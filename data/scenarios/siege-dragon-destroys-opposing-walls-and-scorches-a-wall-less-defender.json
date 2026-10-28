@@ -1,0 +1,19 @@
+{
+  "description": "CR 603.4 / 508.5: Siege Dragon destroys all Walls its controller's opponents control as it enters, and when it attacks a player who controls no Walls it deals 2 damage to each creature without flying that player controls",
+  "note": "Bob's Wall of Wood dies, alice's Wall of Stone stays. Attacking on turn 3, the Dragon burns bob's Grizzly Bears and Hill Giant but not his flying Serra Angel or alice's own wall.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "RRRRRRR", "battlefield": [{"card": "Wall of Stone", "label": "stone"}], "hand": [{"card": "Siege Dragon", "label": "dragon"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Wall of Wood", "label": "wood"}, {"card": "Grizzly Bears", "label": "bears"}, {"card": "Hill Giant", "label": "giant"}, {"card": "Serra Angel", "label": "angel"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$dragon"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Wall of Wood", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Wall of Stone", "count": 1}}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": []}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["Siege Dragon"]}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "check": {"Damage": {"object": "$giant", "damage": 2}}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "check": {"Damage": {"object": "$angel", "damage": 0}}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "check": {"Damage": {"object": "$stone", "damage": 0}}}
+  ]
+}

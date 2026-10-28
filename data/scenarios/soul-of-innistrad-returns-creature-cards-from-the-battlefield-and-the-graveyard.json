@@ -1,0 +1,19 @@
+{
+  "description": "CR 602.2 / 113.6m: Soul of Innistrad returns up to three target creature cards from its controller's graveyard to their hand, and its second ability does the same from the graveyard, exiling it as a cost",
+  "note": "Each ability is refused from the other's zone. The battlefield Soul returns Grizzly Bears and Hill Giant, a land refused; the graveyard Soul, exiled, returns Gray Ogre.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "BBBBBBBBBB", "battlefield": [{"card": "Soul of Innistrad", "label": "soul"}], "graveyard": [{"card": "Soul of Innistrad", "label": "soul-yard"}, {"card": "Grizzly Bears", "label": "bears"}, {"card": "Hill Giant", "label": "giant"}, {"card": "Gray Ogre", "label": "ogre"}, {"card": "Swamp", "label": "swamp"}], "hand": [], "library": [{"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$soul", "ability": 1, "targets": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$soul-yard", "ability": 0, "targets": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$soul", "ability": 0, "targets": ["$bears", "$swamp"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$soul", "ability": 0, "targets": ["$bears", "$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$soul-yard", "ability": 1, "targets": ["$ogre"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Exile", "card": "Soul of Innistrad", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Gray Ogre", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Swamp", "count": 1}}}
+  ]
+}

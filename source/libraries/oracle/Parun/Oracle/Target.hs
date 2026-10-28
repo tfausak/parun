@@ -180,7 +180,12 @@ amounts context q = case q of
     word <- measure m
     whose <- target context s
     Monad.guard (number whose == Filter.Singular)
-    [MkAmount (EqualTo (Text.pack "its " <> word)) [], MkAmount (EqualTo (Text.pack "the " <> word <> Text.pack " of " <> wording whose)) (mentions whose)]
+    -- Free for a card in a graveyard: "that card's toughness" (Rotfeaster
+    -- Maggot).
+    let carded = case fmap TargetSlot.pool (Map.lookup s (slots context)) of
+          Just (Pool.CardsInGraveyard _) -> [MkAmount (EqualTo (Text.pack "that card's " <> word)) []]
+          _ -> []
+    [MkAmount (EqualTo (Text.pack "its " <> word)) [], MkAmount (EqualTo (Text.pack "the " <> word <> Text.pack " of " <> wording whose)) (mentions whose)] <> carded
   _ -> [MkAmount (Stated q) [] | not (null (amount q))]
 
 -- | A characteristic's name (CR 208.1, CR 202.3).

@@ -1,0 +1,15 @@
+{
+  "description": "CR 107.3 / 601.2c: Return to the Ranks returns X target creature cards with mana value 2 or less from your graveyard to the battlefield",
+  "note": "X is 2: Hill Giant, mana value 4, is refused; Grizzly Bears and Savannah Lions return, Elite Vanguard stays.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "WWWW", "hand": [{"card": "Return to the Ranks", "label": "ranks"}], "graveyard": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Savannah Lions", "label": "lions"}, {"card": "Hill Giant", "label": "giant"}, {"card": "Elite Vanguard", "label": "vanguard"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Cast": {"object": "$ranks", "x": 2, "targets": ["$bears", "$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$ranks", "x": 2, "targets": ["$bears", "$lions"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"OrderTimestamps": ["Grizzly Bears", "Savannah Lions"]}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Savannah Lions", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Elite Vanguard", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}}
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "description": "CR 701.23a / 608.2c: Nissa, Worldwaker's -7 puts any number of basic land cards from her controller's library onto the battlefield, and those lands become 4/4 Elemental creatures with trample",
+  "note": "Hill Giant is refused; alice finds a Forest and an Island, each a 4/4 trampling creature land, and Nissa goes to her graveyard with no loyalty left.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Nissa, Worldwaker", "label": "nissa", "counters": [{"key": {"type": "Loyalty"}, "value": 7}]}, {"card": "Plains", "label": "plains"}], "library": [{"card": "Forest", "label": "lib-forest"}, {"card": "Hill Giant", "label": "lib-giant"}, {"card": "Island", "label": "lib-island"}, {"card": "Grizzly Bears", "label": "lib-bears"}, {"card": "Craw Wurm"}, {"card": "Craw Wurm"}, {"card": "Craw Wurm"}, {"card": "Craw Wurm"}]}, {"name": "bob", "library": [{"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$nissa", "ability": 2, "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "Search", "with": ["$lib-forest", "$lib-giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$lib-forest", "$lib-island"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$lib-giant", "$lib-bears", "Craw Wurm", "Craw Wurm#2", "Craw Wurm#3", "Craw Wurm#4"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "Forest", "power": 4, "toughness": 4}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "Island", "power": 4, "toughness": 4}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "Island", "keyword": {"type": "Trample"}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Subtypes": {"object": "Forest", "subtypes": ["Elemental", "Forest"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Types": {"object": "$plains", "types": ["Land"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Nissa, Worldwaker", "count": 1}}}
+  ]
+}

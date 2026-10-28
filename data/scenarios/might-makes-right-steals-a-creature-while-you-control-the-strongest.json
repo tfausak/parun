@@ -1,0 +1,20 @@
+{
+  "description": "CR 603.4 / 613.1b: at the beginning of combat on its controller's turn, if they control each creature with the greatest power, Might Makes Right gains control of target creature an opponent controls until end of turn, untaps it and gives it haste",
+  "note": "Alice's 6/4 Craw Wurm is the strongest, so on turn 1 she takes bob's tapped Hill Giant and attacks him with it. On turn 2 bob casts his own Craw Wurm, tying her, and on turn 3 nothing triggers.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Might Makes Right", "label": "mmr"}, {"card": "Craw Wurm", "label": "wurm"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant", "tapped": true}, {"card": "Forest", "label": "f0"}, {"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}, {"card": "Forest", "label": "f3"}, {"card": "Forest", "label": "f4"}, {"card": "Forest", "label": "f5"}], "hand": [{"card": "Craw Wurm", "label": "wurm2"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "do": {"ChooseTargets": {"target": ["$giant"]}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"View": {"of": "Controller", "object": "$giant", "is": "alice"}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Tapped": {"object": "$giant", "tapped": false}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Keywords": {"object": "$giant", "keyword": {"type": "Haste"}, "count": 1}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$giant"]}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 17}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Controller", "object": "$giant", "is": "bob"}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$wurm2", "mana": ["$f0", "$f1", "$f2", "$f3", "$f4", "$f5"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": []}},
+    {"turn": 3, "step": "BeginningOfCombat", "player": "alice", "check": {"View": {"of": "Stack", "is": []}}},
+    {"turn": 3, "step": "BeginningOfCombat", "player": "alice", "check": {"View": {"of": "Controller", "object": "$giant", "is": "bob"}}}
+  ]
+}

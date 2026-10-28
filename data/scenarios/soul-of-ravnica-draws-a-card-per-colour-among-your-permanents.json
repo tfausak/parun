@@ -1,0 +1,15 @@
+{
+  "description": "CR 105.2 / 608.2h: Soul of Ravnica draws a card for each colour among permanents its controller controls, from the battlefield and, exiling itself, from the graveyard",
+  "note": "Blue Soul, green Grizzly Bears and white Savannah Lions make three draws, bob's red Hill Giant none; after alice bolts her Lions the graveyard Soul draws two.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "UUUUUUUUUUUUUU", "battlefield": [{"card": "Soul of Ravnica", "label": "soul"}, {"card": "Grizzly Bears", "label": "bears"}, {"card": "Savannah Lions", "label": "lions"}, {"card": "Mountain", "label": "mountain"}], "graveyard": [{"card": "Soul of Ravnica", "label": "soul-yard"}], "hand": [{"card": "Lightning Bolt", "label": "bolt"}], "library": [{"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}]}, {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$soul", "ability": 0, "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$bolt", "targets": ["$lions"], "mana": ["$mountain"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$soul-yard", "ability": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 5}}}
+  ]
+}

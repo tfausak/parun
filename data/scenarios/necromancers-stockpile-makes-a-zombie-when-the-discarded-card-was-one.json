@@ -1,0 +1,19 @@
+{
+  "description": "CR 601.2h / 608.2c: Necromancer's Stockpile discards a creature card as a cost to draw a card, and creates a tapped 2/2 black Zombie token if the discarded card was a Zombie card",
+  "note": "A land can't be discarded. Discarding Gravedigger, a Zombie, draws and makes a token; discarding Grizzly Bears draws only.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "BBBB", "battlefield": [{"card": "Necromancer's Stockpile", "label": "stockpile"}], "hand": [{"card": "Gravedigger", "label": "digger"}, {"card": "Grizzly Bears", "label": "bears"}, {"card": "Swamp", "label": "swamp"}], "library": [{"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$stockpile", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "ChooseDiscard", "with": ["$swamp"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseDiscard", "with": ["$digger"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Zombie Token", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "Zombie Token", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$stockpile", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseDiscard", "with": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Zombie Token", "count": 1}}}
+  ]
+}
