@@ -1260,6 +1260,8 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.SpellCast {} -> []
   -- The same rule read off the spell itself carries nothing at all.
   TriggerCondition.SelfCast -> []
+  -- CR 602.2b's activation carries a Filter, which holds no Count.
+  TriggerCondition.AbilityActivated _ -> []
   -- CR 702.21a's condition carries a PlayerRelation and no Count.
   TriggerCondition.SelfBecomesTargeted _ -> []
   -- Its player-side sibling carries a PlayerRelation and a StackObjectKind, and
@@ -2870,6 +2872,7 @@ reservedSlots =
       Binding.thisAbility,
       Binding.announcedTargets,
       Binding.targetingObject,
+      Binding.activatedAbility,
       Binding.blockingCreature,
       Binding.blockedCreature,
       Binding.attackingCreature,
@@ -4786,6 +4789,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.SpellCast (SpellCast.MkSpellCast f _ _ _ _ _) -> unframed [f]
   -- "This spell" names the bearer and needs no Filter to say so.
   TriggerCondition.SelfCast -> []
+  TriggerCondition.AbilityActivated f -> unframed [f]
   -- Rule 702.21a names the bearer as well, and asks only a relation of the
   -- targeting object's controller -- no Filter over the object itself.
   TriggerCondition.SelfBecomesTargeted _ -> []
@@ -4915,6 +4919,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.PermanentGetsCounters _ -> []
   TriggerCondition.SpellCast _ -> []
   TriggerCondition.SelfCast -> []
+  TriggerCondition.AbilityActivated _ -> []
   TriggerCondition.SelfBecomesTargeted _ -> []
   TriggerCondition.ControllerBecomesTarget _ -> []
   TriggerCondition.PermanentsBecomeTargeted _ -> []

@@ -1220,6 +1220,7 @@ koth-fire-of-resistance
 krarks-thumb
 krav-the-unredeemed
 krosan-vorine
+kurkesh-onakke-ancient
 kytheon-hero-of-akros-gideon-battle-forged
 labyrinth-of-skophos
 lady-sun
@@ -1503,6 +1504,7 @@ norwood-riders
 novijen-sages
 null-chamber
 oath-of-the-ancient-wood
+ob-nixilis-unshackled
 obelisk-of-urd
 obliterate
 oblivion-ring
@@ -1813,6 +1815,7 @@ ring-of-three-wishes
 ring-of-thune
 ring-of-valkas
 ring-of-xathrid
+rings-of-brighthearth
 riptide-gearhulk
 rise-fall
 rise-from-the-grave

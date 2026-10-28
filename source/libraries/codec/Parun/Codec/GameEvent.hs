@@ -7,6 +7,7 @@
 module Parun.Codec.GameEvent where
 
 import qualified Parun.Codec.AbilityTriggered as AbilityTriggered
+import qualified Parun.Codec.AbilityWasActivated as AbilityWasActivated
 import qualified Parun.Codec.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Parun.Codec.AttackerBlocked as AttackerBlocked
 import qualified Parun.Codec.AttackerDeclared as AttackerDeclared
@@ -102,7 +103,7 @@ codec =
       Arm.payload "AbilityCountered" Countering.codec GameEvent.AbilityCountered (\x -> case x of GameEvent.AbilityCountered y -> Just y; _ -> Nothing),
       Arm.payload "LifeLost" LifeChange.codec GameEvent.LifeLost (\x -> case x of GameEvent.LifeLost y -> Just y; _ -> Nothing),
       Arm.payload "LifeGained" LifeChange.codec GameEvent.LifeGained (\x -> case x of GameEvent.LifeGained y -> Just y; _ -> Nothing),
-      Arm.payload "LoyaltyAbilityActivated" ObjectId.codec GameEvent.LoyaltyAbilityActivated (\x -> case x of GameEvent.LoyaltyAbilityActivated y -> Just y; _ -> Nothing),
+      Arm.payload "AbilityActivated" AbilityWasActivated.codec GameEvent.AbilityActivated (\x -> case x of GameEvent.AbilityActivated y -> Just y; _ -> Nothing),
       Arm.payload "CountersPut" CounterChange.codec GameEvent.CountersPut (\x -> case x of GameEvent.CountersPut y -> Just y; _ -> Nothing),
       Arm.payload "CountersRemoved" CounterChange.codec GameEvent.CountersRemoved (\x -> case x of GameEvent.CountersRemoved y -> Just y; _ -> Nothing),
       Arm.payload "HalfUnlocked" HalfUnlocked.codec GameEvent.HalfUnlocked (\x -> case x of GameEvent.HalfUnlocked y -> Just y; _ -> Nothing),
@@ -178,7 +179,7 @@ tagOf x = case x of
   GameEvent.AbilityCountered {} -> "AbilityCountered"
   GameEvent.LifeLost {} -> "LifeLost"
   GameEvent.LifeGained {} -> "LifeGained"
-  GameEvent.LoyaltyAbilityActivated {} -> "LoyaltyAbilityActivated"
+  GameEvent.AbilityActivated {} -> "AbilityActivated"
   GameEvent.CountersPut {} -> "CountersPut"
   GameEvent.CountersRemoved {} -> "CountersRemoved"
   GameEvent.HalfUnlocked {} -> "HalfUnlocked"

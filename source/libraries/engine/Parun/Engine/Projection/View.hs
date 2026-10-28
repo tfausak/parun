@@ -379,6 +379,14 @@ settledUnder oid controller gs = case (Game.lookupObject oid gs, controller) of
   (Just object, Just pid) -> Object.sickness object == Sickness.Settled pid
   _ -> False
 
+-- CR 113.7a / 608.2h: a departed object's view placed in the zone its record
+-- says it last existed in, which Count.lastKnownView leaves Nothing; the view
+-- unchanged while the object exists.
+lastZoned :: GameState -> ObjectId -> Filter.View -> Filter.View
+lastZoned gs oid view = case Game.lastKnownOf oid gs of
+  Just lastKnown -> view {Filter.zone = Just (LastKnown.zone lastKnown)}
+  Nothing -> view
+
 -- Shared assembly: fill a View from a projection's characteristics, a supplied
 -- controller and supplied counters.
 --
@@ -709,7 +717,12 @@ viewOfCharacteristics peers oid pc controller counters gs =
       -- artifact sacrificed to activate it still reads "from an artifact source".
       -- Nothing for anything that is not an ability on the stack. Lazy, so a
       -- Filter that never names the atom pays nothing.
-      Filter.abilitySource = Game.abilitySourceOf oid gs >>= Count.orLastKnown peers gs,
+      --
+      -- A departed source answers IsInZone from the zone it last existed in,
+      -- which the record keeps: CR 109.2's "an artifact" is a permanent, so
+      -- Kurkesh, Onakke Ancient sees the Mind Stone sacrificed to pay for its
+      -- own draw and not the card Soul of New Phyrexia exiles from a graveyard.
+      Filter.abilitySource = Game.abilitySourceOf oid gs >>= \src -> fmap (lastZoned gs src) (Count.orLastKnown peers gs src),
       Filter.tapped = Game.isTapped oid gs,
       -- CR 110.5's other status, and the only site that fills the field. Read off
       -- Object.facing, never off the projection: CR 110.5a says status is not a

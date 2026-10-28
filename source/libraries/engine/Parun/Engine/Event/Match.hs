@@ -28,6 +28,7 @@ import qualified Parun.Engine.Turn as Turn
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
+import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
 import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackedPlayer as AttackedPlayer
@@ -343,7 +344,7 @@ countersRemovedFrom bearer wanted event = case event of
   GameEvent.Crewed _ -> Nothing
   GameEvent.PermanentSacrificed {} -> Nothing
   GameEvent.AbilityTriggered {} -> Nothing
-  GameEvent.LoyaltyAbilityActivated _ -> Nothing
+  GameEvent.AbilityActivated _ -> Nothing
   GameEvent.LifeLost {} -> Nothing
   GameEvent.LifeGained {} -> Nothing
 
@@ -400,7 +401,7 @@ boundDeparts bindings destinations slot event = case event of
   GameEvent.Crewed _ -> False
   GameEvent.PermanentSacrificed {} -> False
   GameEvent.AbilityTriggered {} -> False
-  GameEvent.LoyaltyAbilityActivated _ -> False
+  GameEvent.AbilityActivated _ -> False
   GameEvent.LifeLost {} -> False
   GameEvent.LifeGained {} -> False
   GameEvent.CountersPut {} -> False
@@ -549,7 +550,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -636,7 +637,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -713,7 +714,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -789,7 +790,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -877,7 +878,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -962,7 +963,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -1035,7 +1036,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -1117,7 +1118,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -1197,7 +1198,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -1289,7 +1290,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -1361,7 +1362,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -1434,7 +1435,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -1506,7 +1507,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -1579,7 +1580,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
     GameEvent.CountersRemoved {} -> False
@@ -1664,7 +1665,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -1762,7 +1763,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -1845,7 +1846,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -1925,7 +1926,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -2004,7 +2005,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -2092,7 +2093,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -2181,7 +2182,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -2266,7 +2267,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -2350,7 +2351,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -2435,7 +2436,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -2533,7 +2534,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -2628,7 +2629,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -2715,7 +2716,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -2800,7 +2801,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -2880,7 +2881,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -2993,7 +2994,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -3099,7 +3100,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -3176,7 +3177,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -3262,7 +3263,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -3373,7 +3374,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -3463,7 +3464,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -3565,7 +3566,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -3637,7 +3638,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -3713,7 +3714,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -3813,7 +3814,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -3891,7 +3892,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -3986,7 +3987,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -4068,7 +4069,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -4161,7 +4162,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -4249,7 +4250,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -4398,7 +4399,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           GameEvent.Crewed _ -> False
           GameEvent.PermanentSacrificed {} -> False
           GameEvent.AbilityTriggered {} -> False
-          GameEvent.LoyaltyAbilityActivated _ -> False
+          GameEvent.AbilityActivated _ -> False
           GameEvent.LifeLost {} -> False
           GameEvent.LifeGained {} -> False
           GameEvent.CountersPut {} -> False
@@ -4550,7 +4551,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           GameEvent.Crewed _ -> False
           GameEvent.PermanentSacrificed {} -> False
           GameEvent.AbilityTriggered {} -> False
-          GameEvent.LoyaltyAbilityActivated _ -> False
+          GameEvent.AbilityActivated _ -> False
           GameEvent.LifeLost {} -> False
           GameEvent.LifeGained {} -> False
           GameEvent.CountersPut {} -> False
@@ -4630,7 +4631,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -4711,7 +4712,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -4792,7 +4793,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -4878,7 +4879,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -4972,7 +4973,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -5094,7 +5095,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           GameEvent.Crewed _ -> False
           GameEvent.PermanentSacrificed {} -> False
           GameEvent.AbilityTriggered {} -> False
-          GameEvent.LoyaltyAbilityActivated _ -> False
+          GameEvent.AbilityActivated _ -> False
           GameEvent.LifeLost {} -> False
           GameEvent.LifeGained {} -> False
           GameEvent.CountersPut {} -> False
@@ -5312,7 +5313,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           GameEvent.Crewed _ -> False
           GameEvent.PermanentSacrificed {} -> False
           GameEvent.AbilityTriggered {} -> False
-          GameEvent.LoyaltyAbilityActivated _ -> False
+          GameEvent.AbilityActivated _ -> False
           GameEvent.LifeLost {} -> False
           GameEvent.LifeGained {} -> False
           GameEvent.CountersPut {} -> False
@@ -5386,7 +5387,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -5484,7 +5485,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -5559,7 +5560,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -5641,7 +5642,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -5754,7 +5755,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -5835,7 +5836,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -5922,7 +5923,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           GameEvent.Crewed _ -> False
           GameEvent.PermanentSacrificed {} -> False
           GameEvent.AbilityTriggered {} -> False
-          GameEvent.LoyaltyAbilityActivated _ -> False
+          GameEvent.AbilityActivated _ -> False
           GameEvent.LifeLost {} -> False
           GameEvent.LifeGained {} -> False
           GameEvent.CountersPut {} -> False
@@ -6019,7 +6020,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           GameEvent.Crewed _ -> False
           GameEvent.PermanentSacrificed {} -> False
           GameEvent.AbilityTriggered {} -> False
-          GameEvent.LoyaltyAbilityActivated _ -> False
+          GameEvent.AbilityActivated _ -> False
           GameEvent.LifeLost {} -> False
           GameEvent.LifeGained {} -> False
           GameEvent.CountersPut {} -> False
@@ -6146,7 +6147,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           GameEvent.Crewed _ -> False
           GameEvent.PermanentSacrificed {} -> False
           GameEvent.AbilityTriggered {} -> False
-          GameEvent.LoyaltyAbilityActivated _ -> False
+          GameEvent.AbilityActivated _ -> False
           GameEvent.LifeLost {} -> False
           GameEvent.LifeGained {} -> False
           GameEvent.CountersPut {} -> False
@@ -6234,7 +6235,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           GameEvent.Crewed _ -> False
           GameEvent.PermanentSacrificed {} -> False
           GameEvent.AbilityTriggered {} -> False
-          GameEvent.LoyaltyAbilityActivated _ -> False
+          GameEvent.AbilityActivated _ -> False
           GameEvent.LifeLost {} -> False
           GameEvent.LifeGained {} -> False
           GameEvent.CountersPut {} -> False
@@ -6318,7 +6319,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -6401,7 +6402,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -6506,7 +6507,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -6603,7 +6604,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -6697,7 +6698,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.CountersPut {} -> False
     GameEvent.CountersRemoved {} -> False
@@ -6790,7 +6791,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
     GameEvent.CountersRemoved {} -> False
@@ -6918,7 +6919,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
   -- CR 716.2a: the BEARER's class level crossed N going up. "When this Class
@@ -7008,7 +7009,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
   -- CR 310.12b: the LAST counter of this kind came off the BEARER. The mirror of
@@ -7132,7 +7133,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
   -- CR 601.2i's "any abilities that trigger when a spell is cast": a spell the
@@ -7264,7 +7265,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           GameEvent.AttackerUnblocked _ -> False
           GameEvent.SpellCountered _ -> False
           GameEvent.AbilityCountered _ -> False
-          GameEvent.LoyaltyAbilityActivated _ -> False
+          GameEvent.AbilityActivated _ -> False
           GameEvent.LifeLost {} -> False
           GameEvent.LifeGained {} -> False
   -- CR 601.2i, self-scoped: the spell that became cast IS the bearer. A bare
@@ -7314,7 +7315,85 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
+    GameEvent.LifeLost {} -> False
+    GameEvent.LifeGained {} -> False
+    GameEvent.CountersPut {} -> False
+    GameEvent.CountersRemoved {} -> False
+    GameEvent.ControlChanged {} -> False
+    GameEvent.VentureMarkerEntered {} -> False
+    GameEvent.BecameTarget {} -> False
+    GameEvent.BecameAttached {} -> False
+    GameEvent.BecameUnattached {} -> False
+    GameEvent.LeftTheGame _ -> False
+    GameEvent.Milled {} -> False
+    GameEvent.PlayerActed _ -> False
+    GameEvent.LandPlayed {} -> False
+    GameEvent.LostTheGame _ -> False
+    GameEvent.ManifestedDread {} -> False
+    GameEvent.DieResultSettled _ -> False
+    GameEvent.RolledToVisit _ -> False
+    GameEvent.PlanarDieRolled _ -> False
+    GameEvent.TurnedUpOffDeck _ -> False
+    GameEvent.ChaosEnsued -> False
+    GameEvent.ClassLevelSet _ -> False
+    GameEvent.Plotted _ -> False
+    GameEvent.BecameAttacked _ -> False
+    GameEvent.AttackersDeclared _ -> False
+    GameEvent.BecameTapped _ -> False
+    GameEvent.BecameUntapped _ -> False
+    GameEvent.TappedForMana _ -> False
+    GameEvent.ManaAdded _ -> False
+    GameEvent.ManaAbilityResolved _ -> False
+    GameEvent.CoinFlipped {} -> False
+    GameEvent.StickerPut _ -> False
+    GameEvent.ActivatedAbilityResolved _ -> False
+    GameEvent.TriggeredAbilityResolved _ -> False
+    GameEvent.CardArrived _ -> False
+  -- CR 602.2b / 601.2i: the Filter over the ability on the stack, its
+  -- controller the activator (CR 602.2a), read live for SpellCast's reason --
+  -- the activation is the last thing Activate.activateAbilityWith does, so the
+  -- ability is still on the stack -- and its source through CR 113.7a's last
+  -- known information (Filter.FromSource), so a source sacrificed to pay the
+  -- cost still answers.
+  TriggerCondition.AbilityActivated f -> case event of
+    GameEvent.AbilityActivated activated ->
+      Maybe.isJust (Game.lookupObject (AbilityWasActivated.ability activated) gs)
+        && Filter.matches bearerContext (Projection.viewOfSpell (AbilityWasActivated.player activated) (AbilityWasActivated.ability activated) gs) f
+    GameEvent.SpellCast {} -> False
+    GameEvent.SpellCopied _ -> False
+    GameEvent.Discarded {} -> False
+    GameEvent.Drew {} -> False
+    GameEvent.Moved {} -> False
+    GameEvent.DamageDealt _ -> False
+    GameEvent.DamagePrevented {} -> False
+    GameEvent.StepBegan {} -> False
+    GameEvent.BecameMonarch _ -> False
+    GameEvent.TookInitiative _ -> False
+    GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
+    GameEvent.Voted {} -> False
+    GameEvent.VotesRevealed {} -> False
+    GameEvent.AttackerDeclared {} -> False
+    GameEvent.BecameBlocking {} -> False
+    GameEvent.BlocksDeclared {} -> False
+    GameEvent.AttackerBlocked {} -> False
+    GameEvent.AttackerUnblocked _ -> False
+    GameEvent.SpellCountered _ -> False
+    GameEvent.AbilityCountered _ -> False
+    GameEvent.HalfUnlocked {} -> False
+    GameEvent.TurnedFaceUp _ -> False
+    GameEvent.PermanentActed _ -> False
+    GameEvent.Transformed {} -> False
+    GameEvent.BecameDesignated {} -> False
+    GameEvent.Mentored {} -> False
+    GameEvent.Exploited {} -> False
+    GameEvent.BecameCrewed _ -> False
+    GameEvent.Convoked _ -> False
+    GameEvent.Saddled _ -> False
+    GameEvent.Crewed _ -> False
+    GameEvent.PermanentSacrificed {} -> False
+    GameEvent.AbilityTriggered {} -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -7426,7 +7505,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -7516,7 +7595,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -7616,7 +7695,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -7701,7 +7780,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.AttackerUnblocked _ -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
   -- CR 708.7 through CR 603.2: the bearer is the permanent that turned over.
@@ -7784,7 +7863,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.AttackerUnblocked _ -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
   -- CR 701.27e through CR 603.2: the bearer is the permanent that transformed,
@@ -7869,7 +7948,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.AttackerUnblocked _ -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
   -- CR 701.27e's OTHER written form, read by a bystander: "whenever a permanent
@@ -7989,7 +8068,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.AttackerUnblocked _ -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
   -- CR 708.7's OTHER written form, read by a bystander: "whenever a permanent is
@@ -8090,7 +8169,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.AttackerUnblocked _ -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
   -- CR 603.2: a permanent performed the watched action. The EVENT and nothing
@@ -8145,7 +8224,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -8253,7 +8332,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.AttackerUnblocked _ -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
   -- CR 702.134c: the creature the BEARER IS ATTACHED TO mentored another. The
@@ -8338,7 +8417,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.AttackerUnblocked _ -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
   -- CR 702.110b: the BEARER exploited a creature -- its controller sacrificed one
@@ -8418,7 +8497,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.AttackerUnblocked _ -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
   -- CR 702.110b read by a bystander (Skull Skaab): SelfExploits' event, with
@@ -8499,7 +8578,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.AttackerUnblocked _ -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
   -- CR 702.122e: the BEARER became crewed, which that rule defines as a crew
@@ -8581,7 +8660,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.AttackerUnblocked _ -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
   -- CR 702.122b: the BEARER crewed a Vehicle, which that rule makes true of a
@@ -8659,7 +8738,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.AttackerUnblocked _ -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
   -- CR 702.112b: a permanent the Filter admits was given the renowned designation.
@@ -8741,7 +8820,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.AttackerUnblocked _ -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
   -- CR 709.5i: "such an ability triggers when that permanent has one of the two
@@ -8831,7 +8910,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.AttackerUnblocked _ -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
   -- CR 603.10a's sacrifice family: the log entry Event.sacrificeIn writes is the
@@ -8930,7 +9009,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.AttackerUnblocked _ -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
   -- CR 603.1b: "a triggered ability may have more than one trigger condition".
@@ -9058,7 +9137,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.AttackerUnblocked _ -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
   -- CR 603.7: "when you lose control of the creature" -- Ray of Command's third
@@ -9150,7 +9229,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.AttackerUnblocked _ -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
   -- CR 309.4c: "when YOU move your venture marker into THIS room", so the
@@ -9226,7 +9305,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.AttackerUnblocked _ -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
   -- CR 603.2: this player performed the watched action, the relation reading
@@ -9272,7 +9351,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -9346,7 +9425,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -9419,7 +9498,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -9498,7 +9577,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -9571,7 +9650,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -9647,7 +9726,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -9724,7 +9803,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -9796,7 +9875,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -9869,7 +9948,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -9942,7 +10021,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -10020,7 +10099,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -10098,7 +10177,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -10176,7 +10255,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -10262,7 +10341,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -10350,7 +10429,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -10435,7 +10514,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False
@@ -10514,7 +10593,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Crewed _ -> False
     GameEvent.PermanentSacrificed {} -> False
     GameEvent.AbilityTriggered {} -> False
-    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.AbilityActivated _ -> False
     GameEvent.LifeLost {} -> False
     GameEvent.LifeGained {} -> False
     GameEvent.CountersPut {} -> False

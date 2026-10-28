@@ -38,6 +38,7 @@ import qualified Parun.Codec.AbilityKindSpec
 import qualified Parun.Codec.AbilityNameSpec
 import qualified Parun.Codec.AbilityTriggeredSpec
 import qualified Parun.Codec.AbilityViewSpec
+import qualified Parun.Codec.AbilityWasActivatedSpec
 import qualified Parun.Codec.AcquisitionSpec
 import qualified Parun.Codec.ActingPermanentSpec
 import qualified Parun.Codec.ActivateManaAbilitiesSpec
@@ -1595,6 +1596,7 @@ spec s registry corpus = do
   Parun.Codec.SpellCastSpec.spec s
   Parun.Codec.SpellWasCastSpec.spec s
   Parun.Codec.SpellWasCopiedSpec.spec s
+  Parun.Codec.AbilityWasActivatedSpec.spec s
   Parun.Codec.SpendManaAsThoughSpec.spec s
   Parun.Codec.SpendTriggerSpec.spec s
   Parun.Codec.SpliceSpec.spec s

@@ -1,0 +1,142 @@
+{
+  "description": "CR 602.2b Kurkesh, Onakke Ancient copies an artifact's ability with a new target",
+  "note": "Alice activates Rod of Ruin at bob and pays Kurkesh's {R}; the copy is aimed at carol instead, so both take 1. Three seats so the copy's new target is neither the original's nor alice.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Kurkesh, Onakke Ancient",
+            "label": "kurkesh"
+          },
+          {
+            "card": "Mountain",
+            "label": "m1"
+          },
+          {
+            "card": "Mountain",
+            "label": "m2"
+          },
+          {
+            "card": "Mountain",
+            "label": "m3"
+          },
+          {
+            "card": "Mountain",
+            "label": "m4"
+          },
+          {
+            "card": "Rod of Ruin",
+            "label": "rod",
+            "ready": true
+          }
+        ]
+      },
+      {
+        "name": "bob"
+      },
+      {
+        "name": "carol"
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$rod",
+          "ability": 0,
+          "targets": [
+            "$bob"
+          ],
+          "mana": [
+            "$m1",
+            "$m2",
+            "$m3",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Stack",
+          "is": [
+            "trigger of $kurkesh",
+            "ability of $rod"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "ChooseToPay": {
+          "decision": {
+            "type": "Pays"
+          },
+          "mana": [
+            "$m4"
+          ]
+        }
+      },
+      "source": "$kurkesh"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "ChooseTargets": {
+          "target": [
+            "$carol"
+          ]
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "View": {
+        "of": "Stack",
+        "is": []
+      }
+    },
+    {
+      "Life": {
+        "player": "bob",
+        "life": 19
+      }
+    },
+    {
+      "Life": {
+        "player": "carol",
+        "life": 19
+      }
+    },
+    {
+      "Life": {
+        "player": "alice",
+        "life": 20
+      }
+    }
+  ]
+}

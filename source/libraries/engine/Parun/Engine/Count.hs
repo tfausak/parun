@@ -807,7 +807,7 @@ snapshotView viewOf gs shape event = case event of
   GameEvent.Crewed _ -> Nothing
   GameEvent.PermanentSacrificed {} -> Nothing
   GameEvent.AbilityTriggered {} -> Nothing
-  GameEvent.LoyaltyAbilityActivated _ -> Nothing
+  GameEvent.AbilityActivated _ -> Nothing
   GameEvent.LifeLost {} -> Nothing
   GameEvent.LifeGained {} -> Nothing
   -- CR 122.6's placement names an object by id and snapshots no characteristics,

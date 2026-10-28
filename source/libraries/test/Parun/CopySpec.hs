@@ -161,6 +161,7 @@ import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.OptionalDecision as OptionalDecision
+import qualified Parun.Types.PaymentDecision as PaymentDecision
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlayerChoice as PlayerChoice
 import qualified Parun.Types.PlayerId as PlayerId
@@ -1891,6 +1892,41 @@ copyAbilityOnStackSpec s registry = Spec.describe s "Parun.Engine.Copy" $ do
         Spec.assertBool s (elem abilId (GameState.stack afterEngine)) "setup: and the original was under the copy before the Stifle resolved"
         Spec.assertEqWith s "setup: both Pikers left alice's hand before the copy resolved" (handSize S.alice stifled) 0
       _ -> Spec.assertFailure s "Rumor Gatherer's trigger should be on the stack, and Lithoform Engine should declare a {2} ability"
+  -- CR 602.2b's trigger rather than Lithoform Engine's targeted copy: Kurkesh,
+  -- Onakke Ancient's "copy that ability" names the activated ability through
+  -- Binding.activatedAbility, and the copy goes above it, so bob's Stifle
+  -- counters the original out from under the copy (Rings of Brighthearth's
+  -- ruling: they resolve even if that ability is countered). Bob at 19 is the
+  -- copy resolving; 20 is no copy, 18 an uncountered original.
+  Spec.it s "CR 707.10 Kurkesh, Onakke Ancient's copy resolves though the original is countered" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    island <- S.printingOf s registry "Island"
+    kurkesh <- S.printingOf s registry "Kurkesh, Onakke Ancient"
+    rod <- S.printingOf s registry "Rod of Ruin"
+    stifle <- S.printingOf s registry "Stifle"
+    let (_, withKurkesh) = S.addPermanent kurkesh S.alice (S.landsFor island S.bob 1 (S.landsInPlay mountain 4))
+        (rodId, withRod) = S.addPermanent rod S.alice withKurkesh
+        (stifleId, board) = S.addHandCard stifle S.bob withRod
+        pays :: Prompt.Prompt r -> r
+        pays p = case p of
+          Prompt.ChooseToPay {} -> PaymentDecision.Pays
+          _ -> pinTarget (Recipient.ToPlayer S.bob) p
+    case Projection.abilitiesOf rodId board of
+      [ping] -> do
+        let activated = S.runPure (pinTarget (Recipient.ToPlayer S.bob)) board {GameState.priority = Just S.alice} (Activate.activateAbility S.alice rodId ping >> Engine.settleForPriority)
+        case GameState.stack activated of
+          [_, abilId] -> do
+            let afterKurkesh = resolveOne pays activated
+                cast = S.runPure (pinTarget (Recipient.ToObject abilId)) afterKurkesh {GameState.priority = Just S.bob} (S.cast S.bob stifleId)
+                stifled = resolveOne S.identityAnswer cast
+                afterCopy = resolveOne S.identityAnswer stifled
+            Spec.assertEqWith s "CR 707.10 the copy dealt bob 1 and the countered original nothing" (S.lifeOf S.bob afterCopy) (Just 19)
+            Spec.assertEqWith s "and the stack is empty" (GameState.stack afterCopy) []
+            -- Supporting, and after the reads above.
+            Spec.assertBool s (notElem abilId (GameState.stack stifled)) "setup: the Stifle countered the original while the copy was still on the stack"
+            Spec.assertEqWith s "setup: the copy sat above the original before the Stifle" (length (GameState.stack afterKurkesh)) 2
+          stack -> Spec.assertFailure s ("Kurkesh's trigger should sit above the Rod's ability, not " <> show stack)
+      _ -> Spec.assertFailure s "Rod of Ruin should declare one activated ability"
 
 -- CR 707.10d, end to end: Zada, Hedron Grinder {3}{R} Legendary Creature --
 -- Goblin Ally 3/3, "Whenever you cast an instant or sorcery spell that targets

@@ -3087,7 +3087,7 @@ castOf event = case event of
   GameEvent.AttackerUnblocked _ -> Nothing
   GameEvent.SpellCountered _ -> Nothing
   GameEvent.AbilityCountered _ -> Nothing
-  GameEvent.LoyaltyAbilityActivated _ -> Nothing
+  GameEvent.AbilityActivated _ -> Nothing
   GameEvent.LifeLost {} -> Nothing
   GameEvent.LifeGained {} -> Nothing
   GameEvent.CountersPut {} -> Nothing
@@ -3196,7 +3196,7 @@ abilityResolved event = case event of
   GameEvent.AttackerUnblocked _ -> Nothing
   GameEvent.SpellCountered _ -> Nothing
   GameEvent.AbilityCountered _ -> Nothing
-  GameEvent.LoyaltyAbilityActivated _ -> Nothing
+  GameEvent.AbilityActivated _ -> Nothing
   GameEvent.LifeLost {} -> Nothing
   GameEvent.LifeGained {} -> Nothing
   GameEvent.CountersPut {} -> Nothing
@@ -3283,7 +3283,7 @@ discardOf event = case event of
   GameEvent.AttackerUnblocked _ -> Nothing
   GameEvent.SpellCountered _ -> Nothing
   GameEvent.AbilityCountered _ -> Nothing
-  GameEvent.LoyaltyAbilityActivated _ -> Nothing
+  GameEvent.AbilityActivated _ -> Nothing
   GameEvent.LifeLost {} -> Nothing
   GameEvent.LifeGained {} -> Nothing
   GameEvent.CountersPut {} -> Nothing
@@ -3455,7 +3455,7 @@ movedChange event = case event of
   GameEvent.AttackerUnblocked _ -> Nothing
   GameEvent.SpellCountered _ -> Nothing
   GameEvent.AbilityCountered _ -> Nothing
-  GameEvent.LoyaltyAbilityActivated _ -> Nothing
+  GameEvent.AbilityActivated _ -> Nothing
   GameEvent.LifeLost {} -> Nothing
   GameEvent.LifeGained {} -> Nothing
   GameEvent.CountersPut {} -> Nothing
@@ -3563,7 +3563,7 @@ damageDealt event = case event of
   GameEvent.AttackerUnblocked _ -> Nothing
   GameEvent.SpellCountered _ -> Nothing
   GameEvent.AbilityCountered _ -> Nothing
-  GameEvent.LoyaltyAbilityActivated _ -> Nothing
+  GameEvent.AbilityActivated _ -> Nothing
   GameEvent.CountersPut {} -> Nothing
   GameEvent.CountersRemoved {} -> Nothing
   GameEvent.ControlChanged {} -> Nothing
@@ -3840,7 +3840,7 @@ lifeGainOf event = case event of
   GameEvent.AttackerUnblocked _ -> Nothing
   GameEvent.SpellCountered _ -> Nothing
   GameEvent.AbilityCountered _ -> Nothing
-  GameEvent.LoyaltyAbilityActivated _ -> Nothing
+  GameEvent.AbilityActivated _ -> Nothing
   GameEvent.CountersPut {} -> Nothing
   GameEvent.CountersRemoved {} -> Nothing
   GameEvent.ControlChanged {} -> Nothing

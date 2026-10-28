@@ -102,6 +102,8 @@ library codec
     Parun.Codec.AbilityTriggeredSpec
     Parun.Codec.AbilityView
     Parun.Codec.AbilityViewSpec
+    Parun.Codec.AbilityWasActivated
+    Parun.Codec.AbilityWasActivatedSpec
     Parun.Codec.Acquisition
     Parun.Codec.AcquisitionSpec
     Parun.Codec.ActingPermanent
@@ -2309,6 +2311,7 @@ library types
     Parun.Types.AbilitySticker
     Parun.Types.AbilityTriggered
     Parun.Types.AbilityView
+    Parun.Types.AbilityWasActivated
     Parun.Types.Acquisition
     Parun.Types.ActingPermanent
     Parun.Types.Action

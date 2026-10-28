@@ -153,6 +153,7 @@ codec =
           Arm.payload "PermanentGetsCounters" CounterPlacement.codec TriggerCondition.PermanentGetsCounters (\x -> case x of TriggerCondition.PermanentGetsCounters y -> Just y; _ -> Nothing),
           Arm.payload "SpellCast" SpellCast.codec TriggerCondition.SpellCast (\x -> case x of TriggerCondition.SpellCast y -> Just y; _ -> Nothing),
           Arm.nullary "SelfCast" TriggerCondition.SelfCast,
+          Arm.payload "AbilityActivated" filterCodec TriggerCondition.AbilityActivated (\x -> case x of TriggerCondition.AbilityActivated y -> Just y; _ -> Nothing),
           Arm.payload "SelfBecomesTargeted" PlayerRelation.codec TriggerCondition.SelfBecomesTargeted (\x -> case x of TriggerCondition.SelfBecomesTargeted y -> Just y; _ -> Nothing),
           Arm.payload "ControllerBecomesTarget" ControllerBecomesTarget.codec TriggerCondition.ControllerBecomesTarget (\x -> case x of TriggerCondition.ControllerBecomesTarget y -> Just y; _ -> Nothing),
           Arm.payload "PermanentsBecomeTargeted" PermanentsBecomeTargeted.codec TriggerCondition.PermanentsBecomeTargeted (\x -> case x of TriggerCondition.PermanentsBecomeTargeted y -> Just y; _ -> Nothing),
@@ -299,6 +300,7 @@ tagOf x = case x of
   TriggerCondition.PermanentGetsCounters {} -> "PermanentGetsCounters"
   TriggerCondition.SpellCast {} -> "SpellCast"
   TriggerCondition.SelfCast {} -> "SelfCast"
+  TriggerCondition.AbilityActivated {} -> "AbilityActivated"
   TriggerCondition.SelfBecomesTargeted {} -> "SelfBecomesTargeted"
   TriggerCondition.ControllerBecomesTarget {} -> "ControllerBecomesTarget"
   TriggerCondition.PermanentsBecomeTargeted {} -> "PermanentsBecomeTargeted"

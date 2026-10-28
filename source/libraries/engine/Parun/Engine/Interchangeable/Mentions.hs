@@ -3000,6 +3000,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.PermanentGetsCounters counterPlacement -> counterPlacementNames asking counterPlacement
   TriggerCondition.SpellCast spellCast -> spellCastNames asking spellCast
   TriggerCondition.SelfCast -> mempty
+  TriggerCondition.AbilityActivated filter_ -> filterNames asking filter_
   TriggerCondition.SelfBecomesTargeted _playerRelation -> mempty
   TriggerCondition.ControllerBecomesTarget _controllerBecomesTarget -> mempty
   TriggerCondition.PermanentsBecomeTargeted permanentsBecomeTargeted -> permanentsBecomeTargetedNames asking permanentsBecomeTargeted
