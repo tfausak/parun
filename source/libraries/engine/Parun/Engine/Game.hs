@@ -3363,6 +3363,12 @@ enteredBattlefieldChange event = do
   change <- movedChange event
   if ZoneChange.to change == Zone.Battlefield then Just change else Nothing
 
+-- The event group of the log entry that put `oid` onto the battlefield.
+entryGroup :: ObjectId -> GameState -> Maybe EventGroup.EventGroup
+entryGroup oid gs =
+  let entered logged = maybe False ((== oid) . ZoneChange.object) (enteredBattlefieldChange (LoggedEvent.event logged))
+   in fmap (LoggedEvent.group . Seq.index (GameState.events gs)) (Seq.findIndexR entered (GameState.events gs))
+
 -- CR 700.4's "is put into a graveyard from the battlefield", the reader
 -- `enteredBattlefieldChange` above is the other direction of: rule 702.69a's
 -- gravestorm counts these, through Parun.Engine.Quantity's PermanentsDiedThisTurn

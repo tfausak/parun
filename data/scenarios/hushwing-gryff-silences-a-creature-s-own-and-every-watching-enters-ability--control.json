@@ -1,0 +1,102 @@
+{
+  "description": "CR 603.6a control: with Dawn Gryff in Hushwing Gryff's place, the entering creature triggers every enters ability",
+  "note": "The control for the Hushwing Gryff board: with a vanilla Dawn Gryff in its place, Venerable Monk gains alice 2, her Soul Warden 1 and bob's Soul Warden bob 1.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Soul Warden",
+            "label": "alice-warden"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Venerable Monk",
+            "label": "monk"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "manaPool": "WWW"
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Dawn Gryff"
+          },
+          {
+            "card": "Soul Warden"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$monk"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "OrderTriggers": [
+          "Venerable Monk",
+          "$alice-warden"
+        ]
+      }
+    }
+  ],
+  "final": [
+    {
+      "Life": {
+        "player": "alice",
+        "life": 23
+      }
+    },
+    {
+      "Life": {
+        "player": "bob",
+        "life": 21
+      }
+    }
+  ]
+}

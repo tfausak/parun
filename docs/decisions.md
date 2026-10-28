@@ -892,3 +892,27 @@ Entries are ordered by the first rule each cites.
   scenario "CR 800.4a a departing player's shield is not a control effect, so
   it stays".
 - **Issue**: #592.
+
+## A silenced entry silences its departure
+
+- **Question**: Hushwing Gryff's "creatures entering don't cause abilities to
+  trigger" names the entry. A creature card returned from a graveyard to the
+  battlefield is one zone change, which a "whenever a card leaves your
+  graveyard" ability (Spirit Mascot, Kishla Skimmer) also watches. Does that
+  ability trigger?
+- **Rules**: CR 603.6a, 603.6c, 603.10a, 613.11; CR of 2026-08-07. Rulings:
+  Hushwing Gryff, Torpor Orb and Tocatli Honor Guard ("the trigger event
+  doesn't have to specify 'creatures' entering"), Hushbringer 2019-10-04 (a
+  "leaves the battlefield" trigger does not trigger on a creature dying).
+- **Decision**: No. Every trigger the entering zone change satisfies is
+  silenced, whichever side of the move its condition names.
+- **Rejected**: Silencing only the CR 603.6a enters abilities. The entry rulings
+  say the event need not be phrased as creatures entering, and Hushbringer's
+  ruling silences the other-side wording ("leaves the battlefield") of a
+  silenced dying. Reading the entry half by that mirror leaves no ground for
+  sparing the departure half.
+- **Site**: `Parun.Engine.Event.Match.entryTriggers`. Proved by the scenarios
+  "Hushwing Gryff silences a leaves-your-graveyard trigger on a reanimated
+  creature" (Spirit Mascot) and "Hushwing Gryff silences a reanimated card's
+  own leaves-your-graveyard trigger" (Oglor's grant).
+- **Issue**: #5713.

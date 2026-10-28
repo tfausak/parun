@@ -1,0 +1,85 @@
+{
+  "description": "CR 603.6a / 613.11 whole card: Hushwing Gryff stops a creature's own enters ability and every player's \"whenever a creature enters\"",
+  "note": "bob's Gryff silences every player's abilities: Venerable Monk's own enters ability, alice's Soul Warden and bob's own Soul Warden all stay quiet, so nobody gains life. The control swaps the Gryff for Dawn Gryff, a vanilla 2/1 flier.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Soul Warden",
+            "label": "alice-warden"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Venerable Monk",
+            "label": "monk"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "manaPool": "WWW"
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Hushwing Gryff"
+          },
+          {
+            "card": "Soul Warden"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$monk"
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "Life": {
+        "player": "alice",
+        "life": 20
+      }
+    },
+    {
+      "Life": {
+        "player": "bob",
+        "life": 20
+      }
+    }
+  ]
+}
