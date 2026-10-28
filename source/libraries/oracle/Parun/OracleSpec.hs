@@ -407,10 +407,10 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertBool s (Oracle.says feeder spark (Text.pack "Whenever this creature attacks and isn't blocked, defending player loses 1 life for each card in their graveyard.")) "their unsaid"
 
   -- An activated ability whose cost sacrifices its source calls it "it"
-  -- (Mogg Mob).
+  -- (Mogg Mob), or by its name again (Inferno Fist), "it" first.
   Spec.it s "render calls a sacrificed source it" $ do
     let mob = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.SacrificeThis]) (damage [(you, 3)])
-    Spec.assertEq s [[Text.pack "Sacrifice Spark: It deals 3 damage to you."]] (Oracle.abilities (withFace (\f -> f {Face.activatedAbilities = [mob]})))
+    Spec.assertEq s [[Text.pack "Sacrifice Spark: It deals 3 damage to you.", Text.pack "Sacrifice Spark: Spark deals 3 damage to you."]] (Oracle.abilities (withFace (\f -> f {Face.activatedAbilities = [mob]})))
 
   -- CR 113.2c: a paragraph break starts another ability, so only a spell's
   -- instructions (one spell ability, CR 113.3a) may be broken across lines.

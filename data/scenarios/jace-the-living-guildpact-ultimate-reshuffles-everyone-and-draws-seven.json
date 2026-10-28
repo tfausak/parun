@@ -1,0 +1,20 @@
+{
+  "description": "CR 701.24a / 121.1: Jace, the Living Guildpact's -8 makes each player shuffle their hand and graveyard into their library, then its controller draws seven",
+  "note": "Jace, at 0 loyalty, is in alice's graveyard by the time the ability resolves (CR 704.5i), so it goes into her library too, beside her Gray Ogre (hand), Hill Giant (graveyard) and six Islands; seven are drawn in the order she shuffles, leaving Jace at the bottom; bob's Lightning Bolt and Shock go into his library and he draws nothing.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Jace, the Living Guildpact", "label": "jace", "counters": [{"key": {"type": "Loyalty"}, "value": 8}]}], "hand": [{"card": "Gray Ogre", "label": "a1"}], "graveyard": [{"card": "Hill Giant", "label": "a2"}], "library": [{"card": "Island", "label": "a3"}, {"card": "Island", "label": "a4"}, {"card": "Island", "label": "a5"}, {"card": "Island", "label": "a6"}, {"card": "Island", "label": "a7"}, {"card": "Island", "label": "a8"}]}, {"name": "bob", "hand": [{"card": "Lightning Bolt", "label": "b1"}], "graveyard": [{"card": "Shock", "label": "b2"}], "library": [{"card": "Island", "label": "b3"}, {"card": "Island", "label": "b4"}, {"card": "Island", "label": "b5"}, {"card": "Island", "label": "b6"}, {"card": "Island", "label": "b7"}, {"card": "Island", "label": "b8"}, {"card": "Island", "label": "b9"}, {"card": "Island", "label": "b10"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$jace", "ability": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["Gray Ogre", "Hill Giant", "$a3", "$a4", "$a5", "$a6", "$a7", "$a8", "Jace, the Living Guildpact"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["Lightning Bolt", "Shock", "$b3", "$b4", "$b5", "$b6", "$b7", "$b8", "$b9", "$b10"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 5}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Gray Ogre", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Hill Giant", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Library", "card": "Jace, the Living Guildpact", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Lightning Bolt", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Library", "card": "Lightning Bolt", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Library", "card": "Shock", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "bob", "zone": "Hand", "is": []}}}
+  ]
+}
