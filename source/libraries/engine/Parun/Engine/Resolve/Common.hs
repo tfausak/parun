@@ -49,6 +49,7 @@ import qualified Parun.Engine.Replacement as Replacement
 import Parun.Engine.Resolve.Slots (boundSlots, chosenCandidates, effectContext, effectObjectRefs, effectPlayerRefs, effectViewOf, graveyardCardsOf, handCardsOf, legalMany, legalOne, libraryCardsOf, matchingFromAmong, objectRefObjects, playerRefPlayers, playerRefSlots, replacementRowSlots, resolutionReads, resolvingAbilityName, resolvingKind, slotBindings, slotGroup)
 import qualified Parun.Engine.Restamp as Restamp
 import qualified Parun.Engine.Room as Room
+import qualified Parun.Engine.SourceContext as SourceContext
 import qualified Parun.Engine.Star as Star
 import qualified Parun.Engine.Sticker as Sticker
 import qualified Parun.Engine.Target as Target
@@ -1526,7 +1527,10 @@ installDamageRow resolving targets slots controller source duration kind rewrite
               -- DamagePattern.whatSource, which Synthetic Turn the Blade writes,
               -- and Harm's Way's recipient description rides it as Divine
               -- Deflection's does.
-              ActiveReplacement.slots = Map.restrictKeys slots namedSlots
+              ActiveReplacement.slots = Map.restrictKeys slots namedSlots,
+              -- CR 608.2h: the colour Avacyn, Guardian Angel chose as THIS
+              -- resolution ran, under the acquisition it froze (CR 607.5).
+              ActiveReplacement.choices = SourceContext.choicesOf (Game.readingAcquisition resolving source g source) source g
             }
         -- Every slot name the row above can name: replacementRowReads' answer for
         -- the ReplacementEffect just built, which is the whole of what
