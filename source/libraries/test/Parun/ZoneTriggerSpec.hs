@@ -2552,8 +2552,8 @@ everyTriggerCondition =
     -- Safekeeping's pair first, then Dormant Gomazoa's.
     TriggerCondition.ControllerBecomesTarget (ControllerBecomesTarget.MkControllerBecomesTarget PlayerRelation.Opponent Nothing),
     TriggerCondition.ControllerBecomesTarget (ControllerBecomesTarget.MkControllerBecomesTarget PlayerRelation.AnyPlayer (Just StackObjectKind.Spell)),
-    -- Professor Hojo's own, the only inhabitant in the pool: a Filter and a kind
-    -- where the sibling above carries a relation and a kind.
+    -- Professor Hojo's own, the only inhabitant in the pool: a Filter beside the
+    -- sibling above's relation and kind.
     TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted Filter.Type.IsSource PlayerRelation.AnyPlayer (Just StackObjectKind.ActivatedAbility)),
     -- Venerated Rotpriest's per-creature twin, and Diffusion Sliver's: both
     -- relations, for the SelfBecomesTargeted pair's reason.
