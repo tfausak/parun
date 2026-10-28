@@ -336,88 +336,90 @@
                       {
                         "type": "CreateEmblem",
                         "value": {
-                          "faces": [
-                            {
-                              "name": "Liliana of the Dark Realms Emblem",
-                              "staticAbilities": [
-                                {
-                                  "affected": {
-                                    "type": "Matching",
-                                    "value": {
-                                      "type": "And",
-                                      "value": [
-                                        {
-                                          "type": "HasSubtype",
-                                          "value": {
-                                            "type": "Swamp"
-                                          }
-                                        },
-                                        {
-                                          "type": "HeldBy",
-                                          "value": {
-                                            "holder": {
-                                              "type": "Controller"
-                                            },
-                                            "relation": {
-                                              "type": "You"
+                          "card": {
+                            "faces": [
+                              {
+                                "name": "Liliana of the Dark Realms Emblem",
+                                "staticAbilities": [
+                                  {
+                                    "affected": {
+                                      "type": "Matching",
+                                      "value": {
+                                        "type": "And",
+                                        "value": [
+                                          {
+                                            "type": "HasSubtype",
+                                            "value": {
+                                              "type": "Swamp"
+                                            }
+                                          },
+                                          {
+                                            "type": "HeldBy",
+                                            "value": {
+                                              "holder": {
+                                                "type": "Controller"
+                                              },
+                                              "relation": {
+                                                "type": "You"
+                                              }
                                             }
                                           }
-                                        }
-                                      ]
-                                    }
-                                  },
-                                  "modifications": [
-                                    {
-                                      "type": "GainAbility",
-                                      "value": {
-                                        "type": "Activated",
+                                        ]
+                                      }
+                                    },
+                                    "modifications": [
+                                      {
+                                        "type": "GainAbility",
                                         "value": {
-                                          "cost": {
-                                            "components": [
-                                              {
-                                                "type": "TapThis"
-                                              }
-                                            ],
-                                            "mana": []
-                                          },
-                                          "modal": {
-                                            "modes": [
-                                              {
-                                                "clauses": [
-                                                  {
-                                                    "effects": [
-                                                      {
-                                                        "type": "AddMana",
-                                                        "value": {
-                                                          "count": {
-                                                            "type": "Literal",
-                                                            "value": 4
-                                                          },
-                                                          "production": {
-                                                            "type": "OfType",
-                                                            "value": {
-                                                              "type": "Colored",
+                                          "type": "Activated",
+                                          "value": {
+                                            "cost": {
+                                              "components": [
+                                                {
+                                                  "type": "TapThis"
+                                                }
+                                              ],
+                                              "mana": []
+                                            },
+                                            "modal": {
+                                              "modes": [
+                                                {
+                                                  "clauses": [
+                                                    {
+                                                      "effects": [
+                                                        {
+                                                          "type": "AddMana",
+                                                          "value": {
+                                                            "count": {
+                                                              "type": "Literal",
+                                                              "value": 4
+                                                            },
+                                                            "production": {
+                                                              "type": "OfType",
                                                               "value": {
-                                                                "type": "Black"
+                                                                "type": "Colored",
+                                                                "value": {
+                                                                  "type": "Black"
+                                                                }
                                                               }
                                                             }
                                                           }
                                                         }
-                                                      }
-                                                    ]
-                                                  }
-                                                ]
-                                              }
-                                            ]
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
                                           }
                                         }
                                       }
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
                         }
                       }
                     ]

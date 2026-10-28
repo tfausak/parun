@@ -1,0 +1,19 @@
+{
+  "description": "CR 115.1 / 701.8a: Garruk, Apex Predator's first +1 destroys another target planeswalker",
+  "note": "Garruk itself is no legal target ('another'); bob's Garruk, Caller of Beasts is, a ruling allowing another player's Garruk.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Garruk, Apex Predator", "label": "apex", "counters": [{"key": {"type": "Loyalty"}, "value": 5}]}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Garruk, Caller of Beasts", "label": "walker", "counters": [{"key": {"type": "Loyalty"}, "value": 4}]}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$apex", "ability": 0, "targets": ["$apex"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$apex", "ability": 0, "targets": ["$walker"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Garruk, Caller of Beasts", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$apex", "kind": {"type": "Loyalty"}, "count": 6}}}
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "description": "CR 114.2 / 800.4a: the emblem Garruk, Apex Predator's -8 gives carol is hers, so it stays when Garruk's owner concedes",
+  "note": "Three seats so the game goes on after alice concedes; Garruk starts at 9 so it is still on the battlefield, and leaves with her. CR 800.4a takes every object alice owns out of the game; the emblem is carol's (CR 114.2), as the card's ruling says.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Garruk, Apex Predator", "label": "apex", "counters": [{"key": {"type": "Loyalty"}, "value": 9}]}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "carol", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$apex", "ability": 3, "targets": ["$carol"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "carol", "zone": "Command", "card": "Garruk, Apex Predator Emblem", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Garruk, Apex Predator", "count": 1}}},
+    {"turn": 1, "step": "EndStep", "player": "alice", "do": "Concede"},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Count": {"player": "carol", "zone": "Command", "card": "Garruk, Apex Predator Emblem", "count": 1}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Garruk, Apex Predator", "count": 0}}}
+  ]
+}

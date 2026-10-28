@@ -1,0 +1,21 @@
+{
+  "description": "CR 608.2h: Garruk, Apex Predator's -3 destroys target creature and Garruk's controller gains life equal to that creature's toughness as it last existed",
+  "note": "The Hill Giant carries two +1/+1 counters, so it was 5/5 on the battlefield and is a 3/3 card in the graveyard: alice gains 5, not 3.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Garruk, Apex Predator", "label": "apex", "counters": [{"key": {"type": "Loyalty"}, "value": 5}]}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant", "counters": [{"key": {"type": "PlusOnePlusOne"}, "value": 2}]}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$giant", "power": 5, "toughness": 5}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$apex", "ability": 2, "targets": ["$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 25}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 20}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$apex", "kind": {"type": "Loyalty"}, "count": 2}}}
+  ]
+}
