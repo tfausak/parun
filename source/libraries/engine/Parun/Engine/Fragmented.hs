@@ -265,7 +265,7 @@ lapIsRead there gs =
 -- own events (Parun.Engine.Resolve.Effect, Parun.Engine.Cost's reversal and mana
 -- triggers, the trigger scan, the CR 704.5h watermark); readers keyed by an
 -- id that has moved (Parun.Engine.Game.arrivalsOf, revealedArriving,
--- Parun.Engine.MoveDuration.departedIn, Parun.Engine.Event.Trigger.entryGroup)
+-- Parun.Engine.MoveDuration.departedIn, Parun.Engine.Game.entryGroup)
 -- or that mints a new one (Parun.Engine.Event.forgetShown), which a lap cannot
 -- move again under the same id; Parun.Engine.Engine.beginTurnOf's fold of the
 -- casts and attacks, which a priority-only lap without a zone change cannot

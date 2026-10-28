@@ -1,0 +1,96 @@
+{
+  "description": "CR 603.6a / 613.11 Hushwing Gryff silences a leaves-your-graveyard trigger on a reanimated creature",
+  "note": "docs/decisions.md, \"A silenced entry silences its departure\": Zombify's one move takes Grizzly Bears out of alice's graveyard and puts it onto the battlefield, so under bob's Gryff Spirit Mascot's \"one or more cards leave your graveyard\" does not trigger. The control swaps in Dawn Gryff.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "BBBB",
+        "battlefield": [
+          {
+            "card": "Spirit Mascot",
+            "label": "mascot"
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Zombify",
+            "label": "zombify"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Hushwing Gryff"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$zombify",
+          "targets": [
+            "$bears"
+          ]
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "Counters": {
+        "object": "$mascot",
+        "kind": {
+          "type": "PlusOnePlusOne"
+        },
+        "count": 0
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Battlefield",
+        "card": "Grizzly Bears",
+        "count": 1
+      }
+    }
+  ]
+}

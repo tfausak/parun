@@ -198,7 +198,7 @@ delayedAsTriggered board oid gs = maybe (Projection.delayedSnapshotOf oid gs) (P
 -- sample is replaced; a group without one reads the live board anyway
 -- (`battlefieldAt`).
 resampleEntry :: ObjectId -> GameState -> GameState
-resampleEntry oid gs = case entryGroup oid gs of
+resampleEntry oid gs = case Game.entryGroup oid gs of
   Nothing -> gs
   Just group -> gs {GameState.battlefieldWhenTriggered = Map.adjust (const (battlefieldCandidates gs)) group (GameState.battlefieldWhenTriggered gs)}
 
@@ -221,12 +221,6 @@ fileBoards gs =
       groups = filter (not . open) (fmap LoggedEvent.group (Foldable.toList unfiled))
       board = gs {GameState.boardAfterEvent = Map.empty}
    in if null groups then gs else gs {GameState.boardAfterEvent = List.foldl' (\m group -> Map.insert group board m) filed groups}
-
--- The event group of the log entry that put `oid` onto the battlefield.
-entryGroup :: ObjectId -> GameState -> Maybe EventGroup.EventGroup
-entryGroup oid gs =
-  let entered logged = maybe False ((== oid) . ZoneChange.object) (Game.enteredBattlefieldChange (LoggedEvent.event logged))
-   in fmap (LoggedEvent.group . Seq.index (GameState.events gs)) (Seq.findIndexR entered (GameState.events gs))
 
 -- The zone change an event describes, if it is one.
 movedOf :: GameEvent -> Maybe ZoneChange
