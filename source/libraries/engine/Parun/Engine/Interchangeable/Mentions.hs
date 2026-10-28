@@ -1160,6 +1160,10 @@ createNames :: (Monoid r) => Asking r -> (card -> r) -> (ability -> r) -> Create
 createNames asking onCard onAbility x = case x of
   Create.MkCreate quantity card riders slot creator -> quantityNames asking quantity <> onCard card <> entryRidersNames asking (quantityNames asking) onAbility riders <> foldMap (slotNames asking) slot <> playerRefNames asking creator
 
+createEmblemNames :: (Monoid r) => Asking r -> (card -> r) -> CreateEmblem.CreateEmblem card -> r
+createEmblemNames asking onCard x = case x of
+  CreateEmblem.MkCreateEmblem card player -> onCard card <> playerRefNames asking player
+
 createCopyNames :: (Monoid r) => Asking r -> (ability -> r) -> CreateCopy.CreateCopy ability -> r
 createCopyNames asking onAbility x = case x of
   CreateCopy.MkCreateCopy quantity ref riders slot exceptions -> quantityNames asking quantity <> objectRefNames asking ref <> entryRidersNames asking (quantityNames asking) onAbility riders <> foldMap (slotNames asking) slot <> foldMap (copyExceptionNames asking onAbility) exceptions
@@ -1451,7 +1455,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.Prohibit prohibit -> prohibitNames asking prohibit
   Effect.ForbidAttack forbidAttack -> forbidAttackNames asking forbidAttack
   Effect.ForbidBeingBlocked forbidBeingBlocked -> forbidBeingBlockedNames asking forbidBeingBlocked
-  Effect.CreateEmblem (CreateEmblem.MkCreateEmblem card player) -> playerRefNames asking player <> onCard card
+  Effect.CreateEmblem createEmblem -> createEmblemNames asking onCard createEmblem
   Effect.BecomeMonarch monarchTarget -> monarchTargetNames asking monarchTarget
   Effect.TakeTheInitiative _initiativeTarget -> mempty
   Effect.Designate designate -> designateNames asking designate
