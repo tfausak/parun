@@ -71,6 +71,7 @@ import qualified Parun.Codec.FromOutsideTheGame as FromOutsideTheGame
 import qualified Parun.Codec.GainControl as GainControl
 import qualified Parun.Codec.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Codec.GrantPlayFromExile as GrantPlayFromExile
+import qualified Parun.Codec.Guess as Guess
 import qualified Parun.Codec.InitiativeTarget as InitiativeTarget
 import qualified Parun.Codec.LifeLoss as LifeLoss
 import qualified Parun.Codec.LookAt as LookAt
@@ -297,6 +298,7 @@ codec cardCodec abilityCodec =
           Arm.payload "ChooseSector" SlotName.codec Effect.ChooseSector (\x -> case x of Effect.ChooseSector y -> Just y; _ -> Nothing),
           Arm.payload "RollDie" RollDie.codec Effect.RollDie (\x -> case x of Effect.RollDie y -> Just y; _ -> Nothing),
           Arm.payload "FlipCoin" FlipCoin.codec Effect.FlipCoin (\x -> case x of Effect.FlipCoin y -> Just y; _ -> Nothing),
+          Arm.payload "Guess" Guess.codec Effect.Guess (\x -> case x of Effect.Guess y -> Just y; _ -> Nothing),
           Arm.payload "TakeExtraTurn" TakeExtraTurn.codec Effect.TakeExtraTurn (\x -> case x of Effect.TakeExtraTurn y -> Just y; _ -> Nothing),
           Arm.payload "ShuffleIntoLibrary" ShuffleIntoLibrary.codec Effect.ShuffleIntoLibrary (\x -> case x of Effect.ShuffleIntoLibrary y -> Just y; _ -> Nothing),
           Arm.payload "Ante" Ante.codec Effect.Ante (\x -> case x of Effect.Ante y -> Just y; _ -> Nothing),
@@ -477,6 +479,7 @@ tagOf x = case x of
   Effect.ChooseSector {} -> "ChooseSector"
   Effect.RollDie {} -> "RollDie"
   Effect.FlipCoin {} -> "FlipCoin"
+  Effect.Guess {} -> "Guess"
   Effect.TakeExtraTurn {} -> "TakeExtraTurn"
   Effect.ShuffleIntoLibrary {} -> "ShuffleIntoLibrary"
   Effect.Ante {} -> "Ante"

@@ -39,6 +39,7 @@ import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.ForageMode as ForageMode
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GraveyardArrangement as GraveyardArrangement
+import qualified Parun.Types.GuessAnswer as GuessAnswer
 import qualified Parun.Types.HandActionIndex as HandActionIndex
 import qualified Parun.Types.HybridPayment as HybridPayment
 import qualified Parun.Types.Keyword as Keyword
@@ -654,6 +655,10 @@ data Prompt r where
   -- Parun.Interpreter.policingCardNames, which resolves the name and matches the
   -- Filter against it.
   ChooseCardName :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Filter.Filter Keyword.Keyword -> Seq.Seq (PlayerId.PlayerId, CardName.CardName) -> Prompt CardName.CardName
+  -- | CR 608.2c: whether a Guess's proposition, the Filter, holds of a card
+  -- hidden from the guesser (CR 400.2), the ObjectId being the guess's source
+  -- and never the card; never elided.
+  ChooseGuess :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Filter.Filter Keyword.Keyword -> Prompt GuessAnswer.GuessAnswer
   -- | Which opponent a card's text names, as a permanent enters (CR 614.12a),
   -- which opponent an entering Aura enchants (CR 303.4f; Archnemesis), at
   -- resolution for CR 701.29a's fateseal, for a resolving
