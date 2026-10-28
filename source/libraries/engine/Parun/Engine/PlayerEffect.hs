@@ -1219,7 +1219,7 @@ silencesEntry pid entrant gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
+        PlayerEffect.LoyaltyGrant _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
