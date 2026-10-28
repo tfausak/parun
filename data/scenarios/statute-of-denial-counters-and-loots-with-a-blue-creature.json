@@ -1,0 +1,16 @@
+{
+  "description": "CR 701.6a / 608.2c: Statute of Denial counters target spell, then, because alice controls a blue creature, she draws a card and discards a card",
+  "note": "Alice's Merfolk of the Pearl Trident is blue; she draws an Island and discards her Shock.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "UUUU", "battlefield": [{"card": "Merfolk of the Pearl Trident", "label": "mine"}], "hand": [{"card": "Statute of Denial", "label": "statute"}, {"card": "Shock", "label": "shock"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "manaPool": "RRRR", "hand": [{"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$giant"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$statute", "targets": ["Hill Giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseDiscard", "with": ["$shock"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Shock", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 1}}}
+  ]
+}

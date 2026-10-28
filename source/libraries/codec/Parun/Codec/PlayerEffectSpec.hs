@@ -347,6 +347,13 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       PlayerEffect.codec
       PlayerEffect.CantSetSchemesInMotion
       " {\"type\":\"CantSetSchemesInMotion\"} "
+  -- CR 603.6a / Hushwing Gryff.
+  Spec.it s "EntriesDontTrigger" $
+    Common.assertCodec
+      s
+      PlayerEffect.codec
+      (PlayerEffect.EntriesDontTrigger (Filter.And []))
+      " {\"type\":\"EntriesDontTrigger\",\"value\":{\"type\":\"And\",\"value\":[]}} "
   -- CR 723.2 / Opposition Agent.
   Spec.it s "ControlledWhileSearching" $
     Common.assertCodec

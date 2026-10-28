@@ -31,7 +31,6 @@ import qualified Parun.Engine.Damage as Damage
 import qualified Parun.Engine.Daytime as Daytime
 import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.Event as Event
-import qualified Parun.Engine.Event.Trigger as Trigger
 import qualified Parun.Engine.Expiry as Expiry
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Forage as Forage
@@ -1811,8 +1810,12 @@ sourceObjectOf src = case src of
 -- reason: it records whether evidence was collected, which is all CR 701.59c's
 -- linked text asks, and no text names the exiled cards through it.
 -- Parun.CostSpec's "CR 609.7a the evidence the Inspector collected is not a
--- source it refers to" proves it. The other paid-cost slots stay: a card reads
--- each by name (Fling's "the sacrificed creature's power").
+-- source it refers to" proves it. The other paid-cost slots stay, whether or
+-- not the effect reads them again: the cost's own words refer to the object it
+-- paid with ("Sacrifice a creature", "Discard a creature card"), and the
+-- ability on the stack carries that text. Fling and Necromancer's Stockpile
+-- read theirs again; Cho-Arrim Alchemist's discarded card is a source it
+-- refers to all the same.
 referentsOfBindings :: Map.Map SlotName Binding.Type.Binding -> [ObjectId]
 referentsOfBindings bindings =
   let named = Map.withoutKeys bindings (Set.fromList [Binding.thisAbility, Binding.collectedEvidence, Binding.announcedTargets])
@@ -3560,7 +3563,7 @@ expandGrant resolving source gs modification = case modification of
 -- "CR 614.12 a creature entering beside Ixidron enters face up" (one MoveToZone)
 -- and Parun.TargetPerPlayerSpec's Sepulchral Primordial pair (a ForEach) prove it.
 enteredBeside :: ObjectId -> GameState -> Set ObjectId
-enteredBeside oid gs = case Trigger.entryGroup oid gs of
+enteredBeside oid gs = case Game.entryGroup oid gs of
   Nothing -> Set.empty
   Just group ->
     Set.delete oid . Set.fromList $

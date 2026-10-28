@@ -1,0 +1,15 @@
+{
+  "description": "CR 611.2c / 105.2: Sanctified Charge gives creatures you control +2/+1 and white creatures you control first strike until end of turn",
+  "note": "Alice's white Savannah Lions and green Grizzly Bears both get +2/+1; only the Lions gain first strike. Bob's white Serra Angel gets neither.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "WWWWW", "battlefield": [{"card": "Savannah Lions", "label": "lions"}, {"card": "Grizzly Bears", "label": "bears"}], "hand": [{"card": "Sanctified Charge", "label": "charge"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Serra Angel", "label": "angel"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$charge"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$lions", "power": 4, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 4, "toughness": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$lions", "keyword": {"type": "FirstStrike"}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$bears", "keyword": {"type": "FirstStrike"}, "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$angel", "power": 4, "toughness": 4}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$angel", "keyword": {"type": "FirstStrike"}, "count": 0}}}
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "description": "CR 509.1b / 603.10a: Scuttling Doom Engine can't be blocked by creatures with power 2 or less, and when it dies it deals 6 damage to target opponent or planeswalker",
+  "note": "Bob's 2-power Grizzly Bears can't block it; his 6/4 Craw Wurm can, and the two trade. Alice can't aim the death trigger at herself, so bob takes 6.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Scuttling Doom Engine", "label": "engine", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Craw Wurm", "label": "wurm"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$engine"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": {"Block": {"$bears": ["$engine"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {"$wurm": ["$engine"]}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "refuse": {"ChooseTargets": {"target": ["$alice"]}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "do": {"ChooseTargets": {"target": ["$bob"]}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Scuttling Doom Engine", "count": 1}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Craw Wurm", "count": 1}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "check": {"Life": {"player": "bob", "life": 14}}}
+  ]
+}

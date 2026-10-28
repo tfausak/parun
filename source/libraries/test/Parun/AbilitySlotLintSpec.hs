@@ -365,7 +365,7 @@ activatedAbilityOffends ability =
           then Set.singleton Binding.exiledPermanent
           else Set.empty
       discarded =
-        if discardsSelfAsCost (ActivatedAbility.cost ability)
+        if discardsAsCost (ActivatedAbility.cost ability)
           then Set.singleton Binding.discardedCard
           else Set.empty
       removed =
@@ -442,13 +442,15 @@ exilesPermanentsAsCost =
         _ -> False
    in any isExile . Cost.Type.components
 
--- Does this cost DISCARD the card it is on? exilesSelfAsCost's shape, for
--- Binding.discardedCard (Cost.payComponent's DiscardThis arm): Calim, Djinn
--- Emperor's "return Calim from your graveyard".
-discardsSelfAsCost :: Cost.Type.Cost Keyword.Keyword -> Bool
-discardsSelfAsCost =
+-- Does this cost DISCARD a card? exilesSelfAsCost's shape, for
+-- Binding.discardedCard (Cost.payComponent's DiscardThis and DiscardCards
+-- arms): Calim, Djinn Emperor's "return Calim from your graveyard", Necromancer's
+-- Stockpile's "the discarded card".
+discardsAsCost :: Cost.Type.Cost Keyword.Keyword -> Bool
+discardsAsCost =
   let isDiscard component = case component of
         CostComponent.DiscardThis {} -> True
+        CostComponent.DiscardCards {} -> True
         _ -> False
    in any isDiscard . Cost.Type.components
 
@@ -586,7 +588,7 @@ armingCostSlots card =
     ( fmap
         ( \ability ->
             let cost = ActivatedAbility.cost ability
-             in Set.fromList ([Binding.discardedCard | discardsSelfAsCost cost] <> [Binding.exiledCard | exilesSelfAsCost cost])
+             in Set.fromList ([Binding.discardedCard | discardsAsCost cost] <> [Binding.exiledCard | exilesSelfAsCost cost])
         )
         (Face.activatedAbilities card)
     )

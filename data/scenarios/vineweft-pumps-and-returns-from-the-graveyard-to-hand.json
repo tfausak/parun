@@ -1,0 +1,13 @@
+{
+  "description": "CR 303.4 / 113.6m: Vineweft gives enchanted creature +1/+1, and its controller can return it from their graveyard to their hand",
+  "note": "The copy on the battlefield can't use the graveyard ability; the one in the graveyard returns to alice's hand.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "GGGGG", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Vineweft", "label": "vine", "attached": "bears"}], "graveyard": [{"card": "Vineweft", "label": "vine-yard"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 3, "toughness": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$vine", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$vine-yard", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Vineweft", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Vineweft", "count": 1}}}
+  ]
+}

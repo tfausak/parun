@@ -1,0 +1,14 @@
+{
+  "description": "CR 603.4: Siege Dragon's attack trigger has an intervening if, so it does nothing against a defending player who controls a Wall",
+  "note": "The Dragon is already in play; bob's Wall of Wood stands, so his Grizzly Bears takes no damage and no trigger asks for anything.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Siege Dragon", "label": "dragon", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Wall of Wood", "label": "wood"}, {"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$dragon"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"View": {"of": "Stack", "is": []}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Damage": {"object": "$bears", "damage": 0}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Damage": {"object": "$wood", "damage": 0}}}
+  ]
+}

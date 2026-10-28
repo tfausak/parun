@@ -5093,6 +5093,7 @@ playerEffectFilters playerEffect = case playerEffect of
   -- Carthalion, True Heir).
   PlayerEffect.CantBecomeMonarch -> []
   PlayerEffect.CantSetSchemesInMotion -> []
+  PlayerEffect.EntriesDontTrigger f -> [f]
   PlayerEffect.ControlledWhileSearching -> []
   PlayerEffect.YouChoose _ -> []
   PlayerEffect.ExilesFoundWhileSearching -> []

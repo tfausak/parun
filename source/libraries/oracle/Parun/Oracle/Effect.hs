@@ -391,6 +391,11 @@ instructions context es = case es of
             (run, others) = span (maybe False alike . destroyOf) rest
         p <- destroyed context (d : Maybe.mapMaybe destroyOf run)
         fmap (p :) (instructions (noting context (e : run)) others)
+  e : rest
+    | Just m <- returnOf context e,
+      (run@(_ : _), others) <- span (Maybe.isJust . returnOf context) rest -> do
+        p <- returned context (m : Maybe.mapMaybe (returnOf context) run)
+        fmap (p :) (instructions (noting context (e : run)) others)
   e : rest -> do
     p <- effect context e
     fmap (p :) (instructions (noting context [e]) rest)
@@ -461,6 +466,29 @@ destroyed context ds = do
   objects <- Prose.listing "and" (fmap Target.wording refs) : both
   [MkPredicate Nothing (Text.pack "destroy " <> objects) regenerate (concatMap Target.mentions refs) Nothing False]
 
+-- | The instruction, if it returns one targeted object to its owner's hand
+-- from the battlefield and nothing more, which 'returned' may list with its
+-- neighbours.
+returnOf :: Target.Context -> Effect.Effect card Continuous.Ability -> Maybe (MoveToZone.MoveToZone Continuous.Ability)
+returnOf context e = case e of
+  Effect.MoveToZone m
+    | MoveToZone.zone m == Zone.Hand,
+      MoveToZone.riders m == EntryRiders.defaultValue,
+      Maybe.isNothing (MoveToZone.duration m),
+      Maybe.isNothing (MoveToZone.origin m),
+      ObjectRef.InSlot s <- MoveToZone.ref m,
+      Just slot <- Map.lookup s (Target.slots context),
+      TargetSlot.pool slot `elem` [Pool.Creatures, Pool.Permanents] ->
+        Just m
+  _ -> Nothing
+
+-- | "Return [objects] to their owners' hands", the targets of consecutive
+-- instructions listed in one sentence (Peel from Reality).
+returned :: Target.Context -> [MoveToZone.MoveToZone Continuous.Ability] -> [Predicate]
+returned context ms = do
+  refs <- traverse (Target.object context Target.All . MoveToZone.ref) ms
+  [MkPredicate Nothing (Text.pack "return " <> Prose.listing "and" (fmap Target.wording refs) <> Text.pack " to their owners' hands") [] (concatMap Target.mentions refs) Nothing False]
+
 -- | The instruction's continuous effect, if it is one.
 modifyTarget :: Effect.Effect card ability -> Maybe (ModifyTarget.ModifyTarget ability)
 modifyTarget e = case e of
@@ -487,7 +515,21 @@ modified context m more = do
   let again = case ModifyTarget.modification m of
         Modification.ModifyPowerToughness _ -> elem (ModifyTarget.ref m) (Target.pumped context)
         _ -> False
-      change = if again then (\(v, rest) -> v <> Text.pack " an additional" <> rest) (Text.breakOn (Text.pack " ") change') else change'
+      changed = if again then (\(v, rest) -> v <> Text.pack " an additional" <> rest) (Text.breakOn (Text.pack " ") change') else change'
+      -- Some of the objects an earlier instruction changed "also" change:
+      -- "White creatures you control also gain first strike" (Sanctified
+      -- Charge). Free.
+      conjuncts f = case f of
+        Filter.Type.And fs -> fs
+        _ -> [f]
+      among = case ModifyTarget.ref m of
+        ObjectRef.EachMatching f ->
+          let narrower r = case r of
+                ObjectRef.EachMatching g -> conjuncts f /= conjuncts g && all (`elem` conjuncts f) (conjuncts g)
+                _ -> False
+           in any narrower (Target.earlier context)
+        _ -> False
+  change <- if among then [changed, Text.pack "also " <> changed] else [changed]
   -- A rule granted until end of turn lasts "this turn": "can't be blocked
   -- this turn" (Zhuge Jin, Wu Strategist). Beside a change to the object's
   -- characteristics it is not spelled out here.
