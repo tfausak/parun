@@ -16,6 +16,7 @@ import qualified Parun.Codec.CreatureBecomesBlockedByAtLeast as CreatureBecomesB
 import qualified Parun.Codec.CreatureExploits as CreatureExploits
 import qualified Parun.Codec.DamageKind as DamageKind
 import qualified Parun.Codec.DealsDamageToPlayer as DealsDamageToPlayer
+import qualified Parun.Codec.DealtDamage as DealtDamage
 import qualified Parun.Codec.DieResult as DieResult
 import qualified Parun.Codec.Filter as Filter
 import qualified Parun.Codec.Keyword as Keyword
@@ -23,12 +24,12 @@ import qualified Parun.Codec.OwnedZone as OwnedZone
 import qualified Parun.Codec.PermanentActed as PermanentActed
 import qualified Parun.Codec.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Codec.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
-import qualified Parun.Codec.PermanentSacrificed as PermanentSacrificed
 import qualified Parun.Codec.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Codec.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Codec.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Codec.PlacesSticker as PlacesSticker
 import qualified Parun.Codec.PlayerActed as PlayerActed
+import qualified Parun.Codec.PlayerActsOn as PlayerActsOn
 import qualified Parun.Codec.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Parun.Codec.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Codec.PlayerDrawsNthCard as PlayerDrawsNthCard
@@ -72,7 +73,7 @@ codec =
           Arm.payload "DealsDamageToPlayer" DealsDamageToPlayer.codec TriggerCondition.DealsDamageToPlayer (\x -> case x of TriggerCondition.DealsDamageToPlayer y -> Just y; _ -> Nothing),
           Arm.optionalPayload "SelfDealsDamageToCreature" DamageKind.codec TriggerCondition.SelfDealsDamageToCreature (\x -> case x of TriggerCondition.SelfDealsDamageToCreature y -> Just y; _ -> Nothing),
           Arm.payload "DealsDamage" ActingPermanent.codec TriggerCondition.DealsDamage (\x -> case x of TriggerCondition.DealsDamage y -> Just y; _ -> Nothing),
-          Arm.payload "IsDealtDamage" ActingPermanent.codec TriggerCondition.IsDealtDamage (\x -> case x of TriggerCondition.IsDealtDamage y -> Just y; _ -> Nothing),
+          Arm.payload "IsDealtDamage" (DealtDamage.codec ActingPermanent.codec) TriggerCondition.IsDealtDamage (\x -> case x of TriggerCondition.IsDealtDamage y -> Just y; _ -> Nothing),
           Arm.payload "PlayerIsDealtDamage" PlayerIsDealtDamage.codec TriggerCondition.PlayerIsDealtDamage (\x -> case x of TriggerCondition.PlayerIsDealtDamage y -> Just y; _ -> Nothing),
           Arm.payload "PermanentDealsCombatDamageToPlayer" PermanentDealsCombatDamageToPlayer.codec TriggerCondition.PermanentDealsCombatDamageToPlayer (\x -> case x of TriggerCondition.PermanentDealsCombatDamageToPlayer y -> Just y; _ -> Nothing),
           Arm.payload "PermanentsDealCombatDamageToPlayer" PermanentsDealCombatDamageToPlayer.codec TriggerCondition.PermanentsDealCombatDamageToPlayer (\x -> case x of TriggerCondition.PermanentsDealCombatDamageToPlayer y -> Just y; _ -> Nothing),
@@ -109,8 +110,8 @@ codec =
           Arm.payload "RevealedThisWay" RevealedThisWay.codec TriggerCondition.RevealedThisWay (\x -> case x of TriggerCondition.RevealedThisWay y -> Just y; _ -> Nothing),
           Arm.nullary "SelfExiledForMadness" TriggerCondition.SelfExiledForMadness,
           Arm.nullary "SelfDiscarded" TriggerCondition.SelfDiscarded,
-          Arm.payload "PlayerDiscards" PlayerRelation.codec TriggerCondition.PlayerDiscards (\x -> case x of TriggerCondition.PlayerDiscards y -> Just y; _ -> Nothing),
-          Arm.payload "PlayerDiscardsCards" PlayerRelation.codec TriggerCondition.PlayerDiscardsCards (\x -> case x of TriggerCondition.PlayerDiscardsCards y -> Just y; _ -> Nothing),
+          Arm.payload "PlayerDiscards" PlayerActsOn.codec TriggerCondition.PlayerDiscards (\x -> case x of TriggerCondition.PlayerDiscards y -> Just y; _ -> Nothing),
+          Arm.payload "PlayerDiscardsCards" PlayerActsOn.codec TriggerCondition.PlayerDiscardsCards (\x -> case x of TriggerCondition.PlayerDiscardsCards y -> Just y; _ -> Nothing),
           Arm.payload "PlayerCycles" PlayerRelation.codec TriggerCondition.PlayerCycles (\x -> case x of TriggerCondition.PlayerCycles y -> Just y; _ -> Nothing),
           Arm.payload "PlayerDrawsNthCard" PlayerDrawsNthCard.codec TriggerCondition.PlayerDrawsNthCard (\x -> case x of TriggerCondition.PlayerDrawsNthCard y -> Just y; _ -> Nothing),
           Arm.nullary "SelfPutIntoGraveyardFromLibrary" TriggerCondition.SelfPutIntoGraveyardFromLibrary,
@@ -174,7 +175,7 @@ codec =
           Arm.payload "CreatureExploits" CreatureExploits.codec TriggerCondition.CreatureExploits (\x -> case x of TriggerCondition.CreatureExploits y -> Just y; _ -> Nothing),
           Arm.payload "SelfBecomesCrewed" TriggerFrequency.codec TriggerCondition.SelfBecomesCrewed (\x -> case x of TriggerCondition.SelfBecomesCrewed y -> Just y; _ -> Nothing),
           Arm.nullary "SelfCrewsVehicle" TriggerCondition.SelfCrewsVehicle,
-          Arm.payload "PermanentSacrificed" PermanentSacrificed.codec TriggerCondition.PermanentSacrificed (\x -> case x of TriggerCondition.PermanentSacrificed y -> Just y; _ -> Nothing),
+          Arm.payload "PermanentSacrificed" PlayerActsOn.codec TriggerCondition.PermanentSacrificed (\x -> case x of TriggerCondition.PermanentSacrificed y -> Just y; _ -> Nothing),
           Arm.payload "SagaFinalChapterTriggers" PlayerRelation.codec TriggerCondition.SagaFinalChapterTriggers (\x -> case x of TriggerCondition.SagaFinalChapterTriggers y -> Just y; _ -> Nothing),
           Arm.payload "PlayerBecomesMonarch" PlayerRelation.codec TriggerCondition.PlayerBecomesMonarch (\x -> case x of TriggerCondition.PlayerBecomesMonarch y -> Just y; _ -> Nothing),
           Arm.payload "LoseControlOfBound" SlotName.codec TriggerCondition.LoseControlOfBound (\x -> case x of TriggerCondition.LoseControlOfBound y -> Just y; _ -> Nothing),

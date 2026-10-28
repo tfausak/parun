@@ -1,0 +1,17 @@
+{
+  "description": "CR 702.35a / 603.2: a creature card discarded into exile by madness is still discarded, so Waste Not makes a Zombie",
+  "note": "Alice's Psychic Miasma makes bob discard Arrogant Wurm, which madness exiles instead. Bob declines to cast it and it goes to his graveyard; Waste Not's creature ability still makes one Zombie.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [{"card": "Waste Not", "label": "waste"}, {"card": "Swamp", "label": "s1"}, {"card": "Swamp", "label": "s2"}], "hand": [{"card": "Psychic Miasma", "label": "miasma"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "hand": [{"card": "Arrogant Wurm", "label": "wurm"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+  ]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$miasma", "targets": ["$bob"], "mana": ["$s1", "$s2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "bob", "zone": "Exile", "is": ["Arrogant Wurm"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Arrogant Wurm", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Zombie Token", "count": 1}}}
+  ]
+}

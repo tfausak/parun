@@ -574,6 +574,7 @@ devout-invocation
 diabolic-edict
 diabolic-revelation
 diaochan-artful-beauty
+diffusion-sliver
 dig-up
 digsite-conservator
 diminish
@@ -2442,6 +2443,7 @@ warriors-stand
 warstorm-surge
 wash-away
 waste-management
+waste-not
 watchful-radstag
 water-whip
 waterbenders-restoration

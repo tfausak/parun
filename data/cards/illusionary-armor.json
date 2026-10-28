@@ -74,6 +74,9 @@
                 "value": {
                   "type": "IsSource"
                 }
+              },
+              "relation": {
+                "type": "AnyPlayer"
               }
             }
           },

@@ -102,7 +102,6 @@ import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
-import qualified Parun.Types.PermanentSacrificed as PermanentSacrificed
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
@@ -113,6 +112,7 @@ import qualified Parun.Types.PlanarDieFace as PlanarDieFace
 import qualified Parun.Types.PlanarDieRolled as PlanarDieRolled
 import qualified Parun.Types.Player as Player
 import qualified Parun.Types.PlayerActed as PlayerActed
+import qualified Parun.Types.PlayerActsOn as PlayerActsOn
 import qualified Parun.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
@@ -1075,16 +1075,18 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- Death Pits of Rath's. DealsDamage's arm with the check moved from the
   -- event's SOURCE to its RECIPIENT.
   --
-  -- No combat test, and deliberately: rule 120.3 is about damage being dealt
-  -- however it was dealt, and Ripjaw Raptor's printed phrase qualifies it in no
-  -- way, so a Prodigal Sorcerer's ping fires this exactly as combat damage does.
+  -- The KIND conjunct is SelfDealsDamageToCreature's: Nothing for Ripjaw
+  -- Raptor's unqualified phrase, which a Prodigal Sorcerer's ping fires exactly
+  -- as combat damage does; Just Combat for Wall of Essence's CR 510.2 damage.
   --
   -- Recipient.objectOf, not a ToCreature test: CR 120.3's recipient may be any
   -- permanent (a planeswalker, a battle), and the ActingPermanent decides the
   -- match either way. Nothing is dealt damage while the id is a player's, which
   -- is what the Nothing arm falls through on.
-  TriggerCondition.IsDealtDamage watched -> case event of
-    GameEvent.DamageDealt ev -> maybe False (damageBy watched) (Recipient.objectOf (DamageEvent.target ev))
+  TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage watched kind) -> case event of
+    GameEvent.DamageDealt ev ->
+      all (== DamageEvent.kind ev) kind
+        && maybe False (damageBy watched) (Recipient.objectOf (DamageEvent.target ev))
     GameEvent.Moved {} -> False
     GameEvent.StepBegan {} -> False
     GameEvent.SpellCast {} -> False
@@ -1164,7 +1166,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.DamageDealt ev ->
       let dealt = PlayerIsDealtDamage.dealt watched
        in all (== DamageEvent.kind ev) (DealtDamage.kind dealt)
-            && dealtToRelated board gs (PlayerRelation.holds (Game.teams gs) (DealtDamage.player dealt) you) (PlayerIsDealtDamage.orTheirPlaneswalkers watched) (DamageEvent.target ev)
+            && dealtToRelated board gs (PlayerRelation.holds (Game.teams gs) (DealtDamage.recipient dealt) you) (PlayerIsDealtDamage.orTheirPlaneswalkers watched) (DamageEvent.target ev)
     GameEvent.Moved {} -> False
     GameEvent.StepBegan {} -> False
     GameEvent.SpellCast {} -> False
@@ -2058,8 +2060,17 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- card must fire this; the cycle is ONE Discarded event, so it fires it once.
   -- TriggerSpec's "CR 702.29d cycling a card fires the discard trigger exactly
   -- once" is the test that proves it.
-  TriggerCondition.PlayerDiscards relation -> case event of
-    GameEvent.Discarded (Discarded.MkDiscarded discarder _ _ _ _) -> PlayerRelation.holds (Game.teams gs) relation you discarder
+  --
+  -- The Filter reads the card the discard named, which is the incarnation in
+  -- the zone it arrived in (Event.discardReturning) and its last known
+  -- information once it has moved on. A madness discard into exile is still a
+  -- discard (CR 702.35a) and arrives on the same event, so it is judged alike.
+  -- Waste Not's three abilities each narrow here rather than in a clause, since
+  -- CR 603.2 asks the event whether the ability triggers at all.
+  TriggerCondition.PlayerDiscards (PlayerActsOn.MkPlayerActsOn relation f) -> case event of
+    GameEvent.Discarded (Discarded.MkDiscarded discarder card _ _ _) ->
+      PlayerRelation.holds (Game.teams gs) relation you discarder
+        && maybe False (\view -> Filter.matches bearerContext view f) (Projection.viewWithLastKnown card gs card)
     GameEvent.Drew {} -> False
     GameEvent.Moved {} -> False
     GameEvent.DamageDealt _ -> False
@@ -7605,6 +7616,8 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- CR 603.2c's batch reading of the same rule from a BYSTANDER's side, and the
   -- one of the three arms with a Filter: Professor Hojo asks nothing of the
   -- targeting object's controller and everything of the permanents it named.
+  -- Diffusion Sliver asks both; the relation is read off the event's controller
+  -- field for SelfBecomesTargeted's CR 405.4 reason.
   --
   -- The KIND conjunct is the sibling's one limb narrower. "An ACTIVATED
   -- ability" is CR 113.3b alone, where CR 603.3d brings CR 113.3c's to the same
@@ -7633,6 +7646,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
         Nothing -> False
         Just candidate ->
           maybe True (== BecameTarget.kind t) (PermanentsBecomeTargeted.kind c)
+            && PlayerRelation.holds (Game.teams gs) (PermanentsBecomeTargeted.relation c) you (BecameTarget.controller t)
             && Filter.matches bearerContext (Projection.sampledView oid candidate gs) (PermanentsBecomeTargeted.filter c)
     GameEvent.BecameAttached {} -> False
     GameEvent.BecameUnattached {} -> False
@@ -8934,7 +8948,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   --
   -- Nothing is a permanent that is gone AND filed no last known information, about
   -- which no Filter can honestly answer.
-  TriggerCondition.PermanentSacrificed (PermanentSacrificed.MkPermanentSacrificed relation f) -> case event of
+  TriggerCondition.PermanentSacrificed (PlayerActsOn.MkPlayerActsOn relation f) -> case event of
     GameEvent.PermanentSacrificed ev
       | PlayerRelation.holds (Game.teams gs) relation you (PermanentWasSacrificed.player ev) ->
           let victim = PermanentWasSacrificed.permanent ev

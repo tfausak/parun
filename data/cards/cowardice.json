@@ -37,6 +37,9 @@
                 "value": {
                   "type": "Creature"
                 }
+              },
+              "relation": {
+                "type": "AnyPlayer"
               }
             }
           },

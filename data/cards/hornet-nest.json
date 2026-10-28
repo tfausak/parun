@@ -36,7 +36,9 @@
           "condition": {
             "type": "IsDealtDamage",
             "value": {
-              "type": "Self"
+              "recipient": {
+                "type": "Self"
+              }
             }
           },
           "modal": {

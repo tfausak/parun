@@ -19,19 +19,22 @@ spec s = Spec.describe s "Parun.Codec.PermanentsBecomeTargeted" $ do
       PermanentsBecomeTargeted.codec
       ( PermanentsBecomeTargeted.MkPermanentsBecomeTargeted
           { PermanentsBecomeTargeted.filter = Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You],
+            PermanentsBecomeTargeted.relation = PlayerRelation.AnyPlayer,
             PermanentsBecomeTargeted.kind = Just StackObjectKind.ActivatedAbility
           }
       )
-      " {\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}]},\"kind\":{\"type\":\"ActivatedAbility\"}} "
-  -- The kind elided, which is the wider "a spell or ability" reading.
-  Spec.it s "MkPermanentsBecomeTargeted, no kind at all" $
+      " {\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}]},\"relation\":{\"type\":\"AnyPlayer\"},\"kind\":{\"type\":\"ActivatedAbility\"}} "
+  -- The kind elided, which is the wider "a spell or ability" reading, and an
+  -- opponent's: Diffusion Sliver's.
+  Spec.it s "MkPermanentsBecomeTargeted, an opponent's and no kind at all" $
     Common.assertCodec
       s
       PermanentsBecomeTargeted.codec
       ( PermanentsBecomeTargeted.MkPermanentsBecomeTargeted
           { PermanentsBecomeTargeted.filter = Filter.IsSource,
+            PermanentsBecomeTargeted.relation = PlayerRelation.Opponent,
             PermanentsBecomeTargeted.kind = Nothing
           }
       )
-      " {\"filter\":{\"type\":\"IsSource\"}} "
+      " {\"filter\":{\"type\":\"IsSource\"},\"relation\":{\"type\":\"Opponent\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PermanentsBecomeTargeted.codec

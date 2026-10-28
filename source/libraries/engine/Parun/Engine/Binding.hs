@@ -1055,8 +1055,9 @@ withAnnouncedTargets aiming =
 -- the targeting object rather than over what was targeted: the bearer becoming a
 -- target (TriggerCondition.SelfBecomesTargeted, ward's) and the bearer's
 -- CONTROLLER becoming one (TriggerCondition.ControllerBecomesTarget, Amulet of
--- Safekeeping's "counter that spell or ability"). The object bound is the same
--- field of the same event either way.
+-- Safekeeping's "counter that spell or ability"), and a permanent the bearer
+-- watches becoming one (TriggerCondition.PermanentBecomesTargeted, Diffusion
+-- Sliver's). The object bound is the same field of the same event each way.
 --
 -- Distinct from `castSpell` even though both name a stack object: that one is the
 -- spell a CAST event named, and an activated ability targeting a warded permanent

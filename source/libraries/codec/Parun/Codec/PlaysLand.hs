@@ -11,7 +11,7 @@ import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.PlaysLand as PlaysLand
 
 -- | A bare object keyed by the record's field names, as
--- Parun.Codec.PermanentSacrificed is. Every key is required: "whenever you play
+-- Parun.Codec.PlayerActsOn is. Every key is required: "whenever you play
 -- a land" with no zone is no card in the pool, and the unrestricted land spells
 -- itself out as the trivial Filter.
 codec :: Codec.Codec PlaysLand.PlaysLand

@@ -110,7 +110,7 @@
             "type": "PlayerIsDealtDamage",
             "value": {
               "dealt": {
-                "player": {
+                "recipient": {
                   "type": "You"
                 }
               }

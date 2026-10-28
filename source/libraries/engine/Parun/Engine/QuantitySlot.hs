@@ -373,7 +373,7 @@ nestedRefs quantity = case quantity of
   Quantity.CardsDrawnThisTurn ref -> Set.singleton (Left ref)
   Quantity.BendingsThisTurn ref -> Set.singleton (Left ref)
   Quantity.LifeGainedThisTurn ref -> Set.singleton (Left ref)
-  Quantity.PlayersDealtDamageThisTurn tally -> Set.singleton (Left (DealtDamage.player tally))
+  Quantity.PlayersDealtDamageThisTurn tally -> Set.singleton (Left (DealtDamage.recipient tally))
   Quantity.DamageDealtToPlayersThisTurn ref -> Set.singleton (Left ref)
   Quantity.SpellsCastLastTurn ref -> Set.singleton (Left ref)
   Quantity.SpellsCastThisTurn ref -> Set.singleton (Left ref)
@@ -648,7 +648,7 @@ mapPlayerRefs f intoCount quantity =
         Quantity.CardsDrawnThisTurn ref -> Quantity.CardsDrawnThisTurn (f ref)
         Quantity.BendingsThisTurn ref -> Quantity.BendingsThisTurn (f ref)
         Quantity.LifeGainedThisTurn ref -> Quantity.LifeGainedThisTurn (f ref)
-        Quantity.PlayersDealtDamageThisTurn tally -> Quantity.PlayersDealtDamageThisTurn tally {DealtDamage.player = f (DealtDamage.player tally)}
+        Quantity.PlayersDealtDamageThisTurn tally -> Quantity.PlayersDealtDamageThisTurn tally {DealtDamage.recipient = f (DealtDamage.recipient tally)}
         Quantity.DamageDealtToPlayersThisTurn ref -> Quantity.DamageDealtToPlayersThisTurn (f ref)
         Quantity.SpellsCastLastTurn ref -> Quantity.SpellsCastLastTurn (f ref)
         Quantity.SpellsCastThisTurn ref -> Quantity.SpellsCastThisTurn (f ref)

@@ -13,7 +13,7 @@ import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 
 -- | A bare object keyed by the record's field names, as
--- Parun.Codec.PermanentSacrificed is. The filter, the scope and the zone left are
+-- Parun.Codec.PlayerActsOn is. The filter, the scope and the zone left are
 -- required: a printing that narrowed by neither of the first two would spell
 -- itself out as the trivial Filter and TurnScope.EachTurn rather than leaving
 -- either out. The destination and whose pile are defaulted, most printings

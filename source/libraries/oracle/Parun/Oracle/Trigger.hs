@@ -17,7 +17,9 @@ import qualified Parun.Types.Compares as Compares
 import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.Count as Count
+import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
+import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.Holder as Holder
@@ -93,7 +95,7 @@ event context creature c = case c of
     (one, that) <- described context (PermanentDealsCombatDamageToPlayer.filter p)
     (whom, player') <- player (PermanentDealsCombatDamageToPlayer.recipient p)
     [other ("Whenever " <> one <> " deals combat damage to " <> whom) [(thatPlayer, player'), (combatDamager, that)]]
-  TriggerCondition.IsDealtDamage (ActingPermanent.Matching f) -> do
+  TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage (ActingPermanent.Matching f) Nothing) -> do
     (one, _) <- described context f
     [other ("Whenever " <> one <> " is dealt damage") [(becameSlot, "it")]]
   TriggerCondition.DealsCombatDamage (ActingPermanent.Matching f) -> do
@@ -191,7 +193,8 @@ selfEvent context creature c = case c of
     [(recurring, "becomes blocked by " <> one, [(thatBlocker, that)])]
   -- Free: the ability word enrage (CR 207.2c) printed (Ripjaw Raptor) or
   -- not (Stuffy Doll).
-  TriggerCondition.IsDealtDamage ActingPermanent.Self -> [(recurring <> ["Enrage \8212 Whenever"], "is dealt damage", [])]
+  TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing) -> [(recurring <> ["Enrage \8212 Whenever"], "is dealt damage", [])]
+  TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self (Just DamageKind.Combat)) -> [(recurring, "is dealt combat damage", [])]
   TriggerCondition.DealsDamage ActingPermanent.Self -> [(recurring, "deals damage", [])]
   TriggerCondition.DealsCombatDamage ActingPermanent.Self -> [(recurring, "deals combat damage", [])]
   TriggerCondition.SelfDealsCombatDamageToPlayer relation -> do
