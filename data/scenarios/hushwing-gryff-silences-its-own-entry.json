@@ -1,0 +1,78 @@
+{
+  "description": "CR 603.6a / 613.11 Hushwing Gryff's own entry does not trigger an opponent's Soul Warden",
+  "note": "The silencer counts for an entry beside it, its own included (Tocatli Honor Guard's ruling): it is read off the game filed after the entry, where it stands. alice stays at 20.",
+  "board": {
+    "active": "bob",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Soul Warden"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "manaPool": "WWW",
+        "hand": [
+          {
+            "card": "Hushwing Gryff",
+            "label": "gryff"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Cast": {
+          "object": "$gryff"
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "Life": {
+        "player": "alice",
+        "life": 20
+      }
+    },
+    {
+      "Count": {
+        "player": "bob",
+        "zone": "Battlefield",
+        "card": "Hushwing Gryff",
+        "count": 1
+      }
+    }
+  ]
+}

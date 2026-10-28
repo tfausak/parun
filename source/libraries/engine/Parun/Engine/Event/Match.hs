@@ -451,23 +451,28 @@ dealtToRelated board gs related orTheirPlaneswalkers target
   where
     theirPlaneswalker view = Set.member CardType.Planeswalker (Filter.cardTypes view) && maybe False related (Filter.controller view)
 
--- CR 603.6a / 613.11: may this entry trigger `you`'s enters abilities, or does
--- an effect applying to them (Hushwing Gryff) silence it? Asked of the game
--- filed immediately after the entry (GameState.boardAfterEvent), so a silencer
--- that entered beside the entrant counts and one that left later in the same
--- resolution still does; the live game answers for an entry none is filed for.
--- The filed board is a regression fence: reading the live game leaves the suite
--- green, no scenario moving a silencer between the entry and the scan.
+-- CR 603.6a / 613.11: may this zone change trigger `you`'s abilities, or is
+-- it a move onto the battlefield that an effect applying to them (Hushwing
+-- Gryff) silences? Every arm a move onto the battlefield can satisfy asks: the
+-- two CR 603.6a arms, the departure-side SelfLeavesGraveyard and
+-- CardLeavesZone, since the entry and the departure are one event
+-- (docs/decisions.md, "A silenced entry silences its departure"), and
+-- CardsPutIntoZone. Any other move answers True. CardsPutIntoZone's gate is a
+-- regression fence: no card in data/cards names the battlefield as its
+-- destination (grep, 2026-10-28).
 --
--- Only CR 603.6a's two arms ask: a condition watching the same zone change's
--- other half (CardLeavesZone's card leaving a graveyard) triggers on the
--- departure, and the Gryff's 2014-07-18 rulings reach only abilities triggering
--- on the entry. The hushwing-gryff scenarios under data/scenarios prove both.
+-- Asked of the game filed immediately after the entry
+-- (GameState.boardAfterEvent), so a silencer that entered beside the entrant,
+-- or is the entrant, counts. The live game answers for an entry none is filed
+-- for. That the filed board is read rather than the live one is a regression
+-- fence: the suite stays green under the live read, since no scenario has a
+-- silencer leave between the entry and the scan.
 entryTriggers :: GameState -> PlayerId -> ZoneChange.ZoneChange -> Bool
 entryTriggers gs you zc =
-  let entrant = ZoneChange.object zc
-      atEntry = maybe gs (\group -> Map.findWithDefault gs group (GameState.boardAfterEvent gs)) (Game.entryGroup entrant gs)
-   in not (PlayerEffect.silencesEntry you entrant atEntry)
+  ZoneChange.to zc /= Zone.Battlefield
+    || let entrant = ZoneChange.object zc
+           atEntry = maybe gs (\group -> Map.findWithDefault gs group (GameState.boardAfterEvent gs)) (Game.entryGroup entrant gs)
+        in not (PlayerEffect.silencesEntry you entrant atEntry)
 
 -- The same question against a slot environment, for the conditions whose subject
 -- is an object named EARLIER rather than the bearer or a class of objects
@@ -4672,6 +4677,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
       ZoneChange.from (Moved.change m) == Zone.Graveyard
         && Game.leftOrigin (Moved.change m)
         && elem bearer (Moved.departures m)
+        && entryTriggers gs you (Moved.change m)
     GameEvent.DamageDealt _ -> False
     GameEvent.StepBegan {} -> False
     GameEvent.SpellCast {} -> False
@@ -6075,6 +6081,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
                 Turn.turnScopeAdmits scopeNamed gs (CardLeavesZone.scope p) (GameState.activePlayer gs) you
                   && (Map.member bearer board || Moved.revealed m)
                   && not (Seq.null (admitted m))
+                  && entryTriggers gs you (Moved.change m)
           GameEvent.Moved {} -> False
           GameEvent.LeftTheGame l
             | LeftTheGame.from l == CardLeavesZone.from p,
@@ -6183,6 +6190,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
             && Turn.turnScopeAdmits scopeNamed gs scope (GameState.activePlayer gs) you
             && (Set.null origins || Set.member (ZoneChange.from zc) origins)
             && (Map.member bearer board || revealed)
+            && entryTriggers gs you zc
             && let arrived = ZoneChange.object zc
                 in case Projection.viewWithLastKnown arrived gs arrived of
                      Nothing -> False
