@@ -28,7 +28,7 @@ data Guess = MkGuess
     -- 109.5's "you" is the ability's controller).
     proposition :: Filter.Filter Keyword.Keyword,
     -- | Binds 1 for a right guess and 0 for a wrong one, Effect.FlipCoin's
-    -- shape; nothing when no guess was made.
+    -- shape; cleared when no guess was made.
     right :: SlotName.SlotName
   }
   deriving (Eq, Ord, Show)

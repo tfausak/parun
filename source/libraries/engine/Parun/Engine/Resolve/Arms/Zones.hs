@@ -1313,8 +1313,11 @@ lookAt resolving source controller legal (LookAt.MkLookAt ref slot looker) = do
 -- question, asked through askingObjects like Reveal's -- then the guesser is
 -- asked with the proposition alone, CR 400.2 keeping the card from them, and the
 -- truth is read off the card once the answer is in. No card, or several, is no
--- guess (CR 609.3), so `right` stays unbound and neither "guessed right" nor
--- "guessed wrong" holds.
+-- guess (CR 609.3), so `right` is cleared and neither "guessed right" nor
+-- "guessed wrong" holds: bindAmountSlot writes the source too, where an earlier
+-- resolution's outcome (a double striker's first trigger) would otherwise be
+-- read. A fence: Master of Predicaments' cast reads `slot`, empty then, so no
+-- board in the pool observes the clear.
 guess :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Guess.Guess -> Game ()
 guess resolving source controller legal chosen (Guess.MkGuess subject slot guesser proposition right) = do
   named <- Common.askingObjects resolving source controller legal chosen subject
@@ -1330,7 +1333,9 @@ guess resolving source controller legal chosen (Guess.MkGuess subject slot guess
             holds = any (\view -> Filter.matches context view proposition) (effectViewOf resolving source legal gs card)
             guessed = answer == GuessAnswer.Holds
         State.modify' (Common.bindAmountSlot resolving source right (if guessed == holds then 1 else 0))
-    _ -> pure ()
+    _ ->
+      let clear obj = obj {Object.bindings = Map.delete right (Object.bindings obj)}
+       in State.modify' (\gs -> gs {GameState.objects = Map.adjust clear resolving (Map.adjust clear source (GameState.objects gs))})
 
 arrangeInLibrary :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ArrangeInLibrary.ArrangeInLibrary -> Game ()
 arrangeInLibrary resolving source controller legal (ArrangeInLibrary.MkArrangeInLibrary ref chooser) = do
