@@ -457,9 +457,10 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
                 -- CR 602.2b / 601.2i: record that the ability has become
                 -- activated, what "whenever you activate" watches (Kurkesh,
                 -- Onakke Ancient) and the whole of CR 606.3's once-per-turn
-                -- limit's storage (Activatable.loyaltyActivatedThisTurn). Every path that rejects
-                -- the activation restores `before`, and the log lives in that
-                -- state, so no rejected activation can leave a record behind.
+                -- limit's storage (Activatable.loyaltyActivatedThisTurn).
+                -- Every path that rejects the activation restores `before`,
+                -- and the log lives in that state, so no rejected activation
+                -- can leave a record behind.
                 Payment.Paid bound -> do
                   State.modify' (Event.recordEvent (GameEvent.AbilityActivated AbilityWasActivated.MkAbilityWasActivated {AbilityWasActivated.player = pid, AbilityWasActivated.ability = abilId, AbilityWasActivated.source = srcId, AbilityWasActivated.loyalty = Loyalty.isLoyaltyCost (ActivatedAbility.cost ability)}))
                   -- CR 608.2h: the slots the PAYMENT bound -- the permanent a
