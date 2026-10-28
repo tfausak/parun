@@ -1091,6 +1091,7 @@ illuminor-szeras
 illusionary-armor
 illusionary-mask
 illusionary-servant
+illusory-angel
 imaryll-elfhame-elite
 immediate-action
 imoti-celebrant-of-bounty

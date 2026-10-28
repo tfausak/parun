@@ -2,6 +2,7 @@ module Parun.Types.CastingRestriction where
 
 import Numeric.Natural (Natural)
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.DuringPhase as DuringPhase
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.TurnScope as TurnScope
@@ -108,6 +109,10 @@ data CastingRestriction
   | -- | CR 500.7: not castable during the caster's first this-many turns of the
     -- game -- Serra Avenger's "your first, second, or third turns" is 3.
     NotDuringFirstTurns Natural
+  | -- | CR 601.3: castable only if a fact about the game holds -- Illusory Angel's
+    -- "only if you've cast another spell this turn". The mirror of
+    -- Parun.Types.ActivationRestriction's arm of this name (CR 602.5).
+    OnlyIf Condition.Condition
   | -- | CR 601.2h: only mana of this colour may pay for the spell's X -- Consume
     -- Spirit's "Spend only black mana on X". A payment rule, not a gate:
     -- Parun.Engine.Cost.confineX reads it.

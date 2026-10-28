@@ -6,10 +6,16 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Types.CastingRestriction as CastingRestriction
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.CombatStep as CombatStep
+import qualified Parun.Types.Compares as Compares
+import qualified Parun.Types.Comparison as Comparison
+import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.DuringPhase as DuringPhase
 import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PhaseSelector as PhaseSelector
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
+import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.TurnScope as TurnScope
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -88,6 +94,22 @@ spec s = Spec.describe s "Parun.Codec.CastingRestriction" $ do
       CastingRestriction.codec
       (CastingRestriction.BeforeStep (Phase.Combat CombatStep.CombatDamage))
       " {\"type\":\"BeforeStep\",\"value\":{\"type\":\"Combat\",\"value\":{\"type\":\"CombatDamage\"}}} "
+  -- CR 601.3 over a fact about the game: Illusory Angel's "Cast this spell only
+  -- if you've cast another spell this turn".
+  Spec.it s "OnlyIf, Illusory Angel's another spell this turn" $
+    Common.assertCodec
+      s
+      CastingRestriction.codec
+      ( CastingRestriction.OnlyIf
+          ( Condition.Compares
+              Compares.MkCompares
+                { Compares.measured = Quantity.SpellsCastThisTurn (PlayerRef.Relative PlayerRelation.You),
+                  Compares.comparison = Comparison.AtLeast,
+                  Compares.threshold = Quantity.Literal 1
+                }
+          )
+      )
+      " {\"type\":\"OnlyIf\",\"value\":{\"type\":\"Compares\",\"value\":{\"comparison\":{\"type\":\"AtLeast\"},\"measured\":{\"type\":\"SpellsCastThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"threshold\":{\"type\":\"Literal\",\"value\":1}}}} "
   -- Consume Spirit's "Spend only black mana on X" (CR 601.2h).
   Spec.it s "SpendOnlyOnX" $
     Common.assertCodec
