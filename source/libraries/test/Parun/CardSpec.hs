@@ -238,6 +238,7 @@ import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Guess as Guess
 import qualified Parun.Types.HandAction as HandAction
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.HowMany as HowMany
@@ -686,6 +687,7 @@ objectRefPositions =
         ("move-to-zone", Effect.MoveToZone (MoveToZone.MkMoveToZone (plantedRef "mz") Zone.Exile plainRiders Nothing Nothing LibraryPlacement.OwnerChooses Nothing), [plantedRef "mz"]),
         ("reveal", Effect.Reveal (Reveal.MkReveal (plantedRef "rv") Nothing), [plantedRef "rv"]),
         ("look-at", Effect.LookAt (LookAt.MkLookAt (plantedRef "la") (SlotName.MkSlotName (Text.pack "seen")) (PlayerRef.Relative PlayerRelation.You)), [plantedRef "la"]),
+        ("guess", Effect.Guess Guess.MkGuess {Guess.subject = plantedRef "gu", Guess.slot = SlotName.MkSlotName (Text.pack "gs"), Guess.guesser = PlayerRef.Relative PlayerRelation.You, Guess.proposition = Filter.Type.And [], Guess.right = SlotName.MkSlotName (Text.pack "gr")}, [plantedRef "gu"]),
         ("explore", Effect.Explore (plantedRef "ex"), [plantedRef "ex"]),
         ("assemble", Effect.Assemble (Just (plantedRef "as")), [plantedRef "as"]),
         ("arrange-in-library", Effect.ArrangeInLibrary (ArrangeInLibrary.MkArrangeInLibrary (plantedRef "al") (PlayerRef.Relative PlayerRelation.You)), [plantedRef "al"]),
@@ -772,6 +774,7 @@ playerRefPositions =
         ("surveil", Effect.Surveil (playerQuantity "su"), [plantedPlayer "su"]),
         ("fateseal", Effect.Fateseal (playerQuantity "fs"), [plantedPlayer "fs"]),
         ("look-at", Effect.LookAt (LookAt.MkLookAt (plantedRef "la") (SlotName.MkSlotName (Text.pack "seen")) (plantedPlayer "lk")), [plantedPlayer "lk"]),
+        ("guess", Effect.Guess Guess.MkGuess {Guess.subject = plantedRef "gu", Guess.slot = SlotName.MkSlotName (Text.pack "gs"), Guess.guesser = plantedPlayer "gu", Guess.proposition = Filter.Type.And [], Guess.right = SlotName.MkSlotName (Text.pack "gr")}, [plantedPlayer "gu"]),
         ("arrange-in-library", Effect.ArrangeInLibrary (ArrangeInLibrary.MkArrangeInLibrary (plantedRef "al") (plantedPlayer "ac")), [plantedPlayer "ac"]),
         ("move-to-zone-arranged", Effect.MoveToZone (MoveToZone.MkMoveToZone (plantedRef "ma") Zone.Library EntryRiders.defaultValue {EntryRiders.under = EntryController.Instructed (plantedPlayer "mu")} Nothing Nothing (LibraryPlacement.ArrangedBy (ArrangedArrival.MkArrangedArrival LibraryPosition.Top (plantedPlayer "mc"))) Nothing), [plantedPlayer "mu", plantedPlayer "mc"]),
         ("lose-life", Effect.LoseLife (LifeLoss.MkLifeLoss (plantedPlayer "ll") one LifeLossCause.ByEffect Nothing), [plantedPlayer "ll"]),
@@ -1349,6 +1352,7 @@ ownCounts effect = case effect of
   Effect.Mill (Mill.MkMill _ quantity _ _) -> quantityCounts quantity
   Effect.Reveal {} -> []
   Effect.LookAt {} -> []
+  Effect.Guess {} -> []
   Effect.Scry (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantityCounts quantity
   Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantityCounts quantity
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantityCounts quantity
@@ -1902,6 +1906,7 @@ effectNestedEffects effect = case effect of
   Effect.Mill {} -> []
   Effect.Reveal {} -> []
   Effect.LookAt {} -> []
+  Effect.Guess {} -> []
   Effect.Scry {} -> []
   Effect.Surveil {} -> []
   Effect.Fateseal {} -> []
@@ -2453,6 +2458,7 @@ effectReplacements effect = case effect of
   Effect.Mill {} -> []
   Effect.Reveal {} -> []
   Effect.LookAt {} -> []
+  Effect.Guess {} -> []
   Effect.Scry {} -> []
   Effect.Surveil {} -> []
   Effect.Fateseal {} -> []
@@ -3016,6 +3022,7 @@ effectMintedFaces effect = case effect of
   Effect.Mill {} -> []
   Effect.Reveal {} -> []
   Effect.LookAt {} -> []
+  Effect.Guess {} -> []
   Effect.Scry {} -> []
   Effect.Surveil {} -> []
   Effect.Fateseal {} -> []
@@ -6126,6 +6133,8 @@ effectFilters effect = case effect of
   -- reaches it, as Explore's does. Both halves of CR 701.20 answer alike.
   Effect.Reveal (Reveal.MkReveal ref _) -> frame SourceHostFramed (objectRefFilters ref)
   Effect.LookAt (LookAt.MkLookAt ref _ _) -> frame SourceHostFramed (objectRefFilters ref)
+  -- The proposition is matched in the effect's context, ChoosePermanents' Filter.
+  Effect.Guess (Guess.MkGuess subject _ _ proposition _) -> frame SourceHostFramed (objectRefFilters subject) <> unframed [proposition]
   Effect.Scry (PlayerQuantity.MkPlayerQuantity _ quantity) -> frame Unframed (quantityFilters quantity)
   Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> frame Unframed (quantityFilters quantity)
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> frame Unframed (quantityFilters quantity)

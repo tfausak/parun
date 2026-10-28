@@ -55,6 +55,7 @@ import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.EntwineDecision as EntwineDecision
 import qualified Parun.Types.ForageMode as ForageMode
 import qualified Parun.Types.GraveyardArrangement as GraveyardArrangement
+import qualified Parun.Types.GuessAnswer as GuessAnswer
 import qualified Parun.Types.HandActionIndex as HandActionIndex
 import qualified Parun.Types.HybridPayment as HybridPayment
 import qualified Parun.Types.Keyword as Keyword
@@ -426,6 +427,7 @@ shapeOf prompt = case prompt of
   Prompt.ChooseManaType {} -> viaCodec Codec.ManaType.codec
   Prompt.ChooseCardType {} -> viaCodec Codec.CardType.codec
   Prompt.ChooseCardName {} -> viaCodec Codec.CardName.codec
+  Prompt.ChooseGuess {} -> named [GuessAnswer.Holds, GuessAnswer.DoesNotHold]
   Prompt.ChooseOpponent {} -> player
   Prompt.ChooseProtector {} -> player
   Prompt.ChoosePlayer {} -> player

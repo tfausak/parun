@@ -1070,6 +1070,7 @@ withinOffer prompt chosen = case prompt of
   -- Every value of the answer's type is on offer: a yes or no, a coin face, a
   -- side, an end of the library, a decision whose every arm the prompt allows.
   Prompt.Type.CallCoin {} -> True
+  Prompt.Type.ChooseGuess {} -> True
   Prompt.Type.FlipCoin -> True
   Prompt.Type.Concede {} -> True
   Prompt.Type.ChooseBuyback {} -> True

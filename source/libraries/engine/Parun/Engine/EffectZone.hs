@@ -347,6 +347,7 @@ zonesFunctionedAgainst itself delayed effect = case effect of
   Effect.ChooseSector _ -> Set.empty
   Effect.RollDie {} -> Set.empty
   Effect.FlipCoin {} -> Set.empty
+  Effect.Guess {} -> Set.empty
   Effect.TakeExtraTurn {} -> Set.empty
   Effect.ShuffleIntoLibrary {} -> Set.empty
   Effect.Ante {} -> Set.empty

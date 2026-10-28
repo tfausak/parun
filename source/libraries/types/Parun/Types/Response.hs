@@ -24,6 +24,7 @@ import qualified Parun.Types.EntwineDecision as EntwineDecision
 import qualified Parun.Types.Facing as Facing
 import qualified Parun.Types.ForageMode as ForageMode
 import qualified Parun.Types.GraveyardArrangement as GraveyardArrangement
+import qualified Parun.Types.GuessAnswer as GuessAnswer
 import qualified Parun.Types.HandActionIndex as HandActionIndex
 import qualified Parun.Types.HybridPayment as HybridPayment
 import qualified Parun.Types.Keyword as Keyword
@@ -552,6 +553,8 @@ data Response
     ChoseCardType CardType.CardType
   | -- | CR 201.4 / 614.1c: the card name a player chose as an object entered.
     ChoseCardName CardName.CardName
+  | -- | CR 608.2c: a guesser's answer to a Parun.Types.Guess.
+    ChoseGuess GuessAnswer.GuessAnswer
   | -- | The opponent a player chose for an as-enters choice the card assigns to
     -- "an opponent" (CR 614.12a puts that choice before the permanent enters),
     -- or promised a gift to (CR 702.174a).

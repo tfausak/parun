@@ -156,6 +156,7 @@ import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Guess as Guess
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.InitiativeTarget as InitiativeTarget
 import qualified Parun.Types.InstructionR as InstructionR
@@ -756,6 +757,7 @@ effectObjectRefs effect = case effect of
   Effect.FromOutsideTheGame {} -> []
   Effect.ExileThisSpell -> []
   Effect.LookAt (LookAt.MkLookAt ref _ _) -> [ref]
+  Effect.Guess (Guess.MkGuess subject _ _ _ _) -> [subject]
   Effect.Scry {} -> []
   Effect.Surveil {} -> []
   Effect.Fateseal {} -> []
@@ -1004,6 +1006,7 @@ effectPlayerRefs effect = case effect of
   Effect.FromOutsideTheGame {} -> []
   Effect.ExileThisSpell -> []
   Effect.LookAt (LookAt.MkLookAt _ _ looker) -> [looker]
+  Effect.Guess guess -> [Guess.guesser guess]
   Effect.Scry (PlayerQuantity.MkPlayerQuantity ref _) -> [ref]
   Effect.Surveil (PlayerQuantity.MkPlayerQuantity ref _) -> [ref]
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity ref _) -> [ref]
@@ -1356,6 +1359,9 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   Effect.Reveal {} -> Map.empty
   -- The bound slot is a DEFINITION, not a read.
   Effect.LookAt {} -> Map.empty
+  -- The two slots are DEFINITIONS (boundSlots below); the reads are the
+  -- proposition's.
+  Effect.Guess guess -> filterSlotsOf (Guess.proposition guess)
   Effect.Scry (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantitySlots quantity
   Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantitySlots quantity
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantitySlots quantity
@@ -2187,6 +2193,7 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.Mill (Mill.MkMill _ quantity _ _) -> Quantity.slotsAreExhaustive quantity
   Effect.Reveal {} -> True
   Effect.LookAt {} -> True
+  Effect.Guess {} -> True
   Effect.Scry (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.slotsAreExhaustive quantity
   Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.slotsAreExhaustive quantity
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.slotsAreExhaustive quantity
@@ -2479,6 +2486,7 @@ readsX =
         Effect.Mill (Mill.MkMill _ quantity _ _) -> Quantity.readsX quantity
         Effect.Reveal {} -> False
         Effect.LookAt {} -> False
+        Effect.Guess {} -> False
         Effect.Scry (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.readsX quantity
         Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.readsX quantity
         Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.readsX quantity
@@ -2682,6 +2690,7 @@ boundSlots effect = case effect of
   Effect.Reveal (Reveal.MkReveal _ mSlot) -> foldMap Set.singleton mSlot
   -- The cards CR 701.20e's look showed, for a later clause to name.
   Effect.LookAt (LookAt.MkLookAt _ slot _) -> Set.singleton slot
+  Effect.Guess guess -> Set.fromList [Guess.slot guess, Guess.right guess]
   Effect.Scry {} -> Set.empty
   Effect.Surveil {} -> Set.empty
   Effect.Fateseal {} -> Set.empty

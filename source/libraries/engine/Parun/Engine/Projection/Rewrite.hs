@@ -160,6 +160,7 @@ import qualified Parun.Types.GameLossR as GameLossR
 import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Guess as Guess
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.LifeLoss as LifeLoss
@@ -1069,6 +1070,9 @@ rewriteEffect pairs effect = case effect of
   -- The number of coins is the Quantity, PutCounters' descent above; the reading
   -- and the slot name no word rule 612 can swap.
   Effect.FlipCoin x -> Effect.FlipCoin x {FlipCoin.count = rewriteQuantity pairs (FlipCoin.count x)}
+  -- The card guessed about and the proposition, LookAt's ref and
+  -- ChoosePermanents' Filter descents; the guesser and the slots carry no word.
+  Effect.Guess x -> Effect.Guess x {Guess.subject = rewriteObjectRef pairs (Guess.subject x), Guess.proposition = Filter.rewrite pairs (Guess.proposition x)}
   -- The number of turns is the Quantity, FlipCoin's descent above; the
   -- PlayerRef and the skips no word rule 612 can swap.
   Effect.TakeExtraTurn x -> Effect.TakeExtraTurn x {TakeExtraTurn.count = rewriteQuantity pairs (TakeExtraTurn.count x)}

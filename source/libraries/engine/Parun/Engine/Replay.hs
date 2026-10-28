@@ -35,6 +35,7 @@ import qualified Parun.Types.ForageMode as ForageMode
 import Parun.Types.Game (Game)
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GraveyardArrangement as GraveyardArrangement
+import qualified Parun.Types.GuessAnswer as GuessAnswer
 import qualified Parun.Types.KickerDecision as KickerDecision
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.MoveSpread as MoveSpread
@@ -191,6 +192,7 @@ encode p answer = case p of
   Prompt.ChooseManaType {} -> Response.ChoseManaType answer
   Prompt.ChooseCardType {} -> Response.ChoseCardType answer
   Prompt.ChooseCardName {} -> Response.ChoseCardName answer
+  Prompt.ChooseGuess {} -> Response.ChoseGuess answer
   Prompt.ChooseOpponent {} -> Response.ChoseOpponent answer
   Prompt.ChooseProtector {} -> Response.ChoseProtector answer
   Prompt.ChoosePlayer {} -> Response.ChosePlayer answer
@@ -565,6 +567,9 @@ decode p response = case p of
     _ -> Nothing
   Prompt.ChooseCardName {} -> case response of
     Response.ChoseCardName n -> Just n
+    _ -> Nothing
+  Prompt.ChooseGuess {} -> case response of
+    Response.ChoseGuess answer -> Just answer
     _ -> Nothing
   Prompt.ChooseOpponent {} -> case response of
     Response.ChoseOpponent pid -> Just pid
@@ -1165,6 +1170,8 @@ defaultAnswer p = case p of
   -- one answerer Parun.Interpreter.policingCardNames must not wrap: that wrapper
   -- asks again until rule 201.4 is satisfied, and this answer never satisfies it.
   Prompt.ChooseCardName {} -> CardName.MkCardName Text.empty
+  -- Either answer is a guess; Holds is the first.
+  Prompt.ChooseGuess {} -> GuessAnswer.Holds
   -- Every candidate is an opponent the card's own text offered, and the prompt
   -- is raised only when there are two or more.
   Prompt.ChooseOpponent _ _ _ _ opponents -> NonEmpty.head opponents
