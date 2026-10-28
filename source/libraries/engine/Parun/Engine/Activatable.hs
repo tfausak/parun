@@ -367,7 +367,8 @@ activationSourcesGiven grants pcs pid gs =
 -- window stands. The grant is its holder's: it ignores every earlier
 -- activation, whoever made it, and only its holder's own activations beyond the
 -- turn's first spend it (graceUsed). data/scenarios/the-chain-veil proves the
--- count, and its trade-back scenario the per-player spending.
+-- count, and its each-players-grant-is-spent-by-their-own-activations scenario
+-- the per-player spending.
 loyaltyOk :: PlayerId -> ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> GameState -> Bool
 loyaltyOk pid srcId ability gs =
   not (Loyalty.isLoyaltyCost (ActivatedAbility.cost ability))
