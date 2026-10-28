@@ -1,0 +1,11 @@
+{
+  "description": "CR 110.2a / 115.1: Endless Obedience puts target creature card from a graveyard onto the battlefield under its caster's control",
+  "note": "Three seats: the Hill Giant is carol's, and alice, who cast the sorcery, controls it.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Swamp", "label": "s1"}, {"card": "Swamp", "label": "s2"}, {"card": "Swamp", "label": "s3"}, {"card": "Swamp", "label": "s4"}, {"card": "Swamp", "label": "s5"}, {"card": "Swamp", "label": "s6"}], "hand": [{"card": "Endless Obedience", "label": "obedience"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "carol", "graveyard": [{"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$obedience", "targets": ["$giant"], "mana": ["$s1", "$s2", "$s3", "$s4", "$s5", "$s6"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Controller", "object": "Hill Giant", "is": "alice"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "carol", "zone": "Graveyard", "card": "Hill Giant", "count": 0}}}
+  ]
+}

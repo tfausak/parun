@@ -1,0 +1,12 @@
+{
+  "description": "CR 613.1d / 613.4b: Ensoul Artifact's artifact is a creature with base power and toughness 5/5 in addition to its other types",
+  "note": "Sol Ring becomes a 5/5 artifact creature; Ornithopter beside it stays 0/2.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "UU", "battlefield": [{"card": "Ornithopter", "label": "thopter"}, {"card": "Sol Ring", "label": "ring"}], "hand": [{"card": "Ensoul Artifact", "label": "ensoul"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$ensoul", "targets": ["$ring"], "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$ring", "power": 5, "toughness": 5}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Types": {"object": "$ring", "types": ["Artifact", "Creature"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$thopter", "power": 0, "toughness": 2}}}
+  ]
+}

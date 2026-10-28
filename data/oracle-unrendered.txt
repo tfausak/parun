@@ -38,6 +38,7 @@ aetherspouts
 afterlife-from-the-loam
 agents-toolkit
 aggravated-assault
+aggressive-mining
 agonizing-memories
 agyrem
 airbending-lesson
@@ -155,6 +156,7 @@ autonomous-assembler
 autumn-willow-and-baron-sengir
 autumn-willow-harmony
 autumns-veil
+avarice-amulet
 avarice-totem
 avatar-aang-aang-master-of-elements
 avatar-of-hope
@@ -230,6 +232,7 @@ black-mana-battery
 black-panther-wakandan-king
 black-ward
 blackmail
+blastfire-bolt
 blatant-thievery
 blazing-archon
 blessed-reversal
@@ -266,6 +269,7 @@ booby-trap
 book-burning
 boom-scholar
 boon-reflection
+boonweaver-giant
 borborygmos-and-fblthp
 boreal-outrider
 boros-battleshaper
@@ -297,6 +301,7 @@ bristling-boar
 brittle-effigy
 bronze-tablet
 bronzehide-lion
+brood-keeper
 browbeat
 browse
 bruenor-battlehammer
@@ -309,6 +314,7 @@ bubble-smuggler
 bubbling-cauldron
 bumper-cars
 bureau-headmaster
+burning-anger
 burning-earth
 burning-eye-zubera
 burning-of-xinye
@@ -339,6 +345,7 @@ case-of-the-pilfered-proof
 case-of-the-ransacked-lab
 cathartic-reunion
 caustic-exhale
+caustic-tar
 cavalier-of-flame
 caverns-of-despair
 cease-desist
@@ -366,6 +373,7 @@ chandras-phoenix
 chandras-spitfire
 chaos-dragon
 charging-rhino
+chasm-skulker
 chatterfang-squirrel-general
 cheering-fanatic
 chief-engineer
@@ -375,6 +383,7 @@ cho-manno-revolutionary
 cho-mannos-blessing
 choke
 chomping-kavu
+chord-of-calling
 chronomantic-escape
 chthonian-nightmare
 cid-timeless-artificer
@@ -433,6 +442,7 @@ conjurers-mantle
 conquer
 consecrate-consume
 consecrate-land
+constricting-sliver
 consume-spirit
 consumed-by-greed
 consuming-blob
@@ -473,6 +483,7 @@ crucible-of-worlds
 cruel-bargain
 cruel-edict
 cruel-fate
+cruel-sadist
 crumb-and-get-it
 crumbling-colossus
 cry-of-contrition
@@ -580,6 +591,7 @@ disguise-agent
 dismantling-wave
 dismiss-into-dream
 disorder
+dissipate
 distant-memories
 distorting-lens
 distress
@@ -680,6 +692,7 @@ empty-city-ruse
 enchantment-alteration
 encouraging-aviator-jump
 encrust
+endless-obedience
 endless-whispers
 endurance
 enduring-courage
@@ -693,6 +706,7 @@ enigma-thief
 enlarge
 enormous-energy-blade
 ensnaring-bridge
+ensoul-artifact
 entangling-vines
 entourage-of-trest
 eon-hub
@@ -702,6 +716,7 @@ erudite-wizard
 essence-of-the-wild
 etchings-of-the-chosen
 eternal-dominion
+eternal-thirst
 ethereal-ambush
 ethereal-valkyrie
 ethersworn-canonist
@@ -832,10 +847,12 @@ foul-spirit
 foundry-groundbreaker
 frankensteins-monster
 frenetic-sliver
+frenzied-goblin
 freyalise-llanowars-fury
 from-the-rubble
 frontier-mastodon
 frost-breath
+frost-lynx
 frost-titan
 fulgent-distraction
 full-steam-ahead
@@ -873,6 +890,7 @@ gemcutter-buccaneer
 gemstone-caverns
 general-jarkeld
 generator-servant
+genesis-hydra
 geosurge
 gerrard
 geyser-leaper
@@ -917,7 +935,9 @@ goblin-brawler
 goblin-brigand
 goblin-diplomats
 goblin-grenade
+goblin-kaboomist
 goblin-mutant
+goblin-rabblemaster
 goblin-recruiter
 goblin-shortcutter
 goblin-tunneler
@@ -956,6 +976,7 @@ grim-lavamancer
 grim-poppet
 grim-reminder
 grim-return
+grindclock
 grinning-ignus
 grinning-totem
 grist-the-hunger-tide
@@ -976,6 +997,7 @@ hakbal-of-the-surging-soul
 hallar-the-firefletcher
 hama-the-bloodbender
 hamletback-goliath
+hammerhand
 hand-of-the-praetors
 hanged-executioner
 hanweir-battlements
@@ -1035,7 +1057,9 @@ hollow-trees
 hollow-warrior
 holy-day
 hopeful-initiate
+hornet-nest
 hostage-taker
+hot-soup
 hour-of-glory
 howlpack-piper-wildsong-howler
 huang-zhong-shu-general
@@ -1044,6 +1068,7 @@ humility
 hungering-hydra
 hunt-the-weak
 hunted-wumpus
+hunters-ambush
 hunters-feast
 hunters-insight
 hunting-velociraptor
@@ -1073,6 +1098,7 @@ imperial-edict
 imperial-recruiter
 imposing-sovereign
 impulsive-pilferer
+in-garruks-wake
 incarnation-technique
 incinerate
 incite
@@ -1080,6 +1106,7 @@ indentured-djinn
 index
 indigo-faerie
 indomitable-might
+indulgent-tormentor
 infantry-shield
 infernal-contract
 infernal-vessel
@@ -1124,6 +1151,7 @@ ixidron
 izoni-center-of-the-web
 jace-beleren
 jace-memory-adept
+jace-the-living-guildpact
 jaces-archivist
 jaces-erasure
 jaces-mindseeker
@@ -1131,6 +1159,7 @@ jaces-phantasm
 jackal-familiar
 jade-monolith
 jade-statue
+jalira-master-polymorphist
 jarad-golgari-lich-lord
 jared-carthalion-true-heir
 jeering-homunculus
@@ -1150,6 +1179,7 @@ justice-vance-astrovik
 juxtapose
 kadenas-silencer
 kalonian-hydra
+kalonian-twingrove
 kami-of-mourning
 kang-the-conqueror
 kari-zev-crew-of-two
@@ -1205,6 +1235,7 @@ lead-golem
 lead-the-stampede
 leave-chance
 leeches
+leeching-sliver
 legacy-weapon
 leonin-arbiter
 leonin-shikari
@@ -1225,6 +1256,7 @@ lichs-mirror
 lier-disciple-of-the-drowned
 life-and-limb
 lifebane-zombie
+lifes-legacy
 lightmine-field
 lightstall-inquisitor
 lightwielder-paladin

@@ -176,8 +176,9 @@ triggered context creature t
 -- | An activated ability: "[Cost]: [Effect.]" (CR 602.1a), and after it the
 -- restrictions on activating it (CR 602.5), "Activate only as a sorcery." An
 -- ability whose cost sacrifices its source calls it "it" after that (Mogg
--- Mob). Only an ability its controller activates renders yet: a condition, a
--- named or keyword ability, or a bound on X is not spelled out here.
+-- Mob), or by its name again (Inferno Fist's "This Aura deals"). Only an
+-- ability its controller activates renders yet: a condition, a named or
+-- keyword ability, or a bound on X is not spelled out here.
 activated :: Target.Context -> ActivatedAbility.ActivatedAbility Card.Card Continuous.Ability -> [Text.Text]
 activated context a
   | null (ActivatedAbility.maximumX a),
@@ -189,7 +190,7 @@ activated context a
     Maybe.isNothing (ActivatedAbility.keyword a) = do
       cost <- Cost.cost (Target.self context) (Target.keyword context) (ActivatedAbility.cost a)
       let sacrificed = elem CostComponent.SacrificeThis (Cost.Type.components (ActivatedAbility.cost a))
-          after = if sacrificed then context {Target.self = Text.pack "it"} else context
+      after <- if sacrificed then [context {Target.self = Text.pack "it"}, context] else [context]
       effect <- Effect.modal after (ActivatedAbility.modal a)
       rider <- case ActivatedAbility.restrictions a of
         [] -> [Text.empty]

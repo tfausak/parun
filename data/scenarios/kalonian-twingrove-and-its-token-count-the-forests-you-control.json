@@ -1,0 +1,15 @@
+{
+  "description": "CR 604.3 / 613.4a: Kalonian Twingrove's power and toughness, and its Treefolk Warrior token's, each equal the number of Forests its controller controls",
+  "note": "Three Forests make both 3/3, bob's Forest not counting; a fourth makes both 4/4.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "GGGGGG", "battlefield": [{"card": "Forest"}, {"card": "Forest"}, {"card": "Forest"}], "hand": [{"card": "Kalonian Twingrove", "label": "grove"}, {"card": "Forest", "label": "forest"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Forest"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$grove", "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "Kalonian Twingrove", "power": 3, "toughness": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "Treefolk Warrior Token", "power": 3, "toughness": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"PlayLand": "$forest"}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "Kalonian Twingrove", "power": 4, "toughness": 4}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "Treefolk Warrior Token", "power": 4, "toughness": 4}}}
+  ]
+}

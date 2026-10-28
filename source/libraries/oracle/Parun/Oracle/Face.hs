@@ -49,7 +49,9 @@ token named card = case Card.faces card of
         subtypes <- case Text.stripSuffix (Text.pack " Token") (CardName.unwrap (Face.name face)) of
           Just prefix | List.sort (Text.words prefix) == List.sort names -> [Text.words prefix]
           _ -> []
-        keywords <- traverse named (Map.keys (Face.keywords face))
+        -- In any order: the face keeps none, and Oracle lists Hornet Queen's
+        -- tokens' "flying and deathtouch" where the key order is the reverse.
+        keywords <- traverse named (Map.keys (Face.keywords face)) >>= List.permutations
         colors <- case Set.toList (Face.colorIndicator face) of
           [] -> [[Text.pack "colorless"]]
           cs -> fmap (\ordered -> [Prose.listing "and" (fmap Filter.color ordered)]) (Maybe.maybeToList (colorOrder cs))

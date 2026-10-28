@@ -1,0 +1,18 @@
+{
+  "description": "CR 502.3 / 603.6a: when Frost Lynx enters, it taps target creature an opponent controls, which doesn't untap during its controller's next untap step",
+  "note": "bob's Hill Giant stays tapped through his turn 2 untap step while his tapped Gray Ogre untaps; it untaps on his turn 4.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "UUU", "hand": [{"card": "Frost Lynx", "label": "lynx"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant"}, {"card": "Gray Ogre", "label": "ogre", "tapped": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$lynx"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseTargets": {"target": ["$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$giant", "tapped": true}}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": []}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Tapped": {"object": "$giant", "tapped": true}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Tapped": {"object": "$ogre", "tapped": false}}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": []}},
+    {"turn": 4, "step": "PrecombatMain", "player": "bob", "check": {"Tapped": {"object": "$giant", "tapped": false}}},
+    {"turn": 4, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": []}}
+  ]
+}

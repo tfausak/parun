@@ -901,9 +901,10 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
             ]
         -- CR 107.3m: an enters-the-battlefield trigger's effects read the X
         -- announced for the spell (Engine.placeBorne's enteredX), so a face
-        -- whose spell cost declares X may read it there (Pin Collection).
+        -- whose spell cost declares X may read it there (Pin Collection);
+        -- CR 107.3i's cast trigger likewise (Genesis Hydra).
         enteredX face ability =
-          if TriggeredAbility.condition ability == TriggerCondition.SelfEnters && any declaresVariable (spellCostsOf face)
+          if TriggeredAbility.condition ability `elem` [TriggerCondition.SelfEnters, TriggerCondition.SelfCast] && any declaresVariable (spellCostsOf face)
             then Set.singleton Binding.variableX
             else Set.empty
         -- Per face over withMinted, so a minted face inherits only what its OWN

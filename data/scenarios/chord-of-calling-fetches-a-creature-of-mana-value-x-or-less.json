@@ -1,0 +1,13 @@
+{
+  "description": "CR 107.3a / 701.23a: Chord of Calling puts a creature card with mana value X or less from its caster's library onto the battlefield",
+  "note": "X is 3: Hill Giant (mana value 4) is refused and Gray Ogre (3) is put onto the battlefield.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}, {"card": "Forest", "label": "f3"}, {"card": "Forest", "label": "f4"}, {"card": "Forest", "label": "f5"}, {"card": "Forest", "label": "f6"}], "hand": [{"card": "Chord of Calling", "label": "chord"}], "library": [{"card": "Hill Giant", "label": "giant"}, {"card": "Gray Ogre", "label": "ogre"}, {"card": "Island", "label": "i1"}, {"card": "Island", "label": "i2"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$chord", "x": 3, "mana": ["$f1", "$f2", "$f3", "$f4", "$f5", "$f6"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "Search", "with": ["$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$ogre"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$giant", "$i1", "$i2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Gray Ogre", "count": 1}}}
+  ]
+}

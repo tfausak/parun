@@ -1,0 +1,19 @@
+{
+  "description": "CR 606.4 / 115.1: Jace, the Living Guildpact's +1 looks at the top two cards and puts one into the graveyard; its -3 returns another target nonland permanent to its owner's hand",
+  "note": "+1 bins Hill Giant and leaves Gray Ogre on top; two turns later -3 can't target bob's Forest and returns his White Knight.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Jace, the Living Guildpact", "label": "jace", "counters": [{"key": {"type": "Loyalty"}, "value": 5}]}], "library": [{"card": "Hill Giant", "label": "giant"}, {"card": "Gray Ogre", "label": "ogre"}, {"card": "Island", "label": "i1"}]}, {"name": "bob", "battlefield": [{"card": "Forest", "label": "forest"}, {"card": "White Knight", "label": "knight"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$jace", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardFromAmong", "with": "$giant"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Library", "is": ["$ogre", "$i1"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$jace", "kind": {"type": "Loyalty"}, "count": 6}}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": []}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$jace", "ability": 1, "targets": ["$forest"]}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$jace", "ability": 1, "targets": ["$knight"]}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "White Knight", "count": 1}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$jace", "kind": {"type": "Loyalty"}, "count": 3}}}
+  ]
+}
