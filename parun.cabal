@@ -2105,8 +2105,6 @@ library spec
 -- The test suite. The `parun-test-suite` target is a thin wrapper around it.
 library test
   import: library
-  -- Spec code is cheap to run and dear to compile: unoptimized, the library
-  -- builds about 3.7 times faster and the suite runs about a fifth slower.
   ghc-options: -O0
   build-depends:
     bytestring ^>=0.12.2,
