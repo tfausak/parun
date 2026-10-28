@@ -445,8 +445,8 @@ collect sources floating =
       -- CR 109.5's "you" is the row's BAKED controller, and the reading object is
       -- its source: the clause outlives the resolution that installed it, so
       -- there is nothing live to derive either from. The row's captured slots
-      -- ride along, so a clause and its pattern read one context
-      -- (candidateContext's).
+      -- and its baked choices (CR 608.2h) ride along, so a clause and its
+      -- pattern read one context (candidateContext's).
       --
       -- CR 611.2a: a row under a window waits for that window first -- False
       -- Peace's "all combat phases of their next turn" (Expiry.begun).
@@ -456,7 +456,7 @@ collect sources floating =
           Just condition ->
             Condition.holds
               (Projection.fullView sources)
-              (Projection.framedBySlots sources (fmap (Set.map Recipient.ToObject) (ActiveReplacement.slots active)) (Projection.sourceContext sources (Just (ActiveReplacement.controller active)) (ActiveReplacement.source active)))
+              (Projection.framedBySlots sources (fmap (Set.map Recipient.ToObject) (ActiveReplacement.slots active)) (Projection.framedWith (ActiveReplacement.choices active) (ActiveReplacement.source active) sources (Projection.sourceContext sources (Just (ActiveReplacement.controller active)) (ActiveReplacement.source active))))
               (Projection.boardAsEntering sources)
               (ActiveReplacement.source active)
               condition
@@ -1813,7 +1813,8 @@ matchesFiltered viewOf gs candidate filter_ oid =
 -- 608.2h's last known information for a source already in a graveyard; a
 -- floating row and a stored effect's shield read the choices they baked as they
 -- were installed instead (ReplacementCandidate.choices, CR 608.2h), so a later
--- choice by the same source cannot rewrite them. The player is read live on
+-- choice by the same source cannot rewrite them; `lives` asks a floating row's
+-- condition with the same baked choices. The player is read live on
 -- every row: Parun.Types.LastKnown records no chosen player, and rule
 -- 702.16k's carrier is a permanent on the battlefield whenever its own static
 -- ability mints a row.
@@ -2522,7 +2523,10 @@ choose gs event candidates =
           -- different boards and the drawer is asked which.
           if readsSource (ReplacementCandidate.effect c)
             then Just (ReplacementCandidate.source c)
-            else Nothing
+            else Nothing,
+          -- CR 608.2h: two rows equal but for the choices they baked (two
+          -- Avacyn, Guardian Angel shields) match different sources.
+          ReplacementCandidate.choices c
         )
    in case candidates of
         [] -> pure Nothing
