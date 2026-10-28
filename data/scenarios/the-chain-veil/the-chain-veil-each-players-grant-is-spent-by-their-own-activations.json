@@ -1,0 +1,38 @@
+{
+  "description": "CR 606.3 The Chain Veil's grant ignores every earlier activation: bob's unused grant lets him activate the Emperor alice already activated twice",
+  "note": "In bob's upkeep alice resolves her Veil, flashes in The Wandering Emperor and activates her -1 twice (the turn's one, then her grant). In his main phase bob resolves his own Veil and takes the Emperor with Zealous Conscripts; his grant is unspent, so as though none had been activated he may activate her once. A count pooled across players reads two activations against his one grant and refuses.",
+  "board": {"active": "bob", "step": "Upkeep", "seats": [
+    {"name": "alice", "hand": [{"card": "The Wandering Emperor", "label": "emperor"}],
+     "battlefield": [
+      {"card": "The Chain Veil", "label": "a-veil"},
+      {"card": "Plains", "label": "a1"}, {"card": "Plains", "label": "a2"}, {"card": "Plains", "label": "a3"}, {"card": "Plains", "label": "a4"},
+      {"card": "Plains", "label": "a5"}, {"card": "Plains", "label": "a6"}, {"card": "Plains", "label": "a7"}, {"card": "Plains", "label": "a8"}],
+     "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "hand": [{"card": "Zealous Conscripts", "label": "conscripts"}],
+     "battlefield": [
+      {"card": "The Chain Veil", "label": "b-veil"},
+      {"card": "Mountain", "label": "b1"}, {"card": "Mountain", "label": "b2"}, {"card": "Mountain", "label": "b3"}, {"card": "Mountain", "label": "b4"},
+      {"card": "Mountain", "label": "b5"}, {"card": "Mountain", "label": "b6"}, {"card": "Mountain", "label": "b7"}, {"card": "Mountain", "label": "b8"}, {"card": "Mountain", "label": "b9"}],
+     "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"Activate": {"object": "$a-veil", "ability": 0, "mana": ["$a1", "$a2", "$a3", "$a4", null]}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"Cast": {"object": "$emperor", "mana": ["$a5", "$a6", "$a7", "$a8"]}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"Activate": {"object": "The Wandering Emperor", "ability": 1}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"Activate": {"object": "The Wandering Emperor", "ability": 1}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "check": {"Counters": {"object": "The Wandering Emperor", "kind": {"type": "Loyalty"}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Activate": {"object": "$b-veil", "ability": 0, "mana": ["$b1", "$b2", "$b3", "$b4", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$conscripts", "mana": ["$b5", "$b6", "$b7", "$b8", "$b9"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"ChooseTargets": {"target": ["The Wandering Emperor"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Controller", "object": "The Wandering Emperor", "is": "bob"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Activate": {"object": "The Wandering Emperor", "ability": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "The Wandering Emperor", "count": 1}}}
+  ]
+}

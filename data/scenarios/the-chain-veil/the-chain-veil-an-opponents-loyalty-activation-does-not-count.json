@@ -1,0 +1,17 @@
+{
+  "description": "CR 603.4 The Chain Veil still makes alice lose 2 life when only bob activated a loyalty ability during her turn",
+  "note": "Bob flashes in The Wandering Emperor on alice's turn and activates her -1 at instant speed, so a loyalty ability of a planeswalker WAS activated this turn, just not by alice.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [{"card": "The Chain Veil", "label": "veil"}],
+     "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "hand": [{"card": "The Wandering Emperor", "label": "emperor"}],
+     "battlefield": [{"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}, {"card": "Plains", "label": "p3"}, {"card": "Plains", "label": "p4"}],
+     "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$emperor", "mana": ["$p1", "$p2", "$p3", "$p4"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Activate": {"object": "The Wandering Emperor", "ability": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Counters": {"object": "The Wandering Emperor", "kind": {"type": "Loyalty"}, "count": 2}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Life": {"player": "alice", "life": 18}}}
+  ]
+}

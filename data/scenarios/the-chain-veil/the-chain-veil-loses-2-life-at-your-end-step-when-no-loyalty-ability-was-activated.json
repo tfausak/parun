@@ -1,0 +1,19 @@
+{
+  "description": "CR 603.4 The Chain Veil makes alice lose 2 life at her end step when the only ability she activated was its own, and not at bob's",
+  "note": "The Veil's own {4},{T} ability is a non-loyalty activation of a non-planeswalker, so the count reads 0; Ajani stands there unactivated. Bob's end step is not hers, so turn 2 leaves her at 18.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [
+      {"card": "The Chain Veil", "label": "veil"},
+      {"card": "Ajani Goldmane", "label": "ajani", "counters": [{"key": {"type": "Loyalty"}, "value": 4}]},
+      {"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}, {"card": "Plains", "label": "p3"}, {"card": "Plains", "label": "p4"}],
+     "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$veil", "ability": 0, "mana": ["$p1", "$p2", "$p3", "$p4"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$veil", "tapped": true}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 20}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Life": {"player": "alice", "life": 18}}},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "check": {"Life": {"player": "alice", "life": 18}}}
+  ]
+}

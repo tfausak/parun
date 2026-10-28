@@ -23,10 +23,12 @@ import qualified Parun.Engine.Deploy as Deploy
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Keyword as Keyword
+import qualified Parun.Engine.Loyalty as Loyalty
 import qualified Parun.Engine.ManaAbility as ManaAbility
 import qualified Parun.Engine.Players as Players
 import qualified Parun.Engine.Subtype as Subtype
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
+import qualified Parun.Types.ActivationCriteria as ActivationCriteria
 import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackerDeclared as AttackerDeclared
@@ -56,11 +58,14 @@ import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LoggedEvent as LoggedEvent
+import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import qualified Parun.Types.Milled as Milled
 import qualified Parun.Types.Moved as Moved
 import qualified Parun.Types.MovedBetween as MovedBetween
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
+import qualified Parun.Types.ObjectSnapshot as ObjectSnapshot
+import qualified Parun.Types.PastActivation as PastActivation
 import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.ProjectedCharacteristics as PC
@@ -1164,6 +1169,38 @@ abilitiesOf deploys pc =
     deploys
     (Map.keysSet (PC.keywords pc))
     (PC.activatedAbilities pc <> Keyword.battlefieldAbilitiesOf (PC.keywords pc))
+
+-- CR 602.2 / 608.2i: an object one of the turn's past activations recorded
+-- (Parun.Types.PastActivation), seen as it was when the activation began rather
+-- than as it is now. The zone as recorded, so CR 109.2's "a creature you
+-- control" passes over an earlier activation that targeted a creature SPELL.
+-- CR 113.6p's home beside it is what Synthetic First Rehearsal's "whose source
+-- has an activated ability" reads (data/scenarios/vanguard's past-activation
+-- scenario); CR 604.2's lapsed sample is a regression fence.
+pastView :: ObjectSnapshot.ObjectSnapshot -> Filter.View
+pastView snapshot =
+  (viewOfSnapshot False (ObjectSnapshot.controller snapshot) (Just (ObjectSnapshot.owner snapshot)) False Map.empty (ObjectSnapshot.zone snapshot) (ObjectSnapshot.home snapshot) (ObjectSnapshot.lapsedGrants snapshot) (ObjectSnapshot.characteristics snapshot))
+    { Filter.identity = Just (ObjectSnapshot.object snapshot),
+      Filter.zone = Just (ObjectSnapshot.zone snapshot)
+    }
+
+-- What only the ABILITY of a past activation can answer
+-- (Parun.Types.ActivationCriteria): its rule-702 keyword, CR 605.1a's kind and
+-- CR 606.2's loyalty, the last off the printed cost as
+-- Parun.Engine.Loyalty.loyaltyKindOf reads it for the activation in progress.
+-- CR 305.6's intrinsic mana route records no ability, and is no loyalty ability.
+--
+-- The loyalty conjunct is a regression fence for The Chain Veil's "loyalty
+-- ability of a planeswalker": no card in data/cards/ gives a planeswalker a
+-- non-loyalty activated ability. Kaito, Bane of Nightmares' ninjutsu would
+-- (AtomicCards.json, 2026-10-27, planeswalkers whose text has such a line).
+-- The planeswalker half of that phrase is the source filter's, which Luxior,
+-- Giada's Gift observes (data/scenarios/the-chain-veil).
+activationMeets :: ActivationCriteria.ActivationCriteria -> PastActivation.PastActivation -> Bool
+activationMeets criteria past =
+  maybe True (\g -> any (Keyword.designates g) (ActivatedAbility.keyword =<< PastActivation.ability past)) (ActivationCriteria.grantedBy criteria)
+    && maybe True (== PastActivation.kind past) (ActivationCriteria.whichKind criteria)
+    && maybe True (== maybe LoyaltyKind.NonLoyaltyAbility (Loyalty.loyaltyKindOf . ActivatedAbility.cost) (PastActivation.ability past)) (ActivationCriteria.whichLoyalty criteria)
 
 -- The Filter.View a recorded snapshot yields, shared by every arm of
 -- snapshotView above so that two shapes of event cannot disagree about what a

@@ -15,6 +15,7 @@ import qualified Parun.Codec.InZone as InZone
 import qualified Parun.Codec.Keyword as Keyword
 import qualified Parun.Codec.KeywordDesignator as KeywordDesignator
 import qualified Parun.Codec.LandAllowance as LandAllowance
+import qualified Parun.Codec.LoyaltyGrant as LoyaltyGrant
 import qualified Parun.Codec.ManaFilter as ManaFilter
 import qualified Parun.Codec.ModifiedRoll as ModifiedRoll
 import qualified Parun.Codec.PlayerCounterKind as PlayerCounterKind
@@ -63,7 +64,7 @@ codec =
           Arm.payload "CastAsThoughItHadFlash" filterCodec PlayerEffect.CastAsThoughItHadFlash (\x -> case x of PlayerEffect.CastAsThoughItHadFlash y -> Just y; _ -> Nothing),
           Arm.payload "MayPlayAsThoughItHadFlash" filterCodec PlayerEffect.MayPlayAsThoughItHadFlash (\x -> case x of PlayerEffect.MayPlayAsThoughItHadFlash y -> Just y; _ -> Nothing),
           Arm.payload "ActivateKeywordAtInstantSpeed" (KeywordDesignator.codec Keyword.codec) PlayerEffect.ActivateKeywordAtInstantSpeed (\x -> case x of PlayerEffect.ActivateKeywordAtInstantSpeed y -> Just y; _ -> Nothing),
-          Arm.payload "ActivateLoyaltyAtInstantSpeed" filterCodec PlayerEffect.ActivateLoyaltyAtInstantSpeed (\x -> case x of PlayerEffect.ActivateLoyaltyAtInstantSpeed y -> Just y; _ -> Nothing),
+          Arm.payload "LoyaltyGrant" LoyaltyGrant.codec PlayerEffect.LoyaltyGrant (\x -> case x of PlayerEffect.LoyaltyGrant y -> Just y; _ -> Nothing),
           Arm.payload "MayTapForMana" TapForMana.codec PlayerEffect.MayTapForMana (\x -> case x of PlayerEffect.MayTapForMana y -> Just y; _ -> Nothing),
           Arm.payload "CantBeCountered" CounterProhibition.codec PlayerEffect.CantBeCountered (\x -> case x of PlayerEffect.CantBeCountered y -> Just y; _ -> Nothing),
           Arm.payload "RestrictTargeting" (TargetRestriction.codec filterCodec) PlayerEffect.RestrictTargeting (\x -> case x of PlayerEffect.RestrictTargeting y -> Just y; _ -> Nothing),
@@ -117,7 +118,7 @@ tagOf x = case x of
   PlayerEffect.CastAsThoughItHadFlash {} -> "CastAsThoughItHadFlash"
   PlayerEffect.MayPlayAsThoughItHadFlash {} -> "MayPlayAsThoughItHadFlash"
   PlayerEffect.ActivateKeywordAtInstantSpeed {} -> "ActivateKeywordAtInstantSpeed"
-  PlayerEffect.ActivateLoyaltyAtInstantSpeed {} -> "ActivateLoyaltyAtInstantSpeed"
+  PlayerEffect.LoyaltyGrant {} -> "LoyaltyGrant"
   PlayerEffect.MayTapForMana {} -> "MayTapForMana"
   PlayerEffect.CantBeCountered {} -> "CantBeCountered"
   PlayerEffect.RestrictTargeting {} -> "RestrictTargeting"

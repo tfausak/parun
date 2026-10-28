@@ -31,6 +31,7 @@ import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Event.Trigger as Trigger
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Loyalty as Loyalty
 import qualified Parun.Engine.Modal as Modal
 import qualified Parun.Engine.PlayerEffect as PlayerEffect
 import qualified Parun.Engine.Projection as Projection
@@ -1329,7 +1330,7 @@ activateWhileRolling :: Game Result -> PlayerId -> ObjectId -> ActivatedAbility.
 activateWhileRolling runSubgame pid oid ability = do
   before <- State.get
   let stamp = ActivatedAbility.keyword ability
-      loyalty = Cost.loyaltyKindOf (ActivatedAbility.cost ability)
+      loyalty = Loyalty.loyaltyKindOf (ActivatedAbility.cost ability)
       gathered = Cost.activationAdjustments Set.empty stamp AbilityKind.NonManaAbility loyalty pid oid before
       totalled = Cost.plusComponents gathered (ActivatedAbility.cost ability)
       spendable = ActivationRestriction.spendableTypes oid (ActivatedAbility.restrictions ability) before

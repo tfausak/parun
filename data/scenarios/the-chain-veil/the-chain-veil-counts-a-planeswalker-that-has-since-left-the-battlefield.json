@@ -1,0 +1,16 @@
+{
+  "description": "CR 603.4 / 608.2i The Chain Veil counts Ajani Goldmane's loyalty activation after its cost left Ajani at 0 loyalty and it died",
+  "note": "Per the Veil's first ruling it does not matter whether the planeswalker is still on the battlefield, so the count reads the activation's snapshot, not the board.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [
+      {"card": "The Chain Veil", "label": "veil"},
+      {"card": "Ajani Goldmane", "label": "ajani", "counters": [{"key": {"type": "Loyalty"}, "value": 1}]}],
+     "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$ajani", "ability": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Ajani Goldmane", "count": 1}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Life": {"player": "alice", "life": 20}}}
+  ]
+}

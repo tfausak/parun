@@ -58,7 +58,6 @@ import qualified Parun.Extra.Integer as Integer
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.AbilityKind as AbilityKind
 import qualified Parun.Types.AbilityName as AbilityName
-import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.ActivationCriteria as ActivationCriteria
 import qualified Parun.Types.ActivePlayerEffect as ActivePlayerEffect
 import qualified Parun.Types.AffectedPlayers as AffectedPlayers
@@ -89,8 +88,9 @@ import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.InZone as InZone
 import Parun.Types.Keyword (Keyword)
-import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.LandAllowance as LandAllowance
+import qualified Parun.Types.LoyaltyClause as LoyaltyClause
+import qualified Parun.Types.LoyaltyGrant as LoyaltyGrant
 import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaRestriction as ManaRestriction
@@ -631,7 +631,7 @@ prohibitsCasting pid oid variable gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
+        PlayerEffect.LoyaltyGrant _ -> False
         PlayerEffect.MayTapForMana _ -> False
         -- CR 701.6a is about a spell or ability ALREADY on the stack, and CR
         -- 601.3 is about beginning to cast one: an uncounterable spell is not a
@@ -818,7 +818,7 @@ prohibitsPlayingLand pid oid gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
+        PlayerEffect.LoyaltyGrant _ -> False
         PlayerEffect.MayTapForMana _ -> False
         -- CR 305.1 again: a land is never put on the stack, so nothing about
         -- countering reaches a land play.
@@ -909,7 +909,7 @@ prohibitsSearching pid owner causeController gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
+        PlayerEffect.LoyaltyGrant _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
@@ -1016,7 +1016,7 @@ prohibitsCounters pid kind gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
+        PlayerEffect.LoyaltyGrant _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
@@ -1100,7 +1100,7 @@ prohibitsBecomingMonarch pid gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
+        PlayerEffect.LoyaltyGrant _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
@@ -1159,7 +1159,7 @@ schemesCantBeSetInMotion gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
+        PlayerEffect.LoyaltyGrant _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
@@ -1278,7 +1278,7 @@ prohibitsAttackingWithCreatures pid gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
+        PlayerEffect.LoyaltyGrant _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
@@ -1667,27 +1667,17 @@ targetQuestions pid gs r =
 -- in a turn the scope admits, is there no activation by `pid` earlier this turn
 -- matching the criteria? Reduced or not, and whether or not the effect asking
 -- existed yet (Tezzeret, Betrayer of Flesh's ruling). Asked of
--- GameState.activationsThisTurn's snapshots rather than the live board, with the
--- criteria Parun.Types.CostModifier carries; `source` is the
--- asking effect's own permanent, which Filter.IsSource reads.
-firstActivation :: PlayerId -> RowSource -> Filter Keyword -> Maybe (KeywordDesignator.KeywordDesignator Keyword) -> Maybe AbilityKind.AbilityKind -> Maybe (Filter Keyword) -> GameState -> TurnScope.TurnScope -> Bool
-firstActivation pid source criterion granted wantedKind aimedAt gs scope =
-  let -- The zone as recorded, so CR 109.2's "a creature you control" passes over
-      -- an earlier activation that targeted a creature SPELL. CR 113.6p's home
-      -- beside it is what Synthetic First Rehearsal's "whose source has an
-      -- activated ability" reads (data/scenarios/vanguard's past-activation
-      -- scenario); CR 604.2's lapsed sample is a regression fence.
-      snapshotView snapshot =
-        (Count.viewOfSnapshot False (ObjectSnapshot.controller snapshot) (Just (ObjectSnapshot.owner snapshot)) False Map.empty (ObjectSnapshot.zone snapshot) (ObjectSnapshot.home snapshot) (ObjectSnapshot.lapsedGrants snapshot) (ObjectSnapshot.characteristics snapshot))
-          { Filter.identity = Just (ObjectSnapshot.object snapshot),
-            Filter.zone = Just (ObjectSnapshot.zone snapshot)
-          }
-      matchesSnapshot you criterion' snapshot = Filter.matches (contextFor you source gs) (snapshotView snapshot) criterion'
+-- GameState.activationsThisTurn's snapshots rather than the live board
+-- (Count.pastView), with the criteria Parun.Types.CostModifier carries
+-- (Count.activationMeets); `source` is the asking effect's own permanent, which
+-- Filter.IsSource reads.
+firstActivation :: PlayerId -> RowSource -> Filter Keyword -> ActivationCriteria.ActivationCriteria -> Maybe (Filter Keyword) -> GameState -> TurnScope.TurnScope -> Bool
+firstActivation pid source criterion criteria aimedAt gs scope =
+  let matchesSnapshot you criterion' snapshot = Filter.matches (contextFor you source gs) (Count.pastView snapshot) criterion'
       admits past =
         PastActivation.activator past == pid
           && matchesSnapshot (ObjectSnapshot.controller (PastActivation.source past)) criterion (PastActivation.source past)
-          && maybe True (\g -> any (Keyword.designates g) (ActivatedAbility.keyword =<< PastActivation.ability past)) granted
-          && maybe True (== PastActivation.kind past) wantedKind
+          && Count.activationMeets criteria past
           && maybe True (\f -> any (matchesSnapshot (Just (targetPerspective pid source gs)) f) (PastActivation.targets past)) aimedAt
    in Turn.turnScopeAdmits (Count.scopePlayers (Projection.viewWithLastKnownAnywhere gs) (contextFor (Just pid) source gs) gs) gs scope (GameState.activePlayer gs) pid
         && not (any admits (GameState.activationsThisTurn gs))
@@ -1701,7 +1691,7 @@ alternativeActivationCosts :: PlayerId -> Maybe Keyword -> GameState -> [ManaCos
 alternativeActivationCosts pid stamp gs =
   let offered (source, effect) = case effect of
         PlayerEffect.AlternativeActivationCost (AlternativeActivationCost.MkAlternativeActivationCost granted onlyFirst amount) ->
-          if any (Keyword.designates granted) stamp && maybe True (firstActivation pid source (Filter.Type.And []) (Just granted) Nothing Nothing gs) onlyFirst
+          if any (Keyword.designates granted) stamp && maybe True (firstActivation pid source (Filter.Type.And []) ActivationCriteria.MkActivationCriteria {ActivationCriteria.grantedBy = Just granted, ActivationCriteria.whichKind = Nothing, ActivationCriteria.whichLoyalty = Nothing} Nothing gs) onlyFirst
             then Just amount
             else Nothing
         _ -> Nothing
@@ -1771,7 +1761,7 @@ activationCostAdjustmentsGiven effects pid targets stamp kind loyalty srcId gs =
                 && maybe True (\g -> any (Keyword.designates g) stamp) granted
                 && maybe True (== kind) wantedKind
                 && maybe True (== loyalty) (ActivationCriteria.whichLoyalty criteria)
-                && maybe True (firstActivation pid source criterion granted wantedKind (CostModifier.whichTargets modifier) gs) (CostModifier.onlyFirst modifier)
+                && maybe True (firstActivation pid source criterion criteria (CostModifier.whichTargets modifier) gs) (CostModifier.onlyFirst modifier)
         -- Thalia and Sapphire Medallion, turned away by the SUBJECT and not by
         -- their Filters, which is what keeps a noncreature permanent's activated
         -- ability untaxed (#90).
@@ -1858,15 +1848,18 @@ activatesKeywordAtInstantSpeed stamp pid gs =
         _ -> False
    in any (grants . snd) (applying pid gs)
 
--- CR 606.3: may `pid` activate the loyalty abilities of `srcId` any time they
--- could cast an instant (The Wandering Emperor)? The criterion is asked of the
--- permanent, from the effect's source, so `IsSource` is "her loyalty abilities".
-activatesLoyaltyAtInstantSpeed :: PlayerId -> ObjectId -> GameState -> Bool
-activatesLoyaltyAtInstantSpeed pid srcId gs =
+-- CR 606.3: how many grants let `pid` activate the loyalty abilities of `srcId`
+-- past that clause of the rule -- any at all lifts the window (The Wandering
+-- Emperor), and each is one more activation this turn (The Chain Veil, whose
+-- every resolution is a row of its own). The criterion is asked of the
+-- permanent, from the effect's source, so `IsSource` is "her loyalty
+-- abilities".
+loyaltyGrants :: LoyaltyClause.LoyaltyClause -> PlayerId -> ObjectId -> GameState -> Int
+loyaltyGrants clause pid srcId gs =
   let grants (source, effect) = case effect of
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed criterion -> matchesObjectFrom source criterion srcId gs
+        PlayerEffect.LoyaltyGrant grant -> LoyaltyGrant.relaxes grant == clause && matchesObjectFrom source (LoyaltyGrant.permanents grant) srcId gs
         _ -> False
-   in any grants (applying pid gs)
+   in length (filter grants (applying pid gs))
 
 -- CR 602.2's exception granted by an effect rather than printed on the object
 -- (Piracy): the CR 106.6 restriction of each grant letting `pid` tap `oid` for
@@ -1894,7 +1887,7 @@ landPlayFlashGrant :: PlayerEffect -> Maybe (Filter Keyword)
 landPlayFlashGrant effect = case effect of
   PlayerEffect.MayPlayAsThoughItHadFlash criterion -> Just criterion
   PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
-  PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> Nothing
+  PlayerEffect.LoyaltyGrant _ -> Nothing
   PlayerEffect.MayTapForMana _ -> Nothing
   PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
   PlayerEffect.CantCastSpells -> Nothing
@@ -2145,7 +2138,7 @@ castPermissionsFrom pid zone oid gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
+        PlayerEffect.LoyaltyGrant _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.PlayAdditionalLands _ -> False
         PlayerEffect.CantCastSpells -> False
@@ -2437,7 +2430,7 @@ mayCastFromHandWithoutPayingManaCost pid oid gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
+        PlayerEffect.LoyaltyGrant _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.PlayLandsFrom _ -> False
         PlayerEffect.PlotFrom _ -> False
@@ -2521,7 +2514,7 @@ playLandPiles pid gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> []
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> []
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> []
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> []
+        PlayerEffect.LoyaltyGrant _ -> []
         PlayerEffect.MayTapForMana _ -> []
         PlayerEffect.CantCastSpells -> []
         PlayerEffect.CantActivateAbilities {} -> []
@@ -2632,7 +2625,7 @@ protectedFromTargeting rows caster pid gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
+        PlayerEffect.LoyaltyGrant _ -> False
         PlayerEffect.MayTapForMana _ -> False
         -- CR 701.6a grants no targeting immunity: Parun.Types.Counterability
         -- says the same about CR 113.6g, and a Cancel at a spell Spider-Punk
@@ -2742,7 +2735,7 @@ protectedFromGiven rows aimer oid gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
+        PlayerEffect.LoyaltyGrant _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
@@ -2833,7 +2826,7 @@ protectionCarriers gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> Nothing
+        PlayerEffect.LoyaltyGrant _ -> Nothing
         PlayerEffect.MayTapForMana _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
         PlayerEffect.RestrictTargeting _ -> Nothing
@@ -2902,7 +2895,7 @@ landPlaysAllowed pid gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> Nothing
+        PlayerEffect.LoyaltyGrant _ -> Nothing
         PlayerEffect.MayTapForMana _ -> Nothing
         PlayerEffect.CantCastSpells -> Nothing
         PlayerEffect.CantActivateAbilities {} -> Nothing
@@ -2992,7 +2985,7 @@ votesAllowed pid gs =
         PlayerEffect.CastAsThoughItHadFlash {} -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash {} -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed {} -> Nothing
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed {} -> Nothing
+        PlayerEffect.LoyaltyGrant {} -> Nothing
         PlayerEffect.MayTapForMana {} -> Nothing
         PlayerEffect.CantBeCountered {} -> Nothing
         PlayerEffect.RestrictTargeting {} -> Nothing
@@ -3054,7 +3047,7 @@ offeredExtras pid gs =
         PlayerEffect.CastAsThoughItHadFlash {} -> False
         PlayerEffect.MayPlayAsThoughItHadFlash {} -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed {} -> False
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed {} -> False
+        PlayerEffect.LoyaltyGrant {} -> False
         PlayerEffect.MayTapForMana {} -> False
         PlayerEffect.CantBeCountered {} -> False
         PlayerEffect.RestrictTargeting {} -> False
@@ -3117,7 +3110,7 @@ cascadeActions pid gs =
         PlayerEffect.CastAsThoughItHadFlash {} -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash {} -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed {} -> Nothing
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed {} -> Nothing
+        PlayerEffect.LoyaltyGrant {} -> Nothing
         PlayerEffect.MayTapForMana {} -> Nothing
         PlayerEffect.CantBeCountered {} -> Nothing
         PlayerEffect.RestrictTargeting {} -> Nothing
@@ -3179,7 +3172,7 @@ drawReveals pid nth gs =
         PlayerEffect.CastAsThoughItHadFlash {} -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash {} -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed {} -> Nothing
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed {} -> Nothing
+        PlayerEffect.LoyaltyGrant {} -> Nothing
         PlayerEffect.MayTapForMana {} -> Nothing
         PlayerEffect.CantBeCountered {} -> Nothing
         PlayerEffect.RestrictTargeting {} -> Nothing
@@ -3240,7 +3233,7 @@ shownGrants pid gs =
         PlayerEffect.CastAsThoughItHadFlash {} -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash {} -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed {} -> Nothing
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed {} -> Nothing
+        PlayerEffect.LoyaltyGrant {} -> Nothing
         PlayerEffect.MayTapForMana {} -> Nothing
         PlayerEffect.CantBeCountered {} -> Nothing
         PlayerEffect.RestrictTargeting {} -> Nothing
@@ -3335,7 +3328,7 @@ maximumHandSize pid gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> current
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> current
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> current
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> current
+        PlayerEffect.LoyaltyGrant _ -> current
         PlayerEffect.MayTapForMana _ -> current
         PlayerEffect.CantBeCountered _ -> current
         PlayerEffect.RestrictTargeting _ -> current
@@ -3416,7 +3409,7 @@ keepsUnspentMana pid gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> Nothing
+        PlayerEffect.LoyaltyGrant _ -> Nothing
         PlayerEffect.MayTapForMana _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
         PlayerEffect.RestrictTargeting _ -> Nothing
@@ -3489,7 +3482,7 @@ losesLifeForUnspentMana pid gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
+        PlayerEffect.LoyaltyGrant _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
@@ -3566,7 +3559,7 @@ prohibitsGainingLife pid gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
+        PlayerEffect.LoyaltyGrant _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
@@ -3639,7 +3632,7 @@ prohibitsLosingLife pid gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
+        PlayerEffect.LoyaltyGrant _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
@@ -3711,7 +3704,7 @@ precludes outcome pid gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
+        PlayerEffect.LoyaltyGrant _ -> False
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
@@ -3781,7 +3774,7 @@ spendManaAsThough pid gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> Nothing
+        PlayerEffect.LoyaltyGrant _ -> Nothing
         PlayerEffect.MayTapForMana _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
         PlayerEffect.RestrictTargeting _ -> Nothing
@@ -3893,7 +3886,7 @@ cantBeCountered pid counterer oid gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
+        PlayerEffect.LoyaltyGrant _ -> False
         PlayerEffect.MayTapForMana _ -> False
         -- Autumn's Veil's OTHER clause, which CR 115 reads at targeting.
         PlayerEffect.RestrictTargeting _ -> False
@@ -3957,7 +3950,7 @@ targetingRestrictions =
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> Nothing
+        PlayerEffect.LoyaltyGrant _ -> Nothing
         PlayerEffect.MayTapForMana _ -> Nothing
         PlayerEffect.DamageCantBePrevented _ -> Nothing
         PlayerEffect.DamageCantBeRedirected _ -> Nothing
@@ -4103,7 +4096,7 @@ unpreventable gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> Nothing
+        PlayerEffect.LoyaltyGrant _ -> Nothing
         PlayerEffect.MayTapForMana _ -> Nothing
    in concatMap (\pid -> Maybe.mapMaybe says (applying pid gs)) (Game.stillPlaying gs)
 
@@ -4182,7 +4175,7 @@ unredirectable gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> Nothing
+        PlayerEffect.LoyaltyGrant _ -> Nothing
         PlayerEffect.MayTapForMana _ -> Nothing
    in concatMap (\pid -> Maybe.mapMaybe says (applying pid gs)) (Game.stillPlaying gs)
 
@@ -4236,7 +4229,7 @@ statedFlips pid gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> Nothing
+        PlayerEffect.LoyaltyGrant _ -> Nothing
         PlayerEffect.MayTapForMana _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
         PlayerEffect.RestrictTargeting _ -> Nothing
@@ -4311,7 +4304,7 @@ rollModifiers pid gs =
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> Nothing
+        PlayerEffect.LoyaltyGrant _ -> Nothing
         PlayerEffect.MayTapForMana _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
         PlayerEffect.RestrictTargeting _ -> Nothing
@@ -4423,7 +4416,7 @@ overPlayerRefs f effect = case effect of
   PlayerEffect.CastAsThoughItHadFlash _ -> pure effect
   PlayerEffect.MayPlayAsThoughItHadFlash _ -> pure effect
   PlayerEffect.ActivateKeywordAtInstantSpeed _ -> pure effect
-  PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> pure effect
+  PlayerEffect.LoyaltyGrant _ -> pure effect
   PlayerEffect.MayTapForMana _ -> pure effect
   PlayerEffect.CantBeCountered _ -> pure effect
   PlayerEffect.RestrictTargeting _ -> pure effect
@@ -4500,7 +4493,7 @@ overDamagePatterns f effect = case effect of
   PlayerEffect.CastAsThoughItHadFlash _ -> pure effect
   PlayerEffect.MayPlayAsThoughItHadFlash _ -> pure effect
   PlayerEffect.ActivateKeywordAtInstantSpeed _ -> pure effect
-  PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> pure effect
+  PlayerEffect.LoyaltyGrant _ -> pure effect
   PlayerEffect.MayTapForMana _ -> pure effect
   PlayerEffect.CantBeCountered _ -> pure effect
   PlayerEffect.RestrictTargeting _ -> pure effect

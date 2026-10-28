@@ -1,0 +1,15 @@
+{
+  "description": "CR 603.4 The Chain Veil does not trigger at alice's end step after she activated Ajani Goldmane's loyalty ability",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [
+      {"card": "The Chain Veil", "label": "veil"},
+      {"card": "Ajani Goldmane", "label": "ajani", "counters": [{"key": {"type": "Loyalty"}, "value": 4}]}],
+     "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$ajani", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 22}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Life": {"player": "alice", "life": 22}}}
+  ]
+}

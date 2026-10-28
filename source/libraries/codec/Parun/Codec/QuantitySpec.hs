@@ -6,6 +6,8 @@ import qualified Parun.Codec.Quantity as Quantity
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.AbilityAct as AbilityAct
+import qualified Parun.Types.ActivationCriteria as ActivationCriteria
+import qualified Parun.Types.ActivationsThisTurn as ActivationsThisTurn
 import qualified Parun.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Parun.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Parun.Types.AgainstSlot as AgainstSlot
@@ -30,6 +32,7 @@ import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
+import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.Measure as Measure
@@ -676,6 +679,19 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       Quantity.codec
       (Quantity.TimesThisTurn AbilityAct.Resolved)
       " {\"type\":\"TimesThisTurn\",\"value\":{\"type\":\"Resolved\"}} "
+  -- The Chain Veil's "you activate a loyalty ability of a planeswalker".
+  Spec.it s "ActivationsThisTurn" $
+    Common.assertCodec
+      s
+      Quantity.codec
+      ( Quantity.ActivationsThisTurn
+          ActivationsThisTurn.MkActivationsThisTurn
+            { ActivationsThisTurn.activator = PlayerRef.Relative PlayerRelation.You,
+              ActivationsThisTurn.source = Filter.HasCardType CardType.Planeswalker,
+              ActivationsThisTurn.criteria = ActivationCriteria.MkActivationCriteria {ActivationCriteria.grantedBy = Nothing, ActivationCriteria.whichKind = Nothing, ActivationCriteria.whichLoyalty = Just LoyaltyKind.LoyaltyAbility}
+            }
+      )
+      " {\"type\":\"ActivationsThisTurn\",\"value\":{\"activator\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"source\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Planeswalker\"}},\"criteria\":{\"whichLoyalty\":{\"type\":\"LoyaltyAbility\"}}}} "
   -- CR 702.40a with nothing on the wire: the spell is the one the quantity is
   -- evaluated against, and "this turn" is the event log's own extent.
   Spec.it s "SpellsCastBefore is nullary" $
