@@ -20,6 +20,7 @@ import qualified Parun.Engine.Count as Count
 import Parun.Engine.Event.Binding (admitsDeparture, admittedAttackers, admittedDepartures, admittedPreventedSources, combatDamagerOn, postEventView)
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.PlayerEffect as PlayerEffect
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Replacement as Replacement
 import qualified Parun.Engine.Saga as Saga
@@ -450,6 +451,24 @@ dealtToRelated board gs related orTheirPlaneswalkers target
   where
     theirPlaneswalker view = Set.member CardType.Planeswalker (Filter.cardTypes view) && maybe False related (Filter.controller view)
 
+-- CR 603.6a / 613.11: may this entry trigger `you`'s enters abilities, or does
+-- an effect applying to them (Hushwing Gryff) silence it? Asked of the game
+-- filed immediately after the entry (GameState.boardAfterEvent), so a silencer
+-- that entered beside the entrant counts and one that left later in the same
+-- resolution still does; the live game answers for an entry none is filed for.
+-- The filed board is a regression fence: reading the live game leaves the suite
+-- green, no scenario moving a silencer between the entry and the scan.
+--
+-- Only CR 603.6a's two arms ask: a condition watching the same zone change's
+-- other half (CardLeavesZone's card leaving a graveyard) triggers on the
+-- departure, and the Gryff's 2014-07-18 rulings reach only abilities triggering
+-- on the entry. The hushwing-gryff scenarios under data/scenarios prove both.
+entryTriggers :: GameState -> PlayerId -> ZoneChange.ZoneChange -> Bool
+entryTriggers gs you zc =
+  let entrant = ZoneChange.object zc
+      atEntry = maybe gs (\group -> Map.findWithDefault gs group (GameState.boardAfterEvent gs)) (Game.entryGroup entrant gs)
+   in not (PlayerEffect.silencesEntry you entrant atEntry)
+
 -- The same question against a slot environment, for the conditions whose subject
 -- is an object named EARLIER rather than the bearer or a class of objects
 -- (TriggerCondition.LoseControlOfBound, BoundDies and BoundDiesOrIsExiled).
@@ -463,8 +482,9 @@ dealtToRelated board gs related orTheirPlaneswalkers target
 -- event (Event.Trigger.battlefieldAt), for an arm that must not read the live one.
 matchesTriggerGiven :: Map.Map SlotName.SlotName Binding -> Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> GameState -> ObjectId -> PlayerId -> TriggerCondition -> GameEvent -> Bool
 matchesTriggerGiven bindings board gs bearer you cond event = case cond of
-  -- CR 603.6a: the bearer's own object entered the battlefield.
-  TriggerCondition.SelfEnters -> maybe False ((== bearer) . ZoneChange.object) (Game.enteredBattlefieldChange event)
+  -- CR 603.6a: the bearer's own object entered the battlefield, an entry that
+  -- may trigger `you`'s abilities (`entryTriggers`).
+  TriggerCondition.SelfEnters -> maybe False (\zc -> ZoneChange.object zc == bearer && entryTriggers gs you zc) (Game.enteredBattlefieldChange event)
   -- CR 603.6a's "whenever a [type] enters": a permanent the Filter admits
   -- entered the battlefield. The bearer frames the match rather than being it --
   -- it is the Filter.Context's source (so `Not IsSource` is Soul Warden's
@@ -483,7 +503,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     -- Nothing is an entrant the sample does not hold that is gone AND
     -- filed no last known information, about which no Filter can
     -- honestly answer.
-    Just zc -> maybe False (\view -> Filter.matches bearerContext view f) (postEventView board gs (ZoneChange.object zc))
+    Just zc -> maybe False (\view -> Filter.matches bearerContext view f) (postEventView board gs (ZoneChange.object zc)) && entryTriggers gs you zc
   -- CR 603.2b: this step began, on a turn the scope admits, and -- for a card
   -- that counts main phases rather than naming one -- at CR 505.1b's ordinal.
   TriggerCondition.StepBegins (StepBegins.MkStepBegins wanted ordinal scope) -> case event of

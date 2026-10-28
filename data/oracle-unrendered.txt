@@ -1049,6 +1049,7 @@ hunters-insight
 hunting-velociraptor
 hurkyls-recall
 hurr-jackal
+hushwing-gryff
 hustle-bustle
 hydra-broodmaster
 hydraulic-helper
@@ -2223,6 +2224,7 @@ titanias-song
 tithing-blade-consuming-sepulcher
 tivit-seller-of-secrets
 tobias-doomed-conqueror
+tocatli-honor-guard
 tolarian-winds
 tomb-of-annihilation
 tome-of-the-infinite
@@ -2232,6 +2234,7 @@ torgaar-famine-incarnate
 torment-of-venom
 tormods-crypt
 tornado-elemental
+torpor-orb
 total-war
 touch-of-the-eternal
 tovolar-dire-overlord-tovolar-the-midnight-scourge

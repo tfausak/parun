@@ -73,6 +73,7 @@ codec =
           Arm.payload "HasProtectionFrom" filterCodec PlayerEffect.HasProtectionFrom (\x -> case x of PlayerEffect.HasProtectionFrom y -> Just y; _ -> Nothing),
           Arm.nullary "CantBecomeMonarch" PlayerEffect.CantBecomeMonarch,
           Arm.nullary "CantSetSchemesInMotion" PlayerEffect.CantSetSchemesInMotion,
+          Arm.payload "EntriesDontTrigger" filterCodec PlayerEffect.EntriesDontTrigger (\x -> case x of PlayerEffect.EntriesDontTrigger y -> Just y; _ -> Nothing),
           Arm.nullary "ControlledWhileSearching" PlayerEffect.ControlledWhileSearching,
           Arm.payload "YouChoose" CombatDeclaration.codec PlayerEffect.YouChoose (\x -> case x of PlayerEffect.YouChoose y -> Just y; _ -> Nothing),
           Arm.nullary "ExilesFoundWhileSearching" PlayerEffect.ExilesFoundWhileSearching,
@@ -126,6 +127,7 @@ tagOf x = case x of
   PlayerEffect.HasProtectionFrom {} -> "HasProtectionFrom"
   PlayerEffect.CantBecomeMonarch {} -> "CantBecomeMonarch"
   PlayerEffect.CantSetSchemesInMotion {} -> "CantSetSchemesInMotion"
+  PlayerEffect.EntriesDontTrigger {} -> "EntriesDontTrigger"
   PlayerEffect.ControlledWhileSearching {} -> "ControlledWhileSearching"
   PlayerEffect.YouChoose {} -> "YouChoose"
   PlayerEffect.ExilesFoundWhileSearching {} -> "ExilesFoundWhileSearching"
