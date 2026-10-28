@@ -4431,9 +4431,9 @@ craftExilingBoth first second p = case p of
 -- four or more nonlands with activated abilities {8}{U}", whose back face "has
 -- each activated ability of the exiled cards used to craft it. You may activate
 -- each of those abilities only once each turn." (Oracle text checked against
--- Scryfall, 2026-10-02). Its second ability, "Whenever you activate an ability
--- that isn't a mana ability, copy it", is not transcribed (#4603), which leaves
--- parun's card STRICTER than printed: no ping below is doubled.
+-- Scryfall, 2026-10-02). Each activation below resolves through Stack.resolveTop
+-- with no settle, so the Locus's own "copy it" trigger is never placed and no
+-- ping is doubled; data/scenarios/event-trigger's Locus case is that trigger.
 --
 -- The four materials sit in alice's graveyard, exactly the minimum, so the
 -- prompt is elided: TWO Brothers of Fire, a Withered Wretch, and an Omen Hawker,

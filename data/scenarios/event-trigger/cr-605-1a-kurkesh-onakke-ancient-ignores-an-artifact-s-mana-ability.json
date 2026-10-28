@@ -1,0 +1,125 @@
+{
+  "description": "CR 605.1a a mana ability paying for Rod of Ruin adds no second Kurkesh trigger",
+  "note": "A guard, not a proof of Kurkesh's 'if it isn't a mana ability': mana abilities record no activation at all (#5733), so Mind Stone's {T}: Add {C}, paying part of the Rod's {3}, cannot fire Kurkesh, and the Rod alone puts one trigger on the stack. No card here encodes the exclusion; it holds because nothing is recorded.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Kurkesh, Onakke Ancient",
+            "label": "kurkesh"
+          },
+          {
+            "card": "Mountain",
+            "label": "m1"
+          },
+          {
+            "card": "Mountain",
+            "label": "m2"
+          },
+          {
+            "card": "Mountain",
+            "label": "m3"
+          },
+          {
+            "card": "Mountain",
+            "label": "m4"
+          },
+          {
+            "card": "Rod of Ruin",
+            "label": "rod",
+            "ready": true
+          },
+          {
+            "card": "Mind Stone",
+            "label": "stone"
+          }
+        ]
+      },
+      {
+        "name": "bob"
+      },
+      {
+        "name": "carol"
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$rod",
+          "ability": 0,
+          "targets": [
+            "$bob"
+          ],
+          "mana": [
+            "$stone",
+            "$m1",
+            "$m2",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Stack",
+          "is": [
+            "trigger of $kurkesh",
+            "ability of $rod"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "ChooseToPay": {
+          "decision": {
+            "type": "Declines"
+          }
+        }
+      },
+      "source": "$kurkesh"
+    }
+  ],
+  "final": [
+    {
+      "View": {
+        "of": "Stack",
+        "is": []
+      }
+    },
+    {
+      "Life": {
+        "player": "bob",
+        "life": 19
+      }
+    },
+    {
+      "Tapped": {
+        "object": "$stone",
+        "tapped": true
+      }
+    }
+  ]
+}

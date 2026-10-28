@@ -2,6 +2,7 @@ module Parun.Types.GameEvent where
 
 import Data.Sequence (Seq)
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
+import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
 import qualified Parun.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Parun.Types.AttackerBlocked as AttackerBlocked
 import qualified Parun.Types.AttackerDeclared as AttackerDeclared
@@ -273,12 +274,16 @@ data GameEvent
     -- where the life was never lost; and paying life (CR 119.4), which that rule
     -- calls losing life.
     LifeGained LifeChange.LifeChange
-  | -- | CR 606.3: a LOYALTY ability of this permanent was activated -- the record
-    -- that rule's once-per-permanent-per-turn limit is read out of, as a
+  | -- | CR 602.2b / 601.2i: an ability BECAME ACTIVATED, its costs paid. CR
+    -- 606.3's once-per-permanent-per-turn limit is read out of these records, a
     -- look-back read of the log rather than a stamp on the object, so a skipped
-    -- untap step (CR 500.11) cannot strand it. The ObjectId is the SOURCE
-    -- PERMANENT, so CR 400.7's flickered planeswalker may activate again.
-    LoyaltyAbilityActivated ObjectId.ObjectId
+    -- untap step (CR 500.11) cannot strand it; the source is the PERMANENT's id,
+    -- so CR 400.7's flickered planeswalker may activate again.
+    --
+    -- Not implemented: an ability that never reaches the stack -- a CR 605
+    -- mana ability, or one activated inside a die roll's window (Goblin Bookie)
+    -- -- records none (#5733).
+    AbilityActivated AbilityWasActivated.AbilityWasActivated
   | -- | CR 122.6: one or more counters were PUT onto an object -- the object, the
     -- kind, and the counts of that kind on it BEFORE and AFTER. The pair rather
     -- than one amount because CR 714.2b's chapter ability asks whether the number

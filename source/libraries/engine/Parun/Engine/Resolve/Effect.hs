@@ -1341,6 +1341,8 @@ activateWhileRolling runSubgame pid oid ability = do
   case payment of
     -- CR 733.1: the payment reversed the activation back to `before` itself.
     Payment.Unpaid -> pure False
+    -- Not implemented: this activation records no GameEvent.AbilityActivated,
+    -- so nothing triggers on it (#5733).
     Payment.Paid _ -> do
       State.modify' (ActivationRestriction.recordActivation oid ability)
       State.modify' (ActivationRestriction.logActivation before pid oid (Just ability) AbilityKind.NonManaAbility Set.empty)

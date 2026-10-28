@@ -112,7 +112,7 @@ spec s registry corpus = Spec.describe s "Parun.Codec (integration)" $ do
   -- nested-And/Or/Not coverage lives in Parun.Codec.FilterSpec.
   -- EntryRewrite's own per-constructor coverage lives in
   -- Parun.Codec.EntryRewriteSpec now. GameEvent's own per-constructor
-  -- coverage -- including LoyaltyAbilityActivated's CR 606.3 record --
+  -- coverage -- including AbilityActivated's CR 606.3 record --
   -- lives in Parun.Codec.GameEventSpec now.
   -- Cost's own per-constructor coverage, including the CR 118.6 absent-mana
   -- and CR 118.5a {0} behavior, lives in Parun.Codec.CostSpec now. The
@@ -220,7 +220,7 @@ spec s registry corpus = Spec.describe s "Parun.Codec (integration)" $ do
     -- and a CR 120.3c planeswalker Recipient; StepBegan; SpellCast;
     -- BecameMonarch; Discarded, both causes; AttackerDeclared;
     -- BecameBlocking; AttackerBlocked;
-    -- SpellCountered; LoyaltyAbilityActivated) needed no registry fixture --
+    -- SpellCountered; AbilityActivated) needed no registry fixture --
     -- a synthetic stand-in snapshot proves Moved/Revealed/SpellCast just as
     -- well as a real one proves the shape -- so it moved to
     -- Parun.Codec.GameEventSpec.

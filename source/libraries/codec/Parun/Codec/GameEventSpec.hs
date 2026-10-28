@@ -12,6 +12,7 @@ import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
+import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
 import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Parun.Types.AttackTarget as AttackTarget
@@ -299,12 +300,12 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       GameEvent.codec
       (GameEvent.AbilityCountered (Countering.MkCountering (ObjectId.MkObjectId 4) (ObjectId.MkObjectId 5) (PlayerId.MkPlayerId 1)))
       " {\"type\":\"AbilityCountered\",\"value\":{\"countered\":4,\"source\":5,\"controller\":1}} "
-  Spec.it s "LoyaltyAbilityActivated" $
+  Spec.it s "AbilityActivated" $
     Common.assertCodec
       s
       GameEvent.codec
-      (GameEvent.LoyaltyAbilityActivated (ObjectId.MkObjectId 7))
-      " {\"type\":\"LoyaltyAbilityActivated\",\"value\":7} "
+      (GameEvent.AbilityActivated (AbilityWasActivated.MkAbilityWasActivated (PlayerId.MkPlayerId 1) (ObjectId.MkObjectId 8) (ObjectId.MkObjectId 7) True))
+      " {\"type\":\"AbilityActivated\",\"value\":{\"player\":1,\"ability\":8,\"source\":7,\"loyalty\":true}} "
   Spec.it s "LifeLost" $
     Common.assertCodec
       s

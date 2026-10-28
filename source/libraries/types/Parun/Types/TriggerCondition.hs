@@ -445,6 +445,10 @@ data TriggerCondition
     -- (Desolation Twin). Self-scoped, which is what lets
     -- Parun.Engine.Event.Trigger.zonesTriggeredFrom answer CR 113.6k totally.
     SelfCast
+  | -- | CR 602.2b / 601.2i: "whenever you activate an ability [of a ...]"
+    -- (Kurkesh, Onakke Ancient), the Filter read against the ability on the
+    -- stack, as SpellCast's is against the spell.
+    AbilityActivated (Filter.Filter Keyword.Keyword)
   | -- | CR 601.2c: "whenever this permanent becomes the target of a spell or
     -- ability [a player] controls" -- CR 702.21a's ward, once per instance of
     -- the word "target".

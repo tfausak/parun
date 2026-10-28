@@ -1,0 +1,179 @@
+{
+  "description": "CR 701.23a Ob Nixilis, Unshackled makes an opponent who searches their library sacrifice a creature and lose 10 life",
+  "note": "Bob's Ob Nixilis watches alice, his opponent, search with Rampant Growth. Three seats so that player is alice alone: carol, bob's other opponent, keeps her life and her Bears. Alice has two creatures, so the sacrifice is her choice: she gives up the Alpine Grizzly.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "f1"
+          },
+          {
+            "card": "Forest",
+            "label": "f2"
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bear"
+          },
+          {
+            "card": "Alpine Grizzly",
+            "label": "grizzly"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Rampant Growth",
+            "label": "growth"
+          }
+        ],
+        "library": [
+          {
+            "card": "Forest",
+            "label": "lf"
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "lb"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Ob Nixilis, Unshackled",
+            "label": "ob"
+          }
+        ]
+      },
+      {
+        "name": "carol",
+        "battlefield": [
+          {
+            "card": "Grizzly Bears",
+            "label": "cbear"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$growth",
+          "mana": [
+            "$f1",
+            "$f2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$lf"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "$lb"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseSacrifices",
+          "with": [
+            "$grizzly"
+          ]
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "Life": {
+        "player": "alice",
+        "life": 10
+      }
+    },
+    {
+      "Life": {
+        "player": "bob",
+        "life": 20
+      }
+    },
+    {
+      "Life": {
+        "player": "carol",
+        "life": 20
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Battlefield",
+        "card": "Alpine Grizzly",
+        "count": 0
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Battlefield",
+        "card": "Grizzly Bears",
+        "count": 1
+      }
+    },
+    {
+      "Count": {
+        "player": "carol",
+        "zone": "Battlefield",
+        "card": "Grizzly Bears",
+        "count": 1
+      }
+    },
+    {
+      "Counters": {
+        "object": "$ob",
+        "kind": {
+          "type": "PlusOnePlusOne"
+        },
+        "count": 1
+      }
+    }
+  ]
+}

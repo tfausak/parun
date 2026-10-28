@@ -35,6 +35,7 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
 import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
+import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
 import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackedPlayer as AttackedPlayer
@@ -2168,6 +2169,8 @@ representativeEvents cond =
         -- The same event, and the only one this condition admits either. It binds
         -- nothing whichever ids the event names, since the spell IS the bearer.
         TriggerCondition.SelfCast -> one (GameEvent.SpellCast (SpellWasCast.MkSpellWasCast S.alice arrived S.emptyCharacteristics (Just Zone.Hand) Nothing Set.empty))
+        -- CR 602.2b's activation, binding the ability and its activator.
+        TriggerCondition.AbilityActivated _ -> one (GameEvent.AbilityActivated (AbilityWasActivated.MkAbilityWasActivated S.alice arrived departed False))
         -- CR 601.2c's event, with the bearer as the targeted object and alice as
         -- the targeting object's controller -- an event BOTH relations admit,
         -- since matchesTrigger reads `you` from the bearer's side and this list
@@ -2536,6 +2539,7 @@ everyTriggerCondition =
     -- And magecraft's "or copy", whose second event binds the same pair.
     TriggerCondition.SpellCast (SpellCast.MkSpellCast Filter.Type.IsSource TurnScope.EachTurn Nothing Nothing Nothing True),
     TriggerCondition.SelfCast,
+    TriggerCondition.AbilityActivated (Filter.Type.And []),
     -- BOTH relations, for the SpellCast pair's reason just above: the arm cases
     -- on the relation, and one that stamped nothing under the other half would go
     -- unseen if only rule 702.21a's own Opponent were listed.

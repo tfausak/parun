@@ -38,6 +38,7 @@ import qualified Parun.Engine.Vanguard as Vanguard
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
+import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
 import qualified Parun.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackerBlocked as AttackerBlocked
@@ -277,7 +278,7 @@ movedOf event = case event of
   GameEvent.Crewed _ -> Nothing
   GameEvent.PermanentSacrificed {} -> Nothing
   GameEvent.AbilityTriggered {} -> Nothing
-  GameEvent.LoyaltyAbilityActivated _ -> Nothing
+  GameEvent.AbilityActivated _ -> Nothing
   GameEvent.LifeLost {} -> Nothing
   GameEvent.LifeGained {} -> Nothing
   GameEvent.CountersPut {} -> Nothing
@@ -414,7 +415,7 @@ participants event =
         GameEvent.AbilityCountered c -> ([Countering.countered c, Countering.source c], [])
         GameEvent.LifeLost c -> player (LifeChange.player c)
         GameEvent.LifeGained c -> player (LifeChange.player c)
-        GameEvent.LoyaltyAbilityActivated oid -> one oid
+        GameEvent.AbilityActivated a -> ([AbilityWasActivated.ability a, AbilityWasActivated.source a], [AbilityWasActivated.player a])
         GameEvent.CountersPut c -> one (CounterChange.object c)
         GameEvent.CountersRemoved c -> one (CounterChange.object c)
         GameEvent.HalfUnlocked h -> ([HalfUnlocked.object h], [HalfUnlocked.actor h])
@@ -751,6 +752,7 @@ looksBack condition = case condition of
   TriggerCondition.PermanentsGetCounters {} -> False
   TriggerCondition.PermanentGetsCounters {} -> False
   TriggerCondition.SpellCast {} -> False
+  TriggerCondition.AbilityActivated _ -> False
   TriggerCondition.SelfCast -> False
   TriggerCondition.SelfBecomesTargeted _ -> False
   TriggerCondition.ControllerBecomesTarget {} -> False
@@ -1061,6 +1063,7 @@ batchScoped condition = case condition of
   -- occurrences.
   TriggerCondition.PermanentGetsCounters {} -> False
   TriggerCondition.SpellCast {} -> False
+  TriggerCondition.AbilityActivated _ -> False
   TriggerCondition.SelfCast -> False
   TriggerCondition.SelfBecomesTargeted _ -> False
   TriggerCondition.ControllerBecomesTarget {} -> False
@@ -1430,7 +1433,7 @@ eventTriggers events gs =
         GameEvent.Crewed _ -> Map.empty
         GameEvent.PermanentSacrificed {} -> Map.empty
         GameEvent.AbilityTriggered {} -> Map.empty
-        GameEvent.LoyaltyAbilityActivated _ -> Map.empty
+        GameEvent.AbilityActivated _ -> Map.empty
         GameEvent.LifeLost {} -> Map.empty
         GameEvent.LifeGained {} -> Map.empty
         GameEvent.CountersPut {} -> Map.empty
@@ -1721,7 +1724,7 @@ eventTriggers events gs =
         GameEvent.Crewed _ -> Map.empty
         GameEvent.PermanentSacrificed {} -> Map.empty
         GameEvent.AbilityTriggered {} -> Map.empty
-        GameEvent.LoyaltyAbilityActivated _ -> Map.empty
+        GameEvent.AbilityActivated _ -> Map.empty
         GameEvent.LifeLost {} -> Map.empty
         GameEvent.LifeGained {} -> Map.empty
         GameEvent.CountersPut {} -> Map.empty
@@ -2115,7 +2118,7 @@ eventTriggers events gs =
         GameEvent.Crewed _ -> Map.empty
         GameEvent.PermanentSacrificed {} -> Map.empty
         GameEvent.AbilityTriggered {} -> Map.empty
-        GameEvent.LoyaltyAbilityActivated _ -> Map.empty
+        GameEvent.AbilityActivated _ -> Map.empty
         GameEvent.LifeLost {} -> Map.empty
         GameEvent.LifeGained {} -> Map.empty
         GameEvent.CountersPut {} -> Map.empty
@@ -2278,7 +2281,7 @@ eventTriggers events gs =
         GameEvent.Crewed _ -> Map.empty
         GameEvent.PermanentSacrificed {} -> Map.empty
         GameEvent.AbilityTriggered {} -> Map.empty
-        GameEvent.LoyaltyAbilityActivated _ -> Map.empty
+        GameEvent.AbilityActivated _ -> Map.empty
         GameEvent.LifeLost {} -> Map.empty
         GameEvent.LifeGained {} -> Map.empty
         GameEvent.CountersPut {} -> Map.empty
@@ -3126,6 +3129,7 @@ zonesTriggeredFrom cond =
         -- CR 113.6's default: Young Pyromancer watches the stack from the battlefield,
         -- and a card in a graveyard sees nothing cast.
         TriggerCondition.SpellCast {} -> battlefield
+        TriggerCondition.AbilityActivated _ -> battlefield
         -- CR 113.6k, the second zone it reaches: CR 601.2a moves the object to the stack
         -- to cast it and leaves it there, so at CR 601.2i it is on the stack and not on
         -- the battlefield -- this condition cannot trigger from there at all. The stack
@@ -3469,6 +3473,7 @@ stateTriggersOn gs
             TriggerCondition.PermanentsGetCounters {} -> False
             TriggerCondition.PermanentGetsCounters {} -> False
             TriggerCondition.SpellCast {} -> False
+            TriggerCondition.AbilityActivated _ -> False
             TriggerCondition.SelfCast -> False
             TriggerCondition.SelfBecomesTargeted _ -> False
             TriggerCondition.ControllerBecomesTarget {} -> False
@@ -4093,7 +4098,7 @@ resnapshot gs without event =
         GameEvent.AbilityCountered {} -> Just event
         GameEvent.LifeLost {} -> Just event
         GameEvent.LifeGained {} -> Just event
-        GameEvent.LoyaltyAbilityActivated {} -> Just event
+        GameEvent.AbilityActivated {} -> Just event
         GameEvent.CountersPut {} -> Just event
         GameEvent.CountersRemoved {} -> Just event
         GameEvent.HalfUnlocked {} -> Just event

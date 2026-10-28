@@ -96,6 +96,8 @@ import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.OutsideDestination as OutsideDestination
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentAction as PermanentAction
+import qualified Parun.Types.PlayerActed as PlayerActed
+import qualified Parun.Types.PlayerAction as PlayerAction
 import qualified Parun.Types.PlayerControl as PlayerControl
 import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.PlayerRef as PlayerRef
@@ -782,6 +784,10 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
           -- visibility/cr-701-23a-private-look-oreskos-explorer-s-search-for-none-still-looks
           -- is the proof.
           Monad.unless (Set.null searchedZones) $ do
+            -- CR 701.23a: "whenever [a player] searches their library" (Ob
+            -- Nixilis, Unshackled), recorded before the find, so a search that
+            -- finds nothing is still one.
+            Monad.when ownLibrary (State.modify' (Event.recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.SearchLibrary searcher))))
             Monad.when (searcher == owner && Set.member Zone.Library searchedZones) (Cast.castWhileSearching (performManaAbility runSubgame) searcher)
             looking <- State.get
             Monad.forM_ (Set.toAscList searchedZones) $ \zone -> Monad.mapM_ (Event.look searcher) (Game.zoneMembers zone owner looking)
