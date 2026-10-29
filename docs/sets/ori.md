@@ -1,0 +1,151 @@
+# Magic Origins census
+
+The Magic Origins (ORI) cards not yet in the pool, and which wait on a
+capability. Derived 2026-10-29 from MTGJSON's set list against `data/cards/`.
+Re-derive the missing list by writing the set list as a deck (`1 Name` per
+line) and running `parun deck` on it: every unresolved name is reported.
+
+## Expressible today
+
+These need no new capability, but `parun translate` does not translate them yet.
+Each names the mtgish node the translator stops at.
+
+- Abbot of Keral Keep: `_Action:Exile`
+- Acolyte of the Inferno: `_Permanent:Trigger_TheAttackingCreature`
+- Alchemist's Vial: `_Action:CreatePermanentRuleEffectUntil`
+- Alhammarret, High Arbiter: `_ReplacementActionWouldEnter:EachPlayerAction`
+- Angel's Tomb: `_LayerEffect:SetPT`
+- Animist's Awakening: `_Action:RevealTheTopNumberCardsOfLibrary`
+- Archangel of Tithes:
+  `_PermanentRule:CantAttackPlayerOrPlaneswalkerControlledByUnlessCost`
+- Artificer's Epiphany: `_Action:If`
+- Avaricious Dragon: `_Action:DiscardHand`
+- Bounding Krasis: `_Action:TapOrUntapPermanent`
+- Calculated Dismissal: `_Action:PlayerMayCost`
+- Call of the Full Moon: `_Players:NumSpellsCastLastTurnIs`
+- Chandra, Fire of Kaladesh // Chandra, Roaring Flame:
+  double-faced, so not a `parun translate` candidate
+- Cleric of the Forward Order: `_Permanents:IsNamed`
+- Consecrated by Blood: `_Rule:Activated`
+- Consul's Lieutenant: `_Permanent:Trigger_ThatCreature`
+- Cruel Revival: `_Target:UptoOneTargetGraveyardCard`
+- Dark Dabbling: `_Action:If`
+- Dark Petition: `_Action:If`
+- Day's Undoing: `_Action:ShuffleHandAndGraveyardIntoLibrary`
+- Deep-Sea Terror: `_Rule:Unless`
+- Despoiler of Souls: `_Rule:FromGraveyard`
+- Disciple of the Ring: `_Cost:Exile`
+- Displacement Wave: `_Permanents:ManaValueIs`
+- Dreadwaters: renders differently from its Oracle text
+- Elemental Bond: `_Permanents:PowerIs`
+- Embermaw Hellion: `_Rule:ReplaceWouldDealDamage`
+- Enshrouding Mist: `_Action:CreatePreventDamageUntil`
+- Enthralling Victor: `_Permanents:PowerIs`
+- Erebos's Titan: `_Condition:AllPlayersPassFilter`
+- Evolutionary Leap:
+  `_Action:RevealCardsFromTheTopOfLibraryUntilACardOfTypeIsRevealed`
+- Exquisite Firecraft: `_Rule:FromStackIf`
+- Faerie Miscreant: `_Permanents:IsNamed`
+- Fiery Conclusion: `_Rule:CastEffect`
+- Fiery Impulse: `_Action:IfElse`
+- Flameshadow Conjuring: `_CreatableToken:TokenCopyOfPermanent`
+- Gather the Pack: `_Action:IfElse`
+- Ghirapur Aether Grid: `_Cost:TapNumberPermanents`
+- Gideon's Phalanx: `_Action:If`
+- Gilt-Leaf Winnower: `_Permanents:PowerAndToughnessArentEqual`
+- Gnarlroot Trapper: `_Action:AddManaWithModifiers`
+- Goblin Glory Chaser: `_Permanents:IsRenowned`
+- Goblin Piledriver: `_LayerEffect:AdjustPTForEach`
+- Grasp of the Hieromancer: `_Rule:TriggerA`
+- Hallowed Moonlight: `_Action:CreateReplaceWouldEnterUntil`
+- Hangarback Walker: `_ReplacementActionWouldEnter:EntersWithNumberCounters`
+- Harbinger of the Tides: `_Rule:CastEffect`
+- Helm of the Gods: `_StaticLayerEffect:AdjustPTForEach`
+- Herald of the Pantheon: `_Rule:PlayerEffect`
+- Hixus, Prison Warden: `_Trigger:WhenACreatureDealsCombatDamageToAPlayer`
+- Honored Hierarch: `_Permanents:IsRenowned`
+- Infectious Bloodlust: `_PermanentRule:MustAttack`
+- Infernal Scarring: `_Rule:TriggerA`
+- Infinite Obliteration: `_Action:ChooseACardName`
+- Jace's Sanctum: `_Rule:PlayerEffect`
+- Jace, Vryn's Prodigy // Jace, Telepath Unbound:
+  double-faced, so not a `parun translate` candidate
+- Knight of the White Orchid: `_Players:ControlsMorePermanentThanPlayer`
+- Kothophed, Soul Hoarder: `_Trigger:WhenAPermanentIsPutIntoAPlayersGraveyard`
+- Kytheon's Tactics: `_Action:IfElse`
+- Liliana, Heretical Healer // Liliana, Defiant Necromancer:
+  double-faced, so not a `parun translate` candidate
+- Llanowar Empath: `_Action:RevealTopCardOfLibrary`
+- Macabre Waltz: `_Target:UptoNumberTargetGraveyardCards`
+- Mage-Ring Bully: `_PermanentRule:MustAttack`
+- Mage-Ring Network: `_CounterType:StorageCounter`
+- Mage-Ring Responder: `_PermanentRule:DoesntUntapDuringControllersUntap`
+- Might of the Masses: `_LayerEffect:AdjustPTForEach`
+- Mizzium Meddler: `_Target:TargetSpellOrAbility`
+- Molten Vortex: `_Cost:DiscardACardOfType`
+- Murder Investigation: `_Trigger:WhenAPermanentDies`
+- Necromantic Summons: `_CardsInGraveyards:IsCardtype`
+- Nightsnare: `_Action:RevealHand`
+- Nissa's Pilgrimage: `_Action:IfElse`
+- Nissa's Revelation: `_Action:RevealTopCardOfLibrary`
+- Nissa, Vastwood Seer // Nissa, Sage Animist:
+  double-faced, so not a `parun translate` candidate
+- Orbs of Warding: `_Rule:PlayerEffect`
+- Orchard Spirit: renders differently from its Oracle text
+- Patron of the Valiant: `_Permanents:HasACounterOfType`
+- Possessed Skaab: `_Rule:ReplaceWouldPutIntoGraveyard`
+- Prism Ring: `_ReplacementActionWouldEnter:ChooseAColor`
+- Psychic Rebuttal: `_Spells:TargetsPlayer`
+- Ramroller: `_PermanentRule:MustAttack`
+- Ravaging Blaze: `_Action:If`
+- Reave Soul: `_Permanents:PowerIs`
+- Reclusive Artificer: `_Action:HavePermanentDealDamage`
+- Relic Seeker: `_Trigger:WhenACreatureBecomesRenowned`
+- Scab-Clan Berserker: `_Permanents:IsRenowned`
+- Scrapskin Drake: `_PermanentRule:CanBlockOnly`
+- Seismic Elemental: `_Action:CreateEachPermanentRuleEffectUntil`
+- Send to Sleep: `_Action:If`
+- Sentinel of the Eternal Watch: `_Player:Trigger_ThatPlayer`
+- Shadows of the Past: `_Players:NumCardsOfTypeInGraveyardIs`
+- Sigil of Valor: `_Trigger:WhenACreatureAttacksAlone`
+- Skaab Goliath: `_Rule:CastEffect`
+- Smash to Smithereens: `_DamageRecipient:Player`
+- Somberwald Alpha: `_Trigger:WhenACreatureBecomesBlocked`
+- Sphinx's Tutelage: `_Trigger:WhenAPlayerDrawsACard`
+- Starfield of Nyx: `_Action:PutGraveyardCardOntoBattlefield`
+- Stratus Walk: `_PermanentRule:CanBlockOnly`
+- Subterranean Scout: `_Permanents:PowerIs`
+- Suppression Bonds: `_Permanent:HostPermanent`
+- Swift Reckoning: `_Rule:CastEffect`
+- Sword of the Animist: `_Trigger:WhenACreatureAttacks`
+- Sylvan Messenger: `_Action:RevealTheTopNumberCardsOfLibrary`
+- Talent of the Telepath: `_Action:IfElse`
+- The Great Aurora: `_Action:ShuffleHandAndPermanentsIntoLibrary`
+- Thopter Spy Network:
+  `_Trigger:WhenAnyNumberOfCreaturesDealCombatDamageToAPlayer`
+- Thornbow Archer: `_Players:And`
+- Throwing Knife: `_Trigger:WhenACreatureAttacks`
+- Tormented Thoughts: `_Rule:CastEffect`
+- Touch of Moonglove: `_Action:CreateTriggerUntil`
+- Tower Geist: `_Action:LookAtTheTopNumberCardsOfLibrary`
+- Tragic Arrogance:
+  `_Action:ChooseMultiplePermanentsAmoungPermanentsForEachPlayer`
+- Undead Servant: `_CardsInGraveyards:IsNamed`
+- Unholy Hunger: `_Action:If`
+- Vine Snare: `_Action:CreatePreventDamageUntil`
+- Whirler Rogue: `_Cost:TapNumberPermanents`
+- Wild Instincts: `_Action:Fight`
+- Willbreaker: `_Trigger:WhenAPermanentBecomesTheTargetOfASpellOrAbility`
+- Woodland Bellower: `_CardsInLibrary:IsNonSupertype`
+
+## Needs a capability
+
+Each card is tracked by its issue and is added when that issue lands. Hardest
+first.
+
+- #5395: Demonic Pact. Nothing remembers which modes an object has already
+  chosen, so "choose one that hasn't been chosen" has no reading.
+- #4781: Alhammarret's Archive. No draw replacement can spare the first draw in
+  a draw step, and none rewrites a draw as two.
+- #5754: Tainted Remedy. `LifeGainRewrite` cannot turn a gain into a loss of
+  that much life.
