@@ -1042,6 +1042,7 @@ herald-of-war
 heritage-druid
 hermes-overseer-of-elpis
 hero-of-bladehold
+hewed-stone-retainers
 hickory-woodlot
 high-ground
 high-perfect-morcant
@@ -1993,6 +1994,7 @@ skull-skaab
 skullclamp
 skullwinder
 skymarcher-aspirant
+skyshroud-condor
 skyshroud-ranger
 skywinder-drake
 slaughter-pact

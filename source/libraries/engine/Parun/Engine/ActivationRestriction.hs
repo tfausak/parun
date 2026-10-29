@@ -165,7 +165,7 @@ restrictionMet pid srcId ability gs restriction = case restriction of
   -- a condition over the zone the card leaves answers the same at both.
   -- data/scenarios/mana's Lys Alana Dignitary cases prove the refused offer and
   -- its Synthetic Hollow Spring cases the admitted one.
-  ActivationRestriction.OnlyIf condition -> onlyIfHolds pid srcId gs condition
+  ActivationRestriction.OnlyIf condition -> onlyIfHolds pid srcId (Game.withoutBeingCast gs) condition
   -- CR 602.5b's counted rider, one of the two arms that read neither a window nor
   -- the board: has THIS ability of THIS object already been activated, EVER? CR 400.7
   -- ends the memory with the incarnation (Object.newIncarnation), so a permanent
@@ -220,19 +220,17 @@ restrictionMet pid srcId ability gs restriction = case restriction of
     named = Count.scopePlayers (Projection.viewWithLastKnownAnywhere gs) (Projection.sourceContext gs (Just pid) srcId) gs
 
 -- CR 601.3 / 602.5's "only if [a fact about the game]", asked of `srcId` with
--- `pid` as "you", against the board after CR 601.2a's move
--- (Game.withoutBeingCast). Shared by the OnlyIf arm above and
--- Parun.Engine.Cast's CastingRestriction.OnlyIf: the two rules ask the same
--- question of the same board, so one copy.
+-- `pid` as CR 109.5's "you", against the board each caller hands in: the
+-- activation arm above the board after CR 601.2a's move, Parun.Engine.Cast's
+-- CastingRestriction.OnlyIf the board before it. One evaluation, the board its
+-- parameter.
 onlyIfHolds :: PlayerId -> ObjectId -> GameState -> Condition.Type.Condition -> Bool
-onlyIfHolds pid srcId gs condition =
-  let moved = Game.withoutBeingCast gs
-   in Condition.holds
-        (Projection.fullView moved)
-        (Projection.sourceContext moved (Just pid) srcId)
-        moved
-        srcId
-        condition
+onlyIfHolds pid srcId board =
+  Condition.holds
+    (Projection.fullView board)
+    (Projection.sourceContext board (Just pid) srcId)
+    board
+    srcId
 
 -- CR 602.5d under a permission to activate "any time you could cast an instant"
 -- (Leonin Shikari): the sorcery-speed rider reads as CR 602.5e's instant-speed
