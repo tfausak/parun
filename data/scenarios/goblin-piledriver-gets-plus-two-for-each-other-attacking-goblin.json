@@ -1,0 +1,106 @@
+{
+  "description": "Goblin Piledriver gets +2/+0 until end of turn for each other attacking Goblin as it attacks",
+  "note": "Two other Goblins and a Grizzly Bears attack beside it, so it is 5/2; the Goblin Glory Chaser left home is not counted.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Goblin Piledriver",
+            "label": "pd",
+            "ready": true
+          },
+          {
+            "card": "Raging Goblin",
+            "label": "r1"
+          },
+          {
+            "card": "Raging Goblin",
+            "label": "r2"
+          },
+          {
+            "card": "Goblin Glory Chaser",
+            "label": "home"
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "gb",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$pd",
+          "$r1",
+          "$r2",
+          "$gb"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$pd",
+          "power": 5,
+          "toughness": 2
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndOfCombat",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 11
+        }
+      }
+    }
+  ]
+}

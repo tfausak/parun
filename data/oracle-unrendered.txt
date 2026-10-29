@@ -956,6 +956,7 @@ glorfindel-dauntless-rescuer
 glorious-protector
 glory-bound-initiate
 gnarlid-pack
+gnarlroot-trapper
 gnat-miser
 goblin-arsonist
 goblin-artillery
@@ -965,6 +966,7 @@ goblin-bookie
 goblin-brawler
 goblin-brigand
 goblin-diplomats
+goblin-glory-chaser
 goblin-grenade
 goblin-kaboomist
 goblin-mutant
@@ -988,6 +990,7 @@ grafdiggers-cage
 grafted-skullcap
 grafted-wargear
 grand-abolisher
+grasp-of-the-hieromancer
 grasping-tentacles
 grave-endeavor
 grave-pact
@@ -1030,6 +1033,7 @@ hama-the-bloodbender
 hamletback-goliath
 hammerhand
 hand-of-the-praetors
+hangarback-walker
 hanged-executioner
 hanweir-battlements
 hanweir-garrison
@@ -1068,6 +1072,7 @@ heirloom-blade
 hellion-crucible
 henry-wu-ingen-geneticist
 henzie-toolbox-torre
+herald-of-the-pantheon
 herald-of-war
 heritage-druid
 hermes-overseer-of-elpis
@@ -1084,6 +1089,7 @@ hipparion
 historians-boon
 history-of-benalia
 hive-mind
+hixus-prison-warden
 hoarding-dragon
 hollow-trees
 hollow-warrior
