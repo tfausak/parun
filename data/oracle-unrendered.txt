@@ -1541,13 +1541,16 @@ new-way-forward
 nexus-of-fate
 nicol-bolas-planeswalker
 night-shift-of-the-living-dead
+nightsnare
 nihiloor
 nimbus-maze
 ninja-of-the-deep-hours
 nishoba-brawler
 nissa-steward-of-elements
+nissa-vastwood-seer-nissa-sage-animist
 nissa-worldwaker
 nissas-expedition
+nissas-pilgrimage
 no-regrets-egret
 no-rest-for-the-wicked
 nomad-mythmaker
@@ -1592,6 +1595,8 @@ opposition-agent
 oppressive-rays
 oracle-en-vec
 oracles-attendants
+orbs-of-warding
+orchard-spirit
 orcish-artillery
 orcish-spy
 orcish-veteran
@@ -1639,6 +1644,7 @@ pathrazer-of-ulamog
 patriars-humiliation
 patrician-geist
 patron-of-the-akki
+patron-of-the-valiant
 pay-no-heed
 pearl-collector
 peek
@@ -1700,6 +1706,7 @@ ponder
 porphyry-nodes
 port-of-karfell
 portent
+possessed-skaab
 power-play
 power-sink
 precursor-golem
@@ -1723,6 +1730,7 @@ primeval-titan
 primitive-etchings
 primordial-hydra
 printlifter-ooze
+prism-ring
 prison-barricade
 prized-amalgam
 prized-unicorn
