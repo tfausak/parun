@@ -106,8 +106,9 @@ to agents as written. What it doesn't say:
 
 - Mark the PR ready once the self-review's fixes are pushed and the suite is
   green, report it, and stop: don't wait for CI, don't start the next unit.
-  One unit at a time per checkout. An orchestrated unit leaves it a draft;
-  the orchestrator marks it ready (`docs/agents/orchestrating.md`).
+  One unit at a time per checkout. An orchestrated unit leaves it a draft,
+  overriding `CONTRIBUTING.md`; the orchestrator marks it ready
+  (`docs/agents/orchestrating.md`).
 
 - STAGE, then `hooky fix` (staged files only; it runs every `.hooky.kdl` check
   and rewrites in place), then `git add` again. `--all` sweeps the tree; use
@@ -151,7 +152,9 @@ to agents as written. What it doesn't say:
   (`"name":"Foo"`), and `rulings` sorts before `text`, so a hit near a name is
   usually ruling boilerplate.
 
-- `_scratch/` (gitignored, may be absent: a skipped step, not a blocker) holds
+- `_scratch/` (gitignored; a missing input is a fetch,
+  `docs/agents/orchestrating.md`'s "Machine setup", and missing prior art a
+  skipped step, not a blocker) holds
   prior art --- `phase`, `mtgish`, `argentum-engine`; see
   `docs/agents/set-by-set.md`, "Prior art". Consult it AFTER deriving the rule
   from `docs/rules.txt`; the CR wins every disagreement.
@@ -188,10 +191,11 @@ to agents as written. What it doesn't say:
 - A reading gets a `docs/decisions.md` entry, in the same PR, only when BOTH
   hold: it is observable (different game states or legal choices on some
   legal board), and not forced (neither the CR nor an official ruling picks
-  one). The code site cites the entry. A forced reading cites its rule or
-  ruling at the code site instead; an unobservable implementation choice gets
-  at most a one-line code comment. Check there first, so a settled question
-  is not decided again differently.
+  one). The code site cites the entry. A forced reading --- including one
+  whose rejected alternative is refuted by a rule or ruling --- cites it at
+  the code site instead; an unobservable implementation choice goes in the PR
+  body and gets at most a one-line code comment. Check there first, so a
+  settled question is not decided again differently.
 
 - File the issue, cite it inline. An elision gets an issue carrying status,
   rationale and expiry trigger, and a code-site comment stating only what is
@@ -204,7 +208,7 @@ to agents as written. What it doesn't say:
   an elision paragraph; an elision phrased otherwise cites `(gap #N)`; a
   historical reference sharing a paragraph with an elision drops the
   parentheses (`see #1116`). Closing an issue means grepping its bare number
-  and rewriting every elision citing it, in the same PR.
+  over the whole tree and rewriting every elision citing it, in the same PR.
 
   Fold a known problem in or file it, naming the card that exercises it;
   `docs/agents/set-by-set.md`, "Follow-ups: fold in or file", has the rule.

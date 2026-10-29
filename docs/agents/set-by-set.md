@@ -31,7 +31,8 @@ edit sites, CR citations); what needs a compiler does not (wire spellings,
 line numbers, mutation predictions). `curl` the Oracle text and diff it
 against the brief, grep the sibling to confirm edit sites, and re-derive the
 mutations. A predicted-red mutation that comes back green is a finding: the
-board cannot discriminate, or the site has no observer. Diagnose which.
+board cannot discriminate, or the site has no observer. Diagnose which;
+don't reword the prediction.
 
 Check which issue, and which half of a split one ("the other half stays on
 #N"), you are closing. The cheapest first move is to find the funnel --- the

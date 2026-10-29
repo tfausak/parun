@@ -132,10 +132,10 @@ summary, and its title carries no CR numbers.
   scratchpad. Briefs and PR bodies are files there, relayed by path, never
   retyped.
 - **Merging.** When a PR has cleared any audit, `gh pr ready` it and arm
-  auto-merge (squash) in the same step; a later send-back undoes ready first
+  auto-merge (squash) in the same step; a later fix undoes ready first
   (`gh pr ready --undo`). Re-check `autoMergeRequest` after arming and after
-  every push. On a conflict, send the agent back to merge `origin/main`
-  (`docs/agents/set-by-set.md`, "Git and the PR").
+  every push. On a conflict, brief a fresh agent on the branch to merge
+  `origin/main` (`docs/agents/set-by-set.md`, "Git and the PR").
 - **Shepherd** each PR with `script/shepherd.sh PR` in the background: it
   updates a `BEHIND` branch and exits on merge, conflict or a failed check.
   Read a failed job's log first: one that died in `Set up job` is not a real
@@ -146,8 +146,9 @@ summary, and its title carries no CR numbers.
   that has no commit beyond `origin/main`, skipping any a live worktree has
   checked out. Kill a stalled `cabal` by PID after `lsof -p <pid> -d cwd`
   shows a finished worktree. Leave branches you did not create that carry
-  commits. Hold a worktree while an audit or send-back may still reach it.
-  Then refresh the warm worktree.
+  commits. Hold a worktree until its PR merges: a fixer works in it. Then
+  refresh the warm worktree.
+
 ## Writing a brief
 
 Instantiate the templates below, never a previous filled-in brief; add only
