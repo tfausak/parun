@@ -10,16 +10,6 @@ line) and running `parun deck` on it: every unresolved name is reported.
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Deep-Sea Terror: `_Rule:Unless`
-- Despoiler of Souls: `_Rule:FromGraveyard`
-- Disciple of the Ring: `_Cost:Exile`
-- Displacement Wave: `_Permanents:ManaValueIs`
-- Dreadwaters: renders differently from its Oracle text
-- Elemental Bond: `_Permanents:PowerIs`
-- Embermaw Hellion: `_Rule:ReplaceWouldDealDamage`
-- Enshrouding Mist: `_Action:CreatePreventDamageUntil`
-- Enthralling Victor: `_Permanents:PowerIs`
-- Erebos's Titan: `_Condition:AllPlayersPassFilter`
 - Evolutionary Leap:
   `_Action:RevealCardsFromTheTopOfLibraryUntilACardOfTypeIsRevealed`
 - Exquisite Firecraft: `_Rule:FromStackIf`

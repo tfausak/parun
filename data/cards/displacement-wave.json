@@ -1,0 +1,90 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Variable"
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Displacement Wave",
+      "oracleText": "Return all nonland permanents with mana value X or less to their owners' hands.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "MoveToZone",
+                    "value": {
+                      "ref": {
+                        "type": "EachMatching",
+                        "value": {
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "Not",
+                              "value": {
+                                "type": "HasCardType",
+                                "value": {
+                                  "type": "Land"
+                                }
+                              }
+                            },
+                            {
+                              "type": "Measures",
+                              "value": {
+                                "comparison": {
+                                  "type": "AtMost"
+                                },
+                                "measure": {
+                                  "type": "ManaValue"
+                                },
+                                "operand": {
+                                  "type": "AmountInSlot",
+                                  "value": "X"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "zone": {
+                        "type": "Hand"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -556,6 +556,7 @@ declaration-of-naught
 deem-inferior
 deem-worthy
 deep-sea-serpent
+deep-sea-terror
 deep-wood
 deepglow-skate
 deeproot-pilgrimage
@@ -578,6 +579,7 @@ dermotaxi
 desert
 desertion
 desolation-twin
+despoiler-of-souls
 destined-lead
 destructive-force
 detritivore
@@ -598,11 +600,13 @@ dinosaurs-on-a-spaceship
 dire-fleet-daredevil
 disarm
 disciple-of-bolas
+disciple-of-the-ring
 discombobulate
 disguise-agent
 dismantling-wave
 dismiss-into-dream
 disorder
+displacement-wave
 dissipate
 distant-memories
 distorting-lens
@@ -642,6 +646,7 @@ drain-power
 drannith-magistrate
 dread-charge
 dread-fugue
+dreadwaters
 dream-cache
 dream-devourer
 dream-prowler
@@ -679,6 +684,7 @@ elbrus-the-binding-blade-withengar-unbound
 elder-deep-fiend
 elderscale-wurm
 elemental-augury
+elemental-bond
 elemental-mastery
 elemental-teachings
 elemental-uprising
@@ -696,6 +702,7 @@ elvish-hunter
 elvish-pioneer
 elvish-piper
 embereth-shieldbreaker-battle-display
+embermaw-hellion
 embolden
 emergent-growth
 emperor-crocodile
@@ -717,11 +724,14 @@ enhanced-surveillance
 enigma-thief
 enlarge
 enormous-energy-blade
+enshrouding-mist
 ensnaring-bridge
 ensoul-artifact
 entangling-vines
+enthralling-victor
 entourage-of-trest
 eon-hub
+ereboss-titan
 ersatz-gnomes
 ertais-scorn
 erudite-wizard

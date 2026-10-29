@@ -2273,7 +2273,7 @@ discardsBound pid cards = do
 -- something else under Maskwood Nexus (Parun.CostSpec's Putrid Raptor pair).
 discardCandidates :: Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
 discardCandidates slots pid oid criterion gs =
-  let context = Projection.framedBy oid gs (Projection.contextWithSlots gs (Just pid) Nothing slots)
+  let context = Projection.framedBy oid gs (Projection.contextWithSlots gs (Just pid) (Just oid) slots)
       viewOf = Projection.viewsOf gs
       matches candidate = Filter.matches context (viewOf candidate) criterion
    in filter (\candidate -> candidate /= oid && not (Game.beingCast gs candidate) && matches candidate) (Game.zoneMembers Zone.Hand pid gs)
@@ -2329,7 +2329,7 @@ revealFromHandCandidates = discardCandidates
 -- the battlefield half cannot read the criterion differently.
 beholdCandidates :: Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
 beholdCandidates slots pid oid criterion gs =
-  let context = Projection.framedBy oid gs (Projection.contextWithSlots gs (Just pid) Nothing slots)
+  let context = Projection.framedBy oid gs (Projection.contextWithSlots gs (Just pid) (Just oid) slots)
       viewOf = Projection.viewsOf gs
       matches candidate = Filter.matches context (viewOf candidate) criterion
    in revealFromHandCandidates slots pid oid criterion gs
@@ -2394,13 +2394,15 @@ revealPaying paidFor pid card = do
 --
 -- No `oid` exclusion, unlike discardCandidates above: CR 602.2a leaves an ability
 -- activated FROM a graveyard with its source still there, a legal candidate for
--- its own cost. What is excluded instead is the card being CAST (Game.beingCast),
+-- its own cost unless its criterion's "other" (`Not IsSource`, read against the
+-- context's source) excludes it -- Despoiler of Souls' scenario proves that.
+-- What this reader itself excludes is the card being CAST (Game.beingCast),
 -- which is the exclusion the callers asking BEFORE CR 601.2a's move need and the
 -- only one CR 601.2a states -- Loathsome Chimera is not among the cards its own
 -- escape cost can exile.
 exileCandidates :: Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
 exileCandidates slots pid oid criterion gs =
-  let context = Projection.framedBy oid gs (Projection.contextWithSlots gs (Just pid) Nothing slots)
+  let context = Projection.framedBy oid gs (Projection.contextWithSlots gs (Just pid) (Just oid) slots)
       viewOf = Projection.viewsOf gs
       matches candidate = Filter.matches context (viewOf candidate) criterion
    in filter (\candidate -> not (Game.beingCast gs candidate) && matches candidate) (Game.zoneMembers Zone.Graveyard pid gs)
@@ -2421,7 +2423,7 @@ exileCandidates slots pid oid criterion gs =
 -- leave the ExileThis component nothing to exile.
 materialCandidates :: Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
 materialCandidates slots pid oid criterion gs =
-  let context = Projection.framedBy oid gs (Projection.contextWithSlots gs (Just pid) Nothing slots)
+  let context = Projection.framedBy oid gs (Projection.contextWithSlots gs (Just pid) (Just oid) slots)
       viewOf = Projection.viewsOf gs
       matches candidate = candidate /= oid && Filter.matches context (viewOf candidate) criterion
    in filter matches (List.sort (Projection.controls pid gs))
