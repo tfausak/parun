@@ -114,6 +114,7 @@ import qualified Parun.Types.CastFromZone as CastFromZone
 import qualified Parun.Types.CastObligation as CastObligation
 import qualified Parun.Types.CastOffer as CastOffer
 import qualified Parun.Types.CastRepetition as CastRepetition
+import qualified Parun.Types.CastingRestriction as CastingRestriction
 import qualified Parun.Types.CausedBy as CausedBy
 import qualified Parun.Types.ChangeText as ChangeText
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
@@ -902,6 +903,19 @@ restrictionConditions restriction = case restriction of
   ActivationRestriction.DuringDieRoll -> []
   ActivationRestriction.InstantSpeed -> []
   ActivationRestriction.SpendOnly _ -> []
+
+-- Every Condition a "cast this spell only ..." clause holds: only CR 601.3's
+-- OnlyIf carries one. restrictionConditions' role for the casting side.
+castingRestrictionConditions :: CastingRestriction.CastingRestriction -> [Condition.Type.Condition]
+castingRestrictionConditions restriction = case restriction of
+  CastingRestriction.DuringPhase _ -> []
+  CastingRestriction.AttackedThisStep -> []
+  CastingRestriction.AfterBlockersDeclared -> []
+  CastingRestriction.BeforeStep _ -> []
+  CastingRestriction.DuringTurn _ -> []
+  CastingRestriction.NotDuringFirstTurns _ -> []
+  CastingRestriction.OnlyIf condition -> [condition]
+  CastingRestriction.SpendOnlyOnX _ -> []
 
 -- CR 701.46a's per-clause gate. Mode.allEffects and Modal.allEffects drop clause
 -- boundaries by design, so every lint that reaches a card through them needs
@@ -2136,6 +2150,8 @@ cardCounts card =
     <> concatMap (playerEffectCounts . PlayerStaticAbility.effect) (Face.playerAbilities card)
     <> concatMap (quantityCounts . CostReduction.perEach) (Face.costReductions card)
     <> concatMap (concatMap conditionCounts . Maybe.maybeToList . CostReduction.condition) (Face.costReductions card)
+    -- CR 601.3's "cast this spell only if" rider (Illusory Angel).
+    <> concatMap (concatMap conditionCounts . castingRestrictionConditions) (Face.castingRestrictions card)
     <> ruleAbilitiesCounts (Projection.ruleAbilitiesOfFace card)
 
 -- Every Count reachable from the fifteen CR 613.11 rule-ability families, a
@@ -6728,13 +6744,14 @@ activatedAbilityFilters ability =
 --   * `spell`, `activatedAbilities`, `triggeredAbilities`, `delayedAbilities` --
 --     every mode's target slots and effects, plus an activation cost, a
 --     trigger's own condition and its intervening clause.
+--   * `castingRestrictions` -- CR 601.3's OnlyIf condition.
 --   * `mulliganActions` (CR 103.5b) and `openingHandActions` (CR 103.6) -- the two
 --     pregame actions, which `cardResolutionEffects` above does not reach.
 --
 -- The remaining fields hold none: `name`, `manaCost`, `typeLine`, `loyalty`,
 -- `defense`, `vanguard`, `canBeYourCommander`, `claimsStartingPlayer`,
--- `anteOnly`, `colorIndicator`, `counterability`, `castingPermissions` and
--- `castingRestrictions`. That is checkable rather than asserted: none of the
+-- `anteOnly`, `colorIndicator`, `counterability` and `castingPermissions`.
+-- That is checkable rather than asserted: none of the
 -- types those fields reach imports Parun.Types.Filter, which
 -- `grep -rl 'import qualified Parun.Types.Filter' source/libraries/types/` over
 -- each one's closure answers.
@@ -6775,6 +6792,9 @@ cardFilters card =
         <> concatMap (frame Unframed . alternativeCostFilters) (Face.alternativeCosts card)
         <> concatMap (quantityFilters . CostReduction.perEach) (Face.costReductions card)
         <> concatMap (concatMap conditionFilters . Maybe.maybeToList . CostReduction.condition) (Face.costReductions card)
+        -- CR 601.3's rider, Unframed for activatedAbilityFilters' CR 602.5 reason:
+        -- the cast gate reads no announcement.
+        <> concatMap (concatMap conditionFilters . castingRestrictionConditions) (Face.castingRestrictions card)
         <> unframed (Maybe.mapMaybe CostReduction.whichTargets (Face.costReductions card))
         <> concatMap (slotlessCost . specialActionFilters) (Face.specialActions card)
         <> ruleAbilitiesFilters (Projection.ruleAbilitiesOfFace card)

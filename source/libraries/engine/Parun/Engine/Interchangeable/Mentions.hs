@@ -876,6 +876,7 @@ castingRestrictionNames asking x = case x of
   CastingRestriction.BeforeStep _phase -> history asking HistoryRead.StepBegins
   CastingRestriction.DuringTurn turnScope -> turnScopeNames asking turnScope
   CastingRestriction.NotDuringFirstTurns _turns -> mempty
+  CastingRestriction.OnlyIf condition -> conditionNames asking condition
   CastingRestriction.SpendOnlyOnX _color -> mempty
 
 changeTextNames :: (Monoid r) => Asking r -> ChangeText.ChangeText -> r
