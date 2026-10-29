@@ -1827,7 +1827,7 @@ isPayResponse response = case response of
 -- counters on it. If you don't, create N 1/1 colorless Servo artifact creature
 -- tokens." Rule 702.123a prints CR 118.12a's rewriting already done, so the
 -- minted clause is one PayGate over
--- CostComponent.PutPlusOneCountersOnThis and the tokens are its "if you don't"
+-- CostComponent.PutCountersOnThis and the tokens are its "if you don't"
 -- branch -- afterlife's mint with a gate on it, and the first minted keyword
 -- ability that offers a COST at resolution. (Soulshift's and provoke's clauses
 -- ask a question there too, but a printed "may" rather than a cost.)

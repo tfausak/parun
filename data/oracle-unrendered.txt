@@ -2534,6 +2534,7 @@ yawning-fissure
 yedora-grave-gardener
 yeva-natures-herald
 ygra-eater-of-all
+yisan-the-wanderer-bard
 yixlid-jailer
 yotia-declares-war
 young-deathclaws

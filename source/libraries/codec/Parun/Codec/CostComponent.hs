@@ -4,7 +4,7 @@ import qualified Data.Typeable as Typeable
 import qualified Parun.Codec.Behold as Behold
 import qualified Parun.Codec.CostAmount as CostAmount
 import qualified Parun.Codec.CountersFromPermanents as CountersFromPermanents
-import qualified Parun.Codec.CountersFromThis as CountersFromThis
+import qualified Parun.Codec.CountersOnThis as CountersOnThis
 import qualified Parun.Codec.DiscardCards as DiscardCards
 import qualified Parun.Codec.ExileCardsFromGraveyard as ExileCardsFromGraveyard
 import qualified Parun.Codec.ExileCardsFromHand as ExileCardsFromHand
@@ -62,9 +62,9 @@ codec keywordCodec =
       Arm.payload "PayEnergy" CostAmount.codec CostComponent.PayEnergy (\x -> case x of CostComponent.PayEnergy y -> Just y; _ -> Nothing),
       Arm.payload "AddLoyaltyToThis" Common.natural CostComponent.AddLoyaltyToThis (\x -> case x of CostComponent.AddLoyaltyToThis y -> Just y; _ -> Nothing),
       Arm.payload "RemoveLoyaltyFromThis" CostAmount.codec CostComponent.RemoveLoyaltyFromThis (\x -> case x of CostComponent.RemoveLoyaltyFromThis y -> Just y; _ -> Nothing),
-      Arm.payload "RemoveCountersFromThis" (CountersFromThis.codec keywordCodec) CostComponent.RemoveCountersFromThis (\x -> case x of CostComponent.RemoveCountersFromThis y -> Just y; _ -> Nothing),
+      Arm.payload "RemoveCountersFromThis" (CountersOnThis.codec keywordCodec) CostComponent.RemoveCountersFromThis (\x -> case x of CostComponent.RemoveCountersFromThis y -> Just y; _ -> Nothing),
       Arm.payload "RemoveCounters" (CountersFromPermanents.codec keywordCodec) CostComponent.RemoveCounters (\x -> case x of CostComponent.RemoveCounters y -> Just y; _ -> Nothing),
-      Arm.payload "PutPlusOneCountersOnThis" Common.natural CostComponent.PutPlusOneCountersOnThis (\x -> case x of CostComponent.PutPlusOneCountersOnThis y -> Just y; _ -> Nothing),
+      Arm.payload "PutCountersOnThis" (CountersOnThis.codec keywordCodec) CostComponent.PutCountersOnThis (\x -> case x of CostComponent.PutCountersOnThis y -> Just y; _ -> Nothing),
       Arm.payload "Blight" CostAmount.codec CostComponent.Blight (\x -> case x of CostComponent.Blight y -> Just y; _ -> Nothing),
       Arm.nullary "Forage" CostComponent.Forage,
       Arm.nullary "FlipCoin" CostComponent.FlipCoin,
@@ -107,7 +107,7 @@ tagOf x = case x of
   CostComponent.RemoveLoyaltyFromThis {} -> "RemoveLoyaltyFromThis"
   CostComponent.RemoveCountersFromThis {} -> "RemoveCountersFromThis"
   CostComponent.RemoveCounters {} -> "RemoveCounters"
-  CostComponent.PutPlusOneCountersOnThis {} -> "PutPlusOneCountersOnThis"
+  CostComponent.PutCountersOnThis {} -> "PutCountersOnThis"
   CostComponent.Blight {} -> "Blight"
   CostComponent.Forage {} -> "Forage"
   CostComponent.FlipCoin {} -> "FlipCoin"

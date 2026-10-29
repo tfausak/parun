@@ -78,7 +78,7 @@ loyaltyAmountOf component = case component of
   -- another permanent: CR 606.4's loyalty symbol is what makes a loyalty
   -- ability, and this is a +1\/+1 counter.
   CostComponent.RemoveCounters {} -> Nothing
-  CostComponent.PutPlusOneCountersOnThis _ -> Nothing
+  CostComponent.PutCountersOnThis _ -> Nothing
   CostComponent.Blight _ -> Nothing
   CostComponent.Forage -> Nothing
   CostComponent.FlipCoin -> Nothing

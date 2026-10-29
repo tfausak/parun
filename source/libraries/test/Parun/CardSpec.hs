@@ -4022,7 +4022,7 @@ costComponentFilters component = case component of
   -- CR 118.1's removal aimed elsewhere: Zameck Guildmage's "a creature you
   -- control", Retribution of the Ancients' "creatures you control".
   CostComponent.RemoveCounters (CountersFromPermanents.MkCountersFromPermanents _ _ f _) -> [f]
-  CostComponent.PutPlusOneCountersOnThis _ -> []
+  CostComponent.PutCountersOnThis _ -> []
   CostComponent.Blight _ -> []
   CostComponent.Forage -> []
   CostComponent.FlipCoin -> []

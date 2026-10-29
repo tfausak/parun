@@ -76,6 +76,7 @@ import qualified Parun.Types.Counter as Counter
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CounterName as CounterName
 import qualified Parun.Types.Counterability as Counterability
+import qualified Parun.Types.CountersOnThis as CountersOnThis
 import qualified Parun.Types.Craft as Craft
 import qualified Parun.Types.Create as Create
 import qualified Parun.Types.CreateCopy as CreateCopy
@@ -7557,7 +7558,7 @@ fabricate n =
                     { -- CR 118.5, crew's note above: no mana part is `Just` an empty
                       -- one, never the Nothing that means unpayable.
                       Cost.mana = Just (ManaCost.MkManaCost []),
-                      Cost.components = [CostComponent.PutPlusOneCountersOnThis n]
+                      Cost.components = [CostComponent.PutCountersOnThis (CountersOnThis.MkCountersOnThis CounterKind.PlusOnePlusOne n)]
                     }
                     NonEmpty.:| []
                 ),
