@@ -607,13 +607,15 @@ joined context predicates = case predicates of
           <> [ (Prose.sentence (clauseText p {verb = vp} <> Text.pack " and " <> vq <> Text.pack ", where X is " <> e) <> trailing q, allMentions p <> mentions q)
              | (vp, vq, e) <- sharedX
              ]
-    -- Free: two sentences (Afterlife Insurance) or "and" (Bad Deal).
-    | implied p || implied q -> apart <> together <> togetherX
+    -- Free: two sentences (Afterlife Insurance), "and" (Bad Deal) or, after
+    -- an imperative, ", then" (Macabre Waltz).
+    | implied p || implied q -> apart <> together <> togetherX <> thenImperative
     -- Free: "and" (Vampiric Feast) or two sentences (Soul Shred).
     | otherwise -> together <> apart <> togetherX
     where
       together = [(Prose.sentence (clauseText p <> Text.pack " and " <> clauseText q) <> trailing q, allMentions p <> allMentions q)]
       apart = [(text, allMentions p <> allMentions q) | text <- followedBy context (sentences p) (sentences q)]
+      thenImperative = [(Prose.sentence (clauseText p <> Text.pack ", then " <> verb q) <> trailing q, allMentions p <> mentions q) | Maybe.isNothing (subject p), implied q]
       -- Free for one count read by two subjects: "equal to" each time, above,
       -- or one X defined once (Tendrils of Corruption's "deals X damage to
       -- target creature and you gain X life, where X is the number of Swamps
