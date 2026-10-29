@@ -526,16 +526,17 @@ modified context m more = do
       changed = if again then (\(v, rest) -> v <> Text.pack " an additional" <> rest) (Text.breakOn (Text.pack " ") change') else change'
       -- Some of the objects an earlier instruction changed "also" change:
       -- "White creatures you control also gain first strike" (Sanctified
-      -- Charge). Free.
+      -- Charge), or all of them: "those creatures also gain vigilance"
+      -- (Kytheon's Tactics). Free.
       conjuncts f = case f of
         Filter.Type.And fs -> fs
         _ -> [f]
       among = case ModifyTarget.ref m of
         ObjectRef.EachMatching f ->
-          let narrower r = case r of
-                ObjectRef.EachMatching g -> conjuncts f /= conjuncts g && all (`elem` conjuncts f) (conjuncts g)
+          let within r = case r of
+                ObjectRef.EachMatching g -> all (`elem` conjuncts f) (conjuncts g)
                 _ -> False
-           in any narrower (Target.earlier context)
+           in any within (Target.earlier context)
         _ -> False
   change <- if among then [changed, Text.pack "also " <> changed] else [changed]
   -- A rule granted until end of turn lasts "this turn": "can't be blocked

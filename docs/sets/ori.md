@@ -10,18 +10,6 @@ line) and running `parun deck` on it: every unresolved name is reported.
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Honored Hierarch: `_Permanents:IsRenowned`
-- Infectious Bloodlust: `_PermanentRule:MustAttack`
-- Infernal Scarring: `_Rule:TriggerA`
-- Infinite Obliteration: `_Action:ChooseACardName`
-- Jace's Sanctum: `_Rule:PlayerEffect`
-- Jace, Vryn's Prodigy // Jace, Telepath Unbound:
-  double-faced, so not a `parun translate` candidate
-- Knight of the White Orchid: `_Players:ControlsMorePermanentThanPlayer`
-- Kothophed, Soul Hoarder: `_Trigger:WhenAPermanentIsPutIntoAPlayersGraveyard`
-- Kytheon's Tactics: `_Action:IfElse`
-- Liliana, Heretical Healer // Liliana, Defiant Necromancer:
-  double-faced, so not a `parun translate` candidate
 - Llanowar Empath: `_Action:RevealTopCardOfLibrary`
 - Macabre Waltz: `_Target:UptoNumberTargetGraveyardCards`
 - Mage-Ring Bully: `_PermanentRule:MustAttack`
@@ -108,5 +96,7 @@ first.
   reading.
 - #5764: Hallowed Moonlight. An enters redirect to exile is offered only
   against a zone change, so a creature token that wasn't cast still enters.
+- #4735: Jace, Vryn's Prodigy // Jace, Telepath Unbound. No permission lets
+  one targeted card be cast from a graveyard, so the −3 has no reading.
 - #5754: Tainted Remedy. `LifeGainRewrite` cannot turn a gain into a loss of
   that much life.
