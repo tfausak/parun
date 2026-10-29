@@ -175,6 +175,7 @@ import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.DealDamage as DealDamage
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
+import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Defense as Defense
 import qualified Parun.Types.Designate as Designate
 import qualified Parun.Types.Destroy as Destroy
@@ -299,7 +300,6 @@ import qualified Parun.Types.PerCreature as PerCreature
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
-import qualified Parun.Types.PermanentSacrificed as PermanentSacrificed
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
@@ -310,6 +310,7 @@ import qualified Parun.Types.PhaseSelector as PhaseSelector
 import qualified Parun.Types.PlacesSticker as PlacesSticker
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
 import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
+import qualified Parun.Types.PlayerActsOn as PlayerActsOn
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Types.PlayerCounters as PlayerCounters
@@ -1203,10 +1204,11 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.RevealedThisWay _ -> []
   TriggerCondition.SelfDiscarded -> []
   TriggerCondition.SelfExiledForMadness -> []
-  -- CR 701.9a's discard condition is a PlayerRelation, which holds no Count.
+  -- CR 701.9a's discard condition is a PlayerRelation and a Filter, neither of
+  -- which holds a Count.
   TriggerCondition.PlayerDiscards _ -> []
   TriggerCondition.PlayerDiscardsCards _ -> []
-  -- CR 702.29a's cycling read as a discard: the same PlayerRelation, so no Count
+  -- CR 702.29a's cycling read as a discard: a PlayerRelation alone, so no Count
   -- either.
   TriggerCondition.PlayerCycles _ -> []
   TriggerCondition.PlayerDrawsNthCard {} -> []
@@ -1286,8 +1288,8 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- Its player-side sibling carries a PlayerRelation and a StackObjectKind, and
   -- no Count either.
   TriggerCondition.ControllerBecomesTarget {} -> []
-  -- Nor does the bystander batch reading, which carries a Filter and a
-  -- StackObjectKind.
+  -- Nor does the bystander batch reading, which carries a Filter, a
+  -- PlayerRelation and a StackObjectKind.
   TriggerCondition.PermanentsBecomeTargeted {} -> []
   TriggerCondition.PermanentBecomesTargeted {} -> []
 
@@ -4612,7 +4614,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.SelfManaAbilityResolves -> []
   -- CR 701.21a's Filter narrows the sacrificed permanent -- Vengeful Tracker's
   -- "an artifact" -- and is swept like PermanentDies' below.
-  TriggerCondition.PermanentSacrificed payload -> unframed [PermanentSacrificed.filter payload]
+  TriggerCondition.PermanentSacrificed payload -> unframed [PlayerActsOn.filter payload]
   -- CR 603.3b's names a PlayerRelation; the Saga is found through CR 714.2d's
   -- final chapter number rather than through a Filter.
   TriggerCondition.SagaFinalChapterTriggers _ -> []
@@ -4656,7 +4658,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- so a text change has nothing here to rewrite.
   TriggerCondition.SelfDealsDamageToCreature _ -> []
   TriggerCondition.DealsDamage watched -> actingFilters watched
-  TriggerCondition.IsDealtDamage watched -> actingFilters watched
+  TriggerCondition.IsDealtDamage dealt -> actingFilters (DealtDamage.recipient dealt)
   TriggerCondition.PlayerIsDealtDamage _ -> []
   -- Its watcher-scoped sibling carries one -- Tovolar's "a Wolf or Werewolf you
   -- control", which the card lint must sweep.
@@ -4735,8 +4737,9 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.RevealedThisWay r -> unframed [RevealedThisWay.card r]
   TriggerCondition.SelfDiscarded -> []
   TriggerCondition.SelfExiledForMadness -> []
-  TriggerCondition.PlayerDiscards _ -> []
-  TriggerCondition.PlayerDiscardsCards _ -> []
+  -- Waste Not's "a creature card", card text swept like PermanentSacrificed's.
+  TriggerCondition.PlayerDiscards payload -> unframed [PlayerActsOn.filter payload]
+  TriggerCondition.PlayerDiscardsCards payload -> unframed [PlayerActsOn.filter payload]
   TriggerCondition.PlayerCycles _ -> []
   TriggerCondition.PlayerDrawsNthCard {} -> []
   -- CR 725.1's crowning condition is a PlayerRelation, which holds no Filter.

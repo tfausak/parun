@@ -10,7 +10,7 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 -- produce -- Autumn Willow, Harmony's "whenever you tap a land creature for
 -- mana".
 --
--- A record for Parun.Types.PermanentSacrificed's reason: the printed form pairs a
+-- A record for Parun.Types.PlayerActsOn's reason: the printed form pairs a
 -- subject with its narrowings, and no field has a default -- Mirari's Wake's
 -- "whenever you tap a land for mana" spells the subject out as a Land filter
 -- rather than leaving it absent, and its silence about the mana out as

@@ -1,0 +1,27 @@
+{
+  "description": "CR 603.2 / 601.2c / 118.12a: Diffusion Sliver counters an opponent's spell targeting a Sliver its controller controls unless that opponent pays {2}",
+  "note": "Three seats. Alice's own Giant Growth on her Galerider Sliver is not taxed. Bob's first Unsummon, at alice's Grizzly Bears, is not either: the Bears are no Sliver. His second, at the Blur Sliver with his last Island, is countered. Carol pays {2} for her Unsummon at Diffusion Sliver itself, and it resolves.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "G", "battlefield": [{"card": "Diffusion Sliver", "label": "sliver"}, {"card": "Galerider Sliver", "label": "galerider"}, {"card": "Grizzly Bears", "label": "bears"}], "hand": [{"card": "Giant Growth", "label": "growth"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "battlefield": [{"card": "Island", "label": "b1"}, {"card": "Island", "label": "b2"}], "hand": [{"card": "Unsummon", "label": "u1"}, {"card": "Unsummon", "label": "u2"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+    {"name": "carol", "battlefield": [{"card": "Island", "label": "c1"}, {"card": "Island", "label": "c2"}, {"card": "Island", "label": "c3"}], "hand": [{"card": "Unsummon", "label": "u3"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+  ]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$growth", "targets": ["$galerider"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$galerider", "power": 4, "toughness": 4}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$u1", "targets": ["$bears"], "mana": ["$b1", null]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$u2", "targets": ["$galerider"], "mana": ["$b2"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Stack", "is": ["trigger of $sliver", "Unsummon#3"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Galerider Sliver", "count": 1}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Unsummon", "count": 2}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "carol", "do": {"Cast": {"object": "$u3", "targets": ["$sliver"], "mana": ["$c1", null]}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "carol", "do": "Pass"},
+    {"turn": 3, "step": "PrecombatMain", "player": "carol", "do": {"ChooseToPay": {"decision": {"type": "Pays"}, "mana": ["$c2", "$c3"]}}, "source": "$sliver"},
+    {"turn": 3, "step": "PrecombatMain", "player": "carol", "do": "Pass"},
+    {"turn": 3, "step": "PrecombatMain", "player": "carol", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Diffusion Sliver", "count": 1}}}
+  ]
+}

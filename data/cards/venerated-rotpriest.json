@@ -57,6 +57,9 @@
               },
               "kind": {
                 "type": "Spell"
+              },
+              "relation": {
+                "type": "AnyPlayer"
               }
             }
           },

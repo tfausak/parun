@@ -32,11 +32,13 @@
           "condition": {
             "type": "IsDealtDamage",
             "value": {
-              "type": "Matching",
-              "value": {
-                "type": "HasCardType",
+              "recipient": {
+                "type": "Matching",
                 "value": {
-                  "type": "Creature"
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
                 }
               }
             }
