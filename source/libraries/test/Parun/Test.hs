@@ -510,7 +510,6 @@ import qualified Parun.Codec.PermanentActionSpec
 import qualified Parun.Codec.PermanentBecomesDesignatedSpec
 import qualified Parun.Codec.PermanentCandidateSpec
 import qualified Parun.Codec.PermanentDealsCombatDamageToPlayerSpec
-import qualified Parun.Codec.PermanentSacrificedSpec
 import qualified Parun.Codec.PermanentTappedForManaSpec
 import qualified Parun.Codec.PermanentWasSacrificedSpec
 import qualified Parun.Codec.PermanentsBecomeTargetedSpec
@@ -534,6 +533,7 @@ import qualified Parun.Codec.PlaneswalkRewriteSpec
 import qualified Parun.Codec.PlayBudgetSpec
 import qualified Parun.Codec.PlayPermissionOriginSpec
 import qualified Parun.Codec.PlayerActionSpec
+import qualified Parun.Codec.PlayerActsOnSpec
 import qualified Parun.Codec.PlayerAttacksPlayerSpec
 import qualified Parun.Codec.PlayerAttacksWithSpec
 import qualified Parun.Codec.PlayerChoiceSpec
@@ -1453,7 +1453,7 @@ spec s registry corpus = do
   Parun.Codec.PermanentBecomesDesignatedSpec.spec s
   Parun.Codec.PermanentCandidateSpec.spec s
   Parun.Codec.PermanentDealsCombatDamageToPlayerSpec.spec s
-  Parun.Codec.PermanentSacrificedSpec.spec s
+  Parun.Codec.PlayerActsOnSpec.spec s
   Parun.Codec.PermanentsBecomeTargetedSpec.spec s
   Parun.Codec.PermanentsDealCombatDamageToPlayerSpec.spec s
   Parun.Codec.PermanentTappedForManaSpec.spec s

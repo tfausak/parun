@@ -23,7 +23,13 @@
           "condition": {
             "type": "PlayerDiscards",
             "value": {
-              "type": "Opponent"
+              "filter": {
+                "type": "And",
+                "value": []
+              },
+              "player": {
+                "type": "Opponent"
+              }
             }
           },
           "modal": {

@@ -114,6 +114,7 @@ import qualified Parun.Types.CastFromZone as CastFromZone
 import qualified Parun.Types.CastObligation as CastObligation
 import qualified Parun.Types.CastOffer as CastOffer
 import qualified Parun.Types.CastRepetition as CastRepetition
+import qualified Parun.Types.CastingRestriction as CastingRestriction
 import qualified Parun.Types.CausedBy as CausedBy
 import qualified Parun.Types.ChangeText as ChangeText
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
@@ -174,6 +175,7 @@ import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.DealDamage as DealDamage
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
+import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Defense as Defense
 import qualified Parun.Types.Designate as Designate
 import qualified Parun.Types.Destroy as Destroy
@@ -298,7 +300,6 @@ import qualified Parun.Types.PerCreature as PerCreature
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
-import qualified Parun.Types.PermanentSacrificed as PermanentSacrificed
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
@@ -309,6 +310,7 @@ import qualified Parun.Types.PhaseSelector as PhaseSelector
 import qualified Parun.Types.PlacesSticker as PlacesSticker
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
 import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
+import qualified Parun.Types.PlayerActsOn as PlayerActsOn
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Types.PlayerCounters as PlayerCounters
@@ -903,6 +905,19 @@ restrictionConditions restriction = case restriction of
   ActivationRestriction.InstantSpeed -> []
   ActivationRestriction.SpendOnly _ -> []
 
+-- Every Condition a "cast this spell only ..." clause holds: only CR 601.3's
+-- OnlyIf carries one. restrictionConditions' role for the casting side.
+castingRestrictionConditions :: CastingRestriction.CastingRestriction -> [Condition.Type.Condition]
+castingRestrictionConditions restriction = case restriction of
+  CastingRestriction.DuringPhase _ -> []
+  CastingRestriction.AttackedThisStep -> []
+  CastingRestriction.AfterBlockersDeclared -> []
+  CastingRestriction.BeforeStep _ -> []
+  CastingRestriction.DuringTurn _ -> []
+  CastingRestriction.NotDuringFirstTurns _ -> []
+  CastingRestriction.OnlyIf condition -> [condition]
+  CastingRestriction.SpendOnlyOnX _ -> []
+
 -- CR 701.46a's per-clause gate. Mode.allEffects and Modal.allEffects drop clause
 -- boundaries by design, so every lint that reaches a card through them needs
 -- this beside it, or the gate's Counts -- and through them its Filters -- go
@@ -1189,10 +1204,11 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.RevealedThisWay _ -> []
   TriggerCondition.SelfDiscarded -> []
   TriggerCondition.SelfExiledForMadness -> []
-  -- CR 701.9a's discard condition is a PlayerRelation, which holds no Count.
+  -- CR 701.9a's discard condition is a PlayerRelation and a Filter, neither of
+  -- which holds a Count.
   TriggerCondition.PlayerDiscards _ -> []
   TriggerCondition.PlayerDiscardsCards _ -> []
-  -- CR 702.29a's cycling read as a discard: the same PlayerRelation, so no Count
+  -- CR 702.29a's cycling read as a discard: a PlayerRelation alone, so no Count
   -- either.
   TriggerCondition.PlayerCycles _ -> []
   TriggerCondition.PlayerDrawsNthCard {} -> []
@@ -1272,8 +1288,8 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- Its player-side sibling carries a PlayerRelation and a StackObjectKind, and
   -- no Count either.
   TriggerCondition.ControllerBecomesTarget {} -> []
-  -- Nor does the bystander batch reading, which carries a Filter and a
-  -- StackObjectKind.
+  -- Nor does the bystander batch reading, which carries a Filter, a
+  -- PlayerRelation and a StackObjectKind.
   TriggerCondition.PermanentsBecomeTargeted {} -> []
   TriggerCondition.PermanentBecomesTargeted {} -> []
 
@@ -2136,6 +2152,8 @@ cardCounts card =
     <> concatMap (playerEffectCounts . PlayerStaticAbility.effect) (Face.playerAbilities card)
     <> concatMap (quantityCounts . CostReduction.perEach) (Face.costReductions card)
     <> concatMap (concatMap conditionCounts . Maybe.maybeToList . CostReduction.condition) (Face.costReductions card)
+    -- CR 601.3's "cast this spell only if" rider (Illusory Angel).
+    <> concatMap (concatMap conditionCounts . castingRestrictionConditions) (Face.castingRestrictions card)
     <> ruleAbilitiesCounts (Projection.ruleAbilitiesOfFace card)
 
 -- Every Count reachable from the fifteen CR 613.11 rule-ability families, a
@@ -4596,7 +4614,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.SelfManaAbilityResolves -> []
   -- CR 701.21a's Filter narrows the sacrificed permanent -- Vengeful Tracker's
   -- "an artifact" -- and is swept like PermanentDies' below.
-  TriggerCondition.PermanentSacrificed payload -> unframed [PermanentSacrificed.filter payload]
+  TriggerCondition.PermanentSacrificed payload -> unframed [PlayerActsOn.filter payload]
   -- CR 603.3b's names a PlayerRelation; the Saga is found through CR 714.2d's
   -- final chapter number rather than through a Filter.
   TriggerCondition.SagaFinalChapterTriggers _ -> []
@@ -4640,7 +4658,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- so a text change has nothing here to rewrite.
   TriggerCondition.SelfDealsDamageToCreature _ -> []
   TriggerCondition.DealsDamage watched -> actingFilters watched
-  TriggerCondition.IsDealtDamage watched -> actingFilters watched
+  TriggerCondition.IsDealtDamage dealt -> actingFilters (DealtDamage.recipient dealt)
   TriggerCondition.PlayerIsDealtDamage _ -> []
   -- Its watcher-scoped sibling carries one -- Tovolar's "a Wolf or Werewolf you
   -- control", which the card lint must sweep.
@@ -4719,8 +4737,9 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.RevealedThisWay r -> unframed [RevealedThisWay.card r]
   TriggerCondition.SelfDiscarded -> []
   TriggerCondition.SelfExiledForMadness -> []
-  TriggerCondition.PlayerDiscards _ -> []
-  TriggerCondition.PlayerDiscardsCards _ -> []
+  -- Waste Not's "a creature card", card text swept like PermanentSacrificed's.
+  TriggerCondition.PlayerDiscards payload -> unframed [PlayerActsOn.filter payload]
+  TriggerCondition.PlayerDiscardsCards payload -> unframed [PlayerActsOn.filter payload]
   TriggerCondition.PlayerCycles _ -> []
   TriggerCondition.PlayerDrawsNthCard {} -> []
   -- CR 725.1's crowning condition is a PlayerRelation, which holds no Filter.
@@ -6729,13 +6748,14 @@ activatedAbilityFilters ability =
 --   * `spell`, `activatedAbilities`, `triggeredAbilities`, `delayedAbilities` --
 --     every mode's target slots and effects, plus an activation cost, a
 --     trigger's own condition and its intervening clause.
+--   * `castingRestrictions` -- CR 601.3's OnlyIf condition.
 --   * `mulliganActions` (CR 103.5b) and `openingHandActions` (CR 103.6) -- the two
 --     pregame actions, which `cardResolutionEffects` above does not reach.
 --
 -- The remaining fields hold none: `name`, `manaCost`, `typeLine`, `loyalty`,
 -- `defense`, `vanguard`, `canBeYourCommander`, `claimsStartingPlayer`,
--- `anteOnly`, `colorIndicator`, `counterability`, `castingPermissions` and
--- `castingRestrictions`. That is checkable rather than asserted: none of the
+-- `anteOnly`, `colorIndicator`, `counterability` and `castingPermissions`.
+-- That is checkable rather than asserted: none of the
 -- types those fields reach imports Parun.Types.Filter, which
 -- `grep -rl 'import qualified Parun.Types.Filter' source/libraries/types/` over
 -- each one's closure answers.
@@ -6776,6 +6796,9 @@ cardFilters card =
         <> concatMap (frame Unframed . alternativeCostFilters) (Face.alternativeCosts card)
         <> concatMap (quantityFilters . CostReduction.perEach) (Face.costReductions card)
         <> concatMap (concatMap conditionFilters . Maybe.maybeToList . CostReduction.condition) (Face.costReductions card)
+        -- CR 601.3's rider, Unframed for activatedAbilityFilters' CR 602.5 reason:
+        -- the cast gate reads no announcement.
+        <> concatMap (concatMap conditionFilters . castingRestrictionConditions) (Face.castingRestrictions card)
         <> unframed (Maybe.mapMaybe CostReduction.whichTargets (Face.costReductions card))
         <> concatMap (slotlessCost . specialActionFilters) (Face.specialActions card)
         <> ruleAbilitiesFilters (Projection.ruleAbilitiesOfFace card)

@@ -109,7 +109,7 @@
                       "quantity": {
                         "type": "PlayersDealtDamageThisTurn",
                         "value": {
-                          "player": {
+                          "recipient": {
                             "type": "Relative",
                             "value": {
                               "type": "Opponent"

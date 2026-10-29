@@ -627,13 +627,13 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.PlayersDealtDamageThisTurn DealtDamage.MkDealtDamage {DealtDamage.player = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Nothing})
-      " {\"type\":\"PlayersDealtDamageThisTurn\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}}} "
+      (Quantity.PlayersDealtDamageThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Nothing})
+      " {\"type\":\"PlayersDealtDamageThisTurn\",\"value\":{\"recipient\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}}} "
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.PlayersDealtDamageThisTurn DealtDamage.MkDealtDamage {DealtDamage.player = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target")), DealtDamage.kind = Just DamageKind.Combat})
-      " {\"type\":\"PlayersDealtDamageThisTurn\",\"value\":{\"player\":{\"type\":\"InSlot\",\"value\":\"target\"},\"kind\":{\"type\":\"Combat\"}}} "
+      (Quantity.PlayersDealtDamageThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target")), DealtDamage.kind = Just DamageKind.Combat})
+      " {\"type\":\"PlayersDealtDamageThisTurn\",\"value\":{\"recipient\":{\"type\":\"InSlot\",\"value\":\"target\"},\"kind\":{\"type\":\"Combat\"}}} "
   -- CR 120.1 again, the same log read as a TOTAL: Petrified Wood-Kin's rule
   -- 702.54b X is the Relative arm over Opponent, and it must not share a tag with
   -- the tally above, which answers a different number on the same board.

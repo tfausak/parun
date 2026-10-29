@@ -127,7 +127,6 @@ import qualified Parun.Types.PendingTrigger as PendingTrigger
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
-import qualified Parun.Types.PermanentSacrificed as PermanentSacrificed
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
@@ -139,6 +138,7 @@ import qualified Parun.Types.PlanarDieFace as PlanarDieFace
 import qualified Parun.Types.PlanarDieRolled as PlanarDieRolled
 import qualified Parun.Types.Player as Player
 import qualified Parun.Types.PlayerActed as PlayerActed
+import qualified Parun.Types.PlayerActsOn as PlayerActsOn
 import qualified Parun.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
@@ -2427,8 +2427,9 @@ everyTriggerCondition =
     TriggerCondition.SelfDealsDamageToCreature (Just DamageKind.Combat),
     TriggerCondition.DealsDamage ActingPermanent.Self,
     TriggerCondition.DealsDamage (ActingPermanent.Matching (Filter.Type.HasAttached Filter.Type.IsSource)),
-    TriggerCondition.IsDealtDamage ActingPermanent.Self,
-    TriggerCondition.IsDealtDamage (ActingPermanent.Matching (Filter.Type.And [])),
+    TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing),
+    TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage (ActingPermanent.Matching (Filter.Type.And [])) Nothing),
+    TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self (Just DamageKind.Combat)),
     TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You Nothing) False),
     TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You (Just DamageKind.Noncombat)) False),
     TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You (Just DamageKind.Combat)) True),
@@ -2444,8 +2445,8 @@ everyTriggerCondition =
     TriggerCondition.RevealedThisWay (RevealedThisWay.MkRevealedThisWay (Filter.Type.And []) Nothing),
     TriggerCondition.SelfDiscarded,
     TriggerCondition.SelfExiledForMadness,
-    TriggerCondition.PlayerDiscards PlayerRelation.Opponent,
-    TriggerCondition.PlayerDiscardsCards PlayerRelation.You,
+    TriggerCondition.PlayerDiscards (PlayerActsOn.MkPlayerActsOn PlayerRelation.Opponent (Filter.Type.And [])),
+    TriggerCondition.PlayerDiscardsCards (PlayerActsOn.MkPlayerActsOn PlayerRelation.You (Filter.Type.And [])),
     TriggerCondition.PlayerCycles PlayerRelation.You,
     TriggerCondition.PlayerCycles PlayerRelation.Opponent,
     TriggerCondition.PlayerDrawsNthCard (PlayerDrawsNthCard.MkPlayerDrawsNthCard PlayerRelation.You (Just 2)),
@@ -2551,11 +2552,13 @@ everyTriggerCondition =
     -- Safekeeping's pair first, then Dormant Gomazoa's.
     TriggerCondition.ControllerBecomesTarget (ControllerBecomesTarget.MkControllerBecomesTarget PlayerRelation.Opponent Nothing),
     TriggerCondition.ControllerBecomesTarget (ControllerBecomesTarget.MkControllerBecomesTarget PlayerRelation.AnyPlayer (Just StackObjectKind.Spell)),
-    -- Professor Hojo's own, the only inhabitant in the pool: a Filter and a kind
-    -- where the sibling above carries a relation and a kind.
-    TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted Filter.Type.IsSource (Just StackObjectKind.ActivatedAbility)),
-    -- Venerated Rotpriest's per-creature twin.
-    TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted Filter.Type.IsSource (Just StackObjectKind.Spell)),
+    -- Professor Hojo's own, the only inhabitant in the pool: a Filter beside the
+    -- sibling above's relation and kind.
+    TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted Filter.Type.IsSource PlayerRelation.AnyPlayer (Just StackObjectKind.ActivatedAbility)),
+    -- Venerated Rotpriest's per-creature twin, and Diffusion Sliver's: both
+    -- relations, for the SelfBecomesTargeted pair's reason.
+    TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted Filter.Type.IsSource PlayerRelation.AnyPlayer (Just StackObjectKind.Spell)),
+    TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted Filter.Type.IsSource PlayerRelation.Opponent Nothing),
     TriggerCondition.SelfHalfUnlocked (CardName.MkCardName (Text.pack "Steaming Sauna")),
     TriggerCondition.RoomFullyUnlocked PlayerRelation.You,
     -- Balemurk Leech's own pair, and not an arbitrary one: PermanentEnters binds
@@ -2612,9 +2615,9 @@ everyTriggerCondition =
     -- eventBindings arm that had cased on the relation and stamped nothing under
     -- one of them would go unseen if only one were listed. Vengeful Tracker
     -- prints the Opponent form and Mayhem Devil the AnyPlayer one.
-    TriggerCondition.PermanentSacrificed (PermanentSacrificed.MkPermanentSacrificed PlayerRelation.You (Filter.Type.And [])),
-    TriggerCondition.PermanentSacrificed (PermanentSacrificed.MkPermanentSacrificed PlayerRelation.Opponent (Filter.Type.And [])),
-    TriggerCondition.PermanentSacrificed (PermanentSacrificed.MkPermanentSacrificed PlayerRelation.AnyPlayer (Filter.Type.And [])),
+    TriggerCondition.PermanentSacrificed (PlayerActsOn.MkPlayerActsOn PlayerRelation.You (Filter.Type.And [])),
+    TriggerCondition.PermanentSacrificed (PlayerActsOn.MkPlayerActsOn PlayerRelation.Opponent (Filter.Type.And [])),
+    TriggerCondition.PermanentSacrificed (PlayerActsOn.MkPlayerActsOn PlayerRelation.AnyPlayer (Filter.Type.And [])),
     TriggerCondition.SagaFinalChapterTriggers PlayerRelation.You,
     -- BOTH relations, on the SpellCast pair's reasoning above: an eventBindings
     -- arm that had cased on the relation and stamped nothing under one of them

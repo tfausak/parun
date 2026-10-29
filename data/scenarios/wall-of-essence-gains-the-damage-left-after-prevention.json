@@ -1,0 +1,15 @@
+{
+  "description": "CR 603.2 / 615.1 / 510.2: Wall of Essence gains the combat damage it is actually dealt, after prevention",
+  "note": "Alice shields her Wall of Essence with Healing Salve's second mode in bob's upkeep. Bob's Craw Wurm (6/4) is blocked by the Wall; 3 of its 6 damage is prevented, the Wall survives with 3, and alice gains 3, not 6.",
+  "board": {"active": "bob", "step": "Upkeep", "seats": [
+    {"name": "bob", "battlefield": [{"card": "Craw Wurm", "label": "wurm", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+    {"name": "alice", "manaPool": "W", "battlefield": [{"card": "Wall of Essence", "label": "wall"}], "hand": [{"card": "Healing Salve", "label": "salve"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+  ]},
+  "timeline": [
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"Cast": {"object": "$salve", "targets": ["$wall"], "modes": [1]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$wurm"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {"$wall": ["$wurm"]}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "bob", "check": {"Damage": {"object": "$wall", "damage": 3}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "bob", "check": {"Life": {"player": "alice", "life": 23}}}
+  ]
+}
