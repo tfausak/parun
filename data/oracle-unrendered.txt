@@ -2241,7 +2241,9 @@ swerve
 swift-silence
 switcheroo
 swooping-protector
+sword-of-the-animist
 sword-swallowing-seraph
+sylvan-messenger
 synchronized-eviction
 syphon-soul
 tablet-of-the-guilds
@@ -2249,6 +2251,7 @@ tahngarths-glare
 tainted-aether
 takesies-backsies
 talas-explorer
+talent-of-the-telepath
 tameshi-reality-architect
 tamiyo-compleated-sage
 tamiyos-compleation
@@ -2328,8 +2331,10 @@ the-weatherseed-treaty
 thelonite-hermit
 thicket-basilisk
 thieves-auction
+thopter-spy-network
 thorin-mountain-king
 thorn-elemental
+thornbow-archer
 thorncaster-sliver
 thornvault-forager
 thoughtleech
@@ -2345,6 +2350,7 @@ threefold-signal
 thromok-the-insatiable
 throne-of-eldraine
 throne-of-empires
+throwing-knife
 thrull-surgeon
 thunderbond-vanguard
 thundermane-dragon
@@ -2379,10 +2385,12 @@ too-greedily-too-deep
 toralfs-disciple
 torgaar-famine-incarnate
 torment-of-venom
+tormented-thoughts
 tormods-crypt
 tornado-elemental
 torpor-orb
 total-war
+touch-of-moonglove
 touch-of-the-eternal
 tovolar-dire-overlord-tovolar-the-midnight-scourge
 toxic-deluge
