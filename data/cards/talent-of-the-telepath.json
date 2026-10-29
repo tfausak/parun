@@ -57,34 +57,13 @@
               {
                 "effects": [
                   {
-                    "type": "OfferCast",
+                    "type": "BindAmount",
                     "value": {
-                      "offer": {
-                        "withoutPayingManaCost": true
+                      "quantity": {
+                        "type": "Literal",
+                        "value": 1
                       },
-                      "ref": {
-                        "type": "EachCardFromAmong",
-                        "value": {
-                          "filter": {
-                            "type": "Or",
-                            "value": [
-                              {
-                                "type": "HasCardType",
-                                "value": {
-                                  "type": "Instant"
-                                }
-                              },
-                              {
-                                "type": "HasCardType",
-                                "value": {
-                                  "type": "Sorcery"
-                                }
-                              }
-                            ]
-                          },
-                          "slot": "revealed"
-                        }
-                      }
+                      "slot": "casts"
                     }
                   }
                 ]
@@ -143,6 +122,20 @@
                 },
                 "effects": [
                   {
+                    "type": "BindAmount",
+                    "value": {
+                      "quantity": {
+                        "type": "Literal",
+                        "value": 2
+                      },
+                      "slot": "casts"
+                    }
+                  }
+                ]
+              },
+              {
+                "effects": [
+                  {
                     "type": "OfferCast",
                     "value": {
                       "offer": {
@@ -169,6 +162,13 @@
                             ]
                           },
                           "slot": "revealed"
+                        }
+                      },
+                      "repetition": {
+                        "type": "UpTo",
+                        "value": {
+                          "type": "InSlot",
+                          "value": "casts"
                         }
                       }
                     }

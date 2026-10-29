@@ -1113,6 +1113,7 @@ rewriteEffect pairs effect = case effect of
         { OfferCast.ref = rewriteObjectRef pairs (OfferCast.ref oc),
           OfferCast.repetition = case OfferCast.repetition oc of
             CastRepetition.WithinTotalManaValue quantity -> CastRepetition.WithinTotalManaValue (rewriteQuantity pairs quantity)
+            CastRepetition.UpTo quantity -> CastRepetition.UpTo (rewriteQuantity pairs quantity)
             repetition -> repetition,
           OfferCast.offer =
             (OfferCast.offer oc)

@@ -158,7 +158,8 @@ import qualified Parun.Types.Zone as Zone
 -- as the spell it becomes -- unobserved, no board casting a split card this
 -- way), and the cast spell's mana value is spent from it.
 -- `evaluate` reads the budget's Quantity once, before the first round (CR
--- 608.2h).
+-- 608.2h). UpTo's count is the same repeat with a cap on casts, read once the
+-- same way.
 --
 -- Answers the spells the offer's casts put on the stack, for CR 400.7h's
 -- OfferCast.slot.
@@ -167,10 +168,13 @@ offerCast runSubgame context evaluate named caster optionality verb retake repet
   subjects <- if copied then Maybe.catMaybes <$> traverse (Common.castableCopy caster) named else pure named
   case repetition of
     CastRepetition.Once -> foldMap (Maybe.maybeToList . snd) <$> offerCastOnce runSubgame context subjects caster optionality verb retake offer
-    CastRepetition.AnyNumber -> again Nothing subjects
-    CastRepetition.WithinTotalManaValue quantity -> again (Just (Maybe.fromMaybe 0 (evaluate quantity))) subjects
+    CastRepetition.AnyNumber -> again Nothing Nothing subjects
+    CastRepetition.WithinTotalManaValue quantity -> again (Just (Maybe.fromMaybe 0 (evaluate quantity))) Nothing subjects
+    CastRepetition.UpTo quantity -> again Nothing (Just (Maybe.fromMaybe 0 (evaluate quantity))) subjects
   where
-    again budget remaining = do
+    again :: Maybe Integer -> Maybe Integer -> [ObjectId] -> Game [ObjectId]
+    again _ (Just casts) _ | casts <= 0 = pure []
+    again budget casts remaining = do
       let capped total = offer {CastOffer.restriction = Just (maybe (Filter.Type.Measures (Measures.MkMeasures Measure.ManaValue Comparison.AtMost (Operand.Literal total))) (\r -> Filter.Type.And [r, Filter.Type.Measures (Measures.MkMeasures Measure.ManaValue Comparison.AtMost (Operand.Literal total))]) (CastOffer.restriction offer))}
       taken <- offerCastOnce runSubgame context remaining caster optionality verb retake (maybe offer capped budget)
       case taken of
@@ -178,7 +182,7 @@ offerCast runSubgame context evaluate named caster optionality verb retake repet
         Just (oid, spell) -> do
           gs <- State.get
           let spent = Maybe.fromMaybe 0 (spell >>= Projection.fullView gs >>= Filter.manaValue)
-          (Maybe.maybeToList spell <>) <$> again (fmap (subtract spent) budget) (filter (/= oid) remaining)
+          (Maybe.maybeToList spell <>) <$> again (fmap (subtract spent) budget) (fmap (subtract 1) casts) (filter (/= oid) remaining)
 
 -- CR 707.13 / 707.14: offer the cast of a copy of this printing created outside
 -- the game (Event.mintOutside), bracketing `offerCast` with the mint and the

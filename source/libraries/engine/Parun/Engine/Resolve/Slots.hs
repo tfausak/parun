@@ -339,6 +339,7 @@ repetitionQuantities repetition = case repetition of
   CastRepetition.Once -> []
   CastRepetition.AnyNumber -> []
   CastRepetition.WithinTotalManaValue quantity -> [quantity]
+  CastRepetition.UpTo quantity -> [quantity]
 
 -- The Quantities an entry rider carries: CR 122.6's count per counter kind, which
 -- a card may write as anything a Quantity spells. A position the three walkers
