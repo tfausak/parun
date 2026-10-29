@@ -1794,6 +1794,7 @@ rally-the-troops
 rambling-possum
 rampage-of-the-clans
 rampaging-ceratops
+ramroller
 rangers-path
 ransack
 ransom-note
@@ -1802,6 +1803,7 @@ rapid-fire
 rat-out
 ratchet-bomb
 ratchet-field-medic-ratchet-rescue-racer
+ravaging-blaze
 ray-of-command
 ray-of-frost
 razorfin-abolisher
@@ -1815,11 +1817,13 @@ realm-of-koh
 realmbreakers-grasp
 realms-uncharted
 reasonable-doubt
+reave-soul
 rebirth
 rebuff-the-wicked
 recall
 reciprocate
 reckless-brute
+reclusive-artificer
 red-cliffs-armada
 red-mana-battery
 red-priest-of-yawgmoth
@@ -1831,6 +1835,7 @@ relentless-advance
 relentless-assault
 relentless-rats
 relic-runner
+relic-seeker
 reliquary-tower
 remand
 remedy
@@ -1956,6 +1961,7 @@ savanti-romero-times-exile
 save-point
 savior-of-ollenbock
 savor-the-moment
+scab-clan-berserker
 scalpelexis
 scampire
 scarecrow
@@ -1971,6 +1977,7 @@ scourge-of-valkas
 scouts-warning
 scrambleverse
 scrapshooter
+scrapskin-drake
 screaming-swarm
 screams-from-within
 scrounging-bandar
@@ -1989,16 +1996,19 @@ sedge-sliver
 seedborn-muse
 seeker-of-slaanesh
 seifer-balamb-rival
+seismic-elemental
 seismic-stomp
 seized-from-slumber
 selenia
 selfless-police-captain
 selfless-squire
 sen-triplets
+send-to-sleep
 sengir-autocrat
 sengir-vampire
 sensational-spider-man
 sentinel-dispatch
+sentinel-of-the-eternal-watch
 sepulchral-primordial
 seraph-of-the-sword
 serene-master

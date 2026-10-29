@@ -10,16 +10,6 @@ line) and running `parun deck` on it: every unresolved name is reported.
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Ramroller: `_PermanentRule:MustAttack`
-- Ravaging Blaze: `_Action:If`
-- Reave Soul: `_Permanents:PowerIs`
-- Reclusive Artificer: `_Action:HavePermanentDealDamage`
-- Relic Seeker: `_Trigger:WhenACreatureBecomesRenowned`
-- Scab-Clan Berserker: `_Permanents:IsRenowned`
-- Scrapskin Drake: `_PermanentRule:CanBlockOnly`
-- Seismic Elemental: `_Action:CreateEachPermanentRuleEffectUntil`
-- Send to Sleep: `_Action:If`
-- Sentinel of the Eternal Watch: `_Player:Trigger_ThatPlayer`
 - Shadows of the Past: `_Players:NumCardsOfTypeInGraveyardIs`
 - Sigil of Valor: `_Trigger:WhenACreatureAttacksAlone`
 - Skaab Goliath: `_Rule:CastEffect`
