@@ -4,7 +4,7 @@ import qualified Numeric.Natural as Natural
 import qualified Parun.Types.Behold as Behold
 import qualified Parun.Types.CostAmount as CostAmount
 import qualified Parun.Types.CountersFromPermanents as CountersFromPermanents
-import qualified Parun.Types.CountersFromThis as CountersFromThis
+import qualified Parun.Types.CountersOnThis as CountersOnThis
 import qualified Parun.Types.DiscardCards as DiscardCards
 import qualified Parun.Types.DiscardCause as DiscardCause
 import qualified Parun.Types.ExileCardsFromGraveyard as ExileCardsFromGraveyard
@@ -93,15 +93,14 @@ data CostComponent keyword
     RemoveLoyaltyFromThis CostAmount.CostAmount
   | -- | CR 118.1 as a cost / Barkhide Troll, Hickory Woodlot: remove this many
     -- counters of one kind from the permanent the cost is on.
-    RemoveCountersFromThis (CountersFromThis.CountersFromThis keyword)
+    RemoveCountersFromThis (CountersOnThis.CountersOnThis keyword)
   | -- | CR 118.1 as a cost / Zameck Guildmage, Tayam, Luminous Enigma,
     -- Retribution of the Ancients: remove this many counters from permanents
     -- matching the Filter, chosen by the payer.
     RemoveCounters (CountersFromPermanents.CountersFromPermanents keyword)
-  | -- | CR 118.12's counter-placing cost / CR 701.63a's endure, Fortress
-    -- Kin-Guard: put this many +1\/+1 counters on the permanent the cost is on,
-    -- paid as the spell or ability resolves.
-    PutPlusOneCountersOnThis Natural.Natural
+  | -- | CR 118.1 as a cost / Yisan, the Wanderer Bard, CR 701.63a's endure: put
+    -- this many counters of one kind on the permanent the cost is on.
+    PutCountersOnThis (CountersOnThis.CountersOnThis keyword)
   | -- | CR 701.68a as a cost / Bogslither's Embrace, Dawnhand Dissident: the paying
     -- player puts N -1\/-1 counters on a creature they control, and can't pay at
     -- all where they control none (CR 701.68b). Soul Immolation's "blight X"

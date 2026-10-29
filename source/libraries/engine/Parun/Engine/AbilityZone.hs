@@ -188,7 +188,7 @@ zoneOfComponent component = case component of
   CostComponent.RemoveCounters {} -> Nothing
   -- CR 122.6 puts counters on a permanent already where it is, so nothing moves
   -- out of any zone.
-  CostComponent.PutPlusOneCountersOnThis _ -> Nothing
+  CostComponent.PutCountersOnThis _ -> Nothing
   CostComponent.Blight _ -> Nothing
   -- Nothing, and NOT Just Zone.Graveyard: rule 113.6m asks about an ability that
   -- moves THE OBJECT IT'S ON, and CR 701.61a moves OTHER cards -- the

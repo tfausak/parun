@@ -3213,7 +3213,7 @@ rewriteComponent pairs component = case component of
   CostComponent.AddLoyaltyToThis _ -> component
   CostComponent.RemoveLoyaltyFromThis _ -> component
   CostComponent.RemoveCountersFromThis _ -> component
-  CostComponent.PutPlusOneCountersOnThis _ -> component
+  CostComponent.PutCountersOnThis _ -> component
   CostComponent.Blight _ -> component
   CostComponent.Forage -> component
   CostComponent.FlipCoin -> component

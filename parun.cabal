@@ -509,8 +509,8 @@ library codec
     Parun.Codec.CountersAreSpec
     Parun.Codec.CountersFromPermanents
     Parun.Codec.CountersFromPermanentsSpec
-    Parun.Codec.CountersFromThis
-    Parun.Codec.CountersFromThisSpec
+    Parun.Codec.CountersOnThis
+    Parun.Codec.CountersOnThisSpec
     Parun.Codec.CounterSpec
     Parun.Codec.CounterSpread
     Parun.Codec.CounterSpreadSpec
@@ -2556,7 +2556,7 @@ library types
     Parun.Types.CounterRestriction
     Parun.Types.CountersAre
     Parun.Types.CountersFromPermanents
-    Parun.Types.CountersFromThis
+    Parun.Types.CountersOnThis
     Parun.Types.CounterSpread
     Parun.Types.CounterSubject
     Parun.Types.CountIs

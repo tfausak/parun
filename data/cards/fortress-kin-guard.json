@@ -86,8 +86,13 @@
                       "cost": {
                         "components": [
                           {
-                            "type": "PutPlusOneCountersOnThis",
-                            "value": 1
+                            "type": "PutCountersOnThis",
+                            "value": {
+                              "count": 1,
+                              "kind": {
+                                "type": "PlusOnePlusOne"
+                              }
+                            }
                           }
                         ],
                         "mana": []

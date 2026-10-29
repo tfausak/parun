@@ -270,7 +270,7 @@ costMovesLibraryCard component = case component of
   CostComponent.RemoveLoyaltyFromThis _ -> False
   CostComponent.RemoveCountersFromThis _ -> False
   CostComponent.RemoveCounters {} -> False
-  CostComponent.PutPlusOneCountersOnThis _ -> False
+  CostComponent.PutCountersOnThis _ -> False
   CostComponent.Blight _ -> False
   -- CR 701.61a moves cards out of a GRAVEYARD and a Food off the battlefield,
   -- neither of which is a library, so this cost leaves CR 605.1a's clause intact

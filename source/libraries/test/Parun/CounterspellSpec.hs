@@ -602,7 +602,7 @@ kinGuardOnStack plains kinGuard others =
 -- CR 701.63a's endure, which is CR 118.12a's "unless" over a cost that puts
 -- counters rather than one that spends a resource: "that permanent's controller
 -- creates an N/N white Spirit creature token UNLESS THEY PUT N +1/+1 COUNTERS ON
--- THAT PERMANENT" (CostComponent.PutPlusOneCountersOnThis). Fortress Kin-Guard
+-- THAT PERMANENT" (CostComponent.PutCountersOnThis). Fortress Kin-Guard
 -- ({1}{W} 1/2 Creature -- Dog Soldier, "When this creature enters, it endures 1")
 -- is the printing.
 --

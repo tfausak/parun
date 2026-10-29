@@ -1,0 +1,34 @@
+{
+  "description": "CR 602.2b / 601.2h / 701.23a whole card: each activation of Yisan, the Wanderer Bard puts its verse counter on as a cost, so the search counts it: mana value 1, then 2, then 3",
+  "note": "Memnite (mana value 0) is refused on the first activation, which a search reading the counters before the cost was paid would admit; Centaur Courser (3) is refused on the second and Memnite again on the third. Each shuffle is answered in full, an Island on top for turn 3's and turn 5's draws; after the first shuffle the library's cards are named by card, their labels gone stale.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice",
+     "battlefield": [{"card": "Yisan, the Wanderer Bard", "label": "yisan", "ready": true}, {"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}, {"card": "Forest", "label": "f3"}],
+     "library": [{"card": "Memnite", "label": "memnite"}, {"card": "Jungle Lion", "label": "lion"}, {"card": "Grizzly Bears", "label": "bears"}, {"card": "Centaur Courser", "label": "courser"}, {"card": "Island", "label": "i1"}, {"card": "Island", "label": "i2"}, {"card": "Island", "label": "i3"}]},
+    {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+  ]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$yisan", "ability": 0, "costOrder": [0, 1], "mana": ["$f1", "$f2", "$f3"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "Search", "with": ["$memnite"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$lion"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$i1", "$i2", "$memnite", "$bears", "$courser", "$i3"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Jungle Lion", "count": 1}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$yisan", "ability": 0, "costOrder": [0, 1], "mana": ["$f1", "$f2", "$f3"]}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "Search", "with": ["Centaur Courser"]}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["Grizzly Bears"]}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["Island#3", "Memnite", "Centaur Courser", "Island#4"]}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": []}},
+    {"turn": 5, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$yisan", "ability": 0, "costOrder": [0, 1], "mana": ["$f1", "$f2", "$f3"]}}},
+    {"turn": 5, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 5, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "Search", "with": ["Memnite"]}}},
+    {"turn": 5, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["Centaur Courser"]}}},
+    {"turn": 5, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["Memnite", "Island#4"]}}},
+    {"turn": 5, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Centaur Courser", "count": 1}}},
+    {"turn": 5, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$yisan", "kind": {"type": "Named", "value": "verse"}, "count": 3}}},
+    {"turn": 5, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Library", "card": "Memnite", "count": 1}}},
+    {"turn": 5, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": []}}
+  ]
+}

@@ -11,9 +11,10 @@ import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CostAmount as CostAmount
 import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CounterName as CounterName
 import qualified Parun.Types.CounterSpread as CounterSpread
 import qualified Parun.Types.CountersFromPermanents as CountersFromPermanents
-import qualified Parun.Types.CountersFromThis as CountersFromThis
+import qualified Parun.Types.CountersOnThis as CountersOnThis
 import qualified Parun.Types.DiscardCards as DiscardCards
 import qualified Parun.Types.DiscardCause as DiscardCause
 import qualified Parun.Types.ExileCardsFromGraveyard as ExileCardsFromGraveyard
@@ -172,7 +173,7 @@ spec s = Spec.describe s "Parun.Codec.CostComponent" $ do
     Common.assertCodec
       s
       codec
-      (CostComponent.RemoveCountersFromThis (CountersFromThis.MkCountersFromThis CounterKind.PlusOnePlusOne 1))
+      (CostComponent.RemoveCountersFromThis (CountersOnThis.MkCountersOnThis CounterKind.PlusOnePlusOne 1))
       " {\"type\":\"RemoveCountersFromThis\",\"value\":{\"count\":1,\"kind\":{\"type\":\"PlusOnePlusOne\"}}} "
   -- The same removal aimed at a permanent the payer chooses, Zameck Guildmage's.
   Spec.it s "RemoveCounters" $
@@ -196,12 +197,19 @@ spec s = Spec.describe s "Parun.Codec.CostComponent" $ do
       (CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Announced (SlotName.MkSlotName (Text.pack "X")))) (Filter.HasCardType CardType.Creature)))
       " {\"type\":\"Sacrifice\",\"value\":{\"count\":{\"type\":\"Announced\",\"value\":\"X\"},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
   -- CR 118.12's counter-placing cost, CR 701.63a's endure.
-  Spec.it s "PutPlusOneCountersOnThis" $
+  Spec.it s "PutCountersOnThis" $
     Common.assertCodec
       s
       codec
-      (CostComponent.PutPlusOneCountersOnThis 1)
-      " {\"type\":\"PutPlusOneCountersOnThis\",\"value\":1} "
+      (CostComponent.PutCountersOnThis (CountersOnThis.MkCountersOnThis CounterKind.PlusOnePlusOne 1))
+      " {\"type\":\"PutCountersOnThis\",\"value\":{\"count\":1,\"kind\":{\"type\":\"PlusOnePlusOne\"}}} "
+  -- Its named-counter form, Yisan, the Wanderer Bard's verse counter.
+  Spec.it s "PutCountersOnThis of a named counter" $
+    Common.assertCodec
+      s
+      codec
+      (CostComponent.PutCountersOnThis (CountersOnThis.MkCountersOnThis (CounterKind.Named (CounterName.UnsafeMkCounterName (Text.pack "verse"))) 1))
+      " {\"type\":\"PutCountersOnThis\",\"value\":{\"count\":1,\"kind\":{\"type\":\"Named\",\"value\":\"verse\"}}} "
   -- CR 701.68a as a cost, CR 601.2f/602.1b/118.12's three positions for it.
   Spec.it s "Blight" $
     Common.assertCodec

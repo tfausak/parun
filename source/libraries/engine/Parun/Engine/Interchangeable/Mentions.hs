@@ -153,7 +153,7 @@ import qualified Parun.Types.CounterR as CounterR
 import qualified Parun.Types.CounterRestriction as CounterRestriction
 import qualified Parun.Types.CounterSubject as CounterSubject
 import qualified Parun.Types.CountersFromPermanents as CountersFromPermanents
-import qualified Parun.Types.CountersFromThis as CountersFromThis
+import qualified Parun.Types.CountersOnThis as CountersOnThis
 import qualified Parun.Types.Craft as Craft
 import qualified Parun.Types.Create as Create
 import qualified Parun.Types.CreateCopy as CreateCopy
@@ -1062,9 +1062,9 @@ costComponentNames asking onKeyword x = case x of
   CostComponent.PayEnergy amount -> costAmountNames asking amount
   CostComponent.AddLoyaltyToThis _natural -> history asking HistoryRead.LoyaltyActivations
   CostComponent.RemoveLoyaltyFromThis amount -> history asking HistoryRead.LoyaltyActivations <> costAmountNames asking amount
-  CostComponent.RemoveCountersFromThis countersFromThis -> countersFromThisNames asking onKeyword countersFromThis
+  CostComponent.RemoveCountersFromThis countersOnThis -> countersOnThisNames asking onKeyword countersOnThis
   CostComponent.RemoveCounters countersFromPermanents -> countersFromPermanentsNames asking onKeyword countersFromPermanents
-  CostComponent.PutPlusOneCountersOnThis _natural -> mempty
+  CostComponent.PutCountersOnThis countersOnThis -> countersOnThisNames asking onKeyword countersOnThis
   CostComponent.Blight amount -> costAmountNames asking amount
   CostComponent.Forage -> mempty
   CostComponent.FlipCoin -> mempty
@@ -1160,9 +1160,9 @@ countersFromPermanentsNames :: (Monoid r) => Asking r -> (keyword -> r) -> Count
 countersFromPermanentsNames asking onKeyword x = case x of
   CountersFromPermanents.MkCountersFromPermanents count kind whichPermanent _spread -> costAmountNames asking count <> whichCountersNames asking onKeyword kind <> filterNames asking whichPermanent
 
-countersFromThisNames :: (Monoid r) => Asking r -> (keyword -> r) -> CountersFromThis.CountersFromThis keyword -> r
-countersFromThisNames asking onKeyword x = case x of
-  CountersFromThis.MkCountersFromThis kind _count -> counterKindNames asking onKeyword kind
+countersOnThisNames :: (Monoid r) => Asking r -> (keyword -> r) -> CountersOnThis.CountersOnThis keyword -> r
+countersOnThisNames asking onKeyword x = case x of
+  CountersOnThis.MkCountersOnThis kind _count -> counterKindNames asking onKeyword kind
 
 craftNames :: (Monoid r) => Asking r -> (keyword -> r) -> Craft.Craft keyword -> r
 craftNames asking onKeyword x = case x of
