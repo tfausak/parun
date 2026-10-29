@@ -70,9 +70,9 @@ way.
 
 A question that takes many reads --- every site reading a slot, every pool
 card using a constructor, how a funnel orders its callers --- goes to an
-Explore subagent (`model: haiku` for a lookup, `sonnet` for a judgement),
-briefed with the question and the paths. Verify a claim it makes before
-relying on it.
+Explore subagent (`model: haiku` for a lookup, `sonnet` for a judgement) if
+your session can spawn one; a dispatched agent usually cannot, and reads
+narrowly instead. Verify a claim such a subagent makes before relying on it.
 
 ### Enumerate the edit sites in one pass
 

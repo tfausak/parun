@@ -153,9 +153,11 @@ summary, and its title carries no CR numbers.
 Instantiate the templates below, never a previous filled-in brief; add only
 what is specific to the unit. Don't research ahead of the implementer: a brief
 carries facts reading settles (producers, Oracle text fetched this session,
-what the census says, which merged units it must reuse) and flags anything
-else unverified --- never a predicted wire spelling, test board, mutation
-outcome or file list. Never tell an implementer not to chase something.
+what the census says, which merged units it must reuse, enumerations a haiku
+Explore subagent answered for it, since the unit can't spawn one) and flags
+anything else unverified --- never a predicted wire spelling, test board,
+mutation outcome or file list. Never tell an implementer not to chase
+something.
 
 ## Templates
 
