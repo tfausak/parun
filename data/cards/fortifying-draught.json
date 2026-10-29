@@ -45,20 +45,30 @@
                         "type": "ModifyPowerToughness",
                         "value": {
                           "power": {
-                            "type": "LifeGainedThisTurn",
+                            "type": "LifeChanged",
                             "value": {
-                              "type": "Relative",
-                              "value": {
-                                "type": "You"
+                              "direction": {
+                                "type": "Gained"
+                              },
+                              "player": {
+                                "type": "Relative",
+                                "value": {
+                                  "type": "You"
+                                }
                               }
                             }
                           },
                           "toughness": {
-                            "type": "LifeGainedThisTurn",
+                            "type": "LifeChanged",
                             "value": {
-                              "type": "Relative",
-                              "value": {
-                                "type": "You"
+                              "direction": {
+                                "type": "Gained"
+                              },
+                              "player": {
+                                "type": "Relative",
+                                "value": {
+                                  "type": "You"
+                                }
                               }
                             }
                           }

@@ -55,11 +55,16 @@
                       "type": "Exactly"
                     },
                     "measured": {
-                      "type": "LifeGainedThisTurn",
+                      "type": "LifeChanged",
                       "value": {
-                        "type": "Relative",
-                        "value": {
-                          "type": "You"
+                        "direction": {
+                          "type": "Gained"
+                        },
+                        "player": {
+                          "type": "Relative",
+                          "value": {
+                            "type": "You"
+                          }
                         }
                       }
                     },
@@ -128,11 +133,16 @@
                       "type": "AtLeast"
                     },
                     "measured": {
-                      "type": "LifeGainedThisTurn",
+                      "type": "LifeChanged",
                       "value": {
-                        "type": "Relative",
-                        "value": {
-                          "type": "You"
+                        "direction": {
+                          "type": "Gained"
+                        },
+                        "player": {
+                          "type": "Relative",
+                          "value": {
+                            "type": "You"
+                          }
                         }
                       }
                     },

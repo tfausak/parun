@@ -110,6 +110,8 @@ import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
+import qualified Parun.Types.LifeDirection as LifeDirection
+import qualified Parun.Types.LifeTally as LifeTally
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.Measure as Measure
@@ -178,6 +180,7 @@ import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TurnRole as TurnRole
 import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Parun.Types.WhichCounters as WhichCounters
+import qualified Parun.Types.WhichTurn as WhichTurn
 import qualified Parun.Types.WithCounters as WithCounters
 import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZoneScope as ZoneScope
@@ -1915,7 +1918,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- And the pair that differs in exactly one thing: the same face with the same
     -- filter, in a slot that DOES name an amount, is accepted -- so the lint is
     -- reading the amount key rather than rejecting every planted atom.
-    let amounted = slotWith (TargetSlot.withAmount (Quantity.Type.LifeGainedThisTurn (PlayerRef.Relative PlayerRelation.You)) (TargetSlot.required Pool.Creatures (Just buried)))
+    let amounted = slotWith (TargetSlot.withAmount (Quantity.Type.LifeChanged (LifeTally.MkLifeTally (PlayerRef.Relative PlayerRelation.You) LifeDirection.Gained WhichTurn.ThisTurn)) (TargetSlot.required Pool.Creatures (Just buried)))
     Spec.assertEqWith s "the same atom in a slot that names one is not" (enclosingAmountCounts amounted) (1, 0)
     -- The same pair at the other position: a conjure's reference pick, which
     -- fills the bound only where it names one.

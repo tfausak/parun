@@ -26,9 +26,11 @@
                   "aggregation": {
                     "type": "Greatest",
                     "value": {
-                      "type": "SpellsCastThisTurn",
+                      "type": "SpellsCast",
                       "value": {
-                        "type": "Candidate"
+                        "player": {
+                          "type": "Candidate"
+                        }
                       }
                     }
                   },

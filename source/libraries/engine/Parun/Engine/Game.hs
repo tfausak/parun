@@ -61,6 +61,7 @@ import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import Parun.Types.Mana (Mana)
 import qualified Parun.Types.Mana as Mana
@@ -110,6 +111,7 @@ import qualified Parun.Types.TokenLot as TokenLot
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Parun.Types.TypeLine as TypeLine
+import qualified Parun.Types.WhichTurn as WhichTurn
 import Parun.Types.Zone (Zone)
 import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZoneChange as ZoneChange
@@ -3146,18 +3148,26 @@ castsBefore spell gs =
     (_, []) -> Nothing
     (before, _) -> Just before
 
--- CR 601.2i: how many spells each player has cast this turn, off the whole log,
--- which Engine.handoffTurn clears. GameState.castsLastTurn is a snapshot of it,
--- and Parun.Engine.PlayerEffect.castsThisTurn and Parun.Engine.Quantity's
--- SpellsCastThisTurn arm read one seat out of it, so the three cannot disagree.
+-- CR 601.2i: how many spells each player cast during the turn this log holds --
+-- turnLog's, or the outgoing one Engine.beginTurn folds CR 502.2's scalar out
+-- of. Parun.Engine.PlayerEffect.castsThisTurn and Parun.Engine.Quantity's
+-- SpellsCast arm read one seat out of it, so the readers cannot disagree.
 --
 -- SPARSE: a player who cast nothing has no entry, and every reader takes 0 for an
 -- absent one.
-castsPerPlayer :: GameState -> Map.Map PlayerId Natural
-castsPerPlayer gs =
+castsPerPlayer :: Seq.Seq LoggedEvent.LoggedEvent -> Map.Map PlayerId Natural
+castsPerPlayer events =
   Map.fromListWith
     (+)
-    (fmap (\cast -> (SpellWasCast.player cast, 1)) (Foldable.toList (castsInLog gs)))
+    (fmap (\cast -> (SpellWasCast.player cast, 1)) (Maybe.mapMaybe (castOf . LoggedEvent.event) (Foldable.toList events)))
+
+-- CR 608.2i: the log of the turn a tally names. GameState.events is the turn in
+-- progress, Engine.beginTurn clearing it at the handoff; GameState.eventsLastTurn
+-- is the one before, whoever's it was, and empty on the game's first turn.
+turnLog :: WhichTurn.WhichTurn -> GameState -> Seq.Seq LoggedEvent.LoggedEvent
+turnLog which gs = case which of
+  WhichTurn.ThisTurn -> GameState.events gs
+  WhichTurn.LastTurn -> GameState.eventsLastTurn gs
 
 -- CR 601.2i: this turn's casts, in the order they became cast, off the log
 -- Engine.handoffTurn clears.
@@ -3528,7 +3538,7 @@ damageRecipient :: GameEvent -> Maybe Recipient.Recipient
 damageRecipient = fmap fst . damageDealt
 
 -- The same answer with the AMOUNT alongside it, which is what a total rather
--- than a tally wants -- lifeGainOf's shape below, and the one exhaustive
+-- than a tally wants -- lifeChangeOf's shape below, and the one exhaustive
 -- GameEvent case both readings share.
 damageDealt :: GameEvent -> Maybe (Recipient.Recipient, Natural)
 damageDealt event = case event of
@@ -3671,7 +3681,7 @@ yourTeamCastASpellThisTurn pid gs =
 -- yourTeamCastASpellThisTurn's shape over the life-loss log, and the reader is
 -- Parun.Engine.Cost.candidateCostsGiven's spectacle offer.
 --
--- CR 119.3's loss and not a negative gain, lifeGainOf's note below: a life
+-- CR 119.3's loss and not a negative gain, lifeChangeOf's note below: a life
 -- TOTAL back where it started leaves the loss on the log, which is what rule
 -- 702.137a asks about.
 --
@@ -3680,10 +3690,7 @@ yourTeamCastASpellThisTurn pid gs =
 -- here.
 opponentLostLifeThisTurn :: PlayerId -> GameState -> Bool
 opponentLostLifeThisTurn pid gs =
-  let lostIt event = case event of
-        GameEvent.LifeLost change -> areOpponents gs pid (LifeChange.player change)
-        _ -> False
-   in any (lostIt . LoggedEvent.event) (GameState.events gs)
+  any (areOpponents gs pid . fst) (Maybe.mapMaybe (lifeChangeOf LifeDirection.Lost . LoggedEvent.event) (Foldable.toList (GameState.events gs)))
 
 -- CR 702.76a / 608.2i: was a player dealt combat damage this turn by a source
 -- that was then under this player's control and had any of these creature types?
@@ -3797,11 +3804,12 @@ damageDealtToThisTurn gs oid =
         (Foldable.toList (GameState.events gs))
     )
 
--- The player an event describes GAINING LIFE, and how much (CR 119.3).
+-- The player an event describes gaining or losing life, as the direction asks,
+-- and how much (CR 119.3).
 --
 -- castOf's, discardOf's, enteredBattlefield's and damageRecipient's sibling, and
 -- here for their import-graph reason: the caller is Parun.Engine.Quantity's
--- LifeGainedThisTurn arm.
+-- LifeChanged arm.
 --
 -- The AMOUNT rides along because the question the caller asks is "how much", not
 -- "how many times" -- CR 702.15e keeps two simultaneous lifelink gains separate
@@ -3810,12 +3818,13 @@ damageDealtToThisTurn gs oid =
 -- CR 119.9's zero is not fenced here, because nothing files one: the write every
 -- gain goes through (Parun.Engine.Event.changeLife) skips a zero delta, and
 -- Parun.Engine.Damage's lifelink record guards its own amount.
-lifeGainOf :: GameEvent -> Maybe (PlayerId, Natural)
-lifeGainOf event = case event of
-  GameEvent.LifeGained (LifeChange.MkLifeChange pid amount) -> Just (pid, amount)
+lifeChangeOf :: LifeDirection.LifeDirection -> GameEvent -> Maybe (PlayerId, Natural)
+lifeChangeOf direction event = case event of
+  GameEvent.LifeGained change -> toward LifeDirection.Gained change
   -- CR 119.3's other sign. A loss is not a negative gain: "the amount of life you
-  -- gained this turn" is not reduced by life lost since, so this is not an arm.
-  GameEvent.LifeLost {} -> Nothing
+  -- gained this turn" is not reduced by life lost since, and a loss stays a loss
+  -- whatever is gained after it (First Response's ruling, 2020-11-10).
+  GameEvent.LifeLost change -> toward LifeDirection.Lost change
   GameEvent.Moved {} -> Nothing
   GameEvent.Discarded {} -> Nothing
   GameEvent.Drew {} -> Nothing
@@ -3883,21 +3892,21 @@ lifeGainOf event = case event of
   GameEvent.ActivatedAbilityResolved _ -> Nothing
   GameEvent.TriggeredAbilityResolved _ -> Nothing
   GameEvent.CardArrived _ -> Nothing
+  where
+    toward side (LifeChange.MkLifeChange pid amount) = if side == direction then Just (pid, amount) else Nothing
 
--- CR 119.3 / 608.2i: how much life this player has gained this turn. The log fold
--- lifeGainOf exists for. The turn scope is GameState.events itself:
--- Parun.Engine.Engine.beginTurnOf clears the log at the handoff, so "this turn" is
--- what the log holds -- wasDealtDamageThisTurn's footing one function up.
+-- CR 119.3 / 608.2i: how much life this player gained or lost during the turn
+-- this log holds (turnLog). The log fold lifeChangeOf exists for.
 --
 -- SUMMED over the amounts rather than counted over the events, which is the whole
 -- difference between this and the discard tally beside it.
-lifeGainedThisTurn :: GameState -> PlayerId -> Natural
-lifeGainedThisTurn gs pid =
-  sum (fmap snd (filter ((== pid) . fst) (Maybe.mapMaybe (lifeGainOf . LoggedEvent.event) (Foldable.toList (GameState.events gs)))))
+lifeChangedIn :: LifeDirection.LifeDirection -> Seq.Seq LoggedEvent.LoggedEvent -> PlayerId -> Natural
+lifeChangedIn direction events pid =
+  sum (fmap snd (filter ((== pid) . fst) (Maybe.mapMaybe (lifeChangeOf direction . LoggedEvent.event) (Foldable.toList events))))
 
 -- CR 603.1b: how many DISTINCT bending verbs this player has done this turn --
 -- CR 701.65b's airbend, CR 701.66b's earthbend, CR 702.189b's firebend and CR
--- 701.67c's waterbend. lifeGainedThisTurn's footing.
+-- 701.67c's waterbend. lifeChangedIn's footing.
 bendingsThisTurn :: GameState -> PlayerId -> Int
 bendingsThisTurn gs pid =
   let actionOf event = case event of
@@ -3911,7 +3920,7 @@ bendingActions :: Set.Set PlayerAction.PlayerAction
 bendingActions = Set.fromList [PlayerAction.Airbend, PlayerAction.Earthbend, PlayerAction.Firebend, PlayerAction.Waterbend]
 
 -- CR 508.1a / 608.2i: how many creatures this player declared as attackers this
--- turn. lifeGainedThisTurn's footing -- a fold over GameState.events, whose
+-- turn. lifeChangedIn's footing -- a fold over GameState.events, whose
 -- extent Parun.Engine.Engine.beginTurnOf's clearing makes "this turn".
 --
 -- The ATTACKING PLAYER is read off the event rather than resolved through CR

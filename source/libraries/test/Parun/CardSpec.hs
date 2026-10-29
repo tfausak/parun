@@ -4345,11 +4345,10 @@ quantityKindFilters quantity = case quantity of
   Quantity.Type.CardsDiscardedThisTurn _ -> []
   Quantity.Type.CardsDrawnThisTurn _ -> []
   Quantity.Type.BendingsThisTurn _ -> []
-  Quantity.Type.LifeGainedThisTurn _ -> []
+  Quantity.Type.LifeChanged _ -> []
   Quantity.Type.PlayersDealtDamageThisTurn _ -> []
   Quantity.Type.DamageDealtToPlayersThisTurn _ -> []
-  Quantity.Type.SpellsCastLastTurn _ -> []
-  Quantity.Type.SpellsCastThisTurn _ -> []
+  Quantity.Type.SpellsCast _ -> []
   Quantity.Type.TimesThisTurn _ -> []
   -- Its own Filter, which no Count holds and countFilters cannot see.
   Quantity.Type.ActivationsThisTurn tally -> [(Unframed, ActivationsThisTurn.source tally)]

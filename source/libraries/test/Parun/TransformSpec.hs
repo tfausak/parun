@@ -1311,12 +1311,12 @@ castAndResolve pid oid gs =
 -- effect is a combat-damage replacement on a board that never reaches combat. So
 -- "bob cast a spell" is the only thing a cast contributes.
 spellsCastLastTurnSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
-spellsCastLastTurnSpec s registry = Spec.describe s "SpellsCastLastTurn" $ do
-  -- The snapshot the four reads above rest on, asserted at the state level: the
-  -- handoff records a count PER SEAT, and CR 502.2's one-player scalar keeps
-  -- answering about the outgoing active player alone. A unit-level fence, not the
-  -- proof -- the case above is that.
-  Spec.it s "CR 608.2i the handoff records what each player cast, per seat" $ do
+spellsCastLastTurnSpec s registry = Spec.describe s "SpellsCast at LastTurn" $ do
+  -- The log the four reads above rest on, asserted at the state level: the
+  -- handoff keeps the outgoing log, whose fold counts PER SEAT, and CR 502.2's
+  -- one-player scalar keeps answering about the outgoing active player alone. A
+  -- unit-level fence, not the proof -- the case above is that.
+  Spec.it s "CR 608.2i the handoff keeps what each player cast, per seat" $ do
     forest <- S.printingOf s registry "Forest"
     fog <- S.printingOf s registry "Fog"
     let withLands = S.landsFor forest S.bob 1 emptyBoard
@@ -1324,7 +1324,7 @@ spellsCastLastTurnSpec s registry = Spec.describe s "SpellsCastLastTurn" $ do
         handed = Engine.beginTurnOf S.bob (castAndResolve S.bob bobFog board)
     -- SPARSE: alice cast nothing and so has no entry at all, which every reader
     -- takes for 0.
-    Spec.assertEqWith s "bob cast one during alice's turn and alice cast none" (GameState.castsLastTurn handed) (Map.fromList [(S.bob, 1)])
+    Spec.assertEqWith s "bob cast one during alice's turn and alice cast none" (Game.castsPerPlayer (GameState.eventsLastTurn handed)) (Map.fromList [(S.bob, 1)])
     Spec.assertEqWith s "and CR 502.2's scalar still answers about alice alone" (GameState.spellsCastLastTurn handed) 0
 
 -- The two names Ratchet, Field Medic // Ratchet, Rescue Racer prints. CR 701.28

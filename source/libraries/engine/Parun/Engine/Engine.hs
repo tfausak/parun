@@ -1782,7 +1782,7 @@ beginTurn extra pid gs =
   let -- CR 601.2i / 608.2i: how many spells each player cast during the turn that
       -- is ending, taken here because the log it is folded from is cleared by the
       -- record update below. `gs` still holds the OUTGOING active player.
-      casts = Game.castsPerPlayer gs
+      casts = Game.castsPerPlayer (GameState.events gs)
       -- CR 800.4b: a player who would be controlled by a departed player isn't, so
       -- a pending Decider naming one is not promoted. CR 800.4a's second clause
       -- clears the entry at the departure itself; this guard answers otherwise.
@@ -1853,13 +1853,9 @@ beginTurn extra pid gs =
             -- whether ANY cast two or more, and the most any one of them cast
             -- answers both.
             GameState.spellsCastLastTurn = List.foldl' max 0 (fmap (\p -> Map.findWithDefault 0 p casts) outgoing),
-            -- CR 601.2i / 608.2i: the same fold, kept per seat, because a CARD
-            -- asks about every player ("if no spells were cast last turn") and
-            -- about any one of them ("if a player cast two or more spells last
-            -- turn") where rule 731.2 asks only about the outgoing active player.
-            -- The scalar above is read out of THIS map, so the two cannot drift.
-            GameState.castsLastTurn = casts,
-            -- The outgoing log, kept for the per-seat view before it is cleared above.
+            -- CR 608.2i: the outgoing log, kept before it is cleared above, for
+            -- the per-seat view and for every "last turn" tally a CARD asks
+            -- (Quantity's SpellsCast and LifeChanged at WhichTurn.LastTurn).
             GameState.eventsLastTurn = GameState.events gs,
             -- CR 601.2i: the outgoing turn's casts join the game-long record
             -- before the log holding them is cleared above.

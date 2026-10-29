@@ -461,12 +461,9 @@ data GameState = MkGameState
     -- there. Under the shared team turns option, the most any one player on the
     -- previous active team cast (CR 731.2a).
     spellsCastLastTurn :: Natural.Natural,
-    -- | CR 601.2i / 608.2i: how many spells each player cast during the turn
-    -- just ended, sparse, snapshotted at the same handoff; spellsCastLastTurn
-    -- is read out of it by Engine.beginTurnOf so the two cannot disagree.
-    castsLastTurn :: Map.Map PlayerId.PlayerId Natural.Natural,
-    -- | The turn just ended's `events`, kept at the handoff for the per-seat
-    -- view (Parun.Engine.PlayerView) alone; no rule reads it.
+    -- | CR 608.2i: the turn just ended's `events`, kept at the handoff. The
+    -- per-seat view reads it, and so does every "last turn" tally
+    -- (WhichTurn.LastTurn); empty before the game's second turn.
     eventsLastTurn :: Seq.Seq LoggedEvent.LoggedEvent,
     -- | CR 601.2i / 608.2i: every spell cast this game BEFORE the turn in
     -- progress, oldest first, appended at the turn handoff from the log it

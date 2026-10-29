@@ -49,6 +49,7 @@ import qualified Parun.Types.HybridPhyrexian as HybridPhyrexian
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LastKnown as LastKnown
+import qualified Parun.Types.LifeTally as LifeTally
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
@@ -71,6 +72,7 @@ import qualified Parun.Types.Quotient as Quotient
 import qualified Parun.Types.Rounding as Rounding
 import Parun.Types.SlotName (SlotName)
 import qualified Parun.Types.Source as Source
+import qualified Parun.Types.SpellTally as SpellTally
 import qualified Parun.Types.SpellWasCast as SpellWasCast
 import qualified Parun.Types.StickerContent as StickerContent
 import qualified Parun.Types.StoredResult as StoredResult
@@ -798,21 +800,25 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         Quantity.BendingsThisTurn ref -> case playersOf ref of
           Just [pid] -> Just (toInteger (Game.bendingsThisTurn gs pid))
           _ -> Nothing
-        -- CR 119.3 / 608.2i: how much life that player has gained this turn.
-        -- CardsDiscardedThisTurn's arm in footing -- a live fold over GameState.events,
-        -- whose extent Engine.beginTurnOf's clearing makes "this turn" -- and in ARITY:
-        -- Nothing for a reference naming anything but exactly one player, since "whose
-        -- life?" has no sum.
+        -- CR 119.3 / 608.2i: how much life that player gained or lost during the turn
+        -- the tally names. CardsDiscardedThisTurn's arm in footing -- a live fold over
+        -- that turn's log (Game.turnLog) -- and in ARITY: Nothing for a reference
+        -- naming anything but exactly one player, since "whose life?" has no sum.
         --
         -- The AMOUNTS are summed where the discard tally counts events, the printed
-        -- sentence asking how much life rather than how many gains.
-        -- Game.lifeGainedThisTurn is the fold, so a second reader of the same log cannot
-        -- drift from this one.
+        -- sentence asking how much life rather than how many gains. A loss counts
+        -- whatever was gained after it, and damage counts as its loss (Feast on the
+        -- Fallen's rulings, 2014-07-18; CR 120.3a).
         --
-        -- An EMPTY log answers 0 rather than Nothing, as CardsDiscardedThisTurn's does.
-        -- What is unanswered is only the reference.
-        Quantity.LifeGainedThisTurn ref -> case playersOf ref of
-          Just [pid] -> Just (toInteger (Game.lifeGainedThisTurn gs pid))
+        -- "An opponent lost life last turn" is the Greatest of it over opponents, and
+        -- a departed seat stays out of that fold (Count.playersFor): docs/decisions.md,
+        -- "Whether a departed opponent's life loss counts".
+        --
+        -- An EMPTY log answers 0 rather than Nothing, as CardsDiscardedThisTurn's does --
+        -- the game's first turn has no last turn to have lost life in. What is
+        -- unanswered is only the reference.
+        Quantity.LifeChanged tally -> case playersOf (LifeTally.player tally) of
+          Just [pid] -> Just (toInteger (Game.lifeChangedIn (LifeTally.direction tally) (Game.turnLog (LifeTally.turn tally) gs) pid))
           _ -> Nothing
         -- CR 120.1 / 608.2i: how many of the players this reference names were dealt
         -- damage this turn. CardsDiscardedThisTurn's arm in footing -- a live fold over
@@ -854,32 +860,23 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         Quantity.DamageDealtToPlayersThisTurn ref -> case playersOf ref of
           Nothing -> Nothing
           Just pids -> Just (toInteger (sum (fmap (Game.damageDealtToPlayerThisTurn gs) pids)))
-        -- CR 601.2i / 608.2i: how many spells that player cast during the turn just
-        -- ended. LifeTotal's arm in ARITY -- one player's tally, so a reference naming
-        -- several answers "whose?" rather than a sum -- and read STRAIGHT OFF the
-        -- handoff snapshot for the reason the life total is read straight off
-        -- GameState.players: the log it was folded from is cleared by that same handoff
-        -- (Engine.beginTurnOf), so there is nothing live left to fold.
+        -- CR 601.2i / 608.2i: how many spells that player cast during the turn the
+        -- tally names, folded off that turn's log (Game.turnLog). LifeTotal's arm in
+        -- ARITY -- one player's tally, so a reference naming several answers "whose?"
+        -- rather than a sum.
         --
-        -- Both printed readings are about every player at once and both reach this arm
-        -- through Aggregation.Greatest over Scope.OverPlayers, whose candidate arrives
-        -- as PlayerRef.Candidate -- "no spells were cast last turn" is that maximum
-        -- compared to 0 and "a player cast two or more spells last turn" is the same
-        -- maximum compared to 2. Summing the seats would answer the second wrongly when
-        -- two players cast one spell each.
+        -- Every printed reading reaches this arm through Aggregation.Greatest over
+        -- Scope.OverPlayers, whose candidate arrives as PlayerRef.Candidate -- "no
+        -- spells were cast last turn" is that maximum compared to 0, and "a player cast
+        -- two or more spells last turn" and Ertai's Scorn's "an opponent cast two or
+        -- more spells this turn" the same maximum compared to 2. Summing the seats
+        -- would answer those wrongly when two players cast one spell each.
         --
         -- An ABSENT entry answers 0 rather than Nothing, as CardsDiscardedThisTurn's
         -- empty log does: nobody having cast is an answered question. What is
         -- unanswered is only the reference.
-        Quantity.SpellsCastLastTurn ref -> case playersOf ref of
-          Just [pid] -> Just (toInteger (Map.findWithDefault 0 pid (GameState.castsLastTurn gs)))
-          _ -> Nothing
-        -- CR 601.2i / 608.2i: the arm above, for the turn in progress, read off the live
-        -- log through the same fold GameState.castsLastTurn snapshots. Ertai's Scorn's
-        -- "an opponent cast two or more" is the Greatest of it over opponents, not a
-        -- sum, which two opponents casting one each would satisfy.
-        Quantity.SpellsCastThisTurn ref -> case playersOf ref of
-          Just [pid] -> Just (toInteger (Map.findWithDefault 0 pid (Game.castsPerPlayer gs)))
+        Quantity.SpellsCast tally -> case playersOf (SpellTally.player tally) of
+          Just [pid] -> Just (toInteger (Map.findWithDefault 0 pid (Game.castsPerPlayer (Game.turnLog (SpellTally.turn tally) gs))))
           _ -> Nothing
         -- CR 608.2n / 608.2i: how many times the ability this evaluation is aimed at
         -- has resolved this turn, activated or triggered, folded off the turn-scoped
@@ -935,7 +932,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- and of the ability (Count.activationMeets). The snapshot is what answers
         -- The Chain Veil's ruling that a planeswalker gone from the battlefield
         -- still counts. Absent activations are 0, an answered question; only the
-        -- reference can go unanswered, SpellsCastThisTurn's posture.
+        -- reference can go unanswered, SpellsCast's posture.
         -- data/scenarios/the-chain-veil proves the count.
         Quantity.ActivationsThisTurn tally -> case playersOf (ActivationsThisTurn.activator tally) of
           Just [pid] ->
@@ -999,7 +996,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- projection, so the double strike appears in the same settle that CR 704.5t
         -- removed the dungeon in.
         --
-        -- An ABSENT player answers 0 rather than Nothing, as SpellsCastLastTurn's absent
+        -- An ABSENT player answers 0 rather than Nothing, as SpellsCast's absent
         -- entry does: having completed none is an answered question. What is unanswered
         -- is only the reference.
         Quantity.DungeonsCompleted ref -> case playersOf ref of
@@ -1404,11 +1401,10 @@ objectSlots quantity = case quantity of
   Quantity.CardsDiscardedThisTurn _ -> Set.empty
   Quantity.CardsDrawnThisTurn _ -> Set.empty
   Quantity.BendingsThisTurn _ -> Set.empty
-  Quantity.LifeGainedThisTurn _ -> Set.empty
+  Quantity.LifeChanged _ -> Set.empty
   Quantity.PlayersDealtDamageThisTurn _ -> Set.empty
   Quantity.DamageDealtToPlayersThisTurn _ -> Set.empty
-  Quantity.SpellsCastLastTurn _ -> Set.empty
-  Quantity.SpellsCastThisTurn _ -> Set.empty
+  Quantity.SpellsCast _ -> Set.empty
   Quantity.TimesThisTurn _ -> Set.empty
   Quantity.ActivationsThisTurn _ -> Set.empty
   Quantity.SpellsCastBefore -> Set.empty
@@ -1686,11 +1682,10 @@ readsX quantity = case quantity of
   Quantity.CardsDiscardedThisTurn _ -> False
   Quantity.CardsDrawnThisTurn _ -> False
   Quantity.BendingsThisTurn _ -> False
-  Quantity.LifeGainedThisTurn _ -> False
+  Quantity.LifeChanged _ -> False
   Quantity.PlayersDealtDamageThisTurn _ -> False
   Quantity.DamageDealtToPlayersThisTurn _ -> False
-  Quantity.SpellsCastLastTurn _ -> False
-  Quantity.SpellsCastThisTurn _ -> False
+  Quantity.SpellsCast _ -> False
   Quantity.TimesThisTurn _ -> False
   Quantity.ActivationsThisTurn _ -> False
   Quantity.SpellsCastBefore -> False
