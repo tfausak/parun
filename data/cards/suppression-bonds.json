@@ -1,0 +1,94 @@
+{
+  "faces": [
+    {
+      "activationProhibitions": [
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "HasAttached",
+              "value": {
+                "type": "IsSource"
+              }
+            }
+          }
+        }
+      ],
+      "combatRestrictions": [
+        {
+          "type": "CantAttack",
+          "value": {
+            "affected": {
+              "type": "Matching",
+              "value": {
+                "type": "HasAttached",
+                "value": {
+                  "type": "IsSource"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "CantBlock",
+          "value": {
+            "affected": {
+              "type": "Matching",
+              "value": {
+                "type": "HasAttached",
+                "value": {
+                  "type": "IsSource"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "enchant": [
+        {
+          "filter": {
+            "type": "Not",
+            "value": {
+              "type": "HasCardType",
+              "value": {
+                "type": "Land"
+              }
+            }
+          },
+          "pool": {
+            "type": "Permanents"
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Suppression Bonds",
+      "oracleText": "Enchant nonland permanent\nEnchanted permanent can't attack or block, and its activated abilities can't be activated.",
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Aura"
+          }
+        ],
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}

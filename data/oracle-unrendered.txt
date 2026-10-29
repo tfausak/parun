@@ -2028,6 +2028,7 @@ shadow-urchin
 shadowborn-apostle
 shadowborn-demon
 shadowgrange-archfiend
+shadows-of-the-past
 shahrazad
 shahrazad-and-sindbad
 shattered-ego
@@ -2049,6 +2050,7 @@ sidar-kondo-of-jamuraa
 siege-behemoth
 siege-dragon
 sigardas-aid
+sigil-of-valor
 silence
 silent-arbiter
 silverquill-the-disputant
@@ -2057,6 +2059,7 @@ sinister-gnarlbark
 sinister-reflections
 sirens-call
 sixth-sense
+skaab-goliath
 skilled-animator
 skinshifter
 skirk-marauder
@@ -2079,6 +2082,7 @@ sliver-hive
 slobad-iron-goblin
 slumbering-dragon
 smallpox
+smash-to-smithereens
 smog-smasher
 smoke-teller
 snake-basket
@@ -2164,6 +2168,7 @@ stalking-tiger
 stand-or-fall
 standstill
 star-compass
+starfield-of-nyx
 starforged-sword
 static-discharge
 static-orb
@@ -2190,6 +2195,7 @@ stormtide-leviathan
 stormwild-capridor
 story-circle
 strategic-planning
+stratus-walk
 strax-sontaran-nurse
 stream-of-acid
 streetwise-negotiator
@@ -2201,6 +2207,7 @@ stuffy-doll
 stun
 stupor
 subterranean-schooner
+subterranean-scout
 summer-bloom
 summitfest-closing-ceremony
 summon-choco-mog
@@ -2218,6 +2225,7 @@ sunweb
 super-shredder
 super-soldier-serum
 superior-spider-man
+suppression-bonds
 suppression-field
 suqata-assassin
 surrounded-by-orcs

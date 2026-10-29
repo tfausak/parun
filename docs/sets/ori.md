@@ -10,16 +10,6 @@ line) and running `parun deck` on it: every unresolved name is reported.
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Shadows of the Past: `_Players:NumCardsOfTypeInGraveyardIs`
-- Sigil of Valor: `_Trigger:WhenACreatureAttacksAlone`
-- Skaab Goliath: `_Rule:CastEffect`
-- Smash to Smithereens: `_DamageRecipient:Player`
-- Somberwald Alpha: `_Trigger:WhenACreatureBecomesBlocked`
-- Sphinx's Tutelage: `_Trigger:WhenAPlayerDrawsACard`
-- Starfield of Nyx: `_Action:PutGraveyardCardOntoBattlefield`
-- Stratus Walk: `_PermanentRule:CanBlockOnly`
-- Subterranean Scout: `_Permanents:PowerIs`
-- Suppression Bonds: `_Permanent:HostPermanent`
 - Swift Reckoning: `_Rule:CastEffect`
 - Sword of the Animist: `_Trigger:WhenACreatureAttacks`
 - Sylvan Messenger: `_Action:RevealTheTopNumberCardsOfLibrary`
@@ -73,5 +63,9 @@ first.
   "copy the spell countered this way" names no spell to copy.
 - #5770: Nissa's Revelation. No quantity reads a revealed library card's power
   and toughness, nor its last known toughness once it is drawn.
+- #5776: Sphinx's Tutelage. No count reads the most members sharing a color,
+  so "two nonland cards that share a color" has no reading.
+- #5775: Somberwald Alpha. "Becomes blocked" fires only for its source, so "a
+  creature you control becomes blocked" has no reading.
 - #5754: Tainted Remedy. `LifeGainRewrite` cannot turn a gain into a loss of
   that much life.
