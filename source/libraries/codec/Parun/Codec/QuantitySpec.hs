@@ -32,6 +32,8 @@ import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
+import qualified Parun.Types.LifeDirection as LifeDirection
+import qualified Parun.Types.LifeTally as LifeTally
 import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
@@ -49,8 +51,10 @@ import qualified Parun.Types.Quotient as Quotient
 import qualified Parun.Types.Rounding as Rounding
 import qualified Parun.Types.Scope as Scope
 import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.SpellTally as SpellTally
 import qualified Parun.Types.Times as Times
 import qualified Parun.Types.VotesReceived as VotesReceived
+import qualified Parun.Types.WhichTurn as WhichTurn
 import qualified Parun.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -606,20 +610,19 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       Quantity.codec
       (Quantity.BendingsThisTurn (PlayerRef.Relative PlayerRelation.You))
       " {\"type\":\"BendingsThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
-  -- CR 119.3, on CardsDiscardedThisTurn's terms: a PlayerRef and nothing else,
-  -- with the same recursive-decoder pair. Fortifying Draught's is the Relative
-  -- arm.
-  Spec.it s "LifeGainedThisTurn, relative and from a slot" $ do
+  -- CR 119.3: the tally's record, whose own spec covers its fields. Fortifying
+  -- Draught's is this turn's gain; First Response's last turn's loss.
+  Spec.it s "LifeChanged" $ do
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.LifeGainedThisTurn (PlayerRef.Relative PlayerRelation.You))
-      " {\"type\":\"LifeGainedThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+      (Quantity.LifeChanged LifeTally.MkLifeTally {LifeTally.player = PlayerRef.Relative PlayerRelation.You, LifeTally.direction = LifeDirection.Gained, LifeTally.turn = WhichTurn.ThisTurn})
+      " {\"type\":\"LifeChanged\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"direction\":{\"type\":\"Gained\"}}} "
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.LifeGainedThisTurn (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))
-      " {\"type\":\"LifeGainedThisTurn\",\"value\":{\"type\":\"InSlot\",\"value\":\"target\"}} "
+      (Quantity.LifeChanged LifeTally.MkLifeTally {LifeTally.player = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target")), LifeTally.direction = LifeDirection.Lost, LifeTally.turn = WhichTurn.LastTurn})
+      " {\"type\":\"LifeChanged\",\"value\":{\"player\":{\"type\":\"InSlot\",\"value\":\"target\"},\"direction\":{\"type\":\"Lost\"},\"turn\":{\"type\":\"LastTurn\"}}} "
   -- CR 120.1: a PlayerRef and an optional kind. Furious Spinesplitter's is the
   -- Relative arm over Opponent with no kind; Tymna the Weaver's narrows it to CR
   -- 510.2's combat damage.
@@ -648,28 +651,19 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       Quantity.codec
       (Quantity.DamageDealtToPlayersThisTurn (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))
       " {\"type\":\"DamageDealtToPlayersThisTurn\",\"value\":{\"type\":\"InSlot\",\"value\":\"target\"}} "
-  -- CR 601.2i, on CardsDiscardedThisTurn's terms again: a PlayerRef and nothing
-  -- else. Daybreak Ranger // Nightfall Predator writes the Candidate arm, which is
-  -- how a per-player quantity is read under a count over players; the InSlot arm
-  -- beside it is the recursive-decoder pair the two cases above make.
-  Spec.it s "SpellsCastLastTurn, from the fold's candidate and from a slot" $ do
+  -- CR 601.2i: the tally's record. Daybreak Ranger // Nightfall Predator writes
+  -- the Candidate arm last turn, Ertai's Scorn this turn.
+  Spec.it s "SpellsCast" $ do
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.SpellsCastLastTurn PlayerRef.Candidate)
-      " {\"type\":\"SpellsCastLastTurn\",\"value\":{\"type\":\"Candidate\"}} "
+      (Quantity.SpellsCast SpellTally.MkSpellTally {SpellTally.player = PlayerRef.Candidate, SpellTally.turn = WhichTurn.LastTurn})
+      " {\"type\":\"SpellsCast\",\"value\":{\"player\":{\"type\":\"Candidate\"},\"turn\":{\"type\":\"LastTurn\"}}} "
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.SpellsCastLastTurn (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))
-      " {\"type\":\"SpellsCastLastTurn\",\"value\":{\"type\":\"InSlot\",\"value\":\"target\"}} "
-  -- Ertai's Scorn's per-opponent tally, SpellsCastLastTurn's wire one turn over.
-  Spec.it s "SpellsCastThisTurn carries its PlayerRef" $
-    Common.assertCodec
-      s
-      Quantity.codec
-      (Quantity.SpellsCastThisTurn PlayerRef.Candidate)
-      " {\"type\":\"SpellsCastThisTurn\",\"value\":{\"type\":\"Candidate\"}} "
+      (Quantity.SpellsCast SpellTally.MkSpellTally {SpellTally.player = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target")), SpellTally.turn = WhichTurn.ThisTurn})
+      " {\"type\":\"SpellsCast\",\"value\":{\"player\":{\"type\":\"InSlot\",\"value\":\"target\"}}} "
   -- CR 608.2n / 602.2 with only the act on the wire: the ability is the one the
   -- quantity is evaluated against, reached through AgainstSlot over CR 602.2a's
   -- "thisAbility", and "this turn" is the log's own extent.

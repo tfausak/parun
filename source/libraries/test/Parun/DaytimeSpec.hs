@@ -45,7 +45,6 @@
 module Parun.DaytimeSpec where
 
 import qualified Control.Monad as Monad
-import qualified Data.Map as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
@@ -64,6 +63,7 @@ import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.Daytime as Daytime
 import qualified Parun.Types.Face as Face
+import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
@@ -71,6 +71,7 @@ import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.Printing as Printing
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Recipient as Recipient
+import qualified Parun.Types.SpellWasCast as SpellWasCast
 import qualified Parun.Types.Zone as Zone
 
 -- The face this permanent is showing, by name (CR 709.4a). What "transformed"
@@ -456,12 +457,14 @@ anyNumberBoard tovolar ranger wolf =
       (bobRangerId, g4) = S.addPermanent ranger S.bob g3
    in (tovolarId, rangerId, bobRangerId, settle (afterOneCast g4))
 
--- One spell cast by alice during the previous turn, written into the per-seat
--- snapshot the Ranger's trigger reads. Set directly, as afterCasting above is,
--- and what it stands in for is proved through the rules by Parun.TransformSpec's
--- SpellsCastLastTurn group.
+-- One spell cast by alice during the previous turn, written into the last-turn
+-- log the Ranger's trigger folds. Set directly, as afterCasting above is, and
+-- what it stands in for is proved through the rules by Parun.TransformSpec's
+-- "SpellsCast at LastTurn" group.
 afterOneCast :: GameState.GameState -> GameState.GameState
-afterOneCast gs = gs {GameState.castsLastTurn = Map.singleton S.alice 1}
+afterOneCast gs =
+  let cast = GameEvent.SpellCast (SpellWasCast.MkSpellWasCast S.alice S.noSource S.emptyCharacteristics (Just Zone.Hand) Nothing Set.empty)
+   in gs {GameState.eventsLastTurn = GameState.events (S.withEvents [cast] gs)}
 
 -- Names every permanent offered. Pinned rather than left to S.identityAnswer,
 -- whose fallback happens to answer the same way: the assertion is about what the

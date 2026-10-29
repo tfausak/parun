@@ -317,7 +317,6 @@ gameWith settings order =
           -- CR 731.1: "the game starts with neither designation".
           GameState.daytime = Nothing,
           GameState.spellsCastLastTurn = 0,
-          GameState.castsLastTurn = mempty,
           GameState.eventsLastTurn = mempty,
           GameState.castsBeforeThisTurn = mempty,
           GameState.attacksInOwnLastTurn = mempty,
@@ -1090,7 +1089,6 @@ restartGame perform exempt starter = do
             -- with neither designation however the ended one finished.
             GameState.daytime = Nothing,
             GameState.spellsCastLastTurn = 0,
-            GameState.castsLastTurn = mempty,
             GameState.eventsLastTurn = mempty,
             GameState.castsBeforeThisTurn = mempty,
             GameState.attacksInOwnLastTurn = mempty,
@@ -1372,7 +1370,6 @@ subgameStateFrom starter parent =
           -- neither designation and the main game's is untouched by it.
           GameState.daytime = Nothing,
           GameState.spellsCastLastTurn = 0,
-          GameState.castsLastTurn = mempty,
           GameState.eventsLastTurn = mempty,
           GameState.castsBeforeThisTurn = mempty,
           GameState.attacksInOwnLastTurn = mempty,

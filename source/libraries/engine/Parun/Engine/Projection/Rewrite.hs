@@ -2025,7 +2025,7 @@ rewritePayGate pairs gate =
 -- word swap finds text there exactly as it finds it at the top level. A
 -- REGRESSION FENCE rather than a proved behaviour, bakeSlot's posture one module
 -- over: no committed bound reaches a Filter -- the pool's bounds name either
--- Quantity.LifeGainedThisTurn or Quantity.InSlot, and neither arm carries one --
+-- Quantity.LifeChanged or Quantity.InSlot, and neither arm carries one --
 -- so no board today tells the two readings apart. The slot's computed COUNT is
 -- a Quantity on the same footing and is descended into beside it.
 rewriteTargetSlot :: [(TextWord.TextWord, TextWord.TextWord)] -> TargetSlot.TargetSlot -> TargetSlot.TargetSlot
@@ -2409,11 +2409,10 @@ rewriteQuantity pairs quantity = case quantity of
   Quantity.Type.CardsDiscardedThisTurn _ -> quantity
   Quantity.Type.CardsDrawnThisTurn _ -> quantity
   Quantity.Type.BendingsThisTurn _ -> quantity
-  Quantity.Type.LifeGainedThisTurn _ -> quantity
+  Quantity.Type.LifeChanged _ -> quantity
   Quantity.Type.PlayersDealtDamageThisTurn _ -> quantity
   Quantity.Type.DamageDealtToPlayersThisTurn _ -> quantity
-  Quantity.Type.SpellsCastLastTurn _ -> quantity
-  Quantity.Type.SpellsCastThisTurn _ -> quantity
+  Quantity.Type.SpellsCast _ -> quantity
   Quantity.Type.TimesThisTurn _ -> quantity
   Quantity.Type.ActivationsThisTurn tally -> Quantity.Type.ActivationsThisTurn tally {ActivationsThisTurn.source = Filter.rewrite pairs (ActivationsThisTurn.source tally)}
   Quantity.Type.SpellsCastBefore -> quantity

@@ -120,6 +120,7 @@ import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.Mana as Mana.Type
 import qualified Parun.Types.ManaRetention as ManaRetention
 import qualified Parun.Types.ManaType as ManaType
@@ -2549,7 +2550,7 @@ aimAtCreature oid p = case p of
 
 -- alice's graveyard holds a Goblin Piker (mana value 2), a Russet Wolves (mana
 -- value 4) and a Lightning Bolt (mana value 1), with `gained` life gained this
--- turn planted in the CR 608.2i log Game.lifeGainedThisTurn folds.
+-- turn planted in the CR 608.2i log Game.lifeChangedIn folds.
 --
 -- Three DISTINCT mana values, and the Bolt is the one UNDER every bound the cases
 -- use: it is kept out by the And's other conjunct alone, so a filter that had
@@ -2570,7 +2571,7 @@ celestineGraveyard piker wolves bolt gained =
 -- THE card the computed mana-value bound was waiting for. CR 601.2c chooses the
 -- target and CR 608.2b re-reads it, both through
 -- Parun.Engine.Target.admittedGiven, which is the one site that fills
--- Filter.Context.slotAmount -- off the slot's own Quantity.LifeGainedThisTurn.
+-- Filter.Context.slotAmount -- off the slot's own Quantity.LifeChanged.
 --
 -- The bound is NOT a printed literal, and the two cases below are what say so: a
 -- card out of range on one board is in range on another that differs only in how
@@ -2591,8 +2592,8 @@ celestineSpec s registry = Spec.describe s "EnclosingAmount (CR 202.3)" $ do
         let (pikerId, wolvesId, boltId, atTwo) = celestineGraveyard piker wolves bolt 2
             (_, _, _, atFour) = celestineGraveyard piker wolves bolt 4
             legal = Target.legalRecipients StackObjectKind.Spell (Just S.alice) S.noSource theSlot
-        Spec.assertEqWith s "the fixture planted 2 life gained" (Game.lifeGainedThisTurn atTwo S.alice) 2
-        Spec.assertEqWith s "and 4 on the other board" (Game.lifeGainedThisTurn atFour S.alice) 4
+        Spec.assertEqWith s "the fixture planted 2 life gained" (Game.lifeChangedIn LifeDirection.Gained (GameState.events atTwo) S.alice) 2
+        Spec.assertEqWith s "and 4 on the other board" (Game.lifeChangedIn LifeDirection.Gained (GameState.events atFour) S.alice) 4
         Spec.assertBool s (Set.member (Recipient.ToObject pikerId) (legal atTwo)) "mana value 2 is within a bound of 2"
         Spec.assertBool s (not (Set.member (Recipient.ToObject wolvesId) (legal atTwo))) "mana value 4 is not"
         Spec.assertBool s (Set.member (Recipient.ToObject wolvesId) (legal atFour)) "and at 4 gained it is -- the bound moved"
@@ -2610,7 +2611,7 @@ celestineSpec s registry = Spec.describe s "EnclosingAmount (CR 202.3)" $ do
       Nothing -> Spec.assertFailure s "Celestine should declare one triggered ability with one target slot"
       Just theSlot -> do
         let (pikerId, wolvesId, _, atZero) = celestineGraveyard piker wolves bolt 0
-        Spec.assertEqWith s "the fixture planted no life gained" (Game.lifeGainedThisTurn atZero S.alice) 0
+        Spec.assertEqWith s "the fixture planted no life gained" (Game.lifeChangedIn LifeDirection.Gained (GameState.events atZero) S.alice) 0
         Spec.assertEqWith s "and the slot admits nothing at all" (Target.legalRecipients StackObjectKind.Spell (Just S.alice) S.noSource theSlot atZero) Set.empty
         -- The same two cards ARE offered once the bound reaches them, so the empty
         -- set above is the bound talking and not an empty graveyard.

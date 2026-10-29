@@ -551,10 +551,10 @@ storedSource active = RowSource.MkRowSource (Just (ActivePlayerEffect.source act
 -- Engine.beginTurnOf) holds one.
 --
 -- Read out of Game.castsPerPlayer rather than folding the log itself, so the
--- per-seat map Engine.beginTurnOf snapshots and this one seat's count are the
--- same fold.
+-- per-seat map Engine.beginTurnOf folds and this one seat's count are the same
+-- fold.
 castsThisTurn :: PlayerId -> GameState -> Natural
-castsThisTurn pid gs = Map.findWithDefault 0 pid (Game.castsPerPlayer gs)
+castsThisTurn pid gs = Map.findWithDefault 0 pid (Game.castsPerPlayer (GameState.events gs))
 
 -- CR 601.3: a player can begin to cast a spell only if no rule or effect
 -- prohibits it. The prohibit half. Cast.permitsCastWhileSearching is not the

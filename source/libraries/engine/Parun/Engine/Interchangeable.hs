@@ -218,7 +218,7 @@ representatives pcs gs candidates =
 --     GameState.monarch, GameState.initiative, GameState.drewFromEmpty,
 --     GameState.loopInvolvement, GameState.extraTurns and the per-player
 --     counters (landsPlayed, drawsThisTurn, departedThisTurn, turnsBegun,
---     spellsCastLastTurn, castsLastTurn, resolvedNames) are keyed by or valued
+--     spellsCastLastTurn, resolvedNames) are keyed by or valued
 --     at a PLAYER and name no object.
 --   * GameState.lastKnown is about objects that have LEFT, bar the host each
 --     record names, which namedByAnother searches; and so is
@@ -237,8 +237,9 @@ representatives pcs gs candidates =
 --     GameState.battlefieldWhenTriggered (CR 603.10's look-back) are keyed by
 --     every permanent alike, so objects COMPARES the two entries in each
 --     rather than searching for the ids.
---   * GameState.eventsLastTurn is read by the per-seat view alone, never by a
---     rule, so no choice can turn on it.
+--   * GameState.eventsLastTurn is read by the per-seat view and by the "last
+--     turn" tallies (Quantity's SpellsCast and LifeChanged), which count per
+--     PLAYER and name no object, so no choice between objects can turn on it.
 --   * GameState.outsideObjects (CR 729.4) is keyed by ids belonging to a game
 --     this one is nested inside, and its value names no object -- an owner, a
 --     printing and a face-up/face-down status (CR 110.5); the id supplies of

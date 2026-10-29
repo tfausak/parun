@@ -1275,10 +1275,10 @@ castDraught recipient draughtId gs =
 -- gain 2 life. Target creature gets +X/+X until end of turn, where X is the
 -- amount of life you gained this turn."
 --
--- The card Quantity.LifeGainedThisTurn was waiting for. CR 119.3's gain is
+-- The card Quantity.LifeChanged was waiting for. CR 119.3's gain is
 -- recorded as GameEvent.LifeGained, and CR 608.2i's turn-scoped log is where the
 -- total comes from -- so the quantity is a SUM of amounts over that log
--- (Game.lifeGainedThisTurn), not a count of its entries.
+-- (Game.lifeChangedIn), not a count of its entries.
 --
 -- CR 608.2c is what makes the card read its own gain: the two instructions are
 -- followed in printed order, so by the time the modification is created the
