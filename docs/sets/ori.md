@@ -10,16 +10,6 @@ line) and running `parun deck` on it: every unresolved name is reported.
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Gnarlroot Trapper: `_Action:AddManaWithModifiers`
-- Goblin Glory Chaser: `_Permanents:IsRenowned`
-- Goblin Piledriver: `_LayerEffect:AdjustPTForEach`
-- Grasp of the Hieromancer: `_Rule:TriggerA`
-- Hallowed Moonlight: `_Action:CreateReplaceWouldEnterUntil`
-- Hangarback Walker: `_ReplacementActionWouldEnter:EntersWithNumberCounters`
-- Harbinger of the Tides: `_Rule:CastEffect`
-- Helm of the Gods: `_StaticLayerEffect:AdjustPTForEach`
-- Herald of the Pantheon: `_Rule:PlayerEffect`
-- Hixus, Prison Warden: `_Trigger:WhenACreatureDealsCombatDamageToAPlayer`
 - Honored Hierarch: `_Permanents:IsRenowned`
 - Infectious Bloodlust: `_PermanentRule:MustAttack`
 - Infernal Scarring: `_Rule:TriggerA`
@@ -113,5 +103,10 @@ first.
   "as long as this creature is untapped" can't switch them.
 - #5762: Exquisite Firecraft. A card's own "can't be countered" carries no
   condition, so spell mastery can't switch it.
+- #5765: Harbinger of the Tides. No cast permission at instant timing carries
+  a cost increase, so "as though it had flash if you pay {2} more" has no
+  reading.
+- #5764: Hallowed Moonlight. An enters redirect to exile is offered only
+  against a zone change, so a creature token that wasn't cast still enters.
 - #5754: Tainted Remedy. `LifeGainRewrite` cannot turn a gain into a loss of
   that much life.

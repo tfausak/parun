@@ -205,8 +205,9 @@ possessive word
 -- | The objects a count counts (CR 608.2h), in both numbers, and the target
 -- slots the words name: ("Mountain you control", "Mountains you control"),
 -- ("card in your hand", "cards in your hand"). Permanents nothing else places
--- are "on the battlefield" (Fruition). Only a count of members of a zone is
--- spelled out here.
+-- are "on the battlefield" (Fruition), save attacking or blocking ones, which
+-- CR 506.4 already places there (Goblin Piledriver). Only a count of members of
+-- a zone is spelled out here.
 counting :: Context -> Count.Count Quantity.Quantity -> [(Text.Text, Text.Text, [SlotName.SlotName])]
 counting context c = case (Count.aggregation c, Count.scope c) of
   (Aggregation.Members, Scope.InZone (InZone.MkInZone zone whose)) -> do
@@ -221,7 +222,7 @@ counting context c = case (Count.aggregation c, Count.scope c) of
     p <- Filter.phrase (Filter.Type.And rest) (keyword context)
     (placed, fallback, ms) <- case (zone, whose, controllers) of
       (Zone.Battlefield, PlayerRef.Relative PlayerRelation.AnyPlayer, []) ->
-        let nowhere = null (Filter.qualifiers p)
+        let nowhere = null (Filter.qualifiers p) && not (any (`elem` [Filter.Type.IsAttacking, Filter.Type.IsBlocking]) rest)
          in [(Filter.merge p (Filter.MkPhrase [] [] [Filter.MkQualifier (Text.pack "on the battlefield") (Text.pack "on the battlefield") | nowhere]), permanent, [])]
       (Zone.Battlefield, PlayerRef.Relative PlayerRelation.AnyPlayer, [controller]) -> do
         (controls', ms) <- controllerOf controller
