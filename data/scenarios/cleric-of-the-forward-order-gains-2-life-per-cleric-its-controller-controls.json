@@ -1,0 +1,13 @@
+{
+  "description": "Cleric of the Forward Order gains its controller 2 life for each creature they control named Cleric of the Forward Order, itself included",
+  "note": "Alice controls one Cleric and a Grizzly Bears and casts a second Cleric; bob controls a third Cleric. Only alice's two count, so she gains 4.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "WW", "hand": [{"card": "Cleric of the Forward Order", "label": "cleric"}], "battlefield": [{"card": "Cleric of the Forward Order"}, {"card": "Grizzly Bears"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "battlefield": [{"card": "Cleric of the Forward Order"}], "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$cleric"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 24}}}
+  ]
+}

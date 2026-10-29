@@ -10,28 +10,6 @@ line) and running `parun deck` on it: every unresolved name is reported.
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Abbot of Keral Keep: `_Action:Exile`
-- Acolyte of the Inferno: `_Permanent:Trigger_TheAttackingCreature`
-- Alchemist's Vial: `_Action:CreatePermanentRuleEffectUntil`
-- Alhammarret, High Arbiter: `_ReplacementActionWouldEnter:EachPlayerAction`
-- Angel's Tomb: `_LayerEffect:SetPT`
-- Animist's Awakening: `_Action:RevealTheTopNumberCardsOfLibrary`
-- Archangel of Tithes:
-  `_PermanentRule:CantAttackPlayerOrPlaneswalkerControlledByUnlessCost`
-- Artificer's Epiphany: `_Action:If`
-- Avaricious Dragon: `_Action:DiscardHand`
-- Bounding Krasis: `_Action:TapOrUntapPermanent`
-- Calculated Dismissal: `_Action:PlayerMayCost`
-- Call of the Full Moon: `_Players:NumSpellsCastLastTurnIs`
-- Chandra, Fire of Kaladesh // Chandra, Roaring Flame:
-  double-faced, so not a `parun translate` candidate
-- Cleric of the Forward Order: `_Permanents:IsNamed`
-- Consecrated by Blood: `_Rule:Activated`
-- Consul's Lieutenant: `_Permanent:Trigger_ThatCreature`
-- Cruel Revival: `_Target:UptoOneTargetGraveyardCard`
-- Dark Dabbling: `_Action:If`
-- Dark Petition: `_Action:If`
-- Day's Undoing: `_Action:ShuffleHandAndGraveyardIntoLibrary`
 - Deep-Sea Terror: `_Rule:Unless`
 - Despoiler of Souls: `_Rule:FromGraveyard`
 - Disciple of the Ring: `_Cost:Exile`
@@ -147,5 +125,12 @@ first.
   chosen, so "choose one that hasn't been chosen" has no reading.
 - #4781: Alhammarret's Archive. No draw replacement can spare the first draw in
   a draw step, and none rewrites a draw as two.
+- #5756: Alhammarret, High Arbiter. No as-enters step reveals the opponents'
+  hands, and a name choice can't be confined to the cards revealed.
+- #5758, #5759: Chandra, Fire of Kaladesh // Chandra, Roaring Flame. Nothing
+  totals the damage a source dealt this turn, and a damage instruction can't
+  bind the players it damaged.
+- #5757: Archangel of Tithes. Attack and block costs carry no condition, so
+  "as long as this creature is untapped" can't switch them.
 - #5754: Tainted Remedy. `LifeGainRewrite` cannot turn a gain into a loss of
   that much life.

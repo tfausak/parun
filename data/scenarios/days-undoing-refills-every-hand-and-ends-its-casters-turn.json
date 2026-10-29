@@ -1,0 +1,19 @@
+{
+  "description": "Day's Undoing shuffles each player's hand and graveyard into their library, each draws seven, and on its caster's turn it ends the turn",
+  "note": "Alice's Avaricious Dragon would discard her hand at the beginning of her end step; the turn ends before that step, so she still holds all seven cards in bob's upkeep.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "UUU", "hand": [{"card": "Day's Undoing", "label": "undoing"}, {"card": "Forest"}], "battlefield": [{"card": "Avaricious Dragon", "label": "dragon"}], "graveyard": [{"card": "Shock"}], "library": [{"card": "Island", "label": "a1"}, {"card": "Island", "label": "a2"}, {"card": "Island", "label": "a3"}, {"card": "Island", "label": "a4"}, {"card": "Island", "label": "a5"}, {"card": "Island", "label": "a6"}]},
+    {"name": "bob", "hand": [{"card": "Mountain"}], "library": [{"card": "Plains", "label": "b1"}, {"card": "Plains", "label": "b2"}, {"card": "Plains", "label": "b3"}, {"card": "Plains", "label": "b4"}, {"card": "Plains", "label": "b5"}, {"card": "Plains", "label": "b6"}, {"card": "Plains", "label": "b7"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$undoing"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["Forest", "Shock", "$a1", "$a2", "$a3", "$a4", "$a5", "$a6"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["Mountain", "$b1", "$b2", "$b3", "$b4", "$b5", "$b6", "$b7"]}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Library", "is": ["$a6"]}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"View": {"of": "Zone", "player": "bob", "zone": "Library", "is": ["$b7"]}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Shock", "count": 1}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 5}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Island", "count": 0}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Exile", "card": "Day's Undoing", "count": 1}}}
+  ]
+}

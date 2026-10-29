@@ -1,0 +1,15 @@
+{
+  "description": "Acolyte of the Inferno deals 2 damage to a creature that blocks it, as the block is declared",
+  "note": "Without the trigger the 3/1 Acolyte and the 2/2 Bears trade in combat; with it the Bears die before combat damage and the Acolyte survives. Bob takes no damage, so renown never fires.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [{"card": "Acolyte of the Inferno", "label": "acolyte", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$acolyte"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {"$bears": ["$acolyte"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Acolyte of the Inferno", "count": 1}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 20}}}
+  ]
+}

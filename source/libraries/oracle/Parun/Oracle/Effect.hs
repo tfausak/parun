@@ -289,9 +289,17 @@ clause :: Target.Context -> Clause.Clause Card.Card Continuous.Ability -> [(Text
 clause context c
   | Maybe.isJust (Clause.ifTaken c) || Maybe.isJust (Clause.orElse c) = []
   | Just gate <- Clause.condition c = do
-      (words', itself) <- condition context gate
+      (plain, itself) <- condition context gate
+      -- Free: a plural instant-or-sorcery count reads "and/or", and an
+      -- ability word may head the sentence (Calculated Dismissal's spell
+      -- mastery).
+      words' <- ListUtils.nubOrd [plain, Text.replace (Text.pack "instant or sorcery cards") (Text.pack "instant and/or sorcery cards") plain]
+      word <- Trigger.abilityWord words'
       (body, ms) <- clause (if itself then context {Target.self = Text.pack "it"} else context) c {Clause.condition = Nothing}
-      [(Text.pack "If " <> words' <> Text.pack ", " <> lowered context body, ms)]
+      -- Free: "also" before instructions that add to the ones before them
+      -- (Dark Dabbling).
+      opened <- [lowered context body, Text.pack "also " <> lowered context body]
+      [(word <> Text.pack "If " <> words' <> Text.pack ", " <> opened, ms)]
   | otherwise = do
       predicates <- instructions context (Foldable.toList (Clause.effects c))
       case (Clause.payGate c, Clause.optionality c, List.foldr addedTogether [] predicates) of
@@ -753,11 +761,14 @@ effect context e = case e of
       _ -> []
     acted context (Text.pack "regenerate ") r
   -- "Regenerate enchanted creature": the same shield on the permanent a loop
-  -- binds as the instruction resolves.
+  -- binds as the instruction resolves. Free over several: "all" or "each"
+  -- (Dark Dabbling's "each other creature you control").
   Effect.ForEach (ForEach.MkForEach r LoopMembers.Every slot body False Nothing Nothing)
     | [Effect.Replace (Replace.MkReplace Duration.UntilEndOfTurn Uses.Once ReplacementOrigin.Other Nothing (ReplacementEffect.DestructionR (DestructionR.MkDestructionR (Just (Filter.Type.IsBound bound)) DestructionRewrite.Regenerate)))] <- Foldable.toList body,
-      bound == slot ->
-        acted context (Text.pack "regenerate ") r
+      bound == slot -> do
+        determiner <- [Target.All, Target.Each]
+        ref <- Target.object context determiner r
+        [MkPredicate Nothing (Text.pack "regenerate " <> Target.wording ref) [] (Target.mentions ref) Nothing False]
   Effect.Discard d -> discarded context d
   Effect.Search s -> searched context s
   -- "Target player mills two cards" (CR 701.17a).

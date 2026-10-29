@@ -1,0 +1,18 @@
+{
+  "description": "Call of the Full Moon gives the enchanted creature +3/+2 and trample, and is sacrificed in the next upkeep after a player cast two spells",
+  "note": "Alice casts two Ornithopters on turn 1; at the start of bob's turn 2 upkeep the Aura's trigger sacrifices it, and the Bears are back to 2/2.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "hand": [{"card": "Ornithopter", "label": "t1"}, {"card": "Ornithopter", "label": "t2"}], "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Call of the Full Moon", "label": "moon", "attached": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 5, "toughness": 4}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$bears", "keyword": {"type": "Trample"}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$t1"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$t2"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Call of the Full Moon", "count": 1}}},
+    {"turn": 2, "step": "DrawStep", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Call of the Full Moon", "count": 1}}},
+    {"turn": 2, "step": "DrawStep", "player": "bob", "check": {"PowerToughness": {"object": "$bears", "power": 2, "toughness": 2}}}
+  ]
+}

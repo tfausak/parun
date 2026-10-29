@@ -1,0 +1,16 @@
+{
+  "description": "Cruel Revival destroys target non-Zombie creature and returns up to one target Zombie card from its caster's graveyard to their hand",
+  "note": "Bob's Walking Corpse is a Zombie, so it cannot be the creature target; alice's Hill Giant card is no Zombie, so it cannot be the card target. The Bears die and Gravedigger returns.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "BBBBB", "hand": [{"card": "Cruel Revival", "label": "revival"}], "graveyard": [{"card": "Gravedigger", "label": "digger"}, {"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Walking Corpse", "label": "corpse"}], "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Cast": {"object": "$revival", "targetsBySlot": {"victim": ["$corpse"], "zombie": ["$digger"]}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Cast": {"object": "$revival", "targetsBySlot": {"victim": ["$bears"], "zombie": ["$giant"]}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$revival", "targetsBySlot": {"victim": ["$bears"], "zombie": ["$digger"]}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Gravedigger", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Walking Corpse", "count": 1}}}
+  ]
+}
