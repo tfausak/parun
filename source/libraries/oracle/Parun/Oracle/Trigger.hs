@@ -26,6 +26,8 @@ import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.LifeDirection as LifeDirection
+import qualified Parun.Types.LifeTally as LifeTally
 import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
 import qualified Parun.Types.Phase as Phase
@@ -39,6 +41,7 @@ import qualified Parun.Types.StepBegins as StepBegins
 import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggerFrequency as TriggerFrequency
 import qualified Parun.Types.TurnScope as TurnScope
+import qualified Parun.Types.WhichTurn as WhichTurn
 import qualified Parun.Types.Zone as Zone
 
 -- | A trigger event as the ability's opening words say it: "When Spark
@@ -322,8 +325,25 @@ condition context c = case c of
     (Quantity.AttackersDeclaredThisTurn who, Quantity.Literal 1) | comparison == Comparison.AtLeast -> do
       (subject, _) <- holder context who
       [subject <> Text.pack " attacked this turn"]
+    -- CR 119.3: "you lost life last turn" (First Response), "an opponent lost
+    -- life last turn" (Feast on the Fallen).
+    (Quantity.LifeChanged tally, Quantity.Literal 1) | comparison == Comparison.AtLeast -> do
+      (subject, _) <- holder context (LifeTally.player tally)
+      [subject <> lifeChanged tally]
     _ -> []
   _ -> []
+
+-- | A life tally's predicate after its subject: " lost life last turn".
+lifeChanged :: LifeTally.LifeTally -> Text.Text
+lifeChanged tally =
+  Text.pack (" " <> verb <> " life " <> which)
+  where
+    verb = case LifeTally.direction tally of
+      LifeDirection.Gained -> "gained"
+      LifeDirection.Lost -> "lost"
+    which = case LifeTally.turn tally of
+      WhichTurn.ThisTurn -> "this turn"
+      WhichTurn.LastTurn -> "last turn"
 
 -- | The ability word (CR 207.2c) Oracle text may print before an ability
 -- whose condition this is. Free for hellbent: printed (Slaughterhouse

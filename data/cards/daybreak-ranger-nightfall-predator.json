@@ -108,9 +108,14 @@
                   "aggregation": {
                     "type": "Greatest",
                     "value": {
-                      "type": "SpellsCastLastTurn",
+                      "type": "SpellsCast",
                       "value": {
-                        "type": "Candidate"
+                        "player": {
+                          "type": "Candidate"
+                        },
+                        "turn": {
+                          "type": "LastTurn"
+                        }
                       }
                     }
                   },
@@ -265,9 +270,14 @@
                   "aggregation": {
                     "type": "Greatest",
                     "value": {
-                      "type": "SpellsCastLastTurn",
+                      "type": "SpellsCast",
                       "value": {
-                        "type": "Candidate"
+                        "player": {
+                          "type": "Candidate"
+                        },
+                        "turn": {
+                          "type": "LastTurn"
+                        }
                       }
                     }
                   },

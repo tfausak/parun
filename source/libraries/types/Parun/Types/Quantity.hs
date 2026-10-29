@@ -19,6 +19,7 @@ import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
+import qualified Parun.Types.LifeTally as LifeTally
 import qualified Parun.Types.ManaCount as ManaCount
 import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.PlayerCounterTally as PlayerCounterTally
@@ -26,6 +27,7 @@ import qualified Parun.Types.PlayerDesignationTally as PlayerDesignationTally
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.ProductionTag as ProductionTag
 import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.SpellTally as SpellTally
 import qualified Parun.Types.VotesReceived as VotesReceived
 
 -- | A number that may not be a literal number.
@@ -265,9 +267,10 @@ data Quantity
     -- 701.66b, 701.67c, 702.189b) that player has done this turn -- Avatar
     -- Aang's "if you've done all four this turn".
     BendingsThisTurn PlayerRef.PlayerRef
-  | -- | CR 119.3 / 608.2i: how much life that player gained this turn, summed
-    -- from the turn-scoped GameEvent.LifeGained log.
-    LifeGainedThisTurn PlayerRef.PlayerRef
+  | -- | CR 119.3 / 608.2i: how much life that player gained or lost during the
+    -- turn the tally names, summed from that turn's GameEvent.LifeGained or
+    -- LifeLost log.
+    LifeChanged LifeTally.LifeTally
   | -- | CR 120.1 / 608.2i: how many of the players that reference names were
     -- dealt damage, or combat damage alone, this turn -- players, not events
     -- (rule 702.54a).
@@ -278,11 +281,9 @@ data Quantity
   | -- | CR 120.1 / 608.2i: the total damage dealt this turn to the object this
     -- quantity is evaluated against.
     DamageDealtToThisTurn
-  | -- | CR 601.2i / 608.2i: how many spells that player cast last turn, read off
-    -- GameState.castsLastTurn (not CR 502.2's active-player scalar).
-    SpellsCastLastTurn PlayerRef.PlayerRef
-  | -- | CR 601.2i / 608.2i: how many spells that player cast this turn.
-    SpellsCastThisTurn PlayerRef.PlayerRef
+  | -- | CR 601.2i / 608.2i: how many spells that player cast during the turn the
+    -- tally names (not CR 502.2's active-player scalar).
+    SpellsCast SpellTally.SpellTally
   | -- | CR 608.2n \/ 608.2i: how many times the ABILITY this quantity is
     -- evaluated against has resolved this turn, folded from the turn-scoped
     -- GameEvent.ActivatedAbilityResolved and TriggeredAbilityResolved log and

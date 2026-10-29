@@ -411,9 +411,6 @@ data TriggerCondition
     PlayersGainLife PlayerRelation.PlayerRelation
   | -- | "Whenever [a player] loses life" (Exquisite Blood), against
     -- GameEvent.LifeLost -- PlayerGainsLife's mirror in shape.
-    --
-    -- Not implemented: CR 119.5's life-total set, which would be a loss by that
-    -- rule's own words whenever the new total is lower, records nothing.
     PlayerLosesLife PlayerRelation.PlayerRelation
   | -- | CR 714.2b generalized over the counter kind: a threshold crossing whose
     -- before/after pair straddles N, intervening "if" included.

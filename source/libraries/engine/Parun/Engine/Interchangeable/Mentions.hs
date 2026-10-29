@@ -260,10 +260,12 @@ import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.KeywordTally as KeywordTally
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
+import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeGainR as LifeGainR
 import qualified Parun.Types.LifeLoss as LifeLoss
 import qualified Parun.Types.LifeLossPattern as LifeLossPattern
 import qualified Parun.Types.LifeLossR as LifeLossR
+import qualified Parun.Types.LifeTally as LifeTally
 import qualified Parun.Types.LimitUnless as LimitUnless
 import qualified Parun.Types.LookAt as LookAt
 import qualified Parun.Types.LoyaltyClause as LoyaltyClause
@@ -391,6 +393,7 @@ import qualified Parun.Types.SlotPerPlayer as SlotPerPlayer
 import qualified Parun.Types.SpecialAction as SpecialAction
 import qualified Parun.Types.SpeedDecrease as SpeedDecrease
 import qualified Parun.Types.SpellCast as SpellCast
+import qualified Parun.Types.SpellTally as SpellTally
 import qualified Parun.Types.Splice as Splice
 import qualified Parun.Types.StatedFlip as StatedFlip
 import qualified Parun.Types.StaticAbility as StaticAbility
@@ -430,6 +433,7 @@ import qualified Parun.Types.VotesReceived as VotesReceived
 import qualified Parun.Types.Ward as Ward
 import qualified Parun.Types.WhenSpent as WhenSpent
 import qualified Parun.Types.WhichCounters as WhichCounters
+import qualified Parun.Types.WhichTurn as WhichTurn
 import qualified Parun.Types.While as While
 import qualified Parun.Types.WithCounters as WithCounters
 import qualified Parun.Types.Zone as Zone
@@ -455,6 +459,13 @@ data Asking r = MkAsking
 -- Whether reading this slot might name the object.
 slotNames :: Asking r -> SlotName.SlotName -> r
 slotNames asking _slot = contextNames asking
+
+-- A history read of the turn a tally names: the turn in progress is read
+-- (CR 732.3), and last turn's log, which no loop of this turn can grow, is not.
+turnHistory :: (Monoid r) => Asking r -> WhichTurn.WhichTurn -> HistoryRead.HistoryRead -> r
+turnHistory asking which reading = case which of
+  WhichTurn.ThisTurn -> history asking reading
+  WhichTurn.LastTurn -> mempty
 
 -- Whether an atom reading the resolution context -- an enclosing target slot's
 -- amount, an attach's subject, a baked crew or attachment set -- might name the
@@ -2593,12 +2604,11 @@ quantityNames asking x = case x of
   Quantity.CardsDiscardedThisTurn playerRef -> history asking HistoryRead.Discards <> playerRefNames asking playerRef
   Quantity.CardsDrawnThisTurn playerRef -> playerRefNames asking playerRef
   Quantity.BendingsThisTurn playerRef -> history asking HistoryRead.Bendings <> playerRefNames asking playerRef
-  Quantity.LifeGainedThisTurn playerRef -> history asking HistoryRead.LifeGains <> playerRefNames asking playerRef
+  Quantity.LifeChanged tally -> turnHistory asking (LifeTally.turn tally) (case LifeTally.direction tally of LifeDirection.Gained -> HistoryRead.LifeGains; LifeDirection.Lost -> HistoryRead.LifeLosses) <> playerRefNames asking (LifeTally.player tally)
   Quantity.PlayersDealtDamageThisTurn tally -> history asking HistoryRead.Damage <> playerRefNames asking (DealtDamage.recipient tally)
   Quantity.DamageDealtToPlayersThisTurn playerRef -> history asking HistoryRead.Damage <> playerRefNames asking playerRef
   Quantity.DamageDealtToThisTurn -> history asking HistoryRead.Damage
-  Quantity.SpellsCastLastTurn playerRef -> playerRefNames asking playerRef
-  Quantity.SpellsCastThisTurn playerRef -> history asking HistoryRead.Casts <> playerRefNames asking playerRef
+  Quantity.SpellsCast tally -> turnHistory asking (SpellTally.turn tally) HistoryRead.Casts <> playerRefNames asking (SpellTally.player tally)
   Quantity.TimesThisTurn act -> history asking $ case act of
     AbilityAct.Activated -> HistoryRead.Activations
     AbilityAct.Resolved -> HistoryRead.Resolutions

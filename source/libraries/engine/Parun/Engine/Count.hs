@@ -643,6 +643,26 @@ playersFor viewOf context gs =
       }
     gs
 
+-- CR 800.4i: playersFor for a tally of what HAPPENED to players, judged over
+-- every seat that began the game rather than over those still in it: a player
+-- who lost life and then left still lost it (Skewer the Critics' ruling,
+-- 2024-01-12; Florian, Voldaren Scion's, 2021-09-24).
+historyPlayersFor :: ViewOf -> Filter.Context -> GameState -> PlayerRef.PlayerRef -> Maybe [PlayerId]
+historyPlayersFor viewOf context gs =
+  Players.named
+    Players.MkReads
+      { Players.perspective = Filter.perspective context,
+        Players.bound = Maybe.isJust (Filter.source context),
+        Players.slotPlayers = slotPlayers context gs,
+        Players.slotObject = (`Filter.slotOneObject` context),
+        Players.controllerOf = viewOf Monad.>=> Filter.controller,
+        Players.ownerOf = viewOf Monad.>=> Filter.owner,
+        Players.acquisitionOf = (`Game.acquisitionOf` gs),
+        Players.roster = GameState.turnOrder gs,
+        Players.reaches = const True
+      }
+    gs
+
 -- CR 102.1: the players a TurnScope.PlayersTurn reference names, which is
 -- playersFor with CR 113.7's source slot naming the context's source where
 -- nothing bound it already -- a step trigger is matched before its bindings

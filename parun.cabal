@@ -869,6 +869,8 @@ library codec
     Parun.Codec.LibraryPositionSpec
     Parun.Codec.LifeChange
     Parun.Codec.LifeChangeSpec
+    Parun.Codec.LifeDirection
+    Parun.Codec.LifeDirectionSpec
     Parun.Codec.LifeGainR
     Parun.Codec.LifeGainRewrite
     Parun.Codec.LifeGainRewriteSpec
@@ -885,6 +887,8 @@ library codec
     Parun.Codec.LifeLossRewriteSpec
     Parun.Codec.LifeLossRSpec
     Parun.Codec.LifeLossSpec
+    Parun.Codec.LifeTally
+    Parun.Codec.LifeTallySpec
     Parun.Codec.LimitUnless
     Parun.Codec.LimitUnlessSpec
     Parun.Codec.LoggedEvent
@@ -1385,6 +1389,8 @@ library codec
     Parun.Codec.SpeedDecreaseSpec
     Parun.Codec.SpellCast
     Parun.Codec.SpellCastSpec
+    Parun.Codec.SpellTally
+    Parun.Codec.SpellTallySpec
     Parun.Codec.SpellWasCast
     Parun.Codec.SpellWasCastSpec
     Parun.Codec.SpellWasCopied
@@ -1553,6 +1559,8 @@ library codec
     Parun.Codec.WhenSpentSpec
     Parun.Codec.WhichCounters
     Parun.Codec.WhichCountersSpec
+    Parun.Codec.WhichTurn
+    Parun.Codec.WhichTurnSpec
     Parun.Codec.While
     Parun.Codec.WhileSpec
     Parun.Codec.WithCounters
@@ -2753,6 +2761,7 @@ library types
     Parun.Types.LibraryPlacement
     Parun.Types.LibraryPosition
     Parun.Types.LifeChange
+    Parun.Types.LifeDirection
     Parun.Types.LifeGainR
     Parun.Types.LifeGainRewrite
     Parun.Types.LifeIs
@@ -2761,6 +2770,7 @@ library types
     Parun.Types.LifeLossPattern
     Parun.Types.LifeLossR
     Parun.Types.LifeLossRewrite
+    Parun.Types.LifeTally
     Parun.Types.LimitUnless
     Parun.Types.LoggedEvent
     Parun.Types.LookAt
@@ -3051,6 +3061,7 @@ library types
     Parun.Types.SpecialAction
     Parun.Types.SpeedDecrease
     Parun.Types.SpellCast
+    Parun.Types.SpellTally
     Parun.Types.SpellWasCast
     Parun.Types.SpellWasCopied
     Parun.Types.SpendManaAsThough
@@ -3154,6 +3165,7 @@ library types
     Parun.Types.When
     Parun.Types.WhenSpent
     Parun.Types.WhichCounters
+    Parun.Types.WhichTurn
     Parun.Types.While
     Parun.Types.WithCounters
     Parun.Types.WordFamily

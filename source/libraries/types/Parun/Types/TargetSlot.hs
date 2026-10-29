@@ -66,7 +66,7 @@ data TargetSlot = MkTargetSlot
     -- slot costs one record field and reaches every bound the pool prints.
     --
     -- ON THE SLOT rather than one nullary operand per printed bound (an
-    -- OfSource-shaped LifeGainedThisTurn), because Betor,
+    -- OfSource-shaped life-gained tally), because Betor,
     -- Ancestor's Voice prints the bound against life LOST this turn beside the
     -- gained one: the operand-per-bound shape owes a new operand, a new
     -- Parun.Engine.Filter.Context field and a new position lint for each, where a
