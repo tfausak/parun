@@ -4454,7 +4454,7 @@ mintedReplacementsFor keyword count = case keyword of
                     DamagePattern.whichSource = Nothing,
                     DamagePattern.boundRecipient = Nothing
                   },
-              DamageR.rewrite = DamageRewrite.PreventUpTo n,
+              DamageR.rewrite = DamageRewrite.PreventUpTo (Quantity.Literal (toInteger n)),
               DamageR.riders = Seq.empty
             }
       )

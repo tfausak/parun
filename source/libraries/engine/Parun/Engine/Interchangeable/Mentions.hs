@@ -1218,7 +1218,7 @@ damageRewriteNames asking onEffect x = case x of
   DamageRewrite.PreventRemovingShieldCounter -> mempty
   DamageRewrite.PreventNext _natural -> mempty
   DamageRewrite.PreventAllBut _natural -> mempty
-  DamageRewrite.PreventUpTo _natural -> mempty
+  DamageRewrite.PreventUpTo quantity -> quantityNames asking quantity
   DamageRewrite.SetAmount _natural -> mempty
   DamageRewrite.Scale _scaling -> mempty
   DamageRewrite.Redirect recipient -> recipientNames asking recipient

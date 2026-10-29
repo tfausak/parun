@@ -4,6 +4,7 @@ import qualified Data.Sequence as Seq
 import qualified Numeric.Natural as Natural
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Scaling as Scaling
 
@@ -33,8 +34,7 @@ import qualified Parun.Types.Scaling as Scaling
 --
 -- SetAmount is CR 614.1a's "instead" with a flat number (Galvanic Blast). A
 -- Natural rather than a Quantity because every printed instead-amount in the pool
--- is a literal, and a variable one would need the whole quantity-evaluation
--- environment inside the CR 616.1 loop, which nothing asks for yet.
+-- is a literal; PreventUpTo shows the Quantity shape it would take.
 --
 -- Scale is Furnace of Rath's "double that damage ... instead", reusing
 -- Parun.Types.Scaling rather than a Double arm -- the difference between doubling
@@ -120,7 +120,7 @@ data DamageRewrite effect
     -- one recipient in one event, and CR 510.4's two combat damage steps -- the
     -- one way one source hits one creature twice -- are the different TIMES rule
     -- 702.64b's own second sentence lets the ceiling renew at.
-    PreventUpTo Natural.Natural
+    PreventUpTo Quantity.Quantity
   | SetAmount Natural.Natural
   | Scale Scaling.Scaling
   | Redirect Recipient.Recipient
