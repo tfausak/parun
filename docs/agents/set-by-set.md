@@ -370,11 +370,20 @@ is noise until it repeats unloaded.
 ### Reading code
 
 Everything a command prints stays in the context and is re-read every turn
-after, so read narrowly: `grep -n` for the identifier first, then `sed -n`
-the lines around the hit. Never page through a whole module (`Event.hs`,
-`Cast.hs` and their peers run to thousands of lines), never re-read what is
-already in the context, and send long output (builds, test runs) to a file
-and read only the lines that matter. Auditors read the same way.
+after, so read narrowly. Run `script/tags.sh` once in the worktree; a
+definition is then one lookup (`grep -P '^castUse\t' tags` gives file and
+line), and `sed -n` reads just that span. `grep -n` the identifier only to
+find its uses. Never page through a whole module (`Event.hs`, `Cast.hs` and
+their peers run to thousands of lines), never re-read what is already in the
+context, and send long output (builds, test runs) to a file and read only the
+lines that matter. Auditors read the same way.
+
+A question that takes many reads to answer --- every site that reads a slot,
+every pool card using a constructor, how a funnel orders its callers --- goes
+to an Explore subagent on a smaller model (`model: haiku` for a lookup,
+`sonnet` for a judgement), briefed with the question and the paths. Its
+reading stays in its own context; yours gains only its answer. Verify a
+claim it makes before relying on it, as you would an issue body.
 
 ### Enumerate the edit sites in one pass
 

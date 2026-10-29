@@ -139,6 +139,7 @@
               pkgs.gh
               pkgs.ghcid
               pkgs.git
+              pkgs.haskellPackages.hasktags
               pkgs.hlint
               pkgs.jq
               pkgs.nixfmt
