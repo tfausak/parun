@@ -64,11 +64,11 @@ Per set, in this order, one unit at a time ("Mechanics").
    the evidence), and Scryfall-verify only the "Needs a capability" cards.
    Report two trend numbers: the first dry run's translations, and the cards
    needing a capability. About a third to a half usually translate.
-2. **Two hand batches** over "Expressible today": the first half, then the
-   second. Translate first, hand-write on rejection. Every census verdict and
-   every sibling it names is a claim to verify --- every set so far had wrong
-   ones. A wrong verdict moves the card under "Needs a capability" (issue or
-   comment), or is folded if small. Each batch updates the census.
+2. **Hand batches** over "Expressible today", in order, about 20 cards each
+   ("Short sessions"). Translate first, hand-write on rejection. Every census
+   verdict and every sibling it names is a claim to verify --- every set so far
+   had wrong ones. A wrong verdict moves the card under "Needs a capability"
+   (issue or comment), or is folded if small. Each batch updates the census.
 3. **Capability units**, one per issue, hardest first.
    Several parameter-sized issues go in one capability batch, but only when
    they share an edit site: name the function or constructor they all edit,
@@ -82,9 +82,11 @@ Per set, in this order, one unit at a time ("Mechanics").
    set's audits find: audit more of a kind that keeps finding defects, and
    skip a kind that comes back clean twice running. Record each skip and its
    reason as the unit reports, so "How it went" can say whether it held up.
-   Relay findings to the SAME implementer as
-   claims to verify; it pushes back with evidence where the audit is wrong.
-   The PR stays a draft until the fixes land.
+   Hand the findings to a FRESH fixer, not the implementer: resuming a long
+   session re-reads its whole context every turn. Brief it with the PR (diff
+   and body) and the findings as claims to verify; it pushes back with
+   evidence where the audit is wrong. The PR stays a draft until the fixes
+   land.
 5. **Finish.** When every capability card is in the pool, set "Needs a
    capability" to "Nothing", commit the set list as
    `data/decks/sets/<set>.txt` (`1 Name` a line, one per card name in the
@@ -113,8 +115,10 @@ Per set, in this order, one unit at a time ("Mechanics").
    - Filed along the way: #N (one phrase), ...
    - Audits: A of K capability PRs; D found rules defects.
      - #PR: the defect, in a line.
-   - Subagent tokens: census Xk; hand Xk, Xk; capability Xk (#PR), ...;
-     audits Xk (#PR), .... Total X.XXM, Xk per card. Wall clock ~Nh.
+   - Cost (`script/session-tokens.sh` over the set's transcripts): cache
+     reads X.XB, cache writes XM, output XM; X.XM cache reads per card. The
+     costliest units: #PR (XM), .... Wall clock ~Nh. Sets before ORI
+     recorded each agent's peak context as "subagent tokens", not this.
    - Owner review:
      - #PR: a decisions.md entry, wire-format change or contested reading.
    ```
@@ -137,8 +141,17 @@ no CR numbers.
   while its unit waits. Tokens, not wall clock, are the budget, and parallel
   units each move main under the others and cost a merge apiece.
   `script/with-build-lock.sh` stays as the guard (`PARUN_BUILD_SLOTS`).
-- **Cost, for planning** (subagent tokens): census ~300--350k; hand batch
-  ~13--17k per card; capability unit ~150--350k; audit ~100--200k.
+- **Cost** is cache reads, measured with `script/session-tokens.sh` on the
+  agents' transcripts: every turn re-reads the whole context, so a session
+  costs roughly its turns times its average context, and grows with the
+  square of its length. In M14 and M15 cache reads were 1.6B tokens against
+  54M written and 5M output, and code reads (`sed`, `cat`, `grep`) were three
+  quarters of what filled the context.
+- **Short sessions.** Size a unit to finish in about 150 turns: hand batches
+  of about 20 cards, capability batches of two or three issues. A unit
+  nearing that with work left commits, reports, and leaves the rest to a
+  fresh unit briefed with its branch and report. Never resume a finished
+  agent for more work; brief a fresh one.
 - **Subagents commit; the orchestrator pushes.** Before pushing, grep the
   branch's commit messages and the PR body for close/fix/resolve beside an
   issue number. Open the PR as a draft from the agent's PR-body file, then
@@ -249,10 +262,10 @@ closes with **Finishing**.
 > says "related to #5468". Also report the count per census section and the
 > two trend numbers.
 
-**Hand batch 1.**
+**Hand batch.**
 
-> Hand-write the first half of SETNAME's "Expressible today" list in
-> `docs/sets/<set>.md`: its first N entries, FIRST through LAST. Follow "The
+> Hand-write entries FIRST through LAST (N cards) of SETNAME's "Expressible
+> today" list in `docs/sets/<set>.md`. Follow "The
 > procedure", step 2: translate first; verify each card's Oracle text, cost,
 > type line and P/T on Scryfall; stamp `oracleText` via `parun ingest`; one
 > scenario per new ability wording, the PR body naming each card left without
@@ -261,12 +274,21 @@ closes with **Finishing**.
 > (re-check after your merge). The PR says "related to #5468". Also report the
 > cards and scenarios added and what remains, by census section.
 
-**Hand batch 2** differs only in: the last N entries, FIRST through LAST;
-"batch 1 is PR #P, merged"; this batch finishes the
-list; and it carries batch 1's findings forward --- the census verdicts it
-overturned, and any renderer wordings or `docs/decisions.md` entries it
-added, so batch 2 extends those sites by reading batch 1's diff rather than
-duplicating them.
+Each later batch adds "the previous batch is PR #P, merged", says whether
+it finishes the list, and carries the earlier batches' findings forward ---
+the census verdicts they overturned, and any renderer wordings or
+`docs/decisions.md` entries they added --- so it extends those sites by
+reading their diffs rather than duplicating them.
+
+**Audit fix.**
+
+> Fix the findings of PR #P's audit. You are on branch BRANCH (PR #P) in
+> your own worktree; read the PR body (`gh api
+> repos/tfausak/parun/pulls/P --jq .body`) and its diff (`git diff
+> BASESHA HEAD`) before anything else, and read only the code the findings
+> name. Each finding below is a claim to verify: fix what holds, push back
+> with evidence where it doesn't. FINDINGS. Update the PR body file
+> `SCRATCH/pr.md` (copy it from the PR first) and report the head SHA.
 
 **Capability unit.**
 
@@ -344,6 +366,24 @@ The timeout catches infinite loops, not slowness. ONE budget covers the suite:
 read it off `flake.nix`'s `testFlags` and `.github/workflows/ci.yml`, which
 must agree, and pass the same one locally. A lone TIMEOUT on a shared machine
 is noise until it repeats unloaded.
+
+### Reading code
+
+Everything a command prints stays in the context and is re-read every turn
+after, so read narrowly. Run `script/tags.sh` once in the worktree; a
+definition is then one lookup (`grep -P '^castUse\t' tags` gives file and
+line), and `sed -n` reads just that span. `grep -n` the identifier only to
+find its uses. Never page through a whole module (`Event.hs`, `Cast.hs` and
+their peers run to thousands of lines), never re-read what is already in the
+context, and send long output (builds, test runs) to a file and read only the
+lines that matter. Auditors read the same way.
+
+A question that takes many reads to answer --- every site that reads a slot,
+every pool card using a constructor, how a funnel orders its callers --- goes
+to an Explore subagent on a smaller model (`model: haiku` for a lookup,
+`sonnet` for a judgement), briefed with the question and the paths. Its
+reading stays in its own context; yours gains only its answer. Verify a
+claim it makes before relying on it, as you would an issue body.
 
 ### Enumerate the edit sites in one pass
 
