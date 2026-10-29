@@ -1,0 +1,269 @@
+1 Accursed Spirit
+1 Act on Impulse
+1 Aegis Angel
+1 Aeronaut Tinkerer
+1 Aetherspouts
+1 Aggressive Mining
+1 Ajani Steadfast
+1 Ajani's Pridemate
+1 Altac Bloodseeker
+1 Amphin Pathmage
+1 Ancient Silverback
+1 Avacyn, Guardian Angel
+1 Avarice Amulet
+1 Back to Nature
+1 Battle Mastery
+1 Battlefield Forge
+1 Belligerent Sliver
+1 Black Cat
+1 Blastfire Bolt
+1 Blood Host
+1 Boonweaver Giant
+1 Borderland Marauder
+1 Brawler's Plate
+1 Bronze Sable
+1 Brood Keeper
+1 Burning Anger
+1 Cancel
+1 Carnivorous Moss-Beast
+1 Carrion Crow
+1 Caustic Tar
+1 Caves of Koilos
+1 Centaur Courser
+1 Chandra, Pyromaster
+1 Charging Rhino
+1 Chasm Skulker
+1 Chief Engineer
+1 Child of Night
+1 Chord of Calling
+1 Chronostutter
+1 Circle of Flame
+1 Clear a Path
+1 Cone of Flame
+1 Congregate
+1 Constricting Sliver
+1 Coral Barrier
+1 Covenant of Blood
+1 Crippling Blight
+1 Crowd's Favor
+1 Crucible of Fire
+1 Cruel Sadist
+1 Darksteel Citadel
+1 Dauntless River Marshal
+1 Devouring Light
+1 Diffusion Sliver
+1 Dissipate
+1 Divination
+1 Divine Favor
+1 Divine Verdict
+1 Elvish Mystic
+1 Encrust
+1 Endless Obedience
+1 Ensoul Artifact
+1 Ephemeral Shields
+1 Eternal Thirst
+1 Evolving Wilds
+1 Feast on the Fallen
+1 Feral Incarnation
+1 Festergloom
+1 First Response
+1 Flesh to Dust
+1 Forest
+1 Forge Devil
+1 Foundry Street Denizen
+1 Frenzied Goblin
+1 Frost Lynx
+1 Fugitive Wizard
+1 Furnace Whelp
+1 Gargoyle Sentinel
+1 Garruk's Packleader
+1 Garruk, Apex Predator
+1 Gather Courage
+1 Geist of the Moors
+1 Generator Servant
+1 Genesis Hydra
+1 Glacial Crasher
+1 Goblin Kaboomist
+1 Goblin Rabblemaster
+1 Goblin Roughrider
+1 Gravedigger
+1 Grindclock
+1 Hammerhand
+1 Haunted Plate Mail
+1 Heat Ray
+1 Heliod's Pilgrim
+1 Hoarding Dragon
+1 Hornet Nest
+1 Hornet Queen
+1 Hot Soup
+1 Hunt the Weak
+1 Hunter's Ambush
+1 Hushwing Gryff
+1 Hydrosurge
+1 Illusory Angel
+1 In Garruk's Wake
+1 Indulgent Tormentor
+1 Inferno Fist
+1 Inspired Charge
+1 Into the Void
+1 Invasive Species
+1 Invisibility
+1 Island
+1 Jace's Ingenuity
+1 Jace, the Living Guildpact
+1 Jalira, Master Polymorphist
+1 Jorubai Murk Lurker
+1 Juggernaut
+1 Kalonian Twingrove
+1 Kapsho Kitefins
+1 Kinsbaile Skirmisher
+1 Kird Chieftain
+1 Krenko's Enforcer
+1 Kurkesh, Onakke Ancient
+1 Lava Axe
+1 Leeching Sliver
+1 Life's Legacy
+1 Lightning Strike
+1 Liliana Vess
+1 Living Totem
+1 Llanowar Wastes
+1 Mahamoti Djinn
+1 Marked by Honor
+1 Mass Calcify
+1 Master of Predicaments
+1 Meditation Puzzle
+1 Mercurial Pretender
+1 Meteorite
+1 Midnight Guard
+1 Might Makes Right
+1 Military Intelligence
+1 Mind Rot
+1 Mind Sculpt
+1 Miner's Bane
+1 Mountain
+1 Naturalize
+1 Necrobite
+1 Necrogen Scudder
+1 Necromancer's Assistant
+1 Necromancer's Stockpile
+1 Negate
+1 Netcaster Spider
+1 Nightfire Giant
+1 Nightmare
+1 Nimbus of the Isles
+1 Nissa's Expedition
+1 Nissa, Worldwaker
+1 Ob Nixilis, Unshackled
+1 Obelisk of Urd
+1 Oppressive Rays
+1 Oreskos Swiftclaw
+1 Ornithopter
+1 Overwhelm
+1 Paragon of Eternal Wilds
+1 Paragon of Fierce Defiance
+1 Paragon of Gathering Mists
+1 Paragon of New Dawns
+1 Paragon of Open Graves
+1 Peel from Reality
+1 Perilous Vault
+1 Phyrexian Revoker
+1 Phytotitan
+1 Pillar of Light
+1 Plains
+1 Plummet
+1 Polymorphist's Jest
+1 Preeminent Captain
+1 Profane Memento
+1 Quickling
+1 Radiant Fountain
+1 Raise the Alarm
+1 Ranger's Guile
+1 Razorfoot Griffin
+1 Reclamation Sage
+1 Research Assistant
+1 Resolute Archangel
+1 Restock
+1 Return to the Ranks
+1 Roaring Primadox
+1 Rogue's Gloves
+1 Rotfeaster Maggot
+1 Rummaging Goblin
+1 Runeclaw Bear
+1 Sacred Armory
+1 Sanctified Charge
+1 Satyr Wayfinder
+1 Scrapyard Mongrel
+1 Scuttling Doom Engine
+1 Seismic Strike
+1 Selfless Cathar
+1 Sengir Vampire
+1 Seraph of the Masses
+1 Serra Angel
+1 Shadowcloak Vampire
+1 Shaman of Spring
+1 Shield of the Avatar
+1 Shivan Dragon
+1 Shivan Reef
+1 Shrapnel Blast
+1 Siege Dragon
+1 Siege Wurm
+1 Sign in Blood
+1 Sliver Hive
+1 Sliver Hivelord
+1 Solemn Offering
+1 Soul of Innistrad
+1 Soul of New Phyrexia
+1 Soul of Ravnica
+1 Soul of Shandalar
+1 Soul of Theros
+1 Soul of Zendikar
+1 Soulmender
+1 Spectra Ward
+1 Spirit Bonds
+1 Stab Wound
+1 Staff of the Death Magus
+1 Staff of the Flame Magus
+1 Staff of the Mind Magus
+1 Staff of the Sun Magus
+1 Staff of the Wild Magus
+1 Stain the Mind
+1 Statute of Denial
+1 Stoke the Flames
+1 Stormtide Leviathan
+1 Sunblade Elf
+1 Sungrace Pegasus
+1 Swamp
+1 Terra Stomper
+1 The Chain Veil
+1 Thundering Giant
+1 Tireless Missionaries
+1 Titanic Growth
+1 Torch Fiend
+1 Tormod's Crypt
+1 Triplicate Spirits
+1 Turn to Frog
+1 Typhoid Rats
+1 Tyrant's Machine
+1 Ulcerate
+1 Undergrowth Scavenger
+1 Unmake the Graves
+1 Urborg, Tomb of Yawgmoth
+1 Venom Sliver
+1 Verdant Haven
+1 Vineweft
+1 Void Snare
+1 Walking Corpse
+1 Wall of Essence
+1 Wall of Fire
+1 Wall of Frost
+1 Wall of Limbs
+1 Wall of Mulch
+1 Warden of the Beyond
+1 Waste Not
+1 Welkin Tern
+1 Will-Forged Golem
+1 Witch's Familiar
+1 Xathrid Slyblade
+1 Yavimaya Coast
+1 Yisan, the Wanderer Bard
+1 Zof Shade
