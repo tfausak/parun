@@ -10,17 +10,6 @@ line) and running `parun deck` on it: every unresolved name is reported.
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Nightsnare: `_Action:RevealHand`
-- Nissa's Pilgrimage: `_Action:IfElse`
-- Nissa's Revelation: `_Action:RevealTopCardOfLibrary`
-- Nissa, Vastwood Seer // Nissa, Sage Animist:
-  double-faced, so not a `parun translate` candidate
-- Orbs of Warding: `_Rule:PlayerEffect`
-- Orchard Spirit: renders differently from its Oracle text
-- Patron of the Valiant: `_Permanents:HasACounterOfType`
-- Possessed Skaab: `_Rule:ReplaceWouldPutIntoGraveyard`
-- Prism Ring: `_ReplacementActionWouldEnter:ChooseAColor`
-- Psychic Rebuttal: `_Spells:TargetsPlayer`
 - Ramroller: `_PermanentRule:MustAttack`
 - Ravaging Blaze: `_Action:If`
 - Reave Soul: `_Permanents:PowerIs`
@@ -90,5 +79,9 @@ first.
   one targeted card be cast from a graveyard, so the −3 has no reading.
 - #5768: Mizzium Meddler. Nothing changes one target of a spell or ability to
   a named object, and no slot targets a spell or ability (#4564).
+- #5771: Psychic Rebuttal. A counter binds only how many it countered, so
+  "copy the spell countered this way" names no spell to copy.
+- #5770: Nissa's Revelation. No quantity reads a revealed library card's power
+  and toughness, nor its last known toughness once it is drawn.
 - #5754: Tainted Remedy. `LifeGainRewrite` cannot turn a gain into a loss of
   that much life.
