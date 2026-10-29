@@ -10,6 +10,7 @@ import qualified Data.Sequence as Seq
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Numeric.Natural (Natural)
+import qualified Parun.Engine.ActivationRestriction as ActivationRestriction
 import qualified Parun.Engine.Binding as Binding
 import qualified Parun.Engine.Card as Card
 import qualified Parun.Engine.Commander as Commander
@@ -1790,6 +1791,13 @@ restrictionMet pid oid gs restriction = case restriction of
   -- CR 500.7: the caster's own turns, extra ones included; another player's
   -- turn is never one of them (Serra Avenger's rulings).
   CastingRestriction.NotDuringFirstTurns n -> not (Turn.isActive gs pid && Turn.turnsBegun pid gs <= n)
+  -- CR 601.3's prohibition over a fact about the game, through the evaluation
+  -- CR 602.5's activation rider uses (ActivationRestriction.onlyIfHolds), with
+  -- the would-be caster as CR 109.5's "you". Against the board BEFORE CR
+  -- 601.2a's move, since CR 601.3 asks whether the player can BEGIN to cast:
+  -- the card is still where it lies. Illusory Angel;
+  -- data/scenarios/illusory-angel-* prove it.
+  CastingRestriction.OnlyIf condition -> ActivationRestriction.onlyIfHolds pid oid gs condition
   -- A payment rule, not a gate: `xConfinement` hands it to Cost.confineX.
   CastingRestriction.SpendOnlyOnX _ -> True
   where
