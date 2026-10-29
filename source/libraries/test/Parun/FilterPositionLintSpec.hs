@@ -1574,6 +1574,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Pithing Needle", 1), -- its activation prohibition's affected set
         ("Phyrexian Revoker", 1), -- its activation prohibition's affected set
         ("Stain the Mind", 1), -- its own search
+        ("Infinite Obliteration", 1), -- its own search
         ("Sphinx Ambassador", 1) -- its move clause's gate
       ]
   -- CR 702.16k's chosen player in the same frame one atom over: answerable only
@@ -1891,6 +1892,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Tameshi, Reality Architect", 1),
         ("Chthonian Nightmare", 1),
         ("Tamiyo, Compleated Sage", 1),
+        ("Liliana, Heretical Healer", 1),
         ("Synthetic Counted Verdict", 1),
         ("Spell Blast", 1),
         ("Fear of Change", 1),
