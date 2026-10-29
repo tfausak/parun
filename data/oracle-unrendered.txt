@@ -2393,8 +2393,10 @@ total-war
 touch-of-moonglove
 touch-of-the-eternal
 tovolar-dire-overlord-tovolar-the-midnight-scourge
+tower-geist
 toxic-deluge
 trade-secrets
+tragic-arrogance
 trait-doctoring
 transcantation
 transcendence
@@ -2433,6 +2435,7 @@ ultima
 unbury
 uncontrollable-anger
 uncovered-clues
+undead-servant
 under-construction-skyscraper
 undercity
 undercover-operative
@@ -2487,6 +2490,7 @@ victor-mancha-runaway
 vigorspore-wurm
 village-rites
 villainous-ogre
+vine-snare
 viral-spawning
 visions-of-beyond
 vitalizing-cascade
@@ -2551,6 +2555,7 @@ well-rested
 wheel-of-sun-and-moon
 whim-of-volrath
 whippoorwill
+whirler-rogue
 whirling-dervish
 whirlpool-drake
 whirlpool-rider
@@ -2568,9 +2573,11 @@ wicks-patrol
 wild-evocation
 wild-growth
 wild-guess
+wild-instincts
 wild-ricochet
 wildfire
 wildgrowth-walker
+willbreaker
 wilson-refined-grizzly
 windborn-muse
 windbrisk-heights
@@ -2597,6 +2604,7 @@ wolf-pack
 wolfir-silverheart
 wolfriders-saddle
 wood-elemental
+woodland-bellower
 word-of-command
 word-of-seizing
 words-of-worship
