@@ -32,6 +32,7 @@ import qualified Parun.Engine.Binding as Binding
 import qualified Parun.Engine.Card as Card
 import qualified Parun.Engine.Cast as Cast
 import qualified Parun.Engine.Cost as Cost
+import qualified Parun.Engine.Event.Binding as Event
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Keyword as KeywordEngine
@@ -6989,10 +6990,12 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
                   then Set.singleton Binding.modeChooser
                   else Set.empty
               -- The slots the Filters of a delayed ability this mode arms read
-              -- (CR 603.7c), which the spell must declare or define.
+              -- (CR 603.7c), which the spell must declare or define -- less what
+              -- the delayed ability's own trigger event binds (Touch of
+              -- Moonglove's "a creature ... dies").
               armedReads mode =
                 Set.unions
-                  [ Filter.boundSlots f
+                  [ Set.difference (Filter.boundSlots f) (Event.eventBindingSlots (TriggeredAbility.condition delayed))
                   | Effect.ArmDelayedTrigger arm <- Foldable.toList (Mode.allEffects mode),
                     Just delayed <- [Map.lookup (ArmDelayedTrigger.name arm) (Face.delayedAbilities card)],
                     (_, f) <- triggeredAbilityFilters delayed
