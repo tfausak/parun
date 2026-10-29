@@ -5369,9 +5369,10 @@ replacementEffectFilters replacementEffect = case replacementEffect of
   -- kind and the baked recipient beside them are not Filters.
   --
   -- The REWRITE holds one too, on a third axis: CR 614.9's printed destination
-  -- (Pariah's "enchanted creature"), which damageRewriteFilters below answers.
+  -- (Pariah's "enchanted creature") or a counted ceiling's Count, which
+  -- damageRewriteFilters below answers.
   ReplacementEffect.DamageR (DamageR.MkDamageR damagePattern rewrite _) ->
-    unframed (DamagePattern.whatSource damagePattern : Maybe.maybeToList (DamagePattern.whatRecipient damagePattern) <> damageRewriteFilters rewrite)
+    unframed (DamagePattern.whatSource damagePattern : Maybe.maybeToList (DamagePattern.whatRecipient damagePattern)) <> damageRewriteFilters rewrite
   -- CR 614.1a's printed subject (Pyramids' "target land").
   ReplacementEffect.DestructionR (DestructionR.MkDestructionR matching _) -> unframed (Maybe.maybeToList matching)
   -- CR 111.1: what the token being created is (Queen Allenal of Ruadach's
@@ -5404,21 +5405,23 @@ replacementEffectFilters replacementEffect = case replacementEffect of
   ReplacementEffect.PlaneswalkR {} -> []
   ReplacementEffect.PhaseR _ -> []
 
--- CR 614.9's printed destination, the one Filter a damage REWRITE carries.
+-- CR 614.9's printed destination, the one Filter a damage REWRITE carries, and
+-- CR 702.64a's counted ceiling, whose Count holds one (Shield of the Avatar's
+-- "creatures you control").
 --
 -- Exhaustive rather than a wildcard, this file's discipline for a sum: a second
 -- rewrite that describes something must be classified here rather than have its
 -- Filter go unlinted.
-damageRewriteFilters :: DamageRewrite.DamageRewrite (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> [Filter.Type.Filter Keyword.Keyword]
+damageRewriteFilters :: DamageRewrite.DamageRewrite (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
 damageRewriteFilters rewrite = case rewrite of
-  DamageRewrite.RedirectMatching f -> [f]
+  DamageRewrite.RedirectMatching f -> unframed [f]
   DamageRewrite.Redirect _ -> []
   DamageRewrite.RedirectNext _ _ -> []
   DamageRewrite.PreventAll -> []
   DamageRewrite.PreventRemovingShieldCounter -> []
   DamageRewrite.PreventNext _ -> []
   DamageRewrite.PreventAllBut _ -> []
-  DamageRewrite.PreventUpTo _ -> []
+  DamageRewrite.PreventUpTo quantity -> quantityFilters quantity
   DamageRewrite.SetAmount _ -> []
   DamageRewrite.Scale _ -> []
   -- CR 614.1a's instead-effects hold no Filter of their own; the ones inside
