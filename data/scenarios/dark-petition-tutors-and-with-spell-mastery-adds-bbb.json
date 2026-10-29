@@ -1,0 +1,17 @@
+{
+  "description": "Dark Petition puts any card from its caster's library into their hand, and with spell mastery adds {B}{B}{B}",
+  "note": "Alice's pool is exactly Dark Petition's cost, and spell mastery is on (Shock and Divination in her graveyard). The {B}{B}{B} it adds is what pays for the Murder she found, which kills bob's Bears.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "BBBBB", "hand": [{"card": "Dark Petition", "label": "petition"}], "graveyard": [{"card": "Shock"}, {"card": "Divination"}], "library": [{"card": "Island", "label": "island"}, {"card": "Murder", "label": "murder"}, {"card": "Forest", "label": "forest"}]},
+    {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$petition"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$murder"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$island", "$forest"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Murder", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "Murder", "targets": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}

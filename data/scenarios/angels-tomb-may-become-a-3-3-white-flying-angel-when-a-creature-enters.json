@@ -1,0 +1,21 @@
+{
+  "description": "Angel's Tomb may become a 3/3 white Angel artifact creature with flying until end of turn when a creature its controller controls enters",
+  "note": "Alice's Bears entering triggers it; she takes the option. On bob's turn the Tomb is a colourless noncreature artifact again.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "GG", "hand": [{"card": "Grizzly Bears", "label": "bears"}], "battlefield": [{"card": "Angel's Tomb", "label": "tomb"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Types": {"object": "$tomb", "types": ["Artifact"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$bears"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "source": "$tomb", "do": {"ChooseOptional": {"type": "Exercises"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Types": {"object": "$tomb", "types": ["Artifact", "Creature"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Subtypes": {"object": "$tomb", "subtypes": ["Angel"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$tomb", "power": 3, "toughness": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$tomb", "keyword": {"type": "Flying"}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Colors", "object": "$tomb", "is": ["White"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Types": {"object": "$tomb", "types": ["Artifact"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Colors", "object": "$tomb", "is": []}}}
+  ]
+}

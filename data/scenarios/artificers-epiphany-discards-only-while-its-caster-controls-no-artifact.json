@@ -1,0 +1,19 @@
+{
+  "description": "Artificer's Epiphany draws two, then discards a card only if its caster controls no artifacts",
+  "note": "The first copy resolves with no artifact on alice's side and asks for a discard; after Ornithopter resolves the second copy draws two and asks for nothing, which an unscheduled discard prompt would fail.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "UUUUUU", "hand": [{"card": "Artificer's Epiphany", "label": "first"}, {"card": "Artificer's Epiphany", "label": "second"}, {"card": "Ornithopter", "label": "thopter"}], "library": [{"card": "Forest"}, {"card": "Mountain"}, {"card": "Plains"}, {"card": "Swamp"}, {"card": "Island"}]},
+    {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$first"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseDiscard", "with": ["Forest"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Forest", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Mountain", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$thopter"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$second"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Hand", "is": ["Mountain", "Plains", "Swamp"]}}}
+  ]
+}

@@ -7,6 +7,7 @@ a-good-day-to-pie
 a-realm-reborn
 aang-at-the-crossroads-aang-destined-savior
 aarakocra-sneak
+abbot-of-keral-keep
 abduction
 abomination-of-llanowar
 absolute-virtue
@@ -56,6 +57,7 @@ alabaster-dragon
 aladdin
 alchemists-gambit
 alchemists-retrieval
+alchemists-vial
 all-in-good-time
 all-is-dust
 alluring-scent
@@ -88,6 +90,7 @@ angelic-chorus
 angelic-destiny
 angelic-harold
 angelic-sleuth
+angels-tomb
 anger
 anger-of-the-gods
 angus-mackenzie
@@ -95,6 +98,7 @@ animal-magnetism
 animar-soul-of-elements
 animate-dead
 animate-wall
+animists-awakening
 ankh-of-mishra
 annex
 aphotic-wisps
@@ -159,6 +163,7 @@ autumns-veil
 avacyn-guardian-angel
 avarice-amulet
 avarice-totem
+avaricious-dragon
 avatar-aang-aang-master-of-elements
 avatar-of-hope
 avatar-of-might
@@ -330,6 +335,7 @@ cadaverous-bloom
 caged-sun
 caldera-breaker
 calim-djinn-emperor
+call-of-the-full-moon
 call-of-the-wild
 call-to-the-grave
 caltrops
@@ -406,6 +412,7 @@ clavileno-first-of-the-blessed
 cleansing
 clearwater-goblet
 cleopatra-exiled-pharaoh
+cleric-of-the-forward-order
 clever-concealment
 clever-impersonator
 clock-of-omens
@@ -443,7 +450,9 @@ conjurers-mantle
 conquer
 consecrate-consume
 consecrate-land
+consecrated-by-blood
 constricting-sliver
+consuls-lieutenant
 consume-spirit
 consumed-by-greed
 consuming-blob
@@ -532,6 +541,7 @@ dash-hopes
 dawnglade-regent
 dawnhand-dissident
 daybreak-ranger-nightfall-predator
+days-undoing
 deadbeat-attendant
 deadeye-tracker
 deadlock-trap

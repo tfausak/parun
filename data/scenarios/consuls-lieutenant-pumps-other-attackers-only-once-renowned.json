@@ -1,0 +1,18 @@
+{
+  "description": "Consul's Lieutenant's attack trigger gives other attacking creatures its controller controls +1/+1 until end of turn, but only once it is renowned",
+  "note": "On turn 1 the Lieutenant is not yet renowned, so the Bears attack as a 2/2; its first-strike damage makes it renowned. On turn 3 the Bears attack as a 3/3 and the Lieutenant itself, 3/2 from its renown counter, gets nothing.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [{"card": "Consul's Lieutenant", "label": "lieutenant", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$lieutenant", "$bears"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 2, "toughness": 2}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 16}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"PowerToughness": {"object": "$lieutenant", "power": 3, "toughness": 2}}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$lieutenant", "$bears"]}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 3, "toughness": 3}}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "check": {"PowerToughness": {"object": "$lieutenant", "power": 3, "toughness": 2}}},
+    {"turn": 3, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 10}}}
+  ]
+}

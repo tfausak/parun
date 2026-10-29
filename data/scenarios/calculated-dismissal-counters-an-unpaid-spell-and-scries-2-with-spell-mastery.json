@@ -1,0 +1,17 @@
+{
+  "description": "Calculated Dismissal counters a spell whose controller does not pay {3}, and with spell mastery its caster scries 2",
+  "note": "Bob spends his whole pool on the Bears, so he cannot pay. Alice's graveyard holds exactly two instant and sorcery cards; she sends the Forest to the bottom and keeps the Mountain on top.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [
+    {"name": "bob", "manaPool": "GG", "hand": [{"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "alice", "manaPool": "UUU", "hand": [{"card": "Calculated Dismissal", "label": "dismissal"}], "graveyard": [{"card": "Shock"}, {"card": "Divination"}], "library": [{"card": "Forest"}, {"card": "Mountain"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$bears"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$dismissal", "targets": ["Grizzly Bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseScry", "with": [["Forest"], ["Mountain"]]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Library", "is": ["Mountain", "Island#3", "Forest"]}}}
+  ]
+}

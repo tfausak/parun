@@ -1,0 +1,21 @@
+{
+  "description": "Alchemist's Vial draws a card as it enters, and its sacrifice ability leaves its target unable to attack or to block this turn",
+  "note": "Two Vials already on the battlefield bar alice's own Hill Giant from attacking and bob's Giant Spider from blocking. The Wind Drake attacks in the Giant's place, and bob is never asked to block it: the Spider, which has reach, is the only creature he could block with. A third Vial cast after combat draws the Island alice holds in her end step.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "CC", "hand": [{"card": "Alchemist's Vial", "label": "cast"}], "battlefield": [{"card": "Alchemist's Vial", "label": "first"}, {"card": "Alchemist's Vial", "label": "second"}, {"card": "Hill Giant", "label": "giant", "ready": true}, {"card": "Wind Drake", "label": "drake", "ready": true}, {"card": "Mountain", "label": "m1"}, {"card": "Mountain", "label": "m2"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "battlefield": [{"card": "Giant Spider", "label": "spider", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$first", "targets": ["$giant"], "costOrder": [0, 1], "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$second", "targets": ["$spider"], "costOrder": [0, 1], "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Alchemist's Vial", "count": 2}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": {"Attack": ["$giant"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$drake"]}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 18}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "do": {"Cast": {"object": "$cast", "mana": ["$m1", "$m2"]}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "EndStep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 1}}}
+  ]
+}

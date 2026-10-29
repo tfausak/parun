@@ -1,0 +1,19 @@
+{
+  "description": "Dark Dabbling regenerates its target and draws a card; with spell mastery it also regenerates each other creature its caster controls",
+  "note": "Spell mastery is on (Shock and Divination in alice's graveyard). Pyroclasm then deals lethal damage to all four creatures: alice's targeted Bears and her two untargeted Llanowar Elves each regenerate, each on its own shield, and bob's Bears die.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "BBB", "hand": [{"card": "Dark Dabbling", "label": "dabbling"}, {"card": "Pyroclasm", "label": "pyroclasm"}], "battlefield": [{"card": "Grizzly Bears", "label": "mine"}, {"card": "Llanowar Elves", "label": "elves"}, {"card": "Llanowar Elves", "label": "elves2"}, {"card": "Mountain", "label": "m1"}, {"card": "Mountain", "label": "m2"}], "graveyard": [{"card": "Shock"}, {"card": "Divination"}], "library": [{"card": "Forest", "label": "drawn"}, {"card": "Island"}]},
+    {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "theirs"}], "library": [{"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$dabbling", "targets": ["$mine"], "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "OrderForEach", "with": [1, 0]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Forest", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$pyroclasm", "mana": ["$m1", "$m2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Llanowar Elves", "count": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$elves", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}
