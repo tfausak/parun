@@ -112,6 +112,7 @@ import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.DealDamage as DealDamage
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
+import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Designate as Designate
 import qualified Parun.Types.Destroy as Destroy
 import qualified Parun.Types.DestructionR as DestructionR
@@ -196,13 +197,13 @@ import qualified Parun.Types.PayGate as PayGate
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
-import qualified Parun.Types.PermanentSacrificed as PermanentSacrificed
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.PlacesSticker as PlacesSticker
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
 import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
+import qualified Parun.Types.PlayerActsOn as PlayerActsOn
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerCounters as PlayerCounters
 import qualified Parun.Types.PlayerEffect as PlayerEffect
@@ -2074,7 +2075,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.DealsDamageToPlayer p -> TriggerCondition.DealsDamageToPlayer p {DealsDamageToPlayer.actor = acting (DealsDamageToPlayer.actor p)}
   TriggerCondition.SelfDealsDamageToCreature _ -> condition
   TriggerCondition.DealsDamage watched -> TriggerCondition.DealsDamage (acting watched)
-  TriggerCondition.IsDealtDamage watched -> TriggerCondition.IsDealtDamage (acting watched)
+  TriggerCondition.IsDealtDamage dealt -> TriggerCondition.IsDealtDamage dealt {DealtDamage.recipient = acting (DealtDamage.recipient dealt)}
   TriggerCondition.PlayerIsDealtDamage _ -> condition
   TriggerCondition.PermanentDealsCombatDamageToPlayer p -> TriggerCondition.PermanentDealsCombatDamageToPlayer p {PermanentDealsCombatDamageToPlayer.filter = Filter.rewrite pairs (PermanentDealsCombatDamageToPlayer.filter p)}
   TriggerCondition.PermanentsDealCombatDamageToPlayer p -> TriggerCondition.PermanentsDealCombatDamageToPlayer p {PermanentsDealCombatDamageToPlayer.filter = Filter.rewrite pairs (PermanentsDealCombatDamageToPlayer.filter p)}
@@ -2091,10 +2092,10 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.AbilityActivated f -> TriggerCondition.AbilityActivated (Filter.rewrite pairs f)
   TriggerCondition.SelfBecomesTargeted _ -> condition
   TriggerCondition.ControllerBecomesTarget {} -> condition
-  TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted f kind) -> TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted (Filter.rewrite pairs f) kind)
-  TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted f kind) -> TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted (Filter.rewrite pairs f) kind)
-  TriggerCondition.PlayerDiscards _ -> condition
-  TriggerCondition.PlayerDiscardsCards _ -> condition
+  TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted f relation kind) -> TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted (Filter.rewrite pairs f) relation kind)
+  TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted f relation kind) -> TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted (Filter.rewrite pairs f) relation kind)
+  TriggerCondition.PlayerDiscards payload -> TriggerCondition.PlayerDiscards payload {PlayerActsOn.filter = Filter.rewrite pairs (PlayerActsOn.filter payload)}
+  TriggerCondition.PlayerDiscardsCards payload -> TriggerCondition.PlayerDiscardsCards payload {PlayerActsOn.filter = Filter.rewrite pairs (PlayerActsOn.filter payload)}
   TriggerCondition.PlayerCycles _ -> condition
   TriggerCondition.PlayerDrawsNthCard {} -> condition
   TriggerCondition.PlayerBecomesMonarch _ -> condition
@@ -2177,7 +2178,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.CreatureExploits (CreatureExploits.MkCreatureExploits exploiter exploited) -> TriggerCondition.CreatureExploits (CreatureExploits.MkCreatureExploits (Filter.rewrite pairs exploiter) (Filter.rewrite pairs exploited))
   TriggerCondition.SelfBecomesCrewed {} -> condition
   TriggerCondition.SelfCrewsVehicle -> condition
-  TriggerCondition.PermanentSacrificed payload -> TriggerCondition.PermanentSacrificed payload {PermanentSacrificed.filter = Filter.rewrite pairs (PermanentSacrificed.filter payload)}
+  TriggerCondition.PermanentSacrificed payload -> TriggerCondition.PermanentSacrificed payload {PlayerActsOn.filter = Filter.rewrite pairs (PlayerActsOn.filter payload)}
   TriggerCondition.SagaFinalChapterTriggers _ -> condition
   -- CR 603.7's slot name is card data but not card TEXT, so no CR 612.1 swap
   -- reaches it; what the slot holds is read off the projection instead.

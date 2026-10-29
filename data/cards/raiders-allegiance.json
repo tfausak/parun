@@ -41,7 +41,7 @@
                               "kind": {
                                 "type": "Combat"
                               },
-                              "player": {
+                              "recipient": {
                                 "type": "Relative",
                                 "value": {
                                   "type": "AnyPlayer"
@@ -97,7 +97,7 @@
                               "kind": {
                                 "type": "Combat"
                               },
-                              "player": {
+                              "recipient": {
                                 "type": "Relative",
                                 "value": {
                                   "type": "AnyPlayer"

@@ -1295,7 +1295,7 @@ admitsEntry gs oid rewrite = case rewrite of
   EntryRewrite.Bloodthirst Nothing -> True
   EntryRewrite.Bloodthirst (Just _) ->
     let context = Projection.sourceContext gs (Projection.controllerOf oid gs) oid
-     in maybe False (> 0) (Quantity.evaluate (Projection.fullView gs) context gs oid (Quantity.Type.PlayersDealtDamageThisTurn DealtDamage.MkDealtDamage {DealtDamage.player = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Nothing}))
+     in maybe False (> 0) (Quantity.evaluate (Projection.fullView gs) context gs oid (Quantity.Type.PlayersDealtDamageThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Nothing}))
   -- CR 702.150a's own first condition, the ability's rather than the pattern's:
   -- "If this permanent WOULD ENTER WITH ONE OR MORE LOYALTY COUNTERS ON IT". The
   -- pending count is what that asks about (GameState.enteringCounters), so the

@@ -43,7 +43,6 @@ import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentAction as PermanentAction
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
-import qualified Parun.Types.PermanentSacrificed as PermanentSacrificed
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
@@ -51,6 +50,7 @@ import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlacesSticker as PlacesSticker
 import qualified Parun.Types.PlayerActed as PlayerActed
 import qualified Parun.Types.PlayerAction as PlayerAction
+import qualified Parun.Types.PlayerActsOn as PlayerActsOn
 import qualified Parun.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
@@ -184,17 +184,23 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       " {\"type\":\"DealsDamage\",\"value\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasAttached\",\"value\":{\"type\":\"IsSource\"}}}} "
   -- CR 120.3: the same history read the other way round -- the permanent was
   -- DEALT damage.
-  Spec.it s "IsDealtDamage round-trips both actors" $ do
+  Spec.it s "IsDealtDamage round-trips both actors and a kind" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.IsDealtDamage ActingPermanent.Self)
-      " {\"type\":\"IsDealtDamage\",\"value\":{\"type\":\"Self\"}} "
+      (TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing))
+      " {\"type\":\"IsDealtDamage\",\"value\":{\"recipient\":{\"type\":\"Self\"}}} "
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.IsDealtDamage (ActingPermanent.Matching (Filter.HasCardType CardType.Creature)))
-      " {\"type\":\"IsDealtDamage\",\"value\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      (TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage (ActingPermanent.Matching (Filter.HasCardType CardType.Creature)) Nothing))
+      " {\"type\":\"IsDealtDamage\",\"value\":{\"recipient\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}}} "
+    -- Wall of Essence's "is dealt combat damage".
+    Common.assertCodec
+      s
+      TriggerCondition.codec
+      (TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self (Just DamageKind.Combat)))
+      " {\"type\":\"IsDealtDamage\",\"value\":{\"recipient\":{\"type\":\"Self\"},\"kind\":{\"type\":\"Combat\"}}} "
   -- Lich's any damage, and Chandra's Spitfire's noncombat damage to an
   -- opponent.
   Spec.it s "PlayerIsDealtDamage round-trips both kinds" $ do
@@ -202,12 +208,12 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       s
       TriggerCondition.codec
       (TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You Nothing) False))
-      " {\"type\":\"PlayerIsDealtDamage\",\"value\":{\"dealt\":{\"player\":{\"type\":\"You\"}}}} "
+      " {\"type\":\"PlayerIsDealtDamage\",\"value\":{\"dealt\":{\"recipient\":{\"type\":\"You\"}}}} "
     Common.assertCodec
       s
       TriggerCondition.codec
       (TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.Opponent (Just DamageKind.Noncombat)) False))
-      " {\"type\":\"PlayerIsDealtDamage\",\"value\":{\"dealt\":{\"player\":{\"type\":\"Opponent\"},\"kind\":{\"type\":\"Noncombat\"}}}} "
+      " {\"type\":\"PlayerIsDealtDamage\",\"value\":{\"dealt\":{\"recipient\":{\"type\":\"Opponent\"},\"kind\":{\"type\":\"Noncombat\"}}}} "
   -- The same event read by a bystander, carrying Tovolar's "you control" and
   -- Teysa's "to you": two relations, so a crossed codec would not round-trip.
   Spec.it s "PermanentDealsCombatDamageToPlayer round-trips with its Filter and recipient" $
@@ -291,19 +297,19 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       TriggerCondition.SelfExiledForMadness
       " {\"type\":\"SelfExiledForMadness\"} "
-  -- CR 701.9a's discard. Both relations, since the PlayerRelation is the whole
-  -- content of the "whenever an opponent discards" phrasing.
-  Spec.it s "PlayerDiscards round-trips both relations" $ do
+  -- CR 701.9a's discard. Both relations and a non-trivial Filter, since each is
+  -- content: Megrim's "an opponent" against Waste Not's "a creature card".
+  Spec.it s "PlayerDiscards round-trips both relations and a Filter" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PlayerDiscards PlayerRelation.Opponent)
-      " {\"type\":\"PlayerDiscards\",\"value\":{\"type\":\"Opponent\"}} "
+      (TriggerCondition.PlayerDiscards (PlayerActsOn.MkPlayerActsOn PlayerRelation.Opponent (Filter.HasCardType CardType.Creature)))
+      " {\"type\":\"PlayerDiscards\",\"value\":{\"player\":{\"type\":\"Opponent\"},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PlayerDiscards PlayerRelation.You)
-      " {\"type\":\"PlayerDiscards\",\"value\":{\"type\":\"You\"}} "
+      (TriggerCondition.PlayerDiscards (PlayerActsOn.MkPlayerActsOn PlayerRelation.You (Filter.And [])))
+      " {\"type\":\"PlayerDiscards\",\"value\":{\"player\":{\"type\":\"You\"},\"filter\":{\"type\":\"And\",\"value\":[]}}} "
   -- CR 702.29a's cycling read as a discard, watched by a bystander: Prickly
   -- Marmoset's "whenever you cycle a card". Both relations, for PlayerDiscards'
   -- reason, and the tag is what keeps it distinct on the wire from that
@@ -325,8 +331,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PlayerDiscardsCards PlayerRelation.You)
-      " {\"type\":\"PlayerDiscardsCards\",\"value\":{\"type\":\"You\"}} "
+      (TriggerCondition.PlayerDiscardsCards (PlayerActsOn.MkPlayerActsOn PlayerRelation.You (Filter.And [])))
+      " {\"type\":\"PlayerDiscardsCards\",\"value\":{\"player\":{\"type\":\"You\"},\"filter\":{\"type\":\"And\",\"value\":[]}}} "
   -- CR 121.1's Nth draw of a turn. The relation and the ordinal are both content,
   -- and the ordinal is not 1, so a codec dropping it would fail rather than
   -- round-trip the default.
@@ -956,18 +962,18 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       " {\"type\":\"ControllerBecomesTarget\",\"value\":{\"relation\":{\"type\":\"AnyPlayer\"},\"kind\":{\"type\":\"Spell\"}}} "
   -- CR 603.2c's batch reading of the same rule with a Filter over the targeted
   -- permanents: Professor Hojo's. Hand-written like every Arm.tagged arm.
-  Spec.it s "PermanentsBecomeTargeted round-trips with its Filter and its kind" $
+  Spec.it s "PermanentsBecomeTargeted round-trips with its Filter, its relation and its kind" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted {PermanentsBecomeTargeted.filter = Filter.HeldBy Holder.Controller PlayerRelation.You, PermanentsBecomeTargeted.kind = Just StackObjectKind.ActivatedAbility}))
-      " {\"type\":\"PermanentsBecomeTargeted\",\"value\":{\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"kind\":{\"type\":\"ActivatedAbility\"}}} "
-  Spec.it s "PermanentBecomesTargeted round-trips with its Filter and its kind" $
+      (TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted {PermanentsBecomeTargeted.filter = Filter.HeldBy Holder.Controller PlayerRelation.You, PermanentsBecomeTargeted.relation = PlayerRelation.AnyPlayer, PermanentsBecomeTargeted.kind = Just StackObjectKind.ActivatedAbility}))
+      " {\"type\":\"PermanentsBecomeTargeted\",\"value\":{\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"relation\":{\"type\":\"AnyPlayer\"},\"kind\":{\"type\":\"ActivatedAbility\"}}} "
+  Spec.it s "PermanentBecomesTargeted round-trips with its Filter, its relation and its kind" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted {PermanentsBecomeTargeted.filter = Filter.HeldBy Holder.Controller PlayerRelation.You, PermanentsBecomeTargeted.kind = Just StackObjectKind.Spell}))
-      " {\"type\":\"PermanentBecomesTargeted\",\"value\":{\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"kind\":{\"type\":\"Spell\"}}} "
+      (TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted {PermanentsBecomeTargeted.filter = Filter.HeldBy Holder.Controller PlayerRelation.You, PermanentsBecomeTargeted.relation = PlayerRelation.Opponent, PermanentsBecomeTargeted.kind = Just StackObjectKind.Spell}))
+      " {\"type\":\"PermanentBecomesTargeted\",\"value\":{\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"relation\":{\"type\":\"Opponent\"},\"kind\":{\"type\":\"Spell\"}}} "
   Spec.it s "SelfCast" $
     Common.assertCodec
       s
@@ -1030,8 +1036,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.CausedBy CausedBy.MkCausedBy {CausedBy.controller = PlayerRelation.Opponent, CausedBy.condition = TriggerCondition.PlayerDiscards PlayerRelation.You})
-      " {\"type\":\"CausedBy\",\"value\":{\"controller\":{\"type\":\"Opponent\"},\"condition\":{\"type\":\"PlayerDiscards\",\"value\":{\"type\":\"You\"}}}} "
+      (TriggerCondition.CausedBy CausedBy.MkCausedBy {CausedBy.controller = PlayerRelation.Opponent, CausedBy.condition = TriggerCondition.PlayerDiscards (PlayerActsOn.MkPlayerActsOn PlayerRelation.You (Filter.And []))})
+      " {\"type\":\"CausedBy\",\"value\":{\"controller\":{\"type\":\"Opponent\"},\"condition\":{\"type\":\"PlayerDiscards\",\"value\":{\"player\":{\"type\":\"You\"},\"filter\":{\"type\":\"And\",\"value\":[]}}}}} "
   Spec.it s "AnyOf round-trips both of its branches" $
     Common.assertCodec
       s
@@ -1154,7 +1160,7 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentSacrificed (PermanentSacrificed.MkPermanentSacrificed PlayerRelation.Opponent (Filter.HasCardType CardType.Artifact)))
+      (TriggerCondition.PermanentSacrificed (PlayerActsOn.MkPlayerActsOn PlayerRelation.Opponent (Filter.HasCardType CardType.Artifact)))
       " {\"type\":\"PermanentSacrificed\",\"value\":{\"player\":{\"type\":\"Opponent\"},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}}}} "
   -- CR 603.3b's second class. The relation is the only payload: which Saga and
   -- which chapter are read off the event and the source's projection.
@@ -1170,10 +1176,10 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.SagaFinalChapterTriggers PlayerRelation.Opponent)
       " {\"type\":\"SagaFinalChapterTriggers\",\"value\":{\"type\":\"Opponent\"}} "
-  -- CR 725.1's crowning. Both relations, for the same reason PlayerDiscards has
-  -- both: the PlayerRelation is the whole difference between "whenever you
-  -- become the monarch" and "whenever an opponent becomes the monarch", so a
-  -- codec that dropped it would silently turn one printing into the other.
+  -- CR 725.1's crowning. Both relations, since the PlayerRelation is the whole
+  -- payload and the whole difference between "whenever you become the monarch"
+  -- and "whenever an opponent becomes the monarch", so a codec that dropped it
+  -- would silently turn one printing into the other.
   Spec.it s "PlayerBecomesMonarch round-trips both relations" $ do
     Common.assertCodec
       s

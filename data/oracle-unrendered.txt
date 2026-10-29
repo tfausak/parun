@@ -575,6 +575,7 @@ devout-invocation
 diabolic-edict
 diabolic-revelation
 diaochan-artful-beauty
+diffusion-sliver
 dig-up
 digsite-conservator
 diminish
@@ -1043,6 +1044,7 @@ herald-of-war
 heritage-druid
 hermes-overseer-of-elpis
 hero-of-bladehold
+hewed-stone-retainers
 hickory-woodlot
 high-ground
 high-perfect-morcant
@@ -1092,6 +1094,7 @@ illuminor-szeras
 illusionary-armor
 illusionary-mask
 illusionary-servant
+illusory-angel
 imaryll-elfhame-elite
 immediate-action
 imoti-celebrant-of-bounty
@@ -1415,6 +1418,7 @@ mirror-universe
 mirrorweave
 misfortune
 mishra
+mishra-excavation-prodigy
 mishras-foundry
 mishras-workshop
 misinformation
@@ -1994,6 +1998,7 @@ skull-skaab
 skullclamp
 skullwinder
 skymarcher-aspirant
+skyshroud-condor
 skyshroud-ranger
 skywinder-drake
 slaughter-pact
@@ -2445,6 +2450,7 @@ warriors-stand
 warstorm-surge
 wash-away
 waste-management
+waste-not
 watchful-radstag
 water-whip
 waterbenders-restoration

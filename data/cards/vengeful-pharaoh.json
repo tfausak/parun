@@ -58,7 +58,7 @@
                 "kind": {
                   "type": "Combat"
                 },
-                "player": {
+                "recipient": {
                   "type": "You"
                 }
               },

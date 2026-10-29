@@ -122,6 +122,9 @@
                     }
                   }
                 ]
+              },
+              "relation": {
+                "type": "AnyPlayer"
               }
             }
           },
