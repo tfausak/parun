@@ -40,6 +40,7 @@ import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.HistoryRead as HistoryRead
 import qualified Parun.Types.Keyword as Keyword.Type
+import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import Parun.Types.LoopTrail (LoopTrail)
 import qualified Parun.Types.LoopTrail as LoopTrail
@@ -307,8 +308,8 @@ records reading event = case reading of
   HistoryRead.Deaths -> Maybe.isJust (Game.diedChange event)
   HistoryRead.Discards -> Maybe.isJust (Game.discardOf event)
   HistoryRead.Entries -> Maybe.isJust (Game.enteredBattlefieldChange event)
-  HistoryRead.LifeGains -> Maybe.isJust (Game.lifeGainOf event)
-  HistoryRead.LifeLosses -> lifeLost event
+  HistoryRead.LifeGains -> Maybe.isJust (Game.lifeChangeOf LifeDirection.Gained event)
+  HistoryRead.LifeLosses -> Maybe.isJust (Game.lifeChangeOf LifeDirection.Lost event)
   HistoryRead.LoyaltyActivations -> loyaltyActivated event
   HistoryRead.MonarchChanges -> becameMonarch event
   HistoryRead.Mills -> milled event
@@ -368,11 +369,6 @@ convoked event = case event of
 saddled :: GameEvent -> Bool
 saddled event = case event of
   GameEvent.Saddled {} -> True
-  _ -> False
-
-lifeLost :: GameEvent -> Bool
-lifeLost event = case event of
-  GameEvent.LifeLost {} -> True
   _ -> False
 
 loyaltyActivated :: GameEvent -> Bool

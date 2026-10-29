@@ -16,7 +16,9 @@ import qualified Parun.Types.PhaseSelector as PhaseSelector
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.SpellTally as SpellTally
 import qualified Parun.Types.TurnScope as TurnScope
+import qualified Parun.Types.WhichTurn as WhichTurn
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.CastingRestriction" $ do
@@ -103,13 +105,13 @@ spec s = Spec.describe s "Parun.Codec.CastingRestriction" $ do
       ( CastingRestriction.OnlyIf
           ( Condition.Compares
               Compares.MkCompares
-                { Compares.measured = Quantity.SpellsCastThisTurn (PlayerRef.Relative PlayerRelation.You),
+                { Compares.measured = Quantity.SpellsCast SpellTally.MkSpellTally {SpellTally.player = PlayerRef.Relative PlayerRelation.You, SpellTally.turn = WhichTurn.ThisTurn},
                   Compares.comparison = Comparison.AtLeast,
                   Compares.threshold = Quantity.Literal 1
                 }
           )
       )
-      " {\"type\":\"OnlyIf\",\"value\":{\"type\":\"Compares\",\"value\":{\"comparison\":{\"type\":\"AtLeast\"},\"measured\":{\"type\":\"SpellsCastThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"threshold\":{\"type\":\"Literal\",\"value\":1}}}} "
+      " {\"type\":\"OnlyIf\",\"value\":{\"type\":\"Compares\",\"value\":{\"comparison\":{\"type\":\"AtLeast\"},\"measured\":{\"type\":\"SpellsCast\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}},\"threshold\":{\"type\":\"Literal\",\"value\":1}}}} "
   -- Consume Spirit's "Spend only black mana on X" (CR 601.2h).
   Spec.it s "SpendOnlyOnX" $
     Common.assertCodec

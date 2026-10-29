@@ -2342,7 +2342,7 @@ bakeSlots players = fmap (bakeSlot players)
 -- HeldByBound. An unbaked one would be unanswerable where the filter beside
 -- it is answerable. A REGRESSION FENCE rather than a proved behaviour: no
 -- committed bound holds a PlayerRef.InSlot -- the pool's bounds name either
--- Quantity.LifeGainedThisTurn against a PlayerRef.Relative, which baking leaves
+-- Quantity.LifeChanged against a PlayerRef.Relative, which baking leaves
 -- alone, or Quantity.InSlot, which carries no PlayerRef at all -- so no board
 -- today tells the two readings apart.
 --

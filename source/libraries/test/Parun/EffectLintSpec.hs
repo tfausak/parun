@@ -542,11 +542,10 @@ printedBoxQuantity quantity = case quantity of
   Quantity.Type.CardsDiscardedThisTurn {} -> False
   Quantity.Type.CardsDrawnThisTurn {} -> False
   Quantity.Type.BendingsThisTurn {} -> False
-  Quantity.Type.LifeGainedThisTurn {} -> False
+  Quantity.Type.LifeChanged {} -> False
   Quantity.Type.PlayersDealtDamageThisTurn {} -> False
   Quantity.Type.DamageDealtToPlayersThisTurn {} -> False
-  Quantity.Type.SpellsCastLastTurn {} -> False
-  Quantity.Type.SpellsCastThisTurn {} -> False
+  Quantity.Type.SpellsCast {} -> False
   Quantity.Type.TimesThisTurn _ -> False
   Quantity.Type.ActivationsThisTurn _ -> False
   Quantity.Type.SpellsCastBefore -> False

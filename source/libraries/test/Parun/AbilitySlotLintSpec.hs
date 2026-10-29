@@ -88,6 +88,8 @@ import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
+import qualified Parun.Types.LifeDirection as LifeDirection
+import qualified Parun.Types.LifeTally as LifeTally
 import qualified Parun.Types.ManaAddition as ManaAddition
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
@@ -139,6 +141,7 @@ import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TurnScope as TurnScope
 import qualified Parun.Types.WhenSpent as WhenSpent
+import qualified Parun.Types.WhichTurn as WhichTurn
 import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZoneScope as ZoneScope
 
@@ -992,8 +995,8 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
           Mode.MkMode
             (Seq.singleton (Mint.mandatory (Seq.singleton (Effect.Tap (Tap.plain (ObjectRef.InSlot target))))))
             (Map.singleton target (TargetSlot.withAmount amount (TargetSlot.required Pool.Permanents (Just (Filter.Type.Measures (Measures.MkMeasures Measure.ManaValue Comparison.AtMost Operand.EnclosingAmount))))))
-        thatPlayer = Quantity.Type.LifeGainedThisTurn (PlayerRef.InSlot Binding.triggerPlayer)
-        you = Quantity.Type.LifeGainedThisTurn (PlayerRef.Relative PlayerRelation.You)
+        thatPlayer = Quantity.Type.LifeChanged (LifeTally.MkLifeTally (PlayerRef.InSlot Binding.triggerPlayer) LifeDirection.Gained WhichTurn.ThisTurn)
+        you = Quantity.Type.LifeChanged (LifeTally.MkLifeTally (PlayerRef.Relative PlayerRelation.You) LifeDirection.Gained WhichTurn.ThisTurn)
     Spec.assertBool
       s
       (triggeredAbilityOffends (modalTrigger TriggerCondition.SelfEnters [bounded thatPlayer]))
@@ -1067,7 +1070,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         atLeastOne measured = Condition.Type.Compares (Compares.MkCompares measured Comparison.AtLeast (Quantity.Type.Literal 1))
         -- "if that player has gained life this turn", the reference nested in the
         -- number Resolve.slotsOf cannot reach from an effect's own field.
-        throughRef = atLeastOne (Quantity.Type.LifeGainedThisTurn (PlayerRef.InSlot Binding.triggerPlayer))
+        throughRef = atLeastOne (Quantity.Type.LifeChanged (LifeTally.MkLifeTally (PlayerRef.InSlot Binding.triggerPlayer) LifeDirection.Gained WhichTurn.ThisTurn))
         -- "if that player controls a permanent", the same read one carrier over:
         -- the slot is named by the FILTER of a Count rather than by a PlayerRef.
         throughCountFilter =
@@ -1078,7 +1081,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         -- And the pair that differs in exactly one thing: the same condition
         -- reading CR 109.5's caster instead of a slot, which no trigger has to
         -- bind, so the lint reads the reference rather than rejecting every gate.
-        throughNoSlot = atLeastOne (Quantity.Type.LifeGainedThisTurn (PlayerRef.Relative PlayerRelation.You))
+        throughNoSlot = atLeastOne (Quantity.Type.LifeChanged (LifeTally.MkLifeTally (PlayerRef.Relative PlayerRelation.You) LifeDirection.Gained WhichTurn.ThisTurn))
     Spec.assertBool
       s
       (triggeredAbilityOffends (modalTrigger TriggerCondition.SelfEnters [gated throughRef]))

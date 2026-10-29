@@ -11,11 +11,13 @@
                 "type": "AtLeast"
               },
               "measured": {
-                "type": "SpellsCastThisTurn",
+                "type": "SpellsCast",
                 "value": {
-                  "type": "Relative",
-                  "value": {
-                    "type": "You"
+                  "player": {
+                    "type": "Relative",
+                    "value": {
+                      "type": "You"
+                    }
                   }
                 }
               },

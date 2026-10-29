@@ -16,6 +16,7 @@ import qualified Parun.Codec.InZone as InZone
 import qualified Parun.Codec.Keyword as Keyword
 import qualified Parun.Codec.KeywordDesignator as KeywordDesignator
 import qualified Parun.Codec.KeywordFamily as KeywordFamily
+import qualified Parun.Codec.LifeTally as LifeTally
 import qualified Parun.Codec.ManaCount as ManaCount
 import qualified Parun.Codec.Measure as Measure
 import qualified Parun.Codec.PlayerCounterTally as PlayerCounterTally
@@ -25,6 +26,7 @@ import qualified Parun.Codec.Plus as Plus
 import qualified Parun.Codec.ProductionTag as ProductionTag
 import qualified Parun.Codec.Quotient as Quotient
 import qualified Parun.Codec.SlotName as SlotName
+import qualified Parun.Codec.SpellTally as SpellTally
 import qualified Parun.Codec.Times as Times
 import qualified Parun.Codec.VotesReceived as VotesReceived
 import qualified Parun.JsonCodec.Arm as Arm
@@ -165,7 +167,7 @@ codec =
       -- CardsDiscardedThisTurn's reason above. What is SUMMED is the amounts and
       -- not the events, which is the arm's own reading rather than anything on
       -- the wire.
-      Arm.payload "LifeGainedThisTurn" PlayerRef.codec Quantity.LifeGainedThisTurn (\x -> case x of Quantity.LifeGainedThisTurn y -> Just y; _ -> Nothing),
+      Arm.payload "LifeChanged" LifeTally.codec Quantity.LifeChanged (\x -> case x of Quantity.LifeChanged y -> Just y; _ -> Nothing),
       -- CR 120.1's damage: a PlayerRef and, for CR 510.2's combat damage alone,
       -- a kind. The threshold that turns the count into "an opponent was dealt
       -- damage" is the Comparison's, not this arm's.
@@ -183,8 +185,7 @@ codec =
       -- rather than the log, since "last turn" outlives the log it was folded
       -- from. The thresholds that turn the count into "no spells were cast" and
       -- "a player cast two or more" are the Comparison's, not this arm's.
-      Arm.payload "SpellsCastLastTurn" PlayerRef.codec Quantity.SpellsCastLastTurn (\x -> case x of Quantity.SpellsCastLastTurn y -> Just y; _ -> Nothing),
-      Arm.payload "SpellsCastThisTurn" PlayerRef.codec Quantity.SpellsCastThisTurn (\x -> case x of Quantity.SpellsCastThisTurn y -> Just y; _ -> Nothing),
+      Arm.payload "SpellsCast" SpellTally.codec Quantity.SpellsCast (\x -> case x of Quantity.SpellsCast y -> Just y; _ -> Nothing),
       -- CR 608.2n / 602.2 with only the act on the wire: the ability is the one
       -- the quantity is evaluated against, which a card names through AgainstSlot
       -- over CR 602.2a's reserved "thisAbility" slot, and "this turn" is the
@@ -296,12 +297,11 @@ tagOf x = case x of
   Quantity.CardsDiscardedThisTurn {} -> "CardsDiscardedThisTurn"
   Quantity.CardsDrawnThisTurn {} -> "CardsDrawnThisTurn"
   Quantity.BendingsThisTurn {} -> "BendingsThisTurn"
-  Quantity.LifeGainedThisTurn {} -> "LifeGainedThisTurn"
+  Quantity.LifeChanged {} -> "LifeChanged"
   Quantity.PlayersDealtDamageThisTurn {} -> "PlayersDealtDamageThisTurn"
   Quantity.DamageDealtToPlayersThisTurn {} -> "DamageDealtToPlayersThisTurn"
   Quantity.DamageDealtToThisTurn {} -> "DamageDealtToThisTurn"
-  Quantity.SpellsCastLastTurn {} -> "SpellsCastLastTurn"
-  Quantity.SpellsCastThisTurn {} -> "SpellsCastThisTurn"
+  Quantity.SpellsCast {} -> "SpellsCast"
   Quantity.TimesThisTurn {} -> "TimesThisTurn"
   Quantity.ActivationsThisTurn {} -> "ActivationsThisTurn"
   Quantity.SpellsCastBefore {} -> "SpellsCastBefore"

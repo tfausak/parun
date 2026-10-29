@@ -31,6 +31,7 @@ import qualified Parun.Types.Count as Count.Type
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Devotion as Devotion
 import qualified Parun.Types.InZone as InZone
+import qualified Parun.Types.LifeTally as LifeTally
 import qualified Parun.Types.ManaCount as ManaCount.Type
 import qualified Parun.Types.PlayerCounterTally as PlayerCounterTally
 import qualified Parun.Types.PlayerDesignationTally as PlayerDesignationTally
@@ -39,6 +40,7 @@ import Parun.Types.Quantity (Quantity)
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.Scope as Scope
 import Parun.Types.SlotName (SlotName)
+import qualified Parun.Types.SpellTally as SpellTally
 import qualified Parun.Types.VotesReceived as VotesReceived
 
 -- The per-member quantity of a count, VISITED -- the one walk the four functions
@@ -187,16 +189,15 @@ overSlots f quantity =
         Quantity.AttackersDeclaredThisCombat -> pure quantity
         Quantity.AttackedInLastTurnOf _ -> pure quantity
         Quantity.AttackersInTheirLastTurn _ -> pure quantity
-        -- And another, CR 119.3's life-gain tally likewise.
-        Quantity.LifeGainedThisTurn _ -> pure quantity
+        -- And another, CR 119.3's life tally likewise.
+        Quantity.LifeChanged _ -> pure quantity
         -- And another, CR 120.1's damage tally likewise.
         Quantity.PlayersDealtDamageThisTurn _ -> pure quantity
         -- And another, CR 120.1's damage total likewise.
         Quantity.DamageDealtToPlayersThisTurn _ -> pure quantity
         -- And another in that same position, CR 601.2i's cast tally having nothing
         -- beside its PlayerRef either.
-        Quantity.SpellsCastLastTurn _ -> pure quantity
-        Quantity.SpellsCastThisTurn _ -> pure quantity
+        Quantity.SpellsCast _ -> pure quantity
         Quantity.TimesThisTurn _ -> pure quantity
         -- And another: the tally's PlayerRef is nestedRefs' half, and its Filter
         -- names no amount.
@@ -372,11 +373,10 @@ nestedRefs quantity = case quantity of
   Quantity.CardsDiscardedThisTurn ref -> Set.singleton (Left ref)
   Quantity.CardsDrawnThisTurn ref -> Set.singleton (Left ref)
   Quantity.BendingsThisTurn ref -> Set.singleton (Left ref)
-  Quantity.LifeGainedThisTurn ref -> Set.singleton (Left ref)
+  Quantity.LifeChanged tally -> Set.singleton (Left (LifeTally.player tally))
   Quantity.PlayersDealtDamageThisTurn tally -> Set.singleton (Left (DealtDamage.recipient tally))
   Quantity.DamageDealtToPlayersThisTurn ref -> Set.singleton (Left ref)
-  Quantity.SpellsCastLastTurn ref -> Set.singleton (Left ref)
-  Quantity.SpellsCastThisTurn ref -> Set.singleton (Left ref)
+  Quantity.SpellsCast tally -> Set.singleton (Left (SpellTally.player tally))
   Quantity.TimesThisTurn _ -> Set.empty
   Quantity.ActivationsThisTurn tally -> Set.singleton (Left (ActivationsThisTurn.activator tally))
   Quantity.SpellsCastBefore -> Set.empty
@@ -496,11 +496,10 @@ nestedCounts quantity = case quantity of
   Quantity.CardsDiscardedThisTurn _ -> []
   Quantity.CardsDrawnThisTurn _ -> []
   Quantity.BendingsThisTurn _ -> []
-  Quantity.LifeGainedThisTurn _ -> []
+  Quantity.LifeChanged _ -> []
   Quantity.PlayersDealtDamageThisTurn _ -> []
   Quantity.DamageDealtToPlayersThisTurn _ -> []
-  Quantity.SpellsCastLastTurn _ -> []
-  Quantity.SpellsCastThisTurn _ -> []
+  Quantity.SpellsCast _ -> []
   Quantity.TimesThisTurn _ -> []
   Quantity.ActivationsThisTurn _ -> []
   Quantity.SpellsCastBefore -> []
@@ -647,11 +646,10 @@ mapPlayerRefs f intoCount quantity =
         Quantity.CardsDiscardedThisTurn ref -> Quantity.CardsDiscardedThisTurn (f ref)
         Quantity.CardsDrawnThisTurn ref -> Quantity.CardsDrawnThisTurn (f ref)
         Quantity.BendingsThisTurn ref -> Quantity.BendingsThisTurn (f ref)
-        Quantity.LifeGainedThisTurn ref -> Quantity.LifeGainedThisTurn (f ref)
+        Quantity.LifeChanged tally -> Quantity.LifeChanged tally {LifeTally.player = f (LifeTally.player tally)}
         Quantity.PlayersDealtDamageThisTurn tally -> Quantity.PlayersDealtDamageThisTurn tally {DealtDamage.recipient = f (DealtDamage.recipient tally)}
         Quantity.DamageDealtToPlayersThisTurn ref -> Quantity.DamageDealtToPlayersThisTurn (f ref)
-        Quantity.SpellsCastLastTurn ref -> Quantity.SpellsCastLastTurn (f ref)
-        Quantity.SpellsCastThisTurn ref -> Quantity.SpellsCastThisTurn (f ref)
+        Quantity.SpellsCast tally -> Quantity.SpellsCast tally {SpellTally.player = f (SpellTally.player tally)}
         Quantity.TimesThisTurn _ -> quantity
         Quantity.ActivationsThisTurn tally -> Quantity.ActivationsThisTurn tally {ActivationsThisTurn.activator = f (ActivationsThisTurn.activator tally)}
         Quantity.SpellsCastBefore -> quantity

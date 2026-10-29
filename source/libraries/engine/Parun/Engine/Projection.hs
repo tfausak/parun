@@ -4459,11 +4459,10 @@ quantityReads q = case q of
   Quantity.Type.CardsDiscardedThisTurn _ -> Set.empty
   Quantity.Type.CardsDrawnThisTurn _ -> Set.empty
   Quantity.Type.BendingsThisTurn _ -> Set.empty
-  Quantity.Type.LifeGainedThisTurn _ -> Set.empty
+  Quantity.Type.LifeChanged _ -> Set.empty
   Quantity.Type.PlayersDealtDamageThisTurn _ -> Set.empty
   Quantity.Type.DamageDealtToPlayersThisTurn _ -> Set.empty
-  Quantity.Type.SpellsCastLastTurn _ -> Set.empty
-  Quantity.Type.SpellsCastThisTurn _ -> Set.empty
+  Quantity.Type.SpellsCast _ -> Set.empty
   Quantity.Type.TimesThisTurn _ -> Set.empty
   -- Its Filter asks a past activation's snapshot, never a projection.
   Quantity.Type.ActivationsThisTurn _ -> Set.empty

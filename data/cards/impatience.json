@@ -41,10 +41,12 @@
                 "type": "Exactly"
               },
               "measured": {
-                "type": "SpellsCastThisTurn",
+                "type": "SpellsCast",
                 "value": {
-                  "type": "InSlot",
-                  "value": "thatPlayer"
+                  "player": {
+                    "type": "InSlot",
+                    "value": "thatPlayer"
+                  }
                 }
               },
               "threshold": {

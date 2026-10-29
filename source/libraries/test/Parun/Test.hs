@@ -406,6 +406,7 @@ import qualified Parun.Codec.LibraryDepthSpec
 import qualified Parun.Codec.LibraryPlacementSpec
 import qualified Parun.Codec.LibraryPositionSpec
 import qualified Parun.Codec.LifeChangeSpec
+import qualified Parun.Codec.LifeDirectionSpec
 import qualified Parun.Codec.LifeGainRSpec
 import qualified Parun.Codec.LifeGainRewriteSpec
 import qualified Parun.Codec.LifeIsSpec
@@ -414,6 +415,7 @@ import qualified Parun.Codec.LifeLossPatternSpec
 import qualified Parun.Codec.LifeLossRSpec
 import qualified Parun.Codec.LifeLossRewriteSpec
 import qualified Parun.Codec.LifeLossSpec
+import qualified Parun.Codec.LifeTallySpec
 import qualified Parun.Codec.LimitUnlessSpec
 import qualified Parun.Codec.LoggedEventSpec
 import qualified Parun.Codec.LookAtSpec
@@ -656,6 +658,7 @@ import qualified Parun.Codec.SourceSpec
 import qualified Parun.Codec.SpecialActionSpec
 import qualified Parun.Codec.SpeedDecreaseSpec
 import qualified Parun.Codec.SpellCastSpec
+import qualified Parun.Codec.SpellTallySpec
 import qualified Parun.Codec.SpellWasCastSpec
 import qualified Parun.Codec.SpellWasCopiedSpec
 import qualified Parun.Codec.SpendManaAsThoughSpec
@@ -736,6 +739,7 @@ import qualified Parun.Codec.WardSpec
 import qualified Parun.Codec.WhenSpec
 import qualified Parun.Codec.WhenSpentSpec
 import qualified Parun.Codec.WhichCountersSpec
+import qualified Parun.Codec.WhichTurnSpec
 import qualified Parun.Codec.WhileSpec
 import qualified Parun.Codec.WithCountersSpec
 import qualified Parun.Codec.WordFamilySpec
@@ -1481,6 +1485,10 @@ spec s registry corpus = do
   Parun.Codec.PlayerCountersSpec.spec s
   Parun.Codec.PlayerCounterTallySpec.spec s
   Parun.Codec.DealtDamageSpec.spec s
+  Parun.Codec.LifeDirectionSpec.spec s
+  Parun.Codec.LifeTallySpec.spec s
+  Parun.Codec.SpellTallySpec.spec s
+  Parun.Codec.WhichTurnSpec.spec s
   Parun.Codec.PlayerIsDealtDamageSpec.spec s
   Parun.Codec.PlayersWhoSpec.spec s
   Parun.Codec.SuperlativeSpec.spec s
