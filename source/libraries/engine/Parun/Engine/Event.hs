@@ -3763,9 +3763,16 @@ apply batch candidate event =
       -- No `setShield` and no arithmetic written back, for CR 615.10's reason one
       -- rule over: CR 702.64b renews the ceiling per source and per time, so a
       -- countdown's remainder would be the wrong state to keep.
-      DamageRewrite.PreventUpTo ceiling_ -> do
+      --
+      -- The ceiling is read HERE, as this event would happen (CR 615.1), against
+      -- the row's own context: Shield of the Avatar's "creatures you control" is
+      -- the candidate controller's, counted afresh for each event.
+      DamageRewrite.PreventUpTo quantity -> do
+        gs <- State.get
         Replacement.consume (ReplacementCandidate.identity candidate)
         let amount = DamageEvent.amount de
+            source = ReplacementCandidate.source candidate
+            ceiling_ = maybe 0 Integer.toNaturalSaturating (Quantity.evaluate (Projection.fullView gs) (Replacement.candidateContext gs candidate) gs source quantity)
             -- Total on Natural: `prevented` is a min of the two operands.
             prevented = min ceiling_ amount
         if prevented >= amount

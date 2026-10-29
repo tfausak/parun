@@ -1742,9 +1742,8 @@ replacementRowReads re = case re of
   ReplacementEffect.ZoneChangeR (ZoneChangeR.MkZoneChangeR pat _ _ _ _ _) -> ([ZoneChangePattern.whatObject pat], [])
   ReplacementEffect.EntryR (EntryR.MkEntryR pat rewrite) -> addFilter pat (entryRewriteReads rewrite)
   ReplacementEffect.DamageR (DamageR.MkDamageR pat rewrite _) ->
-    ( DamagePattern.whatSource pat : (Maybe.maybeToList (DamagePattern.whatRecipient pat) <> damageRewriteFilters rewrite),
-      []
-    )
+    let (filters, quantities) = damageRewriteReads rewrite
+     in (DamagePattern.whatSource pat : (Maybe.maybeToList (DamagePattern.whatRecipient pat) <> filters), quantities)
   -- CR 614.1a's printed subject (Pyramids' "target land"); the rewrite is nullary.
   ReplacementEffect.DestructionR (DestructionR.MkDestructionR matching _) -> (Maybe.maybeToList matching, [])
   -- The rewrite is one Scaling, which is a constructor and a Natural.
@@ -2070,26 +2069,27 @@ damageRewriteEffects rewrite = case rewrite of
   DamageRewrite.RedirectMatching _ -> []
   DamageRewrite.TurnFaceUp -> []
 
--- The Filters a damage REWRITE holds, which is CR 614.9's printed destination and
--- nothing else. No wildcard, replacementRowSlots' discipline: a later rewrite
--- describing something must answer here rather than have its slot reads go
--- undeclared.
-damageRewriteFilters :: DamageRewrite.DamageRewrite (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> [Filter.Type.Filter Keyword.Type.Keyword]
-damageRewriteFilters rewrite = case rewrite of
-  DamageRewrite.RedirectMatching f -> [f]
-  DamageRewrite.Redirect _ -> []
-  DamageRewrite.RedirectNext _ _ -> []
-  DamageRewrite.PreventAll -> []
-  DamageRewrite.PreventRemovingShieldCounter -> []
-  DamageRewrite.PreventNext _ -> []
-  DamageRewrite.PreventAllBut _ -> []
-  DamageRewrite.PreventUpTo _ -> []
-  DamageRewrite.SetAmount _ -> []
-  DamageRewrite.Scale _ -> []
-  -- The nested effects are replacementRowEffects' answer above, not a Filter of
+-- What a damage REWRITE reads, entryRewriteReads' twin: CR 614.9's printed
+-- destination, a Filter, and CR 702.64a's ceiling, a Quantity read against the
+-- row's Context as each event applies (Parun.Engine.Event's PreventUpTo arm).
+-- No wildcard, replacementRowSlots' discipline: a later rewrite describing
+-- something must answer here rather than have its slot reads go undeclared.
+damageRewriteReads :: DamageRewrite.DamageRewrite (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> ([Filter.Type.Filter Keyword.Type.Keyword], [Quantity.Type.Quantity])
+damageRewriteReads rewrite = case rewrite of
+  DamageRewrite.RedirectMatching f -> ([f], [])
+  DamageRewrite.Redirect _ -> ([], [])
+  DamageRewrite.RedirectNext _ _ -> ([], [])
+  DamageRewrite.PreventAll -> ([], [])
+  DamageRewrite.PreventRemovingShieldCounter -> ([], [])
+  DamageRewrite.PreventNext _ -> ([], [])
+  DamageRewrite.PreventAllBut _ -> ([], [])
+  DamageRewrite.PreventUpTo quantity -> ([], [quantity])
+  DamageRewrite.SetAmount _ -> ([], [])
+  DamageRewrite.Scale _ -> ([], [])
+  -- The nested effects are replacementRowEffects' answer above, not a read of
   -- the rewrite's own.
-  DamageRewrite.RunEffects _ -> []
-  DamageRewrite.TurnFaceUp -> []
+  DamageRewrite.RunEffects _ -> ([], [])
+  DamageRewrite.TurnFaceUp -> ([], [])
 
 -- One Filter's slot reads, each at the arity its atom reads it with
 -- (Filter.slotArities): Many for an atom taking the whole set, which since

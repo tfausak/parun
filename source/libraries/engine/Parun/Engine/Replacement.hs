@@ -2216,6 +2216,11 @@ readsApplier re = case re of
   -- shield is no exception: what makes two shields differ is how much each has
   -- LEFT, which rides the effect value and so is already inside `choose`'s
   -- comparison rather than needing the applier to be read.
+  --
+  -- A COUNTED ceiling (Shield of the Avatar) does read the candidate's Context,
+  -- so two under different controllers prevent different amounts -- but CR
+  -- 615.10's ceilings subtract, and n - x - y floored at 0 is the same event
+  -- whichever applies first, so the order is still no board difference.
   ReplacementEffect.DamageR {} -> False
   -- CR 701.19a acts on the creature being destroyed and names no player.
   ReplacementEffect.DestructionR _ -> False

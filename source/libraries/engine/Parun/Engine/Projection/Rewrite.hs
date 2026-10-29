@@ -1686,17 +1686,20 @@ rewriteReplacementEffect pairs effect = case effect of
   ReplacementEffect.PhaseR _ -> effect
 
 -- CR 612.1 through a damage REWRITE, rewriteEntryRewrite's twin one event class
--- over. CR 614.9's printed destination holds a Filter for a word to sit in and
--- the nested effects hold whatever an ability's clauses do; the rest are
--- numbers, a Scaling and a baked Recipient.
+-- over. CR 614.9's printed destination holds a Filter for a word to sit in,
+-- the nested effects hold whatever an ability's clauses do, and CR 702.64a's
+-- ceiling is a Quantity whose count may hold one; the rest are numbers, a
+-- Scaling and a baked Recipient.
 --
 -- NO BOARD OBSERVES IT: the pool's one printed destination is
 -- Filter.IsHostOfSource (Pariah), which names no subtype for CR 612.1 to swap,
--- and the pool's nested programs (Kill-Suit Cultist, Synthetic Proxy Strike)
--- destroy a slot, which names none either -- so mutating either arm away
--- leaves the suite green. Both are the rule rather than a proven behaviour: a
--- card redirecting to "the enchanted Goblin" would prove the first. Exhaustive
--- rather than a wildcard, rewriteReplacementEffect's posture.
+-- the pool's nested programs (Kill-Suit Cultist, Synthetic Proxy Strike)
+-- destroy a slot, which names none either, and the pool's one counted ceiling
+-- (Shield of the Avatar) counts creatures, a card type -- so mutating any of
+-- the three arms away leaves the suite green. All are the rule rather than a
+-- proven behaviour: a card redirecting to "the enchanted Goblin" would prove
+-- the first. Exhaustive rather than a wildcard, rewriteReplacementEffect's
+-- posture.
 rewriteDamageRewrite :: [(TextWord.TextWord, TextWord.TextWord)] -> DamageRewrite.DamageRewrite (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> DamageRewrite.DamageRewrite (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card))
 rewriteDamageRewrite pairs rewrite = case rewrite of
   DamageRewrite.RedirectMatching f -> DamageRewrite.RedirectMatching (Filter.rewrite pairs f)
@@ -1706,7 +1709,7 @@ rewriteDamageRewrite pairs rewrite = case rewrite of
   DamageRewrite.PreventRemovingShieldCounter -> rewrite
   DamageRewrite.PreventNext _ -> rewrite
   DamageRewrite.PreventAllBut _ -> rewrite
-  DamageRewrite.PreventUpTo _ -> rewrite
+  DamageRewrite.PreventUpTo quantity -> DamageRewrite.PreventUpTo (rewriteQuantity pairs quantity)
   DamageRewrite.SetAmount _ -> rewrite
   DamageRewrite.Scale _ -> rewrite
   -- CR 614.1a's "instead [do something]", the payload shared with an ability's

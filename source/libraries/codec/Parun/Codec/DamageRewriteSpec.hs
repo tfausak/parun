@@ -14,6 +14,7 @@ import qualified Parun.Types.Effect as Effect.Type
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.ObjectRef as ObjectRef
+import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.Scaling as Scaling
@@ -53,17 +54,15 @@ spec s = Spec.describe s "Parun.Codec.DamageRewrite" $ do
       (DamageRewrite.codec (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
       (DamageRewrite.PreventAllBut 1)
       " {\"type\":\"PreventAllBut\",\"value\":1} "
-  -- CR 702.64a's ceiling, the arm above read from the other end: the Natural is
-  -- what is PREVENTED rather than what survives, so the same 1 means two
-  -- different things and only the tag tells them apart.
-  -- The tag is therefore the whole of what keeps absorb 1 from Temple Altisaur's
-  -- floor of 1, which is why the two wire forms are pinned side by side.
+  -- CR 702.64a's ceiling, the arm above read from the other end: the amount is
+  -- what is PREVENTED rather than what survives. A Quantity, read at each event
+  -- (Shield of the Avatar's count); absorb's is a literal.
   Spec.it s "PreventUpTo" $
     Common.assertCodec
       s
       (DamageRewrite.codec (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
-      (DamageRewrite.PreventUpTo 1)
-      " {\"type\":\"PreventUpTo\",\"value\":1} "
+      (DamageRewrite.PreventUpTo (Quantity.Literal 1))
+      " {\"type\":\"PreventUpTo\",\"value\":{\"type\":\"Literal\",\"value\":1}} "
   -- CR 614.1a: a flat instead-amount.
   Spec.it s "SetAmount" $
     Common.assertCodec

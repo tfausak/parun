@@ -6,6 +6,7 @@ import qualified Data.Typeable as Typeable
 import qualified Numeric.Natural as Natural
 import qualified Parun.Codec.Filter as Filter
 import qualified Parun.Codec.Keyword as Keyword
+import qualified Parun.Codec.Quantity as Quantity
 import qualified Parun.Codec.Recipient as Recipient
 import qualified Parun.Codec.Scaling as Scaling
 import qualified Parun.JsonCodec.Arm as Arm
@@ -31,7 +32,7 @@ codec effectCodec =
       Arm.nullary "PreventRemovingShieldCounter" DamageRewrite.PreventRemovingShieldCounter,
       Arm.payload "PreventNext" Common.natural DamageRewrite.PreventNext (\x -> case x of DamageRewrite.PreventNext y -> Just y; _ -> Nothing),
       Arm.payload "PreventAllBut" Common.natural DamageRewrite.PreventAllBut (\x -> case x of DamageRewrite.PreventAllBut y -> Just y; _ -> Nothing),
-      Arm.payload "PreventUpTo" Common.natural DamageRewrite.PreventUpTo (\x -> case x of DamageRewrite.PreventUpTo y -> Just y; _ -> Nothing),
+      Arm.payload "PreventUpTo" Quantity.codec DamageRewrite.PreventUpTo (\x -> case x of DamageRewrite.PreventUpTo y -> Just y; _ -> Nothing),
       Arm.payload "SetAmount" Common.natural DamageRewrite.SetAmount (\x -> case x of DamageRewrite.SetAmount y -> Just y; _ -> Nothing),
       Arm.payload "Scale" Scaling.codec DamageRewrite.Scale (\x -> case x of DamageRewrite.Scale y -> Just y; _ -> Nothing),
       Arm.payload "Redirect" Recipient.codec DamageRewrite.Redirect (\x -> case x of DamageRewrite.Redirect y -> Just y; _ -> Nothing),
