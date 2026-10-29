@@ -867,6 +867,7 @@ castRepetitionNames asking x = case x of
   CastRepetition.Once -> mempty
   CastRepetition.AnyNumber -> mempty
   CastRepetition.WithinTotalManaValue quantity -> quantityNames asking quantity
+  CastRepetition.UpTo quantity -> quantityNames asking quantity
 
 castingRestrictionNames :: (Monoid r) => Asking r -> CastingRestriction.CastingRestriction -> r
 castingRestrictionNames asking x = case x of

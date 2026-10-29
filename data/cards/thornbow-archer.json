@@ -1,0 +1,126 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Thornbow Archer",
+      "oracleText": "Whenever this creature attacks, each opponent who doesn't control an Elf loses 1 life.",
+      "power": {
+        "type": "Literal",
+        "value": 1
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 2
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SelfAttacks",
+            "value": {
+              "type": "EveryTime"
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "LoseLife",
+                        "value": {
+                          "player": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "Opponent"
+                            }
+                          },
+                          "quantity": {
+                            "type": "Plus",
+                            "value": {
+                              "left": {
+                                "type": "Literal",
+                                "value": 1
+                              },
+                              "right": {
+                                "type": "Negate",
+                                "value": {
+                                  "type": "Count",
+                                  "value": {
+                                    "aggregation": {
+                                      "type": "Members"
+                                    },
+                                    "filter": {
+                                      "type": "And",
+                                      "value": [
+                                        {
+                                          "type": "HasSubtype",
+                                          "value": {
+                                            "type": "Elf"
+                                          }
+                                        },
+                                        {
+                                          "type": "HeldByRecipient",
+                                          "value": {
+                                            "type": "Controller"
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    "scope": {
+                                      "type": "InZone",
+                                      "value": {
+                                        "player": {
+                                          "type": "Relative",
+                                          "value": {
+                                            "type": "AnyPlayer"
+                                          }
+                                        },
+                                        "zone": {
+                                          "type": "Battlefield"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Archer"
+          },
+          {
+            "type": "Elf"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

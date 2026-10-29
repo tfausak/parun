@@ -12,7 +12,8 @@ codec =
     tagOf
     [ Arm.nullary "Once" CastRepetition.Once,
       Arm.nullary "AnyNumber" CastRepetition.AnyNumber,
-      Arm.payload "WithinTotalManaValue" Quantity.codec CastRepetition.WithinTotalManaValue (\x -> case x of CastRepetition.WithinTotalManaValue y -> Just y; _ -> Nothing)
+      Arm.payload "WithinTotalManaValue" Quantity.codec CastRepetition.WithinTotalManaValue (\x -> case x of CastRepetition.WithinTotalManaValue y -> Just y; _ -> Nothing),
+      Arm.payload "UpTo" Quantity.codec CastRepetition.UpTo (\x -> case x of CastRepetition.UpTo y -> Just y; _ -> Nothing)
     ]
 
 tagOf :: CastRepetition.CastRepetition -> String
@@ -20,3 +21,4 @@ tagOf x = case x of
   CastRepetition.Once {} -> "Once"
   CastRepetition.AnyNumber {} -> "AnyNumber"
   CastRepetition.WithinTotalManaValue {} -> "WithinTotalManaValue"
+  CastRepetition.UpTo {} -> "UpTo"

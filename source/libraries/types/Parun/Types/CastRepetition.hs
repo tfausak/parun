@@ -25,4 +25,7 @@ data CastRepetition
     -- X or less": @AnyNumber@ while the spells cast so far leave room for the
     -- next one's mana value (CR 202.3).
     WithinTotalManaValue Quantity.Quantity
+  | -- | Talent of the Telepath's "up to two": @AnyNumber@ capped at that many
+    -- casts, the quantity read once before the first (CR 608.2h).
+    UpTo Quantity.Quantity
   deriving (Eq, Ord, Show)

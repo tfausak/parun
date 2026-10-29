@@ -10,17 +10,6 @@ line) and running `parun deck` on it: every unresolved name is reported.
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Swift Reckoning: `_Rule:CastEffect`
-- Sword of the Animist: `_Trigger:WhenACreatureAttacks`
-- Sylvan Messenger: `_Action:RevealTheTopNumberCardsOfLibrary`
-- Talent of the Telepath: `_Action:IfElse`
-- The Great Aurora: `_Action:ShuffleHandAndPermanentsIntoLibrary`
-- Thopter Spy Network:
-  `_Trigger:WhenAnyNumberOfCreaturesDealCombatDamageToAPlayer`
-- Thornbow Archer: `_Players:And`
-- Throwing Knife: `_Trigger:WhenACreatureAttacks`
-- Tormented Thoughts: `_Rule:CastEffect`
-- Touch of Moonglove: `_Action:CreateTriggerUntil`
 - Tower Geist: `_Action:LookAtTheTopNumberCardsOfLibrary`
 - Tragic Arrogance:
   `_Action:ChooseMultiplePermanentsAmoungPermanentsForEachPlayer`
@@ -53,6 +42,10 @@ first.
 - #5765: Harbinger of the Tides. No cast permission at instant timing carries
   a cost increase, so "as though it had flash if you pay {2} more" has no
   reading.
+- #5778: Swift Reckoning. No cast permission at instant timing carries a
+  condition, so spell mastery can't grant its own flash.
+- #5779: The Great Aurora. No instruction lets each player put any number of
+  cards from their hand onto the battlefield together.
 - #5764: Hallowed Moonlight. An enters redirect to exile is offered only
   against a zone change, so a creature token that wasn't cast still enters.
 - #4735: Jace, Vryn's Prodigy // Jace, Telepath Unbound. No permission lets

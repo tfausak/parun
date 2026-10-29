@@ -28,5 +28,11 @@ spec s = Spec.describe s "Parun.Codec.CastRepetition" $ do
       CastRepetition.codec
       (CastRepetition.WithinTotalManaValue (Quantity.InSlot (SlotName.MkSlotName (Text.pack "X"))))
       " {\"type\":\"WithinTotalManaValue\",\"value\":{\"type\":\"InSlot\",\"value\":\"X\"}} "
+  Spec.it s "UpTo" $
+    Common.assertCodec
+      s
+      CastRepetition.codec
+      (CastRepetition.UpTo (Quantity.InSlot (SlotName.MkSlotName (Text.pack "casts"))))
+      " {\"type\":\"UpTo\",\"value\":{\"type\":\"InSlot\",\"value\":\"casts\"}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s CastRepetition.codec

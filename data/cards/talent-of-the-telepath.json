@@ -1,0 +1,220 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Talent of the Telepath",
+      "oracleText": "Target opponent reveals the top seven cards of their library. You may cast an instant or sorcery spell from among them without paying its mana cost. Then that player puts the rest into their graveyard.\nSpell mastery — If there are two or more instant and/or sorcery cards in your graveyard, you may cast up to two instant and/or sorcery spells from among the revealed cards instead of one.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "Reveal",
+                    "value": {
+                      "ref": {
+                        "type": "TopOfLibrary",
+                        "value": {
+                          "count": {
+                            "type": "Literal",
+                            "value": 7
+                          },
+                          "player": {
+                            "type": "InSlot",
+                            "value": "target"
+                          }
+                        }
+                      },
+                      "slot": "revealed"
+                    }
+                  }
+                ]
+              },
+              {
+                "effects": [
+                  {
+                    "type": "BindAmount",
+                    "value": {
+                      "quantity": {
+                        "type": "Literal",
+                        "value": 1
+                      },
+                      "slot": "casts"
+                    }
+                  }
+                ]
+              },
+              {
+                "condition": {
+                  "type": "Compares",
+                  "value": {
+                    "comparison": {
+                      "type": "AtLeast"
+                    },
+                    "measured": {
+                      "type": "Count",
+                      "value": {
+                        "aggregation": {
+                          "type": "Members"
+                        },
+                        "filter": {
+                          "type": "Or",
+                          "value": [
+                            {
+                              "type": "HasCardType",
+                              "value": {
+                                "type": "Instant"
+                              }
+                            },
+                            {
+                              "type": "HasCardType",
+                              "value": {
+                                "type": "Sorcery"
+                              }
+                            }
+                          ]
+                        },
+                        "scope": {
+                          "type": "InZone",
+                          "value": {
+                            "player": {
+                              "type": "Relative",
+                              "value": {
+                                "type": "You"
+                              }
+                            },
+                            "zone": {
+                              "type": "Graveyard"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "threshold": {
+                      "type": "Literal",
+                      "value": 2
+                    }
+                  }
+                },
+                "effects": [
+                  {
+                    "type": "BindAmount",
+                    "value": {
+                      "quantity": {
+                        "type": "Literal",
+                        "value": 2
+                      },
+                      "slot": "casts"
+                    }
+                  }
+                ]
+              },
+              {
+                "effects": [
+                  {
+                    "type": "OfferCast",
+                    "value": {
+                      "offer": {
+                        "withoutPayingManaCost": true
+                      },
+                      "ref": {
+                        "type": "EachCardFromAmong",
+                        "value": {
+                          "filter": {
+                            "type": "Or",
+                            "value": [
+                              {
+                                "type": "HasCardType",
+                                "value": {
+                                  "type": "Instant"
+                                }
+                              },
+                              {
+                                "type": "HasCardType",
+                                "value": {
+                                  "type": "Sorcery"
+                                }
+                              }
+                            ]
+                          },
+                          "slot": "revealed"
+                        }
+                      },
+                      "repetition": {
+                        "type": "UpTo",
+                        "value": {
+                          "type": "InSlot",
+                          "value": "casts"
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "effects": [
+                  {
+                    "type": "MoveToZone",
+                    "value": {
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "revealed"
+                      },
+                      "zone": {
+                        "type": "Graveyard"
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "target": {
+                "filter": {
+                  "type": "IsPlayer",
+                  "value": {
+                    "type": "Opponent"
+                  }
+                },
+                "pool": {
+                  "type": "Players"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}
