@@ -75,9 +75,14 @@ Per set, in this order, one unit at a time ("Mechanics").
    read it, and if you cannot, they are a topic, not a batch. Capability units
    do NOT edit `docs/sets/<set>.md`; the orchestrator or the set's last unit
    does.
-4. **Audit** only capability PRs that change a shared rules gate or a wire
-   format: a `GameState` field, a reader every resolution, search or combat
-   passes through, a codec shape. Relay findings to the SAME implementer as
+4. **Audit** a PR that changes what many games pass through: a `GameState`
+   field, a reader every resolution, search, combat or cast passes through, a
+   codec shape, or a new `docs/decisions.md` entry. Any other PR, hand batches
+   included, is audited at the orchestrator's judgement. Adjust to what the
+   set's audits find: audit more of a kind that keeps finding defects, and
+   skip a kind that comes back clean twice running. Record each skip and its
+   reason as the unit reports, so "How it went" can say whether it held up.
+   Relay findings to the SAME implementer as
    claims to verify; it pushes back with evidence where the audit is wrong.
    The PR stays a draft until the fixes land.
 5. **Finish.** When every capability card is in the pool, set "Needs a
