@@ -10,16 +10,6 @@ line) and running `parun deck` on it: every unresolved name is reported.
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Llanowar Empath: `_Action:RevealTopCardOfLibrary`
-- Macabre Waltz: `_Target:UptoNumberTargetGraveyardCards`
-- Mage-Ring Bully: `_PermanentRule:MustAttack`
-- Mage-Ring Network: `_CounterType:StorageCounter`
-- Mage-Ring Responder: `_PermanentRule:DoesntUntapDuringControllersUntap`
-- Might of the Masses: `_LayerEffect:AdjustPTForEach`
-- Mizzium Meddler: `_Target:TargetSpellOrAbility`
-- Molten Vortex: `_Cost:DiscardACardOfType`
-- Murder Investigation: `_Trigger:WhenAPermanentDies`
-- Necromantic Summons: `_CardsInGraveyards:IsCardtype`
 - Nightsnare: `_Action:RevealHand`
 - Nissa's Pilgrimage: `_Action:IfElse`
 - Nissa's Revelation: `_Action:RevealTopCardOfLibrary`
@@ -98,5 +88,7 @@ first.
   against a zone change, so a creature token that wasn't cast still enters.
 - #4735: Jace, Vryn's Prodigy // Jace, Telepath Unbound. No permission lets
   one targeted card be cast from a graveyard, so the −3 has no reading.
+- #5768: Mizzium Meddler. Nothing changes one target of a spell or ability to
+  a named object, and no slot targets a spell or ability (#4564).
 - #5754: Tainted Remedy. `LifeGainRewrite` cannot turn a gain into a loss of
   that much life.

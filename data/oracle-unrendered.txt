@@ -1327,6 +1327,7 @@ living-plane
 living-terrain
 living-wish
 llanowar-behemoth
+llanowar-empath
 llanowar-sentinel
 loathsome-catoblepas
 loathsome-chimera
@@ -1362,6 +1363,9 @@ lys-alana-dignitary
 ma-chao-western-warrior
 maddening-imp
 magar-of-the-magic-strings
+mage-ring-bully
+mage-ring-network
+mage-ring-responder
 magebane-armor
 magic-missile
 magical-hack
@@ -1493,6 +1497,7 @@ mudbutton-clanger
 mulch
 multiversal-recruitment
 muraganda-raceway
+murder-investigation
 murderous-betrayal
 mutagen-connoisseur
 mutalith-vortex-beast
@@ -1520,6 +1525,7 @@ necravolver
 necrite
 necrologia
 necromancers-stockpile
+necromantic-summons
 necrosynthesis
 necrotic-plague
 needle-drop
