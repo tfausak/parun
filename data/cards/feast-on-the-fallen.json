@@ -41,37 +41,19 @@
                 "type": "AtLeast"
               },
               "measured": {
-                "type": "Count",
+                "type": "LifeChanged",
                 "value": {
-                  "aggregation": {
-                    "type": "Greatest",
+                  "direction": {
+                    "type": "Lost"
+                  },
+                  "player": {
+                    "type": "Relative",
                     "value": {
-                      "type": "LifeChanged",
-                      "value": {
-                        "direction": {
-                          "type": "Lost"
-                        },
-                        "player": {
-                          "type": "Candidate"
-                        },
-                        "turn": {
-                          "type": "LastTurn"
-                        }
-                      }
+                      "type": "Opponent"
                     }
                   },
-                  "filter": {
-                    "type": "And",
-                    "value": []
-                  },
-                  "scope": {
-                    "type": "OverPlayers",
-                    "value": {
-                      "type": "Relative",
-                      "value": {
-                        "type": "Opponent"
-                      }
-                    }
+                  "turn": {
+                    "type": "LastTurn"
                   }
                 }
               },

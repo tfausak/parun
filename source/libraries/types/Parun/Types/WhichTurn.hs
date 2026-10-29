@@ -5,6 +5,7 @@ module Parun.Types.WhichTurn where
 data WhichTurn
   = -- | The turn in progress, GameState.events.
     ThisTurn
-  | -- | The turn before it, GameState.eventsLastTurn; none before the game's first.
+  | -- | The turn before it, GameState.eventsLastTurn: on the game's first turn,
+    -- whatever the log held before that turn began.
     LastTurn
   deriving (Bounded, Enum, Eq, Ord, Show)

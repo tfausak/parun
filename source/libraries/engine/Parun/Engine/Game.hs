@@ -3690,7 +3690,7 @@ yourTeamCastASpellThisTurn pid gs =
 -- here.
 opponentLostLifeThisTurn :: PlayerId -> GameState -> Bool
 opponentLostLifeThisTurn pid gs =
-  any (areOpponents gs pid . fst) (Maybe.mapMaybe (lifeChangeOf LifeDirection.Lost . LoggedEvent.event) (Foldable.toList (GameState.events gs)))
+  lifeChangedAmong LifeDirection.Lost (GameState.events gs) (areOpponents gs pid) > 0
 
 -- CR 702.76a / 608.2i: was a player dealt combat damage this turn by a source
 -- that was then under this player's control and had any of these creature types?
@@ -3901,8 +3901,15 @@ lifeChangeOf direction event = case event of
 -- SUMMED over the amounts rather than counted over the events, which is the whole
 -- difference between this and the discard tally beside it.
 lifeChangedIn :: LifeDirection.LifeDirection -> Seq.Seq LoggedEvent.LoggedEvent -> PlayerId -> Natural
-lifeChangedIn direction events pid =
-  sum (fmap snd (filter ((== pid) . fst) (Maybe.mapMaybe (lifeChangeOf direction . LoggedEvent.event) (Foldable.toList events))))
+lifeChangedIn direction events pid = lifeChangedAmong direction events (== pid)
+
+-- lifeChangedIn summed over every player the predicate admits -- the one fold
+-- Parun.Engine.Quantity's LifeChanged arm and spectacle's
+-- opponentLostLifeThisTurn share, so the two cannot answer "an opponent lost
+-- life" differently.
+lifeChangedAmong :: LifeDirection.LifeDirection -> Seq.Seq LoggedEvent.LoggedEvent -> (PlayerId -> Bool) -> Natural
+lifeChangedAmong direction events admits =
+  sum (fmap snd (filter (admits . fst) (Maybe.mapMaybe (lifeChangeOf direction . LoggedEvent.event) (Foldable.toList events))))
 
 -- CR 603.1b: how many DISTINCT bending verbs this player has done this turn --
 -- CR 701.65b's airbend, CR 701.66b's earthbend, CR 702.189b's firebend and CR

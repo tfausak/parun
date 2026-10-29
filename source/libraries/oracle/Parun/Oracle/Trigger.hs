@@ -322,19 +322,11 @@ condition context c = case c of
     (Quantity.AttackersDeclaredThisTurn who, Quantity.Literal 1) | comparison == Comparison.AtLeast -> do
       (subject, _) <- holder context who
       [subject <> Text.pack " attacked this turn"]
-    -- CR 119.3: "you lost life last turn" (First Response).
+    -- CR 119.3: "you lost life last turn" (First Response), "an opponent lost
+    -- life last turn" (Feast on the Fallen).
     (Quantity.LifeChanged tally, Quantity.Literal 1) | comparison == Comparison.AtLeast -> do
       (subject, _) <- holder context (LifeTally.player tally)
       [subject <> lifeChanged tally]
-    -- The same over every opponent: "an opponent lost life last turn" (Feast on
-    -- the Fallen), the Greatest of the tally over them.
-    (Quantity.Count n, Quantity.Literal 1)
-      | comparison == Comparison.AtLeast,
-        Aggregation.Greatest (Quantity.LifeChanged tally) <- Count.aggregation n,
-        LifeTally.player tally == PlayerRef.Candidate,
-        Count.filter n == Filter.Type.And [],
-        Scope.OverPlayers (PlayerRef.Relative PlayerRelation.Opponent) <- Count.scope n ->
-          [Text.pack "an opponent" <> lifeChanged tally]
     _ -> []
   _ -> []
 

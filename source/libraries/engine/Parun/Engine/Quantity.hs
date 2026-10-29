@@ -161,6 +161,11 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- Harrier reads the speed of the player who controlled the permanent its
         -- own earlier clause has already bounced.
         _ -> Count.playersFor viewOf context gs ref
+      -- playersOf for a tally of what happened, whose players are judged over
+      -- every seat that began the game (CR 800.4i).
+      historyPlayersOf ref = case ref of
+        PlayerRef.Candidate -> playersOf ref
+        _ -> Count.historyPlayersFor viewOf context gs ref
 
       -- Every entry onto the battlefield this log records for one id. A list and not
       -- a Maybe: CR 400.7 makes each arrival a new object, so at most one entry can
@@ -800,26 +805,28 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         Quantity.BendingsThisTurn ref -> case playersOf ref of
           Just [pid] -> Just (toInteger (Game.bendingsThisTurn gs pid))
           _ -> Nothing
-        -- CR 119.3 / 608.2i: how much life that player gained or lost during the turn
-        -- the tally names. CardsDiscardedThisTurn's arm in footing -- a live fold over
-        -- that turn's log (Game.turnLog) -- and in ARITY: Nothing for a reference
-        -- naming anything but exactly one player, since "whose life?" has no sum.
+        -- CR 119.3 / 608.2i: how much life the players the tally names gained or lost
+        -- during the turn it names, SUMMED -- a live fold over that turn's log
+        -- (Game.turnLog). Summed rather than asked of one player, so "an opponent
+        -- lost life last turn" (Feast on the Fallen) is this over opponents compared
+        -- against 1, the amounts being positive.
         --
         -- The AMOUNTS are summed where the discard tally counts events, the printed
         -- sentence asking how much life rather than how many gains. A loss counts
         -- whatever was gained after it, and damage counts as its loss (Feast on the
         -- Fallen's rulings, 2014-07-18; CR 120.3a).
         --
-        -- "An opponent lost life last turn" is the Greatest of it over opponents, and
-        -- a departed seat stays out of that fold (Count.playersFor): docs/decisions.md,
-        -- "Whether a departed opponent's life loss counts".
+        -- The players are judged over every seat, departed ones included
+        -- (Count.historyPlayersFor): an opponent who lost life and then left the game
+        -- still lost it (CR 800.4i; Skewer the Critics' ruling, 2024-01-12; Florian,
+        -- Voldaren Scion's, 2021-09-24). Game.lifeChangedAmong is the fold spectacle
+        -- shares.
         --
-        -- An EMPTY log answers 0 rather than Nothing, as CardsDiscardedThisTurn's does --
-        -- the game's first turn has no last turn to have lost life in. What is
-        -- unanswered is only the reference.
-        Quantity.LifeChanged tally -> case playersOf (LifeTally.player tally) of
-          Just [pid] -> Just (toInteger (Game.lifeChangedIn (LifeTally.direction tally) (Game.turnLog (LifeTally.turn tally) gs) pid))
-          _ -> Nothing
+        -- An EMPTY log answers 0 rather than Nothing, as CardsDiscardedThisTurn's does.
+        -- What is unanswered is only the reference.
+        Quantity.LifeChanged tally -> case historyPlayersOf (LifeTally.player tally) of
+          Just pids -> Just (toInteger (Game.lifeChangedAmong (LifeTally.direction tally) (Game.turnLog (LifeTally.turn tally) gs) (`elem` pids)))
+          Nothing -> Nothing
         -- CR 120.1 / 608.2i: how many of the players this reference names were dealt
         -- damage this turn. CardsDiscardedThisTurn's arm in footing -- a live fold over
         -- GameState.events, whose extent Engine.beginTurnOf makes "this turn" -- and
@@ -875,6 +882,10 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- An ABSENT entry answers 0 rather than Nothing, as CardsDiscardedThisTurn's
         -- empty log does: nobody having cast is an answered question. What is
         -- unanswered is only the reference.
+        --
+        -- Not implemented: a player who cast and then left the game is not a
+        -- Scope.OverPlayers candidate, so a fold over players drops their casts
+        -- (#5740).
         Quantity.SpellsCast tally -> case playersOf (SpellTally.player tally) of
           Just [pid] -> Just (toInteger (Map.findWithDefault 0 pid (Game.castsPerPlayer (Game.turnLog (SpellTally.turn tally) gs))))
           _ -> Nothing

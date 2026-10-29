@@ -1,6 +1,6 @@
 {
-  "description": "CR 102.1 / 800.4a: an opponent who lost life last turn and then left the game is no longer an opponent, so Feast on the Fallen does not trigger",
-  "note": "Bob, at 3 life, takes alice's Bolt and loses the game (CR 704.5a), so the turn after alice's is carol's (CR 800.4k). Bob's loss is on last turn's log but he is no one's opponent any more; carol lost nothing, so carol's upkeep raises no target prompt. See docs/decisions.md, 'Whether a departed opponent's life loss counts'.",
+  "description": "CR 800.4i / 603.4: an opponent who lost life last turn and then left the game still lost it, so Feast on the Fallen triggers",
+  "note": "Bob, at 3 life, takes alice's Bolt and loses the game (CR 704.5a), so the turn after alice's is carol's (CR 800.4k). Carol lost nothing; bob's loss alone makes the condition true (Skewer the Critics' ruling, 2024-01-12; Florian, Voldaren Scion's, 2021-09-24). Two creatures make the target a real choice, pinned to the Giant.",
   "board": {
     "active": "alice",
     "seats": [
@@ -136,43 +136,61 @@
       "turn": 1
     },
     {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": {
+        "ChooseTargets": {
+          "target": [
+            "$giant"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "carol",
       "check": {
         "View": {
-          "is": "carol",
-          "of": "ActivePlayer"
+          "of": "ActivePlayer",
+          "is": "carol"
         }
-      },
-      "player": "carol",
-      "step": "PrecombatMain",
-      "turn": 2
+      }
     },
     {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "carol",
       "check": {
         "Counters": {
-          "count": 0,
+          "object": "$giant",
           "kind": {
             "type": "PlusOnePlusOne"
           },
-          "object": "$giant"
+          "count": 1
         }
-      },
-      "player": "carol",
-      "step": "PrecombatMain",
-      "turn": 2
+      }
     },
     {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "carol",
       "check": {
         "Counters": {
-          "count": 0,
+          "object": "$bears",
           "kind": {
             "type": "PlusOnePlusOne"
           },
-          "object": "$bears"
+          "count": 0
         }
-      },
-      "player": "carol",
-      "step": "PrecombatMain",
-      "turn": 2
+      }
     }
   ]
 }

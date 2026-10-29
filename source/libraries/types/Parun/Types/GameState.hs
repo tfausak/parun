@@ -463,7 +463,8 @@ data GameState = MkGameState
     spellsCastLastTurn :: Natural.Natural,
     -- | CR 608.2i: the turn just ended's `events`, kept at the handoff. The
     -- per-seat view reads it, and so does every "last turn" tally
-    -- (WhichTurn.LastTurn); empty before the game's second turn.
+    -- (WhichTurn.LastTurn). On the first turn it holds what the log held as that
+    -- turn began.
     eventsLastTurn :: Seq.Seq LoggedEvent.LoggedEvent,
     -- | CR 601.2i / 608.2i: every spell cast this game BEFORE the turn in
     -- progress, oldest first, appended at the turn handoff from the log it

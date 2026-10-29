@@ -31,24 +31,6 @@ Each entry gives:
 
 Entries are ordered by the first rule each cites.
 
-## Whether a departed opponent's life loss counts
-
-- **Question**: Feast on the Fallen asks "if an opponent lost life last
-  turn". An opponent lost life last turn and then left the game. Does the
-  ability trigger?
-- **Rules**: CR 102.1, 102.3, 800.4a, 800.4i, 603.4; CR of 2026-08-07.
-- **Decision**: No. "An opponent" is asked among the players in the game when
-  the condition is checked, and a player who has left is no one's opponent.
-- **Rejected**: Counting every player who was an opponent when the life was
-  lost. CR 800.4i's second and third sentences let an effect find the
-  ACTIONS a departed player took; losing life is something that happens to a
-  player, not an action they take, so the limb does not reach it.
-- **Site**: `Parun.Engine.Quantity`'s `LifeChanged` arm, folded over opponents
-  by `Parun.Engine.Count.playersFor`. Proved by the scenario "CR 102.1 /
-  800.4a: an opponent who lost life last turn and then left the game is no
-  longer an opponent, so Feast on the Fallen does not trigger".
-- **Issue**: #5718.
-
 ## Whether a merged copy of a mutating spell is a token
 
 - **Question**: A copy of a mutating creature spell merges with its target
