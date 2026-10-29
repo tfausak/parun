@@ -54,6 +54,9 @@
               },
               "kind": {
                 "type": "ActivatedAbility"
+              },
+              "relation": {
+                "type": "AnyPlayer"
               }
             }
           },

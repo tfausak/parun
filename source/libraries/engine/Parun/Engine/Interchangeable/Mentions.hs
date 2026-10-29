@@ -313,13 +313,13 @@ import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentCandidate as PermanentCandidate
 import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
-import qualified Parun.Types.PermanentSacrificed as PermanentSacrificed
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.PlacesSticker as PlacesSticker
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
 import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
+import qualified Parun.Types.PlayerActsOn as PlayerActsOn
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerChoice as PlayerChoice
 import qualified Parun.Types.PlayerCounterTally as PlayerCounterTally
@@ -2320,9 +2320,9 @@ permanentDealsCombatDamageToPlayerNames :: (Monoid r) => Asking r -> PermanentDe
 permanentDealsCombatDamageToPlayerNames asking x = case x of
   PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer filter_ _recipient _orTheirPlaneswalkers -> filterNames asking filter_
 
-permanentSacrificedNames :: (Monoid r) => Asking r -> PermanentSacrificed.PermanentSacrificed -> r
-permanentSacrificedNames asking x = case x of
-  PermanentSacrificed.MkPermanentSacrificed _player filter_ -> filterNames asking filter_
+playerActsOnNames :: (Monoid r) => Asking r -> PlayerActsOn.PlayerActsOn -> r
+playerActsOnNames asking x = case x of
+  PlayerActsOn.MkPlayerActsOn _player filter_ -> filterNames asking filter_
 
 permanentTappedForManaNames :: (Monoid r) => Asking r -> PermanentTappedForMana.PermanentTappedForMana -> r
 permanentTappedForManaNames asking x = case x of
@@ -2330,7 +2330,7 @@ permanentTappedForManaNames asking x = case x of
 
 permanentsBecomeTargetedNames :: (Monoid r) => Asking r -> PermanentsBecomeTargeted.PermanentsBecomeTargeted -> r
 permanentsBecomeTargetedNames asking x = case x of
-  PermanentsBecomeTargeted.MkPermanentsBecomeTargeted filter_ _kind -> filterNames asking filter_
+  PermanentsBecomeTargeted.MkPermanentsBecomeTargeted filter_ _relation _kind -> filterNames asking filter_
 
 permanentsDealCombatDamageToPlayerNames :: (Monoid r) => Asking r -> PermanentsDealCombatDamageToPlayer.PermanentsDealCombatDamageToPlayer -> r
 permanentsDealCombatDamageToPlayerNames asking x = case x of
@@ -2605,7 +2605,7 @@ quantityNames asking x = case x of
   Quantity.CardsDrawnThisTurn playerRef -> playerRefNames asking playerRef
   Quantity.BendingsThisTurn playerRef -> history asking HistoryRead.Bendings <> playerRefNames asking playerRef
   Quantity.LifeChanged tally -> turnHistory asking (LifeTally.turn tally) (case LifeTally.direction tally of LifeDirection.Gained -> HistoryRead.LifeGains; LifeDirection.Lost -> HistoryRead.LifeLosses) <> playerRefNames asking (LifeTally.player tally)
-  Quantity.PlayersDealtDamageThisTurn tally -> history asking HistoryRead.Damage <> playerRefNames asking (DealtDamage.player tally)
+  Quantity.PlayersDealtDamageThisTurn tally -> history asking HistoryRead.Damage <> playerRefNames asking (DealtDamage.recipient tally)
   Quantity.DamageDealtToPlayersThisTurn playerRef -> history asking HistoryRead.Damage <> playerRefNames asking playerRef
   Quantity.DamageDealtToThisTurn -> history asking HistoryRead.Damage
   Quantity.SpellsCast tally -> turnHistory asking (SpellTally.turn tally) HistoryRead.Casts <> playerRefNames asking (SpellTally.player tally)
@@ -2941,7 +2941,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.DealsDamageToPlayer dealsDamageToPlayer -> dealsDamageToPlayerNames asking dealsDamageToPlayer
   TriggerCondition.SelfDealsDamageToCreature _ -> mempty
   TriggerCondition.DealsDamage actingPermanent -> actingPermanentNames asking actingPermanent
-  TriggerCondition.IsDealtDamage actingPermanent -> actingPermanentNames asking actingPermanent
+  TriggerCondition.IsDealtDamage dealt -> actingPermanentNames asking (DealtDamage.recipient dealt)
   TriggerCondition.PlayerIsDealtDamage _playerIsDealtDamage -> mempty
   TriggerCondition.PermanentDealsCombatDamageToPlayer permanentDealsCombatDamageToPlayer -> permanentDealsCombatDamageToPlayerNames asking permanentDealsCombatDamageToPlayer
   TriggerCondition.PermanentsDealCombatDamageToPlayer permanentsDealCombatDamageToPlayer -> permanentsDealCombatDamageToPlayerNames asking permanentsDealCombatDamageToPlayer
@@ -2954,8 +2954,8 @@ triggerConditionNames asking x = case x of
   TriggerCondition.RevealedThisWay (RevealedThisWay.MkRevealedThisWay filter_ _timing) -> filterNames asking filter_
   TriggerCondition.SelfDiscarded -> mempty
   TriggerCondition.SelfExiledForMadness -> mempty
-  TriggerCondition.PlayerDiscards _playerRelation -> mempty
-  TriggerCondition.PlayerDiscardsCards _playerRelation -> mempty
+  TriggerCondition.PlayerDiscards playerActsOn -> playerActsOnNames asking playerActsOn
+  TriggerCondition.PlayerDiscardsCards playerActsOn -> playerActsOnNames asking playerActsOn
   TriggerCondition.PlayerCycles _playerRelation -> mempty
   TriggerCondition.PlayerDrawsNthCard _playerDrawsNthCard -> mempty
   TriggerCondition.SelfAttacks triggerFrequency -> triggerFrequencyNames asking HistoryRead.Attacks triggerFrequency
@@ -3043,7 +3043,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.CreatureExploits creatureExploits -> creatureExploitsNames asking creatureExploits
   TriggerCondition.SelfBecomesCrewed triggerFrequency -> triggerFrequencyNames asking HistoryRead.Crews triggerFrequency
   TriggerCondition.SelfCrewsVehicle -> mempty
-  TriggerCondition.PermanentSacrificed permanentSacrificed -> permanentSacrificedNames asking permanentSacrificed
+  TriggerCondition.PermanentSacrificed permanentSacrificed -> playerActsOnNames asking permanentSacrificed
   TriggerCondition.SagaFinalChapterTriggers _playerRelation -> mempty
   TriggerCondition.PlayerBecomesMonarch _playerRelation -> mempty
   TriggerCondition.LoseControlOfBound slotName -> slotNames asking slotName

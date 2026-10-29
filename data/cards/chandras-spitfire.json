@@ -40,7 +40,7 @@
                 "kind": {
                   "type": "Noncombat"
                 },
-                "player": {
+                "recipient": {
                   "type": "Opponent"
                 }
               }

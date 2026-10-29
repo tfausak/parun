@@ -808,8 +808,12 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- CR 601.2c's "that creature" read by a bystander: the permanent that became
   -- the target, which Cowardice returns to its owner's hand. Unconditional given
   -- a match: matchesTrigger accepts only a BecameTarget naming an object.
+  --
+  -- Beside it the targeting object, the ControllerBecomesTarget arm's slot:
+  -- Diffusion Sliver's "counter that spell or ability unless its controller
+  -- pays {2}".
   (TriggerCondition.PermanentBecomesTargeted _, GameEvent.BecameTarget t) ->
-    maybe Map.empty (`Binding.setBecame` Map.empty) (Recipient.objectOf (BecameTarget.targeted t))
+    Binding.setTargetingObject (BecameTarget.source t) (maybe Map.empty (`Binding.setBecame` Map.empty) (Recipient.objectOf (BecameTarget.targeted t)))
   -- CR 509.3d's "that creature": the blocker whose declaration fired this, which
   -- rule 702.25a's payload gives -1/-1. Unconditional in the same sense as the
   -- arm above -- every GameEvent.BecameBlocking carries both ids -- so
@@ -2077,9 +2081,9 @@ eventBindingSlots cond = case cond of
   -- lint would reject it -- no member of eventBindingSlotsSometimes for
   -- PermanentsDie's reason.
   TriggerCondition.PermanentsBecomeTargeted {} -> Set.empty
-  -- The one permanent each occurrence names, guaranteed for the reason
-  -- eventBindings' arm gives.
-  TriggerCondition.PermanentBecomesTargeted {} -> Set.singleton Binding.became
+  -- The one permanent each occurrence names and the object that targeted it,
+  -- guaranteed for the reasons eventBindings' arm gives.
+  TriggerCondition.PermanentBecomesTargeted {} -> Set.fromList [Binding.became, Binding.targetingObject]
   -- CR 603.3b's second class names two things and binds both: CR 113.7's Saga,
   -- which the chapter ability hangs on, under CR 400.7e's slot for the reason
   -- eventBindings' arm gives, and CR 603.3a's controller of that chapter ability

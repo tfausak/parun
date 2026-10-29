@@ -1084,8 +1084,6 @@ library codec
     Parun.Codec.PermanentCandidateSpec
     Parun.Codec.PermanentDealsCombatDamageToPlayer
     Parun.Codec.PermanentDealsCombatDamageToPlayerSpec
-    Parun.Codec.PermanentSacrificed
-    Parun.Codec.PermanentSacrificedSpec
     Parun.Codec.PermanentsBecomeTargeted
     Parun.Codec.PermanentsBecomeTargetedSpec
     Parun.Codec.PermanentsDealCombatDamageToPlayer
@@ -1133,6 +1131,8 @@ library codec
     Parun.Codec.PlayerActed
     Parun.Codec.PlayerAction
     Parun.Codec.PlayerActionSpec
+    Parun.Codec.PlayerActsOn
+    Parun.Codec.PlayerActsOnSpec
     Parun.Codec.PlayerAttacksPlayer
     Parun.Codec.PlayerAttacksPlayerSpec
     Parun.Codec.PlayerAttacksWith
@@ -2888,7 +2888,6 @@ library types
     Parun.Types.PermanentBecomesDesignated
     Parun.Types.PermanentCandidate
     Parun.Types.PermanentDealsCombatDamageToPlayer
-    Parun.Types.PermanentSacrificed
     Parun.Types.PermanentsBecomeTargeted
     Parun.Types.PermanentsDealCombatDamageToPlayer
     Parun.Types.PermanentTappedForMana
@@ -2915,6 +2914,7 @@ library types
     Parun.Types.Player
     Parun.Types.PlayerActed
     Parun.Types.PlayerAction
+    Parun.Types.PlayerActsOn
     Parun.Types.PlayerAttacksPlayer
     Parun.Types.PlayerAttacksWith
     Parun.Types.PlayerChoice

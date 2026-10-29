@@ -67,6 +67,9 @@
                     "value": {
                       "filter": {
                         "type": "IsSource"
+                      },
+                      "relation": {
+                        "type": "AnyPlayer"
                       }
                     }
                   },

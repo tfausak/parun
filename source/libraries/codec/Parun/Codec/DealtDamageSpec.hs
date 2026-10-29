@@ -16,18 +16,18 @@ spec s = Spec.describe s "Parun.Codec.DealtDamage" $ do
     Common.assertCodec
       s
       (DealtDamage.codec PlayerRef.codec)
-      (DealtDamage.MkDealtDamage {DealtDamage.player = PlayerRef.Type.Relative PlayerRelation.Type.Opponent, DealtDamage.kind = Nothing})
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}} "
+      (DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Type.Relative PlayerRelation.Type.Opponent, DealtDamage.kind = Nothing})
+      " {\"recipient\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}} "
   Spec.it s "combat damage alone" $
     Common.assertCodec
       s
       (DealtDamage.codec PlayerRef.codec)
-      (DealtDamage.MkDealtDamage {DealtDamage.player = PlayerRef.Type.Relative PlayerRelation.Type.AnyPlayer, DealtDamage.kind = Just DamageKind.Combat})
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}},\"kind\":{\"type\":\"Combat\"}} "
+      (DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Type.Relative PlayerRelation.Type.AnyPlayer, DealtDamage.kind = Just DamageKind.Combat})
+      " {\"recipient\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}},\"kind\":{\"type\":\"Combat\"}} "
   Spec.it s "a relation for the player" $
     Common.assertCodec
       s
       (DealtDamage.codec PlayerRelation.codec)
-      (DealtDamage.MkDealtDamage {DealtDamage.player = PlayerRelation.Type.Opponent, DealtDamage.kind = Just DamageKind.Noncombat})
-      " {\"player\":{\"type\":\"Opponent\"},\"kind\":{\"type\":\"Noncombat\"}} "
+      (DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRelation.Type.Opponent, DealtDamage.kind = Just DamageKind.Noncombat})
+      " {\"recipient\":{\"type\":\"Opponent\"},\"kind\":{\"type\":\"Noncombat\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s (DealtDamage.codec PlayerRef.codec)

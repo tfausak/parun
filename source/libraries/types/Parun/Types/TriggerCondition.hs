@@ -17,6 +17,7 @@ import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesB
 import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
+import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
@@ -24,12 +25,12 @@ import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
-import qualified Parun.Types.PermanentSacrificed as PermanentSacrificed
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.PlacesSticker as PlacesSticker
 import qualified Parun.Types.PlayerActed as PlayerActed
+import qualified Parun.Types.PlayerActsOn as PlayerActsOn
 import qualified Parun.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
@@ -99,9 +100,10 @@ data TriggerCondition
   | -- | CR 603.2 / 120.1: a permanent dealt damage of any kind to any
     -- recipient, once per damage event and damager (Horned Cheetah, Spirit Link).
     DealsDamage ActingPermanent.ActingPermanent
-  | -- | CR 120.3: a permanent was dealt damage (Ripjaw Raptor, Death Pits of
-    -- Rath).
-    IsDealtDamage ActingPermanent.ActingPermanent
+  | -- | CR 120.3: a permanent was dealt damage of the kind, or of any kind for
+    -- Nothing (Ripjaw Raptor, Death Pits of Rath; Wall of Essence's combat
+    -- damage).
+    IsDealtDamage (DealtDamage.DealtDamage ActingPermanent.ActingPermanent)
   | -- | CR 120.3 / 603.2c: a player the relation admits, or one of their
     -- planeswalkers, was dealt damage of the kind, once per simultaneous batch
     -- and damaged recipient (Lich, Chandra's Spitfire, Vengeful Pharaoh).
@@ -139,12 +141,12 @@ data TriggerCondition
   | -- | CR 702.35a: "when this card is exiled this way" -- madness's triggered
     -- half, linked (CR 603.11) to the static half that exiled it. Self-scoped.
     SelfExiledForMadness
-  | -- | CR 701.9a read by a bystander: "whenever [a player] discards a card"
-    -- (Megrim).
-    PlayerDiscards PlayerRelation.PlayerRelation
+  | -- | CR 701.9a read by a bystander: "whenever [a player] discards a [kind of]
+    -- card" (Megrim, Waste Not).
+    PlayerDiscards PlayerActsOn.PlayerActsOn
   | -- | CR 603.2c's batch reading of the arm above: "whenever you discard one or
     -- more cards" (Magmakin Artillerist), once per discard event.
-    PlayerDiscardsCards PlayerRelation.PlayerRelation
+    PlayerDiscardsCards PlayerActsOn.PlayerActsOn
   | -- | "Whenever you cycle a card" (Prickly Marmoset) -- PlayerDiscards
     -- narrowed to Parun.Types.DiscardCause.ToPayCyclingCost by CR 702.29a.
     PlayerCycles PlayerRelation.PlayerRelation
@@ -536,7 +538,7 @@ data TriggerCondition
     -- Tracker) -- the CR 701.21a game action, not the zone change SelfDies
     -- reads. Mayhem Devil's unrestricted wording is AnyPlayer and the trivial
     -- Filter.
-    PermanentSacrificed PermanentSacrificed.PermanentSacrificed
+    PermanentSacrificed PlayerActsOn.PlayerActsOn
   | -- | CR 603.3b's second class: "whenever the final chapter ability of a Saga
     -- you control triggers" (Historian's Boon), against
     -- GameEvent.AbilityTriggered.

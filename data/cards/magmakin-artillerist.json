@@ -56,7 +56,13 @@
           "condition": {
             "type": "PlayerDiscardsCards",
             "value": {
-              "type": "You"
+              "filter": {
+                "type": "And",
+                "value": []
+              },
+              "player": {
+                "type": "You"
+              }
             }
           },
           "modal": {

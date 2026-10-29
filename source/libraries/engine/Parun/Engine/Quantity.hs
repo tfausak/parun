@@ -850,7 +850,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         --
         -- The kind narrows the log to CR 510.2's combat damage where a card says
         -- so -- Tymna the Weaver's "opponents that were dealt combat damage".
-        Quantity.PlayersDealtDamageThisTurn tally -> case playersOf (DealtDamage.player tally) of
+        Quantity.PlayersDealtDamageThisTurn tally -> case playersOf (DealtDamage.recipient tally) of
           Nothing -> Nothing
           Just pids -> Just (toInteger (length (filter (wasDealtDamage (DealtDamage.kind tally)) pids)))
         -- CR 120.1 / 608.2i: how much damage in total the players this reference names

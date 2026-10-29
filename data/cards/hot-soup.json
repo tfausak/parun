@@ -61,23 +61,25 @@
           "condition": {
             "type": "IsDealtDamage",
             "value": {
-              "type": "Matching",
-              "value": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
+              "recipient": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    },
+                    {
+                      "type": "HasAttached",
+                      "value": {
+                        "type": "IsSource"
+                      }
                     }
-                  },
-                  {
-                    "type": "HasAttached",
-                    "value": {
-                      "type": "IsSource"
-                    }
-                  }
-                ]
+                  ]
+                }
               }
             }
           },
