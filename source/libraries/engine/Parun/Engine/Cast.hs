@@ -32,6 +32,7 @@ import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Quantity as Quantity
 import qualified Parun.Engine.Resolve.Slots as Slots
+import qualified Parun.Engine.SourceContext as SourceContext
 import qualified Parun.Engine.SplitSecond as SplitSecond
 import qualified Parun.Engine.Sticker as Sticker
 import qualified Parun.Engine.Target as Target
@@ -4080,7 +4081,9 @@ installCastFromGraveyard caster keywords castFor spellId gs0 =
                   -- Parun.Types.ActiveReplacement).
                   ActiveReplacement.condition = Nothing,
                   ActiveReplacement.rider = Nothing,
-                  ActiveReplacement.slots = Map.empty
+                  ActiveReplacement.slots = Map.empty,
+                  -- CR 608.2h, for every row's reason; no pattern here reads one.
+                  ActiveReplacement.choices = SourceContext.choicesOf (Game.acquisitionOf spellId gs) spellId gs
                 }
          in gs1 {GameState.replacements = active : GameState.replacements gs1}
    in List.foldl' arm gs0 (Keyword.castFromGraveyardReplacementsOf keywords castFor)

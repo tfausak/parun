@@ -86,6 +86,7 @@ import qualified Parun.Types.ReplacementOrigin as ReplacementOrigin
 import qualified Parun.Types.Result as Result
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.Source as Source
+import qualified Parun.Types.SourceChoices as SourceChoices
 import qualified Parun.Types.StackObjectKind as StackObjectKind
 import qualified Parun.Types.Status as Status
 import qualified Parun.Types.Subtype as Subtype
@@ -323,7 +324,8 @@ damageSpec s registry =
                 ActiveReplacement.origin = ReplacementOrigin.Other,
                 ActiveReplacement.condition = Nothing,
                 ActiveReplacement.rider = Nothing,
-                ActiveReplacement.slots = Map.empty
+                ActiveReplacement.slots = Map.empty,
+                ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing
               }
           withShield = S.addReplacement shield gs0
           combat = S.runPure S.identityAnswer withShield (Damage.applyDamage [DamageEvent.MkDamageEvent victim (Recipient.ToCreature victim) 2 False False False 0 Nothing Nothing mempty False DamageKind.Combat])
@@ -345,7 +347,8 @@ damageSpec s registry =
                 ActiveReplacement.origin = ReplacementOrigin.Other,
                 ActiveReplacement.condition = Nothing,
                 ActiveReplacement.rider = Nothing,
-                ActiveReplacement.slots = Map.empty
+                ActiveReplacement.slots = Map.empty,
+                ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing
               }
           dropped = Expiry.dropAtCleanup (S.addReplacement shield base)
        in Spec.assertEqWith s "no replacements remain" (GameState.replacements dropped) []
@@ -506,7 +509,8 @@ toxicSpec s registry =
                 ActiveReplacement.origin = ReplacementOrigin.Other,
                 ActiveReplacement.condition = Nothing,
                 ActiveReplacement.rider = Nothing,
-                ActiveReplacement.slots = Map.empty
+                ActiveReplacement.slots = Map.empty,
+                ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing
               }
           ev = DamageEvent.MkDamageEvent oid (Recipient.ToPlayer S.bob) 3 False False False 2 Nothing Nothing mempty False DamageKind.Combat
           after = S.runPure S.identityAnswer (S.addReplacement shield gs0) (Damage.applyDamage [ev])
@@ -636,7 +640,8 @@ lifelinkSpec s registry =
                 ActiveReplacement.origin = ReplacementOrigin.Other,
                 ActiveReplacement.condition = Nothing,
                 ActiveReplacement.rider = Nothing,
-                ActiveReplacement.slots = Map.empty
+                ActiveReplacement.slots = Map.empty,
+                ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing
               }
           ev = DamageEvent.MkDamageEvent oid (Recipient.ToPlayer S.bob) 2 False False False 0 (Just S.alice) Nothing mempty False DamageKind.Combat
           after = S.runPure S.identityAnswer (S.addReplacement shield gs0) (Damage.applyDamage [ev])

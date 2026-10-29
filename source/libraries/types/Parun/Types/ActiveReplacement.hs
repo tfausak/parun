@@ -13,6 +13,7 @@ import qualified Parun.Types.PreventionRider as PreventionRider
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
 import qualified Parun.Types.ReplacementOrigin as ReplacementOrigin
 import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.SourceChoices as SourceChoices
 import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.Uses as Uses
 
@@ -131,6 +132,10 @@ data ActiveReplacement = MkActiveReplacement
     -- row's is rewritten again as a spell it names resolves into a permanent
     -- (Parun.Engine.Event.reenter, CR 614.1 / 608.3a): Boreal Outrider's "that
     -- creature enters with".
-    slots :: Map.Map SlotName.SlotName (Set.Set ObjectId.ObjectId)
+    slots :: Map.Map SlotName.SlotName (Set.Set ObjectId.ObjectId),
+    -- | CR 608.2h: the source's CR 607.2d choices, baked as the row is
+    -- installed, so a later choice by the same source does not rewrite this
+    -- row's. Proved by data/scenarios/avacyn-guardian-angel-keeps-each-creature-shields-own-colour.json.
+    choices :: SourceChoices.SourceChoices
   }
   deriving (Eq, Ord, Show)

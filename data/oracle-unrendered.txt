@@ -156,6 +156,7 @@ autonomous-assembler
 autumn-willow-and-baron-sengir
 autumn-willow-harmony
 autumns-veil
+avacyn-guardian-angel
 avarice-amulet
 avarice-totem
 avatar-aang-aang-master-of-elements
