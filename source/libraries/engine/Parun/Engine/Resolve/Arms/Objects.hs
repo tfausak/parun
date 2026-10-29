@@ -947,7 +947,9 @@ replace resolving source controller legal (Replace.MkReplace duration uses origi
                       ActiveReplacement.slots =
                         Map.restrictKeys
                           (Filter.slotObjects context)
-                          (Map.keysSet (replacementRowSlots re) <> foldMap (Map.keysSet . conditionSlots) condition)
+                          (Map.keysSet (replacementRowSlots re) <> foldMap (Map.keysSet . conditionSlots) condition),
+                      -- CR 608.2h, installDamageRow's bake.
+                      ActiveReplacement.choices = SourceContext.choicesOf (Game.readingAcquisition resolving source gs source) source gs
                     }
              in gs1 {GameState.replacements = active : GameState.replacements gs1}
 
@@ -1245,7 +1247,9 @@ skipPhase resolving source controller legal (SkipPhase.MkSkipPhase ref selector 
                     -- Parun.Types.ActiveReplacement).
                     ActiveReplacement.condition = Nothing,
                     ActiveReplacement.rider = Nothing,
-                    ActiveReplacement.slots = Map.empty
+                    ActiveReplacement.slots = Map.empty,
+                    -- CR 608.2h, installDamageRow's bake; a PhaseR reads none.
+                    ActiveReplacement.choices = SourceContext.choicesOf (Game.readingAcquisition resolving source g source) source g
                   }
            in g1 {GameState.replacements = active : GameState.replacements g1}
   State.modify' (\g -> List.foldl' (flip install) g named)

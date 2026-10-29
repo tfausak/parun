@@ -272,6 +272,7 @@ collect sources floating =
             -- have bound: a printed static ability is re-derived from the board,
             -- and Filter.IsBound is vacuously False in it.
             ReplacementCandidate.slots = Map.empty,
+            -- A static ability's row reads its source's choices live (CR 604.2).
             ReplacementCandidate.choices = Nothing
           }
       fromFloating active =
@@ -305,7 +306,8 @@ collect sources floating =
             -- The installing resolution's bindings, carried through so a row's
             -- own pattern can name one object (see Parun.Types.ActiveReplacement).
             ReplacementCandidate.slots = ActiveReplacement.slots active,
-            ReplacementCandidate.choices = Nothing
+            -- CR 608.2h: the choices the row baked as it was installed.
+            ReplacementCandidate.choices = Just (ActiveReplacement.choices active)
           }
       -- CR 702.16e's PLAYER half: "any damage that would be dealt by sources that
       -- have the stated quality to a permanent or player with protection is
@@ -443,8 +445,8 @@ collect sources floating =
       -- CR 109.5's "you" is the row's BAKED controller, and the reading object is
       -- its source: the clause outlives the resolution that installed it, so
       -- there is nothing live to derive either from. The row's captured slots
-      -- ride along, so a clause and its pattern read one context
-      -- (candidateContext's).
+      -- and its baked choices (CR 608.2h) ride along, so a clause and its
+      -- pattern read one context (candidateContext's).
       --
       -- CR 611.2a: a row under a window waits for that window first -- False
       -- Peace's "all combat phases of their next turn" (Expiry.begun).
@@ -454,7 +456,7 @@ collect sources floating =
           Just condition ->
             Condition.holds
               (Projection.fullView sources)
-              (Projection.framedBySlots sources (fmap (Set.map Recipient.ToObject) (ActiveReplacement.slots active)) (Projection.sourceContext sources (Just (ActiveReplacement.controller active)) (ActiveReplacement.source active)))
+              (Projection.framedBySlots sources (fmap (Set.map Recipient.ToObject) (ActiveReplacement.slots active)) (Projection.framedWith (ActiveReplacement.choices active) (ActiveReplacement.source active) sources (Projection.sourceContext sources (Just (ActiveReplacement.controller active)) (ActiveReplacement.source active))))
               (Projection.boardAsEntering sources)
               (ActiveReplacement.source active)
               condition
@@ -1806,14 +1808,14 @@ matchesFiltered viewOf gs candidate filter_ oid =
 -- floating row whose source has left, the atom's ordinary vacuous answer.
 --
 -- CR 201.4's chosen names and CR 614.1c's chosen player ride along on the same
--- footing, and LIVE for CR 609.7b's reason: a prevention shield's source half is
--- rechecked at the event, so a name or a seat the source chose between the row's
--- installation and the damage is the one this reads. The names, with the
--- colour and subtype beside them, go through Parun.Engine.SourceContext, which
--- falls back to CR 608.2h's last known information for a source already in a
--- graveyard; a stored effect's shield reads the choices it baked as it began
--- instead (ReplacementCandidate.choices, CR 608.2h). The player has no such
--- fallback because Parun.Types.LastKnown records no chosen player, and rule
+-- footing. A permanent's static row reads the names, with the colour and subtype
+-- beside them, LIVE through Parun.Engine.SourceContext, which falls back to CR
+-- 608.2h's last known information for a source already in a graveyard; a
+-- floating row and a stored effect's shield read the choices they baked as they
+-- were installed instead (ReplacementCandidate.choices, CR 608.2h), so a later
+-- choice by the same source cannot rewrite them; `lives` asks a floating row's
+-- condition with the same baked choices. The player is read live on
+-- every row: Parun.Types.LastKnown records no chosen player, and rule
 -- 702.16k's carrier is a permanent on the battlefield whenever its own static
 -- ability mints a row.
 candidateContext :: GameState -> ReplacementCandidate -> Filter.Context
@@ -2521,7 +2523,10 @@ choose gs event candidates =
           -- different boards and the drawer is asked which.
           if readsSource (ReplacementCandidate.effect c)
             then Just (ReplacementCandidate.source c)
-            else Nothing
+            else Nothing,
+          -- CR 608.2h: two rows equal but for the choices they baked (two
+          -- Avacyn, Guardian Angel shields) match different sources.
+          ReplacementCandidate.choices c
         )
    in case candidates of
         [] -> pure Nothing
@@ -4318,7 +4323,9 @@ installTurnSkips entry gs =
                   -- Parun.Types.ActiveReplacement).
                   ActiveReplacement.condition = Nothing,
                   ActiveReplacement.rider = Nothing,
-                  ActiveReplacement.slots = Map.empty
+                  ActiveReplacement.slots = Map.empty,
+                  -- CR 608.2h, for every row's reason; a PhaseR reads none.
+                  ActiveReplacement.choices = SourceContext.choicesOf (Game.acquisitionOf (ExtraTurn.source entry) g) (ExtraTurn.source entry) g
                 }
          in g1 {GameState.replacements = active : GameState.replacements g1}
    in List.foldl' install gs (Set.toAscList (ExtraTurn.skipped entry))
@@ -4396,7 +4403,9 @@ installSpellMoveRow destination shuffling spellId caster gs =
             -- Parun.Types.ActiveReplacement).
             ActiveReplacement.condition = Nothing,
             ActiveReplacement.rider = Nothing,
-            ActiveReplacement.slots = Map.empty
+            ActiveReplacement.slots = Map.empty,
+            -- CR 608.2h, for every row's reason; no pattern here reads one.
+            ActiveReplacement.choices = SourceContext.choicesOf (Game.acquisitionOf spellId gs) spellId gs
           }
    in (ts, gs1 {GameState.replacements = active : GameState.replacements gs1})
 

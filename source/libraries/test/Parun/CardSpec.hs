@@ -6206,10 +6206,12 @@ effectFilters effect = case effect of
   -- against the damage's own recipient, not against this card's frame.
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ ref whatRecipient _ chosenSource quantity rider) ->
     frame Unframed (durationFilters duration) <> frame Unframed (quantityFilters quantity) <> fmap ((,) ChosenSourceFramed) (Maybe.maybeToList chosenSource) <> unframed (Maybe.maybeToList whatRecipient) <> frame SourceHostFramed (foldMap objectRefFilters ref) <> concatMap effectFilters rider
-  -- CR 609.7b's property-named source is UNFRAMED: Parun.Engine.Replacement.matchesDamageSource
-  -- evaluates it against the damage's own source, not against this card's frame.
+  -- CR 609.7b's property-named source is ReplacementRowFramed: it becomes the
+  -- row's DamagePattern.whatSource, matched in the row's
+  -- Parun.Engine.Replacement.candidateContext, which fills the source's CR
+  -- 607.2d choices as the row baked them (Avacyn, Guardian Angel).
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration _ ref whatRecipient _ _ chosenSource whatSource rider) ->
-    frame Unframed (durationFilters duration) <> fmap ((,) ChosenSourceFramed) (Maybe.maybeToList chosenSource) <> unframed (Maybe.maybeToList whatRecipient <> [whatSource]) <> frame SourceHostFramed (foldMap objectRefFilters ref) <> concatMap effectFilters rider
+    frame Unframed (durationFilters duration) <> fmap ((,) ChosenSourceFramed) (Maybe.maybeToList chosenSource) <> unframed (Maybe.maybeToList whatRecipient) <> [(ReplacementRowFramed, whatSource)] <> frame SourceHostFramed (foldMap objectRefFilters ref) <> concatMap effectFilters rider
   -- The two arms above's reads over the fields CR 615.8's shield carries.
   Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance duration ref chosenSource rider) ->
     frame Unframed (durationFilters duration) <> [(ChosenSourceFramed, chosenSource)] <> frame SourceHostFramed (objectRefFilters ref) <> concatMap effectFilters rider
@@ -6217,7 +6219,7 @@ effectFilters effect = case effect of
   -- The chosen source, the recipient description and the property-named source
   -- are framed as the two prevention arms above frame them.
   Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration _ amount srcRef whatRecipient _ destRef chosenSource _ whatSource) ->
-    frame Unframed (durationFilters duration) <> frame Unframed (foldMap quantityFilters amount) <> fmap ((,) ChosenSourceFramed) (Maybe.maybeToList chosenSource) <> unframed (Maybe.maybeToList whatRecipient <> [whatSource]) <> frame SourceHostFramed (foldMap objectRefFilters srcRef <> objectRefFilters destRef)
+    frame Unframed (durationFilters duration) <> frame Unframed (foldMap quantityFilters amount) <> fmap ((,) ChosenSourceFramed) (Maybe.maybeToList chosenSource) <> unframed (Maybe.maybeToList whatRecipient) <> [(ReplacementRowFramed, whatSource)] <> frame SourceHostFramed (foldMap objectRefFilters srcRef <> objectRefFilters destRef)
   -- CR 708.2's listed characteristics hold no Filter, but the ref does -- Ixidron's
   -- "all other nontoken creatures" is an ObjectRef Filter like Destroy's, so the
   -- lint reaches it.
