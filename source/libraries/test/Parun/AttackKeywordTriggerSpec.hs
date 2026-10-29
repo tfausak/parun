@@ -867,10 +867,10 @@ provokeSpec s registry =
 -- why the blocked case needs a blocker that absorbs all four damage (Apprentice
 -- Sharpshooter, 1/4), since a smaller one would let renown's own event through.
 --
--- Valeron Wardens {2}{G} Creature -- Human Monk 1/3 is the second card, and the
--- only printing that WATCHES the designation: renown 2 plus "whenever a creature
--- you control becomes renowned, draw a card" (CR 702.112b's marker read by
--- something other than renown itself).
+-- Valeron Wardens {2}{G} Creature -- Human Monk 1/3 is the second card, and a
+-- printing that WATCHES the designation (as Relic Seeker does): renown 2 plus
+-- "whenever a creature you control becomes renowned, draw a card" (CR
+-- 702.112b's marker read by something other than renown itself).
 --
 -- CR 702.112b's "until it leaves the battlefield" is read on Object.newIncarnation
 -- directly, below. Parun.SetupSpec's "no per-incarnation state survives" case does
