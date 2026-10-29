@@ -64,6 +64,7 @@ import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
 import qualified Parun.Types.ReplacementOrigin as ReplacementOrigin
 import qualified Parun.Types.SideDeck as SideDeck
+import qualified Parun.Types.SourceChoices as SourceChoices
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.Uses as Uses
@@ -343,7 +344,8 @@ exileEnteringAttractions src =
       ActiveReplacement.origin = ReplacementOrigin.Other,
       ActiveReplacement.condition = Nothing,
       ActiveReplacement.rider = Nothing,
-      ActiveReplacement.slots = Map.empty
+      ActiveReplacement.slots = Map.empty,
+      ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing
     }
 
 -- CR 701.51c: "whenever you open an Attraction".

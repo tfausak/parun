@@ -92,6 +92,7 @@ import qualified Parun.Types.ReplacementEntry as ReplacementEntry
 import qualified Parun.Types.ReplacementOrigin as ReplacementOrigin
 import qualified Parun.Types.Response as Response
 import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.SourceChoices as SourceChoices
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.Uses as Uses
@@ -600,7 +601,8 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
               ActiveReplacement.origin = ReplacementOrigin.Other,
               ActiveReplacement.condition = Nothing,
               ActiveReplacement.rider = Nothing,
-              ActiveReplacement.slots = Map.empty
+              ActiveReplacement.slots = Map.empty,
+              ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing
             }
         g3 = S.addReplacement active g2
         asked = answersFor S.identityAnswer g3 (Event.runEntry Set.empty piker)
@@ -1210,7 +1212,8 @@ blastShape src ts =
       ActiveReplacement.origin = ReplacementOrigin.SelfReplacement,
       ActiveReplacement.condition = Nothing,
       ActiveReplacement.rider = Nothing,
-      ActiveReplacement.slots = Map.empty
+      ActiveReplacement.slots = Map.empty,
+      ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing
     }
 
 -- alice controls four untapped Forests and holds an Undergrowth Scavenger. Her

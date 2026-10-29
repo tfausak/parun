@@ -12,6 +12,7 @@ import qualified Parun.Codec.PlayerId as PlayerId
 import qualified Parun.Codec.PreventionRider as PreventionRider
 import qualified Parun.Codec.ReplacementEffect as ReplacementEffect
 import qualified Parun.Codec.ReplacementOrigin as ReplacementOrigin
+import qualified Parun.Codec.SourceChoices as SourceChoices
 import qualified Parun.Codec.Timestamp as Timestamp
 import qualified Parun.Codec.Uses as Uses
 import qualified Parun.JsonCodec.Codec as Codec
@@ -44,6 +45,7 @@ codec = Fields.object $ do
       "slots"
       (Common.textMap SlotName.unwrap (Right . SlotName.MkSlotName) (Common.set ObjectId.codec))
       ActiveReplacement.slots
+  choices <- Fields.required "choices" SourceChoices.codec ActiveReplacement.choices
   pure
     ActiveReplacement.MkActiveReplacement
       { ActiveReplacement.effect = effect,
@@ -55,5 +57,6 @@ codec = Fields.object $ do
         ActiveReplacement.origin = origin,
         ActiveReplacement.condition = condition,
         ActiveReplacement.rider = rider,
-        ActiveReplacement.slots = slots
+        ActiveReplacement.slots = slots,
+        ActiveReplacement.choices = choices
       }

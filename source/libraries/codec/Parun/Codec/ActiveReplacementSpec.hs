@@ -8,6 +8,7 @@ import qualified Parun.Codec.ActiveReplacement as ActiveReplacement
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.ActiveReplacement as ActiveReplacement
+import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Compares as Compares
 import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.Condition as Condition
@@ -25,6 +26,7 @@ import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
 import qualified Parun.Types.ReplacementOrigin as ReplacementOrigin
 import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.SourceChoices as SourceChoices
 import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.Uses as Uses
 import qualified Parun.Types.Zone as Zone
@@ -75,17 +77,18 @@ spec s = Spec.describe s "Parun.Codec.ActiveReplacement" $ do
           ActiveReplacement.origin = ReplacementOrigin.Other,
           ActiveReplacement.condition = Nothing,
           ActiveReplacement.rider = Nothing,
-          ActiveReplacement.slots = Map.empty
+          ActiveReplacement.slots = Map.empty,
+          ActiveReplacement.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Map.empty, SourceChoices.colors = Set.empty, SourceChoices.subtype = Nothing}
         }
       ( " {\"effect\":"
           <> effectJson
           <> ",\"source\":1,\"controller\":2,\"timestamp\":3,\"expiry\":{\"type\":\"AtCleanup\"}"
           <> ",\"uses\":{\"type\":\"Unlimited\"},\"origin\":{\"type\":\"Other\"}"
-          <> ",\"condition\":null,\"rider\":null,\"slots\":{}} "
+          <> ",\"condition\":null,\"rider\":null,\"slots\":{},\"choices\":{}} "
       )
   -- Every optional axis at once, each away from the case above: CR 614.1's
   -- printed "if", CR 615.5's rider, CR 614.3's used-up count, CR 614.15's
-  -- self-replacement, and CR 603.7c's snapshot. The snapshot's value is a SET of
+  -- self-replacement, CR 603.7c's snapshot, and CR 608.2h's baked choices. The snapshot's value is a SET of
   -- two ids, so an encoder writing only one is caught.
   Spec.it s "a row carrying a clause, a rider and a slot snapshot" $
     Common.assertCodec
@@ -112,7 +115,8 @@ spec s = Spec.describe s "Parun.Codec.ActiveReplacement" $ do
           ActiveReplacement.slots =
             Map.singleton
               (SlotName.MkSlotName (Text.pack "that spell"))
-              (Set.fromList [ObjectId.MkObjectId 8, ObjectId.MkObjectId 9])
+              (Set.fromList [ObjectId.MkObjectId 8, ObjectId.MkObjectId 9]),
+          ActiveReplacement.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Map.empty, SourceChoices.colors = Set.singleton Color.White, SourceChoices.subtype = Nothing}
         }
       ( " {\"effect\":"
           <> effectJson
@@ -120,7 +124,7 @@ spec s = Spec.describe s "Parun.Codec.ActiveReplacement" $ do
           <> ",\"uses\":{\"type\":\"Once\"},\"origin\":{\"type\":\"SelfReplacement\"}"
           <> ",\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":7}}}"
           <> ",\"rider\":{\"effects\":[{\"type\":\"Proliferate\"}],\"targets\":{},\"controller\":5,\"source\":4}"
-          <> ",\"slots\":{\"that spell\":[8,9]}} "
+          <> ",\"slots\":{\"that spell\":[8,9]},\"choices\":{\"colors\":[{\"type\":\"White\"}]}} "
       )
   Spec.it s "has a schema" $
     Common.assertHasSchema s ActiveReplacement.codec

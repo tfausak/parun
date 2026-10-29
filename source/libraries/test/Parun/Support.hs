@@ -1497,7 +1497,8 @@ addRegenShield oid gs =
             ActiveReplacement.origin = ReplacementOrigin.Other,
             ActiveReplacement.condition = Nothing,
             ActiveReplacement.rider = Nothing,
-            ActiveReplacement.slots = Map.empty
+            ActiveReplacement.slots = Map.empty,
+            ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing
           }
    in addReplacement active gs1
 

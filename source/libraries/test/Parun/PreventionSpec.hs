@@ -76,6 +76,7 @@ import qualified Parun.Types.ReplacementEffect as ReplacementEffect
 import qualified Parun.Types.ReplacementEntry as ReplacementEntry
 import qualified Parun.Types.ReplacementOrigin as ReplacementOrigin
 import qualified Parun.Types.Response as Response
+import qualified Parun.Types.SourceChoices as SourceChoices
 import qualified Parun.Types.StepBegan as StepBegan
 import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.Uses as Uses
@@ -247,7 +248,8 @@ leylineShape src ts =
       ActiveReplacement.origin = ReplacementOrigin.Other,
       ActiveReplacement.condition = Nothing,
       ActiveReplacement.rider = Nothing,
-      ActiveReplacement.slots = Map.empty
+      ActiveReplacement.slots = Map.empty,
+      ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing
     }
 
 -- Eon Hub {5} Artifact: "Players skip their upkeep steps."

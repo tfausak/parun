@@ -3419,7 +3419,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Kindred Discovery", hasChosenSubtypeCounts, "two trigger conditions", (2, 0)),
         ("Brass Herald", hasChosenSubtypeCounts, "an affected set and a resolution's own filter", (2, 0)),
         ("Persecute", hasChosenColorCounts, "a spell's own hand sweep after its own choice", (1, 0)),
-        ("Story Circle", hasChosenColorCounts, "an activated ability's chosen damage source", (1, 0))
+        ("Story Circle", hasChosenColorCounts, "an activated ability's chosen damage source", (1, 0)),
+        ("Avacyn, Guardian Angel", hasChosenColorCounts, "two activated abilities' damage shields", (2, 0))
       ]
       $ \(name, counts, position, expected) -> do
         printing <- S.printingOf s registry name
