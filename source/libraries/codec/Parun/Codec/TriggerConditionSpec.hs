@@ -297,8 +297,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       TriggerCondition.SelfExiledForMadness
       " {\"type\":\"SelfExiledForMadness\"} "
-  -- CR 701.9a's discard. Both relations, since the PlayerRelation is the whole
-  -- content of the "whenever an opponent discards" phrasing.
+  -- CR 701.9a's discard. Both relations and a non-trivial Filter, since each is
+  -- content: Megrim's "an opponent" against Waste Not's "a creature card".
   Spec.it s "PlayerDiscards round-trips both relations and a Filter" $ do
     Common.assertCodec
       s
@@ -1176,10 +1176,10 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.SagaFinalChapterTriggers PlayerRelation.Opponent)
       " {\"type\":\"SagaFinalChapterTriggers\",\"value\":{\"type\":\"Opponent\"}} "
-  -- CR 725.1's crowning. Both relations, for the same reason PlayerDiscards has
-  -- both: the PlayerRelation is the whole difference between "whenever you
-  -- become the monarch" and "whenever an opponent becomes the monarch", so a
-  -- codec that dropped it would silently turn one printing into the other.
+  -- CR 725.1's crowning. Both relations, since the PlayerRelation is the whole
+  -- payload and the whole difference between "whenever you become the monarch"
+  -- and "whenever an opponent becomes the monarch", so a codec that dropped it
+  -- would silently turn one printing into the other.
   Spec.it s "PlayerBecomesMonarch round-trips both relations" $ do
     Common.assertCodec
       s

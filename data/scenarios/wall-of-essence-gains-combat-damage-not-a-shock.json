@@ -9,6 +9,7 @@
     {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$shock", "targets": ["$wall"], "mana": ["$mountain"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
     {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Damage": {"object": "$wall", "damage": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Stack", "is": []}}},
     {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 20}}},
     {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$giant"]}},
     {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {"$wall": ["$giant"]}}},

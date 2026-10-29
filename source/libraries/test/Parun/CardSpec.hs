@@ -1274,8 +1274,8 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- Its player-side sibling carries a PlayerRelation and a StackObjectKind, and
   -- no Count either.
   TriggerCondition.ControllerBecomesTarget {} -> []
-  -- Nor does the bystander batch reading, which carries a Filter and a
-  -- StackObjectKind.
+  -- Nor does the bystander batch reading, which carries a Filter, a
+  -- PlayerRelation and a StackObjectKind.
   TriggerCondition.PermanentsBecomeTargeted {} -> []
   TriggerCondition.PermanentBecomesTargeted {} -> []
 
