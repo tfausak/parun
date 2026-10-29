@@ -1094,6 +1094,7 @@ hoarding-dragon
 hollow-trees
 hollow-warrior
 holy-day
+honored-hierarch
 hopeful-initiate
 hornet-nest
 hostage-taker
@@ -1147,9 +1148,12 @@ indigo-faerie
 indomitable-might
 indulgent-tormentor
 infantry-shield
+infectious-bloodlust
 infernal-contract
+infernal-scarring
 infernal-vessel
 infestation-expert-infested-werewolf
+infinite-obliteration
 infinite-reflection
 ingenious-thief
 inkshield
@@ -1195,6 +1199,7 @@ jaces-archivist
 jaces-erasure
 jaces-mindseeker
 jaces-phantasm
+jaces-sanctum
 jackal-familiar
 jade-monolith
 jade-statue
@@ -1252,10 +1257,12 @@ kithkin-brinefarer
 kjeldoran-dead
 kjeldoran-royal-guard
 knight-of-dusk
+knight-of-the-white-orchid
 kongmings-contraptions
 kopala-warden-of-waves
 kormus-bell
 koth-fire-of-resistance
+kothophed-soul-hoarder
 krarks-thumb
 krav-the-unredeemed
 krosan-vorine
@@ -1300,6 +1307,7 @@ lifes-legacy
 lightmine-field
 lightstall-inquisitor
 lightwielder-paladin
+liliana-heretical-healer-liliana-defiant-necromancer
 liliana-of-the-dark-realms
 liliana-of-the-veil
 liliana-untouched-by-death

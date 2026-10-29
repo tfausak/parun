@@ -281,12 +281,17 @@ object context determiner ref = case ref of
               -- not spelled out here.
               _ -> []
         -- Objects a continuous effect changes again: "They get an
-        -- additional +0/+2" (Rhystic Shield). Several objects named again
-        -- anywhere else are not spelled out here.
+        -- additional +0/+2" (Rhystic Shield), or, free, "those creatures"
+        -- of the card type the filter names (Kytheon's Tactics). Several
+        -- objects named again anywhere else are not spelled out here.
         _
           | determiner == Affected,
             [MkReference _ _ Filter.Plural] <- object context {earlier = []} determiner ref ->
-              [MkReference (Text.pack "they") [] Filter.Plural]
+              MkReference (Text.pack "they") [] Filter.Plural : [MkReference (Text.pack "those " <> Filter.cardType Filter.Plural t) [] Filter.Plural | ObjectRef.EachMatching f <- [ref], t <- Maybe.mapMaybe Filter.cardTypeOf (conjuncts f)]
+          where
+            conjuncts f = case f of
+              Filter.Type.And fs -> fs
+              _ -> [f]
         _ -> []
   ObjectRef.InSlot s
     | s == selfSlot -> [MkReference (self context) [] Filter.Singular]
