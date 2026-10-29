@@ -747,6 +747,7 @@ eventides-shadow
 ever-watching-threshold
 everbark-shaman
 evidence-examiner
+evolutionary-leap
 evra-halcyon-witness
 exalted-dragon
 excavating-anurid
@@ -775,6 +776,7 @@ fact-or-fiction
 fae-of-wishes-granted
 faerie-conclave
 faerie-macabre
+faerie-miscreant
 faerie-squadron
 faiths-reward
 falkenrath-gorger
@@ -807,7 +809,9 @@ feywild-trickster
 fields-of-summer
 fiendslayer-paladin
 fierce-retribution
+fiery-conclusion
 fiery-encore
+fiery-impulse
 fight-or-flight
 final-fortune
 final-punishment
@@ -826,6 +830,7 @@ flame-spill
 flame-wave
 flameblast-dragon
 flamerush-rider
+flameshadow-conjuring
 flameskull
 flare-of-malice
 flash
@@ -907,6 +912,7 @@ garruks-packleader
 garth-one-eye
 gaseous-form
 gather-specimens
+gather-the-pack
 gauntlet-of-power
 gearshift-ace
 gemcutter-buccaneer
@@ -917,6 +923,7 @@ genesis-hydra
 geosurge
 gerrard
 geyser-leaper
+ghirapur-aether-grid
 ghitu-encampment
 ghostly-prison
 ghoulraiser
@@ -933,6 +940,7 @@ gift-of-estates
 gifts-ungiven
 gilded-lotus
 gilder-bairn
+gilt-leaf-winnower
 giltspire-avenger
 glacial-crasher
 glacial-fortress

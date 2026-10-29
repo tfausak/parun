@@ -10,17 +10,6 @@ line) and running `parun deck` on it: every unresolved name is reported.
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Evolutionary Leap:
-  `_Action:RevealCardsFromTheTopOfLibraryUntilACardOfTypeIsRevealed`
-- Exquisite Firecraft: `_Rule:FromStackIf`
-- Faerie Miscreant: `_Permanents:IsNamed`
-- Fiery Conclusion: `_Rule:CastEffect`
-- Fiery Impulse: `_Action:IfElse`
-- Flameshadow Conjuring: `_CreatableToken:TokenCopyOfPermanent`
-- Gather the Pack: `_Action:IfElse`
-- Ghirapur Aether Grid: `_Cost:TapNumberPermanents`
-- Gideon's Phalanx: `_Action:If`
-- Gilt-Leaf Winnower: `_Permanents:PowerAndToughnessArentEqual`
 - Gnarlroot Trapper: `_Action:AddManaWithModifiers`
 - Goblin Glory Chaser: `_Permanents:IsRenowned`
 - Goblin Piledriver: `_LayerEffect:AdjustPTForEach`
@@ -122,5 +111,7 @@ first.
   bind the players it damaged.
 - #5757: Archangel of Tithes. Attack and block costs carry no condition, so
   "as long as this creature is untapped" can't switch them.
+- #5762: Exquisite Firecraft. A card's own "can't be countered" carries no
+  condition, so spell mastery can't switch it.
 - #5754: Tainted Remedy. `LifeGainRewrite` cannot turn a gain into a loss of
   that much life.
