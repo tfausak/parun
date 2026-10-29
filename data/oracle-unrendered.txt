@@ -1044,6 +1044,7 @@ herald-of-war
 heritage-druid
 hermes-overseer-of-elpis
 hero-of-bladehold
+hewed-stone-retainers
 hickory-woodlot
 high-ground
 high-perfect-morcant
@@ -1093,6 +1094,7 @@ illuminor-szeras
 illusionary-armor
 illusionary-mask
 illusionary-servant
+illusory-angel
 imaryll-elfhame-elite
 immediate-action
 imoti-celebrant-of-bounty
@@ -1995,6 +1997,7 @@ skull-skaab
 skullclamp
 skullwinder
 skymarcher-aspirant
+skyshroud-condor
 skyshroud-ranger
 skywinder-drake
 slaughter-pact
