@@ -2196,7 +2196,7 @@ readsApplier re = case re of
   -- price rides the effect. Two such rows are always on the same object and
   -- would offer that object's controller the same price.
   ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.OrTapped _)) -> False
-  -- THE ONE ARM THAT ANSWERS YES. CR 616.1b / 110.2 / 109.5: the rewrite hands
+  -- THE ENTRY ARM THAT ANSWERS YES. CR 616.1b / 110.2 / 109.5: the rewrite hands
   -- the permanent to the candidate's own `controller`, baked when the row was
   -- installed. Two Gather Specimens are one card, so their `effect` values are
   -- identical while their controllers are not, and applying one puts the
@@ -2217,11 +2217,12 @@ readsApplier re = case re of
   -- LEFT, which rides the effect value and so is already inside `choose`'s
   -- comparison rather than needing the applier to be read.
   --
-  -- A COUNTED ceiling (Shield of the Avatar) does read the candidate's Context,
-  -- so two under different controllers prevent different amounts -- but CR
-  -- 615.10's ceilings subtract, and n - x - y floored at 0 is the same event
-  -- whichever applies first, so the order is still no board difference.
-  ReplacementEffect.DamageR {} -> False
+  -- The exception is a COUNTED ceiling (Shield of the Avatar): Event.apply reads
+  -- it against the candidate's Context, whose "you" is the candidate's
+  -- controller. Two under different controllers leave the same damage either
+  -- way, but not the same CR 615.13 preventions: X=3 then X=1 against 2 damage
+  -- is one prevention, the other order two.
+  ReplacementEffect.DamageR (DamageR.MkDamageR _ rewrite _) -> countedCeiling rewrite
   -- CR 701.19a acts on the creature being destroyed and names no player.
   ReplacementEffect.DestructionR _ -> False
   -- The scaling is the effect's, and it rewrites the count on the object the
@@ -2398,6 +2399,25 @@ substitutesAction effect = case effect of
   ReplacementEffect.PlaneswalkR {} -> False
   ReplacementEffect.PhaseR _ -> False
 
+-- Is this a CR 702.64a ceiling whose amount is not a literal, so that
+-- Event.apply evaluates it against the applying candidate's Context? No
+-- wildcard, readsApplier's discipline.
+countedCeiling :: Rewrite -> Bool
+countedCeiling rewrite = case rewrite of
+  DamageRewrite.PreventUpTo (Quantity.Type.Literal _) -> False
+  DamageRewrite.PreventUpTo _ -> True
+  DamageRewrite.PreventAll -> False
+  DamageRewrite.PreventRemovingShieldCounter -> False
+  DamageRewrite.PreventNext _ -> False
+  DamageRewrite.PreventAllBut _ -> False
+  DamageRewrite.SetAmount _ -> False
+  DamageRewrite.Scale _ -> False
+  DamageRewrite.Redirect _ -> False
+  DamageRewrite.RedirectNext _ _ -> False
+  DamageRewrite.RedirectMatching _ -> False
+  DamageRewrite.RunEffects _ -> False
+  DamageRewrite.TurnFaceUp -> False
+
 -- Does applying this effect read the candidate's SOURCE -- the object the row
 -- was minted onto -- so that two rows alike in `effect` leave different boards?
 --
@@ -2488,8 +2508,7 @@ readsSource effect = case effect of
 -- can still differ in `source` and in `controller`, so "equal in `effect`"
 -- implies "every order yields the same board" only for effects that apply the
 -- same way whoever is applying them. readsApplier is the classification that
--- separates those two, and EntryRewrite.UnderSourceControl is the one arm it
--- answers True for.
+-- separates those two.
 --
 -- `lifetime` is folded in UNCONDITIONALLY, and for a reason that has nothing to
 -- do with how an effect applies: `consume` spends the row that applied and

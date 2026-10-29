@@ -120,11 +120,6 @@ data DamageRewrite effect
     -- one recipient in one event, and CR 510.4's two combat damage steps -- the
     -- one way one source hits one creature twice -- are the different TIMES rule
     -- 702.64b's own second sentence lets the ceiling renew at.
-    --
-    -- A Quantity, read afresh at each damage event it applies to (CR 615.1:
-    -- prevention effects "aren't locked in ahead of time"), so Shield of the
-    -- Avatar's "X is the number of creatures you control" is the same arm as
-    -- absorb's literal N.
     PreventUpTo Quantity.Quantity
   | SetAmount Natural.Natural
   | Scale Scaling.Scaling

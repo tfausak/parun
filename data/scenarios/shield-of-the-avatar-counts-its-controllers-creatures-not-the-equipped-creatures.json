@@ -1,0 +1,123 @@
+{
+  "description": "CR 109.5 whole card: Shield of the Avatar counts the creatures its own controller controls, not the equipped creature's controller's",
+  "note": "Bob controls alice's equipped Craw Wurm; alice still controls the Shield and two Grizzly Bears, so X is 2 and bob's Lightning Bolt deals the Wurm 3 - 2 = 1. Counting the Wurm's controller's creatures (bob's, the Wurm alone) would make X 1 and the damage 2.",
+  "board": {
+    "active": "bob",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "bob",
+        "hand": [
+          {
+            "card": "Lightning Bolt",
+            "label": "bolt"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Mountain",
+            "label": "m1"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Craw Wurm",
+            "label": "wurm",
+            "controller": "bob"
+          },
+          {
+            "card": "Shield of the Avatar",
+            "label": "shield",
+            "attached": "wurm"
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears2"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "View": {
+          "of": "Controller",
+          "object": "$wurm",
+          "is": "bob"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Cast": {
+          "object": "$bolt",
+          "targets": [
+            "$wurm"
+          ],
+          "mana": [
+            "$m1"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "Damage": {
+          "object": "$wurm",
+          "damage": 1
+        }
+      }
+    }
+  ]
+}
