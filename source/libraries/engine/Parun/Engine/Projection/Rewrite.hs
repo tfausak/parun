@@ -1742,6 +1742,8 @@ rewriteDrawRewrite pairs rewrite = case rewrite of
   DrawRewrite.OthersMayPayLife _ -> rewrite
   DrawRewrite.FromGraveyardOrLose -> rewrite
   DrawRewrite.RevealUntilChosenKind -> rewrite
+  DrawRewrite.DrawInstead _ -> rewrite
+  DrawRewrite.DiscardThenDrawOrMill -> rewrite
 
 -- CR 612.1 through CR 707.9's "except ..." clause. Exhaustive for
 -- rewriteReplacementEffect's reason.

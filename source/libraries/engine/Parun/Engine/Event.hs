@@ -137,6 +137,7 @@ import qualified Parun.Types.DiscardCause as DiscardCause
 import qualified Parun.Types.Discarded as Discarded
 import qualified Parun.Types.DrawCountR as DrawCountR
 import qualified Parun.Types.DrawCountRewrite as DrawCountRewrite
+import qualified Parun.Types.DrawKind as DrawKind
 import qualified Parun.Types.DrawR as DrawR
 import qualified Parun.Types.DrawReveal as DrawReveal
 import qualified Parun.Types.DrawRewrite as DrawRewrite
@@ -2244,7 +2245,7 @@ applyChosen asOf batch allowances applied prevented exiledBy shuffling split can
   let inert = Replacement.inertPrevention gs candidate event
   outcome <- case inert of
     Just rewrite -> applyInertly candidate rewrite event
-    Nothing -> apply batch candidate event
+    Nothing -> apply batch applied candidate event
   -- CR 615.13: read OUTSIDE `apply`, from the event before and after, so
   -- no arm of that fold has to report anything and none can forget to.
   -- What makes it exact rather than a guess is Replacement.prevents: only a
@@ -2412,8 +2413,12 @@ dealing de = if DamageEvent.amount de == 0 then Nothing else Just (ProposedEvent
 -- the exhaustive case lives -- a new Scaling constructor breaks `scale`'s build
 -- and both arms' transitively, so casing it again inline would not strengthen
 -- anything.
-apply :: Set ObjectId -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent)
-apply batch candidate event =
+--
+-- `applied` is CR 614.5's set of rows already applied to this event, which a
+-- rewrite performing NEW events of the same class in its place hands on to
+-- them, together with the candidate itself.
+apply :: Set ObjectId -> Set CandidateId -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent)
+apply batch applied candidate event =
   case (ReplacementCandidate.effect candidate, event) of
     (ReplacementEffect.ZoneChangeR (ZoneChangeR.MkZoneChangeR _ toDest revealing _ toPosition optional), ProposedEvent.WouldChangeZone zc discarded position resolving) -> do
       -- CR 614.1a's "you may ... instead" (Library of Leng): the row's
@@ -4133,7 +4138,7 @@ apply batch candidate event =
     --
     -- The life goes to the player the EVENT named, which for the producer in the
     -- pool is the same seat as CR 109.5's "you"; see Parun.Types.DrawRewrite.
-    (ReplacementEffect.DrawR (DrawR.MkDrawR _ rewrite), ProposedEvent.WouldDraw pid) -> case rewrite of
+    (ReplacementEffect.DrawR (DrawR.MkDrawR _ _ rewrite), ProposedEvent.WouldDraw pid drawKind) -> case rewrite of
       -- Through resolveLifeGain, CR 614.1's funnel for the gain class: the life
       -- this rewrite substitutes for the draw is a life gain event like any
       -- other, so a LifeGainR row resizes it.
@@ -4204,9 +4209,14 @@ apply batch candidate event =
       -- 614.5 keeps THIS row off it -- which is the card's own ruling that
       -- targeting yourself does nothing and loops nowhere. A row with no
       -- controller leaves the draw skipped, CR 614.6's impossible instruction.
+      --
+      -- The draw's kind carries across, so a turn-based draw handed back to its
+      -- own player is still the normal draw Chains of Mephistopheles exempts:
+      -- Plagiarize's rulings, targeting yourself "will not modify the draw" and
+      -- two Plagiarizes "cancel each other out".
       DrawRewrite.YouDraw -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        pure (ProposedEvent.WouldDraw <$> ReplacementCandidate.controller candidate)
+        pure ((`ProposedEvent.WouldDraw` drawKind) <$> ReplacementCandidate.controller candidate)
       -- CR 614.6: Zur's Weirding's "they reveal it instead. Then any other
       -- player may pay 2 life. If a player does, put that card into its owner's
       -- graveyard. Otherwise, that player draws a card."
@@ -4222,6 +4232,8 @@ apply batch candidate event =
       -- milled (CR 701.17a's instruction is not printed). Unpaid, the event is
       -- left STANDING, Dredge's declining arm: CR 614.5 keeps this row off it, so
       -- a dredger may still replace the draw (the card's own ruling).
+      -- Standing, it keeps its kind: see docs/decisions.md, "Which draw is the
+      -- first one drawn in a draw step".
       DrawRewrite.OthersMayPayLife n -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
         gs <- State.get
@@ -4325,6 +4337,42 @@ apply batch candidate event =
             Monad.forM_ (reverse ordered) $ \oid ->
               changeZoneAttaching Nothing Set.empty oid Zone.Library LibraryPosition.Bottom Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
             pure Nothing
+      -- CR 614.1a: Alhammarret's Archive's "draw two cards instead". The draw is
+      -- cancelled (CR 614.6) and N new draws made by the player the EVENT
+      -- named, each offered to every row but those already applied here (CR
+      -- 614.5): a second Archive doubles each, so two draw four (its ruling).
+      DrawRewrite.DrawInstead n -> do
+        Replacement.consume (ReplacementCandidate.identity candidate)
+        Monad.replicateM_ (Natural.toIntSaturating n) (drawCardSpent (spentWith candidate applied) pid)
+        pure Nothing
+      -- CR 614.1a / 701.9a: Chains of Mephistopheles' "that player discards a
+      -- card instead. If the player discards a card this way, they draw a card.
+      -- If the player doesn't discard a card this way, they mill a card." The
+      -- discarder chooses among two or more cards (CR 701.9b). The inner draw is
+      -- a new one, `DrawInstead`'s CR 614.5 posture: a second Chains applies to
+      -- it, this one does not (its ruling). The mill is Dredge's above.
+      --
+      -- CR 609.1: the discard and the mill are the effect of an ability the
+      -- row's controller controls, never a cost, so Spiritual Focus sees who
+      -- caused the discard.
+      DrawRewrite.DiscardThenDrawOrMill -> do
+        let asEffect = payingOnResolution False . causedBy (ReplacementCandidate.controller candidate)
+        Replacement.consume (ReplacementCandidate.identity candidate)
+        gs <- State.get
+        let held = Game.zoneMembers Zone.Hand pid gs
+        picked <- case held of
+          [] -> pure Nothing
+          [only] -> pure (Just only)
+          _ -> do
+            answer <- Game.choose (Prompt.ChooseDiscard (Decide.deciderFor pid gs) pid held 1)
+            pure (Maybe.listToMaybe (filter (`elem` held) answer <> held))
+        discarded <- asEffect (maybe (pure Seq.empty) (discardReturning DiscardCause.ByEffect pid) picked)
+        if null discarded
+          then asEffect $ do
+            milled <- millFrom pid 1
+            Monad.unless (null milled) (State.modify' (recordEvent (GameEvent.Milled (Milled.MkMilled pid (Seq.fromList milled)))))
+          else drawCardSpent (spentWith candidate applied) pid
+        pure Nothing
     -- Unreachable: `applies` admits DrawR only against WouldDraw.
     (ReplacementEffect.DrawR {}, _) -> pure (Just event)
     -- CR 121.2a with CR 614.6: Alms Collector's "if an opponent would draw two or
@@ -9852,8 +9900,25 @@ drawCard pid = Monad.void (drawCardReturning pid)
 -- "reveal it" does not reach it. A rewrite keeping the drawer is Plagiarize
 -- aimed at its own controller, which its ruling calls no useful effect.
 drawCardReturning :: PlayerId -> Game (Maybe ObjectId)
-drawCardReturning pid = do
-  outcome <- applyReplacements (ProposedEvent.WouldDraw pid)
+drawCardReturning = drawCardSpentReturning DrawKind.Other Set.empty
+
+-- CR 504.1: the active player's turn-based draw in their draw step.
+drawForTurn :: PlayerId -> Game ()
+drawForTurn pid = Monad.void (drawCardSpentReturning (DrawKind.TurnBased pid) Set.empty pid)
+
+-- CR 614.5: the rows a replacement's own new events are not offered to -- those
+-- already applied to the event it replaced, and itself.
+spentWith :: ReplacementCandidate -> Set CandidateId -> Set CandidateId
+spentWith candidate = Set.insert (ReplacementCandidate.identity candidate)
+
+-- A draw made in place of another by a draw replacement (CR 614.5): `spent`
+-- holds the rows that already had their opportunity at the event it replaces.
+drawCardSpent :: Set CandidateId -> PlayerId -> Game ()
+drawCardSpent spent pid = Monad.void (drawCardSpentReturning DrawKind.Other spent pid)
+
+drawCardSpentReturning :: DrawKind.DrawKind -> Set CandidateId -> PlayerId -> Game (Maybe ObjectId)
+drawCardSpentReturning kind spent pid = do
+  (outcome, _, _, _, _, _) <- loop Nothing Set.empty Map.empty spent [] Nothing False Nothing (ProposedEvent.WouldDraw pid kind)
   case outcome >>= Replacement.asDraw of
     -- CR 614.6: a replacement took the draw, so it never happens. The row has
     -- already done its own work; nothing is left to do here and nothing is
@@ -10043,12 +10108,13 @@ discard :: DiscardCause.DiscardCause -> PlayerId -> ObjectId -> Game ()
 discard cause pid oid = Monad.void (discardReturning cause pid oid)
 
 -- CR 118.12: run `body` as the "[do something]" of a resolving "If [a player]
--- does": "the action [do something] is a cost, paid when the spell or ability
--- resolves". Saved and restored, so nothing outside the body is a cost.
-payingOnResolution :: Game a -> Game a
-payingOnResolution body = do
+-- does" (True): "the action [do something] is a cost, paid when the spell or
+-- ability resolves"; or (False) as no such cost, even inside one. Saved and
+-- restored, so the answer reaches nothing outside the body.
+payingOnResolution :: Bool -> Game a -> Game a
+payingOnResolution paying body = do
   saved <- State.gets GameState.payingOnResolution
-  State.modify' (\g -> g {GameState.payingOnResolution = True})
+  State.modify' (\g -> g {GameState.payingOnResolution = paying})
   result <- body
   State.modify' (\g -> g {GameState.payingOnResolution = saved})
   pure result

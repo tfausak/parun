@@ -97,7 +97,14 @@
                             "value": 1
                           }
                         }
-                      },
+                      }
+                    ],
+                    "optionality": {
+                      "type": "Optional"
+                    }
+                  },
+                  {
+                    "effects": [
                       {
                         "type": "Discard",
                         "value": {
@@ -117,8 +124,11 @@
                         }
                       }
                     ],
-                    "optionality": {
-                      "type": "Optional"
+                    "ifTaken": {
+                      "type": "AnyTaken",
+                      "value": [
+                        0
+                      ]
                     }
                   }
                 ]

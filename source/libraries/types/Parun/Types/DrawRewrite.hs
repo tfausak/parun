@@ -64,4 +64,11 @@ data DrawRewrite
     -- the chosen kind", that card to hand and the rest to the bottom in any
     -- order.
     RevealUntilChosenKind
+  | -- | CR 614.1a / 614.5: Alhammarret's Archive's "draw two cards instead",
+    -- each a new draw this row does not apply to.
+    DrawInstead Natural.Natural
+  | -- | CR 614.1a / 701.9a / 701.17a: Chains of Mephistopheles' "discards a card
+    -- instead. If the player discards a card this way, they draw a card. If the
+    -- player doesn't discard a card this way, they mill a card."
+    DiscardThenDrawOrMill
   deriving (Eq, Ord, Show)

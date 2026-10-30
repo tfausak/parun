@@ -92,6 +92,7 @@ import qualified Parun.Types.DieRollR as DieRollR
 import qualified Parun.Types.DieRollRewrite as DieRollRewrite
 import qualified Parun.Types.DrawCountR as DrawCountR
 import qualified Parun.Types.DrawCountRewrite as DrawCountRewrite
+import qualified Parun.Types.DrawKind as DrawKind
 import qualified Parun.Types.DrawR as DrawR
 import qualified Parun.Types.DrawRewrite as DrawRewrite
 import qualified Parun.Types.Effect as Effect
@@ -194,7 +195,7 @@ asZoneChange event = case event of
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
@@ -754,7 +755,7 @@ affected event = case event of
   ProposedEvent.WouldUntap oid -> ([oid], [])
   ProposedEvent.WouldLoseLife _ pid _ -> ([], [pid])
   ProposedEvent.WouldGainLife pid _ -> ([], [pid])
-  ProposedEvent.WouldDraw pid -> ([], [pid])
+  ProposedEvent.WouldDraw pid _ -> ([], [pid])
   ProposedEvent.WouldPerform _ performer pid _ -> (Maybe.maybeToList performer, [pid])
   ProposedEvent.WouldThrow throw -> ([], [Throw.thrower throw])
   ProposedEvent.WouldLoseGame pid -> ([], [pid])
@@ -979,9 +980,14 @@ matchesPrinted viewOf gs event candidate =
         -- Every producer but dredge installs a FLOATING row, whose "you" was baked
         -- when it resolved and survives the source leaving the battlefield --
         -- which Ring of Ma'rûf's own cost makes it do; see relationHolds and #2662.
-        (ReplacementEffect.DrawR pat, ProposedEvent.WouldDraw pid) ->
+        (ReplacementEffect.DrawR pat, ProposedEvent.WouldDraw pid kind) ->
           matchesPlayer gs candidate (DrawR.whose pat) pid
             && stocked gs (DrawR.rewrite pat) pid
+            -- CR 504.1: "the first one they draw in each of their draw steps"
+            -- is the drawer's own turn-based draw, for Alhammarret's Archive
+            -- too; see docs/decisions.md, "Which draw is the first one drawn
+            -- in a draw step".
+            && not (DrawR.exceptFirstInDrawStep pat && kind == DrawKind.TurnBased pid)
         -- CR 121.2a: whose draw INSTRUCTIONS the row watches (CR 109.5's "you"),
         -- and the number it names. Alms Collector's "two or more" is a condition on
         -- the event rather than a rewrite that changes nothing, LifeLossR's third
@@ -1110,6 +1116,8 @@ stocked gs rewrite pid = case rewrite of
   DrawRewrite.OthersMayPayLife _ -> True
   DrawRewrite.FromGraveyardOrLose -> True
   DrawRewrite.RevealUntilChosenKind -> True
+  DrawRewrite.DrawInstead _ -> True
+  DrawRewrite.DiscardThenDrawOrMill -> True
 
 breaches :: GameState -> Maybe PlayerId -> LifeLossRewrite.LifeLossRewrite -> PlayerId -> Natural -> Bool
 breaches gs you rewrite pid n = case rewrite of
@@ -2298,32 +2306,38 @@ readsApplier re = case re of
   -- The inner sum is cased, LifeLossR's discipline above for its reason: a
   -- rewrite that DOES read the applier has to be decided here rather than
   -- inheriting this answer.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.GainLife _)) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.GainLife _)) -> False
   -- The card goes to the player the EVENT named and the filter and the reveal
   -- ride the effect, so GainLife's answer above carries over. The one value this
   -- rewrite reads off the CANDIDATE is `source`, which reaches nothing but the
   -- Filter.Context Event.eligible scans the pool under -- `readsSource`'s
   -- question, not this one.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.FromOutsideTheGame _)) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.FromOutsideTheGame _)) -> False
   -- The miller is the seat the EVENT named and the count is the effect's own
   -- field, so GainLife's answer above carries over. The card returned rides the
   -- CANDIDATE rather than the effect, which is `readsSource`'s question and not
   -- this one.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.Dredge _)) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.Dredge _)) -> False
   -- CR 109.5: "you draw a card" -- the drawer is the row's own controller, so
   -- two rows alike in `effect` and unlike in `you` hand the draw to different
   -- seats. DrawCountRewrite.EachDrawOne's answer, and for its reason.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.YouDraw) -> True
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.YouDraw) -> True
   -- The card revealed is the drawer's and the payers are the players OTHER than
   -- the drawer, both read off the EVENT, and the life is the effect's own field.
   -- GainLife's answer, and for its reason.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.OthersMayPayLife _)) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.OthersMayPayLife _)) -> False
   -- The graveyard searched and the player who loses are both the drawer the
   -- EVENT named. GainLife's answer, and for its reason.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.FromGraveyardOrLose) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.FromGraveyardOrLose) -> False
   -- The library walked, the hand reached and the player asked are all the
   -- drawer the EVENT named. GainLife's answer, and for its reason.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.RevealUntilChosenKind) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.RevealUntilChosenKind) -> False
+  -- The drawer is the one the EVENT named and the count the effect's own field.
+  -- GainLife's answer, and for its reason.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.DrawInstead _)) -> False
+  -- CR 609.1: the discard is the row's controller's effect (Event.causedBy), so
+  -- two rows under different controllers make different players its cause.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.DiscardThenDrawOrMill) -> True
   -- CR 121.2a: "you and that player each draw a card" -- the "you" is the row's
   -- own controller, so two rows alike in `effect` and unlike in `you` hand the
   -- extra card to different seats. LifeLossRewrite.ExileFromTopOfYourLibrary's
@@ -2438,18 +2452,20 @@ countedCeiling rewrite = case rewrite of
 -- source.
 readsSource :: ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card)) -> Bool
 readsSource effect = case effect of
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.Dredge _)) -> True
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.GainLife _)) -> False
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.YouDraw) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.Dredge _)) -> True
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.GainLife _)) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.YouDraw) -> False
   -- The source only names the offer (Prompt.ChooseToPay); what is paid and where
   -- the card goes do not depend on it.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.OthersMayPayLife _)) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.OthersMayPayLife _)) -> False
   -- The source only names the prompt and the queued loss; which cards are offered
   -- and who loses do not depend on it.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.FromGraveyardOrLose) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.FromGraveyardOrLose) -> False
   -- The source only names the prompt; what is revealed and where it goes do
   -- not depend on it.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.RevealUntilChosenKind) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.RevealUntilChosenKind) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.DrawInstead _)) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.DiscardThenDrawOrMill) -> False
   -- CR 616.1: Event.eligible scans the pool under Projection.sourceContext
   -- framed by this candidate's source, so a filter naming any of the source's
   -- characteristics or choices (Filter.readsSourceValues) can offer different
@@ -2462,7 +2478,7 @@ readsSource effect = case effect of
   -- choice, and the answer decides what arrives", "CR 616.1 two Rings' wishes
   -- are not a choice" and "CR 616.1 two wishes sharing a colour with
   -- differently coloured sources are a choice" prove them.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.FromOutsideTheGame payload)) -> Filter.readsSourceValues (FromOutsideTheGame.filter payload)
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.FromOutsideTheGame payload)) -> Filter.readsSourceValues (FromOutsideTheGame.filter payload)
   ReplacementEffect.ZoneChangeR {} -> False
   -- CR 707.5: the object copied is read relative to the source (Essence of the
   -- Wild's "this creature", Infinite Reflection's "enchanted creature"), so
@@ -2730,7 +2746,7 @@ affectedChooserOf gs event = case event of
   -- is the player who would draw the card -- WouldLoseLife's answer, and for its
   -- reason. There is no affected OBJECT: CR 121.1's card is not chosen until the
   -- draw happens.
-  ProposedEvent.WouldDraw pid -> Just pid
+  ProposedEvent.WouldDraw pid _ -> Just pid
   -- CR 616.1: an instruction is addressed to the player it names, so that is
   -- the seat choosing among applicable rows -- where a Rigger assembles it is
   -- the Rigger's controller. data/scenarios/library-order's "CR
@@ -4048,7 +4064,7 @@ asDamageEvent event = case event of
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
@@ -4069,7 +4085,7 @@ asDestruction event = case event of
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
@@ -4092,7 +4108,7 @@ asUntap event = case event of
   ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
@@ -4102,7 +4118,7 @@ asUntap event = case event of
 -- Nothing when a replacement took the event (CR 614.6).
 asDraw :: ProposedEvent -> Maybe PlayerId
 asDraw event = case event of
-  ProposedEvent.WouldDraw pid -> Just pid
+  ProposedEvent.WouldDraw pid _ -> Just pid
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
@@ -4134,7 +4150,7 @@ asPerformed instruction event = case event of
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldChangeZone {} -> Nothing
   ProposedEvent.WouldEnter _ -> Nothing
   ProposedEvent.WouldDealDamage _ -> Nothing
@@ -4158,7 +4174,7 @@ asThrow event = case event of
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldChangeZone {} -> Nothing
   ProposedEvent.WouldEnter _ -> Nothing
   ProposedEvent.WouldDealDamage _ -> Nothing
@@ -4188,7 +4204,7 @@ asCounters event = case event of
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
@@ -4212,7 +4228,7 @@ asPlayerCounters event = case event of
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
@@ -4238,7 +4254,7 @@ asLifeLoss event = case event of
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
   ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
@@ -4261,7 +4277,7 @@ asLifeGain event = case event of
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
   ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
@@ -4282,7 +4298,7 @@ asTokens event = case event of
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
@@ -4490,7 +4506,7 @@ asPhaseBegin event = case event of
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing

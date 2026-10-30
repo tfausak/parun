@@ -4128,7 +4128,7 @@ handReplacementsOf keywords = [madnessDiscardExile | not (null (madnessCosts key
 graveyardReplacementsOf :: Set Keyword -> [ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card))]
 graveyardReplacementsOf keywords =
   let rowFor keyword = case keyword of
-        Keyword.Dredge n -> Just (ReplacementEffect.DrawR (DrawR.MkDrawR (ControllerRelation.Related PlayerRelation.You) (DrawRewrite.Dredge n)))
+        Keyword.Dredge n -> Just (ReplacementEffect.DrawR (DrawR.MkDrawR (ControllerRelation.Related PlayerRelation.You) False (DrawRewrite.Dredge n)))
         _ -> Nothing
    in Maybe.mapMaybe rowFor (Set.toAscList keywords)
 

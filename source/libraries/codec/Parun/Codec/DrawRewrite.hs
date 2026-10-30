@@ -16,7 +16,9 @@ codec =
       Arm.nullary "YouDraw" DrawRewrite.YouDraw,
       Arm.payload "OthersMayPayLife" Common.natural DrawRewrite.OthersMayPayLife (\x -> case x of DrawRewrite.OthersMayPayLife y -> Just y; _ -> Nothing),
       Arm.nullary "FromGraveyardOrLose" DrawRewrite.FromGraveyardOrLose,
-      Arm.nullary "RevealUntilChosenKind" DrawRewrite.RevealUntilChosenKind
+      Arm.nullary "RevealUntilChosenKind" DrawRewrite.RevealUntilChosenKind,
+      Arm.payload "DrawInstead" Common.natural DrawRewrite.DrawInstead (\x -> case x of DrawRewrite.DrawInstead y -> Just y; _ -> Nothing),
+      Arm.nullary "DiscardThenDrawOrMill" DrawRewrite.DiscardThenDrawOrMill
     ]
 
 tagOf :: DrawRewrite.DrawRewrite -> String
@@ -28,3 +30,5 @@ tagOf x = case x of
   DrawRewrite.OthersMayPayLife {} -> "OthersMayPayLife"
   DrawRewrite.FromGraveyardOrLose {} -> "FromGraveyardOrLose"
   DrawRewrite.RevealUntilChosenKind {} -> "RevealUntilChosenKind"
+  DrawRewrite.DrawInstead {} -> "DrawInstead"
+  DrawRewrite.DiscardThenDrawOrMill {} -> "DiscardThenDrawOrMill"

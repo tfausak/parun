@@ -357,8 +357,9 @@ controllerAtTriggerSpec s registry =
 -- bob controls the Baral throughout, so CR 109.5 fixes its "you" as bob (CR
 -- 603.3a).
 --
--- Baral's reflexive "if you do" is one Optional mode over both instructions
--- (#487), so `Exercises` below draws AND discards.
+-- Baral's "you may draw a card. If you do, discard a card" is an Optional draw
+-- clause and a discard clause gated on it (`ifTaken`), so `Exercises` below
+-- draws AND discards.
 counterTriggerSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 counterTriggerSpec s registry =
   Spec.describe s "CounterTrigger" $ do

@@ -58,6 +58,7 @@ aladdin
 alchemists-gambit
 alchemists-retrieval
 alchemists-vial
+alhammarrets-archive
 all-in-good-time
 all-is-dust
 alluring-scent
@@ -364,6 +365,7 @@ celestine-reef
 celestine-the-living-saint
 centaur-of-attention
 cephalid-constable
+chains-of-mephistopheles
 challenger-troll
 champion-lancer
 champion-of-the-weird

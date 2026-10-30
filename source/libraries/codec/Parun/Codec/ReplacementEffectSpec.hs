@@ -231,7 +231,7 @@ spec s =
           Common.assertCodec
             s
             codec
-            (ReplacementEffect.DrawR (DrawR.MkDrawR (ControllerRelation.Related PlayerRelation.You) (DrawRewrite.GainLife 5)))
+            (ReplacementEffect.DrawR (DrawR.MkDrawR (ControllerRelation.Related PlayerRelation.You) False (DrawRewrite.GainLife 5)))
             " {\"type\":\"DrawR\",\"value\":{\"whose\":{\"type\":\"You\"},\"rewrite\":{\"type\":\"GainLife\",\"value\":5}}} "
         -- CR 121.2a: Alms Collector, the one DrawCountR producer.
         Spec.it s "DrawCountR (Alms Collector)" $

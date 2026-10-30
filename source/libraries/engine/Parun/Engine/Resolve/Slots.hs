@@ -1763,7 +1763,7 @@ replacementRowReads re = case re of
   ReplacementEffect.LifeGainR {} -> ([], [])
   -- The pattern is one ControllerRelation; a Filter can only ride the REWRITE, and
   -- drawRewriteReads below is what reports it.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ rewrite) -> drawRewriteReads rewrite
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ rewrite) -> drawRewriteReads rewrite
   -- A DrawCountR is one ControllerRelation, one threshold and one nullary rewrite.
   -- DrawR's answer, and for its reason.
   ReplacementEffect.DrawCountR {} -> ([], [])
@@ -1902,6 +1902,8 @@ drawRewriteReads rewrite = case rewrite of
   DrawRewrite.OthersMayPayLife _ -> ([], [])
   DrawRewrite.FromGraveyardOrLose -> ([], [])
   DrawRewrite.RevealUntilChosenKind -> ([], [])
+  DrawRewrite.DrawInstead _ -> ([], [])
+  DrawRewrite.DiscardThenDrawOrMill -> ([], [])
 
 -- replacementRowReads as a slot map. Arity One for every FILTER read, a
 -- Filter.IsBound being a membership test rather than a target slot; the QUANTITY

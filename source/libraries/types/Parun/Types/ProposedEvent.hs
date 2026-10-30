@@ -8,6 +8,7 @@ import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DestructionCause as DestructionCause
 import qualified Parun.Types.DiscardCause as DiscardCause
+import qualified Parun.Types.DrawKind as DrawKind
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LifeLossCause as LifeLossCause
@@ -173,7 +174,7 @@ data ProposedEvent
     -- WouldLoseLife's currency and for its reason.
     WouldGainLife PlayerId.PlayerId Natural.Natural
   | -- | CR 121.1 / 614.11: a player would draw a card. Raised by
-    -- Parun.Engine.Event.drawCardReturning, the one funnel CR 121.1's turn-based
+    -- Parun.Engine.Event.drawCardSpentReturning, the one funnel CR 121.1's turn-based
     -- draw, an opening hand and an Effect.Draw all go through -- and raised
     -- BEFORE the library is looked at, which is rule 614.11's "applied even if no
     -- cards could be drawn because there are no cards in the affected player's
@@ -184,10 +185,10 @@ data ProposedEvent
     -- INSTRUCTION is WouldPerform's DrawCards below, a different event class that
     -- CR 616.1g settles first.
     --
-    -- The PlayerId and nothing else: rule 121.1's action has no source, no amount
-    -- and no destination a replacement could rewrite, and the card it would move
-    -- is not chosen until the draw happens.
-    WouldDraw PlayerId.PlayerId
+    -- The PlayerId and which draw it is: rule 121.1's action has no source, no
+    -- amount and no destination a replacement could rewrite, and the card it
+    -- would move is not chosen until the draw happens.
+    WouldDraw PlayerId.PlayerId DrawKind.DrawKind
   | -- | CR 614.1a: this player would be instructed to carry out this
     -- Parun.Types.PlayerInstruction this many times; each constructor of that
     -- type names its rule and the funnel that raises it.

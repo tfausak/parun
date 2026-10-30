@@ -1145,8 +1145,8 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
         (red, g2) = S.addPermanent piker S.alice twice
         (blue, g3) = S.addPermanent merfolk S.alice g2
         sharing row = case ActiveReplacement.effect row of
-          ReplacementEffect.DrawR (DrawR.MkDrawR w (DrawRewrite.FromOutsideTheGame p)) ->
-            row {ActiveReplacement.effect = ReplacementEffect.DrawR (DrawR.MkDrawR w (DrawRewrite.FromOutsideTheGame p {FromOutsideTheGame.filter = Filter.Shares Trait.Color Anchor.Source}))}
+          ReplacementEffect.DrawR (DrawR.MkDrawR w e (DrawRewrite.FromOutsideTheGame p)) ->
+            row {ActiveReplacement.effect = ReplacementEffect.DrawR (DrawR.MkDrawR w e (DrawRewrite.FromOutsideTheGame p {FromOutsideTheGame.filter = Filter.Shares Trait.Color Anchor.Source}))}
           _ -> row
         board = g3 {GameState.replacements = zipWith (\src row -> (sharing row) {ActiveReplacement.source = src}) [red, blue] (GameState.replacements g3)}
         drawn preferred = S.runPure (preferringRow preferred) board (Event.drawCard S.alice)
