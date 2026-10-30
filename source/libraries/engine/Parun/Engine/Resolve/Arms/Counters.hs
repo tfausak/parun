@@ -51,7 +51,7 @@ import qualified Parun.Engine.Quantity as Quantity
 import qualified Parun.Engine.Recruit as Recruit
 import qualified Parun.Engine.Replacement as Replacement
 import qualified Parun.Engine.Resolve.Common as Common
-import Parun.Engine.Resolve.Slots (battlefieldMatching, effectContext, effectViewOf, legalOne, matchingFromAmong, objectRefObjects, playerRefPlayers, slotBindings)
+import Parun.Engine.Resolve.Slots (battlefieldMatching, effectContext, effectViewOf, legalOne, objectRefObjects, playerRefPlayers, slotBindings)
 import qualified Parun.Engine.Ring as Ring
 import qualified Parun.Engine.Sba as Sba
 import qualified Parun.Engine.Soulbond as Soulbond
@@ -89,6 +89,7 @@ import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Expiry as Expiry.Type
 import qualified Parun.Types.ExtraPhase as ExtraPhase
 import qualified Parun.Types.ExtraTurn as ExtraTurn
+import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.FromOutsideTheGame as FromOutsideTheGame
 import qualified Parun.Types.GainControl as GainControl
@@ -390,29 +391,26 @@ chooseCardName :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Reci
 chooseCardName resolving source controller legal (ChooseCardName.MkChooseCardName ref restriction among) = do
   gs <- State.get
   -- CR 201.4a: a slot confines the offer to the names of its cards the
-  -- restriction admits (Alhammarret, High Arbiter). A list the engine
-  -- holds, so the prompt's restriction becomes that list, it is asked only for
-  -- two or more, and the answer is filtered rather than trusted -- CR 707.13's
-  -- offerNamedCopy posture. The cards are in the game, so no lookup is owed.
-  -- data/scenarios' Alhammarret scenarios prove it.
+  -- restriction admits (Alhammarret, High Arbiter), Common.chooseNameAmong's
+  -- list. Every face's name, each judged by that face alone off the printed
+  -- card, since CR 201.4a reads Oracle text: CR 201.4b/d and 715.5, so an
+  -- Adventure's name is offered and a land back face is not. data/scenarios'
+  -- Alhammarret scenarios prove it.
   confined <- Monad.forM among $ \slot -> do
     members <- Common.fromAmongMembers legal resolving legal slot
     g <- State.get
-    let matching = matchingFromAmong legal resolving controller source g restriction (Common.stillPresent g members)
-    pure (Set.toList (foldMap (`Projection.namesOf` g) matching))
+    let context = effectContext g resolving controller source legal (slotBindings resolving g)
+        nameable card = [Face.name face | face <- NonEmpty.toList (Card.Type.faces card), Filter.matches context (Projection.viewOfCard face) restriction]
+    pure (Set.toList (Set.fromList (foldMap nameable (Maybe.mapMaybe (`Game.cardOf` g) (Common.stillPresent g members)))))
   -- CR 101.4b: each chooser is told the names the choosers before them chose.
   -- Conundrum Sphinx drives three choosers through this arm, but no test reads
   -- the payload here; Null Chamber's entry twin in Parun.Engine.Event is the
   -- proven one.
   let ask made chooser = do
         g <- State.get
-        let asked offer = Game.choose (Prompt.ChooseCardName (Decide.deciderFor chooser g) chooser source offer made)
         picked <- case confined of
-          Nothing -> fmap Just (asked restriction >>= Game.lookUpChosenName)
-          -- CR 609.3: no name to choose chooses none.
-          Just [] -> pure Nothing
-          Just [only] -> pure (Just only)
-          Just names -> fmap (\answer -> List.find (== answer) names) (asked (Filter.Type.Or (fmap Filter.Type.HasName names)))
+          Nothing -> fmap Just (Game.choose (Prompt.ChooseCardName (Decide.deciderFor chooser g) chooser source restriction made) >>= Game.lookUpChosenName)
+          Just names -> Common.chooseNameAmong chooser source made names
         pure (maybe made (\name -> made Seq.|> (chooser, name)) picked)
   picked <- fmap (Map.fromList . Foldable.toList) (Monad.foldM ask Seq.empty (Common.apnapDecidersOf ref legal resolving source controller gs))
   -- CR 101.3: a reference naming NOBODY leaves nothing to do, so the write is

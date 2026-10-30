@@ -90,7 +90,6 @@ import qualified Parun.Types.Face as Face
 import qualified Parun.Types.FaceDownReason as FaceDownReason
 import qualified Parun.Types.FaceDownState as FaceDownState
 import qualified Parun.Types.Facing as Facing
-import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.ForEach as ForEach
 import qualified Parun.Types.ForEachNumber as ForEachNumber
 import Parun.Types.Game (Game)
@@ -734,20 +733,13 @@ offerCastArm offerCast runSubgame resolving source controller legal chosen (Offe
 -- CR 400.7's new object starts empty. The name is spent whether or not the
 -- copy is cast, and with none left the arm does nothing (rulings, 2021-06-18).
 --
--- ChooseCardName, CR 201.4's prompt, with the unchosen names as CR 201.4a's
--- restriction; asked only for two or more. Filtered, not trusted: an answer
--- outside them chooses nothing.
+-- The unchosen names are Common.chooseNameAmong's list.
 offerNamedCopy :: (Game Result -> Filter.Context -> PlayerId -> PrintingId.PrintingId -> CastOffer.CastOffer -> Game ()) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> NonEmpty.NonEmpty CardName.CardName -> Game ()
 offerNamedCopy offerOutsideCopy runSubgame resolving source controller legal names = do
   gs <- State.get
   let spent = Map.findWithDefault Set.empty source (GameState.namedCopyChoices gs)
       remaining = NonEmpty.filter (`Set.notMember` spent) names
-  picked <- case remaining of
-    [] -> pure Nothing
-    [only] -> pure (Just only)
-    _ -> do
-      answer <- Game.choose (Prompt.ChooseCardName (Decide.deciderFor controller gs) controller source (Filter.Type.Or (fmap Filter.Type.HasName remaining)) Seq.empty)
-      pure (List.find (== answer) remaining)
+  picked <- Common.chooseNameAmong controller source Seq.empty remaining
   Monad.forM_ picked $ \name -> do
     State.modify' $ \g -> g {GameState.namedCopyChoices = Map.insertWith Set.union source (Set.singleton name) (GameState.namedCopyChoices g)}
     found <- Game.lookUpCard name
