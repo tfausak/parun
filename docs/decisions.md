@@ -682,6 +682,23 @@ Entries are ordered by the first rule each cites.
   after a removal that had wiped its grant" and its face-up twin.
 - **Issue**: PR #1607.
 
+## Whether a minted object an entry redirect takes changes zones
+
+- **Question**: Hallowed Moonlight exiles a creature token, or a card
+  conjured onto the battlefield, that would enter (ruling 2015-06-22). Is its
+  arrival in exile a zone change? Stonebinder's Familiar triggers on one: under
+  Moonlight, it would see Furgul, Quag Nurturer's conjured Slimy Dualleech.
+- **Rules**: CR 614.6, 111.7, 603.6; no rule names conjure; CR of 2026-08-07.
+- **Decision**: No zone change, so the Familiar does not trigger. The object
+  is put straight into the redirect's zone, as "Whether conjuring a card is a
+  zone change" (#2809) puts a conjured card; a token there ceases to exist by
+  CR 111.7.
+- **Rejected**: A zone change, which would announce a departure from a zone
+  the object was never in, as #2809's entry rejects.
+- **Site**: `Parun.Engine.Event.placeDiverted`. Proved by the scenario
+  hallowed-moonlight-exiles-a-card-conjured-onto-the-battlefield.
+- **Issue**: #5764.
+
 ## Whether a phased-out permanent a subgame takes leaves visibly
 
 - **Question**: A wish brings a phased-out permanent into a Shahrazad

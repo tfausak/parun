@@ -605,8 +605,8 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
               ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing
             }
         g3 = S.addReplacement active g2
-        asked = answersFor S.identityAnswer g3 (Event.runEntry Set.empty piker)
-        after = S.runPure S.identityAnswer g3 (Event.runEntry Set.empty piker)
+        asked = answersFor S.identityAnswer g3 (Event.runEntry False Set.empty piker)
+        after = S.runPure S.identityAnswer g3 (Event.runEntry False Set.empty piker)
     Spec.assertBool s (not (wasAskedForEntryOption asked)) "no ChooseEntryOption was raised"
     Spec.assertEqWith s "the sole option applied anyway" (Projection.powerOf piker after) (Just 3)
   -- #79: resolveDestruction answers with the SETTLED object, not a Bool. The

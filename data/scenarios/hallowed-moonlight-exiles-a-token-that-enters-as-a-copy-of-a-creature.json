@@ -1,0 +1,36 @@
+{
+  "description": "CR 614.12 / 616.1c: Tamiyo, Compleated Sage makes a token copy of Copy Enchantment under Hallowed Moonlight; it enters as a copy of Nyxborn Brute, so it is judged a creature and exiled",
+  "note": "The copy is chosen before the redirect is judged. Judged as a plain Copy Enchantment, the token would be no creature and enter as a second Brute.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Tamiyo, Compleated Sage", "label": "tamiyo", "counters": [{ "key": { "type": "Loyalty" }, "value": 5 }] },
+          { "card": "Nyxborn Brute", "label": "brute" },
+          { "card": "Plains", "label": "p1" },
+          { "card": "Plains", "label": "p2" }
+        ],
+        "graveyard": [{ "card": "Copy Enchantment", "label": "copy" }],
+        "hand": [{ "card": "Hallowed Moonlight", "label": "moonlight" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$moonlight", "mana": ["$p1", "$p2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$tamiyo", "ability": 1, "x": 3, "targets": ["$copy"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseCopyTarget": "$brute" } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Nyxborn Brute", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Copy Enchantment", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Copy Enchantment", "count": 0 } } }
+  ]
+}
