@@ -593,7 +593,11 @@ exchangeCardZones resolving source controller legal chosen (ExchangeCardZones.Mk
 --
 -- The slot binds the library incarnations (CR 400.7), for a later count:
 -- Winds of Change's "draws that many", each player's own -- proved by
--- Parun.MassEffectSpec's Winds of Change group.
+-- Parun.MassEffectSpec's Winds of Change group. One per object moved, the
+-- move's leading arrival, since that count is of objects: CR 712.21e and The
+-- Great Aurora's and Warp World's rulings count a melded or merged permanent
+-- once -- proved by the scenario
+-- the-great-aurora-counts-a-melded-permanent-once.
 shuffleIntoLibrary :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ShuffleIntoLibrary.ShuffleIntoLibrary -> Game ()
 shuffleIntoLibrary resolving source controller legal (ShuffleIntoLibrary.MkShuffleIntoLibrary named refs mSlot) = do
   gs <- State.get
@@ -604,7 +608,7 @@ shuffleIntoLibrary resolving source controller legal (ShuffleIntoLibrary.MkShuff
         Set.fromList (Maybe.mapMaybe (\target -> fmap Object.owner (Game.lookupObject target gs)) targets)
           <> Set.fromList (foldMap (playerRefPlayers legal resolving source controller gs) named)
   arrivals <- Event.changeZonesTogether (fmap (\target -> (target, Zone.Library)) targets)
-  Common.bindObjects resolving mSlot (concatMap Foldable.toList arrivals)
+  Common.bindObjects resolving mSlot (concatMap (Foldable.toList . Seq.take 1) arrivals)
   -- APNAP (CR 608.2f), which is what makes the ORDER of the Prompt.Shuffle calls
   -- a fact about the rules rather than about PlayerId's Ord.
   Monad.forM_ (filter (`Set.member` owners) (Game.apnapOrder gs)) Event.shuffleLibrary
