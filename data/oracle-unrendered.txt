@@ -119,6 +119,7 @@ arcane-laboratory
 arcane-teachings
 arcbound-overseer
 arcbound-wanderer
+archangel-of-tithes
 archangel-of-thune
 archfiend-of-depravity
 archfiends-vessel

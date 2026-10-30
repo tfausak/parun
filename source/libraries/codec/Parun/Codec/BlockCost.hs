@@ -3,6 +3,7 @@
 module Parun.Codec.BlockCost where
 
 import qualified Parun.Codec.Affected as Affected
+import qualified Parun.Codec.Condition as Condition
 import qualified Parun.Codec.Filter as Filter
 import qualified Parun.Codec.Keyword as Keyword
 import qualified Parun.Codec.PerCreature as PerCreature
@@ -18,15 +19,17 @@ import qualified Parun.Types.BlockCost as BlockCost
 --
 -- No "scope" key, which is where this codec is not its twin's mirror:
 -- Parun.Types.BlockCost's header says why. "attackers" is absent for a cost on
--- every block.
+-- every block, and "while" for an ungated one.
 codec :: Codec.Codec BlockCost.BlockCost
 codec = Fields.object $ do
   subject <- Fields.required "subject" Affected.codec BlockCost.subject
   perBlocker <- Fields.required "perBlocker" PerCreature.codec BlockCost.perBlocker
   attackers <- Fields.defaulted "attackers" Nothing (Common.maybe (Filter.codec Keyword.codec)) BlockCost.attackers
+  while <- Fields.defaulted "while" Nothing (Common.maybe Condition.codec) BlockCost.while
   pure
     BlockCost.MkBlockCost
       { BlockCost.subject = subject,
         BlockCost.perBlocker = perBlocker,
-        BlockCost.attackers = attackers
+        BlockCost.attackers = attackers,
+        BlockCost.while = while
       }

@@ -757,7 +757,7 @@ attachedToBoundNames asking x = case x of
 
 attackCostNames :: (Monoid r) => Asking r -> AttackCost.AttackCost -> r
 attackCostNames asking x = case x of
-  AttackCost.MkAttackCost subject perAttacker _scope -> affectedNames asking subject <> perCreatureNames asking perAttacker
+  AttackCost.MkAttackCost subject perAttacker _scope while -> affectedNames asking subject <> perCreatureNames asking perAttacker <> foldMap (conditionNames asking) while
 
 attackLimitUnlessNames :: (Monoid r) => Asking r -> AttackLimitUnless.AttackLimitUnless -> r
 attackLimitUnlessNames asking x = case x of
@@ -802,7 +802,7 @@ blightNames asking x = case x of
 
 blockCostNames :: (Monoid r) => Asking r -> BlockCost.BlockCost -> r
 blockCostNames asking x = case x of
-  BlockCost.MkBlockCost subject perBlocker attackers -> affectedNames asking subject <> perCreatureNames asking perBlocker <> foldMap (filterNames asking) attackers
+  BlockCost.MkBlockCost subject perBlocker attackers while -> affectedNames asking subject <> perCreatureNames asking perBlocker <> foldMap (filterNames asking) attackers <> foldMap (conditionNames asking) while
 
 blockPermissionNames :: (Monoid r) => Asking r -> BlockPermission.BlockPermission -> r
 blockPermissionNames asking x = case x of

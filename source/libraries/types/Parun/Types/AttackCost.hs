@@ -2,6 +2,7 @@ module Parun.Types.AttackCost where
 
 import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.AttackCostScope as AttackCostScope
+import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.PerCreature as PerCreature
 
 -- | CR 508.1c / CR 508.1h: one printed COST TO ATTACK (Ghostly Prison). CR 508.1c
@@ -70,6 +71,10 @@ data AttackCost = MkAttackCost
     -- the source's controller. Ghostly Prison's family protects that player
     -- alone; Sphere of Safety's protects their planeswalkers too. See
     -- Parun.Types.AttackCostScope.
-    scope :: AttackCostScope.AttackCostScope
+    scope :: AttackCostScope.AttackCostScope,
+    -- | CR 611.3a's "as long as" -- Archangel of Tithes' "as long as this
+    -- creature is untapped". Nothing is the ungated cost. Parun.Types.AttackRequirement's
+    -- `while`, with its polarity: a gate that holds puts the cost in force.
+    while :: Maybe Condition.Condition
   }
   deriving (Eq, Ord, Show)
