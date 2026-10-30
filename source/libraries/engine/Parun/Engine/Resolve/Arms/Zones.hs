@@ -765,17 +765,18 @@ offerNotedCopy offerOutsideCopy runSubgame resolving source controller legal off
   Monad.forM_ (Map.lookup source (GameState.notedCards gs)) $ \printingId ->
     offerOutsideCopy runSubgame (effectContext gs resolving controller source legal (slotBindings resolving gs)) controller printingId offer
 
--- CR 601.3: write the standing permission onto every object the ObjectRef names,
--- for the player the PlayerRef names and the stated duration.
---
--- NOT gated on the object being in exile: CR 601.3's permissions are not
--- zone-scoped, so a zone test would be the rules core reading the effect.
+-- CR 601.3: write the standing permission onto every object the ObjectRef names
+-- that lies in the opcode's zone, for the player the PlayerRef names and the
+-- stated duration. The zone is the payload's, so a card a CR 614 replacement
+-- sent elsewhere (Synthetic Exile Diversion) was not "exiled this way" and gets
+-- nothing; proven by
+-- cr-601-3-act-on-impulse-under-synthetic-exile-diversion-grants-nothing-in-the-graveyard.
 grantPlayFromExile :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> GrantPlayFromExile.GrantPlayFromExile -> Game ()
-grantPlayFromExile resolving source controller legal (GrantPlayFromExile.MkGrantPlayFromExile duration player ref spending alternativeCost condition verb increase landEnters upTo) =
+grantPlayFromExile resolving source controller legal (GrantPlayFromExile.MkGrantPlayFromExile duration player ref spending alternativeCost condition verb increase landEnters upTo zone) =
   State.modify' $ \gs ->
     -- The sweep every ObjectRef-taking opcode shares: a player recipient, an
     -- illegal slot (CR 608.2b) and a set that matched nothing all arrive empty.
-    case objectRefObjects legal resolving controller source gs ref of
+    case filter (inZone gs) (objectRefObjects legal resolving controller source gs ref) of
       [] -> gs
       targets -> case playerRefPlayers legal resolving source controller gs player of
         -- CR 715.3d's "that player" is ONE seat and
@@ -815,6 +816,8 @@ grantPlayFromExile resolving source controller legal (GrantPlayFromExile.MkGrant
                 grant o = o {Object.playPermission = Just permission}
              in gs {GameState.objects = foldr (Map.adjust grant) (GameState.objects gs) targets}
         _ -> gs
+  where
+    inZone gs oid = maybe False ((== zone) . Object.zone) (Map.lookup oid (GameState.objects gs))
 
 -- CR 406.3: write the look permission onto every object the ObjectRef names,
 -- as CR 109.5's "you", plus CR 702.75a's ExileLooker.TheExiler where the
@@ -822,10 +825,9 @@ grantPlayFromExile resolving source controller legal (GrantPlayFromExile.MkGrant
 -- player it instructed to look at the cards before exiling one face down is
 -- rule 406.3's continuing looker whatever happens to the permanent afterwards.
 --
--- NOT gated on the object being in exile, nor on its being face down,
--- Effect.GrantPlayFromExile's reason one rule over: a stamp that landed
--- anywhere else is inert, since Parun.Engine.Exile.mayLookAt reads it only
--- where CR 406.3's default does not already answer yes.
+-- NOT gated on the object being in exile, nor on its being face down: a stamp
+-- that landed anywhere else is inert, since Parun.Engine.Exile.mayLookAt reads
+-- it only where CR 406.3's default does not already answer yes.
 grantLookAtExiled :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> GrantLookAtExiled.GrantLookAtExiled -> Game ()
 grantLookAtExiled resolving source controller legal grant =
   State.modify' $ \gs ->
@@ -841,10 +843,8 @@ grantLookAtExiled resolving source controller legal grant =
 -- 116.2k's special action say the same thing by construction. The victims are
 -- enumerated ONCE (CR 608.2f).
 --
--- NOT gated on the object being in exile, Effect.GrantPlayFromExile's reason one
--- rule over: every producer supplies the exile in the same clause, so a zone
--- test would gate a branch nothing can reach. A stamp that landed elsewhere is
--- inert anyway -- Cast.permitsCastPlotted is asked only of exile's members, and
+-- NOT gated on the object being in exile: a stamp that landed elsewhere is
+-- inert -- Cast.permitsCastPlotted is asked only of exile's members, and
 -- CR 400.7's new incarnation carries no stamp across a zone change.
 makePlotted :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ObjectRef -> Game ()
 makePlotted resolving source controller legal ref =

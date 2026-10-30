@@ -272,6 +272,9 @@
                           },
                           "verb": {
                             "type": "Cast"
+                          },
+                          "zone": {
+                            "type": "Graveyard"
                           }
                         }
                       },

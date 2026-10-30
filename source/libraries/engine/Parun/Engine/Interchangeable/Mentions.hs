@@ -1788,7 +1788,7 @@ grantLookAtExiledNames asking x = case x of
 
 grantPlayFromExileNames :: (Monoid r) => Asking r -> GrantPlayFromExile.GrantPlayFromExile -> r
 grantPlayFromExileNames asking x = case x of
-  GrantPlayFromExile.MkGrantPlayFromExile duration player ref _spending _alternativeCost condition _verb _increase _landEnters _upTo -> durationNames asking duration <> playerRefNames asking player <> objectRefNames asking ref <> foldMap (conditionNames asking) condition
+  GrantPlayFromExile.MkGrantPlayFromExile duration player ref _spending _alternativeCost condition _verb _increase _landEnters _upTo _zone -> durationNames asking duration <> playerRefNames asking player <> objectRefNames asking ref <> foldMap (conditionNames asking) condition
 
 -- A granted ability's slots are its OWN: each read resolves against the
 -- bindings of the stack object it becomes or of the object it is granted to,
