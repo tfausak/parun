@@ -1,5 +1,5 @@
 {
-  "description": "CR 509.1d/611.3a an ATTACKING Archangel of Tithes taxes a block {1}",
+  "description": "CR 509.1d/611.3a an ATTACKING Archangel of Tithes taxes a block of another attacker {1}",
   "board": {
     "active": "alice",
     "step": "BeginningOfCombat",
@@ -46,7 +46,8 @@
       "player": "alice",
       "do": {
         "Attack": [
-          "$archangel"
+          "$archangel",
+          "$serra"
         ]
       }
     },
@@ -57,7 +58,7 @@
       "do": {
         "Block": {
           "$spider": [
-            "$archangel"
+            "$serra"
           ]
         }
       }
@@ -112,7 +113,7 @@
       "player": "alice",
       "check": {
         "Blockers": {
-          "attacker": "$archangel",
+          "attacker": "$serra",
           "blockers": [
             "$spider"
           ]
