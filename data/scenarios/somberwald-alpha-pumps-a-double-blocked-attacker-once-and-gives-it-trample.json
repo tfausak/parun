@@ -44,7 +44,7 @@
     "step": "DeclareAttackers"
   },
   "description": "Somberwald Alpha pumps a double-blocked attacker once and gives it trample",
-  "note": "CR 509.3c: two Pikers block the Wurm, one became-blocked event, so the Alpha's bystander trigger makes it 7/5, not 8/6. CR 702.19b: given trample, it assigns 1 to each Piker and the other 5 to bob, for 15. The assignment is the first reading of the pump: it must divide exactly the Wurm's power (CR 510.1c), so a 6/4 or an 8/6 Wurm fails it.",
+  "note": "CR 509.3c: two Pikers block the Wurm, one became-blocked event, so the Alpha's bystander trigger makes it 7/5, not 8/6. CR 702.19b: given trample, it assigns 1 to each Piker and the other 5 to bob, for 15. The assignment is the first reading of the pump: it must divide exactly the Wurm's power (CR 510.1a), so a 6/4 or an 8/6 Wurm fails it.",
   "timeline": [
     {
       "do": {
