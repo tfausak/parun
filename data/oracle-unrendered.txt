@@ -2314,6 +2314,7 @@ the-enigma-jewel-locus-of-enlightenment
 the-filigree-sylex
 the-foretold-soldier
 the-fugitive-doctor
+the-great-aurora
 the-hive
 the-karst-enchanted
 the-kenriths-royal-funeral
