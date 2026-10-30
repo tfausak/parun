@@ -787,6 +787,9 @@ matchesPrinted viewOf gs event candidate =
         -- naming a CAUSE admits only a move made as CR 609.1's effect of a
         -- spell or ability, its controller read live (Game.causeNow) since the
         -- move has not happened yet -- the one Moved.causedBy will record.
+        --
+        -- Not implemented: reading a card bound for the battlefield as it would
+        -- exist there (CR 614.12); a minted object already is (#5796).
         (ReplacementEffect.ZoneChangeR (ZoneChangeR.MkZoneChangeR pat _ _ _ _ _), ProposedEvent.WouldChangeZone zc discarded _ resolving) ->
           maybe True (== ZoneChange.to zc) (ZoneChangePattern.whenDestination pat)
             && maybe True ((== discarded) . Just) (ZoneChangePattern.whenDiscarded pat)

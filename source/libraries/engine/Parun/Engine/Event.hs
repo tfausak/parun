@@ -1430,9 +1430,10 @@ conjureOntoBattlefield controller card copied count tapped = do
       printingId <- State.state (Game.intern (Printing.ofCard card))
       ids <- Monad.replicateM (Natural.toIntSaturating count) (State.state (mintCard controller (Just controller) printingId Zone.Battlefield LibraryPosition.defaultValue tapped))
       Monad.forM_ copied (\snapshot -> Monad.mapM_ (`markDuplicate` snapshot) ids)
-      let siblingsOf oid = Set.delete oid (Set.fromList ids)
-      entered <- Monad.filterM (\oid -> Maybe.isNothing <$> runEntry (siblingsOf oid) oid) ids
-      Monad.mapM_ unmake (filter (`List.notElem` entered) ids)
+      bound <- Monad.filterM (entersOrDiverts (Set.fromList ids)) ids
+      let siblingsOf oid = Set.delete oid (Set.fromList bound)
+      entered <- Monad.filterM (\oid -> Maybe.isNothing <$> runEntry (siblingsOf oid) oid) bound
+      Monad.mapM_ unmake (filter (`List.notElem` entered) bound)
       settleMinted (GameState.nextTimestamp gs) entered
       pure (Seq.fromList entered)
 
@@ -9115,12 +9116,51 @@ createTokens controller card copy n tapped entering attached marks = do
               -- counters whenever they were written. What CR 614.12 does rest on is
               -- `placeObject` above having materialized every token first, which is what
               -- `siblingsOf` then hands each entry loop.
-              let siblingsOf oid = Set.delete oid (Set.fromList ids)
-              Monad.mapM_ (\oid -> Monad.mapM_ (uncurry (addEnteringCounters oid)) (Map.toAscList entering)) ids
-              entered <- Monad.filterM (\oid -> Maybe.isNothing <$> runEntry (siblingsOf oid) oid) ids
-              Monad.mapM_ unmake (filter (`List.notElem` entered) ids)
+              bound <- Monad.filterM (entersOrDiverts (Set.fromList ids)) ids
+              let siblingsOf oid = Set.delete oid (Set.fromList bound)
+              Monad.mapM_ (\oid -> Monad.mapM_ (uncurry (addEnteringCounters oid)) (Map.toAscList entering)) bound
+              entered <- Monad.filterM (\oid -> Maybe.isNothing <$> runEntry (siblingsOf oid) oid) bound
+              Monad.mapM_ unmake (filter (`List.notElem` entered) bound)
               settleMinted (GameState.nextTimestamp unminted) entered
               pure entered
+
+-- CR 614.1a / 614.12: offer a minted object's arrival on the battlefield to the
+-- zone-change redirects bound there (Hallowed Moonlight's "exile it instead",
+-- whose ruling of 2015-06-22 reaches a creature token), as the move funnel offers
+-- a card's. Answers whether it is still bound for the battlefield; otherwise it
+-- is put straight into the redirect's zone, with no zone change logged, as a
+-- conjured card is (docs/decisions.md, "Whether a token an entry redirect takes
+-- was created"), and a token there ceases to exist by CR 111.7.
+--
+-- Asked of the MINTED object, so the redirect's filter reads it as it would
+-- exist on the battlefield (CR 614.12). `given` holds every object of the
+-- creation, the subject included: none is on the battlefield yet, so none of
+-- their rows applies (CR 614.12's sibling rule, and a card moving onto the
+-- battlefield is likewise not yet there to offer its own).
+entersOrDiverts :: Set ObjectId -> ObjectId -> Game Bool
+entersOrDiverts given oid = do
+  -- runEntry's batch and span, for its reasons: what entered earlier in one
+  -- action is a sibling too, the siblings' static abilities are not yet in
+  -- force, and the subject is not counted.
+  saved <- State.get
+  let batch = given <> foldMap (Set.fromList . Foldable.toList . EnteringTogether.arrivals) (GameState.enteringTogether saved)
+  State.modify' (\gs -> gs {GameState.enteringBeside = Set.delete oid batch, GameState.enteringSubjects = Set.insert oid (GameState.enteringSubjects saved)})
+  outcome <- applyReplacementsIn Nothing batch (ProposedEvent.WouldChangeZone (ZoneChange.MkZoneChange oid oid Zone.Battlefield Zone.Battlefield) Nothing LibraryPosition.defaultValue False)
+  State.modify' (\gs -> gs {GameState.enteringBeside = GameState.enteringBeside saved, GameState.enteringSubjects = GameState.enteringSubjects saved})
+  case outcome of
+    Just (ProposedEvent.WouldChangeZone zc _ position _)
+      | ZoneChange.to zc == Zone.Battlefield -> pure True
+      | otherwise -> do
+          State.modify' $ \g -> case Game.lookupObject oid g of
+            Nothing -> g
+            Just obj ->
+              let g1 = Game.removeFromZones oid g
+                  arrived = (Object.newIncarnation obj) {Object.zone = ZoneChange.to zc}
+               in Game.insertIntoZone (ZoneChange.to zc) position (Object.owner obj) oid g1 {GameState.objects = Map.insert oid arrived (GameState.objects g1)}
+          pure False
+    _ -> do
+      unmake oid
+      pure False
 
 -- CR 614.1a on the two roads that MINT onto the battlefield: an object whose
 -- EntryRewrite.SacrificeToEnter went unpaid, or whose ExileFromGraveyard with

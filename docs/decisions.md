@@ -958,3 +958,24 @@ Entries are ordered by the first rule each cites.
 - **Site**: `Parun.Engine.Cost.withFlashPermission`. Proved by the scenario
   harbinger-of-the-tides-cast-in-a-main-phase-may-pay-two-more.
 - **Issue**: #5765.
+
+## Whether a token an entry redirect takes was created
+
+- **Question**: Hallowed Moonlight exiles a creature token that would enter
+  (ruling 2015-06-22). Was the token created, so that a "whenever you create"
+  trigger (Staff of the Storyteller) sees it, and is its arrival in exile a
+  zone change?
+- **Rules**: CR 111.7, 614.6, 614.12, 701.7a, 701.7b; CR of 2026-08-07. No
+  ruling on either.
+- **Decision**: It was created, and its arrival is no zone change. CR 701.7b
+  orders replacements to the creation before those to the entry, so the
+  creation stands and only the entry is replaced. The token, or a conjured
+  card, is put straight into the redirect's zone, as a conjured card is
+  ("Whether conjuring a card is a zone change").
+- **Rejected**: Nothing created, by CR 614.6 and 701.7a's "put onto the
+  battlefield": it unmakes what CR 701.7b's creation replacements already
+  did. A zone change: it needs a `from` zone the token never had.
+- **Site**: `Parun.Engine.Event.entersOrDiverts`. Proved by the scenarios
+  hallowed-moonlight-exiles-each-creature-entering-uncast-tokens-included and
+  hallowed-moonlight-exiles-a-card-conjured-onto-the-battlefield.
+- **Issue**: #5764.
