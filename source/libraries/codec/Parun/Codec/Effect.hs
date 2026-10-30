@@ -28,6 +28,7 @@ import qualified Parun.Codec.BindAmount as BindAmount
 import qualified Parun.Codec.Blight as Blight
 import qualified Parun.Codec.CardName as CardName
 import qualified Parun.Codec.CastOffer as CastOffer
+import qualified Parun.Codec.ChangeTargets as ChangeTargets
 import qualified Parun.Codec.ChangeText as ChangeText
 import qualified Parun.Codec.ChooseCardName as ChooseCardName
 import qualified Parun.Codec.ChooseNumber as ChooseNumber
@@ -320,7 +321,7 @@ codec cardCodec abilityCodec =
           Arm.payload "RepeatIf" repeatIfCodec Effect.RepeatIf (\x -> case x of Effect.RepeatIf y -> Just y; _ -> Nothing),
           Arm.payload "Heal" ObjectRef.codec Effect.Heal (\x -> case x of Effect.Heal y -> Just y; _ -> Nothing),
           Arm.payload "ChooseNewTargets" ObjectRef.codec Effect.ChooseNewTargets (\x -> case x of Effect.ChooseNewTargets y -> Just y; _ -> Nothing),
-          Arm.payload "ChangeTargets" ObjectRef.codec Effect.ChangeTargets (\x -> case x of Effect.ChangeTargets y -> Just y; _ -> Nothing)
+          Arm.payload "ChangeTargets" ChangeTargets.codec Effect.ChangeTargets (\x -> case x of Effect.ChangeTargets y -> Just y; _ -> Nothing)
         ]
 
 tagOf :: Effect.Effect card ability -> String

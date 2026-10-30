@@ -37,6 +37,7 @@ import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CastObligation as CastObligation
 import qualified Parun.Types.CastOffer as CastOffer.Type
 import qualified Parun.Types.CastRepetition as CastRepetition
+import qualified Parun.Types.ChangeTargets as ChangeTargets
 import qualified Parun.Types.ChangeText as ChangeText
 import qualified Parun.Types.ChooseCardName as ChooseCardName
 import qualified Parun.Types.ChooseNumber as ChooseNumber
@@ -2578,14 +2579,21 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       fromJson
       (Effect.ChooseNewTargets (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "spell"))))
       " {\"type\":\"ChooseNewTargets\",\"value\":{\"type\":\"InSlot\",\"value\":\"spell\"}} "
-  -- CR 115.7a: Deflection's "change the target of target spell".
-  Spec.it s "ChangeTargets" $
+  -- CR 115.7a / 115.7b: Deflection's "change the target of target spell", and
+  -- Mizzium Meddler's "change a target ... to this creature".
+  Spec.it s "ChangeTargets round-trips with and without a named new target" $ do
     Common.assertJsonCodec
       s
       toJson
       fromJson
-      (Effect.ChangeTargets (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "spell"))))
-      " {\"type\":\"ChangeTargets\",\"value\":{\"type\":\"InSlot\",\"value\":\"spell\"}} "
+      (Effect.ChangeTargets (ChangeTargets.MkChangeTargets (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "spell"))) Nothing))
+      " {\"type\":\"ChangeTargets\",\"value\":{\"objects\":{\"type\":\"InSlot\",\"value\":\"spell\"}}} "
+    Common.assertJsonCodec
+      s
+      toJson
+      fromJson
+      (Effect.ChangeTargets (ChangeTargets.MkChangeTargets (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "spell"))) (Just (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "self"))))))
+      " {\"type\":\"ChangeTargets\",\"value\":{\"objects\":{\"type\":\"InSlot\",\"value\":\"spell\"},\"onto\":{\"type\":\"InSlot\",\"value\":\"self\"}}} "
   -- CR 701.36a: nullary, rule 701.36a fixing the quality, the count and the
   -- chooser, leaving an author nothing to write.
   Spec.it s "Populate" $

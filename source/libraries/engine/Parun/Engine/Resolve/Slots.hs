@@ -60,6 +60,7 @@ import qualified Parun.Types.Binding as Binding.Type
 import qualified Parun.Types.Blight as Blight.Type
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CastRepetition as CastRepetition
+import qualified Parun.Types.ChangeTargets as ChangeTargets
 import qualified Parun.Types.ChangeText as ChangeText
 import qualified Parun.Types.ChooseCardName as ChooseCardName
 import qualified Parun.Types.ChooseNumber as ChooseNumber
@@ -948,7 +949,7 @@ effectObjectRefs effect = case effect of
   Effect.RepeatIf {} -> []
   Effect.Heal ref -> [ref]
   Effect.ChooseNewTargets ref -> [ref]
-  Effect.ChangeTargets ref -> [ref]
+  Effect.ChangeTargets x -> ChangeTargets.objects x : Maybe.maybeToList (ChangeTargets.onto x)
 
 -- Every PlayerRef this ONE effect holds in a field of its own: not the ones
 -- nested in an ObjectRef it carries (objectRefPlayerRefs), not the ones nested

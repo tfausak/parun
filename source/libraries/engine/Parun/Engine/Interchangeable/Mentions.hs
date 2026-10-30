@@ -102,6 +102,7 @@ import qualified Parun.Types.CastRepetition as CastRepetition
 import qualified Parun.Types.CastingPermission as CastingPermission
 import qualified Parun.Types.CastingRestriction as CastingRestriction
 import qualified Parun.Types.CausedBy as CausedBy
+import qualified Parun.Types.ChangeTargets as ChangeTargets
 import qualified Parun.Types.ChangeText as ChangeText
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
 import qualified Parun.Types.ChooseCardName as ChooseCardName
@@ -1557,7 +1558,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.RepeatIf repeatIf -> repeatIfNames asking (effectNames asking onCard onAbility) repeatIf
   Effect.Heal objectRef -> objectRefNames asking objectRef
   Effect.ChooseNewTargets objectRef -> objectRefNames asking objectRef
-  Effect.ChangeTargets objectRef -> objectRefNames asking objectRef
+  Effect.ChangeTargets changeTargets -> changeTargetsNames asking changeTargets
 
 emergeNames :: (Monoid r) => Asking r -> (keyword -> r) -> Emerge.Emerge keyword -> r
 emergeNames asking onKeyword x = case x of
@@ -2086,6 +2087,10 @@ madnessCostNames :: (Monoid r) => Asking r -> (keyword -> r) -> MadnessCost.Madn
 madnessCostNames asking onKeyword x = case x of
   MadnessCost.Stated cost -> costNames asking onKeyword cost
   MadnessCost.OwnManaCost -> mempty
+
+changeTargetsNames :: (Monoid r) => Asking r -> ChangeTargets.ChangeTargets -> r
+changeTargetsNames asking x = case x of
+  ChangeTargets.MkChangeTargets objects onto -> objectRefNames asking objects <> foldMap (objectRefNames asking) onto
 
 makeForetoldNames :: (Monoid r) => Asking r -> MakeForetold.MakeForetold -> r
 makeForetoldNames asking x = case x of

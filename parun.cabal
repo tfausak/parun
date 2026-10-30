@@ -334,6 +334,7 @@ library codec
     Parun.Codec.CausedBy
     Parun.Codec.ChangeMode
     Parun.Codec.ChangeModeSpec
+    Parun.Codec.ChangeTargets
     Parun.Codec.ChangeText
     Parun.Codec.ChangeTextSpec
     Parun.Codec.ChangeWord
@@ -2457,6 +2458,7 @@ library types
     Parun.Types.CastRepetition
     Parun.Types.CausedBy
     Parun.Types.ChangeMode
+    Parun.Types.ChangeTargets
     Parun.Types.ChangeText
     Parun.Types.ChangeWord
     Parun.Types.CharacteristicPT

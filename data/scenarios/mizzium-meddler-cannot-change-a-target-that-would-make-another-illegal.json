@@ -1,0 +1,162 @@
+{
+  "board": {
+    "active": "bob",
+    "seats": [
+      {
+        "hand": [
+          {
+            "card": "Mizzium Meddler",
+            "label": "meddler"
+          }
+        ],
+        "manaPool": "UUU",
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Goblin Piker",
+            "counters": [
+              {
+                "key": {
+                  "type": "PlusOnePlusOne"
+                },
+                "value": 2
+              }
+            ],
+            "label": "piker"
+          },
+          {
+            "card": "Hill Giant",
+            "label": "giant"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Bioshift",
+            "label": "bioshift"
+          }
+        ],
+        "manaPool": "G",
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 115.7e Mizzium Meddler cannot become either Bioshift target, each change making the other illegal",
+  "final": [
+    {
+      "Counters": {
+        "count": 2,
+        "kind": {
+          "type": "PlusOnePlusOne"
+        },
+        "object": "$giant"
+      }
+    },
+    {
+      "Counters": {
+        "count": 0,
+        "kind": {
+          "type": "PlusOnePlusOne"
+        },
+        "object": "$piker"
+      }
+    },
+    {
+      "View": {
+        "is": [],
+        "of": "Stack"
+      }
+    }
+  ],
+  "note": "Bioshift's second target must share its first's controller, and the Meddler is alice's: either swap leaves the set illegal, so neither is offered and the counters move as cast.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "object": "$bioshift",
+          "targetsBySlot": {
+            "from": [
+              "$piker"
+            ],
+            "to": [
+              "$giant"
+            ]
+          }
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "object": "$meddler"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseTargets": {
+          "redirected": [
+            "Bioshift"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseOptional": {
+          "type": "Exercises"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseMovedCounters",
+          "with": [
+            [
+              {
+                "type": "PlusOnePlusOne"
+              },
+              2
+            ]
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

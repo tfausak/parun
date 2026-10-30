@@ -68,6 +68,7 @@ import qualified Parun.Types.BecomeCopy as BecomeCopy
 import qualified Parun.Types.Binding as Binding.Type
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.ChangeTargets as ChangeTargets
 import qualified Parun.Types.ClassLevel as ClassLevel
 import qualified Parun.Types.ClassLevelChange as ClassLevelChange
 import qualified Parun.Types.Conjure as Conjure
@@ -841,9 +842,13 @@ copyStackObject resolving source controller legal (CopyStackObject.MkCopyStackOb
 chooseNewTargets :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ObjectRef -> Game ()
 chooseNewTargets resolving source controller legal = Common.retargetEach (Common.chooseNewTargetsFor False source controller) legal resolving controller source
 
--- CR 115.7a, the same walk with the stricter re-aim.
-changeTargets :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ObjectRef -> Game ()
-changeTargets resolving source controller legal = Common.retargetEach (Common.changeTargetsFor source controller) legal resolving controller source
+-- CR 115.7a / 115.7b, the same walk with the stricter re-aim. `onto` is read
+-- once, against the resolving effect's own bindings.
+changeTargets :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ChangeTargets.ChangeTargets -> Game ()
+changeTargets resolving source controller legal (ChangeTargets.MkChangeTargets ref onto) = do
+  gs <- State.get
+  let named = fmap (Set.fromList . objectRefObjects legal resolving controller source gs) onto
+  Common.retargetEach (Common.changeTargetsFor named source controller) legal resolving controller source ref
 
 armDelayedTrigger :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ArmDelayedTrigger.ArmDelayedTrigger (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
 armDelayedTrigger resolving source controller legal arm@(ArmDelayedTrigger.MkArmDelayedTrigger name onset duration _) = do

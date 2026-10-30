@@ -2799,8 +2799,10 @@ retargetEach reaim legal resolving controller source ref = do
 -- the final set) leaves every target unchanged. Parun.ExileSpec's "CR 115.7a a
 -- change of target that draws a card the spell refuses leaves the old target,
 -- so the spell resolves" proves the refused draw.
-changeTargetsFor :: ObjectId -> PlayerId -> PlayerId -> ObjectId -> Game ()
-changeTargetsFor source chooser controller oid = do
+--
+-- `onto`: CR 115.7b's change of one target to a named object, below.
+changeTargetsFor :: Maybe (Set ObjectId) -> ObjectId -> PlayerId -> PlayerId -> ObjectId -> Game ()
+changeTargetsFor onto source chooser controller oid = do
   gs <- State.get
   Monad.forM_ (Game.lookupObject oid gs) $ \obj -> do
     let slots = stackTargetSlots obj oid gs
@@ -2809,33 +2811,73 @@ changeTargetsFor source chooser controller oid = do
         aimer = Maybe.fromMaybe oid (Game.abilitySourceOf oid gs)
         fresh = Target.legalSets (resolvingKind oid gs) (resolvingAbilityName oid gs) (Just controller) False seed aimer slots gs
         another old = Set.filter (\r -> not (any (Recipient.sameReferent r) old))
-        -- CR 406.4's draws capped at the slot's count, chooseNewTargetsFor's
-        -- cap. A REGRESSION FENCE: no test drives a pile through this road.
-        offer slot old = (Natural.length old, Target.piledOffer (Just (Natural.length old)) (Just chooser) gs (Target.inChooserRange source chooser gs (another old (Map.findWithDefault Set.empty slot fresh))))
-        asked = Map.mapWithKey offer current
-        enough (n, offered) = Natural.length offered >= n
-        settled (n, offered) = Natural.length offered == n
-    Monad.when (not (Map.null asked) && all enough asked) $ do
-      answer <-
-        if all settled asked
-          then pure (fmap snd asked)
-          else Game.choose (Prompt.ChooseTargets (Decide.deciderFor chooser gs) chooser oid asked)
-      let admits (n, offered) picked = Natural.length picked == n && Set.isSubsetOf picked offered
-          wellFormed =
-            Map.keysSet answer == Map.keysSet asked
-              && and (Map.elems (Map.intersectionWith admits asked answer))
-      Monad.when wellFormed $ do
-        -- Not implemented: revealing the card CR 406.4's draw picked (#5424).
-        drawn <- traverse (fmap fst . Target.drawFromPiles (Just chooser)) answer
-        let stands slot picked =
-              Set.isSubsetOf picked (Map.findWithDefault Set.empty slot fresh)
-                && another (Map.findWithDefault Set.empty slot current) picked == picked
-            coherent = all Set.null (Target.jointlyIllegal (resolvingKind oid gs) (resolvingAbilityName oid gs) (Just controller) seed aimer slots drawn gs)
-        Monad.when (and (Map.elems (Map.mapWithKey stands drawn)) && coherent) $ do
-          rebound <- reaimDivisions chooser oid (Object.bindings obj) drawn
+        rebind picked = do
+          rebound <- reaimDivisions chooser oid (Object.bindings obj) picked
           Monad.forM_ rebound $ \bindings -> do
             let write o = o {Object.bindings = Map.union bindings (Object.bindings o)}
             State.modify' (\g -> g {GameState.objects = Map.adjust write oid (GameState.objects g)})
+    case onto of
+      -- CR 115.7b: each OPTION is the current targets with one of them
+      -- swapped for a recipient `named` refers to, legal now in that slot and
+      -- not already among its targets. Which target is the chooser's (Mizzium
+      -- Meddler's ruling, 2015-06-22). None means nothing changes: CR 115.7a's
+      -- "only to another legal target", which Meddler gone from the battlefield
+      -- is not.
+      --
+      -- CR 115.7e judges the final set, and the joint check refuses only what
+      -- the current set did not already refuse, chooseNewTargetsFor's reading
+      -- of CR 115.7d's "must not cause any unchanged targets to become
+      -- illegal" -- the ruling's "would make other targets illegal".
+      --
+      -- One option is taken unasked, the "may" being the clause's (CR 603.5).
+      -- Several raise Prompt.ChooseTargets offering each slot its targets plus
+      -- its swaps, and an answer that is not an option leaves every target
+      -- unchanged, reject-not-repair.
+      Just named -> do
+        let refused = Target.jointlyIllegal (resolvingKind oid gs) (resolvingAbilityName oid gs) (Just controller) seed aimer slots
+            already = refused current gs
+            causes picked = or (Map.mapWithKey (\slot r -> not (Set.isSubsetOf r (Map.findWithDefault Set.empty slot already))) (refused picked gs))
+            swapsIn slot olds = Set.filter (any (`Set.member` named) . Recipient.objectOf) (Target.inChooserRange source chooser gs (another olds (Map.findWithDefault Set.empty slot fresh)))
+            options =
+              Set.toList . Set.fromList $
+                [ picked
+                | (slot, olds) <- Map.toList current,
+                  new <- Set.toList (swapsIn slot olds),
+                  old <- Set.toList olds,
+                  let picked = Map.insert slot (Set.insert new (Set.delete old olds)) current,
+                  not (causes picked)
+                ]
+            asked = Map.mapWithKey (\slot olds -> (Natural.length olds, Set.union olds (swapsIn slot olds))) current
+        case options of
+          [] -> pure ()
+          [only] -> rebind only
+          _ -> do
+            answer <- Game.choose (Prompt.ChooseTargets (Decide.deciderFor chooser gs) chooser oid asked)
+            Monad.when (answer `elem` options) (rebind answer)
+      Nothing -> do
+        let -- CR 406.4's draws capped at the slot's count, chooseNewTargetsFor's
+            -- cap. A REGRESSION FENCE: no test drives a pile through this road.
+            offer slot old = (Natural.length old, Target.piledOffer (Just (Natural.length old)) (Just chooser) gs (Target.inChooserRange source chooser gs (another old (Map.findWithDefault Set.empty slot fresh))))
+            asked = Map.mapWithKey offer current
+            enough (n, offered) = Natural.length offered >= n
+            settled (n, offered) = Natural.length offered == n
+        Monad.when (not (Map.null asked) && all enough asked) $ do
+          answer <-
+            if all settled asked
+              then pure (fmap snd asked)
+              else Game.choose (Prompt.ChooseTargets (Decide.deciderFor chooser gs) chooser oid asked)
+          let admits (n, offered) picked = Natural.length picked == n && Set.isSubsetOf picked offered
+              wellFormed =
+                Map.keysSet answer == Map.keysSet asked
+                  && and (Map.elems (Map.intersectionWith admits asked answer))
+          Monad.when wellFormed $ do
+            -- Not implemented: revealing the card CR 406.4's draw picked (#5424).
+            drawn <- traverse (fmap fst . Target.drawFromPiles (Just chooser)) answer
+            let stands slot picked =
+                  Set.isSubsetOf picked (Map.findWithDefault Set.empty slot fresh)
+                    && another (Map.findWithDefault Set.empty slot current) picked == picked
+                coherent = all Set.null (Target.jointlyIllegal (resolvingKind oid gs) (resolvingAbilityName oid gs) (Just controller) seed aimer slots drawn gs)
+            Monad.when (and (Map.elems (Map.mapWithKey stands drawn)) && coherent) (rebind drawn)
 
 -- CR 115.7f: each re-aimed slot's new binding, "the original division can't be
 -- changed": a target left standing keeps its part, and the parts of the

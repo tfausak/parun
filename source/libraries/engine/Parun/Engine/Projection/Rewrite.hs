@@ -66,6 +66,7 @@ import qualified Parun.Types.CastOffer as CastOffer
 import qualified Parun.Types.CastRepetition as CastRepetition
 import qualified Parun.Types.CastingPermission as CastingPermission
 import qualified Parun.Types.CausedBy as CausedBy
+import qualified Parun.Types.ChangeTargets as ChangeTargets
 import qualified Parun.Types.ChangeText as ChangeText
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
 import qualified Parun.Types.ChooseCardName as ChooseCardName
@@ -1142,7 +1143,7 @@ rewriteEffect pairs effect = case effect of
     Effect.RepeatIf (RepeatIf.MkRepeatIf (fmap (rewriteEffect pairs) process) (rewriteCondition pairs condition) (fmap (rewriteEffect pairs) ifHolds))
   Effect.Heal ref -> Effect.Heal (rewriteObjectRef pairs ref)
   Effect.ChooseNewTargets ref -> Effect.ChooseNewTargets (rewriteObjectRef pairs ref)
-  Effect.ChangeTargets ref -> Effect.ChangeTargets (rewriteObjectRef pairs ref)
+  Effect.ChangeTargets (ChangeTargets.MkChangeTargets ref onto) -> Effect.ChangeTargets (ChangeTargets.MkChangeTargets (rewriteObjectRef pairs ref) (fmap (rewriteObjectRef pairs) onto))
 
 -- Swaps applied in order, as one table: each word any swap names, paired with
 -- the word the whole sequence leaves it as, and dropped where that is itself.
