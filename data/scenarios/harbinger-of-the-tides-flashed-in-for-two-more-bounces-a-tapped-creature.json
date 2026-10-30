@@ -1,0 +1,124 @@
+{
+  "description": "CR 601.3c / 601.2f Harbinger of the Tides cast on an opponent's turn for {2} more returns his tapped creature as it enters",
+  "note": "Alice casts the Harbinger in bob's upkeep from a pool of exactly four blue; the paired board shows two blue is not enough there.",
+  "board": {
+    "active": "bob",
+    "step": "Upkeep",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "manaPool": "UUUU",
+        "hand": [
+          {
+            "card": "Harbinger of the Tides",
+            "label": "harbinger"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears",
+            "tapped": true
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$harbinger"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": {
+        "ChooseTargets": {
+          "target": [
+            "$bears"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": {
+        "ChooseOptional": {
+          "type": "Exercises"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Harbinger of the Tides",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Hand",
+          "card": "Grizzly Bears",
+          "count": 1
+        }
+      }
+    }
+  ]
+}

@@ -4,7 +4,10 @@ import qualified Parun.Codec.CastingPermission as CastingPermission
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.CastingPermission as CastingPermission
+import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.KeywordFamily as KeywordFamily
+import qualified Parun.Types.ManaCost as ManaCost
+import qualified Parun.Types.ManaSymbol as ManaSymbol
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.CastingPermission" $ do
@@ -26,5 +29,17 @@ spec s = Spec.describe s "Parun.Codec.CastingPermission" $ do
       CastingPermission.codec
       (CastingPermission.CastFromGraveyard (Just KeywordFamily.Blitz))
       " {\"type\":\"CastFromGraveyard\",\"value\":{\"type\":\"Blitz\"}} "
+  Spec.it s "CastAsThoughItHadFlash unconditioned and free" $
+    Common.assertCodec
+      s
+      CastingPermission.codec
+      (CastingPermission.CastAsThoughItHadFlash Nothing Nothing)
+      " {\"type\":\"CastAsThoughItHadFlash\",\"value\":{}} "
+  Spec.it s "CastAsThoughItHadFlash under a condition for a cost increase" $
+    Common.assertCodec
+      s
+      CastingPermission.codec
+      (CastingPermission.CastAsThoughItHadFlash (Just (Condition.Any [])) (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])))
+      " {\"type\":\"CastAsThoughItHadFlash\",\"value\":{\"condition\":{\"type\":\"Any\",\"value\":[]},\"costIncrease\":[{\"type\":\"Generic\",\"value\":2}]}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s CastingPermission.codec

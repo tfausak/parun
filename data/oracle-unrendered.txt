@@ -929,6 +929,7 @@ gerrard
 geyser-leaper
 ghirapur-aether-grid
 ghitu-encampment
+ghitu-fire
 ghostly-prison
 ghoulraiser
 giant-albatross
@@ -1042,6 +1043,7 @@ hanged-executioner
 hanweir-battlements
 hanweir-garrison
 happy-hogan-bodyguard
+harbinger-of-the-tides
 harbor-serpent
 hardened-berserker
 hardened-scales
@@ -1916,6 +1918,7 @@ rootpath-purifier
 rootwater-matriarch
 rope
 rot-curse-rakshasa
+rout
 rowdy-crew
 rowen
 ruhan-of-the-fomori
@@ -2242,6 +2245,7 @@ sutured-ghoul
 swamp-mosquito
 swans-of-bryn-argoll
 swerve
+swift-reckoning
 swift-silence
 switcheroo
 swooping-protector

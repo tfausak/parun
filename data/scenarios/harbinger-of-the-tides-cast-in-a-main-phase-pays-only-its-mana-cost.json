@@ -1,0 +1,116 @@
+{
+  "description": "CR 601.3c / 601.2b Harbinger of the Tides cast at sorcery timing may skip the {2} more",
+  "note": "From four blue, alice announces the printed {U}{U} over the {U}{U}{2} the permission offers, and the two left cast a second Harbinger. No tapped creature, so neither trigger has a target.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "manaPool": "UUUU",
+        "hand": [
+          {
+            "card": "Harbinger of the Tides",
+            "label": "harbinger"
+          },
+          {
+            "card": "Harbinger of the Tides",
+            "label": "second"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$harbinger",
+          "cost": [
+            {
+              "type": "OfType",
+              "value": {
+                "type": "Colored",
+                "value": {
+                  "type": "Blue"
+                }
+              }
+            },
+            {
+              "type": "OfType",
+              "value": {
+                "type": "Colored",
+                "value": {
+                  "type": "Blue"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$second"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Harbinger of the Tides",
+          "count": 2
+        }
+      }
+    }
+  ]
+}

@@ -943,3 +943,18 @@ Entries are ordered by the first rule each cites.
   creature" (Spirit Mascot) and "Hushwing Gryff silences a reanimated card's
   own leaves-your-graveyard trigger" (Oglor's grant).
 - **Issue**: #5713.
+
+## A paid flash permission is offered at sorcery timing too
+
+- **Question**: Harbinger of the Tides lets itself be cast "as though it had
+  flash if you pay {2} more". At a time its caster could cast a sorcery
+  anyway, may they still use the permission and pay the {2}?
+- **Rules**: CR 601.2b, 601.2f, 601.3c, 702.8a; CR of 2026-08-07. No ruling.
+- **Decision**: Yes. The permission's cost is a candidate beside the printed
+  one wherever the card may be cast, and the caster picks.
+- **Rejected**: Withholding it where the card's own window is open. Nothing
+  in the card or CR 601.3c confines the permission to the moments it is
+  needed, and the engine does not make the caster's choice.
+- **Site**: `Parun.Engine.Cost.withFlashPermission`. Proved by the scenario
+  harbinger-of-the-tides-cast-in-a-main-phase-pays-only-its-mana-cost.
+- **Issue**: #5765.

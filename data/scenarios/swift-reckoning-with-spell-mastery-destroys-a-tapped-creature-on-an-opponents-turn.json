@@ -1,0 +1,94 @@
+{
+  "description": "CR 601.3d Swift Reckoning with two instant and sorcery cards in its caster's graveyard is cast in an opponent's upkeep",
+  "note": "Lightning Bolt and Lava Axe meet spell mastery; the paired board with one of them refuses the cast.",
+  "board": {
+    "active": "bob",
+    "step": "Upkeep",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "manaPool": "WW",
+        "hand": [
+          {
+            "card": "Swift Reckoning",
+            "label": "reckoning"
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Lightning Bolt"
+          },
+          {
+            "card": "Lava Axe"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears",
+            "tapped": true
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$reckoning",
+          "targets": [
+            "$bears"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Graveyard",
+          "card": "Grizzly Bears",
+          "count": 1
+        }
+      }
+    }
+  ]
+}
