@@ -249,7 +249,7 @@ spec s registry = Spec.describe s "Adventure" $ do
       Nothing -> Spec.assertFailure s "expected the adventurer card in exile"
       Just exiledId -> do
         Spec.assertBool s (Cast.castable S.alice exiledId shieldbreakerName Facing.FaceUp after) "CR 715.3d: the creature is castable from exile"
-        Spec.assertBool s (Maybe.isJust (Object.playableFromExile =<< Game.lookupObject exiledId after)) "the permission is on the card"
+        Spec.assertBool s (Maybe.isJust (Object.playPermission =<< Game.lookupObject exiledId after)) "the permission is on the card"
     Spec.assertEqWith s "CR 616.1e: the spell's controller was asked, once" asked [S.alice]
   -- The same board and the same answerer for the ONE answer: taking Rest in Peace
   -- first exiles the card with no CR 715.3d permission on it -- the outcome parun
@@ -268,7 +268,7 @@ spec s registry = Spec.describe s "Adventure" $ do
       Nothing -> Spec.assertFailure s "expected the adventurer card in exile"
       Just exiledId -> do
         Spec.assertBool s (not (Cast.castable S.alice exiledId shieldbreakerName Facing.FaceUp after)) "CR 614.6: the creature is not castable from this exile"
-        Spec.assertEqWith s "and no permission was written onto the card" (fmap Object.playableFromExile (Game.lookupObject exiledId after)) (Just Nothing)
+        Spec.assertEqWith s "and no permission was written onto the card" (fmap Object.playPermission (Game.lookupObject exiledId after)) (Just Nothing)
     Spec.assertEqWith s "CR 616.1e: alice was asked here as well" asked [S.alice]
   -- CR 715.3d's second and third sentences, which are one question asked of the
   -- same exiled card: "For as long as that card remains exiled, that player may
@@ -354,7 +354,7 @@ spec s registry = Spec.describe s "Adventure" $ do
     -- is there so the Adventure half is not gated on targeting either.
     let (withArtifact, _) = S.handOne mountain (snd (S.addPermanent bonesplitter S.alice (S.landsInPlay mountain 3)))
         (exiledId, gs) = S.addExiledCard shieldbreaker S.alice withArtifact
-    Spec.assertEqWith s "no permission on the card" (fmap Object.playableFromExile (Game.lookupObject exiledId gs)) (Just Nothing)
+    Spec.assertEqWith s "no permission on the card" (fmap Object.playPermission (Game.lookupObject exiledId gs)) (Just Nothing)
     Spec.assertBool s (not (Cast.castable S.alice exiledId shieldbreakerName Facing.FaceUp gs)) "the creature is not castable"
     Spec.assertBool s (not (Cast.castable S.alice exiledId battleDisplayName Facing.FaceUp gs)) "nor is the Adventure"
   -- The same ruling's other half: an Adventure spell that leaves the stack "by

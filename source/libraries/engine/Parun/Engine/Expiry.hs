@@ -304,7 +304,7 @@ follows = (== Expiry.Perpetual)
 -- bound needs no upper half.
 --
 -- Asked by Parun.Engine.CombatRestriction, Parun.Engine.AttackRequirement,
--- Parun.Engine.Cast.permitsPlayFromExile, Parun.Engine.PlayerEffect.applying,
+-- Parun.Engine.Cast.permitsPlayUnderPermission, Parun.Engine.PlayerEffect.applying,
 -- Parun.Engine.Replacement.collect and Parun.Engine.RestrictedCreatures.prohibited;
 -- Parun.EffectLintSpec's windowOffends keeps a window off every other carrier.
 begun :: GameState -> Expiry -> Bool
@@ -336,7 +336,7 @@ begun gs expiry = case expiry of
 -- names them, its duration's window has begun (`begun`), and its own condition
 -- holds -- Hama, the Bloodbender's "during your turn", read live against the
 -- permission's source as sweepConditional reads a duration's. The one question
--- Parun.Engine.Cast.permitsPlayFromExile and Parun.Engine.Cost's exile arm share,
+-- Parun.Engine.Cast.permitsPlayUnderPermission and Parun.Engine.Cost's exile arm share,
 -- so a cast allowed by some other permission outside this one's window is never
 -- priced by it.
 permissionOpen :: PlayerId -> ExilePlayPermission.ExilePlayPermission -> GameState -> Bool
@@ -628,7 +628,7 @@ windowReached gs afterObjectTurn =
 -- answers the expiry the row keeps, or Nothing to end it.
 --
 -- A row ended is DROPPED from its list, except an object's play permission
--- (CR 601.3, Object.playableFromExile), which is CLEARED on an object that
+-- (CR 601.3, Object.playPermission), which is CLEARED on an object that
 -- stays. A delayed trigger stating no duration (CR 603.7b) has no expiry to
 -- hand over, so `edit` never sees it and it is kept.
 traverseExpiries :: (Applicative f) => (ObjectId -> Expiry -> f (Maybe Expiry)) -> GameState -> f GameState
@@ -636,11 +636,11 @@ traverseExpiries edit gs =
   let delayed x = case DelayedTrigger.expiry x of
         Nothing -> pure (Just x)
         Just e -> fmap (fmap (\e' -> x {DelayedTrigger.expiry = Just e'})) (edit (DelayedTrigger.source x) e)
-      object o = case Object.playableFromExile o of
+      object o = case Object.playPermission o of
         Nothing -> pure o
         Just p ->
           fmap
-            (\kept -> o {Object.playableFromExile = fmap (\e -> p {ExilePlayPermission.expiry = e}) kept})
+            (\kept -> o {Object.playPermission = fmap (\e -> p {ExilePlayPermission.expiry = e}) kept})
             (edit (ExilePlayPermission.source p) (ExilePlayPermission.expiry p))
       set ce co re pe br ar op ap ev ia dt ob =
         gs

@@ -246,7 +246,7 @@ single spec-local helper, and the `other-*` tail, are left out: grep for them.
 - CR 401.2 an empty library has no top card, so the exile does nothing | `check:helper-namesIn`
 - CR 401.2 the top three cards of your library are exiled, and the rest stay put | `check:helper-permissionsIn`
 - CR 405.1/701.6a counters an opponent's abilities beside their spells, and makes a Faerie for each | `board:stack`
-- CR 514.2 the window closes at the end of the turn it named | `check:other-Object.playableFromExile`
+- CR 514.2 the window closes at the end of the turn it named | `check:other-Object.playPermission`
 - CR 603.7 the delayed ability sacrifices what came back at the caster's next end step | `board:delayed-trigger` `board:entered-with` `board:graveyard`
 - CR 608.2d the delayed +1 untaps the two lands named, of five offered | `check:prompt-payload`
 - CR 609.3 X above the library's size exiles what it has | `check:helper-permissionsIn`

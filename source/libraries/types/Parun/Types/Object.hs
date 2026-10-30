@@ -332,16 +332,19 @@ data Object = MkObject
     -- newIncarnation, which IS CR 715.3d's "for as long as that card remains
     -- exiled"; a STATED duration is what Parun.Engine.Expiry sweeps.
     --
+    -- Read where the card lies, exile or a graveyard (Jace, Telepath
+    -- Unbound's "cast target instant or sorcery card from your graveyard").
     -- PLAYABLE and not castable, after CR 601.1a, and both halves read it:
     -- Parun.Engine.Cast.permitsCastFromExile and Parun.Engine.Action.playableLands
-    -- for CR 305.1's special action.
-    playableFromExile :: Maybe ExilePlayPermission.ExilePlayPermission,
+    -- for CR 305.1's special action; a graveyard card's, a cast only,
+    -- Parun.Engine.Cast.permitsCastFromGraveyard.
+    playPermission :: Maybe ExilePlayPermission.ExilePlayPermission,
     -- | CR 702.170a: this exiled card is a PLOTTED card, stamped with the turn on
     -- which it became one. The TURN NUMBER and not a Bool because CR 702.170d
     -- scopes the permission by it, and GameState.turnNumber counts extra turns
     -- too (CR 500.7), so a strict comparison is that clause exactly.
     --
-    -- Beside playableFromExile above rather than inside it: CR 715.3d's
+    -- Beside playPermission above rather than inside it: CR 715.3d's
     -- permission names a PLAYER and states no cost, where CR 702.170d's names the
     -- owner, makes the cast free and fixes the timing. Per-incarnation: cleared
     -- by newIncarnation (CR 400.7), the permission being about a card in exile.
@@ -981,7 +984,7 @@ new o s z t =
       face = Nothing,
       turnedOverAt = Nothing,
       worldSince = Nothing,
-      playableFromExile = Nothing,
+      playPermission = Nothing,
       plotted = Nothing,
       foretold = Nothing,
       foretellCostReduction = Nothing,

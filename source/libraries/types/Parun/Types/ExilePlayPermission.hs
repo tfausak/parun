@@ -14,7 +14,7 @@ import qualified Parun.Types.TapState as TapState
 
 -- | CR 601.3: "a player can begin to cast a spell only if a rule or effect
 -- allows that player to cast it" -- one such effect's permission, held on the
--- object it is about (Object.playableFromExile) rather than in a list on the
+-- object it is about (Object.playPermission) rather than in a list on the
 -- game.
 --
 -- OBJECT-BORNE, and the rules put it there. CR 715.3d says "for as long as THAT

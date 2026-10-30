@@ -56,7 +56,7 @@ import qualified Parun.Types.Zone as Zone
 -- Cast.pileCandidates', the one the cast side reads for the other half of that
 -- sentence, so neither side can drift from the other about which card is on top.
 --
--- Reading the OBJECT-BORNE permission with Cast.permitsPlayFromExile and not
+-- Reading the OBJECT-BORNE permission with Cast.permitsPlayUnderPermission and not
 -- Cast.permitsCastFromExile is the whole of what makes this the PLAY side: the
 -- plotted and foretold permissions that one also folds in each say "may cast it"
 -- (CR 702.170d, CR 702.143a), where CR 601.1a makes playing a card either

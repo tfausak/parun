@@ -983,7 +983,9 @@ candidateCostsGiven permitted pid name oid gs =
                         -- regression fence: its one printing is a land, which is
                         -- played rather than cast (MTGJSON 2026-08-23, text
                         -- "Mayhem (You may play": Oscorp Industries alone).
-                        <> ( if permitted || PlayerEffect.mayCastFrom pid Zone.Graveyard oid gs || PlayerEffect.mayPlayByMayhem pid oid gs
+                        -- Object.playPermission open to `pid` (Jace, Telepath
+                        -- Unbound's -3) states no cost either.
+                        <> ( if permitted || PlayerEffect.mayCastFrom pid Zone.Graveyard oid gs || PlayerEffect.mayPlayByMayhem pid oid gs || maybe False (\permission -> Expiry.permissionOpen pid permission gs) (Object.playPermission obj)
                                then ordinary
                                else filter usingPermitted ordinary
                            )
@@ -1032,7 +1034,7 @@ candidateCostsGiven permitted pid name oid gs =
                 -- (Expiry.permissionOpen): a player casting the same card under
                 -- some other permission is priced by the `_` arm below.
                 Just Zone.Exile
-                  | Just permission <- Object.playableFromExile obj,
+                  | Just permission <- Object.playPermission obj,
                     Expiry.permissionOpen pid permission gs,
                     Just alternative <- ExilePlayPermission.alternativeCost permission ->
                       [untagged (permissionCost alternative face)]
@@ -1150,7 +1152,7 @@ permissionIncrease :: PlayerId -> ObjectId -> GameState -> Natural
 permissionIncrease pid oid gs = case Game.lookupObject oid gs of
   Just obj
     | Object.zone obj == Zone.Exile,
-      Just permission <- Object.playableFromExile obj,
+      Just permission <- Object.playPermission obj,
       Expiry.permissionOpen pid permission gs ->
         ExilePlayPermission.increase permission
   _ -> 0

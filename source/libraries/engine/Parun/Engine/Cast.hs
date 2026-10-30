@@ -1369,7 +1369,7 @@ castableZones pid oid face gs =
 -- PERMISSIONS, any of which suffices, because the rules state six: exileOpen's
 -- five below, and a player's CR 601.3 CastFrom grant naming exile (Dawnhand
 -- Dissident's).
--- The first is Object.playableFromExile's, whose two conjuncts are below and
+-- The first is Object.playPermission's, whose two conjuncts are below and
 -- whose second is why a card its own Adventure exiled offers only the creature
 -- half, while the same card in a hand -- or exiled by some other effect --
 -- offers both; the second is CR 702.170d's
@@ -1378,7 +1378,7 @@ castableZones pid oid face gs =
 -- prepare copy, which permitsCastPrepared answers; the fifth is CR 702.185a's
 -- warped card, which permitsCastWarped answers.
 --
---   * Object.playableFromExile names a player -- which is what keeps a
+--   * Object.playPermission names a player -- which is what keeps a
 --     permission from being an offer to the table. Written either by CR 715.3d's
 --     own "for as long as that card remains exiled, that player may play it" or
 --     by an Effect.GrantPlayFromExile a card states.
@@ -1400,7 +1400,7 @@ permitsCastFromExile pid oid face gs =
 -- grant's additional costs (castWays).
 exileOpen :: PlayerId -> ObjectId -> Face.Face Card.Type.Card -> GameState -> Bool
 exileOpen pid oid face gs =
-  (permitsPlayFromExile pid oid gs && not (Card.isAdventure face && grantedByAdventureRule oid gs))
+  (permitsPlayUnderPermission pid oid gs && not (Card.isAdventure face && grantedByAdventureRule oid gs))
     || permitsCastPlotted pid oid gs
     || permitsCastForetold pid oid gs
     || permitsCastPrepared pid oid gs
@@ -1411,7 +1411,7 @@ exileOpen pid oid face gs =
 -- may cast the copy."
 --
 -- Read LIVE off the permanent the copy names rather than off an
--- Object.playableFromExile stamped at the mint, and the rule is why: it names the
+-- Object.playPermission stamped at the mint, and the rule is why: it names the
 -- prepared permanent's CONTROLLER, which CR 109.4 lets change while the copy sits
 -- in exile. A stored seat would keep letting the old controller cast it.
 --
@@ -1433,15 +1433,16 @@ permitsCastPrepared pid oid gs = case Game.lookupObject oid gs of
 -- A classification of the PERMISSION, never of the effect that wrote one --
 -- ExilePlayPermission.origin has two arms and neither names a card. An object
 -- with no permission at all answers False, which costs nothing: the caller has
--- already had to pass permitsPlayFromExile.
+-- already had to pass permitsPlayUnderPermission.
 grantedByAdventureRule :: ObjectId -> GameState -> Bool
 grantedByAdventureRule oid gs =
-  fmap ExilePlayPermission.origin (Game.lookupObject oid gs >>= Object.playableFromExile)
+  fmap ExilePlayPermission.origin (Game.lookupObject oid gs >>= Object.playPermission)
     == Just PlayPermissionOrigin.Adventure
 
--- Object.playableFromExile's permission on its own -- whichever rule wrote it,
+-- Object.playPermission's permission on its own -- whichever rule wrote it,
 -- with none of permitsCastFromExile's other disjuncts and without its Adventure
--- conjunct: does the exiled object's stored permission name THIS player?
+-- conjunct: does the object's stored permission name THIS player? Asked in exile and,
+-- for a cast, in a graveyard (permitsCastFromGraveyard).
 --
 -- This is the conjunct the land side shares, through permitsLandPlayFromExile
 -- below, which Parun.Engine.Action.playableLands asks of an exiled land (CR
@@ -1465,19 +1466,19 @@ grantedByAdventureRule oid gs =
 -- duration a permission can carry answers it True. Parun.BoardEffectSpec's
 -- GalvanicRelay group is the proof. The permission's own condition is the
 -- third (Expiry.permissionOpen).
-permitsPlayFromExile :: PlayerId -> ObjectId -> GameState -> Bool
-permitsPlayFromExile pid oid gs = case Game.lookupObject oid gs >>= Object.playableFromExile of
+permitsPlayUnderPermission :: PlayerId -> ObjectId -> GameState -> Bool
+permitsPlayUnderPermission pid oid gs = case Game.lookupObject oid gs >>= Object.playPermission of
   Nothing -> False
   Just permission -> Expiry.permissionOpen pid permission gs
 
--- The land side of permitsPlayFromExile: CR 305.9 / 601.3, a permission whose
+-- The land side of permitsPlayUnderPermission: CR 305.9 / 601.3, a permission whose
 -- verb is Cast lets a spell be cast and never lets a land be played (Ragavan,
 -- Nimble Pilferer's "you may cast that card"). Parun.ConjureSpec's Kari Zev case
 -- proves it.
 permitsLandPlayFromExile :: PlayerId -> ObjectId -> GameState -> Bool
 permitsLandPlayFromExile pid oid gs =
-  permitsPlayFromExile pid oid gs
-    && fmap ExilePlayPermission.verb (Game.lookupObject oid gs >>= Object.playableFromExile) == Just PermissionVerb.Play
+  permitsPlayUnderPermission pid oid gs
+    && fmap ExilePlayPermission.verb (Game.lookupObject oid gs >>= Object.playPermission) == Just PermissionVerb.Play
 
 -- CR 118.14: how may this player spend mana toward casting THIS object, as the
 -- object lies right now? Dire Fleet Daredevil's "and mana of any type can be
@@ -1497,7 +1498,7 @@ permitsLandPlayFromExile pid oid gs =
 -- and none says anything about mana, so all three answer AsProduced by having no
 -- rider to read.
 spendingFor :: PlayerId -> ObjectId -> GameState -> ManaSpending
-spendingFor pid oid gs = case Game.lookupObject oid gs >>= Object.playableFromExile of
+spendingFor pid oid gs = case Game.lookupObject oid gs >>= Object.playPermission of
   Just permission | ExilePlayPermission.player permission == pid -> ExilePlayPermission.spending permission
   _ -> ManaSpending.AsProduced
 
@@ -2190,13 +2191,18 @@ isFlashPermission permission = case permission of
 -- CR 601.3 / 702.34a: may this player cast this card from the graveyard it lies
 -- in?
 --
--- TWO permissions read beside each other, because CR 601.3's "a rule or effect
--- allows that player" is reached from two directions and neither is expressible
--- as the other. The first is the flashback half of permitsCastWhileSearching's
+-- THREE permissions read beside each other, because CR 601.3's "a rule or effect
+-- allows that player" is reached from three directions and none is expressible
+-- as another. The first is the flashback half of permitsCastWhileSearching's
 -- membership test -- a permission the CARD carries about ITSELF. The second is a
 -- CR 613.11 continuous effect a player has (Yawgmoth's Will), which no function
 -- of a Face could answer: it is nowhere on the card being cast, and it names a
--- player.
+-- player. The third is Object.playPermission, one effect's permission about
+-- this one card for one player (Jace, Telepath Unbound's -3), read exactly as
+-- exile reads it (permitsPlayUnderPermission).
+--
+-- Not implemented: that permission's riders on a graveyard card, and a land
+-- played out of a graveyard under it (#5799).
 --
 -- Folding the second into the first would say the effect printed flashback onto
 -- every card in the graveyard, which is neither CR 702.34a's meaning nor a thing
@@ -2206,6 +2212,7 @@ permitsCastFromGraveyard :: PlayerId -> ObjectId -> Face.Face Card.Type.Card -> 
 permitsCastFromGraveyard pid oid face gs =
   (ownedBy pid oid gs && (any isGraveyardPermission (Cost.permissionsOf oid face gs) || permitsDisturb oid face gs))
     || PlayerEffect.mayCastFrom pid Zone.Graveyard oid gs
+    || permitsPlayUnderPermission pid oid gs
 
 -- CR 702.146a's permission, which is the one rule 702 permission no keyword set
 -- of the PROPOSED half can carry: "you may cast this card TRANSFORMED from your
@@ -2662,7 +2669,7 @@ castSpellWith perform timed offered applied widened pid oid name facing = Event.
           -- board: the rest of the effect that allowed this cast now names the
           -- spell rather than the card. CR 601.2e's rejection puts `before` back,
           -- which puts the old name back with it.
-          State.modify' (followIntoSpell (Game.lookupObject oid before >>= Object.playableFromExile) oid sid)
+          State.modify' (followIntoSpell (Game.lookupObject oid before >>= Object.playPermission) oid sid)
           -- CR 106.6: mana that may be spent only to cast THIS card names the
           -- spell it has just become, for the same step's reason.
           State.modify' (followIntoPools oid sid)
@@ -2768,7 +2775,7 @@ playLand offered pid oid mName = do
     -- allowed this play names the permanent rather than the card, so Fires of
     -- Mount Doom's "when you play a card this way" finds it.
     Monad.forM_ (Seq.lookup 0 moved) $ \land ->
-      State.modify' (followIntoSpell (Game.lookupObject oid before >>= Object.playableFromExile) oid land)
+      State.modify' (followIntoSpell (Game.lookupObject oid before >>= Object.playPermission) oid land)
     -- CR 305.1: the play itself, for a condition watching land plays
     -- (TriggerCondition.PlayerPlaysLand), naming the zone it was played from.
     Monad.forM_ (Game.zoneOf oid before) $ \from ->
@@ -2785,8 +2792,8 @@ playLand offered pid oid mName = do
 -- cast of a card a budgeted grant covers.
 ownExilePermission :: Bool -> PlayerId -> ObjectId -> GameState -> Maybe ExilePlayPermission.ExilePlayPermission
 ownExilePermission offered pid oid gs
-  | offered || Game.zoneOf oid gs /= Just Zone.Exile || not (permitsPlayFromExile pid oid gs) = Nothing
-  | otherwise = Game.lookupObject oid gs >>= Object.playableFromExile
+  | offered || Game.zoneOf oid gs /= Just Zone.Exile || not (permitsPlayUnderPermission pid oid gs) = Nothing
+  | otherwise = Game.lookupObject oid gs >>= Object.playPermission
 
 -- CR 601.3: one play spent from the budget a played card's exile permission
 -- shares with the other cards its grant covered (Parun.Types.PlayBudget), and
@@ -2803,7 +2810,7 @@ spendPlayBudget permission gs = case permission >>= ExilePlayPermission.budget o
           | ExilePlayPermission.budget held /= Just budget = Just held
           | PlayBudget.remaining budget <= 1 = Nothing
           | otherwise = Just held {ExilePlayPermission.budget = Just budget {PlayBudget.remaining = PlayBudget.remaining budget - 1}}
-        adjust o = o {Object.playableFromExile = Object.playableFromExile o >>= spend}
+        adjust o = o {Object.playPermission = Object.playPermission o >>= spend}
      in gs {GameState.objects = foldr (Map.adjust adjust) (GameState.objects gs) (Set.toList (PlayBudget.covers budget))}
 
 -- CR 400.7i / 614.1d: how a land `pid` plays out of exile under the card's own
@@ -2818,16 +2825,25 @@ exileLandEntry pid oid gs = case Game.lookupObject oid gs of
   Just obj
     | Object.zone obj == Zone.Exile,
       permitsLandPlayFromExile pid oid gs,
-      Just permission <- Object.playableFromExile obj ->
+      Just permission <- Object.playPermission obj ->
         ExilePlayPermission.landEnters permission
   _ -> TapState.Untapped
 
 -- CR 601.3: PlayerEffect.castPermissionOptions for a cast of `oid` out of
--- `zone`, open without a grant where the exiled card carries a permission of
--- its own (exileOpen) as well as where `offered` says so.
+-- `zone`, open without a grant where the card carries a permission of its own
+-- (exileOpen in exile, Object.playPermission in a graveyard) as well as where
+-- `offered` says so.
+--
+-- The graveyard arm is a regression fence: no card in data/cards/ grants a
+-- budgeted graveyard cast an instant or sorcery could also be made under
+-- (Kess, Dissident Mage's "once during each of your turns" would observe it).
 castWays :: (ObjectId -> Bool) -> Bool -> PlayerId -> ObjectId -> Zone.Zone -> Face.Face Card.Type.Card -> GameState -> [Maybe (ObjectId, CastFromZone.CastFromZone)]
 castWays rides offered pid oid zone face gs =
-  PlayerEffect.castPermissionOptions rides (offered || (zone == Zone.Exile && exileOpen pid oid face gs)) pid zone oid gs
+  let ownOpen = case zone of
+        Zone.Exile -> exileOpen pid oid face gs
+        Zone.Graveyard -> permitsPlayUnderPermission pid oid gs
+        _ -> False
+   in PlayerEffect.castPermissionOptions rides (offered || ownOpen) pid zone oid gs
 
 -- CR 118.8 / 601.2f: the additional costs and the reductions each way castWays
 -- offers would bring, one empty pair where there is no permission to choose

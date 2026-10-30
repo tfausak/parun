@@ -141,7 +141,7 @@ spec s = Spec.describe s "Parun.Codec.Object" $ do
           Object.face = Just (CardName.MkCardName (Text.pack "Delver of Secrets")),
           Object.turnedOverAt = Just (Timestamp.MkTimestamp 11),
           Object.worldSince = Just (Timestamp.MkTimestamp 12),
-          Object.playableFromExile =
+          Object.playPermission =
             Just
               ExilePlayPermission.MkExilePlayPermission
                 { ExilePlayPermission.player = PlayerId.MkPlayerId 13,
@@ -227,7 +227,7 @@ spec s = Spec.describe s "Parun.Codec.Object" $ do
           <> ",\"chosenNames\":[{\"key\":{\"type\":\"Own\"},\"value\":{\"29\":\"Mountain\"}}],\"chosenPlayers\":[{\"key\":{\"type\":\"Own\"},\"value\":[{\"key\":{\"type\":\"AsEnters\"},\"value\":9},{\"key\":{\"type\":\"Promised\",\"value\":[{\"type\":\"Card\"},{\"type\":\"Granted\",\"value\":[[4,6],2]}]},\"value\":10}]}]"
           <> ",\"timestamp\":10,\"face\":\"Delver of Secrets\",\"turnedOverAt\":11"
           <> ",\"worldSince\":12"
-          <> ",\"playableFromExile\":{\"player\":13,\"source\":14,\"expiry\":{\"type\":\"AtCleanup\"}"
+          <> ",\"playPermission\":{\"player\":13,\"source\":14,\"expiry\":{\"type\":\"AtCleanup\"}"
           <> ",\"spending\":{\"type\":\"AnyType\"},\"alternativeCost\":{\"type\":\"InsteadOfManaCost\",\"value\":[]},\"condition\":null,\"origin\":{\"type\":\"Granted\"},\"verb\":{\"type\":\"Cast\"},\"increase\":1,\"landEnters\":{\"type\":\"Tapped\"},\"budget\":{\"remaining\":2,\"covers\":[30,31]}}"
           <> ",\"plotted\":0,\"foretold\":15"
           <> ",\"foretellCostReduction\":[{\"type\":\"Generic\",\"value\":29}]"

@@ -9,6 +9,7 @@ import qualified Parun.Types.PermissionCost as PermissionCost
 import qualified Parun.Types.PermissionVerb as PermissionVerb
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.TapState as TapState
+import qualified Parun.Types.Zone as Zone
 
 -- | The payload of Parun.Types.Effect's GrantPlayFromExile arm: which objects the
 -- permission covers, whose it is, how long it lasts, and how its holder may pay
@@ -61,6 +62,10 @@ data GrantPlayFromExile = MkGrantPlayFromExile
     -- | CR 601.3: how many of the covered cards may be played under it, all
     -- told -- March of Reckless Joy\'s "you may play up to two of those
     -- cards". Nothing is every one of them.
-    upTo :: Maybe Natural.Natural
+    upTo :: Maybe Natural.Natural,
+    -- | CR 601.3: the zone the covered cards must lie in to be granted --
+    -- exile\'s "cards exiled this way", or Jace, Telepath Unbound\'s "from your
+    -- graveyard". A card a CR 614 replacement sent elsewhere gets nothing.
+    zone :: Zone.Zone
   }
   deriving (Eq, Ord, Show)

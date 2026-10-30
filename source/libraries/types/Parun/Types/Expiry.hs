@@ -69,7 +69,7 @@ data Expiry
     --
     -- Six carriers ask `begun`: GameState.attackProhibitions (Wall of Dust),
     -- GameState.attackRequirements (Taunt, Gideon, Battle-Forged),
-    -- GameState.playerEffects (Sphinx's Decree), Object.playableFromExile
+    -- GameState.playerEffects (Sphinx's Decree), Object.playPermission
     -- (Galvanic Relay), GameState.replacements (False Peace) and
     -- GameState.objectProhibitions (Exhaustion). A row on any
     -- other would apply from the moment it is stored, so Parun.EffectLintSpec's

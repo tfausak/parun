@@ -1089,7 +1089,7 @@ victorManchaSpec s registry = Spec.describe s "VictorMancha" $ do
         Spec.assertEqWith
           s
           "the card was exiled with no permission on it"
-          (fmap Object.playableFromExile (Game.lookupObject exiledId after))
+          (fmap Object.playPermission (Game.lookupObject exiledId after))
           (Just Nothing)
         Spec.assertBool s (not (offeredCast exiledId benalishHeroName after)) "and it is not castable from exile"
       other -> Spec.assertFailure s ("expected exactly one exiled Hero, got " <> show (length other))

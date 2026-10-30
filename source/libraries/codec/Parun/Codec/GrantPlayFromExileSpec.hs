@@ -20,6 +20,7 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.TapState as TapState
+import qualified Parun.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.GrantPlayFromExile" $ do
@@ -39,7 +40,8 @@ spec s = Spec.describe s "Parun.Codec.GrantPlayFromExile" $ do
             GrantPlayFromExile.verb = PermissionVerb.Play,
             GrantPlayFromExile.increase = 0,
             GrantPlayFromExile.landEnters = TapState.Untapped,
-            GrantPlayFromExile.upTo = Nothing
+            GrantPlayFromExile.upTo = Nothing,
+            GrantPlayFromExile.zone = Zone.Exile
           }
       )
       " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"}} "
@@ -58,7 +60,8 @@ spec s = Spec.describe s "Parun.Codec.GrantPlayFromExile" $ do
             GrantPlayFromExile.verb = PermissionVerb.Play,
             GrantPlayFromExile.increase = 0,
             GrantPlayFromExile.landEnters = TapState.Untapped,
-            GrantPlayFromExile.upTo = Nothing
+            GrantPlayFromExile.upTo = Nothing,
+            GrantPlayFromExile.zone = Zone.Exile
           }
       )
       " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"},\"spending\":{\"type\":\"AnyType\"}} "
@@ -78,7 +81,8 @@ spec s = Spec.describe s "Parun.Codec.GrantPlayFromExile" $ do
             GrantPlayFromExile.verb = PermissionVerb.Play,
             GrantPlayFromExile.increase = 0,
             GrantPlayFromExile.landEnters = TapState.Untapped,
-            GrantPlayFromExile.upTo = Nothing
+            GrantPlayFromExile.upTo = Nothing,
+            GrantPlayFromExile.zone = Zone.Exile
           }
       )
       " {\"duration\":{\"type\":\"Indefinite\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"},\"alternativeCost\":{\"type\":\"InsteadOfManaCost\",\"value\":[]}} "
@@ -98,7 +102,8 @@ spec s = Spec.describe s "Parun.Codec.GrantPlayFromExile" $ do
             GrantPlayFromExile.verb = PermissionVerb.Play,
             GrantPlayFromExile.increase = 0,
             GrantPlayFromExile.landEnters = TapState.Untapped,
-            GrantPlayFromExile.upTo = Nothing
+            GrantPlayFromExile.upTo = Nothing,
+            GrantPlayFromExile.zone = Zone.Exile
           }
       )
       " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"player\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"}} "
@@ -118,11 +123,12 @@ spec s = Spec.describe s "Parun.Codec.GrantPlayFromExile" $ do
             GrantPlayFromExile.verb = PermissionVerb.Cast,
             GrantPlayFromExile.increase = 0,
             GrantPlayFromExile.landEnters = TapState.Untapped,
-            GrantPlayFromExile.upTo = Nothing
+            GrantPlayFromExile.upTo = Nothing,
+            GrantPlayFromExile.zone = Zone.Exile
           }
       )
       " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"},\"verb\":{\"type\":\"Cast\"}} "
-  Spec.it s "a missing player, spending, alternativeCost, condition, verb, increase or landEnters key decodes as the default" $
+  Spec.it s "a missing player, spending, alternativeCost, condition, verb, increase, landEnters or zone key decodes as the default" $
     Common.assertFromJson
       s
       (Codec.decode GrantPlayFromExile.codec)
@@ -137,7 +143,8 @@ spec s = Spec.describe s "Parun.Codec.GrantPlayFromExile" $ do
             GrantPlayFromExile.verb = PermissionVerb.Play,
             GrantPlayFromExile.increase = 0,
             GrantPlayFromExile.landEnters = TapState.Untapped,
-            GrantPlayFromExile.upTo = Nothing
+            GrantPlayFromExile.upTo = Nothing,
+            GrantPlayFromExile.zone = Zone.Exile
           }
       )
   -- Hama, the Bloodbender's: CR 118.9's waterbend alternative, open only
@@ -156,7 +163,8 @@ spec s = Spec.describe s "Parun.Codec.GrantPlayFromExile" $ do
             GrantPlayFromExile.verb = PermissionVerb.Cast,
             GrantPlayFromExile.increase = 0,
             GrantPlayFromExile.landEnters = TapState.Untapped,
-            GrantPlayFromExile.upTo = Nothing
+            GrantPlayFromExile.upTo = Nothing,
+            GrantPlayFromExile.zone = Zone.Exile
           }
       )
       " {\"duration\":{\"type\":\"Indefinite\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"},\"alternativeCost\":{\"type\":\"WaterbendManaValue\"},\"condition\":{\"type\":\"Compares\",\"value\":{\"comparison\":{\"type\":\"Exactly\"},\"measured\":{\"type\":\"IsActivePlayer\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"threshold\":{\"type\":\"Literal\",\"value\":1}}},\"verb\":{\"type\":\"Cast\"}} "
@@ -176,7 +184,8 @@ spec s = Spec.describe s "Parun.Codec.GrantPlayFromExile" $ do
             GrantPlayFromExile.verb = PermissionVerb.Play,
             GrantPlayFromExile.increase = 1,
             GrantPlayFromExile.landEnters = TapState.Tapped,
-            GrantPlayFromExile.upTo = Nothing
+            GrantPlayFromExile.upTo = Nothing,
+            GrantPlayFromExile.zone = Zone.Exile
           }
       )
       " {\"duration\":{\"type\":\"Indefinite\"},\"player\":{\"type\":\"InSlot\",\"value\":\"opponent\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"},\"increase\":1,\"landEnters\":{\"type\":\"Tapped\"}} "
@@ -195,8 +204,29 @@ spec s = Spec.describe s "Parun.Codec.GrantPlayFromExile" $ do
             GrantPlayFromExile.verb = PermissionVerb.Play,
             GrantPlayFromExile.increase = 0,
             GrantPlayFromExile.landEnters = TapState.Untapped,
-            GrantPlayFromExile.upTo = Just 2
+            GrantPlayFromExile.upTo = Just 2,
+            GrantPlayFromExile.zone = Zone.Exile
           }
       )
       " {\"duration\":{\"type\":\"UntilEndOfYourNextTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"},\"upTo\":2} "
+  -- Jace, Telepath Unbound's: CR 601.3's "from your graveyard" written out.
+  Spec.it s "MkGrantPlayFromExile, a graveyard permission" $
+    Common.assertCodec
+      s
+      GrantPlayFromExile.codec
+      ( GrantPlayFromExile.MkGrantPlayFromExile
+          { GrantPlayFromExile.duration = Duration.UntilEndOfTurn,
+            GrantPlayFromExile.player = PlayerRef.Relative PlayerRelation.You,
+            GrantPlayFromExile.ref = ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")),
+            GrantPlayFromExile.spending = ManaSpending.AsProduced,
+            GrantPlayFromExile.alternativeCost = Nothing,
+            GrantPlayFromExile.condition = Nothing,
+            GrantPlayFromExile.verb = PermissionVerb.Cast,
+            GrantPlayFromExile.increase = 0,
+            GrantPlayFromExile.landEnters = TapState.Untapped,
+            GrantPlayFromExile.upTo = Nothing,
+            GrantPlayFromExile.zone = Zone.Graveyard
+          }
+      )
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"},\"verb\":{\"type\":\"Cast\"},\"zone\":{\"type\":\"Graveyard\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s GrantPlayFromExile.codec

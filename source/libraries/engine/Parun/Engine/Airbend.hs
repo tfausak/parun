@@ -111,7 +111,7 @@ grant :: ObjectId -> ObjectId -> GameState.GameState -> GameState.GameState
 grant source oid gs =
   let stamp obj =
         if Object.zone obj == Zone.Exile && isCard (Object.source obj)
-          then obj {Object.playableFromExile = Just (permission source (Object.owner obj))}
+          then obj {Object.playPermission = Just (permission source (Object.owner obj))}
           else obj
       isCard s = case s of
         Source.OfCard _ -> True

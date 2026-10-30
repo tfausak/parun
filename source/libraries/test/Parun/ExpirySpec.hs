@@ -1395,7 +1395,7 @@ runToTurn answer turn =
 
 -- CR 601.3's permission, as the player it names.
 permissionOn :: ObjectId.ObjectId -> GameState.GameState -> Maybe PlayerId.PlayerId
-permissionOn oid gs = fmap ExilePlayPermission.player (Game.lookupObject oid gs >>= Object.playableFromExile)
+permissionOn oid gs = fmap ExilePlayPermission.player (Game.lookupObject oid gs >>= Object.playPermission)
 
 -- alice, on turn 1, casts Soulfire Eruption off nine Mountains at one target.
 -- That exiles the top card of her library -- a Goblin Piker, the one card here

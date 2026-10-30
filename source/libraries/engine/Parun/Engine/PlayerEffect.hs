@@ -2241,8 +2241,8 @@ unspentPermission pid source grant gs =
 --
 -- Open without any of them where something else is CR 601.3's "rule or effect"
 -- allowing the cast: the rules for a card in its owner's hand, and an effect
--- offering the cast during resolution or a permission an exiled card carries for
--- itself (`offered`, CR 608.2g; Parun.Engine.Cast.castWays). A permission the
+-- offering the cast during resolution or a permission an exiled or graveyard card
+-- carries for itself (`offered`, CR 608.2g; Parun.Engine.Cast.castWays). A permission the
 -- OBJECT carries is not weighed here: every one parun
 -- has is a keyword's, offering its own CR 601.2b candidate (escape, flashback),
 -- so the candidate the cast chose says whether it was made under it --
