@@ -23,6 +23,7 @@ import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.Mana as Mana
 import qualified Parun.Types.ManaCost as ManaCost
+import qualified Parun.Types.ModeIndex as ModeIndex
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.Pairing as Pairing
 import qualified Parun.Types.PlayerChoice as PlayerChoice
@@ -41,6 +42,7 @@ import qualified Parun.Types.StoredResult as StoredResult
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.Timestamp as Timestamp
+import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.Zone as Zone
 
 data Object = MkObject
@@ -896,6 +898,11 @@ data Object = MkObject
     -- Parun.Engine.ActivationRestriction's OnlyOnce arm compares the count with
     -- the copies the object bears.
     activatedOnce :: Map.Map (ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)) Natural.Natural,
+    -- | The modes each of this object's triggered abilities has chosen, for a
+    -- ModeMemory.ObjectLifetime instruction (CR 700.2b), keyed by the ability
+    -- by value as activatedOnce is. Written as the ability is put on the stack,
+    -- so a countered instance still counts; per-incarnation (CR 400.7).
+    chosenModes :: Map.Map (TriggeredAbility.TriggeredAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)) (Set.Set ModeIndex.ModeIndex),
     -- | CR 702.95b: the creature this one is paired with, and the seat the
     -- soulbond ability that paired them was controlled by; Nothing for every
     -- unpaired creature, which is nearly all of them.
@@ -1046,6 +1053,7 @@ new o s z t =
       -- CR 400.7 over CR 602.5b: the object that comes back has activated
       -- nothing, so its once-only abilities are available again.
       activatedOnce = Map.empty,
+      chosenModes = Map.empty,
       -- CR 702.95e's third ending said for the leaver: a creature that leaves the
       -- battlefield is unpaired, and the object that comes back was never paired
       -- with anything. Parun.Engine.Soulbond.endWhenBroken supplies the same

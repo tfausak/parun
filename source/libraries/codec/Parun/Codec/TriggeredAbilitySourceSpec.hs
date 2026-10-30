@@ -13,6 +13,7 @@ import qualified Parun.Types.Card as Card
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.Timestamp as Timestamp
@@ -31,7 +32,8 @@ ability =
       TriggeredAbility.modal =
         Modal.MkModal
           (Seq.singleton (Mode.MkMode Seq.empty Map.empty))
-          (ModeSelection.ChooseExactly 1),
+          (ModeSelection.ChooseExactly 1)
+          ModeMemory.NoMemory,
       TriggeredAbility.intervening = Nothing,
       TriggeredAbility.name = Nothing,
       TriggeredAbility.limit = TriggerLimit.Unlimited,

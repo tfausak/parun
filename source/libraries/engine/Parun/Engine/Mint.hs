@@ -14,6 +14,7 @@ import Parun.Types.Filter (Filter)
 import Parun.Types.Keyword (Keyword)
 import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import Parun.Types.Optionality (Optionality)
 import qualified Parun.Types.Optionality as Optionality
@@ -69,7 +70,7 @@ oneModeTargeting slots = oneModeOf slots . Seq.singleton . mandatory
 -- general form of `oneModeTargeting`, for a clause that is optional, gated or
 -- one of several.
 oneModeOf :: Map.Map SlotName TargetSlot -> Seq.Seq (Clause.Clause card ability) -> Modal.Modal card ability
-oneModeOf slots clauses = Modal.MkModal (Seq.singleton (Mode.MkMode clauses slots)) (ModeSelection.ChooseExactly 1)
+oneModeOf slots clauses = Modal.MkModal (Seq.singleton (Mode.MkMode clauses slots)) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory
 
 -- | A triggered ability (CR 603.1) of one `oneMode`, with no intervening "if"
 -- (CR 603.4), no name and no "only once" rider.

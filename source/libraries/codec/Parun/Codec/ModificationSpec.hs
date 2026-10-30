@@ -32,6 +32,7 @@ import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordFamily as KeywordFamily
 import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.ModifyPowerToughness as ModifyPowerToughness
@@ -402,7 +403,7 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
                   []
                   0
                   Nothing
-                  (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1))
+                  (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory)
                   []
                   Activator.Controller
                   Nothing

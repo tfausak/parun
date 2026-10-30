@@ -6,11 +6,13 @@ import qualified Data.Sequence as Seq
 import qualified Data.Text as Text
 import qualified Data.Typeable as Typeable
 import qualified Parun.Codec.Mode as Mode
+import qualified Parun.Codec.ModeMemory as ModeMemory
 import qualified Parun.Codec.ModeSelection as ModeSelection
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.Modal as Modal
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 
 -- | CR 700.2 via Parun.Types.Modal's header: "A non-modal payload is one Mode
@@ -34,4 +36,5 @@ codec cardCodec abilityCodec =
    in Fields.objectWith check $ do
         modes <- Fields.required "modes" (Common.seq (Mode.codec cardCodec abilityCodec)) Modal.modes
         selection <- Fields.defaulted "selection" defaultSelection ModeSelection.codec Modal.selection
-        pure Modal.MkModal {Modal.modes = modes, Modal.selection = selection}
+        memory <- Fields.defaulted "memory" ModeMemory.NoMemory ModeMemory.codec Modal.memory
+        pure Modal.MkModal {Modal.modes = modes, Modal.selection = selection, Modal.memory = memory}

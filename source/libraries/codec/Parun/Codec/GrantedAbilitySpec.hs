@@ -31,6 +31,7 @@ import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.Measures as Measures
 import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.Operand as Operand
@@ -52,7 +53,7 @@ codec :: Codec.Codec (GrantedAbility.GrantedAbility Text.Text)
 codec = GrantedAbility.codec Common.text
 
 emptyModal :: Modal.Modal Text.Text (GrantedAbility.GrantedAbility Text.Text)
-emptyModal = Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1)
+emptyModal = Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory
 
 -- Every arm, since the whole point of the type is that CR 613.1f's grant reaches
 -- several of CR 113.3's ability kinds and the wire has to say which.

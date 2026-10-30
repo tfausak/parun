@@ -282,6 +282,7 @@ import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
 import qualified Parun.Types.ModeIndex as ModeIndex
 import qualified Parun.Types.ModeInstance as ModeInstance
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.ModifiedRoll as ModifiedRoll
@@ -2836,7 +2837,7 @@ modalActivated :: [Mode.Mode Card.Type.Card (GrantedAbility.GrantedAbility Card.
 modalActivated modes =
   ActivatedAbility.MkActivatedAbility
     { ActivatedAbility.cost = Cost.Type.MkCost {Cost.Type.mana = Just (ManaCost.MkManaCost []), Cost.Type.components = []},
-      ActivatedAbility.modal = Modal.MkModal (Seq.fromList modes) (ModeSelection.ChooseExactly 1),
+      ActivatedAbility.modal = Modal.MkModal (Seq.fromList modes) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory,
       ActivatedAbility.maximumX = [],
       ActivatedAbility.minimumX = 0,
       ActivatedAbility.definedX = Nothing,

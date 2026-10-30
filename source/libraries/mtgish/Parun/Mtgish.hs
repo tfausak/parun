@@ -105,6 +105,7 @@ import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.Mill as Mill
 import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.ModifyPowerToughness as ModifyPowerToughness
@@ -897,10 +898,12 @@ modal context value = do
   n <- Node.node value
   modes <- case (Node.tag n, manaOptions value) of
     ("Modal_ChooseOne", _) -> Node.arguments n >>= traverse (mode context)
+    ("Modal_ChooseOneThatHasntBeenChosen", _) -> Node.arguments n >>= traverse (mode context)
     (_, []) -> fmap pure (mode context value)
     (_, [k]) | k > 1 -> traverse (\i -> mode context {manaChoice = Just i} value) [0 .. k - 1]
     _ -> Node.untranslated n
-  pure Modal.MkModal {Modal.modes = Seq.fromList modes, Modal.selection = ModeSelection.ChooseExactly 1}
+  let memory = if Node.tag n == "Modal_ChooseOneThatHasntBeenChosen" then ModeMemory.ObjectLifetime else ModeMemory.NoMemory
+  pure Modal.MkModal {Modal.modes = Seq.fromList modes, Modal.selection = ModeSelection.ChooseExactly 1, Modal.memory = memory}
 
 -- | How many kinds of mana each "or" of mana in the value chooses among.
 manaOptions :: Value.Value -> [Int]
@@ -1179,6 +1182,7 @@ playerEffects context who n = case Node.tag n of
   "LoseLife" -> do
     q <- Node.argument n >>= quantity context
     pure [Effect.LoseLife LifeLoss.MkLifeLoss {LifeLoss.player = who, LifeLoss.quantity = q, LifeLoss.cause = LifeLossCause.ByEffect, LifeLoss.tally = Nothing}]
+  "LoseTheGame" -> pure [Effect.LoseGame who]
   "DiscardACard" -> discard (Quantity.Literal 1)
   "DiscardNumberCardsAtRandom" -> do
     q <- Node.argument n >>= quantity context

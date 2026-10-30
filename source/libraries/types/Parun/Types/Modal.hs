@@ -2,6 +2,7 @@ module Parun.Types.Modal where
 
 import qualified Data.Sequence as Seq
 import qualified Parun.Types.Mode as Mode
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 
 -- | CR 700.2: a spell's or ability's modal payload. `modes` is a Seq -- ordered
@@ -11,6 +12,11 @@ import qualified Parun.Types.ModeSelection as ModeSelection
 -- ChooseExactly 1.
 data Modal card ability = MkModal
   { modes :: Seq.Seq (Mode.Mode card ability),
-    selection :: ModeSelection.ModeSelection
+    selection :: ModeSelection.ModeSelection,
+    -- | Which earlier choices bar a mode (CR 700.2a). Read only where a
+    -- triggered ability is put on the stack (Parun.Engine.Engine.placeBorne).
+    --
+    -- Not implemented: on an activated ability (#5782), or "this turn" (#5783).
+    memory :: ModeMemory.ModeMemory
   }
   deriving (Eq, Ord, Show)

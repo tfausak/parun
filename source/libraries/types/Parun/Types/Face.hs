@@ -53,6 +53,7 @@ import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
 import qualified Parun.Types.ModeIndex as ModeIndex
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlayerStaticAbility as PlayerStaticAbility
@@ -685,6 +686,7 @@ defaultSpell =
   Modal.MkModal
     (Seq.singleton (Mode.MkMode Seq.empty Map.empty))
     (ModeSelection.ChooseExactly 1)
+    ModeMemory.NoMemory
 
 -- | The keywords a face prints, with the multiplicity dropped. What a
 -- membership question wants -- "does this card print flash" -- where the count

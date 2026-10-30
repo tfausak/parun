@@ -7,6 +7,7 @@ import qualified Data.Text as Text
 import qualified Parun.Codec.ActivatedAbilitySourceSpec as ActivatedAbilitySourceSpec
 import qualified Parun.Codec.Object as Object
 import qualified Parun.Codec.ProjectedCharacteristicsSpec as ProjectedCharacteristicsSpec
+import qualified Parun.Codec.TriggeredAbilitySourceSpec as TriggeredAbilitySourceSpec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.Acquisition as Acquisition
@@ -36,6 +37,7 @@ import qualified Parun.Types.ManaSpending as ManaSpending
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.ManaUnit as ManaUnit
+import qualified Parun.Types.ModeIndex as ModeIndex
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.PermissionCost as PermissionCost
@@ -207,7 +209,8 @@ spec s = Spec.describe s "Parun.Codec.Object" $ do
           Object.goadedBy = Set.singleton (PlayerId.MkPlayerId 22),
           Object.doesNotUntapFor = 2,
           Object.exertedBy = Set.singleton (PlayerId.MkPlayerId 23),
-          Object.activatedOnce = Map.singleton ActivatedAbilitySourceSpec.ability 1
+          Object.activatedOnce = Map.singleton ActivatedAbilitySourceSpec.ability 1,
+          Object.chosenModes = Map.singleton TriggeredAbilitySourceSpec.ability (Set.singleton (ModeIndex.MkModeIndex 2))
         }
       ( " {\"owner\":1,\"identity\":{\"serial\":9,\"startingOwner\":7},\"enteredUnder\":2,\"source\":{\"type\":\"OfToken\",\"value\":3}"
           <> ",\"zone\":{\"type\":\"Battlefield\"},\"tapped\":{\"type\":\"Tapped\"}"
@@ -257,7 +260,8 @@ spec s = Spec.describe s "Parun.Codec.Object" $ do
           <> ",\"detainedUntil\":[21],\"goadedBy\":[22]"
           <> ",\"doesNotUntapFor\":2,\"exertedBy\":[23]"
           <> ",\"activatedOnce\":[{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]}"
-          <> ",\"modal\":{\"modes\":[{}]}}]} "
+          <> ",\"modal\":{\"modes\":[{}]}}]"
+          <> ",\"chosenModes\":[{\"key\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}},\"value\":[2]}]} "
       )
   Spec.it s "has a schema" $
     Common.assertHasSchema s Object.codec

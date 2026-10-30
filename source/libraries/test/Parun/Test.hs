@@ -458,6 +458,7 @@ import qualified Parun.Codec.MillTallySpec
 import qualified Parun.Codec.MilledSpec
 import qualified Parun.Codec.ModalSpec
 import qualified Parun.Codec.ModeIndexSpec
+import qualified Parun.Codec.ModeMemorySpec
 import qualified Parun.Codec.ModeSelectionSpec
 import qualified Parun.Codec.ModeSpec
 import qualified Parun.Codec.ModificationSpec
@@ -1660,6 +1661,7 @@ spec s registry corpus = do
   Parun.Codec.TriggeredAbilitySpec.spec s
   Parun.Codec.TriggerFrequencySpec.spec s
   Parun.Codec.TriggerLimitSpec.spec s
+  Parun.Codec.ModeMemorySpec.spec s
   Parun.Codec.TriggerSourceSpec.spec s
   Parun.Codec.TurnedFaceUpSpec.spec s
   Parun.Codec.TurnFaceDownSpec.spec s

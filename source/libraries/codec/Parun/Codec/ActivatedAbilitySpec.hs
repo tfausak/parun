@@ -26,6 +26,7 @@ import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.Optionality as Optionality
 import qualified Parun.Types.Phase as Phase
@@ -83,6 +84,7 @@ spec s = Spec.describe s "Parun.Codec.ActivatedAbility" $ do
                   )
               )
               (ModeSelection.ChooseExactly 1)
+              ModeMemory.NoMemory
           )
           [ActivationRestriction.SorcerySpeed]
           Activator.Controller
@@ -103,7 +105,7 @@ spec s = Spec.describe s "Parun.Codec.ActivatedAbility" $ do
           []
           0
           Nothing
-          (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1))
+          (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory)
           [ ActivationRestriction.DuringPhase (DuringPhase.MkDuringPhase (PhaseSelector.Step (Phase.Combat CombatStep.DeclareAttackers)) TurnScope.EachTurn),
             ActivationRestriction.AttackedThisStep
           ]
@@ -127,7 +129,7 @@ spec s = Spec.describe s "Parun.Codec.ActivatedAbility" $ do
           []
           0
           Nothing
-          (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1))
+          (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory)
           [ActivationRestriction.SorcerySpeed]
           Activator.Controller
           Nothing
@@ -147,7 +149,7 @@ spec s = Spec.describe s "Parun.Codec.ActivatedAbility" $ do
           []
           0
           Nothing
-          (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1))
+          (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory)
           []
           Activator.Controller
           Nothing
@@ -167,7 +169,7 @@ spec s = Spec.describe s "Parun.Codec.ActivatedAbility" $ do
           []
           1
           Nothing
-          (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1))
+          (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory)
           []
           Activator.Controller
           Nothing
@@ -187,7 +189,7 @@ spec s = Spec.describe s "Parun.Codec.ActivatedAbility" $ do
           []
           0
           (Just (Quantity.Literal 2))
-          (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1))
+          (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory)
           []
           Activator.Controller
           Nothing
