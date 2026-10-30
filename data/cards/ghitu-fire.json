@@ -5,7 +5,7 @@
         {
           "type": "CastAsThoughItHadFlash",
           "value": {
-            "costIncrease": [
+            "additionalCost": [
               {
                 "type": "Generic",
                 "value": 2

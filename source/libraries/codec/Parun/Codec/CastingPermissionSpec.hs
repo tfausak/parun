@@ -35,11 +35,11 @@ spec s = Spec.describe s "Parun.Codec.CastingPermission" $ do
       CastingPermission.codec
       (CastingPermission.CastAsThoughItHadFlash Nothing Nothing)
       " {\"type\":\"CastAsThoughItHadFlash\",\"value\":{}} "
-  Spec.it s "CastAsThoughItHadFlash under a condition for a cost increase" $
+  Spec.it s "CastAsThoughItHadFlash under a condition for an additional cost" $
     Common.assertCodec
       s
       CastingPermission.codec
       (CastingPermission.CastAsThoughItHadFlash (Just (Condition.Any [])) (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])))
-      " {\"type\":\"CastAsThoughItHadFlash\",\"value\":{\"condition\":{\"type\":\"Any\",\"value\":[]},\"costIncrease\":[{\"type\":\"Generic\",\"value\":2}]}} "
+      " {\"type\":\"CastAsThoughItHadFlash\",\"value\":{\"condition\":{\"type\":\"Any\",\"value\":[]},\"additionalCost\":[{\"type\":\"Generic\",\"value\":2}]}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s CastingPermission.codec

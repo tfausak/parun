@@ -22,7 +22,7 @@ codec =
       Fields.object $
         (,)
           <$> Fields.defaulted "condition" Nothing (Common.maybe Condition.codec) fst
-          <*> Fields.defaulted "costIncrease" Nothing (Common.maybe ManaCost.codec) snd
+          <*> Fields.defaulted "additionalCost" Nothing (Common.maybe ManaCost.codec) snd
 
 tagOf :: CastingPermission.CastingPermission -> String
 tagOf x = case x of

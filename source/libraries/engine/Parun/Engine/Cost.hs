@@ -444,27 +444,28 @@ withOffering pid oid gs candidate =
 -- | CR 601.3c / 601.3d: the card's own permissions to be cast as though it had
 -- flash whose condition holds as the cast begins, with the caster as CR
 -- 109.5's "you". A free one widens the candidate's window in place; one naming
--- an increase offers the candidate once more with the increase added (CR
--- 601.2f) and the window carried, so the increase is paid only by a cast that
--- uses the permission. Offered at sorcery timing too (docs/decisions.md, "A
--- paid flash permission is offered at sorcery timing too"). The scenarios harbinger-of-the-tides-* and swift-reckoning-*
--- prove both shapes.
+-- an additional cost offers the candidate once more with that cost added (CR
+-- 601.2f) and the window carried, so it is paid only by a cast that uses the
+-- permission. Offered at sorcery timing too (docs/decisions.md, "A paid flash
+-- permission is offered at sorcery timing too"), which the scenario
+-- harbinger-of-the-tides-cast-in-a-main-phase-may-pay-two-more proves. The
+-- scenarios harbinger-of-the-tides-* and swift-reckoning-* prove both shapes.
 --
 -- Not implemented: the condition is asked before CR 601.2a's move, so a card
 -- cast from a graveyard counts itself there (#5792).
 withFlashPermission :: PlayerId -> ObjectId -> Face.Face Card.Type.Card -> GameState -> CandidateCost.CandidateCost -> [CandidateCost.CandidateCost]
 withFlashPermission pid oid face gs =
   let holds = Condition.holds (Projection.fullView gs) (Projection.sourceContext gs (Just pid) oid) gs oid
-      permitted = [increase | CastingPermission.CastAsThoughItHadFlash condition increase <- permissionsOf oid face gs, all holds condition]
+      permitted = [additional | CastingPermission.CastAsThoughItHadFlash condition additional <- permissionsOf oid face gs, all holds condition]
       free = any Maybe.isNothing permitted
-      increases = Maybe.catMaybes permitted
+      additionals = Maybe.catMaybes permitted
    in \candidate ->
         candidate {CandidateCost.instantSpeed = CandidateCost.instantSpeed candidate || free}
           : [ candidate
-                { CandidateCost.cost = plus (CandidateCost.cost candidate) Cost.MkCost {Cost.mana = Just increase, Cost.components = []},
+                { CandidateCost.cost = plus (CandidateCost.cost candidate) Cost.MkCost {Cost.mana = Just additional, Cost.components = []},
                   CandidateCost.instantSpeed = True
                 }
-            | increase <- increases
+            | additional <- additionals
             ]
 
 -- | candidateCostsFor, told whether CR 601.3's permission comes from the EFFECT

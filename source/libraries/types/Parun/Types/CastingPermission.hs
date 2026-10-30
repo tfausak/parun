@@ -34,7 +34,7 @@ data CastingPermission
     -- never "does this have flashback?".
     CastFromGraveyard (Maybe KeywordFamily.KeywordFamily)
   | -- | CR 601.3c / 601.3d: cast this card as though it had flash (CR 702.8a)
-    -- while the condition holds, paying the increase on top of the total cost
-    -- (CR 601.2f) only when the permission is used.
+    -- while the condition holds, paying the additional cost (CR 601.2f) only
+    -- when the permission is used.
     CastAsThoughItHadFlash (Maybe Condition.Condition) (Maybe ManaCost.ManaCost)
   deriving (Eq, Ord, Show)

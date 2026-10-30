@@ -956,5 +956,5 @@ Entries are ordered by the first rule each cites.
   in the card or CR 601.3c confines the permission to the moments it is
   needed, and the engine does not make the caster's choice.
 - **Site**: `Parun.Engine.Cost.withFlashPermission`. Proved by the scenario
-  harbinger-of-the-tides-cast-in-a-main-phase-pays-only-its-mana-cost.
+  harbinger-of-the-tides-cast-in-a-main-phase-may-pay-two-more.
 - **Issue**: #5765.

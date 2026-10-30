@@ -2222,7 +2222,7 @@ rewriteTriggerCondition pairs condition = case condition of
 -- CR 612.1 through a casting permission's one condition.
 rewriteCastingPermission :: [(TextWord.TextWord, TextWord.TextWord)] -> CastingPermission.CastingPermission -> CastingPermission.CastingPermission
 rewriteCastingPermission pairs permission = case permission of
-  CastingPermission.CastAsThoughItHadFlash condition increase -> CastingPermission.CastAsThoughItHadFlash (fmap (rewriteCondition pairs) condition) increase
+  CastingPermission.CastAsThoughItHadFlash condition additional -> CastingPermission.CastAsThoughItHadFlash (fmap (rewriteCondition pairs) condition) additional
   CastingPermission.CastFromGraveyard _ -> permission
   CastingPermission.CastFromLibraryWhileSearching -> permission
 

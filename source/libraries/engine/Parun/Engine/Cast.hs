@@ -207,14 +207,19 @@ cardTimingWith window pid oid name gs = case proposedFace oid name gs of
 -- CR 601.2e / 601.3b: the timing half of rule 601.2e's check at the announced
 -- X. A cast only a flash permission let begin is illegal once the X announced
 -- leaves the permission not naming the spell at `manaValue` and no other window
--- is open. windowedCandidates has already judged every other choice. Asked on
--- the proposal board, so the window reads the stack the spell is not yet on.
--- Parun.CastPermissionSpec's "CR 601.2e Untimely Aluren takes back Protean Hydra
--- at X = 2 and not at X = 3" is the proof.
-flashRefusedAt :: PlayerId -> ObjectId -> CardName.CardName -> Integer -> GameState -> Bool
-flashRefusedAt pid oid name manaValue gs =
+-- is open to the CHOSEN candidate: a candidate it passed over carrying its own
+-- window (offering, sneak, a paid flash permission) does not keep it open.
+-- windowedCandidates has already judged every other choice. Asked on the
+-- proposal board, so the window reads the stack the spell is not yet on. The
+-- scenarios cr-601-2e-untimely-aluren-takes-back-protean-hydra-at-x-2-and-not-at-x-3
+-- and cr-601-2e-untimely-aluren-takes-back-a-hasty-hydra-cast-for-its-printed-cost
+-- are the proof.
+flashRefusedAt :: PlayerId -> ObjectId -> CardName.CardName -> CandidateCost.CandidateCost -> Integer -> GameState -> Bool
+flashRefusedAt pid oid name candidate manaValue gs =
   PlayerEffect.mayCastAsThoughItHadFlash pid oid gs
-    && not (cardTimingWith (timingWith False pid oid name gs) pid oid name gs)
+    && not (timingWith False pid oid name gs)
+    && not (CandidateCost.instantSpeed candidate)
+    && not (Keyword.sneakWindowed (CandidateCost.keyword candidate) && Turn.declareBlockersWindow pid gs)
     && not (PlayerEffect.mayCastAsThoughItHadFlashAt pid oid manaValue gs)
 
 -- CR 601.2b's candidates less the ones their own window shuts out. The ONE
@@ -2673,12 +2678,12 @@ castSpellWith perform timed offered applied widened pid oid name facing = Event.
           -- CR 601.2e's re-asking, at the announced mana value, of a prohibition
           -- and of the permission the cast is made under, judged on the same
           -- proposal board candidateAllowed judged them on, and of a flash
-          -- window where a window times the cast at all.
-          let refusedAt castFor permission manaValue =
-                let board = proposedFor oid castFor proposed
+          -- window where a window times the cast at all, the chosen candidate's.
+          let refusedAt candidate permission manaValue =
+                let board = proposedFor oid (CandidateCost.keyword candidate) proposed
                  in PlayerEffect.prohibitsAtManaValue pid oid manaValue board
                       || not (PlayerEffect.admitsAtManaValue pid permission oid manaValue board)
-                      || (timed && flashRefusedAt pid oid name manaValue board)
+                      || (timed && flashRefusedAt pid oid name candidate manaValue board)
           castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefore candidates spent permissions (riders sid) refusedAt (ownExilePermission offered pid oid before) before
 
 -- CR 305.2a / 305.3: whether `pid` may play a land at all now -- it is their
@@ -3171,7 +3176,7 @@ trimModalForCandidate castFor paid modal = modal {Modal.Type.modes = fmap (trimM
 -- of the pre-move state for `spent`'s reason; the one chosen spends its budget
 -- beside `spent`, and `riders` is what it gives the spell (CR 611.3d), asked
 -- there too and stored beside it.
-castProposed :: ManaAbilityPerformer.ManaAbilityPerformer -> ManaSpending -> PlayerId -> ObjectId -> ObjectId -> Face.Face Card.Type.Card -> Maybe Zone.Zone -> Maybe ObjectId -> Set Keyword -> [CandidateCost.CandidateCost] -> [ActivePlayerEffect.ActivePlayerEffect] -> [Maybe (ObjectId, CastFromZone.CastFromZone)] -> (Maybe (ObjectId, CastFromZone.CastFromZone) -> [ContinuousEffect.ContinuousEffect Card.Type.Card]) -> (Maybe Keyword -> Maybe (ObjectId, CastFromZone.CastFromZone) -> Integer -> Bool) -> Maybe ExilePlayPermission.ExilePlayPermission -> GameState -> Game ()
+castProposed :: ManaAbilityPerformer.ManaAbilityPerformer -> ManaSpending -> PlayerId -> ObjectId -> ObjectId -> Face.Face Card.Type.Card -> Maybe Zone.Zone -> Maybe ObjectId -> Set Keyword -> [CandidateCost.CandidateCost] -> [ActivePlayerEffect.ActivePlayerEffect] -> [Maybe (ObjectId, CastFromZone.CastFromZone)] -> (Maybe (ObjectId, CastFromZone.CastFromZone) -> [ContinuousEffect.ContinuousEffect Card.Type.Card]) -> (CandidateCost.CandidateCost -> Maybe (ObjectId, CastFromZone.CastFromZone) -> Integer -> Bool) -> Maybe ExilePlayPermission.ExilePlayPermission -> GameState -> Game ()
 castProposed perform spending pid oid sid printedFace castFrom preparedFor keywordsBefore candidateCosts spent permissions riders refusedAt exilePermission before = do
   -- CR 700.2e: who chooses the modes, settled first -- the caster where
   -- several players could (Players.chooseOne, elided at one) -- and bound on the
@@ -3620,7 +3625,7 @@ castProposed perform spending pid oid sid printedFace castFrom preparedFor keywo
                   -- CR 601.2f total will.
                   withX o = o {Object.bindings = Map.union (Binding.fromChoices Map.empty mAmount Seq.empty) (Object.bindings o)}
                   announcedBoard = bestowedGs {GameState.objects = Map.adjust withX sid (GameState.objects bestowedGs)}
-                  refused = Maybe.isJust mAmount && maybe False (refusedAt castFor permissionUsed) (Filter.manaValue (Projection.viewOfObject sid announcedBoard))
+                  refused = Maybe.isJust mAmount && maybe False (refusedAt chosenCandidate permissionUsed) (Filter.manaValue (Projection.viewOfObject sid announcedBoard))
               if overCeiling || underFloor || refused || not (payableCost (Just chosenModes) chosenReductions spending pid sid announcedBoard announcedAtX)
                 then reject
                 else do
