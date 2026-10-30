@@ -1342,9 +1342,12 @@ storedPlayerScope effect = case effect of
 -- ChosenCardFromAmong splits off its uncapped "any number", which only a
 -- reveal's test (Lead the Stampede) and a move's (Ransack) reach, and its pile
 -- split (CR 700.3), which only a move's test (Sphinx of Uthuun) reaches.
+-- ChosenCardInHand splits off its "up to", which only a move's test (The Great
+-- Aurora) reaches.
 data Question
   = CardInGraveyard
   | CardInHand
+  | AnyCardsInHand
   | CardFromAmong
   | AnyCardsFromAmong
   | PileFromAmong
@@ -1391,7 +1394,9 @@ questionOf ref = case ref of
   ObjectRef.TopOfGraveyard {} -> Nothing
   ObjectRef.EachCardFromAmong {} -> Nothing
   ObjectRef.ChosenCardInGraveyard {} -> Just CardInGraveyard
-  ObjectRef.ChosenCardInHand {} -> Just CardInHand
+  ObjectRef.ChosenCardInHand choice -> case ChosenCardInHand.count choice of
+    HowMany.UpTo _ -> Just AnyCardsInHand
+    HowMany.Exactly _ -> Just CardInHand
   ObjectRef.ChosenCardFromAmong choice -> case ChosenCardFromAmong.count choice of
     _ | Maybe.isJust (ChosenCardFromAmong.pileChooser choice) -> Just PileFromAmong
     HowMany.UpTo Nothing -> Just AnyCardsFromAmong
@@ -2111,11 +2116,10 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
           -- choosers: Karn Liberated's targeted seat exiles one card, and "each
           -- player" would be one each. The same per-seat count TopOfLibrary
           -- takes of its own PlayerRef, which is why they share namesOneSeat.
-          -- Aquatic Subtlety's printed two makes the same seat plural, and a
-          -- COMPUTED count is plural whatever the board would make it.
-          ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand player _ count) -> case count of
-            Quantity.Type.Literal n -> n <= 1 && namesOneSeat player
-            _ -> False
+          -- Aquatic Subtlety's printed two makes the same seat plural, as does
+          -- The Great Aurora's "any number", and a COMPUTED count is plural
+          -- whatever the board would make it.
+          ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand player _ count) -> atMostOne count && namesOneSeat player
           -- One card per ONE seat, so the ref's own count is the whole of it: a
           -- chooser names a single seat or nobody, where ChosenCardInHand's
           -- PlayerRef above may name several hands. A COMPUTED count is plural
@@ -2734,7 +2738,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     let anyCard = Filter.Type.HasCardType CardType.Creature
         group = SlotName.MkSlotName (Text.pack "revealed")
         inGraveyard = ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard Chooser.TheController (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)) anyCard (Quantity.Type.Literal 1))
-        inHand = ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (PlayerRef.Relative PlayerRelation.You) anyCard (Quantity.Type.Literal 1))
+        inHand = ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (PlayerRef.Relative PlayerRelation.You) anyCard HowMany.one)
         fromAmong = ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong group anyCard HowMany.one (PlayerRef.Relative PlayerRelation.You) Nothing)
         atRandom = ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand (PlayerRef.Relative PlayerRelation.You) anyCard (Quantity.Type.Literal 1))
         atRandomInGraveyard = ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)) anyCard (Quantity.Type.Literal 1))

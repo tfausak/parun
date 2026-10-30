@@ -298,7 +298,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
     Common.assertCodec
       s
       ObjectRef.codec
-      (ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) (Filter.And []) (Quantity.Literal 1)))
+      (ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) (Filter.And []) HowMany.one))
       " {\"type\":\"ChosenCardInHand\",\"value\":{\"player\":{\"type\":\"InSlot\",\"value\":\"target\"},\"filter\":{\"type\":\"And\",\"value\":[]}}} "
   -- Elvish Piper's "a creature card from your hand": the same arm with the
   -- Filter stating a characteristic, which is the pair Karn's unfiltered wording
@@ -307,7 +307,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
     Common.assertCodec
       s
       ObjectRef.codec
-      (ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (PlayerRef.Relative PlayerRelation.You) (Filter.HasCardType CardType.Creature) (Quantity.Literal 1)))
+      (ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (PlayerRef.Relative PlayerRelation.You) (Filter.HasCardType CardType.Creature) HowMany.one))
       " {\"type\":\"ChosenCardInHand\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
   -- The filter is REQUIRED rather than defaulted, so a card written before it
   -- existed is a decode failure rather than a silently unnarrowed choice.
@@ -486,7 +486,7 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
                 Codec.encode ObjectRef.codec (ObjectRef.TopOfLibraryUntil (TopOfLibraryUntil.MkTopOfLibraryUntil (PlayerRef.Relative PlayerRelation.You) (Filter.Not (Filter.HasCardType CardType.Land)) (Quantity.Literal 1))),
                 Codec.encode ObjectRef.codec (ObjectRef.TopOfGraveyard (PlayerRef.Relative PlayerRelation.You)),
                 Codec.encode ObjectRef.codec (ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard Chooser.TheController (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.AnyPlayer)) (Filter.HasCardType CardType.Creature) (Quantity.Literal 1))),
-                Codec.encode ObjectRef.codec (ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (PlayerRef.Relative PlayerRelation.You) (Filter.HasCardType CardType.Creature) (Quantity.Literal 1))),
+                Codec.encode ObjectRef.codec (ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (PlayerRef.Relative PlayerRelation.You) (Filter.HasCardType CardType.Creature) HowMany.one)),
                 Codec.encode ObjectRef.codec (ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong (SlotName.MkSlotName (Text.pack "revealed")) (Filter.HasCardType CardType.Creature) HowMany.one (PlayerRef.Relative PlayerRelation.You) Nothing)),
                 Codec.encode ObjectRef.codec (ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong (SlotName.MkSlotName (Text.pack "revealed")) (Filter.HasCardType CardType.Land))),
                 Codec.encode ObjectRef.codec (ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand (PlayerRef.Relative PlayerRelation.You) (Filter.And []) (Quantity.Literal 1))),

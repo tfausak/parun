@@ -437,6 +437,7 @@ decode p response = case p of
   Prompt.ChooseAnyNumber _ _ _ purpose _ _ -> case (purpose, response) of
     (AnyNumberOf.Permanents, Response.ChoseAnyNumberOfPermanents ids) -> Just ids
     (AnyNumberOf.CardsFromAmong, Response.ChoseCardsFromAmong ids) -> Just ids
+    (AnyNumberOf.CardsInHand, Response.ChoseCardsInHand ids) -> Just ids
     (AnyNumberOf.ToSacrifice, Response.ChoseSacrifices ids) -> Just ids
     (AnyNumberOf.ToReveal, Response.ChoseReveals ids) -> Just ids
     (AnyNumberOf.ToExile, Response.ChoseExilesFromGraveyard ids) -> Just ids
@@ -1461,6 +1462,7 @@ anyNumberResponse :: AnyNumberOf.AnyNumberOf -> Set.Set ObjectId -> Response
 anyNumberResponse purpose = case purpose of
   AnyNumberOf.Permanents -> Response.ChoseAnyNumberOfPermanents
   AnyNumberOf.CardsFromAmong -> Response.ChoseCardsFromAmong
+  AnyNumberOf.CardsInHand -> Response.ChoseCardsInHand
   AnyNumberOf.ToSacrifice -> Response.ChoseSacrifices
   AnyNumberOf.ToReveal -> Response.ChoseReveals
   AnyNumberOf.ToExile -> Response.ChoseExilesFromGraveyard

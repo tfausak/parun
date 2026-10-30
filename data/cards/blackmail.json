@@ -27,8 +27,11 @@
                         "type": "ChosenCardInHand",
                         "value": {
                           "count": {
-                            "type": "Literal",
-                            "value": 3
+                            "type": "Exactly",
+                            "value": {
+                              "type": "Literal",
+                              "value": 3
+                            }
                           },
                           "filter": {
                             "type": "And",
