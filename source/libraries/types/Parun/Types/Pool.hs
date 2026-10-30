@@ -10,7 +10,8 @@ import qualified Parun.Types.ZoneScope as ZoneScope
 -- ZONE for one -- never with a card's own restriction, which is the Filter's job.
 -- A union of two admitted kinds is the one further shape a card can force, since
 -- CR 601.2c fixes one count per slot and a slot has one pool; SpellsAndPermanents,
--- PlayersAndPlaneswalkers and CreaturesAndCardsInGraveyard are those.
+-- SpellsAndAbilities, PlayersAndPlaneswalkers and CreaturesAndCardsInGraveyard
+-- are those.
 data Pool
   = Creatures -- CR 115.1a: creatures on the battlefield (ToCreature).
   | Players -- CR 115: players still in the game (ToPlayer).
@@ -39,6 +40,9 @@ data Pool
     -- Parun.Engine.Activatable.activatable already excludes it (CR 605.1a).
     Abilities
   | SpellsAndPermanents -- CR 115: spells on the stack + battlefield permanents (ToObject).
+  | -- | CR 115.2 clause (b): Spells and Abilities above in one slot (ToObject) --
+    -- Radiant Performer's "target spell or ability".
+    SpellsAndAbilities
   | -- | CR 115.2's own two halves in one slot -- the rule's default (a permanent
     -- is a legal target, here CR 306's planeswalkers, ToPlaneswalker) plus clause
     -- (a)'s "or a player" (ToPlayer). Goblin War Strike's "target player or

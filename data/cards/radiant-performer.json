@@ -1,0 +1,158 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Flash"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Radiant Performer",
+      "oracleText": "Flash\nWhen this creature enters, if you cast it from your hand, choose target spell or ability that targets only a single permanent or player. Copy that spell or ability for each other permanent or player the spell or ability could target. Each copy targets a different one of those permanents and players.",
+      "power": {
+        "type": "Literal",
+        "value": 2
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 2
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SelfEnters"
+          },
+          "intervening": {
+            "type": "Compares",
+            "value": {
+              "comparison": {
+                "type": "AtLeast"
+              },
+              "measured": {
+                "type": "WasCastFrom",
+                "value": {
+                  "from": {
+                    "player": {
+                      "type": "Relative",
+                      "value": {
+                        "type": "You"
+                      }
+                    },
+                    "zone": {
+                      "type": "Hand"
+                    }
+                  }
+                }
+              },
+              "threshold": {
+                "type": "Literal",
+                "value": 1
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "CopyStackObject",
+                        "value": {
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "spell"
+                          },
+                          "targets": {
+                            "type": "ForEach",
+                            "value": [
+                              {
+                                "type": "EachMatching",
+                                "value": {
+                                  "type": "And",
+                                  "value": []
+                                }
+                              },
+                              {
+                                "type": "EachPlayer"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "spell": {
+                    "filter": {
+                      "type": "TargetsOnlyOne",
+                      "value": {
+                        "type": "Or",
+                        "value": [
+                          {
+                            "type": "IsInZone",
+                            "value": {
+                              "type": "Battlefield"
+                            }
+                          },
+                          {
+                            "type": "IsPlayer",
+                            "value": {
+                              "type": "AnyPlayer"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    "pool": {
+                      "type": "SpellsAndAbilities"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Human"
+          },
+          {
+            "type": "Wizard"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

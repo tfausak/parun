@@ -52,9 +52,9 @@ phenomenonOwnerOf oid gs = case fmap Object.source (Game.lookupObject oid gs) of
 
 -- | CR 901.10b: is this a phenomenon's triggered ability whose phenomenon's
 -- owner has left the game? It is then the planar controller's, whoever put it
--- on the stack (CR 707.10). The owner gate is unobserved: only a copy another
--- player put on the stack tells it apart, and no card in data/cards copies a
--- triggered ability its caster does not control (gap #4564).
+-- on the stack (CR 707.10). Parun.PlanechaseSpec's "CR 707.10 a copy of a
+-- phenomenon's ability is its copier's while the phenomenon's owner plays"
+-- proves the owner gate.
 isOrphanedPhenomenonAbility :: ObjectId -> GameState -> Bool
 isOrphanedPhenomenonAbility oid gs = maybe False (`List.notElem` Game.stillPlaying gs) (phenomenonOwnerOf oid gs)
 

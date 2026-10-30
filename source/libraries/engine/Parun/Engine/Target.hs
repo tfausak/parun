@@ -575,6 +575,7 @@ poolHeldLastKnown pool view =
         Pool.Players -> False
         Pool.Spells -> False
         Pool.Abilities -> False
+        Pool.SpellsAndAbilities -> False
         Pool.CardsInGraveyard _ -> False
         Pool.CardsInExile -> False
         Pool.CardsInAnte -> False
@@ -897,6 +898,8 @@ basePoolGiven pools context bindings pool gs = case pool of
   Pool.Spells -> spellPool pools
   Pool.Abilities -> abilityPool pools
   Pool.SpellsAndPermanents -> spellsAndPermanentsPool pools
+  -- Disjoint halves (CR 113.9), so no object appears under two tags.
+  Pool.SpellsAndAbilities -> Set.union (spellPool pools) (abilityPool pools)
   Pool.PlayersAndPlaneswalkers -> playersAndPlaneswalkersPool pools
   Pool.CardsInGraveyard scope -> graveyardRecipients context bindings scope gs
   -- CR 406.1's whole zone, face-down cards included, and hoisted because CR 400.1
@@ -1536,6 +1539,7 @@ scopeSlot pool = case pool of
   Pool.Spells -> Nothing
   Pool.Abilities -> Nothing
   Pool.SpellsAndPermanents -> Nothing
+  Pool.SpellsAndAbilities -> Nothing
   Pool.PlayersAndPlaneswalkers -> Nothing
   Pool.CardsInGraveyard scope -> zoneScopeSlot scope
   Pool.CardsInExile -> Nothing
@@ -2455,6 +2459,7 @@ bakePerPlayer name pid slot =
         Pool.Spells -> pool
         Pool.Abilities -> pool
         Pool.SpellsAndPermanents -> pool
+        Pool.SpellsAndAbilities -> pool
         Pool.PlayersAndPlaneswalkers -> pool
         Pool.CardsInExile -> pool
         Pool.CardsInAnte -> pool
