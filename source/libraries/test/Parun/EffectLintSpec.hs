@@ -71,6 +71,7 @@ import qualified Parun.Types.Blight as Blight
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.ChangeTargets as ChangeTargets
 import qualified Parun.Types.ChangeText as ChangeText
 import qualified Parun.Types.ChoosePermanents as ChoosePermanents
 import qualified Parun.Types.Chooser as Chooser
@@ -1702,7 +1703,7 @@ effectObjectRefs effect =
         Effect.RepeatIf {} -> []
         Effect.Heal ref -> read_ [ref]
         Effect.ChooseNewTargets ref -> read_ [ref]
-        Effect.ChangeTargets ref -> read_ [ref]
+        Effect.ChangeTargets x -> read_ (ChangeTargets.objects x : Maybe.maybeToList (ChangeTargets.onto x))
 
 -- The chooser-shaped refs one effect writes where its position does not allow
 -- them: the lint's offenders. At a read position the CR 608.2d choice is made by

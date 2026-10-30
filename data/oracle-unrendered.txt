@@ -1479,6 +1479,7 @@ mishras-workshop
 misinformation
 mist-dragon
 mitotic-slime
+mizzium-meddler
 mizzixs-mastery
 mob-verdict
 mobilizer-mech
@@ -2142,6 +2143,7 @@ spectral-searchlight
 spectral-shift
 spell-blast
 spellbook
+spellskite
 spelltwine
 sphere-of-safety
 sphinx-ambassador

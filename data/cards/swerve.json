@@ -32,8 +32,10 @@
                   {
                     "type": "ChangeTargets",
                     "value": {
-                      "type": "InSlot",
-                      "value": "spell"
+                      "objects": {
+                        "type": "InSlot",
+                        "value": "spell"
+                      }
                     }
                   }
                 ]

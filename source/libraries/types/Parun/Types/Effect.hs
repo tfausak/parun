@@ -16,6 +16,7 @@ import qualified Parun.Types.BindAmount as BindAmount
 import qualified Parun.Types.Blight as Blight
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CastOffer as CastOffer
+import qualified Parun.Types.ChangeTargets as ChangeTargets
 import qualified Parun.Types.ChangeText as ChangeText
 import qualified Parun.Types.ChooseCardName as ChooseCardName
 import qualified Parun.Types.ChooseNumber as ChooseNumber
@@ -899,7 +900,8 @@ data Effect card ability
   | -- | CR 115.7d: the resolving controller may choose new targets for each
     -- spell or ability on the stack the ObjectRef names (Redirect).
     ChooseNewTargets ObjectRef.ObjectRef
-  | -- | CR 115.7a: the resolving controller changes the targets of each spell or
-    -- ability on the stack the ObjectRef names (Deflection).
-    ChangeTargets ObjectRef.ObjectRef
+  | -- | CR 115.7a / 115.7b: the resolving controller changes the targets of
+    -- each spell or ability on the stack the payload names (Deflection, Mizzium
+    -- Meddler).
+    ChangeTargets ChangeTargets.ChangeTargets
   deriving (Eq, Ord, Show)

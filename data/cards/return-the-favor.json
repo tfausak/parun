@@ -102,8 +102,10 @@
                   {
                     "type": "ChangeTargets",
                     "value": {
-                      "type": "InSlot",
-                      "value": "redirected"
+                      "objects": {
+                        "type": "InSlot",
+                        "value": "redirected"
+                      }
                     }
                   }
                 ]

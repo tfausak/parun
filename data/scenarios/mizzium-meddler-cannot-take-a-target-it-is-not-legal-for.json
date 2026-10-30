@@ -1,0 +1,115 @@
+{
+  "board": {
+    "active": "bob",
+    "seats": [
+      {
+        "hand": [
+          {
+            "card": "Mizzium Meddler",
+            "label": "meddler"
+          }
+        ],
+        "manaPool": "UUU",
+        "name": "alice"
+      },
+      {
+        "hand": [
+          {
+            "card": "Lava Axe",
+            "label": "axe"
+          }
+        ],
+        "manaPool": "RRRRR",
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 115.7a Mizzium Meddler cannot become Lava Axe's target, so Lava Axe stays aimed at its controller",
+  "final": [
+    {
+      "Life": {
+        "life": 15,
+        "player": "alice"
+      }
+    },
+    {
+      "Damage": {
+        "damage": 0,
+        "object": "Mizzium Meddler"
+      }
+    },
+    {
+      "View": {
+        "is": [],
+        "of": "Stack"
+      }
+    }
+  ],
+  "note": "Lava Axe targets only a player or planeswalker, so the creature is no legal new target and nothing changes.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "object": "$axe",
+          "targets": [
+            "$alice"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "object": "$meddler"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseTargets": {
+          "redirected": [
+            "Lava Axe"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseOptional": {
+          "type": "Exercises"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

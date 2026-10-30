@@ -118,6 +118,7 @@ import qualified Parun.Types.CastRepetition as CastRepetition
 import qualified Parun.Types.CastingPermission as CastingPermission
 import qualified Parun.Types.CastingRestriction as CastingRestriction
 import qualified Parun.Types.CausedBy as CausedBy
+import qualified Parun.Types.ChangeTargets as ChangeTargets
 import qualified Parun.Types.ChangeText as ChangeText
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
 import qualified Parun.Types.ChooseCardName as ChooseCardName
@@ -750,7 +751,7 @@ objectRefPositions =
         ("for-each", Effect.ForEach (ForEach.MkForEach (plantedRef "fe") LoopMembers.Every (SlotName.MkSlotName (Text.pack "each")) Seq.empty False Nothing Nothing), [plantedRef "fe"]),
         ("heal", Effect.Heal (plantedRef "he"), [plantedRef "he"]),
         ("choose-new-targets", Effect.ChooseNewTargets (plantedRef "cnt"), [plantedRef "cnt"]),
-        ("change-targets", Effect.ChangeTargets (plantedRef "ct"), [plantedRef "ct"]),
+        ("change-targets", Effect.ChangeTargets (ChangeTargets.MkChangeTargets (plantedRef "ct") (Just (plantedRef "cto"))), [plantedRef "ct", plantedRef "cto"]),
         ("exchange-values", Effect.ExchangeValues (ExchangeValues.MkExchangeValues (ExchangedValue.Power (plantedRef "xv-power")) (ExchangedValue.Toughness (plantedRef "xv-toughness")) Duration.Indefinite), [plantedRef "xv-power", plantedRef "xv-toughness"])
       ]
 
@@ -6444,7 +6445,7 @@ effectFilters effect = case effect of
   Effect.RepeatIf (RepeatIf.MkRepeatIf process condition ifHolds) -> frame Unframed (conditionFilters condition) <> concatMap effectFilters (process <> ifHolds)
   Effect.Heal ref -> frame SourceHostFramed (objectRefFilters ref)
   Effect.ChooseNewTargets ref -> frame SourceHostFramed (objectRefFilters ref)
-  Effect.ChangeTargets ref -> frame SourceHostFramed (objectRefFilters ref)
+  Effect.ChangeTargets x -> frame SourceHostFramed (objectRefFilters (ChangeTargets.objects x) <> foldMap objectRefFilters (ChangeTargets.onto x))
 
 -- Per MODE rather than through Modal.allTargetSlots, which is a Map.unions and so
 -- collapses two modes declaring the same slot name (#475) -- the cross-check
