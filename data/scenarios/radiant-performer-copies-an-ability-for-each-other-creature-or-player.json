@@ -91,7 +91,7 @@
       }
     }
   ],
-  "note": "The only object on the stack when the trigger targets is an ABILITY, so a slot drawing only from spells (CR 112.1) would have nothing and the trigger would be removed (CR 603.3d). Distinct outcomes per recipient: bob, the Pyromancer (dies), Hill Giant and the Performer each take 1 from a copy, alice from the original.",
+  "note": "The only object on the stack when the trigger targets is an ABILITY, so a slot drawing only from spells (CR 112.1) would have nothing and the trigger would be removed (CR 603.3d). Distinct outcomes per recipient: bob, the Pyromancer (dies), Hill Giant and the Performer each take 1 from a copy, alice from the original. Each copy is alice's, the original bob's (CR 707.10).",
   "timeline": [
     {
       "do": {
@@ -194,6 +194,103 @@
             "ability of $pyro"
           ],
           "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "alice",
+          "object": "ability of $pyro",
+          "of": "Controller"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "alice",
+          "object": "ability of $pyro",
+          "of": "Controller"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "alice",
+          "object": "ability of $pyro",
+          "of": "Controller"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "alice",
+          "object": "ability of $pyro",
+          "of": "Controller"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "ability of $pyro"
+          ],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "bob",
+          "object": "ability of $pyro",
+          "of": "Controller"
         }
       },
       "player": "alice",
