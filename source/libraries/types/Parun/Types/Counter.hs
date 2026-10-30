@@ -15,7 +15,9 @@ import qualified Parun.Types.SlotName as SlotName
 -- Quantity.InSlot -- Swift Silence's "draw a card for each spell countered this
 -- way". Destroy's field, for Destroy's reason, and it has to be the FUNNEL's
 -- answer rather than the sweep's: a spell CR 113.6g or CR 613.11 protects was
--- named and was not countered.
+-- named and was not countered. The same slot holds the countered objects
+-- themselves, for Psychic Rebuttal's "copy the spell countered this way" (CR
+-- 608.2h, 707.10); nothing when nothing was countered.
 --
 -- The count is of everything COUNTERED, which CR 701.6a makes "a spell or
 -- ability" -- Swift Silence's rider says "each SPELL countered this way", and

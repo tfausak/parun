@@ -1,0 +1,38 @@
+{
+  "description": "CR 207.2c Psychic Rebuttal without spell mastery only counters",
+  "note": "The copying case's board but for alice's graveyard: one instant is no spell mastery, so she is never asked whether to copy. The Firecraft is countered and nobody is hit.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" }
+        ],
+        "hand": [{ "card": "Psychic Rebuttal", "label": "rebuttal" }],
+        "graveyard": [{ "card": "Lightning Bolt" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Mountain", "label": "m2" },
+          { "card": "Mountain", "label": "m3" }
+        ],
+        "hand": [{ "card": "Exquisite Firecraft", "label": "firecraft" }],
+        "graveyard": [{ "card": "Shock" }]
+      }
+    ],
+    "active": "bob",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Cast": { "object": "$firecraft", "targets": ["$alice"], "mana": ["$m1", "$m2", "$m3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$rebuttal", "targets": ["Exquisite Firecraft"], "mana": ["$i1", "$i2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Exquisite Firecraft", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 20 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 20 } } }
+  ]
+}

@@ -192,8 +192,16 @@ counter resolving source controller legal (Counter.MkCounter ref mSlot mSources 
   let countered = fmap fst moved
   -- CR 701.6a's "countered this way" is what the funnel COUNTERED, never what
   -- the sweep named. Bound onto this effect's SOURCE, and bound even at zero.
-  Monad.forM_ mSlot $ \slot ->
+  --
+  -- The same slot's OBJECTS are the countered stack ids, merged onto
+  -- `resolving` beside the count, for Psychic Rebuttal's "copy the spell
+  -- countered this way": CR 608.2h's last known information, which
+  -- GameState.stackArchive keeps for CR 707.10 to copy. Unbound when nothing
+  -- was countered, so a spell that can't be countered gives no copy (the
+  -- card's ruling). data/scenarios/psychic-rebuttal-* prove both.
+  Monad.forM_ mSlot $ \slot -> do
     State.modify' (Common.bindAmountSlot resolving source slot (Natural.length countered))
+    Monad.unless (null countered) (State.modify' (Common.overHolderBindings resolving (Map.insertWith Binding.mergeBinding slot (Binding.toObjects (Seq.fromList countered)))))
   -- Delay's "exile it with three time counters on it": the cards the
   -- countering put into the destination, bound onto `resolving` as a GROUP,
   -- Destroy's `buried` shape and for its reason. Read off the board after the

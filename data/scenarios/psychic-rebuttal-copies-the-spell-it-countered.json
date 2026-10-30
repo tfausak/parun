@@ -1,0 +1,42 @@
+{
+  "description": "CR 707.10 Psychic Rebuttal with spell mastery copies the spell it countered",
+  "note": "bob's Exquisite Firecraft targets alice; with one instant in bob's graveyard it can be countered. alice's Psychic Rebuttal counters it and, with two in hers, she copies it off its last known information (CR 608.2h) and aims the copy at bob. Pairs with the uncounterable case, which differs only in bob's graveyard.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" }
+        ],
+        "hand": [{ "card": "Psychic Rebuttal", "label": "rebuttal" }],
+        "graveyard": [{ "card": "Lightning Bolt" }, { "card": "Shock" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Mountain", "label": "m2" },
+          { "card": "Mountain", "label": "m3" }
+        ],
+        "hand": [{ "card": "Exquisite Firecraft", "label": "firecraft" }],
+        "graveyard": [{ "card": "Shock" }]
+      }
+    ],
+    "active": "bob",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Cast": { "object": "$firecraft", "targets": ["$alice"], "mana": ["$m1", "$m2", "$m3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$rebuttal", "targets": ["Exquisite Firecraft"], "mana": ["$i1", "$i2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Psychic Rebuttal", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseTargets": { "target": ["$bob"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["Exquisite Firecraft#2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Exquisite Firecraft", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 16 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 20 } } }
+  ]
+}
