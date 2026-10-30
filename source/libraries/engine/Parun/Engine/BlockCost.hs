@@ -20,6 +20,7 @@ import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
+import qualified Parun.Engine.Condition as Condition
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
@@ -106,8 +107,22 @@ costsOn blocker blocked gs =
       taxes bc = case BlockCost.attackers bc of
         Nothing -> True
         Just wanted -> any (\attacker -> Filter.matches blockerContext (Projection.viewOfObject attacker gs) wanted) (Set.toList blocked)
+      -- CR 611.3a: an "as long as" is asked live, once per cost, with CR
+      -- 109.5's "you" the source's controller. No CR 612.1 word swap, as the
+      -- rest of the cost gets none (Projection.Rewrite.rewriteRuleAbilities).
+      inForce source bc = case BlockCost.while bc of
+        Nothing -> True
+        Just condition ->
+          Condition.holds
+            (Projection.fullView gs)
+            (Projection.sourceContext gs (Projection.controllerOf source gs) source)
+            gs
+            source
+            condition
       fromCost source bc =
-        if taxes bc && Projection.affectsUnder grants source blocker (BlockCost.subject bc) view gs
+        if inForce source bc
+          && taxes bc
+          && Projection.affectsUnder grants source blocker (BlockCost.subject bc) view gs
           then fmap ((,) source) (shareOf source bc)
           else []
    in concatMap (\source -> fromPermanent source <> fromGrant source) (Set.toList (GameState.battlefield gs))

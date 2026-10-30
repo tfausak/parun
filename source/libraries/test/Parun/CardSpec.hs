@@ -2178,14 +2178,18 @@ ruleAbilitiesCounts rules =
     -- itself untapped). The affected set holds a Filter but no Count.
     <> concatMap (concatMap conditionCounts . Maybe.maybeToList . UntapRestriction.while) (RuleAbilities.untapRestrictions rules)
     -- CR 508.1h's counted share (Sphere of Safety's "the number of enchantments
-    -- you control"), the one Count a cost to attack can hold: its subject is an
-    -- Affected, which holds a Filter but no Count.
+    -- you control"); its subject is an Affected, which holds a Filter but no
+    -- Count.
     <> concatMap (perCreatureCounts . AttackCost.perAttacker) (RuleAbilities.attackCosts rules)
     -- CR 509.1d's counted share, the same Count in the blocking carrier. A FENCE
     -- rather than a proved line: Sphere of Safety fills the attacking one and
     -- pins the positive assertion below, and no cost to block in `data/cards/`
     -- writes a Counted share -- Oppressive Rays' is a literal {3}.
     <> concatMap (perCreatureCounts . BlockCost.perBlocker) (RuleAbilities.blockCosts rules)
+    -- CR 611.3a's "as long as" on either cost (Archangel of Tithes counts
+    -- itself untapped, and attacking).
+    <> concatMap (concatMap conditionCounts . Maybe.maybeToList . AttackCost.while) (RuleAbilities.attackCosts rules)
+    <> concatMap (concatMap conditionCounts . Maybe.maybeToList . BlockCost.while) (RuleAbilities.blockCosts rules)
 
 -- The shared shape of the D4 dataflow lint, over EVERY carrier a card can hang
 -- modes off: its spell, and its activated, triggered and delayed abilities. The
@@ -6480,6 +6484,9 @@ ruleAbilitiesFilters rules =
         <> concatMap (unframed . affectedFilters . BlockCost.subject) (RuleAbilities.blockCosts rules)
         <> concatMap (perCreatureFilters . BlockCost.perBlocker) (RuleAbilities.blockCosts rules)
         <> concatMap (unframed . Maybe.maybeToList . BlockCost.attackers) (RuleAbilities.blockCosts rules)
+        -- CR 611.3a's "as long as" on either cost (Archangel of Tithes).
+        <> concatMap (concatMap conditionFilters . Maybe.maybeToList . AttackCost.while) (RuleAbilities.attackCosts rules)
+        <> concatMap (concatMap conditionFilters . Maybe.maybeToList . BlockCost.while) (RuleAbilities.blockCosts rules)
         <> concatMap (frame Unframed . combatRestrictionFilters) (RuleAbilities.combatRestrictions rules)
         <> concatMap (unframed . affectedFilters . SacrificeRestriction.affected) (RuleAbilities.sacrificeRestrictions rules)
         <> concatMap untapRestrictionFilters (RuleAbilities.untapRestrictions rules)

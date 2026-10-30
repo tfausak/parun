@@ -1,6 +1,7 @@
 module Parun.Types.BlockCost where
 
 import qualified Parun.Types.Affected as Affected
+import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.PerCreature as PerCreature
@@ -57,6 +58,9 @@ data BlockCost = MkBlockCost
     -- 3 or greater" (CR 509.1b); Nothing taxes every block. Owed once, by
     -- `perBlocker`'s unit, when any attacker the creature is chosen to block
     -- matches.
-    attackers :: Maybe (Filter.Filter Keyword.Keyword)
+    attackers :: Maybe (Filter.Filter Keyword.Keyword),
+    -- | CR 611.3a's "as long as" -- Archangel of Tithes' "as long as this
+    -- creature is attacking". Parun.Types.AttackCost's `while`.
+    while :: Maybe Condition.Condition
   }
   deriving (Eq, Ord, Show)

@@ -19,6 +19,7 @@ import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
+import qualified Parun.Engine.Condition as Condition
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Quantity as Quantity
@@ -142,8 +143,21 @@ costsOn attacker target gs =
           let context = Projection.sourceContext gs (Projection.controllerOf source gs) source
               generic n = Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic (Integer.toNaturalSaturating n)])) []
            in Maybe.maybeToList (fmap generic (Quantity.evaluate (Projection.fullView gs) context gs source quantity))
+      -- CR 611.3a: an "as long as" is asked live, once per cost, with CR
+      -- 109.5's "you" the source's controller. No CR 612.1 word swap, as the
+      -- rest of the cost gets none (Projection.Rewrite.rewriteRuleAbilities).
+      inForce source ac = case AttackCost.while ac of
+        Nothing -> True
+        Just condition ->
+          Condition.holds
+            (Projection.fullView gs)
+            (Projection.sourceContext gs (Projection.controllerOf source gs) source)
+            gs
+            source
+            condition
       fromCost source ac =
-        if protects source ac
+        if inForce source ac
+          && protects source ac
           && Projection.affectsUnder grants source attacker (AttackCost.subject ac) view gs
           then fmap ((,) source) (shareOf source ac)
           else []

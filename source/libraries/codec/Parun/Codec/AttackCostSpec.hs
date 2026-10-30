@@ -15,6 +15,9 @@ import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.AttackCost as AttackCost
 import qualified Parun.Types.AttackCostScope as AttackCostScope
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.Compares as Compares
+import qualified Parun.Types.Comparison as Comparison
+import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.CostAmount as CostAmount
 import qualified Parun.Types.CostComponent as CostComponent
@@ -45,6 +48,7 @@ spec s = Spec.describe s "Parun.Codec.AttackCost" $ do
           (Affected.Matching (Filter.HasCardType CardType.Creature))
           (PerCreature.Fixed (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) []))
           AttackCostScope.Controller
+          Nothing
       )
       " {\"perAttacker\":{\"type\":\"Fixed\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}},\"scope\":{\"type\":\"Controller\"},\"subject\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
   -- Sphere of Safety's half of the type: the wide scope and a counted share, the
@@ -65,6 +69,7 @@ spec s = Spec.describe s "Parun.Codec.AttackCost" $ do
               )
           )
           AttackCostScope.ControllerAndPlaneswalkers
+          Nothing
       )
       " {\"perAttacker\":{\"type\":\"Counted\",\"value\":{\"type\":\"Count\",\"value\":{\"aggregation\":{\"type\":\"Members\"},\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Enchantment\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}]},\"scope\":{\"type\":\"InZone\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}},\"zone\":{\"type\":\"Battlefield\"}}}}}},\"scope\":{\"type\":\"ControllerAndPlaneswalkers\"},\"subject\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
   -- Exalted Dragon's half: a share with no mana and a component, which is CR
@@ -82,12 +87,39 @@ spec s = Spec.describe s "Parun.Codec.AttackCost" $ do
               )
           )
           AttackCostScope.EveryAttack
+          Nothing
       )
       " {\"perAttacker\":{\"type\":\"Fixed\",\"value\":{\"components\":[{\"type\":\"Sacrifice\",\"value\":{\"count\":{\"type\":\"Fixed\",\"value\":1},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}}],\"mana\":[]}},\"scope\":{\"type\":\"EveryAttack\"},\"subject\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}}} "
   -- Exhaustive where the two literals above are representative: Arm.enum derives
   -- the scope's arm list from the type, so this is what would catch an arm the
   -- derivation missed or two that encode alike.
   Spec.it s "the scope round trips every constructor" $ Common.assertEnumCodec s AttackCostScope.codec
+  -- Archangel of Tithes: CR 611.3a's "as long as this creature is untapped".
+  Spec.it s "MkAttackCost with a while" $
+    Common.assertCodec
+      s
+      AttackCost.codec
+      ( AttackCost.MkAttackCost
+          (Affected.Matching (Filter.HasCardType CardType.Creature))
+          (PerCreature.Fixed (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 1])) []))
+          AttackCostScope.ControllerAndPlaneswalkers
+          ( Just
+              ( Condition.Compares
+                  ( Compares.MkCompares
+                      ( Quantity.Count
+                          ( Count.MkCount
+                              (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
+                              (Filter.And [Filter.IsSource, Filter.Not Filter.IsTapped])
+                              Aggregation.Members
+                          )
+                      )
+                      Comparison.AtLeast
+                      (Quantity.Literal 1)
+                  )
+              )
+          )
+      )
+      " {\"perAttacker\":{\"type\":\"Fixed\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]}},\"scope\":{\"type\":\"ControllerAndPlaneswalkers\"},\"subject\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"while\":{\"type\":\"Compares\",\"value\":{\"comparison\":{\"type\":\"AtLeast\"},\"measured\":{\"type\":\"Count\",\"value\":{\"aggregation\":{\"type\":\"Members\"},\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"IsSource\"},{\"type\":\"Not\",\"value\":{\"type\":\"IsTapped\"}}]},\"scope\":{\"type\":\"InZone\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}},\"zone\":{\"type\":\"Battlefield\"}}}}},\"threshold\":{\"type\":\"Literal\",\"value\":1}}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s AttackCost.codec
   Spec.it s "the scope has a schema" $ Common.assertHasSchema s AttackCostScope.codec
   Spec.it s "the share has a schema" $ Common.assertHasSchema s PerCreature.codec

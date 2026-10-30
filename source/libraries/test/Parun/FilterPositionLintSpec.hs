@@ -2262,8 +2262,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         -- CR 116.2c: the same special action, as the price of ending an effect.
         ending = base {Face.spell = spellOf [Effect.AffectPlayers (AffectPlayers.MkAffectPlayers (Duration.UntilPaid sacrificeCost) (AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.You)) PlayerEffect.CantCastSpells)]}
         -- CR 508.1h and CR 509.1d: a declaration announces no target.
-        attacking = base {Face.attackCosts = [AttackCost.MkAttackCost (Affected.Matching (Filter.Type.HasCardType CardType.Creature)) (PerCreature.Fixed sacrificeCost) AttackCostScope.Controller]}
-        blocking = base {Face.blockCosts = [BlockCost.MkBlockCost (Affected.Matching (Filter.Type.HasCardType CardType.Creature)) (PerCreature.Fixed sacrificeCost) Nothing]}
+        attacking = base {Face.attackCosts = [AttackCost.MkAttackCost (Affected.Matching (Filter.Type.HasCardType CardType.Creature)) (PerCreature.Fixed sacrificeCost) AttackCostScope.Controller Nothing]}
+        blocking = base {Face.blockCosts = [BlockCost.MkBlockCost (Affected.Matching (Filter.Type.HasCardType CardType.Creature)) (PerCreature.Fixed sacrificeCost) Nothing Nothing]}
     -- Ordered FIRST: the positions an announcement pays are accepted, which is
     -- what #2924 changed -- Parun.Engine.Cost.pay reads CR 601.2c's targets off
     -- the stack object, so the atom is answered there.
@@ -2929,7 +2929,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
               base {Face.combatRestrictions = [CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless (Affected.Matching buried) Nothing Nothing Nothing)]}
             ),
             ( "CR 508.1h's cost to attack",
-              base {Face.attackCosts = [AttackCost.MkAttackCost (Affected.Matching buried) (PerCreature.Fixed (Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) [])) AttackCostScope.Controller]}
+              base {Face.attackCosts = [AttackCost.MkAttackCost (Affected.Matching buried) (PerCreature.Fixed (Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) [])) AttackCostScope.Controller Nothing]}
             ),
             ( "CR 508.1h's counted share",
               base
@@ -2942,14 +2942,15 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
                             )
                         )
                         AttackCostScope.Controller
+                        Nothing
                     ]
                 }
             ),
             ( "CR 509.1d's cost to block",
-              base {Face.blockCosts = [BlockCost.MkBlockCost (Affected.Matching buried) (PerCreature.Fixed (Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 3])) [])) Nothing]}
+              base {Face.blockCosts = [BlockCost.MkBlockCost (Affected.Matching buried) (PerCreature.Fixed (Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 3])) [])) Nothing Nothing]}
             ),
             ( "CR 509.1b's block-cost attacker filter",
-              base {Face.blockCosts = [BlockCost.MkBlockCost (Affected.Matching Filter.Type.IsSource) (PerCreature.Fixed (Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 1])) [])) (Just buried)]}
+              base {Face.blockCosts = [BlockCost.MkBlockCost (Affected.Matching Filter.Type.IsSource) (PerCreature.Fixed (Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 1])) [])) (Just buried) Nothing]}
             ),
             ( "CR 509.1d's counted share",
               base
@@ -2961,6 +2962,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
                                 (Count.Type.MkCount (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) buried Aggregation.Members)
                             )
                         )
+                        Nothing
                         Nothing
                     ]
                 }

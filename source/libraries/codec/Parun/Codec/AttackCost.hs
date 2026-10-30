@@ -4,8 +4,10 @@ module Parun.Codec.AttackCost where
 
 import qualified Parun.Codec.Affected as Affected
 import qualified Parun.Codec.AttackCostScope as AttackCostScope
+import qualified Parun.Codec.Condition as Condition
 import qualified Parun.Codec.PerCreature as PerCreature
 import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.AttackCost as AttackCost
 
@@ -19,15 +21,17 @@ import qualified Parun.Types.AttackCost as AttackCost
 -- narrow arm IS the default reading of an unqualified "you". A defaulted key
 -- would let a card transcribed a clause short play as a Ghostly Prison -- a
 -- weaker card than printed, in the attacking player's favour -- so every card
--- states which family it belongs to.
+-- states which family it belongs to. "while" is absent for an ungated cost.
 codec :: Codec.Codec AttackCost.AttackCost
 codec = Fields.object $ do
   subject <- Fields.required "subject" Affected.codec AttackCost.subject
   perAttacker <- Fields.required "perAttacker" PerCreature.codec AttackCost.perAttacker
   scope <- Fields.required "scope" AttackCostScope.codec AttackCost.scope
+  while <- Fields.defaulted "while" Nothing (Common.maybe Condition.codec) AttackCost.while
   pure
     AttackCost.MkAttackCost
       { AttackCost.subject = subject,
         AttackCost.perAttacker = perAttacker,
-        AttackCost.scope = scope
+        AttackCost.scope = scope,
+        AttackCost.while = while
       }
