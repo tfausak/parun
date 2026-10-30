@@ -1,0 +1,28 @@
+{
+  "description": "CR 115.7b Spellskite's change has no \"may\": answering Jagged Lightning's targets unchanged still changes one to it",
+  "note": "Two creatures in one slot make two swaps, so the prompt is raised. The answer naming neither swap takes the first option, the Giant's place, so the Giant lives and Spellskite takes 3.",
+  "board": {
+    "active": "bob",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "manaPool": "U", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Hill Giant", "label": "giant"}, {"card": "Spellskite", "label": "skite"}]},
+      {"name": "bob", "manaPool": "RRRRR", "hand": [{"card": "Jagged Lightning", "label": "lightning"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$lightning", "targets": ["$bears", "$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$skite", "ability": 0, "targets": ["Jagged Lightning"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "AnnouncePhyrexianPayment", "with": "PaysMana"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseTargets": {"creatures": ["$bears", "$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"is": ["Jagged Lightning"], "of": "Stack"}}}
+  ],
+  "final": [
+    {"Damage": {"object": "$skite", "damage": 3}},
+    {"Count": {"player": "alice", "zone": "Battlefield", "card": "Hill Giant", "count": 1}},
+    {"Count": {"player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}},
+    {"Life": {"player": "alice", "life": 20}},
+    {"View": {"is": [], "of": "Stack"}}
+  ]
+}

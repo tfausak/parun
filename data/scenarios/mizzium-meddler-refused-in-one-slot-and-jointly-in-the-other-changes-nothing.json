@@ -1,0 +1,26 @@
+{
+  "description": "CR 115.7b / 115.7e Mizzium Meddler changes neither of Chandra, Pyromaster's targets when one slot refuses it and the other refuses it jointly",
+  "note": "Meddler is no player or planeswalker, and as the creature target it is not controlled by bob, the player target. Taking the joint refusal for allowed leaves one swap, taken unasked, and the Bears go undamaged.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "manaPool": "UUU", "battlefield": [{"card": "Chandra, Pyromaster", "label": "chandra", "counters": [{"key": {"type": "Loyalty"}, "value": 4}]}], "hand": [{"card": "Mizzium Meddler", "label": "meddler"}]},
+      {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$chandra", "ability": 0, "targetsBySlot": {"target": ["$bob"], "creature": ["$bears"]}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$meddler"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseTargets": {"redirected": ["ability of $chandra"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseOptional": {"type": "Exercises"}}}
+  ],
+  "final": [
+    {"Damage": {"object": "$bears", "damage": 1}},
+    {"Damage": {"object": "Mizzium Meddler", "damage": 0}},
+    {"Life": {"player": "bob", "life": 19}},
+    {"View": {"is": [], "of": "Stack"}}
+  ]
+}

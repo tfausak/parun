@@ -2831,8 +2831,10 @@ changeTargetsFor onto source chooser controller oid = do
       --
       -- One option is taken unasked, the "may" being the clause's (CR 603.5).
       -- Several raise Prompt.ChooseTargets offering each slot its targets plus
-      -- its swaps, and an answer that is not an option leaves every target
-      -- unchanged, reject-not-repair.
+      -- its swaps. The change is mandatory once reached (Spellskite has no
+      -- "may"), so an answer that is not an option, "unchanged" included,
+      -- takes the first, Game.chooseAmong's posture. The Spellskite scenario
+      -- answering its targets unchanged proves it.
       Just named -> do
         let refused = Target.jointlyIllegal (resolvingKind oid gs) (resolvingAbilityName oid gs) (Just controller) seed aimer slots
             already = refused current gs
@@ -2851,9 +2853,9 @@ changeTargetsFor onto source chooser controller oid = do
         case options of
           [] -> pure ()
           [only] -> rebind only
-          _ -> do
+          first : _ -> do
             answer <- Game.choose (Prompt.ChooseTargets (Decide.deciderFor chooser gs) chooser oid asked)
-            Monad.when (answer `elem` options) (rebind answer)
+            rebind (if answer `elem` options then answer else first)
       Nothing -> do
         let -- CR 406.4's draws capped at the slot's count, chooseNewTargetsFor's
             -- cap. A REGRESSION FENCE: no test drives a pile through this road.
