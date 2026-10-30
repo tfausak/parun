@@ -518,14 +518,14 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.SelfBlocksOneOrMore (Filter.HasColor Color.Black))
       " {\"type\":\"SelfBlocksOneOrMore\",\"value\":{\"type\":\"HasColor\",\"value\":{\"type\":\"Black\"}}} "
-  -- CR 509.3c, nullary for the same reason, and a distinct tag from the sibling
-  -- above: the two name opposite sides of one declaration.
-  Spec.it s "SelfBecomesBlocked" $
+  -- CR 509.3c, the Filter over the ATTACKER: Somberwald Alpha's "a creature
+  -- you control".
+  Spec.it s "CreatureBecomesBlocked" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      TriggerCondition.SelfBecomesBlocked
-      " {\"type\":\"SelfBecomesBlocked\"} "
+      (TriggerCondition.CreatureBecomesBlocked (Filter.HeldBy Holder.Controller PlayerRelation.You))
+      " {\"type\":\"CreatureBecomesBlocked\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}} "
   -- CR 509.3d, which carries a Filter over the BLOCKER where its once-each-combat
   -- sibling above carries nothing -- rule 702.25a's "without flanking".
   Spec.it s "SelfBecomesBlockedBy" $

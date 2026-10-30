@@ -2131,7 +2131,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.SelfBlocksCreature f -> TriggerCondition.SelfBlocksCreature (Filter.rewrite pairs f)
   TriggerCondition.SelfBlocksAtLeast _ -> condition
   TriggerCondition.SelfBlocksOneOrMore f -> TriggerCondition.SelfBlocksOneOrMore (Filter.rewrite pairs f)
-  TriggerCondition.SelfBecomesBlocked -> condition
+  TriggerCondition.CreatureBecomesBlocked f -> TriggerCondition.CreatureBecomesBlocked (Filter.rewrite pairs f)
   TriggerCondition.SelfBecomesBlockedBy f -> TriggerCondition.SelfBecomesBlockedBy (Filter.rewrite pairs f)
   TriggerCondition.PermanentBecomesBlockedBy f -> TriggerCondition.PermanentBecomesBlockedBy (Filter.rewrite pairs f)
   TriggerCondition.SelfBecomesBlockedByOneOrMore f -> TriggerCondition.SelfBecomesBlockedByOneOrMore (Filter.rewrite pairs f)

@@ -1174,10 +1174,10 @@ afflictSpec s _ =
     -- CR 603.2 through CR 508.5: the becomes-blocked event carries the
     -- defending player, and the scan stamps them under the reserved slot rule
     -- 702.130a's "defending player" reads. The falsifier is an arm that binds
-    -- the attacking side, or none at all.
+    -- the attacking side there, or nothing.
     Spec.it s "CR 603.2 the defending player rides the becomes-blocked event in the reserved slot" $ do
-      let bindings = Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice TriggerCondition.SelfBecomesBlocked (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked (ObjectId.MkObjectId 9) S.carol 1))
-      Spec.assertEqWith s "carol is bound under thatPlayer" (Binding.targetsOf bindings) (Map.singleton Binding.triggerPlayer (Set.singleton (Recipient.ToPlayer S.carol)))
+      let bindings = Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.CreatureBecomesBlocked Filter.Type.IsSource) (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked (ObjectId.MkObjectId 9) S.carol 1))
+      Spec.assertEqWith s "carol is bound under thatPlayer" (Map.lookup Binding.triggerPlayer (Binding.targetsOf bindings)) (Just (Set.singleton (Recipient.ToPlayer S.carol)))
     -- CR 702.130b: "If a creature has multiple instances of afflict, each
     -- triggers separately." Asked of the mint rather than of a board, as
     -- bushido's and prowess' are: no card in this pool prints afflict twice
@@ -1307,7 +1307,7 @@ rampageSpec s registry =
                                   GameEvent.AbilityTriggered record
                                     | AbilityTriggered.source record == TriggerSource.OfObject pack,
                                       AbilityTriggered.controller record == S.alice,
-                                      TriggeredAbility.condition (AbilityTriggered.ability record) == TriggerCondition.SelfBecomesBlocked ->
+                                      TriggeredAbility.condition (AbilityTriggered.ability record) == TriggerCondition.CreatureBecomesBlocked Filter.Type.IsSource ->
                                         Just ()
                                   _ -> Nothing
                               )

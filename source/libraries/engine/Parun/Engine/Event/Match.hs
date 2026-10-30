@@ -4033,15 +4033,19 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.ActivatedAbilityResolved _ -> False
     GameEvent.TriggeredAbilityResolved _ -> False
     GameEvent.CardArrived _ -> False
-  -- CR 509.3c: the bearer BECAME a blocked creature, which CR 509.1h makes the
-  -- declaration's other product. SelfBlocks' arm above is the mirror.
+  -- CR 509.3c: an attacker the Filter admits BECAME a blocked creature, which CR
+  -- 509.1h makes the declaration's other product. SelfBlocks' arm above is the
+  -- mirror. CreatureAttacksAlone's reading of the attacker.
   --
   -- One event per blocked attacker is what Combat.declareBlockers records, so
   -- matching it once is rule 509.3c's "only once each combat for that creature".
   -- A match on GameEvent.BecameBlocking's attacker would fire once per blocker
   -- instead; Parun.TriggerSpec's two-blocker case is what tells the two apart.
-  TriggerCondition.SelfBecomesBlocked -> case event of
-    GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked oid _ _) -> oid == bearer
+  TriggerCondition.CreatureBecomesBlocked f -> case event of
+    GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked attacker _ _) ->
+      case Projection.viewWithLastKnown attacker gs attacker of
+        Nothing -> False
+        Just view -> Filter.matches bearerContext view f
     -- The same declaration's other branch, and CR 509.1h makes the two exclusive
     -- for any one attacker.
     GameEvent.AttackerUnblocked _ -> False
@@ -4118,7 +4122,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- CR 509.3d: a creature the Filter admits became a blocking creature FOR the
   -- bearer. The pair on GameEvent.BecameBlocking is read from the ATTACKING
   -- side, which is what makes this fire once per blocker where
-  -- SelfBecomesBlocked's arm above fires once per attacker.
+  -- CreatureBecomesBlocked's arm above fires once per attacker.
   --
   -- BecameBlocking.producer is deliberately not read: rule 509.3d's
   -- third sentence is "In addition, it will trigger if a creature is put onto
@@ -4598,7 +4602,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           GameEvent.TriggeredAbilityResolved _ -> False
           GameEvent.CardArrived _ -> False
   -- CR 509.1h: the bearer became an UNBLOCKED creature, which the glossary's
-  -- "attacks and isn't blocked" entry sends here. SelfBecomesBlocked's arm above
+  -- "attacks and isn't blocked" entry sends here. CreatureBecomesBlocked's arm above
   -- is the other branch of the same turn-based action, and no attacker can
   -- produce both events in one declaration.
   --

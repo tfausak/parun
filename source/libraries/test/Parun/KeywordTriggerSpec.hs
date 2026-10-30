@@ -1077,7 +1077,7 @@ selfBecomesBlockedSpec s registry =
         ours <- mapM (S.printingOf s registry) mine
         yours <- mapM (S.printingOf s registry) theirs
         pure (S.combatBoardOf ours yours)
-   in Spec.describe s "SelfBecomesBlocked" $ do
+   in Spec.describe s "CreatureBecomesBlocked" $ do
         -- The proving test, and its control: the same game with CR 509.1's
         -- declaration switched off. 20 + 1 = 21 blocked, 20 declining -- and bob
         -- moves the other way, 20 blocked against 20 - 1 = 19 letting it through,

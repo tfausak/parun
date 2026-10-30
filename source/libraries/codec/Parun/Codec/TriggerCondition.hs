@@ -100,7 +100,7 @@ codec =
           Arm.payload "SelfBlocksCreature" filterCodec TriggerCondition.SelfBlocksCreature (\x -> case x of TriggerCondition.SelfBlocksCreature y -> Just y; _ -> Nothing),
           Arm.payload "SelfBlocksAtLeast" Common.natural TriggerCondition.SelfBlocksAtLeast (\x -> case x of TriggerCondition.SelfBlocksAtLeast y -> Just y; _ -> Nothing),
           Arm.payload "SelfBlocksOneOrMore" filterCodec TriggerCondition.SelfBlocksOneOrMore (\x -> case x of TriggerCondition.SelfBlocksOneOrMore y -> Just y; _ -> Nothing),
-          Arm.nullary "SelfBecomesBlocked" TriggerCondition.SelfBecomesBlocked,
+          Arm.payload "CreatureBecomesBlocked" filterCodec TriggerCondition.CreatureBecomesBlocked (\x -> case x of TriggerCondition.CreatureBecomesBlocked y -> Just y; _ -> Nothing),
           Arm.payload "SelfBecomesBlockedBy" filterCodec TriggerCondition.SelfBecomesBlockedBy (\x -> case x of TriggerCondition.SelfBecomesBlockedBy y -> Just y; _ -> Nothing),
           Arm.payload "SelfBecomesBlockedByOneOrMore" filterCodec TriggerCondition.SelfBecomesBlockedByOneOrMore (\x -> case x of TriggerCondition.SelfBecomesBlockedByOneOrMore y -> Just y; _ -> Nothing),
           Arm.payload "CreatureBecomesBlockedByAtLeast" CreatureBecomesBlockedByAtLeast.codec TriggerCondition.CreatureBecomesBlockedByAtLeast (\x -> case x of TriggerCondition.CreatureBecomesBlockedByAtLeast y -> Just y; _ -> Nothing),
@@ -247,7 +247,7 @@ tagOf x = case x of
   TriggerCondition.SelfBlocksCreature {} -> "SelfBlocksCreature"
   TriggerCondition.SelfBlocksAtLeast {} -> "SelfBlocksAtLeast"
   TriggerCondition.SelfBlocksOneOrMore {} -> "SelfBlocksOneOrMore"
-  TriggerCondition.SelfBecomesBlocked {} -> "SelfBecomesBlocked"
+  TriggerCondition.CreatureBecomesBlocked {} -> "CreatureBecomesBlocked"
   TriggerCondition.SelfBecomesBlockedBy {} -> "SelfBecomesBlockedBy"
   TriggerCondition.SelfBecomesBlockedByOneOrMore {} -> "SelfBecomesBlockedByOneOrMore"
   TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> "CreatureBecomesBlockedByAtLeast"

@@ -634,13 +634,15 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   (TriggerCondition.CreatureBecomesBlockedByAtLeast {}, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker})) ->
     Binding.setAttackingCreature attacker Map.empty
   -- CR 702.130a's "defending player", the same phrase and the same reserved slot
-  -- as the arm above -- CR 508.5 resolves it for an ability of an ATTACKING
-  -- creature, which is what the bearer of this condition is. Read off the event
-  -- for that arm's reason: every writer of it stamps CR 508.5's answer there --
+  -- as the arm above -- CR 508.5 resolves it for an ability naming an ATTACKING
+  -- creature, which is what the event's attacker is. Read off the event for
+  -- that arm's reason: every writer of it stamps CR 508.5's answer there --
   -- Combat.declareBlockers, Combat.becomeBlocked (CR 509.1h's effect) and
-  -- Combat.putOntoBattlefieldBlocking (CR 509.4).
-  (TriggerCondition.SelfBecomesBlocked, GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked _ defending _)) ->
-    Binding.setTriggerPlayer defending Map.empty
+  -- Combat.putOntoBattlefieldBlocking (CR 509.4). The attacker itself is
+  -- Somberwald Alpha's "it", a bystander's, so it is bound too, under the slot
+  -- CreatureAttacks' arm fills.
+  (TriggerCondition.CreatureBecomesBlocked _, GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked attacker defending _)) ->
+    Binding.setTriggerPlayer defending (Binding.setAttackingCreature attacker Map.empty)
   -- The same slot off CR 509.1h's other branch, stamped there by its one writer,
   -- Combat.declareBlockers: Abyssal Nightstalker's "defending player".
   (TriggerCondition.SelfAttacksUnblocked, GameEvent.AttackerUnblocked u) ->
@@ -1679,12 +1681,12 @@ eventBindingSlots cond = case cond of
   -- CR 508.5's defending player, which the becomes-blocked event carries for
   -- SelfAttacks' reason -- rule 702.130a's afflict is the reader. No BLOCKER: CR
   -- 509.3c names none, so GameEvent.AttackerBlocked carries none, and CR 509.3d's
-  -- form below is the one that binds one. The blocked attacker itself is the
-  -- bearer, already bound as CR 113.7a's source.
+  -- form below is the one that binds one. The blocked attacker is Somberwald
+  -- Alpha's "it".
   --
   -- Unconditional, as this classification has to be: every AttackerBlocked event
-  -- carries a PlayerId.
-  TriggerCondition.SelfBecomesBlocked -> Set.singleton Binding.triggerPlayer
+  -- carries both.
+  TriggerCondition.CreatureBecomesBlocked _ -> Set.fromList [Binding.attackingCreature, Binding.triggerPlayer]
   -- CR 509.3d's form is the one that DOES name a blocker, and
   -- GameEvent.BecameBlocking carries it: rule 702.25a's "the blocking creature".
   -- Guaranteed rather than conditional -- every such event carries both ids, and
@@ -1698,7 +1700,7 @@ eventBindingSlots cond = case cond of
   -- CreatureAttacksYou fills off its own event.
   TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> Set.singleton Binding.attackingCreature
   -- CR 508.5's defending player, which GameEvent.AttackerUnblocked carries for
-  -- SelfBecomesBlocked's reason: Abyssal Nightstalker's "defending player
+  -- CreatureBecomesBlocked's reason: Abyssal Nightstalker's "defending player
   -- discards a card". No blocker -- CR 509.1h's unblocked branch has none.
   TriggerCondition.SelfAttacksUnblocked -> Set.singleton Binding.triggerPlayer
   -- CR 113.6k: the bearer of a library-to-graveyard trigger IS the arriving

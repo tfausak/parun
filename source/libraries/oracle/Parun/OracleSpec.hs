@@ -360,7 +360,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   -- "dies", the object "it" or "that creature"; landfall's ability word
   -- (CR 207.2c); a creature among the objects it watches named first
   -- (Zulaport Cutthroat), never a noncreature.
-  Spec.it s "render prints a trigger on another object entering or dying" $ do
+  Spec.it s "render prints a trigger on another object entering, dying or becoming blocked" $ do
     let on types event effects = withFace (\f -> (typed types [] f) {Face.triggeredAbilities = [triggered event [clause effects] []]})
         others = Filter.And [Filter.HasCardType CardType.Creature, Filter.Not Filter.IsSource]
         mine = Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You]
@@ -369,6 +369,8 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s (Just (Text.pack "Landfall \8212 Whenever a land you control enters, you gain 1 life.")) (Oracle.render (on [CardType.Creature] (TriggerCondition.PermanentEnters (Filter.And [Filter.HasCardType CardType.Land, Filter.HeldBy Holder.Controller PlayerRelation.You])) [gainLife 1]))
     Spec.assertEq s [[Text.pack "Whenever a creature you control dies, you gain 1 life.", Text.pack "Whenever Spark or another creature you control dies, you gain 1 life."]] (Oracle.abilities (on [CardType.Creature] (TriggerCondition.PermanentDies mine) [gainLife 1]))
     Spec.assertEq s [[Text.pack "Whenever a creature you control dies, you gain 1 life."]] (Oracle.abilities (on [CardType.Artifact] (TriggerCondition.PermanentDies mine) [gainLife 1]))
+    -- CR 509.3c read by a bystander (Somberwald Alpha).
+    Spec.assertEq s [[Text.pack "Whenever a creature you control becomes blocked, you gain 1 life."]] (Oracle.abilities (on [CardType.Artifact] (TriggerCondition.CreatureBecomesBlocked mine) [gainLife 1]))
     let dragon = on [CardType.Creature] (TriggerCondition.SelfPutFromBattlefieldInto (OwnedZone.MkOwnedZone Zone.Graveyard PlayerRelation.You)) [Effect.MoveToZone (move (ObjectRef.InSlot became) Zone.Hand)]
     Spec.assertEq s (Just (Text.pack "When Spark is put into your graveyard from the battlefield, return it to your hand.")) (Oracle.render dragon)
     -- The card the source became is yours to return from your graveyard;

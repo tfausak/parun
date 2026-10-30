@@ -2999,7 +2999,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SelfBlocksCreature filter_ -> filterNames asking filter_
   TriggerCondition.SelfBlocksAtLeast _natural -> mempty
   TriggerCondition.SelfBlocksOneOrMore filter_ -> filterNames asking filter_
-  TriggerCondition.SelfBecomesBlocked -> mempty
+  TriggerCondition.CreatureBecomesBlocked filter_ -> filterNames asking filter_
   TriggerCondition.SelfBecomesBlockedBy filter_ -> filterNames asking filter_
   TriggerCondition.SelfBecomesBlockedByOneOrMore filter_ -> filterNames asking filter_
   TriggerCondition.CreatureBecomesBlockedByAtLeast _creatureBecomesBlockedByAtLeast -> mempty

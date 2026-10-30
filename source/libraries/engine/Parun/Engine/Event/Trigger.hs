@@ -725,7 +725,7 @@ looksBack condition = case condition of
   TriggerCondition.SelfBlocksCreature _ -> False
   TriggerCondition.SelfBlocksAtLeast _ -> False
   TriggerCondition.SelfBlocksOneOrMore _ -> False
-  TriggerCondition.SelfBecomesBlocked -> False
+  TriggerCondition.CreatureBecomesBlocked _ -> False
   TriggerCondition.SelfBecomesBlockedBy _ -> False
   TriggerCondition.PermanentBecomesBlockedBy _ -> False
   TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> False
@@ -1024,7 +1024,7 @@ batchScoped condition = case condition of
   -- carries the arity.
   TriggerCondition.SelfBlocksAtLeast _ -> False
   TriggerCondition.SelfBlocksOneOrMore _ -> False
-  TriggerCondition.SelfBecomesBlocked -> False
+  TriggerCondition.CreatureBecomesBlocked _ -> False
   TriggerCondition.SelfBecomesBlockedBy _ -> False
   TriggerCondition.PermanentBecomesBlockedBy _ -> False
   TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> False
@@ -2978,7 +2978,7 @@ zonesTriggeredFrom cond =
         TriggerCondition.SelfBlocksCreature _ -> battlefield
         TriggerCondition.SelfBlocksAtLeast _ -> battlefield
         TriggerCondition.SelfBlocksOneOrMore _ -> battlefield
-        TriggerCondition.SelfBecomesBlocked -> battlefield
+        TriggerCondition.CreatureBecomesBlocked _ -> battlefield
         TriggerCondition.SelfBecomesBlockedBy _ -> battlefield
         TriggerCondition.PermanentBecomesBlockedBy _ -> battlefield
         TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> battlefield
@@ -3328,7 +3328,7 @@ stateTriggersOn gs
             TriggerCondition.SelfBlocksCreature _ -> False
             TriggerCondition.SelfBlocksAtLeast _ -> False
             TriggerCondition.SelfBlocksOneOrMore _ -> False
-            TriggerCondition.SelfBecomesBlocked -> False
+            TriggerCondition.CreatureBecomesBlocked _ -> False
             TriggerCondition.SelfBecomesBlockedBy _ -> False
             TriggerCondition.PermanentBecomesBlockedBy _ -> False
             TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> False

@@ -38,7 +38,10 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfBecomesBlocked"
+            "type": "CreatureBecomesBlocked",
+            "value": {
+              "type": "IsSource"
+            }
           },
           "modal": {
             "modes": [
