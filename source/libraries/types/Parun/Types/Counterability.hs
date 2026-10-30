@@ -1,5 +1,7 @@
 module Parun.Types.Counterability where
 
+import qualified Parun.Types.Condition as Condition
+
 -- | Whether a spell can be countered (CR 701.6a).
 --
 -- CR 113.6g makes this a property of the OBJECT and not of the countering effect,
@@ -15,6 +17,10 @@ module Parun.Types.Counterability where
 --
 -- Not a Bool, for the reason Regenerability, TapState and Sickness are not:
 -- CantBeCountered names the rule at the site that reads it.
+--
+-- CantBeCountered's condition is an ability word's "if" (Exquisite Firecraft's
+-- spell mastery, CR 207.2c), judged when a counter reaches the spell, with the
+-- spell's controller as "you" (its ruling); Nothing is unconditional.
 --
 -- Modelled on the CARD rather than as a StaticAbility. Under the rules it IS a
 -- static ability (CR 604.1), and CR 604.2 keeps its continuous effect active as
@@ -49,5 +55,5 @@ module Parun.Types.Counterability where
 -- with no Serpopard on the battlefield at all.
 data Counterability
   = Counterable
-  | CantBeCountered
-  deriving (Bounded, Enum, Eq, Ord, Show)
+  | CantBeCountered (Maybe Condition.Condition)
+  deriving (Eq, Ord, Show)
