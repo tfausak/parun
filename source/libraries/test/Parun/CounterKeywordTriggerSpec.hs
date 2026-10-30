@@ -1173,11 +1173,11 @@ afflictSpec s _ =
   Spec.describe s "Afflict" $ do
     -- CR 603.2 through CR 508.5: the becomes-blocked event carries the
     -- defending player, and the scan stamps them under the reserved slot rule
-    -- 702.130a's "defending player" reads. The falsifier is an arm that binds
-    -- the attacking side there, or nothing.
+    -- 702.130a's "defending player" reads, beside the attacker. The falsifier
+    -- is an arm that binds the attacking side there, or drops either.
     Spec.it s "CR 603.2 the defending player rides the becomes-blocked event in the reserved slot" $ do
       let bindings = Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.CreatureBecomesBlocked Filter.Type.IsSource) (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked (ObjectId.MkObjectId 9) S.carol 1))
-      Spec.assertEqWith s "carol is bound under thatPlayer" (Map.lookup Binding.triggerPlayer (Binding.targetsOf bindings)) (Just (Set.singleton (Recipient.ToPlayer S.carol)))
+      Spec.assertEqWith s "carol is bound under thatPlayer, the attacker under thatAttackingCreature, and nothing else" (Binding.targetsOf bindings) (Map.fromList [(Binding.triggerPlayer, Set.singleton (Recipient.ToPlayer S.carol)), (Binding.attackingCreature, Set.singleton (Recipient.ToObject (ObjectId.MkObjectId 9)))])
     -- CR 702.130b: "If a creature has multiple instances of afflict, each
     -- triggers separately." Asked of the mint rather than of a board, as
     -- bushido's and prowess' are: no card in this pool prints afflict twice
