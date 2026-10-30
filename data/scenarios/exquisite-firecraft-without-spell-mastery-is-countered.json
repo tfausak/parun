@@ -53,7 +53,7 @@
     "step": "PrecombatMain"
   },
   "description": "CR 701.6a Exquisite Firecraft without spell mastery is countered by Cancel",
-  "note": "Only Lightning Bolt in alice's graveyard, and the Firecraft on the stack does not count itself (its ruling); the paired board with two such cards survives.",
+  "note": "Only Lightning Bolt in alice's graveyard as Cancel resolves; the paired board with two such cards survives.",
   "timeline": [
     {
       "do": {

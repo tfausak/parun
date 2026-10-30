@@ -8478,7 +8478,9 @@ destructionsStanding asOf cause regenerability oids = do
 -- 117.5 scan reads this event the controller can no longer be asked for exactly
 -- (see Parun.Types.Countering).
 counter :: ObjectId -> PlayerId -> ObjectId -> Game ()
-counter source controller oid = Monad.void (counterOne (pure (Zone.Graveyard, LibraryPosition.defaultValue)) source source controller oid)
+counter source controller oid = do
+  gs <- State.get
+  Monad.void (counterOne gs (pure (Zone.Graveyard, LibraryPosition.defaultValue)) source source controller oid)
 
 -- counter over a whole batch, answering with the objects it ACTUALLY countered
 -- (CR 701.6a) -- which is emphatically not the batch it was handed: an id naming
@@ -8504,8 +8506,9 @@ counter source controller oid = Monad.void (counterOne (pure (Zone.Graveyard, Li
 -- A second door rather than a return type on `counter`, the destroyReturning
 -- posture: only the Counter opcode's bound slots use the answer.
 counterReturning :: (ObjectId -> Game (Zone.Zone, LibraryPosition.LibraryPosition)) -> ObjectId -> ObjectId -> PlayerId -> [ObjectId] -> Game [(ObjectId, Seq.Seq ObjectId)]
-counterReturning destinationOf counterer source controller =
-  fmap Maybe.catMaybes . traverse (\oid -> fmap (fmap ((,) oid)) (counterOne (destinationOf oid) counterer source controller oid))
+counterReturning destinationOf counterer source controller victims = do
+  before <- State.get
+  fmap Maybe.catMaybes (traverse (\oid -> fmap (fmap ((,) oid)) (counterOne before (destinationOf oid) counterer source controller oid)) victims)
 
 -- The shared body of both doors: counter ONE object, answering Nothing when it
 -- was not countered and the incarnations its move minted when it was.
@@ -8519,8 +8522,11 @@ counterReturning destinationOf counterer source controller =
 -- black spells" is read off the first, so an ability from a blue permanent
 -- still counters (its ruling). `counter`, which counters as a spell does,
 -- passes one id for both.
-counterOne :: Game (Zone.Zone, LibraryPosition.LibraryPosition) -> ObjectId -> ObjectId -> PlayerId -> ObjectId -> Game (Maybe (Seq.Seq ObjectId))
-counterOne destination counterer source controller oid = do
+--
+-- `before` is the board CR 113.6g's condition is judged on: the batch's, taken
+-- once by counterReturning before any victim moves (CR 608.2f).
+counterOne :: GameState -> Game (Zone.Zone, LibraryPosition.LibraryPosition) -> ObjectId -> ObjectId -> PlayerId -> ObjectId -> Game (Maybe (Seq.Seq ObjectId))
+counterOne before destination counterer source controller oid = do
   gs <- State.get
   case Game.lookupObject oid gs of
     Nothing -> pure Nothing
@@ -8550,11 +8556,13 @@ counterOne destination counterer source controller oid = do
               Countering.controller = controller
             }
       pure (Just Seq.empty)
-    -- CR 113.6g, its condition judged now with the spell's controller as "you"
-    -- (Exquisite Firecraft's ruling). The scenarios exquisite-firecraft-* prove it.
+    -- CR 113.6g, its condition judged with the spell's controller as "you" on
+    -- `before`, the board as the batch began (CR 608.2f, 608.2h), not after
+    -- earlier victims moved (Exquisite Firecraft's ruling). The scenarios
+    -- exquisite-firecraft-* prove it.
     Just _ -> case fmap Face.counterability (Game.faceOf oid gs) of
       Just (Counterability.CantBeCountered condition)
-        | all (Condition.holds (Projection.fullView gs) (Projection.sourceContext gs (Projection.controllerOf oid gs) oid) gs oid) condition -> pure Nothing
+        | all (Condition.holds (Projection.fullView before) (Projection.sourceContext before (Projection.controllerOf oid before) oid) before oid) condition -> pure Nothing
       _ -> do
         (zone, position) <- destination
         moved <- changeZoneAttaching Nothing Set.empty oid zone position Nothing TapState.Untapped Map.empty (Just controller) Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty

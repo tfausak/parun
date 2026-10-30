@@ -921,13 +921,15 @@ castingRestrictionConditions restriction = case restriction of
   CastingRestriction.OnlyIf condition -> [condition]
   CastingRestriction.SpendOnlyOnX _ -> []
 
--- Every Condition a casting permission holds: only CR 601.3d's flash
--- permission carries one.
+-- The Condition a CR 113.6g can't-be-countered clause holds (Exquisite
+-- Firecraft's spell mastery).
 counterabilityConditions :: Counterability.Counterability -> [Condition.Type.Condition]
 counterabilityConditions counterability = case counterability of
   Counterability.Counterable -> []
   Counterability.CantBeCountered condition -> Maybe.maybeToList condition
 
+-- Every Condition a casting permission holds: only CR 601.3d's flash
+-- permission carries one.
 castingPermissionConditions :: CastingPermission.CastingPermission -> [Condition.Type.Condition]
 castingPermissionConditions permission = case permission of
   CastingPermission.CastFromLibraryWhileSearching -> []
