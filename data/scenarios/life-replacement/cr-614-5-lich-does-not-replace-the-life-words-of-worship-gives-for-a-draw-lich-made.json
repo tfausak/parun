@@ -1,0 +1,45 @@
+{
+  "description": "CR 614.5 Lich does not replace the life Words of Worship gives for a draw Lich made",
+  "note": "Alice controls Lich at 0 life and activates Words of Worship. Sacred Nectar's 4 life becomes 4 draws; Words of Worship turns the first into 5 life, a modified event of the gain Lich already replaced, so she gains it and draws only the other 3.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "life": 0,
+        "manaPool": "WWW",
+        "battlefield": [
+          { "card": "Lich" },
+          { "card": "Words of Worship", "label": "words" }
+        ],
+        "hand": [{ "card": "Sacred Nectar", "label": "nectar" }],
+        "library": [
+          { "card": "Swamp" },
+          { "card": "Swamp" },
+          { "card": "Swamp" },
+          { "card": "Swamp" },
+          { "card": "Swamp" },
+          { "card": "Swamp" },
+          { "card": "Swamp" },
+          { "card": "Swamp" },
+          { "card": "Swamp" },
+          { "card": "Swamp" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Forest" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$words" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$nectar" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 5 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Swamp", "count": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Library", "card": "Swamp", "count": 7 } } }
+  ]
+}

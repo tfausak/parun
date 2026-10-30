@@ -1320,6 +1320,9 @@ processDamage events = do
   -- `lost`). Writing the gain afterwards let a floor row (Worship) fire on a
   -- drain a simultaneous gain covered; see #2563.
   --
+  -- Not implemented: a replacement condition reading the life total (Elderscale
+  -- Wurm's) is judged after this pass, not against the whole event (#5809).
+  --
   -- Ahead of `markOne` and `tallyOne` too, which changes nothing they can see:
   -- those write GameState.objects and Player.commanderDamage, and this writes
   -- Player.life. The RECORD lands later still, in recordLifelinkGains, after

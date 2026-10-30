@@ -1959,7 +1959,14 @@ offerCommandZoneFirst gs event bucket split = case (event, split, fmap Replaceme
 -- 701.19a). A rewrite that cancels an event has already performed its own
 -- consequences by the time it returns Nothing.
 applyReplacements :: ProposedEvent -> Game (Maybe ProposedEvent)
-applyReplacements = applyReplacementsIn Nothing Set.empty
+applyReplacements = applyReplacementsSpent Set.empty
+
+-- The same, for an event made in place of another (CR 614.5): `spent` rows are
+-- never offered it.
+applyReplacementsSpent :: Set CandidateId -> ProposedEvent -> Game (Maybe ProposedEvent)
+applyReplacementsSpent spent event = do
+  (outcome, _, _, _, _, _) <- loop Nothing Set.empty False Map.empty spent [] Nothing False Nothing event
+  pure outcome
 
 -- CR 608.2f / 704.3: `asOf` is the board a BATCH's candidates are read from --
 -- `Just` the state the batch began in, or `Nothing` for the live board. Only the
@@ -4116,7 +4123,7 @@ apply batch applied candidate event =
       -- "you" as well: its pattern is LifeLossPattern's Related You.
       LifeLossRewrite.GainInstead -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        settled <- resolveLifeGain pid n
+        settled <- resolveLifeGainSpent (spentWith candidate applied) pid n
         changeLife pid (toInteger settled)
         pure Nothing
     -- Unreachable: `applies` admits LifeLossR only against WouldLoseLife.
@@ -4136,19 +4143,22 @@ apply batch applied candidate event =
       -- CR 614.6: Lich's "draw that many cards instead". The gain never
       -- happens, so no life total moves and no GameEvent.LifeGained is
       -- recorded; the player the event named draws through CR 121's funnel, one
-      -- card at a time (CR 121.2), each draw replaceable in its own right.
+      -- card at a time (CR 121.2), each draw replaceable in its own right but
+      -- never by this row again (CR 614.5): a Words of Worship gain stands.
       LifeGainRewrite.DrawInstead -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        Monad.replicateM_ (Natural.toIntSaturating n) (drawCard pid)
+        Monad.replicateM_ (Natural.toIntSaturating n) (drawCardSpent (spentWith candidate applied) pid)
         pure Nothing
       -- CR 614.6 with CR 119.3: Tainted Remedy's "loses that much life
       -- instead", LifeLossRewrite.GainInstead's arm the other direction. The
       -- gain never happens; the loss is an effect's (ByEffect), through
       -- resolveLifeLoss, so a LifeLossR row resizes it and the settled amount
-      -- is what changeLife records as GameEvent.LifeLost.
+      -- is what changeLife records as GameEvent.LifeLost. Rows already applied
+      -- are spent (CR 614.5), kept because the CR states it: no pool card
+      -- turns that loss back into a gain.
       LifeGainRewrite.LoseInstead -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        settled <- resolveLifeLoss LifeLossCause.ByEffect pid n
+        settled <- resolveLifeLossSpent (spentWith candidate applied) LifeLossCause.ByEffect pid n
         changeLife pid (negate (toInteger settled))
         pure Nothing
     -- Unreachable: `applies` admits LifeGainR only against WouldGainLife.
@@ -4172,7 +4182,7 @@ apply batch applied candidate event =
       -- other, so a LifeGainR row resizes it.
       DrawRewrite.GainLife n -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        settled <- resolveLifeGain pid n
+        settled <- resolveLifeGainSpent (spentWith candidate applied) pid n
         changeLife pid (toInteger settled)
         pure Nothing
       -- CR 400.11c through the same CR 614.6 cancellation: Ring of Ma'rûf's
@@ -5870,7 +5880,12 @@ resolvePlayerCounters cause pid kind n = do
 -- happen, and only the life loss does not -- Parun.PlayerEffectSpec's
 -- PlatinumEmperion group is the proof.
 resolveLifeLoss :: LifeLossCause.LifeLossCause -> PlayerId -> Natural -> Game Natural
-resolveLifeLoss cause pid n =
+resolveLifeLoss = resolveLifeLossSpent Set.empty
+
+-- A loss made in place of another event by a replacement (CR 614.5): `spent`
+-- holds the rows that already had their opportunity, drawCardSpent's reason.
+resolveLifeLossSpent :: Set CandidateId -> LifeLossCause.LifeLossCause -> PlayerId -> Natural -> Game Natural
+resolveLifeLossSpent spent cause pid n =
   if n == 0
     then pure 0
     else do
@@ -5878,7 +5893,7 @@ resolveLifeLoss cause pid n =
       if PlayerEffect.prohibitsLosingLife pid gs
         then pure 0
         else do
-          outcome <- applyReplacements (ProposedEvent.WouldLoseLife cause pid n)
+          outcome <- applyReplacementsSpent spent (ProposedEvent.WouldLoseLife cause pid n)
           pure (maybe 0 snd (outcome >>= Replacement.asLifeLoss))
 
 -- CR 119.3 / 119.10 / 120.3f: settle how much life a player actually gains, and
@@ -5906,7 +5921,11 @@ resolveLifeLoss cause pid n =
 -- goes to Parun.Engine.PlayerEffect.prohibitsGainingLife, so nothing here cases on
 -- an effect. Parun.PlayerEffectSpec's GiantCindermaw group is the proof.
 resolveLifeGain :: PlayerId -> Natural -> Game Natural
-resolveLifeGain pid n =
+resolveLifeGain = resolveLifeGainSpent Set.empty
+
+-- resolveLifeLossSpent's gain side.
+resolveLifeGainSpent :: Set CandidateId -> PlayerId -> Natural -> Game Natural
+resolveLifeGainSpent spent pid n =
   if n == 0
     then pure 0
     else do
@@ -5914,7 +5933,7 @@ resolveLifeGain pid n =
       if PlayerEffect.prohibitsGainingLife pid gs
         then pure 0
         else do
-          outcome <- applyReplacements (ProposedEvent.WouldGainLife pid n)
+          outcome <- applyReplacementsSpent spent (ProposedEvent.WouldGainLife pid n)
           pure (maybe 0 snd (outcome >>= Replacement.asLifeGain))
 
 -- CR 705.1's flip of ONE coin. The ONE road every flip in the engine takes:
@@ -10006,7 +10025,7 @@ drawCardSpent spent pid = Monad.void (drawCardSpentReturning DrawKind.Other spen
 
 drawCardSpentReturning :: DrawKind.DrawKind -> Set CandidateId -> PlayerId -> Game (Maybe ObjectId)
 drawCardSpentReturning kind spent pid = do
-  (outcome, _, _, _, _, _) <- loop Nothing Set.empty False Map.empty spent [] Nothing False Nothing (ProposedEvent.WouldDraw pid kind)
+  outcome <- applyReplacementsSpent spent (ProposedEvent.WouldDraw pid kind)
   case outcome >>= Replacement.asDraw of
     -- CR 614.6: a replacement took the draw, so it never happens. The row has
     -- already done its own work; nothing is left to do here and nothing is

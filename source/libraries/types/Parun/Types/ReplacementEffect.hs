@@ -154,8 +154,8 @@ data ReplacementEffect card ability effect
     -- clause as "if a source would cause you to gain life", and no life loss is
     -- a life gain however the amounts are signed.
     --
-    -- Its pattern is barer than LifeLossR's: no printed gain clause narrows by
-    -- cause.
+    -- Its pattern is barer than LifeLossR's. Not implemented: narrowing by
+    -- cause, Rain of Gore's (gap #5810).
     LifeGainR LifeGainR.LifeGainR
   | -- | CR 614.11 / 121.6: "the next time you would draw a card this turn, you
     -- gain 5 life instead" (Words of Worship). A separate arm from ZoneChangeR
