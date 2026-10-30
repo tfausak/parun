@@ -1561,6 +1561,7 @@ nissa-vastwood-seer-nissa-sage-animist
 nissa-worldwaker
 nissas-expedition
 nissas-pilgrimage
+nissas-revelation
 no-regrets-egret
 no-rest-for-the-wicked
 nomad-mythmaker
