@@ -1,0 +1,141 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Spree"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "modeCosts": {
+        "0": {
+          "mana": [
+            {
+              "type": "Generic",
+              "value": 1
+            }
+          ]
+        },
+        "1": {
+          "mana": [
+            {
+              "type": "Generic",
+              "value": 1
+            }
+          ]
+        }
+      },
+      "name": "Return the Favor",
+      "oracleText": "Spree (Choose one or more additional costs.)\n+ {1} — Copy target instant spell, sorcery spell, activated ability, or triggered ability. You may choose new targets for the copy.\n+ {1} — Change the target of target spell or ability with a single target.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "CopyStackObject",
+                    "value": {
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "copied"
+                      },
+                      "targets": {
+                        "type": "ChosenByController"
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "copied": {
+                "filter": {
+                  "type": "Or",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Instant"
+                      }
+                    },
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Sorcery"
+                      }
+                    },
+                    {
+                      "type": "IsAbility"
+                    }
+                  ]
+                },
+                "pool": {
+                  "type": "SpellsAndAbilities"
+                }
+              }
+            }
+          },
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "ChangeTargets",
+                    "value": {
+                      "type": "InSlot",
+                      "value": "redirected"
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "redirected": {
+                "filter": {
+                  "type": "HasSingleTarget"
+                },
+                "pool": {
+                  "type": "SpellsAndAbilities"
+                }
+              }
+            }
+          }
+        ],
+        "selection": {
+          "type": "ChooseBetween",
+          "value": {
+            "least": 1,
+            "most": 2
+          }
+        }
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}

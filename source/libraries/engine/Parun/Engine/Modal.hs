@@ -298,6 +298,7 @@ instancePool rename pool = case pool of
   Pool.Spells -> pool
   Pool.Abilities -> pool
   Pool.SpellsAndPermanents -> pool
+  Pool.SpellsAndAbilities -> pool
   Pool.PlayersAndPlaneswalkers -> pool
   Pool.CardsInExile -> pool
   Pool.CardsInAnte -> pool

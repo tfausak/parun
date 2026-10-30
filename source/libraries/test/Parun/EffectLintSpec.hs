@@ -1862,6 +1862,7 @@ holdsPlayer pool = case pool of
   Pool.Spells -> False
   Pool.Abilities -> False
   Pool.SpellsAndPermanents -> False
+  Pool.SpellsAndAbilities -> False
   Pool.CardsInGraveyard _ -> False
   Pool.CardsInExile -> False
   Pool.CardsInAnte -> False

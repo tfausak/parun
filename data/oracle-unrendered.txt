@@ -1787,6 +1787,7 @@ quina-qu-gourmet
 qutrub-forayer
 rabid-elephant
 radha-coalition-warlord
+radiant-performer
 radiate
 raffine-scheming-seer
 raffines-informant
@@ -1867,6 +1868,7 @@ retaliate
 retraction-helix
 retribution-of-the-ancients
 return-from-extinction
+return-the-favor
 return-to-the-ranks
 reverberate
 revered-unicorn

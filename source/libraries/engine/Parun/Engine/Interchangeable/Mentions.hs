@@ -2509,6 +2509,7 @@ poolNames asking x = case x of
   Pool.Spells -> mempty
   Pool.Abilities -> mempty
   Pool.SpellsAndPermanents -> mempty
+  Pool.SpellsAndAbilities -> mempty
   Pool.PlayersAndPlaneswalkers -> mempty
   Pool.CardsInGraveyard zoneScope -> zoneScopeNames asking zoneScope
   Pool.CardsInExile -> mempty

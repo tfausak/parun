@@ -60,6 +60,7 @@ import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
+import qualified Parun.Types.ModeIndex as ModeIndex
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.OptionalDecision as OptionalDecision
@@ -472,6 +473,22 @@ spec s registry = Spec.describe s "Parun.Engine.Planechase" $ do
     Spec.assertBool s (notElem S.alice (Game.stillPlaying gone)) "alice has left the game"
     Spec.assertEqWith s "CR 901.10 bob's Tazeem is face up" (fmap (\oid -> (fmap Face.name (Game.faceOf oid gone), fmap Object.owner (Game.lookupObject oid gone))) (Planechase.faceUp gone)) [(cardName "Tazeem", Just S.bob)]
     Spec.assertEqWith s "the ability was alice's while she played" controllers [Just S.alice]
+
+  -- CR 707.10 against CR 901.10b: alice encounters Mutual Epiphany and bob
+  -- copies its ability with Return the Favor's first mode. alice is still
+  -- playing, so the copy is bob's rather than the planar controller's.
+  Spec.it s "CR 707.10 a copy of a phenomenon's ability is its copier's while the phenomenon's owner plays" $ do
+    board <- seatedPlanarBoard s registry S.alice [(S.alice, ["Academy at Tolaria West", "Mutual Epiphany"]), (S.bob, ["Tazeem"])]
+    favor <- S.printingOf s registry "Return the Favor"
+    mountain <- S.printingOf s registry "Mountain"
+    let pending = S.runPure (rolling 6) (inMain S.alice board) (Planechase.roll S.manaPerformer S.alice >> Engine.settleForPriority >> Stack.resolveTop >> Engine.settleForPriority)
+        (favorId, withFavor) = S.addHandCard favor S.bob ((S.landsFor mountain S.bob 3 pending) {GameState.priority = Just S.bob})
+        copying :: Prompt.Prompt r -> r
+        copying p = case p of
+          Prompt.ChooseModes {} -> Seq.singleton (ModeIndex.MkModeIndex 0)
+          _ -> S.identityAnswer p
+        copied = S.runPure copying withFavor (S.cast S.bob favorId >> Stack.resolveTop)
+    Spec.assertEqWith s "CR 707.10 the copy is bob's, above alice's original" (fmap (`Projection.controllerOf` copied) (GameState.stack copied)) [Just S.bob, Just S.alice]
 
   -- CR 311.7: Path of the Enigma ("Target player draws four cards. Will of the
   -- Planeswalkers -- ... If planeswalk gets more votes, planeswalk. If chaos
