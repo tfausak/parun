@@ -983,12 +983,11 @@ matchesPrinted viewOf gs event candidate =
         (ReplacementEffect.DrawR pat, ProposedEvent.WouldDraw pid kind) ->
           matchesPlayer gs candidate (DrawR.whose pat) pid
             && stocked gs (DrawR.rewrite pat) pid
-            -- CR 504.1: Chains of Mephistopheles' ruling reads "the first one
-            -- they draw in each of their draw steps" as the turn-based draw:
-            -- "A player's normal card draw on their turn is exempt from this
-            -- effect. All other draws will be affected." So a replaced normal
-            -- draw still uses it up, and a skipped draw step (CR 103.8a) has none.
-            && not (DrawR.exceptFirstInDrawStep pat && kind == DrawKind.TurnBased)
+            -- CR 504.1: "the first one they draw in each of their draw steps"
+            -- is the drawer's own turn-based draw, for Alhammarret's Archive
+            -- too; see docs/decisions.md, "Which draw is the first one drawn
+            -- in a draw step".
+            && not (DrawR.exceptFirstInDrawStep pat && kind == DrawKind.TurnBased pid)
         -- CR 121.2a: whose draw INSTRUCTIONS the row watches (CR 109.5's "you"),
         -- and the number it names. Alms Collector's "two or more" is a condition on
         -- the event rather than a rewrite that changes nothing, LifeLossR's third

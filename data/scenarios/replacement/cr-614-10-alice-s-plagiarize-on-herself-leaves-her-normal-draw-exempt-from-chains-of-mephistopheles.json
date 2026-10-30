@@ -11,12 +11,20 @@
           {
             "card": "Island",
             "label": "i2"
+          },
+          {
+            "card": "Island",
+            "label": "i3"
+          },
+          {
+            "card": "Island",
+            "label": "i4"
           }
         ],
         "hand": [
           {
-            "card": "Think Twice",
-            "label": "tt"
+            "card": "Plagiarize",
+            "label": "plagiarize"
           },
           {
             "card": "Grizzly Bears"
@@ -24,10 +32,13 @@
         ],
         "library": [
           {
-            "card": "Swamp"
+            "card": "Forest"
           },
           {
-            "card": "Forest"
+            "card": "Plains"
+          },
+          {
+            "card": "Mountain"
           }
         ],
         "name": "alice"
@@ -50,60 +61,67 @@
       }
     ],
     "step": "Upkeep",
-    "turn": 1
+    "turn": 2
   },
-  "description": "CR 103.8a / 504.1 alice, the starting player, skips her first turn's draw, so the Think Twice she casts in that draw step is no normal draw and Chains of Mephistopheles discards her Grizzly Bears before she draws the Swamp",
+  "description": "CR 614.10 / 504.1 alice's Plagiarize on herself does not modify her normal draw (its ruling), so bob's Chains of Mephistopheles still exempts it",
   "timeline": [
     {
       "do": {
         "Cast": {
           "mana": [
             "$i1",
-            "$i2"
+            "$i2",
+            "$i3",
+            "$i4"
           ],
-          "object": "$tt"
+          "object": "$plagiarize",
+          "targets": [
+            "$alice"
+          ]
         }
       },
       "player": "alice",
-      "step": "DrawStep",
-      "turn": 1
-    },
-    {
-      "do": "Pass",
-      "player": "alice",
-      "step": "DrawStep",
-      "turn": 1
+      "step": "Upkeep",
+      "turn": 2
     },
     {
       "check": {
-        "View": {
-          "is": [
-            "Swamp"
-          ],
-          "of": "Zone",
+        "Count": {
+          "card": "Grizzly Bears",
+          "count": 1,
           "player": "alice",
           "zone": "Hand"
         }
       },
       "player": "alice",
       "step": "DrawStep",
-      "turn": 1
+      "turn": 2
     },
     {
       "check": {
-        "View": {
-          "is": [
-            "Grizzly Bears",
-            "Think Twice"
-          ],
-          "of": "Zone",
+        "Count": {
+          "card": "Forest",
+          "count": 1,
           "player": "alice",
-          "zone": "Graveyard"
+          "zone": "Hand"
         }
       },
       "player": "alice",
       "step": "DrawStep",
-      "turn": 1
+      "turn": 2
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Plains",
+          "count": 1,
+          "player": "alice",
+          "zone": "Library"
+        }
+      },
+      "player": "alice",
+      "step": "DrawStep",
+      "turn": 2
     }
   ]
 }

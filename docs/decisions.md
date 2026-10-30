@@ -244,6 +244,33 @@ Entries are ordered by the first rule each cites.
   under `data/scenarios/untap-restriction/` prove it.
 - **Issue**: #5531.
 
+## Which draw is the first one drawn in a draw step
+
+- **Question**: Chains of Mephistopheles and Alhammarret's Archive except
+  "the first one [they/you] draw in each of [their/your] draw steps". Chains'
+  ruling exempts "a player's normal card draw on their turn"; Archive has no
+  such ruling. Does Archive's identical wording read the same? And is the
+  draw Zur's Weirding leaves its drawer when nobody pays ("Otherwise, that
+  player draws a card") still the normal draw?
+- **Rules**: CR 504.1, 121.1, 614.5, 614.6; CR of 2026-08-07.
+- **Decision**: The exempt draw is the drawer's own CR 504.1 draw, on both
+  cards. Zur's Weirding's unpaid draw is that same draw left standing (its
+  ruling lets a dredger replace it), so it stays exempt. A dredged normal
+  draw still uses the exemption up.
+- **Rejected**: Counting the cards actually drawn, which Archive's text alone
+  would allow: alice dredges her normal draw and Howling Mine's draw is then
+  the first she draws, drawing one card where parun draws two; and wording
+  Wizards ruled on for one card is read differently on its twin. Making Zur's
+  unpaid draw a new draw, which would let Chains take a normal draw nobody
+  paid to stop.
+- **Site**: `Parun.Engine.Replacement.matchesPrinted`'s `DrawR` arm and
+  `Parun.Engine.Event.apply`'s `OthersMayPayLife` arm. The scenarios
+  `cr-504-1-chains-of-mephistopheles-takes-alice-s-think-twice-draw-after-she-dredged-her-normal-draw`
+  and
+  `cr-504-1-zur-s-weirding-s-unpaid-draw-is-alice-s-normal-draw-so-chains-of-mephistopheles-spares-it`
+  prove it.
+- **Issue**: #4781.
+
 ## Who may block a creature attacking nothing
 
 - **Question**: CR 506.4c's creature, its planeswalker or battle removed from

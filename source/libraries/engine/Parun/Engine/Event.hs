@@ -4138,7 +4138,7 @@ apply batch applied candidate event =
     --
     -- The life goes to the player the EVENT named, which for the producer in the
     -- pool is the same seat as CR 109.5's "you"; see Parun.Types.DrawRewrite.
-    (ReplacementEffect.DrawR (DrawR.MkDrawR _ _ rewrite), ProposedEvent.WouldDraw pid _) -> case rewrite of
+    (ReplacementEffect.DrawR (DrawR.MkDrawR _ _ rewrite), ProposedEvent.WouldDraw pid drawKind) -> case rewrite of
       -- Through resolveLifeGain, CR 614.1's funnel for the gain class: the life
       -- this rewrite substitutes for the draw is a life gain event like any
       -- other, so a LifeGainR row resizes it.
@@ -4209,9 +4209,14 @@ apply batch applied candidate event =
       -- 614.5 keeps THIS row off it -- which is the card's own ruling that
       -- targeting yourself does nothing and loops nowhere. A row with no
       -- controller leaves the draw skipped, CR 614.6's impossible instruction.
+      --
+      -- The draw's kind carries across, so a turn-based draw handed back to its
+      -- own player is still the normal draw Chains of Mephistopheles exempts:
+      -- Plagiarize's rulings, targeting yourself "will not modify the draw" and
+      -- two Plagiarizes "cancel each other out".
       DrawRewrite.YouDraw -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        pure ((`ProposedEvent.WouldDraw` DrawKind.Other) <$> ReplacementCandidate.controller candidate)
+        pure ((`ProposedEvent.WouldDraw` drawKind) <$> ReplacementCandidate.controller candidate)
       -- CR 614.6: Zur's Weirding's "they reveal it instead. Then any other
       -- player may pay 2 life. If a player does, put that card into its owner's
       -- graveyard. Otherwise, that player draws a card."
@@ -4227,6 +4232,8 @@ apply batch applied candidate event =
       -- milled (CR 701.17a's instruction is not printed). Unpaid, the event is
       -- left STANDING, Dredge's declining arm: CR 614.5 keeps this row off it, so
       -- a dredger may still replace the draw (the card's own ruling).
+      -- Standing, it keeps its kind: see docs/decisions.md, "Which draw is the
+      -- first one drawn in a draw step".
       DrawRewrite.OthersMayPayLife n -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
         gs <- State.get
@@ -9897,7 +9904,7 @@ drawCardReturning = drawCardSpentReturning DrawKind.Other Set.empty
 
 -- CR 504.1: the active player's turn-based draw in their draw step.
 drawForTurn :: PlayerId -> Game ()
-drawForTurn pid = Monad.void (drawCardSpentReturning DrawKind.TurnBased Set.empty pid)
+drawForTurn pid = Monad.void (drawCardSpentReturning (DrawKind.TurnBased pid) Set.empty pid)
 
 -- CR 614.5: the rows a replacement's own new events are not offered to -- those
 -- already applied to the event it replaced, and itself.
