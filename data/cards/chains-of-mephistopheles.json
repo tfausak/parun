@@ -1,0 +1,46 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Chains of Mephistopheles",
+      "oracleText": "If a player would draw a card except the first one they draw in each of their draw steps, that player discards a card instead. If the player discards a card this way, they draw a card. If the player doesn't discard a card this way, they mill a card.",
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "DrawR",
+            "value": {
+              "exceptFirstInDrawStep": true,
+              "rewrite": {
+                "type": "DiscardThenDrawOrMill"
+              },
+              "whose": {
+                "type": "AnyPlayer"
+              }
+            }
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}

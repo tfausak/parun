@@ -39,7 +39,7 @@ issue; an expressible card not yet in the pool is a plain card add.
 | Lich's Mirror | Replacing a loss of the game (CR 614.1a, 104.3, 104.4a) | Proven: `data/scenarios/game-outcome/*lich-s-mirror*`, `data/scenarios/team/cr-810-8a-lich-s-mirror-*`; a permanent the same check moves goes where its controller chooses (`cr-616-1-lich-s-mirror-*`) |
 | Panglacial Wurm | Casting from a hidden zone mid-resolution, while searching (CR 601.3, 608.2g) | Proven: `CastSpec`, `data/scenarios/cast/cr-601-3-*` |
 | Stifle | Countering an ability on the stack (CR 701.6a, 113.9) | Proven: `CounterspellSpec` `stifleSpec` |
-| Chains of Mephistopheles | A draw replacement whose replacement draws again; per-draw-step exception (CR 614.5, 616.1f) | Gap (#4781) |
+| Chains of Mephistopheles | A draw replacement whose replacement draws again; per-draw-step exception (CR 614.5, 616.1f) | Proven: `data/scenarios/replacement/*chains-of-mephistopheles*` |
 | Knowledge Pool | A cast trigger exiling the spell into a linked pool, then the caster casting another pooled card mid-resolution (CR 601.2i, 607.2a, 608.2g, 118.12) | Expressible, not in pool |
 | Doubling Season | Effect-only replacements on tokens and counters, ordered by the affected player against others; costs untouched (CR 614.16, 616.1) | Proven: `data/scenarios/replacement/cr-616-1-*` with Hardened Scales, planeswalker loyalty scenarios |
 | Wear // Tear | Split-card characteristics varying by zone; fuse casting both halves from hand (CR 709.4, 702.102) | Proven: `CastRestrictionSpec` `wearTearSpec`; hand-only gate untested (#4791) |

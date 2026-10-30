@@ -1,0 +1,60 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 5
+        }
+      ],
+      "name": "Alhammarret's Archive",
+      "oracleText": "If you would gain life, you gain twice that much life instead.\nIf you would draw a card except the first one you draw in each of your draw steps, draw two cards instead.",
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "LifeGainR",
+            "value": {
+              "rewrite": {
+                "type": "Scaled",
+                "value": {
+                  "type": "Multiply",
+                  "value": 2
+                }
+              },
+              "whose": {
+                "type": "You"
+              }
+            }
+          }
+        },
+        {
+          "effect": {
+            "type": "DrawR",
+            "value": {
+              "exceptFirstInDrawStep": true,
+              "rewrite": {
+                "type": "DrawInstead",
+                "value": 2
+              },
+              "whose": {
+                "type": "You"
+              }
+            }
+          }
+        }
+      ],
+      "typeLine": {
+        "supertypes": [
+          {
+            "type": "Legendary"
+          }
+        ],
+        "types": [
+          {
+            "type": "Artifact"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -5398,13 +5398,15 @@ replacementEffectFilters replacementEffect = case replacementEffect of
   -- rewrite carries is the one Filter a draw row can hold (Ring of Maʼrûf), and
   -- it is CR 400.11c's, so it takes the same framing Effect.FromOutsideTheGame's
   -- does.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.FromOutsideTheGame payload)) -> outsideTheGameFramed [FromOutsideTheGame.filter payload]
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.GainLife _)) -> []
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.Dredge _)) -> []
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.YouDraw) -> []
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.OthersMayPayLife _)) -> []
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.FromGraveyardOrLose) -> []
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.RevealUntilChosenKind) -> []
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.FromOutsideTheGame payload)) -> outsideTheGameFramed [FromOutsideTheGame.filter payload]
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.GainLife _)) -> []
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.Dredge _)) -> []
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.YouDraw) -> []
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.OthersMayPayLife _)) -> []
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.FromGraveyardOrLose) -> []
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.RevealUntilChosenKind) -> []
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.DrawInstead _)) -> []
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.DiscardThenDrawOrMill) -> []
   ReplacementEffect.DrawCountR {} -> []
   ReplacementEffect.InstructionR {} -> []
   ReplacementEffect.DieRollR {} -> []

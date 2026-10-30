@@ -15,6 +15,13 @@ spec s = Spec.describe s "Parun.Codec.DrawR" $ do
     Common.assertCodec
       s
       DrawR.codec
-      (DrawR.MkDrawR (ControllerRelation.Related PlayerRelation.You) (DrawRewrite.GainLife 5))
+      (DrawR.MkDrawR (ControllerRelation.Related PlayerRelation.You) False (DrawRewrite.GainLife 5))
       " {\"whose\":{\"type\":\"You\"},\"rewrite\":{\"type\":\"GainLife\",\"value\":5}} "
+  -- CR 504.1 / 614.1a: Alhammarret's Archive.
+  Spec.it s "exceptFirstInDrawStep" $
+    Common.assertCodec
+      s
+      DrawR.codec
+      (DrawR.MkDrawR (ControllerRelation.Related PlayerRelation.You) True (DrawRewrite.DrawInstead 2))
+      " {\"whose\":{\"type\":\"You\"},\"exceptFirstInDrawStep\":true,\"rewrite\":{\"type\":\"DrawInstead\",\"value\":2}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s DrawR.codec

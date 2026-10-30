@@ -29,6 +29,7 @@ import qualified Control.Applicative as Applicative
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Containers.ListUtils as ListUtils
+import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
@@ -64,6 +65,7 @@ import qualified Parun.Types.ActiveReplacement as ActiveReplacement
 import qualified Parun.Types.AsCopy as AsCopy
 import qualified Parun.Types.AttachR as AttachR
 import qualified Parun.Types.AttachRewrite as AttachRewrite
+import qualified Parun.Types.BeginningStep as BeginningStep
 import Parun.Types.CandidateId (CandidateId)
 import qualified Parun.Types.CandidateId as CandidateId
 import Parun.Types.Card (Card)
@@ -94,6 +96,7 @@ import qualified Parun.Types.DrawCountR as DrawCountR
 import qualified Parun.Types.DrawCountRewrite as DrawCountRewrite
 import qualified Parun.Types.DrawR as DrawR
 import qualified Parun.Types.DrawRewrite as DrawRewrite
+import qualified Parun.Types.Drew as Drew
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EntryOption as EntryOption
 import qualified Parun.Types.EntryR as EntryR
@@ -105,6 +108,7 @@ import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.FloatingCandidate as FloatingCandidate
 import qualified Parun.Types.FromOutsideTheGame as FromOutsideTheGame
 import Parun.Types.Game (Game)
+import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameLossR as GameLossR
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
@@ -119,11 +123,13 @@ import qualified Parun.Types.LifeGainRewrite as LifeGainRewrite
 import qualified Parun.Types.LifeLossPattern as LifeLossPattern
 import qualified Parun.Types.LifeLossR as LifeLossR
 import qualified Parun.Types.LifeLossRewrite as LifeLossRewrite
+import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.ManaR as ManaR
 import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.PermanentCandidate as PermanentCandidate
+import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PhasePattern as PhasePattern
 import Parun.Types.PhaseSelector (PhaseSelector)
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
@@ -982,6 +988,7 @@ matchesPrinted viewOf gs event candidate =
         (ReplacementEffect.DrawR pat, ProposedEvent.WouldDraw pid) ->
           matchesPlayer gs candidate (DrawR.whose pat) pid
             && stocked gs (DrawR.rewrite pat) pid
+            && not (DrawR.exceptFirstInDrawStep pat && firstInDrawStep gs pid)
         -- CR 121.2a: whose draw INSTRUCTIONS the row watches (CR 109.5's "you"),
         -- and the number it names. Alms Collector's "two or more" is a condition on
         -- the event rather than a rewrite that changes nothing, LifeLossR's third
@@ -1101,6 +1108,21 @@ matchesPrinted viewOf gs event candidate =
 -- ExileFromTopOfYourLibrary arm and for its reason. The player asked is the one
 -- the EVENT named, which is who rule 702.52a mills; the row reaches this only
 -- once ControllerRelation.Related You has made that seat the card's own owner.
+-- CR 504.1: is `pid` in their own draw step, having drawn no card since it
+-- began? A draw a replacement took is no draw (CR 614.6), so it does not use up
+-- the first. Read off the turn's log back to the step's GameEvent.StepBegan,
+-- not off GameState.drawsThisTurn, which an upkeep draw (Brainstorm) moves too.
+firstInDrawStep :: GameState -> PlayerId -> Bool
+firstInDrawStep gs pid =
+  GameState.phase gs == Phase.Beginning BeginningStep.DrawStep
+    && Turn.isActive gs pid
+    && null [() | GameEvent.Drew (Drew.MkDrew who _) <- Foldable.toList sinceBegan, who == pid]
+  where
+    -- Comprehensions rather than cases, so no fallthrough arm absorbs a new
+    -- GameEvent constructor.
+    began event = not (null [() | GameEvent.StepBegan _ <- [event]])
+    sinceBegan = Seq.takeWhileR (not . began) (fmap LoggedEvent.event (GameState.events gs))
+
 stocked :: GameState -> DrawRewrite.DrawRewrite -> PlayerId -> Bool
 stocked gs rewrite pid = case rewrite of
   DrawRewrite.Dredge n -> Natural.length (Game.zoneMembers Zone.Library pid gs) >= n
@@ -1110,6 +1132,8 @@ stocked gs rewrite pid = case rewrite of
   DrawRewrite.OthersMayPayLife _ -> True
   DrawRewrite.FromGraveyardOrLose -> True
   DrawRewrite.RevealUntilChosenKind -> True
+  DrawRewrite.DrawInstead _ -> True
+  DrawRewrite.DiscardThenDrawOrMill -> True
 
 breaches :: GameState -> Maybe PlayerId -> LifeLossRewrite.LifeLossRewrite -> PlayerId -> Natural -> Bool
 breaches gs you rewrite pid n = case rewrite of
@@ -2298,32 +2322,38 @@ readsApplier re = case re of
   -- The inner sum is cased, LifeLossR's discipline above for its reason: a
   -- rewrite that DOES read the applier has to be decided here rather than
   -- inheriting this answer.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.GainLife _)) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.GainLife _)) -> False
   -- The card goes to the player the EVENT named and the filter and the reveal
   -- ride the effect, so GainLife's answer above carries over. The one value this
   -- rewrite reads off the CANDIDATE is `source`, which reaches nothing but the
   -- Filter.Context Event.eligible scans the pool under -- `readsSource`'s
   -- question, not this one.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.FromOutsideTheGame _)) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.FromOutsideTheGame _)) -> False
   -- The miller is the seat the EVENT named and the count is the effect's own
   -- field, so GainLife's answer above carries over. The card returned rides the
   -- CANDIDATE rather than the effect, which is `readsSource`'s question and not
   -- this one.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.Dredge _)) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.Dredge _)) -> False
   -- CR 109.5: "you draw a card" -- the drawer is the row's own controller, so
   -- two rows alike in `effect` and unlike in `you` hand the draw to different
   -- seats. DrawCountRewrite.EachDrawOne's answer, and for its reason.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.YouDraw) -> True
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.YouDraw) -> True
   -- The card revealed is the drawer's and the payers are the players OTHER than
   -- the drawer, both read off the EVENT, and the life is the effect's own field.
   -- GainLife's answer, and for its reason.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.OthersMayPayLife _)) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.OthersMayPayLife _)) -> False
   -- The graveyard searched and the player who loses are both the drawer the
   -- EVENT named. GainLife's answer, and for its reason.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.FromGraveyardOrLose) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.FromGraveyardOrLose) -> False
   -- The library walked, the hand reached and the player asked are all the
   -- drawer the EVENT named. GainLife's answer, and for its reason.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.RevealUntilChosenKind) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.RevealUntilChosenKind) -> False
+  -- The drawer is the one the EVENT named and the count the effect's own field.
+  -- GainLife's answer, and for its reason.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.DrawInstead _)) -> False
+  -- The discarder, drawer and miller are all the player the EVENT named.
+  -- GainLife's answer, and for its reason.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.DiscardThenDrawOrMill) -> False
   -- CR 121.2a: "you and that player each draw a card" -- the "you" is the row's
   -- own controller, so two rows alike in `effect` and unlike in `you` hand the
   -- extra card to different seats. LifeLossRewrite.ExileFromTopOfYourLibrary's
@@ -2438,18 +2468,20 @@ countedCeiling rewrite = case rewrite of
 -- source.
 readsSource :: ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card)) -> Bool
 readsSource effect = case effect of
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.Dredge _)) -> True
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.GainLife _)) -> False
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.YouDraw) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.Dredge _)) -> True
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.GainLife _)) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.YouDraw) -> False
   -- The source only names the offer (Prompt.ChooseToPay); what is paid and where
   -- the card goes do not depend on it.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.OthersMayPayLife _)) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.OthersMayPayLife _)) -> False
   -- The source only names the prompt and the queued loss; which cards are offered
   -- and who loses do not depend on it.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.FromGraveyardOrLose) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.FromGraveyardOrLose) -> False
   -- The source only names the prompt; what is revealed and where it goes do
   -- not depend on it.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ DrawRewrite.RevealUntilChosenKind) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.RevealUntilChosenKind) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.DrawInstead _)) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.DiscardThenDrawOrMill) -> False
   -- CR 616.1: Event.eligible scans the pool under Projection.sourceContext
   -- framed by this candidate's source, so a filter naming any of the source's
   -- characteristics or choices (Filter.readsSourceValues) can offer different
@@ -2462,7 +2494,7 @@ readsSource effect = case effect of
   -- choice, and the answer decides what arrives", "CR 616.1 two Rings' wishes
   -- are not a choice" and "CR 616.1 two wishes sharing a colour with
   -- differently coloured sources are a choice" prove them.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.FromOutsideTheGame payload)) -> Filter.readsSourceValues (FromOutsideTheGame.filter payload)
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.FromOutsideTheGame payload)) -> Filter.readsSourceValues (FromOutsideTheGame.filter payload)
   ReplacementEffect.ZoneChangeR {} -> False
   -- CR 707.5: the object copied is read relative to the source (Essence of the
   -- Wild's "this creature", Infinite Reflection's "enchanted creature"), so

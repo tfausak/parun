@@ -1301,7 +1301,8 @@ drawCountRNames asking x = case x of
 
 drawRNames :: (Monoid r) => Asking r -> DrawR.DrawR -> r
 drawRNames asking x = case x of
-  DrawR.MkDrawR whose rewrite -> controllerRelationNames asking whose <> drawRewriteNames asking rewrite
+  -- CR 504.1: the exception reads the turn's log back to the step's beginning.
+  DrawR.MkDrawR whose exceptFirst rewrite -> controllerRelationNames asking whose <> (if exceptFirst then history asking HistoryRead.StepBegins else mempty) <> drawRewriteNames asking rewrite
 
 drawRewriteNames :: (Monoid r) => Asking r -> DrawRewrite.DrawRewrite -> r
 drawRewriteNames asking x = case x of
@@ -1312,6 +1313,8 @@ drawRewriteNames asking x = case x of
   DrawRewrite.OthersMayPayLife _natural -> mempty
   DrawRewrite.FromGraveyardOrLose -> mempty
   DrawRewrite.RevealUntilChosenKind -> mempty
+  DrawRewrite.DrawInstead _natural -> mempty
+  DrawRewrite.DiscardThenDrawOrMill -> mempty
 
 dungeonRoomNames :: (Monoid r) => Asking r -> (card -> r) -> DungeonRoom.DungeonRoom card -> r
 dungeonRoomNames asking onCard x = case x of

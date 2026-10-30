@@ -68,4 +68,18 @@ spec s = Spec.describe s "Parun.Codec.DrawRewrite" $ do
       DrawRewrite.codec
       DrawRewrite.RevealUntilChosenKind
       " {\"type\":\"RevealUntilChosenKind\"} "
+  -- CR 614.1a / 614.5: Alhammarret's Archive.
+  Spec.it s "DrawInstead" $
+    Common.assertCodec
+      s
+      DrawRewrite.codec
+      (DrawRewrite.DrawInstead 2)
+      " {\"type\":\"DrawInstead\",\"value\":2} "
+  -- CR 614.1a / 701.9a / 701.17a: Chains of Mephistopheles.
+  Spec.it s "DiscardThenDrawOrMill" $
+    Common.assertCodec
+      s
+      DrawRewrite.codec
+      DrawRewrite.DiscardThenDrawOrMill
+      " {\"type\":\"DiscardThenDrawOrMill\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s DrawRewrite.codec
