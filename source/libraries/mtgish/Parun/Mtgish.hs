@@ -272,12 +272,13 @@ rule :: Face -> Node.Node -> Translated Face
 rule face n = case Node.tag n of
   "SpellActions" -> do
     Monad.unless (Face.spell face == Face.defaultSpell) (Node.untranslated n)
-    m <- Node.argument n >>= modal outermost
+    v <- Node.argument n
+    m <- modal outermost v >>= forgetful v
     pure face {Face.spell = m}
   "Activated" -> do
     (costValue, actionsValue) <- pair n
     c <- costOf costValue
-    m <- modal outermost actionsValue
+    m <- modal outermost actionsValue >>= forgetful actionsValue
     pure face {Face.activatedAbilities = Face.activatedAbilities face <> [activatedAbility c m]}
   -- "Activate only ..." (CR 602.5).
   "ActivatedWithModifiers" -> do
@@ -285,7 +286,7 @@ rule face n = case Node.tag n of
     case as of
       [costValue, actionsValue, modifierValue] -> do
         c <- costOf costValue
-        m <- modal outermost actionsValue
+        m <- modal outermost actionsValue >>= forgetful actionsValue
         rs <- Node.node modifierValue >>= activationRestrictions
         pure face {Face.activatedAbilities = Face.activatedAbilities face <> [(activatedAbility c m) {ActivatedAbility.restrictions = rs}]}
       _ -> Node.untranslated n
@@ -904,6 +905,15 @@ modal context value = do
     _ -> Node.untranslated n
   let memory = if Node.tag n == "Modal_ChooseOneThatHasntBeenChosen" then ModeMemory.ObjectLifetime else ModeMemory.NoMemory
   pure Modal.MkModal {Modal.modes = Seq.fromList modes, Modal.selection = ModeSelection.ChooseExactly 1, Modal.memory = memory}
+
+-- | A spell's or activated ability's modal, refused where it remembers its
+-- modes.
+--
+-- Not implemented: a mode memory outside a triggered ability (#5782).
+forgetful :: Value.Value -> Modal -> Translated Modal
+forgetful value m
+  | Modal.memory m == ModeMemory.NoMemory = pure m
+  | otherwise = Node.node value >>= Node.untranslated
 
 -- | How many kinds of mana each "or" of mana in the value chooses among.
 manaOptions :: Value.Value -> [Int]

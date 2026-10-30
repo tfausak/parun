@@ -1052,7 +1052,9 @@ placeBorne srcId pending = do
         Just forced -> pure forced
         Nothing -> fmap Seq.sort (Game.choose (Prompt.ChooseModes decider controller abilId legal selection))
       -- Remembered as chosen, before targets: a mode chosen for an instance
-      -- that never resolves still counts (Demonic Pact's rulings).
+      -- that never resolves still counts (Demonic Pact's rulings), which
+      -- data/scenarios' demonic-pact-counts-a-mode-chosen-for-a-countered-trigger
+      -- proves.
       Monad.when (Modal.Type.memory modal /= ModeMemory.NoMemory) $
         State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.chosenModes = Map.insertWith Set.union ability (Set.fromList (Foldable.toList chosenModes)) (Object.chosenModes o)}) srcId (GameState.objects g)})
       -- CR 603.3d: targets for the chosen mode(s) only, chosen as the ability is

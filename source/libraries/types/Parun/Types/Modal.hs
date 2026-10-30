@@ -13,8 +13,9 @@ import qualified Parun.Types.ModeSelection as ModeSelection
 data Modal card ability = MkModal
   { modes :: Seq.Seq (Mode.Mode card ability),
     selection :: ModeSelection.ModeSelection,
-    -- | Which earlier choices bar a mode (CR 700.2a). Read only where a
-    -- triggered ability is put on the stack (Parun.Engine.Engine.placeBorne).
+    -- | Which earlier choices bar a mode (Demonic Pact's rulings). Read only
+    -- where a triggered ability is put on the stack
+    -- (Parun.Engine.Engine.placeBorne).
     --
     -- Not implemented: on an activated ability (#5782), or "this turn" (#5783).
     memory :: ModeMemory.ModeMemory
