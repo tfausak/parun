@@ -1,0 +1,45 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Tainted Remedy",
+      "oracleText": "If an opponent would gain life, that player loses that much life instead.",
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "LifeGainR",
+            "value": {
+              "rewrite": {
+                "type": "LoseInstead"
+              },
+              "whose": {
+                "type": "Opponent"
+              }
+            }
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}

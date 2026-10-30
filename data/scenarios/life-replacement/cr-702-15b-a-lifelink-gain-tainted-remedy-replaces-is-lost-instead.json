@@ -1,0 +1,64 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Vampire Nighthawk",
+            "label": "hawk",
+            "ready": true
+          }
+        ],
+        "life": 15,
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Tainted Remedy",
+            "ready": true
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 702.15b a lifelink gain Tainted Remedy replaces is lost instead",
+  "note": "Alice's Vampire Nighthawk deals bob 2; her 2 lifelink life is an opponent's gain to bob's Tainted Remedy, so she goes from 15 to 13 while the damage is dealt in full.",
+  "timeline": [
+    {
+      "do": {
+        "Attack": [
+          "$hawk"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 18,
+          "player": "bob"
+        }
+      },
+      "player": "alice",
+      "step": "EndOfCombat",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 13,
+          "player": "alice"
+        }
+      },
+      "player": "alice",
+      "step": "EndOfCombat",
+      "turn": 1
+    }
+  ]
+}

@@ -1,0 +1,273 @@
+1 Abbot of Keral Keep
+1 Acolyte of the Inferno
+1 Act of Treason
+1 Aegis Angel
+1 Aerial Volley
+1 Akroan Jailer
+1 Akroan Sergeant
+1 Alchemist's Vial
+1 Alhammarret's Archive
+1 Alhammarret, High Arbiter
+1 Ampryn Tactician
+1 Anchor to the Aether
+1 Angel's Tomb
+1 Animist's Awakening
+1 Anointer of Champions
+1 Archangel of Tithes
+1 Artificer's Epiphany
+1 Aspiring Aeronaut
+1 Auramancer
+1 Avaricious Dragon
+1 Aven Battle Priest
+1 Battlefield Forge
+1 Bellows Lizard
+1 Blazing Hellhound
+1 Blessed Spirits
+1 Blightcaster
+1 Blood-Cursed Knight
+1 Boggart Brute
+1 Bonded Construct
+1 Bone to Ash
+1 Bounding Krasis
+1 Brawler's Plate
+1 Calculated Dismissal
+1 Call of the Full Moon
+1 Catacomb Slug
+1 Caustic Caterpillar
+1 Caves of Koilos
+1 Celestial Flare
+1 Chandra's Fury
+1 Chandra's Ignition
+1 Chandra, Fire of Kaladesh // Chandra, Roaring Flame
+1 Charging Griffin
+1 Chief of the Foundry
+1 Citadel Castellan
+1 Clash of Wills
+1 Claustrophobia
+1 Cleric of the Forward Order
+1 Cobblebrute
+1 Conclave Naturalists
+1 Consecrated by Blood
+1 Consul's Lieutenant
+1 Cruel Revival
+1 Dark Dabbling
+1 Dark Petition
+1 Day's Undoing
+1 Deadbridge Shaman
+1 Deep-Sea Terror
+1 Demolish
+1 Demonic Pact
+1 Despoiler of Souls
+1 Disciple of the Ring
+1 Disperse
+1 Displacement Wave
+1 Divine Verdict
+1 Dragon Fodder
+1 Dreadwaters
+1 Dwynen's Elite
+1 Dwynen, Gilt-Leaf Daen
+1 Eagle of the Watch
+1 Elemental Bond
+1 Elvish Visionary
+1 Embermaw Hellion
+1 Enlightened Ascetic
+1 Enshrouding Mist
+1 Enthralling Victor
+1 Erebos's Titan
+1 Evolutionary Leap
+1 Evolving Wilds
+1 Exquisite Firecraft
+1 Eyeblight Assassin
+1 Eyeblight Massacre
+1 Faerie Miscreant
+1 Fetid Imp
+1 Fiery Conclusion
+1 Fiery Hellhound
+1 Fiery Impulse
+1 Firefiend Elemental
+1 Flameshadow Conjuring
+1 Flesh to Dust
+1 Fleshbag Marauder
+1 Forest
+1 Foundry of the Consuls
+1 Gaea's Revenge
+1 Gather the Pack
+1 Ghirapur Aether Grid
+1 Ghirapur Gearcrafter
+1 Gideon's Phalanx
+1 Gilt-Leaf Winnower
+1 Gnarlroot Trapper
+1 Goblin Glory Chaser
+1 Goblin Piledriver
+1 Gold-Forged Sentinel
+1 Grasp of the Hieromancer
+1 Graveblade Marauder
+1 Guardian Automaton
+1 Guardians of Meletis
+1 Hallowed Moonlight
+1 Hangarback Walker
+1 Harbinger of the Tides
+1 Healing Hands
+1 Heavy Infantry
+1 Helm of the Gods
+1 Herald of the Pantheon
+1 Hitchclaw Recluse
+1 Hixus, Prison Warden
+1 Honored Hierarch
+1 Hydrolash
+1 Infectious Bloodlust
+1 Infernal Scarring
+1 Infinite Obliteration
+1 Into the Void
+1 Iroas's Champion
+1 Island
+1 Jace's Sanctum
+1 Jace, Vryn's Prodigy // Jace, Telepath Unbound
+1 Jayemdae Tome
+1 Jhessian Thief
+1 Joraga Invocation
+1 Knight of the Pilgrim's Road
+1 Knight of the White Orchid
+1 Knightly Valor
+1 Kothophed, Soul Hoarder
+1 Kytheon's Irregulars
+1 Kytheon's Tactics
+1 Kytheon, Hero of Akros // Gideon, Battle-Forged
+1 Languish
+1 Leaf Gilder
+1 Lightning Javelin
+1 Liliana, Heretical Healer // Liliana, Defiant Necromancer
+1 Llanowar Empath
+1 Llanowar Wastes
+1 Macabre Waltz
+1 Mage-Ring Bully
+1 Mage-Ring Network
+1 Mage-Ring Responder
+1 Magmatic Insight
+1 Mahamoti Djinn
+1 Malakir Cullblade
+1 Managorger Hydra
+1 Mantle of Webs
+1 Maritime Guard
+1 Meteorite
+1 Might of the Masses
+1 Mighty Leap
+1 Mind Rot
+1 Mizzium Meddler
+1 Molten Vortex
+1 Mountain
+1 Murder Investigation
+1 Nantuko Husk
+1 Necromantic Summons
+1 Negate
+1 Nightmare
+1 Nightsnare
+1 Nissa's Pilgrimage
+1 Nissa's Revelation
+1 Nissa, Vastwood Seer // Nissa, Sage Animist
+1 Nivix Barrier
+1 Orbs of Warding
+1 Orchard Spirit
+1 Outland Colossus
+1 Patron of the Valiant
+1 Pharika's Disciple
+1 Pia and Kiran Nalaar
+1 Plains
+1 Plummet
+1 Possessed Skaab
+1 Prickleboar
+1 Priest of the Blood Rite
+1 Prism Ring
+1 Prized Unicorn
+1 Psychic Rebuttal
+1 Pyromancer's Goggles
+1 Rabid Bloodsucker
+1 Ramroller
+1 Ravaging Blaze
+1 Read the Bones
+1 Reave Soul
+1 Reclaim
+1 Reclusive Artificer
+1 Relic Seeker
+1 Returned Centaur
+1 Revenant
+1 Rhox Maulers
+1 Ringwarden Owl
+1 Rogue's Passage
+1 Runed Servitor
+1 Scab-Clan Berserker
+1 Scrapskin Drake
+1 Screeching Skaab
+1 Seismic Elemental
+1 Send to Sleep
+1 Sengir Vampire
+1 Sentinel of the Eternal Watch
+1 Separatist Voidmage
+1 Serra Angel
+1 Shadows of the Past
+1 Shaman of the Pack
+1 Shambling Ghoul
+1 Shivan Dragon
+1 Shivan Reef
+1 Sigil of Valor
+1 Sigil of the Empty Throne
+1 Sigiled Starfish
+1 Skaab Goliath
+1 Skyraker Giant
+1 Skysnare Spider
+1 Smash to Smithereens
+1 Somberwald Alpha
+1 Soulblade Djinn
+1 Sphinx's Tutelage
+1 Stalwart Aven
+1 Starfield of Nyx
+1 Stratus Walk
+1 Subterranean Scout
+1 Suppression Bonds
+1 Swamp
+1 Swift Reckoning
+1 Sword of the Animist
+1 Sylvan Messenger
+1 Tainted Remedy
+1 Talent of the Telepath
+1 Terra Stomper
+1 The Great Aurora
+1 Thopter Engineer
+1 Thopter Spy Network
+1 Thornbow Archer
+1 Throwing Knife
+1 Thunderclap Wyvern
+1 Timberpack Wolf
+1 Titan's Strength
+1 Titanic Growth
+1 Topan Freeblade
+1 Tormented Thoughts
+1 Totem-Guide Hartebeest
+1 Touch of Moonglove
+1 Tower Geist
+1 Tragic Arrogance
+1 Turn to Frog
+1 Undead Servant
+1 Undercity Troll
+1 Unholy Hunger
+1 Valeron Wardens
+1 Valor in Akros
+1 Vastwood Gorger
+1 Veteran's Sidearm
+1 Vine Snare
+1 Volcanic Rambler
+1 Vryn Wingmare
+1 War Horn
+1 War Oracle
+1 Watercourser
+1 Weave Fate
+1 Weight of the Underworld
+1 Whirler Rogue
+1 Wild Instincts
+1 Willbreaker
+1 Woodland Bellower
+1 Yavimaya Coast
+1 Yeva's Forcemage
+1 Yoked Ox
+1 Zendikar Incarnate
+1 Zendikar's Roil

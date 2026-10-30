@@ -10,10 +10,12 @@ codec =
   Arm.tagged
     tagOf
     [ Arm.payload "Scaled" Scaling.codec LifeGainRewrite.Scaled (\x -> case x of LifeGainRewrite.Scaled y -> Just y; _ -> Nothing),
-      Arm.nullary "DrawInstead" LifeGainRewrite.DrawInstead
+      Arm.nullary "DrawInstead" LifeGainRewrite.DrawInstead,
+      Arm.nullary "LoseInstead" LifeGainRewrite.LoseInstead
     ]
 
 tagOf :: LifeGainRewrite.LifeGainRewrite -> String
 tagOf x = case x of
   LifeGainRewrite.Scaled {} -> "Scaled"
   LifeGainRewrite.DrawInstead -> "DrawInstead"
+  LifeGainRewrite.LoseInstead -> "LoseInstead"

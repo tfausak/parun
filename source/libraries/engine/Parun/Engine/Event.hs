@@ -4141,6 +4141,16 @@ apply batch applied candidate event =
         Replacement.consume (ReplacementCandidate.identity candidate)
         Monad.replicateM_ (Natural.toIntSaturating n) (drawCard pid)
         pure Nothing
+      -- CR 614.6 with CR 119.3: Tainted Remedy's "loses that much life
+      -- instead", LifeLossRewrite.GainInstead's arm the other direction. The
+      -- gain never happens; the loss is an effect's (ByEffect), through
+      -- resolveLifeLoss, so a LifeLossR row resizes it and the settled amount
+      -- is what changeLife records as GameEvent.LifeLost.
+      LifeGainRewrite.LoseInstead -> do
+        Replacement.consume (ReplacementCandidate.identity candidate)
+        settled <- resolveLifeLoss LifeLossCause.ByEffect pid n
+        changeLife pid (negate (toInteger settled))
+        pure Nothing
     -- Unreachable: `applies` admits LifeGainR only against WouldGainLife.
     (ReplacementEffect.LifeGainR {}, _) -> pure (Just event)
     -- CR 614.6 with CR 614.11: Words of Worship's "the next time you would draw a
