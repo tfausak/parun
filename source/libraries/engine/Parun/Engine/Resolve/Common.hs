@@ -1984,7 +1984,7 @@ exileFoundFor agent exiled =
     let link = ExileLink.MkExileLink {ExileLink.source = agent, ExileLink.ability = Nothing}
         file oid = Map.insert oid link
         permission you = (ExilePlayPermission.defaultValue you agent) {ExilePlayPermission.spending = ManaSpending.AnyColor}
-        grant you o = o {Object.playableFromExile = Just (permission you)}
+        grant you o = o {Object.playPermission = Just (permission you)}
         granted = case Projection.controllerOf agent gs of
           Just you -> foldr (Map.adjust (grant you)) (GameState.objects gs) exiled
           Nothing -> GameState.objects gs

@@ -779,7 +779,7 @@ grantPlayFromExile resolving source controller legal (GrantPlayFromExile.MkGrant
       [] -> gs
       targets -> case playerRefPlayers legal resolving source controller gs player of
         -- CR 715.3d's "that player" is ONE seat and
-        -- Object.playableFromExile holds one, so a reference naming nobody --
+        -- Object.playPermission holds one, so a reference naming nobody --
         -- or naming several -- grants nothing, PlayerRef.InSlot's own
         -- collapse.
         [holder] -> case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs of
@@ -812,7 +812,7 @@ grantPlayFromExile resolving source controller legal (GrantPlayFromExile.MkGrant
                       -- so a play of any of them spends it for all.
                       ExilePlayPermission.budget = fmap (\n -> PlayBudget.MkPlayBudget n (Set.fromList targets)) upTo
                     }
-                grant o = o {Object.playableFromExile = Just permission}
+                grant o = o {Object.playPermission = Just permission}
              in gs {GameState.objects = foldr (Map.adjust grant) (GameState.objects gs) targets}
         _ -> gs
 

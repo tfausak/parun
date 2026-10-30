@@ -175,7 +175,7 @@ mint oid gs =
                 -- CR 722.3c's permission names the prepared permanent's
                 -- controller LIVE, so it is asked of `preparedCopyOf` below
                 -- rather than frozen into an ExilePlayPermission here.
-                Object.playableFromExile = Nothing,
+                Object.playPermission = Nothing,
                 Object.preparedCopyOf = Just oid
               }
        in Game.insertIntoZone

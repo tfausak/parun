@@ -12,7 +12,8 @@ import qualified Parun.Types.TapState as TapState
 
 -- | The payload of Parun.Types.Effect's GrantPlayFromExile arm: which objects the
 -- permission covers, whose it is, how long it lasts, and how its holder may pay
--- for what they cast under it.
+-- for what they cast under it. The objects lie in exile or, for a cast only, a
+-- graveyard (Jace, Telepath Unbound; Parun.Engine.Cast.permitsCastFromGraveyard).
 --
 -- `spending` is CR 118.14's "and mana of any type can be spent to cast that
 -- spell", printed on Dire Fleet Daredevil beside the permission itself. It rides

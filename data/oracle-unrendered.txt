@@ -1203,6 +1203,7 @@ izoni-center-of-the-web
 jace-beleren
 jace-memory-adept
 jace-the-living-guildpact
+jace-vryns-prodigy-jace-telepath-unbound
 jaces-archivist
 jaces-erasure
 jaces-mindseeker

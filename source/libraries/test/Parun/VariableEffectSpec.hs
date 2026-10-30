@@ -1557,7 +1557,7 @@ soulfireEruptionSpec s registry =
       orderAnswersIn = Maybe.mapMaybe (\r -> case r of Response.OrderedForEach o -> Just o; _ -> Nothing)
       named = Just . CardName.MkCardName . Text.pack
       exiledNames pid = List.sort . namesIn Zone.Exile pid
-      permissionsIn pid gs = fmap (Maybe.isJust . Object.playableFromExile) (Maybe.mapMaybe (\oid -> Game.lookupObject oid gs) (Game.zoneMembers Zone.Exile pid gs))
+      permissionsIn pid gs = fmap (Maybe.isJust . Object.playPermission) (Maybe.mapMaybe (\oid -> Game.lookupObject oid gs) (Game.zoneMembers Zone.Exile pid gs))
       lives gs = (S.lifeOf S.alice gs, S.lifeOf S.bob gs, S.lifeOf S.carol gs)
    in Spec.describe s "SoulfireEruption" $ do
         Spec.it s "CR 608.2f each victim takes the mana value of the card exiled FOR IT, in APNAP order" $ do
