@@ -1,0 +1,37 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [{ "card": "Ornithopter", "label": "athopter" }],
+        "hand": [{ "card": "Alhammarret, High Arbiter", "label": "alh" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }],
+        "manaPool": "UUUUUUU",
+        "name": "alice"
+      },
+      {
+        "battlefield": [{ "card": "Mountain", "label": "bmount1" }, { "card": "Mountain", "label": "bmount2" }],
+        "hand": [
+          { "card": "Embereth Shieldbreaker", "label": "bshield" },
+          { "card": "Razorgrass Ambush", "label": "brazor" },
+          { "card": "Island", "label": "bisland" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 201.4a / 201.4d / 715.5: Alhammarret, High Arbiter's controller may name a revealed adventurer card's Adventure, judged by the Adventure alone, but not a modal double-faced card's land back face",
+  "note": "Bob reveals Embereth Shieldbreaker // Battle Display, Razorgrass Ambush // Razorgrass Field and an Island. Alice may not name Razorgrass Field, a land face; she names Battle Display, so bob can't cast it but can still cast Embereth Shieldbreaker.",
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$alh" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Answer": { "prompt": "ChooseCardName", "with": "Razorgrass Field" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseCardName", "with": "Battle Display" } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "bob", "refuse": { "Cast": { "object": "$bshield", "face": "Battle Display", "targets": ["$athopter"], "mana": ["$bmount1"] } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "bob", "do": { "Cast": { "object": "$bshield", "mana": ["$bmount1", "$bmount2"] } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
+    { "turn": 2, "step": "PrecombatMain", "player": "bob", "check": { "Count": { "card": "Embereth Shieldbreaker", "count": 1, "player": "bob", "zone": "Battlefield" } } }
+  ]
+}

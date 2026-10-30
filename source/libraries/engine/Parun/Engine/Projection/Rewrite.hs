@@ -663,7 +663,7 @@ rewriteEffect pairs effect = case effect of
   Effect.RerollStoredResults _ -> effect
   -- CR 612.1: rule 201.4a's restriction is printed card text, so a text-changer
   -- rewrites it exactly as it rewrites a search's filter above.
-  Effect.ChooseCardName (ChooseCardName.MkChooseCardName ref restriction) -> Effect.ChooseCardName (ChooseCardName.MkChooseCardName ref (Filter.rewrite pairs restriction))
+  Effect.ChooseCardName (ChooseCardName.MkChooseCardName ref restriction among) -> Effect.ChooseCardName (ChooseCardName.MkChooseCardName ref (Filter.rewrite pairs restriction) among)
   Effect.ChooseQuality _ -> effect
   -- CR 612.1 again: "a sorcery card you own from outside the game" is printed
   -- card text like the search's filter above, so a text-changer reaches it the

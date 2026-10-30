@@ -89,6 +89,7 @@ import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Expiry as Expiry.Type
 import qualified Parun.Types.ExtraPhase as ExtraPhase
 import qualified Parun.Types.ExtraTurn as ExtraTurn
+import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.FromOutsideTheGame as FromOutsideTheGame
 import qualified Parun.Types.GainControl as GainControl
@@ -353,13 +354,13 @@ putCountersFrom resolving source controller legal (PutCountersFrom.MkPutCounters
 -- takes: who is asked first is public information, so it is a fact about the
 -- rules rather than about PlayerId's Ord.
 --
--- CHOOSE, not target: no CR 608.2b legality to re-check, and the prompt is
--- raised unconditionally because CR 201.4's offer is every card in the Oracle
--- card reference -- there is no candidate list to be short, so the "ask only
--- where two or more make it a choice" shortcut the sibling prompts take cannot
--- apply here.
+-- CHOOSE, not target: no CR 608.2b legality to re-check. Without an `among`
+-- slot the prompt is raised unconditionally because CR 201.4's offer is every
+-- card in the Oracle card reference -- there is no candidate list to be short,
+-- so the "ask only where two or more make it a choice" shortcut the sibling
+-- prompts take cannot apply.
 --
--- The answer is not filtered HERE, the posture the entry twin already takes:
+-- Without `among` the answer is not filtered HERE, the entry twin's posture:
 -- the engine holds no Oracle card reference to judge it against, and
 -- Game.lookUpChosenName asks for the card behind it only once it is in.
 -- Parun.Interpreter.policingCardNames judges it on the far side of
@@ -378,24 +379,39 @@ putCountersFrom resolving source controller legal (PutCountersFrom.MkPutCounters
 -- read twice would leave two, and a permanent that chose as it entered (CR
 -- 614.1c) would lose that name to a later resolution of its own. No card in
 -- data/cards writes two ChooseCardName instructions, and none pairs an
--- as-enters choice with a resolution-time one -- Runed Halo, the pool's
--- as-enters chooser, has no activated ability, and Conjurer's Ban names once
--- (Oracle text, Scryfall, 2026-09-06). Either card would refute this.
+-- as-enters choice with a resolution-time one -- Runed Halo and Alhammarret,
+-- High Arbiter, the pool's as-enters choosers, have no activated ability, and
+-- Conjurer's Ban names once (Oracle text, Scryfall, 2026-09-06). Either card
+-- would refute this.
 --
 -- Written to the SOURCE and not to `resolving`: Parun.Engine.PlayerEffect
 -- .contextFor and the resolution's own context both ask about a source (CR
 -- 113.7), and for a spell the two ids are the same object anyway.
 chooseCardName :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ChooseCardName.ChooseCardName -> Game ()
-chooseCardName resolving source controller legal (ChooseCardName.MkChooseCardName ref restriction) = do
+chooseCardName resolving source controller legal (ChooseCardName.MkChooseCardName ref restriction among) = do
   gs <- State.get
+  -- CR 201.4a: a slot confines the offer to the names of its cards the
+  -- restriction admits (Alhammarret, High Arbiter), Common.chooseNameAmong's
+  -- list. Every face's name, each judged by that face alone off the printed
+  -- card, since CR 201.4a reads Oracle text: CR 201.4b/d and 715.5, so an
+  -- Adventure's name is offered and a land back face is not. data/scenarios'
+  -- Alhammarret scenarios prove it.
+  confined <- Monad.forM among $ \slot -> do
+    members <- Common.fromAmongMembers legal resolving legal slot
+    g <- State.get
+    let context = effectContext g resolving controller source legal (slotBindings resolving g)
+        nameable card = [Face.name face | face <- NonEmpty.toList (Card.Type.faces card), Filter.matches context (Projection.viewOfCard face) restriction]
+    pure (Set.toList (Set.fromList (foldMap nameable (Maybe.mapMaybe (`Game.cardOf` g) (Common.stillPresent g members)))))
   -- CR 101.4b: each chooser is told the names the choosers before them chose.
   -- Conundrum Sphinx drives three choosers through this arm, but no test reads
   -- the payload here; Null Chamber's entry twin in Parun.Engine.Event is the
   -- proven one.
   let ask made chooser = do
         g <- State.get
-        name <- Game.choose (Prompt.ChooseCardName (Decide.deciderFor chooser g) chooser source restriction made) >>= Game.lookUpChosenName
-        pure (made Seq.|> (chooser, name))
+        picked <- case confined of
+          Nothing -> fmap Just (Game.choose (Prompt.ChooseCardName (Decide.deciderFor chooser g) chooser source restriction made) >>= Game.lookUpChosenName)
+          Just names -> Common.chooseNameAmong chooser source made names
+        pure (maybe made (\name -> made Seq.|> (chooser, name)) picked)
   picked <- fmap (Map.fromList . Foldable.toList) (Monad.foldM ask Seq.empty (Common.apnapDecidersOf ref legal resolving source controller gs))
   -- CR 101.3: a reference naming NOBODY leaves nothing to do, so the write is
   -- skipped rather than assigning the empty set -- which would clear a name an

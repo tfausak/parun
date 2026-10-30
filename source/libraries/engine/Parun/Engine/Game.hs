@@ -547,7 +547,9 @@ involve pid gs = gs {GameState.loopInvolvement = Map.insert pid (GameState.nextT
 
 -- CR 108.1: a name a player just chose (CR 201.4), looked up in the Oracle card
 -- reference and the card it names remembered in GameState.lookedUp, then handed
--- back. Every Prompt.ChooseCardName answer goes through here.
+-- back. Every Prompt.ChooseCardName answer goes through here but one from
+-- Parun.Engine.Resolve.Common.chooseNameAmong's list: a face of a card the game
+-- already holds, or one CR 707.13 looks up itself.
 --
 -- Asked, not chosen: nobody decides what the reference says, so CR 104.4b's
 -- lastChoice does not move. Filtered, not trusted: a card with no face of that

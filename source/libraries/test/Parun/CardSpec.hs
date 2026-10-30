@@ -813,7 +813,7 @@ playerRefPositions =
         ("discard-any-number", Effect.Discard (Discard.AnyNumber (AnyNumberDiscard.MkAnyNumberDiscard (plantedPlayer "da") (AnyNumberMatching.MkAnyNumberMatching (Filter.Type.And []) Nothing) Nothing)), [plantedPlayer "da"]),
         ("player-sacrifices", Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices (plantedPlayer "ps") (Filter.Type.And []) one Nothing), [plantedPlayer "ps"]),
         ("flip-coin", Effect.FlipCoin FlipCoin.MkFlipCoin {FlipCoin.count = one, FlipCoin.reading = CoinReading.Heads, FlipCoin.slot = SlotName.MkSlotName (Text.pack "fc"), FlipCoin.misses = Nothing, FlipCoin.flipper = plantedPlayer "fc"}, [plantedPlayer "fc"]),
-        ("choose-card-name", Effect.ChooseCardName (ChooseCardName.MkChooseCardName (plantedPlayer "cn") (Filter.Type.And [])), [plantedPlayer "cn"]),
+        ("choose-card-name", Effect.ChooseCardName (ChooseCardName.MkChooseCardName (plantedPlayer "cn") (Filter.Type.And []) Nothing), [plantedPlayer "cn"]),
         ("for-each-starting-with", Effect.ForEach (ForEach.MkForEach ObjectRef.EachPlayer LoopMembers.Every (SlotName.MkSlotName (Text.pack "each")) Seq.empty False Nothing (Just (plantedPlayer "fe-start"))), [plantedPlayer "fe-start"]),
         ("repeat", Effect.Repeat (Repeat.MkRepeat (plantedPlayer "rp-chooser") Seq.empty Nothing), [plantedPlayer "rp-chooser"]),
         ("choose-number", Effect.ChooseNumber (ChooseNumber.MkChooseNumber (SlotName.MkSlotName (Text.pack "number")) Nothing (plantedPlayer "cn-chooser")), [plantedPlayer "cn-chooser"]),
@@ -6085,9 +6085,11 @@ effectFilters effect = case effect of
   -- Parun.Interpreter.legalCardName, on the far side of
   -- Parun.Engine.Engine.runGameAsked, and it matches a printed FACE
   -- (Parun.Engine.Projection.View.viewOfCard) exactly as CR 400.11c's filter does.
-  -- No candidate here is an object in the game either, the named card being one
-  -- the reference has rather than one on the board.
-  Effect.ChooseCardName (ChooseCardName.MkChooseCardName _ restriction) -> outsideTheGameFramed [restriction]
+  -- The named card is one the reference has. An `among` slot also matches the
+  -- restriction against the cards it holds, which are in the game, but a
+  -- filter a printed face can answer those can too, so this frame is the
+  -- stricter of the two.
+  Effect.ChooseCardName (ChooseCardName.MkChooseCardName _ restriction _) -> outsideTheGameFramed [restriction]
   Effect.ChooseQuality _ -> []
   -- THE one wish-framed position. CR 400.11c's filter is matched against a
   -- PRINTED FACE (Parun.Engine.Projection.View.viewOfCard) rather than against an

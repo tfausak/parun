@@ -54,6 +54,7 @@ import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.ChangeText as ChangeText
 import qualified Parun.Types.ChangeWord as ChangeWord
+import qualified Parun.Types.ChooseCardName as ChooseCardName
 import qualified Parun.Types.ChoosePermanents as ChoosePermanents
 import qualified Parun.Types.ChosenPermanents as ChosenPermanents
 import qualified Parun.Types.ClauseIndex as ClauseIndex
@@ -548,6 +549,13 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
     let slot = SlotName.MkSlotName (Text.pack "thatPlayer")
     Spec.assertEqWith s "a named recipient is a read" (Resolve.slotsOf (Effect.AddMana (ManaAddition.MkManaAddition (PlayerRef.InSlot slot) ManaProduction.AnyColor (Quantity.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing))) (Map.singleton slot SlotArity.One)
     Spec.assertEqWith s "and CR 109.5's unwritten one names no slot" (Resolve.slotsOf (Effect.AddMana (ManaAddition.MkManaAddition (PlayerRef.Relative PlayerRelation.You) ManaProduction.AnyColor (Quantity.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing))) Map.empty
+  -- The fence above for CR 201.4a's "among" slot (Alhammarret, High Arbiter),
+  -- which its own Reveal binds, so the pool cannot observe the read either.
+  Spec.it s "CR 201.4a slotsOf reads the slot a ChooseCardName draws names from" $ do
+    let slot = SlotName.MkSlotName (Text.pack "revealed")
+        named among = Resolve.slotsOf (Effect.ChooseCardName (ChooseCardName.MkChooseCardName (PlayerRef.Relative PlayerRelation.You) (Filter.Type.And []) among))
+    Spec.assertEqWith s "the among slot is a read" (named (Just slot)) (Map.singleton slot SlotArity.Many)
+    Spec.assertEqWith s "and every name reads none" (named Nothing) Map.empty
   -- The same fence for CR 509.4's blocking rider, which the MoveToZone arm reads
   -- since Aetherplasm. Asserted here because the POOL cannot observe it: the
   -- dataflow lint's equality has Mode.targetSlots on its right, which is empty

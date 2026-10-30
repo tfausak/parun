@@ -890,7 +890,7 @@ characteristicPTNames asking x = case x of
 
 chooseCardNameNames :: (Monoid r) => Asking r -> ChooseCardName.ChooseCardName -> r
 chooseCardNameNames asking x = case x of
-  ChooseCardName.MkChooseCardName player restriction -> playerRefNames asking player <> filterNames asking restriction
+  ChooseCardName.MkChooseCardName player restriction among -> playerRefNames asking player <> filterNames asking restriction <> foldMap (slotNames asking) among
 
 bindAmountNames :: (Monoid r) => Asking r -> BindAmount.BindAmount -> r
 bindAmountNames asking x = case x of

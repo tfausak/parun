@@ -1932,6 +1932,19 @@ fromAmongMembers legal resolving chosen slot = do
     Just objects -> objects
     Nothing -> Maybe.mapMaybe Recipient.objectOf (legalMany slot legal)
 
+-- CR 201.4a: a card name chosen from a list the engine holds (CR 707.13's
+-- names, ChooseCardName's `among`). None chooses nothing (CR 609.3), one is
+-- chosen unasked, and two or more ride in the prompt as an Or of HasName. The
+-- answer is filtered, not trusted: one off the list chooses nothing.
+chooseNameAmong :: PlayerId -> ObjectId -> Seq.Seq (PlayerId, CardName.CardName) -> [CardName.CardName] -> Game (Maybe CardName.CardName)
+chooseNameAmong chooser source made names = case names of
+  [] -> pure Nothing
+  [only] -> pure (Just only)
+  _ -> do
+    gs <- State.get
+    answer <- Game.choose (Prompt.ChooseCardName (Decide.deciderFor chooser gs) chooser source (Filter.Type.Or (fmap Filter.Type.HasName names)) made)
+    pure (List.find (== answer) names)
+
 -- CR 723.1a: the new control is the last one CREATED, so it goes ON TOP of any
 -- control already running on that player rather than replacing it. That rule's
 -- "overwrite" is the continuous-effect sense -- both effects exist and the later
