@@ -18,6 +18,7 @@ import qualified Parun.Types.Face as Face
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.Optionality as Optionality
 import qualified Parun.Types.PlayerRef as PlayerRef
@@ -49,6 +50,7 @@ drawOne =
         )
     )
     (ModeSelection.ChooseExactly 1)
+    ModeMemory.NoMemory
 
 -- One constructor, so two cases: a room with arrows and an ability, and a room
 -- writing neither optional key -- the bottommost room of a dungeon whose printed

@@ -43,6 +43,7 @@ import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.Modal as ModalT
 import qualified Parun.Types.Mode as Mode
 import qualified Parun.Types.ModeIndex as ModeIndex
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.Moved as Moved
 import qualified Parun.Types.Object as Object
@@ -200,7 +201,8 @@ modalReaderSpec s = Spec.describe s "M4h Modal reader" $ do
                   Mode.MkMode (Seq.singleton (Mint.mandatory (Seq.singleton (Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 2) Nothing))))) Map.empty
                 ]
             )
-            (ModeSelection.ChooseExactly 1) ::
+            (ModeSelection.ChooseExactly 1)
+            ModeMemory.NoMemory ::
             ModalT.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)
         chosen = Seq.singleton (ModeIndex.MkModeIndex 1)
     Spec.assertEqWith s "only mode 1's effect" (Modal.modesEffects chosen m) [Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 2) Nothing)]

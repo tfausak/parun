@@ -2123,7 +2123,7 @@ millTallyNames asking x = case x of
 
 modalNames :: (Monoid r) => Asking r -> (card -> r) -> (ability -> r) -> Modal.Modal card ability -> r
 modalNames asking onCard onAbility x = case x of
-  Modal.MkModal modes _selection -> foldMap (modeNames asking onCard onAbility) modes
+  Modal.MkModal modes _selection _memory -> foldMap (modeNames asking onCard onAbility) modes
 
 modeNames :: (Monoid r) => Asking r -> (card -> r) -> (ability -> r) -> Mode.Mode card ability -> r
 modeNames asking onCard onAbility x = case x of

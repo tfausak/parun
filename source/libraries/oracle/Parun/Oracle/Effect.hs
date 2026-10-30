@@ -64,6 +64,7 @@ import qualified Parun.Types.ManaRetention as ManaRetention
 import qualified Parun.Types.Mill as Mill
 import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.ModifyTarget as ModifyTarget
@@ -134,33 +135,37 @@ data Mana
 -- you." (Adarkar Wastes).
 modal :: Target.Context -> Modal.Modal Card.Card Continuous.Ability -> [Text.Text]
 modal context m = case (Foldable.toList (Modal.modes m), Modal.selection m) of
-  ([only], ModeSelection.ChooseExactly 1) -> mode context only
+  ([only], ModeSelection.ChooseExactly 1) | Modal.memory m == ModeMemory.NoMemory -> mode context only
   (modes@(_ : _ : _), selection)
     | Just added' <- traverse manaMode modes,
-      selection == ModeSelection.ChooseExactly 1 ->
+      (selection, Modal.memory m) == (ModeSelection.ChooseExactly 1, ModeMemory.NoMemory) ->
         [Prose.sentence (Text.pack "add " <> Prose.listing "or" added')]
-    | selection == ModeSelection.ChooseExactly 1,
+    | (selection, Modal.memory m) == (ModeSelection.ChooseExactly 1, ModeMemory.NoMemory),
       Just split <- traverse manaThen modes,
       (_, rest) : others <- split,
       all ((== rest) . snd) others -> do
         following <- mode context rest
         followedBy context (Prose.sentence (Text.pack "add " <> Prose.listing "or" (fmap fst split))) following
     | otherwise -> do
-        heading <- choose selection (length modes)
+        heading <- choose (Modal.memory m) selection (length modes)
         bodies <- traverse (mode context {Target.breaks = [Text.pack " "]}) modes
         [heading <> foldMap (Text.pack "\n\8226 " <>) bodies]
   _ -> []
 
 -- | The instruction to choose modes (CR 700.2), given how many there are:
 -- "Choose one \8212", "Choose one or both \8212", "Choose three. You may
--- choose the same mode more than once." (CR 700.2d).
-choose :: ModeSelection.ModeSelection -> Int -> [Text.Text]
-choose selection count = case selection of
-  ModeSelection.ChooseExactly n -> [Text.pack "Choose " <> Prose.cardinal (toInteger n) <> Text.pack " \8212"]
-  ModeSelection.ChooseExactlyWithRepeats n -> [Text.pack "Choose " <> Prose.cardinal (toInteger n) <> Text.pack ". You may choose the same mode more than once."]
-  ModeSelection.ChooseBetween b
-    | ChooseBetween.least b == 1, toInteger (ChooseBetween.most b) == toInteger count -> [Text.pack (if count == 2 then "Choose one or both \8212" else "Choose one or more \8212")]
-  _ -> []
+-- choose the same mode more than once." (CR 700.2d), "Choose one that hasn't
+-- been chosen \8212".
+choose :: ModeMemory.ModeMemory -> ModeSelection.ModeSelection -> Int -> [Text.Text]
+choose memory selection count = case (memory, selection) of
+  (ModeMemory.ObjectLifetime, ModeSelection.ChooseExactly n) -> [Text.pack "Choose " <> Prose.cardinal (toInteger n) <> Text.pack " that hasn't been chosen \8212"]
+  (ModeMemory.ObjectLifetime, _) -> []
+  (ModeMemory.NoMemory, _) -> case selection of
+    ModeSelection.ChooseExactly n -> [Text.pack "Choose " <> Prose.cardinal (toInteger n) <> Text.pack " \8212"]
+    ModeSelection.ChooseExactlyWithRepeats n -> [Text.pack "Choose " <> Prose.cardinal (toInteger n) <> Text.pack ". You may choose the same mode more than once."]
+    ModeSelection.ChooseBetween b
+      | ChooseBetween.least b == 1, toInteger (ChooseBetween.most b) == toInteger count -> [Text.pack (if count == 2 then "Choose one or both \8212" else "Choose one or more \8212")]
+    _ -> []
 
 -- | The symbols a mode adds, when adding mana is all it does and it names no
 -- target.
@@ -692,6 +697,7 @@ effect context e = case e of
     a <- Target.amounts context (PlayerQuantity.quantity g)
     n <- life a
     naming (Target.names a) (declarative context (PlayerQuantity.player g) (Text.pack "gain " <> n) (Text.pack "gains " <> n))
+  Effect.LoseGame who -> declarative context who (Text.pack "lose the game") (Text.pack "loses the game")
   Effect.LoseLife l
     | LifeLoss.cause l == LifeLossCause.ByEffect,
       Maybe.isNothing (LifeLoss.tally l) -> do

@@ -282,6 +282,7 @@ import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
 import qualified Parun.Types.ModeIndex as ModeIndex
 import qualified Parun.Types.ModeInstance as ModeInstance
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.ModifiedRoll as ModifiedRoll
@@ -2617,6 +2618,13 @@ faceModals card =
       <> fmap TriggeredAbility.modal (delayedDeclarations card)
       <> fmap DungeonRoom.ability (Foldable.toList (Face.rooms card))
 
+-- Does a spell or an activated ability, printed or granted, carry a mode memory?
+cardRemembersUntriggered :: Face.Face Card.Type.Card -> Bool
+cardRemembersUntriggered card =
+  any
+    ((/= ModeMemory.NoMemory) . Modal.memory)
+    (Face.spell card : fmap ActivatedAbility.modal (Face.activatedAbilities card <> grantedActivatedAbilities card))
+
 -- CR 608.2d: does any clause's either-or name a sibling that does not name it
 -- back? Clause.orElse is SYMMETRIC by design -- the announcement is made at
 -- whichever branch the resolution reaches first, so that one has to know the
@@ -2836,7 +2844,7 @@ modalActivated :: [Mode.Mode Card.Type.Card (GrantedAbility.GrantedAbility Card.
 modalActivated modes =
   ActivatedAbility.MkActivatedAbility
     { ActivatedAbility.cost = Cost.Type.MkCost {Cost.Type.mana = Just (ManaCost.MkManaCost []), Cost.Type.components = []},
-      ActivatedAbility.modal = Modal.MkModal (Seq.fromList modes) (ModeSelection.ChooseExactly 1),
+      ActivatedAbility.modal = Modal.MkModal (Seq.fromList modes) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory,
       ActivatedAbility.maximumX = [],
       ActivatedAbility.minimumX = 0,
       ActivatedAbility.definedX = Nothing,
@@ -7286,6 +7294,20 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
     Spec.assertBool s (not (cardDivisionsDangle face)) "Forked Lightning reads its division, and is accepted"
     Spec.assertBool s (cardDivisionsDangle (rewrite undivided)) "a part read off an undivided slot is rejected"
     Spec.assertBool s (cardDivisionsDangle (rewrite unread)) "a division nothing reads is rejected"
+  -- Demonic Pact's "that hasn't been chosen" outside a triggered ability is
+  -- read by nothing, so a chosen mode would be offered again.
+  --
+  -- Not implemented: a mode memory outside a triggered ability (#5782).
+  Spec.it s "only a triggered ability remembers its chosen modes" $ do
+    ps <- S.allPrintings s corpus
+    pact <- S.printingOf s registry "Demonic Pact"
+    let face = S.combinedFace pact
+        remembering = any ((/= ModeMemory.NoMemory) . Modal.memory . TriggeredAbility.modal) . Face.triggeredAbilities
+        offenders = filter (anyFace cardRemembersUntriggered . Printing.card) ps
+        moved = face {Face.activatedAbilities = [(modalActivated []) {ActivatedAbility.modal = TriggeredAbility.modal ability} | ability <- Face.triggeredAbilities face]}
+    Spec.assertBool s (remembering face && not (cardRemembersUntriggered face)) "Demonic Pact's trigger remembers, and is accepted"
+    Spec.assertBool s (cardRemembersUntriggered moved) "its modal on an activated ability is rejected"
+    Spec.assertEqWith s "no spell or activated ability remembers" (fmap (S.nameOf . Printing.card) offenders) []
   -- CR 608.2d's either-or, whose two branches must name each other: the corpus
   -- half, with the same shape the slot-name pair above has.
   Spec.it s "no card's either-or names a sibling that does not name it back" $ do

@@ -64,6 +64,7 @@ import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
 import qualified Parun.Types.ModeIndex as ModeIndex
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.PerCreature as PerCreature
@@ -120,6 +121,7 @@ minimalModal =
   Modal.MkModal
     (Seq.singleton (Mode.MkMode Seq.empty Map.empty))
     (ModeSelection.ChooseExactly 1)
+    ModeMemory.NoMemory
 
 -- | CR 603.6a's simplest trigger. The shape does not matter here, only that it
 -- is a well-typed TriggeredAbility Card.

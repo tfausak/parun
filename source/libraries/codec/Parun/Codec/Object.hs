@@ -22,6 +22,7 @@ import qualified Parun.Codec.Keyword as Keyword
 import qualified Parun.Codec.KeywordInstance as KeywordInstance
 import qualified Parun.Codec.Mana as Mana
 import qualified Parun.Codec.ManaCost as ManaCost
+import qualified Parun.Codec.ModeIndex as ModeIndex
 import qualified Parun.Codec.ObjectId as ObjectId
 import qualified Parun.Codec.Pairing as Pairing
 import qualified Parun.Codec.PlayerChoice as PlayerChoice
@@ -39,6 +40,7 @@ import qualified Parun.Codec.StoredResult as StoredResult
 import qualified Parun.Codec.Subtype as Subtype
 import qualified Parun.Codec.TapState as TapState
 import qualified Parun.Codec.Timestamp as Timestamp
+import qualified Parun.Codec.TriggeredAbility as TriggeredAbility
 import qualified Parun.Codec.Zone as Zone
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
@@ -161,6 +163,7 @@ codec = Fields.object $ do
   -- Common.repeats rather than multiset: a spend count never falls to zero,
   -- and one entry per spend is the array this field was before it counted.
   activatedOnce <- Fields.defaulted "activatedOnce" (Object.activatedOnce defaults) (Common.repeats (ActivatedAbility.codec Card.codec (GrantedAbility.codec Card.codec))) Object.activatedOnce
+  chosenModes <- Fields.defaulted "chosenModes" (Object.chosenModes defaults) (Common.keyedList (Common.keyValue (TriggeredAbility.codec Card.codec (GrantedAbility.codec Card.codec)) (Common.set ModeIndex.codec))) Object.chosenModes
   pure
     Object.MkObject
       { Object.owner = owner,
@@ -226,5 +229,6 @@ codec = Fields.object $ do
         Object.goadedBy = goadedBy,
         Object.doesNotUntapFor = doesNotUntapFor,
         Object.exertedBy = exertedBy,
-        Object.activatedOnce = activatedOnce
+        Object.activatedOnce = activatedOnce,
+        Object.chosenModes = chosenModes
       }

@@ -15,6 +15,7 @@ import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.Optionality as Optionality
 import qualified Parun.Types.PlayerRelation as PlayerRelation
@@ -60,6 +61,7 @@ spec s = Spec.describe s "Parun.Codec.Modal" $ do
               )
           )
           (ModeSelection.ChooseExactly 1)
+          ModeMemory.NoMemory
       )
       " {\"modes\":[{\"clauses\":[{\"effects\":[{\"type\":\"Attach\",\"value\":\"target\"}]}],\"targetSlots\":{\"target\":{\"pool\":{\"type\":\"Creatures\"},\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}}}}]} "
   Spec.it s "omits a ChooseExactly 1 selection" $
@@ -67,7 +69,7 @@ spec s = Spec.describe s "Parun.Codec.Modal" $ do
       s
       toJson
       fromJson
-      (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) Modal.defaultSelection)
+      (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) Modal.defaultSelection ModeMemory.NoMemory)
       " {\"modes\":[{}]} "
   -- CR 700.2's non-modal payload is a single Mode: a modal PAYLOAD has at
   -- least one mode by invariant, so an empty `modes` array is a decode

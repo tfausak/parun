@@ -97,6 +97,7 @@ import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.Measures as Measures
 import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.ModifyTarget as ModifyTarget
@@ -521,7 +522,7 @@ modalTrigger condition modes =
   Mint.triggerOf
     condition
     Nothing
-    (Modal.MkModal (Seq.fromList modes) (ModeSelection.ChooseExactly 1))
+    (Modal.MkModal (Seq.fromList modes) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory)
 
 -- The slots an ARMING carrier declares as targets: the three carriers above that
 -- can arm a CR 603.7 delayed ability, which is all of them except the delayed

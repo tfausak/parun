@@ -107,6 +107,7 @@ import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.Modal as Modal
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
@@ -273,7 +274,7 @@ lockAbility keys = case drop 1 (Face.activatedAbilities (S.combinedFace keys)) o
   -- Unreachable: the printing has two. A no-mode ability with an unpayable cost
   -- keeps the helper total and is offered nowhere, so a card that lost its
   -- second ability fails the case rather than silently activating the first.
-  [] -> ActivatedAbility.MkActivatedAbility (Cost.MkCost Nothing []) [] 0 Nothing (Modal.MkModal Seq.empty (ModeSelection.ChooseExactly 1)) [] Activator.Controller Nothing Nothing Nothing
+  [] -> ActivatedAbility.MkActivatedAbility (Cost.MkCost Nothing []) [] 0 Nothing (Modal.MkModal Seq.empty (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory) [] Activator.Controller Nothing Nothing Nothing
 
 -- Whether that ability is on alice's menu, which is what says the board really
 -- is in CR 307.5's sorcery-speed window with the cost payable -- and so that a
@@ -311,7 +312,7 @@ activateKeys keys keysId answer gs =
 keyAbility :: Int -> Printing.Printing -> ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)
 keyAbility index key = case drop index (Face.activatedAbilities (S.combinedFace key)) of
   ability : _ -> ability
-  [] -> ActivatedAbility.MkActivatedAbility (Cost.MkCost Nothing []) [] 0 Nothing (Modal.MkModal Seq.empty (ModeSelection.ChooseExactly 1)) [] Activator.Controller Nothing Nothing Nothing
+  [] -> ActivatedAbility.MkActivatedAbility (Cost.MkCost Nothing []) [] 0 Nothing (Modal.MkModal Seq.empty (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory) [] Activator.Controller Nothing Nothing Nothing
 
 -- The board the three Skeleton Key cases share: bob's Room, a Balemurk Leech
 -- apiece for alice and bob, and alice's Skeleton Key. The Room is PLACED rather

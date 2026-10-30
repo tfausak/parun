@@ -78,6 +78,7 @@ import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.ManaUnit as ManaUnit
 import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.ModifyPowerToughness as ModifyPowerToughness
@@ -973,6 +974,7 @@ cyclingSpec s registry = Spec.describe s "Cycling" $ do
             ( Modal.MkModal
                 (Seq.fromList [Mode.MkMode Seq.empty Map.empty, Mode.MkMode Seq.empty Map.empty])
                 (ModeSelection.ChooseExactly 1)
+                ModeMemory.NoMemory
             )
             []
             Activator.Controller

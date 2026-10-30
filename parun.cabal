@@ -974,6 +974,8 @@ library codec
     Parun.Codec.Mode
     Parun.Codec.ModeIndex
     Parun.Codec.ModeIndexSpec
+    Parun.Codec.ModeMemory
+    Parun.Codec.ModeMemorySpec
     Parun.Codec.ModeSelection
     Parun.Codec.ModeSelectionSpec
     Parun.Codec.ModeSpec
@@ -2821,6 +2823,7 @@ library types
     Parun.Types.Mode
     Parun.Types.ModeIndex
     Parun.Types.ModeInstance
+    Parun.Types.ModeMemory
     Parun.Types.ModeSelection
     Parun.Types.Modification
     Parun.Types.ModifiedRoll

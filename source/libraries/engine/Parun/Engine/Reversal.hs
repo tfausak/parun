@@ -419,6 +419,7 @@ objectWith before entry closed = do
   doesNotUntapFor <- field Object.doesNotUntapFor
   exertedBy <- field Object.exertedBy
   activatedOnce <- field Object.activatedOnce
+  chosenModes <- field Object.chosenModes
   paired <- field Object.paired
   stickers <- field Object.stickers
   duplicate <- field Object.duplicate
@@ -485,6 +486,7 @@ objectWith before entry closed = do
         Object.doesNotUntapFor = doesNotUntapFor,
         Object.exertedBy = exertedBy,
         Object.activatedOnce = activatedOnce,
+        Object.chosenModes = chosenModes,
         Object.paired = paired,
         Object.stickers = stickers,
         Object.duplicate = duplicate

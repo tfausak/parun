@@ -28,6 +28,7 @@ import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.Optionality as Optionality
@@ -81,7 +82,8 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbility" $ do
             TriggeredAbility.modal =
               Modal.MkModal
                 (Seq.singleton (Mode.MkMode (Seq.singleton (Clause.MkClause Nothing Nothing Nothing Optionality.Mandatory Nothing (Seq.singleton (Effect.Create (Create.MkCreate (Quantity.Literal 1) (Text.pack "Zombie Token") EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You)))))) Map.empty))
-                (ModeSelection.ChooseExactly 1),
+                (ModeSelection.ChooseExactly 1)
+                ModeMemory.NoMemory,
             TriggeredAbility.intervening = Nothing,
             TriggeredAbility.name = Nothing,
             TriggeredAbility.limit = TriggerLimit.Unlimited,
@@ -101,7 +103,8 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbility" $ do
             TriggeredAbility.modal =
               Modal.MkModal
                 (Seq.singleton (Mode.MkMode (Seq.singleton (Clause.MkClause Nothing Nothing Nothing Optionality.Mandatory Nothing (Seq.singleton (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "you"))) (Quantity.Literal 1))) Nothing Nothing Nothing Nothing))))) Map.empty))
-                (ModeSelection.ChooseExactly 1),
+                (ModeSelection.ChooseExactly 1)
+                ModeMemory.NoMemory,
             TriggeredAbility.intervening =
               Just
                 ( Condition.Compares
@@ -133,7 +136,8 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbility" $ do
                   TriggeredAbility.modal =
                     Modal.MkModal
                       (Seq.singleton (Mode.MkMode (Seq.singleton (Clause.MkClause Nothing Nothing Nothing Optionality.Mandatory Nothing (Seq.singleton (Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "token")), SacrificeEffect.sacrificer = Sacrificer.EffectController, SacrificeEffect.sacrificed = Nothing})))) Map.empty))
-                      (ModeSelection.ChooseExactly 1),
+                      (ModeSelection.ChooseExactly 1)
+                      ModeMemory.NoMemory,
                   TriggeredAbility.intervening = Nothing,
                   TriggeredAbility.name = Nothing,
                   TriggeredAbility.limit = TriggerLimit.Unlimited,
@@ -146,7 +150,8 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbility" $ do
                   TriggeredAbility.modal =
                     Modal.MkModal
                       (Seq.singleton (Mode.MkMode (Seq.singleton (Clause.MkClause Nothing Nothing Nothing Optionality.Mandatory Nothing (Seq.singleton (Effect.Untap (ObjectRef.EachMatching Filter.AttackedThisTurn))))) Map.empty))
-                      (ModeSelection.ChooseExactly 1),
+                      (ModeSelection.ChooseExactly 1)
+                      ModeMemory.NoMemory,
                   TriggeredAbility.intervening = Nothing,
                   TriggeredAbility.name = Nothing,
                   TriggeredAbility.limit = TriggerLimit.Unlimited,
@@ -168,7 +173,8 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbility" $ do
           TriggeredAbility.modal =
             Modal.MkModal
               (Seq.singleton (Mode.MkMode Seq.empty Map.empty))
-              (ModeSelection.ChooseExactly 1),
+              (ModeSelection.ChooseExactly 1)
+              ModeMemory.NoMemory,
           TriggeredAbility.intervening = Nothing,
           TriggeredAbility.name = Nothing,
           TriggeredAbility.limit = TriggerLimit.Unlimited,
@@ -186,7 +192,8 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbility" $ do
           TriggeredAbility.modal =
             Modal.MkModal
               (Seq.singleton (Mode.MkMode Seq.empty Map.empty))
-              (ModeSelection.ChooseExactly 1),
+              (ModeSelection.ChooseExactly 1)
+              ModeMemory.NoMemory,
           TriggeredAbility.intervening = Nothing,
           TriggeredAbility.name = Just (AbilityName.MkAbilityName (Text.pack "vigil")),
           TriggeredAbility.limit = TriggerLimit.Unlimited,
@@ -204,7 +211,8 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbility" $ do
           TriggeredAbility.modal =
             Modal.MkModal
               (Seq.singleton (Mode.MkMode Seq.empty Map.empty))
-              (ModeSelection.ChooseExactly 1),
+              (ModeSelection.ChooseExactly 1)
+              ModeMemory.NoMemory,
           TriggeredAbility.intervening = Nothing,
           TriggeredAbility.name = Nothing,
           TriggeredAbility.limit = TriggerLimit.Unlimited,

@@ -108,6 +108,7 @@ import qualified Parun.Types.ManaAbilityPerformer as ManaAbilityPerformer
 import qualified Parun.Types.Modal as Modal.Type
 import qualified Parun.Types.Mode as Mode
 import qualified Parun.Types.ModeIndex as ModeIndex
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
@@ -1004,7 +1005,15 @@ placeBorne srcId pending = do
         TriggerCondition.SelfEnters -> Just inheritedX
         TriggerCondition.SelfCast -> Just inheritedX
         _ -> Nothing
-      legal = Target.fillableModes StackObjectKind.TriggeredAbility Nothing (Just controller) bound srcId Map.empty modal gs
+      -- CR 700.2b: a mode an earlier choice bars "can't be chosen", like an
+      -- unfillable one, so CR 603.3c removes an ability left with none.
+      --
+      -- Not implemented: reading the memory of a source that left the
+      -- battlefield after triggering (#5784).
+      remembered = case Modal.Type.memory modal of
+        ModeMemory.NoMemory -> Set.empty
+        ModeMemory.ObjectLifetime -> maybe Set.empty (Map.findWithDefault Set.empty ability . Object.chosenModes) (Game.lookupObject srcId gs)
+      legal = Set.difference (Target.fillableModes StackObjectKind.TriggeredAbility Nothing (Just controller) bound srcId Map.empty modal gs) remembered
       selection = Modal.Type.selection modal
       obj =
         Object.newSettled
@@ -1042,6 +1051,12 @@ placeBorne srcId pending = do
       chosenModes <- case Modal.forcedSelection legal selection of
         Just forced -> pure forced
         Nothing -> fmap Seq.sort (Game.choose (Prompt.ChooseModes decider controller abilId legal selection))
+      -- Remembered as chosen, before targets: a mode chosen for an instance
+      -- that never resolves still counts (Demonic Pact's rulings), which
+      -- data/scenarios' demonic-pact-counts-a-mode-chosen-for-a-countered-trigger
+      -- proves.
+      Monad.when (Modal.Type.memory modal /= ModeMemory.NoMemory) $
+        State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.chosenModes = Map.insertWith Set.union ability (Set.fromList (Foldable.toList chosenModes)) (Object.chosenModes o)}) srcId (GameState.objects g)})
       -- CR 603.3d: targets for the chosen mode(s) only, chosen as the ability is
       -- placed. A mode with no target slots asks nothing.
       let slots = Target.announcedSlots StackObjectKind.TriggeredAbility controller srcId gs (Modal.modesTargetSlots chosenModes modal)

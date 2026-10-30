@@ -13,6 +13,7 @@ import qualified Parun.Types.Activator as Activator
 import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.ObjectSnapshot as ObjectSnapshot
@@ -34,7 +35,7 @@ spec s = Spec.describe s "Parun.Codec.PastActivation" $ do
           }
       snapshotJson n = "{\"object\":" <> show (n :: Integer) <> ",\"characteristics\":" <> ProjectedCharacteristicsSpec.testCharacteristicsJson <> ",\"controller\":1,\"owner\":1,\"zone\":{\"type\":\"Stack\"}}"
       -- The barest printed ability: no cost, one empty mode.
-      bare = ActivatedAbility.MkActivatedAbility (Cost.MkCost Nothing []) [] 0 Nothing (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1)) [] Activator.Controller Nothing Nothing Nothing
+      bare = ActivatedAbility.MkActivatedAbility (Cost.MkCost Nothing []) [] 0 Nothing (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory) [] Activator.Controller Nothing Nothing Nothing
   Spec.it s "an ability announced at one target" $
     Common.assertCodec
       s

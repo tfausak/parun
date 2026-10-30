@@ -40,6 +40,7 @@ import qualified Parun.Types.Modal as Modal.Type
 import qualified Parun.Types.Mode as Mode
 import qualified Parun.Types.ModeIndex as ModeIndex
 import qualified Parun.Types.ModeInstance as ModeInstance
+import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Pool as Pool
@@ -937,7 +938,7 @@ fuseSpells ::
 fuseSpells spells = do
   halves <- traverse selectionModes (NonEmpty.toList spells)
   merged <- traverse (Foldable.foldlM mergeDisjointModes emptyMode) (sequence halves)
-  pure (Modal.Type.MkModal (Seq.fromList merged) (ModeSelection.ChooseExactly 1))
+  pure (Modal.Type.MkModal (Seq.fromList merged) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory)
 
 -- One half's every legal answer to its own CR 700.2 instruction, each as its
 -- chosen modes merged in printed order (Parun.Engine.Modal.selections), or Nothing
