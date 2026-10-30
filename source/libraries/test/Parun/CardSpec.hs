@@ -684,7 +684,7 @@ refCounts = concatMap quantityCounts . Resolve.objectRefQuantities
 objectRefPositions :: [(String, Effect.Effect () (), [ObjectRef.ObjectRef])]
 objectRefPositions =
   let plainRiders = EntryRiders.defaultValue
-      handChoice = ChosenCardInHand.MkChosenCardInHand (plantedPlayer "xh") (Filter.Type.And []) (Quantity.Type.Literal 1)
+      handChoice = ChosenCardInHand.MkChosenCardInHand (plantedPlayer "xh") (Filter.Type.And []) HowMany.one
    in [ ("deal-damage", Effect.DealDamage (DealDamage.MkDealDamage (Seq.fromList [DamagePart.MkDamagePart (plantedRef "dd1") (Quantity.Type.Literal 1), DamagePart.MkDamagePart (plantedRef "dd2") (Quantity.Type.Literal 1)]) Nothing Nothing Nothing Nothing), [plantedRef "dd1", plantedRef "dd2"]),
         ("modify-target", Effect.ModifyTarget (ModifyTarget.MkModifyTarget Duration.UntilEndOfTurn (Modification.GainKeyword Keyword.Flying) (plantedRef "mt") Nothing), [plantedRef "mt"]),
         ("restart-game", Effect.RestartGame (Just (plantedRef "rg")), [plantedRef "rg"]),
@@ -848,7 +848,7 @@ objectRefPlayerRefPositions =
   [ ("top-of-library", ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary (plantedPlayer "tl") (Quantity.Type.Literal 1)), [plantedPlayer "tl"]),
     ("top-of-library-until", ObjectRef.TopOfLibraryUntil (TopOfLibraryUntil.MkTopOfLibraryUntil (plantedPlayer "tu") (Filter.Type.And []) (Quantity.Type.Literal 1)), [plantedPlayer "tu"]),
     ("top-of-graveyard", ObjectRef.TopOfGraveyard (plantedPlayer "tg"), [plantedPlayer "tg"]),
-    ("chosen-card-in-hand", ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (plantedPlayer "ch") (Filter.Type.And []) (Quantity.Type.Literal 1)), [plantedPlayer "ch"]),
+    ("chosen-card-in-hand", ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (plantedPlayer "ch") (Filter.Type.And []) HowMany.one), [plantedPlayer "ch"]),
     ("random-card-in-hand", ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand (plantedPlayer "rh") (Filter.Type.And []) (Quantity.Type.Literal 1)), [plantedPlayer "rh"]),
     ("random-card-in-library", ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary (plantedPlayer "rl") (Filter.Type.And []) (Quantity.Type.Literal 1)), [plantedPlayer "rl"]),
     -- And the two CHOOSERS, which name a seat without counting per seat --

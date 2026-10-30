@@ -6,6 +6,7 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.ChosenCardInHand as ChosenCardInHand
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Quantity as Quantity
@@ -22,7 +23,7 @@ spec s = Spec.describe s "Parun.Codec.ChosenCardInHand" $ do
       ( ChosenCardInHand.MkChosenCardInHand
           { ChosenCardInHand.player = PlayerRef.Relative PlayerRelation.You,
             ChosenCardInHand.filter = Filter.HasCardType CardType.Creature,
-            ChosenCardInHand.count = Quantity.Literal 1
+            ChosenCardInHand.count = HowMany.one
           }
       )
       " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
@@ -34,8 +35,20 @@ spec s = Spec.describe s "Parun.Codec.ChosenCardInHand" $ do
       ( ChosenCardInHand.MkChosenCardInHand
           { ChosenCardInHand.player = PlayerRef.Relative PlayerRelation.You,
             ChosenCardInHand.filter = Filter.And [],
-            ChosenCardInHand.count = Quantity.Literal 2
+            ChosenCardInHand.count = HowMany.Exactly (Quantity.Literal 2)
           }
       )
-      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"And\",\"value\":[]},\"count\":{\"type\":\"Literal\",\"value\":2}} "
+      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"And\",\"value\":[]},\"count\":{\"type\":\"Exactly\",\"value\":{\"type\":\"Literal\",\"value\":2}}} "
+  -- The Great Aurora's "any number of land cards".
+  Spec.it s "MkChosenCardInHand, any number" $
+    Common.assertCodec
+      s
+      ChosenCardInHand.codec
+      ( ChosenCardInHand.MkChosenCardInHand
+          { ChosenCardInHand.player = PlayerRef.Relative PlayerRelation.You,
+            ChosenCardInHand.filter = Filter.HasCardType CardType.Land,
+            ChosenCardInHand.count = HowMany.UpTo Nothing
+          }
+      )
+      " {\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"count\":{\"type\":\"UpTo\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ChosenCardInHand.codec

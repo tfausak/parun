@@ -8,13 +8,13 @@ import qualified Parun.Types.ChosenCardInHand as ChosenCardInHand
 import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Guess as Guess
+import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.Measures as Measures
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.Operand as Operand
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
-import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.SlotName as SlotName
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -26,7 +26,7 @@ spec s = Spec.describe s "Parun.Codec.Guess" $ do
       s
       Guess.codec
       Guess.MkGuess
-        { Guess.subject = ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (PlayerRef.Relative PlayerRelation.You) (Filter.And []) (Quantity.Literal 1)),
+        { Guess.subject = ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (PlayerRef.Relative PlayerRelation.You) (Filter.And []) HowMany.one),
           Guess.slot = SlotName.MkSlotName (Text.pack "chosen"),
           Guess.guesser = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "thatPlayer")),
           Guess.proposition = Filter.Measures (Measures.MkMeasures Measure.ManaValue Comparison.GreaterThan (Operand.Literal 4)),

@@ -1,0 +1,31 @@
+{
+  "description": "CR 101.4 The Great Aurora puts each player's chosen lands onto the battlefield together",
+  "note": "Each player shuffles their hand and permanents in and draws that many: alice three (Grizzly Bears, Forest and a Goblin Piker token), bob two, carol one. Then alice, bob and carol in turn order choose any number of land cards from their hand: alice two of her three, bob none, carol her one. The lands enter simultaneously (the card's ruling), so Sunpetal Grove does not see the Forest beside it and enters tapped; the Plains alice kept back stays in her hand.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "GGGGGGGGG", "hand": [{"card": "The Great Aurora", "label": "aurora"}, {"card": "Grizzly Bears"}], "battlefield": [{"card": "Forest"}, {"card": "Goblin Piker", "token": true}], "library": [{"card": "Sunpetal Grove"}, {"card": "Plains"}]},
+    {"name": "bob", "hand": [{"card": "Island"}], "battlefield": [{"card": "Swamp"}], "library": [{"card": "Hill Giant"}, {"card": "Lightning Bolt"}]},
+    {"name": "carol", "battlefield": [{"card": "Mountain"}], "library": [{"card": "Lightning Bolt"}]}
+  ]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$aurora", "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["Sunpetal Grove", "Forest", "Plains", "Grizzly Bears", "Goblin Piker"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["Island", "Hill Giant", "Swamp", "Lightning Bolt"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["Mountain", "Lightning Bolt#2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardsInHand", "with": ["Sunpetal Grove", "Forest"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Answer": {"prompt": "ChooseCardsInHand", "with": []}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "carol", "do": {"Answer": {"prompt": "ChooseCardsInHand", "with": ["Mountain"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"OrderTimestamps": ["Sunpetal Grove", "Forest"]}}
+  ],
+  "final": [
+    {"Tapped": {"object": "Sunpetal Grove", "tapped": true}},
+    {"Count": {"player": "alice", "zone": "Battlefield", "card": "Forest", "count": 1}},
+    {"View": {"of": "Zone", "player": "alice", "zone": "Hand", "is": ["Plains"]}},
+    {"View": {"of": "Zone", "player": "alice", "zone": "Library", "is": ["Grizzly Bears"]}},
+    {"View": {"of": "Zone", "player": "bob", "zone": "Hand", "is": ["Island", "Hill Giant"]}},
+    {"Count": {"player": "bob", "zone": "Battlefield", "card": "Swamp", "count": 0}},
+    {"Count": {"player": "carol", "zone": "Battlefield", "card": "Mountain", "count": 1}},
+    {"View": {"of": "Zone", "player": "carol", "zone": "Hand", "is": []}},
+    {"Count": {"player": "alice", "zone": "Exile", "card": "The Great Aurora", "count": 1}}
+  ]
+}

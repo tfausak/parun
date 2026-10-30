@@ -1267,7 +1267,7 @@ rewriteObjectRef pairs ref = case ref of
   -- Quantity, and this one carries neither.
   ObjectRef.TopOfGraveyard _ -> ref
   ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard c s f n) -> ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard c s (Filter.rewrite pairs f) (rewriteQuantity pairs n))
-  ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand p f n) -> ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand p (Filter.rewrite pairs f) (rewriteQuantity pairs n))
+  ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand p f n) -> ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand p (Filter.rewrite pairs f) (rewriteHowMany pairs n))
   ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong n f c w p) -> ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong n (Filter.rewrite pairs f) (rewriteHowMany pairs c) w p)
   ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong n f) -> ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong n (Filter.rewrite pairs f))
   -- A REGRESSION FENCE rather than proven behaviour, EachCardInYourLibrary's
