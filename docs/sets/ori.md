@@ -7,19 +7,7 @@ line) and running `parun deck` on it: every unresolved name is reported.
 
 ## Expressible today
 
-These need no new capability, but `parun translate` does not translate them yet.
-Each names the mtgish node the translator stops at.
-
-- Tower Geist: `_Action:LookAtTheTopNumberCardsOfLibrary`
-- Tragic Arrogance:
-  `_Action:ChooseMultiplePermanentsAmoungPermanentsForEachPlayer`
-- Undead Servant: `_CardsInGraveyards:IsNamed`
-- Unholy Hunger: `_Action:If`
-- Vine Snare: `_Action:CreatePreventDamageUntil`
-- Whirler Rogue: `_Cost:TapNumberPermanents`
-- Wild Instincts: `_Action:Fight`
-- Willbreaker: `_Trigger:WhenAPermanentBecomesTheTargetOfASpellOrAbility`
-- Woodland Bellower: `_CardsInLibrary:IsNonSupertype`
+Every expressible Magic Origins card has been added to `data/cards/`.
 
 ## Needs a capability
 

@@ -1,0 +1,227 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Tragic Arrogance",
+      "oracleText": "For each player, you choose from among the permanents that player controls an artifact, a creature, an enchantment, and a planeswalker. Then each player sacrifices all other nonland permanents they control.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "ForEach",
+                    "value": {
+                      "body": [
+                        {
+                          "type": "ChoosePermanents",
+                          "value": {
+                            "permanents": {
+                              "filter": {
+                                "type": "And",
+                                "value": [
+                                  {
+                                    "type": "HasCardType",
+                                    "value": {
+                                      "type": "Artifact"
+                                    }
+                                  },
+                                  {
+                                    "type": "HeldByBound",
+                                    "value": {
+                                      "holder": {
+                                        "type": "Controller"
+                                      },
+                                      "slot": "player"
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "slot": "artifact"
+                          }
+                        },
+                        {
+                          "type": "ChoosePermanents",
+                          "value": {
+                            "permanents": {
+                              "filter": {
+                                "type": "And",
+                                "value": [
+                                  {
+                                    "type": "HasCardType",
+                                    "value": {
+                                      "type": "Creature"
+                                    }
+                                  },
+                                  {
+                                    "type": "HeldByBound",
+                                    "value": {
+                                      "holder": {
+                                        "type": "Controller"
+                                      },
+                                      "slot": "player"
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "slot": "creature"
+                          }
+                        },
+                        {
+                          "type": "ChoosePermanents",
+                          "value": {
+                            "permanents": {
+                              "filter": {
+                                "type": "And",
+                                "value": [
+                                  {
+                                    "type": "HasCardType",
+                                    "value": {
+                                      "type": "Enchantment"
+                                    }
+                                  },
+                                  {
+                                    "type": "HeldByBound",
+                                    "value": {
+                                      "holder": {
+                                        "type": "Controller"
+                                      },
+                                      "slot": "player"
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "slot": "enchantment"
+                          }
+                        },
+                        {
+                          "type": "ChoosePermanents",
+                          "value": {
+                            "permanents": {
+                              "filter": {
+                                "type": "And",
+                                "value": [
+                                  {
+                                    "type": "HasCardType",
+                                    "value": {
+                                      "type": "Planeswalker"
+                                    }
+                                  },
+                                  {
+                                    "type": "HeldByBound",
+                                    "value": {
+                                      "holder": {
+                                        "type": "Controller"
+                                      },
+                                      "slot": "player"
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "slot": "planeswalker"
+                          }
+                        }
+                      ],
+                      "ref": {
+                        "type": "EachPlayer"
+                      },
+                      "slot": "player"
+                    }
+                  },
+                  {
+                    "type": "Sacrifice",
+                    "value": {
+                      "ref": {
+                        "type": "EachMatching",
+                        "value": {
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "Not",
+                              "value": {
+                                "type": "HasCardType",
+                                "value": {
+                                  "type": "Land"
+                                }
+                              }
+                            },
+                            {
+                              "type": "Not",
+                              "value": {
+                                "type": "IsBound",
+                                "value": "artifact"
+                              }
+                            },
+                            {
+                              "type": "Not",
+                              "value": {
+                                "type": "IsBound",
+                                "value": "creature"
+                              }
+                            },
+                            {
+                              "type": "Not",
+                              "value": {
+                                "type": "IsBound",
+                                "value": "enchantment"
+                              }
+                            },
+                            {
+                              "type": "Not",
+                              "value": {
+                                "type": "IsBound",
+                                "value": "planeswalker"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "sacrificer": {
+                        "type": "PermanentController"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

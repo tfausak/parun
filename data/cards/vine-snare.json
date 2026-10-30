@@ -1,0 +1,95 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Vine Snare",
+      "oracleText": "Prevent all combat damage that would be dealt this turn by creatures with power 4 or less.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "Replace",
+                    "value": {
+                      "duration": {
+                        "type": "UntilEndOfTurn"
+                      },
+                      "effect": {
+                        "type": "DamageR",
+                        "value": {
+                          "matching": {
+                            "whatSource": {
+                              "type": "And",
+                              "value": [
+                                {
+                                  "type": "HasCardType",
+                                  "value": {
+                                    "type": "Creature"
+                                  }
+                                },
+                                {
+                                  "type": "Measures",
+                                  "value": {
+                                    "comparison": {
+                                      "type": "AtMost"
+                                    },
+                                    "measure": {
+                                      "type": "Power"
+                                    },
+                                    "operand": {
+                                      "type": "Literal",
+                                      "value": 4
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "whichKind": {
+                              "type": "Combat"
+                            }
+                          },
+                          "rewrite": {
+                            "type": "PreventAll"
+                          }
+                        }
+                      },
+                      "origin": {
+                        "type": "Other"
+                      },
+                      "uses": {
+                        "type": "Unlimited"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}
