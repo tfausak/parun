@@ -2302,7 +2302,8 @@ readsApplier re = case re of
   -- The drawer is the player the EVENT named and the count is the event's own,
   -- the arm above's answer.
   ReplacementEffect.LifeGainR (LifeGainR.MkLifeGainR _ LifeGainRewrite.DrawInstead) -> False
-  -- The loser and the amount are the event's own, the arm above's answer.
+  -- The loser and the amount are the event's own, the arm above's answer; the
+  -- two-tainted-remedies scenario in data/scenarios/life-replacement proves it.
   ReplacementEffect.LifeGainR (LifeGainR.MkLifeGainR _ LifeGainRewrite.LoseInstead) -> False
   -- The player who gains the life is the one the EVENT named, and the amount is
   -- the effect's own field, so two rows alike in `effect` gain the same seat the
