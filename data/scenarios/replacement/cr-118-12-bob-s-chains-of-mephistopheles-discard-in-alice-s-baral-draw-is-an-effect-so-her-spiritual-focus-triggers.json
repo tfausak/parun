@@ -1,0 +1,173 @@
+{
+  "board": {
+    "active": "bob",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Baral, Chief of Compliance"
+          },
+          {
+            "card": "Spiritual Focus",
+            "label": "focus"
+          },
+          {
+            "card": "Island",
+            "label": "i1"
+          },
+          {
+            "card": "Island",
+            "label": "i2"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Counterspell",
+            "label": "counterspell"
+          },
+          {
+            "card": "Hill Giant"
+          }
+        ],
+        "library": [
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Forest"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Chains of Mephistopheles"
+          },
+          {
+            "card": "Forest",
+            "label": "f1"
+          },
+          {
+            "card": "Forest",
+            "label": "f2"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          }
+        ],
+        "library": [
+          {
+            "card": "Swamp"
+          },
+          {
+            "card": "Mountain"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain",
+    "turn": 2
+  },
+  "description": "CR 118.12 / 609.1 alice's Baral, Chief of Compliance draw is a cost paid on resolution, but bob's Chains of Mephistopheles replacing it discards her Hill Giant as its own effect, so her Spiritual Focus triggers",
+  "note": "Baral's own discard of the Plains is alice's, and triggers nothing.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$f1",
+            "$f2"
+          ],
+          "object": "$bears"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 2
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 2
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$i1",
+            "$i2"
+          ],
+          "object": "$counterspell",
+          "targets": [
+            "Grizzly Bears"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 2
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 2
+    },
+    {
+      "do": {
+        "ChooseOptional": {
+          "type": "Exercises"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 2
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "trigger of $focus"
+          ],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 2
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "Counterspell",
+            "Hill Giant",
+            "Plains"
+          ],
+          "of": "Zone",
+          "player": "alice",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 2
+    },
+    {
+      "do": {
+        "ChooseOptional": {
+          "type": "Declines"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 2
+    }
+  ]
+}

@@ -14,8 +14,8 @@ import qualified Parun.Types.DrawRewrite as DrawRewrite
 data DrawR = MkDrawR
   { whose :: ControllerRelation.ControllerRelation,
     -- | CR 504.1 / 614.1a: Chains of Mephistopheles' "except the first one they
-    -- draw in each of their draw steps" -- the row does not apply to a draw by
-    -- a player in their own draw step who has drawn no card since it began.
+    -- draw in each of their draw steps" -- the row does not apply to
+    -- Parun.Types.DrawKind's TurnBased draw.
     exceptFirstInDrawStep :: Bool,
     rewrite :: DrawRewrite.DrawRewrite
   }

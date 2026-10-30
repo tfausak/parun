@@ -137,6 +137,7 @@ import qualified Parun.Types.DiscardCause as DiscardCause
 import qualified Parun.Types.Discarded as Discarded
 import qualified Parun.Types.DrawCountR as DrawCountR
 import qualified Parun.Types.DrawCountRewrite as DrawCountRewrite
+import qualified Parun.Types.DrawKind as DrawKind
 import qualified Parun.Types.DrawR as DrawR
 import qualified Parun.Types.DrawReveal as DrawReveal
 import qualified Parun.Types.DrawRewrite as DrawRewrite
@@ -4137,7 +4138,7 @@ apply batch applied candidate event =
     --
     -- The life goes to the player the EVENT named, which for the producer in the
     -- pool is the same seat as CR 109.5's "you"; see Parun.Types.DrawRewrite.
-    (ReplacementEffect.DrawR (DrawR.MkDrawR _ _ rewrite), ProposedEvent.WouldDraw pid) -> case rewrite of
+    (ReplacementEffect.DrawR (DrawR.MkDrawR _ _ rewrite), ProposedEvent.WouldDraw pid _) -> case rewrite of
       -- Through resolveLifeGain, CR 614.1's funnel for the gain class: the life
       -- this rewrite substitutes for the draw is a life gain event like any
       -- other, so a LifeGainR row resizes it.
@@ -4210,7 +4211,7 @@ apply batch applied candidate event =
       -- controller leaves the draw skipped, CR 614.6's impossible instruction.
       DrawRewrite.YouDraw -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        pure (ProposedEvent.WouldDraw <$> ReplacementCandidate.controller candidate)
+        pure ((`ProposedEvent.WouldDraw` DrawKind.Other) <$> ReplacementCandidate.controller candidate)
       -- CR 614.6: Zur's Weirding's "they reveal it instead. Then any other
       -- player may pay 2 life. If a player does, put that card into its owner's
       -- graveyard. Otherwise, that player draws a card."
@@ -4343,7 +4344,12 @@ apply batch applied candidate event =
       -- discarder chooses among two or more cards (CR 701.9b). The inner draw is
       -- a new one, `DrawInstead`'s CR 614.5 posture: a second Chains applies to
       -- it, this one does not (its ruling). The mill is Dredge's above.
+      --
+      -- CR 609.1: the discard and the mill are the effect of an ability the
+      -- row's controller controls, never a cost, so Spiritual Focus sees who
+      -- caused the discard.
       DrawRewrite.DiscardThenDrawOrMill -> do
+        let asEffect = payingOnResolution False . causedBy (ReplacementCandidate.controller candidate)
         Replacement.consume (ReplacementCandidate.identity candidate)
         gs <- State.get
         let held = Game.zoneMembers Zone.Hand pid gs
@@ -4353,9 +4359,9 @@ apply batch applied candidate event =
           _ -> do
             answer <- Game.choose (Prompt.ChooseDiscard (Decide.deciderFor pid gs) pid held 1)
             pure (Maybe.listToMaybe (filter (`elem` held) answer <> held))
-        discarded <- maybe (pure Seq.empty) (discardReturning DiscardCause.ByEffect pid) picked
+        discarded <- asEffect (maybe (pure Seq.empty) (discardReturning DiscardCause.ByEffect pid) picked)
         if null discarded
-          then do
+          then asEffect $ do
             milled <- millFrom pid 1
             Monad.unless (null milled) (State.modify' (recordEvent (GameEvent.Milled (Milled.MkMilled pid (Seq.fromList milled)))))
           else drawCardSpent (spentWith candidate applied) pid
@@ -9887,7 +9893,11 @@ drawCard pid = Monad.void (drawCardReturning pid)
 -- "reveal it" does not reach it. A rewrite keeping the drawer is Plagiarize
 -- aimed at its own controller, which its ruling calls no useful effect.
 drawCardReturning :: PlayerId -> Game (Maybe ObjectId)
-drawCardReturning = drawCardSpentReturning Set.empty
+drawCardReturning = drawCardSpentReturning DrawKind.Other Set.empty
+
+-- CR 504.1: the active player's turn-based draw in their draw step.
+drawForTurn :: PlayerId -> Game ()
+drawForTurn pid = Monad.void (drawCardSpentReturning DrawKind.TurnBased Set.empty pid)
 
 -- CR 614.5: the rows a replacement's own new events are not offered to -- those
 -- already applied to the event it replaced, and itself.
@@ -9897,11 +9907,11 @@ spentWith candidate = Set.insert (ReplacementCandidate.identity candidate)
 -- A draw made in place of another by a draw replacement (CR 614.5): `spent`
 -- holds the rows that already had their opportunity at the event it replaces.
 drawCardSpent :: Set CandidateId -> PlayerId -> Game ()
-drawCardSpent spent pid = Monad.void (drawCardSpentReturning spent pid)
+drawCardSpent spent pid = Monad.void (drawCardSpentReturning DrawKind.Other spent pid)
 
-drawCardSpentReturning :: Set CandidateId -> PlayerId -> Game (Maybe ObjectId)
-drawCardSpentReturning spent pid = do
-  (outcome, _, _, _, _, _) <- loop Nothing Set.empty Map.empty spent [] Nothing False Nothing (ProposedEvent.WouldDraw pid)
+drawCardSpentReturning :: DrawKind.DrawKind -> Set CandidateId -> PlayerId -> Game (Maybe ObjectId)
+drawCardSpentReturning kind spent pid = do
+  (outcome, _, _, _, _, _) <- loop Nothing Set.empty Map.empty spent [] Nothing False Nothing (ProposedEvent.WouldDraw pid kind)
   case outcome >>= Replacement.asDraw of
     -- CR 614.6: a replacement took the draw, so it never happens. The row has
     -- already done its own work; nothing is left to do here and nothing is
@@ -10091,12 +10101,13 @@ discard :: DiscardCause.DiscardCause -> PlayerId -> ObjectId -> Game ()
 discard cause pid oid = Monad.void (discardReturning cause pid oid)
 
 -- CR 118.12: run `body` as the "[do something]" of a resolving "If [a player]
--- does": "the action [do something] is a cost, paid when the spell or ability
--- resolves". Saved and restored, so nothing outside the body is a cost.
-payingOnResolution :: Game a -> Game a
-payingOnResolution body = do
+-- does" (True): "the action [do something] is a cost, paid when the spell or
+-- ability resolves"; or (False) as no such cost, even inside one. Saved and
+-- restored, so the answer reaches nothing outside the body.
+payingOnResolution :: Bool -> Game a -> Game a
+payingOnResolution paying body = do
   saved <- State.gets GameState.payingOnResolution
-  State.modify' (\g -> g {GameState.payingOnResolution = True})
+  State.modify' (\g -> g {GameState.payingOnResolution = paying})
   result <- body
   State.modify' (\g -> g {GameState.payingOnResolution = saved})
   pure result

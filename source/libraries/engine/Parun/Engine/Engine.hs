@@ -539,6 +539,9 @@ discardToHandSize pid = do
 -- 800.1 makes a multiplayer game one that BEGINS with more than two players, and
 -- turnOrder is the permanent roster, so a three-player game down to two
 -- survivors still does not skip.
+--
+-- Not implemented: skipping the step itself (CR 500.11) -- it still begins
+-- and gives priority; only its draw is suppressed (#5788).
 skipsDraw :: GameState -> Bool
 skipsDraw gs =
   GameState.turnNumber gs == 1
@@ -601,7 +604,7 @@ runTurnBasedActions phase = do
     Phase.Beginning BeginningStep.Upkeep -> Monad.mapM_ Contraption.crank live
     Phase.Beginning BeginningStep.DrawStep -> do
       skip <- State.gets skipsDraw
-      Monad.unless skip (Monad.mapM_ Event.drawCard live)
+      Monad.unless skip (Monad.mapM_ Event.drawForTurn live)
     -- CR 703.4h: choose the defending player. The active player's action (CR
     -- 507.1), and the one item on the list CR 800.4h hands to another seat rather
     -- than dropping, so it is NOT guarded here -- designateDefenders asks

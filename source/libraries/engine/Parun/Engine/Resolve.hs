@@ -981,7 +981,7 @@ asCostWhenNamed indexed cIdx body =
         Just (IfTaken.NoneTaken named) -> Foldable.toList named
         -- "If you can't" names an instruction, not CR 118.12's cost.
         Just (IfTaken.Couldnt _) -> []
-   in if any (elem cIdx . names . snd) indexed then Event.payingOnResolution body else body
+   in if any (elem cIdx . names . snd) indexed then Event.payingOnResolution True body else body
 
 -- The other end of the same fold: a clause's ordinal is recorded exactly when
 -- its instructions ran, which is what CR 608.2c's "If you do" asks about. One

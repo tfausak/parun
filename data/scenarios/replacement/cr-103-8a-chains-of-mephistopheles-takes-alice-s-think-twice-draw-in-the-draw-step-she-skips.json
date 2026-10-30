@@ -1,0 +1,109 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "i1"
+          },
+          {
+            "card": "Island",
+            "label": "i2"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Think Twice",
+            "label": "tt"
+          },
+          {
+            "card": "Grizzly Bears"
+          }
+        ],
+        "library": [
+          {
+            "card": "Swamp"
+          },
+          {
+            "card": "Forest"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Chains of Mephistopheles"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "Upkeep",
+    "turn": 1
+  },
+  "description": "CR 103.8a / 504.1 alice, the starting player, skips her first turn's draw, so the Think Twice she casts in that draw step is no normal draw and Chains of Mephistopheles discards her Grizzly Bears before she draws the Swamp",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$i1",
+            "$i2"
+          ],
+          "object": "$tt"
+        }
+      },
+      "player": "alice",
+      "step": "DrawStep",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "DrawStep",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "Swamp"
+          ],
+          "of": "Zone",
+          "player": "alice",
+          "zone": "Hand"
+        }
+      },
+      "player": "alice",
+      "step": "DrawStep",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "Grizzly Bears",
+            "Think Twice"
+          ],
+          "of": "Zone",
+          "player": "alice",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "alice",
+      "step": "DrawStep",
+      "turn": 1
+    }
+  ]
+}

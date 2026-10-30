@@ -29,7 +29,6 @@ import qualified Control.Applicative as Applicative
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Containers.ListUtils as ListUtils
-import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
@@ -65,7 +64,6 @@ import qualified Parun.Types.ActiveReplacement as ActiveReplacement
 import qualified Parun.Types.AsCopy as AsCopy
 import qualified Parun.Types.AttachR as AttachR
 import qualified Parun.Types.AttachRewrite as AttachRewrite
-import qualified Parun.Types.BeginningStep as BeginningStep
 import Parun.Types.CandidateId (CandidateId)
 import qualified Parun.Types.CandidateId as CandidateId
 import Parun.Types.Card (Card)
@@ -94,9 +92,9 @@ import qualified Parun.Types.DieRollR as DieRollR
 import qualified Parun.Types.DieRollRewrite as DieRollRewrite
 import qualified Parun.Types.DrawCountR as DrawCountR
 import qualified Parun.Types.DrawCountRewrite as DrawCountRewrite
+import qualified Parun.Types.DrawKind as DrawKind
 import qualified Parun.Types.DrawR as DrawR
 import qualified Parun.Types.DrawRewrite as DrawRewrite
-import qualified Parun.Types.Drew as Drew
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EntryOption as EntryOption
 import qualified Parun.Types.EntryR as EntryR
@@ -108,7 +106,6 @@ import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.FloatingCandidate as FloatingCandidate
 import qualified Parun.Types.FromOutsideTheGame as FromOutsideTheGame
 import Parun.Types.Game (Game)
-import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameLossR as GameLossR
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
@@ -123,13 +120,11 @@ import qualified Parun.Types.LifeGainRewrite as LifeGainRewrite
 import qualified Parun.Types.LifeLossPattern as LifeLossPattern
 import qualified Parun.Types.LifeLossR as LifeLossR
 import qualified Parun.Types.LifeLossRewrite as LifeLossRewrite
-import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.ManaR as ManaR
 import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.PermanentCandidate as PermanentCandidate
-import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PhasePattern as PhasePattern
 import Parun.Types.PhaseSelector (PhaseSelector)
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
@@ -200,7 +195,7 @@ asZoneChange event = case event of
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
@@ -760,7 +755,7 @@ affected event = case event of
   ProposedEvent.WouldUntap oid -> ([oid], [])
   ProposedEvent.WouldLoseLife _ pid _ -> ([], [pid])
   ProposedEvent.WouldGainLife pid _ -> ([], [pid])
-  ProposedEvent.WouldDraw pid -> ([], [pid])
+  ProposedEvent.WouldDraw pid _ -> ([], [pid])
   ProposedEvent.WouldPerform _ performer pid _ -> (Maybe.maybeToList performer, [pid])
   ProposedEvent.WouldThrow throw -> ([], [Throw.thrower throw])
   ProposedEvent.WouldLoseGame pid -> ([], [pid])
@@ -985,10 +980,15 @@ matchesPrinted viewOf gs event candidate =
         -- Every producer but dredge installs a FLOATING row, whose "you" was baked
         -- when it resolved and survives the source leaving the battlefield --
         -- which Ring of Ma'rûf's own cost makes it do; see relationHolds and #2662.
-        (ReplacementEffect.DrawR pat, ProposedEvent.WouldDraw pid) ->
+        (ReplacementEffect.DrawR pat, ProposedEvent.WouldDraw pid kind) ->
           matchesPlayer gs candidate (DrawR.whose pat) pid
             && stocked gs (DrawR.rewrite pat) pid
-            && not (DrawR.exceptFirstInDrawStep pat && firstInDrawStep gs pid)
+            -- CR 504.1: Chains of Mephistopheles' ruling reads "the first one
+            -- they draw in each of their draw steps" as the turn-based draw:
+            -- "A player's normal card draw on their turn is exempt from this
+            -- effect. All other draws will be affected." So a replaced normal
+            -- draw still uses it up, and a skipped draw step (CR 103.8a) has none.
+            && not (DrawR.exceptFirstInDrawStep pat && kind == DrawKind.TurnBased)
         -- CR 121.2a: whose draw INSTRUCTIONS the row watches (CR 109.5's "you"),
         -- and the number it names. Alms Collector's "two or more" is a condition on
         -- the event rather than a rewrite that changes nothing, LifeLossR's third
@@ -1108,21 +1108,6 @@ matchesPrinted viewOf gs event candidate =
 -- ExileFromTopOfYourLibrary arm and for its reason. The player asked is the one
 -- the EVENT named, which is who rule 702.52a mills; the row reaches this only
 -- once ControllerRelation.Related You has made that seat the card's own owner.
--- CR 504.1: is `pid` in their own draw step, having drawn no card since it
--- began? A draw a replacement took is no draw (CR 614.6), so it does not use up
--- the first. Read off the turn's log back to the step's GameEvent.StepBegan,
--- not off GameState.drawsThisTurn, which an upkeep draw (Brainstorm) moves too.
-firstInDrawStep :: GameState -> PlayerId -> Bool
-firstInDrawStep gs pid =
-  GameState.phase gs == Phase.Beginning BeginningStep.DrawStep
-    && Turn.isActive gs pid
-    && null [() | GameEvent.Drew (Drew.MkDrew who _) <- Foldable.toList sinceBegan, who == pid]
-  where
-    -- Comprehensions rather than cases, so no fallthrough arm absorbs a new
-    -- GameEvent constructor.
-    began event = not (null [() | GameEvent.StepBegan _ <- [event]])
-    sinceBegan = Seq.takeWhileR (not . began) (fmap LoggedEvent.event (GameState.events gs))
-
 stocked :: GameState -> DrawRewrite.DrawRewrite -> PlayerId -> Bool
 stocked gs rewrite pid = case rewrite of
   DrawRewrite.Dredge n -> Natural.length (Game.zoneMembers Zone.Library pid gs) >= n
@@ -2351,9 +2336,9 @@ readsApplier re = case re of
   -- The drawer is the one the EVENT named and the count the effect's own field.
   -- GainLife's answer, and for its reason.
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.DrawInstead _)) -> False
-  -- The discarder, drawer and miller are all the player the EVENT named.
-  -- GainLife's answer, and for its reason.
-  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.DiscardThenDrawOrMill) -> False
+  -- CR 609.1: the discard is the row's controller's effect (Event.causedBy), so
+  -- two rows under different controllers make different players its cause.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.DiscardThenDrawOrMill) -> True
   -- CR 121.2a: "you and that player each draw a card" -- the "you" is the row's
   -- own controller, so two rows alike in `effect` and unlike in `you` hand the
   -- extra card to different seats. LifeLossRewrite.ExileFromTopOfYourLibrary's
@@ -2762,7 +2747,7 @@ affectedChooserOf gs event = case event of
   -- is the player who would draw the card -- WouldLoseLife's answer, and for its
   -- reason. There is no affected OBJECT: CR 121.1's card is not chosen until the
   -- draw happens.
-  ProposedEvent.WouldDraw pid -> Just pid
+  ProposedEvent.WouldDraw pid _ -> Just pid
   -- CR 616.1: an instruction is addressed to the player it names, so that is
   -- the seat choosing among applicable rows -- where a Rigger assembles it is
   -- the Rigger's controller. data/scenarios/library-order's "CR
@@ -4080,7 +4065,7 @@ asDamageEvent event = case event of
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
@@ -4101,7 +4086,7 @@ asDestruction event = case event of
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
@@ -4124,7 +4109,7 @@ asUntap event = case event of
   ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
@@ -4134,7 +4119,7 @@ asUntap event = case event of
 -- Nothing when a replacement took the event (CR 614.6).
 asDraw :: ProposedEvent -> Maybe PlayerId
 asDraw event = case event of
-  ProposedEvent.WouldDraw pid -> Just pid
+  ProposedEvent.WouldDraw pid _ -> Just pid
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
@@ -4166,7 +4151,7 @@ asPerformed instruction event = case event of
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldChangeZone {} -> Nothing
   ProposedEvent.WouldEnter _ -> Nothing
   ProposedEvent.WouldDealDamage _ -> Nothing
@@ -4190,7 +4175,7 @@ asThrow event = case event of
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldChangeZone {} -> Nothing
   ProposedEvent.WouldEnter _ -> Nothing
   ProposedEvent.WouldDealDamage _ -> Nothing
@@ -4220,7 +4205,7 @@ asCounters event = case event of
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
@@ -4244,7 +4229,7 @@ asPlayerCounters event = case event of
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
@@ -4270,7 +4255,7 @@ asLifeLoss event = case event of
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
   ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
@@ -4293,7 +4278,7 @@ asLifeGain event = case event of
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
   ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
@@ -4314,7 +4299,7 @@ asTokens event = case event of
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
@@ -4522,7 +4507,7 @@ asPhaseBegin event = case event of
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldDraw _ _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
