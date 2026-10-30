@@ -12,6 +12,7 @@ import qualified Parun.Types.CastFrom as CastFrom
 import qualified Parun.Types.CompletedDungeon as CompletedDungeon
 import qualified Parun.Types.Count as Count
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.DamageDirection as DamageDirection
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.Devotion as Devotion
@@ -278,9 +279,9 @@ data Quantity
   | -- | CR 120.1 / 608.2i: the total damage dealt this turn to the players that
     -- reference names (rule 702.54b).
     DamageDealtToPlayersThisTurn PlayerRef.PlayerRef
-  | -- | CR 120.1 / 608.2i: the total damage dealt this turn to the object this
-    -- quantity is evaluated against.
-    DamageDealtToThisTurn
+  | -- | CR 120.1 / 608.2i: the total damage dealt this turn to, or by, the
+    -- object this quantity is evaluated against.
+    DamageDealtThisTurn DamageDirection.DamageDirection
   | -- | CR 601.2i / 608.2i: how many spells that player cast during the turn the
     -- tally names (not CR 502.2's active-player scalar).
     SpellsCast SpellTally.SpellTally

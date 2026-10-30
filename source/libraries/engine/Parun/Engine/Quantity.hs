@@ -669,7 +669,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         Quantity.WasBlocking -> fmap (\view -> if Filter.blocking view then 1 else 0) mView
         -- CR 509.1h's other side of that same declaration, and a LOOK-BACK rather
         -- than the arm above's snapshot read: off the log for the object the
-        -- quantity is aimed at (Game.wasBlockedThisTurn), DamageDealtToThisTurn's
+        -- quantity is aimed at (Game.wasBlockedThisTurn), DamageDealtThisTurn's
         -- posture. Fyndhorn Druid is the reader.
         --
         -- Not Filter.blockStatus and not a Parun.Types.LastKnown field, which is what
@@ -680,7 +680,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- CR 702.30a's window as a 0/1 -- echo's intervening "if", read of the
         -- ability's own source at both CR 603.4 and CR 608.2a.
         --
-        -- Off the BOARD rather than off the view, DamageDealtToThisTurn's posture
+        -- Off the BOARD rather than off the view, DamageDealtThisTurn's posture
         -- and for its reason: the answer relates an OBJECT to a PLAYER, and a view
         -- of the one carries no name for the other. CR 603.3a is why the player is
         -- named at all -- rule 702.30a's "you" is the controller the ability had
@@ -701,7 +701,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
           (Just [pid], Just oid) -> Just (if Map.lookup oid (GameState.cardsPlayed gs) == Just pid then 1 else 0)
           _ -> Nothing
         -- CR 120.1's damage as a total, read off the event log for the object the
-        -- quantity is aimed at (Game.damageDealtToThisTurn) rather than off its view:
+        -- quantity is aimed at (Game.damageDealtThisTurn) rather than off its view:
         -- CR 608.2i is what makes the question answerable at all for a creature CR
         -- 400.7 has deleted, and the log survives the death where the object does not.
         --
@@ -709,7 +709,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- the printed clause says this turn, and CR 120.6's regeneration and CR 120.3d's
         -- wither and infect are three boards where the damage that was dealt is no
         -- longer marked on the creature that took it.
-        Quantity.DamageDealtToThisTurn -> fmap (toInteger . Game.damageDealtToThisTurn gs) mOid
+        Quantity.DamageDealtThisTurn direction -> fmap (toInteger . Game.damageDealtThisTurn direction gs) mOid
         -- CR 508.3b: how many of that player's opponents they declared attacked this
         -- combat phase. LifeTotal's arm in shape -- live, one player only, resolved
         -- through the same playersOf, and Nothing for a reference naming
@@ -1403,7 +1403,7 @@ objectSlots quantity = case quantity of
   Quantity.WasBlockedThisTurn -> Set.empty
   Quantity.ControlGainedSinceLastUpkeep _ -> Set.empty
   Quantity.PlayedBy _ -> Set.empty
-  Quantity.DamageDealtToThisTurn -> Set.empty
+  Quantity.DamageDealtThisTurn _ -> Set.empty
   Quantity.OpponentsAttacked _ -> Set.empty
   Quantity.AttackersDeclaredThisTurn _ -> Set.empty
   Quantity.AttackersDeclaredThisCombat -> Set.empty
@@ -1684,7 +1684,7 @@ readsX quantity = case quantity of
   Quantity.WasBlockedThisTurn -> False
   Quantity.ControlGainedSinceLastUpkeep _ -> False
   Quantity.PlayedBy _ -> False
-  Quantity.DamageDealtToThisTurn -> False
+  Quantity.DamageDealtThisTurn _ -> False
   Quantity.OpponentsAttacked _ -> False
   Quantity.AttackersDeclaredThisTurn _ -> False
   Quantity.AttackersDeclaredThisCombat -> False

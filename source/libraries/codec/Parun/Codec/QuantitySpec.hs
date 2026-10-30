@@ -21,6 +21,7 @@ import qualified Parun.Types.CompletedDungeon as CompletedDungeon
 import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.Count as Count
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.DamageDirection as DamageDirection
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Designation as Designation
@@ -462,12 +463,17 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       (Quantity.PlayedBy (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "thatPlayer"))))
       " {\"type\":\"PlayedBy\",\"value\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"}} "
   -- CR 120.1's damage total, on the wire the same way and for the same reason.
-  Spec.it s "DamageDealtToThisTurn" $
+  Spec.it s "DamageDealtThisTurn, to and by" $ do
     Common.assertCodec
       s
       Quantity.codec
-      Quantity.DamageDealtToThisTurn
-      " {\"type\":\"DamageDealtToThisTurn\"} "
+      (Quantity.DamageDealtThisTurn DamageDirection.DealtTo)
+      " {\"type\":\"DamageDealtThisTurn\",\"value\":{\"type\":\"DealtTo\"}} "
+    Common.assertCodec
+      s
+      Quantity.codec
+      (Quantity.DamageDealtThisTurn DamageDirection.DealtBy)
+      " {\"type\":\"DamageDealtThisTurn\",\"value\":{\"type\":\"DealtBy\"}} "
   -- CR 509.1h's status as a look-back, on the wire the same way again.
   Spec.it s "WasBlockedThisTurn" $
     Common.assertCodec

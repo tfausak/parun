@@ -4,7 +4,7 @@
 -- Covers Parun.Engine.Condition, Parun.Types.Condition and Parun.Types.Comparison,
 -- including what Condition.holds makes of Parun.Engine.Quantity's IsMonarch,
 -- EnteredThisTurn, EnteredFrom, WasCastFrom, WasToken, WasBlocking,
--- DamageDealtToThisTurn, WasBlockedThisTurn and TimesThisTurn.
+-- DamageDealtThisTurn, WasBlockedThisTurn and TimesThisTurn.
 module Parun.ConditionSpec where
 
 import qualified Data.Foldable as Foldable

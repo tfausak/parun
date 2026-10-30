@@ -46,6 +46,7 @@ import qualified Parun.Types.ContinuousEffect as ContinuousEffect
 import qualified Parun.Types.Convoking as Convoking
 import qualified Parun.Types.CopyCoverage as CopyCoverage
 import qualified Parun.Types.Crewing as Crewing
+import qualified Parun.Types.DamageDirection as DamageDirection
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.ExileLink as ExileLink
 import qualified Parun.Types.GameEvent as GameEvent
@@ -92,8 +93,9 @@ import qualified Parun.Types.TriggerSource as TriggerSource
 --   * The projections must agree, which is what an Equipment or an Aura shows up
 --     in -- Bonesplitter's +2/+0 makes one Llanowar Elves a 3/1 and the other a
 --     1/1. So must what their two Filter views read off the turn's log (CR
---     608.2i: attacked, dealt damage, entered this turn), so no Filter anywhere
---     -- printed or stored -- answers a look-back atom differently of the two;
+--     608.2i: attacked, dealt damage, entered this turn) and the damage each
+--     dealt and was dealt, so no Filter or Quantity anywhere -- printed or
+--     stored -- answers a look-back atom differently of the two;
 --     and what the log says OTHER objects did to each (actedOnBy), which a
 --     relation atom reads off the other object's view.
 --   * Nothing else may name either object: no other object (namedByAnother),
@@ -151,7 +153,10 @@ objects pcs gs a b =
           Filter.Engine.saddledThisTurn view,
           Filter.Engine.dealtDamageTo view
         )
-      sameView = lookBack (viewOf a) == lookBack (viewOf b) && actedOnBy a gs == actedOnBy b gs
+      -- Quantity.DamageDealtThisTurn's totals, which no View field carries: two
+      -- objects that dealt damage to the same recipients but in different amounts.
+      dealtAmounts oid = fmap (\direction -> Game.damageDealtThisTurn direction gs oid) [minBound .. maxBound :: DamageDirection.DamageDirection]
+      sameView = lookBack (viewOf a) == lookBack (viewOf b) && dealtAmounts a == dealtAmounts b && actedOnBy a gs == actedOnBy b gs
       -- Keyed by every permanent alike, so compared rather than searched.
       sameSample m = Map.lookup a m == Map.lookup b m
       sameSamples =

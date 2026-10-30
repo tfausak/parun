@@ -1797,6 +1797,25 @@ interchangeableSourcesSpec s registry = Spec.describe s "Interchangeable mana so
     Spec.assertBool s paid "the {G} was paid"
     Spec.assertEqWith s "off exactly one Elf" (tappedCount (NonEmpty.toList elves) after) 1
 
+  -- CR 120.1 from the source's side: Elves that dealt bob damage, one 2 and one
+  -- 1, agree on every View field but not on Quantity.DamageDealtThisTurn
+  -- DealtBy, which Chandra, Fire of Kaladesh reads.
+  Spec.it s "CR 120.1 Elves that dealt different amounts of damage are candidates of their own" $ do
+    elf <- S.printingOf s registry "Llanowar Elves"
+    let (elves, ready) = elfBoard elf 3
+        (elfA, elfB) = case NonEmpty.toList elves of
+          a : b : _ -> (a, b)
+          _ -> (NonEmpty.head elves, NonEmpty.head elves)
+        hit amounts gs = S.runPure S.identityAnswer gs (Damage.applyDamage [Event.damageEvent gs DamageKind.Noncombat source (Recipient.ToPlayer S.bob) amount | (source, amount) <- amounts])
+        apart = hit [(elfA, 2), (elfB, 1)] ready
+        together = hit [(elfA, 1), (elfB, 1)] ready
+        (offers, paid, after) = greenWindow apart
+        (alike, _, _) = greenWindow together
+    Spec.assertEqWith s "asked once, with each Elf that dealt damage a candidate of its own beside the untouched one" (fmap length offers) [3]
+    Spec.assertEqWith s "and having dealt the same amount, the two are one candidate" (fmap length alike) [2]
+    Spec.assertBool s paid "the {G} was paid"
+    Spec.assertEqWith s "off exactly one Elf" (tappedCount (NonEmpty.toList elves) after) 1
+
   -- CR 603.7c: Salt Road Skirmish ({3}{B} Sorcery, "Destroy target creature.
   -- Create two 1/1 red Warrior creature tokens. They gain haste until end of
   -- turn. Sacrifice them at the beginning of the next end step.") arms a delayed

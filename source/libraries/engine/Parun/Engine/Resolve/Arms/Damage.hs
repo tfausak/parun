@@ -48,6 +48,7 @@ import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.ActivateManaAbilities as ActivateManaAbilities
 import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.AnyNumberOf as AnyNumberOf
+import qualified Parun.Types.Binding as Binding.Type
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CarryOver as CarryOver
 import qualified Parun.Types.ChangeText as ChangeText
@@ -198,13 +199,20 @@ dealDamage runPreventionRiders runReplacementEffects runSubgame resolving source
   -- 615's prevention had its say, so a shielded player contributes only what
   -- got through. Bound even at 0, LoseLife's tally's posture.
   Monad.forM_ mTally $ \slot -> State.modify' (Common.bindAmountSlot resolving source slot (sum (fmap DamageEvent.amount dealtEvents)))
-  -- Incinerate's "a creature dealt damage this way": the OBJECTS the settled
+  -- Incinerate's "a creature dealt damage this way" and Chandra, Roaring
+  -- Flame's "each player dealt damage this way": the recipients the settled
   -- events reached (CR 120.3), so one whose damage was all prevented (CR
-  -- 615.6) is not among them. Bound onto `resolving` as a group, Destroy's
-  -- `permanents` shape; nothing is bound when nothing was damaged.
+  -- 615.6) is not among them. The objects bound onto `resolving` as a group,
+  -- Destroy's `permanents` shape, and the players beside them as recipients,
+  -- PlayerRef.EachInSlot's read; nothing is bound when nothing was damaged.
   Monad.forM_ mDamaged $ \slot -> do
     let hit = ListUtils.nubOrd (Maybe.mapMaybe (Recipient.objectOf . DamageEvent.target) dealtEvents)
-    Monad.unless (null hit) (State.modify' (Common.bindObjectsSlot resolving slot (Seq.fromList hit)))
+        players = Set.fromList (Maybe.mapMaybe (Recipient.playerOf . DamageEvent.target) dealtEvents)
+        binding =
+          (Binding.toPlayers players)
+            { Binding.Type.objects = if null hit then Nothing else Just (Seq.fromList hit)
+            }
+    Monad.unless (null hit && Set.null players) (State.modify' (Common.overHolderBindings resolving (Map.insert slot binding)))
 
 -- CR 701.14. Every clause of the rule is one line here, and none of them is a
 -- read of what the effect IS: the amounts come off the projection, the kind is

@@ -176,7 +176,7 @@ overSlots f quantity =
         Quantity.WasBlockedThisTurn -> pure quantity
         -- CR 120.1's damage total, naming no slot either: it carries no reference at
         -- all, the object being the one the evaluation is aimed at.
-        Quantity.DamageDealtToThisTurn -> pure quantity
+        Quantity.DamageDealtThisTurn _ -> pure quantity
         -- And a ninth PlayerRef in that same position, CR 508.3b's record having
         -- nothing else on it.
         Quantity.OpponentsAttacked _ -> pure quantity
@@ -364,7 +364,7 @@ nestedRefs quantity = case quantity of
   Quantity.WasAttacking -> Set.empty
   Quantity.WasBlocking -> Set.empty
   Quantity.WasBlockedThisTurn -> Set.empty
-  Quantity.DamageDealtToThisTurn -> Set.empty
+  Quantity.DamageDealtThisTurn _ -> Set.empty
   Quantity.OpponentsAttacked ref -> Set.singleton (Left ref)
   Quantity.AttackersDeclaredThisTurn ref -> Set.singleton (Left ref)
   Quantity.AttackersDeclaredThisCombat -> Set.empty
@@ -475,7 +475,7 @@ nestedCounts quantity = case quantity of
   Quantity.WasAttacking -> []
   Quantity.WasBlocking -> []
   Quantity.WasBlockedThisTurn -> []
-  Quantity.DamageDealtToThisTurn -> []
+  Quantity.DamageDealtThisTurn _ -> []
   Quantity.PlayerCounters {} -> []
   Quantity.Devotion {} -> []
   Quantity.PartySize _ -> []
@@ -709,7 +709,7 @@ mapPlayerRefs f intoCount quantity =
         Quantity.WasAttacking -> quantity
         Quantity.WasBlocking -> quantity
         Quantity.WasBlockedThisTurn -> quantity
-        Quantity.DamageDealtToThisTurn -> quantity
+        Quantity.DamageDealtThisTurn _ -> quantity
         Quantity.EnteredThisTurn -> quantity
         Quantity.BlockersBeyond _ -> quantity
         Quantity.StationMeasure -> quantity

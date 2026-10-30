@@ -80,10 +80,11 @@ data DealDamage = MkDealDamage
     -- a sentence that never says it. The SETTLED total (CR 120.4b), after
     -- prevention and redirection: Parun.Types.LifeLoss's `tally`, for damage.
     tally :: Maybe SlotName.SlotName,
-    -- | Where to bind, as a group, the OBJECTS the instruction actually dealt
-    -- damage to (CR 120.3), for a later effect to name -- Incinerate's "a
-    -- creature dealt damage this way". Settled like `tally`: a recipient whose
-    -- damage was all prevented (CR 615) was dealt none and is not bound.
+    -- | Where to bind, as a group, the objects and players the instruction
+    -- actually dealt damage to (CR 120.3), for a later effect to name --
+    -- Incinerate's "a creature dealt damage this way", Chandra, Roaring Flame's
+    -- "each player dealt damage this way". Settled like `tally`: a recipient
+    -- whose damage was all prevented (CR 615) was dealt none and is not bound.
     damaged :: Maybe SlotName.SlotName
   }
   deriving (Eq, Ord, Show)

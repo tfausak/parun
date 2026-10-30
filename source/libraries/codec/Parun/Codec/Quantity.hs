@@ -9,6 +9,7 @@ import qualified Parun.Codec.CastFrom as CastFrom
 import qualified Parun.Codec.CompletedDungeon as CompletedDungeon
 import qualified Parun.Codec.Count as Count
 import qualified Parun.Codec.CounterKind as CounterKind
+import qualified Parun.Codec.DamageDirection as DamageDirection
 import qualified Parun.Codec.DealtDamage as DealtDamage
 import qualified Parun.Codec.Designation as Designation
 import qualified Parun.Codec.Devotion as Devotion
@@ -176,10 +177,10 @@ codec =
       -- rule 702.54b's "your
       -- opponents" is that reference rather than anything here.
       Arm.payload "DamageDealtToPlayersThisTurn" PlayerRef.codec Quantity.DamageDealtToPlayersThisTurn (\x -> case x of Quantity.DamageDealtToPlayersThisTurn y -> Just y; _ -> Nothing),
-      -- CR 120.1's damage again, with nothing on the wire for WasToken's reason:
-      -- the object it is measured against is whichever one the quantity is
-      -- evaluated against, and the turn is the log's extent.
-      Arm.nullary "DamageDealtToThisTurn" Quantity.DamageDealtToThisTurn,
+      -- CR 120.1's damage again, with only the event's end on the wire for
+      -- WasToken's reason: the object it is measured against is whichever one
+      -- the quantity is evaluated against, and the turn is the log's extent.
+      Arm.payload "DamageDealtThisTurn" DamageDirection.codec Quantity.DamageDealtThisTurn (\x -> case x of Quantity.DamageDealtThisTurn y -> Just y; _ -> Nothing),
       -- CR 601.2i's tally, with only a PlayerRef on the wire for
       -- CardsDiscardedThisTurn's reason above -- but read off the handoff snapshot
       -- rather than the log, since "last turn" outlives the log it was folded
@@ -300,7 +301,7 @@ tagOf x = case x of
   Quantity.LifeChanged {} -> "LifeChanged"
   Quantity.PlayersDealtDamageThisTurn {} -> "PlayersDealtDamageThisTurn"
   Quantity.DamageDealtToPlayersThisTurn {} -> "DamageDealtToPlayersThisTurn"
-  Quantity.DamageDealtToThisTurn {} -> "DamageDealtToThisTurn"
+  Quantity.DamageDealtThisTurn {} -> "DamageDealtThisTurn"
   Quantity.SpellsCast {} -> "SpellsCast"
   Quantity.TimesThisTurn {} -> "TimesThisTurn"
   Quantity.ActivationsThisTurn {} -> "ActivationsThisTurn"

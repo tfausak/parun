@@ -39,6 +39,7 @@ import qualified Parun.Types.Chosen as Chosen
 import qualified Parun.Types.Combat as Combat
 import qualified Parun.Types.ComponentCard as ComponentCard
 import qualified Parun.Types.CopyCoverage as CopyCoverage
+import qualified Parun.Types.DamageDirection as DamageDirection
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.Decider as Decider
@@ -3782,11 +3783,12 @@ damageDealtToPlayerThisTurn gs pid =
         (Foldable.toList (GameState.events gs))
     )
 
--- CR 120.1 / 608.2i: how much damage was dealt to this OBJECT this turn --
--- wasDealtDamageThisTurn's twin over CR 120.1's other three recipients, summing
--- amounts where that one asks a yes or no. Burning-Eye Zubera's "if 4 or more
--- damage was dealt to it this turn" is the reader, through
--- Parun.Engine.Quantity's DamageDealtToThisTurn arm.
+-- CR 120.1 / 608.2i: how much damage was dealt to, or by, this OBJECT this
+-- turn -- wasDealtDamageThisTurn's twin over CR 120.1's other three recipients,
+-- summing amounts where that one asks a yes or no. Burning-Eye Zubera's "if 4
+-- or more damage was dealt to it this turn" reads DealtTo and Chandra, Fire of
+-- Kaladesh's "if Chandra has dealt 3 or more damage this turn" DealtBy, through
+-- Parun.Engine.Quantity's DamageDealtThisTurn arm.
 --
 -- The LOG and not Object.damage, which is the marks CR 120.3e leaves rather than
 -- the damage that was dealt: CR 120.6 removes every mark on a regeneration and
@@ -3795,16 +3797,20 @@ damageDealtToPlayerThisTurn gs pid =
 -- CR 400.7 deletes as the creature dies, which is the whole case the Zubera asks
 -- from. Its extent already IS the turn: Parun.Engine.Engine.beginTurnOf clears it
 -- at the handoff and nothing else does.
-damageDealtToThisTurn :: GameState -> ObjectId -> Natural
-damageDealtToThisTurn gs oid =
+damageDealtThisTurn :: DamageDirection.DamageDirection -> GameState -> ObjectId -> Natural
+damageDealtThisTurn direction gs oid =
   sum
     ( Maybe.mapMaybe
-        ( \logged -> case damageDealt (LoggedEvent.event logged) of
-            Just (recipient, amount) | Recipient.objectOf recipient == Just oid -> Just amount
+        ( \logged -> case (damageDealt (LoggedEvent.event logged), LoggedEvent.event logged) of
+            (Just (recipient, amount), GameEvent.DamageDealt ev) | endOf recipient ev == Just oid -> Just amount
             _ -> Nothing
         )
         (Foldable.toList (GameState.events gs))
     )
+  where
+    endOf recipient ev = case direction of
+      DamageDirection.DealtTo -> Recipient.objectOf recipient
+      DamageDirection.DealtBy -> Just (DamageEvent.source ev)
 
 -- The player an event describes gaining or losing life, as the direction asks,
 -- and how much (CR 119.3).
