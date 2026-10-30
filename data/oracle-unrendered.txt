@@ -2153,6 +2153,7 @@ sphinx-of-clear-skies
 sphinx-of-the-revelation
 sphinx-of-uthuun
 sphinxs-decree
+sphinxs-tutelage
 spider-punk
 spike-cannibal
 spiked-corridor-torture-pit

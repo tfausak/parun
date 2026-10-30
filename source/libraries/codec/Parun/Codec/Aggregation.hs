@@ -2,6 +2,7 @@ module Parun.Codec.Aggregation where
 
 import qualified Data.Typeable as Typeable
 import qualified Parun.Codec.DistinctOf as DistinctOf
+import qualified Parun.Codec.Trait as Trait
 import qualified Parun.JsonCodec.Arm as Arm
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.Types.Aggregation as Aggregation
@@ -22,8 +23,7 @@ codec quantityCodec =
     tagOf
     [ Arm.nullary "Members" Aggregation.Members,
       Arm.payload "Distinct" DistinctOf.codec Aggregation.Distinct (\x -> case x of Aggregation.Distinct y -> Just y; _ -> Nothing),
-      Arm.nullary "MostSharingACreatureType" Aggregation.MostSharingACreatureType,
-      Arm.nullary "MostSharingACardType" Aggregation.MostSharingACardType,
+      Arm.payload "MostSharing" Trait.codec Aggregation.MostSharing (\x -> case x of Aggregation.MostSharing y -> Just y; _ -> Nothing),
       Arm.nullary "DistinctNames" Aggregation.DistinctNames,
       Arm.payload "Greatest" quantityCodec Aggregation.Greatest (\x -> case x of Aggregation.Greatest y -> Just y; _ -> Nothing),
       Arm.payload "Total" quantityCodec Aggregation.Total (\x -> case x of Aggregation.Total y -> Just y; _ -> Nothing)
@@ -33,8 +33,7 @@ tagOf :: Aggregation.Aggregation q -> String
 tagOf x = case x of
   Aggregation.Members {} -> "Members"
   Aggregation.Distinct {} -> "Distinct"
-  Aggregation.MostSharingACreatureType {} -> "MostSharingACreatureType"
-  Aggregation.MostSharingACardType {} -> "MostSharingACardType"
+  Aggregation.MostSharing {} -> "MostSharing"
   Aggregation.DistinctNames {} -> "DistinctNames"
   Aggregation.Greatest {} -> "Greatest"
   Aggregation.Total {} -> "Total"

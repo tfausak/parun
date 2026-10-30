@@ -2499,8 +2499,7 @@ rewriteAggregation pairs aggregation = case aggregation of
   Aggregation.Total q -> Aggregation.Total (rewriteQuantity pairs q)
   Aggregation.Members -> aggregation
   Aggregation.Distinct _ -> aggregation
-  Aggregation.MostSharingACreatureType -> aggregation
-  Aggregation.MostSharingACardType -> aggregation
+  Aggregation.MostSharing _ -> aggregation
   Aggregation.DistinctNames -> aggregation
 
 -- CR 612.1 through CR 208.2a's characteristic-defining power and toughness. Both

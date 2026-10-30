@@ -1,9 +1,10 @@
 module Parun.Types.Trait where
 
--- | What Parun.Types.Filter's Shares compares between the candidate and the
--- anchored object: a non-empty intersection of the two sides' values, so an
+-- | What two objects share: a non-empty intersection of their values, so an
 -- object with none (a colourless one, a nameless one under CR 708.2a, one in no
--- sector) shares nothing.
+-- sector) shares nothing. Compared between a candidate and an anchored object by
+-- Parun.Types.Filter's Shares, and among members by Parun.Types.Aggregation's
+-- MostSharing.
 data Trait
   = -- | CR 105.2: a colour (CR 702.78a's conspire).
     Color
@@ -18,4 +19,6 @@ data Trait
     Sector
   | -- | CR 205.3m: a creature type.
     CreatureType
+  | -- | CR 205.2a: a card type.
+    CardType
   deriving (Bounded, Enum, Eq, Ord, Show)

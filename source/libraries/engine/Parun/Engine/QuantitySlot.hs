@@ -56,8 +56,7 @@ overCount :: (Applicative f) => (quantity -> f quantity) -> Count.Type.Count qua
 overCount f count = case Count.Type.aggregation count of
   Aggregation.Members -> pure count
   Aggregation.Distinct _ -> pure count
-  Aggregation.MostSharingACreatureType -> pure count
-  Aggregation.MostSharingACardType -> pure count
+  Aggregation.MostSharing _ -> pure count
   Aggregation.DistinctNames -> pure count
   Aggregation.Greatest quantity -> fmap (\q -> count {Count.Type.aggregation = Aggregation.Greatest q}) (f quantity)
   Aggregation.Total quantity -> fmap (\q -> count {Count.Type.aggregation = Aggregation.Total q}) (f quantity)

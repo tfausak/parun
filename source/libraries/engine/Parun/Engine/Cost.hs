@@ -2675,7 +2675,7 @@ shareACreatureType chosen gs = case fmap (`tapCreatureTypes` gs) chosen of
   first : rest -> not (Set.null (List.foldl' Set.intersection first rest))
 
 -- CR 205.3m: the most of these permanents that hold one creature type in
--- common, Parun.Engine.Count's MostSharingACreatureType over tap candidates.
+-- common, Parun.Engine.Count's MostSharing Trait.CreatureType over tap candidates.
 largestSharingGroup :: [ObjectId] -> GameState -> Natural
 largestSharingGroup candidates gs =
   Foldable.foldl' max 0 (Map.fromListWith (+) [(subtype, 1) | candidate <- candidates, subtype <- Set.toList (tapCreatureTypes candidate gs)])
