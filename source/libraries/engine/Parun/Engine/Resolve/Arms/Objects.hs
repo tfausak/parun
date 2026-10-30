@@ -623,7 +623,9 @@ copyStackObject resolving source controller legal (CopyStackObject.MkCopyStackOb
     -- the stack (CR 702.40a's storm over a countered Grapeshot), and a trigger
     -- whose event bound the spell it copies (Ivy, Gleeful Spellthief's "that
     -- spell", countered while the trigger waited), or the ability it copies
-    -- (Rings of Brighthearth's "that ability", likewise; Game.cease files it).
+    -- (Rings of Brighthearth's "that ability", likewise; Game.cease files it),
+    -- and a slot an Effect.Counter bound (Psychic Rebuttal's "the spell
+    -- countered this way").
     Monad.forM_ (if Game.isSpell original gs || Game.isAbility original gs then Game.lookupObject original gs else Map.lookup original (GameState.stackArchive gs)) $ \obj ->
       -- CR 707.10's "that player copies it": WHO puts the copy onto the stack,
       -- which is the copy's owner and controller and CR 707.10c's chooser --

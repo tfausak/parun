@@ -2817,7 +2817,8 @@ boundSlots effect = case effect of
   Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance _ _ _ rider) -> foldMap boundSlots rider
   Effect.RedirectDamage {} -> Set.empty
   -- How many spells this countering ACTUALLY countered, for a "for each spell
-  -- countered this way", and the permanents whose abilities were (CR 113.7).
+  -- countered this way", and which (Psychic Rebuttal's "copy the spell countered
+  -- this way"), and the permanents whose abilities were (CR 113.7).
   Effect.Counter (Counter.MkCounter _ mSlot mSources mInstead) -> foldMap Set.singleton mSlot <> foldMap Set.singleton mSources <> foldMap (foldMap Set.singleton . CounterDestination.slot) mInstead
   Effect.PutCounters {} -> Set.empty
   Effect.Divide divide -> Set.singleton (Divide.slot divide)

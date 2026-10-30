@@ -83,6 +83,7 @@ import qualified Parun.Types.ChosenPermanents as ChosenPermanents
 import qualified Parun.Types.Clause as Clause
 import qualified Parun.Types.ContinuousEffect as ContinuousEffect
 import qualified Parun.Types.ControllerRelation as ControllerRelation
+import qualified Parun.Types.CopyStackObject as CopyStackObject
 import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.CostBasis as CostBasis
 import qualified Parun.Types.CostChoice as CostChoice
@@ -2538,8 +2539,9 @@ copyStatedTargets controller copier resolving source legal original newRef = do
 --
 -- The SOURCE alone is added here: every other object this opcode can name is a
 -- TARGET, which CR 608.2b re-checks and blanks, a slot the triggering event
--- bound (Ivy, Gleeful Spellthief's "that spell"), which objectRefObjects already
--- answers once the spell has left, or a sweep, which names what is on the stack
+-- bound (Ivy, Gleeful Spellthief's "that spell") or an earlier countering bound
+-- (Psychic Rebuttal's "the spell countered this way"), which objectRefObjects
+-- already answers once the spell has left, or a sweep, which names what is on the stack
 -- NOW. So the two stack sweeps keep answering live for every other opcode.
 --
 -- The ref's own Filter decides, read off the last known view, so a ref naming
@@ -3030,8 +3032,10 @@ clauseIsImpossible resolving source controller legal gs clause =
 -- impossible -- an empty sweep is vacuously carried out (CR 609.3), and that is
 -- also what keeps a slot a sibling effect of the same clause will define (Carth
 -- the Lion's Reveal then MoveToZone) from reading as impossible while it is
--- still unbound. Drawing is never impossible either (CR 121.3), nor is
--- searching (CR 701.23b's fail to find). Three arms ask more than "nothing at
+-- still unbound. The one exception is a copy of an earlier clause's slot
+-- naming nothing (Effect.CopyStackObject's arm): "copy the spell" names one
+-- object, and with none there is nothing to choose. Drawing is never impossible
+-- either (CR 121.3), nor is searching (CR 701.23b's fail to find). Three arms ask more than "nothing at
 -- all happens": Effect.Mill, because rule 701.17b states the whole comparison
 -- itself, and a counted discard or sacrifice, where an instruction to give up N
 -- things is not an option for a player holding fewer (The Mimeoplasm's
@@ -3144,7 +3148,14 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.Conjure {} -> False
   Effect.CreateCopy {} -> False
   Effect.BecomeCopy {} -> False
-  Effect.CopyStackObject {} -> False
+  -- CR 608.2d: a slot naming nothing to copy, copyStackSubjects being the
+  -- arm's own read -- Psychic Rebuttal's "the spell countered this way" when
+  -- the spell could not be countered. A sweep stays vacuously carried out.
+  -- data/scenarios/psychic-rebuttal-copies-nothing-when-the-spell-is-not-countered
+  -- proves it.
+  Effect.CopyStackObject (CopyStackObject.MkCopyStackObject ref _ _ _ _) -> case ref of
+    ObjectRef.InSlot _ -> null (copyStackSubjects legal resolving controller source gs ref)
+    _ -> False
   Effect.ChooseNewTargets {} -> False
   Effect.ChangeTargets {} -> False
   Effect.Replace {} -> False

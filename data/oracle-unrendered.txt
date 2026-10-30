@@ -1760,6 +1760,7 @@ provoke
 prowling-geistcatcher
 prowling-serpopard
 psychic-miasma
+psychic-rebuttal
 psychic-theft
 psychic-transfer
 psychic-venom
