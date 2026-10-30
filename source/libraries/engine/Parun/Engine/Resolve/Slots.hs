@@ -1132,7 +1132,7 @@ effectPlayerRefs effect = case effect of
   Effect.Proliferate -> []
   Effect.Reroll -> []
   Effect.RerollStoredResults _ -> []
-  Effect.ChooseCardName (ChooseCardName.MkChooseCardName ref _) -> [ref]
+  Effect.ChooseCardName (ChooseCardName.MkChooseCardName ref _ _) -> [ref]
   Effect.ChooseQuality _ -> []
   Effect.Bolster {} -> []
   Effect.Amass {} -> []
@@ -1294,7 +1294,8 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   -- through Filter.boundSlots, and no card writes one of those atoms here. The
   -- CHOOSER's slot is effectPlayerRefs' half, joined at the head above (Petra
   -- Sphinx's "target player").
-  Effect.ChooseCardName _ -> Map.empty
+  -- The group the names are drawn from, ChosenCardFromAmong's read.
+  Effect.ChooseCardName (ChooseCardName.MkChooseCardName _ _ among) -> foldMap (`Map.singleton` SlotArity.Many) among
   Effect.ChooseQuality _ -> Map.empty
   -- No slot: the card comes from outside the game, where CR 400.11c lets nothing
   -- target and so nothing was announced (CR 601.2c).

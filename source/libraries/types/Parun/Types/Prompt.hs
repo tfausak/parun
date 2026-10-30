@@ -653,7 +653,9 @@ data Prompt r where
   -- reference, which is not a set the engine holds. The answer is judged on the
   -- far side of Parun.Engine.Engine.runGameAsked instead, by
   -- Parun.Interpreter.policingCardNames, which resolves the name and matches the
-  -- Filter against it.
+  -- Filter against it. An offer the engine does hold (CR 707.13's names,
+  -- Parun.Types.ChooseCardName's `among`) rides in the Filter as an Or of
+  -- HasName.
   ChooseCardName :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Filter.Filter Keyword.Keyword -> Seq.Seq (PlayerId.PlayerId, CardName.CardName) -> Prompt CardName.CardName
   -- | CR 608.2c: whether a Guess's proposition, the Filter, holds of a card
   -- hidden from the guesser (CR 400.2), the ObjectId being the guess's source

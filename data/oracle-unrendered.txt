@@ -58,6 +58,7 @@ aladdin
 alchemists-gambit
 alchemists-retrieval
 alchemists-vial
+alhammarret-high-arbiter
 alhammarrets-archive
 all-in-good-time
 all-is-dust

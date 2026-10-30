@@ -2385,14 +2385,22 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       (Effect.RerollStoredResults (SlotName.MkSlotName (Text.pack "self")))
       " {\"type\":\"RerollStoredResults\",\"value\":\"self\"} "
   -- CR 201.4's chooser and CR 201.4a's restriction on which names they may
-  -- choose. Rule 201.4 fixes the count, so there is no third key.
+  -- choose; an absent "among" offers every name.
   Spec.it s "ChooseCardName" $
     Common.assertJsonCodec
       s
       toJson
       fromJson
-      (Effect.ChooseCardName (ChooseCardName.MkChooseCardName (PlayerRef.Relative PlayerRelation.You) (Filter.Not (Filter.HasCardType CardType.Land))))
+      (Effect.ChooseCardName (ChooseCardName.MkChooseCardName (PlayerRef.Relative PlayerRelation.You) (Filter.Not (Filter.HasCardType CardType.Land)) Nothing))
       " {\"type\":\"ChooseCardName\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"restriction\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}}} "
+  -- Alhammarret, High Arbiter: the names of the revealed cards only.
+  Spec.it s "ChooseCardName among" $
+    Common.assertJsonCodec
+      s
+      toJson
+      fromJson
+      (Effect.ChooseCardName (ChooseCardName.MkChooseCardName (PlayerRef.Relative PlayerRelation.You) (Filter.And []) (Just (SlotName.MkSlotName (Text.pack "revealed")))))
+      " {\"type\":\"ChooseCardName\",\"value\":{\"among\":\"revealed\",\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"restriction\":{\"type\":\"And\",\"value\":[]}}} "
   Spec.it s "ChooseQuality" $
     Common.assertJsonCodec
       s
