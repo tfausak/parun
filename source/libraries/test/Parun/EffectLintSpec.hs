@@ -533,7 +533,7 @@ printedBoxQuantity quantity = case quantity of
   Quantity.Type.WasBlockedThisTurn -> False
   Quantity.Type.ControlGainedSinceLastUpkeep {} -> False
   Quantity.Type.PlayedBy {} -> False
-  Quantity.Type.DamageDealtToThisTurn -> False
+  Quantity.Type.DamageDealtThisTurn _ -> False
   Quantity.Type.OpponentsAttacked {} -> False
   Quantity.Type.AttackersDeclaredThisTurn {} -> False
   Quantity.Type.AttackersDeclaredThisCombat -> False

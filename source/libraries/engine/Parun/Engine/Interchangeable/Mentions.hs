@@ -2611,7 +2611,7 @@ quantityNames asking x = case x of
   Quantity.LifeChanged tally -> turnHistory asking (LifeTally.turn tally) (case LifeTally.direction tally of LifeDirection.Gained -> HistoryRead.LifeGains; LifeDirection.Lost -> HistoryRead.LifeLosses) <> playerRefNames asking (LifeTally.player tally)
   Quantity.PlayersDealtDamageThisTurn tally -> history asking HistoryRead.Damage <> playerRefNames asking (DealtDamage.recipient tally)
   Quantity.DamageDealtToPlayersThisTurn playerRef -> history asking HistoryRead.Damage <> playerRefNames asking playerRef
-  Quantity.DamageDealtToThisTurn -> history asking HistoryRead.Damage
+  Quantity.DamageDealtThisTurn _ -> history asking HistoryRead.Damage
   Quantity.SpellsCast tally -> turnHistory asking (SpellTally.turn tally) HistoryRead.Casts <> playerRefNames asking (SpellTally.player tally)
   Quantity.TimesThisTurn act -> history asking $ case act of
     AbilityAct.Activated -> HistoryRead.Activations

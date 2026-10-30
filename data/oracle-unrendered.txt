@@ -374,6 +374,7 @@ champions-victory
 chance-for-glory
 chancellor-of-the-forge
 chandra-fire-artisan
+chandra-fire-of-kaladesh-chandra-roaring-flame
 chandra-nalaar
 chandra-pyromaster
 chandra-the-firebrand

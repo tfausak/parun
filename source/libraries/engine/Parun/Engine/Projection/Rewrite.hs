@@ -2389,7 +2389,7 @@ rewriteQuantity pairs quantity = case quantity of
   Quantity.Type.WasBlockedThisTurn -> quantity
   Quantity.Type.ControlGainedSinceLastUpkeep _ -> quantity
   Quantity.Type.PlayedBy _ -> quantity
-  Quantity.Type.DamageDealtToThisTurn -> quantity
+  Quantity.Type.DamageDealtThisTurn _ -> quantity
   Quantity.Type.PlayerCounters {} -> quantity
   -- CR 700.5's "devotion to black": a colour word used as one
   -- (docs/decisions.md, "Colour words a text change reaches"). The PlayerRef
