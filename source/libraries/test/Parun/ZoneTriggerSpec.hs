@@ -1990,14 +1990,14 @@ representativeEvents cond =
         TriggerCondition.SelfBlocksCreature _ -> one (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 0, BecameBlocking.attacker = ObjectId.MkObjectId 41, BecameBlocking.producer = BlockProducer.Declared, BecameBlocking.attackerWasBlocked = False, BecameBlocking.blockersBefore = Set.empty}))
         -- CR 508.5's defending player again, and carol for SelfAttacks' reason
         -- above: eventBindings binds this field under `thatPlayer`.
-        TriggerCondition.SelfBecomesBlocked -> one (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked departed S.carol 1))
+        TriggerCondition.CreatureBecomesBlocked _ -> one (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked departed S.carol 1))
         -- The same declaration event SelfBlocks names, with the ids the other way
         -- round: this condition's bearer is the ATTACKER, and the blocker is what
         -- it binds. The attacker is the pin's bearer, as for SelfBlocksCreature.
         TriggerCondition.SelfBecomesBlockedBy _ -> one (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 41, BecameBlocking.attacker = ObjectId.MkObjectId 0, BecameBlocking.producer = BlockProducer.Declared, BecameBlocking.attackerWasBlocked = False, BecameBlocking.blockersBefore = Set.empty}))
         TriggerCondition.PermanentBecomesBlockedBy _ -> one (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 41, BecameBlocking.attacker = departed, BecameBlocking.producer = BlockProducer.Declared, BecameBlocking.attackerWasBlocked = False, BecameBlocking.blockersBefore = Set.empty}))
         -- The GROUPED attacking-side event, which is what makes this one fire
-        -- once where the arm above fires per blocker. carol on SelfBecomesBlocked's
+        -- once where the arm above fires per blocker. carol on CreatureBecomesBlocked's
         -- reasoning -- and this one binds that player nothing, which is the
         -- difference the pin catches.
         --
@@ -2482,7 +2482,7 @@ everyTriggerCondition =
     TriggerCondition.CreatureBlocks (Filter.Type.And []),
     TriggerCondition.SelfBlocksAtLeast 2,
     TriggerCondition.SelfBlocksCreature (Filter.Type.And []),
-    TriggerCondition.SelfBecomesBlocked,
+    TriggerCondition.CreatureBecomesBlocked (Filter.Type.And []),
     TriggerCondition.SelfBlocksOneOrMore (Filter.Type.And []),
     TriggerCondition.SelfBecomesBlockedBy (Filter.Type.And []),
     TriggerCondition.SelfBecomesBlockedByOneOrMore (Filter.Type.And []),

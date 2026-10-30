@@ -712,7 +712,14 @@ trigger n = case Node.tag n of
   "WhenACreatureAttacks" -> itself (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime)
   "WhenACreatureAttacksAndIsntBlocked" -> itself TriggerCondition.SelfAttacksUnblocked
   "WhenACreatureBlocks" -> itself TriggerCondition.SelfBlocks
-  "WhenACreatureBecomesBlocked" -> itself TriggerCondition.SelfBecomesBlocked
+  "WhenACreatureBecomesBlocked" -> do
+    who <- Node.argument n
+    case single who of
+      Just "ThisPermanent" -> itself (TriggerCondition.CreatureBecomesBlocked Filter.IsSource)
+      Just _ -> Node.untranslated n
+      Nothing -> do
+        f <- permanents outermost who
+        Right (TriggerCondition.CreatureBecomesBlocked f, bound [("Trigger_ThatCreature", Oracle.Trigger.attackingCreature), ("Trigger_DefendingPlayer", Oracle.Trigger.thatPlayer)])
   "WhenACreatureBlocksACreature" -> other TriggerCondition.SelfBlocksCreature Oracle.Trigger.thatAttacker
   "WhenACreatureBecomesBlockedByACreature" -> other TriggerCondition.SelfBecomesBlockedBy Oracle.Trigger.thatBlocker
   "WhenACreatureDealsCombatDamageToAPlayer" -> damaged TriggerCondition.SelfDealsCombatDamageToPlayer

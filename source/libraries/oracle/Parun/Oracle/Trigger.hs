@@ -94,6 +94,12 @@ event context creature c = case c of
     word <- ["it", that]
     subject <- also one
     [other ("Whenever " <> subject <> " dies") [(becameSlot, word), (departedPermanent, word)]]
+  TriggerCondition.CreatureBecomesBlocked f -> do
+    (one, that) <- described context f
+    -- Free: the attacker is "it" (Somberwald Alpha) or "that creature".
+    word <- ["it", that]
+    subject <- also one
+    [other ("Whenever " <> subject <> " becomes blocked") [(attackingCreature, word), (thatPlayer, "defending player")]]
   TriggerCondition.PermanentDealsCombatDamageToPlayer p -> do
     (one, that) <- described context (PermanentDealsCombatDamageToPlayer.filter p)
     (whom, player') <- player (PermanentDealsCombatDamageToPlayer.recipient p)
@@ -187,7 +193,7 @@ selfEvent context creature c = case c of
   TriggerCondition.CreatureAttacksAlone Filter.Type.IsSource -> [(recurring, "attacks alone", [(attackingCreature, "it")])]
   TriggerCondition.SelfAttacksUnblocked -> [(recurring, "attacks and isn't blocked", [(thatPlayer, "defending player")])]
   TriggerCondition.SelfBlocks -> [(recurring, "blocks", [])]
-  TriggerCondition.SelfBecomesBlocked -> [(recurring, "becomes blocked", [(thatPlayer, "defending player")])]
+  TriggerCondition.CreatureBecomesBlocked Filter.Type.IsSource -> [(recurring, "becomes blocked", [(thatPlayer, "defending player"), (attackingCreature, "it")])]
   TriggerCondition.SelfBlocksCreature f -> do
     (one, that) <- described context f
     [(recurring, "blocks " <> one, [(thatAttacker, that)])]

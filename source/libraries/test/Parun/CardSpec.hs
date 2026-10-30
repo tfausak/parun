@@ -1207,7 +1207,9 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- CR 509.3e's filtered form spends the number on a quality instead, so its
   -- Filter holds no Count either.
   TriggerCondition.SelfBlocksOneOrMore _ -> []
-  TriggerCondition.SelfBecomesBlocked -> []
+  -- CR 509.3c's Filter is over the attacker, holding no Count for
+  -- PermanentEnters' reason.
+  TriggerCondition.CreatureBecomesBlocked _ -> []
   -- CR 509.3d's Filter is a predicate over the blocker, and holds no Count for
   -- PermanentEnters' reason.
   TriggerCondition.SelfBecomesBlockedBy _ -> []
@@ -4749,7 +4751,9 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- CR 509.3e's filtered form names a quality the attackers blocked must have,
   -- so this one DOES carry a Filter.
   TriggerCondition.SelfBlocksOneOrMore f -> unframed [f]
-  TriggerCondition.SelfBecomesBlocked -> []
+  -- CR 509.3c's Filter is over the attacker -- Somberwald Alpha's "a creature
+  -- you control".
+  TriggerCondition.CreatureBecomesBlocked f -> unframed [f]
   -- CR 509.3d names a quality the blocker must have, so this one DOES carry a
   -- Filter -- rule 702.25a's "without flanking".
   TriggerCondition.SelfBecomesBlockedBy f -> unframed [f]
@@ -4931,7 +4935,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.SelfBlocksCreature _ -> []
   TriggerCondition.SelfBlocksAtLeast _ -> []
   TriggerCondition.SelfBlocksOneOrMore _ -> []
-  TriggerCondition.SelfBecomesBlocked -> []
+  TriggerCondition.CreatureBecomesBlocked _ -> []
   TriggerCondition.SelfBecomesBlockedBy _ -> []
   TriggerCondition.PermanentBecomesBlockedBy _ -> []
   TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> []

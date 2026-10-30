@@ -10658,7 +10658,7 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.SelfBlocksCreature _ -> False
   TriggerCondition.SelfBlocksAtLeast _ -> False
   TriggerCondition.SelfBlocksOneOrMore _ -> False
-  TriggerCondition.SelfBecomesBlocked -> False
+  TriggerCondition.CreatureBecomesBlocked _ -> False
   TriggerCondition.SelfBecomesBlockedBy _ -> False
   TriggerCondition.PermanentBecomesBlockedBy _ -> False
   TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> False

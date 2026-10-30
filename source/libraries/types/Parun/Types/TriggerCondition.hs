@@ -240,14 +240,15 @@ data TriggerCondition
     -- SelfBlocksAtLeast through Sorrow's Path, and Parun.CombatCostSpec's
     -- ExchangeBlocks group is the proof.
     SelfBlocksOneOrMore (Filter.Filter Keyword.Keyword)
-  | -- | CR 509.3c: "whenever [a creature] becomes blocked" (Sacred Prey) -- the
-    -- attacking side of SelfBlocks, once per attacker that got a blocker.
+  | -- | CR 509.3c: "whenever [a creature] becomes blocked", once per attacker
+    -- the Filter admits: Filter.IsSource for the source's own (Sacred Prey), any
+    -- other for a bystander's (Somberwald Alpha).
     --
     -- Rule 509.3c's other two producers reach it: Effect.BecomesBlocked (Curtain
     -- of Light) and a creature put onto the battlefield blocking (CR 509.4),
     -- which Flash Foliage exercises -- Parun.CombatEffectSpec's
     -- PutOntoBattlefieldBlocking group is the proof.
-    SelfBecomesBlocked
+    CreatureBecomesBlocked (Filter.Filter Keyword.Keyword)
   | -- | CR 509.3d: "whenever [a creature] becomes blocked by a creature" -- rule
     -- 702.25a's flanking, once for each creature that blocks.
     --

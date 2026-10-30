@@ -35,7 +35,10 @@
                 "type": "SelfBlocks"
               },
               {
-                "type": "SelfBecomesBlocked"
+                "type": "CreatureBecomesBlocked",
+                "value": {
+                  "type": "IsSource"
+                }
               }
             ]
           },

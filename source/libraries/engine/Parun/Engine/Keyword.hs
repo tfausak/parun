@@ -6718,7 +6718,7 @@ rampage n =
               (ObjectRef.EachMatching Filter.IsSource)
               Nothing
           )
-   in Mint.trigger TriggerCondition.SelfBecomesBlocked (Seq.singleton effect)
+   in Mint.trigger (TriggerCondition.CreatureBecomesBlocked Filter.IsSource) (Seq.singleton effect)
 
 -- CR 702.25a. CR 509.3d is the event -- "becomes blocked by a creature", once for
 -- each creature that blocks -- and NOT CR 509.3c's "becomes blocked", which fires
@@ -6799,7 +6799,7 @@ bushidoBlocks = bushidoHalf TriggerCondition.SelfBlocks
 
 -- CR 509.3c's half of rule 702.45a.
 bushidoBecomesBlocked :: Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
-bushidoBecomesBlocked = bushidoHalf TriggerCondition.SelfBecomesBlocked
+bushidoBecomesBlocked = bushidoHalf (TriggerCondition.CreatureBecomesBlocked Filter.IsSource)
 
 -- The +N/+N the two halves share.
 bushidoHalf :: TriggerCondition.TriggerCondition -> Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
@@ -6880,7 +6880,7 @@ afflict n =
               LifeLossCause.ByEffect
               Nothing
           )
-   in Mint.trigger TriggerCondition.SelfBecomesBlocked (Seq.singleton effect)
+   in Mint.trigger (TriggerCondition.CreatureBecomesBlocked Filter.IsSource) (Seq.singleton effect)
 
 -- CR 702.134a, the first minted ability that TARGETS. A REAL choice, since with
 -- two smaller attackers the rules leave which one open.
