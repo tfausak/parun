@@ -1800,6 +1800,7 @@ sharesAnchored trait anchor = case anchor of
     Trait.Owner -> Just (\context view -> meets (foldMap Set.singleton (owner view)) (foldMap Set.singleton (sourceOwner context)))
     Trait.Sector -> Just (\context view -> meets (Sector.sectorsIn (designations view)) (sourceSectors context))
     Trait.CreatureType -> Nothing
+    Trait.CardType -> Nothing
   Anchor.Bound slot -> case trait of
     -- A slot naming nothing leaves the bound side empty.
     Trait.Name -> Just (\context view -> meets (names view) (Map.findWithDefault Set.empty slot (slotNames context)))
@@ -1813,6 +1814,7 @@ sharesAnchored trait anchor = case anchor of
     Trait.Color -> Nothing
     Trait.Owner -> Nothing
     Trait.Sector -> Nothing
+    Trait.CardType -> Nothing
   Anchor.Evaluated -> case trait of
     -- The object the surrounding quantity is aimed at (CR 613.4c), and vacuously
     -- FALSE where nothing aims one: no CR 601.2c offer stands behind a Count to
@@ -1822,6 +1824,7 @@ sharesAnchored trait anchor = case anchor of
     Trait.Name -> Nothing
     Trait.Owner -> Nothing
     Trait.Sector -> Nothing
+    Trait.CardType -> Nothing
   where
     meets a b = not (Set.disjoint a b)
 
@@ -3780,6 +3783,7 @@ readsSourceValues predicate = case predicate of
       Trait.Owner -> False
       Trait.Sector -> False
       Trait.CreatureType -> False
+      Trait.CardType -> False
     Anchor.Bound _ -> False
     Anchor.Evaluated -> False
   Filter.HasSubtype _ -> False

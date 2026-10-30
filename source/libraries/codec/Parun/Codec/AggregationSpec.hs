@@ -5,6 +5,7 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.DistinctOf as DistinctOf
+import qualified Parun.Types.Trait as Trait
 
 -- Instantiated at Integer, the simplest element codec available: Aggregation is
 -- parametric in the per-member quantity it reads, and no card cares which
@@ -23,18 +24,12 @@ spec s = Spec.describe s "Parun.Codec.Aggregation" $ do
       (Aggregation.codec Common.integer)
       (Aggregation.Distinct DistinctOf.CardTypes)
       " {\"type\":\"Distinct\",\"value\":{\"type\":\"CardTypes\"}} "
-  Spec.it s "MostSharingACreatureType" $
+  Spec.it s "MostSharing" $
     Common.assertCodec
       s
       (Aggregation.codec Common.integer)
-      Aggregation.MostSharingACreatureType
-      " {\"type\":\"MostSharingACreatureType\"} "
-  Spec.it s "MostSharingACardType" $
-    Common.assertCodec
-      s
-      (Aggregation.codec Common.integer)
-      Aggregation.MostSharingACardType
-      " {\"type\":\"MostSharingACardType\"} "
+      (Aggregation.MostSharing Trait.Color)
+      " {\"type\":\"MostSharing\",\"value\":{\"type\":\"Color\"}} "
   Spec.it s "DistinctNames" $
     Common.assertCodec
       s

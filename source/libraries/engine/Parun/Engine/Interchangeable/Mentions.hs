@@ -677,8 +677,7 @@ aggregationNames :: (Monoid r) => Asking r -> (quantity -> r) -> Aggregation.Agg
 aggregationNames _asking onQuantity x = case x of
   Aggregation.Members -> mempty
   Aggregation.Distinct _ -> mempty
-  Aggregation.MostSharingACreatureType -> mempty
-  Aggregation.MostSharingACardType -> mempty
+  Aggregation.MostSharing _ -> mempty
   Aggregation.DistinctNames -> mempty
   Aggregation.Greatest quantity -> onQuantity quantity
   Aggregation.Total quantity -> onQuantity quantity

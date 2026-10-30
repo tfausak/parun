@@ -19,7 +19,10 @@
                 "type": "Count",
                 "value": {
                   "aggregation": {
-                    "type": "MostSharingACreatureType"
+                    "type": "MostSharing",
+                    "value": {
+                      "type": "CreatureType"
+                    }
                   },
                   "filter": {
                     "type": "And",

@@ -3683,6 +3683,20 @@ measureReads measure = case measure of
   Measure.ManaValue -> Set.empty
   Measure.ColorCount -> Set.singleton Colors
 
+-- Which aspects a Trait's values read, for Filter.Shares and
+-- Aggregation.MostSharing alike.
+traitReads :: Trait.Trait -> Set Aspect
+traitReads trait = case trait of
+  Trait.Color -> Set.singleton Colors
+  -- NAMES, which have no Aspect, HasName's reason.
+  Trait.Name -> Set.empty
+  -- An OWNER, which CR 108.3 fixes when the game starts and no Modification
+  -- writes.
+  Trait.Owner -> Set.empty
+  Trait.Sector -> Set.empty
+  Trait.CreatureType -> Set.singleton Subtypes
+  Trait.CardType -> Set.singleton Types
+
 -- Which aspects a Filter reads. Exhaustive on purpose: a new Filter arm reading
 -- a projected characteristic must be classified here, or CR 613.8a would
 -- silently stop seeing dependencies through it.
@@ -3697,15 +3711,7 @@ filterReads f = case f of
   Filter.Type.HasSupertype _ -> Set.singleton Supertypes
   Filter.Type.HasColor _ -> Set.singleton Colors
   -- Reads the CANDIDATE's trait; the anchored object's arrive on the Context.
-  Filter.Type.Shares trait _ -> case trait of
-    Trait.Color -> Set.singleton Colors
-    -- NAMES, which have no Aspect, HasName's reason.
-    Trait.Name -> Set.empty
-    -- An OWNER, which CR 108.3 fixes when the game starts and no Modification
-    -- writes.
-    Trait.Owner -> Set.empty
-    Trait.Sector -> Set.empty
-    Trait.CreatureType -> Set.singleton Subtypes
+  Filter.Type.Shares trait _ -> traitReads trait
   Filter.Type.HasSubtype _ -> Set.singleton Subtypes
   -- Reads no aspect: CR 201.1's names have no Aspect, so CR 613.8a's dependency
   -- cannot turn on the layer-3 writes of them (AddNamesMatching, SetName,
@@ -4487,8 +4493,7 @@ aggregationReads a = case a of
   Aggregation.Distinct DistinctOf.CardTypes -> Set.singleton Types
   Aggregation.Distinct DistinctOf.Colors -> Set.singleton Colors
   Aggregation.Distinct DistinctOf.BasicLandTypes -> Set.singleton Subtypes
-  Aggregation.MostSharingACreatureType -> Set.singleton Subtypes
-  Aggregation.MostSharingACardType -> Set.singleton Types
+  Aggregation.MostSharing trait -> traitReads trait
   -- No Modification writes CR 201.1's names, HasName's reason in filterReads.
   Aggregation.DistinctNames -> Set.empty
   Aggregation.Greatest q -> quantityReads q

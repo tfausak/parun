@@ -1,6 +1,7 @@
 module Parun.Types.Aggregation where
 
 import qualified Parun.Types.DistinctOf as DistinctOf
+import qualified Parun.Types.Trait as Trait
 
 -- | How a Parun.Types.Count turns its matched set into a number. A real axis,
 -- not always "length": CR 208.2a's Tarmogoyf counts the distinct card TYPES
@@ -22,12 +23,10 @@ data Aggregation quantity
     -- permanents you control" (Volatile Rift), domain's "the number of basic
     -- land types among lands you control" (Tribal Flames).
     Distinct DistinctOf.DistinctOf
-  | -- | The most members that share one creature type (CR 205.3m) -- Synchronized
-    -- Eviction's "at least two creatures that share a creature type".
-    MostSharingACreatureType
-  | -- | The most members that share one card type (CR 205.2a) -- Rowdy Crew's
-    -- "if two cards that share a card type are discarded this way".
-    MostSharingACardType
+  | -- | The most members that share one value of the Trait: Synchronized
+    -- Eviction's creature type (CR 205.3m), Rowdy Crew's card type (CR 205.2a),
+    -- Sphinx's Tutelage's colour (CR 105.2).
+    MostSharing Trait.Trait
   | -- | The most members with different names (CR 201.2b) -- The Necrobloom's
     -- "seven or more lands with different names".
     DistinctNames

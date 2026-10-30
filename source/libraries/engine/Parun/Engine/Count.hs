@@ -26,6 +26,7 @@ import qualified Parun.Engine.Keyword as Keyword
 import qualified Parun.Engine.Loyalty as Loyalty
 import qualified Parun.Engine.ManaAbility as ManaAbility
 import qualified Parun.Engine.Players as Players
+import qualified Parun.Engine.Sector as Sector
 import qualified Parun.Engine.Subtype as Subtype
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.ActivationCriteria as ActivationCriteria
@@ -75,6 +76,7 @@ import qualified Parun.Types.Saddling as Saddling
 import qualified Parun.Types.Scope as Scope
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpellWasCast as SpellWasCast
+import qualified Parun.Types.Trait as Trait
 import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZoneChange as ZoneChange
 
@@ -557,20 +559,21 @@ aggregate quantityOf aggregation members = case aggregation of
   -- CR 305.6: a land's other subtypes (Gate, Desert, Urza's) add nothing, and a
   -- land with two basic land types (Tundra) adds both.
   Aggregation.Distinct DistinctOf.BasicLandTypes -> Just (toInteger (Set.size (Set.filter Subtype.isBasicLandType (Set.unions (fmap (Filter.subtypes . snd) members)))))
-  -- CR 205.3m: the size of the largest group of members holding one creature
-  -- type in common -- not "pairwise sharing", which is not transitive (a Human
-  -- Cleric, a Human Rogue and an Elf Rogue are no three sharing a type). A
-  -- changeling reaches every group through its projected subtypes (CR 702.73a);
-  -- a land type or other non-creature subtype groups nothing. 0 over an empty
-  -- set, or where no member has a creature type.
-  Aggregation.MostSharingACreatureType ->
-    let tally = Map.fromListWith (+) [(subtype, 1 :: Integer) | (_, view) <- members, subtype <- Set.toList (Filter.subtypes view), Subtype.isCreatureType subtype]
-     in Just (Foldable.foldl' max 0 tally)
-  -- CR 205.2a / 205.2b: the same largest-group reading over card types, where an
-  -- artifact creature joins both groups. 0 over an empty set.
-  Aggregation.MostSharingACardType ->
-    let tally = Map.fromListWith (+) [(cardType, 1 :: Integer) | (_, view) <- members, cardType <- Set.toList (Filter.cardTypes view)]
-     in Just (Foldable.foldl' max 0 tally)
+  -- The size of the largest group of members holding one value in common --
+  -- not "pairwise sharing", which is not transitive (a Human Cleric, a Human
+  -- Rogue and an Elf Rogue are no three sharing a type). A member joins a group
+  -- per value: an artifact creature both card-type groups (CR 205.2b), a
+  -- multicoloured card each colour's (CR 105.2b), a changeling every creature
+  -- type's through its projected subtypes (CR 702.73a). A member with no value
+  -- (a colourless one, CR 105.2c) joins none, nor does a land type or other
+  -- non-creature subtype (CR 205.3m). 0 over an empty set.
+  Aggregation.MostSharing trait -> Just $ case trait of
+    Trait.CreatureType -> largestGroup (Set.filter Subtype.isCreatureType . Filter.subtypes)
+    Trait.CardType -> largestGroup Filter.cardTypes
+    Trait.Color -> largestGroup Filter.colors
+    Trait.Name -> largestGroup Filter.names
+    Trait.Owner -> largestGroup (foldMap Set.singleton . Filter.owner)
+    Trait.Sector -> largestGroup (Sector.sectorsIn . Filter.designations)
   -- CR 201.2b: the largest group in which every member has a name and no two
   -- share one. Single-named members contribute one per distinct name; a
   -- member with several names is tried in and out of the group, since taking
@@ -612,6 +615,9 @@ aggregate quantityOf aggregation members = case aggregation of
   Aggregation.Total quantity -> do
     values <- traverse (\(identity, view) -> quantityOf identity view quantity) members
     pure (sum values)
+  where
+    largestGroup :: (Ord a) => (Filter.View -> Set.Set a) -> Integer
+    largestGroup valuesOf = Foldable.foldl' max 0 (Map.fromListWith (+) [(value, 1 :: Integer) | (_, view) <- members, value <- Set.toList (valuesOf view)])
 
 -- CR 400.1: whose copy of the zone -- and, for Parun.Engine.ManaCount, whose
 -- mana pool, which CR 106.4 attaches to a player the same way. Nothing when the

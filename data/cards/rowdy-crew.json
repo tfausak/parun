@@ -103,7 +103,10 @@
                           "type": "Count",
                           "value": {
                             "aggregation": {
-                              "type": "MostSharingACardType"
+                              "type": "MostSharing",
+                              "value": {
+                                "type": "CardType"
+                              }
                             },
                             "filter": {
                               "type": "IsBound",

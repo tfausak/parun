@@ -878,8 +878,7 @@ countQuantities :: Count.Type.Count Quantity.Type.Quantity -> [Quantity.Type.Qua
 countQuantities count = case Count.Type.aggregation count of
   Aggregation.Members -> []
   Aggregation.Distinct _ -> []
-  Aggregation.MostSharingACreatureType -> []
-  Aggregation.MostSharingACardType -> []
+  Aggregation.MostSharing _ -> []
   Aggregation.DistinctNames -> []
   Aggregation.Greatest quantity -> [quantity]
   Aggregation.Total quantity -> [quantity]
