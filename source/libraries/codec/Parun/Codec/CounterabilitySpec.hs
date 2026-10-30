@@ -3,6 +3,7 @@ module Parun.Codec.CounterabilitySpec where
 import qualified Parun.Codec.Counterability as Counterability
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
+import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.Counterability as Counterability
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -17,11 +18,13 @@ spec s = Spec.describe s "Parun.Codec.Counterability" $ do
     Common.assertCodec
       s
       Counterability.codec
-      Counterability.CantBeCountered
+      (Counterability.CantBeCountered Nothing)
       " {\"type\":\"CantBeCountered\"} "
-  -- Exhaustive where the literals above are representative: Arm.enum derives
-  -- the arm list from the type, so this is what would catch a constructor the
-  -- derivation missed or two that encode alike.
-  Spec.it s "round trips every constructor" $ Common.assertEnumCodec s Counterability.codec
+  Spec.it s "CantBeCountered, conditionally" $
+    Common.assertCodec
+      s
+      Counterability.codec
+      (Counterability.CantBeCountered (Just (Condition.Any [])))
+      " {\"type\":\"CantBeCountered\",\"value\":{\"type\":\"Any\",\"value\":[]}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s Counterability.codec

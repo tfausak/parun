@@ -184,7 +184,7 @@ spec s registry corpus = Spec.describe s "Parun.Codec (integration)" $ do
         s
         "Rending Volley says it"
         (Face.counterability (S.combinedFace rendingVolley))
-        Counterability.CantBeCountered
+        (Counterability.CantBeCountered Nothing)
       Spec.assertEqWith
         s
         "Cancel does not, and its file has no counterability key"

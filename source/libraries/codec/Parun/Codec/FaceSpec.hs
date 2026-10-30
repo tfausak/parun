@@ -315,7 +315,7 @@ populatedFace =
       Face.minimumX = 1,
       Face.alternativeCosts = [AlternativeCost.MkAlternativeCost Nothing (Cost.MkCost (Just (ManaCost.MkManaCost [])) [])],
       Face.costReductions = [CostReduction.MkCostReduction (ManaCost.MkManaCost [ManaSymbol.Generic 3]) (Quantity.Literal 1) Nothing Nothing CostDirection.Less],
-      Face.counterability = Counterability.CantBeCountered,
+      Face.counterability = Counterability.CantBeCountered Nothing,
       Face.mulliganActions = [HandAction.MkHandAction Nothing [Effect.ExileHandThenDraw]],
       Face.openingHandActions = [HandAction.MkHandAction Nothing [Effect.ExileHandThenDraw]],
       Face.specialActions = [SpecialAction.DiscardThisAnyTime],
@@ -703,7 +703,7 @@ spec s = Spec.describe s "Parun.Codec.Face" $ do
         s
         encodeFace
         decodeFace
-        baseFace {Face.counterability = Counterability.CantBeCountered}
+        baseFace {Face.counterability = Counterability.CantBeCountered Nothing}
         (init baseFaceJson <> ",\"counterability\":{\"type\":\"CantBeCountered\"}}")
     Spec.it s "mulliganActions" $
       Common.assertJsonCodec

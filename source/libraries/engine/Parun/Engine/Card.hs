@@ -26,6 +26,7 @@ import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
+import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.Counterability as Counterability
 import Parun.Types.Effect (Effect)
 import qualified Parun.Types.Face as Face
@@ -644,19 +645,21 @@ merge2 l r =
           -- characteristics are its two halves combined", where only the right half
           -- carries the clause. The reader beyond it is one line already driven for
           -- every ordinary spell.
-          Face.counterability =
-            if Face.counterability l == Counterability.CantBeCountered || Face.counterability r == Counterability.CantBeCountered
-              then Counterability.CantBeCountered
-              else Counterability.Counterable
-              --
-              -- Face.spell is deliberately NOT merged either: it stays the left half's,
-              -- and nothing casts it. CR 709.3b means the thing on the stack is ONE half
-              -- for every cast this view is asked about -- castableFaces below is what
-              -- such a cast reads -- so the combined view is never the payload that
-              -- resolves. The one printing that puts BOTH halves on the stack is CR
-              -- 702.102's fuse, and it does not merge them here: `fusedFace` below builds
-              -- that payload over this view, so a fused spell reads rule 702.102d's
-              -- ordering and every other reader of `combined` is untouched.
+          --
+          -- Conditions join as an Any; an unconditional half (Nothing) absorbs the other.
+          Face.counterability = case (Face.counterability l, Face.counterability r) of
+            (Counterability.CantBeCountered a, Counterability.CantBeCountered b) -> Counterability.CantBeCountered (Condition.Any <$> sequenceA [a, b])
+            (Counterability.CantBeCountered a, Counterability.Counterable) -> Counterability.CantBeCountered a
+            (Counterability.Counterable, other) -> other
+            --
+            -- Face.spell is deliberately NOT merged either: it stays the left half's,
+            -- and nothing casts it. CR 709.3b means the thing on the stack is ONE half
+            -- for every cast this view is asked about -- castableFaces below is what
+            -- such a cast reads -- so the combined view is never the payload that
+            -- resolves. The one printing that puts BOTH halves on the stack is CR
+            -- 702.102's fuse, and it does not merge them here: `fusedFace` below builds
+            -- that payload over this view, so a fused spell reads rule 702.102d's
+            -- ordering and every other reader of `combined` is untouched.
         }
 
 -- CR 709.4c / 604.3: one printed power or toughness box of a split card's

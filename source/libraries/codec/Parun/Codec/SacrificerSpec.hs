@@ -19,7 +19,7 @@ spec s = Spec.describe s "Parun.Codec.Sacrificer" $ do
       Sacrificer.codec
       Sacrificer.PermanentController
       " {\"type\":\"PermanentController\"} "
-  -- Exhaustive where the two literals above are representative, Counterability's
-  -- reason: Arm.enum derives the arm list from the type.
+  -- Exhaustive where the two literals above are representative: Arm.enum
+  -- derives the arm list from the type.
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s Sacrificer.codec
   Spec.it s "has a schema" $ Common.assertHasSchema s Sacrificer.codec

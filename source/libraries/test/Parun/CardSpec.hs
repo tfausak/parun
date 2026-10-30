@@ -577,7 +577,7 @@ waneFace =
       -- half's Counterable as an answer -- or a record update that never looks at
       -- the right half at all, which is what merge2 did before fuse landed --
       -- leaves the combined view counterable.
-      Face.counterability = Counterability.CantBeCountered
+      Face.counterability = Counterability.CantBeCountered Nothing
     }
 
 cardSpec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -644,7 +644,7 @@ cardSpec s = Spec.describe s "Card" $ do
     -- field (Parun.Engine.Event.counterOne, through Game.faceOf). Only Wane prints
     -- it. What this does NOT reach is that reader: no printing pairs fuse with a
     -- can't-be-countered clause, so the fold is what the suite holds.
-    Spec.assertEqWith s "the right half's can't-be-countered clause" (Face.counterability c) Counterability.CantBeCountered
+    Spec.assertEqWith s "the right half's can't-be-countered clause" (Face.counterability c) (Counterability.CantBeCountered Nothing)
     -- The three ability lists CR 709.4c's "each ability in the text box of each
     -- half" reaches, each asserted in PRINTED order (left half then right), so a
     -- merge that concatenated the halves the other way round fails too.
@@ -923,6 +923,11 @@ castingRestrictionConditions restriction = case restriction of
 
 -- Every Condition a casting permission holds: only CR 601.3d's flash
 -- permission carries one.
+counterabilityConditions :: Counterability.Counterability -> [Condition.Type.Condition]
+counterabilityConditions counterability = case counterability of
+  Counterability.Counterable -> []
+  Counterability.CantBeCountered condition -> Maybe.maybeToList condition
+
 castingPermissionConditions :: CastingPermission.CastingPermission -> [Condition.Type.Condition]
 castingPermissionConditions permission = case permission of
   CastingPermission.CastFromLibraryWhileSearching -> []
@@ -2167,6 +2172,8 @@ cardCounts card =
     <> concatMap (concatMap conditionCounts . castingRestrictionConditions) (Face.castingRestrictions card)
     -- CR 601.3d's flash permission condition (Swift Reckoning).
     <> concatMap (concatMap conditionCounts . castingPermissionConditions) (Face.castingPermissions card)
+    -- CR 113.6g's spell mastery (Exquisite Firecraft).
+    <> concatMap conditionCounts (counterabilityConditions (Face.counterability card))
     <> ruleAbilitiesCounts (Projection.ruleAbilitiesOfFace card)
 
 -- Every Count reachable from the fifteen CR 613.11 rule-ability families, a
@@ -6783,12 +6790,13 @@ activatedAbilityFilters ability =
 --     trigger's own condition and its intervening clause.
 --   * `castingRestrictions` -- CR 601.3's OnlyIf condition.
 --   * `castingPermissions` -- CR 601.3d's flash permission condition.
+--   * `counterability` -- CR 113.6g's condition (Exquisite Firecraft).
 --   * `mulliganActions` (CR 103.5b) and `openingHandActions` (CR 103.6) -- the two
 --     pregame actions, which `cardResolutionEffects` above does not reach.
 --
 -- The remaining fields hold none: `name`, `manaCost`, `typeLine`, `loyalty`,
 -- `defense`, `vanguard`, `canBeYourCommander`, `claimsStartingPlayer`,
--- `anteOnly`, `colorIndicator` and `counterability`.
+-- `anteOnly` and `colorIndicator`.
 -- That is checkable rather than asserted: none of the
 -- types those fields reach imports Parun.Types.Filter, which
 -- `grep -rl 'import qualified Parun.Types.Filter' source/libraries/types/` over
@@ -6834,6 +6842,7 @@ cardFilters card =
         -- the cast gate reads no announcement.
         <> concatMap (concatMap conditionFilters . castingRestrictionConditions) (Face.castingRestrictions card)
         <> concatMap (concatMap conditionFilters . castingPermissionConditions) (Face.castingPermissions card)
+        <> concatMap conditionFilters (counterabilityConditions (Face.counterability card))
         <> unframed (Maybe.mapMaybe CostReduction.whichTargets (Face.costReductions card))
         <> concatMap (slotlessCost . specialActionFilters) (Face.specialActions card)
         <> ruleAbilitiesFilters (Projection.ruleAbilitiesOfFace card)

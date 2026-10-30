@@ -8550,8 +8550,11 @@ counterOne destination counterer source controller oid = do
               Countering.controller = controller
             }
       pure (Just Seq.empty)
+    -- CR 113.6g, its condition judged now with the spell's controller as "you"
+    -- (Exquisite Firecraft's ruling). The scenarios exquisite-firecraft-* prove it.
     Just _ -> case fmap Face.counterability (Game.faceOf oid gs) of
-      Just Counterability.CantBeCountered -> pure Nothing
+      Just (Counterability.CantBeCountered condition)
+        | all (Condition.holds (Projection.fullView gs) (Projection.sourceContext gs (Projection.controllerOf oid gs) oid) gs oid) condition -> pure Nothing
       _ -> do
         (zone, position) <- destination
         moved <- changeZoneAttaching Nothing Set.empty oid zone position Nothing TapState.Untapped Map.empty (Just controller) Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty

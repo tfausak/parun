@@ -1,0 +1,129 @@
+{
+  "faces": [
+    {
+      "counterability": {
+        "type": "CantBeCountered",
+        "value": {
+          "type": "Compares",
+          "value": {
+            "comparison": {
+              "type": "AtLeast"
+            },
+            "measured": {
+              "type": "Count",
+              "value": {
+                "aggregation": {
+                  "type": "Members"
+                },
+                "filter": {
+                  "type": "Or",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Instant"
+                      }
+                    },
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Sorcery"
+                      }
+                    }
+                  ]
+                },
+                "scope": {
+                  "type": "InZone",
+                  "value": {
+                    "player": {
+                      "type": "Relative",
+                      "value": {
+                        "type": "You"
+                      }
+                    },
+                    "zone": {
+                      "type": "Graveyard"
+                    }
+                  }
+                }
+              }
+            },
+            "threshold": {
+              "type": "Literal",
+              "value": 2
+            }
+          }
+        }
+      },
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Exquisite Firecraft",
+      "oracleText": "Exquisite Firecraft deals 4 damage to any target.\nSpell mastery — If there are two or more instant and/or sorcery cards in your graveyard, this spell can't be countered.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "DealDamage",
+                    "value": {
+                      "parts": [
+                        {
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 4
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "target"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "target": {
+                "pool": {
+                  "type": "AnyTarget"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

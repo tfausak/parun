@@ -768,6 +768,7 @@ explosive-derailment
 explosive-singularity
 explosive-vegetation
 exquisite-blood
+exquisite-firecraft
 extract
 extract-a-confession
 extract-power
