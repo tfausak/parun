@@ -1,0 +1,169 @@
+{
+  "description": "CR 601.2e Untimely Aluren takes back Synthetic Hasty Hydra at X = 2 for its printed cost and not for {2} more",
+  "note": "On bob's turn the Hydra's own permission opens a window only to the {X}{G}{2} candidate. At X = 2 the spell's mana value is 3, outside the Aluren's \"4 or greater\", so the printed {X}{G} is taken back while the paid candidate at the same X stands.",
+  "board": {
+    "active": "bob",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "forest",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "forest-2",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "forest-3",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "forest-4",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "forest-5",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "ready": true
+          },
+          {
+            "card": "Synthetic Untimely Aluren",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Synthetic Hasty Hydra",
+            "label": "hydra",
+            "ready": true
+          }
+        ]
+      },
+      {
+        "name": "bob"
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "refuse": {
+        "Cast": {
+          "cost": [
+            {
+              "type": "Variable"
+            },
+            {
+              "type": "OfType",
+              "value": {
+                "type": "Colored",
+                "value": {
+                  "type": "Green"
+                }
+              }
+            }
+          ],
+          "object": "$hydra",
+          "x": 2
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "is": [],
+          "of": "Stack"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "cost": [
+            {
+              "type": "Variable"
+            },
+            {
+              "type": "OfType",
+              "value": {
+                "type": "Colored",
+                "value": {
+                  "type": "Green"
+                }
+              }
+            },
+            {
+              "type": "Generic",
+              "value": 2
+            }
+          ],
+          "mana": [
+            "$forest",
+            "$forest-2",
+            "$forest-3",
+            "$forest-4",
+            "$forest-5",
+            null
+          ],
+          "object": "$hydra",
+          "x": 2
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "is": [
+            "Synthetic Hasty Hydra"
+          ],
+          "of": "Stack"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$forest-5",
+          "tapped": true
+        }
+      }
+    }
+  ]
+}

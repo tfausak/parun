@@ -64,6 +64,7 @@ import qualified Parun.Types.CardsPutIntoZone as CardsPutIntoZone
 import qualified Parun.Types.CastFromZone as CastFromZone
 import qualified Parun.Types.CastOffer as CastOffer
 import qualified Parun.Types.CastRepetition as CastRepetition
+import qualified Parun.Types.CastingPermission as CastingPermission
 import qualified Parun.Types.CausedBy as CausedBy
 import qualified Parun.Types.ChangeText as ChangeText
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
@@ -341,8 +342,9 @@ rewriteModification pairs m =
               -- rewriteTargetSlot is the same descent a mode's target slots take.
               Modification.GainEnchant slot -> Modification.GainEnchant (rewriteTargetSlot [(from, to)] slot)
               Modification.LoseEnchant slot -> Modification.LoseEnchant (rewriteTargetSlot [(from, to)] slot)
-              -- Carries no word: CastingPermission is a closed enumeration.
-              Modification.GainCastingPermission _ -> acc
+              -- CR 612.1 through a flash permission's condition, printed on the
+              -- granter (CR 612.3); every other arm carries no word.
+              Modification.GainCastingPermission permission -> Modification.GainCastingPermission (rewriteCastingPermission [(from, to)] permission)
               -- CR 612.1 through the names' own Filter, printed on the granter (CR
               -- 612.3) as the enchant's is.
               Modification.AddNamesMatching f -> Modification.AddNamesMatching (Filter.rewrite [(from, to)] f)
@@ -2216,6 +2218,13 @@ rewriteTriggerCondition pairs condition = case condition of
     acting watched = case watched of
       ActingPermanent.Self -> ActingPermanent.Self
       ActingPermanent.Matching f -> ActingPermanent.Matching (Filter.rewrite pairs f)
+
+-- CR 612.1 through a casting permission's one condition.
+rewriteCastingPermission :: [(TextWord.TextWord, TextWord.TextWord)] -> CastingPermission.CastingPermission -> CastingPermission.CastingPermission
+rewriteCastingPermission pairs permission = case permission of
+  CastingPermission.CastAsThoughItHadFlash condition additional -> CastingPermission.CastAsThoughItHadFlash (fmap (rewriteCondition pairs) condition) additional
+  CastingPermission.CastFromGraveyard _ -> permission
+  CastingPermission.CastFromLibraryWhileSearching -> permission
 
 -- CR 612.1 through Condition's predicate vocabulary. A Condition reached through
 -- a CR 611.2b duration comes here by way of rewriteDuration below.

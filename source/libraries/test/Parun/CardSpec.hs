@@ -115,6 +115,7 @@ import qualified Parun.Types.CastFromZone as CastFromZone
 import qualified Parun.Types.CastObligation as CastObligation
 import qualified Parun.Types.CastOffer as CastOffer
 import qualified Parun.Types.CastRepetition as CastRepetition
+import qualified Parun.Types.CastingPermission as CastingPermission
 import qualified Parun.Types.CastingRestriction as CastingRestriction
 import qualified Parun.Types.CausedBy as CausedBy
 import qualified Parun.Types.ChangeText as ChangeText
@@ -920,6 +921,14 @@ castingRestrictionConditions restriction = case restriction of
   CastingRestriction.OnlyIf condition -> [condition]
   CastingRestriction.SpendOnlyOnX _ -> []
 
+-- Every Condition a casting permission holds: only CR 601.3d's flash
+-- permission carries one.
+castingPermissionConditions :: CastingPermission.CastingPermission -> [Condition.Type.Condition]
+castingPermissionConditions permission = case permission of
+  CastingPermission.CastFromLibraryWhileSearching -> []
+  CastingPermission.CastFromGraveyard _ -> []
+  CastingPermission.CastAsThoughItHadFlash condition _ -> Maybe.maybeToList condition
+
 -- CR 701.46a's per-clause gate. Mode.allEffects and Modal.allEffects drop clause
 -- boundaries by design, so every lint that reaches a card through them needs
 -- this beside it, or the gate's Counts -- and through them its Filters -- go
@@ -989,8 +998,8 @@ modificationCounts modification = case modification of
   -- gives above for the Filter inside its keyword.
   Modification.GainEnchant _ -> []
   Modification.LoseEnchant _ -> []
-  -- A closed enumeration, carrying neither a Count nor a Filter.
-  Modification.GainCastingPermission _ -> []
+  -- CR 601.3d's flash permission's condition.
+  Modification.GainCastingPermission permission -> concatMap conditionCounts (castingPermissionConditions permission)
   -- CR 613.1f's other grant carries a whole ability, so the sweep descends into
   -- it exactly as it does into a printed one, whichever of CR 113.3's kinds it is.
   Modification.GainAbility granted -> case granted of
@@ -2156,6 +2165,8 @@ cardCounts card =
     <> concatMap (concatMap conditionCounts . Maybe.maybeToList . CostReduction.condition) (Face.costReductions card)
     -- CR 601.3's "cast this spell only if" rider (Illusory Angel).
     <> concatMap (concatMap conditionCounts . castingRestrictionConditions) (Face.castingRestrictions card)
+    -- CR 601.3d's flash permission condition (Swift Reckoning).
+    <> concatMap (concatMap conditionCounts . castingPermissionConditions) (Face.castingPermissions card)
     <> ruleAbilitiesCounts (Projection.ruleAbilitiesOfFace card)
 
 -- Every Count reachable from the fifteen CR 613.11 rule-ability families, a
@@ -4491,7 +4502,7 @@ modificationFilters modification = case modification of
   -- included.
   Modification.GainEnchant slot -> targetSlotFilters slot
   Modification.LoseEnchant slot -> targetSlotFilters slot
-  Modification.GainCastingPermission _ -> []
+  Modification.GainCastingPermission permission -> concatMap conditionFilters (castingPermissionConditions permission)
   -- Nothing HERE, and that is not a hole: a granted ability's Filters are swept
   -- by grantedActivatedAbilities, grantedTriggeredAbilities and
   -- grantedStaticAbilities below, at the outer level, so they keep the Framing that a printed ability's do. Answering
@@ -6771,12 +6782,13 @@ activatedAbilityFilters ability =
 --     every mode's target slots and effects, plus an activation cost, a
 --     trigger's own condition and its intervening clause.
 --   * `castingRestrictions` -- CR 601.3's OnlyIf condition.
+--   * `castingPermissions` -- CR 601.3d's flash permission condition.
 --   * `mulliganActions` (CR 103.5b) and `openingHandActions` (CR 103.6) -- the two
 --     pregame actions, which `cardResolutionEffects` above does not reach.
 --
 -- The remaining fields hold none: `name`, `manaCost`, `typeLine`, `loyalty`,
 -- `defense`, `vanguard`, `canBeYourCommander`, `claimsStartingPlayer`,
--- `anteOnly`, `colorIndicator`, `counterability` and `castingPermissions`.
+-- `anteOnly`, `colorIndicator` and `counterability`.
 -- That is checkable rather than asserted: none of the
 -- types those fields reach imports Parun.Types.Filter, which
 -- `grep -rl 'import qualified Parun.Types.Filter' source/libraries/types/` over
@@ -6821,6 +6833,7 @@ cardFilters card =
         -- CR 601.3's rider, Unframed for activatedAbilityFilters' CR 602.5 reason:
         -- the cast gate reads no announcement.
         <> concatMap (concatMap conditionFilters . castingRestrictionConditions) (Face.castingRestrictions card)
+        <> concatMap (concatMap conditionFilters . castingPermissionConditions) (Face.castingPermissions card)
         <> unframed (Maybe.mapMaybe CostReduction.whichTargets (Face.costReductions card))
         <> concatMap (slotlessCost . specialActionFilters) (Face.specialActions card)
         <> ruleAbilitiesFilters (Projection.ruleAbilitiesOfFace card)

@@ -1,0 +1,77 @@
+{
+  "description": "CR 601.3c / 601.2f Harbinger of the Tides cannot be cast on an opponent's turn without the {2} more",
+  "note": "Two blue pays its mana cost but not the additional cost the flash permission adds.",
+  "board": {
+    "active": "bob",
+    "step": "Upkeep",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "manaPool": "UU",
+        "hand": [
+          {
+            "card": "Harbinger of the Tides",
+            "label": "harbinger"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears",
+            "tapped": true
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "refuse": {
+        "Cast": {
+          "object": "$harbinger"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Hand",
+          "card": "Harbinger of the Tides",
+          "count": 1
+        }
+      }
+    }
+  ]
+}

@@ -1,6 +1,8 @@
 module Parun.Types.CastingPermission where
 
+import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.KeywordFamily as KeywordFamily
+import qualified Parun.Types.ManaCost as ManaCost
 
 -- | CR 113.6 / 601.3: a static permission to cast a card from a zone or under a
 -- condition it normally could not. CastFromLibraryWhileSearching is Panglacial
@@ -31,4 +33,8 @@ data CastingPermission
     -- Parun.Engine.Cast keeps asking "may this be cast from the graveyard?" and
     -- never "does this have flashback?".
     CastFromGraveyard (Maybe KeywordFamily.KeywordFamily)
+  | -- | CR 601.3c / 601.3d: cast this card as though it had flash (CR 702.8a)
+    -- while the condition holds, paying the additional cost (CR 601.2f) only
+    -- when the permission is used.
+    CastAsThoughItHadFlash (Maybe Condition.Condition) (Maybe ManaCost.ManaCost)
   deriving (Eq, Ord, Show)

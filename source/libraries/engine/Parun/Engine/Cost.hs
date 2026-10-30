@@ -441,6 +441,33 @@ withOffering pid oid gs candidate =
         vid <- Replacement.sacrificeCandidates (Just pid) Map.empty pid (Just oid) quality gs
       ]
 
+-- | CR 601.3c / 601.3d: the card's own permissions to be cast as though it had
+-- flash whose condition holds as the cast begins, with the caster as CR
+-- 109.5's "you". A free one widens the candidate's window in place; one naming
+-- an additional cost offers the candidate once more with that cost added (CR
+-- 601.2f) and the window carried, so it is paid only by a cast that uses the
+-- permission. Offered at sorcery timing too (docs/decisions.md, "A paid flash
+-- permission is offered at sorcery timing too"), which the scenario
+-- harbinger-of-the-tides-cast-in-a-main-phase-may-pay-two-more proves. The
+-- scenarios harbinger-of-the-tides-* and swift-reckoning-* prove both shapes.
+--
+-- Not implemented: the condition is asked before CR 601.2a's move, so a card
+-- cast from a graveyard counts itself there (#5792).
+withFlashPermission :: PlayerId -> ObjectId -> Face.Face Card.Type.Card -> GameState -> CandidateCost.CandidateCost -> [CandidateCost.CandidateCost]
+withFlashPermission pid oid face gs =
+  let holds = Condition.holds (Projection.fullView gs) (Projection.sourceContext gs (Just pid) oid) gs oid
+      permitted = [additional | CastingPermission.CastAsThoughItHadFlash condition additional <- permissionsOf oid face gs, all holds condition]
+      free = any Maybe.isNothing permitted
+      additionals = Maybe.catMaybes permitted
+   in \candidate ->
+        candidate {CandidateCost.instantSpeed = CandidateCost.instantSpeed candidate || free}
+          : [ candidate
+                { CandidateCost.cost = plus (CandidateCost.cost candidate) Cost.MkCost {Cost.mana = Just additional, Cost.components = []},
+                  CandidateCost.instantSpeed = True
+                }
+            | additional <- additionals
+            ]
+
 -- | candidateCostsFor, told whether CR 601.3's permission comes from the EFFECT
 -- rather than from the board.
 --
@@ -811,7 +838,7 @@ candidateCostsGiven permitted pid name oid gs =
               -- Game.zoneOf's, so a CR 707.13 copy outside the game (CR 400.11)
               -- takes the `_` arm. A regression fence: none of Garth One-Eye's
               -- six cards prints a cost the graveyard arm offers.
-              concatMap (withOffering pid oid gs) . concatMap (choiceVariants face) . orConverted $ case Game.zoneOf oid gs of
+              concatMap (withOffering pid oid gs) . concatMap (withFlashPermission pid oid face gs) . concatMap (choiceVariants face) . orConverted $ case Game.zoneOf oid gs of
                 -- Three shapes, differing in what they do to the printed cost, plus
                 -- an effect's permission. Flashback (CR 702.34a) REPLACES the mana
                 -- cost, so it is wrapped by `withAdditional`, and escape (CR

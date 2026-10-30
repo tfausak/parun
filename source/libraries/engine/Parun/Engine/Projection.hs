@@ -2528,9 +2528,10 @@ gatherGiven stripped functioning seed gs =
       -- timestamp. Never stripped, for the emblem branch's reason.
       --
       -- CR 113.6f's classification gets no limb here, where fromGraveyardCard
-      -- above has one: Parun.Types.CastingPermission carries a single
-      -- constructor, so a keyword rule 702 turns into a permission to cast an
-      -- object from somewhere can only ever name the GRAVEYARD, and a limb
+      -- above has one: Keyword.permissionsFor turns a keyword only into
+      -- CastingPermission.CastFromGraveyard, so a keyword rule 702 turns into a
+      -- permission to cast an object from somewhere can only ever name the
+      -- GRAVEYARD, and a limb
       -- asking castZoneKeyword in any of these three zones could not answer
       -- True.
       --

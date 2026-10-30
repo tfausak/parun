@@ -50,8 +50,8 @@ data CandidateCost = MkCandidateCost
     -- Empty wherever the rule that offered it states no reduction. CR 702.48a's is the
     -- sacrificed permanent's whole mana cost, colored symbols included.
     reductions :: [ManaCost.ManaCost],
-    -- | CR 702.48a: this candidate may be announced any time its caster could
-    -- cast an instant, whatever the card's own window.
+    -- | CR 702.48a / 601.3c / 601.3d: this candidate may be announced any time
+    -- its caster could cast an instant, whatever the card's own window.
     instantSpeed :: Bool
   }
   deriving (Eq, Ord, Show)
