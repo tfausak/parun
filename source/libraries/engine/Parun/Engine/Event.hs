@@ -5181,6 +5181,10 @@ runEntry minted given oid = do
   case outcome of
     Just (ProposedEvent.WouldChangeZone zc _ position _) -> do
       Monad.void (takeEnteringCounters oid)
+      -- CR 614.6 / 603.12: the entry never happened, so the "when you do" a
+      -- copy entry rewrite armed (becomeCopyAs) does not fire. Proved by the
+      -- scenario hallowed-moonlight-stops-a-diverted-copy-s-when-you-do.
+      State.modify' (\gs -> gs {GameState.delayedTriggers = Seq.filter (\entry -> not (DelayedTrigger.source entry == oid && isReflexive entry)) (GameState.delayedTriggers gs)})
       State.modify' (\gs -> gs {GameState.enteringBeside = before, GameState.enteringSubjects = beforeSubjects})
       placeDiverted oid (ZoneChange.to zc) position
       pure (Just EntryRefusal.Diverted)

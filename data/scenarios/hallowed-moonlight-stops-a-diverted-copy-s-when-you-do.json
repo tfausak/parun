@@ -1,0 +1,36 @@
+{
+  "description": "CR 614.6 / 603.12: Tamiyo, Compleated Sage makes a token copy of Superior Spider-Man under Hallowed Moonlight; it chooses to enter as a copy of bob's Grizzly Bears and is exiled instead, so its \"when you do\" never fires",
+  "note": "The entry never happened, so the reflexive exile of the copied card does not trigger: bob's Grizzly Bears stays in his graveyard.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Tamiyo, Compleated Sage", "label": "tamiyo", "counters": [{ "key": { "type": "Loyalty" }, "value": 5 }] },
+          { "card": "Plains", "label": "p1" },
+          { "card": "Plains", "label": "p2" }
+        ],
+        "graveyard": [{ "card": "Superior Spider-Man", "label": "spider" }],
+        "hand": [{ "card": "Hallowed Moonlight", "label": "moonlight" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "graveyard": [{ "card": "Grizzly Bears", "label": "bears" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$moonlight", "mana": ["$p1", "$p2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$tamiyo", "ability": 1, "x": 4, "targets": ["$spider"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseCopyTarget": "$bears" } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Superior Spider-Man", "count": 0 } } }
+  ]
+}
