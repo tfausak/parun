@@ -9,6 +9,10 @@
             "label": "furgul"
           },
           {
+            "card": "Stonebinder's Familiar",
+            "label": "familiar"
+          },
+          {
             "card": "Plains",
             "label": "p1"
           },
@@ -53,8 +57,8 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "CR 614.1a / 614.12: under Hallowed Moonlight, the Slimy Dualleech Furgul, Quag Nurturer conjures onto the battlefield at end of turn is exiled instead and stays in exile",
-  "note": "A conjured card is a card, so unlike a token it does not cease to exist in exile. Moonlight lasts until end of turn, so it still applies at the end step's trigger.",
+  "description": "CR 614.1a / 614.12: under Hallowed Moonlight, the Slimy Dualleech Furgul, Quag Nurturer conjures onto the battlefield at end of turn is exiled instead, stays in exile, and arrives there by no zone change",
+  "note": "A conjured card is a card, so unlike a token it does not cease to exist in exile. Moonlight lasts until end of turn, so it still applies at the end step's trigger. Stonebinder's Familiar would see a card put into exile; it sees none (docs/decisions.md, \"Whether a minted object an entry redirect takes changes zones\").",
   "timeline": [
     {
       "do": {
@@ -107,6 +111,20 @@
       "player": "alice",
       "step": "EndStep",
       "turn": 1
+    },
+    {
+      "check": {
+        "Counters": {
+          "count": 0,
+          "kind": {
+            "type": "PlusOnePlusOne"
+          },
+          "object": "$familiar"
+        }
+      },
+      "player": "bob",
+      "step": "Upkeep",
+      "turn": 2
     }
   ]
 }
