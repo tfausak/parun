@@ -2685,6 +2685,7 @@ removalCountNames asking x = case x of
   RemovalCount.Exactly quantity -> quantityNames asking quantity
   RemovalCount.UpTo quantity -> quantityNames asking quantity
   RemovalCount.AnyNumber -> mempty
+  RemovalCount.All -> mempty
 
 removeCountersNames :: (Monoid r) => Asking r -> RemoveCounters.RemoveCounters -> r
 removeCountersNames asking x = case x of

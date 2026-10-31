@@ -14,7 +14,8 @@ import qualified Parun.Types.Timestamp as Timestamp
 -- Read through Parun.Engine.RestrictedCreatures.prohibited, one
 -- 'Prohibition.Prohibition' at a time: CR 602.5 at Parun.Engine.ActivationProhibition.cantActivate, CR
 -- 509.1b at Parun.Engine.CombatRestriction.blockProhibited, CR 502.3 at
--- Parun.Engine.UntapRestriction.gathered -- each unioned beside its printed
+-- Parun.Engine.UntapRestriction.gathered, CR 122.6 at
+-- Parun.Engine.CounterRestriction.prohibited -- each unioned beside its printed
 -- carrier's rows, so no gate learns which road a prohibition took -- and CR
 -- 701.19c at Parun.Engine.Event.resolveDestruction, which turns the destruction
 -- it proposes into one that can't be regenerated.

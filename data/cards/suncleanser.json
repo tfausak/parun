@@ -1,0 +1,360 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Suncleanser",
+      "oracleText": "When this creature enters, choose one —\n• Remove all counters from target creature. It can't have counters put on it for as long as this creature remains on the battlefield.\n• Target opponent loses all counters. That player can't get counters for as long as this creature remains on the battlefield.",
+      "power": {
+        "type": "Literal",
+        "value": 1
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 4
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SelfEnters"
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "RemoveCountersAmong",
+                        "value": {
+                          "count": {
+                            "type": "All"
+                          },
+                          "from": {
+                            "type": "InSlot",
+                            "value": "creature"
+                          },
+                          "kind": {
+                            "type": "OfAnyKind"
+                          }
+                        }
+                      },
+                      {
+                        "type": "Prohibit",
+                        "value": {
+                          "affected": {
+                            "type": "Named",
+                            "value": {
+                              "type": "InSlot",
+                              "value": "creature"
+                            }
+                          },
+                          "duration": {
+                            "type": "ForAsLongAs",
+                            "value": {
+                              "type": "Compares",
+                              "value": {
+                                "comparison": {
+                                  "type": "Exactly"
+                                },
+                                "measured": {
+                                  "type": "Count",
+                                  "value": {
+                                    "aggregation": {
+                                      "type": "Members"
+                                    },
+                                    "filter": {
+                                      "type": "IsSource"
+                                    },
+                                    "scope": {
+                                      "type": "InZone",
+                                      "value": {
+                                        "player": {
+                                          "type": "Relative",
+                                          "value": {
+                                            "type": "AnyPlayer"
+                                          }
+                                        },
+                                        "zone": {
+                                          "type": "Battlefield"
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "threshold": {
+                                  "type": "Literal",
+                                  "value": 1
+                                }
+                              }
+                            }
+                          },
+                          "what": {
+                            "type": "Counters"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "creature": {
+                    "pool": {
+                      "type": "Creatures"
+                    }
+                  }
+                }
+              },
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "RemovePlayerCounters",
+                        "value": {
+                          "kind": {
+                            "type": "Energy"
+                          },
+                          "player": {
+                            "type": "InSlot",
+                            "value": "opponent"
+                          },
+                          "quantity": {
+                            "type": "PlayerCounters",
+                            "value": {
+                              "kind": {
+                                "type": "Energy"
+                              },
+                              "player": {
+                                "type": "InSlot",
+                                "value": "opponent"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "RemovePlayerCounters",
+                        "value": {
+                          "kind": {
+                            "type": "Ticket"
+                          },
+                          "player": {
+                            "type": "InSlot",
+                            "value": "opponent"
+                          },
+                          "quantity": {
+                            "type": "PlayerCounters",
+                            "value": {
+                              "kind": {
+                                "type": "Ticket"
+                              },
+                              "player": {
+                                "type": "InSlot",
+                                "value": "opponent"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "RemovePlayerCounters",
+                        "value": {
+                          "kind": {
+                            "type": "Poison"
+                          },
+                          "player": {
+                            "type": "InSlot",
+                            "value": "opponent"
+                          },
+                          "quantity": {
+                            "type": "PlayerCounters",
+                            "value": {
+                              "kind": {
+                                "type": "Poison"
+                              },
+                              "player": {
+                                "type": "InSlot",
+                                "value": "opponent"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "RemovePlayerCounters",
+                        "value": {
+                          "kind": {
+                            "type": "Rad"
+                          },
+                          "player": {
+                            "type": "InSlot",
+                            "value": "opponent"
+                          },
+                          "quantity": {
+                            "type": "PlayerCounters",
+                            "value": {
+                              "kind": {
+                                "type": "Rad"
+                              },
+                              "player": {
+                                "type": "InSlot",
+                                "value": "opponent"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "RemovePlayerCounters",
+                        "value": {
+                          "kind": {
+                            "type": "Experience"
+                          },
+                          "player": {
+                            "type": "InSlot",
+                            "value": "opponent"
+                          },
+                          "quantity": {
+                            "type": "PlayerCounters",
+                            "value": {
+                              "kind": {
+                                "type": "Experience"
+                              },
+                              "player": {
+                                "type": "InSlot",
+                                "value": "opponent"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "RemovePlayerCounters",
+                        "value": {
+                          "kind": {
+                            "type": "Point"
+                          },
+                          "player": {
+                            "type": "InSlot",
+                            "value": "opponent"
+                          },
+                          "quantity": {
+                            "type": "PlayerCounters",
+                            "value": {
+                              "kind": {
+                                "type": "Point"
+                              },
+                              "player": {
+                                "type": "InSlot",
+                                "value": "opponent"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "AffectPlayers",
+                        "value": {
+                          "duration": {
+                            "type": "ForAsLongAs",
+                            "value": {
+                              "type": "Compares",
+                              "value": {
+                                "comparison": {
+                                  "type": "Exactly"
+                                },
+                                "measured": {
+                                  "type": "Count",
+                                  "value": {
+                                    "aggregation": {
+                                      "type": "Members"
+                                    },
+                                    "filter": {
+                                      "type": "IsSource"
+                                    },
+                                    "scope": {
+                                      "type": "InZone",
+                                      "value": {
+                                        "player": {
+                                          "type": "Relative",
+                                          "value": {
+                                            "type": "AnyPlayer"
+                                          }
+                                        },
+                                        "zone": {
+                                          "type": "Battlefield"
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "threshold": {
+                                  "type": "Literal",
+                                  "value": 1
+                                }
+                              }
+                            }
+                          },
+                          "effect": {
+                            "type": "CantGetCounters",
+                            "value": null
+                          },
+                          "players": {
+                            "type": "Named",
+                            "value": "opponent"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "opponent": {
+                    "filter": {
+                      "type": "IsPlayer",
+                      "value": {
+                        "type": "Opponent"
+                      }
+                    },
+                    "pool": {
+                      "type": "Players"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Cleric"
+          },
+          {
+            "type": "Human"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -18,7 +18,8 @@
 -- around by CR 122.5's move, whose third impossibility is "the second object
 -- can't have counters put onto it" (Parun.Engine.Resolve's Effect.MoveCounters
 -- arm). Gating only the first would still take the counter OFF the source, which
--- rule 122.5 forbids outright.
+-- rule 122.5 forbids outright. A third, CR 118.3's: a cost putting counters on
+-- the object can't be paid (Parun.Engine.Cost.canPayComponent).
 --
 -- Asked AFTER CR 616.1's replacement loop has settled the placement, not before,
 -- and the settled object is what it is asked about. A row may redirect a
@@ -32,17 +33,19 @@ import qualified Data.Set as Set
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.Rewrite as Projection
 import qualified Parun.Engine.Projection.View as Projection
+import qualified Parun.Engine.RestrictedCreatures as RestrictedCreatures
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CounterRestriction as CounterRestriction
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Keyword as Keyword
 import Parun.Types.ObjectId (ObjectId)
+import qualified Parun.Types.Prohibition as Prohibition
 import qualified Parun.Types.RuleAbilities as RuleAbilities
 
 -- CR 101.2 with CR 122.6: does an effect in force right now say that counters of
--- `kind` CAN'T BE PUT ON `oid`? Solemnity's second sentence and Melira, Sylvok
--- Outcast's second.
+-- `kind` CAN'T BE PUT ON `oid`? Solemnity's second sentence, Melira, Sylvok
+-- Outcast's second, and Suncleanser's first mode.
 --
 -- Parun.Engine.EntryRestriction.prohibited's body, gate for gate, and every step of
 -- its argument holds here unchanged: the same CR 305.7 and CR 613.1f ability
@@ -98,4 +101,8 @@ prohibited oid kind gs =
             -- "-1/-1 counters" and refuses that kind alone.
             maybe True (== kind) (CounterRestriction.kind restriction)
               && named source (if null changes then affected else Projection.rewriteAffected changes affected)
-   in any (\source -> fromPermanent source || fromGrant source) (Set.toList (GameState.battlefield gs))
+      -- CR 611.2a: a resolution's stored row (Suncleanser), every kind, read
+      -- beside the printed ones; Parun.Types.ActiveObjectProhibition says why
+      -- no ability loss reaches it.
+      stored = Set.member oid (RestrictedCreatures.prohibited Prohibition.Counters [oid] gs)
+   in stored || any (\source -> fromPermanent source || fromGrant source) (Set.toList (GameState.battlefield gs))

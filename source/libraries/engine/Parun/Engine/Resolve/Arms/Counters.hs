@@ -539,12 +539,15 @@ removeCountersAmong resolving source controller legal (RemoveCountersAmong.MkRem
           | otherwise -> do
               answer <- Game.choose (Prompt.ChooseCounterRemovalAtLeast decider controller source 0 offered)
               pure (if Cost.withinOffer offered answer then answer else Map.empty)
+        -- Refused by Parun.Codec.RemoveCountersAmong; this is what it would mean.
+        RemovalCount.All -> pure offered
       Monad.forM_ (Map.toList (Map.filter (> 0) division)) (\(permanent, taken) -> Event.removeCounters permanent kind taken)
       pure (sum division)
     -- CR 122.1: with no kind named, the division is by kind as well
     -- (Eventide's Shadow), through the cost side's mixed prompt at a floor of
-    -- zero. Only "any number" reaches here: Parun.Codec.RemoveCountersAmong
-    -- rejects any kind at a stated count, which no printing writes.
+    -- zero, and "all" (Suncleanser) takes every kind with nothing to divide.
+    -- Only those two reach here: Parun.Codec.RemoveCountersAmong rejects any
+    -- kind at a stated count, which no printing writes.
     WhichCounters.OfAnyKind -> case count of
       RemovalCount.AnyNumber -> do
         let offered = Common.removableAmong gs which permanents
@@ -556,6 +559,10 @@ removeCountersAmong resolving source controller legal (RemoveCountersAmong.MkRem
         let flat = Cost.flattenMixed division
         Monad.forM_ (Map.toList flat) (\((permanent, kind), taken) -> Event.removeCounters permanent kind taken)
         pure (sum flat)
+      RemovalCount.All -> do
+        let every = Common.removableAmong gs which permanents
+        Monad.forM_ (Map.toList every) (\(permanent, kinds) -> Monad.forM_ (Map.toList kinds) (uncurry (Event.removeCounters permanent)))
+        pure (sum (fmap sum every))
       RemovalCount.Exactly _ -> pure 0
       RemovalCount.UpTo _ -> pure 0
   -- Bound even where nothing came off, Effect.RemoveCounters' posture.
