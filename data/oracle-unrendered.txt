@@ -2768,3 +2768,4 @@ declare-dominance
 demanding-dragon
 demon-of-catastrophes
 death-baron
+inferno-hellion

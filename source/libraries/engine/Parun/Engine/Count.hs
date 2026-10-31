@@ -33,6 +33,8 @@ import qualified Parun.Types.ActivationCriteria as ActivationCriteria
 import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackerDeclared as AttackerDeclared
+import qualified Parun.Types.BlockRole as BlockRole
+import qualified Parun.Types.BlocksDeclared as BlocksDeclared
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardArrivedIn as CardArrivedIn
 import qualified Parun.Types.Combat as Combat
@@ -430,7 +432,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.DeclaredAttackedThisCombat -> predicate
         Filter.Type.IsBlocking -> predicate
         Filter.Type.HasBlockStatus _ -> predicate
-        Filter.Type.AttackedThisTurn -> predicate
+        Filter.Type.DeclaredThisTurn _ -> predicate
         Filter.Type.CouldAttackThisTurn -> predicate
         Filter.Type.DeclaredAttackerThisCombat -> predicate
         Filter.Type.DeclaredBlockerThisCombat -> predicate
@@ -1029,7 +1031,7 @@ lastKnownView peers oid gs lastKnown =
           -- CR 718.3d: the copiable record or the object's own, viewOfCharacteristics'
           -- disjunction. A regression fence: no card asks it of a departed object.
           Filter.prototyped = PC.prototyped (LastKnown.characteristics lastKnown) || LastKnown.prototyped lastKnown,
-          Filter.attackedThisTurn = attackedThisTurn oid gs,
+          Filter.declaredThisTurn = declaredThisTurn oid gs,
           Filter.couldAttackThisTurn = couldAttackThisTurn oid gs,
           Filter.declaredAttackerThisCombat = declaredAttackerThisCombat oid gs,
           Filter.declaredAttackedThisCombat = declaredAttackedThisCombat oid gs,
@@ -1049,16 +1051,18 @@ lastKnownView peers oid gs lastKnown =
           Filter.attachedTo = LastKnown.host lastKnown
         }
 
--- CR 608.2i: was this object declared as an attacker this turn? From the turn's
--- event log, which CR 511.3 does not clear. Only Combat.declareAttackers appends
--- the event (CR 508.3a), so CR 508.4's creature put onto the battlefield
--- attacking stays out.
-attackedThisTurn :: ObjectId -> GameState -> Bool
-attackedThisTurn oid gs =
-  let declaredIt event = case event of
-        GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared declared _ _ _ _) -> declared == oid
-        _ -> False
-   in any (declaredIt . LoggedEvent.event) (GameState.events gs)
+-- CR 608.2i: did this object attack or block this turn? From the turn's event
+-- log, which CR 511.3 does not clear. Only Combat.declareAttackers appends
+-- AttackerDeclared (CR 508.3a), and GameEvent.BlocksDeclared leaves out a
+-- creature put onto the battlefield blocking (CR 509.3a), so neither CR 508.4's
+-- arrival attacking nor its blocking twin counts.
+declaredThisTurn :: ObjectId -> GameState -> Set.Set BlockRole.BlockRole
+declaredThisTurn oid gs =
+  let roleOf event = case event of
+        GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared declared _ _ _ _) | declared == oid -> Just BlockRole.Attacker
+        GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared blocker _) | blocker == oid -> Just BlockRole.Blocker
+        _ -> Nothing
+   in Set.fromList (Maybe.mapMaybe (roleOf . LoggedEvent.event) (Foldable.toList (GameState.events gs)))
 
 -- CR 508.1a-d: could this object have been declared as an attacker in one of
 -- this turn's declare attackers steps? The record those steps wrote as each
@@ -1324,7 +1328,7 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       Filter.blockStatus = Nothing,
       Filter.blockers = Set.empty,
       Filter.blocked = Set.empty,
-      Filter.attackedThisTurn = False,
+      Filter.declaredThisTurn = Set.empty,
       Filter.couldAttackThisTurn = False,
       -- CR 508.1a / 509.1a: a snapshot is CR 608.2h's record of an object, and
       -- combat status is no characteristic of one (CR 109.3), so it has nothing

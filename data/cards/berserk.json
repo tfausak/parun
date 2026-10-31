@@ -53,7 +53,10 @@
                                   "value": "target"
                                 },
                                 {
-                                  "type": "AttackedThisTurn"
+                                  "type": "DeclaredThisTurn",
+                                  "value": {
+                                    "type": "Attacker"
+                                  }
                                 }
                               ]
                             },

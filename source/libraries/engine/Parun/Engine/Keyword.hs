@@ -34,6 +34,7 @@ import qualified Parun.Types.AttachRestriction as AttachRestriction
 import qualified Parun.Types.AttackTargetRef as AttackTargetRef
 import qualified Parun.Types.Backup as Backup
 import qualified Parun.Types.BeginningStep as BeginningStep
+import qualified Parun.Types.BlockRole as BlockRole
 import qualified Parun.Types.BlockStatus as BlockStatus
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import Parun.Types.Card (Card)
@@ -5507,7 +5508,7 @@ printedRiders keyword = case keyword of
       ActivationRestriction.SorcerySpeed
     ]
   -- "This creature attacked this turn" is a count of the source among the
-  -- battlefield's permanents that did (Filter.AttackedThisTurn), Relative AnyPlayer's
+  -- battlefield's permanents that did (Filter.DeclaredThisTurn), Relative AnyPlayer's
   -- battlefield because CR 400.1 makes it one shared zone.
   Keyword.Boast ->
     [ ActivationRestriction.OnlyIf
@@ -5516,7 +5517,7 @@ printedRiders keyword = case keyword of
                 ( Quantity.Count
                     ( Count.MkCount
                         (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
-                        (Filter.And [Filter.IsSource, Filter.AttackedThisTurn])
+                        (Filter.And [Filter.IsSource, Filter.DeclaredThisTurn BlockRole.Attacker])
                         Aggregation.Members
                     )
                 )

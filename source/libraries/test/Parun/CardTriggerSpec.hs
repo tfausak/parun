@@ -2587,7 +2587,7 @@ tapStatusOf oid gs = fmap Object.tapped (Game.lookupObject oid gs)
 --
 --   * Quantity.OpponentsAttacked counts the OPPONENTS a declaration reached (CR
 --     508.3b), and CR 506.3's planeswalker is not one, so it answers 0 here.
---   * Filter.AttackedThisTurn asks a CANDIDATE whether it attacked, so a count of
+--   * Filter.DeclaredThisTurn Attacker asks a CANDIDATE whether it attacked, so a count of
 --     it over the battlefield answers 0 once the attacker has died.
 --   * CR 608.2i's look-back over the turn's declarations answers 1, and bob
 --     discards.
@@ -2605,7 +2605,7 @@ marduSkullhunterSpec s registry = Spec.describe s "MarduSkullhunter" $ do
             after = S.runPure (aimAtPlaneswalker jaceId) atBlockers (Monad.replicateM_ 4 Engine.runStep)
         Spec.assertEqWith s "CR 603.4 / 608.2i: bob discarded, so raid saw the declaration" (S.handSize S.bob after) 1
         Spec.assertEqWith s "and it really was announced at the planeswalker (CR 508.1b), where OpponentsAttacked counts 0" (Map.lookup attackerId (Combat.Type.attackers (GameState.combat atBlockers))) (Just (AttackTarget.OfPlaneswalker jaceId))
-        Spec.assertBool s (not (S.onBattlefield attackerId after)) "and the attacker was dead by then, where a Count of Filter.AttackedThisTurn over the battlefield reads 0"
+        Spec.assertBool s (not (S.onBattlefield attackerId after)) "and the attacker was dead by then, where a Count of Filter.DeclaredThisTurn Attacker over the battlefield reads 0"
       _ -> Spec.assertFailure s "fixture should alias bob's Jace and alice's attacker"
 
 -- alice at the declare attackers step with one 2/2 to attack with, two Swamps for

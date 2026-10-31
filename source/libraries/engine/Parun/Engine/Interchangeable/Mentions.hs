@@ -86,6 +86,7 @@ import qualified Parun.Types.Blight as Blight
 import qualified Parun.Types.BlockCost as BlockCost
 import qualified Parun.Types.BlockPermission as BlockPermission
 import qualified Parun.Types.BlockRequirement as BlockRequirement
+import qualified Parun.Types.BlockRole as BlockRole
 import qualified Parun.Types.BoundMeasure as BoundMeasure
 import qualified Parun.Types.CandidateId as CandidateId
 import qualified Parun.Types.CantAttackPlayer as CantAttackPlayer
@@ -487,7 +488,7 @@ contextNames = context
 -- none of them answers the same of both, now and after either is chosen:
 --
 --   * IDENTITY: IsObject names an id outright.
---   * The turn's EVENT LOG: the look-back atoms (AttackedThisTurn,
+--   * The turn's EVENT LOG: the look-back atoms (DeclaredThisTurn,
 --     MilledThisTurn, DealtDamageThisTurn, EnteredThisTurn, the
 --     crewed/convoked/saddled-the-source atoms) and EnteredWithSource
 --     (GameState.enteredWith) and CouldAttackThisTurn
@@ -555,7 +556,7 @@ filterNames asking criterion = case criterion of
   Filter.HasBlockStatus _ -> mempty
   Filter.DeclaredAttackerThisCombat -> mempty
   Filter.DeclaredBlockerThisCombat -> mempty
-  Filter.AttackedThisTurn -> keyed asking <> history asking HistoryRead.Attacks
+  Filter.DeclaredThisTurn role -> keyed asking <> history asking (case role of BlockRole.Attacker -> HistoryRead.Attacks; BlockRole.Blocker -> HistoryRead.Blockers)
   Filter.CouldAttackThisTurn -> keyed asking
   Filter.MilledThisTurn -> keyed asking <> history asking HistoryRead.Mills
   Filter.CantCrewVehicles -> contextNames asking

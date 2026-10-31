@@ -632,7 +632,7 @@ extraPhaseSpec s registry = Spec.describe s "ExtraPhase" $ do
       )
     -- The Piker attacked in every one of them, which it could only do if the
     -- delayed ability untapped it before each -- and it found it by
-    -- Filter.AttackedThisTurn, since CR 511.3 had cleared the combat record.
+    -- Filter.DeclaredThisTurn Attacker, since CR 511.3 had cleared the combat record.
     Spec.assertEqWith s "bob took 2 in each of the three combats" (S.lifeOf S.bob played) (Just 14)
     -- CR 514.2 ends the stated duration, so nothing is left armed.
     Spec.assertEqWith s "and the store is empty by the end of the turn" (Seq.length (GameState.delayedTriggers played)) 0

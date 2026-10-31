@@ -309,12 +309,12 @@ data Filter keyword
     -- 508.1k -- CR 509.1f pays while CR 509.1g has not run, so a fellow creature
     -- chosen in the same declaration is not blocking yet.
     DeclaredBlockerThisCombat
-  | -- | CR 608.2i: the candidate was DECLARED as an attacker earlier this turn --
-    -- Relentless Assault's "all creatures that attacked this turn". A look-back
-    -- read of the turn-scoped GameEvent log, which outlives CR 511.3's wipe of
-    -- Combat.attackers; declared, so CR 508.4's creature put onto the battlefield
-    -- attacking never attacked.
-    AttackedThisTurn
+  | -- | CR 608.2i: the candidate ATTACKED (CR 508.1a) or BLOCKED (CR 509.3a)
+    -- earlier this turn -- Relentless Assault's "all creatures that attacked
+    -- this turn". A look-back read of the turn-scoped GameEvent log, which
+    -- outlives CR 511.3's wipe of the combat record; declared, so a creature put
+    -- onto the battlefield attacking or blocking (CR 508.4, 509.3a) never did.
+    DeclaredThisTurn BlockRole.BlockRole
   | -- | CR 508.1a-d: the candidate could have been declared as an attacker in
     -- one of this turn's declare attackers steps -- Season of the Witch's
     -- "creatures that couldn't attack", negated. Read off
@@ -322,7 +322,7 @@ data Filter keyword
     CouldAttackThisTurn
   | -- | CR 701.17a: the candidate is a card that was MILLED earlier this turn --
     -- The Master, Transcendent's "creature card in a graveyard that was milled
-    -- this turn". AttackedThisTurn's look-back read one event arm over
+    -- this turn". DeclaredThisTurn's look-back read one event arm over
     -- (GameEvent.Milled), and not "moved from a library to a graveyard", which
     -- surveil (CR 701.25a) and explore (CR 701.44a) also do. Matches the
     -- incarnation the mill left the card as (CR 400.7).
@@ -358,7 +358,7 @@ data Filter keyword
     SaddledSourceThisTurn
   | -- | CR 120.1 / 608.2i: the candidate -- an object or a player, since CR 120.1
     -- has damage dealt to both -- was DEALT DAMAGE earlier this turn.
-    -- AttackedThisTurn's look-back read one event arm over
+    -- DeclaredThisTurn's look-back read one event arm over
     -- (GameEvent.DamageDealt), and not Object.damage being positive: a wither or
     -- infect source marks nothing at all (CR 120.3d).
     DealtDamageThisTurn

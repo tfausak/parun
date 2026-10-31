@@ -350,12 +350,12 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       codec
       (Filter.HasBlockStatus BlockStatus.Unblocked)
       " {\"type\":\"HasBlockStatus\",\"value\":{\"type\":\"Unblocked\"}} "
-  Spec.it s "AttackedThisTurn" $
+  Spec.it s "DeclaredThisTurn" $
     Common.assertCodec
       s
       codec
-      Filter.AttackedThisTurn
-      " {\"type\":\"AttackedThisTurn\"} "
+      (Filter.DeclaredThisTurn BlockRole.Blocker)
+      " {\"type\":\"DeclaredThisTurn\",\"value\":{\"type\":\"Blocker\"}} "
   Spec.it s "CouldAttackThisTurn" $
     Common.assertCodec
       s
@@ -761,7 +761,7 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
         -- Synthetic Bulwark Snare's whole target filter, the composite this atom
         -- ships in.
         bulwarkSnare = Filter.Or [Filter.IsAttackingPlayer PlayerRelation.You, Filter.IsAttackingBattle PlayerRelation.You]
-        relentlessAssault = Filter.AttackedThisTurn
+        relentlessAssault = Filter.DeclaredThisTurn BlockRole.Attacker
         -- Break Open's whole target filter, the composite the new atom actually
         -- ships in.
         breakOpen = Filter.And [Filter.IsFaceDown, Filter.HeldBy Holder.Controller PlayerRelation.Opponent]

@@ -319,7 +319,7 @@ filterAtomsOf leaf predicate = case predicate of
   Filter.Type.DeclaredAttackedThisCombat -> leaf predicate
   Filter.Type.IsBlocking -> leaf predicate
   Filter.Type.HasBlockStatus _ -> leaf predicate
-  Filter.Type.AttackedThisTurn -> leaf predicate
+  Filter.Type.DeclaredThisTurn _ -> leaf predicate
   Filter.Type.CouldAttackThisTurn -> leaf predicate
   Filter.Type.DeclaredAttackerThisCombat -> leaf predicate
   Filter.Type.DeclaredBlockerThisCombat -> leaf predicate

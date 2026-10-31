@@ -1,0 +1,12 @@
+{
+  "description": "CR 603.4 Inferno Hellion: the attacked-this-turn Hellion returned to its owner's hand before its end step trigger resolves stays in hand (2018-07-13 ruling)",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Inferno Hellion", "label": "attacker", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Island", "label": "island", "ready": true}], "hand": [{"card": "Unsummon", "label": "unsummon"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$attacker"]}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 13}}},
+    {"turn": 1, "step": "EndStep", "player": "bob", "check": {"View": {"of": "Stack", "is": ["trigger of $attacker"]}}},
+    {"turn": 1, "step": "EndStep", "player": "bob", "do": {"Cast": {"object": "$unsummon", "mana": ["$island"], "targets": ["$attacker"]}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Inferno Hellion", "count": 1}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Library", "card": "Inferno Hellion", "count": 0}}}
+  ]
+}

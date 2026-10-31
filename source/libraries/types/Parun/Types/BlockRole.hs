@@ -1,10 +1,10 @@
 module Parun.Types.BlockRole where
 
--- | CR 509.1g: which side of a blocking relation an object stands on -- the
--- attacking creature that is blocked, or the creature blocking it.
+-- | CR 506.3: which side of combat a creature stands on -- attacking, or
+-- blocking an attacker.
 data BlockRole
-  = -- | CR 509.1g: the attacking creature a blocker blocks.
+  = -- | CR 508.1a: an attacking creature, or the one a blocker blocks.
     Attacker
-  | -- | CR 509.1g: a creature declared blocking an attacker.
+  | -- | CR 509.1a: a blocking creature.
     Blocker
   deriving (Bounded, Enum, Eq, Ord, Show)
