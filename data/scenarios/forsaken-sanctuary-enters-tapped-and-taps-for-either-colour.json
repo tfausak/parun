@@ -1,0 +1,186 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Forsaken Sanctuary",
+            "label": "first"
+          },
+          {
+            "card": "Forsaken Sanctuary",
+            "label": "second"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Forsaken Sanctuary",
+            "label": "played"
+          },
+          {
+            "card": "Savannah Lions",
+            "label": "one"
+          },
+          {
+            "card": "Typhoid Rats",
+            "label": "two"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 614.1d / 106.1 whole card: Forsaken Sanctuary enters tapped, and taps for {W} or {B}",
+  "note": "The Forsaken Sanctuary alice plays arrives tapped; each of the two already in play is the only source for one of her one-pip spells, so each cast proves one mode.",
+  "timeline": [
+    {
+      "do": {
+        "PlayLand": "$played"
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Tapped": {
+          "object": "Forsaken Sanctuary#3",
+          "tapped": true
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$first",
+            null
+          ],
+          "object": "$one",
+          "yields": [
+            [
+              {
+                "manaType": {
+                  "type": "Colored",
+                  "value": {
+                    "type": "White"
+                  }
+                },
+                "restriction": null,
+                "retention": {
+                  "type": "Ordinary"
+                },
+                "rider": null,
+                "sourceChoices": null,
+                "tags": []
+              }
+            ]
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$second"
+          ],
+          "object": "$two",
+          "yields": [
+            [
+              {
+                "manaType": {
+                  "type": "Colored",
+                  "value": {
+                    "type": "Black"
+                  }
+                },
+                "restriction": null,
+                "retention": {
+                  "type": "Ordinary"
+                },
+                "rider": null,
+                "sourceChoices": null,
+                "tags": []
+              }
+            ]
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Savannah Lions",
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Typhoid Rats",
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}
