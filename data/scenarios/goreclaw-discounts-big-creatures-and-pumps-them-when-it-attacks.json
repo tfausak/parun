@@ -1,0 +1,37 @@
+{
+  "description": "Goreclaw: creature spells alice casts with power 4 or greater cost {2} less, and when it attacks each creature she controls with power 4 or greater gets +1/+1 and trample until end of turn",
+  "note": "Four of five mana cast the six-mana Craw Wurm; the Grizzly Bears, power 2, is not discounted, so the one left does not pay for it. On the attack the Wurm, sick and not attacking, gets the bonus with Goreclaw; the Gray Ogre doesn't.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "GGGGG",
+        "battlefield": [
+          { "card": "Goreclaw, Terror of Qal Sisma", "label": "goreclaw", "ready": true },
+          { "card": "Gray Ogre", "label": "ogre", "ready": true }
+        ],
+        "hand": [{ "card": "Craw Wurm", "label": "wurm" }, { "card": "Grizzly Bears", "label": "bears" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$wurm" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Craw Wurm", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass"] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$goreclaw", "$ogre"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "PowerToughness": { "object": "$goreclaw", "power": 5, "toughness": 4 } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "PowerToughness": { "object": "Craw Wurm", "power": 7, "toughness": 5 } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "PowerToughness": { "object": "$ogre", "power": 2, "toughness": 2 } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "Keywords": { "object": "$goreclaw", "keyword": { "type": "Trample" }, "count": 1 } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "Keywords": { "object": "$ogre", "keyword": { "type": "Trample" }, "count": 0 } } }
+  ]
+}

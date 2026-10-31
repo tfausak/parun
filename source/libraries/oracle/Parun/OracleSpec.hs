@@ -674,6 +674,9 @@ spec s = Spec.describe s "Parun.Oracle" $ do
         starred p t = withFace (\f -> f {Face.power = Just (Power.MkPower p), Face.toughness = Just (Toughness.MkToughness t), Face.characteristicPT = Just (CharacteristicPT.MkCharacteristicPT swamps swamps)})
     Spec.assertEq s (Just (Text.pack "Spark's power and toughness are each equal to the number of Swamps you control.")) (Oracle.render (starred Quantity.Star Quantity.Star))
     Spec.assertEq s (Just (Text.pack "Spark's power is equal to the number of Swamps you control.")) (Oracle.render (starred Quantity.Star (Quantity.Literal 4)))
+    let spells = countOf (Filter.Or [Filter.HasCardType CardType.Instant, Filter.HasCardType CardType.Sorcery]) (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You))
+        drake = withFace (\f -> f {Face.power = Just (Power.MkPower Quantity.Star), Face.toughness = Just (Toughness.MkToughness (Quantity.Literal 4)), Face.characteristicPT = Just (CharacteristicPT.MkCharacteristicPT spells spells)})
+    Spec.assertBool s (Oracle.says drake (CardName.MkCardName (Text.pack "Spark")) (Text.pack "Spark's power is equal to the number of instant and sorcery cards in your graveyard.")) "no \"instant and sorcery cards\""
 
   -- CR 111.1 / 122.1: tokens and counters "for each" object counted, or "a
   -- number of" them (Endless Swarm, Tyranid Invasion; Khabal Ghoul, Rhovanion

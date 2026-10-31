@@ -1,0 +1,36 @@
+{
+  "description": "Dismissive Pyromancer: {R}, {T}, discard a card draws a card; {2}{R}, {T}, sacrifice it deals 4 damage to target creature",
+  "note": "Two Pyromancers, since each ability taps its source. bob's 1/7 Kami of Old Stone survives the 4 damage, so the amount is read off it.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "RRRR",
+        "battlefield": [
+          { "card": "Dismissive Pyromancer", "label": "looter", "ready": true },
+          { "card": "Dismissive Pyromancer", "label": "bomber", "ready": true }
+        ],
+        "hand": [{ "card": "Forest", "label": "forest" }, { "card": "Plains" }],
+        "library": [{ "card": "Swamp" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Kami of Old Stone", "label": "kami" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$looter", "ability": 0, "costOrder": [0, 1] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseDiscard", "with": ["$forest"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Forest", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Swamp", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$bomber", "ability": 1, "targets": ["$kami"], "costOrder": [0, 1] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Dismissive Pyromancer", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$kami", "damage": 4 } } }
+  ]
+}

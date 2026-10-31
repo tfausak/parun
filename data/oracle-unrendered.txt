@@ -580,7 +580,9 @@ demonic-attorney
 denethor-stone-seer
 dense-foliage
 denying-wind
+departed-deckhand
 dermotaxi
+desecrated-tomb
 desert
 desertion
 desolation-twin
@@ -591,6 +593,7 @@ detritivore
 devout-invocation
 diabolic-edict
 diabolic-revelation
+diamond-mare
 diaochan-artful-beauty
 diffusion-sliver
 dig-up
@@ -633,6 +636,7 @@ doomsday
 door-of-destinies
 dormant-gomazoa
 double-major
+doublecast
 doubling-chant
 doubling-cube
 doubling-season
@@ -643,6 +647,7 @@ dragon-egg
 dragon-mask
 dragon-whelp
 dragonhawk-fates-tempest
+dragons-hoard
 dragons-prey
 dragonskull-summit
 dragonstorm-globe
@@ -660,7 +665,9 @@ drop-of-honey
 drought
 drowned-catacomb
 drownyard-behemoth
+druid-of-horns
 druidic-satchel
+dryad-greenseeker
 duct-crawler
 dunbarrow-revivalist
 dunedain-blade
@@ -675,6 +682,7 @@ dwarven-catapult
 dwarven-hold
 dwarven-mauler
 dwell-on-the-past
+dwindle
 eager-construct
 early-harvest
 earthbending-lesson
@@ -702,9 +710,11 @@ elspeth-suns-champion
 elven-riders
 elvish-bard
 elvish-berserker
+elvish-clancaller
 elvish-hunter
 elvish-pioneer
 elvish-piper
+elvish-rejuvenator
 embereth-shieldbreaker-battle-display
 embermaw-hellion
 embolden
@@ -735,6 +745,7 @@ entangling-vines
 enthralling-victor
 entourage-of-trest
 eon-hub
+epicure-of-blood
 ereboss-titan
 ersatz-gnomes
 ertais-scorn
@@ -802,6 +813,7 @@ fecundity
 feed-the-pack
 felidar-sovereign
 feline-sovereign
+fell-specter
 fellwar-stone
 feral-deathgorger-dusk-sight
 feral-lightning
@@ -878,6 +890,7 @@ fortress-kin-guard
 foul-spirit
 foundry-groundbreaker
 frankensteins-monster
+fraying-omnipotence
 frenetic-sliver
 frenzied-goblin
 freyalise-llanowars-fury
@@ -928,7 +941,9 @@ genesis-hydra
 geosurge
 gerrard
 geyser-leaper
+ghastbark-twins
 ghirapur-aether-grid
+ghirapur-guide
 ghitu-encampment
 ghitu-fire
 ghostly-prison
@@ -943,6 +958,7 @@ gideon-jura
 gideons-avenger
 gift-of-doom
 gift-of-estates
+gift-of-paradise
 gifts-ungiven
 gilded-lotus
 gilder-bairn
@@ -989,6 +1005,7 @@ goldberry-river-daughter
 goldenhide-ox
 golem-skin-gauntlets
 golgothian-sylex
+goreclaw-terror-of-qal-sisma
 gorilla-berserkers
 graceful-restoration
 graf-rats

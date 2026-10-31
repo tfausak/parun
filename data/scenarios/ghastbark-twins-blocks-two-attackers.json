@@ -1,0 +1,34 @@
+{
+  "description": "Ghastbark Twins can block an additional creature each combat, but not a third",
+  "note": "bob attacks with three creatures. A block of all three is refused; the Twins then block two of them and the third deals alice its damage.",
+  "board": {
+    "active": "bob",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Ghastbark Twins", "label": "twins" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Grizzly Bears", "label": "bears", "ready": true },
+          { "card": "Gray Ogre", "label": "ogre", "ready": true },
+          { "card": "Hill Giant", "label": "giant", "ready": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": ["$bears", "$ogre", "$giant"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "refuse": { "Block": { "$twins": ["$bears", "$ogre", "$giant"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "do": { "Block": { "$twins": ["$bears", "$ogre"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "check": { "Blockers": { "attacker": "$ogre", "blockers": ["$twins"] } } },
+    { "turn": 1, "step": "CombatDamage", "player": "alice", "source": "$twins", "do": { "AssignDamage": { "$bears": 2, "$ogre": 5 } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "bob", "check": { "Life": { "player": "alice", "life": 17 } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "bob", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "bob", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Gray Ogre", "count": 1 } } }
+  ]
+}

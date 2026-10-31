@@ -1,0 +1,42 @@
+{
+  "description": "Elvish Clancaller gives other Elves alice controls +1/+1 and searches for a card named Elvish Clancaller onto the battlefield",
+  "note": "The search admits only the second Clancaller, not the Grizzly Bears. Once it is out each Clancaller pumps the other, and bob's Llanowar Elves gets nothing.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "GGGGGG",
+        "battlefield": [
+          { "card": "Elvish Clancaller", "label": "clancaller", "ready": true },
+          { "card": "Llanowar Elves", "label": "elves" }
+        ],
+        "library": [
+          { "card": "Elvish Clancaller", "label": "second" },
+          { "card": "Grizzly Bears", "label": "bears" },
+          { "card": "Island", "label": "i1" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Llanowar Elves", "label": "theirs" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$clancaller", "power": 1, "toughness": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$elves", "power": 2, "toughness": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$theirs", "power": 1, "toughness": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$clancaller" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Answer": { "prompt": "Search", "with": ["$bears"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Search", "with": ["$second"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Shuffle", "with": ["$bears", "$i1"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Elvish Clancaller", "count": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$clancaller", "power": 2, "toughness": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$elves", "power": 3, "toughness": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$theirs", "power": 1, "toughness": 1 } } }
+  ]
+}
