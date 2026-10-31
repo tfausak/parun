@@ -1,6 +1,6 @@
 {
   "description": "CR 602.2 / 605.1a: Runic Armasaur may draw its controller a card when an opponent activates a non-mana ability of a creature or land",
-  "note": "Bob's Mountain's mana ability and his Tormod's Crypt (an artifact, not a creature or land) trigger nothing, or an unscheduled prompt fails the run; his Shivan Dragon's firebreathing draws alice one card.",
+  "note": "Bob's Mountain's mana ability, his Tormod's Crypt (an artifact, not a creature or land) and his cycling of Barkhide Mauler (a creature card, not a permanent) trigger nothing, or an unscheduled prompt fails the run; his Shivan Dragon's firebreathing draws alice one card.",
   "board": {
     "active": "bob",
     "step": "PrecombatMain",
@@ -42,6 +42,14 @@
           {
             "card": "Tormod's Crypt",
             "label": "crypt"
+          },
+          {
+            "card": "Mountain",
+            "label": "m2"
+          },
+          {
+            "card": "Mountain",
+            "label": "m3"
           }
         ],
         "library": [
@@ -56,6 +64,12 @@
           },
           {
             "card": "Island"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Barkhide Mauler",
+            "label": "mauler"
           }
         ]
       },
@@ -93,7 +107,8 @@
         "Activate": {
           "object": "$shivan",
           "mana": [
-            "$m"
+            "$m",
+            null
           ]
         }
       }
@@ -159,6 +174,9 @@
           "costOrder": [
             0,
             1
+          ],
+          "mana": [
+            null
           ]
         }
       }
@@ -178,6 +196,52 @@
           "player": "carol",
           "zone": "Exile",
           "card": "Hill Giant",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Hand",
+          "card": "Island",
+          "count": 0
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Activate": {
+          "object": "$mauler",
+          "mana": [
+            "$m2",
+            "$m3"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Graveyard",
+          "card": "Barkhide Mauler",
           "count": 1
         }
       }

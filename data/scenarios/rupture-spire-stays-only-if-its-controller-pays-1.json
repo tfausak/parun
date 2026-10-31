@@ -1,5 +1,5 @@
 {
-  "description": "CR 118.12 / 305.1: Rupture Spire enters tapped, and its enters trigger sacrifices it unless its controller pays {1}",
+  "description": "CR 614.1d / 118.12a: Rupture Spire enters tapped, and its enters trigger sacrifices it unless its controller pays {1}",
   "note": "Alice pays with a Plains on turn 1 and keeps that Spire, tapped; on turn 3 she declines for the Spire she drew and it goes to her graveyard.",
   "board": {
     "active": "alice",
