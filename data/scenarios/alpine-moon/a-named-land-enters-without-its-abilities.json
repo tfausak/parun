@@ -1,0 +1,20 @@
+{
+  "description": "CR 614.12: a land Alpine Moon names enters under its effect, so its enters-tapped replacement and its enters trigger are gone before they apply",
+  "note": "Alice names Crumbling Vestige. Bob plays one: it enters untapped, adds no mana, and taps for red.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "R", "hand": [{"card": "Alpine Moon", "label": "moon"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "hand": [{"card": "Crumbling Vestige", "label": "vestige"}, {"card": "Shock", "label": "shock"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+  ]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$moon"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardName", "with": "Crumbling Vestige"}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"PlayLand": "$vestige"}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Stack", "is": []}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "ManaPool", "player": "bob", "is": []}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Tapped": {"object": "Crumbling Vestige", "tapped": false}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$shock", "targets": ["$alice"], "mana": ["Crumbling Vestige"], "yields": [[{"manaType": {"type": "Colored", "value": {"type": "Red"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}]]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 18}}}
+  ]
+}

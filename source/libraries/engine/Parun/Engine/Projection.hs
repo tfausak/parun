@@ -180,10 +180,11 @@ layer m = case m of
   Modification.ChosenSubtype {} -> Layer.Type
   Modification.CreatureSubtype {} -> Layer.Type
   Modification.AddEveryCreatureSubtype -> Layer.Type
-  -- CR 613.1d, and a regression fence rather than a proved behaviour: no board
-  -- in the pool orders Nameless Inversion's removal against an effect in
-  -- another layer, so answering any other layer here leaves the suite green.
-  Modification.LoseEveryCreatureSubtype -> Layer.Type
+  -- CR 613.1d. Proved by the
+  -- a-later-urborg-makes-a-named-land-a-swamp-again scenario: a later Urborg,
+  -- Tomb of Yawgmoth makes a land Alpine Moon named a Swamp again, so a
+  -- swampwalker can't be blocked.
+  Modification.LoseEverySubtype _ -> Layer.Type
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> Layer.Type
   -- CR 613.1d, and a regression fence rather than a proved behaviour: no board
   -- orders an AddSubtype against an effect in another layer, so answering
@@ -511,11 +512,13 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- (CR 613.3); this runs in timestamp order (CR 613.7).
         Modification.AddEveryCreatureSubtype ->
           pc {PC.subtypes = Set.union (gainableSubtypes unitTypes Subtype.everyCreatureType) (PC.subtypes pc)}
-        -- CR 205.1a's last sentence: the removal reaches CR 205.3m's family and
-        -- nothing else, so PC.cardTypes is untouched here and a stripped
-        -- artifact creature is still an artifact and still a creature.
-        Modification.LoseEveryCreatureSubtype ->
-          pc {PC.subtypes = Set.filter (not . Subtype.isCreatureType) (PC.subtypes pc)}
+        -- CR 205.1a's last sentence: the removal reaches the card type's subtype
+        -- set (Subtype.correlatedCardTypes) and nothing else, so PC.cardTypes and
+        -- PC.supertypes are untouched here: a stripped artifact creature is still
+        -- an artifact and still a creature, a stripped legendary land still
+        -- legendary.
+        Modification.LoseEverySubtype cardType ->
+          pc {PC.subtypes = Set.filter (not . Set.member cardType . Subtype.correlatedCardTypes) (PC.subtypes pc)}
         -- CR 205.1a's set again, over the creature types the linked card has
         -- (Quantity.lastCardExiledWith's pick), read off its projected view. With
         -- no such card the arm is the identity, the "as long as" Duplicant's
@@ -790,7 +793,7 @@ cardTypesAfter m types = case m of
   Modification.ChosenSubtype {} -> types
   Modification.CreatureSubtype {} -> types
   Modification.AddEveryCreatureSubtype -> types
-  Modification.LoseEveryCreatureSubtype -> types
+  Modification.LoseEverySubtype _ -> types
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> types
   Modification.AddSubtype _ -> types
   Modification.RemoveSubtype _ -> types
@@ -1613,7 +1616,7 @@ freezeQuantities viewOf gs announcedOn source context m =
           chosenSubtypeAs mode family <$> Game.choiceWithLastKnown Chosen.Subtype (Game.readingAcquisition announcedOn source gs source) source gs
         Modification.CreatureSubtype {} -> Just m
         Modification.AddEveryCreatureSubtype -> Just m
-        Modification.LoseEveryCreatureSubtype -> Just m
+        Modification.LoseEverySubtype _ -> Just m
         -- Nothing frozen: no resolution stores this arm, and the card it reads is
         -- re-picked at every projection (CR 604.2).
         Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> Just m
@@ -1679,7 +1682,7 @@ quantitiesOf m = case m of
   Modification.ChosenSubtype {} -> []
   Modification.CreatureSubtype {} -> []
   Modification.AddEveryCreatureSubtype -> []
-  Modification.LoseEveryCreatureSubtype -> []
+  Modification.LoseEverySubtype _ -> []
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> []
   Modification.AddSubtype _ -> []
   Modification.RemoveSubtype _ -> []
@@ -1732,7 +1735,7 @@ referenceQuery m = case m of
   Modification.ChosenSubtype {} -> Nothing
   Modification.CreatureSubtype {} -> Nothing
   Modification.AddEveryCreatureSubtype -> Nothing
-  Modification.LoseEveryCreatureSubtype -> Nothing
+  Modification.LoseEverySubtype _ -> Nothing
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> Nothing
   Modification.AddSubtype _ -> Nothing
   Modification.RemoveSubtype _ -> Nothing
@@ -1797,7 +1800,7 @@ setsLandSubtype m = case m of
   -- and CR 205.1a/205.1b's creature-type set carries no such clause.
   Modification.CreatureSubtype {} -> False
   Modification.AddEveryCreatureSubtype -> False
-  Modification.LoseEveryCreatureSubtype -> False
+  Modification.LoseEverySubtype _ -> False
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> False
   -- Not a SET, so CR 305.7 does not fire whatever family the subtype belongs to
   -- -- the same answer LandSubtype's InAddition gives above, and
@@ -3040,7 +3043,7 @@ removesAbilities m = case m of
   Modification.ChosenSubtype {} -> False
   Modification.CreatureSubtype {} -> False
   Modification.AddEveryCreatureSubtype -> False
-  Modification.LoseEveryCreatureSubtype -> False
+  Modification.LoseEverySubtype _ -> False
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> False
   Modification.AddSubtype _ -> False
   Modification.RemoveSubtype _ -> False
@@ -4242,9 +4245,9 @@ modificationWrites m = case m of
   -- The honest answer -- the arm writes PC.subtypes and nothing else, and CR
   -- 205.1a's last sentence is why it writes no card type -- but a regression
   -- fence rather than a proved behaviour: no board in the pool makes another
-  -- effect's affected set depend on a creature type this arm took away, so
+  -- effect's affected set depend on a subtype this arm took away, so
   -- Set.empty here leaves the suite green too.
-  Modification.LoseEveryCreatureSubtype -> Set.singleton Subtypes
+  Modification.LoseEverySubtype _ -> Set.singleton Subtypes
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> Set.singleton Subtypes
   -- CR 613.8a: the arm writes PC.subtypes and nothing else. Proved by the
   -- dan-lewis-skips-clues-armed-with-proof-already-made-equipment scenario: Dan
@@ -4360,7 +4363,7 @@ modificationReads m = case m of
   Modification.ChosenSubtype {} -> Set.empty
   Modification.CreatureSubtype {} -> Set.empty
   Modification.AddEveryCreatureSubtype -> Set.empty
-  Modification.LoseEveryCreatureSubtype -> Set.empty
+  Modification.LoseEverySubtype _ -> Set.empty
   -- Reads the subtypes of a card in EXILE, and no modification this screen
   -- guards writes one there.
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> Set.empty
@@ -6220,7 +6223,7 @@ grantsKeywordWhere p m = case m of
   Modification.ChosenSubtype {} -> False
   Modification.CreatureSubtype {} -> False
   Modification.AddEveryCreatureSubtype -> False
-  Modification.LoseEveryCreatureSubtype -> False
+  Modification.LoseEverySubtype _ -> False
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> False
   Modification.AddSubtype _ -> False
   Modification.RemoveSubtype _ -> False
@@ -6304,7 +6307,7 @@ grantsMintingType m = case m of
   Modification.ChosenSubtype {} -> False
   Modification.CreatureSubtype {} -> False
   Modification.AddEveryCreatureSubtype -> False
-  Modification.LoseEveryCreatureSubtype -> False
+  Modification.LoseEverySubtype _ -> False
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> False
   Modification.AddSupertype _ -> False
   Modification.RemoveSupertype _ -> False
@@ -6401,7 +6404,7 @@ grantsAbilityWhere p m = case m of
   Modification.ChosenSubtype {} -> False
   Modification.CreatureSubtype {} -> False
   Modification.AddEveryCreatureSubtype -> False
-  Modification.LoseEveryCreatureSubtype -> False
+  Modification.LoseEverySubtype _ -> False
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> False
   Modification.AddSupertype _ -> False
   Modification.RemoveSupertype _ -> False

@@ -61,7 +61,10 @@
                         "type": "UntilEndOfTurn"
                       },
                       "modification": {
-                        "type": "LoseEveryCreatureSubtype"
+                        "type": "LoseEverySubtype",
+                        "value": {
+                          "type": "Creature"
+                        }
                       },
                       "ref": {
                         "type": "InSlot",
