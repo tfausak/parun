@@ -1687,6 +1687,7 @@ path-of-peril
 path-of-the-enigma
 path-to-the-festival
 pathrazer-of-ulamog
+patient-rebuilding
 patriars-humiliation
 patrician-geist
 patron-of-the-akki
@@ -1795,6 +1796,7 @@ proud-wildbonder
 provoke
 prowling-geistcatcher
 prowling-serpopard
+psychic-corrosion
 psychic-miasma
 psychic-rebuttal
 psychic-theft
@@ -1827,6 +1829,7 @@ rabid-elephant
 radha-coalition-warlord
 radiant-performer
 radiate
+radiating-lightning
 raffine-scheming-seer
 raffines-informant
 rag-man
@@ -1888,6 +1891,7 @@ reliquary-tower
 remand
 remedy
 reminisce
+remorseful-cleric
 remove
 rending-volley
 renegade-krasis
@@ -1900,6 +1904,7 @@ research-development
 resistance-fighter
 resolute-archangel
 resourceful-defense
+resplendent-angel
 rest-in-peace
 restock
 retaliate
@@ -1955,6 +1960,7 @@ roiling-horror
 rolling-stones
 rooftop-nuisance
 root-maze
+root-snare
 rootbound-crag
 rootha-mastering-the-moment
 rootpath-purifier
@@ -1977,6 +1983,7 @@ rune-of-mortality
 rune-of-speed
 rune-of-sustenance
 runed-halo
+runic-armasaur
 runic-repetition
 rush-of-blood
 rust-goliath
@@ -2003,6 +2010,11 @@ sand-silos
 sandman-shifting-scoundrel
 sanguine-bond
 sapphire-medallion
+sarkhan-dragonsoul
+sarkhan-fireblood
+sarkhans-dragonfire
+sarkhans-unsealing
+sarkhans-whelp
 satyr-piper
 satyr-wayfinder
 sauroform-hybrid
@@ -2014,6 +2026,7 @@ savor-the-moment
 scab-clan-berserker
 scalpelexis
 scampire
+scapeshift
 scarecrow
 scarred-puma
 scavenger-grounds
@@ -2086,6 +2099,7 @@ shed-weakness
 shell-of-the-last-kappa
 shellfish-scholar
 shessra-deaths-whisper
+shield-mare
 shield-of-the-avatar
 shifting-sky
 shimatsu-the-bloodcloaked
@@ -2099,8 +2113,10 @@ sibilant-spirit
 sidar-kondo-of-jamuraa
 siege-behemoth
 siege-dragon
+siegebreaker-giant
 sigardas-aid
 sigil-of-valor
+sigiled-sword-of-valeron
 silence
 silent-arbiter
 silverquill-the-disputant

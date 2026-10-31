@@ -28,6 +28,7 @@ import qualified Data.Foldable as Foldable
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
+import qualified Parun.Engine.Loyalty as Loyalty
 import qualified Parun.Engine.Modal as Modal
 import qualified Parun.Types.AbilityKind as AbilityKind
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
@@ -67,9 +68,8 @@ import qualified Parun.Types.ZonePair as ZonePair
 
 -- CR 605.1a: an activated ability is a mana ability if it could add mana AND
 -- doesn't target AND moves no card to or from a library AND is not itself a
--- loyalty ability (CR 606.2, which Parun.Engine.Loyalty.isLoyaltyCost answers; no
--- loyalty ability in the pool adds mana, so the clause is inert rather than
--- checked here). Read at three sites:
+-- loyalty ability (CR 606.2, which Parun.Engine.Loyalty.isLoyaltyCost answers:
+-- Sarkhan, Fireblood's mana +1 uses the stack). Read at three sites:
 -- Mana.manaRoutesOfGiven includes a mana ability as a source,
 -- Activatable.activatableGiven refuses to put one on the stack (CR 605.3b), and
 -- Projection's view builders answer Filter.HasActivatedAbility through
@@ -106,6 +106,7 @@ isManaAbility ab =
         && Map.null (Modal.allTargetSlots (ActivatedAbility.modal ab))
         && not (any movesLibraryCard effects)
         && not (any costMovesLibraryCard (Cost.components (ActivatedAbility.cost ab)))
+        && not (Loyalty.isLoyaltyCost (ActivatedAbility.cost ab))
 
 -- CR 605.1a's kind of each ability on a roster, plus CR 305.6's intrinsic mana
 -- ability where `intrinsic` says the object has one, since no roster holds it:
