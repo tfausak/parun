@@ -7,7 +7,7 @@
 -- proven independently of any card wiring; the card-level proofs live alongside.
 -- Also Parun.Engine.Subtype, the CR 205.3i land-type and CR 205.3m creature-type
 -- classifications the layer-4 LandSubtype, CreatureSubtype,
--- AddEveryCreatureSubtype and LoseEveryCreatureSubtype arms
+-- AddEveryCreatureSubtype and LoseEverySubtype arms
 -- fold with, and the untagged AddSubtype beside them.
 module Parun.ProjectionSpec where
 

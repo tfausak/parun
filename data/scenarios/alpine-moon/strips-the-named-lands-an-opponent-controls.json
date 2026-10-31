@@ -1,0 +1,28 @@
+{
+  "description": "CR 205.1a / 613.1d / 613.1f: Alpine Moon's chosen lands an opponent controls lose all land types and abilities and gain \"{T}: Add one mana of any color.\"",
+  "note": "Alice casts two Moons, naming Tundra and Dryad Arbor. Bob's Tundra is no Island, so he blocks alice's islandwalking Bull Hippo, and it pays red for his Shock. Alice's own Tundra and bob's unnamed Plateau keep their types, and bob's Dryad Arbor keeps its creature type and creature card type (CR 205.3d).",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "RR", "hand": [{"card": "Alpine Moon", "label": "moon1"}, {"card": "Alpine Moon", "label": "moon2"}], "battlefield": [{"card": "Tundra", "label": "alicetundra"}, {"card": "Bull Hippo", "label": "hippo", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "hand": [{"card": "Shock", "label": "shock"}], "battlefield": [{"card": "Tundra", "label": "bobtundra"}, {"card": "Dryad Arbor", "label": "arbor"}, {"card": "Plateau", "label": "plateau"}, {"card": "Grizzly Bears", "label": "bears", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+  ]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$moon1", "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "ChooseCardName", "with": "Island"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardName", "with": "Tundra"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$moon2", "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardName", "with": "Dryad Arbor"}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$hippo"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {"$bears": ["$hippo"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Blockers": {"attacker": "$hippo", "blockers": ["$bears"]}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Subtypes": {"object": "$bobtundra", "subtypes": []}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Subtypes": {"object": "$alicetundra", "subtypes": ["Island", "Plains"]}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Subtypes": {"object": "$plateau", "subtypes": ["Mountain", "Plains"]}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Subtypes": {"object": "$arbor", "subtypes": ["Dryad"]}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Types": {"object": "$arbor", "types": ["Creature", "Land"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$shock", "targets": ["$alice"], "mana": ["$bobtundra", null], "yields": [[{"manaType": {"type": "Colored", "value": {"type": "Red"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}]]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 18}}}
+  ]
+}

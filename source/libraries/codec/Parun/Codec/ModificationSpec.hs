@@ -192,13 +192,13 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       codec
       Modification.AddEveryCreatureSubtype
       " {\"type\":\"AddEveryCreatureSubtype\"} "
-  -- layer 4, CR 205.1a removal over the whole of CR 205.3m (Nameless Inversion).
-  Spec.it s "LoseEveryCreatureSubtype" $
+  -- layer 4, CR 205.1a removal over a card type's family (Alpine Moon).
+  Spec.it s "LoseEverySubtype" $
     Common.assertCodec
       s
       codec
-      Modification.LoseEveryCreatureSubtype
-      " {\"type\":\"LoseEveryCreatureSubtype\"} "
+      (Modification.LoseEverySubtype CardType.Land)
+      " {\"type\":\"LoseEverySubtype\",\"value\":{\"type\":\"Land\"}} "
   -- layer 4, CR 205.1a set to a linked card's creature types (Duplicant).
   Spec.it s "SetCreatureSubtypesOfLastCardExiledWith carries its filter" $
     Common.assertCodec

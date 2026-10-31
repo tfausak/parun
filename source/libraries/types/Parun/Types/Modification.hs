@@ -272,11 +272,12 @@ data Modification ability
     -- denies the granted instance CDA status), so
     -- Parun.Engine.Projection.grantedDefiningParts mints this arm.
     AddEveryCreatureSubtype
-  | -- | layer 4, CR 613.1d / CR 205.1a: this object loses every creature type.
-    -- "Loses all creature types" (Nameless Inversion) is the printed wording.
+  | -- | layer 4, CR 613.1d / CR 205.1a: this object loses every subtype that
+    -- corresponds to the card type (CR 205.3d): "loses all creature types"
+    -- (Nameless Inversion), "lose all land types" (Alpine Moon).
     --
-    -- NULLARY, the mirror of AddEveryCreatureSubtype above and for its reason:
-    -- rule 205.3m's list is the payload and no card enumerates it.
+    -- A CARD TYPE and not a list, for AddEveryCreatureSubtype's reason: the
+    -- family's list is the payload and no card enumerates it.
     --
     -- A REMOVAL rather than a CreatureSubtype Replace over an empty set, which is
     -- LoseAllAbilities' shape: CR 205.1a's last sentence -- "removing an
@@ -284,7 +285,7 @@ data Modification ability
     -- about removal, and it is what keeps a stripped artifact creature an
     -- artifact. Parun.ProjectionSpec's "CR 205.1a Nameless Inversion strips the
     -- Wall type, and the Wall blocks what no Wall may block" proves that.
-    LoseEveryCreatureSubtype
+    LoseEverySubtype CardType.CardType
   | -- | layer 4, CR 613.1d / 205.1a set: this object's creature types become
     -- those of the card its source exiled LAST among those the filter matches
     -- (CR 607.2a, 613.7d) -- Duplicant. No such card leaves them alone.

@@ -1570,6 +1570,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Cheering Fanatic", 1), -- its stored player effect
         ("Synthetic Name Ward", 1), -- its stored player effect
         ("Immediate Action", 1), -- its static ability's affected set
+        ("Alpine Moon", 1), -- its static ability's affected set
         ("Vexing Arcanix", 3), -- its two moves' ObjectRefs and its damage clause's gate
         ("Booby Trap", 1), -- its trigger condition
         ("Pithing Needle", 1), -- its activation prohibition's affected set

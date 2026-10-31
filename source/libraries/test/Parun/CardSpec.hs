@@ -1046,7 +1046,7 @@ modificationCounts modification = case modification of
   Modification.ChosenSubtype {} -> []
   Modification.CreatureSubtype {} -> []
   Modification.AddEveryCreatureSubtype -> []
-  Modification.LoseEveryCreatureSubtype -> []
+  Modification.LoseEverySubtype _ -> []
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> []
   Modification.AddSubtype _ -> []
   Modification.RemoveSubtype _ -> []
@@ -4553,7 +4553,7 @@ modificationFilters modification = case modification of
   Modification.ChosenSubtype {} -> []
   Modification.CreatureSubtype {} -> []
   Modification.AddEveryCreatureSubtype -> []
-  Modification.LoseEveryCreatureSubtype -> []
+  Modification.LoseEverySubtype _ -> []
   -- Its Filter picks the card it reads, which is card text like any other.
   Modification.SetCreatureSubtypesOfLastCardExiledWith f -> unframed [f]
   Modification.AddSubtype _ -> []
