@@ -213,6 +213,7 @@ viewOfCardLapsed lapsed face =
           Filter.saddledThisTurn = Set.empty,
           -- CR 120.1: an OBJECT deals damage; the field above's reason.
           Filter.dealtDamageTo = Set.empty,
+          Filter.dealtDamageEarlier = Set.empty,
           -- CR 302.6 asks about an OBJECT a player controls; this builder
           -- describes a printed FACE, which is none -- `milledThisTurn` above's
           -- reason.
@@ -655,6 +656,7 @@ viewOfCharacteristics peers oid pc controller counters gs =
       Filter.convokedThisTurn = Count.convokedThisTurn oid gs,
       Filter.saddledThisTurn = Count.saddledThisTurn oid gs,
       Filter.dealtDamageTo = Count.dealtDamageTo oid gs,
+      Filter.dealtDamageEarlier = Count.dealtDamageEarlier oid gs,
       -- CR 302.6: Object.sickness, compared against the PROJECTED controller
       -- rather than read as a bare flag -- rule 302.6's subject is a player, so
       -- `Settled` names one, and Parun.Engine.Engine.checkControlContinuity drops a

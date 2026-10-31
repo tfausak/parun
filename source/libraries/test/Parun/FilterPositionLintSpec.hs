@@ -326,7 +326,7 @@ filterAtomsOf leaf predicate = case predicate of
   Filter.Type.MilledThisTurn -> leaf predicate
   Filter.Type.CantCrewVehicles -> leaf predicate
   Filter.Type.DealtDamageThisTurn -> leaf predicate
-  Filter.Type.DealtDamageToThisTurn _ -> leaf predicate
+  Filter.Type.DealtDamageTo _ -> leaf predicate
   Filter.Type.EnteredThisTurn _ -> leaf predicate
   Filter.Type.CrewedSourceThisTurn -> leaf predicate
   Filter.Type.ConvokedSourceThisTurn -> leaf predicate

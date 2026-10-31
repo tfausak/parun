@@ -35,7 +35,7 @@
                 "targetSlots": {
                   "target": {
                     "filter": {
-                      "type": "DealtDamageToThisTurn",
+                      "type": "DealtDamageTo",
                       "value": {
                         "party": {
                           "type": "Related",

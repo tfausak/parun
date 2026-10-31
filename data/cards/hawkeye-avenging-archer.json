@@ -128,7 +128,7 @@
                     "type": "Members"
                   },
                   "filter": {
-                    "type": "DealtDamageToThisTurn",
+                    "type": "DealtDamageTo",
                     "value": {
                       "party": {
                         "type": "InSlot",

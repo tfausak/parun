@@ -3177,6 +3177,16 @@ turnLog which gs = case which of
 castsInLog :: GameState -> Seq.Seq SpellWasCast.SpellWasCast
 castsInLog gs = Seq.fromList (Maybe.mapMaybe (castOf . LoggedEvent.event) (Foldable.toList (GameState.events gs)))
 
+-- CR 120.1: every damage event in the turn's log, oldest first, behind
+-- damageRecipient's CR 120.8 fence -- castsInLog's shape, for
+-- GameState.damageBeforeThisTurn.
+damageInLog :: GameState -> Seq.Seq DamageEvent.DamageEvent
+damageInLog gs =
+  let dealt event = case event of
+        GameEvent.DamageDealt ev | Maybe.isJust (damageRecipient event) -> Just ev
+        _ -> Nothing
+   in Seq.fromList (Maybe.mapMaybe (dealt . LoggedEvent.event) (Foldable.toList (GameState.events gs)))
+
 -- CR 608.2n: the ABILITY an event describes RESOLVING, if it describes one, as
 -- the Source its object on the stack carried -- the source object and the
 -- ability, which is the pair CR 707.10b counts by. castOf above's shape and
@@ -3523,8 +3533,8 @@ movedChange event = case event of
 -- castOf's, discardOf's and enteredBattlefield's sibling, and here for their
 -- import-graph reason: the callers are Parun.Engine.Quantity's
 -- PlayersDealtDamageThisTurn arm, Parun.Engine.Projection's fold for
--- Filter.DealtDamageThisTurn and Parun.Engine.Count.dealtDamageTo's for
--- Filter.DealtDamageToThisTurn.
+-- Filter.DealtDamageThisTurn, Parun.Engine.Count.dealtDamageTo's for
+-- Filter.DealtDamageTo, and damageInLog's for the turn handoff.
 --
 -- The `amount > 0` test below is CR 120.8 -- "if a source would deal 0 damage, it does
 -- not deal damage at all" -- and a FENCE rather than a reachable filter on the

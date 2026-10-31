@@ -562,7 +562,7 @@ filterNames asking criterion = case criterion of
   Filter.ConvokedSourceThisTurn -> keyed asking <> history asking HistoryRead.Convokes <> history asking HistoryRead.Moves
   Filter.SaddledSourceThisTurn -> keyed asking <> history asking HistoryRead.Saddles
   Filter.DealtDamageThisTurn -> keyed asking <> history asking HistoryRead.Damage
-  Filter.DealtDamageToThisTurn _ -> keyed asking <> history asking HistoryRead.Damage
+  Filter.DealtDamageTo _ -> keyed asking <> history asking HistoryRead.Damage
   Filter.EnteredThisTurn (EnteredZone.MkEnteredZone to _from) -> keyed asking <> history asking (if to == Zone.Battlefield then HistoryRead.Entries else HistoryRead.Moves)
   Filter.ControlledSinceTurnBegan -> mempty
   Filter.AttachedTo nested -> filterNames asking nested

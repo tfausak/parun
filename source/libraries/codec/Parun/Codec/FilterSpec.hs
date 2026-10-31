@@ -29,6 +29,7 @@ import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
+import qualified Parun.Types.Lookback as Lookback
 import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.Measures as Measures
 import qualified Parun.Types.NameChooser as NameChooser
@@ -415,12 +416,12 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       codec
       Filter.DealtDamageThisTurn
       " {\"type\":\"DealtDamageThisTurn\"} "
-  Spec.it s "DealtDamageToThisTurn" $
+  Spec.it s "DealtDamageTo" $
     Common.assertCodec
       s
       codec
-      (Filter.DealtDamageToThisTurn DealtDamageTo.MkDealtDamageTo {DealtDamageTo.party = DamagedParty.Source, DealtDamageTo.kind = Nothing})
-      " {\"type\":\"DealtDamageToThisTurn\",\"value\":{\"party\":{\"type\":\"Source\"}}} "
+      (Filter.DealtDamageTo DealtDamageTo.MkDealtDamageTo {DealtDamageTo.party = DamagedParty.Source, DealtDamageTo.kind = Nothing, DealtDamageTo.window = Lookback.ThisTurn})
+      " {\"type\":\"DealtDamageTo\",\"value\":{\"party\":{\"type\":\"Source\"}}} "
   Spec.it s "EnteredThisTurn" $
     Common.assertCodec
       s

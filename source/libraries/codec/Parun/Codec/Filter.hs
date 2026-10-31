@@ -127,7 +127,7 @@ codec keywordCodec =
       Arm.nullary "SaddledSourceThisTurn" Filter.SaddledSourceThisTurn,
       Arm.nullary "CantCrewVehicles" Filter.CantCrewVehicles,
       Arm.nullary "DealtDamageThisTurn" Filter.DealtDamageThisTurn,
-      Arm.payload "DealtDamageToThisTurn" DealtDamageTo.codec Filter.DealtDamageToThisTurn (\x -> case x of Filter.DealtDamageToThisTurn y -> Just y; _ -> Nothing),
+      Arm.payload "DealtDamageTo" DealtDamageTo.codec Filter.DealtDamageTo (\x -> case x of Filter.DealtDamageTo y -> Just y; _ -> Nothing),
       Arm.payload "EnteredThisTurn" EnteredZone.codec Filter.EnteredThisTurn (\x -> case x of Filter.EnteredThisTurn y -> Just y; _ -> Nothing),
       Arm.nullary "ControlledSinceTurnBegan" Filter.ControlledSinceTurnBegan,
       -- Recursive for Controls' reason: the payload describes the
@@ -291,7 +291,7 @@ tagOf x = case x of
   Filter.SaddledSourceThisTurn {} -> "SaddledSourceThisTurn"
   Filter.CantCrewVehicles {} -> "CantCrewVehicles"
   Filter.DealtDamageThisTurn {} -> "DealtDamageThisTurn"
-  Filter.DealtDamageToThisTurn {} -> "DealtDamageToThisTurn"
+  Filter.DealtDamageTo {} -> "DealtDamageTo"
   Filter.EnteredThisTurn {} -> "EnteredThisTurn"
   Filter.ControlledSinceTurnBegan {} -> "ControlledSinceTurnBegan"
   Filter.AttachedTo {} -> "AttachedTo"

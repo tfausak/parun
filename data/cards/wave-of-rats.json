@@ -69,7 +69,7 @@
                     "type": "Members"
                   },
                   "filter": {
-                    "type": "DealtDamageToThisTurn",
+                    "type": "DealtDamageTo",
                     "value": {
                       "kind": {
                         "type": "Combat"

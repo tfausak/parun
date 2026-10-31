@@ -1831,7 +1831,8 @@ beginTurn extra pid gs =
             GameState.extraTurnUnderWay = extra,
             -- CR 608.2i is why a log exists at all. It does not say how far back;
             -- the ONE-turn scope is this engine's choice, and a "this game"
-            -- question about casts reads castsBeforeThisTurn below instead.
+            -- question about casts or damage reads castsBeforeThisTurn or
+            -- damageBeforeThisTurn below instead.
             -- Cleared here and never at cleanup -- cleanup is still part of
             -- this turn, and CR 514.1's discard is itself an event of it.
             GameState.events = Seq.empty,
@@ -1878,6 +1879,9 @@ beginTurn extra pid gs =
             -- CR 601.2i: the outgoing turn's casts join the game-long record
             -- before the log holding them is cleared above.
             GameState.castsBeforeThisTurn = GameState.castsBeforeThisTurn gs <> Game.castsInLog gs,
+            -- CR 120.1: the outgoing turn's damage joins the game-long record the
+            -- same way, for a look-back as long as an object's own life.
+            GameState.damageBeforeThisTurn = GameState.damageBeforeThisTurn gs <> Game.damageInLog gs,
             -- CR 508.1a: the outgoing turn becomes each of its takers' own last
             -- turn, REPLACING the row, an attackless turn included (CR 805.4).
             GameState.attacksInOwnLastTurn = List.foldl' (\rows p -> Map.insert p (Game.attacksInLog gs) rows) (GameState.attacksInOwnLastTurn gs) outgoing,

@@ -270,8 +270,8 @@ lapIsRead there gs =
 -- Parun.Engine.MoveDuration.departedIn, Parun.Engine.Game.entryGroup)
 -- or that mints a new one (Parun.Engine.Event.forgetShown), which a lap cannot
 -- move again under the same id; Parun.Engine.Engine.beginTurnOf's fold of the
--- casts and attacks, which a priority-only lap without a zone change cannot
--- write; and Parun.Engine.PlayerView's witnessed log, which no rule reads.
+-- casts, damage and attacks, which a priority-only lap without a zone change
+-- cannot write; and Parun.Engine.PlayerView's witnessed log, which no rule reads.
 readers :: GameState -> Set.Set HistoryRead.HistoryRead
 readers gs =
   -- The rules' own readers: Parun.Engine.Planechase.rollCost (CR 901.9), and

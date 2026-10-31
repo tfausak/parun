@@ -100,7 +100,7 @@
                                   }
                                 },
                                 {
-                                  "type": "DealtDamageToThisTurn",
+                                  "type": "DealtDamageTo",
                                   "value": {
                                     "party": {
                                       "type": "Source"

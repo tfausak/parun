@@ -26,6 +26,7 @@ import qualified Parun.Codec.CastFromZone as CastFromZone
 import qualified Parun.Codec.Combat as Combat
 import qualified Parun.Codec.ContinuousEffect as ContinuousEffect
 import qualified Parun.Codec.CounterKind as CounterKind
+import qualified Parun.Codec.DamageEvent as DamageEvent
 import qualified Parun.Codec.Daytime as Daytime
 import qualified Parun.Codec.DelayedTrigger as DelayedTrigger
 import qualified Parun.Codec.EndTurnSignal as EndTurnSignal
@@ -211,6 +212,7 @@ codec resolve = Fields.object $ do
   spellsCastLastTurn <- Fields.defaulted "spellsCastLastTurn" 0 Common.natural GameState.spellsCastLastTurn
   eventsLastTurn <- Fields.defaulted "eventsLastTurn" Seq.empty (Common.seq LoggedEvent.codec) GameState.eventsLastTurn
   castsBeforeThisTurn <- Fields.defaulted "castsBeforeThisTurn" Seq.empty (Common.seq SpellWasCast.codec) GameState.castsBeforeThisTurn
+  damageBeforeThisTurn <- Fields.defaulted "damageBeforeThisTurn" Seq.empty (Common.seq DamageEvent.codec) GameState.damageBeforeThisTurn
   attacksInOwnLastTurn <- Fields.defaulted "attacksInOwnLastTurn" Map.empty (Common.naturalMap PlayerId.codec (Common.seq AttackerDeclared.codec)) GameState.attacksInOwnLastTurn
   resolvedNames <- Fields.defaulted "resolvedNames" Map.empty (Common.naturalMap PlayerId.codec (Common.set CardName.codec)) GameState.resolvedNames
   movedUntil <- Fields.defaulted "movedUntil" Map.empty (Common.naturalMap ObjectId.codec ReturnWatch.codec) GameState.movedUntil
@@ -326,6 +328,7 @@ codec resolve = Fields.object $ do
         GameState.spellsCastLastTurn = spellsCastLastTurn,
         GameState.eventsLastTurn = eventsLastTurn,
         GameState.castsBeforeThisTurn = castsBeforeThisTurn,
+        GameState.damageBeforeThisTurn = damageBeforeThisTurn,
         GameState.attacksInOwnLastTurn = attacksInOwnLastTurn,
         GameState.resolvedNames = resolvedNames,
         GameState.movedUntil = movedUntil,

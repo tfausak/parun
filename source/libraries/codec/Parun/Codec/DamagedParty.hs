@@ -12,7 +12,8 @@ codec =
     tagOf
     [ Arm.payload "Related" PlayerRelation.codec DamagedParty.Related (\x -> case x of DamagedParty.Related y -> Just y; _ -> Nothing),
       Arm.nullary "Source" DamagedParty.Source,
-      Arm.payload "InSlot" SlotName.codec DamagedParty.InSlot (\x -> case x of DamagedParty.InSlot y -> Just y; _ -> Nothing)
+      Arm.payload "InSlot" SlotName.codec DamagedParty.InSlot (\x -> case x of DamagedParty.InSlot y -> Just y; _ -> Nothing),
+      Arm.nullary "Anyone" DamagedParty.Anyone
     ]
 
 tagOf :: DamagedParty.DamagedParty -> String
@@ -20,3 +21,4 @@ tagOf x = case x of
   DamagedParty.Related {} -> "Related"
   DamagedParty.Source -> "Source"
   DamagedParty.InSlot {} -> "InSlot"
+  DamagedParty.Anyone -> "Anyone"
