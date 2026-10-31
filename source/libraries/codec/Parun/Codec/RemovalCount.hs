@@ -13,7 +13,8 @@ codec =
     tagOf
     [ Arm.payload "Exactly" Quantity.codec RemovalCount.Exactly (\x -> case x of RemovalCount.Exactly y -> Just y; _ -> Nothing),
       Arm.payload "UpTo" Quantity.codec RemovalCount.UpTo (\x -> case x of RemovalCount.UpTo y -> Just y; _ -> Nothing),
-      Arm.nullary "AnyNumber" RemovalCount.AnyNumber
+      Arm.nullary "AnyNumber" RemovalCount.AnyNumber,
+      Arm.nullary "All" RemovalCount.All
     ]
 
 tagOf :: RemovalCount.RemovalCount -> String
@@ -21,3 +22,4 @@ tagOf x = case x of
   RemovalCount.Exactly {} -> "Exactly"
   RemovalCount.UpTo {} -> "UpTo"
   RemovalCount.AnyNumber {} -> "AnyNumber"
+  RemovalCount.All {} -> "All"

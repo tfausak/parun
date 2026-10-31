@@ -539,12 +539,15 @@ removeCountersAmong resolving source controller legal (RemoveCountersAmong.MkRem
           | otherwise -> do
               answer <- Game.choose (Prompt.ChooseCounterRemovalAtLeast decider controller source 0 offered)
               pure (if Cost.withinOffer offered answer then answer else Map.empty)
+        -- Refused by Parun.Codec.RemoveCountersAmong; this is what it would mean.
+        RemovalCount.All -> pure offered
       Monad.forM_ (Map.toList (Map.filter (> 0) division)) (\(permanent, taken) -> Event.removeCounters permanent kind taken)
       pure (sum division)
     -- CR 122.1: with no kind named, the division is by kind as well
     -- (Eventide's Shadow), through the cost side's mixed prompt at a floor of
-    -- zero. Only "any number" reaches here: Parun.Codec.RemoveCountersAmong
-    -- rejects any kind at a stated count, which no printing writes.
+    -- zero, and "all" (Suncleanser) takes every kind with nothing to divide.
+    -- Only those two reach here: Parun.Codec.RemoveCountersAmong rejects any
+    -- kind at a stated count, which no printing writes.
     WhichCounters.OfAnyKind -> case count of
       RemovalCount.AnyNumber -> do
         let offered = Common.removableAmong gs which permanents
@@ -556,6 +559,10 @@ removeCountersAmong resolving source controller legal (RemoveCountersAmong.MkRem
         let flat = Cost.flattenMixed division
         Monad.forM_ (Map.toList flat) (\((permanent, kind), taken) -> Event.removeCounters permanent kind taken)
         pure (sum flat)
+      RemovalCount.All -> do
+        let every = Common.removableAmong gs which permanents
+        Monad.forM_ (Map.toList every) (\(permanent, kinds) -> Monad.forM_ (Map.toList kinds) (uncurry (Event.removeCounters permanent)))
+        pure (sum (fmap sum every))
       RemovalCount.Exactly _ -> pure 0
       RemovalCount.UpTo _ -> pure 0
   -- Bound even where nothing came off, Effect.RemoveCounters' posture.
@@ -1285,7 +1292,8 @@ amass resolving source controller legal (Amass.Type.MkAmass quantity subtype mSl
 -- CR 701.68a: each player the PlayerRef names puts N -1/-1 counters on a
 -- creature they control; the keyword action is Parun.Engine.Blight.blight's, and
 -- rule 701.68b's optional reading is a cost (CR 118.12). MANDATORY here, so an
--- empty pool is CR 101.3's no-op. A reference naming nobody, or an illegal slot
+-- empty pool is CR 101.3's no-op. Not implemented: refusing a creature that
+-- can't take -1/-1 counters, as the cost road does (#5830). A reference naming nobody, or an illegal slot
 -- (CR 608.2b), blights nothing. APNAP for the order (CR 101.4). Targetless: no
 -- CR 608.2b legality to re-check.
 --
@@ -1319,7 +1327,7 @@ blight resolving source controller legal (Blight.Type.MkBlight ref quantity mSlo
   blightedCreatures <- Event.simultaneously . fmap Maybe.catMaybes . Monad.forM blighters $ \pid ->
     case Common.evaluateForRecipient viewOf context gs resolving source pid quantity of
       Nothing -> pure Nothing -- unevaluable quantity: no-op (the powerOf posture)
-      Just n -> Blight.blight (CounterCause.ByEffect pid) resolving (Integer.toNaturalSaturating n)
+      Just n -> Blight.blight Blight.candidates (CounterCause.ByEffect pid) resolving (Integer.toNaturalSaturating n)
   -- CR 701.68c: "the blighted creature" is the object the blighting player chose
   -- to put the counters on, bound for a later clause of this same resolution to
   -- read (CR 608.2c) -- Grub, Notorious Auntie's token copy of it. Bound off the

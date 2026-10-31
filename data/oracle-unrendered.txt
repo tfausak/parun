@@ -2288,6 +2288,7 @@ summon-valefor
 summoners-pact
 sun-titan
 sun-warriors
+suncleanser
 sunder-shaman
 sundial-of-the-infinite
 sunglasses-of-urza

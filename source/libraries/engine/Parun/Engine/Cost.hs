@@ -41,6 +41,7 @@ import qualified Parun.Engine.Claim as Claim
 import qualified Parun.Engine.Coin as Coin
 import qualified Parun.Engine.Commander as Commander
 import qualified Parun.Engine.Condition as Condition
+import qualified Parun.Engine.CounterRestriction as CounterRestriction
 import qualified Parun.Engine.CrewRestriction as CrewRestriction
 import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.Detain as Detain
@@ -4029,6 +4030,9 @@ canPayComponent slots pid oid component gs = case component of
   -- CR 606.4: always payable, CR 606.6 gating only the removing half -- but the
   -- permanent must still be one this player controls on the battlefield, rule
   -- 606.4 putting the counters on "that permanent".
+  --
+  -- Not implemented: a counter prohibition on the planeswalker making it
+  -- unpayable, as PutCountersOnThis below is (#5828).
   CostComponent.AddLoyaltyToThis _ ->
     Set.member oid (GameState.battlefield gs) && Projection.controllerOf oid gs == Just pid
   -- CR 606.6: a negative loyalty cost can't be activated unless the permanent
@@ -4079,16 +4083,20 @@ canPayComponent slots pid oid component gs = case component of
     CounterSpread.FromAmong -> sum (spreadRemovalCandidates slots pid oid which criterion gs) >= n
     CounterSpread.FromAmongAtLeast -> sum (spreadRemovalCandidates slots pid oid which criterion gs) >= n
   -- CR 701.63a puts the counters on "that permanent", and Yisan, the Wanderer
-  -- Bard on itself, so the only thing that can make this unpayable is the
-  -- permanent no longer being there. Deliberately NOT gated on control, unlike
-  -- the loyalty arms above: rule 701.63a fixes the payer as the controller when
-  -- the ability TRIGGERS, and CR 122.6 lets the counters go on whoever controls
-  -- it when it resolves.
-  CostComponent.PutCountersOnThis _ -> Set.member oid (GameState.battlefield gs)
+  -- Bard on itself, so what can make this unpayable is the permanent no longer
+  -- being there, or CR 118.3 with CR 101.2: an effect saying counters of that
+  -- kind can't be put on it (Suncleanser's ruling). Deliberately NOT gated on
+  -- control, unlike the loyalty arms above: rule 701.63a fixes the payer as the
+  -- controller when the ability TRIGGERS, and CR 122.6 lets the counters go on
+  -- whoever controls it when it resolves.
+  CostComponent.PutCountersOnThis placement ->
+    Set.member oid (GameState.battlefield gs)
+      && not (CounterRestriction.prohibited oid (CountersOnThis.kind placement) gs)
   -- CR 701.68b: a player unable to put the counters on a creature they control
   -- can't choose to blight. Nothing about `oid` and nothing about N -- rule
-  -- 701.68a's candidate is qualified by CONTROL alone, the whole difference from
-  -- PutCountersOnThis above.
+  -- 701.68a's candidate is qualified by CONTROL, the whole difference from
+  -- PutCountersOnThis above; the two share only the CR 118.3 counter gate,
+  -- here inside Blight.payable.
   CostComponent.Blight amount -> payableAnnounced amount (const (Blight.canBlight pid gs))
   -- CR 608.2d: a player who can neither exile three cards from their graveyard
   -- nor sacrifice a Food can't choose either half, which is how a forage COST is
@@ -6966,7 +6974,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
   -- so the cause is `counterCause`'s and not a constant. Doubling Season doubles
   -- the second and not the first; Vorinclex, Monstrous Raider doubles both.
   CostComponent.Blight amount -> paidAnnounced amount $ \n -> do
-    blighted <- Blight.blight (counterCause moment pid) oid n
+    blighted <- Blight.blight Blight.payable (counterCause moment pid) oid n
     -- The creature chosen is DISCARDED here, where the effect arm binds it: CR
     -- 701.68c's "blighted creature" is read by a later clause of the same
     -- resolution, and a cost is paid before there is one.

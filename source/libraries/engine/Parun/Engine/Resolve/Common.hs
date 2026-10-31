@@ -419,6 +419,7 @@ choosesAnyNumber effect =
       RemovalCount.Exactly {} -> False
       RemovalCount.UpTo {} -> False
       RemovalCount.AnyNumber -> True
+      RemovalCount.All -> False
     _ -> False
   where
     anyNumber howMany = howMany == HowMany.UpTo Nothing
@@ -3175,13 +3176,15 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
       Just n | n > 0 -> maybe False ((== 0) . Map.findWithDefault 0 kind . Object.counters) (Game.lookupObject target gs)
       _ -> False
   -- CR 608.2d: "remove three" is not an option where fewer are there. "Up to"
-  -- and "any number" always are, none being an answer.
+  -- and "any number" always are, none being an answer, and "all" takes what
+  -- is there.
   Effect.RemoveCountersAmong (RemoveCountersAmong.MkRemoveCountersAmong count fromRef which _) -> case count of
     RemovalCount.Exactly quantity -> case Quantity.evaluateFor viewOf context gs resolving source quantity of
       Just n | n > 0 -> toInteger (sum (fmap sum (removableAmong gs which (objectRefObjects legal resolving controller source gs fromRef)))) < n
       _ -> False
     RemovalCount.UpTo _ -> False
     RemovalCount.AnyNumber -> False
+    RemovalCount.All -> False
   -- CR 122.5: every pair the move names fails one of the rule's
   -- impossibilities, so no counter can cross. The pair guard and the movable
   -- kinds are the executing arm's own (movablePair, movableCounters), and

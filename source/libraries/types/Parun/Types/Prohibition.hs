@@ -8,6 +8,8 @@ data Prohibition
     Activate
   | -- | It can't block (CR 509.1b).
     Block
+  | -- | Counters can't be put on it (CR 122.6).
+    Counters
   | -- | It can't be regenerated (CR 701.19c).
     Regenerate
   | -- | It doesn't untap during its controller's untap step (CR 502.3).

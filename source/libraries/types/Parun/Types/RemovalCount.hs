@@ -3,7 +3,7 @@ module Parun.Types.RemovalCount where
 import qualified Parun.Types.Quantity as Quantity
 
 -- | How many counters Parun.Types.RemoveCountersAmong takes off, the player
--- dividing them (CR 608.2d).
+-- dividing them where there is a choice (CR 608.2d).
 data RemovalCount
   = -- | Overseer of Vault 76's "remove three quest counters": that many, and
     -- not an option where fewer are there (CR 608.2d).
@@ -13,6 +13,9 @@ data RemovalCount
     UpTo Quantity.Quantity
   | -- | Galloping Lizrog's "remove any number of +1\/+1 counters".
     AnyNumber
+  | -- | Suncleanser's "remove all counters": every one there, with nothing to
+    -- divide.
+    All
   deriving (Eq, Ord, Show)
 
 -- | The count the card writes, for a caller reading every Quantity an effect
@@ -22,3 +25,4 @@ quantityOf x = case x of
   Exactly quantity -> Just quantity
   UpTo quantity -> Just quantity
   AnyNumber -> Nothing
+  All -> Nothing

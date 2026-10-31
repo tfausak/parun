@@ -2335,6 +2335,7 @@ rewriteRemovalCount pairs count = case count of
   RemovalCount.Exactly quantity -> RemovalCount.Exactly (rewriteQuantity pairs quantity)
   RemovalCount.UpTo quantity -> RemovalCount.UpTo (rewriteQuantity pairs quantity)
   RemovalCount.AnyNumber -> count
+  RemovalCount.All -> count
 
 -- CR 612.1 through a Quantity: a Count's Filter is where the subtype word hides,
 -- and its Aggregation may name a further Quantity. Every remaining arm is a leaf.

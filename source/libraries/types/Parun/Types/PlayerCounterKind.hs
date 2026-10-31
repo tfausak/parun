@@ -15,6 +15,8 @@ module Parun.Types.PlayerCounterKind where
 --
 -- A new constructor owes data/cards/aetheric-amplifier.json an entry: its "each
 -- kind of counter you have" (CR 701.10e) is one GainPlayerCounters per kind.
+-- It owes data/cards/suncleanser.json one too: its "loses all counters" is one
+-- RemovePlayerCounters per kind.
 data PlayerCounterKind
   = Energy -- CR 107.14
   | Ticket -- CR 107.17
