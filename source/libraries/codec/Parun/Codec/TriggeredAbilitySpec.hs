@@ -12,6 +12,7 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.BeginningStep as BeginningStep
+import qualified Parun.Types.BlockRole as BlockRole
 import qualified Parun.Types.Clause as Clause
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Compares as Compares
@@ -149,7 +150,7 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbility" $ do
                 { TriggeredAbility.condition = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Combat CombatStep.BeginningOfCombat) Nothing TurnScope.EachTurn),
                   TriggeredAbility.modal =
                     Modal.MkModal
-                      (Seq.singleton (Mode.MkMode (Seq.singleton (Clause.MkClause Nothing Nothing Nothing Optionality.Mandatory Nothing (Seq.singleton (Effect.Untap (ObjectRef.EachMatching Filter.AttackedThisTurn))))) Map.empty))
+                      (Seq.singleton (Mode.MkMode (Seq.singleton (Clause.MkClause Nothing Nothing Nothing Optionality.Mandatory Nothing (Seq.singleton (Effect.Untap (ObjectRef.EachMatching (Filter.DeclaredThisTurn BlockRole.Attacker)))))) Map.empty))
                       (ModeSelection.ChooseExactly 1)
                       ModeMemory.NoMemory,
                   TriggeredAbility.intervening = Nothing,
@@ -160,7 +161,7 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbility" $ do
             )
           ]
       )
-      " {\"each combat\":{\"condition\":{\"type\":\"StepBegins\",\"value\":{\"phase\":{\"type\":\"Combat\",\"value\":{\"type\":\"BeginningOfCombat\"}},\"scope\":{\"type\":\"EachTurn\"}}},\"modal\":{\"modes\":[{\"clauses\":[{\"effects\":[{\"type\":\"Untap\",\"value\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"AttackedThisTurn\"}}}]}]}]}},\"sacrifice it\":{\"condition\":{\"type\":\"StepBegins\",\"value\":{\"phase\":{\"type\":\"Ending\",\"value\":{\"type\":\"EndStep\"}},\"scope\":{\"type\":\"EachTurn\"}}},\"modal\":{\"modes\":[{\"clauses\":[{\"effects\":[{\"type\":\"Sacrifice\",\"value\":{\"ref\":{\"type\":\"InSlot\",\"value\":\"token\"}}}]}]}]}}} "
+      " {\"each combat\":{\"condition\":{\"type\":\"StepBegins\",\"value\":{\"phase\":{\"type\":\"Combat\",\"value\":{\"type\":\"BeginningOfCombat\"}},\"scope\":{\"type\":\"EachTurn\"}}},\"modal\":{\"modes\":[{\"clauses\":[{\"effects\":[{\"type\":\"Untap\",\"value\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"DeclaredThisTurn\",\"value\":{\"type\":\"Attacker\"}}}}]}]}]}},\"sacrifice it\":{\"condition\":{\"type\":\"StepBegins\",\"value\":{\"phase\":{\"type\":\"Ending\",\"value\":{\"type\":\"EndStep\"}},\"scope\":{\"type\":\"EachTurn\"}}},\"modal\":{\"modes\":[{\"clauses\":[{\"effects\":[{\"type\":\"Sacrifice\",\"value\":{\"ref\":{\"type\":\"InSlot\",\"value\":\"token\"}}}]}]}]}}} "
   -- CR 603.4: an ability stating no intervening "if" leaves only the two
   -- required keys.
   Spec.it s "an all-default value omits every optional key" $

@@ -238,7 +238,7 @@ data Quantity
     -- Rule 207.2c's raid is this compared against 1, and it is neither of the two
     -- arms it sits between. OpponentsAttacked counts the OPPONENTS a declaration
     -- reached, so an attack aimed only at a planeswalker (CR 506.3) answers 0;
-    -- Filter.AttackedThisTurn asks a candidate whether it attacked, so a count
+    -- Filter.DeclaredThisTurn Attacker asks a candidate whether it attacked, so a count
     -- over the battlefield loses an attacker that has since died. Raid asks
     -- neither: it asks whether the DECLARATION happened, which only the log
     -- records.

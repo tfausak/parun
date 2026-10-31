@@ -299,6 +299,7 @@ records reading event = case reading of
   HistoryRead.Activations -> False
   HistoryRead.Attacks -> attackerDeclared event
   HistoryRead.Bendings -> bent event
+  HistoryRead.Blockers -> blocked event
   HistoryRead.Blocks -> Maybe.isJust (Game.blockedAttacker event)
   HistoryRead.Casts -> Maybe.isJust (Game.castOf event)
   HistoryRead.CoinFlips -> coinFlipped event
@@ -337,6 +338,11 @@ becameMonarch event = case event of
 attackerDeclared :: GameEvent -> Bool
 attackerDeclared event = case event of
   GameEvent.AttackerDeclared {} -> True
+  _ -> False
+
+blocked :: GameEvent -> Bool
+blocked event = case event of
+  GameEvent.BlocksDeclared {} -> True
   _ -> False
 
 dealtDamage :: GameEvent -> Bool

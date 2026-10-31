@@ -11,6 +11,8 @@ data HistoryRead
     Attacks
   | -- | Bending actions taken (CR 701.65b, 701.66b, 701.67c, 702.189b).
     Bendings
+  | -- | Creatures that blocked (CR 509.3a).
+    Blockers
   | -- | Attackers that became blocked (CR 509.1h).
     Blocks
   | -- | Spells cast (CR 601.2i).

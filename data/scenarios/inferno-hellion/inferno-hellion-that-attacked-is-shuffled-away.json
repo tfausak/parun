@@ -1,0 +1,14 @@
+{
+  "description": "CR 603.4 / 508.1a Inferno Hellion: the Hellion that attacked this turn is shuffled into its owner's library at the end step; the one that neither attacked nor blocked stays",
+  "note": "Pairs with inferno-hellion-that-blocked-is-shuffled-away, where the roles swap seats.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Inferno Hellion", "label": "attacker", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Inferno Hellion", "label": "idle", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$attacker"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 13}}},
+    {"turn": 1, "step": "EndStep", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["Island", "Inferno Hellion#2", "Island#2", "Island#3"]}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Inferno Hellion", "count": 0}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Library", "card": "Inferno Hellion", "count": 1}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Inferno Hellion", "count": 1}}}
+  ]
+}

@@ -262,7 +262,10 @@
                                 {
                                   "type": "Not",
                                   "value": {
-                                    "type": "AttackedThisTurn"
+                                    "type": "DeclaredThisTurn",
+                                    "value": {
+                                      "type": "Attacker"
+                                    }
                                   }
                                 }
                               ]

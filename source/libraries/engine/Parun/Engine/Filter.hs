@@ -336,15 +336,15 @@ data View = MkView
     -- `blocking` still counts. Empty from Count.lastKnownView too, as
     -- `blockers` is: CR 506.4 takes a departed creature out of combat.
     blocked :: Set.Set ObjectId.ObjectId,
-    -- CR 608.2i: was this candidate declared as an attacker earlier this turn?
-    -- Unlike `attacking` not even a present state: it is a look-back read of the
+    -- CR 608.2i: did this candidate attack or block earlier this turn? Unlike
+    -- `attacking` not even a present state: it is a look-back read of the
     -- turn-scoped GameEvent log.
     --
     -- LAZY, like `attachedToView` below but for a plainer reason: filling it
     -- folds the whole turn's event log, and nothing forces it unless a Filter
-    -- actually contains AttackedThisTurn. That is a cost argument rather than
+    -- actually contains DeclaredThisTurn. That is a cost argument rather than
     -- the recursion hazard that field records.
-    attackedThisTurn :: Bool,
+    declaredThisTurn :: Set.Set BlockRole.BlockRole,
     -- CR 508.1a-d: could this candidate have been declared as an attacker in
     -- one of this turn's declare attackers steps? Membership of
     -- GameState.couldAttackThisTurn.
@@ -360,7 +360,7 @@ data View = MkView
     -- place of CR 508.1k.
     declaredBlockerThisCombat :: Bool,
     -- CR 701.17a: was this candidate MILLED earlier this turn? A look-back read
-    -- of the same log `attackedThisTurn` above reads, and LAZY for that field's
+    -- of the same log `declaredThisTurn` above reads, and LAZY for that field's
     -- reason -- nothing forces it unless a Filter contains MilledThisTurn.
     milledThisTurn :: Bool,
     -- CR 120.1 / 608.2i: was this candidate DEALT DAMAGE earlier this turn? The
@@ -923,8 +923,8 @@ playerView pid =
       blockStatus = Nothing,
       blockers = Set.empty,
       blocked = Set.empty,
-      -- CR 506.3 again: a player was never declared as an attacker either.
-      attackedThisTurn = False,
+      -- CR 506.3 again: a player never attacked or blocked either.
+      declaredThisTurn = Set.empty,
       couldAttackThisTurn = False,
       -- CR 506.3 once more, for the two combat-phase-scoped questions: only a
       -- creature is ever declared as an attacker or a blocker.
@@ -2195,7 +2195,7 @@ matches context view predicate = case predicate of
   -- cannot stop being true within a turn -- nothing removes a GameEvent -- so a
   -- creature removed from combat (CR 506.4) still attacked, which is what
   -- Relentless Assault's "creatures that attacked this turn" means.
-  Filter.AttackedThisTurn -> attackedThisTurn view
+  Filter.DeclaredThisTurn role -> Set.member role (declaredThisTurn view)
   -- CR 508.1a-d: the record each declare attackers step wrote as it began, so
   -- a creature that arrived later, or a turn with no combat, answers False.
   Filter.CouldAttackThisTurn -> couldAttackThisTurn view
@@ -2223,7 +2223,7 @@ matches context view predicate = case predicate of
     Just oid -> Set.member oid (cantCrewVehicles context)
     Nothing -> False
   -- CR 120.1 / 608.2i: the same look-back again, over the damage events. Like
-  -- AttackedThisTurn and MilledThisTurn it cannot stop being true within a turn,
+  -- DeclaredThisTurn and MilledThisTurn it cannot stop being true within a turn,
   -- and unlike either it is not the reading CR 120.3e's marked damage would give
   -- -- CR 120.6's regeneration and CR 120.3d's wither both leave a creature that
   -- was dealt damage carrying nothing marked. Named rather than counted, since
@@ -2284,7 +2284,7 @@ matches context view predicate = case predicate of
   Filter.SaddledSourceThisTurn -> case source context of
     Just src -> Set.member src (saddledThisTurn view)
     Nothing -> False
-  -- CR 302.6: not a look-back over the log at all, unlike AttackedThisTurn,
+  -- CR 302.6: not a look-back over the log at all, unlike DeclaredThisTurn,
   -- MilledThisTurn and DealtDamageThisTurn -- the engine keeps the answer as
   -- Object.sickness, written at the untap step and cleared whenever control
   -- moves.
@@ -2588,7 +2588,7 @@ rewrite pairs predicate = case predicate of
   Filter.IsAttackingBattle _ -> predicate
   Filter.IsBlocking -> predicate
   Filter.HasBlockStatus _ -> predicate
-  Filter.AttackedThisTurn -> predicate
+  Filter.DeclaredThisTurn _ -> predicate
   Filter.CouldAttackThisTurn -> predicate
   Filter.DeclaredAttackerThisCombat -> predicate
   Filter.DeclaredAttackedThisCombat -> predicate
@@ -2601,7 +2601,7 @@ rewrite pairs predicate = case predicate of
   Filter.CrewedSourceThisTurn -> predicate
   Filter.ConvokedSourceThisTurn -> predicate
   Filter.SaddledSourceThisTurn -> predicate
-  -- Untouched for AttackedThisTurn's reason: the atom names no subtype.
+  -- Untouched for DeclaredThisTurn's reason: the atom names no subtype.
   Filter.ControlledSinceTurnBegan -> predicate
   -- DESCENT, for Controls' reason above: the nested filter describes
   -- the HOST ("attached to a Swamp"), so CR 612.1's word swap reaches it exactly
@@ -3344,7 +3344,7 @@ bakeBound players objects controllers predicate = case predicate of
   Filter.IsAttackingBattle _ -> predicate
   Filter.IsBlocking -> predicate
   Filter.HasBlockStatus _ -> predicate
-  Filter.AttackedThisTurn -> predicate
+  Filter.DeclaredThisTurn _ -> predicate
   Filter.CouldAttackThisTurn -> predicate
   Filter.DeclaredAttackerThisCombat -> predicate
   Filter.DeclaredAttackedThisCombat -> predicate
@@ -3514,7 +3514,7 @@ manaValueThresholds predicate = case predicate of
   Filter.IsAttackingBattle _ -> []
   Filter.IsBlocking -> []
   Filter.HasBlockStatus _ -> []
-  Filter.AttackedThisTurn -> []
+  Filter.DeclaredThisTurn _ -> []
   Filter.CouldAttackThisTurn -> []
   Filter.DeclaredAttackerThisCombat -> []
   Filter.DeclaredAttackedThisCombat -> []
@@ -3681,7 +3681,7 @@ statesAQuality predicate = case predicate of
   Filter.IsAttackingBattle _ -> True
   Filter.IsBlocking -> True
   Filter.HasBlockStatus _ -> True
-  Filter.AttackedThisTurn -> True
+  Filter.DeclaredThisTurn _ -> True
   Filter.CouldAttackThisTurn -> True
   Filter.DeclaredAttackerThisCombat -> True
   Filter.DeclaredAttackedThisCombat -> True
@@ -3838,7 +3838,7 @@ readsSourceValues predicate = case predicate of
   Filter.IsAttackingBattle _ -> False
   Filter.IsBlocking -> False
   Filter.HasBlockStatus _ -> False
-  Filter.AttackedThisTurn -> False
+  Filter.DeclaredThisTurn _ -> False
   Filter.CouldAttackThisTurn -> False
   Filter.DeclaredAttackerThisCombat -> False
   Filter.DeclaredAttackedThisCombat -> False
@@ -4005,7 +4005,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.HasBlockStatus _ -> pure predicate
   Filter.DeclaredAttackerThisCombat -> pure predicate
   Filter.DeclaredBlockerThisCombat -> pure predicate
-  Filter.AttackedThisTurn -> pure predicate
+  Filter.DeclaredThisTurn _ -> pure predicate
   Filter.CouldAttackThisTurn -> pure predicate
   Filter.MilledThisTurn -> pure predicate
   Filter.CantCrewVehicles -> pure predicate

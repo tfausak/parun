@@ -180,7 +180,7 @@ viewOfCardLapsed lapsed face =
           Filter.blockStatus = Nothing,
           Filter.blockers = Set.empty,
           Filter.blocked = Set.empty,
-          Filter.attackedThisTurn = False,
+          Filter.declaredThisTurn = Set.empty,
           Filter.couldAttackThisTurn = False,
           -- CR 508.1a / 509.1a: a printed face is in no combat, for the reason
           -- `attacking` above is False.
@@ -644,7 +644,7 @@ viewOfCharacteristics peers oid pc controller counters gs =
       -- CR 608.2i: what this object did this turn and this combat, off the
       -- turn's log and the combat record. Each reader is shared with
       -- Count.lastKnownView, which asks it of an id that has ceased.
-      Filter.attackedThisTurn = Count.attackedThisTurn oid gs,
+      Filter.declaredThisTurn = Count.declaredThisTurn oid gs,
       Filter.couldAttackThisTurn = Count.couldAttackThisTurn oid gs,
       Filter.declaredAttackerThisCombat = Count.declaredAttackerThisCombat oid gs,
       Filter.declaredAttackedThisCombat = Count.declaredAttackedThisCombat oid gs,

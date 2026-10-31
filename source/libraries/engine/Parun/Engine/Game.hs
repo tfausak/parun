@@ -3954,7 +3954,7 @@ bendingActions = Set.fromList [PlayerAction.Airbend, PlayerAction.Earthbend, Pla
 --
 -- CR 508.4's creature put onto the battlefield attacking stays out, only
 -- Parun.Engine.Combat.declareAttackers appending the event -- the same scope
--- Parun.Engine.Count.attackedThisTurn reads.
+-- Parun.Engine.Count.declaredThisTurn reads.
 attackersDeclaredThisTurn :: GameState -> PlayerId -> Natural
 attackersDeclaredThisTurn gs pid = Natural.length (filter (declaredBy pid . LoggedEvent.event) (Foldable.toList (GameState.events gs)))
 

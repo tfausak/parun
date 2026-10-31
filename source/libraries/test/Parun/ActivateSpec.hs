@@ -1144,7 +1144,7 @@ boastBoard duskwielder swamp sorcerer =
 -- turn and only once each turn" (CR 702.142a). The ability is PRINTED rather than
 -- minted, so Duskwielder's card file carries the stamp on the ability itself and
 -- the keyword adds rule 702.142a's two riders (Keyword.printedRiders): an
--- ActivationRestriction.OnlyIf counting the source under Filter.AttackedThisTurn
+-- ActivationRestriction.OnlyIf counting the source under Filter.DeclaredThisTurn Attacker
 -- (CR 608.2i's look-back, which outlives CR 511.3's wipe of Combat.attackers),
 -- and ActivationRestriction.TimesEachTurn. The card file states neither, so
 -- both cases below are the keyword's.

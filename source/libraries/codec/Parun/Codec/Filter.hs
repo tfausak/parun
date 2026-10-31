@@ -117,7 +117,7 @@ codec keywordCodec =
       Arm.nullary "DeclaredAttackedThisCombat" Filter.DeclaredAttackedThisCombat,
       Arm.nullary "IsBlocking" Filter.IsBlocking,
       Arm.payload "HasBlockStatus" BlockStatus.codec Filter.HasBlockStatus (\x -> case x of Filter.HasBlockStatus y -> Just y; _ -> Nothing),
-      Arm.nullary "AttackedThisTurn" Filter.AttackedThisTurn,
+      Arm.payload "DeclaredThisTurn" BlockRole.codec Filter.DeclaredThisTurn (\x -> case x of Filter.DeclaredThisTurn y -> Just y; _ -> Nothing),
       Arm.nullary "CouldAttackThisTurn" Filter.CouldAttackThisTurn,
       Arm.nullary "DeclaredAttackerThisCombat" Filter.DeclaredAttackerThisCombat,
       Arm.nullary "DeclaredBlockerThisCombat" Filter.DeclaredBlockerThisCombat,
@@ -281,7 +281,7 @@ tagOf x = case x of
   Filter.DeclaredAttackedThisCombat {} -> "DeclaredAttackedThisCombat"
   Filter.IsBlocking {} -> "IsBlocking"
   Filter.HasBlockStatus {} -> "HasBlockStatus"
-  Filter.AttackedThisTurn {} -> "AttackedThisTurn"
+  Filter.DeclaredThisTurn {} -> "DeclaredThisTurn"
   Filter.CouldAttackThisTurn {} -> "CouldAttackThisTurn"
   Filter.DeclaredAttackerThisCombat {} -> "DeclaredAttackerThisCombat"
   Filter.DeclaredBlockerThisCombat {} -> "DeclaredBlockerThisCombat"

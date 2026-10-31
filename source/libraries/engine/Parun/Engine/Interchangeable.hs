@@ -144,7 +144,7 @@ objects pcs gs a b =
       -- GameState.couldAttackThisTurn (CR 508.1).
       -- Hand-kept: a new look-back field owes a line here.
       lookBack view =
-        ( Filter.Engine.attackedThisTurn view,
+        ( Filter.Engine.declaredThisTurn view,
           Filter.Engine.couldAttackThisTurn view,
           Filter.Engine.milledThisTurn view,
           Filter.Engine.dealtDamageThisTurn view,

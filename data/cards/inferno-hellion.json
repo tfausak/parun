@@ -1,0 +1,148 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Trample"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Inferno Hellion",
+      "oracleText": "Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)\nAt the beginning of each end step, if this creature attacked or blocked this turn, its owner shuffles it into their library.",
+      "power": {
+        "type": "Literal",
+        "value": 7
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 3
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "StepBegins",
+            "value": {
+              "phase": {
+                "type": "Ending",
+                "value": {
+                  "type": "EndStep"
+                }
+              },
+              "scope": {
+                "type": "EachTurn"
+              }
+            }
+          },
+          "intervening": {
+            "type": "Compares",
+            "value": {
+              "comparison": {
+                "type": "AtLeast"
+              },
+              "measured": {
+                "type": "Count",
+                "value": {
+                  "aggregation": {
+                    "type": "Members"
+                  },
+                  "filter": {
+                    "type": "And",
+                    "value": [
+                      {
+                        "type": "IsSource"
+                      },
+                      {
+                        "type": "Or",
+                        "value": [
+                          {
+                            "type": "DeclaredThisTurn",
+                            "value": {
+                              "type": "Attacker"
+                            }
+                          },
+                          {
+                            "type": "DeclaredThisTurn",
+                            "value": {
+                              "type": "Blocker"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "scope": {
+                    "type": "InZone",
+                    "value": {
+                      "player": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "AnyPlayer"
+                        }
+                      },
+                      "zone": {
+                        "type": "Battlefield"
+                      }
+                    }
+                  }
+                }
+              },
+              "threshold": {
+                "type": "Literal",
+                "value": 1
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "ShuffleIntoLibrary",
+                        "value": {
+                          "refs": [
+                            {
+                              "type": "InSlot",
+                              "value": "self"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Hellion"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}
