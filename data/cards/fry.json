@@ -1,0 +1,108 @@
+{
+  "faces": [
+    {
+      "counterability": {
+        "type": "CantBeCountered"
+      },
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Fry",
+      "oracleText": "This spell can't be countered.\nFry deals 5 damage to target creature or planeswalker that's white or blue.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "DealDamage",
+                    "value": {
+                      "parts": [
+                        {
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 5
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "target"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "target": {
+                "filter": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "Or",
+                      "value": [
+                        {
+                          "type": "HasCardType",
+                          "value": {
+                            "type": "Creature"
+                          }
+                        },
+                        {
+                          "type": "HasCardType",
+                          "value": {
+                            "type": "Planeswalker"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "Or",
+                      "value": [
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "White"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Blue"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "pool": {
+                  "type": "Permanents"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}

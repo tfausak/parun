@@ -1,0 +1,195 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Plains",
+            "label": "p"
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "abear"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Gods Willing",
+            "label": "willing"
+          }
+        ],
+        "library": [
+          {
+            "card": "Forest"
+          },
+          {
+            "card": "Island",
+            "label": "li1"
+          },
+          {
+            "card": "Island",
+            "label": "li2"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Mountain",
+            "label": "m"
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bbear"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Shock",
+            "label": "shock"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 702.16b / 701.22a: Gods Willing gives target creature its controller controls protection from the chosen color until end of turn, then scry 1",
+  "note": "bob's Grizzly Bears is no legal target. alice picks red and bottoms the Forest; bob's Shock can't then target her Bears.",
+  "timeline": [
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseColor",
+          "with": {
+            "type": "Red"
+          }
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "Cast": {
+          "mana": [
+            "$p"
+          ],
+          "object": "$willing",
+          "targets": [
+            "$bbear"
+          ]
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$p"
+          ],
+          "object": "$willing",
+          "targets": [
+            "$abear"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseScry",
+          "with": [
+            [
+              "Forest"
+            ],
+            []
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "$li1",
+            "$li2",
+            "Forest"
+          ],
+          "of": "Zone",
+          "player": "alice",
+          "zone": "Library"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "bob",
+      "refuse": {
+        "Cast": {
+          "mana": [
+            "$m"
+          ],
+          "object": "$shock",
+          "targets": [
+            "$abear"
+          ]
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}
