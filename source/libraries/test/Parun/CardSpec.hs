@@ -3223,8 +3223,7 @@ effectMintedFaces effect = case effect of
 --
 -- A CR 601.2c per-player slot's "that player" name counts as declared too: the
 -- announcement binds it, so a reserved name there loses to the event's stamp
--- (Vaevictis Asmadi's attack trigger read CR 508.3a's `thatPlayer` for every
--- copy and offered only the defending player's permanents).
+-- (CR 508.3a's `thatPlayer` under an attack trigger answers every copy).
 ownDeclaredTargetSlots :: Face.Face Card.Type.Card -> Set.Set SlotName.SlotName
 ownDeclaredTargetSlots card =
   Set.unions

@@ -1,5 +1,5 @@
 {
-  "description": "CR 603.12 / 118.12a / 115.1: at the beginning of combat on alice's turn Skyrider Patrol lets her pay {G}{U}, and when she does a +1/+1 counter and flying go on another creature she controls, the flying until end of turn; on bob's turn it does not trigger, and declining arms nothing",
+  "description": "CR 603.12 / 603.5 / 115.1: at the beginning of combat on alice's turn Skyrider Patrol lets her pay {G}{U}, and when she does a +1/+1 counter and flying go on another creature she controls, the flying until end of turn; on bob's turn it does not trigger, and declining arms nothing",
   "note": "The reflexive trigger refuses the Patrol itself and bob's Hill Giant and takes alice's Grizzly Bears. The Bears fly through combat on turn 1 and have lost flying by bob's turn 2, where no payment is offered. On turn 3 alice declines and the Bears keep one counter.",
   "board": {
     "active": "alice",
