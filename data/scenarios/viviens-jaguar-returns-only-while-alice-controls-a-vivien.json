@@ -9,5 +9,6 @@
 {"turn":1,"step":"PrecombatMain","player":"alice","do":"Pass"},
 {"turn":1,"step":"PrecombatMain","player":"alice","do":{"Activate":{"object":"$jaguar","mana":["$f6","$f7","$f8"]}}},
 {"turn":1,"step":"PrecombatMain","player":"alice","do":"Pass"},
-{"turn":1,"step":"PrecombatMain","player":"alice","check":{"Count":{"player":"alice","zone":"Hand","card":"Vivien's Jaguar","count":1}}}
+{"turn":1,"step":"PrecombatMain","player":"alice","check":{"Count":{"player":"alice","zone":"Hand","card":"Vivien's Jaguar","count":1}}},
+{"turn":1,"step":"PrecombatMain","player":"alice","check":{"Keywords":{"object":"Vivien's Jaguar","keyword":{"type":"Reach"},"count":1}}}
 ]}

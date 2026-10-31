@@ -1,6 +1,6 @@
 {
   "description": "CR 614.1c / 602.5d / 701.8a: Transmogrifying Wand enters with three charge counters, and removing one at sorcery speed destroys target creature while its controller creates a 2/4 white Ox, even when the creature survives",
-  "note": "The first activation destroys bob's Hill Giant and gives bob an Ox, none to alice. On turn 3, with the Wand untapped, alice is refused the activation at the beginning of combat. In her second main phase it targets bob's indestructible Darksteel Myr, which stays, and bob still gets a second Ox; one counter is left.",
+  "note": "The first activation destroys bob's Hill Giant and gives bob a 2/4 white Ox, none to alice. On turn 3, with the Wand untapped, alice is refused the activation at the beginning of combat. In her second main phase it targets bob's indestructible Darksteel Myr, which stays, and bob still gets a second Ox; one counter is left.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
@@ -181,6 +181,20 @@
           "object": "Ox Token",
           "power": 2,
           "toughness": 4
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Colors",
+          "object": "Ox Token",
+          "is": [
+            "White"
+          ]
         }
       }
     },

@@ -1,6 +1,6 @@
 {
   "description": "CR 701.20a / 509.1b / 611.2c: Tezzeret's Gatebreaker's entering trigger takes a blue or an artifact card from the top five, and its sacrifice ability makes alice's creatures unblockable this turn, a creature arriving afterwards included",
-  "note": "The first Gatebreaker's five hold a Grizzly Bears (green, refused), a Wind Drake (blue) and a Memnite (colourless artifact); the Drake is taken. The second's hold a Llanowar Elves (refused), an Ornithopter (colourless artifact) and a Coral Merfolk (blue); the Ornithopter is taken. After the sacrifice alice casts a Raging Goblin, which did not exist when the ability resolved; bob's Hill Giant and Wall of Wood can block neither it nor her Bears.",
+  "note": "The first Gatebreaker's five hold a Grizzly Bears (green, refused), a Wind Drake (blue) and a Memnite (colourless artifact); the Drake is taken. The second's hold a Llanowar Elves (refused), an Ornithopter (colourless artifact) and a Coral Merfolk (blue); the Ornithopter is taken. After the sacrifice alice casts a Raging Goblin, which did not exist when the ability resolved; bob's Hill Giant and Wall of Wood can block neither it nor her Bears that turn, and on her turn 3 the Giant blocks the Bears.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
@@ -408,6 +408,49 @@
         "Life": {
           "player": "bob",
           "life": 17
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "do": {
+        "Attack": []
+      }
+    },
+    {
+      "turn": 3,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$mybears"
+        ]
+      }
+    },
+    {
+      "turn": 3,
+      "step": "DeclareBlockers",
+      "player": "bob",
+      "do": {
+        "Block": {
+          "$giant": [
+            "$mybears"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "check": {
+        "Blockers": {
+          "attacker": "$mybears",
+          "blockers": [
+            "$giant"
+          ]
         }
       }
     }

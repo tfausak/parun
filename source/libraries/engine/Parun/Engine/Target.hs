@@ -2378,6 +2378,10 @@ bakeSlot players slot =
 -- permanent that player controls" asks only of the players who control one
 -- (Sylvan Primordial's ruling: "If an opponent has any legal permanents to
 -- target, you must target one of them"). Parun.TargetPerPlayerSpec proves both.
+--
+-- Not implemented: a required copy whose player controls nothing it could
+-- target is still dropped, so Vaevictis Asmadi's ability goes on the stack
+-- rather than failing for want of targets (#5826).
 announcedSlots :: StackObjectKind.StackObjectKind -> PlayerId -> ObjectId -> GameState -> Map SlotName TargetSlot -> Map SlotName TargetSlot
 announcedSlots kind controller source gs =
   splitPerPlayer

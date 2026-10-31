@@ -1,6 +1,6 @@
 {
   "description": "CR 603.2 / 115.1: Thorn Lieutenant creates a 1/1 green Elf Warrior when a spell an opponent controls targets it, not when its controller's own spell does, and {5}{G} gives it +4/+4",
-  "note": "alice's Giant Growth on the Lieutenant makes no token; the pump takes it from 5/6 to 9/10. bob's Shock on turn 2 makes one, and the Lieutenant survives it.",
+  "note": "alice's Giant Growth on the Lieutenant makes no token; the pump takes it from 5/6 to 9/10, and both are over by bob's turn 2. bob's Shock then makes a 1/1 green Elf Warrior, and the Lieutenant survives it.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
@@ -200,6 +200,18 @@
       "turn": 2,
       "step": "PrecombatMain",
       "player": "bob",
+      "check": {
+        "PowerToughness": {
+          "object": "$lt",
+          "power": 2,
+          "toughness": 3
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "bob",
       "do": {
         "Cast": {
           "object": "$shock",
@@ -228,6 +240,32 @@
           "zone": "Battlefield",
           "card": "Elf Warrior Token",
           "count": 1
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "PowerToughness": {
+          "object": "Elf Warrior Token",
+          "power": 1,
+          "toughness": 1
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "View": {
+          "of": "Colors",
+          "object": "Elf Warrior Token",
+          "is": [
+            "Green"
+          ]
         }
       }
     },

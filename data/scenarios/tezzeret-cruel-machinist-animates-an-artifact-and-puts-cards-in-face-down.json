@@ -245,6 +245,20 @@
       }
     },
     {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Counters": {
+          "object": "$tez",
+          "kind": {
+            "type": "Loyalty"
+          },
+          "count": 7
+        }
+      }
+    },
+    {
       "turn": 5,
       "step": "PrecombatMain",
       "player": "alice",

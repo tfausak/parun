@@ -1,8 +1,8 @@
-{"description":"CR 601.2c / 701.21a / 701.20a / 608.2c: when Vaevictis Asmadi attacks, alice targets one permanent each player controls, each player sacrifices theirs, and each reveals their top card and puts it onto the battlefield under their control if it's a permanent card",
-"note":"Three seats, so 'that player' is not 'an opponent'. A target from carol is refused in bob's slot. alice sacrifices her Grizzly Bears and reveals a Hill Giant, which enters under her control; bob sacrifices his Ornithopter and reveals a Shock, which stays on top of his library; carol sacrifices her Wall of Wood and reveals a Forest, which enters under hers.",
+{"description":"CR 601.2c / 701.21a / 701.20a / 608.2c / 608.2b: when Vaevictis Asmadi attacks, alice targets one permanent each player controls, each player sacrifices theirs, and each who did reveals their top card and puts it onto the battlefield under their control if it's a permanent card",
+"note":"Three seats, so 'that player' is not 'an opponent'. A target from carol is refused in bob's slot. bob Shocks his own targeted Ornithopter in response, so he sacrifices nothing and does not reveal: his Hill Giant stays on top of his library (the card's 2018-07-13 ruling). alice sacrifices her Grizzly Bears and reveals a Shock, which stays on top of her library; carol sacrifices her Wall of Wood and reveals a Forest, which enters under her control.",
 "board":{"active":"alice","step":"PrecombatMain","seats":[
-{"name":"alice","battlefield":[{"card":"Vaevictis Asmadi, the Dire","label":"vae","ready":true},{"card":"Grizzly Bears","label":"bears"}],"library":[{"card":"Hill Giant","label":"giant"},{"card":"Island"},{"card":"Island"}]},
-{"name":"bob","battlefield":[{"card":"Ornithopter","label":"thopter"}],"library":[{"card":"Shock","label":"shock"},{"card":"Island"},{"card":"Island"}]},
+{"name":"alice","battlefield":[{"card":"Vaevictis Asmadi, the Dire","label":"vae","ready":true},{"card":"Grizzly Bears","label":"bears"}],"library":[{"card":"Shock","label":"ashock"},{"card":"Island"},{"card":"Island"}]},
+{"name":"bob","battlefield":[{"card":"Ornithopter","label":"thopter"},{"card":"Mountain","label":"m"}],"hand":[{"card":"Shock","label":"bshock"}],"library":[{"card":"Hill Giant","label":"bgiant"},{"card":"Island"},{"card":"Island"}]},
 {"name":"carol","battlefield":[{"card":"Wall of Wood","label":"wall"}],"library":[{"card":"Forest","label":"forest"},{"card":"Island"},{"card":"Island"}]}]},
 "timeline":[
 {"turn":1,"step":"DeclareAttackers","player":"alice","do":{"Attack":["$vae"]}},
@@ -10,12 +10,18 @@
 {"turn":1,"step":"DeclareAttackers","player":"alice","refuse":{"ChooseTargets":{"target#player0":["$bears"],"target#player1":["$wall"],"target#player2":["$thopter"]}}},
 {"turn":1,"step":"DeclareAttackers","player":"alice","do":{"ChooseTargets":{"target#player0":["$bears"],"target#player1":["$thopter"],"target#player2":["$wall"]}}},
 {"turn":1,"step":"DeclareAttackers","player":"alice","do":"Pass"},
-{"turn":1,"step":"DeclareAttackers","player":"alice","check":{"Count":{"player":"alice","zone":"Graveyard","card":"Grizzly Bears","count":1}}},
+{"turn":1,"step":"DeclareAttackers","player":"bob","do":{"Cast":{"object":"$bshock","targets":["$thopter"],"mana":["$m"]}}},
+{"turn":1,"step":"DeclareAttackers","player":"bob","do":"Pass"},
+{"turn":1,"step":"DeclareAttackers","player":"alice","do":"Pass"},
 {"turn":1,"step":"DeclareAttackers","player":"alice","check":{"Count":{"player":"bob","zone":"Graveyard","card":"Ornithopter","count":1}}},
+{"turn":1,"step":"DeclareAttackers","player":"alice","do":"Pass"},
+{"turn":1,"step":"DeclareAttackers","player":"alice","check":{"Count":{"player":"bob","zone":"Library","card":"Hill Giant","count":1}}},
+{"turn":1,"step":"DeclareAttackers","player":"alice","check":{"Count":{"player":"bob","zone":"Battlefield","card":"Hill Giant","count":0}}},
+{"turn":1,"step":"DeclareAttackers","player":"alice","check":{"Count":{"player":"alice","zone":"Graveyard","card":"Grizzly Bears","count":1}}},
 {"turn":1,"step":"DeclareAttackers","player":"alice","check":{"Count":{"player":"carol","zone":"Graveyard","card":"Wall of Wood","count":1}}},
-{"turn":1,"step":"DeclareAttackers","player":"alice","check":{"Count":{"player":"alice","zone":"Battlefield","card":"Hill Giant","count":1}}},
-{"turn":1,"step":"DeclareAttackers","player":"alice","check":{"Count":{"player":"bob","zone":"Library","card":"Shock","count":1}}},
-{"turn":1,"step":"DeclareAttackers","player":"alice","check":{"Count":{"player":"bob","zone":"Battlefield","card":"Shock","count":0}}},
+{"turn":1,"step":"DeclareAttackers","player":"alice","check":{"Count":{"player":"alice","zone":"Library","card":"Shock","count":1}}},
+{"turn":1,"step":"DeclareAttackers","player":"alice","check":{"Count":{"player":"alice","zone":"Battlefield","card":"Shock","count":0}}},
 {"turn":1,"step":"DeclareAttackers","player":"alice","check":{"Count":{"player":"carol","zone":"Battlefield","card":"Forest","count":1}}},
-{"turn":1,"step":"DeclareAttackers","player":"alice","check":{"View":{"of":"Witnessed","player":"alice","is":["Hill Giant","Shock","Forest"]}}}
+{"turn":1,"step":"DeclareAttackers","player":"alice","check":{"View":{"of":"Witnessed","player":"alice","is":["Shock","Forest"]}}},
+{"turn":1,"step":"DeclareAttackers","player":"alice","check":{"Keywords":{"object":"$vae","keyword":{"type":"Flying"},"count":1}}}
 ]}
