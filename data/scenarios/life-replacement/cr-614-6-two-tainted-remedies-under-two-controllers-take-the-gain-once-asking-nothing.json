@@ -1,0 +1,73 @@
+{
+  "board": {
+    "active": "bob",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Tainted Remedy",
+            "ready": true
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Plains",
+            "label": "bp",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Blossoming Calm",
+            "label": "bcalm"
+          }
+        ],
+        "name": "bob"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Tainted Remedy",
+            "ready": true
+          }
+        ],
+        "name": "carol"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 614.6 two Tainted Remedies under two controllers take the gain once, asking nothing",
+  "final": [
+    {
+      "Life": {
+        "life": 18,
+        "player": "bob"
+      }
+    }
+  ],
+  "note": "The ruling: once one applies there is no life gain for the other. The two rows are interchangeable, so bob is not asked to order them (CR 616.1) and loses 2, not 4.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$bp"
+          ],
+          "object": "$bcalm"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

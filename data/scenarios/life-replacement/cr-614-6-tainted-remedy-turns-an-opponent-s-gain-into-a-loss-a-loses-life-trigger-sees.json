@@ -1,0 +1,83 @@
+{
+  "board": {
+    "active": "bob",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Tainted Remedy",
+            "ready": true
+          },
+          {
+            "card": "Exquisite Blood",
+            "ready": true
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Plains",
+            "label": "bp",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Blossoming Calm",
+            "label": "bcalm"
+          }
+        ],
+        "name": "bob"
+      },
+      {
+        "name": "carol"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 614.6 an opponent's life gain becomes a life loss a loses-life trigger sees",
+  "final": [
+    {
+      "Life": {
+        "life": 18,
+        "player": "bob"
+      }
+    },
+    {
+      "Life": {
+        "life": 22,
+        "player": "alice"
+      }
+    },
+    {
+      "Life": {
+        "life": 20,
+        "player": "carol"
+      }
+    }
+  ],
+  "note": "Tainted Remedy turns bob's 2 life into a 2-life loss (CR 119.3), so alice's Exquisite Blood triggers and gains her 2; her own gain is not an opponent's. The board without Tainted Remedy is the paired control.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$bp"
+          ],
+          "object": "$bcalm"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

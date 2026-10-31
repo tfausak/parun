@@ -1623,8 +1623,8 @@ rewriteReplacementEffect pairs effect = case effect of
   -- and no arm of the rewrite names a Filter or a card. No printed word, so
   -- nothing to swap.
   ReplacementEffect.LifeLossR {} -> effect
-  -- CR 614.1a / 119.10: a LifeGainR is one CR 109.5 relation and one scaling.
-  -- No printed word, so nothing to swap.
+  -- CR 614.1a / 119.10: a LifeGainR is one CR 109.5 relation and one rewrite
+  -- naming no Filter or card. No printed word, so nothing to swap.
   ReplacementEffect.LifeGainR {} -> effect
   -- CR 614.1a: an InstructionR is one instruction, one CR 109.5 relation and one
   -- scaling or DrawInstead; no Filter and no card. LifeGainR's answer, and for

@@ -2267,6 +2267,7 @@ syphon-soul
 tablet-of-the-guilds
 tahngarths-glare
 tainted-aether
+tainted-remedy
 takesies-backsies
 talas-explorer
 talent-of-the-telepath

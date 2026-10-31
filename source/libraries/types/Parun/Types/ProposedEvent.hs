@@ -167,8 +167,8 @@ data ProposedEvent
     -- draw.
     --
     -- NO cause, where WouldLoseLife carries one: the loss side needs the grain
-    -- because Worship's clause is scoped to damage, and no printed gain clause
-    -- narrows by how the gain came about. The field appears when a card needs it.
+    -- because Worship's clause is scoped to damage. Not implemented: the cause
+    -- and causing controller Rain of Gore's clause reads (#5810).
     --
     -- The Natural is the life that WOULD be gained, never the resulting total,
     -- WouldLoseLife's currency and for its reason.

@@ -22,4 +22,11 @@ spec s = Spec.describe s "Parun.Codec.LifeGainRewrite" $ do
       LifeGainRewrite.codec
       LifeGainRewrite.DrawInstead
       " {\"type\":\"DrawInstead\"} "
+  -- Tainted Remedy's "that player loses that much life instead".
+  Spec.it s "LoseInstead" $
+    Common.assertCodec
+      s
+      LifeGainRewrite.codec
+      LifeGainRewrite.LoseInstead
+      " {\"type\":\"LoseInstead\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s LifeGainRewrite.codec

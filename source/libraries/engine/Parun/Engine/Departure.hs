@@ -131,7 +131,7 @@ losing asOf replacing reason named = do
   -- nobody with it (CR 104.3i, 810.8a).
   let propose candidates =
         if replacing
-          then Set.fromList <$> Monad.filterM (fmap Maybe.isNothing . Event.applyReplacementsIn asOf Set.empty . ProposedEvent.WouldLoseGame) candidates
+          then Set.fromList <$> Monad.filterM (fmap Maybe.isNothing . Event.applyReplacementsIn asOf Set.empty Set.empty . ProposedEvent.WouldLoseGame) candidates
           else pure Set.empty
   replacedNamed <- propose (if reason == Departure.Lost then named else [])
   -- CR 101.2 / 104.3i: a general an effect says can't lose the game stays in

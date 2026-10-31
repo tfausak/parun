@@ -1164,7 +1164,7 @@ breaches gs you rewrite pid n = case rewrite of
 -- CR 614.1a: would this rewrite actually change the gain? `breaches` above, for
 -- the gain class -- and simpler, since no arm of Parun.Types.LifeGainRewrite
 -- reads the board. A gain the funnel proposes is never 0 (CR 119.10), so
--- DrawInstead always changes it.
+-- DrawInstead and LoseInstead always change it.
 --
 -- `Scaled (Multiply 1)` and `Scaled (AddMore 0)` resize nothing and are refused,
 -- which is `breaches`' Scaled arm carried over word for word: a fence rather than
@@ -1174,6 +1174,7 @@ resizes :: LifeGainRewrite.LifeGainRewrite -> Natural -> Bool
 resizes rewrite n = case rewrite of
   LifeGainRewrite.Scaled scaling -> scale scaling n /= n
   LifeGainRewrite.DrawInstead -> True
+  LifeGainRewrite.LoseInstead -> True
 
 -- Does the REWRITE itself admit this entry, over and above the pattern matching
 -- the entering object? `admits` and `unspent` above, for the entry class.
@@ -2301,6 +2302,9 @@ readsApplier re = case re of
   -- The drawer is the player the EVENT named and the count is the event's own,
   -- the arm above's answer.
   ReplacementEffect.LifeGainR (LifeGainR.MkLifeGainR _ LifeGainRewrite.DrawInstead) -> False
+  -- The loser and the amount are the event's own, the arm above's answer; the
+  -- two-tainted-remedies scenario in data/scenarios/life-replacement proves it.
+  ReplacementEffect.LifeGainR (LifeGainR.MkLifeGainR _ LifeGainRewrite.LoseInstead) -> False
   -- The player who gains the life is the one the EVENT named, and the amount is
   -- the effect's own field, so two rows alike in `effect` gain the same seat the
   -- same life whoever holds them. CR 109.5's "you" is read in `applies` rather

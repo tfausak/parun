@@ -1,0 +1,76 @@
+{
+  "board": {
+    "active": "bob",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Tainted Remedy",
+            "ready": true
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Plains",
+            "label": "bp",
+            "ready": true
+          },
+          {
+            "card": "Worship",
+            "ready": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Blossoming Calm",
+            "label": "bcalm"
+          }
+        ],
+        "life": 1,
+        "name": "bob"
+      },
+      {
+        "name": "carol"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 119.3 the life Tainted Remedy takes is no damage, so Worship does not keep bob at 1",
+  "final": [
+    {
+      "Life": {
+        "life": -1,
+        "player": "bob"
+      }
+    }
+  ],
+  "note": "Bob is at 1 with Worship and a creature. His 2 life becomes an effect's 2-life loss, which Worship's damage clause does not reach, so he goes to -1.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$bp"
+          ],
+          "object": "$bcalm"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

@@ -19,4 +19,7 @@ data LifeGainRewrite
   | -- | CR 614.6 / Lich: "draw that many cards instead" -- the gain never
     -- happens, and the player the event named draws one card per life.
     DrawInstead
+  | -- | CR 614.6 / 119.3 / Tainted Remedy: "loses that much life instead" -- the
+    -- gain never happens, and the player the event named loses that much life.
+    LoseInstead
   deriving (Eq, Ord, Show)
