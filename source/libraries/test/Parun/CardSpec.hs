@@ -3339,7 +3339,10 @@ reservedBindings = Set.intersection reservedSlots . boundSlots
 namedTokens :: Set.Set CardName.CardName
 namedTokens =
   Set.fromList
-    [ -- Synthetic Ursine Rite's, whose card-authored name spells its own Bear
+    [ -- Ajani, Strength of the Pride's "a 2/2 white Cat Soldier creature token
+      -- named Ajani's Pridemate".
+      CardName.MkCardName (Text.pack "Ajani's Pridemate"),
+      -- Synthetic Ursine Rite's, whose card-authored name spells its own Bear
       -- subtype inside a longer word -- the CR 612.2 boundary case.
       CardName.MkCardName (Text.pack "Bearer of the Wilds"),
       -- CR 111.10j's Cursed Role (Spiteful Hexmage).

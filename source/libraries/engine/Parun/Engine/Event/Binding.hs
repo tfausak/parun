@@ -510,10 +510,11 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- "That player": the discarder, which CR 701.9a makes one player and the event
   -- carries directly. The same reserved slot CR 702.70a's poisonous uses, for the
   -- same reason -- a player the EVENT names, which CR 109.5's `you` cannot stand
-  -- in for.
-  (TriggerCondition.PlayerDiscards _, GameEvent.Discarded (Discarded.MkDiscarded discarder _ _ _ _)) ->
-    Binding.setTriggerPlayer discarder Map.empty
-  -- The drawing player, PlayerDiscards' slot for CR 121.1's draw (Underworld
+  -- in for. "That card" is CR 400.7e's `became`, the card's new incarnation the
+  -- event carries (Bag of Holding's "exile that card from your graveyard").
+  (TriggerCondition.PlayerDiscards _, GameEvent.Discarded (Discarded.MkDiscarded discarder card _ _ _)) ->
+    Binding.setBecame card (Binding.setTriggerPlayer discarder Map.empty)
+  -- The drawing player, PlayerDiscards' player slot for CR 121.1's draw (Underworld
   -- Dreams' "that player").
   (TriggerCondition.PlayerDrawsNthCard _, GameEvent.Drew (Drew.MkDrew drawer _)) ->
     Binding.setTriggerPlayer drawer Map.empty
@@ -1575,8 +1576,9 @@ eventBindingSlots cond = case cond of
   -- whom Binding.setYou already names.
   TriggerCondition.SelfExiledForMadness -> Set.empty
   -- CR 701.9a's discarding player, which is nobody the bearer already names --
-  -- Megrim's "that player" is the opponent whose hand the card left.
-  TriggerCondition.PlayerDiscards _ -> Set.singleton Binding.triggerPlayer
+  -- Megrim's "that player" is the opponent whose hand the card left -- and CR
+  -- 400.7e's discarded card, Bag of Holding's "that card".
+  TriggerCondition.PlayerDiscards _ -> Set.fromList [Binding.triggerPlayer, Binding.became]
   -- The batch's card count, eventBindings' arm summed by batchBindings; no
   -- "that player" printing under this condition earns the discarder's slot.
   TriggerCondition.PlayerDiscardsCards _ -> Set.singleton Binding.eventAmount
@@ -1586,7 +1588,7 @@ eventBindingSlots cond = case cond of
   -- condition that said "that player" is what would earn the slot. eventBindings
   -- has no arm for this condition, and the two must agree.
   TriggerCondition.PlayerCycles _ -> Set.empty
-  -- CR 121.1's drawing player, PlayerDiscards' slot: Underworld Dreams' "that
+  -- CR 121.1's drawing player, PlayerDiscards' player slot: Underworld Dreams' "that
   -- player" is the opponent who drew.
   TriggerCondition.PlayerDrawsNthCard {} -> Set.singleton Binding.triggerPlayer
   -- CR 508.5's defending player, which the declaration event carries -- rule
