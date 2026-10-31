@@ -1,0 +1,35 @@
+{
+  "description": "Liliana, the Necromancer's -7 destroys up to two target creatures, then puts up to two creature cards from any graveyards, a just-destroyed one included, onto the battlefield under its controller's control",
+  "note": "Four creature cards are offered after the destruction (the two destroyed, one in each graveyard already) beside a noncreature card, so the offer, the ceiling and the controller are each observable. Taking two of four rules out an exact count by the prompt itself.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{"card": "Liliana, the Necromancer", "label": "lili", "counters": [{"key": {"type": "Loyalty"}, "value": 7}]}],
+        "graveyard": [{"card": "Craw Wurm", "label": "wurm"}, {"card": "Island", "label": "island"}],
+        "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Hill Giant", "label": "giant"}],
+        "graveyard": [{"card": "Air Elemental", "label": "elemental"}],
+        "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]
+      }
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$lili", "ability": 2, "targets": ["$bears", "$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardsInGraveyards", "with": ["Grizzly Bears", "$elemental"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"OrderTimestamps": ["Air Elemental", "Grizzly Bears"]}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"card": "Grizzly Bears", "count": 1, "player": "alice", "zone": "Battlefield"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Controller", "object": "Grizzly Bears", "is": "alice"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Controller", "object": "Air Elemental", "is": "alice"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"card": "Hill Giant", "count": 1, "player": "bob", "zone": "Graveyard"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"card": "Craw Wurm", "count": 1, "player": "alice", "zone": "Graveyard"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"card": "Island", "count": 1, "player": "alice", "zone": "Graveyard"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"card": "Liliana, the Necromancer", "count": 1, "player": "alice", "zone": "Graveyard"}}}
+  ]
+}

@@ -953,21 +953,36 @@ chosenCardsInGraveyard legal resolving controller source (ChosenCardInGraveyard.
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
-      wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
+      amount = maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor viewOf context gs resolving source
       -- `made` is every card this pass has taken so far, beside
       -- who took it: CR 101.4b lets a later chooser know them.
-      pick made asked n candidates
+      pickExactly made asked n candidates
         | n <= (0 :: Natural) = pure made
         | otherwise = do
             picked <- Game.chooseAmong (\decider who pool -> Prompt.ChooseCardInGraveyard decider who source pool made) asked candidates
             case picked of
               Nothing -> pure made
-              Just taken -> pick (made Seq.|> (asked, taken)) asked (n - 1) (List.delete taken candidates)
-      ask asked = fmap (fmap snd . Foldable.toList) . pick Seq.empty asked wanted
+              Just taken -> pickExactly (made Seq.|> (asked, taken)) asked (n - 1) (List.delete taken candidates)
+      -- "Up to" is one ask over every candidate, through Game.pickCounted.
+      -- Not implemented: that ask names no earlier chooser's picks, which CR
+      -- 101.4b lets a later chooser know (#5832).
+      pick made asked candidates = case count of
+        HowMany.Exactly q -> pickExactly made asked (amount q) candidates
+        HowMany.UpTo _ ->
+          (\taken -> made <> Seq.fromList (fmap ((,) asked) taken))
+            <$> Game.pickCounted
+              True
+              (pure (Just asked))
+              (\decider who pool -> Prompt.ChooseCardInGraveyard decider who source pool made)
+              (\decider who pool ceiling_ -> Prompt.ChooseAnyNumber decider who source AnyNumberOf.CardsInGraveyards pool ceiling_)
+              amount
+              count
+              candidates
+      ask asked = fmap (fmap snd . Foldable.toList) . pick Seq.empty asked
   case chooser of
     Chooser.TheController -> ask controller (graveyardCards context legal source controller gs scope filter_)
     Chooser.EachInScope ->
-      fmap (fmap snd . Foldable.toList) . Monad.foldM (\made pid -> pick made pid wanted (graveyardCardsOf context gs pid filter_)) Seq.empty $
+      fmap (fmap snd . Foldable.toList) . Monad.foldM (\made pid -> pick made pid (graveyardCardsOf context gs pid filter_)) Seq.empty $
         Target.zoneScopePlayers (Plane.rangePerspective source controller gs) (Just controller) legal scope gs
     -- ONE chooser, read out of the slot a ChoosePlayer bound,
     -- choosing out of their own graveyard. Through playerRefPlayers so
@@ -3417,7 +3432,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
         let holders = handChoosers legal resolving source controller gs player
          in not (null holders) && all (\pid -> null (handCardsOf context gs pid filter_)) holders
       ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard chooser scope filter_ count) ->
-        positive count && case chooser of
+        mustPick count && case chooser of
           Chooser.TheController -> null (graveyardCards context legal source controller gs scope filter_)
           Chooser.EachInScope ->
             let scoped = Target.zoneScopePlayers (Plane.rangePerspective source controller gs) (Just controller) legal scope gs

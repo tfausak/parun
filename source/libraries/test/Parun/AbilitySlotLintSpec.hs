@@ -85,6 +85,7 @@ import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
@@ -1499,7 +1500,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         takeFrom scope =
           Effect.MoveToZone
             ( MoveToZone.MkMoveToZone
-                (ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard Chooser.TheController scope (Filter.Type.HasCardType CardType.Artifact) (Quantity.Type.Literal 1)))
+                (ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard Chooser.TheController scope (Filter.Type.HasCardType CardType.Artifact) HowMany.one))
                 Zone.Battlefield
                 EntryRiders.defaultValue
                 Nothing

@@ -82,6 +82,7 @@ kindOf prompt = Text.pack $ case prompt of
     AnyNumberOf.Permanents -> "ChooseAnyNumberOfPermanents"
     AnyNumberOf.CardsFromAmong -> "ChooseCardsFromAmong"
     AnyNumberOf.CardsInHand -> "ChooseCardsInHand"
+    AnyNumberOf.CardsInGraveyards -> "ChooseCardsInGraveyards"
     AnyNumberOf.ToSacrifice -> "ChooseAnyNumberToSacrifice"
     AnyNumberOf.ToReveal -> "ChooseAnyNumberToReveal"
     AnyNumberOf.ToExile -> "ChooseAnyNumberToExile"

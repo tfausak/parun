@@ -545,7 +545,7 @@ objectRefSlots ref = joinTwo (joinSlots (fmap playerRefSlots (objectRefPlayerRef
   --
   -- Joined with the COUNT's own slots, TopOfLibrary's arm above and for its
   -- reason.
-  ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard chooser scope _ count) -> joinTwo (joinTwo (chooserSlots chooser) (zoneScopeSlots scope)) (quantitySlots count)
+  ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard chooser scope _ count) -> joinTwo (joinTwo (chooserSlots chooser) (zoneScopeSlots scope)) (maybe Map.empty quantitySlots (HowMany.quantity count))
   -- CR 402.3: the choosers own the hands, so the PlayerRef is reported by
   -- objectRefPlayerRefs rather than here; the COUNT's slots are this arm's.
   ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand _ _ count) -> maybe Map.empty quantitySlots (HowMany.quantity count)
@@ -623,7 +623,7 @@ objectRefQuantities ref = case ref of
   -- the Thran's and Aquatic Subtlety's printed two. A REGRESSION FENCE for the
   -- ChosenCardFromAmong arm below's reason: every count in the pool is a
   -- Literal, which reads no slot.
-  ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard _ _ _ count) -> [count]
+  ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard _ _ _ count) -> Foldable.toList (HowMany.quantity count)
   ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand _ _ count) -> Foldable.toList (HowMany.quantity count)
   -- How many cards are picked out of the group -- Ancestral Memories' printed
   -- two, the library walks' counts above being the only other ObjectRef numbers.

@@ -1,0 +1,31 @@
+{
+  "description": "Liliana, the Necromancer's -7 activated with no targets still resolves, and its controller may put fewer than two creature cards onto the battlefield",
+  "note": "Two creature cards are offered and one is taken, so an exact count of two, or a count of the targets, would show; the answer also names an Island, which the filter drops. Grizzly Bears is untargeted and survives.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{"card": "Liliana, the Necromancer", "label": "lili", "counters": [{"key": {"type": "Loyalty"}, "value": 7}]}],
+        "graveyard": [{"card": "Craw Wurm", "label": "wurm"}, {"card": "Island", "label": "island"}],
+        "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{"card": "Grizzly Bears", "label": "bears"}],
+        "graveyard": [{"card": "Air Elemental", "label": "elemental"}],
+        "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]
+      }
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$lili", "ability": 2, "targets": []}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardsInGraveyards", "with": ["$wurm", "$island"], "unoffered": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"card": "Craw Wurm", "count": 1, "player": "alice", "zone": "Battlefield"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"card": "Island", "count": 1, "player": "alice", "zone": "Graveyard"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"card": "Air Elemental", "count": 1, "player": "bob", "zone": "Graveyard"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"card": "Grizzly Bears", "count": 1, "player": "bob", "zone": "Battlefield"}}}
+  ]
+}

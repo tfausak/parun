@@ -59,8 +59,11 @@
                             "type": "TheController"
                           },
                           "count": {
-                            "type": "BoundCount",
-                            "value": "discarded"
+                            "type": "Exactly",
+                            "value": {
+                              "type": "BoundCount",
+                              "value": "discarded"
+                            }
                           },
                           "filter": {
                             "type": "And",

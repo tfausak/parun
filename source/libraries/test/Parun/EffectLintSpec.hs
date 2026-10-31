@@ -1346,9 +1346,14 @@ storedPlayerScope effect = case effect of
 -- reveal's test (Lead the Stampede) and a move's (Ransack) reach, and its pile
 -- split (CR 700.3), which only a move's test (Sphinx of Uthuun) reaches.
 -- ChosenCardInHand splits off its "up to", which only a move's test (The Great
--- Aurora) reaches.
+-- Aurora) reaches, and ChosenCardInGraveyard its "up to", which only a move's
+-- test (Liliana, the Necromancer) reaches; under Chooser.EachInScope that "up
+-- to" is allowed nowhere, since its ask names no earlier chooser's picks
+-- (#5832).
 data Question
   = CardInGraveyard
+  | AnyCardsInGraveyards
+  | AnyCardsInEachGraveyard
   | CardInHand
   | AnyCardsInHand
   | CardFromAmong
@@ -1396,7 +1401,10 @@ questionOf ref = case ref of
   ObjectRef.TopOfLibraryUntil {} -> Nothing
   ObjectRef.TopOfGraveyard {} -> Nothing
   ObjectRef.EachCardFromAmong {} -> Nothing
-  ObjectRef.ChosenCardInGraveyard {} -> Just CardInGraveyard
+  ObjectRef.ChosenCardInGraveyard choice -> case (ChosenCardInGraveyard.count choice, ChosenCardInGraveyard.chooser choice) of
+    (HowMany.UpTo _, Chooser.EachInScope) -> Just AnyCardsInEachGraveyard
+    (HowMany.UpTo _, _) -> Just AnyCardsInGraveyards
+    (HowMany.Exactly _, _) -> Just CardInGraveyard
   ObjectRef.ChosenCardInHand choice -> case ChosenCardInHand.count choice of
     HowMany.UpTo _ -> Just AnyCardsInHand
     HowMany.Exactly _ -> Just CardInHand
@@ -1427,13 +1435,14 @@ chooserRef = Maybe.isJust . questionOf
 -- reached, so this is the fence that keeps a card from loading a combination no
 -- test reaches. A position read through the pure objectRefObjects allows none.
 --
--- A move's: every question but SeveralPermanents and RandomAmong. The scenario
+-- A move's: every question but SeveralPermanents, RandomAmong and
+-- AnyCardsInEachGraveyard. The scenario
 -- ransack-sends-the-chosen-to-the-bottom-and-orders-the-rest reaches
 -- AnyCardsFromAmong. OffBattlefield's ask is Parun.Engine.Resolve.Effect's
 -- chosenPermanents, which Mirror of Fate's scenario reaches through
 -- Effect.ChoosePermanents; no permanent opcode's test reaches it.
 movedQuestions :: [Question]
-movedQuestions = filter (`notElem` [SeveralPermanents, RandomAmong]) [minBound .. maxBound]
+movedQuestions = filter (`notElem` [SeveralPermanents, RandomAmong, AnyCardsInEachGraveyard]) [minBound .. maxBound]
 
 -- The battlefield questions, for the opcodes that act on PERMANENTS -- Tovolar,
 -- Dire Overlord's transform, Teferi, Hero of Dominaria's untap, God-Eternal
@@ -2106,16 +2115,14 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
           -- -- Fall of the Thran's printed two -- is plural under either
           -- chooser, and a COMPUTED count is plural whatever the board would
           -- make it, TopOfLibrary's reading above and for its reason.
-          ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard chooser _ _ count) -> case count of
-            Quantity.Type.Literal n
-              | n <= 1 -> case chooser of
-                  Chooser.TheController -> True
-                  Chooser.EachInScope -> False
-                  -- One seat, so one graveyard and one card -- TheController's
-                  -- answer with the chooser named by a slot instead of by CR
-                  -- 608.2c.
-                  Chooser.BoundInSlot _ -> True
-            _ -> False
+          ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard chooser _ _ count) ->
+            atMostOne count && case chooser of
+              Chooser.TheController -> True
+              Chooser.EachInScope -> False
+              -- One seat, so one graveyard and one card -- TheController's
+              -- answer with the chooser named by a slot instead of by CR
+              -- 608.2c.
+              Chooser.BoundInSlot _ -> True
           -- One card per CHOOSER again, and here the PlayerRef names the
           -- choosers: Karn Liberated's targeted seat exiles one card, and "each
           -- player" would be one each. The same per-seat count TopOfLibrary
@@ -2741,7 +2748,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     exhume <- S.printingOf s registry "Exhume"
     let anyCard = Filter.Type.HasCardType CardType.Creature
         group = SlotName.MkSlotName (Text.pack "revealed")
-        inGraveyard = ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard Chooser.TheController (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)) anyCard (Quantity.Type.Literal 1))
+        inGraveyard = ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard Chooser.TheController (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)) anyCard HowMany.one)
         inHand = ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (PlayerRef.Relative PlayerRelation.You) anyCard HowMany.one)
         fromAmong = ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong group anyCard HowMany.one (PlayerRef.Relative PlayerRelation.You) Nothing)
         atRandom = ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand (PlayerRef.Relative PlayerRelation.You) anyCard (Quantity.Type.Literal 1))

@@ -1345,6 +1345,7 @@ lightwielder-paladin
 liliana-heretical-healer-liliana-defiant-necromancer
 liliana-of-the-dark-realms
 liliana-of-the-veil
+liliana-the-necromancer
 liliana-untouched-by-death
 liliana-vess
 lilianas-caress

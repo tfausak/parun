@@ -117,8 +117,11 @@
                             "type": "TheController"
                           },
                           "count": {
-                            "type": "InSlot",
-                            "value": "Mines of Moria"
+                            "type": "Exactly",
+                            "value": {
+                              "type": "InSlot",
+                              "value": "Mines of Moria"
+                            }
                           },
                           "filter": {
                             "type": "And",

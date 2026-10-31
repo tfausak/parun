@@ -348,7 +348,7 @@ data Prompt r where
   ChooseDelayedTriggerEvent :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty GameEvent.GameEvent -> Prompt Natural.Natural
   -- | CR 608.2d: which graveyard card a Parun.Types.ObjectRef.ChosenCardInGraveyard
   -- takes; the PlayerId is the chooser, who need not own the graveyard, asked
-  -- in APNAP order (CR 101.4). ONE of these per card the ref's count names, each
+  -- in APNAP order (CR 101.4). ONE of these per card an exact count names, each
   -- over the candidates the earlier asks left. The Seq is every card the pass
   -- has already taken, beside who took it, which CR 101.4b lets a later chooser
   -- know.
