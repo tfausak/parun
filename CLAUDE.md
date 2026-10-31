@@ -113,6 +113,9 @@ to agents as written. What it doesn't say:
 - STAGE, then `hooky fix` (staged files only; it runs every `.hooky.kdl` check
   and rewrites in place), then `git add` again. `--all` sweeps the tree; use
   it only when you suspect something landed unstaged.
+  Run `script/format-json.sh fix` on the files you wrote, never a whole
+  directory: over all of `data/scenarios/` it rewrites hand-formatted
+  scenarios and breaks some.
 
 - After a PR merges, before the next unit, ask: did anything catch you that
   your own checks didn't? did you violate an instruction? did you learn a

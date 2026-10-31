@@ -1577,7 +1577,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Phyrexian Revoker", 1), -- its activation prohibition's affected set
         ("Stain the Mind", 1), -- its own search
         ("Infinite Obliteration", 1), -- its own search
-        ("Sphinx Ambassador", 1) -- its move clause's gate
+        ("Sphinx Ambassador", 1), -- its move clause's gate
+        ("Diviner's Lockbox", 1) -- its sacrifice clause's gate
       ]
   -- CR 702.16k's chosen player in the same frame one atom over: answerable only
   -- where a protection quality is read, and every one of those four positions

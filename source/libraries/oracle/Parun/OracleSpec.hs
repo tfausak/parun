@@ -440,7 +440,9 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s (Just (Text.pack "Destroy all creatures and lands.")) (Oracle.render devastation)
     let colours = Filter.Or [Filter.HasColor Color.White, Filter.HasColor Color.Blue]
         ignite = spell [clause [destroy (ObjectRef.InSlot target) Regenerability.Regenerable]] [(target, (TargetSlot.required Pool.Creatures (Just colours)) {TargetSlot.count = SlotCount.Printed (TargetCount.MkTargetCount 2 (Just 2))})]
-    Spec.assertEq s [[Text.pack "Destroy two target white and/or blue creatures."]] (Oracle.abilities ignite)
+    Spec.assertEq s [[Text.pack "Destroy two target white and/or blue creatures.", Text.pack "Destroy two target creatures that are white and/or blue."]] (Oracle.abilities ignite)
+    let decree = spell [clause [destroy (ObjectRef.InSlot target) Regenerability.Regenerable]] [(target, TargetSlot.required Pool.Creatures (Just colours))]
+    Spec.assertEq s [[Text.pack "Destroy target white or blue creature.", Text.pack "Destroy target creature that's white or blue."]] (Oracle.abilities decree)
     let combatants = Filter.Or [Filter.IsAttacking, Filter.IsBlocking]
         fire = spell [clause [destroy (ObjectRef.InSlot target) Regenerability.Regenerable]] [(target, (TargetSlot.required Pool.Creatures (Just combatants)) {TargetSlot.count = SlotCount.Printed (TargetCount.MkTargetCount 2 (Just 2))})]
     Spec.assertEq s [[Text.pack "Destroy two target attacking or blocking creatures."]] (Oracle.abilities fire)
