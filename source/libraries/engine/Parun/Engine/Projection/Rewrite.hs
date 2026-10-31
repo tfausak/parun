@@ -319,7 +319,8 @@ rewriteModification pairs m =
               Modification.CreatureSubtype mode s -> Modification.CreatureSubtype mode (swap Subtype.isCreatureType s)
               -- Holds no word to swap: it names CR 205.3m's list, not a member of it.
               Modification.AddEveryCreatureSubtype -> acc
-              -- The removal over that same list, and no word to swap for the same reason.
+              -- Names a card type's whole subtype set (CR 205.1a), not a member
+              -- of it, so no word to swap for the same reason.
               Modification.LoseEverySubtype _ -> acc
               -- CR 612.1 through its Filter, printed on the granter (CR 612.3).
               Modification.SetCreatureSubtypesOfLastCardExiledWith f -> Modification.SetCreatureSubtypesOfLastCardExiledWith (Filter.rewrite [(from, to)] f)

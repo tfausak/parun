@@ -5,10 +5,11 @@
 -- within-layer timestamp order, and the CR 613.8 dependency reorder that
 -- overrides it. Mostly directly-constructed continuous effects, so the engine is
 -- proven independently of any card wiring; the card-level proofs live alongside.
--- Also Parun.Engine.Subtype, the CR 205.3i land-type and CR 205.3m creature-type
--- classifications the layer-4 LandSubtype, CreatureSubtype,
--- AddEveryCreatureSubtype and LoseEverySubtype arms
--- fold with, and the untagged AddSubtype beside them.
+-- Also Parun.Engine.Subtype: the CR 205.3i land-type and CR 205.3m creature-type
+-- classifications the layer-4 LandSubtype, CreatureSubtype and
+-- AddEveryCreatureSubtype arms fold with, the correlatedCardTypes map
+-- (CR 205.1a) the LoseEverySubtype arm folds with, and the untagged AddSubtype
+-- beside them.
 module Parun.ProjectionSpec where
 
 import qualified Control.Monad as Monad

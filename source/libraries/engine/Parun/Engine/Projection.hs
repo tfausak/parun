@@ -180,10 +180,10 @@ layer m = case m of
   Modification.ChosenSubtype {} -> Layer.Type
   Modification.CreatureSubtype {} -> Layer.Type
   Modification.AddEveryCreatureSubtype -> Layer.Type
-  -- CR 613.1d, and a regression fence rather than a proved behaviour: no board
-  -- in the pool orders Nameless Inversion's or Alpine Moon's removal against an
-  -- effect in another layer, so answering Layer.Ability here leaves the suite
-  -- green.
+  -- CR 613.1d. Proved by the
+  -- a-later-urborg-makes-a-named-land-a-swamp-again scenario: a later Urborg,
+  -- Tomb of Yawgmoth makes a land Alpine Moon named a Swamp again, so a
+  -- swampwalker can't be blocked.
   Modification.LoseEverySubtype _ -> Layer.Type
   Modification.SetCreatureSubtypesOfLastCardExiledWith _ -> Layer.Type
   -- CR 613.1d, and a regression fence rather than a proved behaviour: no board
@@ -512,10 +512,11 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- (CR 613.3); this runs in timestamp order (CR 613.7).
         Modification.AddEveryCreatureSubtype ->
           pc {PC.subtypes = Set.union (gainableSubtypes unitTypes Subtype.everyCreatureType) (PC.subtypes pc)}
-        -- CR 205.1a's last sentence: the removal reaches the card type's family
-        -- (CR 205.3d) and nothing else, so PC.cardTypes and PC.supertypes are
-        -- untouched here: a stripped artifact creature is still an artifact and
-        -- still a creature, a stripped legendary land still legendary.
+        -- CR 205.1a's last sentence: the removal reaches the card type's subtype
+        -- set (Subtype.correlatedCardTypes) and nothing else, so PC.cardTypes and
+        -- PC.supertypes are untouched here: a stripped artifact creature is still
+        -- an artifact and still a creature, a stripped legendary land still
+        -- legendary.
         Modification.LoseEverySubtype cardType ->
           pc {PC.subtypes = Set.filter (not . Set.member cardType . Subtype.correlatedCardTypes) (PC.subtypes pc)}
         -- CR 205.1a's set again, over the creature types the linked card has

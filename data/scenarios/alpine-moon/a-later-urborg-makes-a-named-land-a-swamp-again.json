@@ -1,0 +1,23 @@
+{
+  "description": "CR 613.1d / 613.7: Alpine Moon's land-type loss is a layer-4 effect, so Urborg, Tomb of Yawgmoth's later Swamp grant applies over it and an earlier one does not",
+  "note": "Alice's first Moon names Plateau, then she plays Urborg, then her second Moon names Tundra. Bob's Plateau is a Swamp again, so alice's swampwalking Bog Wraith can't be blocked; bob's Tundra, stripped after Urborg's grant, has no land type.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "manaPool": "RR", "hand": [{"card": "Alpine Moon", "label": "moon1"}, {"card": "Alpine Moon", "label": "moon2"}, {"card": "Urborg, Tomb of Yawgmoth", "label": "urborg"}], "battlefield": [{"card": "Bog Wraith", "label": "wraith", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "battlefield": [{"card": "Plateau", "label": "plateau"}, {"card": "Tundra", "label": "tundra"}, {"card": "Grizzly Bears", "label": "bears", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+  ]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$moon1"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardName", "with": "Plateau"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"PlayLand": "$urborg"}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$moon2", "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardName", "with": "Tundra"}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$wraith"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": {"Block": {"$bears": ["$wraith"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Blockers": {"attacker": "$wraith", "blockers": null}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Subtypes": {"object": "$plateau", "subtypes": ["Swamp"]}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Subtypes": {"object": "$tundra", "subtypes": []}}}
+  ]
+}
