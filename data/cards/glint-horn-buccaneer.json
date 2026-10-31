@@ -1,0 +1,217 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "DiscardCards",
+                "value": {
+                  "count": {
+                    "type": "Fixed",
+                    "value": 1
+                  },
+                  "whichCards": {
+                    "type": "And",
+                    "value": []
+                  }
+                }
+              }
+            ],
+            "mana": [
+              {
+                "type": "Generic",
+                "value": 1
+              },
+              {
+                "type": "OfType",
+                "value": {
+                  "type": "Colored",
+                  "value": {
+                    "type": "Red"
+                  }
+                }
+              }
+            ]
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Draw",
+                        "value": {
+                          "player": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          },
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 1
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "restrictions": [
+            {
+              "type": "OnlyIf",
+              "value": {
+                "type": "Compares",
+                "value": {
+                  "comparison": {
+                    "type": "AtLeast"
+                  },
+                  "measured": {
+                    "type": "Count",
+                    "value": {
+                      "aggregation": {
+                        "type": "Members"
+                      },
+                      "filter": {
+                        "type": "And",
+                        "value": [
+                          {
+                            "type": "IsSource"
+                          },
+                          {
+                            "type": "IsAttacking"
+                          }
+                        ]
+                      },
+                      "scope": {
+                        "type": "InZone",
+                        "value": {
+                          "player": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "AnyPlayer"
+                            }
+                          },
+                          "zone": {
+                            "type": "Battlefield"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "threshold": {
+                    "type": "Literal",
+                    "value": 1
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "keywords": [
+        {
+          "type": "Haste"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Glint-Horn Buccaneer",
+      "oracleText": "Haste\nWhenever you discard a card, this creature deals 1 damage to each opponent.\n{1}{R}, Discard a card: Draw a card. Activate only if this creature is attacking.",
+      "power": {
+        "type": "Literal",
+        "value": 2
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 4
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "PlayerDiscards",
+            "value": {
+              "filter": {
+                "type": "And",
+                "value": []
+              },
+              "player": {
+                "type": "You"
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "DealDamage",
+                        "value": {
+                          "parts": [
+                            {
+                              "quantity": {
+                                "type": "Literal",
+                                "value": 1
+                              },
+                              "ref": {
+                                "type": "EachOpponent"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Minotaur"
+          },
+          {
+            "type": "Pirate"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

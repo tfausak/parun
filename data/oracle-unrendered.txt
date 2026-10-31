@@ -690,6 +690,7 @@ dunbarrow-revivalist
 dunedain-blade
 dunerider-outlaw
 dungeon-crawler
+dungeon-geists
 duplicant
 duress
 duskwielder
@@ -770,8 +771,10 @@ erudite-wizard
 essence-of-the-wild
 etchings-of-the-chosen
 eternal-dominion
+eternal-isolation
 eternal-thirst
 ethereal-ambush
+ethereal-elk
 ethereal-valkyrie
 ethersworn-canonist
 eunuchs-intrigues
@@ -822,6 +825,7 @@ fanatic-of-mogis
 fatal-blow
 fatal-lore
 fate-transfer
+fathom-fleet-cutthroat
 fatigue
 fblthp-knows-the-way
 fblthp-lost-on-the-range
@@ -840,6 +844,7 @@ fervent-charge
 festering-newt
 fevered-suspicion
 feywild-trickster
+field-of-the-dead
 fields-of-summer
 fiendslayer-paladin
 fierce-retribution
@@ -861,6 +866,7 @@ fires-of-mount-doom
 first-pick
 fixed-point-in-time
 flame-spill
+flame-sweep
 flame-wave
 flameblast-dragon
 flamerush-rider
@@ -916,6 +922,7 @@ frontier-mastodon
 frost-breath
 frost-lynx
 frost-titan
+fry
 fulgent-distraction
 full-steam-ahead
 full-throttle
@@ -936,6 +943,7 @@ galloping-lizrog
 galvanic-blast
 galvanic-relay
 gang-of-elk
+gargos-vicious-watcher
 garland-royal-kidnapper
 garna-bloodfist-of-keld
 garruk-apex-predator
@@ -949,6 +957,7 @@ gaseous-form
 gather-specimens
 gather-the-pack
 gauntlet-of-power
+gauntlets-of-light
 gearshift-ace
 gemcutter-buccaneer
 gemstone-caverns
@@ -989,11 +998,13 @@ glasses-of-urza
 glen-elendras-answer
 gliding-licid
 glimpse-the-future
+glint-horn-buccaneer
 glittering-lion
 gloom-stalker
 glorfindel-dauntless-rescuer
 glorious-protector
 glory-bound-initiate
+gnarlback-rhino
 gnarlid-pack
 gnarlroot-trapper
 gnat-miser
@@ -1001,6 +1012,7 @@ goblin-arsonist
 goblin-artillery
 goblin-bangchuckers
 goblin-battle-jester
+goblin-bird-grabber
 goblin-bookie
 goblin-brawler
 goblin-brigand
@@ -1011,18 +1023,24 @@ goblin-kaboomist
 goblin-mutant
 goblin-rabblemaster
 goblin-recruiter
+goblin-ringleader
 goblin-shortcutter
+goblin-smuggler
 goblin-tunneler
 goblin-war-cry
 god-eternal-bontu
 god-eternal-kefnet
 god-eternal-rhonas
 godhead-of-awe
+gods-willing
 goldberry-river-daughter
 goldenhide-ox
+goldmane-griffin
 golem-skin-gauntlets
 golgothian-sylex
+golos-tireless-pilgrim
 goreclaw-terror-of-qal-sisma
+gorging-vulture
 gorilla-berserkers
 graceful-restoration
 graf-rats

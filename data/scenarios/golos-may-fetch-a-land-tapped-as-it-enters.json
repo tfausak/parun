@@ -1,0 +1,169 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Plains",
+            "label": "l1"
+          },
+          {
+            "card": "Plains",
+            "label": "l2"
+          },
+          {
+            "card": "Plains",
+            "label": "l3"
+          },
+          {
+            "card": "Plains",
+            "label": "l4"
+          },
+          {
+            "card": "Plains",
+            "label": "l5"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Golos, Tireless Pilgrim",
+            "label": "golos"
+          }
+        ],
+        "library": [
+          {
+            "card": "Swamp",
+            "label": "wastes"
+          },
+          {
+            "card": "Island",
+            "label": "gi1"
+          },
+          {
+            "card": "Island",
+            "label": "gi2"
+          },
+          {
+            "card": "Island",
+            "label": "gi3"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 701.23a: Golos's enters trigger may search its controller's library for a land card and put it onto the battlefield tapped",
+  "note": "The Swamp found enters tapped.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$l1",
+            "$l2",
+            "$l3",
+            "$l4",
+            "$l5"
+          ],
+          "object": "$golos"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseOptional": {
+          "type": "Exercises"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$wastes"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "$gi1",
+            "$gi2",
+            "$gi3"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Tapped": {
+          "object": "Swamp",
+          "tapped": true
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Swamp",
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}
