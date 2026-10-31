@@ -1292,7 +1292,8 @@ amass resolving source controller legal (Amass.Type.MkAmass quantity subtype mSl
 -- CR 701.68a: each player the PlayerRef names puts N -1/-1 counters on a
 -- creature they control; the keyword action is Parun.Engine.Blight.blight's, and
 -- rule 701.68b's optional reading is a cost (CR 118.12). MANDATORY here, so an
--- empty pool is CR 101.3's no-op. A reference naming nobody, or an illegal slot
+-- empty pool is CR 101.3's no-op. Not implemented: refusing a creature that
+-- can't take -1/-1 counters, as the cost road does (#5830). A reference naming nobody, or an illegal slot
 -- (CR 608.2b), blights nothing. APNAP for the order (CR 101.4). Targetless: no
 -- CR 608.2b legality to re-check.
 --
@@ -1326,7 +1327,7 @@ blight resolving source controller legal (Blight.Type.MkBlight ref quantity mSlo
   blightedCreatures <- Event.simultaneously . fmap Maybe.catMaybes . Monad.forM blighters $ \pid ->
     case Common.evaluateForRecipient viewOf context gs resolving source pid quantity of
       Nothing -> pure Nothing -- unevaluable quantity: no-op (the powerOf posture)
-      Just n -> Blight.blight (CounterCause.ByEffect pid) resolving (Integer.toNaturalSaturating n)
+      Just n -> Blight.blight Blight.candidates (CounterCause.ByEffect pid) resolving (Integer.toNaturalSaturating n)
   -- CR 701.68c: "the blighted creature" is the object the blighting player chose
   -- to put the counters on, bound for a later clause of this same resolution to
   -- read (CR 608.2c) -- Grub, Notorious Auntie's token copy of it. Bound off the

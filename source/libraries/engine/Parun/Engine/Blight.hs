@@ -18,6 +18,7 @@ import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.List as List
 import Numeric.Natural (Natural)
+import qualified Parun.Engine.CounterRestriction as CounterRestriction
 import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Projection as Projection
@@ -44,6 +45,15 @@ import qualified Parun.Types.Prompt as Prompt
 candidates :: PlayerId -> GameState.GameState -> [ObjectId]
 candidates pid gs = List.sort (filter (\oid -> Projection.isCreatureOf oid gs) (Projection.controls pid gs))
 
+-- | CR 701.68b's pool for a blight the player CHOOSES -- a cost, CR 601.2h's or
+-- CR 118.12's -- narrowed to the creatures that can take -1\/-1 counters: CR
+-- 614.17b and Suncleanser's ruling make putting them on any other unpayable.
+-- Proved by data/scenarios/suncleanser/'s
+-- a-blight-cost-goes-on-the-creature-suncleanser-did-not-name.json and its
+-- twins.
+payable :: PlayerId -> GameState.GameState -> [ObjectId]
+payable pid gs = filter (\oid -> not (CounterRestriction.prohibited oid CounterKind.MinusOneMinusOne gs)) (candidates pid gs)
+
 -- | CR 701.68b: can this player blight at all? "If a player is given the choice
 -- to blight but is unable to put N -1\/-1 counters on a creature they control
 -- (usually because they control no creatures), they can't choose to blight."
@@ -55,11 +65,12 @@ candidates pid gs = List.sort (filter (\oid -> Projection.isCreatureOf oid gs) (
 -- (CR 118.3, and rule 118.12's own "does, doesn't, or can't").
 --
 -- Control and not existence -- an opponent's creatures are not candidates -- and
--- nothing here reads N. Rule 701.68b's "unable to put N counters" has only the one
--- cause the rule itself names: CR 122.6 puts any number of counters on any
--- creature, so a 1\/1 takes blight 5 as readily as blight 1.
+-- nothing here reads N. Rule 701.68b's "unable to put N counters" has two
+-- causes: no creature, the one the rule names, and an effect saying -1\/-1
+-- counters can't be put on it (`payable`). CR 122.6 puts any number of counters
+-- on any other creature, so a 1\/1 takes blight 5 as readily as blight 1.
 canBlight :: PlayerId -> GameState.GameState -> Bool
-canBlight pid gs = not (null (candidates pid gs))
+canBlight pid gs = not (null (payable pid gs))
 
 -- | CR 701.68a: put N -1\/-1 counters on a creature this player controls.
 -- Answers the creature chosen, which is CR 701.68c's "blighted creature" --
@@ -69,6 +80,8 @@ canBlight pid gs = not (null (candidates pid gs))
 -- The caller binds the answer under the effect's slot for a later clause of the
 -- same resolution to read (Grub, Notorious Auntie). The COST callers bind
 -- nothing: no printing pays a blight and then names what it blighted.
+--
+-- The pool is `candidates` for a mandatory blight and `payable` for a cost.
 --
 -- The ObjectId is the object the prompt names -- the spell or ability resolving,
 -- or the one whose cost is being paid. The CounterCause is the caller's, and the
@@ -91,11 +104,11 @@ canBlight pid gs = not (null (candidates pid gs))
 -- 701.68a's process is "put N -1\/-1 counters on a creature you control", so the
 -- creature is chosen whatever N is, and CR 701.68c's "blighted creature" is that
 -- creature.
-blight :: CounterCause.CounterCause -> ObjectId -> Natural -> Game (Maybe ObjectId)
-blight cause resolving n = do
+blight :: (PlayerId -> GameState.GameState -> [ObjectId]) -> CounterCause.CounterCause -> ObjectId -> Natural -> Game (Maybe ObjectId)
+blight pool cause resolving n = do
   let pid = CounterCause.putter cause
   gs <- State.get
-  picked <- Game.chooseAmong (\decider asked -> Prompt.ChooseBlight decider asked resolving) pid (candidates pid gs)
+  picked <- Game.chooseAmong (\decider asked -> Prompt.ChooseBlight decider asked resolving) pid (pool pid gs)
   case picked of
     -- CR 701.68b for a cost, CR 101.3 for an effect: a player controlling no
     -- creature blights nothing.

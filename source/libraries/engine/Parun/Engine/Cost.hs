@@ -4094,8 +4094,9 @@ canPayComponent slots pid oid component gs = case component of
       && not (CounterRestriction.prohibited oid (CountersOnThis.kind placement) gs)
   -- CR 701.68b: a player unable to put the counters on a creature they control
   -- can't choose to blight. Nothing about `oid` and nothing about N -- rule
-  -- 701.68a's candidate is qualified by CONTROL alone, the whole difference from
-  -- PutCountersOnThis above.
+  -- 701.68a's candidate is qualified by CONTROL, the whole difference from
+  -- PutCountersOnThis above; the two share only the CR 118.3 counter gate,
+  -- here inside Blight.payable.
   CostComponent.Blight amount -> payableAnnounced amount (const (Blight.canBlight pid gs))
   -- CR 608.2d: a player who can neither exile three cards from their graveyard
   -- nor sacrifice a Food can't choose either half, which is how a forage COST is
@@ -6973,7 +6974,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
   -- so the cause is `counterCause`'s and not a constant. Doubling Season doubles
   -- the second and not the first; Vorinclex, Monstrous Raider doubles both.
   CostComponent.Blight amount -> paidAnnounced amount $ \n -> do
-    blighted <- Blight.blight (counterCause moment pid) oid n
+    blighted <- Blight.blight Blight.payable (counterCause moment pid) oid n
     -- The creature chosen is DISCARDED here, where the effect arm binds it: CR
     -- 701.68c's "blighted creature" is read by a later clause of the same
     -- resolution, and a cost is paid before there is one.
