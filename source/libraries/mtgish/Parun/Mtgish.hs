@@ -910,6 +910,11 @@ modal context value = do
     (_, []) -> fmap pure (mode context value)
     (_, [k]) | k > 1 -> traverse (\i -> mode context {manaChoice = Just i} value) [0 .. k - 1]
     _ -> Node.untranslated n
+  -- Every mode names its lone target "target", and two modes sharing a slot
+  -- name fuse their targets (Parun.CardSpec's "no card's modes share a target
+  -- slot name"), so such a card is left to be written by hand.
+  let declared = concatMap (Map.keys . Mode.targetSlots) modes
+  Monad.unless (length declared == Set.size (Set.fromList declared)) (Node.untranslated n)
   let memory = if Node.tag n == "Modal_ChooseOneThatHasntBeenChosen" then ModeMemory.ObjectLifetime else ModeMemory.NoMemory
   pure Modal.MkModal {Modal.modes = Seq.fromList modes, Modal.selection = ModeSelection.ChooseExactly 1, Modal.memory = memory}
 
