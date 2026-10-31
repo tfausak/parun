@@ -196,6 +196,7 @@ ballot-broker
 bamboozle
 bane-of-progress
 bane-of-the-living
+banefire
 banewasp-affliction
 banisher-priest
 banquet-guests

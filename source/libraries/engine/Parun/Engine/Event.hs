@@ -8626,7 +8626,8 @@ counterOne before destination counterer source controller oid = do
     -- CR 113.6g, its condition judged with the spell's controller as "you" on
     -- `before`, the board as the batch began (CR 608.2f, 608.2h), not after
     -- earlier victims moved (Exquisite Firecraft's ruling). The scenarios
-    -- exquisite-firecraft-* prove it.
+    -- exquisite-firecraft-* prove it; data/scenarios/banefire proves the
+    -- condition reads the spell's announced X (CR 107.3a).
     Just _ -> case fmap Face.counterability (Game.faceOf oid gs) of
       Just (Counterability.CantBeCountered condition)
         | all (Condition.holds (Projection.fullView before) (Projection.sourceContext before (Projection.controllerOf oid before) oid) before oid) condition -> pure Nothing
