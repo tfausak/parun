@@ -1,0 +1,99 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "name": "alice",
+        "hand": [
+          {
+            "card": "Temple of Mystery",
+            "label": "temple"
+          }
+        ],
+        "library": [
+          {
+            "card": "Craw Wurm",
+            "label": "a1"
+          },
+          {
+            "card": "Hill Giant",
+            "label": "a2"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 614.1c / 603.6a / 701.22a: Temple of Mystery enters tapped and scries 1",
+  "note": "Alice sends Craw Wurm to the bottom.",
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "PlayLand": "$temple"
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseScry",
+          "with": [
+            [
+              "Craw Wurm"
+            ],
+            []
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "Temple of Mystery",
+          "tapped": true
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Zone",
+          "is": [
+            "$a2",
+            "Craw Wurm"
+          ],
+          "player": "alice",
+          "zone": "Library"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Rotting Regisaur",
+            "label": "regisaur",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Forest",
+            "label": "forest"
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "hand": [
+          {
+            "card": "Forest"
+          },
+          {
+            "card": "Mountain"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 503.1a / 603.2 / 701.9a: Rotting Regisaur makes its controller discard a card at the beginning of their upkeep",
+  "note": "Alice discards her Forest at her next upkeep and keeps her Swamp; bob's upkeep in between makes nobody discard.",
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": []
+      }
+    },
+    {
+      "turn": 3,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseDiscard",
+          "with": [
+            "$forest"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "DrawStep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Graveyard",
+          "card": "Forest",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "DrawStep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Hand",
+          "card": "Swamp",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "DrawStep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Hand",
+          "card": "Forest",
+          "count": 1
+        }
+      }
+    }
+  ]
+}

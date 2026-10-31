@@ -199,6 +199,12 @@ spec s = Spec.describe s "Parun.Mtgish" $ do
     let filters = fmap TargetSlot.filter (Map.elems (spellSlotMap (translated fallOfTheHammer)))
     Spec.assertEq s [Just (Filter.HeldBy Holder.Controller PlayerRelation.You), Just (Filter.Not (Filter.IsBound (SlotName.MkSlotName (Text.pack "target1"))))] filters
 
+  -- CR 700.2: two modes each targeting name their slot "target", which would
+  -- fuse their targets (Parun.CardSpec's "no card's modes share a target slot
+  -- name"), so the card is refused rather than written.
+  Spec.it s "rejects a choice of modes whose targets share a slot name" $ do
+    Spec.assertEq s (Left (Text.pack "_Actions:Modal_ChooseOne")) (accepts recklessAirStrike)
+
   -- CR 301.5a: what an Equipment's static ability affects is the creature
   -- it is attached to.
   Spec.it s "reads the host of an Equipment as the creature it is attached to" $ do
@@ -375,6 +381,13 @@ merfolkSeer :: (String, String)
 merfolkSeer =
   ( "{\"_OracleCard\":\"Card\",\"Name\":\"Merfolk Seer\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Creature\"],\"Subtypes\":[\"Merfolk\",\"Wizard\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":2},{\"_ManaSymbol\":\"ManaCostU\"}],\"Rules\":[{\"_Rule\":\"TriggerA\",\"args\":[{\"_Trigger\":\"WhenAPermanentDies\",\"args\":{\"_Permanents\":\"SinglePermanent\",\"args\":{\"_Permanent\":\"ThisPermanent\"}}},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"MayCost\",\"args\":{\"_Cost\":\"PayMana\",\"args\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":1},{\"_ManaSymbol\":\"ManaCostU\"}]}},{\"_Action\":\"If\",\"args\":[{\"_Condition\":\"CostWasPaid\"},[{\"_Action\":\"DrawACard\"}]]}]}]}],\"CardPT\":{\"Power\":2,\"Toughness\":2}}",
     "When this creature dies, you may pay {1}{U}. If you do, draw a card."
+  )
+
+-- | Reckless Air Strike's AST, and its Oracle text.
+recklessAirStrike :: (String, String)
+recklessAirStrike =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Reckless Air Strike\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Sorcery\"],\"Subtypes\":[]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostR\"}],\"Rules\":[{\"_Rule\":\"SpellActions\",\"args\":{\"_Actions\":\"Modal_ChooseOne\",\"args\":[{\"_Actions\":\"Targeted\",\"args\":[[{\"_Target\":\"TargetPermanent\",\"args\":{\"_Permanents\":\"And\",\"args\":[{\"_Permanents\":\"IsCardtype\",\"args\":\"Creature\"},{\"_Permanents\":\"HasAbility\",\"args\":{\"_CheckHasable\":\"Flying\"}}]}}],{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"SpellDealsDamage\",\"args\":[{\"_Spell\":\"ThisSpell\"},{\"_GameNumber\":\"Integer\",\"args\":3},{\"_DamageRecipient\":\"Permanent\",\"args\":{\"_Permanent\":\"Ref_TargetPermanent\"}}]}]}]},{\"_Actions\":\"Targeted\",\"args\":[[{\"_Target\":\"TargetPermanent\",\"args\":{\"_Permanents\":\"IsCardtype\",\"args\":\"Artifact\"}}],{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"DestroyPermanent\",\"args\":{\"_Permanent\":\"Ref_TargetPermanent\"}}]}]}]}}]}",
+    "Choose one \8212\n\8226 Reckless Air Strike deals 3 damage to target creature with flying.\n\8226 Destroy target artifact."
   )
 
 -- | Twin Bolt's AST, and its Oracle text.

@@ -1,0 +1,131 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Sorcerer of the Fang",
+            "label": "sorcerer",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "b1",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "b2",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "b3",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "b4",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "b5",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "b6",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 602.2 / 120.3: Sorcerer of the Fang deals 2 damage to target opponent",
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$sorcerer",
+          "targets": [
+            "$bob"
+          ],
+          "mana": [
+            "$b1",
+            "$b2",
+            "$b3",
+            "$b4",
+            "$b5",
+            "$b6"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 18
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$sorcerer",
+          "tapped": true
+        }
+      }
+    }
+  ]
+}

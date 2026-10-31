@@ -1,0 +1,151 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Prismite",
+            "label": "prismite",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "r1",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "r2",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 605.1a / 106.1: Prismite pays {2} to add one mana of any color, without tapping",
+  "note": "Alice pays with two Mountains and chooses blue.",
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Take": {
+          "action": "ActivateManaAbility $prismite",
+          "mana": [
+            "$r1",
+            "$r2"
+          ],
+          "yields": [
+            [
+              {
+                "manaType": {
+                  "type": "Colored",
+                  "value": {
+                    "type": "Blue"
+                  }
+                },
+                "tags": [
+                  {
+                    "type": "Artifact"
+                  }
+                ],
+                "retention": {
+                  "type": "Ordinary"
+                },
+                "restriction": null,
+                "rider": null,
+                "sourceChoices": null
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "ManaPool",
+          "is": [
+            {
+              "manaType": {
+                "type": "Colored",
+                "value": {
+                  "type": "Blue"
+                }
+              },
+              "tags": [
+                {
+                  "type": "Artifact"
+                }
+              ],
+              "retention": {
+                "type": "Ordinary"
+              },
+              "restriction": null,
+              "rider": null,
+              "sourceChoices": null
+            }
+          ],
+          "player": "alice"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$prismite",
+          "tapped": false
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": []
+      }
+    }
+  ]
+}
