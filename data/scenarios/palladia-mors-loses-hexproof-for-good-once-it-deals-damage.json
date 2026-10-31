@@ -83,7 +83,7 @@
     "step": "PrecombatMain"
   },
   "description": "CR 702.11b / 120.1 / 608.2i: Palladia-Mors has hexproof until it deals damage, and lacks it on every later turn",
-  "note": "Bob's Bears give Murder a legal target, so the refused cast is refused for Palladia's hexproof. The Murder that lands is cast on turn 2, after the turn's log holding the damage was cleared.",
+  "note": "Bob's Bears give Murder a legal target, so the refused cast is refused for Palladia's hexproof. The Murder that lands is cast on turn 3, two turn handoffs after the damage.",
   "timeline": [
     {
       "check": {
@@ -162,6 +162,14 @@
     },
     {
       "do": {
+        "Attack": []
+      },
+      "player": "bob",
+      "step": "DeclareAttackers",
+      "turn": 2
+    },
+    {
+      "do": {
         "Cast": {
           "mana": [
             "$swamp1",
@@ -176,13 +184,13 @@
       },
       "player": "bob",
       "step": "PrecombatMain",
-      "turn": 2
+      "turn": 3
     },
     {
       "do": "Pass",
       "player": "bob",
       "step": "PrecombatMain",
-      "turn": 2
+      "turn": 3
     },
     {
       "check": {
@@ -195,7 +203,7 @@
       },
       "player": "bob",
       "step": "PrecombatMain",
-      "turn": 2
+      "turn": 3
     }
   ]
 }
