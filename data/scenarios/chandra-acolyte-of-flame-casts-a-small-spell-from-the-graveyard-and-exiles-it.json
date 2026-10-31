@@ -101,7 +101,7 @@
     "step": "PrecombatMain"
   },
   "description": "CR 608.2g: Chandra, Acolyte of Flame's -2 lets its controller cast target instant or sorcery card with mana value 3 or less from their graveyard, exiling it instead of putting it into the graveyard",
-  "note": "Flame Wave (mana value 5) is no legal target; the Bolt is cast as the ability resolves, paid for, and exiled when it resolves.",
+  "note": "Flame Wave (mana value 5) is no legal target; the Bolt is cast as the ability resolves, paid for from alice's {R} (her pool is empty with it on the stack), and exiled when it resolves.",
   "timeline": [
     {
       "player": "alice",
@@ -173,6 +173,18 @@
         "Life": {
           "life": 20,
           "player": "bob"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [],
+          "of": "ManaPool",
+          "player": "alice"
         }
       },
       "player": "alice",
