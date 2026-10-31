@@ -1019,6 +1019,7 @@ grave-endeavor
 grave-pact
 gravebane-zombie
 gravegouger
+graveyard-marshal
 graxiplon
 great-intelligences-plan
 great-sable-stag
@@ -1104,6 +1105,7 @@ hermes-overseer-of-elpis
 hero-of-bladehold
 hewed-stone-retainers
 hickory-woodlot
+hieromancers-cage
 high-ground
 high-perfect-morcant
 highcliff-felidar
@@ -1175,6 +1177,7 @@ indulgent-tormentor
 infantry-shield
 infectious-bloodlust
 infernal-contract
+infernal-reckoning
 infernal-scarring
 infernal-vessel
 infestation-expert-infested-werewolf
@@ -1210,6 +1213,8 @@ ironclaw-orcs
 ironhoof-ox
 irresistible-prey
 isao-enlightened-bushi
+isareth-the-awakener
+isolate
 it-that-betrays
 itzquinth-firstborn-of-gishath
 ivory-gargoyle
@@ -1310,8 +1315,10 @@ leave-chance
 leeches
 leeching-sliver
 legacy-weapon
+lena-selfless-champion
 leonin-arbiter
 leonin-shikari
+leonin-warleader
 lesser-gargadon
 leveler
 leyline-of-anticipation
@@ -1331,6 +1338,7 @@ life-and-limb
 lifebane-zombie
 lifes-legacy
 lightmine-field
+lightning-mare
 lightstall-inquisitor
 lightwielder-paladin
 liliana-heretical-healer-liliana-defiant-necromancer
@@ -1339,7 +1347,9 @@ liliana-of-the-veil
 liliana-untouched-by-death
 liliana-vess
 lilianas-caress
+lilianas-contract
 lilianas-reaver
+lilianas-spoils
 lineprancers
 liquimetal-coating
 lithoform-engine
@@ -1396,6 +1406,7 @@ magebane-armor
 magic-missile
 magical-hack
 magister-sphinx
+magistrates-scepter
 magmakin-artillerist
 magmatic-insight
 magnetic-theft
@@ -1446,6 +1457,7 @@ meletis-charlatan
 melira-sylvok-outcast
 meloku-the-clouded-mirror
 memory-lapse
+mentor-of-the-meek
 mercurial-pretender
 meren-of-clan-nel-toth
 merfolk-branchwalker
@@ -1462,6 +1474,7 @@ midnight-tilling
 might-makes-right
 mighty-servant-of-leuk-o
 military-intelligence
+militia-bugler
 millikin
 mimeoplasm-revered-one
 miming-slime
@@ -1484,6 +1497,7 @@ mine-security
 minthara-merciless-soul
 miracle-worker
 mirkwood-trapper
+mirror-image
 mirror-match
 mirror-of-fate
 mirror-universe
@@ -1495,6 +1509,7 @@ mishras-foundry
 mishras-workshop
 misinformation
 mist-dragon
+mistcaller
 mitotic-slime
 mizzium-meddler
 mizzixs-mastery
@@ -1567,7 +1582,9 @@ neverwinter-hydra
 new-way-forward
 nexus-of-fate
 nicol-bolas-planeswalker
+nicol-bolas-the-ravager-nicol-bolas-the-arisen
 night-shift-of-the-living-dead
+nightmares-thirst
 nightsnare
 nihiloor
 nimbus-maze
@@ -1587,6 +1604,7 @@ norns-decree
 norritt
 norwood-priestess
 norwood-riders
+novice-knight
 novijen-sages
 null-chamber
 oath-of-the-ancient-wood

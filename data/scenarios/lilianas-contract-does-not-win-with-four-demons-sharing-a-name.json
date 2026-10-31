@@ -1,0 +1,105 @@
+{
+  "description": "Liliana's Contract does not win the game when four Demons share only three names",
+  "note": "alice controls the Contract and four Demons, two of them Demons of Catastrophes: three names, so her upkeep passes and the game goes on.",
+  "board": {
+    "active": "bob",
+    "step": "EndStep",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Liliana's Contract"
+          },
+          {
+            "card": "Burning-Rune Demon"
+          },
+          {
+            "card": "Demon of Death's Gate"
+          },
+          {
+            "card": "Demon of Catastrophes"
+          },
+          {
+            "card": "Demon of Catastrophes"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ],
+    "turn": 1
+  },
+  "timeline": [
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 2,
+      "step": "DrawStep",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Result",
+          "is": null
+        }
+      }
+    }
+  ]
+}

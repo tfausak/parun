@@ -1,0 +1,104 @@
+{
+  "description": "Liliana's Contract wins the game at its controller's upkeep with four or more Demons with different names",
+  "note": "alice controls the Contract and four Demons, each with its own name, as her upkeep begins.",
+  "board": {
+    "active": "bob",
+    "step": "EndStep",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Liliana's Contract"
+          },
+          {
+            "card": "Burning-Rune Demon"
+          },
+          {
+            "card": "Demon of Death's Gate"
+          },
+          {
+            "card": "Demon of Catastrophes"
+          },
+          {
+            "card": "Bloodletter of Aclazotz"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ],
+    "turn": 1
+  },
+  "timeline": [
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": "Pass"
+    }
+  ],
+  "final": [
+    {
+      "View": {
+        "of": "Result",
+        "is": {
+          "won": "alice"
+        }
+      }
+    }
+  ]
+}
