@@ -86,6 +86,7 @@ import qualified Parun.Types.GameOutcome as GameOutcome
 import qualified Parun.Types.GameSettings as GameSettings
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.HexproofExemption as HexproofExemption
 import qualified Parun.Types.InZone as InZone
 import Parun.Types.Keyword (Keyword)
 import qualified Parun.Types.LandAllowance as LandAllowance
@@ -638,6 +639,7 @@ prohibitsCasting pid oid variable gs =
         -- spell anyone is more or less allowed to cast.
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
+        PlayerEffect.TargetPastHexproof _ -> False
         -- CR 615.12 edits what CR 615.1's shields do to a damage event, and CR
         -- 614.9's redirections likewise. Nobody is more or less allowed to cast
         -- a spell for either.
@@ -824,6 +826,7 @@ prohibitsPlayingLand pid oid gs =
         -- countering reaches a land play.
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
+        PlayerEffect.TargetPastHexproof _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -913,6 +916,7 @@ prohibitsSearching pid owner causeController gs =
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
+        PlayerEffect.TargetPastHexproof _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantBecomeMonarch -> False
@@ -1020,6 +1024,7 @@ prohibitsCounters pid kind gs =
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
+        PlayerEffect.TargetPastHexproof _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantBecomeMonarch -> False
@@ -1104,6 +1109,7 @@ prohibitsBecomingMonarch pid gs =
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
+        PlayerEffect.TargetPastHexproof _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -1163,6 +1169,7 @@ schemesCantBeSetInMotion gs =
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
+        PlayerEffect.TargetPastHexproof _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -1223,6 +1230,7 @@ silencesEntry pid entrant gs =
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
+        PlayerEffect.TargetPastHexproof _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -1282,6 +1290,7 @@ prohibitsAttackingWithCreatures pid gs =
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
+        PlayerEffect.TargetPastHexproof _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -1906,6 +1915,7 @@ landPlayFlashGrant effect = case effect of
   PlayerEffect.CantBeTargetedBy _ -> Nothing
   PlayerEffect.CantBeCountered _ -> Nothing
   PlayerEffect.RestrictTargeting _ -> Nothing
+  PlayerEffect.TargetPastHexproof _ -> Nothing
   PlayerEffect.DamageCantBePrevented _ -> Nothing
   PlayerEffect.DamageCantBeRedirected _ -> Nothing
   PlayerEffect.CantSearchLibraries _ -> Nothing
@@ -2156,6 +2166,7 @@ castPermissionsFrom pid zone oid gs =
         PlayerEffect.CantBeTargetedBy _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
+        PlayerEffect.TargetPastHexproof _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -2455,6 +2466,7 @@ mayCastFromHandWithoutPayingManaCost pid oid gs =
         PlayerEffect.CantBeTargetedBy _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
+        PlayerEffect.TargetPastHexproof _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -2531,6 +2543,7 @@ playLandPiles pid gs =
         PlayerEffect.CantBeTargetedBy _ -> []
         PlayerEffect.CantBeCountered _ -> []
         PlayerEffect.RestrictTargeting _ -> []
+        PlayerEffect.TargetPastHexproof _ -> []
         PlayerEffect.DamageCantBePrevented _ -> []
         PlayerEffect.DamageCantBeRedirected _ -> []
         PlayerEffect.CantSearchLibraries _ -> []
@@ -2594,9 +2607,14 @@ playLandPiles pid gs =
 -- forces Projection.abilityRemoval, a whole-board gather, the moment any
 -- permanent carries a player ability. One walk for two questions is why there is
 -- no PlayerId-taking wrapper beside this -- nothing would call it.
-protectedFromTargeting :: [(RowSource, PlayerEffect)] -> Maybe PlayerId -> PlayerId -> GameState -> Bool
-protectedFromTargeting rows caster pid gs =
+--
+-- `pastHexproof` is CR 702.11e's exemption for the caster (Detection Tower,
+-- hexproofExemptions): it lifts CR 702.11c's scope, Related Opponent, and leaves
+-- shroud's.
+protectedFromTargeting :: [(RowSource, PlayerEffect)] -> Bool -> Maybe PlayerId -> PlayerId -> GameState -> Bool
+protectedFromTargeting rows pastHexproof caster pid gs =
   let stops effect = case effect of
+        PlayerEffect.CantBeTargetedBy (PlayerScope.Related PlayerRelation.Opponent) | pastHexproof -> False
         PlayerEffect.CantBeTargetedBy scope -> case caster of
           Just who -> inScope who pid gs scope
           Nothing -> case scope of
@@ -2632,6 +2650,7 @@ protectedFromTargeting rows caster pid gs =
         -- protects still targets it legally and still resolves.
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
+        PlayerEffect.TargetPastHexproof _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -2739,6 +2758,7 @@ protectedFromGiven rows aimer oid gs =
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
+        PlayerEffect.TargetPastHexproof _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantBecomeMonarch -> False
@@ -2830,6 +2850,7 @@ protectionCarriers gs =
         PlayerEffect.MayTapForMana _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
         PlayerEffect.RestrictTargeting _ -> Nothing
+        PlayerEffect.TargetPastHexproof _ -> Nothing
         PlayerEffect.DamageCantBePrevented _ -> Nothing
         PlayerEffect.DamageCantBeRedirected _ -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
@@ -2912,6 +2933,7 @@ landPlaysAllowed pid gs =
         PlayerEffect.CantBeTargetedBy _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
         PlayerEffect.RestrictTargeting _ -> Nothing
+        PlayerEffect.TargetPastHexproof _ -> Nothing
         PlayerEffect.DamageCantBePrevented _ -> Nothing
         PlayerEffect.DamageCantBeRedirected _ -> Nothing
         PlayerEffect.CantSearchLibraries _ -> Nothing
@@ -2989,6 +3011,7 @@ votesAllowed pid gs =
         PlayerEffect.MayTapForMana {} -> Nothing
         PlayerEffect.CantBeCountered {} -> Nothing
         PlayerEffect.RestrictTargeting {} -> Nothing
+        PlayerEffect.TargetPastHexproof {} -> Nothing
         PlayerEffect.DamageCantBePrevented {} -> Nothing
         PlayerEffect.DamageCantBeRedirected {} -> Nothing
         PlayerEffect.CantSearchLibraries {} -> Nothing
@@ -3051,6 +3074,7 @@ offeredExtras pid gs =
         PlayerEffect.MayTapForMana {} -> False
         PlayerEffect.CantBeCountered {} -> False
         PlayerEffect.RestrictTargeting {} -> False
+        PlayerEffect.TargetPastHexproof {} -> False
         PlayerEffect.DamageCantBePrevented {} -> False
         PlayerEffect.DamageCantBeRedirected {} -> False
         PlayerEffect.CantSearchLibraries {} -> False
@@ -3114,6 +3138,7 @@ cascadeActions pid gs =
         PlayerEffect.MayTapForMana {} -> Nothing
         PlayerEffect.CantBeCountered {} -> Nothing
         PlayerEffect.RestrictTargeting {} -> Nothing
+        PlayerEffect.TargetPastHexproof {} -> Nothing
         PlayerEffect.DamageCantBePrevented {} -> Nothing
         PlayerEffect.DamageCantBeRedirected {} -> Nothing
         PlayerEffect.CantSearchLibraries {} -> Nothing
@@ -3176,6 +3201,7 @@ drawReveals pid nth gs =
         PlayerEffect.MayTapForMana {} -> Nothing
         PlayerEffect.CantBeCountered {} -> Nothing
         PlayerEffect.RestrictTargeting {} -> Nothing
+        PlayerEffect.TargetPastHexproof {} -> Nothing
         PlayerEffect.DamageCantBePrevented {} -> Nothing
         PlayerEffect.DamageCantBeRedirected {} -> Nothing
         PlayerEffect.CantSearchLibraries {} -> Nothing
@@ -3237,6 +3263,7 @@ shownGrants pid gs =
         PlayerEffect.MayTapForMana {} -> Nothing
         PlayerEffect.CantBeCountered {} -> Nothing
         PlayerEffect.RestrictTargeting {} -> Nothing
+        PlayerEffect.TargetPastHexproof {} -> Nothing
         PlayerEffect.DamageCantBePrevented {} -> Nothing
         PlayerEffect.DamageCantBeRedirected {} -> Nothing
         PlayerEffect.CantSearchLibraries {} -> Nothing
@@ -3332,6 +3359,7 @@ maximumHandSize pid gs =
         PlayerEffect.MayTapForMana _ -> current
         PlayerEffect.CantBeCountered _ -> current
         PlayerEffect.RestrictTargeting _ -> current
+        PlayerEffect.TargetPastHexproof _ -> current
         PlayerEffect.DamageCantBePrevented _ -> current
         PlayerEffect.DamageCantBeRedirected _ -> current
         PlayerEffect.CantSearchLibraries _ -> current
@@ -3413,6 +3441,7 @@ keepsUnspentMana pid gs =
         PlayerEffect.MayTapForMana _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
         PlayerEffect.RestrictTargeting _ -> Nothing
+        PlayerEffect.TargetPastHexproof _ -> Nothing
         PlayerEffect.DamageCantBePrevented _ -> Nothing
         PlayerEffect.DamageCantBeRedirected _ -> Nothing
         PlayerEffect.CantSearchLibraries _ -> Nothing
@@ -3486,6 +3515,7 @@ losesLifeForUnspentMana pid gs =
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
+        PlayerEffect.TargetPastHexproof _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -3563,6 +3593,7 @@ prohibitsGainingLife pid gs =
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
+        PlayerEffect.TargetPastHexproof _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -3636,6 +3667,7 @@ prohibitsLosingLife pid gs =
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
+        PlayerEffect.TargetPastHexproof _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -3708,6 +3740,7 @@ precludes outcome pid gs =
         PlayerEffect.MayTapForMana _ -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
+        PlayerEffect.TargetPastHexproof _ -> False
         PlayerEffect.DamageCantBePrevented _ -> False
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantSearchLibraries _ -> False
@@ -3778,6 +3811,7 @@ spendManaAsThough pid gs =
         PlayerEffect.MayTapForMana _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
         PlayerEffect.RestrictTargeting _ -> Nothing
+        PlayerEffect.TargetPastHexproof _ -> Nothing
         PlayerEffect.DamageCantBePrevented _ -> Nothing
         PlayerEffect.DamageCantBeRedirected _ -> Nothing
         PlayerEffect.CantSearchLibraries _ -> Nothing
@@ -3890,6 +3924,7 @@ cantBeCountered pid counterer oid gs =
         PlayerEffect.MayTapForMana _ -> False
         -- Autumn's Veil's OTHER clause, which CR 115 reads at targeting.
         PlayerEffect.RestrictTargeting _ -> False
+        PlayerEffect.TargetPastHexproof _ -> False
         -- Spider-Punk's OTHER sentence, and no part of this answer: CR 615.12
         -- and CR 614.9 are about a damage event and CR 701.6a about an object on
         -- the stack. The two travel together on one card and share nothing.
@@ -3933,6 +3968,7 @@ targetingRestrictions :: [(RowSource, PlayerEffect)] -> [(RowSource, TargetRestr
 targetingRestrictions =
   let restriction (source, effect) = fmap ((,) source) $ case effect of
         PlayerEffect.RestrictTargeting r -> Just r
+        PlayerEffect.TargetPastHexproof _ -> Nothing
         PlayerEffect.CantCastSpells -> Nothing
         PlayerEffect.CantActivateAbilities {} -> Nothing
         PlayerEffect.CantCastMoreThan _ -> Nothing
@@ -4002,6 +4038,79 @@ forbidsTargeting restrictions pid kind aimerView candidate gs =
           && Filter.matches (contextFor (Just pid) source gs) aimerView (TargetRestriction.aimers r)
     )
     restrictions
+
+-- CR 702.11e: the hexproof exemptions among the AIMING player's rows (Detection
+-- Tower), each with its row's source. Parun.Engine.Target reads them where it
+-- asks about hexproof, so that module never sees a PlayerEffect constructor.
+hexproofExemptions :: [(RowSource, PlayerEffect)] -> [(RowSource, HexproofExemption.HexproofExemption)]
+hexproofExemptions =
+  let exemption (source, effect) = fmap ((,) source) $ case effect of
+        PlayerEffect.RestrictTargeting _ -> Nothing
+        PlayerEffect.TargetPastHexproof e -> Just e
+        PlayerEffect.CantCastSpells -> Nothing
+        PlayerEffect.CantActivateAbilities {} -> Nothing
+        PlayerEffect.CantCastMoreThan _ -> Nothing
+        PlayerEffect.ModifyCost {} -> Nothing
+        PlayerEffect.AlternativeActivationCost {} -> Nothing
+        PlayerEffect.PlayAdditionalLands _ -> Nothing
+        PlayerEffect.NoMaximumHandSize -> Nothing
+        PlayerEffect.SetMaximumHandSize _ -> Nothing
+        PlayerEffect.IncreaseMaximumHandSize _ -> Nothing
+        PlayerEffect.ReduceMaximumHandSize _ -> Nothing
+        PlayerEffect.DontLoseUnspentMana _ -> Nothing
+        PlayerEffect.LoseLifeForUnspentMana -> Nothing
+        PlayerEffect.SpendManaAsThough _ -> Nothing
+        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
+        PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
+        PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
+        PlayerEffect.LoyaltyGrant _ -> Nothing
+        PlayerEffect.MayTapForMana _ -> Nothing
+        PlayerEffect.DamageCantBePrevented _ -> Nothing
+        PlayerEffect.DamageCantBeRedirected _ -> Nothing
+        PlayerEffect.CantSearchLibraries _ -> Nothing
+        PlayerEffect.HasProtectionFrom _ -> Nothing
+        PlayerEffect.CantBecomeMonarch -> Nothing
+        PlayerEffect.CantSetSchemesInMotion -> Nothing
+        PlayerEffect.EntriesDontTrigger _ -> Nothing
+        PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.YouChoose _ -> Nothing
+        PlayerEffect.ExilesFoundWhileSearching -> Nothing
+        PlayerEffect.CantAttackWithCreatures -> Nothing
+        PlayerEffect.CantCastMatching _ -> Nothing
+        PlayerEffect.PutTappedAsYouCascade _ -> Nothing
+        PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
+        PlayerEffect.CantPlayLands _ -> Nothing
+        PlayerEffect.CastFrom _ -> Nothing
+        PlayerEffect.PlayLandsFrom _ -> Nothing
+        PlayerEffect.PlotFrom _ -> Nothing
+        PlayerEffect.CastFromHandWithoutPayingManaCost _ -> Nothing
+        PlayerEffect.CantGetCounters _ -> Nothing
+        PlayerEffect.StateCoinFlip _ -> Nothing
+        PlayerEffect.ModifyDieRoll _ -> Nothing
+        PlayerEffect.AdditionalVotes _ -> Nothing
+        PlayerEffect.AdditionalSurveilCards _ -> Nothing
+        PlayerEffect.CantGainLife -> Nothing
+        PlayerEffect.CantLoseLife -> Nothing
+        PlayerEffect.RevealsDraw _ -> Nothing
+        PlayerEffect.Precluded _ -> Nothing
+        PlayerEffect.Shows _ -> Nothing
+        PlayerEffect.CantBeCountered _ -> Nothing
+   in Maybe.mapMaybe exemption
+
+-- CR 702.11e: may `you` target `candidate` as though it didn't have hexproof?
+-- `you`, the aiming player, stands in for CR 109.5's "you", the effect's
+-- controller: the same player for Detection Tower, which grants only its
+-- controller. Read live, so a creature an opponent gains control of later in
+-- the turn is covered (Detection Tower's third ruling; CR 611.2c).
+ignoresHexproofOf :: [(RowSource, HexproofExemption.HexproofExemption)] -> PlayerId -> ObjectId -> GameState -> Bool
+ignoresHexproofOf exemptions you candidate gs =
+  any (\(source, e) -> matchesObjectFor you source (HexproofExemption.permanents e) candidate gs) exemptions
+
+-- CR 702.11e: may the aiming player target players as though they didn't have
+-- hexproof? protectedFromTargeting's `pastHexproof`.
+ignoresPlayerHexproof :: [(RowSource, HexproofExemption.HexproofExemption)] -> Bool
+ignoresPlayerHexproof = any (HexproofExemption.players . snd)
 
 -- CR 615.12 / 613.11: every "damage can't be prevented" effect standing right
 -- now (Spider-Punk, Excruciator), each paired with the SOURCE of the ability
@@ -4079,6 +4188,7 @@ unpreventable gs =
         PlayerEffect.Shows _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
         PlayerEffect.RestrictTargeting _ -> Nothing
+        PlayerEffect.TargetPastHexproof _ -> Nothing
         PlayerEffect.CantCastSpells -> Nothing
         PlayerEffect.CantActivateAbilities {} -> Nothing
         PlayerEffect.CantCastMoreThan _ -> Nothing
@@ -4158,6 +4268,7 @@ unredirectable gs =
         PlayerEffect.Shows _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
         PlayerEffect.RestrictTargeting _ -> Nothing
+        PlayerEffect.TargetPastHexproof _ -> Nothing
         PlayerEffect.CantCastSpells -> Nothing
         PlayerEffect.CantActivateAbilities {} -> Nothing
         PlayerEffect.CantCastMoreThan _ -> Nothing
@@ -4233,6 +4344,7 @@ statedFlips pid gs =
         PlayerEffect.MayTapForMana _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
         PlayerEffect.RestrictTargeting _ -> Nothing
+        PlayerEffect.TargetPastHexproof _ -> Nothing
         PlayerEffect.DamageCantBePrevented _ -> Nothing
         PlayerEffect.DamageCantBeRedirected _ -> Nothing
         PlayerEffect.CantSearchLibraries _ -> Nothing
@@ -4308,6 +4420,7 @@ rollModifiers pid gs =
         PlayerEffect.MayTapForMana _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
         PlayerEffect.RestrictTargeting _ -> Nothing
+        PlayerEffect.TargetPastHexproof _ -> Nothing
         PlayerEffect.DamageCantBePrevented _ -> Nothing
         PlayerEffect.DamageCantBeRedirected _ -> Nothing
         PlayerEffect.CantSearchLibraries _ -> Nothing
@@ -4420,6 +4533,7 @@ overPlayerRefs f effect = case effect of
   PlayerEffect.MayTapForMana _ -> pure effect
   PlayerEffect.CantBeCountered _ -> pure effect
   PlayerEffect.RestrictTargeting _ -> pure effect
+  PlayerEffect.TargetPastHexproof _ -> pure effect
   PlayerEffect.DamageCantBePrevented _ -> pure effect
   PlayerEffect.DamageCantBeRedirected _ -> pure effect
   PlayerEffect.CantSearchLibraries _ -> pure effect
@@ -4497,6 +4611,7 @@ overDamagePatterns f effect = case effect of
   PlayerEffect.MayTapForMana _ -> pure effect
   PlayerEffect.CantBeCountered _ -> pure effect
   PlayerEffect.RestrictTargeting _ -> pure effect
+  PlayerEffect.TargetPastHexproof _ -> pure effect
   PlayerEffect.DamageCantBePrevented pattern_ -> fmap PlayerEffect.DamageCantBePrevented (f pattern_)
   PlayerEffect.DamageCantBeRedirected pattern_ -> fmap PlayerEffect.DamageCantBeRedirected (f pattern_)
   PlayerEffect.CantSearchLibraries _ -> pure effect

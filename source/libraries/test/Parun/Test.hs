@@ -378,6 +378,7 @@ import qualified Parun.Codec.GraveyardOrderSpec
 import qualified Parun.Codec.GuessSpec
 import qualified Parun.Codec.HalfUnlockedSpec
 import qualified Parun.Codec.HandActionSpec
+import qualified Parun.Codec.HexproofExemptionSpec
 import qualified Parun.Codec.HolderSpec
 import qualified Parun.Codec.HopSpec
 import qualified Parun.Codec.HybridSpec
@@ -1320,6 +1321,7 @@ spec s registry corpus = do
   Parun.Codec.HalfUnlockedSpec.spec s
   Parun.Codec.QuotientSpec.spec s
   Parun.Codec.HandActionSpec.spec s
+  Parun.Codec.HexproofExemptionSpec.spec s
   Parun.Codec.HolderSpec.spec s
   Parun.Codec.HopSpec.spec s
   Parun.Codec.HybridSpec.spec s

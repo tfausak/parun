@@ -662,7 +662,10 @@ poolHeldLastKnown pool view =
 -- break this build rather than default to targetable.
 targetable :: Map ObjectId PC.ProjectedCharacteristics -> (PlayerId -> [(RowSource, PlayerEffect)]) -> Maybe PlayerId -> ObjectId -> Filter.View -> GameState -> Recipient -> Bool
 targetable pcs rowsOf perspective source sourceView gs recipient =
-  let restrictedObject oid =
+  let -- CR 702.11e: the AIMING player's exemptions (Detection Tower), forced
+      -- only behind a hexproof ability that would otherwise stop them.
+      exemptions = foldMap (PlayerEffect.hexproofExemptions . rowsOf) perspective
+      restrictedObject oid =
         let keywords = Projection.keywordsGiven pcs oid gs
             -- The candidate's controller, read at most once and only where a
             -- hexproof or protection ability is present to ask about it -- every
@@ -718,7 +721,11 @@ targetable pcs rowsOf perspective source sourceView gs recipient =
             -- False without forcing either.
             restricted =
               Map.member Keyword.Shroud keywords
-                || (not (null hexproofs) && opponentOf (Game.teams gs) perspective controller && any stops hexproofs)
+                || ( not (null hexproofs)
+                       && opponentOf (Game.teams gs) perspective controller
+                       && any stops hexproofs
+                       && not (any (\you -> PlayerEffect.ignoresHexproofOf exemptions you oid gs) perspective)
+                   )
                 || any protects (Maybe.mapMaybe protectionQuality (Map.keys keywords))
          in not (Set.member oid (GameState.battlefield gs) && restricted)
    in case recipient of
@@ -731,7 +738,7 @@ targetable pcs rowsOf perspective source sourceView gs recipient =
         -- along for rule 702.16k's targeting clause (Filter.aimingController).
         Recipient.ToPlayer pid ->
           let rows = rowsOf pid
-           in not (PlayerEffect.protectedFromTargeting rows perspective pid gs)
+           in not (PlayerEffect.protectedFromTargeting rows (PlayerEffect.ignoresPlayerHexproof exemptions) perspective pid gs)
                 && not (PlayerEffect.protectedFromGiven rows (Just perspective) source gs)
         Recipient.ToCreature oid -> restrictedObject oid
         Recipient.ToPlaneswalker oid -> restrictedObject oid

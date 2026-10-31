@@ -11,6 +11,7 @@ import qualified Parun.Codec.DrawReveal as DrawReveal
 import qualified Parun.Codec.ExtraVotes as ExtraVotes
 import qualified Parun.Codec.Filter as Filter
 import qualified Parun.Codec.GameOutcome as GameOutcome
+import qualified Parun.Codec.HexproofExemption as HexproofExemption
 import qualified Parun.Codec.InZone as InZone
 import qualified Parun.Codec.Keyword as Keyword
 import qualified Parun.Codec.KeywordDesignator as KeywordDesignator
@@ -68,6 +69,7 @@ codec =
           Arm.payload "MayTapForMana" TapForMana.codec PlayerEffect.MayTapForMana (\x -> case x of PlayerEffect.MayTapForMana y -> Just y; _ -> Nothing),
           Arm.payload "CantBeCountered" CounterProhibition.codec PlayerEffect.CantBeCountered (\x -> case x of PlayerEffect.CantBeCountered y -> Just y; _ -> Nothing),
           Arm.payload "RestrictTargeting" (TargetRestriction.codec filterCodec) PlayerEffect.RestrictTargeting (\x -> case x of PlayerEffect.RestrictTargeting y -> Just y; _ -> Nothing),
+          Arm.payload "TargetPastHexproof" HexproofExemption.codec PlayerEffect.TargetPastHexproof (\x -> case x of PlayerEffect.TargetPastHexproof y -> Just y; _ -> Nothing),
           Arm.payload "DamageCantBePrevented" DamagePattern.codec PlayerEffect.DamageCantBePrevented (\x -> case x of PlayerEffect.DamageCantBePrevented y -> Just y; _ -> Nothing),
           Arm.payload "DamageCantBeRedirected" DamagePattern.codec PlayerEffect.DamageCantBeRedirected (\x -> case x of PlayerEffect.DamageCantBeRedirected y -> Just y; _ -> Nothing),
           Arm.payload "CantSearchLibraries" CantSearchLibraries.codec PlayerEffect.CantSearchLibraries (\x -> case x of PlayerEffect.CantSearchLibraries y -> Just y; _ -> Nothing),
@@ -122,6 +124,7 @@ tagOf x = case x of
   PlayerEffect.MayTapForMana {} -> "MayTapForMana"
   PlayerEffect.CantBeCountered {} -> "CantBeCountered"
   PlayerEffect.RestrictTargeting {} -> "RestrictTargeting"
+  PlayerEffect.TargetPastHexproof {} -> "TargetPastHexproof"
   PlayerEffect.DamageCantBePrevented {} -> "DamageCantBePrevented"
   PlayerEffect.DamageCantBeRedirected {} -> "DamageCantBeRedirected"
   PlayerEffect.CantSearchLibraries {} -> "CantSearchLibraries"
