@@ -1,0 +1,14 @@
+{"description":"CR 602.5b / 113.6m: Vivien's Jaguar's {2}{G} returns it from the graveyard to its owner's hand only while she controls a Vivien planeswalker, and an opponent's Vivien does not count",
+"note":"bob's Vivien of the Arkbow is on the battlefield from the start, and the activation is refused with mana to spare. Once alice's own Vivien Reid resolves it is offered and returns the Jaguar.",
+"board":{"active":"alice","step":"PrecombatMain","seats":[
+{"name":"alice","battlefield":[{"card":"Forest","label":"f1"},{"card":"Forest","label":"f2"},{"card":"Forest","label":"f3"},{"card":"Forest","label":"f4"},{"card":"Forest","label":"f5"},{"card":"Forest","label":"f6"},{"card":"Forest","label":"f7"},{"card":"Forest","label":"f8"}],"hand":[{"card":"Vivien Reid","label":"vivien"}],"graveyard":[{"card":"Vivien's Jaguar","label":"jaguar"}],"library":[{"card":"Island"},{"card":"Island"}]},
+{"name":"bob","battlefield":[{"card":"Vivien of the Arkbow","label":"bobs","counters":[{"key":{"type":"Loyalty"},"value":5}]}],"library":[{"card":"Island"},{"card":"Island"}]}]},
+"timeline":[
+{"turn":1,"step":"PrecombatMain","player":"alice","refuse":{"Activate":{"object":"$jaguar","mana":["$f6","$f7","$f8"]}}},
+{"turn":1,"step":"PrecombatMain","player":"alice","do":{"Cast":{"object":"$vivien","mana":["$f1","$f2","$f3","$f4","$f5",null]}}},
+{"turn":1,"step":"PrecombatMain","player":"alice","do":"Pass"},
+{"turn":1,"step":"PrecombatMain","player":"alice","do":{"Activate":{"object":"$jaguar","mana":["$f6","$f7","$f8"]}}},
+{"turn":1,"step":"PrecombatMain","player":"alice","do":"Pass"},
+{"turn":1,"step":"PrecombatMain","player":"alice","check":{"Count":{"player":"alice","zone":"Hand","card":"Vivien's Jaguar","count":1}}},
+{"turn":1,"step":"PrecombatMain","player":"alice","check":{"Keywords":{"object":"Vivien's Jaguar","keyword":{"type":"Reach"},"count":1}}}
+]}

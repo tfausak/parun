@@ -2126,6 +2126,7 @@ sinister-reflections
 sirens-call
 sixth-sense
 skaab-goliath
+skalla-wolf
 skilled-animator
 skinshifter
 skirk-marauder
@@ -2133,6 +2134,7 @@ skull-skaab
 skullclamp
 skullwinder
 skymarcher-aspirant
+skyrider-patrol
 skyshroud-condor
 skyshroud-ranger
 skywinder-drake
@@ -2187,6 +2189,7 @@ south-pole-voyager
 sovereigns-of-lost-alara
 space-beleren
 spark-double
+sparktongue-dragon
 sparring-golem
 spawnbroker
 spawning-pool
@@ -2236,6 +2239,7 @@ stalking-tiger
 stand-or-fall
 standstill
 star-compass
+star-crowned-stag
 starfield-of-nyx
 starforged-sword
 static-discharge
@@ -2362,6 +2366,9 @@ territorial-kavu
 territorial-maro
 terror-of-the-peaks
 test-of-faith
+tezzeret-artifice-master
+tezzeret-cruel-machinist
+tezzerets-gatebreaker
 tezzerets-reckoning
 thatcher-revolt
 the-caldaia
@@ -2405,6 +2412,7 @@ thieves-auction
 thopter-spy-network
 thorin-mountain-king
 thorn-elemental
+thorn-lieutenant
 thornbow-archer
 thorncaster-sliver
 thornvault-forager
@@ -2423,6 +2431,7 @@ throne-of-eldraine
 throne-of-empires
 throwing-knife
 thrull-surgeon
+thud
 thunderbond-vanguard
 thundermane-dragon
 thundermaw-hellkite
@@ -2457,6 +2466,7 @@ toralfs-disciple
 torgaar-famine-incarnate
 torment-of-venom
 tormented-thoughts
+tormenting-voice
 tormods-crypt
 tornado-elemental
 torpor-orb
@@ -2471,6 +2481,7 @@ tragic-arrogance
 trait-doctoring
 transcantation
 transcendence
+transmogrifying-wand
 trap-runner
 traumatize
 travel-through-caradhras
@@ -2525,10 +2536,12 @@ upwelling
 urborg-tomb-of-yawgmoth
 urgent-necropsy
 urianger-augurelt
+ursine-champion
 urzas-armor
 urzas-mine
 urzas-power-plant
 urzas-tower
+vaevictis-asmadi-the-dire
 valeron-wardens
 valiant-endeavor
 valley-rally
@@ -2566,6 +2579,10 @@ viral-spawning
 visions-of-beyond
 vitalizing-cascade
 vitu-ghazi-inspector
+vivien-of-the-arkbow
+vivien-reid
+viviens-invocation
+viviens-jaguar
 viviens-stampede
 vizier-of-many-faces
 vizier-of-remedies
@@ -2612,6 +2629,7 @@ watchful-radstag
 water-whip
 waterbenders-restoration
 waterbending-lesson
+waterknot
 wave-of-rats
 wax-wane
 wear-tear

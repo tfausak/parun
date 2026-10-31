@@ -1,0 +1,166 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "mana": [
+              {
+                "type": "Generic",
+                "value": 2
+              },
+              {
+                "type": "OfType",
+                "value": {
+                  "type": "Colored",
+                  "value": {
+                    "type": "Green"
+                  }
+                }
+              }
+            ]
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "MoveToZone",
+                        "value": {
+                          "origin": {
+                            "type": "Graveyard"
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "self"
+                          },
+                          "zone": {
+                            "type": "Hand"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "restrictions": [
+            {
+              "type": "OnlyIf",
+              "value": {
+                "type": "Compares",
+                "value": {
+                  "comparison": {
+                    "type": "AtLeast"
+                  },
+                  "measured": {
+                    "type": "Count",
+                    "value": {
+                      "aggregation": {
+                        "type": "Members"
+                      },
+                      "filter": {
+                        "type": "And",
+                        "value": [
+                          {
+                            "type": "HasSubtype",
+                            "value": {
+                              "type": "Vivien"
+                            }
+                          },
+                          {
+                            "type": "HasCardType",
+                            "value": {
+                              "type": "Planeswalker"
+                            }
+                          },
+                          {
+                            "type": "HeldBy",
+                            "value": {
+                              "holder": {
+                                "type": "Controller"
+                              },
+                              "relation": {
+                                "type": "You"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      "scope": {
+                        "type": "InZone",
+                        "value": {
+                          "player": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "AnyPlayer"
+                            }
+                          },
+                          "zone": {
+                            "type": "Battlefield"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "threshold": {
+                    "type": "Literal",
+                    "value": 1
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "keywords": [
+        {
+          "type": "Reach"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Vivien's Jaguar",
+      "oracleText": "Reach (This creature can block creatures with flying.)\n{2}{G}: Return this card from your graveyard to your hand. Activate only if you control a Vivien planeswalker.",
+      "power": {
+        "type": "Literal",
+        "value": 3
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 2
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Cat"
+          },
+          {
+            "type": "Spirit"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

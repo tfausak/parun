@@ -96,13 +96,13 @@
                   "players": {
                     "type": "AnyPlayer"
                   },
-                  "slot": "thatPlayer"
+                  "slot": "eachPlayer"
                 },
                 "pool": {
                   "type": "CardsInGraveyard",
                   "value": {
                     "type": "InSlot",
-                    "value": "thatPlayer"
+                    "value": "eachPlayer"
                   }
                 }
               }

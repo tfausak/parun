@@ -383,6 +383,7 @@ import qualified Parun.Types.ShuffleIntoLibrary as ShuffleIntoLibrary
 import qualified Parun.Types.SkipPhase as SkipPhase
 import qualified Parun.Types.SlotCount as SlotCount
 import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.SlotPerPlayer as SlotPerPlayer
 import qualified Parun.Types.SpecialAction as SpecialAction
 import qualified Parun.Types.SpeedDecrease as SpeedDecrease
 import qualified Parun.Types.SpellCast as SpellCast
@@ -3219,18 +3220,27 @@ effectMintedFaces effect = case effect of
 -- spell listed in rules 601.2c-d"; and CR 603.7's delayed abilities are
 -- triggered abilities, placed by that same rule. A lint about what DECLARING a
 -- slot means therefore has to range over all four, not over the spell alone.
+--
+-- A CR 601.2c per-player slot's "that player" name counts as declared too: the
+-- announcement binds it, so a reserved name there loses to the event's stamp
+-- (CR 508.3a's `thatPlayer` under an attack trigger answers every copy).
 ownDeclaredTargetSlots :: Face.Face Card.Type.Card -> Set.Set SlotName.SlotName
 ownDeclaredTargetSlots card =
   Set.unions
-    ( Map.keysSet (Card.allTargetSlots card)
-        : fmap
-          (Map.keysSet . Modal.allTargetSlots)
-          ( fmap ActivatedAbility.modal (Face.activatedAbilities card)
-              <> fmap TriggeredAbility.modal (Face.triggeredAbilities card)
-              <> fmap TriggeredAbility.modal (delayedDeclarations card)
-              <> fmap DungeonRoom.ability (Foldable.toList (Face.rooms card))
-          )
+    ( fmap
+        withPerPlayer
+        ( Card.allTargetSlots card
+            : fmap
+              Modal.allTargetSlots
+              ( fmap ActivatedAbility.modal (Face.activatedAbilities card)
+                  <> fmap TriggeredAbility.modal (Face.triggeredAbilities card)
+                  <> fmap TriggeredAbility.modal (delayedDeclarations card)
+                  <> fmap DungeonRoom.ability (Foldable.toList (Face.rooms card))
+              )
+        )
     )
+  where
+    withPerPlayer slots = Map.keysSet slots <> Set.fromList (fmap SlotPerPlayer.slot (Maybe.mapMaybe TargetSlot.perPlayer (Map.elems slots)))
 
 -- Every slot a card DECLARES as a target: the four carriers above, on the card's
 -- own face AND on every face it mints. A token's triggered ability

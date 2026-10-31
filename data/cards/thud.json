@@ -1,0 +1,87 @@
+{
+  "faces": [
+    {
+      "additionalCosts": [
+        {
+          "type": "Sacrifice",
+          "value": {
+            "count": {
+              "type": "Fixed",
+              "value": 1
+            },
+            "whichPermanents": {
+              "type": "HasCardType",
+              "value": {
+                "type": "Creature"
+              }
+            }
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Thud",
+      "oracleText": "As an additional cost to cast this spell, sacrifice a creature.\nThud deals damage equal to the sacrificed creature's power to any target.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "DealDamage",
+                    "value": {
+                      "parts": [
+                        {
+                          "quantity": {
+                            "type": "AgainstSlot",
+                            "value": {
+                              "quantity": {
+                                "type": "Measure",
+                                "value": {
+                                  "type": "Power"
+                                }
+                              },
+                              "slot": "thatSacrificedPermanent"
+                            }
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "target"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "target": {
+                "pool": {
+                  "type": "AnyTarget"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

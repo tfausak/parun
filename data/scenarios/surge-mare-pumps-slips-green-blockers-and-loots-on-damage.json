@@ -1,0 +1,21 @@
+{"description":"CR 509.1b / 603.2 / 608.2c: Surge Mare can't be blocked by green creatures, gets +2/-2 for {1}{U}, and when it deals damage to an opponent alice may draw a card and, if she does, discards one",
+"note":"Pumped once the Mare is a 2/3, and a 0/5 again on bob's turn 2. bob's green Grizzly Bears can't block it and his red Hill Giant could but doesn't. Its 2 damage lets alice draw the Plains on top of her library and discard her Swamp.",
+"board":{"active":"alice","step":"PrecombatMain","seats":[
+{"name":"alice","battlefield":[{"card":"Surge Mare","label":"mare","ready":true},{"card":"Island","label":"i1"},{"card":"Island","label":"i2"}],"hand":[{"card":"Swamp","label":"swamp"}],"library":[{"card":"Plains","label":"plains"},{"card":"Forest"},{"card":"Forest"},{"card":"Forest"}]},
+{"name":"bob","battlefield":[{"card":"Grizzly Bears","label":"bears"},{"card":"Hill Giant","label":"giant"}],"library":[{"card":"Island"},{"card":"Island"}]}]},
+"timeline":[
+{"turn":1,"step":"PrecombatMain","player":"alice","do":{"Activate":{"object":"$mare","mana":["$i1","$i2"]}}},
+{"turn":1,"step":"PrecombatMain","player":"alice","do":"Pass"},
+{"turn":1,"step":"PrecombatMain","player":"alice","check":{"PowerToughness":{"object":"$mare","power":2,"toughness":3}}},
+{"turn":1,"step":"DeclareAttackers","player":"alice","do":{"Attack":["$mare"]}},
+{"turn":1,"step":"DeclareBlockers","player":"bob","refuse":{"Block":{"$bears":["$mare"]}}},
+{"turn":1,"step":"DeclareBlockers","player":"bob","do":{"Block":{}}},
+{"turn":1,"step":"CombatDamage","player":"alice","do":"Pass"},
+{"turn":1,"step":"CombatDamage","player":"alice","do":{"ChooseOptional":{"type":"Exercises"}}},
+{"turn":1,"step":"CombatDamage","player":"alice","do":{"Answer":{"prompt":"ChooseDiscard","with":["$swamp"]}}},
+{"turn":1,"step":"CombatDamage","player":"alice","check":{"Life":{"player":"bob","life":18}}},
+{"turn":1,"step":"CombatDamage","player":"alice","check":{"Count":{"player":"alice","zone":"Hand","card":"Plains","count":1}}},
+{"turn":1,"step":"CombatDamage","player":"alice","check":{"Count":{"player":"alice","zone":"Graveyard","card":"Swamp","count":1}}},
+{"turn":2,"step":"PrecombatMain","player":"bob","check":{"PowerToughness":{"object":"$mare","power":0,"toughness":5}}},
+{"turn":2,"step":"DeclareAttackers","player":"bob","do":{"Attack":[]}}
+]}

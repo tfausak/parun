@@ -1,0 +1,14 @@
+{"description":"CR 205.1b / 613.1d / 602.5b: Ursine Champion's {5}{G} gives it +3/+3 and makes its creature types Bear Berserker until end of turn, no more than once each turn",
+"note":"Activated once the Champion is a 5/5 Bear Berserker, no longer a Human; a second activation that turn is refused with mana to spare. On bob's turn 2 it is a 2/2 Human Berserker again.",
+"board":{"active":"alice","step":"PrecombatMain","seats":[
+{"name":"alice","battlefield":[{"card":"Ursine Champion","label":"champ"},{"card":"Forest","label":"f1"},{"card":"Forest","label":"f2"},{"card":"Forest","label":"f3"},{"card":"Forest","label":"f4"},{"card":"Forest","label":"f5"},{"card":"Forest","label":"f6"},{"card":"Forest","label":"f7"},{"card":"Forest","label":"f8"},{"card":"Forest","label":"f9"},{"card":"Forest","label":"f10"},{"card":"Forest","label":"f11"},{"card":"Forest","label":"f12"}],"library":[{"card":"Island"},{"card":"Island"}]},
+{"name":"bob","library":[{"card":"Island"},{"card":"Island"}]}]},
+"timeline":[
+{"turn":1,"step":"PrecombatMain","player":"alice","do":{"Activate":{"object":"$champ","mana":["$f1","$f2","$f3","$f4","$f5","$f6",null]}}},
+{"turn":1,"step":"PrecombatMain","player":"alice","do":"Pass"},
+{"turn":1,"step":"PrecombatMain","player":"alice","check":{"PowerToughness":{"object":"$champ","power":5,"toughness":5}}},
+{"turn":1,"step":"PrecombatMain","player":"alice","check":{"Subtypes":{"object":"$champ","subtypes":["Bear","Berserker"]}}},
+{"turn":1,"step":"PrecombatMain","player":"alice","refuse":{"Activate":{"object":"$champ","mana":["$f7","$f8","$f9","$f10","$f11","$f12"]}}},
+{"turn":2,"step":"PrecombatMain","player":"bob","check":{"PowerToughness":{"object":"$champ","power":2,"toughness":2}}},
+{"turn":2,"step":"PrecombatMain","player":"bob","check":{"Subtypes":{"object":"$champ","subtypes":["Berserker","Human"]}}}
+]}
