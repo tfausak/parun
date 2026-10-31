@@ -252,6 +252,7 @@ import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Guess as Guess
 import qualified Parun.Types.HandAction as HandAction
+import qualified Parun.Types.HexproofExemption as HexproofExemption
 import qualified Parun.Types.HistoryRead as HistoryRead
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.Impending as Impending
@@ -2113,6 +2114,10 @@ manaCountNames :: (Monoid r) => Asking r -> ManaCount.ManaCount -> r
 manaCountNames asking x = case x of
   ManaCount.MkManaCount player _filter_ -> playerRefNames asking player
 
+hexproofExemptionNames :: (Monoid r) => Asking r -> HexproofExemption.HexproofExemption -> r
+hexproofExemptionNames asking x = case x of
+  HexproofExemption.MkHexproofExemption permanents _players -> filterNames asking permanents
+
 tapForManaNames :: (Monoid r) => Asking r -> TapForMana.TapForMana -> r
 tapForManaNames asking x = case x of
   TapForMana.MkTapForMana permanents restriction -> filterNames asking permanents <> foldMap (manaRestrictionNames asking) restriction
@@ -2425,6 +2430,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.MayTapForMana tapForMana -> tapForManaNames asking tapForMana
   PlayerEffect.CantBeCountered counterProhibition -> counterProhibitionNames asking counterProhibition
   PlayerEffect.RestrictTargeting targetRestriction -> targetRestrictionNames asking (filterNames asking) targetRestriction
+  PlayerEffect.TargetPastHexproof hexproofExemption -> hexproofExemptionNames asking hexproofExemption
   PlayerEffect.DamageCantBePrevented damagePattern -> damagePatternNames asking damagePattern
   PlayerEffect.DamageCantBeRedirected damagePattern -> damagePatternNames asking damagePattern
   PlayerEffect.CantSearchLibraries _cantSearchLibraries -> mempty

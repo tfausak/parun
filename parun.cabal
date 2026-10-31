@@ -811,6 +811,8 @@ library codec
     Parun.Codec.HalfUnlockedSpec
     Parun.Codec.HandAction
     Parun.Codec.HandActionSpec
+    Parun.Codec.HexproofExemption
+    Parun.Codec.HexproofExemptionSpec
     Parun.Codec.Holder
     Parun.Codec.HolderSpec
     Parun.Codec.Hop
@@ -2730,6 +2732,7 @@ library types
     Parun.Types.HandActionIndex
     Parun.Types.HandActionPerformer
     Parun.Types.HandWindowCap
+    Parun.Types.HexproofExemption
     Parun.Types.HistoryRead
     Parun.Types.Holder
     Parun.Types.Hop

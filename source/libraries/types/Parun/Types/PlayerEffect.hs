@@ -12,6 +12,7 @@ import qualified Parun.Types.DrawReveal as DrawReveal
 import qualified Parun.Types.ExtraVotes as ExtraVotes
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.GameOutcome as GameOutcome
+import qualified Parun.Types.HexproofExemption as HexproofExemption
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
@@ -129,6 +130,9 @@ data PlayerEffect
     -- players this effect's scope names control can't be the targets of the
     -- restriction's kind of spell or ability.
     RestrictTargeting (TargetRestriction.TargetRestriction (Filter.Filter Keyword.Keyword))
+  | -- | CR 702.11e / Detection Tower: this player may target what the payload
+    -- names as though it didn't have hexproof.
+    TargetPastHexproof HexproofExemption.HexproofExemption
   | -- | CR 615.12 / 613.11 / Spider-Punk: damage matching the pattern can't be
     -- prevented. Parun.ReplacementSpec's questingBeastSpec proves the pattern's
     -- source and kind limbs against each other. Parun.CardSpec lints the pool

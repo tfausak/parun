@@ -165,6 +165,7 @@ import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Guess as Guess
+import qualified Parun.Types.HexproofExemption as HexproofExemption
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.LifeLoss as LifeLoss
@@ -531,6 +532,7 @@ rewritePlayerEffect pairs effect = case effect of
   -- CR 612.2's colour word in Autumn's Veil's "blue or black spells", and the
   -- word naming what is protected.
   PlayerEffect.RestrictTargeting r -> PlayerEffect.RestrictTargeting r {TargetRestriction.affected = Filter.rewrite pairs (TargetRestriction.affected r), TargetRestriction.aimers = Filter.rewrite pairs (TargetRestriction.aimers r)}
+  PlayerEffect.TargetPastHexproof e -> PlayerEffect.TargetPastHexproof e {HexproofExemption.permanents = Filter.rewrite pairs (HexproofExemption.permanents e)}
   PlayerEffect.CantCastMatching f -> PlayerEffect.CantCastMatching (Filter.rewrite pairs f)
   PlayerEffect.PutTappedAsYouCascade f -> PlayerEffect.PutTappedAsYouCascade (Filter.rewrite pairs f)
   -- CR 305.1's play-side prohibition, narrowed by the same kind of Filter.

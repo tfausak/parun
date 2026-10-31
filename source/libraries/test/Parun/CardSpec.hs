@@ -246,6 +246,7 @@ import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Guess as Guess
 import qualified Parun.Types.HandAction as HandAction
+import qualified Parun.Types.HexproofExemption as HexproofExemption
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.Impending as Impending
@@ -5151,6 +5152,8 @@ playerEffectFilters playerEffect = case playerEffect of
   PlayerEffect.CantBeCountered p -> [CounterProhibition.countered p, CounterProhibition.counterers p]
   -- CR 115's protected permanents and its aiming spells (Autumn's Veil).
   PlayerEffect.RestrictTargeting r -> [TargetRestriction.affected r, TargetRestriction.aimers r]
+  -- CR 702.11e's exempted permanents (Detection Tower's creatures).
+  PlayerEffect.TargetPastHexproof e -> [HexproofExemption.permanents e]
   -- CR 615.12 narrows by a DamagePattern, two of whose axes are Filters over an
   -- object: the damage's SOURCE (Excruciator's "by this creature", `IsSource`)
   -- and its printed RECIPIENT (Lava Burst's "to a creature"). The kind, the

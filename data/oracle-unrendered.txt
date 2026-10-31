@@ -589,6 +589,7 @@ desolation-twin
 despoiler-of-souls
 destined-lead
 destructive-force
+detection-tower
 detritivore
 devout-invocation
 diabolic-edict
