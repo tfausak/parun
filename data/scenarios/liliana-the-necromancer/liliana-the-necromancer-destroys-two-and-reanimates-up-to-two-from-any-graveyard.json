@@ -1,6 +1,6 @@
 {
   "description": "Liliana, the Necromancer's -7 destroys up to two target creatures, then puts up to two creature cards from any graveyards, a just-destroyed one included, onto the battlefield under its controller's control",
-  "note": "Four creature cards are offered after the destruction (the two destroyed, one in each graveyard already) beside a noncreature card, so the offer, the ceiling and the controller are each observable. Taking two of four rules out an exact count by the prompt itself.",
+  "note": "Four creature cards are offered after the destruction (the two destroyed, one in each graveyard already) beside a noncreature card. Answering three keeps the first two in the offer's order (alice's graveyard, then bob's), so the ceiling is observable: Hill Giant stays in bob's graveyard and only two cards are offered to order.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
@@ -22,7 +22,7 @@
   "timeline": [
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$lili", "ability": 2, "targets": ["$bears", "$giant"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardsInGraveyards", "with": ["Grizzly Bears", "$elemental"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardsInGraveyards", "with": ["Grizzly Bears", "$elemental", "Hill Giant"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"OrderTimestamps": ["Air Elemental", "Grizzly Bears"]}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"card": "Grizzly Bears", "count": 1, "player": "alice", "zone": "Battlefield"}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Controller", "object": "Grizzly Bears", "is": "alice"}}},
