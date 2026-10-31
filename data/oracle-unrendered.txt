@@ -1674,6 +1674,7 @@ palace-jailer
 paladin-class
 pale-moon
 paleontologists-pick-axe-dinosaur-headdress
+palladia-mors-the-ruiner
 panglacial-wurm
 panic-attack
 panopticon

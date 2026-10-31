@@ -140,7 +140,8 @@ objects pcs gs a b =
       grants = Projection.View.controlGrants gs
       viewOf oid = Projection.viewOfObjectGiven pcs grants oid gs
       -- Every View field Parun.Engine.Projection.View fills from the turn's log
-      -- (CR 608.2i) or from GameState.couldAttackThisTurn (CR 508.1).
+      -- (CR 608.2i), GameState.damageBeforeThisTurn (CR 120.1) or
+      -- GameState.couldAttackThisTurn (CR 508.1).
       -- Hand-kept: a new look-back field owes a line here.
       lookBack view =
         ( Filter.Engine.attackedThisTurn view,
@@ -151,7 +152,8 @@ objects pcs gs a b =
           Filter.Engine.crewedThisTurn view,
           Filter.Engine.convokedThisTurn view,
           Filter.Engine.saddledThisTurn view,
-          Filter.Engine.dealtDamageTo view
+          Filter.Engine.dealtDamageTo view,
+          Filter.Engine.dealtDamageEarlier view
         )
       -- Quantity.DamageDealtThisTurn's totals, which no View field carries: two
       -- objects that dealt damage to the same recipients but in different amounts.
@@ -177,11 +179,11 @@ objects pcs gs a b =
                && not (layeredBetween a b gs)
            )
 
--- CR 608.2i from the other end: which objects the turn's log says dealt this
--- one damage (CR 120.1), crewed it (CR 702.122c), convoked it or the spell it
+-- CR 608.2i from the other end: which objects the turn's log, or an earlier
+-- turn's (GameState.damageBeforeThisTurn), says dealt this one damage (CR 120.1), crewed it (CR 702.122c), convoked it or the spell it
 -- was (CR 702.51c, 400.7d), and saddled it (CR 702.171c). Each is a relation
 -- atom's answer read off ANOTHER object's view with this one as the source --
--- DealtDamageToThisTurn's Source party, CrewedSourceThisTurn,
+-- DealtDamageTo's Source party, CrewedSourceThisTurn,
 -- ConvokedSourceThisTurn, SaddledSourceThisTurn -- so two candidates whose own
 -- views agree are still different options when these differ. Compared rather
 -- than searched, so two objects the same creature damaged stay alike.
@@ -190,7 +192,9 @@ objects pcs gs a b =
 actedOnBy :: ObjectId -> GameState -> (Set.Set ObjectId, Set.Set ObjectId, Set.Set ObjectId, Set.Set ObjectId)
 actedOnBy oid gs =
   let events = fmap LoggedEvent.event (Foldable.toList (GameState.events gs))
-      damagers = Set.fromList [DamageEvent.source dealt | event@(GameEvent.DamageDealt dealt) <- events, (Game.damageRecipient event >>= Recipient.objectOf) == Just oid]
+      damagers =
+        Set.fromList [DamageEvent.source dealt | event@(GameEvent.DamageDealt dealt) <- events, (Game.damageRecipient event >>= Recipient.objectOf) == Just oid]
+          <> Set.fromList [DamageEvent.source dealt | dealt <- Foldable.toList (GameState.damageBeforeThisTurn gs), Recipient.objectOf (DamageEvent.target dealt) == Just oid]
       crewers = Set.unions [Crewing.crewedBy crewed | GameEvent.Crewed crewed <- events, Crewing.vehicle crewed == oid]
       convokers = Set.unions [Convoking.convokedBy convoked | GameEvent.Convoked convoked <- events, let spell = Convoking.spell convoked, spell == oid || elem oid (Count.becamePermanents spell events)]
       saddlers = Set.unions [Saddling.saddledBy saddled | GameEvent.Saddled saddled <- events, Saddling.mount saddled == oid]
@@ -237,7 +241,8 @@ representatives pcs gs candidates =
 --     compares, which is where a Filter's look-back atoms read it, and through
 --     actedOnBy, the relations those views hold from the other end; an event
 --     the choice itself writes names whichever object was chosen, alike.
---     GameState.couldAttackThisTurn is read through the same two views.
+--     GameState.couldAttackThisTurn and GameState.damageBeforeThisTurn are
+--     read through the same two views, and the latter through actedOnBy too.
 --     GameState.controlSample (CR 603.2's control diff) and
 --     GameState.battlefieldWhenTriggered (CR 603.10's look-back) are keyed by
 --     every permanent alike, so objects COMPARES the two entries in each

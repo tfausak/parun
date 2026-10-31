@@ -1,0 +1,117 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Flying"
+        },
+        {
+          "type": "Trample"
+        },
+        {
+          "type": "Vigilance"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Palladia-Mors, the Ruiner",
+      "oracleText": "Flying, vigilance, trample\nPalladia-Mors has hexproof as long as it hasn't dealt damage yet.",
+      "power": {
+        "type": "Literal",
+        "value": 6
+      },
+      "staticAbilities": [
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "IsSource"
+                },
+                {
+                  "type": "Not",
+                  "value": {
+                    "type": "DealtDamageTo",
+                    "value": {
+                      "party": {
+                        "type": "Anyone"
+                      },
+                      "window": {
+                        "type": "AsThisObject"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "modifications": [
+            {
+              "type": "GainKeyword",
+              "value": {
+                "type": "Hexproof"
+              }
+            }
+          ]
+        }
+      ],
+      "toughness": {
+        "type": "Literal",
+        "value": 6
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Dragon"
+          },
+          {
+            "type": "Elder"
+          }
+        ],
+        "supertypes": [
+          {
+            "type": "Legendary"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

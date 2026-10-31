@@ -1741,6 +1741,7 @@ oneMountainState mountain ph =
           GameState.spellsCastLastTurn = 0,
           GameState.eventsLastTurn = mempty,
           GameState.castsBeforeThisTurn = mempty,
+          GameState.damageBeforeThisTurn = mempty,
           GameState.attacksInOwnLastTurn = mempty,
           GameState.resolvedNames = Map.empty,
           GameState.movedUntil = Map.empty,
@@ -1951,6 +1952,7 @@ stubView table oid =
                 Filter.saddledThisTurn = Set.empty,
                 -- CR 120.1: nor any damage.
                 Filter.dealtDamageTo = Set.empty,
+                Filter.dealtDamageEarlier = Set.empty,
                 -- CR 302.6: the table registers no sickness, and no Count in the
                 -- pool filters by one, so ControlledSinceTurnBegan is vacuously
                 -- False against this stub.

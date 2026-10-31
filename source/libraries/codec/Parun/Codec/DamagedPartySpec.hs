@@ -16,4 +16,6 @@ spec s = Spec.describe s "Parun.Codec.DamagedParty" $ do
     Common.assertCodec s DamagedParty.codec DamagedParty.Source " {\"type\":\"Source\"} "
   Spec.it s "InSlot" $
     Common.assertCodec s DamagedParty.codec (DamagedParty.InSlot (SlotName.MkSlotName (Text.pack "thatDepartedPermanent"))) " {\"type\":\"InSlot\",\"value\":\"thatDepartedPermanent\"} "
+  Spec.it s "Anyone" $
+    Common.assertCodec s DamagedParty.codec DamagedParty.Anyone " {\"type\":\"Anyone\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s DamagedParty.codec

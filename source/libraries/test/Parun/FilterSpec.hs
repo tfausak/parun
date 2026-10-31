@@ -29,6 +29,7 @@ import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
 import qualified Parun.Types.KeywordInstance as KeywordInstance
+import qualified Parun.Types.Lookback as Lookback
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
@@ -110,6 +111,7 @@ blackCreature =
       Filter.convokedThisTurn = Set.empty,
       Filter.saddledThisTurn = Set.empty,
       Filter.dealtDamageTo = Set.empty,
+      Filter.dealtDamageEarlier = Set.empty,
       Filter.controlledSinceTurnBegan = False,
       Filter.attachedToView = Nothing,
       Filter.attachedViews = [],
@@ -194,6 +196,7 @@ devoidBigCreature =
       Filter.convokedThisTurn = Set.empty,
       Filter.saddledThisTurn = Set.empty,
       Filter.dealtDamageTo = Set.empty,
+      Filter.dealtDamageEarlier = Set.empty,
       Filter.controlledSinceTurnBegan = False,
       Filter.attachedToView = Nothing,
       Filter.attachedViews = [],
@@ -1796,10 +1799,10 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
   -- CR 120.1, the CrewedSourceThisTurn group's split: object 31 is the source,
   -- player 0 the perspective, and player 1 someone else. Parun.DamageSpec's
   -- Brine Hag and Reciprocate cases are where a real board fills the field.
-  Spec.describe s "DealtDamageToThisTurn" $ do
+  Spec.describe s "DealtDamageTo" $ do
     let damaged rs = blackCreature {Filter.dealtDamageTo = Set.fromList (fmap (\r -> (r, DamageKind.Noncombat)) rs)}
         asked n = self {Filter.source = Just (ObjectId.MkObjectId n)}
-        to party = Filter.Type.DealtDamageToThisTurn DealtDamageTo.MkDealtDamageTo {DealtDamageTo.party = party, DealtDamageTo.kind = Nothing}
+        to party = Filter.Type.DealtDamageTo DealtDamageTo.MkDealtDamageTo {DealtDamageTo.party = party, DealtDamageTo.kind = Nothing, DealtDamageTo.window = Lookback.ThisTurn}
         toSource = to DamagedParty.Source
         toYou = to (DamagedParty.Related PlayerRelation.You)
         toOpponent = to (DamagedParty.Related PlayerRelation.Opponent)
@@ -1818,11 +1821,26 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
 
     -- CR 510.2: combat damage alone, Witch-king of Angmar's narrowing.
     Spec.it s "a combat kind admits only combat damage" $ do
-      let combatToYou = Filter.Type.DealtDamageToThisTurn DealtDamageTo.MkDealtDamageTo {DealtDamageTo.party = DamagedParty.Related PlayerRelation.You, DealtDamageTo.kind = Just DamageKind.Combat}
+      let combatToYou = Filter.Type.DealtDamageTo DealtDamageTo.MkDealtDamageTo {DealtDamageTo.party = DamagedParty.Related PlayerRelation.You, DealtDamageTo.kind = Just DamageKind.Combat, DealtDamageTo.window = Lookback.ThisTurn}
           dealt k = blackCreature {Filter.dealtDamageTo = Set.singleton (player 0, k)}
       Spec.assertBool s (Filter.matches self (dealt DamageKind.Combat) combatToYou) "combat damage"
       Spec.assertBool s (not (Filter.matches self (dealt DamageKind.Noncombat) combatToYou)) "noncombat damage"
       Spec.assertBool s (Filter.matches self (dealt DamageKind.Combat) toYou) "and any damage admits combat"
+
+    -- CR 120.1: Palladia-Mors, the Ruiner's "dealt damage", to anything at all.
+    Spec.it s "the Anyone party admits every recipient" $ do
+      let toAnyone = to DamagedParty.Anyone
+      Spec.assertBool s (Filter.matches self (damaged [creature 33]) toAnyone) "a creature"
+      Spec.assertBool s (Filter.matches self (damaged [player 1]) toAnyone) "a player"
+      Spec.assertBool s (not (Filter.matches self blackCreature toAnyone)) "nothing"
+
+    -- CR 400.7: an earlier turn's damage counts only as this object.
+    Spec.it s "AsThisObject adds the earlier turns' damage" $ do
+      let ever = Filter.Type.DealtDamageTo DealtDamageTo.MkDealtDamageTo {DealtDamageTo.party = DamagedParty.Anyone, DealtDamageTo.kind = Nothing, DealtDamageTo.window = Lookback.AsThisObject}
+          earlier = blackCreature {Filter.dealtDamageEarlier = Set.singleton (player 1, DamageKind.Combat)}
+      Spec.assertBool s (Filter.matches self earlier ever) "an earlier turn's"
+      Spec.assertBool s (Filter.matches self (damaged [creature 33]) ever) "this turn's"
+      Spec.assertBool s (not (Filter.matches self earlier (to DamagedParty.Anyone))) "this turn only"
 
     Spec.it s "matches a creature that dealt damage to the source" $ do
       Spec.assertBool s (Filter.matches (asked 31) (damaged [creature 31]) toSource) "damaged it"

@@ -25,6 +25,7 @@ import qualified Parun.Types.CastFromZone as CastFromZone
 import qualified Parun.Types.Combat as Combat
 import qualified Parun.Types.ContinuousEffect as ContinuousEffect
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.Daytime as Daytime
 import qualified Parun.Types.DelayedTrigger as DelayedTrigger
 import qualified Parun.Types.EndTurnSignal as EndTurnSignal
@@ -471,6 +472,11 @@ data GameState = MkGameState
     -- clears. Parun.Engine.Count's EventShape.SpellCastThisGame fold joins it
     -- to the live log.
     castsBeforeThisTurn :: Seq.Seq SpellWasCast.SpellWasCast,
+    -- | CR 120.1 / 608.2i: every damage event dealt this game BEFORE the turn in
+    -- progress, oldest first, appended at the turn handoff from the log it
+    -- clears, as castsBeforeThisTurn is. Lookback.AsThisObject's
+    -- Filter.DealtDamageTo joins it to the live log.
+    damageBeforeThisTurn :: Seq.Seq DamageEvent.DamageEvent,
     -- | CR 508.1a / 608.2i: the attackers declared during each player's OWN most
     -- recent turn, keyed by that player and replaced as their next turn ends
     -- (Engine.beginTurn). A departed player's row stands until their next turn

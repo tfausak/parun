@@ -80,7 +80,7 @@
                         "type": "IsSource"
                       },
                       {
-                        "type": "DealtDamageToThisTurn",
+                        "type": "DealtDamageTo",
                         "value": {
                           "party": {
                             "type": "Related",

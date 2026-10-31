@@ -419,6 +419,7 @@ import qualified Parun.Codec.LifeTallySpec
 import qualified Parun.Codec.LimitUnlessSpec
 import qualified Parun.Codec.LoggedEventSpec
 import qualified Parun.Codec.LookAtSpec
+import qualified Parun.Codec.LookbackSpec
 import qualified Parun.Codec.LookedSpec
 import qualified Parun.Codec.LoopMembersSpec
 import qualified Parun.Codec.LoyaltyClauseSpec
@@ -1360,6 +1361,7 @@ spec s registry corpus = do
   Parun.Codec.LookAtSpec.spec s
   Parun.Codec.GuessSpec.spec s
   Parun.Codec.ArrangeInLibrarySpec.spec s
+  Parun.Codec.LookbackSpec.spec s
   Parun.Codec.LookedSpec.spec s
   Parun.Codec.PlayerInstructionSpec.spec s
   Parun.Codec.SeatViewSpec.spec s

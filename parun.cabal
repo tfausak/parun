@@ -896,6 +896,8 @@ library codec
     Parun.Codec.LoggedEventSpec
     Parun.Codec.LookAt
     Parun.Codec.LookAtSpec
+    Parun.Codec.Lookback
+    Parun.Codec.LookbackSpec
     Parun.Codec.Looked
     Parun.Codec.LookedSpec
     Parun.Codec.LoopMembers
@@ -2779,6 +2781,7 @@ library types
     Parun.Types.LimitUnless
     Parun.Types.LoggedEvent
     Parun.Types.LookAt
+    Parun.Types.Lookback
     Parun.Types.Looked
     Parun.Types.LoopMembers
     Parun.Types.LoopTrail

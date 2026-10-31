@@ -21,6 +21,7 @@ import qualified Parun.Codec.PlayerId as PlayerId.Codec
 import qualified Parun.Codec.Printing as Printing.Codec
 import qualified Parun.Engine.Card as Card
 import qualified Parun.Engine.Engine as Engine
+import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Ring as Ring
 import qualified Parun.Engine.Setup as Setup
@@ -44,6 +45,8 @@ import qualified Parun.Types.Count as Count.Type
 import qualified Parun.Types.Counter as Counter
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.Counterability as Counterability
+import qualified Parun.Types.DamageEvent as DamageEvent
+import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EventGroup as EventGroup
 import qualified Parun.Types.Face as Face
@@ -63,6 +66,7 @@ import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.Printing as Printing.Type
 import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.RevealCause as RevealCause
 import qualified Parun.Types.Revealed as Revealed
 import qualified Parun.Types.Scope as Scope
@@ -359,6 +363,16 @@ gameStateRoundTripSpec s registry corpus = do
         handed = Engine.beginTurnOf S.bob (S.runPure S.castAnswer gs (S.cast S.alice spellId))
     Spec.assertEqWith s "the handoff kept alice's cast" (fmap SpellWasCast.player (Foldable.toList (GameState.castsBeforeThisTurn handed))) [S.alice]
     roundTrips "a cast on an earlier turn" handed
+
+  -- GameState.damageBeforeThisTurn, CR 120.1's damage of earlier turns, kept
+  -- at the same handoff and built the same way.
+  Spec.it s "damage on an earlier turn round trips" $ do
+    hillGiant <- S.printingOf s registry "Hill Giant"
+    let (giant, gs) = S.addPermanent hillGiant S.alice (Setup.emptyGame S.bothPlayers)
+        dealt = Event.damageEvent gs DamageKind.Combat giant (Recipient.ToPlayer S.bob) 3
+        handed = Engine.beginTurnOf S.bob (S.withEvents [GameEvent.DamageDealt dealt] gs)
+    Spec.assertEqWith s "the handoff kept the Giant's 3" (fmap DamageEvent.amount (Foldable.toList (GameState.damageBeforeThisTurn handed))) [3]
+    roundTrips "damage on an earlier turn" handed
 
   -- GameState.departedThisTurn, CR 801.2c's seats that still count until the
   -- next turn begins. Non-empty for the reason the case above gives.

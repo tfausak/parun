@@ -1,0 +1,259 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Palladia-Mors, the Ruiner",
+            "label": "palladia",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "plains1"
+          },
+          {
+            "card": "Plains",
+            "label": "plains2"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Flicker of Fate",
+            "label": "flicker"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Giant Spider",
+            "label": "spider"
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp1"
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp2"
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp3"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Murder",
+            "label": "murder"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 400.7: Palladia-Mors that dealt damage on an earlier turn has hexproof again once it returns as a new object",
+  "note": "Palladia deals damage to the blocking Spider on turn 1, so damage to a creature counts. Alice flickers it on bob's turn 2; the Spider's damage to Palladia on turn 1 must not count against the new object either. Bob's Bears give Murder a legal target.",
+  "timeline": [
+    {
+      "do": {
+        "Attack": [
+          "$palladia"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Block": {
+          "$spider": [
+            "$palladia"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "AssignDamage": {
+          "$spider": 6
+        }
+      },
+      "player": "alice",
+      "source": "$palladia",
+      "step": "CombatDamage",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Giant Spider",
+          "count": 1,
+          "player": "bob",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "alice",
+      "step": "PostcombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 20,
+          "player": "bob"
+        }
+      },
+      "player": "alice",
+      "step": "PostcombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Keywords": {
+          "count": 0,
+          "keyword": {
+            "type": "Hexproof"
+          },
+          "object": "$palladia"
+        }
+      },
+      "player": "alice",
+      "step": "PostcombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Keywords": {
+          "count": 0,
+          "keyword": {
+            "type": "Hexproof"
+          },
+          "object": "$palladia"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 2
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 2
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$plains1",
+            "$plains2"
+          ],
+          "object": "$flicker",
+          "targets": [
+            "$palladia"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 2
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 2
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 2
+    },
+    {
+      "check": {
+        "Keywords": {
+          "count": 1,
+          "keyword": {
+            "type": "Hexproof"
+          },
+          "object": "Palladia-Mors, the Ruiner"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 2
+    },
+    {
+      "player": "bob",
+      "refuse": {
+        "Cast": {
+          "mana": [
+            "$swamp1",
+            "$swamp2",
+            "$swamp3"
+          ],
+          "object": "$murder",
+          "targets": [
+            "Palladia-Mors, the Ruiner"
+          ]
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 2
+    }
+  ]
+}

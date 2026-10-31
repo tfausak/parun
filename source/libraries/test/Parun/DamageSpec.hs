@@ -5,7 +5,7 @@
 -- funnel credits as a damage event's source, its deal-time riders (deathtouch,
 -- infect, wither, toxic, lifelink), trample, state-based actions, and the
 -- look-back read of the damage the turn's event log records
--- (Filter.DealtDamageThisTurn, DealtDamageToThisTurn).
+-- (Filter.DealtDamageThisTurn, DealtDamageTo).
 module Parun.DamageSpec where
 
 import qualified Control.Monad as Monad
@@ -2892,12 +2892,12 @@ dealtDamageThisTurnSpec s registry =
           Spec.assertBool s (Set.member sorcererId (GameState.battlefield board)) "and the undamaged Sorcerer is standing to be offered"
         _ -> Spec.assertFailure s "Prodigal Sorcerer should print an activated ability, and Needle Drop a 'target' slot"
 
--- CR 120.1 / 608.2i: Filter.DealtDamageToThisTurn, DealtDamageThisTurn's
+-- CR 120.1 / 608.2i: Filter.DealtDamageTo, DealtDamageThisTurn's
 -- relation turned round -- the candidate DEALT the damage, and the party says
 -- to whom.
 dealtDamageToThisTurnSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 dealtDamageToThisTurnSpec s registry =
-  Spec.describe s "DealtDamageToThisTurn" $ do
+  Spec.describe s "DealtDamageTo" $ do
     -- Three Prodigal Sorcerers: two ping bob's 2/2 Brine Hag to death and the
     -- third pings bob himself, so it dealt damage this turn but not to the Hag.
     -- The Hag is in the graveyard as its trigger resolves, so the source the

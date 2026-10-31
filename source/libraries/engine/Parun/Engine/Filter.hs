@@ -60,6 +60,7 @@ import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.KeywordCount as KeywordCount
 import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.KeywordTally as KeywordTally
+import qualified Parun.Types.Lookback as Lookback
 import qualified Parun.Types.MadnessCost as MadnessCost
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.Measure as Measure
@@ -403,9 +404,13 @@ data View = MkView
     -- CR 120.1 / 608.2i: whom did this candidate deal damage to earlier this
     -- turn? Every recipient of a GameEvent.DamageDealt it was the source of,
     -- each beside that event's CR 510 / 608 kind, LAZY for `crewedThisTurn`'s
-    -- reason; DealtDamageToThisTurn compares them against the party and the
+    -- reason; DealtDamageTo compares them against the party and the
     -- kind the card names.
     dealtDamageTo :: Set.Set (Recipient.Recipient, DamageKind.DamageKind),
+    -- CR 120.1 / 400.7: the same answer for every EARLIER turn this candidate
+    -- has been this object, off GameState.damageBeforeThisTurn, which
+    -- Lookback.AsThisObject joins to `dealtDamageTo`. Lazy for its reason.
+    dealtDamageEarlier :: Set.Set (Recipient.Recipient, DamageKind.DamageKind),
     -- CR 302.6: has this candidate's CONTROLLER controlled it continuously since
     -- their most recent turn began? Read from Object.sickness, the field CR
     -- 302.6's own gates on attacking and the tap symbol are read from, and
@@ -946,6 +951,7 @@ playerView pid =
       saddledThisTurn = Set.empty,
       -- CR 120.2: any object can deal damage, but a player is not an object.
       dealtDamageTo = Set.empty,
+      dealtDamageEarlier = Set.empty,
       -- CR 302.6's continuity is about a creature a player CONTROLS, and a player
       -- is not one -- False is the answer here rather than a default.
       controlledSinceTurnBegan = False,
@@ -2234,9 +2240,12 @@ matches context view predicate = case predicate of
   -- The Hawkeye, Autumn Willow and Witch-king scenarios under
   -- data/scenarios/damage prove the slot and the kind. Vacuously False for a
   -- context with no source, no perspective or nothing in the slot, where the
-  -- party names nothing.
-  Filter.DealtDamageToThisTurn (DealtDamageTo.MkDealtDamageTo party wanted) ->
+  -- party names nothing. The Anyone party names every recipient, and
+  -- Lookback.AsThisObject adds the earlier turns' damage, the Palladia-Mors
+  -- scenarios' subject.
+  Filter.DealtDamageTo (DealtDamageTo.MkDealtDamageTo party wanted window) ->
     let toParty damaged = case party of
+          DamagedParty.Anyone -> True
           DamagedParty.Source -> Maybe.isJust (source context) && Recipient.objectOf damaged == source context
           DamagedParty.Related relation -> case (Recipient.playerOf damaged, perspective context) of
             (Just player, Just you) -> PlayerRelation.holds (teams context) relation you player
@@ -2245,7 +2254,10 @@ matches context view predicate = case predicate of
             Just oid -> Set.member oid (Map.findWithDefault Set.empty slot (slotObjects context))
             Nothing -> False
         hit (damaged, dealtKind) = toParty damaged && all (== dealtKind) wanted
-     in any hit (dealtDamageTo view)
+        earlier = case window of
+          Lookback.ThisTurn -> Set.empty
+          Lookback.AsThisObject -> dealtDamageEarlier view
+     in any hit (dealtDamageTo view) || any hit earlier
   -- CR 400.7 / 608.2i: the same look-back over the zone changes. A permanent
   -- that left and came back is a new object whose entry this is; one that phased
   -- in or turned face up made no entry at all (CR 702.26d, CR 708.8). A card that
@@ -2584,7 +2596,7 @@ rewrite pairs predicate = case predicate of
   Filter.MilledThisTurn -> predicate
   Filter.CantCrewVehicles -> predicate
   Filter.DealtDamageThisTurn -> predicate
-  Filter.DealtDamageToThisTurn _ -> predicate
+  Filter.DealtDamageTo _ -> predicate
   Filter.EnteredThisTurn _ -> predicate
   Filter.CrewedSourceThisTurn -> predicate
   Filter.ConvokedSourceThisTurn -> predicate
@@ -3340,7 +3352,7 @@ bakeBound players objects controllers predicate = case predicate of
   Filter.MilledThisTurn -> predicate
   Filter.CantCrewVehicles -> predicate
   Filter.DealtDamageThisTurn -> predicate
-  Filter.DealtDamageToThisTurn _ -> predicate
+  Filter.DealtDamageTo _ -> predicate
   Filter.EnteredThisTurn _ -> predicate
   Filter.CrewedSourceThisTurn -> predicate
   Filter.ConvokedSourceThisTurn -> predicate
@@ -3510,7 +3522,7 @@ manaValueThresholds predicate = case predicate of
   Filter.MilledThisTurn -> []
   Filter.CantCrewVehicles -> []
   Filter.DealtDamageThisTurn -> []
-  Filter.DealtDamageToThisTurn _ -> []
+  Filter.DealtDamageTo _ -> []
   Filter.EnteredThisTurn _ -> []
   Filter.CrewedSourceThisTurn -> []
   Filter.ConvokedSourceThisTurn -> []
@@ -3677,7 +3689,7 @@ statesAQuality predicate = case predicate of
   Filter.MilledThisTurn -> True
   Filter.CantCrewVehicles -> True
   Filter.DealtDamageThisTurn -> True
-  Filter.DealtDamageToThisTurn _ -> True
+  Filter.DealtDamageTo _ -> True
   Filter.EnteredThisTurn _ -> True
   Filter.CrewedSourceThisTurn -> True
   Filter.ConvokedSourceThisTurn -> True
@@ -3834,7 +3846,7 @@ readsSourceValues predicate = case predicate of
   Filter.MilledThisTurn -> False
   Filter.CantCrewVehicles -> False
   Filter.DealtDamageThisTurn -> False
-  Filter.DealtDamageToThisTurn _ -> False
+  Filter.DealtDamageTo _ -> False
   Filter.EnteredThisTurn _ -> False
   Filter.CrewedSourceThisTurn -> False
   Filter.ConvokedSourceThisTurn -> False
@@ -3999,10 +4011,11 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.CantCrewVehicles -> pure predicate
   Filter.DealtDamageThisTurn -> pure predicate
   -- MANY: a slot party is membership, IsBound's reading.
-  Filter.DealtDamageToThisTurn asked -> case DealtDamageTo.party asked of
-    DamagedParty.InSlot slot -> fmap (\renamed -> Filter.DealtDamageToThisTurn asked {DealtDamageTo.party = DamagedParty.InSlot renamed}) (f SlotArity.Many slot)
+  Filter.DealtDamageTo asked -> case DealtDamageTo.party asked of
+    DamagedParty.InSlot slot -> fmap (\renamed -> Filter.DealtDamageTo asked {DealtDamageTo.party = DamagedParty.InSlot renamed}) (f SlotArity.Many slot)
     DamagedParty.Source -> pure predicate
     DamagedParty.Related _ -> pure predicate
+    DamagedParty.Anyone -> pure predicate
   Filter.EnteredThisTurn _ -> pure predicate
   Filter.CrewedSourceThisTurn -> pure predicate
   Filter.ConvokedSourceThisTurn -> pure predicate

@@ -363,8 +363,9 @@ data Filter keyword
     -- infect source marks nothing at all (CR 120.3d).
     DealtDamageThisTurn
   | -- | CR 120.1 / 608.2i: the candidate DEALT damage to this party earlier this
-    -- turn -- Brine Hag's "each creature that dealt damage to it this turn".
-    DealtDamageToThisTurn DealtDamageTo.DealtDamageTo
+    -- turn, or ever as this object -- Brine Hag's "each creature that dealt
+    -- damage to it this turn".
+    DealtDamageTo DealtDamageTo.DealtDamageTo
   | -- | CR 400.7 / 608.2i: the candidate ENTERED this zone, from one of these
     -- zones, earlier this turn, as the object it is now -- Octomancer's "target
     -- creature token that entered the battlefield this turn", No Rest for the

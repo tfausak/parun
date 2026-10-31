@@ -7,6 +7,7 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamagedParty as DamagedParty
 import qualified Parun.Types.DealtDamageTo as DealtDamageTo
+import qualified Parun.Types.Lookback as Lookback
 import qualified Parun.Types.SlotName as SlotName
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -15,12 +16,18 @@ spec s = Spec.describe s "Parun.Codec.DealtDamageTo" $ do
     Common.assertCodec
       s
       DealtDamageTo.codec
-      DealtDamageTo.MkDealtDamageTo {DealtDamageTo.party = DamagedParty.Source, DealtDamageTo.kind = Nothing}
+      DealtDamageTo.MkDealtDamageTo {DealtDamageTo.party = DamagedParty.Source, DealtDamageTo.kind = Nothing, DealtDamageTo.window = Lookback.ThisTurn}
       " {\"party\":{\"type\":\"Source\"}} "
   Spec.it s "combat damage" $
     Common.assertCodec
       s
       DealtDamageTo.codec
-      DealtDamageTo.MkDealtDamageTo {DealtDamageTo.party = DamagedParty.InSlot (SlotName.MkSlotName (Text.pack "it")), DealtDamageTo.kind = Just DamageKind.Combat}
+      DealtDamageTo.MkDealtDamageTo {DealtDamageTo.party = DamagedParty.InSlot (SlotName.MkSlotName (Text.pack "it")), DealtDamageTo.kind = Just DamageKind.Combat, DealtDamageTo.window = Lookback.ThisTurn}
       " {\"party\":{\"type\":\"InSlot\",\"value\":\"it\"},\"kind\":{\"type\":\"Combat\"}} "
+  Spec.it s "anyone, as this object" $
+    Common.assertCodec
+      s
+      DealtDamageTo.codec
+      DealtDamageTo.MkDealtDamageTo {DealtDamageTo.party = DamagedParty.Anyone, DealtDamageTo.kind = Nothing, DealtDamageTo.window = Lookback.AsThisObject}
+      " {\"party\":{\"type\":\"Anyone\"},\"window\":{\"type\":\"AsThisObject\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s DealtDamageTo.codec

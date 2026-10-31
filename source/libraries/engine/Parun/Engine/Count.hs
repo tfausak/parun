@@ -437,7 +437,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.MilledThisTurn -> predicate
         Filter.Type.CantCrewVehicles -> predicate
         Filter.Type.DealtDamageThisTurn -> predicate
-        Filter.Type.DealtDamageToThisTurn _ -> predicate
+        Filter.Type.DealtDamageTo _ -> predicate
         Filter.Type.EnteredThisTurn _ -> predicate
         Filter.Type.CrewedSourceThisTurn -> predicate
         Filter.Type.ConvokedSourceThisTurn -> predicate
@@ -1041,6 +1041,7 @@ lastKnownView peers oid gs lastKnown =
           Filter.convokedThisTurn = convokedThisTurn oid gs,
           Filter.saddledThisTurn = saddledThisTurn oid gs,
           Filter.dealtDamageTo = dealtDamageTo oid gs,
+          Filter.dealtDamageEarlier = dealtDamageEarlier oid gs,
           -- CR 603.10a: what was attached to it as it left, which the next CR
           -- 704.5m/n pass clears from the live board before triggers are placed.
           Filter.attachedViews = Maybe.mapMaybe peers (Set.toList (LastKnown.attached lastKnown)),
@@ -1138,6 +1139,13 @@ dealtDamageTo oid gs =
         GameEvent.DamageDealt ev | DamageEvent.source ev == oid -> fmap (\recipient -> (recipient, DamageEvent.kind ev)) (Game.damageRecipient event)
         _ -> Nothing
    in Set.fromList (Maybe.mapMaybe (byIt . LoggedEvent.event) (Foldable.toList (GameState.events gs)))
+
+-- CR 120.1 / 400.7: the same answer for every earlier turn of the game. An id
+-- names one object for its whole life, so the earlier turns' damage by this id
+-- is damage by this object.
+dealtDamageEarlier :: ObjectId -> GameState -> Set.Set (Recipient.Recipient, DamageKind.DamageKind)
+dealtDamageEarlier oid gs =
+  Set.fromList [(DamageEvent.target ev, DamageEvent.kind ev) | ev <- Foldable.toList (GameState.damageBeforeThisTurn gs), DamageEvent.source ev == oid]
 
 -- CR 702.51c: which spells did this object convoke, and which permanents did
 -- those spells become? GameEvent.Convoked is written as the cast's cost is paid
@@ -1339,6 +1347,7 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       Filter.convokedThisTurn = Set.empty,
       Filter.saddledThisTurn = Set.empty,
       Filter.dealtDamageTo = Set.empty,
+      Filter.dealtDamageEarlier = Set.empty,
       -- CR 302.6 asks about an OBJECT under a player's control; this view
       -- describes a snapshot rather than one -- `milledThisTurn` above's reason.
       Filter.controlledSinceTurnBegan = False,

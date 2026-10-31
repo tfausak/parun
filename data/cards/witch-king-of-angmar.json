@@ -136,7 +136,7 @@
                                 }
                               },
                               {
-                                "type": "DealtDamageToThisTurn",
+                                "type": "DealtDamageTo",
                                 "value": {
                                   "kind": {
                                     "type": "Combat"
