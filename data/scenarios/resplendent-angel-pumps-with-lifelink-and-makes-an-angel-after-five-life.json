@@ -1,6 +1,6 @@
 {
   "description": "CR 603.4 / 702.15b: Resplendent Angel's pump gives it lifelink; five life gained from its attack makes a 4/4 Angel at end step, four gained on a turn makes none",
-  "note": "On turn 1 alice gains exactly 4 (Sacred Nectar) and has no Angel by bob's upkeep; on turn 3 the pumped 5/5 lifelinker connects for 5 and she has an Angel token with flying and vigilance by bob's next upkeep.",
+  "note": "On turn 1 alice gains exactly 4 (Sacred Nectar) and bob 6 (two Healing Salves), and she has no Angel by bob's upkeep: four is too few and only her own gain counts. On bob's turn 2 she gains 7 (Angel's Mercy) and has an Angel by her upkeep: the trigger is each end step. On turn 3 the pumped 5/5 lifelinker connects for 5 and she has a second Angel, with flying and vigilance, by bob's next upkeep.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
@@ -42,6 +42,10 @@
           {
             "card": "Sacred Nectar",
             "label": "nectar"
+          },
+          {
+            "card": "Angel's Mercy",
+            "label": "mercy"
           }
         ],
         "library": [
@@ -73,6 +77,26 @@
           },
           {
             "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Plains",
+            "label": "bp1"
+          },
+          {
+            "card": "Plains",
+            "label": "bp2"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Healing Salve",
+            "label": "salve1"
+          },
+          {
+            "card": "Healing Salve",
+            "label": "salve2"
           }
         ]
       }
@@ -113,6 +137,68 @@
     },
     {
       "turn": 1,
+      "step": "PostcombatMain",
+      "player": "bob",
+      "do": {
+        "Cast": {
+          "object": "$salve1",
+          "modes": [
+            0
+          ],
+          "targets": [
+            "$bob"
+          ],
+          "mana": [
+            "$bp1",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "bob",
+      "do": {
+        "Cast": {
+          "object": "$salve2",
+          "modes": [
+            0
+          ],
+          "targets": [
+            "$bob"
+          ],
+          "mana": [
+            "$bp2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "bob",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 26
+        }
+      }
+    },
+    {
+      "turn": 1,
       "step": "DeclareAttackers",
       "player": "alice",
       "do": {
@@ -129,6 +215,52 @@
           "zone": "Battlefield",
           "card": "Angel Token",
           "count": 0
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$mercy",
+          "mana": [
+            "$p3",
+            "$p4",
+            "$p5",
+            "$p6"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 2,
+      "step": "DrawStep",
+      "player": "bob",
+      "check": {
+        "Life": {
+          "player": "alice",
+          "life": 31
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Angel Token",
+          "count": 1
         }
       }
     },
@@ -199,7 +331,7 @@
       "check": {
         "Life": {
           "player": "bob",
-          "life": 15
+          "life": 21
         }
       }
     },
@@ -210,7 +342,7 @@
       "check": {
         "Life": {
           "player": "alice",
-          "life": 29
+          "life": 36
         }
       }
     },
@@ -223,7 +355,7 @@
           "player": "alice",
           "zone": "Battlefield",
           "card": "Angel Token",
-          "count": 1
+          "count": 2
         }
       }
     },

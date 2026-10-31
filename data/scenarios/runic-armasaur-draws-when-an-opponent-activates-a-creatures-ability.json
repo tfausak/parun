@@ -1,6 +1,6 @@
 {
   "description": "CR 602.2 / 605.1a: Runic Armasaur may draw its controller a card when an opponent activates a non-mana ability of a creature or land",
-  "note": "Bob's Mountain's mana ability, his Tormod's Crypt (an artifact, not a creature or land) and his cycling of Barkhide Mauler (a creature card, not a permanent) trigger nothing, or an unscheduled prompt fails the run; his Shivan Dragon's firebreathing draws alice one card.",
+  "note": "Bob's Mountain's mana ability, his Tormod's Crypt (an artifact, not a creature or land) and his cycling of Barkhide Mauler (a creature card, not a permanent) trigger nothing, nor does alice firebreathing her own Shivan Dragon (not an opponent's activation), or an unscheduled prompt fails the run; his Shivan Dragon's firebreathing draws alice the Divination, and his Mutavault's animation (a land, not yet a creature) draws her an Island.",
   "board": {
     "active": "bob",
     "step": "PrecombatMain",
@@ -11,6 +11,18 @@
           {
             "card": "Runic Armasaur",
             "label": "armasaur"
+          },
+          {
+            "card": "Shivan Dragon",
+            "label": "ashivan"
+          },
+          {
+            "card": "Mountain",
+            "label": "am"
+          },
+          {
+            "card": "Mountain",
+            "label": "am2"
           }
         ],
         "library": [
@@ -50,6 +62,14 @@
           {
             "card": "Mountain",
             "label": "m3"
+          },
+          {
+            "card": "Mutavault",
+            "label": "mutavault"
+          },
+          {
+            "card": "Mountain",
+            "label": "m4"
           }
         ],
         "library": [
@@ -222,7 +242,8 @@
           "object": "$mauler",
           "mana": [
             "$m2",
-            "$m3"
+            "$m3",
+            null
           ]
         }
       }
@@ -256,6 +277,133 @@
           "zone": "Hand",
           "card": "Island",
           "count": 0
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Activate": {
+          "object": "$mutavault",
+          "ability": 1,
+          "mana": [
+            "$m4",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "ChooseOptional": {
+          "type": "Exercises"
+        }
+      },
+      "source": "$armasaur"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Hand",
+          "card": "Island",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "PowerToughness": {
+          "object": "$mutavault",
+          "power": 2,
+          "toughness": 2
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$ashivan",
+          "mana": [
+            "$am",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$ashivan",
+          "mana": [
+            "$am2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$ashivan",
+          "power": 7,
+          "toughness": 5
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Hand",
+          "card": "Island",
+          "count": 1
         }
       }
     }

@@ -1,23 +1,27 @@
 {
   "description": "CR 603.4 / 513.1: at the beginning of each end step, Regal Bloodlord makes a 1/1 flying Bat if its controller gained life that turn",
-  "note": "Alice gains 3 on her turn and has a Bat by bob's upkeep; she gains nothing on bob's turn and still has one Bat at her next upkeep.",
+  "note": "Bob gains 3 on alice's turn, when she gains nothing, and she has no Bat by bob's upkeep: only her own gain counts. She gains 3 on bob's turn and has a Bat by her next upkeep: the trigger is each end step, not only hers.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
     "seats": [
       {
         "name": "alice",
-        "manaPool": "W",
+        "life": 10,
         "battlefield": [
           {
             "card": "Regal Bloodlord",
             "label": "lord"
+          },
+          {
+            "card": "Plains",
+            "label": "ap"
           }
         ],
         "hand": [
           {
             "card": "Healing Salve",
-            "label": "salve"
+            "label": "asalve"
           }
         ],
         "library": [
@@ -37,6 +41,18 @@
       },
       {
         "name": "bob",
+        "battlefield": [
+          {
+            "card": "Plains",
+            "label": "bp"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Healing Salve",
+            "label": "bsalve"
+          }
+        ],
         "library": [
           {
             "card": "Island"
@@ -58,15 +74,18 @@
     {
       "turn": 1,
       "step": "PrecombatMain",
-      "player": "alice",
+      "player": "bob",
       "do": {
         "Cast": {
-          "object": "$salve",
+          "object": "$bsalve",
           "modes": [
             0
           ],
           "targets": [
-            "$alice"
+            "$bob"
+          ],
+          "mana": [
+            "$bp"
           ]
         }
       }
@@ -74,24 +93,24 @@
     {
       "turn": 1,
       "step": "PrecombatMain",
-      "player": "alice",
+      "player": "bob",
       "do": "Pass"
     },
     {
       "turn": 1,
       "step": "PrecombatMain",
-      "player": "alice",
+      "player": "bob",
       "check": {
         "Life": {
-          "player": "alice",
+          "player": "bob",
           "life": 23
         }
       }
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "bob",
       "check": {
         "Count": {
           "player": "alice",
@@ -104,39 +123,36 @@
     {
       "turn": 2,
       "step": "Upkeep",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$asalve",
+          "modes": [
+            0
+          ],
+          "targets": [
+            "$alice"
+          ],
+          "mana": [
+            "$ap"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 2,
+      "step": "DrawStep",
       "player": "bob",
       "check": {
-        "Count": {
+        "Life": {
           "player": "alice",
-          "zone": "Battlefield",
-          "card": "Bat Token",
-          "count": 1
-        }
-      }
-    },
-    {
-      "turn": 2,
-      "step": "Upkeep",
-      "player": "bob",
-      "check": {
-        "Keywords": {
-          "object": "Bat Token",
-          "keyword": {
-            "type": "Flying"
-          },
-          "count": 1
-        }
-      }
-    },
-    {
-      "turn": 2,
-      "step": "Upkeep",
-      "player": "bob",
-      "check": {
-        "PowerToughness": {
-          "object": "Bat Token",
-          "power": 1,
-          "toughness": 1
+          "life": 13
         }
       }
     },
@@ -150,6 +166,32 @@
           "zone": "Battlefield",
           "card": "Bat Token",
           "count": 1
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "Keywords": {
+          "object": "Bat Token",
+          "keyword": {
+            "type": "Flying"
+          },
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "Bat Token",
+          "power": 1,
+          "toughness": 1
         }
       }
     }

@@ -1,6 +1,6 @@
 {
   "description": "CR 601.2i / 602.2: Sai makes a 1/1 flying Thopter when alice casts an artifact spell, none for a creature spell, and sacrifices two artifacts to draw",
-  "note": "Ornithopter makes one Thopter, Grizzly Bears makes none; Sai then sacrifices the Ornithopter and the Thopter, not the Tormod's Crypt, to draw the Divination.",
+  "note": "Ornithopter makes one Thopter, Grizzly Bears makes none; Sai then sacrifices the Ornithopter and the Thopter, not the Tormod's Crypt, to draw the Divination. Bob's own Tormod's Crypt, cast on his turn, makes alice none: only her own spells count.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
@@ -72,6 +72,12 @@
           },
           {
             "card": "Island"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Tormod's Crypt",
+            "label": "bcrypt"
           }
         ]
       }
@@ -271,6 +277,48 @@
       "check": {
         "Count": {
           "player": "alice",
+          "zone": "Battlefield",
+          "card": "Tormod's Crypt",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Cast": {
+          "object": "$bcrypt"
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Thopter Token",
+          "count": 0
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "Count": {
+          "player": "bob",
           "zone": "Battlefield",
           "card": "Tormod's Crypt",
           "count": 1
