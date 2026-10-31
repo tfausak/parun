@@ -1,0 +1,35 @@
+{
+  "description": "Dragon's Hoard gets a gold counter when a Dragon alice controls enters, and removing it draws a card",
+  "note": "The Llanowar Elves enter first and add nothing; the Shivan Dragon adds the one counter the draw then spends.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "RRRRRRG",
+        "battlefield": [{ "card": "Dragon's Hoard", "label": "hoard" }],
+        "hand": [{ "card": "Llanowar Elves", "label": "elves" }, { "card": "Shivan Dragon", "label": "dragon" }],
+        "library": [{ "card": "Swamp" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$elves", "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "$hoard", "kind": { "type": "Named", "value": "gold" }, "count": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$dragon", "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "$hoard", "kind": { "type": "Named", "value": "gold" }, "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$hoard", "ability": 0, "mana": [null], "costOrder": [0, 1] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "$hoard", "kind": { "type": "Named", "value": "gold" }, "count": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Swamp", "count": 1 } } }
+  ]
+}

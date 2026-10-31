@@ -1,0 +1,29 @@
+{
+  "description": "Enigma Drake's power is the number of instant and sorcery cards in alice's graveyard; its toughness stays 4",
+  "note": "alice's graveyard holds an instant, two sorceries and a creature card; bob's holds another instant. Casting a Shock adds one more.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "R",
+        "battlefield": [{ "card": "Enigma Drake", "label": "drake" }],
+        "hand": [{ "card": "Shock", "label": "shock" }],
+        "graveyard": [{ "card": "Lightning Bolt" }, { "card": "Raise Dead" }, { "card": "Wildfire" }, { "card": "Grizzly Bears" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "graveyard": [{ "card": "Giant Growth" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$drake", "power": 3, "toughness": 4 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$shock", "targets": ["$bob"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$drake", "power": 4, "toughness": 4 } } }
+  ]
+}

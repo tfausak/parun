@@ -1,0 +1,237 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Goreclaw, Terror of Qal Sisma",
+      "oracleText": "Creature spells you cast with power 4 or greater cost {2} less to cast.\nWhenever Goreclaw attacks, each creature you control with power 4 or greater gets +1/+1 and gains trample until end of turn.",
+      "playerAbilities": [
+        {
+          "effect": {
+            "type": "ModifyCost",
+            "value": {
+              "change": {
+                "type": "Reduce",
+                "value": {
+                  "amount": [
+                    {
+                      "type": "Generic",
+                      "value": 2
+                    }
+                  ]
+                }
+              },
+              "matching": {
+                "type": "And",
+                "value": [
+                  {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Creature"
+                    }
+                  },
+                  {
+                    "type": "Measures",
+                    "value": {
+                      "comparison": {
+                        "type": "AtLeast"
+                      },
+                      "measure": {
+                        "type": "Power"
+                      },
+                      "operand": {
+                        "type": "Literal",
+                        "value": 4
+                      }
+                    }
+                  }
+                ]
+              },
+              "subject": {
+                "type": "Spells"
+              }
+            }
+          },
+          "scope": {
+            "type": "You"
+          }
+        }
+      ],
+      "power": {
+        "type": "Literal",
+        "value": 4
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 3
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SelfAttacks",
+            "value": {
+              "type": "EveryTime"
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "ModifyTarget",
+                        "value": {
+                          "duration": {
+                            "type": "UntilEndOfTurn"
+                          },
+                          "modification": {
+                            "type": "ModifyPowerToughness",
+                            "value": {
+                              "power": {
+                                "type": "Literal",
+                                "value": 1
+                              },
+                              "toughness": {
+                                "type": "Literal",
+                                "value": 1
+                              }
+                            }
+                          },
+                          "ref": {
+                            "type": "EachMatching",
+                            "value": {
+                              "type": "And",
+                              "value": [
+                                {
+                                  "type": "HasCardType",
+                                  "value": {
+                                    "type": "Creature"
+                                  }
+                                },
+                                {
+                                  "type": "HeldBy",
+                                  "value": {
+                                    "holder": {
+                                      "type": "Controller"
+                                    },
+                                    "relation": {
+                                      "type": "You"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "Measures",
+                                  "value": {
+                                    "comparison": {
+                                      "type": "AtLeast"
+                                    },
+                                    "measure": {
+                                      "type": "Power"
+                                    },
+                                    "operand": {
+                                      "type": "Literal",
+                                      "value": 4
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "ModifyTarget",
+                        "value": {
+                          "duration": {
+                            "type": "UntilEndOfTurn"
+                          },
+                          "modification": {
+                            "type": "GainKeyword",
+                            "value": {
+                              "type": "Trample"
+                            }
+                          },
+                          "ref": {
+                            "type": "EachMatching",
+                            "value": {
+                              "type": "And",
+                              "value": [
+                                {
+                                  "type": "HasCardType",
+                                  "value": {
+                                    "type": "Creature"
+                                  }
+                                },
+                                {
+                                  "type": "HeldBy",
+                                  "value": {
+                                    "holder": {
+                                      "type": "Controller"
+                                    },
+                                    "relation": {
+                                      "type": "You"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "Measures",
+                                  "value": {
+                                    "comparison": {
+                                      "type": "AtLeast"
+                                    },
+                                    "measure": {
+                                      "type": "Power"
+                                    },
+                                    "operand": {
+                                      "type": "Literal",
+                                      "value": 4
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Bear"
+          }
+        ],
+        "supertypes": [
+          {
+            "type": "Legendary"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

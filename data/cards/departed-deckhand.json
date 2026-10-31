@@ -1,0 +1,211 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "mana": [
+              {
+                "type": "Generic",
+                "value": 3
+              },
+              {
+                "type": "OfType",
+                "value": {
+                  "type": "Colored",
+                  "value": {
+                    "type": "Blue"
+                  }
+                }
+              }
+            ]
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "ModifyTarget",
+                        "value": {
+                          "duration": {
+                            "type": "UntilEndOfTurn"
+                          },
+                          "modification": {
+                            "type": "GainAbility",
+                            "value": {
+                              "type": "Rules",
+                              "value": {
+                                "combatRestrictions": [
+                                  {
+                                    "type": "CantBeBlockedBy",
+                                    "value": {
+                                      "affected": {
+                                        "type": "Matching",
+                                        "value": {
+                                          "type": "IsSource"
+                                        }
+                                      },
+                                      "blockers": {
+                                        "type": "Not",
+                                        "value": {
+                                          "type": "HasSubtype",
+                                          "value": {
+                                            "type": "Spirit"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "target"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "target": {
+                    "filter": {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "IsSource"
+                          }
+                        },
+                        {
+                          "type": "HeldBy",
+                          "value": {
+                            "holder": {
+                              "type": "Controller"
+                            },
+                            "relation": {
+                              "type": "You"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "pool": {
+                      "type": "Creatures"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "combatRestrictions": [
+        {
+          "type": "CantBeBlockedBy",
+          "value": {
+            "affected": {
+              "type": "Matching",
+              "value": {
+                "type": "IsSource"
+              }
+            },
+            "blockers": {
+              "type": "Not",
+              "value": {
+                "type": "HasSubtype",
+                "value": {
+                  "type": "Spirit"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Departed Deckhand",
+      "oracleText": "When this creature becomes the target of a spell, sacrifice it.\nThis creature can't be blocked except by Spirits.\n{3}{U}: Another target creature you control can't be blocked this turn except by Spirits.",
+      "power": {
+        "type": "Literal",
+        "value": 2
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 2
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "PermanentBecomesTargeted",
+            "value": {
+              "filter": {
+                "type": "IsSource"
+              },
+              "kind": {
+                "type": "Spell"
+              },
+              "relation": {
+                "type": "AnyPlayer"
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Sacrifice",
+                        "value": {
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "self"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Pirate"
+          },
+          {
+            "type": "Spirit"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

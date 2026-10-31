@@ -1,0 +1,166 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "TapThis"
+              }
+            ],
+            "mana": []
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "LookAt",
+                        "value": {
+                          "ref": {
+                            "type": "TopOfLibrary",
+                            "value": {
+                              "count": {
+                                "type": "Literal",
+                                "value": 1
+                              },
+                              "player": {
+                                "type": "Relative",
+                                "value": {
+                                  "type": "You"
+                                }
+                              }
+                            }
+                          },
+                          "slot": "looked"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "condition": {
+                      "type": "Compares",
+                      "value": {
+                        "comparison": {
+                          "type": "AtLeast"
+                        },
+                        "measured": {
+                          "type": "Count",
+                          "value": {
+                            "aggregation": {
+                              "type": "Members"
+                            },
+                            "filter": {
+                              "type": "And",
+                              "value": [
+                                {
+                                  "type": "IsBound",
+                                  "value": "looked"
+                                },
+                                {
+                                  "type": "HasCardType",
+                                  "value": {
+                                    "type": "Land"
+                                  }
+                                }
+                              ]
+                            },
+                            "scope": {
+                              "type": "InZone",
+                              "value": {
+                                "player": {
+                                  "type": "Relative",
+                                  "value": {
+                                    "type": "You"
+                                  }
+                                },
+                                "zone": {
+                                  "type": "Library"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "threshold": {
+                          "type": "Literal",
+                          "value": 1
+                        }
+                      }
+                    },
+                    "effects": [
+                      {
+                        "type": "Reveal",
+                        "value": {
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "looked"
+                          },
+                          "slot": "revealed"
+                        }
+                      },
+                      {
+                        "type": "MoveToZone",
+                        "value": {
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "looked"
+                          },
+                          "zone": {
+                            "type": "Hand"
+                          }
+                        }
+                      }
+                    ],
+                    "optionality": {
+                      "type": "Optional"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Dryad Greenseeker",
+      "oracleText": "{T}: Look at the top card of your library. If it's a land card, you may reveal it and put it into your hand.",
+      "power": {
+        "type": "Literal",
+        "value": 1
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 3
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Dryad"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

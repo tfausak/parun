@@ -1,0 +1,54 @@
+{
+  "description": "Fraying Omnipotence: each player loses half their life, discards half their hand, and sacrifices half their creatures, each rounded up and each read off that player's own numbers",
+  "note": "alice has 20 life, 3 cards left in hand and 3 creatures; bob has 15 life, 5 cards and 1 creature. Odd counts make rounding up observable.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "BBBBB",
+        "battlefield": [
+          { "card": "Grizzly Bears", "label": "bears" },
+          { "card": "Gray Ogre", "label": "ogre" },
+          { "card": "Hill Giant", "label": "giant" }
+        ],
+        "hand": [
+          { "card": "Fraying Omnipotence", "label": "fraying" },
+          { "card": "Forest", "label": "forest" },
+          { "card": "Plains", "label": "plains" },
+          { "card": "Swamp", "label": "swamp" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "life": 15,
+        "battlefield": [{ "card": "Craw Wurm", "label": "wurm" }],
+        "hand": [
+          { "card": "Forest", "label": "f2" },
+          { "card": "Plains", "label": "p2" },
+          { "card": "Swamp", "label": "s2" },
+          { "card": "Mountain", "label": "m2" },
+          { "card": "Island", "label": "i2" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$fraying" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseDiscard", "with": ["$forest", "$plains"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Answer": { "prompt": "ChooseDiscard", "with": ["$f2", "$p2", "$s2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseSacrifices", "with": ["$bears", "$ogre"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 10 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 7 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Hand", "is": ["$swamp"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "bob", "zone": "Hand", "is": ["$m2", "$i2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Gray Ogre", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Craw Wurm", "count": 1 } } }
+  ]
+}

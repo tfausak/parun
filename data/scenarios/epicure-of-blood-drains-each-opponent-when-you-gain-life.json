@@ -1,0 +1,38 @@
+{
+  "description": "Epicure of Blood: whenever alice gains life, each opponent loses 1 life; an opponent gaining life does nothing",
+  "note": "Healing Hands gives bob 4 life and triggers nothing; Angel's Mercy gives alice 7 and both bob and carol lose 1.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "WWWWWWW",
+        "battlefield": [{ "card": "Epicure of Blood" }],
+        "hand": [{ "card": "Healing Hands", "label": "hands" }, { "card": "Angel's Mercy", "label": "mercy" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "carol",
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$hands", "targets": ["$bob"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 24 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "carol", "life": 20 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$mercy" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 27 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 23 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "carol", "life": 19 } } }
+  ]
+}

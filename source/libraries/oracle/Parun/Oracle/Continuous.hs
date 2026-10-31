@@ -5,6 +5,7 @@ module Parun.Oracle.Continuous where
 
 import qualified Control.Monad as Monad
 import qualified Data.Bifunctor as Bifunctor
+import qualified Data.Containers.ListUtils as ListUtils
 import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.Maybe as Maybe
@@ -298,7 +299,9 @@ defining context power toughness pt = do
   a <- Target.amounts context q
   Target.EqualTo e <- [Target.reading a]
   Monad.guard (null (Target.names a))
-  [Prose.sentence (Target.possessive (Target.self context) <> Text.pack " " <> subject <> Text.pack " equal to " <> e)]
+  let plain = Prose.sentence (Target.possessive (Target.self context) <> Text.pack " " <> subject <> Text.pack " equal to " <> e)
+  -- Free: a plural instant-or-sorcery count reads "and" (Enigma Drake).
+  ListUtils.nubOrd [plain, Text.replace (Text.pack "instant or sorcery cards") (Text.pack "instant and sorcery cards") plain]
 
 -- | Static abilities restricting how permanents attack and block (CR
 -- 508.1c, CR 509.1b): "This creature can't block.", "Creatures can't

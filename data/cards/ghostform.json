@@ -1,0 +1,93 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Ghostform",
+      "oracleText": "Up to two target creatures can't be blocked this turn.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "ModifyTarget",
+                    "value": {
+                      "duration": {
+                        "type": "UntilEndOfTurn"
+                      },
+                      "modification": {
+                        "type": "GainAbility",
+                        "value": {
+                          "type": "Rules",
+                          "value": {
+                            "combatRestrictions": [
+                              {
+                                "type": "CantBeBlockedBy",
+                                "value": {
+                                  "affected": {
+                                    "type": "Matching",
+                                    "value": {
+                                      "type": "IsSource"
+                                    }
+                                  },
+                                  "blockers": {
+                                    "type": "And",
+                                    "value": []
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "creatures"
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "creatures": {
+                "count": {
+                  "type": "Printed",
+                  "value": {
+                    "least": 0,
+                    "most": 2
+                  }
+                },
+                "pool": {
+                  "type": "Creatures"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

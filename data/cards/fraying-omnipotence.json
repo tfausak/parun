@@ -1,0 +1,197 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Fraying Omnipotence",
+      "oracleText": "Each player loses half their life, then discards half the cards in their hand, then sacrifices half the creatures they control of their choice. Round up each time.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "LoseLife",
+                    "value": {
+                      "player": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "AnyPlayer"
+                        }
+                      },
+                      "quantity": {
+                        "type": "Quotient",
+                        "value": {
+                          "divisor": {
+                            "type": "Literal",
+                            "value": 2
+                          },
+                          "quantity": {
+                            "type": "LifeTotal",
+                            "value": {
+                              "type": "Candidate"
+                            }
+                          },
+                          "rounding": {
+                            "type": "Up"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "Discard",
+                    "value": {
+                      "type": "Counted",
+                      "value": {
+                        "player": {
+                          "type": "Relative",
+                          "value": {
+                            "type": "AnyPlayer"
+                          }
+                        },
+                        "quantity": {
+                          "type": "Quotient",
+                          "value": {
+                            "divisor": {
+                              "type": "Literal",
+                              "value": 2
+                            },
+                            "quantity": {
+                              "type": "Count",
+                              "value": {
+                                "aggregation": {
+                                  "type": "Members"
+                                },
+                                "filter": {
+                                  "type": "And",
+                                  "value": []
+                                },
+                                "scope": {
+                                  "type": "InZone",
+                                  "value": {
+                                    "player": {
+                                      "type": "Candidate"
+                                    },
+                                    "zone": {
+                                      "type": "Hand"
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "rounding": {
+                              "type": "Up"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "PlayerSacrifices",
+                    "value": {
+                      "filter": {
+                        "type": "HasCardType",
+                        "value": {
+                          "type": "Creature"
+                        }
+                      },
+                      "players": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "AnyPlayer"
+                        }
+                      },
+                      "quantity": {
+                        "type": "Quotient",
+                        "value": {
+                          "divisor": {
+                            "type": "Literal",
+                            "value": 2
+                          },
+                          "quantity": {
+                            "type": "Count",
+                            "value": {
+                              "aggregation": {
+                                "type": "Members"
+                              },
+                              "filter": {
+                                "type": "And",
+                                "value": [
+                                  {
+                                    "type": "HasCardType",
+                                    "value": {
+                                      "type": "Creature"
+                                    }
+                                  },
+                                  {
+                                    "type": "HeldByRecipient",
+                                    "value": {
+                                      "type": "Controller"
+                                    }
+                                  }
+                                ]
+                              },
+                              "scope": {
+                                "type": "InZone",
+                                "value": {
+                                  "player": {
+                                    "type": "Relative",
+                                    "value": {
+                                      "type": "AnyPlayer"
+                                    }
+                                  },
+                                  "zone": {
+                                    "type": "Battlefield"
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "rounding": {
+                            "type": "Up"
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

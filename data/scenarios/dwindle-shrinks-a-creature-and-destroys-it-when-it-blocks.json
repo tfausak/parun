@@ -1,0 +1,30 @@
+{
+  "description": "Dwindle gives the enchanted creature -6/-0 and destroys it when it blocks; the attacker stays blocked",
+  "note": "alice's Dwindle enchants bob's Hill Giant. The Giant blocks alice's Gray Ogre and is destroyed before damage; the Ogre deals bob nothing.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Gray Ogre", "label": "ogre", "ready": true },
+          { "card": "Dwindle", "attached": "giant" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Hill Giant", "label": "giant" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$giant", "power": -3, "toughness": 3 } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$ogre"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$giant": ["$ogre"] } } },
+    { "turn": 1, "step": "CombatDamage", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 20 } } }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "description": "Departed Deckhand can't be blocked except by Spirits, and its ability gives another creature alice controls the same restriction this turn",
+  "note": "The ability can't target the Deckhand itself. bob's Grizzly Bears may block neither attacker; his Kami of Old Stone, a Spirit, blocks the Gray Ogre.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "UUUU",
+        "battlefield": [
+          { "card": "Departed Deckhand", "label": "deckhand", "ready": true },
+          { "card": "Gray Ogre", "label": "ogre", "ready": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Grizzly Bears", "label": "bears" },
+          { "card": "Kami of Old Stone", "label": "kami" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Activate": { "object": "$deckhand", "targets": ["$deckhand"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$deckhand", "targets": ["$ogre"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$deckhand", "$ogre"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": { "Block": { "$bears": ["$deckhand"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": { "Block": { "$bears": ["$ogre"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$kami": ["$ogre"] } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 18 } } }
+  ]
+}
