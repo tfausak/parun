@@ -108,7 +108,7 @@
                         "holder": {
                           "type": "Controller"
                         },
-                        "slot": "thatPlayer"
+                        "slot": "eachPlayer"
                       }
                     }
                   ]
@@ -117,7 +117,7 @@
                   "players": {
                     "type": "Opponent"
                   },
-                  "slot": "thatPlayer"
+                  "slot": "eachPlayer"
                 },
                 "pool": {
                   "type": "Permanents"

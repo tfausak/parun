@@ -1,0 +1,17 @@
+{"description":"CR 701.20a / 401.4: Skalla Wolf's entering trigger looks at the top five, lets alice reveal a green card among them into her hand, and puts the rest on the bottom in a random order",
+"note":"alice's top five are a Hill Giant (red), a Grizzly Bears (green), an Island, a Llanowar Elves (green) and a Mountain, over a Craw Wurm sixth. The Giant is refused for its colour, the Wurm for being sixth, the Bears taken, and the other four go under the Wurm.",
+"board":{"active":"alice","step":"PrecombatMain","seats":[
+{"name":"alice","manaPool":"GGGGG","hand":[{"card":"Skalla Wolf","label":"wolf"}],"library":[{"card":"Hill Giant","label":"giant"},{"card":"Grizzly Bears","label":"bears"},{"card":"Island","label":"isl"},{"card":"Llanowar Elves","label":"elves"},{"card":"Mountain","label":"mtn"},{"card":"Craw Wurm","label":"wurm"},{"card":"Swamp"},{"card":"Swamp"}]},
+{"name":"bob","library":[{"card":"Island"},{"card":"Island"}]}]},
+"timeline":[
+{"turn":1,"step":"PrecombatMain","player":"alice","do":{"Cast":{"object":"$wolf"}}},
+{"turn":1,"step":"PrecombatMain","player":"alice","do":"Pass"},
+{"turn":1,"step":"PrecombatMain","player":"alice","do":"Pass"},
+{"turn":1,"step":"PrecombatMain","player":"alice","do":{"ChooseOptional":{"type":"Exercises"}}},
+{"turn":1,"step":"PrecombatMain","player":"alice","refuse":{"Answer":{"prompt":"ChooseCardFromAmong","with":"$giant"}}},
+{"turn":1,"step":"PrecombatMain","player":"alice","refuse":{"Answer":{"prompt":"ChooseCardFromAmong","with":"$wurm"}}},
+{"turn":1,"step":"PrecombatMain","player":"alice","do":{"Answer":{"prompt":"ChooseCardFromAmong","with":"$bears"}}},
+{"turn":1,"step":"PrecombatMain","player":"alice","do":{"Answer":{"prompt":"Shuffle","with":["$mtn","$giant","$isl","$elves"]}}},
+{"turn":1,"step":"PrecombatMain","player":"alice","check":{"Count":{"player":"alice","zone":"Hand","card":"Grizzly Bears","count":1}}},
+{"turn":1,"step":"PrecombatMain","player":"alice","check":{"View":{"of":"Zone","player":"alice","zone":"Library","is":["$wurm","Swamp","Swamp#2","Llanowar Elves","Island#3","Hill Giant","Mountain"]}}}
+]}

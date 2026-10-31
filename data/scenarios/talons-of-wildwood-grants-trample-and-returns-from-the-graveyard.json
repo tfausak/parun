@@ -1,0 +1,15 @@
+{"description":"CR 303.4 / 613.4c / 113.6m: Talons of Wildwood gives the enchanted creature +1/+1 and trample, and {2}{G} returns it from alice's graveyard to her hand",
+"note":"The Talons on alice's Grizzly Bears make it a 3/3 with trample. A second Talons in her graveyard comes back for {2}{G}.",
+"board":{"active":"alice","step":"PrecombatMain","seats":[
+{"name":"alice","battlefield":[{"card":"Grizzly Bears","label":"bears"},{"card":"Forest","label":"f1"},{"card":"Forest","label":"f2"},{"card":"Forest","label":"f3"},{"card":"Forest","label":"f4"},{"card":"Forest","label":"f5"}],"hand":[{"card":"Talons of Wildwood","label":"talons"}],"graveyard":[{"card":"Talons of Wildwood","label":"gy"}],"library":[{"card":"Island"},{"card":"Island"}]},
+{"name":"bob","library":[{"card":"Island"},{"card":"Island"}]}]},
+"timeline":[
+{"turn":1,"step":"PrecombatMain","player":"alice","do":{"Cast":{"object":"$talons","targets":["$bears"],"mana":["$f1","$f2",null]}}},
+{"turn":1,"step":"PrecombatMain","player":"alice","do":"Pass"},
+{"turn":1,"step":"PrecombatMain","player":"alice","check":{"PowerToughness":{"object":"$bears","power":3,"toughness":3}}},
+{"turn":1,"step":"PrecombatMain","player":"alice","check":{"Keywords":{"object":"$bears","keyword":{"type":"Trample"},"count":1}}},
+{"turn":1,"step":"PrecombatMain","player":"alice","do":{"Activate":{"object":"$gy","mana":["$f3","$f4","$f5"]}}},
+{"turn":1,"step":"PrecombatMain","player":"alice","do":"Pass"},
+{"turn":1,"step":"PrecombatMain","player":"alice","check":{"Count":{"player":"alice","zone":"Hand","card":"Talons of Wildwood","count":1}}},
+{"turn":1,"step":"PrecombatMain","player":"alice","check":{"Count":{"player":"alice","zone":"Graveyard","card":"Talons of Wildwood","count":0}}}
+]}
