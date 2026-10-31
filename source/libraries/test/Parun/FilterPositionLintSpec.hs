@@ -1867,7 +1867,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- Exactly, against the mana value: Chthonian Nightmare, Tamiyo, Compleated
     -- Sage, Synthetic Counted Verdict and Spell Blast in a slot, and Fear of
     -- Change and Ornate Imitations in a reference pick, at the top level and
-    -- inside a ForEachNumber body.
+    -- inside a ForEachNumber body; Isareth the Awakener in a reflexive delayed
+    -- ability's slot, whose amount the arming resolution's chosen X binds.
     --
     -- At most and less than, against the mana value on a SPELL whose X shares the
     -- cost with a count announced beside it: March of Otherworldly Light and March
@@ -1902,7 +1903,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Nihiloor", 1),
         ("March of Otherworldly Light", 1),
         ("March of Burgeoning Life", 1),
-        ("Ensnaring Bridge", 1)
+        ("Ensnaring Bridge", 1),
+        ("Isareth the Awakener", 1)
       ]
     -- The rejected side, which the sweep above cannot show while the pool has no
     -- offender: the SAME atom, buried under all three combinators, in a target

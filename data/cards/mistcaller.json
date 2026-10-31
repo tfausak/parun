@@ -1,0 +1,148 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "SacrificeThis"
+              }
+            ],
+            "mana": []
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Replace",
+                        "value": {
+                          "duration": {
+                            "type": "UntilEndOfTurn"
+                          },
+                          "effect": {
+                            "type": "ZoneChangeR",
+                            "value": {
+                              "destination": {
+                                "type": "Exile"
+                              },
+                              "matching": {
+                                "whatObject": {
+                                  "type": "And",
+                                  "value": [
+                                    {
+                                      "type": "HasCardType",
+                                      "value": {
+                                        "type": "Creature"
+                                      }
+                                    },
+                                    {
+                                      "type": "Not",
+                                      "value": {
+                                        "type": "IsToken"
+                                      }
+                                    },
+                                    {
+                                      "type": "Not",
+                                      "value": {
+                                        "type": "Or",
+                                        "value": [
+                                          {
+                                            "type": "WasCastFrom",
+                                            "value": {
+                                              "type": "Hand"
+                                            }
+                                          },
+                                          {
+                                            "type": "WasCastFrom",
+                                            "value": {
+                                              "type": "Library"
+                                            }
+                                          },
+                                          {
+                                            "type": "WasCastFrom",
+                                            "value": {
+                                              "type": "Graveyard"
+                                            }
+                                          },
+                                          {
+                                            "type": "WasCastFrom",
+                                            "value": {
+                                              "type": "Exile"
+                                            }
+                                          },
+                                          {
+                                            "type": "WasCastFrom",
+                                            "value": {
+                                              "type": "Command"
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                },
+                                "whenDestination": {
+                                  "type": "Battlefield"
+                                }
+                              }
+                            }
+                          },
+                          "origin": {
+                            "type": "Other"
+                          },
+                          "uses": {
+                            "type": "Unlimited"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Mistcaller",
+      "oracleText": "Sacrifice this creature: Until end of turn, if a nontoken creature would enter and it wasn't cast, exile it instead.",
+      "power": {
+        "type": "Literal",
+        "value": 1
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 1
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Merfolk"
+          },
+          {
+            "type": "Wizard"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}
