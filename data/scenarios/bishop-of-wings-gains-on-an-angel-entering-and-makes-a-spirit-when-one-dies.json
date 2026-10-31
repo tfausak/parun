@@ -108,7 +108,7 @@
     "step": "PrecombatMain"
   },
   "description": "CR 603.6a / 603.10a / 111.1: Bishop of Wings gains 4 life when an Angel its controller controls enters, and creates a 1/1 flying Spirit when one dies",
-  "note": "Engulfing Eruption's 5 damage kills Serra Angel. Bob's Angel of Mercy entering would not gain alice life: it is placed, not cast, so the only Angel to enter is alice's.",
+  "note": "Engulfing Eruption's 5 damage kills Serra Angel. Bob's Angel of Mercy is not alice's, and the Spirit is created under alice alone.",
   "timeline": [
     {
       "turn": 1,

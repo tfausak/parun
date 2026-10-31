@@ -59,7 +59,7 @@
     "step": "PrecombatMain"
   },
   "description": "CR 603.2 / 508.1 / 702.9a: Trusted Pegasus attacking gives target attacking creature without flying flying until end of turn",
-  "note": "Bob's Hill Giant cannot block the now-flying Grizzly Bears, so no block declaration is offered and both attackers connect.",
+  "note": "Bob's Hill Giant is tapped, so both attackers connect; Hill Giant, not attacking, gains nothing.",
   "timeline": [
     {
       "turn": 1,
