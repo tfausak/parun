@@ -1,6 +1,6 @@
 {
   "description": "CR 611.2b / 613.1d / 708.2 / 606.3: Tezzeret, Cruel Machinist's 0 makes target artifact alice controls a 5/5 creature in addition to its types until her next turn, its +1 draws a card, and its -7 puts any number of cards from her hand onto the battlefield face down as 5/5 artifact creatures",
-  "note": "The 0 refuses bob's Ornithopter and animates alice's Sol Ring, which is still a 5/5 artifact creature on bob's turn 2 and a bare artifact again on her turn 3. On turn 5 the -7 puts her Shock and Grizzly Bears in face down and leaves her Hill Giant in hand; the Shock, an instant, is a 5/5 artifact creature with no name.",
+  "note": "The 0 refuses bob's Ornithopter and Tezzeret itself and animates alice's Sol Ring, which is still a 5/5 artifact creature on bob's turn 2 and a bare artifact again on her turn 3. On turn 5 the -7 puts her Shock and Grizzly Bears in face down and leaves her Hill Giant in hand; the Shock, an instant, is a 5/5 artifact creature with no name.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
@@ -90,6 +90,23 @@
           "ability": 1,
           "targets": [
             "$thopter"
+          ],
+          "mana": [
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "refuse": {
+        "Activate": {
+          "object": "$tez",
+          "ability": 1,
+          "targets": [
+            "$tez"
           ],
           "mana": [
             null
