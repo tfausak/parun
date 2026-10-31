@@ -1,0 +1,199 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Legion's End",
+      "oracleText": "Exile target creature an opponent controls with mana value 2 or less and all other creatures that player controls with the same name as that creature. Then that player reveals their hand and exiles all cards with that name from their hand and graveyard.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "MoveToZone",
+                    "value": {
+                      "ref": {
+                        "type": "EachMatching",
+                        "value": {
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "HasCardType",
+                              "value": {
+                                "type": "Creature"
+                              }
+                            },
+                            {
+                              "type": "ControllerRelatesToBound",
+                              "value": {
+                                "relation": {
+                                  "type": "You"
+                                },
+                                "slot": "target"
+                              }
+                            },
+                            {
+                              "type": "Shares",
+                              "value": {
+                                "anchor": {
+                                  "type": "Bound",
+                                  "value": "target"
+                                },
+                                "trait": {
+                                  "type": "Name"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "zone": {
+                        "type": "Exile"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "effects": [
+                  {
+                    "type": "Reveal",
+                    "value": {
+                      "ref": {
+                        "type": "EachCardInHand",
+                        "value": {
+                          "hands": {
+                            "type": "ControllerOfBound",
+                            "value": "target"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "MoveToZone",
+                    "value": {
+                      "ref": {
+                        "type": "EachCardInHand",
+                        "value": {
+                          "filter": {
+                            "type": "Shares",
+                            "value": {
+                              "anchor": {
+                                "type": "Bound",
+                                "value": "target"
+                              },
+                              "trait": {
+                                "type": "Name"
+                              }
+                            }
+                          },
+                          "hands": {
+                            "type": "ControllerOfBound",
+                            "value": "target"
+                          }
+                        }
+                      },
+                      "zone": {
+                        "type": "Exile"
+                      }
+                    }
+                  },
+                  {
+                    "type": "MoveToZone",
+                    "value": {
+                      "ref": {
+                        "type": "EachCardInGraveyard",
+                        "value": {
+                          "filter": {
+                            "type": "Shares",
+                            "value": {
+                              "anchor": {
+                                "type": "Bound",
+                                "value": "target"
+                              },
+                              "trait": {
+                                "type": "Name"
+                              }
+                            }
+                          },
+                          "graveyards": {
+                            "type": "ControllerOfBound",
+                            "value": "target"
+                          }
+                        }
+                      },
+                      "zone": {
+                        "type": "Exile"
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "target": {
+                "filter": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "Opponent"
+                        }
+                      }
+                    },
+                    {
+                      "type": "Measures",
+                      "value": {
+                        "comparison": {
+                          "type": "AtMost"
+                        },
+                        "measure": {
+                          "type": "ManaValue"
+                        },
+                        "operand": {
+                          "type": "Literal",
+                          "value": 2
+                        }
+                      }
+                    }
+                  ]
+                },
+                "pool": {
+                  "type": "Creatures"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

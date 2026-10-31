@@ -1051,20 +1051,21 @@ boundNameAtoms = decodedAtoms "Shares" (\atom -> case atom of Filter.Type.Shares
 
 -- How many CR 709.4a atoms this card carries in one of the ADMITTED positions
 -- -- a MODE's target slot filter (Harness the Storm), a CR 701.23 search filter
--- (Bifurcate), a CR 608.2c hand sweep's (Hour of Glory) or a CR 119.3 life
--- loss amount's Count filter (Grim Reminder) -- and how many anywhere else. The second number is the offence.
+-- (Bifurcate), a CR 608.2c hand sweep's (Hour of Glory), a CR 119.3 life
+-- loss amount's Count filter (Grim Reminder) or an effect's own object
+-- (Legion's End) -- and how many anywhere else. The second number is the offence.
 --
 -- An ALLOWLIST rather than "wherever Filter.Context.slotNames is filled",
 -- which is the wider set: every position a resolution
 -- reaches through Parun.Engine.Resolve.Slots.effectContext has the names -- an
 -- ObjectRef's own affected set among them, which is SourceHostFramed inside an
--- effect (Resolve.battlefieldMatching). So this rejects the atom in positions
--- that would in fact answer, and only in that direction -- widen it when a card
--- wants one of them, which is the posture sweptForSingularSlots takes at
+-- effect (Resolve.battlefieldMatching), admitted since Legion's End wanted it. So
+-- this rejects the atom in positions that would in fact answer, and only in that
+-- direction -- widen it when a card wants one of them, which is the posture sweptForSingularSlots takes at
 -- SlotlessCostFramed and what the hand sweep's own entry is.
 boundNameCounts :: Face.Face Card.Type.Card -> (Int, Int)
 boundNameCounts card =
-  let total wanted = sum (fmap (\(_, f) -> boundNameAtoms (atomJson f)) (filter (\(framing, _) -> elem framing [InTargetSlot, SearchFramed, HandSweepFramed, LifeLossAmountFramed] == wanted) (cardFilters card)))
+  let total wanted = sum (fmap (\(_, f) -> boundNameAtoms (atomJson f)) (filter (\(framing, _) -> elem framing [InTargetSlot, SearchFramed, HandSweepFramed, LifeLossAmountFramed, SourceHostFramed] == wanted) (cardFilters card)))
    in (total True, total False)
 
 -- CR 709.4a's bound-name comparison is answerable only where
@@ -1652,18 +1653,18 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- CR 709.4a's Filter.Shares Name Bound is in CR 701.3a's position one axis over:
   -- answerable only where Filter.Context.slotNames is filled, and unanswerable --
   -- a silent False -- everywhere else. The positions ADMITTED here are a MODE's
-  -- target slot, a CR 701.23 search filter, a CR 608.2c hand sweep's own filter
-  -- and a CR 119.3 life loss amount, the last three since their arms take their
-  -- context from the resolution (Parun.ResolveSpec's Bifurcate, Hour of Glory and
-  -- Grim Reminder cases). That set
+  -- target slot, a CR 701.23 search filter, a CR 608.2c hand sweep's own filter,
+  -- a CR 119.3 life loss amount and an effect's own object, the last four since
+  -- their arms take their context from the resolution (Parun.ResolveSpec's
+  -- Bifurcate, Hour of Glory and Grim Reminder cases; Legion's End's scenario). That set
   -- is narrower than the set that would answer -- boundNameCounts says why
   -- -- so this rejects in the safe direction only. See boundNameOffends
   -- for the two offences and Framing for why CR 303.4a's enchant slot is not one
   -- of the safe positions.
-  Spec.it s "CR 709.4a no card asks a slot-anchored Shares Name outside a mode's target slot, a search filter, a hand sweep or a life loss amount" $ do
+  Spec.it s "CR 709.4a no card asks a slot-anchored Shares Name outside a mode's target slot, a search filter, a hand sweep, a life loss amount or an effect's object" $ do
     ps <- S.allPrintings s corpus
     let offenders = filter (anyFace boundNameOffends . Printing.card) ps
-    Spec.assertEqWith s "the atom sits only in a target slot's, a search's, a hand sweep's or a life loss amount's filter" (fmap (S.nameOf . Printing.card) offenders) []
+    Spec.assertEqWith s "the atom sits only in a target slot's, a search's, a hand sweep's, a life loss amount's or an effect object's filter" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous, the way the sibling sweeps would be alone: the pool authors the
     -- atom, and the cards that do are ACCEPTED here rather than skipped -- one in
     -- each admitted position, so no member of the set is unwitnessed.
@@ -1680,7 +1681,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Grim Reminder", 1), -- its life loss amount's Count filter
         ("Haunting Echoes", 1), -- its search's filter
         ("Doubling Chant", 1), -- its search's filter, against its loop's member
-        ("Shimian Specter", 1) -- its search's filter, against its loop's member
+        ("Shimian Specter", 1), -- its search's filter, against its loop's member
+        ("Legion's End", 3) -- its battlefield and graveyard exiles' objects and its hand sweep's filter
       ]
     -- Both sides of the split, with room to spare under the pool's real figures:
     -- a traversal that had stopped walking, or a Framing that had stopped marking
@@ -1796,7 +1798,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Chandra's Fury", 1), -- its damage's object, Flame Wave's sentence
         ("Necrotic Plague", 1), -- its trigger's target slot, relative to the dead creature's controller
         ("Chandra, Pyromaster", 1), -- its +1's second target slot, Flame Wave's sentence
-        ("Soul of Shandalar", 2) -- both abilities' second target slots, Flame Wave's sentence
+        ("Soul of Shandalar", 2), -- both abilities' second target slots, Flame Wave's sentence
+        ("Legion's End", 1) -- its exile's object, relative to the target's controller
       ]
     -- The REJECTING direction, hand-built for the reason every sibling lint's is:
     -- a card that offends must not be loadable, so no file can carry one. Buried
@@ -3086,7 +3089,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- each is asserted through boundNameCounts as well as the predicate -- the
   -- counts say the TRAVERSAL put it in that position, where the predicate alone is
   -- also satisfied by the codec half noticing an atom the traversal missed.
-  Spec.it s "the lint itself catches a slot-anchored Shares Name outside a mode's target slot, a search filter, a hand sweep or a life loss amount" $ do
+  Spec.it s "the lint itself catches a slot-anchored Shares Name outside a mode's target slot, a search filter, a hand sweep, a life loss amount or an effect's object" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     sorcerer <- S.printingOf s registry "Prodigal Sorcerer"
     harness <- S.printingOf s registry "Harness the Storm"
@@ -3135,9 +3138,6 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
                         )
                     ]
                 }
-            ),
-            ( "an ObjectRef.EachMatching set",
-              base {Face.spell = spellOf [Effect.Destroy (Destroy.MkDestroy (ObjectRef.EachMatching buried) Regenerability.Regenerable Nothing Nothing Nothing)] Map.empty}
             ),
             ( "CR 603.6a's trigger condition",
               base

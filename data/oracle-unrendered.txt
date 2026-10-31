@@ -1076,6 +1076,7 @@ grist-the-hunger-tide
 grooms-finery
 ground-seal
 grounded-for-life
+growth-cycle
 grub-storied-matriarch-grub-notorious-auntie
 guan-yu-sainted-warrior
 guardian-of-the-ages
@@ -1100,6 +1101,7 @@ hanweir-garrison
 happy-hogan-bodyguard
 harbinger-of-the-tides
 harbor-serpent
+hard-cover
 hardened-berserker
 hardened-scales
 hargilde-kindly-runechanter
@@ -1183,6 +1185,7 @@ icatian-store
 ice-cage
 ice-cauldron
 ichor-rats
+icon-of-ancestry
 icy-prison
 ignorant-bliss
 illicit-auction
@@ -1287,6 +1290,7 @@ jungle-wayfinder
 just-fate
 justice-vance-astrovik
 juxtapose
+kaalia-zenith-seeker
 kadenas-silencer
 kalonian-hydra
 kalonian-twingrove
@@ -1323,6 +1327,7 @@ kithkin-brinefarer
 kjeldoran-dead
 kjeldoran-royal-guard
 knight-of-dusk
+knight-of-the-ebon-legion
 knight-of-the-white-orchid
 kongmings-contraptions
 kopala-warden-of-waves
@@ -1350,12 +1355,14 @@ leave-chance
 leeches
 leeching-sliver
 legacy-weapon
+legions-end
 lena-selfless-champion
 leonin-arbiter
 leonin-shikari
 leonin-warleader
 lesser-gargadon
 leveler
+leyline-of-abundance
 leyline-of-anticipation
 leyline-of-punishment
 leyline-of-resonance
@@ -1401,6 +1408,7 @@ living-wish
 llanowar-behemoth
 llanowar-empath
 llanowar-sentinel
+loaming-shaman
 loathsome-catoblepas
 loathsome-chimera
 localized-destruction
@@ -1418,9 +1426,12 @@ lost-in-the-maze
 lost-in-the-spirit-world
 lost-mine-of-phandelver
 lost-to-legend
+lotus-field
 lotus-vale
 love-song-of-night-and-day
+loxodon-lifechanter
 loxodon-surveyor
+loyal-pegasus
 lulu-stern-guardian
 lumbering-lightshield
 lumen-class-frigate
@@ -1463,6 +1474,7 @@ manaweft-sliver
 mandate-of-peace
 manifest-dread
 marauding-maulhorn
+marauding-raptor
 marble-titan
 march-of-burgeoning-life
 march-of-otherworldly-light
@@ -1474,6 +1486,7 @@ marchesas-decree
 mark-for-death
 mark-of-mutiny
 marshaling-the-troops
+mask-of-immolation
 mask-of-intolerance
 maskwood-nexus
 mass-polymorph
@@ -1483,6 +1496,7 @@ master-of-predicaments
 master-of-the-wild-hunt
 master-thief
 master-warcraft
+masterful-replication
 matca-rioters
 matoya-archon-elder
 mayhem-devil
