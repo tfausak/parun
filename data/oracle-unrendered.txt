@@ -1585,6 +1585,8 @@ moritte-of-the-frost
 mortal-combat
 mortivore
 mossbridge-troll
+mu-yanling-celestial-wind
+mu-yanling-sky-dancer
 mudbutton-clanger
 mulch
 multiversal-recruitment
@@ -1600,6 +1602,7 @@ mycosynth-golem
 myr-welder
 myrkuls-edict
 mystic-compass
+mystic-forge
 mystifying-maze
 nacatl-hunt-pride
 nael-avizoa-aeronaut
@@ -1635,6 +1638,7 @@ nicol-bolas-planeswalker
 nicol-bolas-the-ravager-nicol-bolas-the-arisen
 night-shift-of-the-living-dead
 nightmares-thirst
+nightpack-ambusher
 nightsnare
 nihiloor
 nimbus-maze
@@ -1668,6 +1672,7 @@ octomancer
 odds-ends
 odric-master-tactician
 oglor-devoted-assistant
+ogre-siegebreaker
 ojutais-command
 okk
 old-fat-spider-cant-see-me
@@ -1710,11 +1715,13 @@ otherworldly-escort
 outland-colossus
 overgrown-zealot
 overgrowth
+overgrowth-elemental
 overlord-of-the-mistmoors
 overseer-of-vault-76
 overwhelming-forces
 overwhelming-stampede
 pack-leader
+pack-mastiff
 pact-of-negation
 pact-of-the-titan
 painful-memories
@@ -1803,6 +1810,7 @@ polymorphists-jest
 ponder
 porphyry-nodes
 port-of-karfell
+portal-of-sanctuary
 portent
 possessed-skaab
 power-play
@@ -1900,6 +1908,7 @@ ramroller
 rangers-path
 ransack
 ransom-note
+rapacious-dragon
 raphael-fiendish-savior
 rapid-fire
 rat-out
@@ -1932,6 +1941,7 @@ red-priest-of-yawgmoth
 red-ward
 redeem
 redirect
+reduce-to-ashes
 reflecting-pool
 relentless-advance
 relentless-assault
@@ -1948,6 +1958,7 @@ rending-volley
 renegade-krasis
 renewed-faith
 renewing-touch
+renowned-weaponsmith
 repeat-offender
 reprisal
 reprocess
@@ -1961,6 +1972,7 @@ restock
 retaliate
 retraction-helix
 retribution-of-the-ancients
+retributive-wand
 return-from-extinction
 return-the-favor
 return-to-the-ranks
@@ -1977,6 +1989,7 @@ rhystic-cave
 rhystic-circle
 rhythm-of-the-wild
 richlau-headmaster
+rienne-angel-of-rebirth
 riftmarked-knight
 riftsweeper
 righteous-fury
