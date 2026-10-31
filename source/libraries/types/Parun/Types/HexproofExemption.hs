@@ -8,7 +8,8 @@ import qualified Parun.Types.Keyword as Keyword
 -- "hexproof from [quality]" goes with plain hexproof (rule 702.11e); shroud and
 -- protection stay.
 data HexproofExemption = MkHexproofExemption
-  { -- | The permanents exempted, CR 109.5's "you" being the aiming player.
+  { -- | The permanents exempted. CR 109.5's "you" is the effect's controller;
+    -- it is matched as the aiming player, the same one for Detection Tower.
     permanents :: Filter.Filter Keyword.Keyword,
     -- | Whether players are exempted too (CR 702.11c). Only an opponent's
     -- hexproof stops anyone, so "your opponents" needs no scope.

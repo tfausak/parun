@@ -4099,8 +4099,10 @@ hexproofExemptions =
    in Maybe.mapMaybe exemption
 
 -- CR 702.11e: may `you` target `candidate` as though it didn't have hexproof?
--- Read live, so a creature an opponent gains control of later in the turn is
--- covered (Detection Tower's third ruling; CR 611.2c).
+-- `you`, the aiming player, stands in for CR 109.5's "you", the effect's
+-- controller: the same player for Detection Tower, which grants only its
+-- controller. Read live, so a creature an opponent gains control of later in
+-- the turn is covered (Detection Tower's third ruling; CR 611.2c).
 ignoresHexproofOf :: [(RowSource, HexproofExemption.HexproofExemption)] -> PlayerId -> ObjectId -> GameState -> Bool
 ignoresHexproofOf exemptions you candidate gs =
   any (\(source, e) -> matchesObjectFor you source (HexproofExemption.permanents e) candidate gs) exemptions

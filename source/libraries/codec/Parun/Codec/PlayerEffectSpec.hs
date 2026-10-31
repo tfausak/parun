@@ -22,6 +22,7 @@ import qualified Parun.Types.DrawReveal as DrawReveal
 import qualified Parun.Types.ExtraVotes as ExtraVotes
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.GameOutcome as GameOutcome
+import qualified Parun.Types.HexproofExemption as HexproofExemption
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
@@ -290,6 +291,14 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       PlayerEffect.codec
       (PlayerEffect.RestrictTargeting (TargetRestriction.MkTargetRestriction (Filter.HasCardType CardType.Creature) StackObjectKind.Spell (Filter.HasColor Color.Black)))
       " {\"type\":\"RestrictTargeting\",\"value\":{\"affected\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"aimers\":{\"type\":\"HasColor\",\"value\":{\"type\":\"Black\"}},\"kind\":{\"type\":\"Spell\"}}} "
+  -- CR 702.11e / Detection Tower: the tag around the payload
+  -- Parun.Codec.HexproofExemptionSpec covers.
+  Spec.it s "TargetPastHexproof" $
+    Common.assertCodec
+      s
+      PlayerEffect.codec
+      (PlayerEffect.TargetPastHexproof (HexproofExemption.MkHexproofExemption (Filter.HasCardType CardType.Creature) True))
+      " {\"type\":\"TargetPastHexproof\",\"value\":{\"permanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"players\":true}} "
   -- CR 615.12 / Spider-Punk, whose sentence names no quality of the damage: the
   -- pattern that admits everything, whose every field is its default, so the
   -- payload is an empty object rather than absent. WHOSE damage is the carrier's
