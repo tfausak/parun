@@ -359,6 +359,7 @@ cathartic-reunion
 caustic-exhale
 caustic-tar
 cavalier-of-flame
+cavalier-of-thorns
 caverns-of-despair
 cease-desist
 cease-fire
@@ -369,6 +370,7 @@ celestine-reef
 celestine-the-living-saint
 centaur-of-attention
 cephalid-constable
+cerulean-drake
 chains-of-mephistopheles
 challenger-troll
 champion-lancer
@@ -376,11 +378,17 @@ champion-of-the-weird
 champions-victory
 chance-for-glory
 chancellor-of-the-forge
+chandra-acolyte-of-flame
+chandra-awakened-inferno
 chandra-fire-artisan
 chandra-fire-of-kaladesh-chandra-roaring-flame
+chandra-flames-fury
 chandra-nalaar
+chandra-novice-pyromancer
 chandra-pyromaster
 chandra-the-firebrand
+chandras-embercat
+chandras-flame-wave
 chandras-fury
 chandras-outrage
 chandras-phoenix
@@ -508,6 +516,7 @@ cryoclasm
 crypt-cobra
 crypt-rats
 cryptex
+cryptic-caves
 crystal-spray
 cubwarden
 culling-mark
@@ -596,6 +605,7 @@ detritivore
 devout-invocation
 diabolic-edict
 diabolic-revelation
+diamond-knight
 diamond-mare
 diaochan-artful-beauty
 diffusion-sliver
@@ -625,6 +635,7 @@ distress
 disturbed-slumber
 divine-deflection
 divine-intervention
+diviners-lockbox
 diviners-portent
 djinn-of-wishes
 djinni-windseer
@@ -647,6 +658,7 @@ dovin-hand-of-control
 drafnas-restoration
 drag-to-the-bottom
 dragon-egg
+dragon-mage
 dragon-mask
 dragon-whelp
 dragonhawk-fates-tempest
@@ -655,7 +667,9 @@ dragons-prey
 dragonskull-summit
 dragonstorm-globe
 drain-power
+drakuseth-maw-of-flames
 drannith-magistrate
+drawn-from-dreams
 dread-charge
 dread-fugue
 dreadwaters

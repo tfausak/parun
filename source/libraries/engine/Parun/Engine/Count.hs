@@ -268,7 +268,17 @@ countsWithoutCharacteristics aggregation predicate =
 arrivedFindable :: GameState -> ObjectId -> Bool
 arrivedFindable gs oid = case Game.lookupObject oid gs of
   Nothing -> False
-  Just object -> not (Game.isHiddenZone (Object.zone object)) || revealedArriving gs oid
+  Just object -> not (Game.isHiddenZone (Object.zone object)) || revealedArriving gs oid || revealedInPlace gs oid
+
+-- Was this incarnation revealed where it lies (CR 701.20a)? A reveal moves
+-- nothing, so the slot binds the live id: Diviner's Lockbox's top card
+-- (data/scenarios' diviners-lockbox cases).
+revealedInPlace :: GameState -> ObjectId -> Bool
+revealedInPlace gs oid =
+  let revealed event = case LoggedEvent.event event of
+        GameEvent.Revealed r -> Revealed.card r == oid
+        _ -> False
+   in any revealed (GameState.events gs)
 
 -- Was the card revealed as it left the zone this incarnation arrived from?
 -- The Moved entry naming this id as its arrival gives the departed id; a

@@ -190,7 +190,11 @@ disjunction ps
       let adjs = concatMap adjectives ps
           colours = all (\q -> elem (one q) (fmap color [minBound .. maxBound])) adjs
           conjunction = if colours then "and/or" else "or"
-      [MkPhrase [MkQualifier (Prose.listing "or" (fmap one adjs)) (Prose.listing conjunction (fmap many adjs))] [] []]
+          ones = Prose.listing "or" (fmap one adjs)
+          manys = Prose.listing conjunction (fmap many adjs)
+      -- Free for colours: "creature or planeswalker that's black or red"
+      -- (Devout Decree).
+      MkPhrase [MkQualifier ones manys] [] [] : [qualifier (Text.pack "that's " <> ones) (Text.pack "that are " <> manys) | colours]
   | not (any (null . nouns) ps) = do
       singulars <- traverse (describe Singular (MkNoun Text.empty Nothing)) ps
       let bare p = null (adjectives p) && null (qualifiers p)
