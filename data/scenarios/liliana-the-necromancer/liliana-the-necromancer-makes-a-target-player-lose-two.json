@@ -1,0 +1,26 @@
+{
+  "description": "Liliana, the Necromancer's +1 makes target player lose 2 life and adds a loyalty counter",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{"card": "Liliana, the Necromancer", "label": "lili", "counters": [{"key": {"type": "Loyalty"}, "value": 4}]}],
+        "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]
+      },
+      {
+        "name": "bob",
+        "life": 17,
+        "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]
+      }
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$lili", "ability": 0, "targets": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$lili", "kind": {"type": "Loyalty"}, "count": 5}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 15}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 20}}}
+  ]
+}

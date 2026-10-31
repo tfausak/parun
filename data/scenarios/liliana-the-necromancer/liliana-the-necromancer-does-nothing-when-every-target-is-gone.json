@@ -1,0 +1,36 @@
+{
+  "description": "Liliana, the Necromancer's -7, its only target gone by resolution, doesn't resolve, so no creature card is put onto the battlefield",
+  "note": "Bob bounces the one target, Grizzly Bears, with Unsummon in response; creature cards wait in both graveyards, so a resolution would show as a graveyard prompt or a reanimated card.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{"card": "Liliana, the Necromancer", "label": "lili", "counters": [{"key": {"type": "Loyalty"}, "value": 7}]}],
+        "graveyard": [{"card": "Craw Wurm", "label": "wurm"}],
+        "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Island", "label": "b1"}],
+        "hand": [{"card": "Unsummon", "label": "unsummon"}],
+        "graveyard": [{"card": "Air Elemental", "label": "elemental"}],
+        "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]
+      }
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$lili", "ability": 2, "targets": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$unsummon", "targets": ["$bears"], "mana": ["$b1"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"card": "Grizzly Bears", "count": 1, "player": "bob", "zone": "Hand"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Stack", "is": []}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"card": "Craw Wurm", "count": 1, "player": "alice", "zone": "Graveyard"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"card": "Air Elemental", "count": 1, "player": "bob", "zone": "Graveyard"}}}
+  ]
+}

@@ -13,6 +13,9 @@ data AnyNumberOf
   | -- | CR 608.2d: the cards in the asked seat's own hand an "up to"
     -- Parun.Types.ChosenCardInHand takes.
     CardsInHand
+  | -- | CR 608.2d: the graveyard cards an "up to"
+    -- Parun.Types.ChosenCardInGraveyard takes.
+    CardsInGraveyards
   | -- | CR 614.1c / 614.13a: the permanents sacrificed as a permanent enters.
     ToSacrifice
   | -- | CR 702.38a / 701.20a: the cards in hand revealed as a permanent enters.

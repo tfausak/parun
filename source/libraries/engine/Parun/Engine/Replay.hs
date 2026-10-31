@@ -438,6 +438,7 @@ decode p response = case p of
     (AnyNumberOf.Permanents, Response.ChoseAnyNumberOfPermanents ids) -> Just ids
     (AnyNumberOf.CardsFromAmong, Response.ChoseCardsFromAmong ids) -> Just ids
     (AnyNumberOf.CardsInHand, Response.ChoseCardsInHand ids) -> Just ids
+    (AnyNumberOf.CardsInGraveyards, Response.ChoseCardsInGraveyards ids) -> Just ids
     (AnyNumberOf.ToSacrifice, Response.ChoseSacrifices ids) -> Just ids
     (AnyNumberOf.ToReveal, Response.ChoseReveals ids) -> Just ids
     (AnyNumberOf.ToExile, Response.ChoseExilesFromGraveyard ids) -> Just ids
@@ -1463,6 +1464,7 @@ anyNumberResponse purpose = case purpose of
   AnyNumberOf.Permanents -> Response.ChoseAnyNumberOfPermanents
   AnyNumberOf.CardsFromAmong -> Response.ChoseCardsFromAmong
   AnyNumberOf.CardsInHand -> Response.ChoseCardsInHand
+  AnyNumberOf.CardsInGraveyards -> Response.ChoseCardsInGraveyards
   AnyNumberOf.ToSacrifice -> Response.ChoseSacrifices
   AnyNumberOf.ToReveal -> Response.ChoseReveals
   AnyNumberOf.ToExile -> Response.ChoseExilesFromGraveyard

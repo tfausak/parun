@@ -384,6 +384,10 @@ data Response
     -- to" Parun.Types.ObjectRef.ChosenCardInHand. Apart from
     -- ChoseCardsFromAmong, for ChoseCardFromAmong's reason.
     ChoseCardsInHand (Set.Set ObjectId.ObjectId)
+  | -- | CR 608.2d: the graveyard cards a player chose for an "up to"
+    -- Parun.Types.ObjectRef.ChosenCardInGraveyard. Apart from
+    -- ChoseCardsFromAmong, for ChoseCardFromAmong's reason.
+    ChoseCardsInGraveyards (Set.Set ObjectId.ObjectId)
   | -- | CR 309.2a \/ 701.49a: the dungeon card a venturing player chose to bring
     -- in from outside the game.
     --
