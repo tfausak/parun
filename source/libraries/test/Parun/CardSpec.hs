@@ -5648,8 +5648,8 @@ blockPermissionFilters permission =
 --     TARGET SLOT filter: CR 702.6c's equip quality. Answered by
 --     Parun.Engine.Target.admittedGiven like InTargetSlot, with the bindings and
 --     the chosen player of SlotlessCostFramed, which is to say none.
---   * HandSweepFramed -- ObjectRef.EachCardInHand's own filter, the third
---     position a card may write CR 709.4a's Filter.Shares Name Bound in (Hour of
+--   * HandSweepFramed -- ObjectRef.EachCardInHand's own filter, one of the
+--     positions a card may write CR 709.4a's Filter.Shares Name Bound in (Hour of
 --     Glory): Resolve.Slots.objectRefObjects matches it through
 --     Resolve.Slots.effectContext, which fills the names. Not SourceHostFramed,
 --     which the arm's siblings carry, for the ObjectRef twin lint's sake.
@@ -5841,8 +5841,8 @@ data Framing
     -- be a silent False. Not Unframed either, which is what it was until the
     -- chosen name became answerable.
     MillTallyFramed
-  | -- | CR 608.2c's hand SWEEP filter -- ObjectRef.EachCardInHand's, the third
-    -- position a card may write CR 709.4a's Filter.Shares Name Bound in (Hour of
+  | -- | CR 608.2c's hand SWEEP filter -- ObjectRef.EachCardInHand's, one of the
+    -- positions a card may write CR 709.4a's Filter.Shares Name Bound in (Hour of
     -- Glory): Parun.Engine.Resolve.Slots.objectRefObjects matches it in the
     -- resolution's own context (Resolve.Slots.effectContext), so
     -- Filter.Context.slotNames is filled.

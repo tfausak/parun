@@ -222,10 +222,18 @@ mode context m = do
 -- "You may discard a card. If you do, draw a card." (Tweeze), "sacrifice it
 -- unless you discard a card at random" (Pillaging Horde), and a pair of which
 -- you choose one (CR 608.2d) as "You may tap or untap target permanent."
--- (Twiddle).
+-- (Twiddle). A pair gated on a count at most N and at least N + 1 reads as
+-- the first, then "If ..., ... instead." (Leafkin Druid).
 steps :: Target.Context -> [(ClauseIndex.ClauseIndex, Clause.Clause Card.Card Continuous.Ability)] -> [[(Text.Text, [SlotName.SlotName])]]
 steps context cs = case cs of
   [] -> [[]]
+  (_, c) : (_, d) : rest
+    | Just (Condition.Compares (Compares.MkCompares measured Comparison.AtMost (Quantity.Literal below))) <- Clause.condition c,
+      Clause.condition d == Just (Condition.Compares (Compares.MkCompares measured Comparison.AtLeast (Quantity.Literal (below + 1)))) -> do
+        (first, ms) <- clause context c {Clause.condition = Nothing}
+        (body, ns) <- clause (noted context [c]) d
+        body' <- Foldable.toList (Text.stripSuffix (Text.pack ".") body)
+        fmap ([(first, ms), (body' <> Text.pack " instead.", ns)] <>) (steps (noted context [c, d]) rest)
   (i, c) : (j, d) : rest
     | Clause.ifTaken d == Just (IfTaken.AnyTaken (NonEmpty.singleton i)) -> do
         (first, ms) <- clause context c
