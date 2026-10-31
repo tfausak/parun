@@ -11,7 +11,7 @@ import qualified Parun.Types.LifeGainRewrite as LifeGainRewrite
 -- field because Worship's clause says "damage that would reduce your life
 -- total", where Boon Reflection, Rhox Faithmender and Alhammarret's Archive all
 -- say "if you would gain life" flat. Not implemented: Rain of Gore's narrowing
--- by cause and causing controller (gap #5810).
+-- by cause and causing controller (#5810).
 data LifeGainR = MkLifeGainR
   { whose :: ControllerRelation.ControllerRelation,
     rewrite :: LifeGainRewrite.LifeGainRewrite

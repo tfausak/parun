@@ -168,7 +168,7 @@ data ProposedEvent
     --
     -- NO cause, where WouldLoseLife carries one: the loss side needs the grain
     -- because Worship's clause is scoped to damage. Not implemented: the cause
-    -- and causing controller Rain of Gore's clause reads (gap #5810).
+    -- and causing controller Rain of Gore's clause reads (#5810).
     --
     -- The Natural is the life that WOULD be gained, never the resulting total,
     -- WouldLoseLife's currency and for its reason.
