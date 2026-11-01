@@ -955,6 +955,7 @@ fumble
 fungal-behemoth
 fungal-sprouting
 furgul-quag-nurturer
+furious-rise
 furious-spinesplitter
 furnace-of-rath
 future-sight

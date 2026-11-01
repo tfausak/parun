@@ -12,7 +12,8 @@ codec =
     tagOf
     [ Arm.nullary "SourceTurnedFaceDown" DurationEvent.SourceTurnedFaceDown,
       Arm.payload "SpellCast" (Filter.codec Keyword.codec) DurationEvent.SpellCast (\x -> case x of DurationEvent.SpellCast y -> Just y; _ -> Nothing),
-      Arm.nullary "Planeswalked" DurationEvent.Planeswalked
+      Arm.nullary "Planeswalked" DurationEvent.Planeswalked,
+      Arm.nullary "SourceExiledCard" DurationEvent.SourceExiledCard
     ]
 
 tagOf :: DurationEvent.DurationEvent -> String
@@ -20,3 +21,4 @@ tagOf x = case x of
   DurationEvent.SourceTurnedFaceDown {} -> "SourceTurnedFaceDown"
   DurationEvent.SpellCast {} -> "SpellCast"
   DurationEvent.Planeswalked {} -> "Planeswalked"
+  DurationEvent.SourceExiledCard {} -> "SourceExiledCard"

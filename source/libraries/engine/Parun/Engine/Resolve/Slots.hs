@@ -1696,6 +1696,7 @@ durationSlots duration = case duration of
   -- Parun.Engine.Expiry.arm bakes.
   Duration.UntilEvent DurationEvent.SourceTurnedFaceDown -> Map.empty
   Duration.UntilEvent DurationEvent.Planeswalked -> Map.empty
+  Duration.UntilEvent DurationEvent.SourceExiledCard -> Map.empty
   Duration.UntilEvent (DurationEvent.SpellCast criterion) -> filterSlotsOf criterion
 
 -- Both sides of a comparison are a Quantity, and either may read a slot.
