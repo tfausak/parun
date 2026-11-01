@@ -16,6 +16,8 @@ import qualified Parun.Types.UntapHold as UntapHold
 -- step that is not its controller's (UntapHold.DuringOthersSteps), and Storage
 -- Matrix's "can untap only permanents of the chosen type" the same restriction
 -- with the card type the active player chooses (UntapHold.OfChosenType).
+-- Blossombind's "can't become untapped" is the one hold reaching past CR 502.3
+-- to every untap (UntapHold.Never).
 --
 -- Parun.Types.SacrificeRestriction's shape and its filing, one turn-based action
 -- over: CR 613.11 puts a continuous effect that "affects game rules rather than

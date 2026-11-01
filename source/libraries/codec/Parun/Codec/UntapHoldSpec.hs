@@ -39,5 +39,11 @@ spec s = Spec.describe s "Parun.Codec.UntapHold" $ do
       UntapHold.codec
       (UntapHold.OfChosenType (CardType.Artifact NonEmpty.:| [CardType.Land]))
       " {\"type\":\"OfChosenType\",\"value\":[{\"type\":\"Artifact\"},{\"type\":\"Land\"}]} "
+  Spec.it s "Never" $
+    Common.assertCodec
+      s
+      UntapHold.codec
+      UntapHold.Never
+      " {\"type\":\"Never\"} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s UntapHold.codec

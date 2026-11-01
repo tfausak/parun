@@ -14,7 +14,8 @@ codec =
       Arm.nullary "Elective" UntapHold.Elective,
       Arm.payload "AtMost" Common.natural UntapHold.AtMost (\x -> case x of UntapHold.AtMost y -> Just y; _ -> Nothing),
       Arm.nullary "DuringOthersSteps" UntapHold.DuringOthersSteps,
-      Arm.payload "OfChosenType" (Common.nonEmpty CardType.codec) UntapHold.OfChosenType (\x -> case x of UntapHold.OfChosenType y -> Just y; _ -> Nothing)
+      Arm.payload "OfChosenType" (Common.nonEmpty CardType.codec) UntapHold.OfChosenType (\x -> case x of UntapHold.OfChosenType y -> Just y; _ -> Nothing),
+      Arm.nullary "Never" UntapHold.Never
     ]
 
 tagOf :: UntapHold.UntapHold -> String
@@ -24,3 +25,4 @@ tagOf x = case x of
   UntapHold.AtMost {} -> "AtMost"
   UntapHold.DuringOthersSteps -> "DuringOthersSteps"
   UntapHold.OfChosenType {} -> "OfChosenType"
+  UntapHold.Never -> "Never"

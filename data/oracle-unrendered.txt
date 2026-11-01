@@ -2926,3 +2926,5 @@ yaroks-fenlurker
 yarok-the-desecrated
 scorch-spitter
 vengeful-warchief
+blossombind
+gideon-blackblade
