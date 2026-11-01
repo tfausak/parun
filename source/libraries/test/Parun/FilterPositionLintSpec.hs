@@ -2030,6 +2030,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Ring of Xathrid", 1), -- Regeneration's wording, through an Equipment
         ("Claustrophobia", 1), -- Bewitching Leechcraft's entering tap
         ("Waterknot", 1), -- Claustrophobia's wording
+        ("Sleep Paralysis", 1), -- Claustrophobia's wording
         ("Artificer's Hex", 2) -- its intervening "if" and the destruction it gates
       ]
     -- The rejected side, which the sweep above cannot show while the pool has no

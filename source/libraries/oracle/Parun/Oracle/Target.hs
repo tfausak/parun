@@ -473,9 +473,10 @@ creature p
 
 -- | A slot's count before its head: one target reads singular, a fixed number
 -- or a range plural ("up to three target creatures", "one or two target
--- creatures").
+-- creatures"). Free: a plural instant-or-sorcery head reads "and/or" (Scholar
+-- of the Ages).
 counted :: SlotCount.SlotCount -> Text.Text -> Text.Text -> [(Text.Text, Filter.Number)]
-counted c one many = case c of
+counted c one many = concatMap andOr $ case c of
   SlotCount.Printed (TargetCount.MkTargetCount 1 (Just 1)) -> [(one, Filter.Singular)]
   -- "up to one other target creature" (Sunpearl Kirin), as "other" reads
   -- after a number.
@@ -487,6 +488,11 @@ counted c one many = case c of
   SlotCount.Printed (TargetCount.MkTargetCount 0 Nothing) -> [(Text.pack "any number of " <> many, Filter.Plural)]
   SlotCount.AnnouncedX -> [(Text.pack "X " <> many, Filter.Plural)]
   _ -> []
+  where
+    andOr (words', Filter.Plural)
+      | Text.isInfixOf orCards words' = [(words', Filter.Plural), (Text.replace orCards (Text.pack "instant and/or sorcery cards") words', Filter.Plural)]
+    andOr other = [other]
+    orCards = Text.pack "instant or sorcery cards"
 
 -- | Which graveyards cards are in, as words after their noun: "from your
 -- graveyard", "from a graveyard" or "from graveyards", "from a single
