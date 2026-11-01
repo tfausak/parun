@@ -937,6 +937,7 @@ castingPermissionConditions :: CastingPermission.CastingPermission -> [Condition
 castingPermissionConditions permission = case permission of
   CastingPermission.CastFromLibraryWhileSearching -> []
   CastingPermission.CastFromGraveyard _ -> []
+  CastingPermission.PlayFromGraveyard -> []
   CastingPermission.CastAsThoughItHadFlash condition _ -> Maybe.maybeToList condition
 
 -- CR 701.46a's per-clause gate. Mode.allEffects and Modal.allEffects drop clause

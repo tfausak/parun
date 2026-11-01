@@ -985,8 +985,10 @@ candidateCostsGiven permitted pid name oid gs =
                         -- played rather than cast (MTGJSON 2026-08-23, text
                         -- "Mayhem (You may play": Oscorp Industries alone).
                         -- Object.playPermission open to `pid` (Jace, Telepath
-                        -- Unbound's -3) states no cost either.
-                        <> ( if permitted || PlayerEffect.mayCastFrom pid Zone.Graveyard oid gs || PlayerEffect.mayPlayByMayhem pid oid gs || maybe False (\permission -> Expiry.permissionOpen pid permission gs) (Object.playPermission obj)
+                        -- Unbound's -3) states no cost either, and so does
+                        -- CastingPermission.PlayFromGraveyard (Kethis, the
+                        -- Hidden Hand's granted ability).
+                        <> ( if permitted || PlayerEffect.mayCastFrom pid Zone.Graveyard oid gs || PlayerEffect.mayPlayByMayhem pid oid gs || maybe False (\permission -> Expiry.permissionOpen pid permission gs) (Object.playPermission obj) || elem CastingPermission.PlayFromGraveyard (permissionsOf oid face gs)
                                then ordinary
                                else filter usingPermitted ordinary
                            )

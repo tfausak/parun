@@ -65,6 +65,7 @@ import qualified Parun.Types.AlternativeActivationCost as AlternativeActivationC
 import qualified Parun.Types.AppliedReduction as AppliedReduction
 import qualified Parun.Types.CantSearchLibraries as CantSearchLibraries
 import qualified Parun.Types.CastFromZone as CastFromZone
+import qualified Parun.Types.CastingPermission as CastingPermission
 import qualified Parun.Types.Chosen as Chosen
 import qualified Parun.Types.CombatDeclaration as CombatDeclaration
 import qualified Parun.Types.CostAddition as CostAddition
@@ -2272,11 +2273,11 @@ unspentPermission pid source grant gs =
 -- Open without any of them where something else is CR 601.3's "rule or effect"
 -- allowing the cast: the rules for a card in its owner's hand, and an effect
 -- offering the cast during resolution or a permission an exiled or graveyard card
--- carries for itself (`offered`, CR 608.2g; Parun.Engine.Cast.castWays). A permission the
--- OBJECT carries is not weighed here: every one parun
--- has is a keyword's, offering its own CR 601.2b candidate (escape, flashback),
--- so the candidate the cast chose says whether it was made under it --
--- Parun.Engine.Cast.castProposed asks nothing then, and
+-- carries for itself (`offered`, CR 608.2g; Parun.Engine.Cast.castWays), a
+-- granted PlayFromGraveyard included (mayPlayFromOwnGraveyard). A keyword's
+-- permission is not weighed here: it offers its own CR 601.2b candidate
+-- (escape, flashback), so the candidate the cast chose says whether it was made
+-- under it -- Parun.Engine.Cast.castProposed asks nothing then, and
 -- Parun.CastPermissionSpec's "CR 702.138a an escaped Chimera takes neither Serra
 -- Paragon's use nor its rider" proves it.
 castPermissionOptions :: (ObjectId -> Bool) -> Bool -> PlayerId -> Zone.Zone -> ObjectId -> GameState -> [Maybe (ObjectId, CastFromZone.CastFromZone)]
@@ -2358,14 +2359,15 @@ playPermissionPiles pid gs =
 -- the PRE-MOVE state for castPermissionOptions' reason. Open without any
 -- Play-verb permission where the land is in its owner's hand, a PlayLandsFrom
 -- grant (Crucible of Worlds) opens its pile at no cost, or the land's own
--- costless mayhem admits it (mayPlayByMayhem) -- so a once-each-turn permission
--- (Serra Paragon) standing beside mayhem is a choice, not a spend.
+-- costless mayhem or granted permission admits it (mayPlayByMayhem,
+-- mayPlayFromOwnGraveyard) -- so a once-each-turn permission (Serra Paragon)
+-- standing beside either is a choice, not a spend.
 landPermissionOptions :: (ObjectId -> Bool) -> PlayerId -> ObjectId -> GameState -> [Maybe (ObjectId, CastFromZone.CastFromZone)]
 landPermissionOptions rides pid oid gs = case Game.lookupObject oid gs of
   Nothing -> []
   Just obj ->
     let zone = Object.zone obj
-        free = (zone == Zone.Hand && Object.owner obj == pid) || elem (zone, Object.owner obj) (playLandPiles pid gs) || mayPlayByMayhem pid oid gs
+        free = (zone == Zone.Hand && Object.owner obj == pid) || elem (zone, Object.owner obj) (playLandPiles pid gs) || mayPlayByMayhem pid oid gs || mayPlayFromOwnGraveyard pid oid gs
      in permissionOptions rides free (landPermissionsFrom pid zone oid gs)
 
 -- CR 702.187c: may `pid` play `oid` out of their graveyard under the card's own
@@ -2386,6 +2388,19 @@ mayPlayByMayhem pid oid gs = case Game.lookupObject oid gs of
       && Object.owner obj == pid
       && Keyword.hasCostlessMayhem (Map.keysSet (Projection.keywordsOf oid gs))
       && Game.discardedThisTurnBy pid oid gs
+
+-- CR 601.3 / 305.1: may `pid` play `oid` out of their own graveyard under a
+-- permission the card has there (CastingPermission.PlayFromGraveyard, Kethis,
+-- the Hidden Hand's grant)? Read through the projection (CR 613.1f), so Yixlid
+-- Jailer's "lose all abilities" takes it away. A per-CARD permission, as
+-- mayPlayByMayhem is.
+mayPlayFromOwnGraveyard :: PlayerId -> ObjectId -> GameState -> Bool
+mayPlayFromOwnGraveyard pid oid gs = case Game.lookupObject oid gs of
+  Nothing -> False
+  Just obj ->
+    Object.zone obj == Zone.Graveyard
+      && Object.owner obj == pid
+      && elem CastingPermission.PlayFromGraveyard (PC.castingPermissions (Projection.project oid gs))
 
 -- CR 702.170f: the (zone, owner) piles some PlotFrom grant opens to `pid`, for
 -- Parun.Engine.Plot to draw candidates from, playPermissionPiles' shape; which of

@@ -2229,6 +2229,7 @@ rewriteCastingPermission :: [(TextWord.TextWord, TextWord.TextWord)] -> CastingP
 rewriteCastingPermission pairs permission = case permission of
   CastingPermission.CastAsThoughItHadFlash condition additional -> CastingPermission.CastAsThoughItHadFlash (fmap (rewriteCondition pairs) condition) additional
   CastingPermission.CastFromGraveyard _ -> permission
+  CastingPermission.PlayFromGraveyard -> permission
   CastingPermission.CastFromLibraryWhileSearching -> permission
 
 -- CR 612.1 through Condition's predicate vocabulary. A Condition reached through

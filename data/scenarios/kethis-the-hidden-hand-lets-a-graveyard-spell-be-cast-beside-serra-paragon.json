@@ -1,0 +1,164 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Kethis, the Hidden Hand",
+            "label": "kethis"
+          },
+          {
+            "card": "Serra Paragon",
+            "label": "paragon"
+          },
+          {
+            "card": "Plains",
+            "label": "plains"
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Hammerheim",
+            "label": "hammerheim"
+          },
+          {
+            "card": "Teferi's Isle",
+            "label": "isle"
+          },
+          {
+            "card": "Isamaru, Hound of Konda",
+            "label": "isamaru"
+          },
+          {
+            "card": "Forest",
+            "label": "forest"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "Casting a legendary creature from your graveyard under Kethis, the Hidden Hand's granted permission leaves Serra Paragon's once-each-turn use unspent, so a land can still be played from the graveyard through Paragon",
+  "note": "CR 601.3: the player chooses the permission; answering ChoosePlayPermission with none is the card's own. kethis-the-hidden-hand-lets-a-graveyard-land-be-played-beside-serra-paragon is the land-play half.",
+  "timeline": [
+    {
+      "do": {
+        "Activate": {
+          "ability": 0,
+          "mana": [
+            null
+          ],
+          "object": "$kethis"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseExilesFromGraveyard",
+          "with": [
+            "$hammerheim",
+            "$isle"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$plains"
+          ],
+          "object": "$isamaru"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChoosePlayPermission",
+          "with": null
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Isamaru, Hound of Konda",
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "PlayLand": "$forest"
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Forest",
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}
