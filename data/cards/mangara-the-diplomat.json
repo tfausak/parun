@@ -36,23 +36,10 @@
           "condition": {
             "type": "PlayerAttacksWith",
             "value": {
-              "attackers": 2,
+              "attackers": 1,
               "filter": {
-                "type": "Or",
-                "value": [
-                  {
-                    "type": "IsAttackingPlayer",
-                    "value": {
-                      "type": "You"
-                    }
-                  },
-                  {
-                    "type": "IsAttackingPlaneswalker",
-                    "value": {
-                      "type": "You"
-                    }
-                  }
-                ]
+                "type": "And",
+                "value": []
               },
               "player": {
                 "type": "Opponent"

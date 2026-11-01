@@ -911,6 +911,19 @@
       "turn": 8
     },
     {
+      "check": {
+        "Count": {
+          "card": "Island",
+          "count": 5,
+          "player": "alice",
+          "zone": "Hand"
+        }
+      },
+      "player": "alice",
+      "step": "EndStep",
+      "turn": 8
+    },
+    {
       "do": {
         "Attack": [
           "$c1",
