@@ -354,7 +354,7 @@ filterAtomsOf leaf predicate = case predicate of
   Filter.Type.HostOfSubjectHasCardType _ -> leaf predicate
   Filter.Type.IsCommander -> leaf predicate
   Filter.Type.IsToken -> leaf predicate
-  Filter.Type.IsActivatedAbility -> leaf predicate
+  Filter.Type.IsActivatedAbility _ -> leaf predicate
   Filter.Type.IsAbility -> leaf predicate
   Filter.Type.IsEmblem -> leaf predicate
   -- A DESCENT for RepresentedByCard's reason below, the nest describing the

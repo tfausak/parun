@@ -393,6 +393,7 @@ chandras-flame-wave
 chandras-fury
 chandras-outrage
 chandras-phoenix
+chandras-regulator
 chandras-spitfire
 chaos-dragon
 charging-rhino
@@ -1965,6 +1966,7 @@ renewed-faith
 renewing-touch
 renowned-weaponsmith
 repeat-offender
+repeated-reverberation
 reprisal
 reprocess
 research-development

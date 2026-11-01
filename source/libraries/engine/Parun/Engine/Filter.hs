@@ -61,6 +61,7 @@ import qualified Parun.Types.KeywordCount as KeywordCount
 import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.KeywordTally as KeywordTally
 import qualified Parun.Types.Lookback as Lookback
+import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import qualified Parun.Types.MadnessCost as MadnessCost
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.Measure as Measure
@@ -555,14 +556,15 @@ data View = MkView
     commander :: Bool,
     -- CR 113.3b: is this candidate an ACTIVATED ability on the stack, rather
     -- than CR 113.3c's triggered one? Read from Object.source
-    -- (Parun.Engine.Game.isActivatedAbility) exactly as `token` above is, and
+    -- (Parun.Engine.Game.activatedAbilityKind) exactly as `token` above is, and
     -- never from a projection: which kind of ability an object is is no
     -- characteristic (CR 109.3), so no CR 613 layer can change the answer.
     --
-    -- False for every candidate that is not an ability on the stack: a
+    -- Nothing for every candidate that is not an ability on the stack: a
     -- permanent, a spell, a player, a printed face, an event snapshot. Each
-    -- builder says so at its own site.
-    activatedAbility :: Bool,
+    -- builder says so at its own site. Otherwise CR 606.2's side of it, for
+    -- IsActivatedAbility's kind.
+    activatedAbility :: Maybe LoyaltyKind.LoyaltyKind,
     -- CR 113.1c: is this candidate an ability on the stack AT ALL, of either of
     -- CR 113.3's kinds? The field above widened, filled from the same record
     -- (Parun.Engine.Game.isAbility) and never from a projection, for the same
@@ -987,7 +989,7 @@ playerView pid =
       canAttachToSubject = False,
       -- CR 111.1: a token represents a PERMANENT, and a player is not one.
       token = False,
-      activatedAbility = False,
+      activatedAbility = Nothing,
       -- CR 113.1c again, one kind wider: a player is not an object at all (CR
       -- 109.1), so it is no ability on the stack either.
       ability = False,
@@ -2356,7 +2358,7 @@ matches context view predicate = case predicate of
   Filter.IsCommander -> commander view
   -- CR 113.3b against rule 113.3c, read the way IsToken above is: a live read of
   -- what the object IS (Object.source), which no layer rewrites.
-  Filter.IsActivatedAbility -> activatedAbility view
+  Filter.IsActivatedAbility kind -> maybe (Maybe.isJust (activatedAbility view)) ((== activatedAbility view) . Just) kind
   -- CR 113.1c, the atom above widened to both of CR 113.3's kinds, and read the
   -- same way: a live read of what the object IS (Object.source).
   Filter.IsAbility -> ability view
@@ -2627,7 +2629,7 @@ rewrite pairs predicate = case predicate of
   Filter.HostOfSubjectHasCardType _ -> predicate
   Filter.IsCommander -> predicate
   Filter.IsToken -> predicate
-  Filter.IsActivatedAbility -> predicate
+  Filter.IsActivatedAbility _ -> predicate
   Filter.IsAbility -> predicate
   Filter.IsEmblem -> predicate
   -- Descended into, HasAttached's reason: the nest describes the SOURCE.
@@ -3383,7 +3385,7 @@ bakeBound players objects controllers predicate = case predicate of
   Filter.HostOfSubjectHasCardType _ -> predicate
   Filter.IsCommander -> predicate
   Filter.IsToken -> predicate
-  Filter.IsActivatedAbility -> predicate
+  Filter.IsActivatedAbility _ -> predicate
   Filter.IsAbility -> predicate
   Filter.IsEmblem -> predicate
   -- Descended into, HasAttached's reason: the SOURCE's description is baked
@@ -3551,7 +3553,7 @@ manaValueThresholds predicate = case predicate of
   Filter.HostOfSubjectHasCardType _ -> []
   Filter.IsCommander -> []
   Filter.IsToken -> []
-  Filter.IsActivatedAbility -> []
+  Filter.IsActivatedAbility _ -> []
   Filter.IsAbility -> []
   Filter.IsEmblem -> []
   Filter.FromSource f -> manaValueThresholds f
@@ -3718,7 +3720,7 @@ statesAQuality predicate = case predicate of
   Filter.HostOfSubjectHasCardType _ -> True
   Filter.IsCommander -> True
   Filter.IsToken -> True
-  Filter.IsActivatedAbility -> True
+  Filter.IsActivatedAbility _ -> True
   Filter.IsAbility -> True
   Filter.IsEmblem -> True
   -- True whatever the nest says, RepresentedByCard's reason one arm down.
@@ -3865,7 +3867,7 @@ readsSourceValues predicate = case predicate of
   Filter.HostOfSubjectHasCardType _ -> False
   Filter.IsCommander -> False
   Filter.IsToken -> False
-  Filter.IsActivatedAbility -> False
+  Filter.IsActivatedAbility _ -> False
   Filter.IsAbility -> False
   Filter.IsEmblem -> False
   Filter.FromSource f -> readsSourceValues f
@@ -4036,7 +4038,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.HostOfSubjectHasCardType _ -> pure predicate
   Filter.IsCommander -> pure predicate
   Filter.IsToken -> pure predicate
-  Filter.IsActivatedAbility -> pure predicate
+  Filter.IsActivatedAbility _ -> pure predicate
   Filter.IsAbility -> pure predicate
   Filter.IsEmblem -> pure predicate
   -- DESCENT, for RepresentedByCard's reason below.

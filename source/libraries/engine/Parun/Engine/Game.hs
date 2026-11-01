@@ -18,11 +18,13 @@ import Numeric.Natural (Natural)
 import qualified Parun.Engine.Binding as Binding
 import qualified Parun.Engine.Card as Card
 import qualified Parun.Engine.Decide as Decide
+import qualified Parun.Engine.Loyalty as Loyalty
 import qualified Parun.Engine.Modal as Modal
 import qualified Parun.Engine.Turn as Turn
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.Acquisition as Acquisition
+import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Parun.Types.ActiveCopy as ActiveCopy
 import qualified Parun.Types.ArmDelayedTrigger as ArmDelayedTrigger
@@ -64,6 +66,7 @@ import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LifeChange as LifeChange
 import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LoggedEvent as LoggedEvent
+import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import Parun.Types.Mana (Mana)
 import qualified Parun.Types.Mana as Mana
 import qualified Parun.Types.MeldSource as MeldSource
@@ -2531,24 +2534,30 @@ isAbility oid gs = case lookupObject oid gs of
 --
 -- CR 605.3b keeps a mana ability off the stack entirely, so no mana ability is
 -- ever a candidate here; see Parun.Types.Pool.Abilities.
-isActivatedAbility :: ObjectId -> GameState -> Bool
-isActivatedAbility oid gs = case lookupObject oid gs of
-  Nothing -> False
-  Just obj ->
-    Object.zone obj == Zone.Stack && case Object.source obj of
-      Source.OfAbility _ -> True
-      -- CR 113.3c's kind, which isAbility above keeps and this one does not. The
-      -- inherent one is a triggered ability all the same (CR 725.2), sourceless or
-      -- not.
-      Source.OfTrigger _ -> False
-      Source.OfInherentTrigger _ -> False
-      Source.OfCard _ -> False
-      Source.OfMeld _ -> False
-      Source.OfMerge _ -> False
-      Source.OfToken _ -> False
-      Source.OfEmblem _ -> False
-      Source.OfSpellCopy _ -> False
-      Source.OfCardCopy _ -> False
+--
+-- Answered as CR 606.2's side of the ability (Nothing for anything that is not
+-- an activated ability on the stack), read off its PRINTED cost for
+-- Parun.Engine.Loyalty.loyaltyKindOf's reason: Chandra's Regulator's "a loyalty
+-- ability".
+activatedAbilityKind :: ObjectId -> GameState -> Maybe LoyaltyKind.LoyaltyKind
+activatedAbilityKind oid gs = case lookupObject oid gs of
+  Nothing -> Nothing
+  Just obj
+    | Object.zone obj /= Zone.Stack -> Nothing
+    | otherwise -> case Object.source obj of
+        Source.OfAbility activated -> Just (Loyalty.loyaltyKindOf (ActivatedAbility.cost (ActivatedAbilitySource.ability activated)))
+        -- CR 113.3c's kind, which isAbility above keeps and this one does not. The
+        -- inherent one is a triggered ability all the same (CR 725.2), sourceless or
+        -- not.
+        Source.OfTrigger _ -> Nothing
+        Source.OfInherentTrigger _ -> Nothing
+        Source.OfCard _ -> Nothing
+        Source.OfMeld _ -> Nothing
+        Source.OfMerge _ -> Nothing
+        Source.OfToken _ -> Nothing
+        Source.OfEmblem _ -> Nothing
+        Source.OfSpellCopy _ -> Nothing
+        Source.OfCardCopy _ -> Nothing
 
 -- CR 112.1 / 113.3b / 113.3c: which of CR 115.1's three kinds a spell or ability
 -- is, off its KIND (its Source) alone, isSpell's and isAbility's reading
