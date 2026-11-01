@@ -598,7 +598,16 @@ addedTogether p rest = case (mana p, rest) of
 -- Untap up to three lands." (Frantic Search).
 joined :: Target.Context -> [Predicate] -> [(Text.Text, [SlotName.SlotName])]
 joined context predicates = case predicates of
-  [p] -> [(sentences p, allMentions p)]
+  -- Free for an amount of damage: "equal to" or an X defined after (Sanctum of
+  -- Shattered Heights's "deals X damage to target creature or planeswalker,
+  -- where X is the number of Shrines you control").
+  [p] ->
+    (sentences p, allMentions p)
+      : [ (Prose.sentence (clauseText p {verb = vx} <> Text.pack ", where X is " <> e) <> trailing p, allMentions p)
+        | not (implied p),
+          (vx, e) <- equalToX (verb p),
+          Text.pack " X damage to " `Text.isInfixOf` vx
+        ]
   _ : _ : _ : _ -> ListUtils.nubOrd $ do
     (first, rest) <- [splitAt 1 predicates, splitAt 2 predicates]
     (text, ms) <- joined context first

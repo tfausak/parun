@@ -2098,6 +2098,7 @@ rukh-egg
 rule-of-law
 rumbling-crescendo
 rumor-gatherer
+run-afoul
 rune-brand-juggler
 rune-of-flight
 rune-of-might
@@ -2110,6 +2111,7 @@ runic-repetition
 rush-of-blood
 rust-goliath
 rustic-clachan
+sabertooth-mauler
 sabin-master-monk
 sacred-ground
 sacred-rites
@@ -2127,10 +2129,15 @@ samite-pilgrim
 sanctimony
 sanctuary-blade
 sanctum-guardian
+sanctum-of-calm-waters
+sanctum-of-fruitful-harvest
 sanctum-of-serra
+sanctum-of-stone-fangs
+sanctum-of-tranquil-light
 sand-silos
 sandman-shifting-scoundrel
 sanguine-bond
+sanguine-indulgence
 sapphire-medallion
 sarkhan-dragonsoul
 sarkhan-fireblood
@@ -2156,6 +2163,7 @@ scavenging-ooze
 scepter-of-empires
 scheming-aspirant
 scheming-symmetry
+scorching-dragonfire
 scorching-winds
 scoria-wurm
 scourge-of-valkas
@@ -2179,6 +2187,7 @@ secret-door
 secret-tunnel
 secrets-of-the-golden-city
 sedge-sliver
+see-the-truth
 seedborn-muse
 seeker-of-slaanesh
 seifer-balamb-rival
@@ -2208,6 +2217,7 @@ serra-the-benevolent
 serras-hymn
 serum-powder
 setons-desire
+shacklegeist
 shadow-prophecy
 shadow-the-hedgehog
 shadow-urchin
@@ -2237,13 +2247,16 @@ sibilant-spirit
 sidar-kondo-of-jamuraa
 siege-behemoth
 siege-dragon
+siege-striker
 siegebreaker-giant
 sigardas-aid
 sigil-of-valor
+sigiled-contender
 sigiled-sword-of-valeron
 silence
 silent-arbiter
 silverquill-the-disputant
+silversmote-ghoul
 simic-guildmage
 sinister-gnarlbark
 sinister-reflections
@@ -2313,10 +2326,12 @@ south-pole-voyager
 sovereigns-of-lost-alara
 space-beleren
 spark-double
+sparkhunter-masticore
 sparktongue-dragon
 sparring-golem
 spawnbroker
 spawning-pool
+speaker-of-the-heavens
 spear-of-heliod
 spectra-ward
 spectral-searchlight
@@ -2389,6 +2404,7 @@ storm-the-festival
 stormchasers-talent
 stormtide-leviathan
 stormwild-capridor
+stormwing-entity
 story-circle
 strategic-planning
 stratus-walk
