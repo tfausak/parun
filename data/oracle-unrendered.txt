@@ -150,6 +150,7 @@ aspect-of-wolf
 assassins-blade
 assassins-strike
 astral-arena
+atemsis-all-seeing
 augur-of-bolas
 auntie-ool-cursewretch
 aura-graft
@@ -735,6 +736,7 @@ elvish-piper
 elvish-rejuvenator
 embereth-shieldbreaker-battle-display
 embermaw-hellion
+embodiment-of-agonies
 embolden
 emergent-growth
 emperor-crocodile

@@ -4497,6 +4497,9 @@ aggregationReads a = case a of
   Aggregation.Distinct DistinctOf.CardTypes -> Set.singleton Types
   Aggregation.Distinct DistinctOf.Colors -> Set.singleton Colors
   Aggregation.Distinct DistinctOf.BasicLandTypes -> Set.singleton Subtypes
+  -- measureReads' reason: no Modification writes a mana cost.
+  Aggregation.Distinct DistinctOf.ManaValues -> Set.empty
+  Aggregation.Distinct DistinctOf.ManaCosts -> Set.empty
   Aggregation.MostSharing trait -> traitReads trait
   -- No Modification writes CR 201.1's names, HasName's reason in filterReads.
   Aggregation.DistinctNames -> Set.empty

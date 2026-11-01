@@ -10,4 +10,8 @@ data DistinctOf
   | -- | CR 205.3i / 305.6: Forest, Island, Mountain, Plains and Swamp, the
     -- domain count ("the number of basic land types among lands you control").
     BasicLandTypes
+  | -- | CR 202.3: mana values, a member with no mana cost adding 0 (CR 202.3a).
+    ManaValues
+  | -- | CR 202.1 / 202.1b: mana costs by symbol, a costless member adding none.
+    ManaCosts
   deriving (Bounded, Enum, Eq, Ord, Show)
