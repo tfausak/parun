@@ -878,6 +878,7 @@ castingPermissionNames :: (Monoid r) => Asking r -> CastingPermission.CastingPer
 castingPermissionNames asking x = case x of
   CastingPermission.CastFromLibraryWhileSearching -> mempty
   CastingPermission.CastFromGraveyard _family -> mempty
+  CastingPermission.PlayFromGraveyard -> mempty
   CastingPermission.CastAsThoughItHadFlash condition _additionalCost -> foldMap (conditionNames asking) condition
 
 counterabilityNames :: (Monoid r) => Asking r -> Counterability.Counterability -> r

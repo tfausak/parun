@@ -1,0 +1,143 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Kethis, the Hidden Hand",
+            "label": "kethis"
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp1"
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp2"
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Hammerheim",
+            "label": "hammerheim"
+          },
+          {
+            "card": "Teferi's Isle",
+            "label": "isle"
+          },
+          {
+            "card": "Phyrexian Tower",
+            "label": "tower"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Yixlid Jailer",
+            "label": "jailer"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "Yixlid Jailer arriving after Kethis, the Hidden Hand's ability resolves takes the granted ability away, so the legendary land in your graveyard can no longer be played",
+  "note": "CR 613.1f / 613.7: both effects apply in layer 6, the Jailer's later. kethis-the-hidden-hand-lets-legendary-cards-in-your-graveyard-be-played is the same play without the Jailer.",
+  "timeline": [
+    {
+      "do": {
+        "Activate": {
+          "ability": 0,
+          "mana": [
+            null
+          ],
+          "object": "$kethis"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseExilesFromGraveyard",
+          "with": [
+            "$hammerheim",
+            "$isle"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$swamp1",
+            "$swamp2"
+          ],
+          "object": "$jailer"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Yixlid Jailer",
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "PlayLand": "$tower"
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

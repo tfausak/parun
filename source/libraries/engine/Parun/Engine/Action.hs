@@ -39,13 +39,15 @@ import qualified Parun.Types.Zone as Zone
 -- effect prohibits, each paired with CR 712.12's chosen face (Nothing where no
 -- face is chosen -- see Parun.Engine.Card.landFaces).
 --
--- THREE SOURCES, because CR 305.1's "from their hand" is the rule's own
+-- FOUR SOURCES, because CR 305.1's "from their hand" is the rule's own
 -- allowance and CR 101.1 lets a card widen it. The player's OWN hand needs no
 -- permission; the granted piles are a CR 613.11 player-axis grant, which names
 -- both the zone and whose copy of it (Crucible of Worlds and Yawgmoth's Will
 -- their own graveyard, Sen Triplets an opponent's hand) -- or, for a Play-verb
 -- permission (Serra Paragon), a pile narrowed card by card; and exile is the
--- object-borne permission CR 715.3d and Effect.GrantPlayFromExile write. That
+-- object-borne permission CR 715.3d and Effect.GrantPlayFromExile write; and a
+-- graveyard card may carry its own (CR 702.187c's mayhem,
+-- CastingPermission.PlayFromGraveyard). That
 -- split is the same one Parun.Engine.Cast.castableZones draws for the cast side,
 -- and the exile source is read through that module's own zoneCandidates so the
 -- two can never disagree about where to look -- CR 601.3's permission names a
@@ -123,7 +125,11 @@ playableLands pid gs =
       -- CR 702.187c: per card as well, the permission being the card's own
       -- costless mayhem and the discard that arms it this player's.
       fromMayhem = filter (\oid -> PlayerEffect.mayPlayByMayhem pid oid gs) (Game.zoneMembers Zone.Graveyard pid gs)
-   in concatMap playable (ListUtils.nubOrd (fromHand <> fromGranted <> fromPermitted <> fromExile <> fromMayhem))
+      -- CR 601.3 / 305.1: per card too, the permission being an ability the
+      -- card has where it lies (CastingPermission.PlayFromGraveyard), so it is
+      -- read through the projection and a layer-6 removal takes it away.
+      fromGraveyard = filter (\oid -> Cast.permitsLandPlayFromGraveyard oid gs) (Game.zoneMembers Zone.Graveyard pid gs)
+   in concatMap playable (ListUtils.nubOrd (fromHand <> fromGranted <> fromPermitted <> fromExile <> fromMayhem <> fromGraveyard))
 
 -- The cards in this player's hand whose text grants CR 116.2e's special
 -- action: Circling Vultures' "you may discard this card any time you could cast

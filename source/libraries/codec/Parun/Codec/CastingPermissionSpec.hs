@@ -29,6 +29,12 @@ spec s = Spec.describe s "Parun.Codec.CastingPermission" $ do
       CastingPermission.codec
       (CastingPermission.CastFromGraveyard (Just KeywordFamily.Blitz))
       " {\"type\":\"CastFromGraveyard\",\"value\":{\"type\":\"Blitz\"}} "
+  Spec.it s "PlayFromGraveyard" $
+    Common.assertCodec
+      s
+      CastingPermission.codec
+      CastingPermission.PlayFromGraveyard
+      " {\"type\":\"PlayFromGraveyard\"} "
   Spec.it s "CastAsThoughItHadFlash unconditioned and free" $
     Common.assertCodec
       s

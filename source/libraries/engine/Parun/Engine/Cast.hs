@@ -1480,6 +1480,15 @@ permitsLandPlayFromExile pid oid gs =
   permitsPlayUnderPermission pid oid gs
     && fmap ExilePlayPermission.verb (Game.lookupObject oid gs >>= Object.playPermission) == Just PermissionVerb.Play
 
+-- CR 601.3 / 305.1: does this graveyard card have a permission that lets its
+-- owner play it as a land (CastingPermission.PlayFromGraveyard)? Asked only of
+-- the owner's own graveyard by Parun.Engine.Action.playableLands, and read
+-- through the projection (CR 613.1f), so Yixlid Jailer's "lose all abilities"
+-- takes it away.
+permitsLandPlayFromGraveyard :: ObjectId -> GameState -> Bool
+permitsLandPlayFromGraveyard oid gs =
+  elem CastingPermission.PlayFromGraveyard (PC.castingPermissions (Projection.project oid gs))
+
 -- CR 118.14: how may this player spend mana toward casting THIS object, as the
 -- object lies right now? Dire Fleet Daredevil's "and mana of any type can be
 -- spent to cast that spell" is the only thing that answers anything but
@@ -2177,6 +2186,7 @@ permitsCastWhileSearching oid face gs =
 isGraveyardPermission :: CastingPermission.CastingPermission -> Bool
 isGraveyardPermission permission = case permission of
   CastingPermission.CastFromGraveyard _ -> True
+  CastingPermission.PlayFromGraveyard -> True
   CastingPermission.CastFromLibraryWhileSearching -> False
   CastingPermission.CastAsThoughItHadFlash _ _ -> False
 
@@ -2186,6 +2196,7 @@ isFlashPermission :: CastingPermission.CastingPermission -> Bool
 isFlashPermission permission = case permission of
   CastingPermission.CastAsThoughItHadFlash _ _ -> True
   CastingPermission.CastFromGraveyard _ -> False
+  CastingPermission.PlayFromGraveyard -> False
   CastingPermission.CastFromLibraryWhileSearching -> False
 
 -- CR 601.3 / 702.34a: may this player cast this card from the graveyard it lies

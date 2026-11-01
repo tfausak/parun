@@ -1309,6 +1309,7 @@ kembas-legion
 kenessos-priest-of-thassa
 kenriths-transformation
 kessig-prowler-sinuous-predator
+kethis-the-hidden-hand
 ketramose-the-new-dawn
 keys-to-the-house
 khabal-ghoul
