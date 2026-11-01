@@ -7,11 +7,14 @@
 # uncached input, output, and peak context. Cache reads dominate: every turn
 # re-reads the whole context, so cost grows with turns times context size.
 # A session's "subagent tokens" figure is roughly its peak context, not this.
+# A transcript writes one line per content block, each repeating its API
+# call's usage, so lines are grouped by message id and the last one counted.
 set -euo pipefail
 [ "$#" -gt 0 ] || { echo "usage: $0 TRANSCRIPT.jsonl..." >&2; exit 1; }
 for f in "$@"; do
   jq -rn --arg f "$(basename "$f")" '
-    [inputs | select(.type == "assistant") | .message.usage // empty]
+    [inputs | select(.type == "assistant" and .message.usage != null)]
+    | group_by(.message.id // .uuid) | map(.[-1].message.usage)
     | { turns: length,
         read: (map(.cache_read_input_tokens // 0) | add // 0),
         write: (map(.cache_creation_input_tokens // 0) | add // 0),

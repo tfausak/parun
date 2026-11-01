@@ -61,10 +61,13 @@ Finished 2026-10-31.
     applied set into nested funnels (Lich with Words of Worship).
   - Hand batch #5780: Talent of the Telepath read spell mastery after its
     first cast.
-- Cost (`script/session-tokens.sh` over the set's transcripts): cache reads
-  1.62B (1.36B over 70 agent sessions, 0.26B orchestrating); cache writes
-  24.6M; output 6.9M; 8.2M cache reads per card. The costliest units: #5760
-  (112M), #5787 (89M), #5780 (75M), #5797 (72M). Wall clock ~32h.
+- Cost, approximate: `script/session-tokens.sh` then counted each API call
+  once per content block, and the transcripts are gone, so these are its
+  figures over M19's measured overcount (1.85 reads, 1.86 writes, 2.06
+  output). Cache reads ~0.88B (~0.74B over 70 agent sessions, ~0.14B
+  orchestrating); cache writes ~13M; output ~3.4M; ~4.4M cache reads per
+  card. The costliest units: #5760 (~61M), #5787 (~48M), #5780 (~41M),
+  #5797 (~39M). Wall clock ~32h.
 - Owner review:
   - #5787: decisions.md "Which draw is the first one drawn in a draw step";
     `ProposedEvent.WouldDraw` gained `DrawKind`; Baral, Chief of Compliance
