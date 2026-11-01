@@ -68,6 +68,7 @@ import qualified Parun.Engine.Saga as Saga
 import qualified Parun.Engine.SpaceSculptor as SpaceSculptor
 import qualified Parun.Engine.Subtype as Subtype.Engine
 import qualified Parun.Engine.Turn as Turn
+import qualified Parun.Engine.UntapRestriction as UntapRestriction
 import qualified Parun.Engine.Vanguard as Vanguard
 import qualified Parun.Engine.Visibility as Visibility
 import qualified Parun.Extra.Integer as Integer
@@ -1065,13 +1066,16 @@ untap oid = do
 -- is not, and an untapped permanent that shed a stun counter every untap step
 -- would be the bug that guard prevents. `tap` above states the mirror of this.
 --
--- False means a replacement took the event and has already done its own work.
+-- False means a replacement took the event and has already done its own work,
+-- or that an effect says the permanent can't become untapped: asked BEFORE the
+-- replacements, CR 614.17c leaving a can't-happen event to self-replacement
+-- alone, so CR 122.1d's stun counter stays on it.
 proposeUntap :: ObjectId -> Game Bool
 proposeUntap oid = do
   gs <- State.get
   case Game.lookupObject oid gs of
     Just obj
-      | Object.tapped obj == TapState.Tapped -> do
+      | Object.tapped obj == TapState.Tapped && not (UntapRestriction.cantBecomeUntapped oid gs) -> do
           outcome <- applyReplacements (ProposedEvent.WouldUntap oid)
           pure (Maybe.isJust (outcome >>= Replacement.asUntap))
     _ -> pure False

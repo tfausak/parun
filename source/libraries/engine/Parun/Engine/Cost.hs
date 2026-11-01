@@ -67,6 +67,7 @@ import qualified Parun.Engine.Reversal as Reversal
 import qualified Parun.Engine.SacrificeRestriction as SacrificeRestriction
 import qualified Parun.Engine.Subtype as Subtype
 import qualified Parun.Engine.Summoning as Summoning
+import qualified Parun.Engine.UntapRestriction as UntapRestriction
 import qualified Parun.Extra.Integer as Integer
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.AbilityKind as AbilityKind
@@ -3854,10 +3855,14 @@ canPayComponent slots pid oid component gs = case component of
   CostComponent.TapThis -> case Game.lookupObject oid gs of
     Nothing -> False
     Just obj -> Set.member oid (GameState.battlefield gs) && Object.tapped obj == TapState.Untapped
-  -- CR 107.6: the exact mirror of TapThis above.
+  -- CR 107.6: the mirror of TapThis above, and CR 614.17b: not while an effect
+  -- says it can't become untapped (Blossombind's ruling).
   CostComponent.UntapThis -> case Game.lookupObject oid gs of
     Nothing -> False
-    Just obj -> Set.member oid (GameState.battlefield gs) && Object.tapped obj == TapState.Tapped
+    Just obj ->
+      Set.member oid (GameState.battlefield gs)
+        && Object.tapped obj == TapState.Tapped
+        && not (UntapRestriction.cantBecomeUntapped oid gs)
   -- CR 701.21a: only a permanent, and only one this player controls -- and CR
   -- 101.2, only one no effect says can't be sacrificed. Read here and not left to
   -- the funnel, a cost announced as payable and then unpayable spending an
@@ -4031,12 +4036,13 @@ canPayComponent slots pid oid component gs = case component of
   CostComponent.PayEnergy amount -> payableAnnounced amount (Game.energyOf pid gs >=)
   -- CR 606.4: always payable, CR 606.6 gating only the removing half -- but the
   -- permanent must still be one this player controls on the battlefield, rule
-  -- 606.4 putting the counters on "that permanent".
-  --
-  -- Not implemented: a counter prohibition on the planeswalker making it
-  -- unpayable, as PutCountersOnThis below is (#5828).
-  CostComponent.AddLoyaltyToThis _ ->
-    Set.member oid (GameState.battlefield gs) && Projection.controllerOf oid gs == Just pid
+  -- 606.4 putting the counters on "that permanent". CR 614.17b with CR 101.2: a
+  -- prohibition on loyalty counters going on it makes a nonzero one unpayable,
+  -- PutCountersOnThis below's gate; CR 107.7's [0] puts none and stays payable.
+  CostComponent.AddLoyaltyToThis n ->
+    Set.member oid (GameState.battlefield gs)
+      && Projection.controllerOf oid gs == Just pid
+      && (n == 0 || not (CounterRestriction.prohibited oid CounterKind.Loyalty gs))
   -- CR 606.6: a negative loyalty cost can't be activated unless the permanent
   -- has at least that many loyalty counters. "At least that many" is >=, so a -1
   -- at exactly 1 loyalty IS activatable and CR 704.5i then buries the

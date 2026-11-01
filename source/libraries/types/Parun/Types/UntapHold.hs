@@ -7,7 +7,8 @@ import qualified Parun.Types.CardType as CardType
 -- | CR 502.3: how an untap rule bears on the untap step's untap of the
 -- permanents it names -- an effect's "can't" (CR 101.2), the active player's
 -- own determination of "which permanents they control will untap", a card type
--- they choose, or an untap in a step that is not their controller's.
+-- they choose, or an untap in a step that is not their controller's. Never
+-- alone reaches past the untap step, to every untap (CR 701.26b).
 --
 -- Not Parun.Types.Optionality: that names WHO a printed "may" asks, and CR
 -- 502.3 has already fixed who determines the untap, so a seat here could only
@@ -32,4 +33,7 @@ data UntapHold
     -- That player can untap only permanents of the chosen type this step"
     -- (Storage Matrix; CR 101.2, 205.2a, 502.3).
     OfChosenType (NonEmpty.NonEmpty CardType.CardType)
+  | -- | It can't become untapped at all, the untap step or otherwise:
+    -- "can't become untapped" (Blossombind; CR 101.2, 614.17, 701.26b).
+    Never
   deriving (Eq, Ord, Show)
