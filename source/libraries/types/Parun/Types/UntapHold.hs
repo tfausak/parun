@@ -33,7 +33,6 @@ data UntapHold
     -- That player can untap only permanents of the chosen type this step"
     -- (Storage Matrix; CR 101.2, 205.2a, 502.3).
     OfChosenType (NonEmpty.NonEmpty CardType.CardType)
-  | -- | It can't become untapped at all, the untap step or otherwise:
-    -- "can't become untapped" (Blossombind; CR 101.2, 614.17, 701.26b).
+  | -- | It can't become untapped at all (Blossombind; CR 101.2, 614.17, 701.26b).
     Never
   deriving (Eq, Ord, Show)
