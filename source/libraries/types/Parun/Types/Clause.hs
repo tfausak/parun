@@ -101,8 +101,8 @@ data Clause card ability = MkClause
     -- installed row, while this one gates whether the clause's instructions run
     -- at all.
     condition :: Maybe Condition.Condition,
-    -- | CR 608.2d's "or": the sibling clause of this mode that this one is
-    -- exclusive with, so exactly one of the two happens. Twiddle's "you may tap
+    -- | CR 608.2d's "or": the sibling clauses of this mode that this one is
+    -- exclusive with, so exactly one of the group happens. Twiddle's "you may tap
     -- or untap target artifact, creature, or land" is the witness -- the tap and
     -- the untap are two clauses of one mode reading one target slot, and the
     -- payload's chooser announces which of them "while applying the effect".
@@ -122,15 +122,11 @@ data Clause card ability = MkClause
     -- Named by CR 608.2e's ordinal, the way `ifTaken` names one, and for that
     -- rider's reason: a branch carrying its own effect list would have to sit
     -- inside a Parun.Types.Effect, which is first-order and non-recursive by
-    -- design. SYMMETRIC -- each of the pair names the other -- because the
+    -- design. SYMMETRIC -- each member names all the others -- because the
     -- announcement happens at whichever of them the resolution reaches first,
-    -- and that one has to know the pair exists. Parun.CardSpec's
-    -- cardBranchesAreAsymmetric is what holds the corpus to it.
-    --
-    -- Binary rather than n-ary because nothing in print offers three branches
-    -- this way; widening means a Set in Parun.Types.OrElse and a longer offer in
-    -- Parun.Types.Prompt.ChooseClause, and no change to where the question is
-    -- asked.
+    -- and that one has to know the whole group. Parun.CardSpec's
+    -- cardBranchesAreAsymmetric is what holds the corpus to it. Shifting
+    -- Ceratops's "your choice of reach, trample, or haste" is a group of three.
     --
     -- Independent of `optionality`, which is the pair of constraints two printed
     -- cards impose: Twiddle's "you MAY tap or untap" is one "may" wrapping an

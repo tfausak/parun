@@ -114,7 +114,9 @@
                           "type": "AnyPlayer"
                         }
                       },
-                      "sibling": 1
+                      "siblings": [
+                        1
+                      ]
                     },
                     "payGate": {
                       "branch": {
@@ -184,7 +186,9 @@
                           "type": "AnyPlayer"
                         }
                       },
-                      "sibling": 0
+                      "siblings": [
+                        0
+                      ]
                     }
                   },
                   {

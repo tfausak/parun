@@ -81,7 +81,9 @@
                   }
                 ],
                 "orElse": {
-                  "sibling": 2
+                  "siblings": [
+                    2
+                  ]
                 }
               },
               {
@@ -118,7 +120,9 @@
                   }
                 ],
                 "orElse": {
-                  "sibling": 1
+                  "siblings": [
+                    1
+                  ]
                 }
               }
             ]

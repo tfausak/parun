@@ -733,7 +733,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let notDone = (clause [sacrifice]) {Clause.ifTaken = Just (IfTaken.NoneTaken (NonEmpty.singleton (ClauseIndex.MkClauseIndex 0)))}
         horde = triggered TriggerCondition.SelfEnters [mayDiscard, notDone] []
     Spec.assertEq s [[Text.pack "When Spark enters, sacrifice it unless you discard a card.", Text.pack "When Spark enters, sacrifice Spark unless you discard a card."]] (Oracle.abilities (withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [horde]})))
-    let either' i c = (clause [c]) {Clause.optionality = Optionality.Optional (PlayerRef.Relative PlayerRelation.You), Clause.orElse = Just (OrElse.MkOrElse (ClauseIndex.MkClauseIndex i) (PlayerRef.Relative PlayerRelation.You) False)}
+    let either' i c = (clause [c]) {Clause.optionality = Optionality.Optional (PlayerRef.Relative PlayerRelation.You), Clause.orElse = Just (OrElse.MkOrElse (Set.singleton (ClauseIndex.MkClauseIndex i)) (PlayerRef.Relative PlayerRelation.You) False)}
         twiddle = spell [either' 1 (Effect.Tap (Tap.plain (ObjectRef.InSlot target))), either' 0 (Effect.Untap (ObjectRef.InSlot target))] [(target, TargetSlot.required Pool.Permanents Nothing)]
     Spec.assertEq s (Just (Text.pack "You may tap or untap target permanent.")) (Oracle.render twiddle)
 

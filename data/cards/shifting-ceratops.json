@@ -1,0 +1,178 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "mana": [
+              {
+                "type": "OfType",
+                "value": {
+                  "type": "Colored",
+                  "value": {
+                    "type": "Green"
+                  }
+                }
+              }
+            ]
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "ModifyTarget",
+                        "value": {
+                          "duration": {
+                            "type": "UntilEndOfTurn"
+                          },
+                          "modification": {
+                            "type": "GainKeyword",
+                            "value": {
+                              "type": "Reach"
+                            }
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "self"
+                          }
+                        }
+                      }
+                    ],
+                    "orElse": {
+                      "siblings": [
+                        1,
+                        2
+                      ]
+                    }
+                  },
+                  {
+                    "effects": [
+                      {
+                        "type": "ModifyTarget",
+                        "value": {
+                          "duration": {
+                            "type": "UntilEndOfTurn"
+                          },
+                          "modification": {
+                            "type": "GainKeyword",
+                            "value": {
+                              "type": "Trample"
+                            }
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "self"
+                          }
+                        }
+                      }
+                    ],
+                    "orElse": {
+                      "siblings": [
+                        0,
+                        2
+                      ]
+                    }
+                  },
+                  {
+                    "effects": [
+                      {
+                        "type": "ModifyTarget",
+                        "value": {
+                          "duration": {
+                            "type": "UntilEndOfTurn"
+                          },
+                          "modification": {
+                            "type": "GainKeyword",
+                            "value": {
+                              "type": "Haste"
+                            }
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "self"
+                          }
+                        }
+                      }
+                    ],
+                    "orElse": {
+                      "siblings": [
+                        0,
+                        1
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "counterability": {
+        "type": "CantBeCountered"
+      },
+      "keywords": [
+        {
+          "type": "Protection",
+          "value": {
+            "quality": {
+              "type": "HasColor",
+              "value": {
+                "type": "Blue"
+              }
+            },
+            "spares": null
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Shifting Ceratops",
+      "oracleText": "This spell can't be countered.\nProtection from blue (This creature can't be blocked, targeted, dealt damage, enchanted, or equipped by anything blue.)\n{G}: This creature gains your choice of reach, trample, or haste until end of turn.",
+      "power": {
+        "type": "Literal",
+        "value": 5
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 4
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Dinosaur"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

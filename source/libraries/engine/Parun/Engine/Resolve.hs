@@ -1039,13 +1039,14 @@ gateHolds controller resolving source chosen bindings clause = case Clause.condi
     pure (Condition.holds (Projection.viewWithLastKnownAnywhere gs) (effectContext gs resolving controller source chosen bindings) gs source condition)
 
 -- CR 608.2d: which branch of an either-or clause pair happens -- Twiddle's "you
--- may tap or untap target artifact, creature, or land". A clause naming no
--- sibling always happens; one that names an earlier or later clause of this mode
--- instance happens only if the controller announced IT.
+-- may tap or untap target artifact, creature, or land", or Shifting Ceratops's
+-- group of three. A clause naming no sibling always happens; one that names
+-- earlier or later clauses of this mode instance happens only if the controller
+-- announced IT.
 --
--- Asked ONCE per pair, at whichever branch the fold reaches first, and the
--- answer carried in `picked` under the pair's LOWEST ordinal -- the key both
--- branches compute, so the loser's arrival raises no second prompt. A separate
+-- Asked ONCE per group, at whichever branch the fold reaches first, and the
+-- answer carried in `picked` under the group's LOWEST ordinal -- the key every
+-- branch computes, so a loser's arrival raises no second prompt. A separate
 -- fold component and not `ifTakenHolds`' `ran`: that set records which clauses'
 -- instructions RAN, which `condition` and `payGate` can pull apart from which
 -- branch was CHOSEN (Clause.ifTaken says why it is keyed that way), and an
@@ -1169,14 +1170,12 @@ gatesOnPayment chooser gate =
       PayBranch.IfPaid -> True
       _ -> False
 
--- CR 608.2d's pair, in CR 608.2c's printed order. A clause naming ITSELF is one
--- limb rather than two -- Parun.CardSpec's cardBranchesAreAsymmetric is what
--- keeps the corpus from writing it -- and the head is the ordinal the pair's
--- answer is filed under, which both limbs compute alike.
+-- CR 608.2d's group, in CR 608.2c's printed order. A clause naming ITSELF is
+-- one limb rather than two -- Parun.CardSpec's cardBranchesAreAsymmetric is what
+-- keeps the corpus from writing it -- and the head is the ordinal the group's
+-- answer is filed under, which every limb computes alike.
 orElseLimbs :: ClauseIndex -> OrElse.OrElse -> NonEmpty.NonEmpty ClauseIndex
-orElseLimbs cIdx orElse =
-  let other = OrElse.sibling orElse
-   in if cIdx == other then NonEmpty.singleton cIdx else NonEmpty.sort (cIdx NonEmpty.:| [other])
+orElseLimbs cIdx orElse = NonEmpty.sort (cIdx NonEmpty.:| Set.toList (Set.delete cIdx (OrElse.siblings orElse)))
 
 -- CR 701.55a: is this clause half of a villainous pair whose process has not yet
 -- been performed? An empty answer map filed under the pair's ordinal is what
