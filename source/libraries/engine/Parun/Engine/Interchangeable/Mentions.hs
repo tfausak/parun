@@ -3210,9 +3210,11 @@ zoneScopeNames asking x = case x of
   ZoneScope.ControllerOfBound slotName -> slotNames asking slotName
   ZoneScope.BoundPlayer _playerId -> mempty
 
--- The slot an Anchor names; the evaluated object and the source name none.
-anchorNames :: (Monoid r) => Asking r -> Anchor.Anchor -> r
+-- The slot an Anchor names, or what its nested group names; the evaluated
+-- object and the source name none.
+anchorNames :: (Monoid r) => Asking r -> Anchor.Anchor (Filter.Filter keyword) -> r
 anchorNames asking anchor = case anchor of
   Anchor.Bound slot -> slotNames asking slot
   Anchor.Evaluated -> mempty
   Anchor.Source -> mempty
+  Anchor.AnyPermanent group -> filterNames asking group
