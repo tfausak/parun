@@ -2251,7 +2251,7 @@ wordSwapOf m = case m of
 --
 -- Three ability losses: CR 305.7's land-subtype strip (liveGiven) drops the
 -- permanent outright, CR 613.1f's layer-6 removal (abilitiesRemovedBy) drops only
--- an ability whose every part lands after layer 6, and CR 604.2's "as long as"
+-- an ability with no part below layer 6 (removalReaches), and CR 604.2's "as long as"
 -- gate drops one whose clause is currently false. Neither of the first two
 -- touches a stored effect or a counter (CR 611.2a; CR 122.1a/613.4c). The last
 -- needs a projection, so it is answered against the SEED list below, which is
@@ -2623,8 +2623,7 @@ gatherGiven stripped functioning seed gs =
 -- the fold judges. They are the receiver's rules text rather than a grant, so
 -- they take its own timestamp (CR 613.7a), go before its granted ones in the
 -- index, and answer to CR 613.1f's and CR 305.7's removals as a printed ability
--- does (permanentParts) -- a regression fence, since Lord of Atlantis's
--- ability starts applying in layer 6, which neither removal reaches. The fold
+-- does (permanentParts) -- a regression fence: no test takes one away. The fold
 -- has already applied CR 612.1's word swaps to them, so none is applied here. The generating ability itself goes on being
 -- gathered off the copiable values though its text is gone, which is CR 613.6.
 -- Parun.ProjectionSpec's "CR 612.6 the Shapeshifter as Lord of Atlantis pumps
@@ -2662,7 +2661,7 @@ withStaticGrants stripped setStripped functioning gs base =
       Nothing -> []
       Just obj ->
         let offset = List.genericLength (staticAbilitiesOf oid gs) + List.genericLength (grantedStaticAbilitiesOf oid gs) :: Natural
-            removed sa lowest = (lowest > Layer.Ability && stripped (StaticAbility.name sa) (const True) oid) || (lowest > Layer.Type && setStripped oid)
+            removed sa lowest = (removalReaches sa lowest && stripped (StaticAbility.name sa) (const True) oid) || (lowest > Layer.Type && setStripped oid)
             fromText n sa =
               if functionsFromZone Zone.Battlefield sa
                 then gatherStatic (functioning oid) oid (staticTimestampOf oid obj gs) [] (removed sa) n sa
@@ -2791,7 +2790,7 @@ permanentParts stripped functioning setEffs setStripped gs permId = case Game.lo
         -- the removal order and the Blood Moon case through Streetwise
         -- Negotiator.
         granted n (grantTs, sa) =
-          let removedAfter lowest = lowest > Layer.Ability && stripped (StaticAbility.name sa) ((> grantTs) . gTimestamp) permId
+          let removedAfter lowest = removalReaches sa lowest && stripped (StaticAbility.name sa) ((> grantTs) . gTimestamp) permId
            in if functionsFromZone Zone.Battlefield sa
                 then fmap ((,) n) (gatherStatic (functioning permId) permId (max (Object.timestamp permObj) grantTs) [] removedAfter n sa)
                 else []
@@ -2819,7 +2818,7 @@ permanentParts stripped functioning setEffs setStripped gs permId = case Game.lo
           -- again, counting a removal of its name too.
           wiped = stripped Nothing (const True) permId
           removed sa lowest =
-            (lowest > Layer.Ability && maybe wiped (\n -> stripped (Just n) (const True) permId) (StaticAbility.name sa))
+            (removalReaches sa lowest && maybe wiped (\n -> stripped (Just n) (const True) permId) (StaticAbility.name sa))
               || (lowest > Layer.Type && setStripped permId)
           -- Bound here, OUTSIDE the zipWith, so every ability shares it.
           ts = staticTimestampOf permId permObj gs
@@ -3115,9 +3114,7 @@ removesNamed name m = case m of
 -- THROUGH, so filtering it would answer the question against a board the game
 -- does not have.
 --
--- CR 613.6's rescue falls out of reading the removers off the same candidate
--- list: an ability-removing effect is itself a layer-6 part, so an ability
--- carrying one is never gated by this.
+-- An ability carrying a removal is never gated by this (removalReaches).
 --
 -- Each remover's affected set is judged at CR 613.6's decision point (gLowest),
 -- not at layer 6. For a static ability's remover it is not re-derived:
@@ -3186,6 +3183,19 @@ grantedDefiningParts m = case m of
   Modification.GainKeyword Keyword.Type.Changeling -> m NonEmpty.:| [Modification.AddEveryCreatureSubtype]
   _ -> m NonEmpty.:| []
 
+-- Can a layer-6 removal cost this ability its effect, `lowest` being CR 613.6's
+-- decision layer? An ability with a part below layer 6 has started to apply, so
+-- CR 613.6 keeps it. One starting IN layer 6 depends on the removal (CR 613.8a's
+-- "existence"), so CR 613.8b applies the removal first, in either timestamp
+-- order, and it never starts. Parun.ProjectionSpec's "CR 613.8a Humility" group
+-- proves it for a printed ability, a full text's and a stored grant's, and
+-- data/scenarios/conspicuous-snoop-lends-nothing-under-*-humility.json for one
+-- lending abilities.
+--
+-- An ability that itself removes abilities is left to the fold's timestamp order.
+removalReaches :: StaticAbility.StaticAbility (GrantedAbility.GrantedAbility Card.Type.Card) -> Layer -> Bool
+removalReaches sa lowest = lowest > Layer.Ability || (lowest == Layer.Ability && not (any removesAbilities (staticParts [] sa)))
+
 -- One static ability's parts, ready to fold: CR 613.6's unit. (src, n) is the
 -- key every part carries, so projectWith can tell that a layer-4 part and a
 -- layer-7b part are one effect sharing one affected set, and so the fold's
@@ -3194,9 +3204,8 @@ grantedDefiningParts m = case m of
 -- CR 612: text changes affecting the SOURCE rewrite each part's subtype words
 -- first.
 --
--- `stripped` is CR 613.1f's answer for the source. It costs an ability all of
--- its parts, and only when every one applies AFTER layer 6 -- an ability with a
--- part in layers 1-6 had already started to apply, which is CR 613.6's rescue.
+-- `removed` is CR 613.1f's answer for the source (removalReaches). It costs an
+-- ability all of its parts.
 --
 -- `functioning` is CR 604.2's "as long as" gate, answered by conditionHolds at
 -- the ability's lowest layer, and costs the ability all its parts

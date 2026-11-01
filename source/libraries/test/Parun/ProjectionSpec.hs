@@ -1144,6 +1144,47 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
     let (sorcId, gs) = S.addPermanent prodigalSorcerer S.alice (Setup.emptyGame S.bothPlayers)
     Spec.assertEqWith s "one ability" (length (Projection.abilitiesOf sorcId gs)) 1
 
+  Spec.describe s "CR 613.8a Humility" $ do
+    -- CR 613.8b: the Lord's ability depends on Humility for its existence, so
+    -- none of it starts to apply, its layer-7 pump included, in either order.
+    Spec.it s "takes a printed layer-6 ability's effect whichever is older" $ do
+      lord <- S.printingOf s registry "Lord of Atlantis"
+      seer <- S.printingOf s registry "Merfolk Seer"
+      humility <- S.printingOf s registry "Humility"
+      let (seerId, g0) = S.addPermanent seer S.alice (Setup.emptyGame S.bothPlayers)
+          younger = S.withHumility humility (snd (S.addPermanent lord S.alice g0))
+          older = snd (S.addPermanent lord S.alice (S.withHumility humility g0))
+          control = snd (S.addPermanent lord S.alice g0)
+      Spec.assertEqWith s "control: without Humility the Lord pumps the Seer" (S.powerToughnessOf seerId control) (Just (3, 3))
+      Spec.assertEqWith s "no pump under a younger Humility" (S.powerToughnessOf seerId younger) (Just (1, 1))
+      Spec.assertEqWith s "no pump under an older Humility" (S.powerToughnessOf seerId older) (Just (1, 1))
+    Spec.it s "takes a full text's layer-6 ability's effect" $ do
+      shapeshifter <- S.printingOf s registry "Volrath's Shapeshifter"
+      lord <- S.printingOf s registry "Lord of Atlantis"
+      seer <- S.printingOf s registry "Merfolk Seer"
+      humility <- S.printingOf s registry "Humility"
+      let (seerId, g0) = S.addPermanent seer S.alice (Setup.emptyGame S.bothPlayers)
+          (_, asLord) = fullTextBoard shapeshifter lord g0
+      Spec.assertEqWith s "no pump from a Shapeshifter as the Lord" (S.powerToughnessOf seerId (S.withHumility humility asLord)) (Just (1, 1))
+    -- Hand-granted: the pool's layer-6 producers (Old-Growth Troll, Harold and
+    -- Bob) go on an Aura, which Humility reaches only under Opalescence. The grant
+    -- applies first when it is stamped first, and Humility then takes the ability
+    -- it gave; stamped after, it stands.
+    Spec.it s "takes a stored grant's layer-6 ability only when younger than the grant" $ do
+      lord <- S.printingOf s registry "Lord of Atlantis"
+      seer <- S.printingOf s registry "Merfolk Seer"
+      piker <- S.printingOf s registry "Goblin Piker"
+      humility <- S.printingOf s registry "Humility"
+      let (lordId, lordBoard) = S.addPermanent lord S.alice (Setup.emptyGame S.bothPlayers)
+          abilities = Projection.staticAbilitiesOf lordId lordBoard
+          (seerId, g0) = S.addPermanent seer S.alice (Setup.emptyGame S.bothPlayers)
+          (pikerId, g1) = S.addPermanent piker S.alice g0
+          humbled = S.withHumility humility g1
+          stamp = Timestamp.unwrap (humilityTimestamp humility humbled)
+          granted ts = List.foldl' (\g sa -> S.withEffectAt pikerId (Timestamp.MkTimestamp ts) (Modification.GainAbility (GrantedAbility.Static sa)) g) humbled abilities
+      Spec.assertEqWith s "the grant stamped after Humility stands" (S.powerToughnessOf seerId (granted (stamp + 1))) (Just (2, 2))
+      Spec.assertEqWith s "the grant stamped before Humility is taken" (S.powerToughnessOf seerId (granted (stamp - 1))) (Just (1, 1))
+
   -- The same layer-6 removal from the OTHER kind of ability, and the card whose
   -- ability does not sit at layer 6 alone: Titania's Song removes at 6, animates
   -- at 4 and sets base P/T at 7b, all as ONE effect. CR 613.6 fixes its "each

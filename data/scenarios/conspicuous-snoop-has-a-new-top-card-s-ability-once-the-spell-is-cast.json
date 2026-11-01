@@ -1,6 +1,6 @@
 {
-  "description": "CR 401.5: a new top card isn't revealed until the spell becomes cast, so Conspicuous Snoop has no mana ability of it while paying",
-  "note": "Ruling 2020-06-23. Casting Goblin Piker from the top exposes Skirk Prospector: the payment offers no mana ability on Snoop, and only once the Piker is cast does Snoop have one.",
+  "description": "CR 601.2i: once the spell becomes cast the new top card is shown, so Conspicuous Snoop has its mana ability",
+  "note": "Ruling 2020-06-23. Casting Goblin Piker from the top exposes Skirk Prospector, and Snoop has its ability once the Piker is cast. Parun.CastSpec's \"CR 401.5\" group proves the hold-back during the payment.",
   "board": {
     "seats": [
       {
