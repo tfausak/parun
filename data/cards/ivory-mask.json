@@ -32,7 +32,9 @@
           "effect": {
             "type": "CantBeTargetedBy",
             "value": {
-              "type": "AnyPlayer"
+              "scope": {
+                "type": "AnyPlayer"
+              }
             }
           },
           "scope": {

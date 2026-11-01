@@ -2630,6 +2630,7 @@ varragoth-bloodsky-sire
 vastwood-hydra
 vault-112-sadistic-simulation
 vedalken-orrery
+veil-of-summer
 veiling-oddity
 venerable-warsinger
 venerated-loxodon

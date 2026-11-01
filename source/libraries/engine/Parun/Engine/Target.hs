@@ -226,7 +226,12 @@ legalRecipientsGiven kind reader pools perspective unannounced bindings acquisit
       -- Projection.controlGrants, and the enumeration passes one it has already
       -- paid for. That is the same posture opponentOf's controller read takes
       -- below.
-      sourceView = Projection.viewOfObjectGiven pcs grants source gs
+      --
+      -- A gone source answers from its last known information (CR 113.7a, 608.2b),
+      -- at CR 603.3d and at the re-check alike; an id nothing was filed under
+      -- answers blank. The scenarios with "gone" and "source" in their names prove
+      -- each reader this view feeds.
+      sourceView = Maybe.fromMaybe (Projection.viewOfObjectGiven pcs grants source gs) (Count.orLastKnown (Projection.fullViewGiven pcs grants gs) gs source)
       -- The player rows out of the caller's Pools, which a whole enumeration
       -- shares; a player the pools do not list is gathered on the spot.
       rowsOf pid = Maybe.fromMaybe (PlayerEffect.applying pid gs) (lookup pid (playerRowsPool pools))
@@ -641,7 +646,7 @@ poolHeldLastKnown pool view =
 -- DIFFERENT reader. A player has no keywords: rule 702's keywords live on objects
 -- and are folded by the CR 613.1-613.7 layers, so the player halves ride the CR
 -- 613.10/613.11 player axis: PlayerEffect.CantBeTargetedBy for shroud and
--- hexproof (Ivory Mask, Leyline of Sanctity) and
+-- hexproof (Ivory Mask, Leyline of Sanctity, Veil of Summer) and
 -- PlayerEffect.HasProtectionFrom for rule 702.16b (Runed Halo, The Stasis Coffin).
 -- PlayerEffect.protectedFromTargeting and PlayerEffect.protectedFromGiven are
 -- the typed questions; this module never sees either constructor, and hands both
@@ -731,15 +736,16 @@ targetable pcs rowsOf perspective source sourceView gs recipient =
    in case recipient of
         -- CR 702.18a's and CR 702.11c's player halves, then CR 702.16b's. Two
         -- readers because the two rules ask different things: shroud and
-        -- hexproof narrow by WHO controls the spell, and protection by what the
-        -- SOURCE is -- which is `source` here for the same reason
-        -- `restrictedObject` reads `sourceView`, CR 702.16b naming a spell's
-        -- quality and an ability's source in one sentence. `perspective` goes
+        -- hexproof narrow by WHO controls the spell (and CR 702.11d's variant by
+        -- its source too), and protection by what the SOURCE is alone -- which
+        -- is `sourceView` here for the same reason `restrictedObject` reads
+        -- `sourceView`, CR 702.16b naming a spell's quality and an ability's
+        -- source in one sentence. `perspective` goes
         -- along for rule 702.16k's targeting clause (Filter.aimingController).
         Recipient.ToPlayer pid ->
           let rows = rowsOf pid
-           in not (PlayerEffect.protectedFromTargeting rows (PlayerEffect.ignoresPlayerHexproof exemptions) perspective pid gs)
-                && not (PlayerEffect.protectedFromGiven rows (Just perspective) source gs)
+           in not (PlayerEffect.protectedFromTargeting rows (PlayerEffect.ignoresPlayerHexproof exemptions) perspective source sourceView pid gs)
+                && not (PlayerEffect.protectedFromGiven rows (Just perspective) sourceView gs)
         Recipient.ToCreature oid -> restrictedObject oid
         Recipient.ToPlaneswalker oid -> restrictedObject oid
         Recipient.ToBattle oid -> restrictedObject oid

@@ -97,10 +97,11 @@ data PlayerEffect
   | -- | CR 609.4b / 613.11 / Celestial Dawn: this player may spend the mana the
     -- payload's filter names as though it were mana of the types it names.
     SpendManaAsThough SpendManaAsThough.SpendManaAsThough
-  | -- | CR 702.18a / 702.11c / Ivory Mask, Leyline of Sanctity: this player can't
-    -- be the target of spells or abilities controlled by the players the scope
-    -- names -- the shroud and hexproof scopes respectively.
-    CantBeTargetedBy PlayerScope.PlayerScope
+  | -- | CR 702.18a / 702.11c / 702.11d / Ivory Mask, Leyline of Sanctity, Veil of
+    -- Summer: this player can't be the target of spells or abilities controlled
+    -- by the players the scope names and, given a quality, only those whose
+    -- source has it.
+    CantBeTargetedBy PlayerScope.PlayerScope (Maybe (Filter.Filter Keyword.Keyword))
   | -- | CR 702.16a / 702.16j / The Stasis Coffin, Runed Halo, Absolute Virtue:
     -- this player has protection from the quality the Filter states. Rule
     -- 702.16e's prevention
