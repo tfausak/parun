@@ -81,7 +81,7 @@ codec keywordCodec =
       -- Modification.SetController's baked PlayerId gets.
       Arm.payload "HeldByPlayer" heldByPlayer (uncurry Filter.HeldByPlayer) (\x -> case x of Filter.HeldByPlayer h y -> Just (h, y); _ -> Nothing),
       Arm.payload "HeldByRecipient" Holder.codec Filter.HeldByRecipient (\x -> case x of Filter.HeldByRecipient y -> Just y; _ -> Nothing),
-      Arm.payload "Shares" shares (uncurry Filter.Shares) (\x -> case x of Filter.Shares t a -> Just (t, a); _ -> Nothing),
+      Arm.payload "Shares" (shares (codec keywordCodec)) (uncurry Filter.Shares) (\x -> case x of Filter.Shares t a -> Just (t, a); _ -> Nothing),
       Arm.nullary "ManaValueIsEven" Filter.ManaValueIsEven,
       Arm.payload "HeldBy" heldBy (uncurry Filter.HeldBy) (\x -> case x of Filter.HeldBy h r -> Just (h, r); _ -> Nothing),
       Arm.payload "IsPlayer" PlayerRelation.codec Filter.IsPlayer (\x -> case x of Filter.IsPlayer y -> Just y; _ -> Nothing),
@@ -137,7 +137,7 @@ codec keywordCodec =
       -- Recursive for the arm above's reason, the payload describing the ATTACHER
       -- rather than the host.
       Arm.payload "HasAttached" (codec keywordCodec) Filter.HasAttached (\x -> case x of Filter.HasAttached y -> Just y; _ -> Nothing),
-      Arm.payload "IsAttachedTo" Anchor.codec Filter.IsAttachedTo (\x -> case x of Filter.IsAttachedTo y -> Just y; _ -> Nothing),
+      Arm.payload "IsAttachedTo" (Anchor.codec (codec keywordCodec)) Filter.IsAttachedTo (\x -> case x of Filter.IsAttachedTo y -> Just y; _ -> Nothing),
       Arm.nullary "IsEvaluated" Filter.IsEvaluated,
       Arm.nullary "IsHostOfSource" Filter.IsHostOfSource,
       Arm.nullary "EnteredWithSource" Filter.EnteredWithSource,
@@ -220,12 +220,12 @@ heldByPlayer =
 -- | CR 110.2's comparison across two objects keyed by name: the relation, and
 -- the slot holding the object whose controller it is relative to.
 -- | What is shared, and with which object.
-shares :: Codec.Codec (Trait.Trait, Anchor.Anchor)
-shares =
+shares :: (Typeable.Typeable keyword, Eq keyword) => Codec.Codec (Filter.Filter keyword) -> Codec.Codec (Trait.Trait, Anchor.Anchor (Filter.Filter keyword))
+shares filterCodec =
   Fields.object $
     (,)
       <$> Fields.required "trait" Trait.codec fst
-      <*> Fields.required "anchor" Anchor.codec snd
+      <*> Fields.required "anchor" (Anchor.codec filterCodec) snd
 
 relatesToBound :: Codec.Codec (PlayerRelation.PlayerRelation, SlotName.SlotName)
 relatesToBound =

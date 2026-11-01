@@ -1750,6 +1750,7 @@ path-of-bravery
 path-of-peril
 path-of-the-enigma
 path-to-the-festival
+pattern-matcher
 pathrazer-of-ulamog
 patient-rebuilding
 patriars-humiliation

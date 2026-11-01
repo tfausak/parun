@@ -55,9 +55,9 @@ data Filter keyword
     --
     -- Not implemented: a pair the Context carries no anchored values for (Color,
     -- Owner or Sector at Bound, anything but CreatureType at Evaluated,
-    -- CreatureType at Source), which answers False and
+    -- CreatureType at Source, anything but Name at AnyPermanent), which answers False and
     -- Parun.FilterPositionLintSpec keeps out of card data (#5636).
-    Shares Trait.Trait Anchor.Anchor
+    Shares Trait.Trait (Anchor.Anchor (Filter keyword))
   | HasSubtype Subtype.Subtype -- CR 205.3: the object's subtypes include this one.
   | -- | CR 201.2: the object's names include this LITERAL one. Membership, as CR
     -- 709.4a states the test -- a split card off the stack and a Room with both
@@ -414,7 +414,7 @@ data Filter keyword
     --
     -- Not implemented: the Bound anchor, which answers False and
     -- Parun.FilterPositionLintSpec keeps out of card data (#5636).
-    IsAttachedTo Anchor.Anchor
+    IsAttachedTo (Anchor.Anchor (Filter keyword))
   | -- | CR 613.4c: the candidate IS the object the surrounding QUANTITY is
     -- evaluated against -- Coat of Arms' "each other creature" is @Not
     -- IsEvaluated@. IsSource's question about IsAttachedTo Evaluated's object.
