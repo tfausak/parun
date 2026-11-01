@@ -2860,3 +2860,16 @@ sorins-guide
 starfield-mystic
 tales-end
 yanlings-harbinger
+thought-distortion
+thunderkin-awakener
+twinblade-paladin
+unholy-indenture
+vilis-broker-of-blood
+vivien-arkbow-ranger
+vivien-natures-avenger
+voracious-hydra
+wakeroot-elemental
+wildfire-elemental
+winged-words
+woodland-champion
+yaroks-fenlurker

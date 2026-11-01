@@ -119,12 +119,17 @@ wishBoard mountain wish sideboard =
   -- FOUR Mountains rather than two: the cases that cast a second wish off the
   -- board the first one left need mana the first cast did not tap.
   let (board, wishId) = S.handOne wish (S.landsInPlay mountain 4)
-      -- Interned in LIST ORDER, so the ids ascend with the list and the case
+   in (stockPool sideboard board, wishId)
+
+-- alice's pool outside the game set to the given multiset of printings.
+stockPool :: [(Printing.Printing, Natural.Natural)] -> GameState.GameState -> GameState.GameState
+stockPool sideboard board =
+  let -- Interned in LIST ORDER, so the ids ascend with the list and the case
       -- below can name what Prompt.ChooseFromOutsideTheGame offers last.
       intern (printing, n) (acc, gs) = let (printingId, gs2) = Game.intern printing gs in (acc <> [(printingId, n)], gs2)
       (entries, interned) = List.foldl' (flip intern) ([], board) sideboard
       stock p = p {Player.outsideTheGame = Map.fromList entries}
-   in (interned {GameState.players = Map.adjust stock S.alice (GameState.players interned)}, wishId)
+   in interned {GameState.players = Map.adjust stock S.alice (GameState.players interned)}
 
 -- Burning Wish's printed "You may", taken. S.identityAnswer declines every
 -- optional clause (CR 608.2d), so a case that wants the wish to do anything says
@@ -215,6 +220,25 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
     -- graveyard, which is the whole of what Effect.ExileThisSpell does.
     Spec.assertEqWith s "the wish itself was exiled" (printingsIn Zone.Exile S.alice resolved) [wish]
     Spec.assertEqWith s "and no card reached her graveyard" (printingsIn Zone.Graveyard S.alice resolved) []
+  -- CR 606.3 / 400.11b: the wish as a loyalty ability, its filter a creature.
+  Spec.it s "CR 400.11b Vivien, Arkbow Ranger's -5 puts a creature card from outside the game into her hand" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    vivien <- S.printingOf s registry "Vivien, Arkbow Ranger"
+    signInBlood <- S.printingOf s registry "Sign in Blood"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    let (vivienId, placed) = S.addPermanent vivien S.alice (S.landsInPlay mountain 1)
+        board =
+          (stockPool [(signInBlood, 1), (bears, 1)] (S.addCounter CounterKind.Loyalty 5 vivienId placed))
+            { GameState.phase = Phase.PrecombatMain,
+              GameState.activePlayer = S.alice,
+              GameState.priority = Just S.alice
+            }
+    case Projection.abilitiesOf vivienId board of
+      [_, _, wishing] -> do
+        let resolved = S.runPure exercising board (do Activate.activateAbility S.alice vivienId wishing; Stack.resolveTop)
+        Spec.assertEqWith s "the creature card reached her hand" (printingsIn Zone.Hand S.alice resolved) [bears]
+        Spec.assertEqWith s "and the sorcery stays outside the game" (Map.elems (poolOf S.alice resolved)) [1]
+      other -> Spec.assertEqWith s "Vivien has three loyalty abilities" (length other) 3
   -- CR 400.11b: "those cards remain in the game until the game ends". The copy
   -- brought in is gone from the pool, so a second wish cannot find it again.
   Spec.it s "CR 400.11b the pool is spent: a second Burning Wish finds nothing" $ do

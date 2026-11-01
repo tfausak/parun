@@ -1,0 +1,161 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Trample"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Variable"
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Voracious Hydra",
+      "oracleText": "Trample\nThis creature enters with X +1/+1 counters on it.\nWhen this creature enters, choose one —\n• Double the number of +1/+1 counters on this creature.\n• This creature fights target creature you don't control.",
+      "power": {
+        "type": "Literal",
+        "value": 0
+      },
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "EntryR",
+            "value": {
+              "matching": {
+                "type": "IsSource"
+              },
+              "rewrite": {
+                "type": "WithCounters",
+                "value": [
+                  {
+                    "count": {
+                      "type": "InSlot",
+                      "value": "X"
+                    },
+                    "kind": {
+                      "type": "PlusOnePlusOne"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "toughness": {
+        "type": "Literal",
+        "value": 1
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SelfEnters"
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "PutCounters",
+                        "value": {
+                          "kind": {
+                            "type": "PlusOnePlusOne"
+                          },
+                          "quantity": {
+                            "type": "AgainstSlot",
+                            "value": {
+                              "quantity": {
+                                "type": "ObjectCounters",
+                                "value": {
+                                  "type": "PlusOnePlusOne"
+                                }
+                              },
+                              "slot": "self"
+                            }
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "self"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Fight",
+                        "value": {
+                          "first": "self",
+                          "second": "target"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "target": {
+                    "filter": {
+                      "type": "Not",
+                      "value": {
+                        "type": "HeldBy",
+                        "value": {
+                          "holder": {
+                            "type": "Controller"
+                          },
+                          "relation": {
+                            "type": "You"
+                          }
+                        }
+                      }
+                    },
+                    "pool": {
+                      "type": "Creatures"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Hydra"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}
