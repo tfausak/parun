@@ -2037,6 +2037,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Claustrophobia", 1), -- Bewitching Leechcraft's entering tap
         ("Waterknot", 1), -- Claustrophobia's wording
         ("Sleep Paralysis", 1), -- Claustrophobia's wording
+        ("Capture Sphere", 1), -- Claustrophobia's wording
         ("Artificer's Hex", 2) -- its intervening "if" and the destruction it gates
       ]
     -- The rejected side, which the sweep above cannot show while the pool has no
