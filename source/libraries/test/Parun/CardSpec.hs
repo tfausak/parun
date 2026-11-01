@@ -5138,8 +5138,8 @@ playerEffectFilters playerEffect = case playerEffect of
   -- CR 609.4b carries a ManaFilter and a set of mana types, for the same reason:
   -- what it names is MANA.
   PlayerEffect.SpendManaAsThough _ -> []
-  -- CR 702.18a / 702.11c carry a PlayerScope, not a Filter: the set they name is
-  -- players, and this traversal is about the spells a player effect names.
+  -- CR 702.18a / 702.11c's scope is a PlayerScope, not a Filter: the set it names
+  -- is players. CR 702.11d's quality is a Filter over the aiming object.
   PlayerEffect.CantBeTargetedBy _ quality -> Maybe.maybeToList quality
   -- CR 601.3b's "a spell with certain qualities", which is a Filter over the
   -- spell exactly as a cost modifier's is (Vedalken Orrery's is `And []`).

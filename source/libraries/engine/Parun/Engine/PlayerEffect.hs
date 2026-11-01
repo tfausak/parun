@@ -2741,16 +2741,18 @@ protectedFromTargeting rows pastHexproof caster source sourceView pid gs =
 -- from the same quality redundant for the player case as much as the permanent
 -- one.
 protectedFrom :: ObjectId -> PlayerId -> GameState -> Bool
-protectedFrom oid pid gs = protectedFromGiven (applying pid gs) Nothing oid gs
+protectedFrom oid pid gs = protectedFromGiven (applying pid gs) Nothing (Projection.viewOfObject oid gs) gs
 
--- protectedFrom against an already-gathered row list, for
--- protectedFromTargetingGiven's reason above. `aimer` is Filter.aimingController:
--- Just the controller of the spell or ability aiming at the player, for rule
--- 702.16k's targeting clause, and Nothing at the Aura bar. The cast-prohibition
+-- protectedFrom against an already-gathered row list and the source's view, for
+-- protectedFromTargetingGiven's reason above; Parun.Engine.Target.targetable's
+-- view answers a gone source from its last known information (CR 608.2b).
+-- `aimer` is Filter.aimingController: Just the controller of the spell or ability
+-- aiming at the player, for rule 702.16k's targeting clause, and Nothing at the
+-- Aura bar. The cast-prohibition
 -- scenario "an opponent's ability still can't target the protected player once
 -- she steals its source in response" proves it.
-protectedFromGiven :: [(RowSource, PlayerEffect)] -> Maybe (Maybe PlayerId) -> ObjectId -> GameState -> Bool
-protectedFromGiven rows aimer oid gs =
+protectedFromGiven :: [(RowSource, PlayerEffect)] -> Maybe (Maybe PlayerId) -> Filter.View -> GameState -> Bool
+protectedFromGiven rows aimer view gs =
   let stops (source, effect) = case effect of
         -- CR 702.16a's quality, matched against the object's projected view.
         -- Runed Halo's chosen name is Filter.HasChosenName, answered off the
@@ -2766,7 +2768,7 @@ protectedFromGiven rows aimer oid gs =
         PlayerEffect.HasProtectionFrom quality ->
           Filter.matches
             ((contextFor (RowSource.object source >>= (`Projection.controllerOf` gs)) source gs) {Filter.aimingController = aimer})
-            (Projection.viewOfObject oid gs)
+            view
             quality
         -- CR 702.18a and CR 702.11c are a different immunity, and a narrower
         -- one: they stop TARGETING alone, where rule 702.16 also bars an Aura
