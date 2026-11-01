@@ -2,6 +2,7 @@ module Parun.Codec.ClauseSpec where
 
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Parun.Codec.Clause as Clause
 import qualified Parun.Json.Value as Value
@@ -106,8 +107,8 @@ spec s = Spec.describe s "Parun.Codec.Clause" $ do
       s
       toJson
       fromJson
-      (Clause.MkClause Nothing Nothing (Just (OrElse.MkOrElse (ClauseIndex.MkClauseIndex 1) (PlayerRef.Relative PlayerRelation.You) False)) Optionality.Mandatory Nothing Seq.empty)
-      " {\"orElse\":{\"sibling\":1}} "
+      (Clause.MkClause Nothing Nothing (Just (OrElse.MkOrElse (Set.singleton (ClauseIndex.MkClauseIndex 1)) (PlayerRef.Relative PlayerRelation.You) False)) Optionality.Mandatory Nothing Seq.empty)
+      " {\"orElse\":{\"siblings\":[1]}} "
   -- CR 118.12a: Mana Leak's "unless its controller pays {3}" is what the
   -- payGate key encodes, and it is emitted only when there is one.
   Spec.it s "a clause carrying a resolution cost writes the key" $

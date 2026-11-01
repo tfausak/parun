@@ -2311,7 +2311,7 @@ optionalityNames asking x = case x of
 
 orElseNames :: (Monoid r) => Asking r -> OrElse.OrElse -> r
 orElseNames asking x = case x of
-  OrElse.MkOrElse _sibling chooser _villainous -> playerRefNames asking chooser
+  OrElse.MkOrElse _siblings chooser _villainous -> playerRefNames asking chooser
 
 paidExpiryNames :: (Monoid r) => Asking r -> PaidExpiry.PaidExpiry -> r
 paidExpiryNames asking x = case x of

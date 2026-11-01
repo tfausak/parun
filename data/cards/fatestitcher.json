@@ -31,7 +31,9 @@
                       "type": "Optional"
                     },
                     "orElse": {
-                      "sibling": 1
+                      "siblings": [
+                        1
+                      ]
                     }
                   },
                   {
@@ -48,7 +50,9 @@
                       "type": "Optional"
                     },
                     "orElse": {
-                      "sibling": 0
+                      "siblings": [
+                        0
+                      ]
                     }
                   }
                 ],
