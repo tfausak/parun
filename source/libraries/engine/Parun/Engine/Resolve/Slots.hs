@@ -2430,7 +2430,9 @@ conditionReadsX condition = case condition of
 -- taken from effectObjectRefs ahead of the case and no arm below names one.
 readsX :: [Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)] -> Bool
 readsX =
-  let effectReadsX effect = any (any Quantity.readsX . objectRefQuantities) (effectObjectRefs effect) || effectOwnReadsX effect
+  let -- A ref's filter too: Ugin, the Spirit Dragon's "mana value X or less".
+      refReadsX ref = any Quantity.readsX (objectRefQuantities ref) || Map.member Binding.variableX (objectRefSlots ref)
+      effectReadsX effect = any refReadsX (effectObjectRefs effect) || effectOwnReadsX effect
       -- effectReadsX's half that is not an ObjectRef's: this opcode's own fields,
       -- and its nested effects through the recursion back into readsX.
       effectOwnReadsX effect = case effect of
