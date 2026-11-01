@@ -51,6 +51,7 @@ import qualified Parun.Types.AttachR as AttachR
 import qualified Parun.Types.AttachRewrite as AttachRewrite
 import qualified Parun.Types.AttachTarget as AttachTarget
 import qualified Parun.Types.AttachedToBound as AttachedToBound
+import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackTargetRef as AttackTargetRef
 import qualified Parun.Types.AttackingPlayers as AttackingPlayers
 import qualified Parun.Types.BecomeCopy as BecomeCopy
@@ -585,6 +586,8 @@ objectRefSlots ref = joinTwo (joinSlots (fmap playerRefSlots (objectRefPlayerRef
   -- The host is read out of the slot, and the Filter over what is attached to
   -- it may name slots of its own.
   ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound slot filter_) -> joinTwo (Map.singleton slot SlotArity.Many) (filterSlotsOf filter_)
+  -- The attacker is read out of the slot.
+  ObjectRef.AttackedBy slot -> Map.singleton slot SlotArity.Many
   -- Every ref's own reads; the PlayerRefs are objectRefPlayerRefs', which recurses.
   ObjectRef.AllOf refs -> joinSlots (fmap objectRefSlots (NonEmpty.toList refs))
 
@@ -646,6 +649,7 @@ objectRefQuantities ref = case ref of
   -- printed two.
   ObjectRef.ChosenPermanents choice -> Foldable.toList (HowMany.quantity (ChosenPermanents.count choice))
   ObjectRef.AttachedToBound _ -> []
+  ObjectRef.AttackedBy _ -> []
   ObjectRef.FromAnywhere _ -> []
   ObjectRef.AllOf refs -> concatMap objectRefQuantities refs
 
@@ -701,6 +705,7 @@ objectRefPlayerRefs ref = case ref of
   -- by default CR 608.2c's resolving controller. Pinned as the arm above is.
   ObjectRef.ChosenPermanents choice -> [ChosenPermanents.chooser choice]
   ObjectRef.AttachedToBound _ -> []
+  ObjectRef.AttackedBy _ -> []
   ObjectRef.FromAnywhere _ -> []
   ObjectRef.AllOf refs -> concatMap objectRefPlayerRefs refs
 
@@ -3002,6 +3007,13 @@ battlefieldMatching legal resolving controller source gs filter_ =
         Just pid -> Maybe.fromMaybe last_ (List.elemIndex pid order)
    in List.sortOn (\oid -> (seat oid, oid)) matching
 
+-- CR 508.1b / 608.2h: what each creature the slot holds is attacking, read live,
+-- or off CR 608.2h's record for one that has left (Game.attackTargetWithLastKnown).
+-- A creature attacking nothing (CR 506.4c) names nothing.
+attackedBy :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> GameState -> SlotName -> [AttackTarget.AttackTarget]
+attackedBy legal resolving controller source gs slot =
+  ListUtils.nubOrd (Maybe.mapMaybe (`Game.attackTargetWithLastKnown` gs) (objectRefObjects legal resolving controller source gs (ObjectRef.InSlot slot)))
+
 -- The objects an ObjectRef names DURING a resolution, for every arm whose answer
 -- is a READ. The arms that are a CR 608.2d QUESTION answer [] here and are
 -- carried out by the opcode arms that reach the Game monad. InSlot takes every
@@ -3062,6 +3074,14 @@ objectRefObjects legal resolving controller source gs ref = case ref of
           | otherwise = maybe Set.empty LastKnown.attached (Game.lastKnownOf host gs)
         attached = foldMap attachedTo hosts
      in filter (`Set.member` attached) (battlefieldMatching legal resolving controller source gs filter_)
+  -- The attacked planeswalkers and battles; an attacked player is no object, so
+  -- only objectRefRecipients names one.
+  ObjectRef.AttackedBy slot ->
+    let attackedObject target = case target of
+          AttackTarget.OfPlayer _ -> Nothing
+          AttackTarget.OfPlaneswalker oid -> Just oid
+          AttackTarget.OfBattle oid -> Just oid
+     in Maybe.mapMaybe attackedObject (attackedBy legal resolving controller source gs slot)
   -- CR 400.7's link read back: each object the slot holds, followed through
   -- this turn's logged zone changes to the object it is now -- and, given an
   -- `among`, kept only where that slot holds the incarnation too (CR 400.7j).

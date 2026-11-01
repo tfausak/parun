@@ -170,6 +170,9 @@ data ObjectRef
   | -- | CR 303.4b / 301.5a / 608.2h: the permanents attached to the object a slot holds,
     -- or attached as it left (Rhuk, Hexgold Nabber; Fumble).
     AttachedToBound AttachedToBound.AttachedToBound
+  | -- | CR 508.1b / 608.2h: the player, planeswalker or battle the creature a slot
+    -- holds is attacking, or was attacking as it left (Scorch Spitter).
+    AttackedBy SlotName.SlotName
   | -- | CR 400.7: the object a slot holds, followed to wherever it is now.
     FromAnywhere FromAnywhere.FromAnywhere
   | -- | CR 608.2f: every object each ref names, as one action on all of them --

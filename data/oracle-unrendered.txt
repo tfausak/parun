@@ -2884,3 +2884,4 @@ winged-words
 woodland-champion
 yaroks-fenlurker
 yarok-the-desecrated
+scorch-spitter

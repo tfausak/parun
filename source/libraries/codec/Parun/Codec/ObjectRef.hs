@@ -84,6 +84,7 @@ codec =
           Arm.payload "AtRandom" codec ObjectRef.AtRandom (\x -> case x of ObjectRef.AtRandom y -> Just y; _ -> Nothing),
           Arm.payload "ChosenPermanents" ChosenPermanents.codec ObjectRef.ChosenPermanents (\x -> case x of ObjectRef.ChosenPermanents y -> Just y; _ -> Nothing),
           Arm.payload "AttachedToBound" AttachedToBound.codec ObjectRef.AttachedToBound (\x -> case x of ObjectRef.AttachedToBound y -> Just y; _ -> Nothing),
+          Arm.payload "AttackedBy" SlotName.codec ObjectRef.AttackedBy (\x -> case x of ObjectRef.AttackedBy y -> Just y; _ -> Nothing),
           Arm.payload "FromAnywhere" FromAnywhere.codec ObjectRef.FromAnywhere (\x -> case x of ObjectRef.FromAnywhere y -> Just y; _ -> Nothing),
           Arm.payload "AllOf" (Common.nonEmpty codec) ObjectRef.AllOf (\x -> case x of ObjectRef.AllOf y -> Just y; _ -> Nothing)
         ]
@@ -119,5 +120,6 @@ tagOf x = case x of
   ObjectRef.AtRandom {} -> "AtRandom"
   ObjectRef.ChosenPermanents {} -> "ChosenPermanents"
   ObjectRef.AttachedToBound {} -> "AttachedToBound"
+  ObjectRef.AttackedBy {} -> "AttackedBy"
   ObjectRef.FromAnywhere {} -> "FromAnywhere"
   ObjectRef.AllOf {} -> "AllOf"

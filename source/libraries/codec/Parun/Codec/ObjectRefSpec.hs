@@ -434,6 +434,9 @@ spec s = Spec.describe s "Parun.Codec.ObjectRef" $ do
       ObjectRef.codec
       (ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound (SlotName.MkSlotName (Text.pack "target")) (Filter.HasSubtype Subtype.Equipment)))
       " {\"type\":\"AttachedToBound\",\"value\":{\"slot\":\"target\",\"filter\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Equipment\"}}}} "
+  -- CR 508.1b: the attacker's slot, a bare string.
+  Spec.it s "AttackedBy" $
+    Common.assertCodec s ObjectRef.codec (ObjectRef.AttackedBy (SlotName.MkSlotName (Text.pack "self"))) " {\"type\":\"AttackedBy\",\"value\":\"self\"} "
   -- CR 400.7: the slot whose object is followed, a bare string.
   Spec.it s "FromAnywhere" $
     Common.assertCodec s ObjectRef.codec (ObjectRef.FromAnywhere (FromAnywhere.MkFromAnywhere {FromAnywhere.slot = SlotName.MkSlotName (Text.pack "self"), FromAnywhere.among = Nothing})) " {\"type\":\"FromAnywhere\",\"value\":{\"slot\":\"self\"}} "

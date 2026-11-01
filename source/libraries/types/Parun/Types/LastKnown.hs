@@ -168,7 +168,8 @@ data LastKnown = MkLastKnown
     -- is `attackTarget` below, because CR 506.4c separates the two.
     attacking :: !Bool,
     -- | CR 702.49c: WHAT it was attacking as it left, through Game.attackTargetOf
-    -- -- the question ninjutsu asks of the creature it returned to hand. Nothing
+    -- -- the question ninjutsu asks of the creature it returned to hand, and
+    -- ObjectRef.AttackedBy of a Scorch Spitter killed in response. Nothing
     -- when it was not attacking, and Nothing when it was attacking nothing: CR
     -- 506.4c's creature "is not attacking any player, planeswalker, or battle",
     -- which Combat.attackingNothing records. Parun.BattleSpec's Ninja returning a

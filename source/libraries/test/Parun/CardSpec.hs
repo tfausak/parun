@@ -4310,6 +4310,7 @@ objectRefFilters ref = case ref of
   ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents f _ _ _) -> unframed [f] <> refFilters ref
   -- Rhuk's "all Equipment attached to that creature".
   ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound _ f) -> unframed [f]
+  ObjectRef.AttackedBy _ -> []
   ObjectRef.FromAnywhere _ -> []
   ObjectRef.AtRandom inner -> objectRefFilters inner
   ObjectRef.AllOf refs -> foldMap objectRefFilters refs
