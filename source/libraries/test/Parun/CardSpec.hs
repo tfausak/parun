@@ -5140,7 +5140,7 @@ playerEffectFilters playerEffect = case playerEffect of
   PlayerEffect.SpendManaAsThough _ -> []
   -- CR 702.18a / 702.11c carry a PlayerScope, not a Filter: the set they name is
   -- players, and this traversal is about the spells a player effect names.
-  PlayerEffect.CantBeTargetedBy _ -> []
+  PlayerEffect.CantBeTargetedBy _ quality -> Maybe.maybeToList quality
   -- CR 601.3b's "a spell with certain qualities", which is a Filter over the
   -- spell exactly as a cost modifier's is (Vedalken Orrery's is `And []`).
   PlayerEffect.CastAsThoughItHadFlash f -> [f]

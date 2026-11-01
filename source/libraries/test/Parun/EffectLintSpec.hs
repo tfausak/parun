@@ -1181,7 +1181,7 @@ unpreventableScopeOffends scope playerEffect = case playerEffect of
   PlayerEffect.DontLoseUnspentMana _ -> False
   PlayerEffect.LoseLifeForUnspentMana -> False
   PlayerEffect.SpendManaAsThough _ -> False
-  PlayerEffect.CantBeTargetedBy _ -> False
+  PlayerEffect.CantBeTargetedBy {} -> False
   PlayerEffect.CastAsThoughItHadFlash _ -> False
   PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
   PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -1258,7 +1258,7 @@ unpreventablePatternOffends playerEffect = case playerEffect of
   PlayerEffect.DontLoseUnspentMana _ -> False
   PlayerEffect.LoseLifeForUnspentMana -> False
   PlayerEffect.SpendManaAsThough _ -> False
-  PlayerEffect.CantBeTargetedBy _ -> False
+  PlayerEffect.CantBeTargetedBy {} -> False
   PlayerEffect.CastAsThoughItHadFlash _ -> False
   PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
   PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False

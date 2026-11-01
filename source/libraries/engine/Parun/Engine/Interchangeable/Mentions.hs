@@ -2420,7 +2420,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.DontLoseUnspentMana _manaFilter -> mempty
   PlayerEffect.LoseLifeForUnspentMana -> mempty
   PlayerEffect.SpendManaAsThough _spendManaAsThough -> mempty
-  PlayerEffect.CantBeTargetedBy _playerScope -> mempty
+  PlayerEffect.CantBeTargetedBy _playerScope quality -> foldMap (filterNames asking) quality
   PlayerEffect.HasProtectionFrom filter_ -> filterNames asking filter_
   PlayerEffect.CastAsThoughItHadFlash filter_ -> filterNames asking filter_
   PlayerEffect.MayPlayAsThoughItHadFlash filter_ -> filterNames asking filter_

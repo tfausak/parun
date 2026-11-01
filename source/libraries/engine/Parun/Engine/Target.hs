@@ -641,7 +641,7 @@ poolHeldLastKnown pool view =
 -- DIFFERENT reader. A player has no keywords: rule 702's keywords live on objects
 -- and are folded by the CR 613.1-613.7 layers, so the player halves ride the CR
 -- 613.10/613.11 player axis: PlayerEffect.CantBeTargetedBy for shroud and
--- hexproof (Ivory Mask, Leyline of Sanctity) and
+-- hexproof (Ivory Mask, Leyline of Sanctity, Veil of Summer) and
 -- PlayerEffect.HasProtectionFrom for rule 702.16b (Runed Halo, The Stasis Coffin).
 -- PlayerEffect.protectedFromTargeting and PlayerEffect.protectedFromGiven are
 -- the typed questions; this module never sees either constructor, and hands both
@@ -731,14 +731,15 @@ targetable pcs rowsOf perspective source sourceView gs recipient =
    in case recipient of
         -- CR 702.18a's and CR 702.11c's player halves, then CR 702.16b's. Two
         -- readers because the two rules ask different things: shroud and
-        -- hexproof narrow by WHO controls the spell, and protection by what the
-        -- SOURCE is -- which is `source` here for the same reason
-        -- `restrictedObject` reads `sourceView`, CR 702.16b naming a spell's
-        -- quality and an ability's source in one sentence. `perspective` goes
+        -- hexproof narrow by WHO controls the spell (and CR 702.11d's variant by
+        -- its source too), and protection by what the SOURCE is alone -- which
+        -- is `source` here for the same reason `restrictedObject` reads
+        -- `sourceView`, CR 702.16b naming a spell's quality and an ability's
+        -- source in one sentence. `perspective` goes
         -- along for rule 702.16k's targeting clause (Filter.aimingController).
         Recipient.ToPlayer pid ->
           let rows = rowsOf pid
-           in not (PlayerEffect.protectedFromTargeting rows (PlayerEffect.ignoresPlayerHexproof exemptions) perspective pid gs)
+           in not (PlayerEffect.protectedFromTargeting rows (PlayerEffect.ignoresPlayerHexproof exemptions) perspective source sourceView pid gs)
                 && not (PlayerEffect.protectedFromGiven rows (Just perspective) source gs)
         Recipient.ToCreature oid -> restrictedObject oid
         Recipient.ToPlaneswalker oid -> restrictedObject oid

@@ -628,7 +628,7 @@ prohibitsCasting pid oid variable gs =
         -- CR 702.18a / 702.11c restrict TARGETING, not casting: a player with
         -- shroud may cast anything, and Parun.Engine.Target.targetable is where
         -- the restriction lands (CR 115.4, CR 601.2c).
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         -- CR 601.3b ALLOWS, and this is the prohibit half: a permission is not a
         -- prohibition, and CR 101.2 would let a prohibition outvote it anyway.
         -- mayCastAsThoughItHadFlash below is where it is read.
@@ -817,7 +817,7 @@ prohibitsPlayingLand pid oid gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         -- CR 305.1 again: a land is never cast, so a permission about the timing
         -- of a CAST has nothing to widen here either.
         PlayerEffect.CastAsThoughItHadFlash _ -> False
@@ -911,7 +911,7 @@ prohibitsSearching pid owner causeController gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -1019,7 +1019,7 @@ prohibitsCounters pid kind gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -1104,7 +1104,7 @@ prohibitsBecomingMonarch pid gs =
         -- become the monarch" names nobody), so shroud is not an eligibility
         -- restriction; where a card does target (Jared's own first clause), CR
         -- 115.1's own check turns it away before this one is asked.
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -1164,7 +1164,7 @@ schemesCantBeSetInMotion gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -1229,7 +1229,7 @@ entryTriggerings pid entrant gs =
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
-        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
@@ -1302,7 +1302,7 @@ prohibitsAttackingWithCreatures pid gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -1932,7 +1932,7 @@ landPlayFlashGrant effect = case effect of
   PlayerEffect.DontLoseUnspentMana _ -> Nothing
   PlayerEffect.LoseLifeForUnspentMana -> Nothing
   PlayerEffect.SpendManaAsThough _ -> Nothing
-  PlayerEffect.CantBeTargetedBy _ -> Nothing
+  PlayerEffect.CantBeTargetedBy {} -> Nothing
   PlayerEffect.CantBeCountered _ -> Nothing
   PlayerEffect.RestrictTargeting _ -> Nothing
   PlayerEffect.TargetPastHexproof _ -> Nothing
@@ -2183,7 +2183,7 @@ castPermissionsFrom pid zone oid gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
         PlayerEffect.TargetPastHexproof _ -> False
@@ -2497,7 +2497,7 @@ mayCastFromHandWithoutPayingManaCost pid oid gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
         PlayerEffect.TargetPastHexproof _ -> False
@@ -2574,7 +2574,7 @@ playLandPiles pid gs =
         PlayerEffect.DontLoseUnspentMana _ -> []
         PlayerEffect.LoseLifeForUnspentMana -> []
         PlayerEffect.SpendManaAsThough _ -> []
-        PlayerEffect.CantBeTargetedBy _ -> []
+        PlayerEffect.CantBeTargetedBy {} -> []
         PlayerEffect.CantBeCountered _ -> []
         PlayerEffect.RestrictTargeting _ -> []
         PlayerEffect.TargetPastHexproof _ -> []
@@ -2645,11 +2645,17 @@ playLandPiles pid gs =
 -- `pastHexproof` is CR 702.11e's exemption for the caster (Detection Tower,
 -- hexproofExemptions): it lifts CR 702.11c's scope, Related Opponent, and leaves
 -- shroud's.
-protectedFromTargeting :: [(RowSource, PlayerEffect)] -> Bool -> Maybe PlayerId -> PlayerId -> GameState -> Bool
-protectedFromTargeting rows pastHexproof caster pid gs =
-  let stops effect = case effect of
-        PlayerEffect.CantBeTargetedBy (PlayerScope.Related PlayerRelation.Opponent) | pastHexproof -> False
-        PlayerEffect.CantBeTargetedBy scope -> case caster of
+--
+-- A quality (CR 702.11d) is asked of the aiming object, `source` and its view,
+-- as Target.targetable's `stops` asks it for a permanent; CR 109.5's "you" is
+-- again the protected player. Each row is its own ability (CR 702.11f).
+protectedFromTargeting :: [(RowSource, PlayerEffect)] -> Bool -> Maybe PlayerId -> ObjectId -> Filter.View -> PlayerId -> GameState -> Bool
+protectedFromTargeting rows pastHexproof caster source sourceView pid gs =
+  let hasQuality = maybe True (Filter.matches (Filter.contextIn gs (Just pid) (Just source)) sourceView)
+      stops effect = case effect of
+        PlayerEffect.CantBeTargetedBy (PlayerScope.Related PlayerRelation.Opponent) _ | pastHexproof -> False
+        PlayerEffect.CantBeTargetedBy _ quality | not (hasQuality quality) -> False
+        PlayerEffect.CantBeTargetedBy scope _ -> case caster of
           Just who -> inScope who pid gs scope
           Nothing -> case scope of
             PlayerScope.Related relation -> PlayerRelation.holdsFor (Game.teams gs) relation (Just pid) Nothing
@@ -2766,7 +2772,7 @@ protectedFromGiven rows aimer oid gs =
         -- one: they stop TARGETING alone, where rule 702.16 also bars an Aura
         -- and, by rule 702.16e, prevents damage. Read at their own gate
         -- (protectedFromTargeting above).
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         -- Every other arm is about casting, playing, countering, searching,
         -- paying, keeping mana, gaining or losing life, or how a coin flip came
         -- out. None of them says
@@ -2862,7 +2868,7 @@ protectionCarriers gs =
         -- side is this Filter, so the three consequences of rule 702.16 read one
         -- quality (protectedFromGiven above is the other two).
         PlayerEffect.HasProtectionFrom quality -> fmap (\oid -> (pid, oid, RowSource.choices source, quality)) (RowSource.object source)
-        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CantSearchLibraries _ -> Nothing
         PlayerEffect.CantCastSpells -> Nothing
         PlayerEffect.CantActivateAbilities {} -> Nothing
@@ -2964,7 +2970,7 @@ landPlaysAllowed pid gs =
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
-        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
         PlayerEffect.RestrictTargeting _ -> Nothing
         PlayerEffect.TargetPastHexproof _ -> Nothing
@@ -3385,7 +3391,7 @@ maximumHandSize pid gs =
         PlayerEffect.DontLoseUnspentMana _ -> current
         PlayerEffect.LoseLifeForUnspentMana -> current
         PlayerEffect.SpendManaAsThough _ -> current
-        PlayerEffect.CantBeTargetedBy _ -> current
+        PlayerEffect.CantBeTargetedBy {} -> current
         PlayerEffect.CastAsThoughItHadFlash _ -> current
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> current
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> current
@@ -3467,7 +3473,7 @@ keepsUnspentMana pid gs =
         PlayerEffect.SetMaximumHandSize _ -> Nothing
         PlayerEffect.IncreaseMaximumHandSize _ -> Nothing
         PlayerEffect.ReduceMaximumHandSize _ -> Nothing
-        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
@@ -3541,7 +3547,7 @@ losesLifeForUnspentMana pid gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> True
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -3619,7 +3625,7 @@ prohibitsGainingLife pid gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -3693,7 +3699,7 @@ prohibitsLosingLife pid gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -3766,7 +3772,7 @@ precludes outcome pid gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -3837,7 +3843,7 @@ spendManaAsThough pid gs =
         PlayerEffect.SetMaximumHandSize _ -> Nothing
         PlayerEffect.IncreaseMaximumHandSize _ -> Nothing
         PlayerEffect.ReduceMaximumHandSize _ -> Nothing
-        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
@@ -3950,7 +3956,7 @@ cantBeCountered pid counterer oid gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -4016,7 +4022,7 @@ targetingRestrictions =
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
-        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
@@ -4094,7 +4100,7 @@ hexproofExemptions =
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
-        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
@@ -4236,7 +4242,7 @@ unpreventable gs =
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
-        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
@@ -4316,7 +4322,7 @@ unredirectable gs =
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
-        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
@@ -4370,7 +4376,7 @@ statedFlips pid gs =
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
-        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
@@ -4446,7 +4452,7 @@ rollModifiers pid gs =
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
-        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
@@ -4558,7 +4564,7 @@ overPlayerRefs f effect = case effect of
   PlayerEffect.DontLoseUnspentMana _ -> pure effect
   PlayerEffect.LoseLifeForUnspentMana -> pure effect
   PlayerEffect.SpendManaAsThough _ -> pure effect
-  PlayerEffect.CantBeTargetedBy _ -> pure effect
+  PlayerEffect.CantBeTargetedBy {} -> pure effect
   PlayerEffect.HasProtectionFrom _ -> pure effect
   PlayerEffect.CastAsThoughItHadFlash _ -> pure effect
   PlayerEffect.MayPlayAsThoughItHadFlash _ -> pure effect
@@ -4636,7 +4642,7 @@ overDamagePatterns f effect = case effect of
   PlayerEffect.DontLoseUnspentMana _ -> pure effect
   PlayerEffect.LoseLifeForUnspentMana -> pure effect
   PlayerEffect.SpendManaAsThough _ -> pure effect
-  PlayerEffect.CantBeTargetedBy _ -> pure effect
+  PlayerEffect.CantBeTargetedBy {} -> pure effect
   PlayerEffect.HasProtectionFrom _ -> pure effect
   PlayerEffect.CastAsThoughItHadFlash _ -> pure effect
   PlayerEffect.MayPlayAsThoughItHadFlash _ -> pure effect

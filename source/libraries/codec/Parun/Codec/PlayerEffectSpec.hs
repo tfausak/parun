@@ -208,16 +208,23 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
     Common.assertCodec
       s
       PlayerEffect.codec
-      (PlayerEffect.CantBeTargetedBy (PlayerScope.Related PlayerRelation.AnyPlayer))
-      " {\"type\":\"CantBeTargetedBy\",\"value\":{\"type\":\"AnyPlayer\"}} "
+      (PlayerEffect.CantBeTargetedBy (PlayerScope.Related PlayerRelation.AnyPlayer) Nothing)
+      " {\"type\":\"CantBeTargetedBy\",\"value\":{\"scope\":{\"type\":\"AnyPlayer\"}}} "
   -- CR 702.11c: the OTHER scope, so a codec that dropped the payload would
   -- round-trip one of these and not both.
+  Spec.it s "CantBeTargetedBy, hexproof from a quality" $
+    Common.assertCodec
+      s
+      PlayerEffect.codec
+      (PlayerEffect.CantBeTargetedBy (PlayerScope.Related PlayerRelation.Opponent) (Just (Filter.And [])))
+      " {\"type\":\"CantBeTargetedBy\",\"value\":{\"quality\":{\"type\":\"And\",\"value\":[]},\"scope\":{\"type\":\"Opponent\"}}} "
+
   Spec.it s "CantBeTargetedBy, hexproof's Opponents" $
     Common.assertCodec
       s
       PlayerEffect.codec
-      (PlayerEffect.CantBeTargetedBy (PlayerScope.Related PlayerRelation.Opponent))
-      " {\"type\":\"CantBeTargetedBy\",\"value\":{\"type\":\"Opponent\"}} "
+      (PlayerEffect.CantBeTargetedBy (PlayerScope.Related PlayerRelation.Opponent) Nothing)
+      " {\"type\":\"CantBeTargetedBy\",\"value\":{\"scope\":{\"type\":\"Opponent\"}}} "
   -- CR 601.3b / Vedalken Orrery: "spells" names no quality, so the filter is the
   -- trivial predicate. This is the shape data/cards/vedalken-orrery.json carries.
   Spec.it s "CastAsThoughItHadFlash, Vedalken Orrery's unqualified spells" $

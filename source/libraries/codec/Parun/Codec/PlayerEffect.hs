@@ -47,6 +47,12 @@ codec =
           (,)
             <$> Fields.defaulted "designator" Nothing (Common.maybe (KeywordDesignator.codec Keyword.codec)) fst
             <*> Fields.defaulted "sources" (Filter.Type.And []) filterCodec snd
+      -- The quality absent is every spell and ability the scope's players control.
+      targetingBan =
+        Fields.object $
+          (,)
+            <$> Fields.required "scope" PlayerScope.codec fst
+            <*> Fields.defaulted "quality" Nothing (Common.maybe filterCodec) snd
    in Arm.tagged
         tagOf
         [ Arm.nullary "CantCastSpells" PlayerEffect.CantCastSpells,
@@ -62,7 +68,7 @@ codec =
           Arm.payload "DontLoseUnspentMana" ManaFilter.codec PlayerEffect.DontLoseUnspentMana (\x -> case x of PlayerEffect.DontLoseUnspentMana y -> Just y; _ -> Nothing),
           Arm.nullary "LoseLifeForUnspentMana" PlayerEffect.LoseLifeForUnspentMana,
           Arm.payload "SpendManaAsThough" SpendManaAsThough.codec PlayerEffect.SpendManaAsThough (\x -> case x of PlayerEffect.SpendManaAsThough y -> Just y; _ -> Nothing),
-          Arm.payload "CantBeTargetedBy" PlayerScope.codec PlayerEffect.CantBeTargetedBy (\x -> case x of PlayerEffect.CantBeTargetedBy y -> Just y; _ -> Nothing),
+          Arm.payload "CantBeTargetedBy" targetingBan (uncurry PlayerEffect.CantBeTargetedBy) (\x -> case x of PlayerEffect.CantBeTargetedBy y z -> Just (y, z); _ -> Nothing),
           Arm.payload "CastAsThoughItHadFlash" filterCodec PlayerEffect.CastAsThoughItHadFlash (\x -> case x of PlayerEffect.CastAsThoughItHadFlash y -> Just y; _ -> Nothing),
           Arm.payload "MayPlayAsThoughItHadFlash" filterCodec PlayerEffect.MayPlayAsThoughItHadFlash (\x -> case x of PlayerEffect.MayPlayAsThoughItHadFlash y -> Just y; _ -> Nothing),
           Arm.payload "ActivateKeywordAtInstantSpeed" (KeywordDesignator.codec Keyword.codec) PlayerEffect.ActivateKeywordAtInstantSpeed (\x -> case x of PlayerEffect.ActivateKeywordAtInstantSpeed y -> Just y; _ -> Nothing),
