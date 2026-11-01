@@ -62,6 +62,8 @@ import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.LoyaltyKind as LoyaltyKind
+import qualified Parun.Types.ManaCost as ManaCost
+import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.Milled as Milled
 import qualified Parun.Types.Moved as Moved
 import qualified Parun.Types.MovedBetween as MovedBetween
@@ -549,6 +551,18 @@ attachersOfPlayer gs candidate =
     (\attacher -> (Game.lookupObject attacher gs >>= Object.attachedTo >>= Recipient.playerOf) == Just candidate)
     (Set.toList (GameState.battlefield gs))
 
+-- What makes two mana costs the same cost: their generic symbols summed and
+-- the rest as a multiset, so a split card's {1}{R} and {1}{U} combine (CR
+-- 709.4b) to {2}{U}{R}, while {X} is not {0} and {B/R} is neither {B} nor {R}.
+-- No symbols at all is {0}, as data/cards writes Ornithopter's cost.
+manaCostKey :: ManaCost.ManaCost -> (Natural.Natural, [ManaSymbol.ManaSymbol])
+manaCostKey cost =
+  let symbols = ManaCost.unwrap cost
+      generic symbol = case symbol of
+        ManaSymbol.Generic n -> Just n
+        _ -> Nothing
+   in (sum (Maybe.mapMaybe generic symbols), List.sort (filter (Maybe.isNothing . generic) symbols))
+
 keep :: Filter.Type.Filter Keyword.Type.Keyword -> Filter.Context -> Maybe Filter.View -> Maybe Filter.View
 keep predicate context mv = case mv of
   Nothing -> Nothing
@@ -571,6 +585,10 @@ aggregate quantityOf aggregation members = case aggregation of
   -- CR 305.6: a land's other subtypes (Gate, Desert, Urza's) add nothing, and a
   -- land with two basic land types (Tundra) adds both.
   Aggregation.Distinct DistinctOf.BasicLandTypes -> Just (toInteger (Set.size (Set.filter Subtype.isBasicLandType (Set.unions (fmap (Filter.subtypes . snd) members)))))
+  -- CR 202.3a: a member with no mana cost still has mana value 0.
+  Aggregation.Distinct DistinctOf.ManaValues -> Just (toInteger (Set.size (Set.fromList (Maybe.mapMaybe (Filter.manaValue . snd) members))))
+  -- CR 202.1b: a member with no mana cost adds nothing; {0} is a cost.
+  Aggregation.Distinct DistinctOf.ManaCosts -> Just (toInteger (Set.size (Set.fromList (Maybe.mapMaybe (fmap manaCostKey . Filter.manaCost . snd) members))))
   -- The size of the largest group of members holding one value in common --
   -- not "pairwise sharing", which is not transitive (a Human Cleric, a Human
   -- Rogue and an Elf Rogue are no three sharing a type). A member joins a group

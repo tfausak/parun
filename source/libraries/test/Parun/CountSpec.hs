@@ -46,6 +46,9 @@ import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.InZone as InZone
+import qualified Parun.Types.ManaCost as ManaCost
+import qualified Parun.Types.ManaSymbol as ManaSymbol
+import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.Moved as Moved
 import qualified Parun.Types.MovedBetween as MovedBetween
@@ -118,6 +121,51 @@ spec s registry = Spec.describe s "Parun.Engine.Count" $ do
             (Filter.Type.And [])
             (Aggregation.Distinct DistinctOf.CardTypes)
     Spec.assertEqWith s "two types" (S.countOf viewOf (Filter.contextFor Teams.none Nothing Nothing) gs count) $ Just 2
+
+  -- Embodiment of Agonies' and Atemsis, All-Seeing's rulings: two costs of mana
+  -- value 3 differ, a repeated cost counts once, {0} counts, and a card with no
+  -- mana cost adds no cost but does add mana value 0.
+  Spec.describe s "CR 202.1 / 202.3 Distinct mana costs and mana values" $ do
+    let graveyard names = do
+          printings <- traverse (S.printingOf s registry) names
+          let step g printing = snd (S.addGraveyardCard printing S.alice g)
+          pure (List.foldl' step (Setup.emptyGame S.bothPlayers) printings)
+        distinct of_ gs =
+          S.countOf
+            (\oid -> Just (Projection.viewOfObject oid gs))
+            (Filter.contextFor Teams.none (Just S.alice) Nothing)
+            gs
+            ( Count.Type.MkCount
+                (Scope.InZone (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You)))
+                (Filter.Type.And [])
+                (Aggregation.Distinct of_)
+            )
+        pile = ["Vampire Nighthawk", "Afflict", "Vampire Nighthawk", "Ornithopter", "Asmoranomardicadaistinaculdacar"]
+    Spec.it s "counts {1}{B}{B}, {2}{B} and {0}, not the costless card" $ do
+      gs <- graveyard pile
+      Spec.assertEqWith s "three costs" (distinct DistinctOf.ManaCosts gs) $ Just 3
+      gs' <- graveyard ["Vampire Nighthawk", "Asmoranomardicadaistinaculdacar"]
+      Spec.assertEqWith s "costless adds none" (distinct DistinctOf.ManaCosts gs') $ Just 1
+    Spec.it s "counts 3 and 0, the costless card's 0 included" $ do
+      gs <- graveyard (pile <> ["Lightning Bolt"])
+      Spec.assertEqWith s "three values" (distinct DistinctOf.ManaValues gs) $ Just 3
+      gs' <- graveyard ["Vampire Nighthawk", "Asmoranomardicadaistinaculdacar"]
+      Spec.assertEqWith s "costless is 0" (distinct DistinctOf.ManaValues gs') $ Just 2
+    Spec.it s "CR 709.4b a split card's combined {1}{R}{1}{U} is {2}{U}{R}" $
+      Spec.assertEq
+        s
+        (Count.manaCostKey (cost [ManaSymbol.Generic 1, red, ManaSymbol.Generic 1, blue]))
+        (Count.manaCostKey (cost [ManaSymbol.Generic 2, blue, red]))
+    Spec.it s "no symbols is {0}" $
+      Spec.assertEq
+        s
+        (Count.manaCostKey (cost []))
+        (Count.manaCostKey (cost [ManaSymbol.Generic 0]))
+    Spec.it s "{X} is not {0}" $
+      Spec.assertNe
+        s
+        (Count.manaCostKey (cost [ManaSymbol.Variable]))
+        (Count.manaCostKey (cost [ManaSymbol.Generic 0]))
 
   -- A GRAVEYARD rather than the battlefield, here and in the three-seat case
   -- below, and CR 400.1 is why: a graveyard is one player's, so "whose copy" is
@@ -1123,3 +1171,10 @@ leftBattlefieldSpec s registry =
             (counters (cross theirGiant withBuried), counters (cross buriedGiant withBuried))
             (1, 0)
           Spec.assertEqWith s "setup: each crossing took its card out of the main game" (Map.member theirGiant (GameState.objects (cross theirGiant withBuried)), Map.member buriedGiant (GameState.objects (cross buriedGiant withBuried))) (False, False)
+
+cost :: [ManaSymbol.ManaSymbol] -> ManaCost.ManaCost
+cost = ManaCost.MkManaCost
+
+red, blue :: ManaSymbol.ManaSymbol
+red = ManaSymbol.OfType (ManaType.Colored Color.Red)
+blue = ManaSymbol.OfType (ManaType.Colored Color.Blue)

@@ -169,8 +169,9 @@ data View = MkView
     --
     -- Beside the value rather than instead of it, because CR 202.3 is not
     -- recoverable in reverse: {B}{B} and {1}{B} are both 2, and CR 700.5's
-    -- devotion counts the SYMBOLS. Parun.Engine.Quantity's Devotion arm is the one
-    -- reader; no Parun.Types.Filter atom asks about it.
+    -- devotion counts the SYMBOLS, and Embodiment of Agonies' distinct mana costs
+    -- (Parun.Engine.Count's ManaCosts arm) count whole costs. No
+    -- Parun.Types.Filter atom asks about it.
     manaCost :: Maybe ManaCost.ManaCost,
     controller :: Maybe PlayerId.PlayerId,
     -- CR 108.3 / 110.2: the candidate's OWNER -- the player who started the game
