@@ -19,7 +19,7 @@ codec :: Codec.Codec ChooseBetween.ChooseBetween
 codec =
   let check cb =
         if ChooseBetween.least cb > ChooseBetween.most cb
-          then Left (Text.pack "ModeSelection: least must not exceed most")
+          then Left (Text.pack "ChooseBetween: least must not exceed most")
           else Right cb
    in Fields.objectWith check $ do
         least <- Fields.required "least" Common.natural ChooseBetween.least

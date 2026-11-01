@@ -96,6 +96,7 @@ import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CarryOver as CarryOver
 import qualified Parun.Types.CausedBy as CausedBy
+import qualified Parun.Types.ChooseBetween as ChooseBetween
 import qualified Parun.Types.Chosen as Chosen
 import qualified Parun.Types.ChosenQuality as ChosenQuality
 import qualified Parun.Types.CoinFace as CoinFace
@@ -4857,14 +4858,25 @@ chooseQualityAs candidate quality oid = do
 -- earlier choice, which is what "the last chosen color" reads.
 --
 -- Colours go one prompt per colour, each offering the CR 105.1 colours not yet
--- chosen ("two colors" are two different ones), so only a fifth is forced. CR
+-- chosen ("two colors" are two different ones), so only a fifth is forced; a
+-- range ("the color or colors of your choice") first asks how many, as a
+-- Prompt.ChooseNumber, and a fixed count asks nothing. CR
 -- 305.6's basic land types and CR 205.3m's creature types are always all legal
 -- and distinguishable, so there is no one-option case to elide. Both types
 -- write Object.chosenSubtype: no printing makes both choices, and CR 607.2d
 -- links each to the ability that reads it.
 chooseQuality :: ChosenQuality.ChosenQuality -> PlayerId -> Acquisition.Acquisition -> ObjectId -> Game ()
 chooseQuality quality chooser acquisition oid = case quality of
-  ChosenQuality.Colors count -> do
+  ChosenQuality.Colors range -> do
+    let least = ChooseBetween.least range
+        most = ChooseBetween.most range
+    count <-
+      if least == most
+        then pure most
+        else do
+          gs <- State.get
+          answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor chooser gs) chooser oid least (Just most))
+          pure (max least (min most answer))
     let pick chosen _ = do
           picked <- Game.chooseAmong (\decider who -> Prompt.ChooseColor decider who oid) chooser (filter (`Set.notMember` chosen) [minBound .. maxBound :: Color.Color])
           pure (maybe chosen (`Set.insert` chosen) picked)

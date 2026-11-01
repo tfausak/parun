@@ -54,6 +54,7 @@ import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.CantBlockCreatures as CantBlockCreatures
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.ChooseBetween as ChooseBetween
 import qualified Parun.Types.ChooseCardName as ChooseCardName
 import qualified Parun.Types.ChosenPermanents as ChosenPermanents
 import qualified Parun.Types.ChosenQuality as ChosenQuality
@@ -3497,7 +3498,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
           ]
         draw = Effect.Draw (Draw.MkDraw (PlayerRef.InSlot Binding.you) (Quantity.Type.Literal 1) Nothing)
     Monad.forM_
-      [ (Filter.Type.HasChosenColor, ChosenQuality.Colors 1, hasChosenColorCounts, hasChosenColorTag),
+      [ (Filter.Type.HasChosenColor, ChosenQuality.Colors (ChooseBetween.MkChooseBetween 1 1), hasChosenColorCounts, hasChosenColorTag),
         (Filter.Type.HasChosenSubtype, ChosenQuality.BasicLandType, hasChosenSubtypeCounts, hasChosenSubtypeTag)
       ]
       $ \(atom, quality, counts, tag) -> do

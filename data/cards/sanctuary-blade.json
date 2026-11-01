@@ -37,7 +37,10 @@
                 "type": "ChooseQuality",
                 "value": {
                   "type": "Colors",
-                  "value": 1
+                  "value": {
+                    "least": 1,
+                    "most": 1
+                  }
                 }
               }
             }

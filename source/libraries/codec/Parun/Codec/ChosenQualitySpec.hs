@@ -3,6 +3,7 @@ module Parun.Codec.ChosenQualitySpec where
 import qualified Parun.Codec.ChosenQuality as ChosenQuality
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
+import qualified Parun.Types.ChooseBetween as ChooseBetween
 import qualified Parun.Types.ChosenQuality as ChosenQuality
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -11,8 +12,14 @@ spec s = Spec.describe s "Parun.Codec.ChosenQuality" $ do
     Common.assertCodec
       s
       ChosenQuality.codec
-      (ChosenQuality.Colors 2)
-      " {\"type\":\"Colors\",\"value\":2} "
+      (ChosenQuality.Colors (ChooseBetween.MkChooseBetween 2 2))
+      " {\"type\":\"Colors\",\"value\":{\"least\":2,\"most\":2}} "
+  Spec.it s "Colors as a range (Scuttlemutt)" $
+    Common.assertCodec
+      s
+      ChosenQuality.codec
+      (ChosenQuality.Colors (ChooseBetween.MkChooseBetween 1 5))
+      " {\"type\":\"Colors\",\"value\":{\"least\":1,\"most\":5}} "
   Spec.it s "BasicLandType (Convincing Mirage)" $
     Common.assertCodec
       s
