@@ -1597,6 +1597,7 @@ discard resolving source controller legal _ (Discard.AnyNumber (AnyNumberDiscard
         let candidates = handCardsOf context gs victim filter_
             -- Read against the VICTIM, the Counted arm's count's reason.
             ceiling_ = fmap (maybe 0 Integer.toNaturalSaturating . Common.evaluateForRecipient viewOf context gs resolving source victim) atMost
+            -- Not implemented: asking again for an answer over the limit, which is trimmed (#5889).
             capped :: [a] -> [a]
             capped = maybe id (take . Natural.toIntSaturating) ceiling_
         if null candidates || ceiling_ == Just 0

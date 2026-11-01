@@ -40,7 +40,8 @@ data SpellCast = MkSpellCast
     -- Counted over the casts the rest of this record ALREADY admits rather than
     -- over every cast in the log -- the printed sentence puts the ordinal
     -- inside the description ("your second spell", "your first spell during
-    -- each opponent's turn"), so the set counted is the set matched.
+    -- each opponent's turn"), so the set counted is the set matched, narrowed to
+    -- the caster's own ("an opponent casts their second spell").
     --
     -- Which is why the number is not stamped on GameEvent.SpellCast the way CR
     -- 121.1's is stamped on GameEvent.Drew: a draw's ordinal is per player and

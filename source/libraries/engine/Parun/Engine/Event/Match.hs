@@ -195,7 +195,8 @@ crewingsOf bearer gs =
 --
 -- Counted over the casts the SAME condition admits, since the printed sentence
 -- puts the ordinal inside the description -- so the Filter and the zone are
--- applied to each earlier cast too. Each earlier one is read through
+-- applied to each earlier cast too. And over the caster's own alone: Mangara, the
+-- Diplomat's "an opponent casts THEIR second spell" counts per opponent. Each earlier one is read through
 -- Count.snapshotView, the CR 608.2h snapshot its event recorded, because CR
 -- 601.2a's stack incarnation is long gone for every cast but the one being
 -- matched.
@@ -213,10 +214,11 @@ crewingsOf bearer gs =
 -- list holding two Effect.OfferCast would, and the DSL admits one. So the stop
 -- is a fence resting on the rule's ordering rather than a behaviour a test
 -- proves.
-castOrdinal :: Filter.Context -> Filter.Type.Filter Keyword.Type.Keyword -> Maybe Zone -> ObjectId -> GameState -> Maybe Natural
-castOrdinal context predicate fromZone spell gs =
+castOrdinal :: Filter.Context -> Filter.Type.Filter Keyword.Type.Keyword -> Maybe Zone -> PlayerId -> ObjectId -> GameState -> Maybe Natural
+castOrdinal context predicate fromZone caster spell gs =
   let counted cast =
-        maybe True (\z -> SpellWasCast.zone cast == Just z) fromZone
+        SpellWasCast.player cast == caster
+          && maybe True (\z -> SpellWasCast.zone cast == Just z) fromZone
           && maybe False (\view -> Filter.matches context view predicate) (Count.snapshotView (Projection.viewWithLastKnownAnywhere gs) gs EventShape.SpellCast (GameEvent.SpellCast cast))
    in fmap ((1 +) . Natural.length . filter counted) (Game.castsBefore spell gs)
 
@@ -7228,7 +7230,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
                 -- Clarion Spirit's "your SECOND spell each turn", asked LAST so the
                 -- log walk happens only for a cast the rest of the condition
                 -- already admits.
-                && maybe True ((castOrdinal bearerContext f fromZone spell gs ==) . Just) ordinal
+                && maybe True ((castOrdinal bearerContext f fromZone caster spell gs ==) . Just) ordinal
           -- Magecraft's "or copy" (CR 707.10): the player who copied the spell,
           -- the copy's controller, is the one whose "you copy" this is -- not
           -- the copied spell's. data/scenarios/copy's

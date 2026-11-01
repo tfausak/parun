@@ -1032,12 +1032,10 @@ orLastKnown live gs oid = Monad.join (Game.liveOrLastKnown (const (live oid)) (J
 -- your graveyard" (Parun.CountSpec), TOKEN status by Sunpearl Kirin's "if it
 -- was a token",
 -- BLOCKING by Guildsworn Prowler's intervening "if" and ATTACKING by Garna,
--- Bloodfist of Keld's "if it was attacking". The three fields that follow the
--- combat lookup on to the attacked permanent -- attackingPlayer,
--- attackingPlaneswalkerController and attackingBattleProtector -- answer
--- Nothing, and Parun.Types.LastKnown's `attacking` records the query behind
--- that; so does `blockStatus`, Nothing too, whose one printing asks a CR 608.2i
--- question.
+-- Bloodfist of Keld's "if it was attacking", and ATTACK TARGET, attackingPlayer
+-- and attackingPlaneswalkerController, by Mangara, the Diplomat's scenario.
+-- attackingBattleProtector answers Nothing, since no card asks it of a departed
+-- attacker, and `blockStatus` too, whose one printing asks a CR 608.2i question.
 --
 -- `oid` is the id it had, so the turn's log still answers what it did while it
 -- existed (CR 608.2i) -- it attacked, it was dealt damage, it entered -- and
@@ -1070,6 +1068,18 @@ lastKnownView peers oid gs lastKnown =
       )
         { Filter.identity = Just oid,
           Filter.attacking = LastKnown.attacking lastKnown,
+          -- CR 508.1b: what it was attacking as it left (Mangara, the Diplomat's
+          -- ruling), and that planeswalker's controller as it left, which
+          -- docs/decisions.md's "The seat of a departed attacker's planeswalker"
+          -- settles: Combat.removedDefending, since CR 506.4 ends the attack on
+          -- any change from that seat. It lasts the combat, as this read's one
+          -- asker does.
+          Filter.attackingPlayer = case LastKnown.attackTarget lastKnown of
+            Just (AttackTarget.OfPlayer pid) -> Just pid
+            _ -> Nothing,
+          Filter.attackingPlaneswalkerController = case LastKnown.attackTarget lastKnown of
+            Just (AttackTarget.OfPlaneswalker _) -> Map.lookup oid (Combat.removedDefending (GameState.combat gs))
+            _ -> Nothing,
           Filter.blocking = LastKnown.blocking lastKnown,
           Filter.paidCosts = LastKnown.paidCosts lastKnown,
           -- CR 718.3d: the copiable record or the object's own, viewOfCharacteristics'
