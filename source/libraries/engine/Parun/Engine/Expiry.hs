@@ -502,6 +502,9 @@ dropAtCleanup gs =
 -- settleForPriority runs at exactly the points where the board can change, so
 -- checking here is indistinguishable from checking continuously.
 --
+-- Not implemented: ending inside a resolution, as a mana ability's sacrifice
+-- while paying one can make it (#5891).
+--
 -- `changed` is a scan over sourcedExpiries rather than a compare of rebuilt
 -- carriers, and `State.put` is skipped when nothing changed, so a no-op sweep
 -- -- the usual one, since this runs at every settle -- rewrites nothing.

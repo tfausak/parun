@@ -271,6 +271,33 @@ Entries are ordered by the first rule each cites.
   prove it.
 - **Issue**: #4781.
 
+## The seat of a departed attacker's planeswalker
+
+- **Question**: Mangara, the Diplomat rechecks, as its trigger resolves, how
+  many of "those creatures" are attacking you and/or planeswalkers you control.
+  Its ruling reads an attacker that has left by "the player or planeswalker they
+  were attacking before they left". Is "you control" read of that planeswalker
+  as the attacker left, or now, when the planeswalker has since changed
+  controllers? Bob attacks alice's planeswalker with two creatures, both die,
+  bob takes the planeswalker: a draw, or none? Carol attacks alice with one and
+  bob's planeswalker with another, that one dies, alice takes the planeswalker:
+  does it make two?
+- **Rules**: CR 506.4, 506.4c, 508.1b, 603.4, 608.2h; Mangara's ruling of
+  2020-06-23; CR of 2026-08-07.
+- **Decision**: As it left. The attacker's last known information is what it
+  was attacking under whom, so the first board draws and the second counts one.
+- **Rejected**: Now. CR 608.2h gives it a footing, current information of a
+  planeswalker still on the battlefield, but only by reading "you control" as a
+  question about the planeswalker rather than about the attack. It answers with
+  a state no attacker can be in: CR 506.4 ends an attack on a planeswalker whose
+  controller changes, so a creature still attacking would read as attacking
+  nothing, and one that left a moment earlier would read as attacking the new
+  controller, on the second board a player it never attacked.
+- **Site**: `Parun.Engine.Count.lastKnownView`, reading
+  `Combat.removedDefending`. Proved by turns 12 and 17 of the scenario
+  mangara-draws-when-two-attack-you-or-your-planeswalkers-and-for-an-opponents-second-spell.
+- **Issue**: #5890.
+
 ## Who may block a creature attacking nothing
 
 - **Question**: CR 506.4c's creature, its planeswalker or battle removed from

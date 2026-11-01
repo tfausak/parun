@@ -40,6 +40,18 @@
           },
           {
             "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
           }
         ],
         "battlefield": [
@@ -61,8 +73,36 @@
             ]
           },
           {
+            "card": "Chandra, Flame's Catalyst",
+            "label": "w2",
+            "counters": [
+              {
+                "key": {
+                  "type": "Loyalty"
+                },
+                "value": 3
+              }
+            ]
+          },
+          {
+            "card": "Liliana, Death Mage",
+            "label": "w3",
+            "counters": [
+              {
+                "key": {
+                  "type": "Loyalty"
+                },
+                "value": 3
+              }
+            ]
+          },
+          {
             "card": "Labyrinth of Skophos",
             "label": "lab"
+          },
+          {
+            "card": "Reliquary Tower",
+            "label": "rt"
           },
           {
             "card": "Mountain",
@@ -83,6 +123,46 @@
           {
             "card": "Plains",
             "label": "pl4"
+          },
+          {
+            "card": "Mountain",
+            "label": "n1"
+          },
+          {
+            "card": "Mountain",
+            "label": "n2"
+          },
+          {
+            "card": "Mountain",
+            "label": "n3"
+          },
+          {
+            "card": "Mountain",
+            "label": "n4"
+          },
+          {
+            "card": "Mountain",
+            "label": "n5"
+          },
+          {
+            "card": "Mountain",
+            "label": "n6"
+          },
+          {
+            "card": "Mountain",
+            "label": "n7"
+          },
+          {
+            "card": "Mountain",
+            "label": "n8"
+          },
+          {
+            "card": "Mountain",
+            "label": "n9"
+          },
+          {
+            "card": "Mountain",
+            "label": "n10"
           }
         ],
         "hand": [
@@ -93,6 +173,46 @@
           {
             "card": "Lightning Bolt",
             "label": "bolt2"
+          },
+          {
+            "card": "Shock",
+            "label": "as1"
+          },
+          {
+            "card": "Shock",
+            "label": "as2"
+          },
+          {
+            "card": "Lightning Bolt",
+            "label": "x1"
+          },
+          {
+            "card": "Lightning Bolt",
+            "label": "x2"
+          },
+          {
+            "card": "Lightning Bolt",
+            "label": "x3"
+          },
+          {
+            "card": "Lightning Bolt",
+            "label": "x4"
+          },
+          {
+            "card": "Lightning Bolt",
+            "label": "x5"
+          },
+          {
+            "card": "Lightning Bolt",
+            "label": "x6"
+          },
+          {
+            "card": "Lightning Bolt",
+            "label": "x7"
+          },
+          {
+            "card": "Word of Seizing",
+            "label": "wa"
           }
         ],
         "life": 60
@@ -149,6 +269,38 @@
             "ready": true
           },
           {
+            "card": "Grizzly Bears",
+            "label": "b3",
+            "ready": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "b4",
+            "ready": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "b5",
+            "ready": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "b6",
+            "ready": true
+          },
+          {
+            "card": "Mu Yanling, Sky Dancer",
+            "label": "bw",
+            "counters": [
+              {
+                "key": {
+                  "type": "Loyalty"
+                },
+                "value": 30
+              }
+            ]
+          },
+          {
             "card": "Mountain",
             "label": "bm1"
           },
@@ -159,6 +311,14 @@
           {
             "card": "Mountain",
             "label": "bm3"
+          },
+          {
+            "card": "Mountain",
+            "label": "bm4"
+          },
+          {
+            "card": "Mountain",
+            "label": "bm5"
           }
         ],
         "hand": [
@@ -173,6 +333,10 @@
           {
             "card": "Shock",
             "label": "bs3"
+          },
+          {
+            "card": "Word of Seizing",
+            "label": "wb"
           }
         ],
         "life": 60
@@ -226,6 +390,16 @@
           {
             "card": "Grizzly Bears",
             "label": "c2",
+            "ready": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "c3",
+            "ready": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "c4",
             "ready": true
           },
           {
@@ -683,7 +857,8 @@
         "Cast": {
           "object": "$bs3",
           "mana": [
-            "$bm3"
+            "$bm3",
+            null
           ],
           "targets": [
             "$carol"
@@ -817,7 +992,636 @@
       "player": "alice",
       "step": "EndStep",
       "turn": 9
+    },
+    {
+      "do": {
+        "Cast": {
+          "object": "$as1",
+          "mana": [
+            "$m",
+            null
+          ],
+          "targets": [
+            "$bob"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 10
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 10
+    },
+    {
+      "do": {
+        "Cast": {
+          "object": "$as2",
+          "mana": [
+            "$n1",
+            null
+          ],
+          "targets": [
+            "$bob"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 10
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 10
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Island",
+          "count": 7,
+          "player": "alice",
+          "zone": "Hand"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 10
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Shock",
+          "count": 2,
+          "player": "alice",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 10
+    },
+    {
+      "do": {
+        "Attack": []
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 10
+    },
+    {
+      "do": {
+        "Attack": [
+          "$b1",
+          "$b3"
+        ]
+      },
+      "player": "bob",
+      "step": "DeclareAttackers",
+      "turn": 11
+    },
+    {
+      "do": {
+        "ChooseAttackTarget": "$alice"
+      },
+      "player": "bob",
+      "step": "DeclareAttackers",
+      "turn": 11
+    },
+    {
+      "do": {
+        "ChooseAttackTarget": "$w2"
+      },
+      "player": "bob",
+      "step": "DeclareAttackers",
+      "turn": 11
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "DeclareAttackers",
+      "turn": 11
+    },
+    {
+      "do": {
+        "Cast": {
+          "object": "$x1",
+          "mana": [
+            "$n2",
+            null
+          ],
+          "targets": [
+            "$b3"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 11
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 11
+    },
+    {
+      "do": {
+        "Cast": {
+          "object": "$x2",
+          "mana": [
+            "$n3",
+            null
+          ],
+          "targets": [
+            "$w2"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 11
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 11
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 11
+    },
+    {
+      "do": {
+        "Block": {}
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 11
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Island",
+          "count": 8,
+          "player": "alice",
+          "zone": "Hand"
+        }
+      },
+      "player": "alice",
+      "step": "EndStep",
+      "turn": 11
+    },
+    {
+      "do": {
+        "Attack": [
+          "$c2",
+          "$c3",
+          "$c4"
+        ]
+      },
+      "player": "carol",
+      "step": "DeclareAttackers",
+      "turn": 12
+    },
+    {
+      "do": {
+        "ChooseAttackTarget": "$alice"
+      },
+      "player": "carol",
+      "step": "DeclareAttackers",
+      "turn": 12
+    },
+    {
+      "do": {
+        "ChooseAttackTarget": "$alice"
+      },
+      "player": "carol",
+      "step": "DeclareAttackers",
+      "turn": 12
+    },
+    {
+      "do": {
+        "ChooseAttackTarget": "$bw"
+      },
+      "player": "carol",
+      "step": "DeclareAttackers",
+      "turn": 12
+    },
+    {
+      "do": "Pass",
+      "player": "carol",
+      "step": "DeclareAttackers",
+      "turn": 12
+    },
+    {
+      "do": {
+        "Activate": {
+          "object": "$lab",
+          "ability": 1,
+          "targets": [
+            "$c3"
+          ],
+          "mana": [
+            "$pl1",
+            "$pl2",
+            "$pl3",
+            "$pl4",
+            null
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 12
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 12
+    },
+    {
+      "do": {
+        "Cast": {
+          "object": "$x3",
+          "mana": [
+            "$n4",
+            null
+          ],
+          "targets": [
+            "$c4"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 12
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 12
+    },
+    {
+      "do": {
+        "Cast": {
+          "object": "$wa",
+          "mana": [
+            "$n5",
+            "$n6",
+            "$n7",
+            "$n8",
+            "$n9",
+            null
+          ],
+          "targets": [
+            "$bw"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 12
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 12
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 12
+    },
+    {
+      "do": {
+        "Block": {}
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 12
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Island",
+          "count": 8,
+          "player": "alice",
+          "zone": "Hand"
+        }
+      },
+      "player": "alice",
+      "step": "EndStep",
+      "turn": 12
+    },
+    {
+      "do": {
+        "Attack": []
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 13
+    },
+    {
+      "do": {
+        "Attack": [
+          "$b1",
+          "$b4"
+        ]
+      },
+      "player": "bob",
+      "step": "DeclareAttackers",
+      "turn": 14
+    },
+    {
+      "do": {
+        "ChooseAttackTarget": "$alice"
+      },
+      "player": "bob",
+      "step": "DeclareAttackers",
+      "turn": 14
+    },
+    {
+      "do": {
+        "ChooseAttackTarget": "$w3"
+      },
+      "player": "bob",
+      "step": "DeclareAttackers",
+      "turn": 14
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "DeclareAttackers",
+      "turn": 14
+    },
+    {
+      "do": {
+        "Cast": {
+          "object": "$x4",
+          "mana": [
+            "$m",
+            null
+          ],
+          "targets": [
+            "$w3"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 14
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 14
+    },
+    {
+      "do": {
+        "Cast": {
+          "object": "$x5",
+          "mana": [
+            "$n1",
+            null
+          ],
+          "targets": [
+            "$b4"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 14
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 14
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 14
+    },
+    {
+      "do": {
+        "Block": {}
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 14
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Island",
+          "count": 9,
+          "player": "alice",
+          "zone": "Hand"
+        }
+      },
+      "player": "alice",
+      "step": "EndStep",
+      "turn": 14
+    },
+    {
+      "do": {
+        "Attack": []
+      },
+      "player": "carol",
+      "step": "DeclareAttackers",
+      "turn": 15
+    },
+    {
+      "do": {
+        "Attack": []
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 16
+    },
+    {
+      "do": {
+        "Attack": [
+          "$b5",
+          "$b6"
+        ]
+      },
+      "player": "bob",
+      "step": "DeclareAttackers",
+      "turn": 17
+    },
+    {
+      "do": {
+        "ChooseAttackTarget": "$gu"
+      },
+      "player": "bob",
+      "step": "DeclareAttackers",
+      "turn": 17
+    },
+    {
+      "do": {
+        "ChooseAttackTarget": "$gu"
+      },
+      "player": "bob",
+      "step": "DeclareAttackers",
+      "turn": 17
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "DeclareAttackers",
+      "turn": 17
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "DeclareAttackers",
+      "turn": 17
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "DeclareAttackers",
+      "turn": 17
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "DeclareAttackers",
+      "turn": 17
+    },
+    {
+      "do": {
+        "Cast": {
+          "object": "$wb",
+          "mana": [
+            "$bm1",
+            "$bm2",
+            "$bm3",
+            "$bm4",
+            "$bm5"
+          ],
+          "targets": [
+            "$gu"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "DeclareAttackers",
+      "turn": 17
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "DeclareAttackers",
+      "turn": 17
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "DeclareAttackers",
+      "turn": 17
+    },
+    {
+      "do": {
+        "Cast": {
+          "object": "$x6",
+          "mana": [
+            "$m",
+            null
+          ],
+          "targets": [
+            "$b5"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 17
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 17
+    },
+    {
+      "do": {
+        "Cast": {
+          "object": "$x7",
+          "mana": [
+            "$n1",
+            null
+          ],
+          "targets": [
+            "$b6"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 17
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 17
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 17
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 17
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Grizzly Bears",
+          "count": 5,
+          "player": "bob",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "alice",
+      "step": "EndStep",
+      "turn": 17
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Island",
+          "count": 11,
+          "player": "alice",
+          "zone": "Hand"
+        }
+      },
+      "player": "alice",
+      "step": "EndStep",
+      "turn": 17
     }
   ],
-  "note": "Turn 2's two attackers split between alice and carol: no draw. Turn 3 one at alice, one at her planeswalker: draw. Turn 5 the attacker at her planeswalker dies with the trigger on the stack, and turn 9 one attacking her: each's last known attack still counts (ruling). Turn 6 one is removed from combat: no draw. Turn 8 bob's first spell and carol's first are nobody's second; bob's second draws, and bob's third does not."
+  "note": "Turn 2's two attackers split between alice and carol: no draw. Turn 3 one at alice, one at her planeswalker: draw. Turn 5 the attacker at her planeswalker dies with the trigger on the stack, and turn 9 one attacking her: each's last known attack still counts (ruling). Turn 6 one is removed from combat: no draw. Turn 8 bob's first spell and carol's first are nobody's second; bob's second draws, and bob's third does not. Turn 10 alice's own second spell draws nothing. Turn 11 the attacker at a planeswalker dies, then the planeswalker: its attack still counts; turn 14 the planeswalker dies first, so the attacker left attacking nothing (CR 506.4c) and does not. Turns 12 and 17 are docs/decisions.md's seat of a departed attacker's planeswalker, read as the attacker left: taking bob's planeswalker after its attacker died adds nothing, and losing alice's after both of its died takes nothing away."
 }

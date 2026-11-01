@@ -23,68 +23,6 @@
           {
             "clauses": [
               {
-                "condition": {
-                  "type": "Compares",
-                  "value": {
-                    "comparison": {
-                      "type": "LessThan"
-                    },
-                    "measured": {
-                      "type": "Count",
-                      "value": {
-                        "aggregation": {
-                          "type": "Members"
-                        },
-                        "filter": {
-                          "type": "And",
-                          "value": [
-                            {
-                              "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
-                            },
-                            {
-                              "type": "HasKeyword",
-                              "value": {
-                                "type": "Flying"
-                              }
-                            },
-                            {
-                              "type": "HeldBy",
-                              "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "relation": {
-                                  "type": "You"
-                                }
-                              }
-                            }
-                          ]
-                        },
-                        "scope": {
-                          "type": "InZone",
-                          "value": {
-                            "player": {
-                              "type": "Relative",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
-                            },
-                            "zone": {
-                              "type": "Battlefield"
-                            }
-                          }
-                        }
-                      }
-                    },
-                    "threshold": {
-                      "type": "Literal",
-                      "value": 1
-                    }
-                  }
-                },
                 "effects": [
                   {
                     "type": "Counter",
@@ -119,105 +57,137 @@
                       },
                       "slot": "spell"
                     }
-                  }
-                }
-              },
-              {
-                "condition": {
-                  "type": "Compares",
-                  "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
-                    "measured": {
-                      "type": "Count",
-                      "value": {
-                        "aggregation": {
-                          "type": "Members"
-                        },
-                        "filter": {
-                          "type": "And",
-                          "value": [
-                            {
-                              "type": "HasCardType",
-                              "value": {
-                                "type": "Creature"
-                              }
-                            },
-                            {
-                              "type": "HasKeyword",
-                              "value": {
-                                "type": "Flying"
-                              }
-                            },
-                            {
-                              "type": "HeldBy",
-                              "value": {
-                                "holder": {
-                                  "type": "Controller"
-                                },
-                                "relation": {
-                                  "type": "You"
+                  },
+                  "perEach": {
+                    "type": "Plus",
+                    "value": {
+                      "left": {
+                        "type": "Literal",
+                        "value": 1
+                      },
+                      "right": {
+                        "type": "Times",
+                        "value": {
+                          "factor": 3,
+                          "quantity": {
+                            "type": "Quotient",
+                            "value": {
+                              "divisor": {
+                                "type": "Plus",
+                                "value": {
+                                  "left": {
+                                    "type": "Literal",
+                                    "value": 1
+                                  },
+                                  "right": {
+                                    "type": "Count",
+                                    "value": {
+                                      "aggregation": {
+                                        "type": "Members"
+                                      },
+                                      "filter": {
+                                        "type": "And",
+                                        "value": [
+                                          {
+                                            "type": "HasCardType",
+                                            "value": {
+                                              "type": "Creature"
+                                            }
+                                          },
+                                          {
+                                            "type": "HasKeyword",
+                                            "value": {
+                                              "type": "Flying"
+                                            }
+                                          },
+                                          {
+                                            "type": "HeldBy",
+                                            "value": {
+                                              "holder": {
+                                                "type": "Controller"
+                                              },
+                                              "relation": {
+                                                "type": "You"
+                                              }
+                                            }
+                                          }
+                                        ]
+                                      },
+                                      "scope": {
+                                        "type": "InZone",
+                                        "value": {
+                                          "player": {
+                                            "type": "Relative",
+                                            "value": {
+                                              "type": "AnyPlayer"
+                                            }
+                                          },
+                                          "zone": {
+                                            "type": "Battlefield"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
                                 }
+                              },
+                              "quantity": {
+                                "type": "Count",
+                                "value": {
+                                  "aggregation": {
+                                    "type": "Members"
+                                  },
+                                  "filter": {
+                                    "type": "And",
+                                    "value": [
+                                      {
+                                        "type": "HasCardType",
+                                        "value": {
+                                          "type": "Creature"
+                                        }
+                                      },
+                                      {
+                                        "type": "HasKeyword",
+                                        "value": {
+                                          "type": "Flying"
+                                        }
+                                      },
+                                      {
+                                        "type": "HeldBy",
+                                        "value": {
+                                          "holder": {
+                                            "type": "Controller"
+                                          },
+                                          "relation": {
+                                            "type": "You"
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  "scope": {
+                                    "type": "InZone",
+                                    "value": {
+                                      "player": {
+                                        "type": "Relative",
+                                        "value": {
+                                          "type": "AnyPlayer"
+                                        }
+                                      },
+                                      "zone": {
+                                        "type": "Battlefield"
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "rounding": {
+                                "type": "Up"
                               }
-                            }
-                          ]
-                        },
-                        "scope": {
-                          "type": "InZone",
-                          "value": {
-                            "player": {
-                              "type": "Relative",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
-                            },
-                            "zone": {
-                              "type": "Battlefield"
                             }
                           }
                         }
                       }
-                    },
-                    "threshold": {
-                      "type": "Literal",
-                      "value": 1
-                    }
-                  }
-                },
-                "effects": [
-                  {
-                    "type": "Counter",
-                    "value": {
-                      "ref": {
-                        "type": "InSlot",
-                        "value": "spell"
-                      }
-                    }
-                  }
-                ],
-                "payGate": {
-                  "branch": {
-                    "type": "IfNotPaid"
-                  },
-                  "cost": {
-                    "mana": [
-                      {
-                        "type": "Generic",
-                        "value": 4
-                      }
-                    ]
-                  },
-                  "payer": {
-                    "type": "HolderOfBound",
-                    "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "hop": {
-                        "type": "Itself"
-                      },
-                      "slot": "spell"
                     }
                   }
                 }
