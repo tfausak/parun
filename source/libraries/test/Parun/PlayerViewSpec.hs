@@ -51,6 +51,7 @@ import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Looked as Looked
 import qualified Parun.Types.Move as Move
@@ -238,7 +239,7 @@ spec s registry = Spec.describe s "PlayerView" $ do
       Spec.assertEqWith s (seat <> "CR 701.9a both discards") [Discarded.player d | GameEvent.Discarded d <- seen] [S.bob, S.bob]
       Spec.assertEqWith s (seat <> "CR 404.2 both discarded cards landing face up") (Set.fromList [ProjectedCharacteristics.names (Moved.characteristics m) | GameEvent.Moved m <- seen, ZoneChange.from (Moved.change m) == Zone.Hand, ZoneChange.to (Moved.change m) == Zone.Graveyard]) (Set.fromList (fmap (Set.singleton . CardName.MkCardName . Text.pack) ["Hill Giant", "Grizzly Bears"]))
       Spec.assertEqWith s (seat <> "CR 120.3a the damage") [(DamageEvent.amount d, DamageEvent.target d) | GameEvent.DamageDealt d <- seen] [(3, Recipient.ToPlayer S.bob)]
-      Spec.assertEqWith s (seat <> "CR 119.3 the life lost and gained") ([LifeChange.amount l | GameEvent.LifeLost l <- seen], [LifeChange.amount l | GameEvent.LifeGained l <- seen]) ([3], [4])
+      Spec.assertEqWith s (seat <> "CR 119.3 the life lost and gained") ([LifeLost.amount l | GameEvent.LifeLost l <- seen], [LifeChange.amount l | GameEvent.LifeGained l <- seen]) ([3], [4])
       Spec.assertEqWith s (seat <> "drawn") (List.sort (filter (`elem` sentences) (drawnFor pid gs))) (List.sort sentences)
   Spec.it s "CR 508.1 / 509.1 / 510.2 attackers, blockers, combat damage and the creatures that died are witnessed by both seats, by name" $ do
     let setup = S.duel S.declareAttackers [S.settled "bear" "Grizzly Bears", S.settled "giant" "Hill Giant"] [S.settled "lizard" "Lizard Warrior"]

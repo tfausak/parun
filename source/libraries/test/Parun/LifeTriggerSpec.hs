@@ -40,6 +40,7 @@ import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Moved as Moved
 import qualified Parun.Types.Object as Object
@@ -48,12 +49,14 @@ import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.Player as Player
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.PlayerLosesLife as PlayerLosesLife
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggerEntry as TriggerEntry
+import qualified Parun.Types.TriggerFrequency as TriggerFrequency
 import qualified Parun.Types.TriggerSource as TriggerSource
 import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZoneChange as ZoneChange
@@ -1253,7 +1256,7 @@ lifeLossTriggerSpec s registry =
           Spec.assertEqWith
             s
             "thatMuch is the loss and thatPlayer is who lost it"
-            (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.PlayerLosesLife PlayerRelation.Opponent) (GameEvent.LifeLost (LifeChange.MkLifeChange S.bob 7)))
+            (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.PlayerLosesLife (PlayerLosesLife.MkPlayerLosesLife PlayerRelation.Opponent TriggerFrequency.EveryTime)) (GameEvent.LifeLost (LifeLost.MkLifeLost S.bob 7 True)))
             (Map.fromList [(Binding.eventAmount, Binding.toAmount 7), (Binding.triggerPlayer, Binding.toPlayer S.bob)])
         -- The loser is bound under the OTHER relation too, and that is a claim
         -- about the event rather than about the relation: CR 603.2's environment
@@ -1264,7 +1267,7 @@ lifeLossTriggerSpec s registry =
           Spec.assertEqWith
             s
             "thatPlayer names the loser whichever relation matched"
-            (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.PlayerLosesLife PlayerRelation.You) (GameEvent.LifeLost (LifeChange.MkLifeChange S.alice 3)))
+            (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.PlayerLosesLife (PlayerLosesLife.MkPlayerLosesLife PlayerRelation.You TriggerFrequency.EveryTime)) (GameEvent.LifeLost (LifeLost.MkLifeLost S.alice 3 True)))
             (Map.fromList [(Binding.eventAmount, Binding.toAmount 3), (Binding.triggerPlayer, Binding.toPlayer S.alice)])
 
 -- CR 603.2's other half of a life-loss event: the PLAYER it named, not only the

@@ -89,6 +89,7 @@ import qualified Parun.Types.LandPlayed as LandPlayed
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Looked as Looked
 import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
@@ -413,7 +414,7 @@ participants event =
         GameEvent.VotesRevealed ballots -> foldMap ballotParticipants ballots
         GameEvent.SpellCountered c -> ([Countering.countered c, Countering.source c], [])
         GameEvent.AbilityCountered c -> ([Countering.countered c, Countering.source c], [])
-        GameEvent.LifeLost c -> player (LifeChange.player c)
+        GameEvent.LifeLost c -> player (LifeLost.player c)
         GameEvent.LifeGained c -> player (LifeChange.player c)
         GameEvent.AbilityActivated a -> ([AbilityWasActivated.ability a, AbilityWasActivated.source a], [AbilityWasActivated.player a])
         GameEvent.CountersPut c -> one (CounterChange.object c)

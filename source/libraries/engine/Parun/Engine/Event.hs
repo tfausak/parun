@@ -192,6 +192,7 @@ import qualified Parun.Types.LifeGainRewrite as LifeGainRewrite
 import qualified Parun.Types.LifeLossCause as LifeLossCause
 import qualified Parun.Types.LifeLossR as LifeLossR
 import qualified Parun.Types.LifeLossRewrite as LifeLossRewrite
+import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Looked as Looked
 import qualified Parun.Types.MadnessCost as MadnessCost
@@ -326,6 +327,19 @@ import qualified Parun.Types.ZoneChangeR as ZoneChangeR
 -- depth 0, which is what freezes it.
 recordEvent :: GameEvent -> GameState -> GameState
 recordEvent event gs = recordEventOver gs event gs
+
+-- The GameEvent.LifeLost for a loss recorded next, stamped with whether the log
+-- holds an earlier one of the player's. Stamped here because the trigger scan runs
+-- after a whole resolution or cast, when the log no longer says which of two losses
+-- came first. Of losses dealt together only the first recorded is stamped, so
+-- they fire once (Intermediate Chirography's ruling, "your first life-losing
+-- event"). The log's clearing at turn handoff makes it "of the turn".
+lifeLost :: PlayerId -> Natural -> GameState -> GameEvent
+lifeLost pid amount gs =
+  let spent logged = case LoggedEvent.event logged of
+        GameEvent.LifeLost loss -> LifeLost.player loss == pid
+        _ -> False
+   in GameEvent.LifeLost (LifeLost.MkLifeLost {LifeLost.player = pid, LifeLost.amount = amount, LifeLost.first = not (any spent (GameState.events gs))})
 
 -- `recordEvent`, sampling CR 603.10's board off `board` rather than off the state
 -- the entry is appended to: for an event the caller records after the moment it
@@ -688,7 +702,7 @@ payLife :: PlayerId -> Natural -> Game ()
 payLife pid n = do
   settled <- resolveLifeLoss LifeLossCause.ByPayment pid n
   Monad.when (settled /= 0) . State.modify' $
-    recordEvent (GameEvent.LifeLost (LifeChange.MkLifeChange pid settled)) . Game.adjustLife pid (negate (toInteger settled))
+    \gs -> recordEvent (lifeLost pid settled gs) (Game.adjustLife pid (negate (toInteger settled)) gs)
 
 -- CR 110.5b: stamp the tapped status onto an entering permanent, the write shared
 -- by EntryRewrite.Tapped (CR 614.1d), by the declining half of
@@ -9979,13 +9993,13 @@ endOfGameReveals gs = case concatMap (leavingReveals gs) (Map.keys (GameState.ob
 -- loss side takes the same posture.
 changeLife :: PlayerId -> Integer -> Game ()
 changeLife pid delta =
-  Monad.when (delta /= 0) . State.modify' $
+  Monad.when (delta /= 0) . State.modify' $ \gs ->
     recordEvent
       ( if delta > 0
           then GameEvent.LifeGained (LifeChange.MkLifeChange pid (Integer.toNaturalSaturating delta))
-          else GameEvent.LifeLost (LifeChange.MkLifeChange pid (Integer.toNaturalSaturating (negate delta)))
+          else lifeLost pid (Integer.toNaturalSaturating (negate delta)) gs
       )
-      . Game.adjustLife pid delta
+      (Game.adjustLife pid delta gs)
 
 -- CR 121.1, one card at a time per CR 121.2, with CR 614's say first (CR 121.6).
 -- An empty library records the failed draw, which CR 704.5b makes a loss at the

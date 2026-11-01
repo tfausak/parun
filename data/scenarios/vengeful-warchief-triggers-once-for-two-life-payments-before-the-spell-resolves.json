@@ -1,0 +1,163 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Vengeful Warchief",
+            "label": "chief"
+          },
+          {
+            "card": "Gnarlroot Trapper",
+            "label": "t1",
+            "ready": true
+          },
+          {
+            "card": "Gnarlroot Trapper",
+            "label": "t2",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Elvish Warrior",
+            "label": "elf"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "Two life payments in one cast trigger Vengeful Warchief once, ahead of the spell.",
+  "final": [
+    {
+      "Counters": {
+        "count": 1,
+        "kind": {
+          "type": "PlusOnePlusOne"
+        },
+        "object": "$chief"
+      }
+    }
+  ],
+  "note": "Two Gnarlroot Trappers pay life twice in one cast, separate events the trigger scan first sees together: the first of them triggers, once, and the counter lands while the spell waits on the stack (its third ruling). A count of the turn's losses would read two at both and never trigger.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$t1",
+            "$t2"
+          ],
+          "object": "$elf"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "trigger of $chief",
+            "Elvish Warrior"
+          ],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 18,
+          "player": "alice"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "Elvish Warrior"
+          ],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Counters": {
+          "count": 1,
+          "kind": {
+            "type": "PlusOnePlusOne"
+          },
+          "object": "$chief"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

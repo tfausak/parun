@@ -8,8 +8,7 @@ import qualified Parun.Types.PlayerId as PlayerId
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.LifeChange" $ do
-  -- CR 118.2 / 118.3. Shared by GameEvent's LifeLost and LifeGained, which is
-  -- why the record is named for its shape rather than for either arm.
+  -- CR 119.3.
   Spec.it s "MkLifeChange, both keys" $
     Common.assertCodec
       s

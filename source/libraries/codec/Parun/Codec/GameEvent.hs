@@ -37,6 +37,7 @@ import qualified Parun.Codec.HalfUnlocked as HalfUnlocked
 import qualified Parun.Codec.LandPlayed as LandPlayed
 import qualified Parun.Codec.LeftTheGame as LeftTheGame
 import qualified Parun.Codec.LifeChange as LifeChange
+import qualified Parun.Codec.LifeLost as LifeLost
 import qualified Parun.Codec.Looked as Looked
 import qualified Parun.Codec.ManaAbilityResolved as ManaAbilityResolved
 import qualified Parun.Codec.ManaAdded as ManaAdded
@@ -101,7 +102,7 @@ codec =
       Arm.payload "VotesRevealed" (Common.seq Ballot.codec) GameEvent.VotesRevealed (\x -> case x of GameEvent.VotesRevealed y -> Just y; _ -> Nothing),
       Arm.payload "SpellCountered" Countering.codec GameEvent.SpellCountered (\x -> case x of GameEvent.SpellCountered y -> Just y; _ -> Nothing),
       Arm.payload "AbilityCountered" Countering.codec GameEvent.AbilityCountered (\x -> case x of GameEvent.AbilityCountered y -> Just y; _ -> Nothing),
-      Arm.payload "LifeLost" LifeChange.codec GameEvent.LifeLost (\x -> case x of GameEvent.LifeLost y -> Just y; _ -> Nothing),
+      Arm.payload "LifeLost" LifeLost.codec GameEvent.LifeLost (\x -> case x of GameEvent.LifeLost y -> Just y; _ -> Nothing),
       Arm.payload "LifeGained" LifeChange.codec GameEvent.LifeGained (\x -> case x of GameEvent.LifeGained y -> Just y; _ -> Nothing),
       Arm.payload "AbilityActivated" AbilityWasActivated.codec GameEvent.AbilityActivated (\x -> case x of GameEvent.AbilityActivated y -> Just y; _ -> Nothing),
       Arm.payload "CountersPut" CounterChange.codec GameEvent.CountersPut (\x -> case x of GameEvent.CountersPut y -> Just y; _ -> Nothing),

@@ -70,7 +70,7 @@ import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
-import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.Moved as Moved
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
@@ -272,7 +272,7 @@ spec s registry = Spec.describe s "Range of influence" $ do
   -- alone, and from its positive pair in which opponent lost the life.
   Spec.it s "CR 801.11 an opponent's life loss outside range raises no speed" $ do
     let fast = S.fourPlayerGame {GameState.players = Map.adjust (\p -> p {Player.speed = Just 1}) S.alice (GameState.players S.fourPlayerGame)}
-        losing pid = S.withEvents [GameEvent.LifeLost (LifeChange.MkLifeChange pid 2)] fast
+        losing pid = S.withEvents [GameEvent.LifeLost (LifeLost.MkLifeLost pid 2 True)] fast
         settle gs =
           let placed = S.runPure S.identityAnswer gs (Engine.placePendingTriggers [])
            in if null (GameState.stack placed) then placed else S.runPure S.identityAnswer placed Stack.resolveTop

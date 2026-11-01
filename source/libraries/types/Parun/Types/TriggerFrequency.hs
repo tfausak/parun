@@ -11,9 +11,9 @@ module Parun.Types.TriggerFrequency where
 -- rides the ABILITY and states "this ability triggers only once", each turn or
 -- each game, where this narrows one condition's EVENT.
 --
--- Load-bearing on the one card that carries it: Aurelia adds a combat phase when
--- she attacks (CR 500.8), so without the narrowing she attacks again in the phase
--- she added, adds another, and the turn never ends.
+-- Load-bearing on Aurelia: she adds a combat phase when she attacks (CR 500.8),
+-- so without the narrowing she attacks again in the phase she added, adds another,
+-- and the turn never ends.
 data TriggerFrequency
   = -- | CR 603.2c: every occurrence of the trigger event counts.
     EveryTime

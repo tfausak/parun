@@ -65,6 +65,7 @@ import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LifeChange as LifeChange
 import qualified Parun.Types.LifeDirection as LifeDirection
+import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import Parun.Types.Mana (Mana)
@@ -3851,7 +3852,7 @@ lifeChangeOf direction event = case event of
   -- CR 119.3's other sign. A loss is not a negative gain: "the amount of life you
   -- gained this turn" is not reduced by life lost since, and a loss stays a loss
   -- whatever is gained after it (First Response's ruling, 2020-11-10).
-  GameEvent.LifeLost change -> toward LifeDirection.Lost change
+  GameEvent.LifeLost (LifeLost.MkLifeLost pid amount _) -> toward LifeDirection.Lost (LifeChange.MkLifeChange pid amount)
   GameEvent.Moved {} -> Nothing
   GameEvent.Discarded {} -> Nothing
   GameEvent.Drew {} -> Nothing

@@ -45,7 +45,9 @@
           "condition": {
             "type": "PlayerLosesLife",
             "value": {
-              "type": "AnyPlayer"
+              "player": {
+                "type": "AnyPlayer"
+              }
             }
           },
           "modal": {

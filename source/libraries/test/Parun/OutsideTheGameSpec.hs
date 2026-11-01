@@ -80,7 +80,7 @@ import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.LeftTheGame as LeftTheGame
-import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.MergeComponent as MergeComponent
 import qualified Parun.Types.Moved as Moved
@@ -778,7 +778,7 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
         -- Scoped to bob, the player CR 729.1b makes pay: today he is the only
         -- main-game life-loser, but an unscoped match would also catch alice's.
         isLifeLoss e = case e of
-          GameEvent.LifeLost change -> LifeChange.player change == S.bob
+          GameEvent.LifeLost change -> LifeLost.player change == S.bob
           _ -> False
         isShredderCounter e = case e of
           GameEvent.CountersPut change -> CounterChange.object change == shredderId

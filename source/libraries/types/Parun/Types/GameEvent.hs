@@ -32,6 +32,7 @@ import qualified Parun.Types.HalfUnlocked as HalfUnlocked
 import qualified Parun.Types.LandPlayed as LandPlayed
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.Looked as Looked
 import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
 import qualified Parun.Types.ManaAdded as ManaAdded
@@ -263,7 +264,7 @@ data GameEvent
     -- player pay. A reader asking "did this player lose life" must find all three.
     -- LifeGained below is the sibling rather than one "life total changed" arm,
     -- the two being distinct events for triggers.
-    LifeLost LifeChange.LifeChange
+    LifeLost LifeLost.LifeLost
   | -- | CR 119.3's other direction: a player GAINED life, and how much. Greater
     -- than 0, which CR 119.9 states outright. Recorded at both places a source
     -- causes a life total to go up: CR 119.3's instructed gain, and CR 120.3f's
