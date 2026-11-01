@@ -146,6 +146,7 @@ zonesFunctionedAgainst itself delayed effect = case effect of
     ObjectRef.ChosenPermanents _ -> Set.empty
     ObjectRef.AttachedToBound _ -> Set.empty
     -- The object may be in any zone by now.
+    ObjectRef.AttackedBy _ -> Set.empty
     ObjectRef.FromAnywhere _ -> Set.empty
     -- CR 608.2f's one action on several objects moves the object it's on when
     -- any member names it: Sandman, Shifting Scoundrel's "return this card and

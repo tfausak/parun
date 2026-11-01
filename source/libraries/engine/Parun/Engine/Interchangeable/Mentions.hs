@@ -2284,6 +2284,7 @@ objectRefNames asking x = case x of
   ObjectRef.AtRandom inner -> objectRefNames asking inner
   ObjectRef.ChosenPermanents chosenPermanents -> chosenPermanentsNames asking chosenPermanents
   ObjectRef.AttachedToBound attachedToBound -> attachedToBoundNames asking attachedToBound
+  ObjectRef.AttackedBy slot -> slotNames asking slot
   ObjectRef.FromAnywhere fromAnywhere -> history asking HistoryRead.Moves <> fromAnywhereNames asking fromAnywhere
   ObjectRef.AllOf refs -> foldMap (objectRefNames asking) refs
 

@@ -46,7 +46,7 @@ import qualified Parun.Engine.Projection.Rewrite as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Quantity as Quantity
 import qualified Parun.Engine.Replacement as Replacement
-import Parun.Engine.Resolve.Slots (boundSlots, chosenCandidates, effectContext, effectObjectRefs, effectPlayerRefs, effectViewOf, graveyardCardsOf, handCardsOf, legalMany, legalOne, libraryCardsOf, matchingFromAmong, objectRefObjects, playerRefPlayers, playerRefSlots, replacementRowSlots, resolutionReads, resolvingAbilityName, resolvingKind, slotBindings, slotGroup)
+import Parun.Engine.Resolve.Slots (attackedBy, boundSlots, chosenCandidates, effectContext, effectObjectRefs, effectPlayerRefs, effectViewOf, graveyardCardsOf, handCardsOf, legalMany, legalOne, libraryCardsOf, matchingFromAmong, objectRefObjects, playerRefPlayers, playerRefSlots, replacementRowSlots, resolutionReads, resolvingAbilityName, resolvingKind, slotBindings, slotGroup)
 import qualified Parun.Engine.Restamp as Restamp
 import qualified Parun.Engine.Room as Room
 import qualified Parun.Engine.SourceContext as SourceContext
@@ -67,6 +67,7 @@ import qualified Parun.Types.AnyNumberMatching as AnyNumberMatching
 import qualified Parun.Types.AnyNumberOf as AnyNumberOf
 import qualified Parun.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import qualified Parun.Types.ArrangedArrival as ArrangedArrival
+import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.Ballot as Ballot
 import qualified Parun.Types.Binding as Binding.Type
 import qualified Parun.Types.Card as Card.Type
@@ -762,6 +763,7 @@ askingObjects resolving source controller legal chosen ref = case ref of
   ObjectRef.TopOfGraveyard _ -> swept
   ObjectRef.EachCardFromAmong _ -> swept
   ObjectRef.AttachedToBound _ -> swept
+  ObjectRef.AttackedBy _ -> swept
   ObjectRef.FromAnywhere _ -> swept
   where
     swept :: Game [ObjectId]
@@ -1151,6 +1153,14 @@ objectRefRecipients legal resolving controller source gs ref = case ref of
   ObjectRef.ChosenPermanents _ -> []
   -- A read, so the sweep answers it.
   ObjectRef.AttachedToBound _ -> fmap Recipient.ToObject (objectRefObjects legal resolving controller source gs ref)
+  -- CR 120.3a: the attacked player is a damage recipient, and the attacked
+  -- permanent is named by its own CR 115.4 tag, as Damage.combatRecipient names it.
+  ObjectRef.AttackedBy slot ->
+    let attacked target = case target of
+          AttackTarget.OfPlayer pid -> Recipient.ToPlayer pid
+          AttackTarget.OfPlaneswalker oid -> Recipient.ToPlaneswalker oid
+          AttackTarget.OfBattle oid -> Recipient.ToBattle oid
+     in fmap attacked (attackedBy legal resolving controller source gs slot)
   -- A read, so the sweep answers it.
   ObjectRef.FromAnywhere _ -> fmap Recipient.ToObject (objectRefObjects legal resolving controller source gs ref)
   -- Each ref's recipients in the order written, one named twice named once.

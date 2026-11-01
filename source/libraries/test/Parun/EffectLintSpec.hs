@@ -1422,6 +1422,7 @@ questionOf ref = case ref of
     HowMany.Exactly _ -> Just SeveralPermanents
     HowMany.UpTo _ -> Just PermanentsUpTo
   ObjectRef.AttachedToBound {} -> Nothing
+  ObjectRef.AttackedBy {} -> Nothing
   ObjectRef.FromAnywhere {} -> Nothing
   -- The first question a member puts, so a member that asks is fenced as it would be alone.
   ObjectRef.AllOf refs -> Foldable.asum (fmap questionOf refs)
@@ -2169,6 +2170,8 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
           ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents _ _ count _) -> atMostOne count
           -- FALSE: every attachment to a host moves, however many there are.
           ObjectRef.AttachedToBound _ -> False
+          -- TRUE, InSlot's answer: what the slot's creature attacks.
+          ObjectRef.AttackedBy _ -> True
           -- TRUE, InSlot's answer: the slot's object, followed.
           ObjectRef.FromAnywhere _ -> True
           -- TRUE: one draw names one object, however many the pool holds.
