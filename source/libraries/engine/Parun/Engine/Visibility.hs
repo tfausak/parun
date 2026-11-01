@@ -158,9 +158,8 @@ base pid oid gs = case Game.lookupObject oid gs of
   Nothing -> Visibility.Obscured
   Just obj -> case Game.zoneOf oid gs of
     Nothing -> visibleIf (Object.owner obj == pid) -- CR 400.11
-    -- Not implemented: CR 401.5's new top card, changed while a spell is being
-    -- cast or an ability activated or a special action taken, is shown at once
-    -- rather than after (#5003).
+    -- Not implemented: CR 401.5's new top card, changed while a special action
+    -- is taken, is shown at once rather than after (#5003).
     Just Zone.Library -> shownTo pid oid gs -- CR 401.2, 401.5
     Just Zone.Hand ->
       if Game.keptFaceDown oid gs
@@ -180,9 +179,7 @@ shownTo seat oid gs = case Game.lookupObject oid gs of
   Nothing -> Visibility.Obscured
   Just obj ->
     let owner = Object.owner obj
-        isTop = case Game.zoneMembers Zone.Library owner gs of
-          top : _ -> top == oid
-          [] -> False
+        isTop = Game.shownTop owner gs == Just oid
         reaches grant = case Shows.to grant of
           Audience.Everyone -> True
           Audience.ThatPlayer -> seat == owner

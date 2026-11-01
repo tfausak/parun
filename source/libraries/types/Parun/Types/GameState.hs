@@ -381,6 +381,10 @@ data GameState = MkGameState
     -- kept face down in its hand with no characteristics, keyed to the ordinal
     -- GameEvent.Drew stamped on its draw.
     keptFaceDown :: Maybe (Map.Map ObjectId.ObjectId Natural.Natural),
+    -- | CR 401.5: Nothing unless a spell is being cast or an ability activated
+    -- (Parun.Engine.Event.announcing); then each library's top card as it
+    -- began, the only one that stays shown until it ends (Game.shownTop).
+    announcedTops :: Maybe (Map.Map PlayerId.PlayerId ObjectId.ObjectId),
     -- | CR 801.2c: the players who have left the game since this turn began,
     -- whose seats still count toward range of influence until the next turn
     -- begins; cleared at turn handoff.

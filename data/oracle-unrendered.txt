@@ -487,6 +487,7 @@ conquer
 consecrate-consume
 consecrate-land
 consecrated-by-blood
+conspicuous-snoop
 constricting-sliver
 consuls-lieutenant
 consume-spirit

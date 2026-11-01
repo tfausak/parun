@@ -496,8 +496,8 @@ affectedNames oid source gs affected = case affected of
 --   * The per-object budgets and notes: GameState.activatedThisTurn (CR
 --     602.5b), castPermissionsUsedThisTurn (CR 601.3), rollModifiersUsedThisTurn
 --     (CR 706.2), namedCopyChoices (CR 707.13), notedCards (CR 707.14),
---     notedMana (CR 607.2e), keptFaceDown (CR 121.8) and outsideCopies (CR
---     400.11), each keyed by the object it is about; and the logs
+--     notedMana (CR 607.2e), keptFaceDown (CR 121.8), announcedTops (CR 401.5)
+--     and outsideCopies (CR 400.11), each keyed by the object it is about; and the logs
 --     triggeredThisGame (a "triggers only once" rider's spent triggerings),
 --     activationsThisTurn (CR 602.2) and attacksInOwnLastTurn (CR 508.1a), by
 --     the object each entry names.
@@ -552,6 +552,7 @@ namedByRelation oid gs =
         || keyed (GameState.notedCards gs)
         || keyed (GameState.notedMana gs)
         || maybe False keyed (GameState.keptFaceDown gs)
+        || maybe False (elem oid) (GameState.announcedTops gs)
         || Set.member oid (GameState.outsideCopies gs)
         || any (triggeredNames oid) (GameState.triggeredThisGame gs)
         || any (activationNames oid) (GameState.activationsThisTurn gs)

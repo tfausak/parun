@@ -106,6 +106,7 @@ import qualified Parun.Types.CantAttackPlayer as CantAttackPlayer
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.CantBlockCreatures as CantBlockCreatures
 import qualified Parun.Types.Card as Card.Type
+import qualified Parun.Types.CardAbilities as CardAbilities
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
@@ -224,7 +225,6 @@ import qualified Parun.Types.ExileCardsFromHand as ExileCardsFromHand
 import qualified Parun.Types.ExileFromGraveyard as ExileFromGraveyard
 import qualified Parun.Types.ExileMaterials as ExileMaterials
 import qualified Parun.Types.ExilePermanents as ExilePermanents
-import qualified Parun.Types.ExiledCardAbilities as ExiledCardAbilities
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.FaceDownCharacteristics as FaceDownCharacteristics
 import qualified Parun.Types.FaceDownState as FaceDownState
@@ -1031,7 +1031,7 @@ modificationCounts modification = case modification of
   Modification.GainAbilitiesOfSource _ -> []
   -- The rider's CR 602.5 conditions; the abilities are the exiled cards', and
   -- their Filter's Counts are reached through modificationFilters.
-  Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities _ extra) -> concatMap conditionCounts (concatMap restrictionConditions extra)
+  Modification.GainCardAbilities (CardAbilities.MkCardAbilities _ _ extra) -> concatMap conditionCounts (concatMap restrictionConditions extra)
   Modification.GainAbilitiesOfStickers -> []
   Modification.LoseAllAbilities -> []
   -- Carries a name, which reaches no Count.
@@ -4546,7 +4546,7 @@ modificationFilters modification = case modification of
   Modification.GainAbilitiesOfSource _ -> []
   -- The rider's CR 602.5 conditions, as a printed ability's are swept, and the
   -- Filter naming the exiled cards.
-  Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities cards extra) -> (Unframed, cards) : frame Unframed (concatMap conditionFilters (concatMap restrictionConditions extra))
+  Modification.GainCardAbilities (CardAbilities.MkCardAbilities _ cards extra) -> (Unframed, cards) : frame Unframed (concatMap conditionFilters (concatMap restrictionConditions extra))
   Modification.GainAbilitiesOfStickers -> []
   Modification.SetBasePowerToughness (SetBasePowerToughness.MkSetBasePowerToughness p t) -> foldMap quantityFilters p <> foldMap quantityFilters t
   Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness p t) -> quantityFilters p <> quantityFilters t

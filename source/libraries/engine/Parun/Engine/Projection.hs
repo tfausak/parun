@@ -50,6 +50,7 @@ import qualified Parun.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import qualified Parun.Types.BattlefieldCandidate as BattlefieldCandidate
 import qualified Parun.Types.Binding as Binding.Type
 import qualified Parun.Types.Card as Card.Type
+import qualified Parun.Types.CardAbilities as CardAbilities
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.ChangeMode as ChangeMode
@@ -75,7 +76,6 @@ import qualified Parun.Types.DistinctOf as DistinctOf
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EntryR as EntryR
 import qualified Parun.Types.EntryRewrite as EntryRewrite
-import qualified Parun.Types.ExiledCardAbilities as ExiledCardAbilities
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.FaceDownState as FaceDownState
 import qualified Parun.Types.Facing as Facing
@@ -91,6 +91,7 @@ import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.LastKnown as LastKnown
 import Parun.Types.Layer (Layer)
 import qualified Parun.Types.Layer as Layer
+import qualified Parun.Types.LentCards as LentCards
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.Loyalty as Loyalty
 import qualified Parun.Types.Mana as Mana
@@ -161,7 +162,7 @@ layer m = case m of
   Modification.GainCastingPermission _ -> Layer.Ability
   Modification.GainAbility _ -> Layer.Ability
   Modification.GainAbilitiesOfSource _ -> Layer.Ability
-  Modification.GainExiledCardAbilities _ -> Layer.Ability
+  Modification.GainCardAbilities _ -> Layer.Ability
   Modification.GainAbilitiesOfStickers -> Layer.Ability
   Modification.LoseAllAbilities -> Layer.Ability
   -- CR 613.1f again, and the same layer as the wipe above: what differs is the
@@ -356,8 +357,8 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- put in GameState.continuousEffects. The identity keeps the walk total,
         -- which is the posture SetController's arm below takes.
         Modification.GainAbilitiesOfSource _ -> pc
-        -- CR 613.1f / 607.2a: the activated abilities of each card in exile the
-        -- payload's Filter matches, framed by `src`, read off its copiable values
+        -- CR 613.1f / 607.2a: the activated abilities of each card the payload
+        -- walks that its Filter matches, framed by `src`, read off its copiable values
         -- (CR 707.2), each with the payload's restrictions added. Like
         -- GainAbility above, the receiver is their source (CR 113.7). The
         -- Filter's IsExiledWithSource reads as no ability of `src`'s
@@ -369,7 +370,7 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- 607.5 an acquired one only to its own pair.
         --
         -- CR 602.5c / 607.5: each is named for the card it came from and its
-        -- own name (Binding.exiledCardAbility), so two identically worded
+        -- own name (Binding.lentCardAbility), so two identically worded
         -- abilities from two cards are two to a restriction on their use, and
         -- a named one is not the holder's own ability of that name. A name
         -- stated inside it means its twin from the same card
@@ -382,13 +383,22 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- data/scenarios/mairsil-the-pretender-activates-each-caged-ability-once-each-turn.json,
         -- and two cards' identically worded abilities by
         -- data/scenarios/mairsil-the-pretender-a-twin-ability-from-another-card-is-not-spent.json.
-        Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities criterion extra) ->
-          let cards = filter (maybe False (\view -> Filter.matches context view criterion) . viewOf) (Set.toAscList (GameState.exile gs))
-              named card a = a {ActivatedAbility.name = Just (Binding.exiledCardAbility card (ActivatedAbility.name a))}
-              -- CR 113.6 / 702.178b: a card has, in exile, only the "as long
+        --
+        -- CR 401.5: atop a library, only a card that is shown: a new top card
+        -- lends nothing until the spell becomes cast or the ability activated
+        -- (Game.shownTop, the ruling on Conspicuous Snoop). Not implemented: CR
+        -- 401.6's new object, for a card returned to the top from within its
+        -- library (#5897).
+        Modification.GainCardAbilities (CardAbilities.MkCardAbilities from criterion extra) ->
+          let (zone, lenders) = case from of
+                LentCards.InExile -> (Zone.Exile, Set.toAscList (GameState.exile gs))
+                LentCards.TopOfYourLibrary -> (Zone.Library, foldMap (\you -> Maybe.maybeToList (Game.shownTop you gs)) (controllerOf src gs))
+              cards = filter (maybe False (\view -> Filter.matches context view criterion) . viewOf) lenders
+              named card a = a {ActivatedAbility.name = Just (Binding.lentCardAbility card (ActivatedAbility.name a))}
+              -- CR 113.6 / 702.178b: a card has, where it is, only the "as long
               -- as" grants that function there (AbilityZone.grantFunctionsIn).
-              inExile card = let copied = copiableCharacteristics card gs in filter (AbilityZone.grantFunctionsIn Zone.Battlefield (PC.delayedAbilities copied) Zone.Exile) (PC.activatedAbilities copied)
-              gained = foldMap (\card -> fmap (named card) (inExile card)) cards
+              lent card = let copied = copiableCharacteristics card gs in filter (AbilityZone.grantFunctionsIn Zone.Battlefield (PC.delayedAbilities copied) zone) (PC.activatedAbilities copied)
+              gained = foldMap (\card -> fmap (named card) (lent card)) cards
               restricted a = a {ActivatedAbility.restrictions = ActivatedAbility.restrictions a <> extra}
            in pc {PC.activatedAbilities = PC.activatedAbilities pc <> fmap restricted gained}
         -- CR 613.1f / 123.7a: the abilities printed on the ability stickers on
@@ -777,7 +787,7 @@ cardTypesAfter m types = case m of
   Modification.GainCastingPermission _ -> types
   Modification.GainAbility _ -> types
   Modification.GainAbilitiesOfSource _ -> types
-  Modification.GainExiledCardAbilities _ -> types
+  Modification.GainCardAbilities _ -> types
   Modification.GainAbilitiesOfStickers -> types
   Modification.LoseAllAbilities -> types
   Modification.LoseNamedAbility _ -> types
@@ -1604,7 +1614,7 @@ freezeQuantities viewOf gs announcedOn source context m =
         -- variable in this effect, not in a quoted ability's own future one.
         Modification.GainAbility _ -> Just m
         Modification.GainAbilitiesOfSource _ -> Just m
-        Modification.GainExiledCardAbilities _ -> Just m
+        Modification.GainCardAbilities _ -> Just m
         Modification.GainAbilitiesOfStickers -> Just m
         Modification.LoseAllAbilities -> Just m
         Modification.LoseNamedAbility _ -> Just m
@@ -1675,7 +1685,7 @@ quantitiesOf m = case m of
   -- The layer fold evaluates nothing inside a quoted ability.
   Modification.GainAbility _ -> []
   Modification.GainAbilitiesOfSource _ -> []
-  Modification.GainExiledCardAbilities _ -> []
+  Modification.GainCardAbilities _ -> []
   Modification.GainAbilitiesOfStickers -> []
   Modification.LoseAllAbilities -> []
   Modification.LoseNamedAbility _ -> []
@@ -1729,7 +1739,7 @@ referenceQuery m = case m of
   Modification.GainCastingPermission _ -> Nothing
   Modification.GainAbility _ -> Nothing
   Modification.GainAbilitiesOfSource _ -> Nothing
-  Modification.GainExiledCardAbilities _ -> Nothing
+  Modification.GainCardAbilities _ -> Nothing
   Modification.GainAbilitiesOfStickers -> Nothing
   Modification.LoseAllAbilities -> Nothing
   Modification.LoseNamedAbility _ -> Nothing
@@ -1790,7 +1800,7 @@ setsLandSubtype m = case m of
   -- An ability grant is layer 6 and sets no subtype at all.
   Modification.GainAbility _ -> False
   Modification.GainAbilitiesOfSource _ -> False
-  Modification.GainExiledCardAbilities _ -> False
+  Modification.GainCardAbilities _ -> False
   Modification.GainAbilitiesOfStickers -> False
   Modification.GainKeyword _ -> False
   Modification.GainKeywordAtManaCost _ -> False
@@ -2241,7 +2251,7 @@ wordSwapOf m = case m of
 --
 -- Three ability losses: CR 305.7's land-subtype strip (liveGiven) drops the
 -- permanent outright, CR 613.1f's layer-6 removal (abilitiesRemovedBy) drops only
--- an ability whose every part lands after layer 6, and CR 604.2's "as long as"
+-- an ability with no part below layer 6 (removalReaches), and CR 604.2's "as long as"
 -- gate drops one whose clause is currently false. Neither of the first two
 -- touches a stored effect or a counter (CR 611.2a; CR 122.1a/613.4c). The last
 -- needs a projection, so it is answered against the SEED list below, which is
@@ -2613,8 +2623,7 @@ gatherGiven stripped functioning seed gs =
 -- the fold judges. They are the receiver's rules text rather than a grant, so
 -- they take its own timestamp (CR 613.7a), go before its granted ones in the
 -- index, and answer to CR 613.1f's and CR 305.7's removals as a printed ability
--- does (permanentParts) -- a regression fence, since Lord of Atlantis's
--- ability starts applying in layer 6, which neither removal reaches. The fold
+-- does (permanentParts) -- a regression fence: no test takes one away. The fold
 -- has already applied CR 612.1's word swaps to them, so none is applied here. The generating ability itself goes on being
 -- gathered off the copiable values though its text is gone, which is CR 613.6.
 -- Parun.ProjectionSpec's "CR 612.6 the Shapeshifter as Lord of Atlantis pumps
@@ -2652,7 +2661,7 @@ withStaticGrants stripped setStripped functioning gs base =
       Nothing -> []
       Just obj ->
         let offset = List.genericLength (staticAbilitiesOf oid gs) + List.genericLength (grantedStaticAbilitiesOf oid gs) :: Natural
-            removed sa lowest = (lowest > Layer.Ability && stripped (StaticAbility.name sa) (const True) oid) || (lowest > Layer.Type && setStripped oid)
+            removed sa lowest = (removalReaches sa lowest && stripped (StaticAbility.name sa) (const True) oid) || (lowest > Layer.Type && setStripped oid)
             fromText n sa =
               if functionsFromZone Zone.Battlefield sa
                 then gatherStatic (functioning oid) oid (staticTimestampOf oid obj gs) [] (removed sa) n sa
@@ -2781,7 +2790,7 @@ permanentParts stripped functioning setEffs setStripped gs permId = case Game.lo
         -- the removal order and the Blood Moon case through Streetwise
         -- Negotiator.
         granted n (grantTs, sa) =
-          let removedAfter lowest = lowest > Layer.Ability && stripped (StaticAbility.name sa) ((> grantTs) . gTimestamp) permId
+          let removedAfter lowest = removalReaches sa lowest && stripped (StaticAbility.name sa) ((> grantTs) . gTimestamp) permId
            in if functionsFromZone Zone.Battlefield sa
                 then fmap ((,) n) (gatherStatic (functioning permId) permId (max (Object.timestamp permObj) grantTs) [] removedAfter n sa)
                 else []
@@ -2809,7 +2818,7 @@ permanentParts stripped functioning setEffs setStripped gs permId = case Game.lo
           -- again, counting a removal of its name too.
           wiped = stripped Nothing (const True) permId
           removed sa lowest =
-            (lowest > Layer.Ability && maybe wiped (\n -> stripped (Just n) (const True) permId) (StaticAbility.name sa))
+            (removalReaches sa lowest && maybe wiped (\n -> stripped (Just n) (const True) permId) (StaticAbility.name sa))
               || (lowest > Layer.Type && setStripped permId)
           -- Bound here, OUTSIDE the zipWith, so every ability shares it.
           ts = staticTimestampOf permId permObj gs
@@ -3038,7 +3047,7 @@ removesAbilities m = case m of
   -- green.
   Modification.GainAbility _ -> False
   Modification.GainAbilitiesOfSource _ -> False
-  Modification.GainExiledCardAbilities _ -> False
+  Modification.GainCardAbilities _ -> False
   Modification.GainAbilitiesOfStickers -> False
   -- CR 305.7 strips a land's rules text, but as a layer-4 type change performed
   -- by setLandSubtypeTo and the two gates beside it, never a layer-6 removal.
@@ -3105,9 +3114,7 @@ removesNamed name m = case m of
 -- THROUGH, so filtering it would answer the question against a board the game
 -- does not have.
 --
--- CR 613.6's rescue falls out of reading the removers off the same candidate
--- list: an ability-removing effect is itself a layer-6 part, so an ability
--- carrying one is never gated by this.
+-- An ability carrying a removal is never gated by this (removalReaches).
 --
 -- Each remover's affected set is judged at CR 613.6's decision point (gLowest),
 -- not at layer 6. For a static ability's remover it is not re-derived:
@@ -3176,6 +3183,20 @@ grantedDefiningParts m = case m of
   Modification.GainKeyword Keyword.Type.Changeling -> m NonEmpty.:| [Modification.AddEveryCreatureSubtype]
   _ -> m NonEmpty.:| []
 
+-- Can a layer-6 removal cost this ability its effect, `lowest` being CR 613.6's
+-- decision layer? An ability with a part below layer 6 has started to apply, so
+-- CR 613.6 keeps it. One starting IN layer 6 depends on the removal (CR 613.8a's
+-- "existence"), so CR 613.8b applies the removal first, in either timestamp
+-- order, and it never starts. Parun.ProjectionSpec's "CR 613.8a Humility" group
+-- proves it for a printed ability, a full text's and a stored grant's, and
+-- data/scenarios/conspicuous-snoop-lends-nothing-under-*-humility.json for one
+-- lending abilities.
+--
+-- Not implemented: an ability that itself removes abilities waiting on a removal
+-- of its source; it stays in the fold's timestamp order (#5899).
+removalReaches :: StaticAbility.StaticAbility (GrantedAbility.GrantedAbility Card.Type.Card) -> Layer -> Bool
+removalReaches sa lowest = lowest > Layer.Ability || (lowest == Layer.Ability && not (any removesAbilities (staticParts [] sa)))
+
 -- One static ability's parts, ready to fold: CR 613.6's unit. (src, n) is the
 -- key every part carries, so projectWith can tell that a layer-4 part and a
 -- layer-7b part are one effect sharing one affected set, and so the fold's
@@ -3184,9 +3205,8 @@ grantedDefiningParts m = case m of
 -- CR 612: text changes affecting the SOURCE rewrite each part's subtype words
 -- first.
 --
--- `stripped` is CR 613.1f's answer for the source. It costs an ability all of
--- its parts, and only when every one applies AFTER layer 6 -- an ability with a
--- part in layers 1-6 had already started to apply, which is CR 613.6's rescue.
+-- `removed` is CR 613.1f's answer for the source (removalReaches). It costs an
+-- ability all of its parts.
 --
 -- `functioning` is CR 604.2's "as long as" gate, answered by conditionHolds at
 -- the ability's lowest layer, and costs the ability all its parts
@@ -4220,7 +4240,7 @@ modificationWrites m = case m of
   -- creature into the Ascent's set" proves it.
   Modification.GainAbility _ -> Set.singleton Keywords
   Modification.GainAbilitiesOfSource _ -> Set.singleton Keywords
-  Modification.GainExiledCardAbilities _ -> Set.singleton Keywords
+  Modification.GainCardAbilities _ -> Set.singleton Keywords
   Modification.GainAbilitiesOfStickers -> Set.singleton Keywords
   Modification.LoseAllAbilities -> Set.singleton Keywords
   -- Writes ProjectedCharacteristics.activatedAbilities, which Aspect has no finer
@@ -4329,7 +4349,7 @@ modificationReads m = case m of
   -- A quoted ability's quantities are read at ITS resolution.
   Modification.GainAbility _ -> Set.empty
   Modification.GainAbilitiesOfSource _ -> Set.empty
-  Modification.GainExiledCardAbilities _ -> Set.empty
+  Modification.GainCardAbilities _ -> Set.empty
   Modification.GainAbilitiesOfStickers -> Set.empty
   Modification.LoseAllAbilities -> Set.empty
   -- Carries a name, which is not a Quantity: a grant and a removal of one
@@ -6219,7 +6239,7 @@ grantsKeywordWhere p m = case m of
   -- one whose own modifications grant one.
   Modification.GainAbility g -> grantedStaticWrites (grantsKeywordWhere p) g
   Modification.GainAbilitiesOfSource _ -> False
-  Modification.GainExiledCardAbilities _ -> False
+  Modification.GainCardAbilities _ -> False
   -- The sticker data is not in the modification, so True over-approximates.
   Modification.GainAbilitiesOfStickers -> True
   Modification.LoseAllAbilities -> False
@@ -6305,7 +6325,7 @@ grantsMintingType m = case m of
   -- A granted static ability's own parts, grantsKeywordWhere's reason.
   Modification.GainAbility g -> grantedStaticWrites grantsMintingType g
   Modification.GainAbilitiesOfSource _ -> False
-  Modification.GainExiledCardAbilities _ -> False
+  Modification.GainCardAbilities _ -> False
   Modification.GainAbilitiesOfStickers -> False
   Modification.LoseAllAbilities -> False
   Modification.LoseNamedAbility _ -> False
@@ -6401,7 +6421,7 @@ grantsAbilityWhere p m = case m of
   Modification.LoseEnchant _ -> False
   Modification.GainCastingPermission _ -> False
   Modification.GainAbilitiesOfSource _ -> False
-  Modification.GainExiledCardAbilities _ -> False
+  Modification.GainCardAbilities _ -> False
   -- The sticker data is not in the modification, so True over-approximates.
   Modification.GainAbilitiesOfStickers -> True
   Modification.LoseAllAbilities -> False
