@@ -1402,7 +1402,7 @@ rewriteRuleAbilities pairs abilities =
         { RuleAbilities.activationProhibitions = fmap (\x -> x {ActivationProhibition.affected = affected (ActivationProhibition.affected x)}) (RuleAbilities.activationProhibitions abilities),
           RuleAbilities.attachRestrictions = fmap (\x -> x {AttachRestriction.affected = affected (AttachRestriction.affected x), AttachRestriction.attachers = Filter.rewrite pairs (AttachRestriction.attachers x)}) (RuleAbilities.attachRestrictions abilities),
           RuleAbilities.attackCosts = RuleAbilities.attackCosts abilities,
-          RuleAbilities.attackPermissions = fmap (\x -> x {AttackPermission.affected = affected (AttackPermission.affected x)}) (RuleAbilities.attackPermissions abilities),
+          RuleAbilities.attackPermissions = fmap (\x -> x {AttackPermission.affected = affected (AttackPermission.affected x), AttackPermission.while = condition (AttackPermission.while x)}) (RuleAbilities.attackPermissions abilities),
           RuleAbilities.attackRequirements = fmap (\x -> x {AttackRequirement.subject = affected (AttackRequirement.subject x), AttackRequirement.while = condition (AttackRequirement.while x)}) (RuleAbilities.attackRequirements abilities),
           RuleAbilities.blockCosts = RuleAbilities.blockCosts abilities,
           RuleAbilities.blockPermissions = fmap (\x -> x {BlockPermission.affected = affected (BlockPermission.affected x), BlockPermission.additional = fmap (rewriteQuantity pairs) (BlockPermission.additional x), BlockPermission.while = condition (BlockPermission.while x)}) (RuleAbilities.blockPermissions abilities),

@@ -1,0 +1,123 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Flash"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Containment Priest",
+      "oracleText": "Flash\nIf a nontoken creature would enter and it wasn't cast, exile it instead.",
+      "power": {
+        "type": "Literal",
+        "value": 2
+      },
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "ZoneChangeR",
+            "value": {
+              "destination": {
+                "type": "Exile"
+              },
+              "matching": {
+                "whatObject": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    },
+                    {
+                      "type": "Not",
+                      "value": {
+                        "type": "IsToken"
+                      }
+                    },
+                    {
+                      "type": "Not",
+                      "value": {
+                        "type": "Or",
+                        "value": [
+                          {
+                            "type": "WasCastFrom",
+                            "value": {
+                              "type": "Hand"
+                            }
+                          },
+                          {
+                            "type": "WasCastFrom",
+                            "value": {
+                              "type": "Library"
+                            }
+                          },
+                          {
+                            "type": "WasCastFrom",
+                            "value": {
+                              "type": "Graveyard"
+                            }
+                          },
+                          {
+                            "type": "WasCastFrom",
+                            "value": {
+                              "type": "Exile"
+                            }
+                          },
+                          {
+                            "type": "WasCastFrom",
+                            "value": {
+                              "type": "Command"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                "whenDestination": {
+                  "type": "Battlefield"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "toughness": {
+        "type": "Literal",
+        "value": 2
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Cleric"
+          },
+          {
+            "type": "Human"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

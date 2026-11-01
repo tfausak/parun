@@ -594,7 +594,7 @@ spec s = Spec.describe s "Parun.Codec.Face" $ do
         s
         encodeFace
         decodeFace
-        baseFace {Face.attackPermissions = [AttackPermission.MkAttackPermission Affected.Attached]}
+        baseFace {Face.attackPermissions = [AttackPermission.MkAttackPermission Affected.Attached Nothing]}
         (init baseFaceJson <> ",\"attackPermissions\":[{\"affected\":{\"type\":\"Attached\"}}]}")
     Spec.it s "attachRestrictions" $
       Common.assertJsonCodec
