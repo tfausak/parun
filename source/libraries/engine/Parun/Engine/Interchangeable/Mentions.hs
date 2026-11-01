@@ -2817,7 +2817,7 @@ scopeNames asking x = case x of
 
 searchNames :: (Monoid r) => Asking r -> Search.Search -> r
 searchNames asking x = case x of
-  Search.MkSearch searcher owner _zones _outsideTheGame quantity filter_ descriptions _upTo _destination subject slot _differentIn _exactly _andOr -> playerRefNames asking searcher <> playerRefNames asking owner <> foldMap (quantityNames asking) quantity <> filterNames asking filter_ <> foldMap (filterNames asking) descriptions <> foldMap (slotNames asking) subject <> foldMap (slotNames asking) slot
+  Search.MkSearch searcher owner _zones _outsideTheGame quantity filter_ descriptions _upTo _destination subject slot handSlot _differentIn _exactly _andOr -> playerRefNames asking searcher <> playerRefNames asking owner <> foldMap (quantityNames asking) quantity <> filterNames asking filter_ <> foldMap (filterNames asking) descriptions <> foldMap (slotNames asking) subject <> foldMap (slotNames asking) slot <> foldMap (slotNames asking) handSlot
 
 selfCountersReachedNames :: (Monoid r) => Asking r -> SelfCountersReached.SelfCountersReached -> r
 selfCountersReachedNames asking x = case x of

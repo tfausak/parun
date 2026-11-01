@@ -853,7 +853,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
 
   -- CR 701.23a: a search of your library for one card, and where it goes.
   Spec.it s "render prints a search of your library" $ do
-    let search f destination = Effect.Search (Search.MkSearch (PlayerRef.Relative PlayerRelation.You) (PlayerRef.Relative PlayerRelation.You) (Set.singleton Zone.Library) False (Just (Quantity.Literal 1)) f Seq.empty False destination Nothing Nothing Set.empty False False)
+    let search f destination = Effect.Search (Search.MkSearch (PlayerRef.Relative PlayerRelation.You) (PlayerRef.Relative PlayerRelation.You) (Set.singleton Zone.Library) False (Just (Quantity.Literal 1)) f Seq.empty False destination Nothing Nothing Nothing Set.empty False False)
         searching f destination = Oracle.abilities (spell [clause [search f destination]] [])
     Spec.assertEq s [[Text.pack "Search your library for a card, put that card into your hand, then shuffle.", Text.pack "Search your library for a card, put it into your hand, then shuffle."]] (searching (Filter.And []) SearchDestination.Hand)
     Spec.assertEq s [[Text.pack "Search your library for an artifact or enchantment card, reveal it, then shuffle and put that card on top.", Text.pack "Search your library for an artifact or enchantment card, reveal it, then shuffle and put the card on top."]] (searching (Filter.Or [Filter.HasCardType CardType.Artifact, Filter.HasCardType CardType.Enchantment]) SearchDestination.RevealThenTop)

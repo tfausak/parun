@@ -914,6 +914,7 @@ cycling cost searchFor =
                 -- CR 701.3a question, so no object is fixed for one to be about.
                 Search.subject = Nothing,
                 Search.slot = Nothing,
+                Search.handSlot = Nothing,
                 Search.differentIn = Set.empty,
                 Search.exactly = False,
                 Search.andOr = False
@@ -1097,6 +1098,7 @@ searchForSameManaValue cost filter_ destination =
               -- CR 701.3a question, so no object is fixed for one to be about.
               Search.subject = Nothing,
               Search.slot = Nothing,
+              Search.handSlot = Nothing,
               Search.differentIn = Set.empty,
               Search.exactly = False,
               Search.andOr = False
@@ -8094,6 +8096,7 @@ partnerWith name =
               -- Nothing attaches and the filter asks no CR 701.3a question.
               Search.subject = Nothing,
               Search.slot = Nothing,
+              Search.handSlot = Nothing,
               Search.differentIn = Set.empty,
               Search.exactly = False,
               Search.andOr = False

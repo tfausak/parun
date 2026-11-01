@@ -1669,6 +1669,7 @@ necrite
 necrologia
 necromancers-stockpile
 necromantic-summons
+necromentia
 necrosynthesis
 necrotic-plague
 needle-drop

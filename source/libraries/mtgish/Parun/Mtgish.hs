@@ -1294,6 +1294,7 @@ searchLibrary who steps = case steps of
               Search.destination = destination,
               Search.subject = Nothing,
               Search.slot = Nothing,
+              Search.handSlot = Nothing,
               Search.differentIn = Set.empty,
               Search.exactly = False,
               Search.andOr = False
