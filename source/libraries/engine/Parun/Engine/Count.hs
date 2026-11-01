@@ -499,7 +499,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.HostOfSubjectHasCardType _ -> predicate
         Filter.Type.IsCommander -> predicate
         Filter.Type.IsToken -> predicate
-        Filter.Type.IsActivatedAbility -> predicate
+        Filter.Type.IsActivatedAbility _ -> predicate
         Filter.Type.IsAbility -> predicate
         Filter.Type.IsEmblem -> predicate
         -- NOT descended into, RepresentedByCard's reason below: CR 113.7's subject is
@@ -1420,7 +1420,7 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       Filter.commander = False,
       -- CR 113.3b: CR 608.2h's record is of characteristics rather than of an
       -- object on the stack, so there is no ability here to be either kind.
-      Filter.activatedAbility = False,
+      Filter.activatedAbility = Nothing,
       -- CR 113.1c, the line above widened: still no ability on the stack here to
       -- be one of either kind.
       Filter.ability = False,

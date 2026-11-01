@@ -18,6 +18,7 @@ import qualified Parun.Codec.Expansion as Expansion
 import qualified Parun.Codec.Holder as Holder
 import qualified Parun.Codec.KeywordDesignator as KeywordDesignator
 import qualified Parun.Codec.KeywordFamily as KeywordFamily
+import qualified Parun.Codec.LoyaltyKind as LoyaltyKind
 import qualified Parun.Codec.Measures as Measures
 import qualified Parun.Codec.NameChooser as NameChooser
 import qualified Parun.Codec.ObjectId as ObjectId
@@ -146,7 +147,7 @@ codec keywordCodec =
       Arm.payload "HostOfSubjectHasCardType" CardType.codec Filter.HostOfSubjectHasCardType (\x -> case x of Filter.HostOfSubjectHasCardType y -> Just y; _ -> Nothing),
       Arm.nullary "IsCommander" Filter.IsCommander,
       Arm.nullary "IsToken" Filter.IsToken,
-      Arm.nullary "IsActivatedAbility" Filter.IsActivatedAbility,
+      Arm.optionalPayload "IsActivatedAbility" LoyaltyKind.codec Filter.IsActivatedAbility (\x -> case x of Filter.IsActivatedAbility y -> Just y; _ -> Nothing),
       Arm.nullary "IsAbility" Filter.IsAbility,
       Arm.nullary "IsEmblem" Filter.IsEmblem,
       -- Recursive for AttachedTo's reason, the payload describing the ability's

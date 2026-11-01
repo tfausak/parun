@@ -3899,7 +3899,7 @@ filterReads f = case f of
   -- Reads nothing, for the atom above's reason and off the same record: CR
   -- 113.3's two kinds are told apart by Parun.Types.Source, which no Modification
   -- writes.
-  Filter.Type.IsActivatedAbility -> Set.empty
+  Filter.Type.IsActivatedAbility _ -> Set.empty
   -- Reads nothing, for the atom above's reason: CR 113.1c's question is answered
   -- off Parun.Types.Source too.
   Filter.Type.IsAbility -> Set.empty
@@ -4140,7 +4140,7 @@ filterReadsPeers f = case f of
   Filter.Type.AttachedNoLaterThanSource -> False
   Filter.Type.IsToken -> False
   Filter.Type.IsCommander -> False
-  Filter.Type.IsActivatedAbility -> False
+  Filter.Type.IsActivatedAbility _ -> False
   Filter.Type.IsAbility -> False
   Filter.Type.IsEmblem -> False
   Filter.Type.IsTapped -> False

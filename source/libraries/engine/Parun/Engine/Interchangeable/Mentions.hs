@@ -580,7 +580,7 @@ filterNames asking criterion = case criterion of
   Filter.HostOfSubjectHasCardType _cardType -> contextNames asking
   Filter.IsToken -> mempty
   Filter.IsCommander -> mempty
-  Filter.IsActivatedAbility -> mempty
+  Filter.IsActivatedAbility _ -> mempty
   Filter.IsAbility -> mempty
   Filter.IsEmblem -> mempty
   Filter.FromSource nested -> filterNames asking nested

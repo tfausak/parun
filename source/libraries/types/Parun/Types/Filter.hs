@@ -18,6 +18,7 @@ import qualified Parun.Types.Expansion as Expansion
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
+import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import qualified Parun.Types.Measures as Measures
 import qualified Parun.Types.NameChooser as NameChooser
 import qualified Parun.Types.ObjectId as ObjectId
@@ -480,9 +481,10 @@ data Filter keyword
     -- 903.3's designation is made before the game begins and no rule rewrites it.
     IsCommander
   | -- | CR 113.3b: the candidate is an ACTIVATED ability on the stack, not CR
-    -- 113.3c's triggered one -- Squelch's "target activated ability".
-    -- Uncharacteristic and immutable for IsToken's reason.
-    IsActivatedAbility
+    -- 113.3c's triggered one -- Squelch's "target activated ability"; given a
+    -- kind, only CR 606.2's side of it (Chandra's Regulator's "a loyalty
+    -- ability"). Uncharacteristic and immutable for IsToken's reason.
+    IsActivatedAbility (Maybe LoyaltyKind.LoyaltyKind)
   | -- | CR 113.1c: the candidate is an ability on the stack, of either of CR
     -- 113.3's two kinds -- IsActivatedAbility above widened to take the triggered
     -- one as well. Uncharacteristic and immutable for IsToken's reason.
