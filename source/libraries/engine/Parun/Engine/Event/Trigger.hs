@@ -2337,9 +2337,11 @@ eventTriggers events gs =
             -- CR 603.2d: a permanent entering may make an ability of a
             -- permanent trigger additional times (Yarok, the Desecrated),
             -- whichever side of the move its condition names (docs/decisions.md,
-            -- "A silenced entry silences its departure"). Only a bearer on the
-            -- battlefield is a permanent (CR 110.1): not a card in a graveyard
-            -- watching lands enter (Bloodghast), nor an emblem. A "triggers only
+            -- "A silenced entry silences its departure"), but not an event
+            -- riding the entry (docs/decisions.md, "An entry's own triggers are
+            -- the zone change's"). Only a bearer on the battlefield is a
+            -- permanent (CR 110.1): not a card in a graveyard watching lands
+            -- enter (Bloodghast), nor an emblem. A "triggers only
             -- once" limit still caps the instances (docs/decisions.md, "A trigger
             -- limit caps an additional trigger"). Delayed and reflexive triggers
             -- are gathered elsewhere and never multiplied, as CR 603.2d asks.
@@ -2366,10 +2368,11 @@ eventTriggers events gs =
             -- occurrences of one CR 510.2 step.
             --
             -- And by CR 603.2d's instance, so a batch trigger's additional
-            -- instances survive as triggers of their own.
+            -- instances survive as triggers of their own; `oncePerBatch` joins
+            -- the batch's bindings without it.
             key (index, (cond, _)) (extra, trigger) =
               if batchScoped cond
-                then Just (oid, index :: Natural, extra :: Natural, batchPartition cond (PendingTrigger.bindings trigger))
+                then Just ((oid, index :: Natural, batchPartition cond (PendingTrigger.bindings trigger)), extra :: Natural)
                 else Nothing
             keyed indexed = fmap (\pair -> (key indexed pair, snd pair)) (pends (snd indexed))
          in concatMap keyed (filter (fires . snd) (zip [0 ..] abilities))
@@ -2404,7 +2407,7 @@ eventTriggers events gs =
       -- The battlefield reading is per GROUP and so is hoisted out of the block:
       -- every event in one group happened at the same time, so they share it. A
       -- group with no events cannot occur, which `eventGroups` states in the type.
-      scanBlock block later same graveyard = oncePerBatch (concatMap (scanOne (battlefieldAt (LoggedEvent.group (NonEmpty.head block)) gs) later same graveyard) block)
+      scanBlock block later same graveyard = oncePerBatch fst (concatMap (scanOne (battlefieldAt (LoggedEvent.group (NonEmpty.head block)) gs) later same graveyard) block)
    in concat (List.zipWith4 scanBlock groups laterGroups sameGroup graveyardAt)
 
 -- CR 603.2c's FIRST sentence, applied to ONE event group's matches: a
@@ -2422,16 +2425,21 @@ eventTriggers events gs =
 -- trigger event is the whole group -- Rakshasa Vizier's "that many" counts every
 -- card the group moved.
 --
+-- `joinOn` names which keys share those bindings: every CR 603.2d instance of
+-- one batch trigger is a trigger of the whole batch, though only the instances
+-- an entry added survive past the entry's own match. A fence: no pool card
+-- reads a mixed batch's bindings through an additional instance.
+--
 -- Per GROUP and never per scan: several groups can share one CR 117.5 scan
 -- (GameState.scannedThrough is not bumped until the scan ends), and CR 704.3
 -- makes each state-based-action pass its own single event.
 -- Parun.ZoneTriggerSpec's "CR 704.3 two death groups in one trigger scan are two
 -- trigger events" is what tells the two readings apart. Shared by
 -- eventTriggers and inherentTriggers.
-oncePerBatch :: (Ord k) => [(Maybe k, PendingTrigger)] -> [PendingTrigger]
-oncePerBatch entries =
-  let joined = Map.fromListWith (flip (<>)) [(batch, [PendingTrigger.bindings trigger]) | (Just batch, trigger) <- entries]
-      joinedFor batch trigger = case Map.lookup batch joined of
+oncePerBatch :: (Ord j, Ord k) => (k -> j) -> [(Maybe k, PendingTrigger)] -> [PendingTrigger]
+oncePerBatch joinOn entries =
+  let joined = Map.fromListWith (flip (<>)) [(joinOn batch, [PendingTrigger.bindings trigger]) | (Just batch, trigger) <- entries]
+      joinedFor batch trigger = case Map.lookup (joinOn batch) joined of
         Just (first : rest) -> trigger {PendingTrigger.bindings = batchBindings (first NonEmpty.:| rest)}
         _ -> trigger
       go seen remaining = case remaining of
@@ -2493,7 +2501,7 @@ inherentTriggers held events gs =
               TriggerSource.Sourceless -> Map.empty
             pend logged = PendingTrigger.MkPendingTrigger source you ability (eventBindingsOver board gs Nothing Map.empty bearer you cond (LoggedEvent.event logged)) Nothing (Just logged) 1 frozen
             key trigger = if batchScoped cond then Just (batchPartition cond (PendingTrigger.bindings trigger)) else Nothing
-         in oncePerBatch [(key trigger, trigger) | logged <- NonEmpty.toList block, let event = LoggedEvent.event logged, fires event, trigger <- stepCopies gs bearer you cond event ability (pend logged)]
+         in oncePerBatch id [(key trigger, trigger) | logged <- NonEmpty.toList block, let event = LoggedEvent.event logged, fires event, trigger <- stepCopies gs bearer you cond event ability (pend logged)]
    in concatMap (filter (interveningHolds gs) . forHeld) held
 
 -- CR 113.6m, read off a TRIGGERED ability: "an ability whose cost or effect

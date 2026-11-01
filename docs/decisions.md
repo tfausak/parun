@@ -965,6 +965,29 @@ Entries are ordered by the first rule each cites.
   yarok-the-desecrated-doubles-a-leaves-your-graveyard-trigger-on-a-reanimated-creature.
 - **Issue**: #5713.
 
+## An entry's own triggers are the zone change's
+
+- **Question**: A permanent can enter with counters on it (a Saga's lore
+  counter, CR 714.3a) or attached to something (an Aura). A chapter I ability,
+  or a "whenever counters are put" or "becomes attached" ability, triggers on
+  that. Does a permanent entering "cause" it, so that Yarok, the Desecrated
+  makes it trigger an additional time and Hushwing Gryff silences it?
+- **Rules**: CR 603.2d, 603.6a, 613.11, 122.6, 714.2b, 714.3a; CR of
+  2026-08-07. No ruling: none of Yarok, Panharmonicon, Elesh Norn, Mother of
+  Machines, Torpor Orb or any Saga has one on it.
+- **Decision**: No. Only abilities triggering on the zone change itself are
+  multiplied or silenced; a counter put or an attachment made as the
+  permanent enters is an event of its own.
+- **Rejected**: Treating every event that happens because a permanent entered
+  as caused by the entry. CR 714.2b's trigger event is the lore counter being
+  put, which CR 122.6 counts whether or not the Saga is entering, so the
+  entry is at most its occasion.
+- **Site**: `Parun.Engine.Event.Match.entryTriggers` and
+  `additionalEntryTriggers`, which `Parun.Engine.Event.Trigger.eventTriggers`
+  asks only of a move onto the battlefield. Proved by the scenario
+  yarok-the-desecrated-doesn-t-double-a-saga-s-chapter-i.
+- **Issue**: #5837.
+
 ## A paid flash permission is offered at sorcery timing too
 
 - **Question**: Harbinger of the Tides lets itself be cast "as though it had
