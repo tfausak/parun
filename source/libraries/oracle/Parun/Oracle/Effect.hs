@@ -1020,6 +1020,7 @@ searched context s
         && not (Search.upTo s)
         && Maybe.isNothing (Search.subject s)
         && Maybe.isNothing (Search.slot s)
+        && Maybe.isNothing (Search.handSlot s)
         && Set.null (Search.differentIn s)
         && not (Search.exactly s)
         && not (Search.andOr s)
