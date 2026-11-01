@@ -1130,6 +1130,7 @@ headless-skaab
 healing-grace
 heart-of-light
 heart-of-yavimaya
+heart-piercer-bow
 heartstone
 heavenly-blademaster
 heavy-fog
