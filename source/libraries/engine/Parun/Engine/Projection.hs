@@ -3192,7 +3192,8 @@ grantedDefiningParts m = case m of
 -- data/scenarios/conspicuous-snoop-lends-nothing-under-*-humility.json for one
 -- lending abilities.
 --
--- An ability that itself removes abilities is left to the fold's timestamp order.
+-- Not implemented: an ability that itself removes abilities waiting on a removal
+-- of its source; it stays in the fold's timestamp order (#5899).
 removalReaches :: StaticAbility.StaticAbility (GrantedAbility.GrantedAbility Card.Type.Card) -> Layer -> Bool
 removalReaches sa lowest = lowest > Layer.Ability || (lowest == Layer.Ability && not (any removesAbilities (staticParts [] sa)))
 
