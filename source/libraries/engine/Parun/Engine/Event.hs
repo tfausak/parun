@@ -330,7 +330,8 @@ recordEvent event gs = recordEventOver gs event gs
 
 -- CR 603.10a: file `before` as the board the next event's group looks back to.
 -- The first filing stands: in a CR 608.2f group it is the board before any of
--- the group's permanents left.
+-- the group's permanents left. A regression fence: every multi-permanent group
+-- in the suite moves with one batch board, so a later filing would read the same.
 fileBoardBeforeDeparture :: GameState -> GameState -> GameState
 fileBoardBeforeDeparture before gs =
   let board = before {GameState.boardAfterEvent = Map.empty, GameState.boardBeforeDeparture = Map.empty}
