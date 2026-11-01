@@ -330,7 +330,8 @@ data Prompt r where
   -- rule leaves 0 as the only payable amount.
   ChoosePaidEnergy :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Prompt Natural.Natural
   -- | CR 107.1c / 608.2d: the number an Effect.ChooseNumber binds as the object
-  -- resolves, or an Effect.Bid's bid; the Natural is its floor and the Maybe its
+  -- resolves, an Effect.Bid's bid, or how many colours a ChosenQuality.Colors
+  -- range picks (CR 105.4); the Natural is its floor and the Maybe its
   -- bound, the answer clamped to the bound. A bid's floor is the high bid, and
   -- an answer not above it declines to top it. Answers as Response.ChoseNumber.
   ChooseNumber :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Maybe Natural.Natural -> Prompt Natural.Natural
@@ -630,8 +631,8 @@ data Prompt r where
   -- permanent enters so it enters untapped, Nothing declining; raised at one
   -- candidate too.
   ChooseRevealOnEntry :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt (Maybe ObjectId.ObjectId)
-  -- | CR 614.1c: a colour an entering object's controller chooses, from those
-  -- (CR 105.1) not already chosen for it.
+  -- | CR 105.4: a colour chosen for the object (Parun.Engine.Event's
+  -- chooseQuality), from those (CR 105.1) not already chosen for it.
   ChooseColor :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty Color.Color -> Prompt Color.Color
   -- | Which of the offered marks the object is given: CR 702.158b's sector, for
   -- the creature CR 704.5u assigns or the ability source whose CR 702.158d
