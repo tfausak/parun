@@ -1070,6 +1070,16 @@ lastKnownView peers oid gs lastKnown =
       )
         { Filter.identity = Just oid,
           Filter.attacking = LastKnown.attacking lastKnown,
+          -- CR 508.1b: what it was attacking as it left (Mangara, the Diplomat's
+          -- ruling), and that planeswalker's controller now, or as it left too.
+          Filter.attackingPlayer = case LastKnown.attackTarget lastKnown of
+            Just (AttackTarget.OfPlayer pid) -> Just pid
+            _ -> Nothing,
+          Filter.attackingPlaneswalkerController = case LastKnown.attackTarget lastKnown of
+            Just (AttackTarget.OfPlaneswalker pw) -> case peers pw of
+              Just view -> Filter.controller view
+              Nothing -> fmap LastKnown.controller (Map.lookup pw (GameState.lastKnown gs))
+            _ -> Nothing,
           Filter.blocking = LastKnown.blocking lastKnown,
           Filter.paidCosts = LastKnown.paidCosts lastKnown,
           -- CR 718.3d: the copiable record or the object's own, viewOfCharacteristics'

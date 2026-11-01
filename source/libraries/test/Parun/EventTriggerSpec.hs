@@ -950,7 +950,7 @@ clarionSpiritSpec s registry =
               let afterFirst = castAndResolve S.alice first gs
                   logged = Maybe.mapMaybe (Game.castOf . LoggedEvent.event) (Foldable.toList (GameState.events afterFirst))
                   context = Filter.contextFor (Game.teams afterFirst) (Just S.alice) Nothing
-                  ordinal oid = Match.castOrdinal context (Filter.Type.And []) Nothing oid afterFirst
+                  ordinal oid = Match.castOrdinal context (Filter.Type.And []) Nothing S.alice oid afterFirst
               case logged of
                 [cast] -> do
                   Spec.assertEqWith s "the uncast Boil has no ordinal" (ordinal uncast) Nothing
