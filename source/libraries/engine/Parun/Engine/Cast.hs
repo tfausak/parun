@@ -710,7 +710,7 @@ castAimable key announced x pid oid gs = case Game.faceOf oid gs of
           | otherwise = [trimmed]
         -- CR 601.2c's per-player copies, as castProposed offers them. A REGRESSION
         -- FENCE: no card pairs a per-player slot with a target-reading cost.
-        slotsOf modal chosen = Target.announcedSlots StackObjectKind.Spell pid oid gs (Card.modesTargetSlotsGiven enchants mutating chosen face {Face.spell = modal})
+        slotsOf modal chosen = Target.announcedSlots pid oid gs (Card.modesTargetSlotsGiven enchants mutating chosen face {Face.spell = modal})
         setsOf slots = Target.legalSets StackObjectKind.Spell Nothing (Just pid) True Map.empty oid slots gs
         -- CR 601.2c's joint check, asked as `setsOf` asks: ahead of the X, so a
         -- bound reading it states none. The sets are measured slot by slot and
@@ -3567,7 +3567,7 @@ castProposed perform spending pid oid sid printedFace castFrom preparedFor keywo
                       else
                         -- CR 702.47d: the spliced text's targets are chosen here
                         -- beside the spell's own.
-                        Target.announcedSlots StackObjectKind.Spell pid sid bestowedGs $
+                        Target.announcedSlots pid sid bestowedGs $
                           Map.union
                             (Card.modesTargetSlotsGiven (Projection.enchantOf sid bestowedGs) (maybe False Object.mutating (Game.lookupObject sid bestowedGs)) chosenModes faceForTargets)
                             (maybe Map.empty (`Game.splicedTargetSlots` bestowedGs) (Game.lookupObject sid bestowedGs))

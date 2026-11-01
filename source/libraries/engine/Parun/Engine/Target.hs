@@ -2284,7 +2284,7 @@ fillableModesGiven kind reader pools perspective seed source extra modal gs =
   let counting = countingBy reader perspective seed source gs
       ms = Foldable.toList (Modal.modes modal)
       fillable i m =
-        let slots = maybe id (\p -> announcedSlots kind p source gs) perspective (Map.union extra (Mode.targetSlots m))
+        let slots = maybe id (\p -> announcedSlots p source gs) perspective (Map.union extra (Mode.targetSlots m))
             -- CR 601.2b's other FLOOR, the one `short` below cannot spell: a
             -- slot's CR 202.3 computed bound that reads a number the seed cannot
             -- supply states no bound at all rather than an unmeetable one (see
@@ -2387,19 +2387,15 @@ bakeSlot players slot =
 -- Modal.perPlayerSlot's name and baked against its own player. Every other slot
 -- passes through.
 --
--- A player with nothing the copy could target gets no copy, so "target
--- permanent that player controls" asks only of the players who control one
--- (Sylvan Primordial's ruling: "If an opponent has any legal permanents to
--- target, you must target one of them"). Parun.TargetPerPlayerSpec proves both.
---
--- Not implemented: a required copy whose player controls nothing it could
--- target is still dropped, so Vaevictis Asmadi's ability goes on the stack
--- rather than failing for want of targets (#5826).
-announcedSlots :: StackObjectKind.StackObjectKind -> PlayerId -> ObjectId -> GameState -> Map SlotName TargetSlot -> Map SlotName TargetSlot
-announcedSlots kind controller source gs =
-  splitPerPlayer
-    (\_ each -> List.filter (PlayerRelation.holds (Game.teams gs) (SlotPerPlayer.players each) controller) (Players.table (Plane.rangePerspective source controller gs) gs))
-    (\copy -> not (Set.null (legalRecipients kind (Just controller) source copy gs)))
+-- Every copy is announced, its player's candidates or none: its count decides.
+-- An "up to one" copy with nothing to target is asked nothing (askChooser). A
+-- required one cannot be filled, so the mode is unfillable and the spell
+-- uncastable or the trigger removed (CR 601.2c, 603.3d; Vaevictis Asmadi's
+-- 2018-07-13 ruling). Parun.TargetPerPlayerSpec proves the first, the
+-- target-per-player scenarios the second.
+announcedSlots :: PlayerId -> ObjectId -> GameState -> Map SlotName TargetSlot -> Map SlotName TargetSlot
+announcedSlots controller source gs =
+  splitPerPlayer (\_ each -> List.filter (PlayerRelation.holds (Game.teams gs) (SlotPerPlayer.players each) controller) (Players.table (Plane.rangePerspective source controller gs) gs))
 
 -- CR 802.2a: the defending player an announcement chose, for a source with no
 -- attacking creature to resolve "defending player" by. The target settles it --
@@ -2433,24 +2429,19 @@ stampDefendingPlayers source chosen gs bindings = case Defender.defendingPlayerO
 boundCopies :: Set SlotName -> Map SlotName TargetSlot -> Map SlotName TargetSlot
 boundCopies bound =
   let copies = Maybe.mapMaybe Modal.Engine.perPlayerOf (Set.toList bound)
-   in splitPerPlayer (\slot _ -> [pid | (base, pid) <- copies, base == slot]) (const True)
+   in splitPerPlayer (\slot _ -> [pid | (base, pid) <- copies, base == slot])
 
--- Every perPlayer slot as its copies, one per player `playersOf` names and kept
--- where `keep` holds of it -- all of them when it holds of none, so a spell with
--- nothing to target anywhere still has a slot it cannot fill (CR 601.2c). Every
+-- Every perPlayer slot as its copies, one per player `playersOf` names. Every
 -- other slot unchanged.
-splitPerPlayer :: (SlotName -> SlotPerPlayer.SlotPerPlayer -> [PlayerId]) -> (TargetSlot -> Bool) -> Map SlotName TargetSlot -> Map SlotName TargetSlot
-splitPerPlayer playersOf keep =
+splitPerPlayer :: (SlotName -> SlotPerPlayer.SlotPerPlayer -> [PlayerId]) -> Map SlotName TargetSlot -> Map SlotName TargetSlot
+splitPerPlayer playersOf =
   let split name slot = case TargetSlot.perPlayer slot of
         Nothing -> Map.singleton name slot
         Just each ->
-          let copies =
-                Map.fromList
-                  [ (Modal.Engine.perPlayerSlot name pid, bakePerPlayer (SlotPerPlayer.slot each) pid slot)
-                  | pid <- playersOf name each
-                  ]
-              kept = Map.filter keep copies
-           in if Map.null kept then copies else kept
+          Map.fromList
+            [ (Modal.Engine.perPlayerSlot name pid, bakePerPlayer (SlotPerPlayer.slot each) pid slot)
+            | pid <- playersOf name each
+            ]
    in Map.unions . Map.mapWithKey split
 
 -- One copy of a perPlayer slot, its "that player" baked to `pid`: bakeSlot's

@@ -1062,7 +1062,7 @@ placeBorne srcId pending = do
         State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.chosenModes = Map.insertWith Set.union ability (Set.fromList (Foldable.toList chosenModes)) (Object.chosenModes o)}) srcId (GameState.objects g)})
       -- CR 603.3d: targets for the chosen mode(s) only, chosen as the ability is
       -- placed. A mode with no target slots asks nothing.
-      let slots = Target.announcedSlots StackObjectKind.TriggeredAbility controller srcId gs (Modal.modesTargetSlots chosenModes modal)
+      let slots = Target.announcedSlots controller srcId gs (Modal.modesTargetSlots chosenModes modal)
           sets = Target.legalSets StackObjectKind.TriggeredAbility Nothing (Just controller) False bound srcId slots gs
           -- CR 603.3d's "identical to the process ... listed in rules 601.2c-d",
           -- and 601.2c's "all at once": an answer whose slots read each other is

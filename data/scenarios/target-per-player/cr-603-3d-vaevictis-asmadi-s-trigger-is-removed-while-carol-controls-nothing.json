@@ -1,0 +1,37 @@
+{
+  "description": "CR 603.3d Vaevictis Asmadi's attack trigger is removed from the stack while carol controls no permanents",
+  "note": "The card's 2018-07-13 ruling. alice and bob each control a permanent the trigger could target, carol none, so no target is asked for, nobody sacrifices and nobody reveals. Its resolving twin, carol controlling a Wall of Wood, is vaevictis-asmadi-makes-each-player-sacrifice-and-reveal-into-play.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Vaevictis Asmadi, the Dire", "label": "vae", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears" }
+        ],
+        "library": [{ "card": "Hill Giant" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Ornithopter", "label": "thopter" }],
+        "library": [{ "card": "Hill Giant" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "carol",
+        "library": [{ "card": "Forest" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$vae"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$vae", "do": { "ChooseAttackTarget": "$bob" } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Ornithopter", "count": 1 } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Library", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Library", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "alice", "is": [] } } }
+  ]
+}
