@@ -1,6 +1,6 @@
 {
   "description": "The Karst, Enchanted finds cards sharing no card type, mana value or toughness, and an instant with no power shares none",
-  "note": "Alice names six cards; Giant Spider is a 2/4 creature with mana value 4. Ornithopter shares only its creature type, Subterranean Schooner (an artifact, not a creature) only its toughness 4, and Day of Judgment only its mana value, so each is dropped by one axis alone. Murder and Pacifism have no power or toughness and stay. Bob picks Giant Spider and Murder, found under every reading but one with Murder dropped, so each wrong reading reaches the hand check with a different hand.",
+  "note": "Giant Spider is a 2/4 creature with mana value 4. Alice's answers pairing it with Ornithopter (sharing only its creature type), Subterranean Schooner (an artifact, not a creature, sharing only its toughness 4) and Day of Judgment (sharing only its mana value) are each asked again, so each axis is proven alone. Murder and Pacifism have no power or toughness and are found beside it. Bob picks Giant Spider and Murder.",
   "board": {
     "seats": [
       {
@@ -83,15 +83,54 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "alice",
+      "refuse": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$giant-spider",
+            "$ornithopter"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "refuse": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$giant-spider",
+            "$schooner"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "refuse": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$giant-spider",
+            "$day-of-judgment"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
       "do": {
         "Answer": {
           "prompt": "Search",
           "with": [
             "$giant-spider",
             "$murder",
-            "$ornithopter",
-            "$schooner",
-            "$day-of-judgment",
             "$pacifism"
           ]
         }

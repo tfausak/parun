@@ -1,6 +1,6 @@
 {
   "description": "CR 701.21a / 701.23a: Scapeshift sacrifices any number of lands and searches for up to that many land cards, put onto the battlefield tapped",
-  "note": "Alice sacrifices two of her four lands, and the Mountain and Swamp she takes enter tapped; the Island stays in her library.",
+  "note": "Alice sacrifices two of her four lands; her answer of three lands is asked again, and the Mountain and Swamp she then takes enter tapped; the Island stays in her library.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
@@ -96,6 +96,21 @@
           "with": [
             "$f1",
             "$p"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "refuse": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "Mountain",
+            "Swamp",
+            "Island"
           ]
         }
       }
