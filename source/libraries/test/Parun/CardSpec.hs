@@ -203,6 +203,7 @@ import qualified Parun.Types.Earthbend as Earthbend
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.Emerge as Emerge
 import qualified Parun.Types.EntersWith as EntersWith
+import qualified Parun.Types.EntriesTrigger as EntriesTrigger
 import qualified Parun.Types.EntryController as EntryController
 import qualified Parun.Types.EntryFlip as EntryFlip
 import qualified Parun.Types.EntryHost as EntryHost
@@ -5176,7 +5177,7 @@ playerEffectFilters playerEffect = case playerEffect of
   -- Carthalion, True Heir).
   PlayerEffect.CantBecomeMonarch -> []
   PlayerEffect.CantSetSchemesInMotion -> []
-  PlayerEffect.EntriesDontTrigger f -> [f]
+  PlayerEffect.EntriesTrigger e -> [EntriesTrigger.entrants e]
   PlayerEffect.ControlledWhileSearching -> []
   PlayerEffect.YouChoose _ -> []
   PlayerEffect.ExilesFoundWhileSearching -> []

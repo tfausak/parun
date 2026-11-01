@@ -309,6 +309,7 @@ import qualified Parun.Codec.EnteredZoneSpec
 import qualified Parun.Codec.EnteringTogetherSpec
 import qualified Parun.Codec.EntersWithSpec
 import qualified Parun.Codec.EntrantSpec
+import qualified Parun.Codec.EntriesTriggerSpec
 import qualified Parun.Codec.EntryAttackSpec
 import qualified Parun.Codec.EntryBlockSpec
 import qualified Parun.Codec.EntryControllerSpec
@@ -321,6 +322,7 @@ import qualified Parun.Codec.EntryRestrictionSpec
 import qualified Parun.Codec.EntryRewriteSpec
 import qualified Parun.Codec.EntryRidersSpec
 import qualified Parun.Codec.EntrySpec
+import qualified Parun.Codec.EntryTriggeringSpec
 import qualified Parun.Codec.EquipSpec
 import qualified Parun.Codec.EventExpirySpec
 import qualified Parun.Codec.EventGroupSpec
@@ -1074,6 +1076,8 @@ spec s registry corpus = do
   Parun.Codec.CantBlockCreaturesSpec.spec s
   Parun.Codec.CantSearchLibrariesSpec.spec s
   Parun.Codec.CardArrivedInSpec.spec s
+  Parun.Codec.EntriesTriggerSpec.spec s
+  Parun.Codec.EntryTriggeringSpec.spec s
   Parun.Codec.ObjectCountSpec.spec s
   Parun.Codec.CardIdentitySpec.spec s
   Parun.Codec.CardLeavesZoneSpec.spec s

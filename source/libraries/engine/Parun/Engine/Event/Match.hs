@@ -458,7 +458,9 @@ dealtToRelated board gs related orTheirPlaneswalkers target
 -- two CR 603.6a arms, the departure-side SelfLeavesGraveyard and
 -- CardLeavesZone, since the entry and the departure are one event
 -- (docs/decisions.md, "A silenced entry silences its departure"), and
--- CardsPutIntoZone. Any other move answers True. CardsPutIntoZone's gate is a
+-- CardsPutIntoZone. Any other move answers True, and an event riding the
+-- entry (a lore counter, an attachment) is not asked (docs/decisions.md, "An
+-- entry's own triggers are the zone change's"). CardsPutIntoZone's gate is a
 -- regression fence: no card in data/cards names the battlefield as its
 -- destination (grep, 2026-10-28).
 --
@@ -471,9 +473,22 @@ dealtToRelated board gs related orTheirPlaneswalkers target
 entryTriggers :: GameState -> PlayerId -> ZoneChange.ZoneChange -> Bool
 entryTriggers gs you zc =
   ZoneChange.to zc /= Zone.Battlefield
-    || let entrant = ZoneChange.object zc
-           atEntry = maybe gs (\group -> Map.findWithDefault gs group (GameState.boardAfterEvent gs)) (Game.entryGroup entrant gs)
-        in not (PlayerEffect.silencesEntry you entrant atEntry)
+    || not (PlayerEffect.silencesEntry you (ZoneChange.object zc) (atEntry gs (ZoneChange.object zc)))
+
+-- CR 603.2d: how many additional times an ability of `you`'s that this zone
+-- change caused to trigger triggers -- none unless it is a move onto the
+-- battlefield (Yarok, the Desecrated), with the scope `entryTriggers` has.
+-- Read off the same filed game as `entryTriggers`, so a Yarok entering beside
+-- the entrant, or being it, counts (its ruling).
+additionalEntryTriggers :: GameState -> PlayerId -> ZoneChange.ZoneChange -> Natural
+additionalEntryTriggers gs you zc
+  | ZoneChange.to zc == Zone.Battlefield = PlayerEffect.additionalEntryTriggers you (ZoneChange.object zc) (atEntry gs (ZoneChange.object zc))
+  | otherwise = 0
+
+-- The game filed immediately after `entrant` entered the battlefield
+-- (GameState.boardAfterEvent), or the live game for an entry none is filed for.
+atEntry :: GameState -> ObjectId -> GameState
+atEntry gs entrant = maybe gs (\group -> Map.findWithDefault gs group (GameState.boardAfterEvent gs)) (Game.entryGroup entrant gs)
 
 -- The same question against a slot environment, for the conditions whose subject
 -- is an object named EARLIER rather than the bearer or a class of objects

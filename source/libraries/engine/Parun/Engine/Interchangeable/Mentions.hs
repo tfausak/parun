@@ -201,6 +201,7 @@ import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.Emerge as Emerge
 import qualified Parun.Types.EnteredZone as EnteredZone
 import qualified Parun.Types.EntersWith as EntersWith
+import qualified Parun.Types.EntriesTrigger as EntriesTrigger
 import qualified Parun.Types.EntryAttack as EntryAttack
 import qualified Parun.Types.EntryBlock as EntryBlock
 import qualified Parun.Types.EntryController as EntryController
@@ -2437,7 +2438,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.CantSearchLibraries _cantSearchLibraries -> mempty
   PlayerEffect.CantBecomeMonarch -> mempty
   PlayerEffect.CantSetSchemesInMotion -> mempty
-  PlayerEffect.EntriesDontTrigger filter_ -> filterNames asking filter_
+  PlayerEffect.EntriesTrigger entries -> filterNames asking (EntriesTrigger.entrants entries)
   PlayerEffect.ControlledWhileSearching -> mempty
   PlayerEffect.YouChoose _declaration -> mempty
   PlayerEffect.ExilesFoundWhileSearching -> mempty

@@ -21,11 +21,16 @@
       "playerAbilities": [
         {
           "effect": {
-            "type": "EntriesDontTrigger",
+            "type": "EntriesTrigger",
             "value": {
-              "type": "HasCardType",
-              "value": {
-                "type": "Creature"
+              "entrants": {
+                "type": "HasCardType",
+                "value": {
+                  "type": "Creature"
+                }
+              },
+              "triggering": {
+                "type": "NoTrigger"
               }
             }
           },

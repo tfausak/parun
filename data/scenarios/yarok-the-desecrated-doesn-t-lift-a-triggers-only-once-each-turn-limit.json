@@ -1,0 +1,83 @@
+{
+  "description": "CR 603.2d: with Yarok, the Desecrated, Enduring Innocence's \"triggers only once each turn\" ability still triggers once when a creature enters",
+  "note": "docs/decisions.md, \"A trigger limit caps an additional trigger\": Grizzly Bears entering would make the ability trigger twice, but its limit holds it to one, so alice draws one card, not two.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "GG",
+        "battlefield": [
+          {
+            "card": "Yarok, the Desecrated"
+          },
+          {
+            "card": "Enduring Innocence"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$bears"
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Hand",
+        "card": "Island",
+        "count": 1
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Library",
+        "card": "Island",
+        "count": 2
+      }
+    }
+  ]
+}
