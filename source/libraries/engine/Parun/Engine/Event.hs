@@ -328,6 +328,14 @@ import qualified Parun.Types.ZoneChangeR as ZoneChangeR
 recordEvent :: GameEvent -> GameState -> GameState
 recordEvent event gs = recordEventOver gs event gs
 
+-- CR 603.10a: file `before` as the board the next event's group looks back to.
+-- The first filing stands: in a CR 608.2f group it is the board before any of
+-- the group's permanents left.
+fileBoardBeforeDeparture :: GameState -> GameState -> GameState
+fileBoardBeforeDeparture before gs =
+  let board = before {GameState.boardAfterEvent = Map.empty, GameState.boardBeforeDeparture = Map.empty}
+   in gs {GameState.boardBeforeDeparture = Map.insertWith (\_ filed -> filed) (GameState.nextEventGroup gs) board (GameState.boardBeforeDeparture gs)}
+
 -- The GameEvent.LifeLost for a loss recorded next, stamped with whether the log
 -- holds an earlier one of the player's. Stamped here because the trigger scan runs
 -- after a whole resolution or cast, when the log no longer says which of two losses
@@ -8014,6 +8022,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                     Monad.forM_ (Object.attachedTo obj) (unattach oid)
                   seenArriving <- State.gets (Visibility.seenByEveryone newId)
                   causer <- State.gets Game.causeNow
+                  Monad.when (fromZone == Zone.Battlefield) (State.modify' (fileBoardBeforeDeparture lki))
                   State.modify'
                     . recordEvent
                     . GameEvent.Moved

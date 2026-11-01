@@ -1048,3 +1048,23 @@ Entries are ordered by the first rule each cites.
   by the scenario
   yarok-the-desecrated-doesn-t-lift-a-triggers-only-once-each-turn-limit.
 - **Issue**: #5837.
+
+## A departing bearer's additional triggers look back
+
+- **Question**: Sanctum of All ("while you control six or more Shrines") and
+  Harmonic Prodigy double an ability by whose it is, not by its cause. A bearer's
+  leaves-the-battlefield ability triggers on its own departure. Is the doubling
+  read before the bearer left, or after? It splits on the sixth Shrine dying, and
+  on Harmonic Prodigy dying beside the Wizard.
+- **Rules**: CR 603.2d, 603.10a; CR of 2026-08-07. No ruling on either card.
+  Teysa Karlov and Drivnod, Carnage Dominus rule the same split for a dying cause:
+  an effect's source dying beside the creature still counts.
+- **Decision**: Before. CR 603.10a's look-back reads the whole board the bearer
+  left: the bearer as it last existed, the effect's source and its condition. A
+  bearer still on the battlefield reads the board immediately after the event.
+- **Rejected**: The board after the event, which would ask a departed bearer's
+  look-back to stop at the bearer, against the Teysa rulings' reading of the same
+  moment.
+- **Site**: `Parun.Engine.Event.Match.additionalTriggers`, reading
+  `GameState.boardBeforeDeparture`. data/scenarios's "Harmonic Prodigy dying
+  beside a Wizard" scenario proves it.

@@ -75,6 +75,7 @@ import qualified Parun.Types.DiscardCause as DiscardCause
 import qualified Parun.Types.Discarded as Discarded
 import qualified Parun.Types.DrawnUnder as DrawnUnder
 import qualified Parun.Types.Drew as Drew
+import qualified Parun.Types.EventGroup as EventGroup
 import qualified Parun.Types.EventShape as EventShape
 import qualified Parun.Types.Exploited as Exploited
 import qualified Parun.Types.Filter as Filter.Type
@@ -488,6 +489,21 @@ additionalEntryTriggers :: GameState -> PlayerId -> ZoneChange.ZoneChange -> Nat
 additionalEntryTriggers gs you zc
   | ZoneChange.to zc == Zone.Battlefield = PlayerEffect.additionalEntryTriggers you (ZoneChange.object zc) (atEntry gs (ZoneChange.object zc))
   | otherwise = 0
+
+-- CR 603.2d: how many additional times `bearer`'s triggered abilities trigger
+-- on the event of `group`, for a bearer that was a permanent then (CR 110.1): a
+-- card in a graveyard or an emblem has no such abilities. Read off the board after
+-- the event (GameState.boardAfterEvent), or for a bearer that event took off the
+-- battlefield the board it looks back to (GameState.boardBeforeDeparture; CR
+-- 603.10a, docs/decisions.md, "A departing bearer's additional triggers look
+-- back").
+additionalTriggers :: GameState -> PlayerId -> ObjectId -> EventGroup.EventGroup -> Natural
+additionalTriggers gs you bearer group =
+  let after = Map.findWithDefault gs group (GameState.boardAfterEvent gs)
+      boards = after : Maybe.maybeToList (Map.lookup group (GameState.boardBeforeDeparture gs))
+   in case filter (Set.member bearer . GameState.battlefield) boards of
+        board : _ -> PlayerEffect.additionalTriggers you bearer board
+        [] -> 0
 
 -- The game filed immediately after `entrant` entered the battlefield
 -- (GameState.boardAfterEvent), or the live game for an entry none is filed for.

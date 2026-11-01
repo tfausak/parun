@@ -481,6 +481,7 @@ happenedBetween before after =
         gs
           { GameState.events = Seq.empty,
             GameState.boardAfterEvent = Map.empty,
+            GameState.boardBeforeDeparture = Map.empty,
             GameState.battlefieldWhenTriggered = Map.empty,
             GameState.nextEventGroup = GameState.nextEventGroup before,
             GameState.eventGroupDepth = GameState.eventGroupDepth before,

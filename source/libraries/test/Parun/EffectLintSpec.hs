@@ -1160,6 +1160,7 @@ unpreventableScopeOffends scope playerEffect = case playerEffect of
   PlayerEffect.CantBecomeMonarch -> False
   PlayerEffect.CantSetSchemesInMotion -> False
   PlayerEffect.EntriesTrigger _ -> False
+  PlayerEffect.AdditionalTriggers _ -> False
   PlayerEffect.ControlledWhileSearching -> False
   PlayerEffect.YouChoose _ -> False
   PlayerEffect.ExilesFoundWhileSearching -> False
@@ -1241,6 +1242,7 @@ unpreventablePatternOffends playerEffect = case playerEffect of
   PlayerEffect.CantBecomeMonarch -> False
   PlayerEffect.CantSetSchemesInMotion -> False
   PlayerEffect.EntriesTrigger _ -> False
+  PlayerEffect.AdditionalTriggers _ -> False
   PlayerEffect.ControlledWhileSearching -> False
   PlayerEffect.YouChoose _ -> False
   PlayerEffect.ExilesFoundWhileSearching -> False

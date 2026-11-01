@@ -366,6 +366,13 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       PlayerEffect.codec
       PlayerEffect.CantSetSchemesInMotion
       " {\"type\":\"CantSetSchemesInMotion\"} "
+  -- CR 603.2d / Sanctum of All.
+  Spec.it s "AdditionalTriggers" $
+    Common.assertCodec
+      s
+      PlayerEffect.codec
+      (PlayerEffect.AdditionalTriggers (Filter.And []))
+      " {\"type\":\"AdditionalTriggers\",\"value\":{\"type\":\"And\",\"value\":[]}} "
   -- CR 603.2d / Yarok, the Desecrated.
   Spec.it s "EntriesTrigger" $
     Common.assertCodec

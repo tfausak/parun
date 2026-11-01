@@ -5185,6 +5185,7 @@ playerEffectFilters playerEffect = case playerEffect of
   PlayerEffect.CantBecomeMonarch -> []
   PlayerEffect.CantSetSchemesInMotion -> []
   PlayerEffect.EntriesTrigger e -> [EntriesTrigger.entrants e]
+  PlayerEffect.AdditionalTriggers bearers -> [bearers]
   PlayerEffect.ControlledWhileSearching -> []
   PlayerEffect.YouChoose _ -> []
   PlayerEffect.ExilesFoundWhileSearching -> []

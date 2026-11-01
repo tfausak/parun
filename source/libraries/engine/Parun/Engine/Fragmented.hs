@@ -103,6 +103,7 @@ digest gs =
                 GameState.scannedThrough = 0,
                 GameState.damageScannedThrough = 0,
                 GameState.boardAfterEvent = Map.empty,
+                GameState.boardBeforeDeparture = Map.empty,
                 GameState.battlefieldWhenTriggered = Map.empty,
                 GameState.controlSample = Map.empty,
                 GameState.lastKnown = Map.empty,

@@ -2443,6 +2443,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.CantBecomeMonarch -> mempty
   PlayerEffect.CantSetSchemesInMotion -> mempty
   PlayerEffect.EntriesTrigger entries -> filterNames asking (EntriesTrigger.entrants entries)
+  PlayerEffect.AdditionalTriggers bearers -> filterNames asking bearers
   PlayerEffect.ControlledWhileSearching -> mempty
   PlayerEffect.YouChoose _declaration -> mempty
   PlayerEffect.ExilesFoundWhileSearching -> mempty

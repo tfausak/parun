@@ -84,6 +84,7 @@ codec =
           Arm.nullary "CantBecomeMonarch" PlayerEffect.CantBecomeMonarch,
           Arm.nullary "CantSetSchemesInMotion" PlayerEffect.CantSetSchemesInMotion,
           Arm.payload "EntriesTrigger" EntriesTrigger.codec PlayerEffect.EntriesTrigger (\x -> case x of PlayerEffect.EntriesTrigger y -> Just y; _ -> Nothing),
+          Arm.payload "AdditionalTriggers" filterCodec PlayerEffect.AdditionalTriggers (\x -> case x of PlayerEffect.AdditionalTriggers y -> Just y; _ -> Nothing),
           Arm.nullary "ControlledWhileSearching" PlayerEffect.ControlledWhileSearching,
           Arm.payload "YouChoose" CombatDeclaration.codec PlayerEffect.YouChoose (\x -> case x of PlayerEffect.YouChoose y -> Just y; _ -> Nothing),
           Arm.nullary "ExilesFoundWhileSearching" PlayerEffect.ExilesFoundWhileSearching,
@@ -139,6 +140,7 @@ tagOf x = case x of
   PlayerEffect.CantBecomeMonarch {} -> "CantBecomeMonarch"
   PlayerEffect.CantSetSchemesInMotion {} -> "CantSetSchemesInMotion"
   PlayerEffect.EntriesTrigger {} -> "EntriesTrigger"
+  PlayerEffect.AdditionalTriggers {} -> "AdditionalTriggers"
   PlayerEffect.ControlledWhileSearching {} -> "ControlledWhileSearching"
   PlayerEffect.YouChoose {} -> "YouChoose"
   PlayerEffect.ExilesFoundWhileSearching {} -> "ExilesFoundWhileSearching"
