@@ -1,0 +1,34 @@
+{
+  "description": "CR 603.2c / 601.2c: Leyline of Combustion deals 2 damage to the opponent whose spell targets its controller and/or their permanents, once per spell",
+  "note": "Three seats. Alice's own Shock at her Hill Giant does nothing. Bob's Shock at alice herself costs him 2. His Cone of Flame at alice, her Grizzly Bears and his own Hill Giant is one trigger: 2 more, not 4. Carol's Shock at bob triggers nothing; hers at alice's Hill Giant costs carol 2, and bob only her first Shock's 2.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [{"card": "Leyline of Combustion", "label": "leyline"}, {"card": "Hill Giant", "label": "giant"}, {"card": "Grizzly Bears", "label": "bears"}, {"card": "Mountain", "label": "a1"}], "hand": [{"card": "Shock", "label": "s0"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "bgiant"}, {"card": "Mountain", "label": "b1"}, {"card": "Mountain", "label": "b2"}, {"card": "Mountain", "label": "b3"}, {"card": "Mountain", "label": "b4"}, {"card": "Mountain", "label": "b5"}, {"card": "Mountain", "label": "b6"}], "hand": [{"card": "Shock", "label": "s1"}, {"card": "Cone of Flame", "label": "cone"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+    {"name": "carol", "battlefield": [{"card": "Mountain", "label": "c1"}, {"card": "Mountain", "label": "c2"}], "hand": [{"card": "Shock", "label": "s2"}, {"card": "Shock", "label": "s3"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+  ]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$s0", "targets": ["$giant"], "mana": ["$a1"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Stack", "is": ["Shock#4"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 20}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$s1", "targets": ["$alice"], "mana": ["$b1", null]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Stack", "is": ["trigger of $leyline", "Shock#4"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "bob", "life": 18}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 18}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$cone", "targetsBySlot": {"first": ["$alice"], "second": ["$bears"], "third": ["$bgiant"]}, "mana": ["$b2", "$b3", "$b4", "$b5", "$b6"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Stack", "is": ["trigger of $leyline", "Cone of Flame"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "bob", "life": 16}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 17}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "carol", "do": {"Cast": {"object": "$s3", "targets": ["$bob"], "mana": ["$c1", null]}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "carol", "check": {"View": {"of": "Stack", "is": ["Shock#4"]}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "carol", "do": "Pass"},
+    {"turn": 3, "step": "PrecombatMain", "player": "carol", "do": {"Cast": {"object": "$s2", "targets": ["$giant"], "mana": ["$c2"]}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "carol", "do": "Pass"},
+    {"turn": 3, "step": "PrecombatMain", "player": "carol", "check": {"Life": {"player": "carol", "life": 18}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "carol", "check": {"Life": {"player": "bob", "life": 14}}}
+  ]
+}

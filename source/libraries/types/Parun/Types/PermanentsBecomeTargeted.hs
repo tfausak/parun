@@ -26,6 +26,11 @@ data PermanentsBecomeTargeted = MkPermanentsBecomeTargeted
     -- | Which of CR 601.2c's announcement roads, the sibling
     -- Parun.Types.ControllerBecomesTarget's field one recipient over. Nothing is
     -- "a spell or ability"; Just ActivatedAbility is Professor Hojo's.
-    kind :: Maybe StackObjectKind.StackObjectKind
+    kind :: Maybe StackObjectKind.StackObjectKind,
+    -- | Whether CR 109.5's "you" becoming a target counts too: Leyline of
+    -- Combustion's "you and/or at least one permanent you control" (one batch,
+    -- CR 603.2c) and Unsettled Mariner's "you or a permanent you control" (one
+    -- occurrence each).
+    includesYou :: Bool
   }
   deriving (Eq, Ord, Show)

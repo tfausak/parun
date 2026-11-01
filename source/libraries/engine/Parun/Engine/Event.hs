@@ -8693,9 +8693,13 @@ counterOne before destination counterer source controller oid = do
 -- Unbracketed, a batch-scoped arm is inert -- each recipient gets a group of its
 -- own and fires the ability again. Per-occurrence siblings are unaffected:
 -- eventTriggers keys them Nothing, so ward on two creatures still fires twice.
+--
+-- ONE EVENT PER OBJECT OR PLAYER, however many of rule 601.2c's "target" words
+-- named it: it becomes a target once. Unsettled Mariner's ruling (2019-06-14),
+-- proved by its scenario's Twisted Fealty naming one creature in both slots.
 becameTarget :: GameState -> ObjectId -> StackObjectKind.StackObjectKind -> PlayerId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> Game ()
 becameTarget announced source kind controller chosen =
-  simultaneously . Foldable.for_ (concatMap Set.toAscList (Map.elems chosen)) $ \targeted ->
+  simultaneously . Foldable.for_ (ListUtils.nubOrdOn (\r -> (Recipient.playerOf r, Recipient.objectOf r)) (concatMap Set.toAscList (Map.elems chosen))) $ \targeted ->
     State.modify'
       . recordEventOver announced
       $ GameEvent.BecameTarget

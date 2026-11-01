@@ -2359,7 +2359,7 @@ permanentTappedForManaNames asking x = case x of
 
 permanentsBecomeTargetedNames :: (Monoid r) => Asking r -> PermanentsBecomeTargeted.PermanentsBecomeTargeted -> r
 permanentsBecomeTargetedNames asking x = case x of
-  PermanentsBecomeTargeted.MkPermanentsBecomeTargeted filter_ _relation _kind -> filterNames asking filter_
+  PermanentsBecomeTargeted.MkPermanentsBecomeTargeted filter_ _relation _kind _includesYou -> filterNames asking filter_
 
 permanentsDealCombatDamageToPlayerNames :: (Monoid r) => Asking r -> PermanentsDealCombatDamageToPlayer.PermanentsDealCombatDamageToPlayer -> r
 permanentsDealCombatDamageToPlayerNames asking x = case x of

@@ -14,15 +14,17 @@ import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargete
 -- | A bare object keyed by the record's field names, on
 -- Parun.Codec.ControllerBecomesTarget's posture: the filter and the relation are
 -- required, while the kind is elided when absent, "a spell or ability" being the
--- wider and unnarrowed reading of CR 601.2c.
+-- wider and unnarrowed reading of CR 601.2c, and includesYou when false.
 codec :: Codec.Codec PermanentsBecomeTargeted.PermanentsBecomeTargeted
 codec = Fields.object $ do
   filter_ <- Fields.required "filter" (Filter.codec Keyword.codec) PermanentsBecomeTargeted.filter
   relation <- Fields.required "relation" PlayerRelation.codec PermanentsBecomeTargeted.relation
   kind <- Fields.defaulted "kind" Nothing (Common.maybe StackObjectKind.codec) PermanentsBecomeTargeted.kind
+  includesYou <- Fields.defaulted "includesYou" False Common.boolean PermanentsBecomeTargeted.includesYou
   pure
     PermanentsBecomeTargeted.MkPermanentsBecomeTargeted
       { PermanentsBecomeTargeted.filter = filter_,
         PermanentsBecomeTargeted.relation = relation,
-        PermanentsBecomeTargeted.kind = kind
+        PermanentsBecomeTargeted.kind = kind,
+        PermanentsBecomeTargeted.includesYou = includesYou
       }

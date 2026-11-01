@@ -62,6 +62,7 @@ import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
 import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
+import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.PlayerActed as PlayerActed
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
@@ -808,9 +809,15 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- controls that object", which is CR 405.4's answer to "its controller".
   (TriggerCondition.ControllerBecomesTarget {}, GameEvent.BecameTarget t) ->
     Binding.setTargetingObject (BecameTarget.source t) Map.empty
+  -- The batch's "that player": the targeting object's controller, whom Leyline
+  -- of Combustion deals 2 damage to. The event's player rather than the object's
+  -- holder, so a spell countered or stolen before the trigger resolves changes
+  -- nothing. One announcement has one controller, so every member agrees.
+  (TriggerCondition.PermanentsBecomeTargeted _, GameEvent.BecameTarget t) ->
+    Binding.setTriggerPlayer (BecameTarget.controller t) Map.empty
   -- CR 601.2c's "that creature" read by a bystander: the permanent that became
-  -- the target, which Cowardice returns to its owner's hand. Unconditional given
-  -- a match: matchesTrigger accepts only a BecameTarget naming an object.
+  -- the target, which Cowardice returns to its owner's hand, unbound when
+  -- includesYou admitted the player instead (Unsettled Mariner).
   --
   -- Beside it the targeting object, the ControllerBecomesTarget arm's slot:
   -- Diffusion Sliver's "counter that spell or ability unless its controller
@@ -2077,17 +2084,16 @@ eventBindingSlots cond = case cond of
   -- reads the bearer and never this slot, and a slot promised but unread is
   -- harmless where the reverse is the failure this lint exists to catch.
   TriggerCondition.ControllerBecomesTarget {} -> Set.singleton Binding.targetingObject
-  -- Nothing, PermanentsDie's answer and for its reason: CR 603.2c makes the whole
-  -- announcement the trigger event, so neither the targeting object nor any one
-  -- of the permanents it named is the thing the condition is about. Professor
-  -- Hojo, the only printing of this written form, draws a card and names none of
-  -- them; a payload saying "that spell or ability" would refute this, and the
-  -- lint would reject it -- no member of eventBindingSlotsSometimes for
-  -- PermanentsDie's reason.
-  TriggerCondition.PermanentsBecomeTargeted {} -> Set.empty
+  -- The targeting object's controller, Leyline of Combustion's "that player",
+  -- and nothing else: CR 603.2c makes the whole announcement the trigger event,
+  -- so no one permanent it named is the thing the condition is about.
+  TriggerCondition.PermanentsBecomeTargeted {} -> Set.singleton Binding.triggerPlayer
   -- The one permanent each occurrence names and the object that targeted it,
-  -- guaranteed for the reasons eventBindings' arm gives.
-  TriggerCondition.PermanentBecomesTargeted {} -> Set.fromList [Binding.became, Binding.targetingObject]
+  -- guaranteed for the reasons eventBindings' arm gives; the permanent only
+  -- sometimes when the occurrence may name "you" instead.
+  TriggerCondition.PermanentBecomesTargeted c
+    | PermanentsBecomeTargeted.includesYou c -> Set.singleton Binding.targetingObject
+    | otherwise -> Set.fromList [Binding.became, Binding.targetingObject]
   -- CR 603.3b's second class names two things and binds both: CR 113.7's Saga,
   -- which the chapter ability hangs on, under CR 400.7e's slot for the reason
   -- eventBindings' arm gives, and CR 603.3a's controller of that chapter ability
@@ -2228,4 +2234,7 @@ eventBindingSlotsSometimes cond = case cond of
   -- data/cards/paranormal-analyst.json is the reader, and finding nothing there
   -- is the rule's own answer.
   TriggerCondition.PlayerManifestsDread _ -> Set.singleton Binding.became
+  -- The permanent an occurrence names, absent when it named "you" (Unsettled
+  -- Mariner).
+  TriggerCondition.PermanentBecomesTargeted c | PermanentsBecomeTargeted.includesYou c -> Set.singleton Binding.became
   _ -> Set.empty

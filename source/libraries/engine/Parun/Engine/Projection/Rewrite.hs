@@ -2102,8 +2102,8 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.AbilityActivated f -> TriggerCondition.AbilityActivated (Filter.rewrite pairs f)
   TriggerCondition.SelfBecomesTargeted _ -> condition
   TriggerCondition.ControllerBecomesTarget {} -> condition
-  TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted f relation kind) -> TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted (Filter.rewrite pairs f) relation kind)
-  TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted f relation kind) -> TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted (Filter.rewrite pairs f) relation kind)
+  TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted f relation kind includesYou) -> TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted (Filter.rewrite pairs f) relation kind includesYou)
+  TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted f relation kind includesYou) -> TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted (Filter.rewrite pairs f) relation kind includesYou)
   TriggerCondition.PlayerDiscards payload -> TriggerCondition.PlayerDiscards payload {PlayerActsOn.filter = Filter.rewrite pairs (PlayerActsOn.filter payload)}
   TriggerCondition.PlayerDiscardsCards payload -> TriggerCondition.PlayerDiscardsCards payload {PlayerActsOn.filter = Filter.rewrite pairs (PlayerActsOn.filter payload)}
   TriggerCondition.PlayerCycles _ -> condition
