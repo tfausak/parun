@@ -3746,6 +3746,7 @@ filterReads f = case f of
       Operand.EnclosingAmount -> Set.empty
       -- Another object's projection, declared as the candidate's (Aspect's note).
       Operand.OfEachOtherCandidate measure -> measureReads measure
+  Filter.Type.ControllerIsOwner -> holderReads Holder.Controller <> holderReads Holder.Owner
   Filter.Type.HeldBy holder _ -> holderReads holder
   -- The candidate's controller; who defends is a combat-record fact.
   Filter.Type.ControlledByRole _ -> Set.singleton Controller
@@ -4080,6 +4081,7 @@ filterReadsPeers f = case f of
     Operand.OfBound _ -> False
     Operand.AmountInSlot _ -> False
     Operand.EnclosingAmount -> False
+  Filter.Type.ControllerIsOwner -> False
   Filter.Type.HeldBy _ _ -> False
   Filter.Type.ControlledByRole _ -> False
   Filter.Type.HeldByBound _ _ -> False

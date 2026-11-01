@@ -24,9 +24,8 @@ data SpellCast = MkSpellCast
     -- of the zone it left, so no characteristic of the candidate can answer the
     -- question. The event carries it instead (Parun.Types.SpellWasCast.zone).
     --
-    -- ONE zone, not a set and not a negation: every printing in the pool names a
-    -- single zone. Vega, the Watcher's "from anywhere other than your hand" is
-    -- the shape that would want more, and no card here prints it.
+    -- ONE zone, not a set and not a negation: Ghostly Pilferer's "from anywhere
+    -- other than their hand" negates in the Filter, off Filter.WasCastFrom.
     zone :: Maybe Zone.Zone,
     -- | Clarion Spirit's "your SECOND spell each turn": the cast fires the
     -- ability only when it is the nth one of the turn matching everything

@@ -372,8 +372,14 @@ player context ref = case ref of
     | s == youSlot -> [(MkReference (Text.pack "you") [] Filter.Singular, Second)]
     | Just word <- Map.lookup s (bound context) -> [(MkReference word [] Filter.Singular, Third)]
     | otherwise -> fmap (\r -> (r, Third)) (target context s)
-  PlayerRef.HolderOfBound Holder.Owner Hop.Itself _ -> [(MkReference (Text.pack "its owner") [] Filter.Singular, Third)]
-  PlayerRef.HolderOfBound Holder.Controller Hop.Itself _ -> [(MkReference (Text.pack "its controller") [] Filter.Singular, Third)]
+  PlayerRef.HolderOfBound holder Hop.Itself s -> [(MkReference (possessor <> Text.pack (holderWord holder)) [] Filter.Singular, Third)]
+    where
+      possessor = case Map.lookup s (bound context) of
+        Just word | word /= Text.pack "it" -> word <> Text.pack "'s "
+        _ -> Text.pack "its "
+      holderWord h = case h of
+        Holder.Owner -> "owner"
+        Holder.Controller -> "controller"
   _ -> []
 
 -- | A target slot as its announcement reads: "target creature", "any

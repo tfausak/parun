@@ -1952,6 +1952,7 @@ matches context view predicate = case predicate of
   -- on the battlefield and the stack, so Garland's "creatures you control but
   -- don't own" is the two holders conjoined. Vacuously False where `heldBy`
   -- reads Nothing.
+  Filter.ControllerIsOwner -> Maybe.isJust (controller view) && controller view == owner view
   Filter.HeldBy holder relation -> case (heldBy holder view, perspective context) of
     (Just h, Just p) -> PlayerRelation.holds (teams context) relation p h
     _ -> False
@@ -2561,6 +2562,7 @@ rewrite pairs predicate = case predicate of
   Filter.ManaValueIsEven -> predicate
   -- Untouched: CR 612.1 swaps a WORD in the text, and this atom names a player
   -- relation rather than a subtype.
+  Filter.ControllerIsOwner -> predicate
   Filter.HeldBy _ _ -> predicate
   -- Untouched for HeldBy's reason.
   Filter.ControlledByRole _ -> predicate
@@ -3316,6 +3318,7 @@ bakeBound players objects controllers predicate = case predicate of
   -- making it.
   Filter.Measures _ -> predicate
   Filter.ManaValueIsEven -> predicate
+  Filter.ControllerIsOwner -> predicate
   Filter.HeldBy _ _ -> predicate
   Filter.ControlledByRole _ -> predicate
   Filter.IsSource -> predicate
@@ -3497,6 +3500,7 @@ manaValueThresholds predicate = case predicate of
   Filter.HasNameOriginallyPrintedIn _ -> []
   Filter.HasKeyword _ -> []
   Filter.HasKeywordFamily _ -> []
+  Filter.ControllerIsOwner -> []
   Filter.HeldBy _ _ -> []
   Filter.ControlledByRole _ -> []
   Filter.HeldByBound _ _ -> []
@@ -3653,6 +3657,7 @@ statesAQuality predicate = case predicate of
   Filter.HasNameOriginallyPrintedIn _ -> True
   Filter.HasKeyword _ -> True
   Filter.HasKeywordFamily _ -> True
+  Filter.ControllerIsOwner -> True
   Filter.HeldBy _ _ -> True
   Filter.ControlledByRole _ -> True
   Filter.HeldByBound _ _ -> True
@@ -3826,6 +3831,7 @@ readsSourceValues predicate = case predicate of
   -- HasKeyword arm), so nothing inside it reads the context.
   Filter.HasKeyword _ -> False
   Filter.HasKeywordFamily _ -> False
+  Filter.ControllerIsOwner -> False
   Filter.HeldBy _ _ -> False
   Filter.ControlledByRole _ -> False
   Filter.HeldByBound _ _ -> False
@@ -3968,6 +3974,7 @@ overBoundSlotsWith f predicate = case predicate of
           Operand.EnclosingAmount -> pure predicate
           Operand.OfEachOtherCandidate _ -> pure predicate
   Filter.ManaValueIsEven -> pure predicate
+  Filter.ControllerIsOwner -> pure predicate
   Filter.HeldBy _ _ -> pure predicate
   Filter.ControlledByRole _ -> pure predicate
   -- A PLAYER slot, read singly all the same: `matches` answers it off a slot

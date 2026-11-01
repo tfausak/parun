@@ -99,6 +99,9 @@ data Filter keyword
   | -- | CR 108.3 / 108.4 / 110.2: the candidate's holder relates thus to the
     -- perspective; False where it has none (CR 108.4, 109.1).
     HeldBy Holder.Holder PlayerRelation.PlayerRelation
+  | -- | CR 108.3 / 110.2: the candidate's controller is its owner -- Ghostly
+    -- Pilferer's "their hand" on a spell (Sen Triplets casts from another's).
+    ControllerIsOwner
   | -- | CR 102.1 / 508.5: the candidate's controller holds this role -- an active
     -- player (Nettling Imp's "the active player has controlled"; every member of
     -- the active team under CR 805.4a) or the defending player for the object the

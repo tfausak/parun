@@ -419,6 +419,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.HasKeywordFamily _ -> predicate
         Filter.Type.Measures _ -> predicate
         Filter.Type.ManaValueIsEven -> predicate
+        Filter.Type.ControllerIsOwner -> predicate
         Filter.Type.HeldBy _ _ -> predicate
         Filter.Type.ControlledByRole _ -> predicate
         Filter.Type.HeldByBound _ _ -> predicate
