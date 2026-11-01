@@ -22,13 +22,14 @@ import qualified Parun.Engine.Condition as Condition
 import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.EffectZone as EffectZone
 import Parun.Engine.Event.Binding (batchBindings, batchPartition, eventBindingsOver)
-import Parun.Engine.Event.Match (additionalEntryTriggers, matchesTriggerGiven, stepPlayers)
+import Parun.Engine.Event.Match (additionalEntryTriggers, additionalTriggers, matchesTriggerGiven, stepPlayers)
 import qualified Parun.Engine.Expiry as Expiry
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Keyword as Keyword
 import qualified Parun.Engine.Modal as Modal
 import qualified Parun.Engine.Plane as Plane
+import qualified Parun.Engine.PlayerEffect as PlayerEffect
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Replacement as Replacement
@@ -207,8 +208,9 @@ resampleEntry oid gs = case Game.entryGroup oid gs of
 -- CR 603.4: file `gs` as the board after every unscanned event that has none
 -- yet (GameState.boardAfterEvent). Called where an event is over with whatever
 -- else its instruction or action does: as each instruction of a resolution
--- finishes (CR 608.2c, Resolve.applyEffectWith) and before each state-based
--- action check (Sba.performStateBasedActions). The first filing stands, and a group a
+-- finishes (CR 608.2c, Resolve.applyEffectWith), as each part of a cost is paid
+-- (CR 601.2h, Cost.payInOrder) and before each state-based action check
+-- (Sba.performStateBasedActions). The first filing stands, and a group a
 -- `simultaneously` bracket still holds open is left for the filing after it
 -- closes (CR 608.2f). Each board's own copy of the field is empty.
 --
@@ -221,7 +223,7 @@ fileBoards gs =
       open group = GameState.eventGroupDepth gs > 0 && group == GameState.nextEventGroup gs
       unfiled = Seq.takeWhileR (\logged -> Map.notMember (LoggedEvent.group logged) filed) (Seq.drop (Natural.toIntSaturating (GameState.scannedThrough gs)) (GameState.events gs))
       groups = filter (not . open) (fmap LoggedEvent.group (Foldable.toList unfiled))
-      board = gs {GameState.boardAfterEvent = Map.empty}
+      board = gs {GameState.boardAfterEvent = Map.empty, GameState.boardBeforeDeparture = Map.empty}
    in if null groups then gs else gs {GameState.boardAfterEvent = List.foldl' (\m group -> Map.insert group board m) filed groups}
 
 -- The zone change an event describes, if it is one.
@@ -2346,15 +2348,18 @@ eventTriggers events gs =
             -- once" limit still caps the instances (docs/decisions.md, "A trigger
             -- limit caps an additional trigger"). Delayed and reflexive triggers
             -- are gathered elsewhere and never multiplied, as CR 603.2d asks.
-            additional = case Game.enteredBattlefieldChange event of
-              Just zc | Map.member oid board -> additionalEntryTriggers gs ctrl zc
-              _ -> 0
+            -- Each effect adds its own, so one that names the bearer (Sanctum
+            -- of All) adds to one that names the entry.
+            additional cond =
+              additionalTriggers gs ctrl oid (LoggedEvent.group logged) (looksBack cond) + case Game.enteredBattlefieldChange event of
+                Just zc | Map.member oid board -> additionalEntryTriggers gs ctrl zc
+                _ -> 0
             -- CR 805.4d: one trigger per player whose step this is (stepCopies).
             -- Each paired with which of CR 603.2d's instances it is.
             pends (cond, ab) =
               let perPlayer = stepCopies gs oid ctrl cond event ab (pend (cond, ab))
                   occurrences = maybe perPlayer (\n -> concat (List.genericReplicate n perPlayer)) (countersRemovedOccurrences oid cond event)
-               in [(extra, trigger) | extra <- [0 .. additional], trigger <- occurrences]
+               in [(extra, trigger) | extra <- [0 .. additional cond], trigger <- occurrences]
             -- CR 603.2c's key, for `oncePerBatch` below: which ability of which
             -- bearer this pending trigger came from, or Nothing when the condition
             -- is per-occurrence and every member of the batch is its own trigger
@@ -3530,7 +3535,10 @@ stateTriggersOn gs
           -- CR 400.7d, the event scan's stamp above on this road too. A
           -- fence: no state trigger in data/cards/ reads the record.
           pend ab = PendingTrigger.MkPendingTrigger (TriggerSource.OfObject oid) ctrl ab (maybe Map.empty (Binding.paidCostRecord . Object.bindings) (Game.lookupObject oid gs)) Nothing Nothing (copiesIn abilities ab) (Projection.delayedSnapshotOf oid gs)
-       in fmap (pend . snd) (filter armed (zip (List.inits lives) lives))
+          -- CR 603.2d: a state trigger triggers additional times like any other,
+          -- on a permanent; CR 603.8 holds each back while any is on the stack.
+          instances = if Set.member oid (GameState.battlefield gs) then 1 + PlayerEffect.additionalTriggers ctrl oid gs else 1
+       in concatMap (List.genericReplicate instances . pend . snd) (filter armed (zip (List.inits lives) lives))
 
 -- CR 603.8 across one settle: a state trigger triggers "as soon as the game
 -- state matches", so one armed on any of `boards` (Engine.settlePasses') has
@@ -4039,6 +4047,7 @@ firesWithout gone pending gs =
                 GameState.command = Set.difference (GameState.command gs) gone,
                 GameState.continuousEffects = filter (\e -> Set.notMember (ContinuousEffect.source e) gone) (GameState.continuousEffects gs),
                 GameState.boardAfterEvent = Map.empty,
+                GameState.boardBeforeDeparture = Map.empty,
                 GameState.battlefieldWhenTriggered = Map.empty
               }
           same p =

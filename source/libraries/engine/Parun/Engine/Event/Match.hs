@@ -75,6 +75,7 @@ import qualified Parun.Types.DiscardCause as DiscardCause
 import qualified Parun.Types.Discarded as Discarded
 import qualified Parun.Types.DrawnUnder as DrawnUnder
 import qualified Parun.Types.Drew as Drew
+import qualified Parun.Types.EventGroup as EventGroup
 import qualified Parun.Types.EventShape as EventShape
 import qualified Parun.Types.Exploited as Exploited
 import qualified Parun.Types.Filter as Filter.Type
@@ -488,6 +489,25 @@ additionalEntryTriggers :: GameState -> PlayerId -> ZoneChange.ZoneChange -> Nat
 additionalEntryTriggers gs you zc
   | ZoneChange.to zc == Zone.Battlefield = PlayerEffect.additionalEntryTriggers you (ZoneChange.object zc) (atEntry gs (ZoneChange.object zc))
   | otherwise = 0
+
+-- CR 603.2d: how many additional times `bearer`'s triggered ability triggers on
+-- the event of `group`, for a bearer that was a permanent then (CR 110.1): a card
+-- in a graveyard or an emblem has no such abilities. Read off the board the
+-- ability itself reads: CR 603.10's after the event (GameState.boardAfterEvent),
+-- or for `looksBack` the board before it (GameState.boardBeforeDeparture; CR
+-- 603.10a, docs/decisions.md, "A look-back ability's additional triggers look
+-- back"). A look-back ability's event with no such board took nothing off the
+-- battlefield, so the after board answers.
+--
+-- Not implemented: the board before a look-back event that takes nothing off
+-- the battlefield, a control change, say (#5901).
+additionalTriggers :: GameState -> PlayerId -> ObjectId -> EventGroup.EventGroup -> Bool -> Natural
+additionalTriggers gs you bearer group looksBack =
+  let after = Map.findWithDefault gs group (GameState.boardAfterEvent gs)
+      before = if looksBack then Maybe.maybeToList (Map.lookup group (GameState.boardBeforeDeparture gs)) else []
+   in case filter (Set.member bearer . GameState.battlefield) (before <> [after]) of
+        board : _ -> PlayerEffect.additionalTriggers you bearer board
+        [] -> 0
 
 -- The game filed immediately after `entrant` entered the battlefield
 -- (GameState.boardAfterEvent), or the live game for an entry none is filed for.

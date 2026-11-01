@@ -1048,3 +1048,27 @@ Entries are ordered by the first rule each cites.
   by the scenario
   yarok-the-desecrated-doesn-t-lift-a-triggers-only-once-each-turn-limit.
 - **Issue**: #5837.
+
+## A look-back ability's additional triggers look back
+
+- **Question**: Sanctum of All ("while you control six or more Shrines") and
+  Harmonic Prodigy double an ability by whose it is, not by its cause. A
+  leaves-the-battlefield ability looks back. Is its doubling read before the
+  event, or after? It splits on Harmonic Prodigy dying alone, with the bearer
+  staying (Xathrid Necromancer) or leaving beside it. Sanctum's count has no such
+  split yet: Scryfall `t:shrine (o:"leaves the battlefield" or o:"dies" or o:"put
+  into a graveyard")`, 2026-11-01, no hit.
+- **Rules**: CR 603.2d, 603.10, 603.10a; CR of 2026-08-07. No ruling on either
+  card. Teysa Karlov and Drivnod, Carnage Dominus rule the same split for a dying
+  cause: an effect's source dying beside the creature still counts, whether or not
+  the ability's permanent leaves too.
+- **Decision**: Before. The ability decides, not its bearer: CR 603.10a's look-back
+  reads the whole board before the event, the bearer, the effect's source and its
+  condition. Any other ability reads the board immediately after its event (CR
+  603.10), a bearer that left later in the same cost included.
+- **Rejected**: Choosing by whether the bearer left, which gives a staying bearer
+  the after board, one trigger under a lone Prodigy's death and two under a Wrath;
+  the Teysa rulings give both the same answer.
+- **Site**: `Parun.Engine.Event.Match.additionalTriggers`, reading
+  `GameState.boardBeforeDeparture`. data/scenarios's "Harmonic Prodigy dying alone"
+  and "Harmonic Prodigy dying beside a Wizard" scenarios prove it.

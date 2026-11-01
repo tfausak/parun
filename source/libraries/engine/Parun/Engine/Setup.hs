@@ -247,6 +247,7 @@ gameWith settings order =
           GameState.stackArchive = Map.empty,
           GameState.scannedThrough = 0,
           GameState.boardAfterEvent = Map.empty,
+          GameState.boardBeforeDeparture = Map.empty,
           GameState.battlefieldWhenTriggered = Map.empty,
           GameState.controlSample = Map.empty,
           GameState.damageScannedThrough = 0,
@@ -1019,6 +1020,7 @@ restartGame perform exempt starter = do
             GameState.stackArchive = Map.empty,
             GameState.scannedThrough = 0,
             GameState.boardAfterEvent = Map.empty,
+            GameState.boardBeforeDeparture = Map.empty,
             GameState.battlefieldWhenTriggered = Map.empty,
             GameState.controlSample = Map.empty,
             GameState.damageScannedThrough = 0,
@@ -1310,6 +1312,7 @@ subgameStateFrom starter parent =
           GameState.stackArchive = Map.empty,
           GameState.scannedThrough = 0,
           GameState.boardAfterEvent = Map.empty,
+          GameState.boardBeforeDeparture = Map.empty,
           GameState.battlefieldWhenTriggered = Map.empty,
           GameState.controlSample = Map.empty,
           GameState.damageScannedThrough = 0,
@@ -1503,7 +1506,7 @@ applyCrossings finalSub parent =
               [] -> Event.recordEvent (left zone)
               revealed -> Event.simultaneouslyPure (Event.recordEvent (left zone) . (\g1 -> List.foldl' (flip Event.recordEvent) g1 revealed))
          in if Set.member oid (GameState.battlefield g)
-              then recordLeft Zone.Battlefield gone
+              then recordLeft Zone.Battlefield (Event.fileBoardBeforeDeparture g gone)
               else case fmap Object.zone (Map.lookup oid (GameState.objects g)) of
                 -- Phased out, CR 702.26b above.
                 Just Zone.Battlefield -> gone

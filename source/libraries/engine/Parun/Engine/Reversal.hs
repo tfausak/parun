@@ -88,6 +88,7 @@ withoutAnnouncement before entry closed = do
   scannedThrough <- one GameState.scannedThrough
   battlefieldWhenTriggered <- mapOfMaps GameState.battlefieldWhenTriggered
   boardAfterEvent <- mapOf GameState.boardAfterEvent
+  boardBeforeDeparture <- mapOf GameState.boardBeforeDeparture
   controlSample <- mapOf GameState.controlSample
   damageScannedThrough <- one GameState.damageScannedThrough
   delayedTriggers <- seqOf GameState.delayedTriggers
@@ -215,6 +216,7 @@ withoutAnnouncement before entry closed = do
         GameState.scannedThrough = scannedThrough,
         GameState.battlefieldWhenTriggered = battlefieldWhenTriggered,
         GameState.boardAfterEvent = boardAfterEvent,
+        GameState.boardBeforeDeparture = boardBeforeDeparture,
         GameState.controlSample = controlSample,
         GameState.damageScannedThrough = damageScannedThrough,
         GameState.delayedTriggers = delayedTriggers,

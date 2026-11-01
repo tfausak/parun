@@ -175,6 +175,13 @@ data GameState = MkGameState
     -- entry's own copy of this field is empty. Written by
     -- Parun.Engine.Event.Trigger.fileBoards, cleared with `battlefieldWhenTriggered`.
     boardAfterEvent :: Map.Map EventGroup.EventGroup GameState,
+    -- | CR 603.10a: the whole game immediately before each unscanned event that
+    -- took a permanent off the battlefield, keyed by group, the board a
+    -- leaves-the-battlefield ability looks back to; each entry's own copy of this
+    -- field and of `boardAfterEvent` is empty. Written by
+    -- Parun.Engine.Event.fileBoardBeforeDeparture, cleared with
+    -- `battlefieldWhenTriggered`.
+    boardBeforeDeparture :: Map.Map EventGroup.EventGroup GameState,
     -- | Who controlled each permanent the last time
     -- Parun.Engine.Engine.sampleControl looked; diffing it against the live
     -- projection is what yields GameEvent.ControlChanged (CR 603.2). Rebuilt

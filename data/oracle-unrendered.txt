@@ -3016,3 +3016,5 @@ yaroks-fenlurker
 yarok-the-desecrated
 scorch-spitter
 vengeful-warchief
+harmonic-prodigy
+sanctum-of-all
