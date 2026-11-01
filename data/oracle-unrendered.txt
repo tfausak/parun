@@ -783,6 +783,7 @@ enshrouding-mist
 ensnaring-bridge
 ensoul-artifact
 entangling-vines
+enthralling-hold
 enthralling-victor
 entourage-of-trest
 eon-hub

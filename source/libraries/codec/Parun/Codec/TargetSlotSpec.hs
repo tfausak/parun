@@ -37,6 +37,12 @@ spec s = Spec.describe s "Parun.Codec.TargetSlot" $ do
       TargetSlot.codec
       (TargetSlot.required Pool.Permanents (Just (Filter.HasCardType CardType.Artifact)))
       " {\"pool\":{\"type\":\"Permanents\"},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}}} "
+  Spec.it s "a slot narrowed only as the spell is cast" $
+    Common.assertCodec
+      s
+      TargetSlot.codec
+      ((TargetSlot.required Pool.Creatures Nothing) {TargetSlot.asCast = Just (Filter.HasCardType CardType.Artifact)})
+      " {\"pool\":{\"type\":\"Creatures\"},\"asCast\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Artifact\"}}} "
   Spec.it s "a required spec: \"another\" (Not IsSource)" $
     Common.assertCodec
       s

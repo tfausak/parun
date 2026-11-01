@@ -3581,6 +3581,7 @@ targetSlotSlots slot =
         -- Every slot the slot's own FILTER names -- CR 603.2's "target artifact or
         -- enchantment that player controls".
         maybe Map.empty (Map.fromSet (const SlotArity.One) . Filter.boundSlots) (TargetSlot.filter slot),
+        maybe Map.empty (Map.fromSet (const SlotArity.One) . Filter.boundSlots) (TargetSlot.asCast slot),
         -- And every slot its CR 202.3 computed bound names -- Venerable Warsinger's
         -- "mana value X or less ... where X is the amount of damage this creature
         -- dealt to that player", whose X is the trigger's own event amount
