@@ -1070,13 +1070,14 @@ framedNameCounts card =
   let total wanted = sum (fmap (\(_, f) -> framedNameAtoms (atomJson f)) (filter (\(framing, _) -> elem framing [InTargetSlot, SearchFramed, HandSweepFramed, LifeLossAmountFramed, SourceHostFramed] == wanted) (cardFilters card)))
    in (total True, total False)
 
--- CR 709.4a's bound-name comparison is answerable only where
--- Filter.Context.slotNames is filled, which two callers do:
+-- CR 709.4a's framed name comparisons (framedNameAtoms) are answerable only
+-- where Filter.Context.slotNames and battlefieldViews are filled, which two
+-- callers do, both through Parun.Engine.Projection.framedBySlots:
 -- Parun.Engine.Target.admittedGiven, matching a MODE's target slot Filter, and
 -- Parun.Engine.Resolve.Slots.effectContext, which all but one of a resolution's
 -- positions go through -- the search filter and the mill tally among them.
--- Filter.contextFor leaves it empty, so
--- Filter.Shares Name Bound in a Count filter read outside a resolution, an
+-- Filter.contextFor leaves both empty, so
+-- either atom in a Count filter read outside a resolution, an
 -- affected set or a cost criterion is a silent False rather than a rejected card. This is where that is made loud.
 --
 -- The positions framedNameCounts admits are narrower than that, on
@@ -1652,8 +1653,9 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
       (searchZoneSets (S.combinedFace moogle))
       [Set.fromList [Zone.Library, Zone.Graveyard]]
     Spec.assertBool s (length (concatMap (searchZoneSets . S.combinedFace) ps) > 5) "and the pool gives the sweep other searches to be about"
-  -- CR 709.4a's Filter.Shares Name Bound is in CR 701.3a's position one axis over:
-  -- answerable only where Filter.Context.slotNames is filled, and unanswerable --
+  -- CR 709.4a's Filter.Shares Name, at Bound or AnyPermanent, is in CR 701.3a's
+  -- position one axis over: answerable only where Filter.Context.slotNames and
+  -- battlefieldViews are filled (Projection.framedBySlots), and unanswerable --
   -- a silent False -- everywhere else. The positions ADMITTED here are a MODE's
   -- target slot, a CR 701.23 search filter, a CR 608.2c hand sweep's own filter,
   -- a CR 119.3 life loss amount and an effect's own object, the last four since
@@ -1663,7 +1665,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- -- so this rejects in the safe direction only. See framedNameOffends
   -- for the two offences and Framing for why CR 303.4a's enchant slot is not one
   -- of the safe positions.
-  Spec.it s "CR 709.4a no card asks a slot-anchored Shares Name outside a mode's target slot, a search filter, a hand sweep, a life loss amount or an effect's object" $ do
+  Spec.it s "CR 709.4a no card asks a framed Shares Name outside a mode's target slot, a search filter, a hand sweep, a life loss amount or an effect's object" $ do
     ps <- S.allPrintings s corpus
     let offenders = filter (anyFace framedNameOffends . Printing.card) ps
     Spec.assertEqWith s "the atom sits only in a target slot's, a search's, a hand sweep's, a life loss amount's or an effect object's filter" (fmap (S.nameOf . Printing.card) offenders) []
@@ -2393,8 +2395,10 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     let groupKeyword = base {Face.spell = counting (kindOf groupAtom) Nothing}
         groupSlot = base {Face.spell = counting plain (Just groupAtom)}
     Spec.assertEqWith s "Shares Name AnyPermanent under a slot amount's keyword counter is an offence" (framedNameCounts groupKeyword) (0, 1)
+    Spec.assertBool s (framedNameOffends groupKeyword) "and the lint says so"
     Spec.assertEqWith s "the same group atom in the slot's own filter is not" (framedNameCounts groupSlot) (1, 0)
-    -- NOT vacuous: the codec sees exactly one atom in each of the six faces, so
+    Spec.assertBool s (not (framedNameOffends groupSlot)) "and the lint accepts it"
+    -- NOT vacuous: the codec sees exactly one atom in each planted face, so
     -- every pair above is a comparison against a real occurrence rather than
     -- against nothing -- and a (0, 0) from a traversal that stopped digging would
     -- fail the cross-check inside each lint rather than pass quietly.
@@ -2404,7 +2408,9 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
             ("IsHostOfSource under the row's keyword counter", encoded hostOfSourceTag rowKeyword),
             ("IsHostOfSource in the row's own pattern", encoded hostOfSourceTag rowItself),
             ("Shares Name Bound under the amount's keyword counter", framedNameAtoms (Codec.encode (Face.Codec.codec Card.codec) amountKeyword)),
-            ("Shares Name Bound in the slot's own filter", framedNameAtoms (Codec.encode (Face.Codec.codec Card.codec) slotItself))
+            ("Shares Name Bound in the slot's own filter", framedNameAtoms (Codec.encode (Face.Codec.codec Card.codec) slotItself)),
+            ("Shares Name AnyPermanent under the amount's keyword counter", framedNameAtoms (Codec.encode (Face.Codec.codec Card.codec) groupKeyword)),
+            ("Shares Name AnyPermanent in the slot's own filter", framedNameAtoms (Codec.encode (Face.Codec.codec Card.codec) groupSlot))
           ]
     Spec.assertEqWith s "each planted face encodes exactly one atom" authored (fmap (fmap (const 1)) authored)
   -- CR 122.1b lets a counter's KIND be a whole Keyword, and a keyword may carry a
@@ -3099,7 +3105,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- each is asserted through framedNameCounts as well as the predicate -- the
   -- counts say the TRAVERSAL put it in that position, where the predicate alone is
   -- also satisfied by the codec half noticing an atom the traversal missed.
-  Spec.it s "the lint itself catches a slot-anchored Shares Name outside a mode's target slot, a search filter, a hand sweep, a life loss amount or an effect's object" $ do
+  Spec.it s "the lint itself catches a framed Shares Name outside a mode's target slot, a search filter, a hand sweep, a life loss amount or an effect's object" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     sorcerer <- S.printingOf s registry "Prodigal Sorcerer"
     harness <- S.printingOf s registry "Harness the Storm"

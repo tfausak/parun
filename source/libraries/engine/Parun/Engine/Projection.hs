@@ -1287,7 +1287,7 @@ framedBySlots gs recipients context =
           Filter.slotHostControllers = fmap (foldMap hostController . objectsOf) recipients,
           -- CR 614.12: less a batch still entering (GameState.enteringBeside),
           -- Resolve.Slots.battlefieldMatching's reading.
-          Filter.battlefieldViews = fmap (`viewOfObject` gs) (Seq.fromList (Set.toList (Set.difference (GameState.battlefield gs) (GameState.enteringBeside gs))))
+          Filter.battlefieldViews = fmap (viewsOf gs) (Seq.fromList (Set.toList (Set.difference (GameState.battlefield gs) (GameState.enteringBeside gs))))
         }
 
 -- Filter.contextFor with a recipient map framed in through framedBySlots, for

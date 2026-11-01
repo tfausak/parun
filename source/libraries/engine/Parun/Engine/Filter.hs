@@ -1279,7 +1279,7 @@ data Context = MkContext
     -- False.
     --
     -- What keeps a card out of those positions is Parun.FilterPositionLintSpec's
-    -- "CR 709.4a no card asks a slot-anchored Shares Name outside a mode's target slot, a search filter, a hand sweep or a life loss amount",
+    -- "CR 709.4a no card asks a framed Shares Name outside a mode's target slot, a search filter, a hand sweep, a life loss amount or an effect's object",
     -- the sweep sourceMeasures' and defendingPlayer's siblings each have.
     slotNames :: Map.Map SlotName.SlotName (Set.Set CardName.CardName),
     -- CR 110.2: the CONTROLLERS of the objects the surrounding announcement's
@@ -1795,10 +1795,10 @@ heldBy holder view = case holder of
   Holder.Owner -> owner view
 
 -- CR 105.2 / 205.3m / 709.4a: Filter.Shares' reading of each pair, as the test
--- of a candidate against the anchored object's values. One comparison for every
--- trait: a non-empty INTERSECTION. CR 105.2 and CR 709.4a make colours and names
--- sets, CR 702.158e asks for a shared sector designation, and an owner is a set
--- of at most one. A side with no value -- a colourless object, a nameless one
+-- of a candidate against the anchored object's values, or against each member's
+-- of a group anchor. One comparison for every trait: a non-empty INTERSECTION.
+-- CR 105.2 and CR 709.4a make colours and names sets, CR 702.158e asks for a
+-- shared sector designation, and an owner is a set of at most one. A side with no value -- a colourless object, a nameless one
 -- (CR 708.2a), a player, which has no owner, one in no sector, or an anchor the
 -- context did not fill -- leaves its set empty and answers False without a case
 -- of its own, but for one posture below.
