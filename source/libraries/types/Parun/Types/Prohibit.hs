@@ -13,6 +13,10 @@ import qualified Parun.Types.RestrictedCreatures as RestrictedCreatures
 -- write the other three Named. Exhaustion's is @Prohibit Untap
 -- (DuringNextUntapStepOf target) (Matching ...)@.
 --
+-- Teferi, Timeless Voyager's "they can't phase in" is written BEFORE its PhaseOut:
+-- a Named ref reads the battlefield, and they have left it once that has resolved.
+-- Nothing happens between the two, so the reversed order is not observable.
+--
 -- One axis, where Parun.Types.ForbidAttack also carries what the attack is aimed
 -- at. Parun.Types.RestrictedCreatures for that type's reason: CR 611.2c makes
 -- "creatures and lands target opponent controls don't untap" a class.

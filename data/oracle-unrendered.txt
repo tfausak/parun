@@ -2492,6 +2492,7 @@ tectonic-rift
 teferi-hero-of-dominaria
 teferi-mage-of-zhalfir
 teferi-master-of-time
+teferi-timeless-voyager
 teferis-ageless-insight
 teferis-moat
 teferis-puzzle-box

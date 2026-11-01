@@ -27,6 +27,10 @@
 -- Parun.Engine.Damage.removeAllDamage clears every object rather than every
 -- permanent and so covers a phased-out one without naming it.
 --
+-- A stored "can't phase in" (Prohibition.PhaseIn, Teferi, Timeless Voyager) is the
+-- other effect on that far side: `phasingIn` asks it by id. CR 702.26e leaves it
+-- standing, as an effect naming the permanent as phased out.
+--
 -- The object itself does NOT move zones, which is CR 702.26d: Object.zone stays
 -- Zone.Battlefield, nothing goes through Parun.Engine.Event's zone-change funnel,
 -- and so no zone-change ability triggers and no object gets a new incarnation.
@@ -89,6 +93,7 @@ import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Prepare as Prepare
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
+import qualified Parun.Engine.RestrictedCreatures as RestrictedCreatures
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Keyword as Keyword
@@ -96,6 +101,7 @@ import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.PhasedOut as PhasedOut
 import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.Prohibition as Prohibition
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.Zone as Zone
@@ -258,10 +264,18 @@ heldBy pid oid gs = Maybe.fromMaybe pid (Projection.controllerOf oid gs)
 -- belonging to anybody. They are unioned into `onSchedule` before the closure
 -- rather than beside it, so an Aura that phased out indirectly on an orphaned
 -- host still rides back with that host (CR 702.26g).
+--
+-- A permanent a stored prohibition holds (CR 101.2) drops off `onSchedule`, and
+-- what rides on it stays with it (CR 702.26g). It is only passed over: its row
+-- stands, so the first untap step on its schedule after the hold ends takes it.
+-- Scenario teferi-timeless-voyager-held-creatures-miss-their-untap-step is the
+-- proof, and "CR 702.26n a held orphaned row waits out the hold" in
+-- Parun.PhasingSpec the orphaned half.
 phasingIn :: PlayerId -> GameState -> [ObjectId]
 phasingIn pid gs =
   let rows = GameState.phasedOut gs
-      onSchedule = Map.keysSet (Map.filter (\row -> row == PhasedOut.Directly pid || isOrphaned row) rows)
+      due = Map.keysSet (Map.filter (\row -> row == PhasedOut.Directly pid || isOrphaned row) rows)
+      onSchedule = Set.difference due (RestrictedCreatures.prohibited Prohibition.PhaseIn (Set.toList due) gs)
       indirect = Map.keysSet (Map.filter isIndirect rows)
    in Set.toAscList (closeOver indirect onSchedule gs)
 
