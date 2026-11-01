@@ -10,6 +10,8 @@ data Prohibition
     Block
   | -- | Counters can't be put on it (CR 122.6).
     Counters
+  | -- | It stays phased out through its untap step (CR 702.26a).
+    PhaseIn
   | -- | It can't be regenerated (CR 701.19c).
     Regenerate
   | -- | It doesn't untap during its controller's untap step (CR 502.3).

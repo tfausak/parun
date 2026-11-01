@@ -1,0 +1,246 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "AddLoyaltyToThis",
+                "value": 1
+              }
+            ],
+            "mana": []
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Draw",
+                        "value": {
+                          "player": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          },
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 1
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "RemoveLoyaltyFromThis",
+                "value": {
+                  "type": "Fixed",
+                  "value": 3
+                }
+              }
+            ],
+            "mana": []
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "MoveToZone",
+                        "value": {
+                          "placement": {
+                            "type": "Stated",
+                            "value": {
+                              "type": "Top"
+                            }
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "target"
+                          },
+                          "zone": {
+                            "type": "Library"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "target": {
+                    "pool": {
+                      "type": "Creatures"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "RemoveLoyaltyFromThis",
+                "value": {
+                  "type": "Fixed",
+                  "value": 8
+                }
+              }
+            ],
+            "mana": []
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Prohibit",
+                        "value": {
+                          "affected": {
+                            "type": "Named",
+                            "value": {
+                              "type": "EachMatching",
+                              "value": {
+                                "type": "And",
+                                "value": [
+                                  {
+                                    "type": "HasCardType",
+                                    "value": {
+                                      "type": "Creature"
+                                    }
+                                  },
+                                  {
+                                    "type": "HeldByBound",
+                                    "value": {
+                                      "holder": {
+                                        "type": "Controller"
+                                      },
+                                      "slot": "target"
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          },
+                          "duration": {
+                            "type": "UntilEndOfYourNextTurn"
+                          },
+                          "what": {
+                            "type": "PhaseIn"
+                          }
+                        }
+                      },
+                      {
+                        "type": "PhaseOut",
+                        "value": {
+                          "type": "EachMatching",
+                          "value": {
+                            "type": "And",
+                            "value": [
+                              {
+                                "type": "HasCardType",
+                                "value": {
+                                  "type": "Creature"
+                                }
+                              },
+                              {
+                                "type": "HeldByBound",
+                                "value": {
+                                  "holder": {
+                                    "type": "Controller"
+                                  },
+                                  "slot": "target"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "target": {
+                    "filter": {
+                      "type": "IsPlayer",
+                      "value": {
+                        "type": "Opponent"
+                      }
+                    },
+                    "pool": {
+                      "type": "Players"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "loyalty": {
+        "type": "Literal",
+        "value": 4
+      },
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 4
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Teferi, Timeless Voyager",
+      "oracleText": "[+1]: Draw a card.\n[−3]: Put target creature on top of its owner's library.\n[−8]: Each creature target opponent controls phases out. Until the end of your next turn, they can't phase in. (Treat them and anything attached to them as though they don't exist.)",
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Teferi"
+          }
+        ],
+        "supertypes": [
+          {
+            "type": "Legendary"
+          }
+        ],
+        "types": [
+          {
+            "type": "Planeswalker"
+          }
+        ]
+      }
+    }
+  ]
+}

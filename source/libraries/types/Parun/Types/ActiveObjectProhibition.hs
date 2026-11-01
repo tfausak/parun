@@ -16,9 +16,10 @@ import qualified Parun.Types.Timestamp as Timestamp
 -- 509.1b at Parun.Engine.CombatRestriction.blockProhibited, CR 502.3 at
 -- Parun.Engine.UntapRestriction.gathered, CR 122.6 at
 -- Parun.Engine.CounterRestriction.prohibited -- each unioned beside its printed
--- carrier's rows, so no gate learns which road a prohibition took -- and CR
--- 701.19c at Parun.Engine.Event.resolveDestruction, which turns the destruction
--- it proposes into one that can't be regenerated.
+-- carrier's rows, so no gate learns which road a prohibition took -- CR 702.26a
+-- at Parun.Engine.Phasing.phasingIn, and CR 701.19c at
+-- Parun.Engine.Event.resolveDestruction, which turns the destruction it proposes
+-- into one that can't be regenerated.
 --
 -- OUTSIDE the layer system (CR 613.11): each modifies the rules rather than an
 -- object's characteristics, so no Parun.Types.Modification arm could carry it
