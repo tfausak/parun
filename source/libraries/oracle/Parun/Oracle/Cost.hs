@@ -86,8 +86,20 @@ component self named c = case c of
     p <- Filter.phrase f named
     let card = Filter.MkNoun (Text.pack "card") (Just (Text.pack "cards"))
     fmap (Text.pack "Discard " <>) (some (toInteger n) card (Filter.merge p (Filter.MkPhrase [] [card] [])))
+      <> [ Text.pack "Discard " <> Prose.article one <> Text.pack " " <> one <> Text.pack " or " <> other
+         | n == 1,
+           Filter.Type.Or [left, right] <- [f],
+           one <- singular named card left,
+           other <- singular named card right
+         ]
   CostComponent.Blight (CostAmount.Fixed n) -> [Text.pack ("Blight " <> show n)]
   _ -> []
+
+-- | One object of a filter, named as a card: "land card", "Shrine card".
+singular :: (k -> [Text.Text]) -> Filter.Noun -> Filter.Type.Filter k -> [Text.Text]
+singular named card f = do
+  p <- Filter.phrase f named
+  Filter.describe Filter.Singular card (Filter.merge p (Filter.MkPhrase [] [card] []))
 
 -- | So many objects a phrase describes: "a Mountain", "another creature",
 -- "three Forests".
