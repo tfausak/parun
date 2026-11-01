@@ -2369,6 +2369,7 @@ bakeSlot :: Map SlotName PlayerId -> TargetSlot -> TargetSlot
 bakeSlot players slot =
   slot
     { TargetSlot.filter = fmap (Filter.bakeBound players Map.empty Map.empty) (TargetSlot.filter slot),
+      TargetSlot.asCast = fmap (Filter.bakeBound players Map.empty Map.empty) (TargetSlot.asCast slot),
       TargetSlot.amount = fmap (Quantity.bakeBound players Map.empty) (TargetSlot.amount slot),
       TargetSlot.divided = fmap (Quantity.bakeBound players Map.empty) (TargetSlot.divided slot),
       -- CR 601.2c's count reads a Quantity of its own, so it is baked beside the
@@ -2400,6 +2401,19 @@ announcedSlots kind controller source gs =
   splitPerPlayer
     (\_ each -> List.filter (PlayerRelation.holds (Game.teams gs) (SlotPerPlayer.players each) controller) (Players.table (Plane.rangePerspective source controller gs) gs))
     (\copy -> not (Set.null (legalRecipients kind (Just controller) source copy gs)))
+    . fmap narrowedAsCast
+
+-- CR 601.2c: the slot with its asCast restriction in its filter. Only this
+-- announcement holds the result; CR 608.2b's re-check and a changed target read
+-- the slot off the face.
+narrowedAsCast :: TargetSlot -> TargetSlot
+narrowedAsCast slot = case TargetSlot.asCast slot of
+  Nothing -> slot
+  Just narrowing ->
+    slot
+      { TargetSlot.filter = Just (maybe narrowing (\printed -> Filter.Type.And [printed, narrowing]) (TargetSlot.filter slot)),
+        TargetSlot.asCast = Nothing
+      }
 
 -- CR 802.2a: the defending player an announcement chose, for a source with no
 -- attacking creature to resolve "defending player" by. The target settles it --

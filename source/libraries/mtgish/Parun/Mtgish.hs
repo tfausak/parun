@@ -1658,7 +1658,8 @@ slot pool f =
       TargetSlot.chooser = Nothing,
       TargetSlot.perPlayer = Nothing,
       TargetSlot.divided = Nothing,
-      TargetSlot.together = Nothing
+      TargetSlot.together = Nothing,
+      TargetSlot.asCast = Nothing
     }
 
 -- | A slot of permanents: creatures (CR 109.2) where the description says

@@ -2929,7 +2929,7 @@ tapPermanentsNames asking x = case x of
 
 targetSlotNames :: (Monoid r) => Asking r -> TargetSlot.TargetSlot -> r
 targetSlotNames asking x = case x of
-  TargetSlot.MkTargetSlot pool filter_ count amount chooser perPlayer divided _together -> poolNames asking pool <> foldMap (filterNames asking) filter_ <> slotCountNames asking count <> foldMap (quantityNames asking) amount <> foldMap (playerRefNames asking) chooser <> foldMap (slotPerPlayerNames asking) perPlayer <> foldMap (quantityNames asking) divided
+  TargetSlot.MkTargetSlot pool filter_ count amount chooser perPlayer divided _together asCast -> poolNames asking pool <> foldMap (filterNames asking) filter_ <> foldMap (filterNames asking) asCast <> slotCountNames asking count <> foldMap (quantityNames asking) amount <> foldMap (playerRefNames asking) chooser <> foldMap (slotPerPlayerNames asking) perPlayer <> foldMap (quantityNames asking) divided
 
 theseDiscardNames :: (Monoid r) => Asking r -> TheseDiscard.TheseDiscard -> r
 theseDiscardNames asking x = case x of

@@ -3083,6 +3083,7 @@ targetSlotSiblingNames slot =
   Set.unions
     [ poolSiblingName (TargetSlot.pool slot),
       maybe Set.empty Filter.boundSlots (TargetSlot.filter slot),
+      maybe Set.empty Filter.boundSlots (TargetSlot.asCast slot),
       maybe Set.empty (Map.keysSet . Slots.quantitySlots) (TargetSlot.amount slot),
       maybe Set.empty (Map.keysSet . Slots.quantitySlots) (SlotCount.quantity (TargetSlot.count slot)),
       maybe Set.empty (Map.keysSet . Slots.quantitySlots) (TargetSlot.divided slot)

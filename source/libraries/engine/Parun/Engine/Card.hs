@@ -1946,10 +1946,8 @@ foldEnchant slots = case slots of
           Just meet ->
             first
               { TargetSlot.pool = meet,
-                TargetSlot.filter = case Maybe.mapMaybe TargetSlot.filter (first : rest) of
-                  [] -> Nothing
-                  [one] -> Just one
-                  many -> Just (Filter.And many)
+                TargetSlot.filter = allOf TargetSlot.filter,
+                TargetSlot.asCast = allOf TargetSlot.asCast
               }
           -- The empty disjunction, which matches nothing: no candidate for CR
           -- 601.2c to choose, so CR 303.4a leaves the spell uncastable, CR 303.4g
@@ -1958,6 +1956,11 @@ foldEnchant slots = case slots of
           -- every card off it, so no test observes it.
           Nothing -> first {TargetSlot.filter = Just (Filter.Or [])}
       )
+    where
+      allOf field = case Maybe.mapMaybe field (first : rest) of
+        [] -> Nothing
+        [one] -> Just one
+        many -> Just (Filter.And many)
 
 -- The pool among these that every other one CONTAINS, if one does: the
 -- intersection CR 702.5c asks for whenever the pools are nested (enchant

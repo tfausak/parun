@@ -4116,7 +4116,7 @@ costComponentFilters component = case component of
 -- flying" -- and CR 303.4a's enchant slot, which is a TargetSlot too.
 targetSlotFilters :: TargetSlot.TargetSlot -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
 targetSlotFilters slot =
-  unframed (Maybe.maybeToList (TargetSlot.filter slot))
+  unframed (Maybe.maybeToList (TargetSlot.filter slot) <> Maybe.maybeToList (TargetSlot.asCast slot))
     -- CR 202.3's computed bound is a Quantity, and a Quantity reaches a Count and
     -- so a Filter -- so the slot's `amount` is a Filter position like any other
     -- and has to be swept, or the cross-checks below would report an atom buried

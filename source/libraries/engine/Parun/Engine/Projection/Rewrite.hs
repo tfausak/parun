@@ -2045,6 +2045,7 @@ rewriteTargetSlot :: [(TextWord.TextWord, TextWord.TextWord)] -> TargetSlot.Targ
 rewriteTargetSlot pairs slot =
   slot
     { TargetSlot.filter = fmap (Filter.rewrite pairs) (TargetSlot.filter slot),
+      TargetSlot.asCast = fmap (Filter.rewrite pairs) (TargetSlot.asCast slot),
       TargetSlot.amount = fmap (rewriteQuantity pairs) (TargetSlot.amount slot),
       TargetSlot.count = SlotCount.mapQuantity (rewriteQuantity pairs) (TargetSlot.count slot),
       TargetSlot.divided = fmap (rewriteQuantity pairs) (TargetSlot.divided slot)
