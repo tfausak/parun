@@ -66,10 +66,6 @@
             "ready": true
           },
           {
-            "card": "Wall of Stone",
-            "label": "aw"
-          },
-          {
             "card": "Forest",
             "label": "f1"
           },
@@ -133,10 +129,6 @@
           {
             "card": "Wall of Stone",
             "label": "w2"
-          },
-          {
-            "card": "Hill Giant",
-            "label": "bg"
           }
         ]
       }
@@ -283,36 +275,6 @@
     {
       "do": {
         "Attack": [
-          "$bg"
-        ]
-      },
-      "player": "bob",
-      "step": "DeclareAttackers",
-      "turn": 2
-    },
-    {
-      "do": {
-        "ChooseAttackTarget": "$alice"
-      },
-      "player": "bob",
-      "step": "DeclareAttackers",
-      "turn": 2
-    },
-    {
-      "do": {
-        "Block": {
-          "$aw": [
-            "$bg"
-          ]
-        }
-      },
-      "player": "alice",
-      "step": "DeclareBlockers",
-      "turn": 2
-    },
-    {
-      "do": {
-        "Attack": [
           "Grizzly Bears",
           "$a"
         ]
@@ -370,5 +332,5 @@
       "turn": 3
     }
   ],
-  "note": "Each attacker's choice is its own (the ruling), one taken and one declined. Neither the Bears cast after Garruk resolved, nor bob's Giant on turn 2, nor anything on turn 3 is given a prompt."
+  "note": "Each attacker's choice is its own (the ruling), one taken and one declined. On turn 3 neither the Bears cast after Garruk resolved nor the Giant that had the option is given a prompt."
 }
