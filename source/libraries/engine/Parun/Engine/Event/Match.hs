@@ -490,18 +490,22 @@ additionalEntryTriggers gs you zc
   | ZoneChange.to zc == Zone.Battlefield = PlayerEffect.additionalEntryTriggers you (ZoneChange.object zc) (atEntry gs (ZoneChange.object zc))
   | otherwise = 0
 
--- CR 603.2d: how many additional times `bearer`'s triggered abilities trigger
--- on the event of `group`, for a bearer that was a permanent then (CR 110.1): a
--- card in a graveyard or an emblem has no such abilities. Read off the board after
--- the event (GameState.boardAfterEvent), or for a bearer that event took off the
--- battlefield the board it looks back to (GameState.boardBeforeDeparture; CR
--- 603.10a, docs/decisions.md, "A departing bearer's additional triggers look
--- back").
-additionalTriggers :: GameState -> PlayerId -> ObjectId -> EventGroup.EventGroup -> Natural
-additionalTriggers gs you bearer group =
+-- CR 603.2d: how many additional times `bearer`'s triggered ability triggers on
+-- the event of `group`, for a bearer that was a permanent then (CR 110.1): a card
+-- in a graveyard or an emblem has no such abilities. Read off the board the
+-- ability itself reads: CR 603.10's after the event (GameState.boardAfterEvent),
+-- or for `looksBack` the board before it (GameState.boardBeforeDeparture; CR
+-- 603.10a, docs/decisions.md, "A look-back ability's additional triggers look
+-- back"). A look-back ability's event with no such board took nothing off the
+-- battlefield, so the after board answers.
+--
+-- Not implemented: the board before a look-back event that takes nothing off
+-- the battlefield, a control change, say (#5901).
+additionalTriggers :: GameState -> PlayerId -> ObjectId -> EventGroup.EventGroup -> Bool -> Natural
+additionalTriggers gs you bearer group looksBack =
   let after = Map.findWithDefault gs group (GameState.boardAfterEvent gs)
-      boards = after : Maybe.maybeToList (Map.lookup group (GameState.boardBeforeDeparture gs))
-   in case filter (Set.member bearer . GameState.battlefield) boards of
+      before = if looksBack then Maybe.maybeToList (Map.lookup group (GameState.boardBeforeDeparture gs)) else []
+   in case filter (Set.member bearer . GameState.battlefield) (before <> [after]) of
         board : _ -> PlayerEffect.additionalTriggers you bearer board
         [] -> 0
 

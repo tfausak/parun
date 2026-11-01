@@ -56,7 +56,28 @@
         "name": "alice"
       },
       {
-        "battlefield": [],
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "i1",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "i2",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Stifle",
+            "label": "s1"
+          },
+          {
+            "card": "Stifle",
+            "label": "s2"
+          }
+        ],
         "library": [
           {
             "card": "Island"
@@ -100,8 +121,115 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "A state trigger of a Wizard goes off twice with Harmonic Prodigy and doesn't go off again while either instance waits.",
+  "description": "A state trigger of a Wizard goes off twice with Harmonic Prodigy; countering one instance re-arms nothing while the other waits, and countering that one too makes it go off twice again.",
   "timeline": [
+    {
+      "do": {
+        "OrderTriggers": [
+          "$outcast",
+          "$outcast"
+        ]
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "trigger of $outcast",
+            "trigger of $outcast"
+          ],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$i1",
+            null
+          ],
+          "object": "$s1",
+          "targets": [
+            "trigger of $outcast"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "trigger of $outcast"
+          ],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$i2"
+          ],
+          "object": "$s2",
+          "targets": [
+            "trigger of $outcast"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
     {
       "do": {
         "OrderTriggers": [

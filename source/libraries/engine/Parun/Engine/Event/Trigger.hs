@@ -208,8 +208,9 @@ resampleEntry oid gs = case Game.entryGroup oid gs of
 -- CR 603.4: file `gs` as the board after every unscanned event that has none
 -- yet (GameState.boardAfterEvent). Called where an event is over with whatever
 -- else its instruction or action does: as each instruction of a resolution
--- finishes (CR 608.2c, Resolve.applyEffectWith) and before each state-based
--- action check (Sba.performStateBasedActions). The first filing stands, and a group a
+-- finishes (CR 608.2c, Resolve.applyEffectWith), as each part of a cost is paid
+-- (CR 601.2h, Cost.payInOrder) and before each state-based action check
+-- (Sba.performStateBasedActions). The first filing stands, and a group a
 -- `simultaneously` bracket still holds open is left for the filing after it
 -- closes (CR 608.2f). Each board's own copy of the field is empty.
 --
@@ -2349,8 +2350,8 @@ eventTriggers events gs =
             -- are gathered elsewhere and never multiplied, as CR 603.2d asks.
             -- Each effect adds its own, so one that names the bearer (Sanctum
             -- of All) adds to one that names the entry.
-            additional =
-              additionalTriggers gs ctrl oid (LoggedEvent.group logged) + case Game.enteredBattlefieldChange event of
+            additional cond =
+              additionalTriggers gs ctrl oid (LoggedEvent.group logged) (looksBack cond) + case Game.enteredBattlefieldChange event of
                 Just zc | Map.member oid board -> additionalEntryTriggers gs ctrl zc
                 _ -> 0
             -- CR 805.4d: one trigger per player whose step this is (stepCopies).
@@ -2358,7 +2359,7 @@ eventTriggers events gs =
             pends (cond, ab) =
               let perPlayer = stepCopies gs oid ctrl cond event ab (pend (cond, ab))
                   occurrences = maybe perPlayer (\n -> concat (List.genericReplicate n perPlayer)) (countersRemovedOccurrences oid cond event)
-               in [(extra, trigger) | extra <- [0 .. additional], trigger <- occurrences]
+               in [(extra, trigger) | extra <- [0 .. additional cond], trigger <- occurrences]
             -- CR 603.2c's key, for `oncePerBatch` below: which ability of which
             -- bearer this pending trigger came from, or Nothing when the condition
             -- is per-occurrence and every member of the batch is its own trigger

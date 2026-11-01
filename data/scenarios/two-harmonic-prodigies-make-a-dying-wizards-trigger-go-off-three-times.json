@@ -13,10 +13,6 @@
           {
             "card": "Merfolk Seer",
             "label": "seer"
-          },
-          {
-            "card": "Merfolk Seer",
-            "label": "other"
           }
         ],
         "library": [
@@ -116,7 +112,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "Each Harmonic Prodigy adds its own instance: a Wizard dying with two of them triggers three times, while a Wizard dying alone with none triggers once.",
+  "description": "Each Harmonic Prodigy adds its own instance: a Wizard dying with two of them triggers three times.",
   "timeline": [
     {
       "do": "Pass",

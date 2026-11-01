@@ -331,8 +331,9 @@ objectsLeaveWith pid gs =
       -- the move. Parun.FaceDownSpec's "CR 708.9 the Witness draws when a
       -- face-down permanent's owner leaves the game" proves it.
       revealed = concatMap (Event.leavingReveals gs) owned
+      filed = if null permanents then id else Event.fileBoardBeforeDeparture gs
    in Event.simultaneouslyPure
-        (\g -> List.foldl' (\g1 oid -> Event.recordEvent (GameEvent.LeftTheGame (LeftTheGame.MkLeftTheGame oid Zone.Battlefield)) g1) (List.foldl' (flip Event.recordEvent) g revealed) permanents)
+        (\g -> List.foldl' (\g1 oid -> Event.recordEvent (GameEvent.LeftTheGame (LeftTheGame.MkLeftTheGame oid Zone.Battlefield)) g1) (List.foldl' (flip Event.recordEvent) (filed g) revealed) permanents)
         removed
 
 -- CR 800.4a, second clause: any effects which give that player control of

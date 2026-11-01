@@ -46,6 +46,7 @@ import qualified Parun.Engine.CrewRestriction as CrewRestriction
 import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.Detain as Detain
 import qualified Parun.Engine.Event as Event
+import qualified Parun.Engine.Event.Trigger as Trigger
 import qualified Parun.Engine.Expiry as Expiry
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Forage as Forage
@@ -5381,6 +5382,9 @@ payInOrder perform moment paidFor slots pid oid components = case components of
   [] -> pure bindsNothing
   component : rest -> do
     outcome <- payComponent perform moment paidFor slots pid oid component
+    -- CR 603.4: this part's event is over, and the next part may take a
+    -- permanent away.
+    State.modify' Trigger.fileBoards
     case outcome of
       Payment.Unpaid -> pure Payment.Unpaid
       Payment.Paid bound -> fmap (mergeBound bound) (payInOrder perform moment paidFor slots pid oid rest)
