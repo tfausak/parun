@@ -96,7 +96,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "CR 606.2 / 603.7c: Repeated Reverberation copies the next loyalty ability twice, skipping a non-loyalty one, and is then used up",
+  "description": "CR 606.2 / 603.7b: Repeated Reverberation copies the next loyalty ability twice, skipping a non-loyalty one, and is then used up",
   "final": [
     {
       "View": {
