@@ -201,6 +201,7 @@ import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.Emerge as Emerge
 import qualified Parun.Types.EnteredZone as EnteredZone
 import qualified Parun.Types.EntersWith as EntersWith
+import qualified Parun.Types.EntriesTrigger as EntriesTrigger
 import qualified Parun.Types.EntryAttack as EntryAttack
 import qualified Parun.Types.EntryBlock as EntryBlock
 import qualified Parun.Types.EntryController as EntryController
@@ -331,6 +332,7 @@ import qualified Parun.Types.PlayerCounterTally as PlayerCounterTally
 import qualified Parun.Types.PlayerCounters as PlayerCounters
 import qualified Parun.Types.PlayerDesignationTally as PlayerDesignationTally
 import qualified Parun.Types.PlayerEffect as PlayerEffect
+import qualified Parun.Types.PlayerLosesLife as PlayerLosesLife
 import qualified Parun.Types.PlayerQuantity as PlayerQuantity
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerSacrifices as PlayerSacrifices
@@ -579,7 +581,7 @@ filterNames asking criterion = case criterion of
   Filter.HostOfSubjectHasCardType _cardType -> contextNames asking
   Filter.IsToken -> mempty
   Filter.IsCommander -> mempty
-  Filter.IsActivatedAbility -> mempty
+  Filter.IsActivatedAbility _ -> mempty
   Filter.IsAbility -> mempty
   Filter.IsEmblem -> mempty
   Filter.FromSource nested -> filterNames asking nested
@@ -877,6 +879,7 @@ castingPermissionNames :: (Monoid r) => Asking r -> CastingPermission.CastingPer
 castingPermissionNames asking x = case x of
   CastingPermission.CastFromLibraryWhileSearching -> mempty
   CastingPermission.CastFromGraveyard _family -> mempty
+  CastingPermission.PlayFromGraveyard -> mempty
   CastingPermission.CastAsThoughItHadFlash condition _additionalCost -> foldMap (conditionNames asking) condition
 
 counterabilityNames :: (Monoid r) => Asking r -> Counterability.Counterability -> r
@@ -2282,6 +2285,7 @@ objectRefNames asking x = case x of
   ObjectRef.AtRandom inner -> objectRefNames asking inner
   ObjectRef.ChosenPermanents chosenPermanents -> chosenPermanentsNames asking chosenPermanents
   ObjectRef.AttachedToBound attachedToBound -> attachedToBoundNames asking attachedToBound
+  ObjectRef.AttackedBy slot -> slotNames asking slot
   ObjectRef.FromAnywhere fromAnywhere -> history asking HistoryRead.Moves <> fromAnywhereNames asking fromAnywhere
   ObjectRef.AllOf refs -> foldMap (objectRefNames asking) refs
 
@@ -2308,7 +2312,7 @@ optionalityNames asking x = case x of
 
 orElseNames :: (Monoid r) => Asking r -> OrElse.OrElse -> r
 orElseNames asking x = case x of
-  OrElse.MkOrElse _sibling chooser _villainous -> playerRefNames asking chooser
+  OrElse.MkOrElse _siblings chooser _villainous -> playerRefNames asking chooser
 
 paidExpiryNames :: (Monoid r) => Asking r -> PaidExpiry.PaidExpiry -> r
 paidExpiryNames asking x = case x of
@@ -2357,7 +2361,7 @@ permanentTappedForManaNames asking x = case x of
 
 permanentsBecomeTargetedNames :: (Monoid r) => Asking r -> PermanentsBecomeTargeted.PermanentsBecomeTargeted -> r
 permanentsBecomeTargetedNames asking x = case x of
-  PermanentsBecomeTargeted.MkPermanentsBecomeTargeted filter_ _relation _kind -> filterNames asking filter_
+  PermanentsBecomeTargeted.MkPermanentsBecomeTargeted filter_ _relation _kind _includesYou -> filterNames asking filter_
 
 permanentsDealCombatDamageToPlayerNames :: (Monoid r) => Asking r -> PermanentsDealCombatDamageToPlayer.PermanentsDealCombatDamageToPlayer -> r
 permanentsDealCombatDamageToPlayerNames asking x = case x of
@@ -2417,7 +2421,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.DontLoseUnspentMana _manaFilter -> mempty
   PlayerEffect.LoseLifeForUnspentMana -> mempty
   PlayerEffect.SpendManaAsThough _spendManaAsThough -> mempty
-  PlayerEffect.CantBeTargetedBy _playerScope -> mempty
+  PlayerEffect.CantBeTargetedBy _playerScope quality -> foldMap (filterNames asking) quality
   PlayerEffect.HasProtectionFrom filter_ -> filterNames asking filter_
   PlayerEffect.CastAsThoughItHadFlash filter_ -> filterNames asking filter_
   PlayerEffect.MayPlayAsThoughItHadFlash filter_ -> filterNames asking filter_
@@ -2437,7 +2441,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.CantSearchLibraries _cantSearchLibraries -> mempty
   PlayerEffect.CantBecomeMonarch -> mempty
   PlayerEffect.CantSetSchemesInMotion -> mempty
-  PlayerEffect.EntriesDontTrigger filter_ -> filterNames asking filter_
+  PlayerEffect.EntriesTrigger entries -> filterNames asking (EntriesTrigger.entrants entries)
   PlayerEffect.ControlledWhileSearching -> mempty
   PlayerEffect.YouChoose _declaration -> mempty
   PlayerEffect.ExilesFoundWhileSearching -> mempty
@@ -2806,7 +2810,7 @@ scopeNames asking x = case x of
   Scope.InZone inZone -> inZoneNames asking inZone
   Scope.InHistory eventShape -> eventShapeNames asking eventShape
   Scope.OverPlayers playerRef -> playerRefNames asking playerRef
-  Scope.OverBound slotName -> slotNames asking slotName
+  Scope.OverBound _ slotName -> slotNames asking slotName
   Scope.TopOf inZone -> inZoneNames asking inZone
 
 searchNames :: (Monoid r) => Asking r -> Search.Search -> r
@@ -3042,7 +3046,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SelfPreventsDamage filter_ -> filterNames asking filter_
   TriggerCondition.PlayerGainsLife _playerRelation -> mempty
   TriggerCondition.PlayersGainLife _playerRelation -> mempty
-  TriggerCondition.PlayerLosesLife _playerRelation -> mempty
+  TriggerCondition.PlayerLosesLife playerLosesLife -> triggerFrequencyNames asking HistoryRead.LifeLosses (PlayerLosesLife.frequency playerLosesLife)
   TriggerCondition.SelfCountersReached selfCountersReached -> selfCountersReachedNames asking selfCountersReached
   TriggerCondition.SelfBecomesClassLevel _classLevel -> mempty
   TriggerCondition.SelfLastCounterRemoved selfCountersRemoved -> selfCountersRemovedNames asking selfCountersRemoved
@@ -3208,9 +3212,11 @@ zoneScopeNames asking x = case x of
   ZoneScope.ControllerOfBound slotName -> slotNames asking slotName
   ZoneScope.BoundPlayer _playerId -> mempty
 
--- The slot an Anchor names; the evaluated object and the source name none.
-anchorNames :: (Monoid r) => Asking r -> Anchor.Anchor -> r
+-- The slot an Anchor names, or what its nested group names; the evaluated
+-- object and the source name none.
+anchorNames :: (Monoid r) => Asking r -> Anchor.Anchor (Filter.Filter keyword) -> r
 anchorNames asking anchor = case anchor of
   Anchor.Bound slot -> slotNames asking slot
   Anchor.Evaluated -> mempty
   Anchor.Source -> mempty
+  Anchor.AnyPermanent group -> filterNames asking group

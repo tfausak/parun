@@ -61,6 +61,7 @@ import qualified Parun.Types.KeywordCount as KeywordCount
 import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.KeywordTally as KeywordTally
 import qualified Parun.Types.Lookback as Lookback
+import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import qualified Parun.Types.MadnessCost as MadnessCost
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.Measure as Measure
@@ -169,8 +170,9 @@ data View = MkView
     --
     -- Beside the value rather than instead of it, because CR 202.3 is not
     -- recoverable in reverse: {B}{B} and {1}{B} are both 2, and CR 700.5's
-    -- devotion counts the SYMBOLS. Parun.Engine.Quantity's Devotion arm is the one
-    -- reader; no Parun.Types.Filter atom asks about it.
+    -- devotion counts the SYMBOLS, and Embodiment of Agonies' distinct mana costs
+    -- (Parun.Engine.Count's ManaCosts arm) count whole costs. No
+    -- Parun.Types.Filter atom asks about it.
     manaCost :: Maybe ManaCost.ManaCost,
     controller :: Maybe PlayerId.PlayerId,
     -- CR 108.3 / 110.2: the candidate's OWNER -- the player who started the game
@@ -554,14 +556,15 @@ data View = MkView
     commander :: Bool,
     -- CR 113.3b: is this candidate an ACTIVATED ability on the stack, rather
     -- than CR 113.3c's triggered one? Read from Object.source
-    -- (Parun.Engine.Game.isActivatedAbility) exactly as `token` above is, and
+    -- (Parun.Engine.Game.activatedAbilityKind) exactly as `token` above is, and
     -- never from a projection: which kind of ability an object is is no
     -- characteristic (CR 109.3), so no CR 613 layer can change the answer.
     --
-    -- False for every candidate that is not an ability on the stack: a
+    -- Nothing for every candidate that is not an ability on the stack: a
     -- permanent, a spell, a player, a printed face, an event snapshot. Each
-    -- builder says so at its own site.
-    activatedAbility :: Bool,
+    -- builder says so at its own site. Otherwise CR 606.2's side of it, for
+    -- IsActivatedAbility's kind.
+    activatedAbility :: Maybe LoyaltyKind.LoyaltyKind,
     -- CR 113.1c: is this candidate an ability on the stack AT ALL, of either of
     -- CR 113.3's kinds? The field above widened, filled from the same record
     -- (Parun.Engine.Game.isAbility) and never from a projection, for the same
@@ -986,7 +989,7 @@ playerView pid =
       canAttachToSubject = False,
       -- CR 111.1: a token represents a PERMANENT, and a player is not one.
       token = False,
-      activatedAbility = False,
+      activatedAbility = Nothing,
       -- CR 113.1c again, one kind wider: a player is not an object at all (CR
       -- 109.1), so it is no ability on the stack either.
       ability = False,
@@ -1276,7 +1279,7 @@ data Context = MkContext
     -- False.
     --
     -- What keeps a card out of those positions is Parun.FilterPositionLintSpec's
-    -- "CR 709.4a no card asks a slot-anchored Shares Name outside a mode's target slot, a search filter, a hand sweep or a life loss amount",
+    -- "CR 709.4a no card asks a framed Shares Name outside a mode's target slot, a search filter, a hand sweep, a life loss amount or an effect's object",
     -- the sweep sourceMeasures' and defendingPlayer's siblings each have.
     slotNames :: Map.Map SlotName.SlotName (Set.Set CardName.CardName),
     -- CR 110.2: the CONTROLLERS of the objects the surrounding announcement's
@@ -1642,9 +1645,13 @@ data Context = MkContext
     --
     -- Not implemented: the operand in a target slot, a discard or any other
     -- choice's pool (#5514).
-    candidateMeasures :: Maybe (Map.Map ObjectId.ObjectId (Map.Map Measure.Measure Integer))
+    candidateMeasures :: Maybe (Map.Map ObjectId.ObjectId (Map.Map Measure.Measure Integer)),
+    -- CR 109.2: the projected view of every permanent, for Shares at
+    -- Anchor.AnyPermanent. Filled lazily by Parun.Engine.Projection.framedBySlots;
+    -- empty in contextFor below, so the atom is vacuously False there, and
+    -- Parun.FilterPositionLintSpec keeps a card to the positions it is filled in.
+    battlefieldViews :: Seq.Seq View
   }
-  deriving (Eq, Ord, Show)
 
 -- A Context for every match whose Filter cannot name a context-relative atom --
 -- that is, every match but a target slot's, CR 702.149a's trigger condition and
@@ -1706,7 +1713,7 @@ data Context = MkContext
 -- here owes both halves of the same pair: which way its unfilled read answers,
 -- and what holds a card to the positions that fill it.
 contextFor :: Teams.Teams -> Maybe PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> Context
-contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], activePlayers = [], recipient = Nothing, shares = Map.empty, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, slotVotes = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, evaluatedCreatureTypes = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Map.empty, reader = Nothing, candidateMeasures = Nothing}
+contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], activePlayers = [], recipient = Nothing, shares = Map.empty, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, slotVotes = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, evaluatedCreatureTypes = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Map.empty, reader = Nothing, candidateMeasures = Nothing, battlefieldViews = Seq.empty}
 
 -- contextFor over a game: its teams (CR 102.4) and its active players (CR 102.1,
 -- 805.4a) filled from the state, the two facts about the table a match may ask.
@@ -1788,17 +1795,17 @@ heldBy holder view = case holder of
   Holder.Owner -> owner view
 
 -- CR 105.2 / 205.3m / 709.4a: Filter.Shares' reading of each pair, as the test
--- of a candidate against the anchored object's values. One comparison for every
--- trait: a non-empty INTERSECTION. CR 105.2 and CR 709.4a make colours and names
--- sets, CR 702.158e asks for a shared sector designation, and an owner is a set
--- of at most one. A side with no value -- a colourless object, a nameless one
+-- of a candidate against the anchored object's values, or against each member's
+-- of a group anchor. One comparison for every trait: a non-empty INTERSECTION.
+-- CR 105.2 and CR 709.4a make colours and names sets, CR 702.158e asks for a
+-- shared sector designation, and an owner is a set of at most one. A side with no value -- a colourless object, a nameless one
 -- (CR 708.2a), a player, which has no owner, one in no sector, or an anchor the
 -- context did not fill -- leaves its set empty and answers False without a case
 -- of its own, but for one posture below.
 --
 -- Not implemented: a pair the Context carries no anchored values for, answered
 -- Nothing (#5636).
-sharesAnchored :: Trait.Trait -> Anchor.Anchor -> Maybe (Context -> View -> Bool)
+sharesAnchored :: Trait.Trait -> Anchor.Anchor (Filter.Filter Keyword.Type.Keyword) -> Maybe (Context -> View -> Bool)
 sharesAnchored trait anchor = case anchor of
   Anchor.Source -> case trait of
     Trait.Color -> Just (\context view -> meets (colors view) (sourceColors context))
@@ -1831,6 +1838,16 @@ sharesAnchored trait anchor = case anchor of
     Trait.Owner -> Nothing
     Trait.Sector -> Nothing
     Trait.CardType -> Nothing
+  -- Some permanent the nest admits, matched in the OUTER context, so its "you"
+  -- and "another" are the outer match's (Pattern Matcher's "another creature
+  -- you control"). Vacuously False where nothing fills battlefieldViews.
+  Anchor.AnyPermanent group -> case trait of
+    Trait.Name -> Just (\context view -> any (\permanent -> matches context permanent group && meets (names view) (names permanent)) (battlefieldViews context))
+    Trait.Color -> Nothing
+    Trait.Owner -> Nothing
+    Trait.Sector -> Nothing
+    Trait.CreatureType -> Nothing
+    Trait.CardType -> Nothing
   where
     meets a b = not (Set.disjoint a b)
 
@@ -1839,11 +1856,13 @@ sharesAnchored trait anchor = case anchor of
 -- quantity is aimed at, which need not be the source.
 --
 -- Not implemented: the Bound anchor, answered Nothing (#5636).
-attachedAnchored :: Anchor.Anchor -> Maybe (Context -> Maybe ObjectId.ObjectId)
+attachedAnchored :: Anchor.Anchor nested -> Maybe (Context -> Maybe ObjectId.ObjectId)
 attachedAnchored anchor = case anchor of
   Anchor.Source -> Just source
   Anchor.Evaluated -> Just evaluated
   Anchor.Bound _ -> Nothing
+  -- A group names no one host: Filter.AttachedTo is that reading.
+  Anchor.AnyPermanent _ -> Nothing
 
 -- The one generic matcher. A pure fold over the Filter tree; it never inspects
 -- which effect produced the Filter. Identity checks like IsSource consult the
@@ -2355,7 +2374,7 @@ matches context view predicate = case predicate of
   Filter.IsCommander -> commander view
   -- CR 113.3b against rule 113.3c, read the way IsToken above is: a live read of
   -- what the object IS (Object.source), which no layer rewrites.
-  Filter.IsActivatedAbility -> activatedAbility view
+  Filter.IsActivatedAbility kind -> maybe (Maybe.isJust (activatedAbility view)) ((== activatedAbility view) . Just) kind
   -- CR 113.1c, the atom above widened to both of CR 113.3's kinds, and read the
   -- same way: a live read of what the object IS (Object.source).
   Filter.IsAbility -> ability view
@@ -2510,7 +2529,7 @@ rewrite pairs predicate = case predicate of
   -- CR 612.2's colour word used as a colour word: "black creature", and the
   -- "black" in "nonblack" under a Not, as Mind Bend's reminder text says.
   Filter.HasColor c -> Filter.HasColor (TextWord.colorAfter pairs c)
-  Filter.Shares _ _ -> predicate
+  Filter.Shares trait anchor -> Filter.Shares trait (mapAnchor (rewrite pairs) anchor)
   -- Untouched, and CR 612.2 says so outright: "an effect that changes a color
   -- word or a subtype can't change a card name, even if that name contains a
   -- word ... that is the same as a Magic color word, basic land type, or
@@ -2616,7 +2635,7 @@ rewrite pairs predicate = case predicate of
   -- the ATTACHER ("enchanted by an Aura"), so CR 612.1's word swap reaches it as
   -- it reaches the same description written at the top level.
   Filter.HasAttached f -> Filter.HasAttached (rewrite pairs f)
-  Filter.IsAttachedTo _ -> predicate
+  Filter.IsAttachedTo anchor -> Filter.IsAttachedTo (mapAnchor (rewrite pairs) anchor)
   Filter.IsEvaluated -> predicate
   Filter.IsHostOfSource -> predicate
   Filter.EnteredWithSource -> predicate
@@ -2626,7 +2645,7 @@ rewrite pairs predicate = case predicate of
   Filter.HostOfSubjectHasCardType _ -> predicate
   Filter.IsCommander -> predicate
   Filter.IsToken -> predicate
-  Filter.IsActivatedAbility -> predicate
+  Filter.IsActivatedAbility _ -> predicate
   Filter.IsAbility -> predicate
   Filter.IsEmblem -> predicate
   -- Descended into, HasAttached's reason: the nest describes the SOURCE.
@@ -3284,7 +3303,7 @@ bakeBound players objects controllers predicate = case predicate of
   Filter.HasCardType _ -> predicate
   Filter.HasSupertype _ -> predicate
   Filter.HasColor _ -> predicate
-  Filter.Shares _ _ -> predicate
+  Filter.Shares trait anchor -> Filter.Shares trait (mapAnchor (bakeBound players objects controllers) anchor)
   Filter.HasSubtype _ -> predicate
   Filter.HasName _ -> predicate
   Filter.NameWordsAtLeast _ -> predicate
@@ -3372,7 +3391,7 @@ bakeBound players objects controllers predicate = case predicate of
   -- ATTACHER's description is baked exactly as the same atom at the top level
   -- would be, and Parun.Engine.Filter.boundSlots descends to match.
   Filter.HasAttached f -> Filter.HasAttached (bakeBound players objects controllers f)
-  Filter.IsAttachedTo _ -> predicate
+  Filter.IsAttachedTo anchor -> Filter.IsAttachedTo (mapAnchor (bakeBound players objects controllers) anchor)
   Filter.IsEvaluated -> predicate
   Filter.IsHostOfSource -> predicate
   Filter.EnteredWithSource -> predicate
@@ -3382,7 +3401,7 @@ bakeBound players objects controllers predicate = case predicate of
   Filter.HostOfSubjectHasCardType _ -> predicate
   Filter.IsCommander -> predicate
   Filter.IsToken -> predicate
-  Filter.IsActivatedAbility -> predicate
+  Filter.IsActivatedAbility _ -> predicate
   Filter.IsAbility -> predicate
   Filter.IsEmblem -> predicate
   -- Descended into, HasAttached's reason: the SOURCE's description is baked
@@ -3471,7 +3490,7 @@ manaValueThresholds predicate = case predicate of
   Filter.HasCardType _ -> []
   Filter.HasSupertype _ -> []
   Filter.HasColor _ -> []
-  Filter.Shares _ _ -> []
+  Filter.Shares _ anchor -> foldMap manaValueThresholds (anchorFilter anchor)
   Filter.HasSubtype _ -> []
   Filter.HasName _ -> []
   Filter.NameWordsAtLeast _ -> []
@@ -3540,7 +3559,7 @@ manaValueThresholds predicate = case predicate of
   -- inside bound an ATTACHER's mana value and never the candidate's. Only
   -- widening CR 601.3a's sample is the safe direction.
   Filter.HasAttached f -> manaValueThresholds f
-  Filter.IsAttachedTo _ -> []
+  Filter.IsAttachedTo anchor -> foldMap manaValueThresholds (anchorFilter anchor)
   Filter.IsEvaluated -> []
   Filter.IsHostOfSource -> []
   Filter.EnteredWithSource -> []
@@ -3550,7 +3569,7 @@ manaValueThresholds predicate = case predicate of
   Filter.HostOfSubjectHasCardType _ -> []
   Filter.IsCommander -> []
   Filter.IsToken -> []
-  Filter.IsActivatedAbility -> []
+  Filter.IsActivatedAbility _ -> []
   Filter.IsAbility -> []
   Filter.IsEmblem -> []
   Filter.FromSource f -> manaValueThresholds f
@@ -3717,7 +3736,7 @@ statesAQuality predicate = case predicate of
   Filter.HostOfSubjectHasCardType _ -> True
   Filter.IsCommander -> True
   Filter.IsToken -> True
-  Filter.IsActivatedAbility -> True
+  Filter.IsActivatedAbility _ -> True
   Filter.IsAbility -> True
   Filter.IsEmblem -> True
   -- True whatever the nest says, RepresentedByCard's reason one arm down.
@@ -3798,6 +3817,7 @@ readsSourceValues predicate = case predicate of
       Trait.CardType -> False
     Anchor.Bound _ -> False
     Anchor.Evaluated -> False
+    Anchor.AnyPermanent group -> readsSourceValues group
   Filter.HasSubtype _ -> False
   Filter.HasName _ -> False
   Filter.NameWordsAtLeast _ -> False
@@ -3854,7 +3874,7 @@ readsSourceValues predicate = case predicate of
   Filter.ControlledSinceTurnBegan -> False
   Filter.AttachedTo f -> readsSourceValues f
   Filter.HasAttached f -> readsSourceValues f
-  Filter.IsAttachedTo _ -> False
+  Filter.IsAttachedTo anchor -> any readsSourceValues (anchorFilter anchor)
   Filter.IsEvaluated -> False
   Filter.IsHostOfSource -> False
   Filter.EnteredWithSource -> False
@@ -3864,7 +3884,7 @@ readsSourceValues predicate = case predicate of
   Filter.HostOfSubjectHasCardType _ -> False
   Filter.IsCommander -> False
   Filter.IsToken -> False
-  Filter.IsActivatedAbility -> False
+  Filter.IsActivatedAbility _ -> False
   Filter.IsAbility -> False
   Filter.IsEmblem -> False
   Filter.FromSource f -> readsSourceValues f
@@ -4035,7 +4055,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.HostOfSubjectHasCardType _ -> pure predicate
   Filter.IsCommander -> pure predicate
   Filter.IsToken -> pure predicate
-  Filter.IsActivatedAbility -> pure predicate
+  Filter.IsActivatedAbility _ -> pure predicate
   Filter.IsAbility -> pure predicate
   Filter.IsEmblem -> pure predicate
   -- DESCENT, for RepresentedByCard's reason below.
@@ -4070,11 +4090,28 @@ overBoundSlotsWith f predicate = case predicate of
 
 -- The slot an Anchor names, at MANY: an anchored atom takes the whole set the
 -- slot names.
-overAnchorSlot :: (Applicative f) => (SlotArity.SlotArity -> SlotName.SlotName -> f SlotName.SlotName) -> Anchor.Anchor -> f Anchor.Anchor
+overAnchorSlot :: (Applicative f) => (SlotArity.SlotArity -> SlotName.SlotName -> f SlotName.SlotName) -> Anchor.Anchor (Filter.Filter Keyword.Type.Keyword) -> f (Anchor.Anchor (Filter.Filter Keyword.Type.Keyword))
 overAnchorSlot f anchor = case anchor of
   Anchor.Bound slot -> fmap Anchor.Bound (f SlotArity.Many slot)
   Anchor.Evaluated -> pure anchor
   Anchor.Source -> pure anchor
+  Anchor.AnyPermanent group -> fmap Anchor.AnyPermanent (overBoundSlotsWith f group)
+
+-- The filter an anchor nests, for a traversal that descends into one.
+anchorFilter :: Anchor.Anchor nested -> Maybe nested
+anchorFilter anchor = case anchor of
+  Anchor.AnyPermanent group -> Just group
+  Anchor.Bound _ -> Nothing
+  Anchor.Evaluated -> Nothing
+  Anchor.Source -> Nothing
+
+-- A rewrite of the filter an anchor nests.
+mapAnchor :: (nested -> nested) -> Anchor.Anchor nested -> Anchor.Anchor nested
+mapAnchor f anchor = case anchor of
+  Anchor.AnyPermanent group -> Anchor.AnyPermanent (f group)
+  Anchor.Bound _ -> anchor
+  Anchor.Evaluated -> anchor
+  Anchor.Source -> anchor
 
 -- overBoundSlotsWith without the arity: CR 700.2d's rename.
 overBoundSlots :: (Applicative f) => (SlotName.SlotName -> f SlotName.SlotName) -> Filter.Filter Keyword.Type.Keyword -> f (Filter.Filter Keyword.Type.Keyword)

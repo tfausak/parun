@@ -33,6 +33,9 @@ data CastingPermission
     -- Parun.Engine.Cast keeps asking "may this be cast from the graveyard?" and
     -- never "does this have flashback?".
     CastFromGraveyard (Maybe KeywordFamily.KeywordFamily)
+  | -- | CR 601.3 / 305.1: play this card from its owner's graveyard, casting
+    -- it for its printed or an alternative cost (CR 118.9) or playing it as a land.
+    PlayFromGraveyard
   | -- | CR 601.3c / 601.3d: cast this card as though it had flash (CR 702.8a)
     -- while the condition holds, paying the additional cost (CR 601.2f) only
     -- when the permission is used.

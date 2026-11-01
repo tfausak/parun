@@ -30,6 +30,7 @@ import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
 import qualified Parun.Types.Lookback as Lookback
+import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.Measures as Measures
 import qualified Parun.Types.NameChooser as NameChooser
@@ -541,8 +542,14 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
     Common.assertCodec
       s
       codec
-      Filter.IsActivatedAbility
+      (Filter.IsActivatedAbility Nothing)
       " {\"type\":\"IsActivatedAbility\"} "
+  Spec.it s "IsActivatedAbility with a loyalty kind" $
+    Common.assertCodec
+      s
+      codec
+      (Filter.IsActivatedAbility (Just LoyaltyKind.LoyaltyAbility))
+      " {\"type\":\"IsActivatedAbility\",\"value\":{\"type\":\"LoyaltyAbility\"}} "
   Spec.it s "IsAbility" $
     Common.assertCodec
       s

@@ -106,6 +106,7 @@ import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LandPlayed as LandPlayed
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.MadnessCost as MadnessCost
 import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
@@ -145,6 +146,7 @@ import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
+import qualified Parun.Types.PlayerLosesLife as PlayerLosesLife
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.ProjectedCharacteristics as PC
@@ -1803,6 +1805,9 @@ representativeEvents cond =
       -- A row whose arm reads no arrival table, which is every arm but one.
       noTable e = (Map.empty, e)
       one e = noTable e NonEmpty.:| []
+      becameTargetEvents c =
+        let targeting recipient = noTable (GameEvent.BecameTarget (BecameTarget.MkBecameTarget recipient arrived (Maybe.fromMaybe StackObjectKind.Spell (PermanentsBecomeTargeted.kind c)) S.bob))
+         in targeting (Recipient.ToObject departed) NonEmpty.:| [targeting (Recipient.ToPlayer S.alice) | PermanentsBecomeTargeted.includesYou c]
       -- The batch's CR 400.7e table, with the sacrificed permanent's graveyard
       -- arrival in it -- Event.eventTriggers' `becameInGraveyard` for a sacrifice
       -- that reached a graveyard.
@@ -1887,7 +1892,7 @@ representativeEvents cond =
         -- CR 726.2's third ability is controlled by the taker, so alice's take.
         TriggerCondition.PlayerTookInitiative -> one (GameEvent.TookInitiative S.alice)
         -- CR 702.179d's own event, an opponent's loss.
-        TriggerCondition.OpponentLostLifeDuringYourTurn -> one (GameEvent.LifeLost (LifeChange.MkLifeChange S.bob 2))
+        TriggerCondition.OpponentLostLifeDuringYourTurn -> one (GameEvent.LifeLost (LifeLost.MkLifeLost S.bob 2 True))
         TriggerCondition.SelfCycled -> one (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.ToPayCyclingCost Nothing Nothing))
         -- CR 702.94a's cause, so the event is one this condition genuinely
         -- admits; an Ordinary reveal would pin nothing.
@@ -2132,7 +2137,7 @@ representativeEvents cond =
         TriggerCondition.PlayersGainLife _ -> one (GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 2))
         -- The loss condition's own event, and the only one it admits, on the
         -- gain arm's reasoning: same payload shape, same amount floor.
-        TriggerCondition.PlayerLosesLife _ -> one (GameEvent.LifeLost (LifeChange.MkLifeChange S.bob 2))
+        TriggerCondition.PlayerLosesLife _ -> one (GameEvent.LifeLost (LifeLost.MkLifeLost S.bob 2 True))
         -- CR 714.2b: a placement on the BEARER that crosses the chapter. The
         -- bearer here is `departed`, the id Event.matchesTrigger is asked about
         -- below, and the counts straddle N so the event really matches.
@@ -2185,10 +2190,12 @@ representativeEvents cond =
         TriggerCondition.ControllerBecomesTarget c -> one (GameEvent.BecameTarget (BecameTarget.MkBecameTarget (Recipient.ToPlayer S.alice) arrived (Maybe.fromMaybe StackObjectKind.Spell (ControllerBecomesTarget.kind c)) S.bob))
         -- The same event back on the OBJECT axis, the kind taken from the
         -- condition for the sibling's reason: Professor Hojo's Just
-        -- ActivatedAbility. It binds nothing, CR 603.2c's batch naming no one
-        -- permanent, and the floor below pins that.
-        TriggerCondition.PermanentsBecomeTargeted c -> one (GameEvent.BecameTarget (BecameTarget.MkBecameTarget (Recipient.ToObject departed) arrived (Maybe.fromMaybe StackObjectKind.Spell (PermanentsBecomeTargeted.kind c)) S.bob))
-        TriggerCondition.PermanentBecomesTargeted c -> one (GameEvent.BecameTarget (BecameTarget.MkBecameTarget (Recipient.ToObject departed) arrived (Maybe.fromMaybe StackObjectKind.Spell (PermanentsBecomeTargeted.kind c)) S.bob))
+        -- ActivatedAbility. It binds only the targeting player, CR 603.2c's
+        -- batch naming no one permanent, and the floor below pins that.
+        -- With "you" included, alice herself is a recipient too, so the floor
+        -- is read on the path where no permanent is named as well.
+        TriggerCondition.PermanentsBecomeTargeted c -> becameTargetEvents c
+        TriggerCondition.PermanentBecomesTargeted c -> becameTargetEvents c
         -- CR 709.5h's own event, on the BEARER and naming the same door the
         -- condition does, so the pair really matches -- the door below is the one
         -- everyTriggerCondition names.
@@ -2512,7 +2519,7 @@ everyTriggerCondition =
     TriggerCondition.SelfPreventsDamage (Filter.Type.And []),
     TriggerCondition.PlayerGainsLife PlayerRelation.You,
     TriggerCondition.PlayersGainLife PlayerRelation.AnyPlayer,
-    TriggerCondition.PlayerLosesLife PlayerRelation.Opponent,
+    TriggerCondition.PlayerLosesLife (PlayerLosesLife.MkPlayerLosesLife PlayerRelation.Opponent TriggerFrequency.EveryTime),
     TriggerCondition.SelfCountersReached (SelfCountersReached.MkSelfCountersReached CounterKind.Lore 1),
     TriggerCondition.SelfBecomesClassLevel (ClassLevel.MkClassLevel 2),
     TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Defense),
@@ -2552,13 +2559,17 @@ everyTriggerCondition =
     -- Safekeeping's pair first, then Dormant Gomazoa's.
     TriggerCondition.ControllerBecomesTarget (ControllerBecomesTarget.MkControllerBecomesTarget PlayerRelation.Opponent Nothing),
     TriggerCondition.ControllerBecomesTarget (ControllerBecomesTarget.MkControllerBecomesTarget PlayerRelation.AnyPlayer (Just StackObjectKind.Spell)),
-    -- Professor Hojo's own, the only inhabitant in the pool: a Filter beside the
-    -- sibling above's relation and kind.
-    TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted Filter.Type.IsSource PlayerRelation.AnyPlayer (Just StackObjectKind.ActivatedAbility)),
+    -- Professor Hojo's own: a Filter beside the sibling above's relation and
+    -- kind.
+    TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted Filter.Type.IsSource PlayerRelation.AnyPlayer (Just StackObjectKind.ActivatedAbility) False),
     -- Venerated Rotpriest's per-creature twin, and Diffusion Sliver's: both
     -- relations, for the SelfBecomesTargeted pair's reason.
-    TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted Filter.Type.IsSource PlayerRelation.AnyPlayer (Just StackObjectKind.Spell)),
-    TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted Filter.Type.IsSource PlayerRelation.Opponent Nothing),
+    TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted Filter.Type.IsSource PlayerRelation.AnyPlayer (Just StackObjectKind.Spell) False),
+    TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted Filter.Type.IsSource PlayerRelation.Opponent Nothing False),
+    -- Leyline of Combustion's and Unsettled Mariner's, "you" included: their
+    -- representative events name alice as well, the path only these admit.
+    TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted Filter.Type.IsSource PlayerRelation.Opponent Nothing True),
+    TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted Filter.Type.IsSource PlayerRelation.Opponent Nothing True),
     TriggerCondition.SelfHalfUnlocked (CardName.MkCardName (Text.pack "Steaming Sauna")),
     TriggerCondition.RoomFullyUnlocked PlayerRelation.You,
     -- Balemurk Leech's own pair, and not an arbitrary one: PermanentEnters binds

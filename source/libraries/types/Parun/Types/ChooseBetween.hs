@@ -2,9 +2,10 @@ module Parun.Types.ChooseBetween where
 
 import qualified Numeric.Natural as Natural
 
--- | CR 700.2's range: an instruction naming how FEW and how MANY modes may be
--- chosen, both inclusive. "Choose one or both --" over two modes (Vandalize) is
--- 1 to 2.
+-- | A range of how FEW and how MANY may be chosen, both inclusive: CR 700.2's
+-- modes ("Choose one or both --" over two modes, Vandalize, is 1 to 2) or CR
+-- 105.4's colours ("the color or colors of your choice", Scuttlemutt, is 1 to
+-- 5).
 
 -- Both fields are a Natural and the pair is ordered, so they are named rather
 -- than positional: a card file that swapped them would state a range no

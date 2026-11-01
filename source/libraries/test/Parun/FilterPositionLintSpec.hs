@@ -54,6 +54,7 @@ import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.CantBlockCreatures as CantBlockCreatures
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.ChooseBetween as ChooseBetween
 import qualified Parun.Types.ChooseCardName as ChooseCardName
 import qualified Parun.Types.ChosenPermanents as ChosenPermanents
 import qualified Parun.Types.ChosenQuality as ChosenQuality
@@ -268,7 +269,8 @@ filterAtomsOf leaf predicate = case predicate of
   Filter.Type.HasCardType _ -> leaf predicate
   Filter.Type.HasSupertype _ -> leaf predicate
   Filter.Type.HasColor _ -> leaf predicate
-  Filter.Type.Shares _ _ -> leaf predicate
+  -- A leaf, and a descent into the filter a group anchor nests.
+  Filter.Type.Shares _ anchor -> leaf predicate <> foldMap (filterAtomsOf leaf) (Filter.anchorFilter anchor)
   Filter.Type.HasSubtype _ -> leaf predicate
   Filter.Type.HasName _ -> leaf predicate
   Filter.Type.NameWordsAtLeast _ -> leaf predicate
@@ -340,7 +342,7 @@ filterAtomsOf leaf predicate = case predicate of
   -- A DESCENT for the atom above's reason, the nest describing the ATTACHER: CR
   -- 303.4b's atom is a Filter position a card author writes into like any other.
   Filter.Type.HasAttached f -> filterAtomsOf leaf f
-  Filter.Type.IsAttachedTo _ -> leaf predicate
+  Filter.Type.IsAttachedTo anchor -> leaf predicate <> foldMap (filterAtomsOf leaf) (Filter.anchorFilter anchor)
   Filter.Type.IsEvaluated -> leaf predicate
   Filter.Type.IsHostOfSource -> leaf predicate
   Filter.Type.EnteredWithSource -> leaf predicate
@@ -354,7 +356,7 @@ filterAtomsOf leaf predicate = case predicate of
   Filter.Type.HostOfSubjectHasCardType _ -> leaf predicate
   Filter.Type.IsCommander -> leaf predicate
   Filter.Type.IsToken -> leaf predicate
-  Filter.Type.IsActivatedAbility -> leaf predicate
+  Filter.Type.IsActivatedAbility _ -> leaf predicate
   Filter.Type.IsAbility -> leaf predicate
   Filter.Type.IsEmblem -> leaf predicate
   -- A DESCENT for RepresentedByCard's reason below, the nest describing the
@@ -828,7 +830,7 @@ hasChosenNameTag = Text.pack "HasChosenName"
 -- the atom in a static condition and expects the offence.
 --
 -- An ALLOWLIST rather than "wherever Filter.Context.sourceChosenNames is filled",
--- boundNameCounts' posture and for its reason: since #2992 the field is
+-- framedNameCounts' posture and for its reason: since #2992 the field is
 -- filled by Parun.Engine.Resolve.Slots.effectContext itself, so every position a
 -- RESOLUTION reaches has it, and this rejects the atom in positions that would in
 -- fact answer. Widen it when a card wants one of them.
@@ -1044,10 +1046,11 @@ decodedAtoms tag wanted value =
       Value.Object o | tagged o -> either (const 0) (\atom -> if wanted atom then 1 else 0) (Codec.decode (Filter.Codec.codec Keyword.Codec.codec) value)
       _ -> 0
 
--- The CR 709.4a bound-name atoms in an encoding: Filter.Shares Name at a Bound
--- anchor.
-boundNameAtoms :: Value.Value -> Int
-boundNameAtoms = decodedAtoms "Shares" (\atom -> case atom of Filter.Type.Shares Trait.Name (Anchor.Bound _) -> True; _ -> False)
+-- The CR 709.4a atoms Parun.Engine.Projection.framedBySlots answers, in an
+-- encoding: Filter.Shares Name at a Bound anchor (Filter.Context.slotNames) or
+-- at AnyPermanent (Filter.Context.battlefieldViews).
+framedNameAtoms :: Value.Value -> Int
+framedNameAtoms = decodedAtoms "Shares" (\atom -> case atom of Filter.Type.Shares Trait.Name (Anchor.Bound _) -> True; Filter.Type.Shares Trait.Name (Anchor.AnyPermanent _) -> True; _ -> False)
 
 -- How many CR 709.4a atoms this card carries in one of the ADMITTED positions
 -- -- a MODE's target slot filter (Harness the Storm), a CR 701.23 search filter
@@ -1063,21 +1066,22 @@ boundNameAtoms = decodedAtoms "Shares" (\atom -> case atom of Filter.Type.Shares
 -- this rejects the atom in positions that would in fact answer, and only in that
 -- direction -- widen it when a card wants one of them, which is the posture sweptForSingularSlots takes at
 -- SlotlessCostFramed and what the hand sweep's own entry is.
-boundNameCounts :: Face.Face Card.Type.Card -> (Int, Int)
-boundNameCounts card =
-  let total wanted = sum (fmap (\(_, f) -> boundNameAtoms (atomJson f)) (filter (\(framing, _) -> elem framing [InTargetSlot, SearchFramed, HandSweepFramed, LifeLossAmountFramed, SourceHostFramed] == wanted) (cardFilters card)))
+framedNameCounts :: Face.Face Card.Type.Card -> (Int, Int)
+framedNameCounts card =
+  let total wanted = sum (fmap (\(_, f) -> framedNameAtoms (atomJson f)) (filter (\(framing, _) -> elem framing [InTargetSlot, SearchFramed, HandSweepFramed, LifeLossAmountFramed, SourceHostFramed] == wanted) (cardFilters card)))
    in (total True, total False)
 
--- CR 709.4a's bound-name comparison is answerable only where
--- Filter.Context.slotNames is filled, which two callers do:
+-- CR 709.4a's framed name comparisons (framedNameAtoms) are answerable only
+-- where Filter.Context.slotNames and battlefieldViews are filled, which two
+-- callers do, both through Parun.Engine.Projection.framedBySlots:
 -- Parun.Engine.Target.admittedGiven, matching a MODE's target slot Filter, and
 -- Parun.Engine.Resolve.Slots.effectContext, which all but one of a resolution's
 -- positions go through -- the search filter and the mill tally among them.
--- Filter.contextFor leaves it empty, so
--- Filter.Shares Name Bound in a Count filter read outside a resolution, an
+-- Filter.contextFor leaves both empty, so
+-- either atom in a Count filter read outside a resolution, an
 -- affected set or a cost criterion is a silent False rather than a rejected card. This is where that is made loud.
 --
--- The positions boundNameCounts admits are narrower than that, on
+-- The positions framedNameCounts admits are narrower than that, on
 -- purpose: see its own note. So a card rejected here is not necessarily one the
 -- engine would answer wrong.
 --
@@ -1092,10 +1096,10 @@ boundNameCounts card =
 -- the first, so neutralizing the cross-check leaves the suite green. What would
 -- observe it is a future Face field cardFilters forgets, which is the thing that
 -- cannot be written down yet.
-boundNameOffends :: Face.Face Card.Type.Card -> Bool
-boundNameOffends card =
-  let (slotted, elsewhere) = boundNameCounts card
-   in elsewhere /= 0 || slotted + elsewhere /= boundNameAtoms (Codec.encode (Face.Codec.codec Card.codec) card)
+framedNameOffends :: Face.Face Card.Type.Card -> Bool
+framedNameOffends card =
+  let (slotted, elsewhere) = framedNameCounts card
+   in elsewhere /= 0 || slotted + elsewhere /= framedNameAtoms (Codec.encode (Face.Codec.codec Card.codec) card)
 
 -- The CR 205.3m atoms anchored at a SLOT in an encoding: Filter.Shares
 -- CreatureType at a Bound anchor. evaluatedOffends polices the Evaluated one.
@@ -1115,7 +1119,7 @@ boundCreatureTypeCounts card =
    in (total True, total False)
 
 -- The atom outside those positions, or the traversal and the codec disagreeing
--- about how many the card holds -- boundNameOffends' two offences, and its
+-- about how many the card holds -- framedNameOffends' two offences, and its
 -- second disjunct is the same regression fence.
 boundCreatureTypeOffends :: Face.Face Card.Type.Card -> Bool
 boundCreatureTypeOffends card =
@@ -1186,13 +1190,13 @@ controllerRelatesToBoundCounts card =
 -- one site that matches a MODE's target slot Filter, and
 -- Parun.Engine.Resolve.Slots.effectContext, which an attach effect's destination
 -- and an effect's ObjectRef are matched against and which
--- Parun.Engine.Resolve.Common.storedClass bakes a stored class's atom from. EntryAttachDestination's bare Context is not one. This is boundNameOffends' sweep one characteristic over, and
+-- Parun.Engine.Resolve.Common.storedClass bakes a stored class's atom from. EntryAttachDestination's bare Context is not one. This is framedNameOffends' sweep one characteristic over, and
 -- the one place the two differ is what makes it load-bearing rather than tidy:
 -- that atom is a silent False outside its position and this one is a silent TRUE,
 -- so an atom in a Count filter, an affected set or a search filter would ADMIT
 -- what the card excludes rather than nothing at all.
 --
--- Two offences under one name, boundNameOffends' two: the traversal found
+-- Two offences under one name, framedNameOffends' two: the traversal found
 -- the atom outside a target slot, or the traversal and the codec disagree about
 -- how many the card holds. The second disjunct is a REGRESSION FENCE for that
 -- function's reason.
@@ -1236,7 +1240,7 @@ hostFramed framing = case framing of
 -- traversal found the atom outside those positions, or the traversal and the
 -- codec disagree about how many the card holds -- the second being a blind spot in
 -- cardFilters, in which an atom would be reported as zero rather than as an
--- offence. The second disjunct is a REGRESSION FENCE for boundNameOffends'
+-- offence. The second disjunct is a REGRESSION FENCE for framedNameOffends'
 -- reason.
 hostOfSourceOffends :: Face.Face Card.Type.Card -> Bool
 hostOfSourceOffends card =
@@ -1313,7 +1317,7 @@ isBoundCounts card =
 -- Two offences under one name, for hostOfSourceOffends' two reasons turned
 -- around: the traversal found the atom inside a wish's filter, or the traversal
 -- and the codec disagree about how many the card holds. The second disjunct is a
--- REGRESSION FENCE for boundNameOffends' reason.
+-- REGRESSION FENCE for framedNameOffends' reason.
 --
 -- Only IsBound, of the atoms that read a Context's slots. Shares Name Bound is
 -- fenced to a mode's target slot by its own lint, so a wish's filter already
@@ -1650,20 +1654,21 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
       (searchZoneSets (S.combinedFace moogle))
       [Set.fromList [Zone.Library, Zone.Graveyard]]
     Spec.assertBool s (length (concatMap (searchZoneSets . S.combinedFace) ps) > 5) "and the pool gives the sweep other searches to be about"
-  -- CR 709.4a's Filter.Shares Name Bound is in CR 701.3a's position one axis over:
-  -- answerable only where Filter.Context.slotNames is filled, and unanswerable --
+  -- CR 709.4a's Filter.Shares Name, at Bound or AnyPermanent, is in CR 701.3a's
+  -- position one axis over: answerable only where Filter.Context.slotNames and
+  -- battlefieldViews are filled (Projection.framedBySlots), and unanswerable --
   -- a silent False -- everywhere else. The positions ADMITTED here are a MODE's
   -- target slot, a CR 701.23 search filter, a CR 608.2c hand sweep's own filter,
   -- a CR 119.3 life loss amount and an effect's own object, the last four since
   -- their arms take their context from the resolution (Parun.ResolveSpec's
   -- Bifurcate, Hour of Glory and Grim Reminder cases; Legion's End's scenario). That set
-  -- is narrower than the set that would answer -- boundNameCounts says why
-  -- -- so this rejects in the safe direction only. See boundNameOffends
+  -- is narrower than the set that would answer -- framedNameCounts says why
+  -- -- so this rejects in the safe direction only. See framedNameOffends
   -- for the two offences and Framing for why CR 303.4a's enchant slot is not one
   -- of the safe positions.
-  Spec.it s "CR 709.4a no card asks a slot-anchored Shares Name outside a mode's target slot, a search filter, a hand sweep, a life loss amount or an effect's object" $ do
+  Spec.it s "CR 709.4a no card asks a framed Shares Name outside a mode's target slot, a search filter, a hand sweep, a life loss amount or an effect's object" $ do
     ps <- S.allPrintings s corpus
-    let offenders = filter (anyFace boundNameOffends . Printing.card) ps
+    let offenders = filter (anyFace framedNameOffends . Printing.card) ps
     Spec.assertEqWith s "the atom sits only in a target slot's, a search's, a hand sweep's, a life loss amount's or an effect object's filter" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous, the way the sibling sweeps would be alone: the pool authors the
     -- atom, and the cards that do are ACCEPTED here rather than skipped -- one in
@@ -1673,7 +1678,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
       registry
       ps
       "each author's atom is in an admitted position"
-      boundNameCounts
+      framedNameCounts
       [ ("Harness the Storm", 1), -- its trigger's target slot
         ("Bifurcate", 1), -- its search's filter
         ("March of Burgeoning Life", 1), -- its search's filter
@@ -1682,7 +1687,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Haunting Echoes", 1), -- its search's filter
         ("Doubling Chant", 1), -- its search's filter, against its loop's member
         ("Shimian Specter", 1), -- its search's filter, against its loop's member
-        ("Legion's End", 3) -- its battlefield and graveyard exiles' objects and its hand sweep's filter
+        ("Legion's End", 3), -- its battlefield and graveyard exiles' objects and its hand sweep's filter
+        ("Pattern Matcher", 1) -- its search's filter, at AnyPermanent
       ]
     -- Both sides of the split, with room to spare under the pool's real figures:
     -- a traversal that had stopped walking, or a Framing that had stopped marking
@@ -2307,6 +2313,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         boundAtom = bury (Filter.Type.IsBound slot)
         hostAtom = bury Filter.Type.IsHostOfSource
         nameAtom = bury (Filter.Type.Shares Trait.Name (Anchor.Bound slot))
+        groupAtom = bury (Filter.Type.Shares Trait.Name (Anchor.AnyPermanent creatures))
         keywordOf f = Keyword.Hexproof (Just f)
         kindOf f = CounterKind.Keyword (keywordOf f)
         plain = CounterKind.PlusOnePlusOne
@@ -2381,11 +2388,18 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- supplied, and the keyword counter inside the slot's CR 202.3 amount is not.
     let amountKeyword = base {Face.spell = counting (kindOf nameAtom) Nothing}
         slotItself = base {Face.spell = counting plain (Just nameAtom)}
-    Spec.assertEqWith s "Shares Name Bound under a slot amount's keyword counter is an offence" (boundNameCounts amountKeyword) (0, 1)
-    Spec.assertBool s (boundNameOffends amountKeyword) "and the lint says so"
-    Spec.assertEqWith s "the same atom in the slot's own filter is not" (boundNameCounts slotItself) (1, 0)
-    Spec.assertBool s (not (boundNameOffends slotItself)) "and the lint accepts it"
-    -- NOT vacuous: the codec sees exactly one atom in each of the six faces, so
+    Spec.assertEqWith s "Shares Name Bound under a slot amount's keyword counter is an offence" (framedNameCounts amountKeyword) (0, 1)
+    Spec.assertBool s (framedNameOffends amountKeyword) "and the lint says so"
+    Spec.assertEqWith s "the same atom in the slot's own filter is not" (framedNameCounts slotItself) (1, 0)
+    Spec.assertBool s (not (framedNameOffends slotItself)) "and the lint accepts it"
+    -- The same pair for the group anchor, which framedBySlots fills beside the slot names.
+    let groupKeyword = base {Face.spell = counting (kindOf groupAtom) Nothing}
+        groupSlot = base {Face.spell = counting plain (Just groupAtom)}
+    Spec.assertEqWith s "Shares Name AnyPermanent under a slot amount's keyword counter is an offence" (framedNameCounts groupKeyword) (0, 1)
+    Spec.assertBool s (framedNameOffends groupKeyword) "and the lint says so"
+    Spec.assertEqWith s "the same group atom in the slot's own filter is not" (framedNameCounts groupSlot) (1, 0)
+    Spec.assertBool s (not (framedNameOffends groupSlot)) "and the lint accepts it"
+    -- NOT vacuous: the codec sees exactly one atom in each planted face, so
     -- every pair above is a comparison against a real occurrence rather than
     -- against nothing -- and a (0, 0) from a traversal that stopped digging would
     -- fail the cross-check inside each lint rather than pass quietly.
@@ -2394,8 +2408,10 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
           [ ("IsBound beside the kind", encoded isBoundTag besideIt),
             ("IsHostOfSource under the row's keyword counter", encoded hostOfSourceTag rowKeyword),
             ("IsHostOfSource in the row's own pattern", encoded hostOfSourceTag rowItself),
-            ("Shares Name Bound under the amount's keyword counter", boundNameAtoms (Codec.encode (Face.Codec.codec Card.codec) amountKeyword)),
-            ("Shares Name Bound in the slot's own filter", boundNameAtoms (Codec.encode (Face.Codec.codec Card.codec) slotItself))
+            ("Shares Name Bound under the amount's keyword counter", framedNameAtoms (Codec.encode (Face.Codec.codec Card.codec) amountKeyword)),
+            ("Shares Name Bound in the slot's own filter", framedNameAtoms (Codec.encode (Face.Codec.codec Card.codec) slotItself)),
+            ("Shares Name AnyPermanent under the amount's keyword counter", framedNameAtoms (Codec.encode (Face.Codec.codec Card.codec) groupKeyword)),
+            ("Shares Name AnyPermanent in the slot's own filter", framedNameAtoms (Codec.encode (Face.Codec.codec Card.codec) groupSlot))
           ]
     Spec.assertEqWith s "each planted face encodes exactly one atom" authored (fmap (fmap (const 1)) authored)
   -- CR 122.1b lets a counter's KIND be a whole Keyword, and a keyword may carry a
@@ -3087,10 +3103,10 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
   --
   -- Every fixture buries the atom under all three combinators, so an
   -- implementation reading only the top of a Filter would accept all of them, and
-  -- each is asserted through boundNameCounts as well as the predicate -- the
+  -- each is asserted through framedNameCounts as well as the predicate -- the
   -- counts say the TRAVERSAL put it in that position, where the predicate alone is
   -- also satisfied by the codec half noticing an atom the traversal missed.
-  Spec.it s "the lint itself catches a slot-anchored Shares Name outside a mode's target slot, a search filter, a hand sweep, a life loss amount or an effect's object" $ do
+  Spec.it s "the lint itself catches a framed Shares Name outside a mode's target slot, a search filter, a hand sweep, a life loss amount or an effect's object" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     sorcerer <- S.printingOf s registry "Prodigal Sorcerer"
     harness <- S.printingOf s registry "Harness the Storm"
@@ -3177,7 +3193,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
                 }
             )
           ]
-        report (label, card) = (label, boundNameOffends card, boundNameCounts card)
+        report (label, card) = (label, framedNameOffends card, framedNameCounts card)
     Spec.assertEqWith
       s
       "every position that cannot answer is rejected, and the traversal is what finds it"
@@ -3186,7 +3202,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     Spec.assertEqWith
       s
       "and the codec counts exactly the atoms the traversal does"
-      (fmap (\(_, card) -> boundNameAtoms (Codec.encode (Face.Codec.codec Card.codec) card)) planted)
+      (fmap (\(_, card) -> framedNameAtoms (Codec.encode (Face.Codec.codec Card.codec) card)) planted)
       (fmap (const 1) planted)
     -- The nesting, stated on its own: a top-level-only check would score every one
     -- of these zero but the first.
@@ -3194,7 +3210,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
       s
       "the atom is found at every nesting depth"
       ( fmap
-          (boundNameAtoms . atomJson)
+          (framedNameAtoms . atomJson)
           [ atom,
             Filter.Type.And [atom],
             Filter.Type.Or [atom],
@@ -3210,13 +3226,13 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     Spec.assertEqWith
       s
       "Harness the Storm is accepted"
-      (boundNameOffends (S.combinedFace harness), boundNameCounts (S.combinedFace harness))
+      (framedNameOffends (S.combinedFace harness), framedNameCounts (S.combinedFace harness))
       (False, (1, 0))
     let slotted = base {Face.spell = spellOf [] (Map.singleton slot (TargetSlot.required Pool.Permanents (Just buried)))}
     Spec.assertEqWith
       s
       "a buried atom in a mode's target slot is accepted"
-      (boundNameOffends slotted, boundNameCounts slotted)
+      (framedNameOffends slotted, framedNameCounts slotted)
       (False, (1, 0))
     -- The OTHER accepted position, and the pair to the rejections above: a search
     -- filter is matched in the resolution's own context
@@ -3226,7 +3242,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     Spec.assertEqWith
       s
       "a buried atom in a search's filter is accepted"
-      (boundNameOffends searched, boundNameCounts searched)
+      (framedNameOffends searched, framedNameCounts searched)
       (False, (1, 0))
     -- The THIRD accepted position, and the one that separates this lint from a
     -- rule about ObjectRefs: EachCardInHand's own filter is matched in the
@@ -3237,12 +3253,12 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     Spec.assertEqWith
       s
       "a buried atom in a hand sweep's filter is accepted"
-      (boundNameOffends sweptHand, boundNameCounts sweptHand)
+      (framedNameOffends sweptHand, framedNameCounts sweptHand)
       (False, (1, 0))
     Spec.assertEqWith
       s
       "and the ungrafted base card carries no atom at all"
-      (boundNameOffends base, boundNameCounts base)
+      (framedNameOffends base, framedNameCounts base)
       (False, (0, 0))
   -- The rejecting direction for CR 201.4, for the reason the two tests above give:
   -- Ancient Vendetta only exercises the ACCEPTING one, and a card that offends a
@@ -3482,7 +3498,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
           ]
         draw = Effect.Draw (Draw.MkDraw (PlayerRef.InSlot Binding.you) (Quantity.Type.Literal 1) Nothing)
     Monad.forM_
-      [ (Filter.Type.HasChosenColor, ChosenQuality.Colors 1, hasChosenColorCounts, hasChosenColorTag),
+      [ (Filter.Type.HasChosenColor, ChosenQuality.Colors (ChooseBetween.MkChooseBetween 1 1), hasChosenColorCounts, hasChosenColorTag),
         (Filter.Type.HasChosenSubtype, ChosenQuality.BasicLandType, hasChosenSubtypeCounts, hasChosenSubtypeTag)
       ]
       $ \(atom, quality, counts, tag) -> do

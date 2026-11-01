@@ -19,6 +19,8 @@ import qualified Parun.Types.CostSubject as CostSubject
 import qualified Parun.Types.CounterProhibition as CounterProhibition
 import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DrawReveal as DrawReveal
+import qualified Parun.Types.EntriesTrigger as EntriesTrigger
+import qualified Parun.Types.EntryTriggering as EntryTriggering
 import qualified Parun.Types.ExtraVotes as ExtraVotes
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.GameOutcome as GameOutcome
@@ -206,16 +208,24 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
     Common.assertCodec
       s
       PlayerEffect.codec
-      (PlayerEffect.CantBeTargetedBy (PlayerScope.Related PlayerRelation.AnyPlayer))
-      " {\"type\":\"CantBeTargetedBy\",\"value\":{\"type\":\"AnyPlayer\"}} "
+      (PlayerEffect.CantBeTargetedBy (PlayerScope.Related PlayerRelation.AnyPlayer) Nothing)
+      " {\"type\":\"CantBeTargetedBy\",\"value\":{\"scope\":{\"type\":\"AnyPlayer\"}}} "
   -- CR 702.11c: the OTHER scope, so a codec that dropped the payload would
   -- round-trip one of these and not both.
   Spec.it s "CantBeTargetedBy, hexproof's Opponents" $
     Common.assertCodec
       s
       PlayerEffect.codec
-      (PlayerEffect.CantBeTargetedBy (PlayerScope.Related PlayerRelation.Opponent))
-      " {\"type\":\"CantBeTargetedBy\",\"value\":{\"type\":\"Opponent\"}} "
+      (PlayerEffect.CantBeTargetedBy (PlayerScope.Related PlayerRelation.Opponent) Nothing)
+      " {\"type\":\"CantBeTargetedBy\",\"value\":{\"scope\":{\"type\":\"Opponent\"}}} "
+  -- CR 702.11d: the optional quality, so a codec that dropped it would round-trip
+  -- the two above and not this.
+  Spec.it s "CantBeTargetedBy, hexproof from a quality" $
+    Common.assertCodec
+      s
+      PlayerEffect.codec
+      (PlayerEffect.CantBeTargetedBy (PlayerScope.Related PlayerRelation.Opponent) (Just (Filter.And [])))
+      " {\"type\":\"CantBeTargetedBy\",\"value\":{\"quality\":{\"type\":\"And\",\"value\":[]},\"scope\":{\"type\":\"Opponent\"}}} "
   -- CR 601.3b / Vedalken Orrery: "spells" names no quality, so the filter is the
   -- trivial predicate. This is the shape data/cards/vedalken-orrery.json carries.
   Spec.it s "CastAsThoughItHadFlash, Vedalken Orrery's unqualified spells" $
@@ -356,13 +366,13 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       PlayerEffect.codec
       PlayerEffect.CantSetSchemesInMotion
       " {\"type\":\"CantSetSchemesInMotion\"} "
-  -- CR 603.6a / Hushwing Gryff.
-  Spec.it s "EntriesDontTrigger" $
+  -- CR 603.2d / Yarok, the Desecrated.
+  Spec.it s "EntriesTrigger" $
     Common.assertCodec
       s
       PlayerEffect.codec
-      (PlayerEffect.EntriesDontTrigger (Filter.And []))
-      " {\"type\":\"EntriesDontTrigger\",\"value\":{\"type\":\"And\",\"value\":[]}} "
+      (PlayerEffect.EntriesTrigger EntriesTrigger.MkEntriesTrigger {EntriesTrigger.entrants = Filter.And [], EntriesTrigger.triggering = EntryTriggering.AnAdditionalTime})
+      " {\"type\":\"EntriesTrigger\",\"value\":{\"entrants\":{\"type\":\"And\",\"value\":[]},\"triggering\":{\"type\":\"AnAdditionalTime\"}}} "
   -- CR 723.2 / Opposition Agent.
   Spec.it s "ControlledWhileSearching" $
     Common.assertCodec

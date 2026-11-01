@@ -39,6 +39,7 @@ import qualified Parun.Types.CastOffer as CastOffer.Type
 import qualified Parun.Types.CastRepetition as CastRepetition
 import qualified Parun.Types.ChangeTargets as ChangeTargets
 import qualified Parun.Types.ChangeText as ChangeText
+import qualified Parun.Types.ChooseBetween as ChooseBetween
 import qualified Parun.Types.ChooseCardName as ChooseCardName
 import qualified Parun.Types.ChooseNumber as ChooseNumber
 import qualified Parun.Types.ChoosePermanents as ChoosePermanents
@@ -2410,8 +2411,8 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.ChooseQuality (ChosenQuality.Colors 1))
-      " {\"type\":\"ChooseQuality\",\"value\":{\"type\":\"Colors\",\"value\":1}} "
+      (Effect.ChooseQuality (ChosenQuality.Colors (ChooseBetween.MkChooseBetween 1 1)))
+      " {\"type\":\"ChooseQuality\",\"value\":{\"type\":\"Colors\",\"value\":{\"least\":1,\"most\":1}}} "
   -- CR 400.11c: the filter and CR 701.20a's reveal, Burning Wish's "reveal a
   -- sorcery card". Everything else about the sentence is the rule's -- the pool is
   -- the resolving controller's own (CR 108.3b) and the destination their hand.

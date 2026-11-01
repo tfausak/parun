@@ -1,5 +1,6 @@
 module Parun.Types.Scope where
 
+import qualified Parun.Types.BoundReading as BoundReading
 import qualified Parun.Types.EventShape as EventShape
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.PlayerRef as PlayerRef
@@ -77,8 +78,9 @@ data Scope
     -- (Shadowgrange Archfiend's creatures "sacrificed this way").
     -- findableAfterMove asks CR 400.7j of where an ARRIVAL landed; a DEPARTURE
     -- is found by nothing, and the fold reads its CR 608.2h last known
-    -- information wherever it went.
-    OverBound SlotName.SlotName
+    -- information wherever it went. BoundReading.BeforeMove reads each arrival
+    -- as that departure (Flood of Tears).
+    OverBound BoundReading.BoundReading SlotName.SlotName
   | -- | CR 401.2 / 404.1: the top card of each library or graveyard the InZone
     -- names (Vampire Nocturnus, Guiding Spirit); no candidate in an unordered zone.
     TopOf InZone.InZone

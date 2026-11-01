@@ -8,6 +8,7 @@ import qualified Parun.Codec.CostModifier as CostModifier
 import qualified Parun.Codec.CounterProhibition as CounterProhibition
 import qualified Parun.Codec.DamagePattern as DamagePattern
 import qualified Parun.Codec.DrawReveal as DrawReveal
+import qualified Parun.Codec.EntriesTrigger as EntriesTrigger
 import qualified Parun.Codec.ExtraVotes as ExtraVotes
 import qualified Parun.Codec.Filter as Filter
 import qualified Parun.Codec.GameOutcome as GameOutcome
@@ -46,6 +47,12 @@ codec =
           (,)
             <$> Fields.defaulted "designator" Nothing (Common.maybe (KeywordDesignator.codec Keyword.codec)) fst
             <*> Fields.defaulted "sources" (Filter.Type.And []) filterCodec snd
+      -- The quality absent is every spell and ability the scope's players control.
+      targetingBan =
+        Fields.object $
+          (,)
+            <$> Fields.required "scope" PlayerScope.codec fst
+            <*> Fields.defaulted "quality" Nothing (Common.maybe filterCodec) snd
    in Arm.tagged
         tagOf
         [ Arm.nullary "CantCastSpells" PlayerEffect.CantCastSpells,
@@ -61,7 +68,7 @@ codec =
           Arm.payload "DontLoseUnspentMana" ManaFilter.codec PlayerEffect.DontLoseUnspentMana (\x -> case x of PlayerEffect.DontLoseUnspentMana y -> Just y; _ -> Nothing),
           Arm.nullary "LoseLifeForUnspentMana" PlayerEffect.LoseLifeForUnspentMana,
           Arm.payload "SpendManaAsThough" SpendManaAsThough.codec PlayerEffect.SpendManaAsThough (\x -> case x of PlayerEffect.SpendManaAsThough y -> Just y; _ -> Nothing),
-          Arm.payload "CantBeTargetedBy" PlayerScope.codec PlayerEffect.CantBeTargetedBy (\x -> case x of PlayerEffect.CantBeTargetedBy y -> Just y; _ -> Nothing),
+          Arm.payload "CantBeTargetedBy" targetingBan (uncurry PlayerEffect.CantBeTargetedBy) (\x -> case x of PlayerEffect.CantBeTargetedBy y z -> Just (y, z); _ -> Nothing),
           Arm.payload "CastAsThoughItHadFlash" filterCodec PlayerEffect.CastAsThoughItHadFlash (\x -> case x of PlayerEffect.CastAsThoughItHadFlash y -> Just y; _ -> Nothing),
           Arm.payload "MayPlayAsThoughItHadFlash" filterCodec PlayerEffect.MayPlayAsThoughItHadFlash (\x -> case x of PlayerEffect.MayPlayAsThoughItHadFlash y -> Just y; _ -> Nothing),
           Arm.payload "ActivateKeywordAtInstantSpeed" (KeywordDesignator.codec Keyword.codec) PlayerEffect.ActivateKeywordAtInstantSpeed (\x -> case x of PlayerEffect.ActivateKeywordAtInstantSpeed y -> Just y; _ -> Nothing),
@@ -76,7 +83,7 @@ codec =
           Arm.payload "HasProtectionFrom" filterCodec PlayerEffect.HasProtectionFrom (\x -> case x of PlayerEffect.HasProtectionFrom y -> Just y; _ -> Nothing),
           Arm.nullary "CantBecomeMonarch" PlayerEffect.CantBecomeMonarch,
           Arm.nullary "CantSetSchemesInMotion" PlayerEffect.CantSetSchemesInMotion,
-          Arm.payload "EntriesDontTrigger" filterCodec PlayerEffect.EntriesDontTrigger (\x -> case x of PlayerEffect.EntriesDontTrigger y -> Just y; _ -> Nothing),
+          Arm.payload "EntriesTrigger" EntriesTrigger.codec PlayerEffect.EntriesTrigger (\x -> case x of PlayerEffect.EntriesTrigger y -> Just y; _ -> Nothing),
           Arm.nullary "ControlledWhileSearching" PlayerEffect.ControlledWhileSearching,
           Arm.payload "YouChoose" CombatDeclaration.codec PlayerEffect.YouChoose (\x -> case x of PlayerEffect.YouChoose y -> Just y; _ -> Nothing),
           Arm.nullary "ExilesFoundWhileSearching" PlayerEffect.ExilesFoundWhileSearching,
@@ -131,7 +138,7 @@ tagOf x = case x of
   PlayerEffect.HasProtectionFrom {} -> "HasProtectionFrom"
   PlayerEffect.CantBecomeMonarch {} -> "CantBecomeMonarch"
   PlayerEffect.CantSetSchemesInMotion {} -> "CantSetSchemesInMotion"
-  PlayerEffect.EntriesDontTrigger {} -> "EntriesDontTrigger"
+  PlayerEffect.EntriesTrigger {} -> "EntriesTrigger"
   PlayerEffect.ControlledWhileSearching {} -> "ControlledWhileSearching"
   PlayerEffect.YouChoose {} -> "YouChoose"
   PlayerEffect.ExilesFoundWhileSearching {} -> "ExilesFoundWhileSearching"

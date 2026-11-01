@@ -239,7 +239,7 @@ viewOfCardLapsed lapsed face =
           Filter.commander = False,
           -- CR 113.3b: an ability on the stack is never a printed face, so this
           -- builder's candidate cannot be one.
-          Filter.activatedAbility = False,
+          Filter.activatedAbility = Nothing,
           -- CR 113.1c, the line above widened to CR 113.3's other kind: a printed
           -- face is no ability on the stack either.
           Filter.ability = False,
@@ -706,7 +706,7 @@ viewOfCharacteristics peers oid pc controller counters gs =
       -- 113.3's kinds an ability is is fixed for the life of the object. False
       -- for an id naming nothing, and for every object that is not an ability on
       -- the stack.
-      Filter.activatedAbility = Game.isActivatedAbility oid gs,
+      Filter.activatedAbility = Game.activatedAbilityKind oid gs,
       -- CR 113.1c, the line above widened to take CR 113.3c's triggered kind as
       -- well, and read off Object.source in the same way.
       Filter.ability = Game.isAbility oid gs,

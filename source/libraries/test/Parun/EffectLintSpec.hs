@@ -1159,7 +1159,7 @@ unpreventableScopeOffends scope playerEffect = case playerEffect of
   PlayerEffect.HasProtectionFrom _ -> False
   PlayerEffect.CantBecomeMonarch -> False
   PlayerEffect.CantSetSchemesInMotion -> False
-  PlayerEffect.EntriesDontTrigger _ -> False
+  PlayerEffect.EntriesTrigger _ -> False
   PlayerEffect.ControlledWhileSearching -> False
   PlayerEffect.YouChoose _ -> False
   PlayerEffect.ExilesFoundWhileSearching -> False
@@ -1181,7 +1181,7 @@ unpreventableScopeOffends scope playerEffect = case playerEffect of
   PlayerEffect.DontLoseUnspentMana _ -> False
   PlayerEffect.LoseLifeForUnspentMana -> False
   PlayerEffect.SpendManaAsThough _ -> False
-  PlayerEffect.CantBeTargetedBy _ -> False
+  PlayerEffect.CantBeTargetedBy {} -> False
   PlayerEffect.CastAsThoughItHadFlash _ -> False
   PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
   PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -1240,7 +1240,7 @@ unpreventablePatternOffends playerEffect = case playerEffect of
   PlayerEffect.HasProtectionFrom _ -> False
   PlayerEffect.CantBecomeMonarch -> False
   PlayerEffect.CantSetSchemesInMotion -> False
-  PlayerEffect.EntriesDontTrigger _ -> False
+  PlayerEffect.EntriesTrigger _ -> False
   PlayerEffect.ControlledWhileSearching -> False
   PlayerEffect.YouChoose _ -> False
   PlayerEffect.ExilesFoundWhileSearching -> False
@@ -1258,7 +1258,7 @@ unpreventablePatternOffends playerEffect = case playerEffect of
   PlayerEffect.DontLoseUnspentMana _ -> False
   PlayerEffect.LoseLifeForUnspentMana -> False
   PlayerEffect.SpendManaAsThough _ -> False
-  PlayerEffect.CantBeTargetedBy _ -> False
+  PlayerEffect.CantBeTargetedBy {} -> False
   PlayerEffect.CastAsThoughItHadFlash _ -> False
   PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
   PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -1422,6 +1422,7 @@ questionOf ref = case ref of
     HowMany.Exactly _ -> Just SeveralPermanents
     HowMany.UpTo _ -> Just PermanentsUpTo
   ObjectRef.AttachedToBound {} -> Nothing
+  ObjectRef.AttackedBy {} -> Nothing
   ObjectRef.FromAnywhere {} -> Nothing
   -- The first question a member puts, so a member that asks is fenced as it would be alone.
   ObjectRef.AllOf refs -> Foldable.asum (fmap questionOf refs)
@@ -2169,6 +2170,8 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
           ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents _ _ count _) -> atMostOne count
           -- FALSE: every attachment to a host moves, however many there are.
           ObjectRef.AttachedToBound _ -> False
+          -- TRUE, InSlot's answer: what the slot's creature attacks.
+          ObjectRef.AttackedBy _ -> True
           -- TRUE, InSlot's answer: the slot's object, followed.
           ObjectRef.FromAnywhere _ -> True
           -- TRUE: one draw names one object, however many the pool holds.

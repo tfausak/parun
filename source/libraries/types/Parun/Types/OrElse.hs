@@ -1,20 +1,23 @@
 module Parun.Types.OrElse where
 
+import qualified Data.Set as Set
 import qualified Parun.Types.ClauseIndex as ClauseIndex
 import qualified Parun.Types.PlayerRef as PlayerRef
 
--- | CR 608.2d's "or": the sibling clause this one is exclusive with, and WHO
--- announces which of the pair happens. Parun.Types.Clause.orElse is where it
--- rides; that field's haddock says why the pair is named by CR 608.2e's ordinal
+-- | CR 608.2d's "or": the sibling clauses this one is exclusive with, and WHO
+-- announces which of the group happens. Parun.Types.Clause.orElse is where it
+-- rides; that field's haddock says why the group is named by CR 608.2e's ordinal
 -- rather than by nesting one clause inside the other.
 --
 -- The chooser rides the rider for Parun.Types.Optionality's reason: a clause
 -- printing no either-or has nobody to name, and a Clause field would admit that
 -- pairing.
 data OrElse = MkOrElse
-  { -- | The sibling, which must name this clause back -- see Parun.CardSpec's
-    -- cardBranchesAreAsymmetric, which is what holds the corpus to it.
-    sibling :: ClauseIndex.ClauseIndex,
+  { -- | The other members of the group, each of which must name the rest
+    -- back; Parun.CardSpec's cardBranchesAreAsymmetric holds the corpus to it.
+    -- One for Twiddle's pair, two for Shifting Ceratops's "your choice of reach,
+    -- trample, or haste".
+    siblings :: Set.Set ClauseIndex.ClauseIndex,
     -- | WHO announces the branch. CR 608.2d says only that "the player" does,
     -- and the printed sentence says which: Twiddle's is the resolving
     -- controller (CR 405.4), and Worms of the Earth's "any player may sacrifice
@@ -40,7 +43,7 @@ data OrElse = MkOrElse
     -- Parun.ResolveSpec's "CR 608.2d a seat that announced the damage is held to
     -- it" proves it.
     --
-    -- Both halves of a pair must name the SAME chooser, the announcement being
+    -- Every member of a group must name the SAME chooser, the announcement being
     -- made once at whichever branch the resolution reaches first; Parun.CardSpec
     -- holds the corpus to that alongside the symmetry.
     chooser :: PlayerRef.PlayerRef,
@@ -59,7 +62,7 @@ data OrElse = MkOrElse
     -- resolving controller, and Parun.Types.Effect is first-order so a branch
     -- carrying its own effect list could not sit in one.
     --
-    -- Both halves of a pair must agree on it, for `sibling`'s reason.
+    -- Every member of a group must agree on it, for `siblings`' reason.
     --
     -- Rule 701.55d's exception to rule 608.2e is why this marker steers
     -- resolution rather than only widening the offer: a pair carrying it is

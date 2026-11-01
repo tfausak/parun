@@ -56,7 +56,7 @@ import qualified Parun.Types.AbilityTriggered as AbilityTriggered
 import qualified Parun.Types.Action as A
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
-import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.Mana as Mana.Type
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.PendingTrigger as PendingTrigger
@@ -490,8 +490,8 @@ increaseSpec s registry = Spec.describe s "Increase" $ do
   Spec.it s "CR 603.2c two losses in one group are one trigger event, a later group another, and the rider keeps one" $ do
     let logged =
           S.withGroupedEvents
-            [ [GameEvent.LifeLost (LifeChange.MkLifeChange S.bob 2), GameEvent.LifeLost (LifeChange.MkLifeChange S.bob 1)],
-              [GameEvent.LifeLost (LifeChange.MkLifeChange S.bob 3)]
+            [ [GameEvent.LifeLost (LifeLost.MkLifeLost S.bob 2 True), GameEvent.LifeLost (LifeLost.MkLifeLost S.bob 1 True)],
+              [GameEvent.LifeLost (LifeLost.MkLifeLost S.bob 3 True)]
             ]
             (atSpeed 1 S.alice (Setup.emptyGame S.bothPlayers))
         after = resolveTrigger S.identityAnswer logged

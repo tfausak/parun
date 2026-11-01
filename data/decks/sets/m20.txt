@@ -1,0 +1,329 @@
+1 Act of Treason
+1 Aerial Assault
+1 Aether Gust
+1 Agent of Treachery
+1 Aggressive Mammoth
+1 Agonizing Syphon
+1 Air Elemental
+1 Ajani, Inspiring Leader
+1 Ajani, Strength of the Pride
+1 Ancestral Blade
+1 Angel of Vitality
+1 Angelic Gift
+1 Angelic Guardian
+1 Anticipate
+1 Anvilwrought Raptor
+1 Apostle of Purifying Light
+1 Atemsis, All-Seeing
+1 Audacious Thief
+1 Bag of Holding
+1 Barkhide Troll
+1 Barony Vampire
+1 Bartizan Bats
+1 Bastion Enforcer
+1 Battalion Foot Soldier
+1 Befuddle
+1 Bishop of Wings
+1 Bladebrand
+1 Blightbeetle
+1 Blood Burglar
+1 Blood for Bones
+1 Bloodfell Caves
+1 Bloodsoaked Altar
+1 Bloodthirsty Aerialist
+1 Blossoming Sands
+1 Bogstomper
+1 Bone Splinters
+1 Bone to Ash
+1 Boneclad Necromancer
+1 Boreal Elemental
+1 Brightwood Tracker
+1 Brineborn Cutthroat
+1 Bristling Boar
+1 Brought Back
+1 Canopy Spider
+1 Captivating Gyre
+1 Cavalier of Dawn
+1 Cavalier of Flame
+1 Cavalier of Gales
+1 Cavalier of Night
+1 Cavalier of Thorns
+1 Celestial Messenger
+1 Centaur Courser
+1 Cerulean Drake
+1 Chandra's Embercat
+1 Chandra's Flame Wave
+1 Chandra's Outrage
+1 Chandra's Regulator
+1 Chandra's Spitfire
+1 Chandra, Acolyte of Flame
+1 Chandra, Awakened Inferno
+1 Chandra, Flame's Fury
+1 Chandra, Novice Pyromancer
+1 Cloudkin Seer
+1 Colossus Hammer
+1 Concordia Pegasus
+1 Convolute
+1 Coral Merfolk
+1 Corpse Knight
+1 Creeping Trailblazer
+1 Cryptic Caves
+1 Daggersail Aeronaut
+1 Dark Remedy
+1 Dawning Angel
+1 Daybreak Chaplain
+1 Destructive Digger
+1 Devout Decree
+1 Diamond Knight
+1 Disenchant
+1 Disentomb
+1 Disfigure
+1 Dismal Backwater
+1 Diviner's Lockbox
+1 Dragon Mage
+1 Drakuseth, Maw of Flames
+1 Drawn from Dreams
+1 Dread Presence
+1 Dungeon Geists
+1 Duress
+1 Elvish Reclaimer
+1 Ember Hauler
+1 Embodiment of Agonies
+1 Empyrean Eagle
+1 Engulfing Eruption
+1 Epicure of Blood
+1 Eternal Isolation
+1 Ethereal Elk
+1 Evolving Wilds
+1 Faerie Miscreant
+1 Fathom Fleet Cutthroat
+1 Fearless Halberdier
+1 Fencing Ace
+1 Feral Abomination
+1 Feral Invocation
+1 Ferocious Pup
+1 Field of the Dead
+1 Fire Elemental
+1 Flame Sweep
+1 Flood of Tears
+1 Forest
+1 Fortress Crab
+1 Frilled Sandwalla
+1 Frilled Sea Serpent
+1 Frost Lynx
+1 Fry
+1 Gargos, Vicious Watcher
+1 Gauntlets of Light
+1 Gift of Paradise
+1 Glaring Aegis
+1 Glint-Horn Buccaneer
+1 Gnarlback Rhino
+1 Goblin Assailant
+1 Goblin Bird-Grabber
+1 Goblin Ringleader
+1 Goblin Smuggler
+1 Gods Willing
+1 Goldmane Griffin
+1 Golos, Tireless Pilgrim
+1 Gorging Vulture
+1 Grafdigger's Cage
+1 Gravedigger
+1 Gravewaker
+1 Greenwood Sentinel
+1 Griffin Protector
+1 Griffin Sentinel
+1 Growth Cycle
+1 Gruesome Scourger
+1 Haazda Officer
+1 Hanged Executioner
+1 Hard Cover
+1 Healer of the Glade
+1 Heart-Piercer Bow
+1 Herald of the Sun
+1 Hostile Minotaur
+1 Howling Giant
+1 Icon of Ancestry
+1 Immortal Phoenix
+1 Impassioned Orator
+1 Imperial Outrider
+1 Infuriate
+1 Inspired Charge
+1 Inspiring Captain
+1 Ironclad Krovod
+1 Ironroot Warlord
+1 Island
+1 Jungle Hollow
+1 Kaalia, Zenith Seeker
+1 Keldon Raider
+1 Kethis, the Hidden Hand
+1 Knight of the Ebon Legion
+1 Kykar, Wind's Fury
+1 Lavakin Brawler
+1 Leafkin Druid
+1 Legion's End
+1 Leyline of Abundance
+1 Leyline of Anticipation
+1 Leyline of Combustion
+1 Leyline of Sanctity
+1 Leyline of the Void
+1 Lightning Stormkin
+1 Loaming Shaman
+1 Lotus Field
+1 Loxodon Lifechanter
+1 Loyal Pegasus
+1 Mammoth Spider
+1 Maniacal Rage
+1 Manifold Key
+1 Marauder's Axe
+1 Marauding Raptor
+1 Mask of Immolation
+1 Master Splicer
+1 Masterful Replication
+1 Meteor Golem
+1 Metropolis Sprite
+1 Might of the Masses
+1 Mind Rot
+1 Moat Piranhas
+1 Moldervine Reclamation
+1 Moment of Heroism
+1 Moorland Inquisitor
+1 Mountain
+1 Mu Yanling, Celestial Wind
+1 Mu Yanling, Sky Dancer
+1 Murder
+1 Mystic Forge
+1 Natural End
+1 Negate
+1 Netcaster Spider
+1 Nightpack Ambusher
+1 Nimble Birdsticker
+1 Noxious Grasp
+1 Oakenform
+1 Octoprophet
+1 Ogre Siegebreaker
+1 Omnath, Locus of the Roil
+1 Overcome
+1 Overgrowth Elemental
+1 Pacifism
+1 Pack Mastiff
+1 Pattern Matcher
+1 Phantom Warrior
+1 Plains
+1 Planar Cleansing
+1 Plummet
+1 Portal of Sanctuary
+1 Prismite
+1 Prized Unicorn
+1 Prowling Caracal
+1 Pulse of Murasa
+1 Pyroclastic Elemental
+1 Rabid Bite
+1 Raise the Alarm
+1 Rapacious Dragon
+1 Reckless Air Strike
+1 Reduce to Ashes
+1 Renowned Weaponsmith
+1 Repeated Reverberation
+1 Retributive Wand
+1 Riddlemaster Sphinx
+1 Rienne, Angel of Rebirth
+1 Ripscale Predator
+1 Risen Reef
+1 Rotting Regisaur
+1 Rubblebelt Recluse
+1 Rugged Highlands
+1 Rule of Law
+1 Sage's Row Denizen
+1 Salvager of Ruin
+1 Sanitarium Skeleton
+1 Savage Gorger
+1 Savannah Sage
+1 Scampering Scorcher
+1 Scheming Symmetry
+1 Scholar of the Ages
+1 Scorch Spitter
+1 Scoured Barrens
+1 Scuttlemutt
+1 Season of Growth
+1 Sedge Scorpion
+1 Sephara, Sky's Blade
+1 Serra's Guardian
+1 Shared Summons
+1 Shifting Ceratops
+1 Shivan Dragon
+1 Shock
+1 Show of Valor
+1 Siege Mastodon
+1 Silverback Shaman
+1 Skeleton Archer
+1 Skyknight Vanguard
+1 Sleep Paralysis
+1 Snapping Drake
+1 Sorcerer of the Fang
+1 Sorin's Guide
+1 Sorin's Thirst
+1 Sorin, Imperious Bloodlord
+1 Sorin, Vampire Lord
+1 Soul Salvage
+1 Soulmender
+1 Spectral Sailor
+1 Squad Captain
+1 Starfield Mystic
+1 Steadfast Sentry
+1 Steel Overseer
+1 Stone Golem
+1 Swamp
+1 Swiftwater Cliffs
+1 Take Vengeance
+1 Tale's End
+1 Tectonic Rift
+1 Temple of Epiphany
+1 Temple of Malady
+1 Temple of Mystery
+1 Temple of Silence
+1 Temple of Triumph
+1 Thicket Crasher
+1 Thirsting Bloodlord
+1 Thornwood Falls
+1 Thought Distortion
+1 Thrashing Brontodon
+1 Thunderkin Awakener
+1 Titanic Growth
+1 Tomebound Lich
+1 Tranquil Cove
+1 Trusted Pegasus
+1 Twinblade Paladin
+1 Uncaged Fury
+1 Unchained Berserker
+1 Undead Servant
+1 Unholy Indenture
+1 Unsummon
+1 Vampire Opportunist
+1 Vampire of the Dire Moon
+1 Veil of Summer
+1 Vengeful Warchief
+1 Vial of Dragonfire
+1 Vilis, Broker of Blood
+1 Vivien's Crocodile
+1 Vivien, Arkbow Ranger
+1 Vivien, Nature's Avenger
+1 Volcanic Dragon
+1 Voracious Hydra
+1 Vorstclaw
+1 Wakeroot Elemental
+1 Walking Corpse
+1 Warden of Evos Isle
+1 Waterkin Shaman
+1 Wildfire Elemental
+1 Wind-Scarred Crag
+1 Winged Words
+1 Wolfkin Bond
+1 Wolfrider's Saddle
+1 Woodland Champion
+1 Woodland Mystic
+1 Yanling's Harbinger
+1 Yarok's Fenlurker
+1 Yarok's Wavecrasher
+1 Yarok, the Desecrated
+1 Yoked Ox
+1 Zephyr Charge

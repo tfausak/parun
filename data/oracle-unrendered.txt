@@ -150,6 +150,7 @@ aspect-of-wolf
 assassins-blade
 assassins-strike
 astral-arena
+atemsis-all-seeing
 augur-of-bolas
 auntie-ool-cursewretch
 aura-graft
@@ -392,6 +393,7 @@ chandras-flame-wave
 chandras-fury
 chandras-outrage
 chandras-phoenix
+chandras-regulator
 chandras-spitfire
 chaos-dragon
 charging-rhino
@@ -735,6 +737,7 @@ elvish-piper
 elvish-rejuvenator
 embereth-shieldbreaker-battle-display
 embermaw-hellion
+embodiment-of-agonies
 embolden
 emergent-growth
 emperor-crocodile
@@ -883,6 +886,7 @@ fleshpulper-giant
 flicker-of-fate
 fling
 flock-of-rabid-sheep
+flood-of-tears
 flopsie-bumis-buddy
 flowering-lumberknot
 flowstone-slide
@@ -1126,6 +1130,7 @@ headless-skaab
 healing-grace
 heart-of-light
 heart-of-yavimaya
+heart-piercer-bow
 heartstone
 heavenly-blademaster
 heavy-fog
@@ -1309,6 +1314,7 @@ kembas-legion
 kenessos-priest-of-thassa
 kenriths-transformation
 kessig-prowler-sinuous-predator
+kethis-the-hidden-hand
 ketramose-the-new-dawn
 keys-to-the-house
 khabal-ghoul
@@ -1364,6 +1370,7 @@ lesser-gargadon
 leveler
 leyline-of-abundance
 leyline-of-anticipation
+leyline-of-combustion
 leyline-of-punishment
 leyline-of-resonance
 leyline-of-sanctity
@@ -1744,6 +1751,7 @@ path-of-bravery
 path-of-peril
 path-of-the-enigma
 path-to-the-festival
+pattern-matcher
 pathrazer-of-ulamog
 patient-rebuilding
 patriars-humiliation
@@ -1960,6 +1968,7 @@ renewed-faith
 renewing-touch
 renowned-weaponsmith
 repeat-offender
+repeated-reverberation
 reprisal
 reprocess
 research-development
@@ -2109,6 +2118,7 @@ screaming-swarm
 screams-from-within
 scrounging-bandar
 sculpting-steel
+scuttlemutt
 scuttling-doom-engine
 sea-gate-restoration-sea-gate-reborn
 sea-monster
@@ -2165,6 +2175,7 @@ shellfish-scholar
 shessra-deaths-whisper
 shield-mare
 shield-of-the-avatar
+shifting-ceratops
 shifting-sky
 shimatsu-the-bloodcloaked
 shimian-specter
@@ -2596,6 +2607,7 @@ unexpectedly-absent
 unleash-fury
 unlicensed-hearse
 unlucky-witness
+unsettled-mariner
 unstable-shapeshifter
 upwelling
 urborg-tomb-of-yawgmoth
@@ -2618,6 +2630,7 @@ varragoth-bloodsky-sire
 vastwood-hydra
 vault-112-sadistic-simulation
 vedalken-orrery
+veil-of-summer
 veiling-oddity
 venerable-warsinger
 venerated-loxodon
@@ -2873,3 +2886,6 @@ wildfire-elemental
 winged-words
 woodland-champion
 yaroks-fenlurker
+yarok-the-desecrated
+scorch-spitter
+vengeful-warchief

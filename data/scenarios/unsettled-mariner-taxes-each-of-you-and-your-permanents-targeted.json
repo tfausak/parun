@@ -1,0 +1,31 @@
+{
+  "description": "CR 603.2c / 601.2c / 118.12a: Unsettled Mariner triggers once for its controller and once for each permanent they control that an opponent's spell targets",
+  "note": "Three seats. Bob's Cone of Flame at alice, her Grizzly Bears and his own Hill Giant triggers twice: he pays {1} for one and, with no mana left, is countered by the other. Carol's Shock at alice with no mana to spare is countered. Bob's Twisted Fealty naming the Bears in both its slots triggers once.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [{"card": "Unsettled Mariner", "label": "mariner"}, {"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "bgiant"}, {"card": "Mountain", "label": "b1"}, {"card": "Mountain", "label": "b2"}, {"card": "Mountain", "label": "b3"}, {"card": "Mountain", "label": "b4"}, {"card": "Mountain", "label": "b5"}, {"card": "Mountain", "label": "b6"}], "hand": [{"card": "Cone of Flame", "label": "cone"}, {"card": "Twisted Fealty", "label": "fealty"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+    {"name": "carol", "battlefield": [{"card": "Mountain", "label": "c1"}], "hand": [{"card": "Shock", "label": "s2"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+  ]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$cone", "targetsBySlot": {"first": ["$alice"], "second": ["$bears"], "third": ["$bgiant"]}, "mana": ["$b1", "$b2", "$b3", "$b4", "$b5", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"OrderTriggers": ["$mariner", "$mariner"]}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Stack", "is": ["trigger of $mariner", "trigger of $mariner", "Cone of Flame"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"ChooseToPay": {"decision": {"type": "Pays"}, "mana": ["$b6"]}}, "source": "$mariner"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 20}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "carol", "do": {"Cast": {"object": "$s2", "targets": ["$alice"], "mana": ["$c1"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "carol", "check": {"View": {"of": "Stack", "is": ["trigger of $mariner", "Shock"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "carol", "do": "Pass"},
+    {"turn": 2, "step": "PrecombatMain", "player": "carol", "check": {"Life": {"player": "alice", "life": 20}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "carol", "check": {"Count": {"player": "carol", "zone": "Graveyard", "card": "Shock", "count": 1}}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": []}},
+    {"turn": 4, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$fealty", "targetsBySlot": {"target": ["$bears"], "creature": ["$bears"]}, "mana": ["$b1", "$b2", "$b3", null]}}},
+    {"turn": 4, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Stack", "is": ["trigger of $mariner", "Twisted Fealty"]}}},
+    {"turn": 4, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 4, "step": "PrecombatMain", "player": "bob", "do": {"ChooseToPay": {"decision": {"type": "Declines"}}}, "source": "$mariner"},
+    {"turn": 4, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Stack", "is": []}}},
+    {"turn": 4, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Controller", "object": "$bears", "is": "alice"}}}
+  ]
+}

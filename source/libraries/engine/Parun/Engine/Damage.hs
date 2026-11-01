@@ -1176,7 +1176,7 @@ processDamage events = do
         Recipient.ToPlayer pid
           | not (DamageEvent.dealtByInfect ev),
             losing > 0 ->
-              [GameEvent.LifeLost (LifeChange.MkLifeChange pid losing)]
+              [Event.lifeLost pid losing]
         _ -> []
       -- CR 120.3h's and CR 120.3c's counter removals, recorded so a trigger
       -- watching counters come off has an event to fire off: CR 310.12b's "when
@@ -1435,9 +1435,9 @@ processDamage events = do
             -- markOne left, which is what makes the pair the removal that
             -- actually happened.
             List.foldl'
-              (flip Event.recordEvent)
+              (\g record -> Event.recordEvent (record g) g)
               dealt
-              (concatMap (uncurry lifeLostBy) (zip survivors lost) <> removalsBetween board marked)
+              (concatMap (uncurry lifeLostBy) (zip survivors lost) <> fmap const (removalsBetween board marked))
     )
   -- CR 120.3's counter results, run AFTER the records above for `lifeLostBy`'s
   -- reason: putCounters records CR 122.6's own CountersPut, and a cause reads

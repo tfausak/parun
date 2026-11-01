@@ -14,7 +14,9 @@
           "condition": {
             "type": "PlayerLosesLife",
             "value": {
-              "type": "Opponent"
+              "player": {
+                "type": "Opponent"
+              }
             }
           },
           "modal": {

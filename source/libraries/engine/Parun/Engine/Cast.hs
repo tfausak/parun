@@ -2177,6 +2177,7 @@ permitsCastWhileSearching oid face gs =
 isGraveyardPermission :: CastingPermission.CastingPermission -> Bool
 isGraveyardPermission permission = case permission of
   CastingPermission.CastFromGraveyard _ -> True
+  CastingPermission.PlayFromGraveyard -> True
   CastingPermission.CastFromLibraryWhileSearching -> False
   CastingPermission.CastAsThoughItHadFlash _ _ -> False
 
@@ -2186,6 +2187,7 @@ isFlashPermission :: CastingPermission.CastingPermission -> Bool
 isFlashPermission permission = case permission of
   CastingPermission.CastAsThoughItHadFlash _ _ -> True
   CastingPermission.CastFromGraveyard _ -> False
+  CastingPermission.PlayFromGraveyard -> False
   CastingPermission.CastFromLibraryWhileSearching -> False
 
 -- CR 601.3 / 702.34a: may this player cast this card from the graveyard it lies
@@ -2831,7 +2833,8 @@ exileLandEntry pid oid gs = case Game.lookupObject oid gs of
 
 -- CR 601.3: PlayerEffect.castPermissionOptions for a cast of `oid` out of
 -- `zone`, open without a grant where the card carries a permission of its own
--- (exileOpen in exile, Object.playPermission in a graveyard) as well as where
+-- (exileOpen in exile; Object.playPermission or
+-- PlayerEffect.mayPlayFromOwnGraveyard in a graveyard) as well as where
 -- `offered` says so.
 --
 -- The graveyard arm is a regression fence: no card in data/cards/ grants a
@@ -2841,7 +2844,7 @@ castWays :: (ObjectId -> Bool) -> Bool -> PlayerId -> ObjectId -> Zone.Zone -> F
 castWays rides offered pid oid zone face gs =
   let ownOpen = case zone of
         Zone.Exile -> exileOpen pid oid face gs
-        Zone.Graveyard -> permitsPlayUnderPermission pid oid gs
+        Zone.Graveyard -> permitsPlayUnderPermission pid oid gs || PlayerEffect.mayPlayFromOwnGraveyard pid oid gs
         _ -> False
    in PlayerEffect.castPermissionOptions rides (offered || ownOpen) pid zone oid gs
 

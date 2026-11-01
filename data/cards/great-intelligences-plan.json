@@ -74,7 +74,9 @@
                     "type": "InSlot",
                     "value": "target"
                   },
-                  "sibling": 2,
+                  "siblings": [
+                    2
+                  ],
                   "villainous": true
                 }
               },
@@ -97,7 +99,9 @@
                     "type": "InSlot",
                     "value": "target"
                   },
-                  "sibling": 1,
+                  "siblings": [
+                    1
+                  ],
                   "villainous": true
                 }
               }

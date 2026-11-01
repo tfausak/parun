@@ -1,5 +1,6 @@
 module Parun.Codec.OrElseSpec where
 
+import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Parun.Codec.OrElse as OrElse
 import qualified Parun.Json.Value as Value
@@ -18,29 +19,36 @@ toJson = Codec.encode OrElse.codec
 fromJson :: Value.Value -> Either Text.Text OrElse.OrElse
 fromJson = Codec.decode OrElse.codec
 
--- One constructor, so three cases: the unmarked chooser, which is elided, a card
--- that names somebody else, and CR 701.55a's villainous flag, elided the same
--- way.
+-- One constructor, so four cases: the unmarked chooser, which is elided, a group
+-- of three, a card that names somebody else, and CR 701.55a's villainous flag,
+-- elided the same way.
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.OrElse" $ do
-  Spec.it s "a branch announced by the resolving controller writes only its sibling" $
+  Spec.it s "a branch announced by the resolving controller writes only its siblings" $
     Common.assertJsonCodec
       s
       toJson
       fromJson
-      (OrElse.MkOrElse (ClauseIndex.MkClauseIndex 1) (PlayerRef.Relative PlayerRelation.You) False)
-      " {\"sibling\":1} "
+      (OrElse.MkOrElse (Set.singleton (ClauseIndex.MkClauseIndex 1)) (PlayerRef.Relative PlayerRelation.You) False)
+      " {\"siblings\":[1]} "
+  Spec.it s "a member of a group of three writes both its siblings" $
+    Common.assertJsonCodec
+      s
+      toJson
+      fromJson
+      (OrElse.MkOrElse (Set.fromList [ClauseIndex.MkClauseIndex 0, ClauseIndex.MkClauseIndex 2]) (PlayerRef.Relative PlayerRelation.You) False)
+      " {\"siblings\":[0,2]} "
   Spec.it s "and one the whole table announces writes the chooser" $
     Common.assertJsonCodec
       s
       toJson
       fromJson
-      (OrElse.MkOrElse (ClauseIndex.MkClauseIndex 0) (PlayerRef.Relative PlayerRelation.AnyPlayer) False)
-      " {\"sibling\":0,\"chooser\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}} "
+      (OrElse.MkOrElse (Set.singleton (ClauseIndex.MkClauseIndex 0)) (PlayerRef.Relative PlayerRelation.AnyPlayer) False)
+      " {\"siblings\":[0],\"chooser\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}} "
   Spec.it s "CR 701.55a a villainous choice writes the flag" $
     Common.assertJsonCodec
       s
       toJson
       fromJson
-      (OrElse.MkOrElse (ClauseIndex.MkClauseIndex 1) (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) True)
-      " {\"sibling\":1,\"chooser\":{\"type\":\"InSlot\",\"value\":\"target\"},\"villainous\":true} "
+      (OrElse.MkOrElse (Set.singleton (ClauseIndex.MkClauseIndex 1)) (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) True)
+      " {\"siblings\":[1],\"chooser\":{\"type\":\"InSlot\",\"value\":\"target\"},\"villainous\":true} "

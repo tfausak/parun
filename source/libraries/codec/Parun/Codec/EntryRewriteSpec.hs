@@ -11,6 +11,7 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.AsCopy as AsCopy
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.ChooseBetween as ChooseBetween
 import qualified Parun.Types.ChosenQuality as ChosenQuality
 import qualified Parun.Types.CopyClause as CopyClause
 import qualified Parun.Types.CopyDomain as CopyDomain
@@ -95,8 +96,8 @@ spec s = Spec.describe s "Parun.Codec.EntryRewrite" $ do
     Common.assertCodec
       s
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
-      (EntryRewrite.ChooseQuality (ChosenQuality.Colors 2))
-      " {\"type\":\"ChooseQuality\",\"value\":{\"type\":\"Colors\",\"value\":2}} "
+      (EntryRewrite.ChooseQuality (ChosenQuality.Colors (ChooseBetween.MkChooseBetween 2 2)))
+      " {\"type\":\"ChooseQuality\",\"value\":{\"type\":\"Colors\",\"value\":{\"least\":2,\"most\":2}}} "
   -- CR 702.155b / 714.3b: read ahead's pair of intrinsic abilities as one
   -- rewrite, payload-free because rule 714.2d reads the bound off the Saga.
   Spec.it s "ReadAhead (Love Song of Night and Day)" $

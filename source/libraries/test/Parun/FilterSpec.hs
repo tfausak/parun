@@ -31,6 +31,7 @@ import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
 import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.Lookback as Lookback
+import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
@@ -121,7 +122,7 @@ blackCreature =
       Filter.canAttachToSubject = False,
       Filter.token = False,
       Filter.commander = False,
-      Filter.activatedAbility = False,
+      Filter.activatedAbility = Nothing,
       Filter.ability = False,
       Filter.emblem = False,
       Filter.abilitySource = Nothing,
@@ -206,7 +207,7 @@ devoidBigCreature =
       Filter.canAttachToSubject = False,
       Filter.token = False,
       Filter.commander = False,
-      Filter.activatedAbility = False,
+      Filter.activatedAbility = Nothing,
       Filter.ability = False,
       Filter.emblem = False,
       Filter.abilitySource = Nothing,
@@ -2284,18 +2285,24 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
 
   -- CR 113.3b against CR 113.3c. A bare field read like IsToken above: the
   -- builder (Parun.Engine.Projection.View.viewOfCharacteristics, through
-  -- Parun.Engine.Game.isActivatedAbility) is where the zone and the kind are
+  -- Parun.Engine.Game.activatedAbilityKind) is where the zone and the kind are
   -- decided, so the gameplay-level proof is Parun.CounterspellSpec's Squelch
   -- group.
   Spec.describe s "IsActivatedAbility" $ do
     Spec.it s "matches a view whose object is an activated ability" $ do
-      Spec.assertBool s (Filter.matches self (blackCreature {Filter.activatedAbility = True}) Filter.Type.IsActivatedAbility) "activated ability"
-      Spec.assertBool s (not (Filter.matches self blackCreature Filter.Type.IsActivatedAbility)) "and a permanent is not one"
+      Spec.assertBool s (Filter.matches self (blackCreature {Filter.activatedAbility = Just LoyaltyKind.NonLoyaltyAbility}) (Filter.Type.IsActivatedAbility Nothing)) "activated ability"
+      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.IsActivatedAbility Nothing))) "and a permanent is not one"
+
+    -- CR 606.2: given a kind, only that side of the loyalty division.
+    Spec.it s "given a kind, matches only an activated ability of that kind" $ do
+      Spec.assertBool s (Filter.matches self (blackCreature {Filter.activatedAbility = Just LoyaltyKind.LoyaltyAbility}) (Filter.Type.IsActivatedAbility (Just LoyaltyKind.LoyaltyAbility))) "loyalty ability"
+      Spec.assertBool s (not (Filter.matches self (blackCreature {Filter.activatedAbility = Just LoyaltyKind.NonLoyaltyAbility}) (Filter.Type.IsActivatedAbility (Just LoyaltyKind.LoyaltyAbility)))) "and a non-loyalty one is not"
+      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.IsActivatedAbility (Just LoyaltyKind.NonLoyaltyAbility)))) "nor is a permanent of either kind"
 
     -- CR 113.9: neither kind is a spell and neither contains the other, so a
     -- player -- who is no object at all -- is vacuously false, IsToken's posture.
     Spec.it s "a player candidate is vacuously false" $ do
-      Spec.assertBool s (not (Filter.matches self aPlayer Filter.Type.IsActivatedAbility)) "player"
+      Spec.assertBool s (not (Filter.matches self aPlayer (Filter.Type.IsActivatedAbility Nothing))) "player"
 
   -- CR 110.5. The atom is a bare field read, Transformed's shape below: the
   -- battlefield scoping CR 110.5d demands lives in the BUILDER that fills the

@@ -15,6 +15,7 @@ codec =
     tagOf
     [ Arm.nullary "CastFromLibraryWhileSearching" CastingPermission.CastFromLibraryWhileSearching,
       Arm.optionalPayload "CastFromGraveyard" KeywordFamily.codec CastingPermission.CastFromGraveyard (\x -> case x of CastingPermission.CastFromGraveyard y -> Just y; _ -> Nothing),
+      Arm.nullary "PlayFromGraveyard" CastingPermission.PlayFromGraveyard,
       Arm.payload "CastAsThoughItHadFlash" flash (uncurry CastingPermission.CastAsThoughItHadFlash) (\x -> case x of CastingPermission.CastAsThoughItHadFlash c m -> Just (c, m); _ -> Nothing)
     ]
   where
@@ -28,4 +29,5 @@ tagOf :: CastingPermission.CastingPermission -> String
 tagOf x = case x of
   CastingPermission.CastFromLibraryWhileSearching {} -> "CastFromLibraryWhileSearching"
   CastingPermission.CastFromGraveyard {} -> "CastFromGraveyard"
+  CastingPermission.PlayFromGraveyard {} -> "PlayFromGraveyard"
   CastingPermission.CastAsThoughItHadFlash {} -> "CastAsThoughItHadFlash"

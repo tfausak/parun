@@ -134,6 +134,7 @@ import qualified Parun.Types.EachCardInHand as EachCardInHand
 import qualified Parun.Types.Earthbend as Earthbend
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EntersWith as EntersWith
+import qualified Parun.Types.EntriesTrigger as EntriesTrigger
 import qualified Parun.Types.EntryFlip as EntryFlip
 import qualified Parun.Types.EntryHost as EntryHost
 import qualified Parun.Types.EntryOption as EntryOption
@@ -569,11 +570,12 @@ rewritePlayerEffect pairs effect = case effect of
   PlayerEffect.IncreaseMaximumHandSize _ -> effect
   PlayerEffect.ReduceMaximumHandSize _ -> effect
   PlayerEffect.LoseLifeForUnspentMana -> effect
-  PlayerEffect.CantBeTargetedBy _ -> effect
+  -- CR 702.11d's quality is a word on the card, as for protection above.
+  PlayerEffect.CantBeTargetedBy scope quality -> PlayerEffect.CantBeTargetedBy scope (fmap (Filter.rewrite pairs) quality)
   PlayerEffect.CantSearchLibraries _ -> effect
   PlayerEffect.CantBecomeMonarch -> effect
   PlayerEffect.CantSetSchemesInMotion -> effect
-  PlayerEffect.EntriesDontTrigger f -> PlayerEffect.EntriesDontTrigger (Filter.rewrite pairs f)
+  PlayerEffect.EntriesTrigger e -> PlayerEffect.EntriesTrigger e {EntriesTrigger.entrants = Filter.rewrite pairs (EntriesTrigger.entrants e)}
   PlayerEffect.ControlledWhileSearching -> effect
   PlayerEffect.YouChoose _ -> effect
   PlayerEffect.ExilesFoundWhileSearching -> effect
@@ -1286,6 +1288,7 @@ rewriteObjectRef pairs ref = case ref of
   ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary p f c) -> ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary p (Filter.rewrite pairs f) (rewriteQuantity pairs c))
   ObjectRef.ChosenPermanents choice -> ObjectRef.ChosenPermanents (rewriteChosenPermanents pairs choice)
   ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound slot f) -> ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound slot (Filter.rewrite pairs f))
+  ObjectRef.AttackedBy _ -> ref
   ObjectRef.FromAnywhere _ -> ref
   ObjectRef.AtRandom inner -> ObjectRef.AtRandom (rewriteObjectRef pairs inner)
   ObjectRef.AllOf refs -> ObjectRef.AllOf (fmap (rewriteObjectRef pairs) refs)
@@ -2101,8 +2104,8 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.AbilityActivated f -> TriggerCondition.AbilityActivated (Filter.rewrite pairs f)
   TriggerCondition.SelfBecomesTargeted _ -> condition
   TriggerCondition.ControllerBecomesTarget {} -> condition
-  TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted f relation kind) -> TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted (Filter.rewrite pairs f) relation kind)
-  TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted f relation kind) -> TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted (Filter.rewrite pairs f) relation kind)
+  TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted f relation kind includesYou) -> TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted (Filter.rewrite pairs f) relation kind includesYou)
+  TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted f relation kind includesYou) -> TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted (Filter.rewrite pairs f) relation kind includesYou)
   TriggerCondition.PlayerDiscards payload -> TriggerCondition.PlayerDiscards payload {PlayerActsOn.filter = Filter.rewrite pairs (PlayerActsOn.filter payload)}
   TriggerCondition.PlayerDiscardsCards payload -> TriggerCondition.PlayerDiscardsCards payload {PlayerActsOn.filter = Filter.rewrite pairs (PlayerActsOn.filter payload)}
   TriggerCondition.PlayerCycles _ -> condition
@@ -2228,6 +2231,7 @@ rewriteCastingPermission :: [(TextWord.TextWord, TextWord.TextWord)] -> CastingP
 rewriteCastingPermission pairs permission = case permission of
   CastingPermission.CastAsThoughItHadFlash condition additional -> CastingPermission.CastAsThoughItHadFlash (fmap (rewriteCondition pairs) condition) additional
   CastingPermission.CastFromGraveyard _ -> permission
+  CastingPermission.PlayFromGraveyard -> permission
   CastingPermission.CastFromLibraryWhileSearching -> permission
 
 -- CR 612.1 through Condition's predicate vocabulary. A Condition reached through

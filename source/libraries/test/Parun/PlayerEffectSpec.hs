@@ -146,6 +146,7 @@ import qualified Parun.Types.Hybrid as Hybrid
 import qualified Parun.Types.HybridPhyrexian as HybridPhyrexian
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
@@ -2574,7 +2575,7 @@ lifeGainsOf :: GameState.GameState -> [(PlayerId.PlayerId, Natural)]
 lifeGainsOf gs = Maybe.mapMaybe (\ev -> case ev of GameEvent.LifeGained (LifeChange.MkLifeChange pid n) -> Just (pid, n); _ -> Nothing) (S.eventsOf gs)
 
 lifeLossesOf :: GameState.GameState -> [(PlayerId.PlayerId, Natural)]
-lifeLossesOf gs = Maybe.mapMaybe (\ev -> case ev of GameEvent.LifeLost (LifeChange.MkLifeChange pid n) -> Just (pid, n); _ -> Nothing) (S.eventsOf gs)
+lifeLossesOf gs = Maybe.mapMaybe (\ev -> case ev of GameEvent.LifeLost (LifeLost.MkLifeLost pid n _) -> Just (pid, n); _ -> Nothing) (S.eventsOf gs)
 
 -- Renewed Faith ({2}{W} Instant, "You gain 6 life") in alice's hand over three
 -- untapped Plains, with `mawSeats` naming who controls a Giant Cindermaw ({2}{R}

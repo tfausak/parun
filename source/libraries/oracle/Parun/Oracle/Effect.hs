@@ -250,11 +250,10 @@ steps context cs = case cs of
         fmap (step :) (steps (noted context [c, d]) rest)
     | Just o <- Clause.orElse c,
       Just o' <- Clause.orElse d,
-      OrElse.sibling o == j,
-      OrElse.sibling o' == i,
+      OrElse.siblings o == Set.singleton j,
       OrElse.chooser o == PlayerRef.Relative PlayerRelation.You,
       not (OrElse.villainous o),
-      o' == o {OrElse.sibling = i},
+      o' == o {OrElse.siblings = Set.singleton i},
       Clause.optionality c == Clause.optionality d,
       c == (unridden c) {Clause.optionality = Clause.optionality c, Clause.orElse = Clause.orElse c},
       d == (unridden d) {Clause.optionality = Clause.optionality d, Clause.orElse = Clause.orElse d} -> do

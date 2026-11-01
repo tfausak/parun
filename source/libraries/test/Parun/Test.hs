@@ -309,6 +309,7 @@ import qualified Parun.Codec.EnteredZoneSpec
 import qualified Parun.Codec.EnteringTogetherSpec
 import qualified Parun.Codec.EntersWithSpec
 import qualified Parun.Codec.EntrantSpec
+import qualified Parun.Codec.EntriesTriggerSpec
 import qualified Parun.Codec.EntryAttackSpec
 import qualified Parun.Codec.EntryBlockSpec
 import qualified Parun.Codec.EntryControllerSpec
@@ -321,6 +322,7 @@ import qualified Parun.Codec.EntryRestrictionSpec
 import qualified Parun.Codec.EntryRewriteSpec
 import qualified Parun.Codec.EntryRidersSpec
 import qualified Parun.Codec.EntrySpec
+import qualified Parun.Codec.EntryTriggeringSpec
 import qualified Parun.Codec.EquipSpec
 import qualified Parun.Codec.EventExpirySpec
 import qualified Parun.Codec.EventGroupSpec
@@ -416,6 +418,7 @@ import qualified Parun.Codec.LifeLossPatternSpec
 import qualified Parun.Codec.LifeLossRSpec
 import qualified Parun.Codec.LifeLossRewriteSpec
 import qualified Parun.Codec.LifeLossSpec
+import qualified Parun.Codec.LifeLostSpec
 import qualified Parun.Codec.LifeTallySpec
 import qualified Parun.Codec.LimitUnlessSpec
 import qualified Parun.Codec.LoggedEventSpec
@@ -554,6 +557,7 @@ import qualified Parun.Codec.PlayerEffectSpec
 import qualified Parun.Codec.PlayerIdSpec
 import qualified Parun.Codec.PlayerInstructionSpec
 import qualified Parun.Codec.PlayerIsDealtDamageSpec
+import qualified Parun.Codec.PlayerLosesLifeSpec
 import qualified Parun.Codec.PlayerQuantitySpec
 import qualified Parun.Codec.PlayerRefSpec
 import qualified Parun.Codec.PlayerRelationSpec
@@ -1074,6 +1078,8 @@ spec s registry corpus = do
   Parun.Codec.CantBlockCreaturesSpec.spec s
   Parun.Codec.CantSearchLibrariesSpec.spec s
   Parun.Codec.CardArrivedInSpec.spec s
+  Parun.Codec.EntriesTriggerSpec.spec s
+  Parun.Codec.EntryTriggeringSpec.spec s
   Parun.Codec.ObjectCountSpec.spec s
   Parun.Codec.CardIdentitySpec.spec s
   Parun.Codec.CardLeavesZoneSpec.spec s
@@ -1500,6 +1506,8 @@ spec s registry corpus = do
   Parun.Codec.PlayerDesignationSpec.spec s
   Parun.Codec.PlayerDesignationTallySpec.spec s
   Parun.Codec.PlayerDrawsNthCardSpec.spec s
+  Parun.Codec.PlayerLosesLifeSpec.spec s
+  Parun.Codec.LifeLostSpec.spec s
   Parun.Codec.PlayerEffectSpec.spec s
   Parun.Codec.PlayerIdSpec.spec s
   Parun.Codec.PlayerQuantitySpec.spec s

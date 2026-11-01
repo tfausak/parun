@@ -203,6 +203,7 @@ import qualified Parun.Types.Earthbend as Earthbend
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.Emerge as Emerge
 import qualified Parun.Types.EntersWith as EntersWith
+import qualified Parun.Types.EntriesTrigger as EntriesTrigger
 import qualified Parun.Types.EntryController as EntryController
 import qualified Parun.Types.EntryFlip as EntryFlip
 import qualified Parun.Types.EntryHost as EntryHost
@@ -936,6 +937,7 @@ castingPermissionConditions :: CastingPermission.CastingPermission -> [Condition
 castingPermissionConditions permission = case permission of
   CastingPermission.CastFromLibraryWhileSearching -> []
   CastingPermission.CastFromGraveyard _ -> []
+  CastingPermission.PlayFromGraveyard -> []
   CastingPermission.CastAsThoughItHadFlash condition _ -> Maybe.maybeToList condition
 
 -- CR 701.46a's per-clause gate. Mode.allEffects and Modal.allEffects drop clause
@@ -2654,9 +2656,10 @@ cardRemembersUntriggered card =
     (Face.spell card : fmap ActivatedAbility.modal (Face.activatedAbilities card <> grantedActivatedAbilities card))
 
 -- CR 608.2d: does any clause's either-or name a sibling that does not name it
--- back? Clause.orElse is SYMMETRIC by design -- the announcement is made at
--- whichever branch the resolution reaches first, so that one has to know the
--- pair exists -- and nothing in Parun.Engine.Resolve enforces it.
+-- and the rest of its group back? Clause.orElse is SYMMETRIC by design -- the
+-- announcement is made at whichever branch the resolution reaches first, so
+-- that one has to know the whole group -- and nothing in Parun.Engine.Resolve
+-- enforces it.
 --
 -- What an asymmetric pair does silently, which is why this is a lint and not an
 -- elision: a clause naming nobody is never excluded, so it runs whatever the
@@ -2671,23 +2674,26 @@ cardBranchesAreAsymmetric :: Face.Face Card.Type.Card -> Bool
 cardBranchesAreAsymmetric = any (any modeBranchesOffend . Modal.modes) . faceModals
 
 -- One mode's half of that lint: a clause naming ITSELF offends (there is no pair
--- to choose between), and so does one whose named sibling is missing or names
--- somebody else. So does a pair whose two halves name different CHOOSERS, the
+-- to choose between), and so does one naming nobody, or one whose named
+-- sibling is missing or names a different group. So does a group whose members
+-- name different CHOOSERS, the
 -- announcement being made once at whichever branch the resolution reaches first
 -- (Parun.Engine.Resolve.chosenBranch, or villainousPass for a CR 701.55a pair)
 -- -- the loser's own chooser would be data
--- nothing reads. And so does a pair whose halves disagree about CR 701.55a's
+-- nothing reads. And so does a group whose members disagree about CR 701.55a's
 -- villainous flag, which is read at the same single announcement.
 modeBranchesOffend :: Mode.Mode Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
 modeBranchesOffend mode =
   let indexed = zip (fmap ClauseIndex.MkClauseIndex [0 ..]) (Foldable.toList (Mode.clauses mode))
       byIndex = Map.fromList indexed
-      names cIdx chooser villainous = Just (Just (OrElse.MkOrElse cIdx chooser villainous))
       offends (cIdx, clause) = case Clause.orElse clause of
         Nothing -> False
         Just orElse ->
-          OrElse.sibling orElse == cIdx
-            || fmap Clause.orElse (Map.lookup (OrElse.sibling orElse) byIndex) /= names cIdx (OrElse.chooser orElse) (OrElse.villainous orElse)
+          let group = Set.insert cIdx (OrElse.siblings orElse)
+              namesBack sibling = fmap Clause.orElse (Map.lookup sibling byIndex) == Just (Just orElse {OrElse.siblings = Set.delete sibling group})
+           in Set.null (OrElse.siblings orElse)
+                || Set.member cIdx (OrElse.siblings orElse)
+                || not (all namesBack (OrElse.siblings orElse))
    in any offends indexed
 
 -- CR 601.2d / 608.2d: does a divided slot go unread, or a Quantity.Share read
@@ -4308,6 +4314,7 @@ objectRefFilters ref = case ref of
   ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents f _ _ _) -> unframed [f] <> refFilters ref
   -- Rhuk's "all Equipment attached to that creature".
   ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound _ f) -> unframed [f]
+  ObjectRef.AttackedBy _ -> []
   ObjectRef.FromAnywhere _ -> []
   ObjectRef.AtRandom inner -> objectRefFilters inner
   ObjectRef.AllOf refs -> foldMap objectRefFilters refs
@@ -5131,9 +5138,9 @@ playerEffectFilters playerEffect = case playerEffect of
   -- CR 609.4b carries a ManaFilter and a set of mana types, for the same reason:
   -- what it names is MANA.
   PlayerEffect.SpendManaAsThough _ -> []
-  -- CR 702.18a / 702.11c carry a PlayerScope, not a Filter: the set they name is
-  -- players, and this traversal is about the spells a player effect names.
-  PlayerEffect.CantBeTargetedBy _ -> []
+  -- CR 702.18a / 702.11c's scope is a PlayerScope, not a Filter: the set it names
+  -- is players. CR 702.11d's quality is a Filter over the aiming object.
+  PlayerEffect.CantBeTargetedBy _ quality -> Maybe.maybeToList quality
   -- CR 601.3b's "a spell with certain qualities", which is a Filter over the
   -- spell exactly as a cost modifier's is (Vedalken Orrery's is `And []`).
   PlayerEffect.CastAsThoughItHadFlash f -> [f]
@@ -5176,7 +5183,7 @@ playerEffectFilters playerEffect = case playerEffect of
   -- Carthalion, True Heir).
   PlayerEffect.CantBecomeMonarch -> []
   PlayerEffect.CantSetSchemesInMotion -> []
-  PlayerEffect.EntriesDontTrigger f -> [f]
+  PlayerEffect.EntriesTrigger e -> [EntriesTrigger.entrants e]
   PlayerEffect.ControlledWhileSearching -> []
   PlayerEffect.YouChoose _ -> []
   PlayerEffect.ExilesFoundWhileSearching -> []
@@ -7371,9 +7378,9 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
         offenders = filter (anyFace cardBranchesAreAsymmetric . Printing.card) ps
     -- Guards against passing vacuously: a pool where no clause branches at all
     -- could not offend whatever the lint said. Twiddle, Teardrop Kami, Keys to
-    -- the House, Worms of the Earth and Great Intelligence's Plan all carry one
-    -- -- spells, activated abilities and a triggered one -- and Keys and the
-    -- Plan are the pairs printing no "may" over the branches.
+    -- the House, Worms of the Earth, Great Intelligence's Plan and Shifting
+    -- Ceratops all carry one -- spells, activated abilities and a triggered one
+    -- -- and Keys, the Plan and the Ceratops print no "may" over the branches.
     Spec.assertBool s (any (anyFace (any branching . faceModals) . Printing.card) ps) "the pool has a clause carrying an either-or"
     Spec.assertEqWith s "no half-named branch" (fmap (S.nameOf . Printing.card) offenders) []
   -- And the rejecting direction, against Twiddle misauthored on purpose -- never
@@ -7393,18 +7400,30 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
         -- Twiddle's own chooser, the unmarked "you" (CR 405.4): every offender
         -- below keeps it, so each assertion fails for the arm it names rather
         -- than for the chooser half.
-        branchTo n = Just (OrElse.MkOrElse (ClauseIndex.MkClauseIndex n) (PlayerRef.Relative PlayerRelation.You) False)
+        branchTo n = Just (OrElse.MkOrElse (Set.singleton (ClauseIndex.MkClauseIndex n)) (PlayerRef.Relative PlayerRelation.You) False)
+        nobody = Just (OrElse.MkOrElse Set.empty (PlayerRef.Relative PlayerRelation.You) False)
         selfNaming, dangling, disagreeing, halfVillainous :: [(Int, Maybe OrElse.OrElse)]
         selfNaming = [(0, branchTo 0), (1, branchTo 1)]
         dangling = [(0, branchTo 7), (1, branchTo 7)]
-        disagreeing = [(0, Just (OrElse.MkOrElse (ClauseIndex.MkClauseIndex 1) (PlayerRef.Relative PlayerRelation.AnyPlayer) False))]
-        halfVillainous = [(0, Just (OrElse.MkOrElse (ClauseIndex.MkClauseIndex 1) (PlayerRef.Relative PlayerRelation.You) True))]
+        disagreeing = [(0, Just (OrElse.MkOrElse (Set.singleton (ClauseIndex.MkClauseIndex 1)) (PlayerRef.Relative PlayerRelation.AnyPlayer) False))]
+        halfVillainous = [(0, Just (OrElse.MkOrElse (Set.singleton (ClauseIndex.MkClauseIndex 1)) (PlayerRef.Relative PlayerRelation.You) True))]
     Spec.assertBool s (not (cardBranchesAreAsymmetric face)) "Twiddle's tap and untap name each other, and are accepted"
     Spec.assertBool s (cardBranchesAreAsymmetric (rewrite [(1, Nothing)])) "a branch whose sibling names nobody back is rejected"
     Spec.assertBool s (cardBranchesAreAsymmetric (rewrite selfNaming)) "two branches each naming themselves are rejected"
     Spec.assertBool s (cardBranchesAreAsymmetric (rewrite dangling)) "branches naming an ordinal no clause has are rejected"
     Spec.assertBool s (cardBranchesAreAsymmetric (rewrite disagreeing)) "and a pair whose halves name different choosers is rejected"
     Spec.assertBool s (cardBranchesAreAsymmetric (rewrite halfVillainous)) "CR 701.55a a pair only one half of which is villainous is rejected"
+    Spec.assertBool s (cardBranchesAreAsymmetric (rewrite [(0, nobody), (1, nobody)])) "two branches naming nobody are rejected"
+  -- The same direction for a group of three, against Shifting Ceratops.
+  Spec.it s "the lint itself catches a group of three one member of which omits another" $ do
+    ceratops <- S.printingOf s registry "Shifting Ceratops"
+    let face = S.combinedFace ceratops
+        overAbility f ability = ability {ActivatedAbility.modal = (ActivatedAbility.modal ability) {Modal.modes = fmap (\mode -> mode {Mode.clauses = f (Mode.clauses mode)}) (Modal.modes (ActivatedAbility.modal ability))}}
+        rewrite i orElse = face {Face.activatedAbilities = fmap (overAbility (Seq.adjust' (\clause -> clause {Clause.orElse = orElse}) i)) (Face.activatedAbilities face)}
+        naming ns = Just (OrElse.MkOrElse (Set.fromList (fmap ClauseIndex.MkClauseIndex ns)) (PlayerRef.Relative PlayerRelation.You) False)
+    Spec.assertBool s (not (cardBranchesAreAsymmetric face)) "reach, trample and haste each name the other two, and are accepted"
+    Spec.assertBool s (cardBranchesAreAsymmetric (rewrite 2 (naming [0]))) "haste naming only reach is rejected"
+    Spec.assertBool s (cardBranchesAreAsymmetric (rewrite 2 (naming [0, 1, 2]))) "and haste naming itself among the three is rejected"
   -- CR 118.6's described cost, whose mana part comes from the object its basis
   -- names: the corpus half.
   Spec.it s "no card states a mana part beside a cost described in terms of another object" $ do

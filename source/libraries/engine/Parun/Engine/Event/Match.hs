@@ -88,6 +88,7 @@ import qualified Parun.Types.LandPlayed as LandPlayed
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
 import qualified Parun.Types.ManaAdded as ManaAdded
@@ -118,6 +119,7 @@ import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
+import qualified Parun.Types.PlayerLosesLife as PlayerLosesLife
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.ProjectedCharacteristics as PC
@@ -458,7 +460,9 @@ dealtToRelated board gs related orTheirPlaneswalkers target
 -- two CR 603.6a arms, the departure-side SelfLeavesGraveyard and
 -- CardLeavesZone, since the entry and the departure are one event
 -- (docs/decisions.md, "A silenced entry silences its departure"), and
--- CardsPutIntoZone. Any other move answers True. CardsPutIntoZone's gate is a
+-- CardsPutIntoZone. Any other move answers True, and an event riding the
+-- entry (a lore counter, an attachment) is not asked (docs/decisions.md, "An
+-- entry's own triggers are the zone change's"). CardsPutIntoZone's gate is a
 -- regression fence: no card in data/cards names the battlefield as its
 -- destination (grep, 2026-10-28).
 --
@@ -471,9 +475,22 @@ dealtToRelated board gs related orTheirPlaneswalkers target
 entryTriggers :: GameState -> PlayerId -> ZoneChange.ZoneChange -> Bool
 entryTriggers gs you zc =
   ZoneChange.to zc /= Zone.Battlefield
-    || let entrant = ZoneChange.object zc
-           atEntry = maybe gs (\group -> Map.findWithDefault gs group (GameState.boardAfterEvent gs)) (Game.entryGroup entrant gs)
-        in not (PlayerEffect.silencesEntry you entrant atEntry)
+    || not (PlayerEffect.silencesEntry you (ZoneChange.object zc) (atEntry gs (ZoneChange.object zc)))
+
+-- CR 603.2d: how many additional times an ability of `you`'s that this zone
+-- change caused to trigger triggers -- none unless it is a move onto the
+-- battlefield (Yarok, the Desecrated), with the scope `entryTriggers` has.
+-- Read off the same filed game as `entryTriggers`, so a Yarok entering beside
+-- the entrant, or being it, counts (its ruling).
+additionalEntryTriggers :: GameState -> PlayerId -> ZoneChange.ZoneChange -> Natural
+additionalEntryTriggers gs you zc
+  | ZoneChange.to zc == Zone.Battlefield = PlayerEffect.additionalEntryTriggers you (ZoneChange.object zc) (atEntry gs (ZoneChange.object zc))
+  | otherwise = 0
+
+-- The game filed immediately after `entrant` entered the battlefield
+-- (GameState.boardAfterEvent), or the live game for an entry none is filed for.
+atEntry :: GameState -> ObjectId -> GameState
+atEntry gs entrant = maybe gs (\group -> Map.findWithDefault gs group (GameState.boardAfterEvent gs)) (Game.entryGroup entrant gs)
 
 -- The same question against a slot environment, for the conditions whose subject
 -- is an object named EARLIER rather than the bearer or a class of objects
@@ -1548,7 +1565,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- CR 702.179d: an opponent still in the game (CR 102.3) lost life during
   -- "your" turn -- each active player's, under CR 805.4's shared team turns.
   TriggerCondition.OpponentLostLifeDuringYourTurn -> case event of
-    GameEvent.LifeLost (LifeChange.MkLifeChange lost _) -> Turn.isActive gs you && List.elem lost (Game.opponentsOf you gs)
+    GameEvent.LifeLost (LifeLost.MkLifeLost lost _ _) -> Turn.isActive gs you && List.elem lost (Game.opponentsOf you gs)
     GameEvent.DamageDealt _ -> False
     GameEvent.StepBegan {} -> False
     GameEvent.SpellCast {} -> False
@@ -6770,8 +6787,15 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- GAINING life is a different event, not a signed version of this one: one
   -- lifelink source's damage can record a loss and a gain together, and only the
   -- loss fires this.
-  TriggerCondition.PlayerLosesLife relation -> case event of
-    GameEvent.LifeLost (LifeChange.MkLifeChange pid _) -> PlayerRelation.holds (Game.teams gs) relation you pid
+  --
+  -- The first-time reading comes off the event, stamped as the loss happened
+  -- (Event.lifeLost): the log can hold a later loss by the time the scan reaches
+  -- this one.
+  TriggerCondition.PlayerLosesLife (PlayerLosesLife.MkPlayerLosesLife relation frequency) -> case event of
+    GameEvent.LifeLost (LifeLost.MkLifeLost pid _ first) ->
+      PlayerRelation.holds (Game.teams gs) relation you pid && case frequency of
+        TriggerFrequency.EveryTime -> True
+        TriggerFrequency.FirstTimeEachTurn -> first
     GameEvent.Moved {} -> False
     GameEvent.DamageDealt _ -> False
     GameEvent.DamagePrevented {} -> False
@@ -7644,15 +7668,20 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- Firing ONCE for the whole announcement is Event.Trigger.batchScoped's
   -- answer and not this function's: matchesTriggerGiven sees one event at a
   -- time and answers the same for both readings, which is its contract.
+  --
+  -- With includesYou, CR 109.5's "you" named as a target is a member too, the
+  -- ControllerBecomesTarget arm's test: Leyline of Combustion's "you and/or at
+  -- least one permanent you control".
   TriggerCondition.PermanentsBecomeTargeted c -> case event of
-    GameEvent.BecameTarget t -> case Recipient.objectOf (BecameTarget.targeted t) of
-      Nothing -> False
-      Just oid -> case Map.lookup oid board of
-        Nothing -> False
-        Just candidate ->
-          maybe True (== BecameTarget.kind t) (PermanentsBecomeTargeted.kind c)
-            && PlayerRelation.holds (Game.teams gs) (PermanentsBecomeTargeted.relation c) you (BecameTarget.controller t)
-            && Filter.matches bearerContext (Projection.sampledView oid candidate gs) (PermanentsBecomeTargeted.filter c)
+    GameEvent.BecameTarget t ->
+      maybe True (== BecameTarget.kind t) (PermanentsBecomeTargeted.kind c)
+        && PlayerRelation.holds (Game.teams gs) (PermanentsBecomeTargeted.relation c) you (BecameTarget.controller t)
+        && case (Recipient.playerOf (BecameTarget.targeted t), Recipient.objectOf (BecameTarget.targeted t)) of
+          (Just player, _) -> PermanentsBecomeTargeted.includesYou c && player == you
+          (Nothing, Nothing) -> False
+          (Nothing, Just oid) -> case Map.lookup oid board of
+            Nothing -> False
+            Just candidate -> Filter.matches bearerContext (Projection.sampledView oid candidate gs) (PermanentsBecomeTargeted.filter c)
     GameEvent.BecameAttached {} -> False
     GameEvent.BecameUnattached {} -> False
     GameEvent.LeftTheGame _ -> False

@@ -96,6 +96,7 @@ import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CarryOver as CarryOver
 import qualified Parun.Types.CausedBy as CausedBy
+import qualified Parun.Types.ChooseBetween as ChooseBetween
 import qualified Parun.Types.Chosen as Chosen
 import qualified Parun.Types.ChosenQuality as ChosenQuality
 import qualified Parun.Types.CoinFace as CoinFace
@@ -191,6 +192,7 @@ import qualified Parun.Types.LifeGainRewrite as LifeGainRewrite
 import qualified Parun.Types.LifeLossCause as LifeLossCause
 import qualified Parun.Types.LifeLossR as LifeLossR
 import qualified Parun.Types.LifeLossRewrite as LifeLossRewrite
+import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Looked as Looked
 import qualified Parun.Types.MadnessCost as MadnessCost
@@ -325,6 +327,33 @@ import qualified Parun.Types.ZoneChangeR as ZoneChangeR
 -- depth 0, which is what freezes it.
 recordEvent :: GameEvent -> GameState -> GameState
 recordEvent event gs = recordEventOver gs event gs
+
+-- The GameEvent.LifeLost for a loss recorded next, stamped with whether the log
+-- holds an earlier one of the player's. Stamped here because the trigger scan runs
+-- after a whole resolution or cast, when the log no longer says which of two losses
+-- came first. Of losses dealt together only the first recorded is stamped, so
+-- they fire once (Intermediate Chirography's ruling, "your first life-losing
+-- event"). The log's clearing at turn handoff makes it "of the turn".
+lifeLost :: PlayerId -> Natural -> GameState -> GameEvent
+lifeLost pid amount gs =
+  GameEvent.LifeLost (LifeLost.MkLifeLost {LifeLost.player = pid, LifeLost.amount = amount, LifeLost.first = firstLifeLoss pid (GameState.events gs)})
+
+-- Whether a loss of the player's after `earlier` is their first in the log.
+firstLifeLoss :: PlayerId -> Seq.Seq LoggedEvent.LoggedEvent -> Bool
+firstLifeLoss pid earlier =
+  let spent logged = case LoggedEvent.event logged of
+        GameEvent.LifeLost loss -> LifeLost.player loss == pid
+        _ -> False
+   in not (any spent earlier)
+
+-- CR 733.1: `lifeLost`'s stamps over a log with an undone stretch cut out of it,
+-- which can leave a later loss the first (Parun.Engine.Reversal.withoutAnnouncement).
+restampLifeLosses :: Seq.Seq LoggedEvent.LoggedEvent -> Seq.Seq LoggedEvent.LoggedEvent
+restampLifeLosses logged =
+  let restamp index entry = case LoggedEvent.event entry of
+        GameEvent.LifeLost loss -> entry {LoggedEvent.event = GameEvent.LifeLost loss {LifeLost.first = firstLifeLoss (LifeLost.player loss) (Seq.take index logged)}}
+        _ -> entry
+   in Seq.mapWithIndex restamp logged
 
 -- `recordEvent`, sampling CR 603.10's board off `board` rather than off the state
 -- the entry is appended to: for an event the caller records after the moment it
@@ -687,7 +716,7 @@ payLife :: PlayerId -> Natural -> Game ()
 payLife pid n = do
   settled <- resolveLifeLoss LifeLossCause.ByPayment pid n
   Monad.when (settled /= 0) . State.modify' $
-    recordEvent (GameEvent.LifeLost (LifeChange.MkLifeChange pid settled)) . Game.adjustLife pid (negate (toInteger settled))
+    \gs -> recordEvent (lifeLost pid settled gs) (Game.adjustLife pid (negate (toInteger settled)) gs)
 
 -- CR 110.5b: stamp the tapped status onto an entering permanent, the write shared
 -- by EntryRewrite.Tapped (CR 614.1d), by the declining half of
@@ -4857,14 +4886,25 @@ chooseQualityAs candidate quality oid = do
 -- earlier choice, which is what "the last chosen color" reads.
 --
 -- Colours go one prompt per colour, each offering the CR 105.1 colours not yet
--- chosen ("two colors" are two different ones), so only a fifth is forced. CR
+-- chosen ("two colors" are two different ones), so only a fifth is forced; a
+-- range ("the color or colors of your choice") first asks how many, as a
+-- Prompt.ChooseNumber, and a fixed count asks nothing. CR
 -- 305.6's basic land types and CR 205.3m's creature types are always all legal
 -- and distinguishable, so there is no one-option case to elide. Both types
 -- write Object.chosenSubtype: no printing makes both choices, and CR 607.2d
 -- links each to the ability that reads it.
 chooseQuality :: ChosenQuality.ChosenQuality -> PlayerId -> Acquisition.Acquisition -> ObjectId -> Game ()
 chooseQuality quality chooser acquisition oid = case quality of
-  ChosenQuality.Colors count -> do
+  ChosenQuality.Colors range -> do
+    let least = ChooseBetween.least range
+        most = ChooseBetween.most range
+    count <-
+      if least == most
+        then pure most
+        else do
+          gs <- State.get
+          answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor chooser gs) chooser oid least (Just most))
+          pure (max least (min most answer))
     let pick chosen _ = do
           picked <- Game.chooseAmong (\decider who -> Prompt.ChooseColor decider who oid) chooser (filter (`Set.notMember` chosen) [minBound .. maxBound :: Color.Color])
           pure (maybe chosen (`Set.insert` chosen) picked)
@@ -5677,6 +5717,9 @@ putOwnCounters oid kind n = do
 -- Projection.replacementsOf's does and for its reason. Parun.ReplacementSpec's
 -- Squad Captain pair proves it, over a Rise of the Dark Realms sweep: mutating
 -- this call back to the live board reddens "no +1/+1 counter".
+--
+-- Not implemented: a subject entering from a graveyard is not counted there,
+-- though its count is made before it leaves (Undergrowth Scavenger) (#5861).
 placeEntryCounters :: ReplacementCandidate -> ObjectId -> Map (CounterKind.CounterKind Keyword.Type.Keyword) Quantity.Type.Quantity -> Game ()
 placeEntryCounters candidate oid counters = do
   gs <- State.get
@@ -8658,12 +8701,6 @@ counterOne before destination counterer source controller oid = do
 -- copy there with the targets its controller settled on. Its ChooseNewTargets
 -- arm is the fifth, CR 115.7d's re-target of an object already on the stack.
 --
--- ONE EVENT PER SLOT PER RECIPIENT, which is rule 601.2c's own arity: that rule
--- lets one object be chosen once for each instance of the word "target" and
--- forbids it twice within one instance, so the per-slot sets are walked rather
--- than unioned and a spell naming the same permanent under two instances records
--- two.
---
 -- Players are kept, CR 115.1 making a player a target in its own right: Dormant
 -- Gomazoa watches its controller become one, and rule 601.2c names objects and
 -- players in the same breath, so one event over a Recipient beats two events.
@@ -8693,9 +8730,15 @@ counterOne before destination counterer source controller oid = do
 -- Unbracketed, a batch-scoped arm is inert -- each recipient gets a group of its
 -- own and fires the ability again. Per-occurrence siblings are unaffected:
 -- eventTriggers keys them Nothing, so ward on two creatures still fires twice.
+-- An outer bracket can hold several announcements (Hive Mind's copies);
+-- Event.Binding.batchPartition splits those by targeting object.
+--
+-- ONE EVENT PER OBJECT OR PLAYER, however many of rule 601.2c's "target" words
+-- named it: it becomes a target once. Unsettled Mariner's ruling (2019-06-14),
+-- proved by its scenario's Twisted Fealty naming one creature in both slots.
 becameTarget :: GameState -> ObjectId -> StackObjectKind.StackObjectKind -> PlayerId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> Game ()
 becameTarget announced source kind controller chosen =
-  simultaneously . Foldable.for_ (concatMap Set.toAscList (Map.elems chosen)) $ \targeted ->
+  simultaneously . Foldable.for_ (ListUtils.nubOrdOn (\r -> (Recipient.playerOf r, Recipient.objectOf r)) (concatMap Set.toAscList (Map.elems chosen))) $ \targeted ->
     State.modify'
       . recordEventOver announced
       $ GameEvent.BecameTarget
@@ -9964,13 +10007,13 @@ endOfGameReveals gs = case concatMap (leavingReveals gs) (Map.keys (GameState.ob
 -- loss side takes the same posture.
 changeLife :: PlayerId -> Integer -> Game ()
 changeLife pid delta =
-  Monad.when (delta /= 0) . State.modify' $
+  Monad.when (delta /= 0) . State.modify' $ \gs ->
     recordEvent
       ( if delta > 0
           then GameEvent.LifeGained (LifeChange.MkLifeChange pid (Integer.toNaturalSaturating delta))
-          else GameEvent.LifeLost (LifeChange.MkLifeChange pid (Integer.toNaturalSaturating (negate delta)))
+          else lifeLost pid (Integer.toNaturalSaturating (negate delta)) gs
       )
-      . Game.adjustLife pid delta
+      (Game.adjustLife pid delta gs)
 
 -- CR 121.1, one card at a time per CR 121.2, with CR 614's say first (CR 121.6).
 -- An empty library records the failed draw, which CR 704.5b makes a loss at the

@@ -436,8 +436,9 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
               -- nothing in the pool wipes a noncreature permanent's abilities, so
               -- dropping this line leaves the suite green.
               PC.enchant = [],
-              -- CR 601.3's permission is an ability too. Unproven: nothing in
-              -- the pool wipes the abilities of a card in a library.
+              -- CR 601.3's permission is an ability too; the scenario
+              -- kethis-the-hidden-hand-permission-is-lost-to-a-later-yixlid-jailer
+              -- proves it.
               PC.castingPermissions = []
             }
         -- CR 613.1f layer 6, the wipe above narrowed to one name: every ability
@@ -1283,7 +1284,10 @@ framedBySlots gs recipients context =
           Filter.slotControllers = over (maybe Set.empty Set.singleton . Filter.controller),
           Filter.slotCreatureTypes = over (Set.filter Subtype.isCreatureType . Filter.subtypes),
           Filter.slotMeasures = measures,
-          Filter.slotHostControllers = fmap (foldMap hostController . objectsOf) recipients
+          Filter.slotHostControllers = fmap (foldMap hostController . objectsOf) recipients,
+          -- CR 614.12: less a batch still entering (GameState.enteringBeside),
+          -- Resolve.Slots.battlefieldMatching's reading.
+          Filter.battlefieldViews = fmap (viewsOf gs) (Seq.fromList (Set.toList (Set.difference (GameState.battlefield gs) (GameState.enteringBeside gs))))
         }
 
 -- Filter.contextFor with a recipient map framed in through framedBySlots, for
@@ -3714,7 +3718,7 @@ filterReads f = case f of
   Filter.Type.HasSupertype _ -> Set.singleton Supertypes
   Filter.Type.HasColor _ -> Set.singleton Colors
   -- Reads the CANDIDATE's trait; the anchored object's arrive on the Context.
-  Filter.Type.Shares trait _ -> traitReads trait
+  Filter.Type.Shares trait anchor -> traitReads trait <> foldMap filterReads (Filter.anchorFilter anchor)
   Filter.Type.HasSubtype _ -> Set.singleton Subtypes
   -- Reads no aspect: CR 201.1's names have no Aspect, so CR 613.8a's dependency
   -- cannot turn on the layer-3 writes of them (AddNamesMatching, SetName,
@@ -3871,7 +3875,7 @@ filterReads f = case f of
   -- the atom above's reason. The attachment itself reads nothing, for that atom's
   -- reason too: no Modification writes Object.attachedTo.
   Filter.Type.HasAttached g -> filterReads g
-  Filter.Type.IsAttachedTo _ -> Set.empty
+  Filter.Type.IsAttachedTo anchor -> foldMap filterReads (Filter.anchorFilter anchor)
   Filter.Type.IsEvaluated -> Set.empty
   Filter.Type.IsHostOfSource -> Set.empty
   Filter.Type.EnteredWithSource -> Set.empty
@@ -3898,7 +3902,7 @@ filterReads f = case f of
   -- Reads nothing, for the atom above's reason and off the same record: CR
   -- 113.3's two kinds are told apart by Parun.Types.Source, which no Modification
   -- writes.
-  Filter.Type.IsActivatedAbility -> Set.empty
+  Filter.Type.IsActivatedAbility _ -> Set.empty
   -- Reads nothing, for the atom above's reason: CR 113.1c's question is answered
   -- off Parun.Types.Source too.
   Filter.Type.IsAbility -> Set.empty
@@ -4056,7 +4060,8 @@ filterReadsPeers f = case f of
   -- The anchored object's traits arrive on the Context -- the source's owner
   -- read off Object.owner rather than off a projection -- and the candidate's
   -- own come from its partial, so no PEER is projected.
-  Filter.Type.Shares _ _ -> False
+  -- A group anchor reads every permanent's view (Filter.Context.battlefieldViews).
+  Filter.Type.Shares _ anchor -> Maybe.isJust (Filter.anchorFilter anchor)
   Filter.Type.HasSubtype _ -> False
   Filter.Type.HasName _ -> False
   Filter.Type.NameWordsAtLeast _ -> False
@@ -4132,14 +4137,14 @@ filterReadsPeers f = case f of
   Filter.Type.ConvokedSourceThisTurn -> False
   Filter.Type.SaddledSourceThisTurn -> False
   Filter.Type.ControlledSinceTurnBegan -> False
-  Filter.Type.IsAttachedTo _ -> False
+  Filter.Type.IsAttachedTo anchor -> Maybe.isJust (Filter.anchorFilter anchor)
   Filter.Type.IsEvaluated -> False
   Filter.Type.IsHostOfSource -> False
   Filter.Type.EnteredWithSource -> False
   Filter.Type.AttachedNoLaterThanSource -> False
   Filter.Type.IsToken -> False
   Filter.Type.IsCommander -> False
-  Filter.Type.IsActivatedAbility -> False
+  Filter.Type.IsActivatedAbility _ -> False
   Filter.Type.IsAbility -> False
   Filter.Type.IsEmblem -> False
   Filter.Type.IsTapped -> False
@@ -4496,6 +4501,9 @@ aggregationReads a = case a of
   Aggregation.Distinct DistinctOf.CardTypes -> Set.singleton Types
   Aggregation.Distinct DistinctOf.Colors -> Set.singleton Colors
   Aggregation.Distinct DistinctOf.BasicLandTypes -> Set.singleton Subtypes
+  -- measureReads' reason: no Modification writes a mana cost.
+  Aggregation.Distinct DistinctOf.ManaValues -> Set.empty
+  Aggregation.Distinct DistinctOf.ManaCosts -> Set.empty
   Aggregation.MostSharing trait -> traitReads trait
   -- No Modification writes CR 201.1's names, HasName's reason in filterReads.
   Aggregation.DistinctNames -> Set.empty

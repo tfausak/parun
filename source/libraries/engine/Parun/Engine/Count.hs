@@ -35,6 +35,7 @@ import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackerDeclared as AttackerDeclared
 import qualified Parun.Types.BlockRole as BlockRole
 import qualified Parun.Types.BlocksDeclared as BlocksDeclared
+import qualified Parun.Types.BoundReading as BoundReading
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardArrivedIn as CardArrivedIn
 import qualified Parun.Types.Combat as Combat
@@ -62,6 +63,8 @@ import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.LoyaltyKind as LoyaltyKind
+import qualified Parun.Types.ManaCost as ManaCost
+import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.Milled as Milled
 import qualified Parun.Types.Moved as Moved
 import qualified Parun.Types.MovedBetween as MovedBetween
@@ -183,8 +186,17 @@ evaluate viewOf quantityOf context gs count =
         -- (countsWithoutCharacteristics) keeps it: Flux's and Jace's Archivist's
         -- "discarded this way" under Library of Leng (data/scenarios'
         -- windfall-counts-the-cards-library-of-leng-put-on-top).
-        Scope.OverBound slot ->
-          let ids = Set.toList (Map.findWithDefault Set.empty slot (Filter.slotObjects context))
+        --
+        -- BoundReading.BeforeMove swaps each arrival for the id it departed as,
+        -- found by nothing, so read by CR 608.2h last known information:
+        -- Flood of Tears' "nontoken permanents you control" returned to a hand,
+        -- whatever zone a CR 614 redirect put one in instead (its 2019-07-12
+        -- ruling). A member no move arrived as is already its own departure.
+        Scope.OverBound reading slot ->
+          let bound = Set.toList (Map.findWithDefault Set.empty slot (Filter.slotObjects context))
+              ids = case reading of
+                BoundReading.AsBound -> bound
+                BoundReading.BeforeMove -> fmap (\oid -> Maybe.fromMaybe oid (departedAs gs oid)) bound
               member oid
                 | findableAfterMove gs oid = True
                 | otherwise = countsWithoutCharacteristics aggregation predicate && wasDiscarded gs oid
@@ -285,15 +297,20 @@ revealedInPlace gs oid =
 -- Revealed entry naming that id is the reveal (CR 701.20a).
 revealedArriving :: GameState -> ObjectId -> Bool
 revealedArriving gs oid =
-  let events = fmap LoggedEvent.event (Foldable.toList (GameState.events gs))
-      departedIds = Maybe.mapMaybe departedAs events
-      departedAs event = case event of
+  let departed = departedAs gs oid
+      revealed event = case LoggedEvent.event event of
+        GameEvent.Revealed r -> Just (Revealed.card r) == departed
+        _ -> False
+   in any revealed (GameState.events gs)
+
+-- CR 400.7: the id this incarnation had before the move that made it, off the
+-- Moved entry naming it as an arrival; Nothing if no move this turn made it.
+departedAs :: GameState -> ObjectId -> Maybe ObjectId
+departedAs gs oid =
+  let departure event = case LoggedEvent.event event of
         GameEvent.Moved m | Foldable.elem oid (Moved.arrivals m) -> Just (ZoneChange.departed (Moved.change m))
         _ -> Nothing
-      revealed event = case event of
-        GameEvent.Revealed r -> List.elem (Revealed.card r) departedIds
-        _ -> False
-   in any revealed events
+   in Maybe.listToMaybe (Maybe.mapMaybe departure (Foldable.toList (GameState.events gs)))
 
 -- CR 109.1 / 120.1: THE player candidate's view -- Parun.Engine.Filter.playerView
 -- with the one field a bare PlayerId cannot answer filled from the board.
@@ -482,7 +499,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.HostOfSubjectHasCardType _ -> predicate
         Filter.Type.IsCommander -> predicate
         Filter.Type.IsToken -> predicate
-        Filter.Type.IsActivatedAbility -> predicate
+        Filter.Type.IsActivatedAbility _ -> predicate
         Filter.Type.IsAbility -> predicate
         Filter.Type.IsEmblem -> predicate
         -- NOT descended into, RepresentedByCard's reason below: CR 113.7's subject is
@@ -549,6 +566,18 @@ attachersOfPlayer gs candidate =
     (\attacher -> (Game.lookupObject attacher gs >>= Object.attachedTo >>= Recipient.playerOf) == Just candidate)
     (Set.toList (GameState.battlefield gs))
 
+-- What makes two mana costs the same cost: their generic symbols summed and
+-- the rest as a multiset, so a split card's {1}{R} and {1}{U} combine (CR
+-- 709.4b) to {2}{U}{R}, while {X} is not {0} and {B/R} is neither {B} nor {R}.
+-- No symbols at all is {0}, as data/cards writes Ornithopter's cost.
+manaCostKey :: ManaCost.ManaCost -> (Natural.Natural, [ManaSymbol.ManaSymbol])
+manaCostKey cost =
+  let symbols = ManaCost.unwrap cost
+      generic symbol = case symbol of
+        ManaSymbol.Generic n -> Just n
+        _ -> Nothing
+   in (sum (Maybe.mapMaybe generic symbols), List.sort (filter (Maybe.isNothing . generic) symbols))
+
 keep :: Filter.Type.Filter Keyword.Type.Keyword -> Filter.Context -> Maybe Filter.View -> Maybe Filter.View
 keep predicate context mv = case mv of
   Nothing -> Nothing
@@ -571,6 +600,10 @@ aggregate quantityOf aggregation members = case aggregation of
   -- CR 305.6: a land's other subtypes (Gate, Desert, Urza's) add nothing, and a
   -- land with two basic land types (Tundra) adds both.
   Aggregation.Distinct DistinctOf.BasicLandTypes -> Just (toInteger (Set.size (Set.filter Subtype.isBasicLandType (Set.unions (fmap (Filter.subtypes . snd) members)))))
+  -- CR 202.3a: a member with no mana cost still has mana value 0.
+  Aggregation.Distinct DistinctOf.ManaValues -> Just (toInteger (Set.size (Set.fromList (Maybe.mapMaybe (Filter.manaValue . snd) members))))
+  -- CR 202.1b: a member with no mana cost adds nothing; {0} is a cost.
+  Aggregation.Distinct DistinctOf.ManaCosts -> Just (toInteger (Set.size (Set.fromList (Maybe.mapMaybe (fmap manaCostKey . Filter.manaCost . snd) members))))
   -- The size of the largest group of members holding one value in common --
   -- not "pairwise sharing", which is not transitive (a Human Cleric, a Human
   -- Rogue and an Elf Rogue are no three sharing a type). A member joins a group
@@ -1387,7 +1420,7 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       Filter.commander = False,
       -- CR 113.3b: CR 608.2h's record is of characteristics rather than of an
       -- object on the stack, so there is no ability here to be either kind.
-      Filter.activatedAbility = False,
+      Filter.activatedAbility = Nothing,
       -- CR 113.1c, the line above widened: still no ability on the stack here to
       -- be one of either kind.
       Filter.ability = False,

@@ -65,6 +65,7 @@ import qualified Parun.Types.AlternativeActivationCost as AlternativeActivationC
 import qualified Parun.Types.AppliedReduction as AppliedReduction
 import qualified Parun.Types.CantSearchLibraries as CantSearchLibraries
 import qualified Parun.Types.CastFromZone as CastFromZone
+import qualified Parun.Types.CastingPermission as CastingPermission
 import qualified Parun.Types.Chosen as Chosen
 import qualified Parun.Types.CombatDeclaration as CombatDeclaration
 import qualified Parun.Types.CostAddition as CostAddition
@@ -78,6 +79,8 @@ import qualified Parun.Types.CounterProhibition as CounterProhibition
 import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DrawReveal as DrawReveal
 import qualified Parun.Types.EnteredZone as EnteredZone
+import qualified Parun.Types.EntriesTrigger as EntriesTrigger
+import qualified Parun.Types.EntryTriggering as EntryTriggering
 import qualified Parun.Types.ExtraVotes as ExtraVotes
 import qualified Parun.Types.Face as Face
 import Parun.Types.Filter (Filter)
@@ -625,7 +628,7 @@ prohibitsCasting pid oid variable gs =
         -- CR 702.18a / 702.11c restrict TARGETING, not casting: a player with
         -- shroud may cast anything, and Parun.Engine.Target.targetable is where
         -- the restriction lands (CR 115.4, CR 601.2c).
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         -- CR 601.3b ALLOWS, and this is the prohibit half: a permission is not a
         -- prohibition, and CR 101.2 would let a prohibition outvote it anyway.
         -- mayCastAsThoughItHadFlash below is where it is read.
@@ -649,7 +652,7 @@ prohibitsCasting pid oid variable gs =
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
-        PlayerEffect.EntriesDontTrigger _ -> False
+        PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.ControlledWhileSearching -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
@@ -814,7 +817,7 @@ prohibitsPlayingLand pid oid gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         -- CR 305.1 again: a land is never cast, so a permission about the timing
         -- of a CAST has nothing to widen here either.
         PlayerEffect.CastAsThoughItHadFlash _ -> False
@@ -833,7 +836,7 @@ prohibitsPlayingLand pid oid gs =
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
-        PlayerEffect.EntriesDontTrigger _ -> False
+        PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.ControlledWhileSearching -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
@@ -908,7 +911,7 @@ prohibitsSearching pid owner causeController gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -921,7 +924,7 @@ prohibitsSearching pid owner causeController gs =
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
-        PlayerEffect.EntriesDontTrigger _ -> False
+        PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.CantAttackWithCreatures -> False
         PlayerEffect.CantCastMatching _ -> False
         PlayerEffect.PutTappedAsYouCascade _ -> False
@@ -1016,7 +1019,7 @@ prohibitsCounters pid kind gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -1029,7 +1032,7 @@ prohibitsCounters pid kind gs =
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
-        PlayerEffect.EntriesDontTrigger _ -> False
+        PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.ControlledWhileSearching -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
@@ -1072,7 +1075,7 @@ prohibitsBecomingMonarch pid gs =
   let prohibits effect = case effect of
         PlayerEffect.CantBecomeMonarch -> True
         PlayerEffect.CantSetSchemesInMotion -> False
-        PlayerEffect.EntriesDontTrigger _ -> False
+        PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.ControlledWhileSearching -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
@@ -1101,7 +1104,7 @@ prohibitsBecomingMonarch pid gs =
         -- become the monarch" names nobody), so shroud is not an eligibility
         -- restriction; where a card does target (Jared's own first clause), CR
         -- 115.1's own check turns it away before this one is asked.
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -1142,7 +1145,7 @@ schemesCantBeSetInMotion :: GameState -> Bool
 schemesCantBeSetInMotion gs =
   let prohibits effect = case effect of
         PlayerEffect.CantSetSchemesInMotion -> True
-        PlayerEffect.EntriesDontTrigger _ -> False
+        PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.ControlledWhileSearching -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
@@ -1161,7 +1164,7 @@ schemesCantBeSetInMotion gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -1194,66 +1197,83 @@ schemesCantBeSetInMotion gs =
         PlayerEffect.Shows _ -> False
    in any (\pid -> any (prohibits . snd) (applying pid gs)) (Game.stillPlaying gs)
 
--- CR 603.6a / 613.11 / 101.2: does an effect applying to `pid` keep `entrant`
--- entering from triggering `pid`'s enters abilities (Hushwing Gryff)? `gs` is
--- the game immediately after the entry, so the entrant is read as it exists on
--- the battlefield and a silencer entering beside it counts (the card's
--- rulings). Parun.Engine.Event.Match's two CR 603.6a arms are the reader.
+-- CR 603.6a / 603.2d / 613.11 / 101.2: how the effects applying to `pid`
+-- change the triggering of `pid`'s abilities that `entrant` entering causes to
+-- trigger, one entry per effect admitting it. `gs` is the game immediately
+-- after the entry, so the entrant is read as it exists on the battlefield and an
+-- effect's source entering beside it, or being it, counts (Hushwing Gryff's and
+-- Yarok, the Desecrated's rulings).
+entryTriggerings :: PlayerId -> ObjectId -> GameState -> [EntryTriggering.EntryTriggering]
+entryTriggerings pid entrant gs =
+  let triggering (source, effect) = case effect of
+        PlayerEffect.EntriesTrigger entries ->
+          if matchesObjectFrom source (EntriesTrigger.entrants entries) entrant gs
+            then Just (EntriesTrigger.triggering entries)
+            else Nothing
+        PlayerEffect.CantSetSchemesInMotion -> Nothing
+        PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.YouChoose _ -> Nothing
+        PlayerEffect.ExilesFoundWhileSearching -> Nothing
+        PlayerEffect.CantBecomeMonarch -> Nothing
+        PlayerEffect.CantAttackWithCreatures -> Nothing
+        PlayerEffect.CantCastSpells -> Nothing
+        PlayerEffect.CantActivateAbilities {} -> Nothing
+        PlayerEffect.CantCastMoreThan _ -> Nothing
+        PlayerEffect.ModifyCost {} -> Nothing
+        PlayerEffect.AlternativeActivationCost {} -> Nothing
+        PlayerEffect.PlayAdditionalLands _ -> Nothing
+        PlayerEffect.NoMaximumHandSize -> Nothing
+        PlayerEffect.SetMaximumHandSize _ -> Nothing
+        PlayerEffect.IncreaseMaximumHandSize _ -> Nothing
+        PlayerEffect.ReduceMaximumHandSize _ -> Nothing
+        PlayerEffect.DontLoseUnspentMana _ -> Nothing
+        PlayerEffect.LoseLifeForUnspentMana -> Nothing
+        PlayerEffect.SpendManaAsThough _ -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
+        PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
+        PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
+        PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
+        PlayerEffect.LoyaltyGrant _ -> Nothing
+        PlayerEffect.MayTapForMana _ -> Nothing
+        PlayerEffect.CantBeCountered _ -> Nothing
+        PlayerEffect.RestrictTargeting _ -> Nothing
+        PlayerEffect.TargetPastHexproof _ -> Nothing
+        PlayerEffect.DamageCantBePrevented _ -> Nothing
+        PlayerEffect.DamageCantBeRedirected _ -> Nothing
+        PlayerEffect.CantSearchLibraries _ -> Nothing
+        PlayerEffect.HasProtectionFrom _ -> Nothing
+        PlayerEffect.CantCastMatching _ -> Nothing
+        PlayerEffect.PutTappedAsYouCascade _ -> Nothing
+        PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
+        PlayerEffect.CantPlayLands _ -> Nothing
+        PlayerEffect.CastFrom _ -> Nothing
+        PlayerEffect.PlayLandsFrom _ -> Nothing
+        PlayerEffect.PlotFrom _ -> Nothing
+        PlayerEffect.CastFromHandWithoutPayingManaCost _ -> Nothing
+        PlayerEffect.CantGetCounters _ -> Nothing
+        PlayerEffect.StateCoinFlip _ -> Nothing
+        PlayerEffect.ModifyDieRoll _ -> Nothing
+        PlayerEffect.AdditionalVotes _ -> Nothing
+        PlayerEffect.AdditionalSurveilCards _ -> Nothing
+        PlayerEffect.CantGainLife -> Nothing
+        PlayerEffect.CantLoseLife -> Nothing
+        PlayerEffect.RevealsDraw _ -> Nothing
+        PlayerEffect.Precluded _ -> Nothing
+        PlayerEffect.Shows _ -> Nothing
+   in Maybe.mapMaybe triggering (applying pid gs)
+
+-- CR 603.6a / 613.11: does an effect keep `entrant` entering from triggering
+-- `pid`'s abilities (Hushwing Gryff)? Parun.Engine.Event.Match.entryTriggers is
+-- the reader.
 silencesEntry :: PlayerId -> ObjectId -> GameState -> Bool
-silencesEntry pid entrant gs =
-  let silences (source, effect) = case effect of
-        PlayerEffect.EntriesDontTrigger f -> matchesObjectFrom source f entrant gs
-        PlayerEffect.CantSetSchemesInMotion -> False
-        PlayerEffect.ControlledWhileSearching -> False
-        PlayerEffect.YouChoose _ -> False
-        PlayerEffect.ExilesFoundWhileSearching -> False
-        PlayerEffect.CantBecomeMonarch -> False
-        PlayerEffect.CantAttackWithCreatures -> False
-        PlayerEffect.CantCastSpells -> False
-        PlayerEffect.CantActivateAbilities {} -> False
-        PlayerEffect.CantCastMoreThan _ -> False
-        PlayerEffect.ModifyCost {} -> False
-        PlayerEffect.AlternativeActivationCost {} -> False
-        PlayerEffect.PlayAdditionalLands _ -> False
-        PlayerEffect.NoMaximumHandSize -> False
-        PlayerEffect.SetMaximumHandSize _ -> False
-        PlayerEffect.IncreaseMaximumHandSize _ -> False
-        PlayerEffect.ReduceMaximumHandSize _ -> False
-        PlayerEffect.DontLoseUnspentMana _ -> False
-        PlayerEffect.LoseLifeForUnspentMana -> False
-        PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
-        PlayerEffect.CastAsThoughItHadFlash _ -> False
-        PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
-        PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
-        PlayerEffect.LoyaltyGrant _ -> False
-        PlayerEffect.MayTapForMana _ -> False
-        PlayerEffect.CantBeCountered _ -> False
-        PlayerEffect.RestrictTargeting _ -> False
-        PlayerEffect.TargetPastHexproof _ -> False
-        PlayerEffect.DamageCantBePrevented _ -> False
-        PlayerEffect.DamageCantBeRedirected _ -> False
-        PlayerEffect.CantSearchLibraries _ -> False
-        PlayerEffect.HasProtectionFrom _ -> False
-        PlayerEffect.CantCastMatching _ -> False
-        PlayerEffect.PutTappedAsYouCascade _ -> False
-        PlayerEffect.CastOnlyAtSorcerySpeed -> False
-        PlayerEffect.CantPlayLands _ -> False
-        PlayerEffect.CastFrom _ -> False
-        PlayerEffect.PlayLandsFrom _ -> False
-        PlayerEffect.PlotFrom _ -> False
-        PlayerEffect.CastFromHandWithoutPayingManaCost _ -> False
-        PlayerEffect.CantGetCounters _ -> False
-        PlayerEffect.StateCoinFlip _ -> False
-        PlayerEffect.ModifyDieRoll _ -> False
-        PlayerEffect.AdditionalVotes _ -> False
-        PlayerEffect.AdditionalSurveilCards _ -> False
-        PlayerEffect.CantGainLife -> False
-        PlayerEffect.CantLoseLife -> False
-        PlayerEffect.RevealsDraw _ -> False
-        PlayerEffect.Precluded _ -> False
-        PlayerEffect.Shows _ -> False
-   in any silences (applying pid gs)
+silencesEntry pid entrant gs = elem EntryTriggering.NoTrigger (entryTriggerings pid entrant gs)
+
+-- CR 603.2d: how many additional times each of `pid`'s abilities that
+-- `entrant` entering causes to trigger triggers, one per effect (Yarok, the
+-- Desecrated's ruling on two Yaroks). Parun.Engine.Event.Trigger.eventTriggers
+-- is the reader.
+additionalEntryTriggers :: PlayerId -> ObjectId -> GameState -> Natural
+additionalEntryTriggers pid entrant gs = List.genericLength (filter (== EntryTriggering.AnAdditionalTime) (entryTriggerings pid entrant gs))
 
 -- CR 508.1c / 101.2: is `pid` forbidden from attacking with creatures? A
 -- restriction on the PLAYER (Angelic Arbiter), read by
@@ -1265,7 +1285,7 @@ prohibitsAttackingWithCreatures pid gs =
         PlayerEffect.CantAttackWithCreatures -> True
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
-        PlayerEffect.EntriesDontTrigger _ -> False
+        PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.ControlledWhileSearching -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
@@ -1282,7 +1302,7 @@ prohibitsAttackingWithCreatures pid gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -1912,7 +1932,7 @@ landPlayFlashGrant effect = case effect of
   PlayerEffect.DontLoseUnspentMana _ -> Nothing
   PlayerEffect.LoseLifeForUnspentMana -> Nothing
   PlayerEffect.SpendManaAsThough _ -> Nothing
-  PlayerEffect.CantBeTargetedBy _ -> Nothing
+  PlayerEffect.CantBeTargetedBy {} -> Nothing
   PlayerEffect.CantBeCountered _ -> Nothing
   PlayerEffect.RestrictTargeting _ -> Nothing
   PlayerEffect.TargetPastHexproof _ -> Nothing
@@ -1922,7 +1942,7 @@ landPlayFlashGrant effect = case effect of
   PlayerEffect.HasProtectionFrom _ -> Nothing
   PlayerEffect.CantBecomeMonarch -> Nothing
   PlayerEffect.CantSetSchemesInMotion -> Nothing
-  PlayerEffect.EntriesDontTrigger _ -> Nothing
+  PlayerEffect.EntriesTrigger _ -> Nothing
   PlayerEffect.ControlledWhileSearching -> Nothing
   PlayerEffect.YouChoose _ -> Nothing
   PlayerEffect.ExilesFoundWhileSearching -> Nothing
@@ -2163,7 +2183,7 @@ castPermissionsFrom pid zone oid gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
         PlayerEffect.TargetPastHexproof _ -> False
@@ -2173,7 +2193,7 @@ castPermissionsFrom pid zone oid gs =
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
-        PlayerEffect.EntriesDontTrigger _ -> False
+        PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.ControlledWhileSearching -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
@@ -2253,11 +2273,11 @@ unspentPermission pid source grant gs =
 -- Open without any of them where something else is CR 601.3's "rule or effect"
 -- allowing the cast: the rules for a card in its owner's hand, and an effect
 -- offering the cast during resolution or a permission an exiled or graveyard card
--- carries for itself (`offered`, CR 608.2g; Parun.Engine.Cast.castWays). A permission the
--- OBJECT carries is not weighed here: every one parun
--- has is a keyword's, offering its own CR 601.2b candidate (escape, flashback),
--- so the candidate the cast chose says whether it was made under it --
--- Parun.Engine.Cast.castProposed asks nothing then, and
+-- carries for itself (`offered`, CR 608.2g; Parun.Engine.Cast.castWays), a
+-- granted PlayFromGraveyard included (mayPlayFromOwnGraveyard). A keyword's
+-- permission is not weighed here: it offers its own CR 601.2b candidate
+-- (escape, flashback), so the candidate the cast chose says whether it was made
+-- under it -- Parun.Engine.Cast.castProposed asks nothing then, and
 -- Parun.CastPermissionSpec's "CR 702.138a an escaped Chimera takes neither Serra
 -- Paragon's use nor its rider" proves it.
 castPermissionOptions :: (ObjectId -> Bool) -> Bool -> PlayerId -> Zone.Zone -> ObjectId -> GameState -> [Maybe (ObjectId, CastFromZone.CastFromZone)]
@@ -2339,14 +2359,15 @@ playPermissionPiles pid gs =
 -- the PRE-MOVE state for castPermissionOptions' reason. Open without any
 -- Play-verb permission where the land is in its owner's hand, a PlayLandsFrom
 -- grant (Crucible of Worlds) opens its pile at no cost, or the land's own
--- costless mayhem admits it (mayPlayByMayhem) -- so a once-each-turn permission
--- (Serra Paragon) standing beside mayhem is a choice, not a spend.
+-- costless mayhem or granted permission admits it (mayPlayByMayhem,
+-- mayPlayFromOwnGraveyard) -- so a once-each-turn permission (Serra Paragon)
+-- standing beside either is a choice, not a spend.
 landPermissionOptions :: (ObjectId -> Bool) -> PlayerId -> ObjectId -> GameState -> [Maybe (ObjectId, CastFromZone.CastFromZone)]
 landPermissionOptions rides pid oid gs = case Game.lookupObject oid gs of
   Nothing -> []
   Just obj ->
     let zone = Object.zone obj
-        free = (zone == Zone.Hand && Object.owner obj == pid) || elem (zone, Object.owner obj) (playLandPiles pid gs) || mayPlayByMayhem pid oid gs
+        free = (zone == Zone.Hand && Object.owner obj == pid) || elem (zone, Object.owner obj) (playLandPiles pid gs) || mayPlayByMayhem pid oid gs || mayPlayFromOwnGraveyard pid oid gs
      in permissionOptions rides free (landPermissionsFrom pid zone oid gs)
 
 -- CR 702.187c: may `pid` play `oid` out of their graveyard under the card's own
@@ -2367,6 +2388,19 @@ mayPlayByMayhem pid oid gs = case Game.lookupObject oid gs of
       && Object.owner obj == pid
       && Keyword.hasCostlessMayhem (Map.keysSet (Projection.keywordsOf oid gs))
       && Game.discardedThisTurnBy pid oid gs
+
+-- CR 601.3 / 305.1: may `pid` play `oid` out of their own graveyard under a
+-- permission the card has there (CastingPermission.PlayFromGraveyard, Kethis,
+-- the Hidden Hand's grant)? Read through the projection (CR 613.1f), so Yixlid
+-- Jailer's "lose all abilities" takes it away. A per-CARD permission, as
+-- mayPlayByMayhem is.
+mayPlayFromOwnGraveyard :: PlayerId -> ObjectId -> GameState -> Bool
+mayPlayFromOwnGraveyard pid oid gs = case Game.lookupObject oid gs of
+  Nothing -> False
+  Just obj ->
+    Object.zone obj == Zone.Graveyard
+      && Object.owner obj == pid
+      && elem CastingPermission.PlayFromGraveyard (PC.castingPermissions (Projection.project oid gs))
 
 -- CR 702.170f: the (zone, owner) piles some PlotFrom grant opens to `pid`, for
 -- Parun.Engine.Plot to draw candidates from, playPermissionPiles' shape; which of
@@ -2463,7 +2497,7 @@ mayCastFromHandWithoutPayingManaCost pid oid gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CantBeCountered _ -> False
         PlayerEffect.RestrictTargeting _ -> False
         PlayerEffect.TargetPastHexproof _ -> False
@@ -2473,7 +2507,7 @@ mayCastFromHandWithoutPayingManaCost pid oid gs =
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
-        PlayerEffect.EntriesDontTrigger _ -> False
+        PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.ControlledWhileSearching -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
@@ -2540,7 +2574,7 @@ playLandPiles pid gs =
         PlayerEffect.DontLoseUnspentMana _ -> []
         PlayerEffect.LoseLifeForUnspentMana -> []
         PlayerEffect.SpendManaAsThough _ -> []
-        PlayerEffect.CantBeTargetedBy _ -> []
+        PlayerEffect.CantBeTargetedBy {} -> []
         PlayerEffect.CantBeCountered _ -> []
         PlayerEffect.RestrictTargeting _ -> []
         PlayerEffect.TargetPastHexproof _ -> []
@@ -2550,7 +2584,7 @@ playLandPiles pid gs =
         PlayerEffect.HasProtectionFrom _ -> []
         PlayerEffect.CantBecomeMonarch -> []
         PlayerEffect.CantSetSchemesInMotion -> []
-        PlayerEffect.EntriesDontTrigger _ -> []
+        PlayerEffect.EntriesTrigger _ -> []
         PlayerEffect.ControlledWhileSearching -> []
         PlayerEffect.YouChoose _ -> []
         PlayerEffect.ExilesFoundWhileSearching -> []
@@ -2611,11 +2645,17 @@ playLandPiles pid gs =
 -- `pastHexproof` is CR 702.11e's exemption for the caster (Detection Tower,
 -- hexproofExemptions): it lifts CR 702.11c's scope, Related Opponent, and leaves
 -- shroud's.
-protectedFromTargeting :: [(RowSource, PlayerEffect)] -> Bool -> Maybe PlayerId -> PlayerId -> GameState -> Bool
-protectedFromTargeting rows pastHexproof caster pid gs =
-  let stops effect = case effect of
-        PlayerEffect.CantBeTargetedBy (PlayerScope.Related PlayerRelation.Opponent) | pastHexproof -> False
-        PlayerEffect.CantBeTargetedBy scope -> case caster of
+--
+-- A quality (CR 702.11d) is asked of the aiming object, `source` and its view,
+-- as Target.targetable's `stops` asks it for a permanent; CR 109.5's "you" is
+-- again the protected player. Each row is its own ability (CR 702.11f).
+protectedFromTargeting :: [(RowSource, PlayerEffect)] -> Bool -> Maybe PlayerId -> ObjectId -> Filter.View -> PlayerId -> GameState -> Bool
+protectedFromTargeting rows pastHexproof caster source sourceView pid gs =
+  let hasQuality = maybe True (Filter.matches (Filter.contextIn gs (Just pid) (Just source)) sourceView)
+      stops effect = case effect of
+        PlayerEffect.CantBeTargetedBy (PlayerScope.Related PlayerRelation.Opponent) _ | pastHexproof -> False
+        PlayerEffect.CantBeTargetedBy _ quality | not (hasQuality quality) -> False
+        PlayerEffect.CantBeTargetedBy scope _ -> case caster of
           Just who -> inScope who pid gs scope
           Nothing -> case scope of
             PlayerScope.Related relation -> PlayerRelation.holdsFor (Game.teams gs) relation (Just pid) Nothing
@@ -2657,7 +2697,7 @@ protectedFromTargeting rows pastHexproof caster pid gs =
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
-        PlayerEffect.EntriesDontTrigger _ -> False
+        PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.ControlledWhileSearching -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
@@ -2701,16 +2741,18 @@ protectedFromTargeting rows pastHexproof caster pid gs =
 -- from the same quality redundant for the player case as much as the permanent
 -- one.
 protectedFrom :: ObjectId -> PlayerId -> GameState -> Bool
-protectedFrom oid pid gs = protectedFromGiven (applying pid gs) Nothing oid gs
+protectedFrom oid pid gs = protectedFromGiven (applying pid gs) Nothing (Projection.viewOfObject oid gs) gs
 
--- protectedFrom against an already-gathered row list, for
--- protectedFromTargetingGiven's reason above. `aimer` is Filter.aimingController:
--- Just the controller of the spell or ability aiming at the player, for rule
--- 702.16k's targeting clause, and Nothing at the Aura bar. The cast-prohibition
+-- protectedFrom against an already-gathered row list and the source's view, for
+-- protectedFromTargetingGiven's reason above; Parun.Engine.Target.targetable's
+-- view answers a gone source from its last known information (CR 608.2b).
+-- `aimer` is Filter.aimingController: Just the controller of the spell or ability
+-- aiming at the player, for rule 702.16k's targeting clause, and Nothing at the
+-- Aura bar. The cast-prohibition
 -- scenario "an opponent's ability still can't target the protected player once
 -- she steals its source in response" proves it.
-protectedFromGiven :: [(RowSource, PlayerEffect)] -> Maybe (Maybe PlayerId) -> ObjectId -> GameState -> Bool
-protectedFromGiven rows aimer oid gs =
+protectedFromGiven :: [(RowSource, PlayerEffect)] -> Maybe (Maybe PlayerId) -> Filter.View -> GameState -> Bool
+protectedFromGiven rows aimer view gs =
   let stops (source, effect) = case effect of
         -- CR 702.16a's quality, matched against the object's projected view.
         -- Runed Halo's chosen name is Filter.HasChosenName, answered off the
@@ -2726,13 +2768,13 @@ protectedFromGiven rows aimer oid gs =
         PlayerEffect.HasProtectionFrom quality ->
           Filter.matches
             ((contextFor (RowSource.object source >>= (`Projection.controllerOf` gs)) source gs) {Filter.aimingController = aimer})
-            (Projection.viewOfObject oid gs)
+            view
             quality
         -- CR 702.18a and CR 702.11c are a different immunity, and a narrower
         -- one: they stop TARGETING alone, where rule 702.16 also bars an Aura
         -- and, by rule 702.16e, prevents damage. Read at their own gate
         -- (protectedFromTargeting above).
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         -- Every other arm is about casting, playing, countering, searching,
         -- paying, keeping mana, gaining or losing life, or how a coin flip came
         -- out. None of them says
@@ -2763,7 +2805,7 @@ protectedFromGiven rows aimer oid gs =
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
-        PlayerEffect.EntriesDontTrigger _ -> False
+        PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.ControlledWhileSearching -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
@@ -2828,7 +2870,7 @@ protectionCarriers gs =
         -- side is this Filter, so the three consequences of rule 702.16 read one
         -- quality (protectedFromGiven above is the other two).
         PlayerEffect.HasProtectionFrom quality -> fmap (\oid -> (pid, oid, RowSource.choices source, quality)) (RowSource.object source)
-        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CantSearchLibraries _ -> Nothing
         PlayerEffect.CantCastSpells -> Nothing
         PlayerEffect.CantActivateAbilities {} -> Nothing
@@ -2855,7 +2897,7 @@ protectionCarriers gs =
         PlayerEffect.DamageCantBeRedirected _ -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
-        PlayerEffect.EntriesDontTrigger _ -> Nothing
+        PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
@@ -2930,7 +2972,7 @@ landPlaysAllowed pid gs =
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
-        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
         PlayerEffect.RestrictTargeting _ -> Nothing
         PlayerEffect.TargetPastHexproof _ -> Nothing
@@ -2940,7 +2982,7 @@ landPlaysAllowed pid gs =
         PlayerEffect.HasProtectionFrom _ -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
-        PlayerEffect.EntriesDontTrigger _ -> Nothing
+        PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
@@ -3017,7 +3059,7 @@ votesAllowed pid gs =
         PlayerEffect.CantSearchLibraries {} -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
-        PlayerEffect.EntriesDontTrigger _ -> Nothing
+        PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
@@ -3080,7 +3122,7 @@ offeredExtras pid gs =
         PlayerEffect.CantSearchLibraries {} -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
-        PlayerEffect.EntriesDontTrigger _ -> False
+        PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.ControlledWhileSearching -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
@@ -3144,7 +3186,7 @@ cascadeActions pid gs =
         PlayerEffect.CantSearchLibraries {} -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
-        PlayerEffect.EntriesDontTrigger _ -> Nothing
+        PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
@@ -3207,7 +3249,7 @@ drawReveals pid nth gs =
         PlayerEffect.CantSearchLibraries {} -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
-        PlayerEffect.EntriesDontTrigger _ -> Nothing
+        PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
@@ -3269,7 +3311,7 @@ shownGrants pid gs =
         PlayerEffect.CantSearchLibraries {} -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
-        PlayerEffect.EntriesDontTrigger _ -> Nothing
+        PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
@@ -3351,7 +3393,7 @@ maximumHandSize pid gs =
         PlayerEffect.DontLoseUnspentMana _ -> current
         PlayerEffect.LoseLifeForUnspentMana -> current
         PlayerEffect.SpendManaAsThough _ -> current
-        PlayerEffect.CantBeTargetedBy _ -> current
+        PlayerEffect.CantBeTargetedBy {} -> current
         PlayerEffect.CastAsThoughItHadFlash _ -> current
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> current
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> current
@@ -3366,7 +3408,7 @@ maximumHandSize pid gs =
         PlayerEffect.HasProtectionFrom _ -> current
         PlayerEffect.CantBecomeMonarch -> current
         PlayerEffect.CantSetSchemesInMotion -> current
-        PlayerEffect.EntriesDontTrigger _ -> current
+        PlayerEffect.EntriesTrigger _ -> current
         PlayerEffect.ControlledWhileSearching -> current
         PlayerEffect.YouChoose _ -> current
         PlayerEffect.ExilesFoundWhileSearching -> current
@@ -3433,7 +3475,7 @@ keepsUnspentMana pid gs =
         PlayerEffect.SetMaximumHandSize _ -> Nothing
         PlayerEffect.IncreaseMaximumHandSize _ -> Nothing
         PlayerEffect.ReduceMaximumHandSize _ -> Nothing
-        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
@@ -3448,7 +3490,7 @@ keepsUnspentMana pid gs =
         PlayerEffect.HasProtectionFrom _ -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
-        PlayerEffect.EntriesDontTrigger _ -> Nothing
+        PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
@@ -3507,7 +3549,7 @@ losesLifeForUnspentMana pid gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> True
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -3522,7 +3564,7 @@ losesLifeForUnspentMana pid gs =
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
-        PlayerEffect.EntriesDontTrigger _ -> False
+        PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.ControlledWhileSearching -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
@@ -3585,7 +3627,7 @@ prohibitsGainingLife pid gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -3600,7 +3642,7 @@ prohibitsGainingLife pid gs =
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
-        PlayerEffect.EntriesDontTrigger _ -> False
+        PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.ControlledWhileSearching -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
@@ -3659,7 +3701,7 @@ prohibitsLosingLife pid gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -3674,7 +3716,7 @@ prohibitsLosingLife pid gs =
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
-        PlayerEffect.EntriesDontTrigger _ -> False
+        PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.ControlledWhileSearching -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
@@ -3732,7 +3774,7 @@ precludes outcome pid gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -3747,7 +3789,7 @@ precludes outcome pid gs =
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
-        PlayerEffect.EntriesDontTrigger _ -> False
+        PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.ControlledWhileSearching -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
@@ -3803,7 +3845,7 @@ spendManaAsThough pid gs =
         PlayerEffect.SetMaximumHandSize _ -> Nothing
         PlayerEffect.IncreaseMaximumHandSize _ -> Nothing
         PlayerEffect.ReduceMaximumHandSize _ -> Nothing
-        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
@@ -3818,7 +3860,7 @@ spendManaAsThough pid gs =
         PlayerEffect.HasProtectionFrom _ -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
-        PlayerEffect.EntriesDontTrigger _ -> Nothing
+        PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
@@ -3916,7 +3958,7 @@ cantBeCountered pid counterer oid gs =
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
         PlayerEffect.SpendManaAsThough _ -> False
-        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
@@ -3934,7 +3976,7 @@ cantBeCountered pid counterer oid gs =
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
-        PlayerEffect.EntriesDontTrigger _ -> False
+        PlayerEffect.EntriesTrigger _ -> False
         PlayerEffect.ControlledWhileSearching -> False
         PlayerEffect.YouChoose _ -> False
         PlayerEffect.ExilesFoundWhileSearching -> False
@@ -3982,7 +4024,7 @@ targetingRestrictions =
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
-        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
@@ -3994,7 +4036,7 @@ targetingRestrictions =
         PlayerEffect.HasProtectionFrom _ -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
-        PlayerEffect.EntriesDontTrigger _ -> Nothing
+        PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
@@ -4060,7 +4102,7 @@ hexproofExemptions =
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
-        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
@@ -4072,7 +4114,7 @@ hexproofExemptions =
         PlayerEffect.HasProtectionFrom _ -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
-        PlayerEffect.EntriesDontTrigger _ -> Nothing
+        PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
@@ -4163,7 +4205,7 @@ unpreventable gs =
         PlayerEffect.HasProtectionFrom _ -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
-        PlayerEffect.EntriesDontTrigger _ -> Nothing
+        PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
@@ -4202,7 +4244,7 @@ unpreventable gs =
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
-        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
@@ -4243,7 +4285,7 @@ unredirectable gs =
         PlayerEffect.HasProtectionFrom _ -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
-        PlayerEffect.EntriesDontTrigger _ -> Nothing
+        PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
@@ -4282,7 +4324,7 @@ unredirectable gs =
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
-        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
@@ -4336,7 +4378,7 @@ statedFlips pid gs =
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
-        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
@@ -4351,7 +4393,7 @@ statedFlips pid gs =
         PlayerEffect.HasProtectionFrom _ -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
-        PlayerEffect.EntriesDontTrigger _ -> Nothing
+        PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
@@ -4412,7 +4454,7 @@ rollModifiers pid gs =
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
-        PlayerEffect.CantBeTargetedBy _ -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
         PlayerEffect.ActivateKeywordAtInstantSpeed _ -> Nothing
@@ -4427,7 +4469,7 @@ rollModifiers pid gs =
         PlayerEffect.HasProtectionFrom _ -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
-        PlayerEffect.EntriesDontTrigger _ -> Nothing
+        PlayerEffect.EntriesTrigger _ -> Nothing
         PlayerEffect.ControlledWhileSearching -> Nothing
         PlayerEffect.YouChoose _ -> Nothing
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
@@ -4524,7 +4566,7 @@ overPlayerRefs f effect = case effect of
   PlayerEffect.DontLoseUnspentMana _ -> pure effect
   PlayerEffect.LoseLifeForUnspentMana -> pure effect
   PlayerEffect.SpendManaAsThough _ -> pure effect
-  PlayerEffect.CantBeTargetedBy _ -> pure effect
+  PlayerEffect.CantBeTargetedBy {} -> pure effect
   PlayerEffect.HasProtectionFrom _ -> pure effect
   PlayerEffect.CastAsThoughItHadFlash _ -> pure effect
   PlayerEffect.MayPlayAsThoughItHadFlash _ -> pure effect
@@ -4539,7 +4581,7 @@ overPlayerRefs f effect = case effect of
   PlayerEffect.CantSearchLibraries _ -> pure effect
   PlayerEffect.CantBecomeMonarch -> pure effect
   PlayerEffect.CantSetSchemesInMotion -> pure effect
-  PlayerEffect.EntriesDontTrigger _ -> pure effect
+  PlayerEffect.EntriesTrigger _ -> pure effect
   PlayerEffect.ControlledWhileSearching -> pure effect
   PlayerEffect.YouChoose _ -> pure effect
   PlayerEffect.ExilesFoundWhileSearching -> pure effect
@@ -4602,7 +4644,7 @@ overDamagePatterns f effect = case effect of
   PlayerEffect.DontLoseUnspentMana _ -> pure effect
   PlayerEffect.LoseLifeForUnspentMana -> pure effect
   PlayerEffect.SpendManaAsThough _ -> pure effect
-  PlayerEffect.CantBeTargetedBy _ -> pure effect
+  PlayerEffect.CantBeTargetedBy {} -> pure effect
   PlayerEffect.HasProtectionFrom _ -> pure effect
   PlayerEffect.CastAsThoughItHadFlash _ -> pure effect
   PlayerEffect.MayPlayAsThoughItHadFlash _ -> pure effect
@@ -4617,7 +4659,7 @@ overDamagePatterns f effect = case effect of
   PlayerEffect.CantSearchLibraries _ -> pure effect
   PlayerEffect.CantBecomeMonarch -> pure effect
   PlayerEffect.CantSetSchemesInMotion -> pure effect
-  PlayerEffect.EntriesDontTrigger _ -> pure effect
+  PlayerEffect.EntriesTrigger _ -> pure effect
   PlayerEffect.ControlledWhileSearching -> pure effect
   PlayerEffect.YouChoose _ -> pure effect
   PlayerEffect.ExilesFoundWhileSearching -> pure effect
