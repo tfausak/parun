@@ -1,0 +1,26 @@
+{
+  "description": "CR 603.2c / 601.2c / 707.10c: Leyline of Combustion triggers once per copy that targets its controller, even when one Hive Mind trigger makes the copies together",
+  "note": "Four seats. Bob's Shock at alice costs him 2. Dave's Hive Mind has alice, carol and dave copy it, each keeping alice as the target. Alice's own copy triggers nothing; carol's and dave's are two spells, so two triggers, 2 damage to each: one trigger would leave one of them at 20.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "battlefield": [{"card": "Leyline of Combustion", "label": "leyline"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "manaPool": "R", "hand": [{"card": "Shock", "label": "shock"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "carol", "library": [{"card": "Island"}, {"card": "Island"}]},
+    {"name": "dave", "battlefield": [{"card": "Hive Mind", "label": "hive"}], "library": [{"card": "Island"}, {"card": "Island"}]}
+  ]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$shock", "targets": ["$alice"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "bob", "life": 18}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseTargets": {"target": ["$alice"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "carol", "do": {"ChooseTargets": {"target": ["$alice"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "dave", "do": {"ChooseTargets": {"target": ["$alice"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"OrderTriggers": ["Leyline of Combustion", "Leyline of Combustion"]}}
+  ],
+  "final": [
+    {"Life": {"player": "alice", "life": 12}},
+    {"Life": {"player": "bob", "life": 18}},
+    {"Life": {"player": "carol", "life": 18}},
+    {"Life": {"player": "dave", "life": 18}}
+  ]
+}

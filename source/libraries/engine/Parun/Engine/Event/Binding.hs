@@ -812,9 +812,10 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- The batch's "that player": the targeting object's controller, whom Leyline
   -- of Combustion deals 2 damage to. The event's player rather than the object's
   -- holder, so a spell countered or stolen before the trigger resolves changes
-  -- nothing. One announcement has one controller, so every member agrees.
+  -- nothing; the Leyline scenario's Aethersnatch proves it. Beside it the
+  -- targeting object, which batchPartition splits a group by.
   (TriggerCondition.PermanentsBecomeTargeted _, GameEvent.BecameTarget t) ->
-    Binding.setTriggerPlayer (BecameTarget.controller t) Map.empty
+    Binding.setTargetingObject (BecameTarget.source t) (Binding.setTriggerPlayer (BecameTarget.controller t) Map.empty)
   -- CR 601.2c's "that creature" read by a bystander: the permanent that became
   -- the target, which Cowardice returns to its owner's hand, unbound when
   -- includesYou admitted the player instead (Unsettled Mariner).
@@ -1235,6 +1236,11 @@ batchPartition cond bindings = case cond of
   -- data/scenarios/card-trigger/cr-603-2c-vengeful-pharaoh-triggers-once-for-you-and-once-per-planeswalker.json
   -- proves the split.
   TriggerCondition.PlayerIsDealtDamage _ -> seat Binding.triggerPlayer <> object Binding.became
+  -- CR 601.2c: one occurrence per targeting object, each its own announcement,
+  -- even where several land in one group -- Hive Mind's copies, made inside its
+  -- ForEach's bracket. data/scenarios/leyline-of-combustion-burns-once-per-hive-mind-copy.json
+  -- proves the split.
+  TriggerCondition.PermanentsBecomeTargeted _ -> object Binding.targetingObject
   -- The branch that matched is the one that stamped, eventBindings' AnyOf arm's
   -- reading.
   TriggerCondition.AnyOf conditions -> Maybe.fromMaybe Seq.empty (List.find (not . Seq.null) (fmap (`batchPartition` bindings) conditions))
@@ -2084,10 +2090,11 @@ eventBindingSlots cond = case cond of
   -- reads the bearer and never this slot, and a slot promised but unread is
   -- harmless where the reverse is the failure this lint exists to catch.
   TriggerCondition.ControllerBecomesTarget {} -> Set.singleton Binding.targetingObject
-  -- The targeting object's controller, Leyline of Combustion's "that player",
-  -- and nothing else: CR 603.2c makes the whole announcement the trigger event,
-  -- so no one permanent it named is the thing the condition is about.
-  TriggerCondition.PermanentsBecomeTargeted {} -> Set.singleton Binding.triggerPlayer
+  -- The targeting object and its controller, Leyline of Combustion's "that
+  -- player", and nothing else: CR 603.2c makes the whole announcement the
+  -- trigger event, so no one permanent it named is the thing the condition is
+  -- about.
+  TriggerCondition.PermanentsBecomeTargeted {} -> Set.fromList [Binding.targetingObject, Binding.triggerPlayer]
   -- The one permanent each occurrence names and the object that targeted it,
   -- guaranteed for the reasons eventBindings' arm gives; the permanent only
   -- sometimes when the occurrence may name "you" instead.

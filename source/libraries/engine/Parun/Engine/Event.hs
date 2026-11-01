@@ -8658,12 +8658,6 @@ counterOne before destination counterer source controller oid = do
 -- copy there with the targets its controller settled on. Its ChooseNewTargets
 -- arm is the fifth, CR 115.7d's re-target of an object already on the stack.
 --
--- ONE EVENT PER SLOT PER RECIPIENT, which is rule 601.2c's own arity: that rule
--- lets one object be chosen once for each instance of the word "target" and
--- forbids it twice within one instance, so the per-slot sets are walked rather
--- than unioned and a spell naming the same permanent under two instances records
--- two.
---
 -- Players are kept, CR 115.1 making a player a target in its own right: Dormant
 -- Gomazoa watches its controller become one, and rule 601.2c names objects and
 -- players in the same breath, so one event over a Recipient beats two events.
@@ -8693,6 +8687,8 @@ counterOne before destination counterer source controller oid = do
 -- Unbracketed, a batch-scoped arm is inert -- each recipient gets a group of its
 -- own and fires the ability again. Per-occurrence siblings are unaffected:
 -- eventTriggers keys them Nothing, so ward on two creatures still fires twice.
+-- An outer bracket can hold several announcements (Hive Mind's copies);
+-- Event.Binding.batchPartition splits those by targeting object.
 --
 -- ONE EVENT PER OBJECT OR PLAYER, however many of rule 601.2c's "target" words
 -- named it: it becomes a target once. Unsettled Mariner's ruling (2019-06-14),
