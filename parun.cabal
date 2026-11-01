@@ -2440,6 +2440,7 @@ library types
     Parun.Types.BlockStatus
     Parun.Types.Board
     Parun.Types.BoundMeasure
+    Parun.Types.BoundReading
     Parun.Types.BuybackDecision
     Parun.Types.CandidateCost
     Parun.Types.CandidateId

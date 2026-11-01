@@ -36,6 +36,7 @@ import qualified Parun.Types.Backup as Backup
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.BlockRole as BlockRole
 import qualified Parun.Types.BlockStatus as BlockStatus
+import qualified Parun.Types.BoundReading as BoundReading
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import Parun.Types.Card (Card)
 import qualified Parun.Types.Card as Card
@@ -6218,7 +6219,7 @@ myriad =
               ArmDelayedTrigger.duration = Nothing,
               ArmDelayedTrigger.ability = Nothing
             }
-      anyToken = atLeastOneMatching (Scope.OverBound myriadTokenSlot) (Filter.And [])
+      anyToken = atLeastOneMatching (Scope.OverBound BoundReading.AsBound myriadTokenSlot) (Filter.And [])
    in Mint.triggerOf
         (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime)
         Nothing
@@ -6540,7 +6541,7 @@ soulbondOtherEnters =
             ( Condition.All
                 [ soulbondSelfEligible,
                   atLeastOneMatching
-                    (Scope.OverBound Binding.became)
+                    (Scope.OverBound BoundReading.AsBound Binding.became)
                     (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You, Filter.Not Filter.IsPaired])
                 ]
             )

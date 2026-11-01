@@ -1,0 +1,185 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 4
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Flood of Tears",
+      "oracleText": "Return all nonland permanents to their owners' hands. If you return four or more nontoken permanents you control this way, you may put a permanent card from your hand onto the battlefield.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "MoveToZone",
+                    "value": {
+                      "ref": {
+                        "type": "EachMatching",
+                        "value": {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasCardType",
+                            "value": {
+                              "type": "Land"
+                            }
+                          }
+                        }
+                      },
+                      "slot": "returned",
+                      "zone": {
+                        "type": "Hand"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "condition": {
+                  "type": "Compares",
+                  "value": {
+                    "comparison": {
+                      "type": "AtLeast"
+                    },
+                    "measured": {
+                      "type": "Count",
+                      "value": {
+                        "aggregation": {
+                          "type": "Members"
+                        },
+                        "filter": {
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "Not",
+                              "value": {
+                                "type": "IsToken"
+                              }
+                            },
+                            {
+                              "type": "HeldBy",
+                              "value": {
+                                "holder": {
+                                  "type": "Controller"
+                                },
+                                "relation": {
+                                  "type": "You"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "scope": {
+                          "type": "OverBoundBeforeMove",
+                          "value": "returned"
+                        }
+                      }
+                    },
+                    "threshold": {
+                      "type": "Literal",
+                      "value": 4
+                    }
+                  }
+                },
+                "effects": [
+                  {
+                    "type": "MoveToZone",
+                    "value": {
+                      "ref": {
+                        "type": "ChosenCardInHand",
+                        "value": {
+                          "filter": {
+                            "type": "Or",
+                            "value": [
+                              {
+                                "type": "HasCardType",
+                                "value": {
+                                  "type": "Artifact"
+                                }
+                              },
+                              {
+                                "type": "HasCardType",
+                                "value": {
+                                  "type": "Battle"
+                                }
+                              },
+                              {
+                                "type": "HasCardType",
+                                "value": {
+                                  "type": "Creature"
+                                }
+                              },
+                              {
+                                "type": "HasCardType",
+                                "value": {
+                                  "type": "Enchantment"
+                                }
+                              },
+                              {
+                                "type": "HasCardType",
+                                "value": {
+                                  "type": "Land"
+                                }
+                              },
+                              {
+                                "type": "HasCardType",
+                                "value": {
+                                  "type": "Planeswalker"
+                                }
+                              }
+                            ]
+                          },
+                          "player": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          }
+                        }
+                      },
+                      "zone": {
+                        "type": "Battlefield"
+                      }
+                    }
+                  }
+                ],
+                "optionality": {
+                  "type": "Optional"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}
