@@ -54,6 +54,7 @@ import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
 import qualified Parun.Types.ManifestedDread as ManifestedDread
 import qualified Parun.Types.Mentored as Mentored
@@ -742,7 +743,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- "you", so the slot is a second name for one player there; that is a
   -- redundancy, not a wrong answer, and the alternative -- binding it only under
   -- Opponent -- would make the promise depend on the relation.
-  (TriggerCondition.PlayerLosesLife _, GameEvent.LifeLost (LifeChange.MkLifeChange pid amount)) ->
+  (TriggerCondition.PlayerLosesLife _, GameEvent.LifeLost (LifeLost.MkLifeLost pid amount _)) ->
     Binding.setTriggerPlayer pid (Binding.setEventAmount amount Map.empty)
   -- CR 601.2i's "it": the spell that became cast, which the event names and
   -- which nothing else on the ability does. Presence of the Master's "whenever a

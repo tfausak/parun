@@ -332,6 +332,7 @@ import qualified Parun.Types.PlayerCounterTally as PlayerCounterTally
 import qualified Parun.Types.PlayerCounters as PlayerCounters
 import qualified Parun.Types.PlayerDesignationTally as PlayerDesignationTally
 import qualified Parun.Types.PlayerEffect as PlayerEffect
+import qualified Parun.Types.PlayerLosesLife as PlayerLosesLife
 import qualified Parun.Types.PlayerQuantity as PlayerQuantity
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerSacrifices as PlayerSacrifices
@@ -3045,7 +3046,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SelfPreventsDamage filter_ -> filterNames asking filter_
   TriggerCondition.PlayerGainsLife _playerRelation -> mempty
   TriggerCondition.PlayersGainLife _playerRelation -> mempty
-  TriggerCondition.PlayerLosesLife _playerRelation -> mempty
+  TriggerCondition.PlayerLosesLife playerLosesLife -> triggerFrequencyNames asking HistoryRead.LifeLosses (PlayerLosesLife.frequency playerLosesLife)
   TriggerCondition.SelfCountersReached selfCountersReached -> selfCountersReachedNames asking selfCountersReached
   TriggerCondition.SelfBecomesClassLevel _classLevel -> mempty
   TriggerCondition.SelfLastCounterRemoved selfCountersRemoved -> selfCountersRemovedNames asking selfCountersRemoved

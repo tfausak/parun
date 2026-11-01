@@ -59,7 +59,7 @@ import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LibraryPosition as LibraryPosition
-import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
@@ -492,7 +492,7 @@ namedOut name gs =
 -- channel a card that watches for life loss reads, and the half of CR 119.4 a
 -- bare subtraction from the life total would not satisfy.
 lostLife :: PlayerId.PlayerId -> Natural.Natural -> GameState.GameState -> Bool
-lostLife pid n gs = GameEvent.LifeLost (LifeChange.MkLifeChange pid n) `elem` S.eventsOf gs
+lostLife pid n gs = GameEvent.LifeLost (LifeLost.MkLifeLost pid n True) `elem` S.eventsOf gs
 
 -- CR 615.7's prevention shield, whose plainest producer in data/cards/ is Mending
 -- Hands ({W} Instant: "Prevent the next 4 damage that would be dealt to any

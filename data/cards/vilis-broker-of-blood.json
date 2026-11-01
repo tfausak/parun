@@ -124,7 +124,9 @@
           "condition": {
             "type": "PlayerLosesLife",
             "value": {
-              "type": "You"
+              "player": {
+                "type": "You"
+              }
             }
           },
           "modal": {

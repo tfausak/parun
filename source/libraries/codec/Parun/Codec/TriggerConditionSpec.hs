@@ -55,6 +55,7 @@ import qualified Parun.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
+import qualified Parun.Types.PlayerLosesLife as PlayerLosesLife
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.Quantity as Quantity
@@ -837,13 +838,13 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PlayerLosesLife PlayerRelation.You)
-      " {\"type\":\"PlayerLosesLife\",\"value\":{\"type\":\"You\"}} "
+      (TriggerCondition.PlayerLosesLife (PlayerLosesLife.MkPlayerLosesLife PlayerRelation.You TriggerFrequency.EveryTime))
+      " {\"type\":\"PlayerLosesLife\",\"value\":{\"player\":{\"type\":\"You\"}}} "
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PlayerLosesLife PlayerRelation.Opponent)
-      " {\"type\":\"PlayerLosesLife\",\"value\":{\"type\":\"Opponent\"}} "
+      (TriggerCondition.PlayerLosesLife (PlayerLosesLife.MkPlayerLosesLife PlayerRelation.Opponent TriggerFrequency.EveryTime))
+      " {\"type\":\"PlayerLosesLife\",\"value\":{\"player\":{\"type\":\"Opponent\"}}} "
   -- CR 714.2b. The payload is the counter KIND then the chapter number, in that
   -- order, since a Saga's chapters are told apart by the number alone.
   Spec.it s "SelfCountersReached round-trips its kind and its chapter number" $

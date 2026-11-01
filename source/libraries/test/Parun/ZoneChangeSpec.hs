@@ -55,6 +55,7 @@ import qualified Parun.Types.GraveyardArrangement as GraveyardArrangement
 import qualified Parun.Types.GraveyardOrder as GraveyardOrder
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
 import qualified Parun.Types.Object as Object
@@ -1283,7 +1284,7 @@ lifeGains :: GameState.GameState -> [(PlayerId.PlayerId, Natural)]
 lifeGains gs = Maybe.mapMaybe (\ev -> case ev of GameEvent.LifeGained (LifeChange.MkLifeChange pid n) -> Just (pid, n); _ -> Nothing) (S.eventsOf gs)
 
 lifeLosses :: GameState.GameState -> [(PlayerId.PlayerId, Natural)]
-lifeLosses gs = Maybe.mapMaybe (\ev -> case ev of GameEvent.LifeLost (LifeChange.MkLifeChange pid n) -> Just (pid, n); _ -> Nothing) (S.eventsOf gs)
+lifeLosses gs = Maybe.mapMaybe (\ev -> case ev of GameEvent.LifeLost (LifeLost.MkLifeLost pid n _) -> Just (pid, n); _ -> Nothing) (S.eventsOf gs)
 
 exchangeLifeTotalsSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 exchangeLifeTotalsSpec s registry = Spec.describe s "ExchangeLifeTotals" $ do

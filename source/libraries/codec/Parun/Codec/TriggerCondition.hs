@@ -34,6 +34,7 @@ import qualified Parun.Codec.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Parun.Codec.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Codec.PlayerDrawsNthCard as PlayerDrawsNthCard
 import qualified Parun.Codec.PlayerIsDealtDamage as PlayerIsDealtDamage
+import qualified Parun.Codec.PlayerLosesLife as PlayerLosesLife
 import qualified Parun.Codec.PlayerRelation as PlayerRelation
 import qualified Parun.Codec.PlaysLand as PlaysLand
 import qualified Parun.Codec.RevealedThisWay as RevealedThisWay
@@ -144,7 +145,7 @@ codec =
           Arm.payload "SelfPreventsDamage" filterCodec TriggerCondition.SelfPreventsDamage (\x -> case x of TriggerCondition.SelfPreventsDamage y -> Just y; _ -> Nothing),
           Arm.payload "PlayerGainsLife" PlayerRelation.codec TriggerCondition.PlayerGainsLife (\x -> case x of TriggerCondition.PlayerGainsLife y -> Just y; _ -> Nothing),
           Arm.payload "PlayersGainLife" PlayerRelation.codec TriggerCondition.PlayersGainLife (\x -> case x of TriggerCondition.PlayersGainLife y -> Just y; _ -> Nothing),
-          Arm.payload "PlayerLosesLife" PlayerRelation.codec TriggerCondition.PlayerLosesLife (\x -> case x of TriggerCondition.PlayerLosesLife y -> Just y; _ -> Nothing),
+          Arm.payload "PlayerLosesLife" PlayerLosesLife.codec TriggerCondition.PlayerLosesLife (\x -> case x of TriggerCondition.PlayerLosesLife y -> Just y; _ -> Nothing),
           Arm.payload "SelfCountersReached" SelfCountersReached.codec TriggerCondition.SelfCountersReached (\x -> case x of TriggerCondition.SelfCountersReached y -> Just y; _ -> Nothing),
           Arm.payload "SelfBecomesClassLevel" ClassLevel.codec TriggerCondition.SelfBecomesClassLevel (\x -> case x of TriggerCondition.SelfBecomesClassLevel y -> Just y; _ -> Nothing),
           Arm.payload "SelfLastCounterRemoved" SelfCountersRemoved.codec TriggerCondition.SelfLastCounterRemoved (\x -> case x of TriggerCondition.SelfLastCounterRemoved y -> Just y; _ -> Nothing),

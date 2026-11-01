@@ -106,6 +106,7 @@ import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LandPlayed as LandPlayed
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.MadnessCost as MadnessCost
 import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
@@ -145,6 +146,7 @@ import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
+import qualified Parun.Types.PlayerLosesLife as PlayerLosesLife
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.ProjectedCharacteristics as PC
@@ -1890,7 +1892,7 @@ representativeEvents cond =
         -- CR 726.2's third ability is controlled by the taker, so alice's take.
         TriggerCondition.PlayerTookInitiative -> one (GameEvent.TookInitiative S.alice)
         -- CR 702.179d's own event, an opponent's loss.
-        TriggerCondition.OpponentLostLifeDuringYourTurn -> one (GameEvent.LifeLost (LifeChange.MkLifeChange S.bob 2))
+        TriggerCondition.OpponentLostLifeDuringYourTurn -> one (GameEvent.LifeLost (LifeLost.MkLifeLost S.bob 2 True))
         TriggerCondition.SelfCycled -> one (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.ToPayCyclingCost Nothing Nothing))
         -- CR 702.94a's cause, so the event is one this condition genuinely
         -- admits; an Ordinary reveal would pin nothing.
@@ -2135,7 +2137,7 @@ representativeEvents cond =
         TriggerCondition.PlayersGainLife _ -> one (GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 2))
         -- The loss condition's own event, and the only one it admits, on the
         -- gain arm's reasoning: same payload shape, same amount floor.
-        TriggerCondition.PlayerLosesLife _ -> one (GameEvent.LifeLost (LifeChange.MkLifeChange S.bob 2))
+        TriggerCondition.PlayerLosesLife _ -> one (GameEvent.LifeLost (LifeLost.MkLifeLost S.bob 2 True))
         -- CR 714.2b: a placement on the BEARER that crosses the chapter. The
         -- bearer here is `departed`, the id Event.matchesTrigger is asked about
         -- below, and the counts straddle N so the event really matches.
@@ -2517,7 +2519,7 @@ everyTriggerCondition =
     TriggerCondition.SelfPreventsDamage (Filter.Type.And []),
     TriggerCondition.PlayerGainsLife PlayerRelation.You,
     TriggerCondition.PlayersGainLife PlayerRelation.AnyPlayer,
-    TriggerCondition.PlayerLosesLife PlayerRelation.Opponent,
+    TriggerCondition.PlayerLosesLife (PlayerLosesLife.MkPlayerLosesLife PlayerRelation.Opponent TriggerFrequency.EveryTime),
     TriggerCondition.SelfCountersReached (SelfCountersReached.MkSelfCountersReached CounterKind.Lore 1),
     TriggerCondition.SelfBecomesClassLevel (ClassLevel.MkClassLevel 2),
     TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Defense),

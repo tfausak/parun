@@ -58,6 +58,7 @@ import qualified Parun.Types.HalfUnlocked as HalfUnlocked
 import qualified Parun.Types.LandPlayed as LandPlayed
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.Looked as Looked
 import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
 import qualified Parun.Types.ManaAdded as ManaAdded
@@ -310,8 +311,8 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
     Common.assertCodec
       s
       GameEvent.codec
-      (GameEvent.LifeLost (LifeChange.MkLifeChange (PlayerId.MkPlayerId 1) 2))
-      " {\"type\":\"LifeLost\",\"value\":{\"player\":1,\"amount\":2}} "
+      (GameEvent.LifeLost (LifeLost.MkLifeLost (PlayerId.MkPlayerId 1) 2 True))
+      " {\"type\":\"LifeLost\",\"value\":{\"player\":1,\"amount\":2,\"first\":true}} "
   -- CR 119.3's other direction. A DIFFERENT tag from LifeLost above and the same
   -- payload shape, so the two must never decode to each other.
   Spec.it s "LifeGained" $

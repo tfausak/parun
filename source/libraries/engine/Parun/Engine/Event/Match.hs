@@ -88,6 +88,7 @@ import qualified Parun.Types.LandPlayed as LandPlayed
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
 import qualified Parun.Types.ManaAdded as ManaAdded
@@ -118,6 +119,7 @@ import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
+import qualified Parun.Types.PlayerLosesLife as PlayerLosesLife
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.ProjectedCharacteristics as PC
@@ -1563,7 +1565,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- CR 702.179d: an opponent still in the game (CR 102.3) lost life during
   -- "your" turn -- each active player's, under CR 805.4's shared team turns.
   TriggerCondition.OpponentLostLifeDuringYourTurn -> case event of
-    GameEvent.LifeLost (LifeChange.MkLifeChange lost _) -> Turn.isActive gs you && List.elem lost (Game.opponentsOf you gs)
+    GameEvent.LifeLost (LifeLost.MkLifeLost lost _ _) -> Turn.isActive gs you && List.elem lost (Game.opponentsOf you gs)
     GameEvent.DamageDealt _ -> False
     GameEvent.StepBegan {} -> False
     GameEvent.SpellCast {} -> False
@@ -6785,8 +6787,15 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- GAINING life is a different event, not a signed version of this one: one
   -- lifelink source's damage can record a loss and a gain together, and only the
   -- loss fires this.
-  TriggerCondition.PlayerLosesLife relation -> case event of
-    GameEvent.LifeLost (LifeChange.MkLifeChange pid _) -> PlayerRelation.holds (Game.teams gs) relation you pid
+  --
+  -- The first-time reading comes off the event, stamped as the loss happened
+  -- (Event.lifeLost): the log can hold a later loss by the time the scan reaches
+  -- this one.
+  TriggerCondition.PlayerLosesLife (PlayerLosesLife.MkPlayerLosesLife relation frequency) -> case event of
+    GameEvent.LifeLost (LifeLost.MkLifeLost pid _ first) ->
+      PlayerRelation.holds (Game.teams gs) relation you pid && case frequency of
+        TriggerFrequency.EveryTime -> True
+        TriggerFrequency.FirstTimeEachTurn -> first
     GameEvent.Moved {} -> False
     GameEvent.DamageDealt _ -> False
     GameEvent.DamagePrevented {} -> False

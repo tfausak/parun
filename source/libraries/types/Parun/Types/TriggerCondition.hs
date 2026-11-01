@@ -35,6 +35,7 @@ import qualified Parun.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
+import qualified Parun.Types.PlayerLosesLife as PlayerLosesLife
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.RevealedThisWay as RevealedThisWay
@@ -411,8 +412,9 @@ data TriggerCondition
     -- players gain life", once for the whole CR 608.2f event.
     PlayersGainLife PlayerRelation.PlayerRelation
   | -- | "Whenever [a player] loses life" (Exquisite Blood), against
-    -- GameEvent.LifeLost -- PlayerGainsLife's mirror in shape.
-    PlayerLosesLife PlayerRelation.PlayerRelation
+    -- GameEvent.LifeLost; its frequency is Vengeful Warchief's "for the first time
+    -- each turn".
+    PlayerLosesLife PlayerLosesLife.PlayerLosesLife
   | -- | CR 714.2b generalized over the counter kind: a threshold crossing whose
     -- before/after pair straddles N, intervening "if" included.
     SelfCountersReached SelfCountersReached.SelfCountersReached
