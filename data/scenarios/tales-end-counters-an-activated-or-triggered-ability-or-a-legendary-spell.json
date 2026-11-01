@@ -156,7 +156,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "CR 701.6b / 115.1: Tale's End counters target activated ability, triggered ability or legendary spell",
+  "description": "CR 701.6a / 115.1: Tale's End counters target activated ability, triggered ability or legendary spell",
   "note": "A nonlegendary Grizzly Bears spell is refused as its target; Isamaru, Prodigal Sorcerer's ping and Elvish Visionary's draw trigger are each countered.",
   "timeline": [
     {
