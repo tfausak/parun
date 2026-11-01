@@ -21,6 +21,7 @@ import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.Loyalty as Loyalty
 import qualified Parun.Engine.Modal as Modal
 import qualified Parun.Engine.Turn as Turn
+import qualified Parun.Extra.Int as Int
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.Acquisition as Acquisition
@@ -46,6 +47,7 @@ import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.Discarded as Discarded
+import qualified Parun.Types.EntryOrigin as EntryOrigin
 import qualified Parun.Types.EventGroup as EventGroup
 import qualified Parun.Types.ExiledPile as ExiledPile
 import Parun.Types.Face (Face)
@@ -988,6 +990,46 @@ removeFromZones oid gs =
           GameState.sideDecks = fmap (fromPile Zone.Command) (GameState.sideDecks gs),
           GameState.stack = filter (/= oid) (GameState.stack gs)
         }
+
+-- CR 614.12: where an object is, so that an entry it is about to make can
+-- still count it there (Projection.boardAsEntering). Nothing on the
+-- battlefield, in a side deck, and on the stack: a resolving permanent spell
+-- becomes the permanent (CR 608.3a-b), and no entry in the pool counts the stack.
+entryOriginOf :: ObjectId -> GameState -> Maybe EntryOrigin.EntryOrigin
+entryOriginOf oid gs = do
+  obj <- lookupObject oid gs
+  let zone = Object.zone obj
+      inPile piles = do
+        pid <- pileHolderOf oid gs
+        index <- Map.lookup pid (piles gs) >>= Seq.elemIndexL oid
+        pure (EntryOrigin.MkEntryOrigin zone (Just pid) (Int.toNaturalSaturating index))
+      inShared members = if Set.member oid (members gs) then Just (EntryOrigin.MkEntryOrigin zone Nothing 0) else Nothing
+  case zone of
+    Zone.Library -> inPile GameState.library
+    Zone.Hand -> inPile GameState.hand
+    Zone.Graveyard -> inPile GameState.graveyard
+    Zone.Exile -> inShared GameState.exile
+    Zone.Command -> inShared GameState.command
+    Zone.Ante -> inShared GameState.ante
+    Zone.Battlefield -> Nothing
+    Zone.Stack -> Nothing
+
+-- CR 614.12: an object back where entryOriginOf found it, at its index in a
+-- pile, beside whatever it left there. Writes the zone index only.
+returnToOrigin :: EntryOrigin.EntryOrigin -> ObjectId -> GameState -> GameState
+returnToOrigin origin oid gs =
+  let into piles = case EntryOrigin.holder origin of
+        Just pid -> Map.alter (Just . Seq.insertAt (Natural.toIntSaturating (EntryOrigin.index origin)) oid . Maybe.fromMaybe Seq.empty) pid piles
+        Nothing -> piles
+   in case EntryOrigin.zone origin of
+        Zone.Library -> gs {GameState.library = into (GameState.library gs)}
+        Zone.Hand -> gs {GameState.hand = into (GameState.hand gs)}
+        Zone.Graveyard -> gs {GameState.graveyard = into (GameState.graveyard gs)}
+        Zone.Exile -> gs {GameState.exile = Set.insert oid (GameState.exile gs)}
+        Zone.Command -> gs {GameState.command = Set.insert oid (GameState.command gs)}
+        Zone.Ante -> gs {GameState.ante = Set.insert oid (GameState.ante gs)}
+        Zone.Battlefield -> gs
+        Zone.Stack -> gs
 
 -- CR 401.2: a library is an ORDERED pile, so a library arrival needs the END it
 -- arrives at. The Seq's HEAD is the top -- Event.drawCard takes the head, which

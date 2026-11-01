@@ -31,6 +31,7 @@ import qualified Parun.Codec.Daytime as Daytime
 import qualified Parun.Codec.DelayedTrigger as DelayedTrigger
 import qualified Parun.Codec.EndTurnSignal as EndTurnSignal
 import qualified Parun.Codec.EnteringTogether as EnteringTogether
+import qualified Parun.Codec.EntryOrigin as EntryOrigin
 import qualified Parun.Codec.EventGroup as EventGroup
 import qualified Parun.Codec.ExileLink as ExileLink
 import qualified Parun.Codec.ExtraTurn as ExtraTurn
@@ -155,7 +156,7 @@ codec resolve = Fields.object $ do
   detachedBindings <- Fields.defaulted "detachedBindings" Map.empty (Common.naturalMap ObjectId.codec Binding.codecMap) GameState.detachedBindings
   pendingEntryEffects <- Fields.defaulted "pendingEntryEffects" Seq.empty (Common.seq PendingEntryEffect.codec) GameState.pendingEntryEffects
   enteringBeside <- Fields.defaulted "enteringBeside" Set.empty (Common.set ObjectId.codec) GameState.enteringBeside
-  enteringSubjects <- Fields.defaulted "enteringSubjects" Set.empty (Common.set ObjectId.codec) GameState.enteringSubjects
+  enteringSubjects <- Fields.defaulted "enteringSubjects" Map.empty (Common.naturalMap ObjectId.codec (Common.maybe EntryOrigin.codec)) GameState.enteringSubjects
   enteringPending <- Fields.defaulted "enteringPending" Map.empty (Common.naturalMap ObjectId.codec PlayerId.codec) GameState.enteringPending
   refusedEntries <- Fields.defaulted "refusedEntries" Nothing (Common.maybe (Common.set ObjectId.codec)) GameState.refusedEntries
   enteringCounters <- Fields.defaulted "enteringCounters" Map.empty (Common.naturalMap ObjectId.codec (Common.multiset (CounterKind.codec Keyword.codec))) GameState.enteringCounters

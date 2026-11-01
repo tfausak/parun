@@ -316,6 +316,7 @@ import qualified Parun.Codec.EntryControllerSpec
 import qualified Parun.Codec.EntryFlipSpec
 import qualified Parun.Codec.EntryHostSpec
 import qualified Parun.Codec.EntryOptionSpec
+import qualified Parun.Codec.EntryOriginSpec
 import qualified Parun.Codec.EntryPriceSpec
 import qualified Parun.Codec.EntryRSpec
 import qualified Parun.Codec.EntryRestrictionSpec
@@ -1257,6 +1258,7 @@ spec s registry corpus = do
   Parun.Codec.EndingStepSpec.spec s
   Parun.Codec.EndTurnSignalSpec.spec s
   Parun.Codec.EnteringTogetherSpec.spec s
+  Parun.Codec.EntryOriginSpec.spec s
   Parun.Codec.EntersWithSpec.spec s
   Parun.Codec.EntrantSpec.spec s
   Parun.Codec.EntryAttackSpec.spec s
