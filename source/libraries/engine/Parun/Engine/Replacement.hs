@@ -841,6 +841,13 @@ matchesPrinted viewOf gs event candidate =
         -- so matchesPutter still parts Vorinclex's "if you would put" from CR
         -- 614.16's "if an effect would put" (#847). Reading it off the flush
         -- rather than off the event is what keeps the two levels answering alike.
+        --
+        -- CR 614.12, as in the entry arm below: a row naming a general subset
+        -- does not apply to its own source entering (Conclave Mentor's, Pir's and
+        -- Vizier of Remedies's rulings). The scenario
+        -- cr-614-12-conclave-mentor-scales-another-creature-s-entering-counters-and-not-its-own
+        -- proves it. `confinedToSource` is the rule's other half: no pool row
+        -- confines itself, so nothing observes it.
         (ReplacementEffect.CounterR (CounterR.MkCounterR pat _), ProposedEvent.WouldEnter oid) ->
           case Projection.controllerOf oid gs of
             Nothing -> False
@@ -849,6 +856,7 @@ matchesPrinted viewOf gs event candidate =
                 && matchesPutter gs candidate (CounterPattern.subject pat) (CounterCause.ByEffect putter)
                 && matchesController gs candidate (CounterPattern.whose pat) oid
                 && matchesPermanent viewOf gs Nothing Map.empty Nothing (CounterPattern.onWhat pat) oid
+                && (src /= oid || confinedToSource (CounterPattern.onWhat pat))
         -- CR 109.5: "under YOUR control" -- the tokens' controller against the
         -- candidate's "you". No producer today names an opponent here.
         --

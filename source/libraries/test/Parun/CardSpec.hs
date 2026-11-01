@@ -2190,6 +2190,7 @@ ruleAbilitiesCounts :: RuleAbilities.RuleAbilities -> [Count.Type.Count Quantity
 ruleAbilitiesCounts rules =
   concatMap combatRestrictionCounts (RuleAbilities.combatRestrictions rules)
     <> concatMap blockPermissionCounts (RuleAbilities.blockPermissions rules)
+    <> concatMap (foldMap conditionCounts . AttackPermission.while) (RuleAbilities.attackPermissions rules)
     -- CR 508.1d's "or that it attacks if some condition is met", the same CR
     -- 604.2 clause blockPermissionCounts reads one field over (Otarian
     -- Juggernaut counts its controller's graveyard). The requirement's SUBJECT
@@ -6541,6 +6542,7 @@ ruleAbilitiesFilters rules =
         <> concatMap (unframed . affectedFilters . TargetRestriction.affected) (RuleAbilities.targetRestrictions rules)
         <> concatMap (unframed . pure . TargetRestriction.aimers) (RuleAbilities.targetRestrictions rules)
         <> concatMap (unframed . affectedFilters . AttackPermission.affected) (RuleAbilities.attackPermissions rules)
+        <> concatMap (concatMap conditionFilters . Maybe.maybeToList . AttackPermission.while) (RuleAbilities.attackPermissions rules)
         <> concatMap (unframed . attachRestrictionFilters) (RuleAbilities.attachRestrictions rules)
         <> concatMap (unframed . affectedFilters . EntryRestriction.affected) (RuleAbilities.entryRestrictions rules)
         <> concatMap (unframed . affectedFilters . CounterRestriction.affected) (RuleAbilities.counterRestrictions rules)
