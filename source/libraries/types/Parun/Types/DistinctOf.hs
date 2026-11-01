@@ -12,7 +12,6 @@ data DistinctOf
     BasicLandTypes
   | -- | CR 202.3: mana values, a member with no mana cost adding 0 (CR 202.3a).
     ManaValues
-  | -- | CR 202.1: mana costs as symbols ({2}{B} is not {1}{B}{B}), a member with
-    -- no mana cost adding nothing.
+  | -- | CR 202.1 / 202.1b: mana costs by symbol, a costless member adding none.
     ManaCosts
   deriving (Bounded, Enum, Eq, Ord, Show)
