@@ -9,6 +9,7 @@ import qualified Parun.Types.CostModifier as CostModifier
 import qualified Parun.Types.CounterProhibition as CounterProhibition
 import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DrawReveal as DrawReveal
+import qualified Parun.Types.EntriesTrigger as EntriesTrigger
 import qualified Parun.Types.ExtraVotes as ExtraVotes
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.GameOutcome as GameOutcome
@@ -153,10 +154,10 @@ data PlayerEffect
     CantBecomeMonarch
   | -- | CR 701.32 / 904.9 / All in Good Time: schemes can't be set in motion.
     CantSetSchemesInMotion
-  | -- | CR 603.6a / 613.11 / Hushwing Gryff: an object the Filter admits entering
-    -- the battlefield doesn't cause this player's enters abilities to trigger.
+  | -- | CR 603.6a / 603.2d / 613.11 / Hushwing Gryff, Yarok, the Desecrated:
+    -- how entries change the triggering of this player's abilities.
     -- Not implemented: the same for a creature dying (Hushbringer) (#5725).
-    EntriesDontTrigger (Filter.Filter Keyword.Keyword)
+    EntriesTrigger EntriesTrigger.EntriesTrigger
   | -- | CR 723.2 / Opposition Agent: while this player searches their library,
     -- CR 109.5's "you" of the row controls them.
     ControlledWhileSearching

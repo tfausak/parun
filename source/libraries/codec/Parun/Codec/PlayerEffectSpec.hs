@@ -19,6 +19,8 @@ import qualified Parun.Types.CostSubject as CostSubject
 import qualified Parun.Types.CounterProhibition as CounterProhibition
 import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DrawReveal as DrawReveal
+import qualified Parun.Types.EntriesTrigger as EntriesTrigger
+import qualified Parun.Types.EntryTriggering as EntryTriggering
 import qualified Parun.Types.ExtraVotes as ExtraVotes
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.GameOutcome as GameOutcome
@@ -356,13 +358,13 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       PlayerEffect.codec
       PlayerEffect.CantSetSchemesInMotion
       " {\"type\":\"CantSetSchemesInMotion\"} "
-  -- CR 603.6a / Hushwing Gryff.
-  Spec.it s "EntriesDontTrigger" $
+  -- CR 603.2d / Yarok, the Desecrated.
+  Spec.it s "EntriesTrigger" $
     Common.assertCodec
       s
       PlayerEffect.codec
-      (PlayerEffect.EntriesDontTrigger (Filter.And []))
-      " {\"type\":\"EntriesDontTrigger\",\"value\":{\"type\":\"And\",\"value\":[]}} "
+      (PlayerEffect.EntriesTrigger EntriesTrigger.MkEntriesTrigger {EntriesTrigger.entrants = Filter.And [], EntriesTrigger.triggering = EntryTriggering.AnAdditionalTime})
+      " {\"type\":\"EntriesTrigger\",\"value\":{\"entrants\":{\"type\":\"And\",\"value\":[]},\"triggering\":{\"type\":\"AnAdditionalTime\"}}} "
   -- CR 723.2 / Opposition Agent.
   Spec.it s "ControlledWhileSearching" $
     Common.assertCodec

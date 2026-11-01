@@ -134,6 +134,7 @@ import qualified Parun.Types.EachCardInHand as EachCardInHand
 import qualified Parun.Types.Earthbend as Earthbend
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EntersWith as EntersWith
+import qualified Parun.Types.EntriesTrigger as EntriesTrigger
 import qualified Parun.Types.EntryFlip as EntryFlip
 import qualified Parun.Types.EntryHost as EntryHost
 import qualified Parun.Types.EntryOption as EntryOption
@@ -573,7 +574,7 @@ rewritePlayerEffect pairs effect = case effect of
   PlayerEffect.CantSearchLibraries _ -> effect
   PlayerEffect.CantBecomeMonarch -> effect
   PlayerEffect.CantSetSchemesInMotion -> effect
-  PlayerEffect.EntriesDontTrigger f -> PlayerEffect.EntriesDontTrigger (Filter.rewrite pairs f)
+  PlayerEffect.EntriesTrigger e -> PlayerEffect.EntriesTrigger e {EntriesTrigger.entrants = Filter.rewrite pairs (EntriesTrigger.entrants e)}
   PlayerEffect.ControlledWhileSearching -> effect
   PlayerEffect.YouChoose _ -> effect
   PlayerEffect.ExilesFoundWhileSearching -> effect

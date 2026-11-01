@@ -1,0 +1,81 @@
+{
+  "description": "CR 603.2d: Yarok, the Desecrated entering makes alice's Soul Warden trigger an additional time, its ruling's \"including Yarok itself\"",
+  "note": "Yarok is read on the battlefield immediately after its own entry, so alice's Warden gains her 2 life; bob's Warden still triggers once.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "BGUUU",
+        "battlefield": [
+          {
+            "card": "Soul Warden"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Yarok, the Desecrated",
+            "label": "yarok"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Soul Warden"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$yarok"
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "Life": {
+        "player": "alice",
+        "life": 22
+      }
+    },
+    {
+      "Life": {
+        "player": "bob",
+        "life": 21
+      }
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "description": "CR 603.2d / 603.2c: a creature reanimated with Yarok, the Desecrated out triggers Spirit Mascot's \"one or more cards leave your graveyard\" an additional time",
+  "note": "The entry and the departure are one zone change (docs/decisions.md, \"A silenced entry silences its departure\"), so the Mascot's batch trigger triggers twice and gets two counters.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "BBBB",
+        "battlefield": [
+          {
+            "card": "Yarok, the Desecrated"
+          },
+          {
+            "card": "Spirit Mascot",
+            "label": "mascot"
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Zombify",
+            "label": "zombify"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$zombify",
+          "targets": [
+            "$bears"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "OrderTriggers": [
+          "$mascot",
+          "$mascot"
+        ]
+      }
+    }
+  ],
+  "final": [
+    {
+      "Counters": {
+        "object": "$mascot",
+        "kind": {
+          "type": "PlusOnePlusOne"
+        },
+        "count": 2
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Battlefield",
+        "card": "Grizzly Bears",
+        "count": 1
+      }
+    }
+  ]
+}

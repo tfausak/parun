@@ -668,6 +668,8 @@ library codec
     Parun.Codec.EntersWithSpec
     Parun.Codec.Entrant
     Parun.Codec.EntrantSpec
+    Parun.Codec.EntriesTrigger
+    Parun.Codec.EntriesTriggerSpec
     Parun.Codec.Entry
     Parun.Codec.EntryAttack
     Parun.Codec.EntryAttackSpec
@@ -692,6 +694,8 @@ library codec
     Parun.Codec.EntryRidersSpec
     Parun.Codec.EntryRSpec
     Parun.Codec.EntrySpec
+    Parun.Codec.EntryTriggering
+    Parun.Codec.EntryTriggeringSpec
     Parun.Codec.Equip
     Parun.Codec.EquipSpec
     Parun.Codec.EquipTarget
@@ -2649,6 +2653,7 @@ library types
     Parun.Types.EnteringTogether
     Parun.Types.EntersWith
     Parun.Types.Entrant
+    Parun.Types.EntriesTrigger
     Parun.Types.Entry
     Parun.Types.EntryAttack
     Parun.Types.EntryBlock
@@ -2662,6 +2667,7 @@ library types
     Parun.Types.EntryRestriction
     Parun.Types.EntryRewrite
     Parun.Types.EntryRiders
+    Parun.Types.EntryTriggering
     Parun.Types.EntwineDecision
     Parun.Types.Equip
     Parun.Types.EquipTarget

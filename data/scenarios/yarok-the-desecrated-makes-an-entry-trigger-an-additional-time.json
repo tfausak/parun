@@ -1,0 +1,97 @@
+{
+  "description": "CR 603.2d: with Yarok, the Desecrated, a creature entering triggers its own enters ability and alice's Soul Warden an additional time each, but not bob's Soul Warden",
+  "note": "Venerable Monk's 2 life twice and alice's Warden's 1 life twice put alice at 26; bob's Warden is a permanent alice doesn't control, so it triggers once and bob ends at 21.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "WWW",
+        "battlefield": [
+          {
+            "card": "Yarok, the Desecrated"
+          },
+          {
+            "card": "Soul Warden"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Venerable Monk",
+            "label": "monk"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Soul Warden"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$monk"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "OrderTriggers": [
+          "Soul Warden",
+          "Soul Warden",
+          "Venerable Monk",
+          "Venerable Monk"
+        ]
+      }
+    }
+  ],
+  "final": [
+    {
+      "Life": {
+        "player": "alice",
+        "life": 26
+      }
+    },
+    {
+      "Life": {
+        "player": "bob",
+        "life": 21
+      }
+    }
+  ]
+}

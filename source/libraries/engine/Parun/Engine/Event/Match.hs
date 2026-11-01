@@ -471,9 +471,22 @@ dealtToRelated board gs related orTheirPlaneswalkers target
 entryTriggers :: GameState -> PlayerId -> ZoneChange.ZoneChange -> Bool
 entryTriggers gs you zc =
   ZoneChange.to zc /= Zone.Battlefield
-    || let entrant = ZoneChange.object zc
-           atEntry = maybe gs (\group -> Map.findWithDefault gs group (GameState.boardAfterEvent gs)) (Game.entryGroup entrant gs)
-        in not (PlayerEffect.silencesEntry you entrant atEntry)
+    || not (PlayerEffect.silencesEntry you (ZoneChange.object zc) (atEntry gs (ZoneChange.object zc)))
+
+-- CR 603.2d: how many additional times an ability of `you`'s that this zone
+-- change caused to trigger triggers -- none unless it is a move onto the
+-- battlefield (Yarok, the Desecrated). Read off the same filed game as
+-- `entryTriggers`, so a Yarok entering beside the entrant, or being it, counts
+-- (its ruling).
+additionalEntryTriggers :: GameState -> PlayerId -> ZoneChange.ZoneChange -> Natural
+additionalEntryTriggers gs you zc
+  | ZoneChange.to zc == Zone.Battlefield = PlayerEffect.additionalEntryTriggers you (ZoneChange.object zc) (atEntry gs (ZoneChange.object zc))
+  | otherwise = 0
+
+-- The game filed immediately after `entrant` entered the battlefield
+-- (GameState.boardAfterEvent), or the live game for an entry none is filed for.
+atEntry :: GameState -> ObjectId -> GameState
+atEntry gs entrant = maybe gs (\group -> Map.findWithDefault gs group (GameState.boardAfterEvent gs)) (Game.entryGroup entrant gs)
 
 -- The same question against a slot environment, for the conditions whose subject
 -- is an object named EARLIER rather than the bearer or a class of objects

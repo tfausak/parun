@@ -22,7 +22,7 @@ import qualified Parun.Engine.Condition as Condition
 import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.EffectZone as EffectZone
 import Parun.Engine.Event.Binding (batchBindings, batchPartition, eventBindingsOver)
-import Parun.Engine.Event.Match (matchesTriggerGiven, stepPlayers)
+import Parun.Engine.Event.Match (additionalEntryTriggers, matchesTriggerGiven, stepPlayers)
 import qualified Parun.Engine.Expiry as Expiry
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
@@ -2334,10 +2334,24 @@ eventTriggers events gs =
             -- paid for the spell it was, so the bearer's record rides on every
             -- ability it triggers (Binding.paidCostRecord).
             pend (cond, ab) = PendingTrigger.MkPendingTrigger (TriggerSource.OfObject oid) ctrl ab (Map.union (Binding.paidCostRecord bindings) (eventBindingsOver board gs (Map.lookup oid becameInGraveyard) becameInGraveyard oid ctrl cond event)) Nothing (Just logged) (copiesIn (fmap snd abilities) ab) (delayedAsTriggered board oid gs)
+            -- CR 603.2d: a permanent entering may make an ability of a
+            -- permanent trigger additional times (Yarok, the Desecrated),
+            -- whichever side of the move its condition names (docs/decisions.md,
+            -- "A silenced entry silences its departure"). Only a bearer on the
+            -- battlefield is a permanent (CR 110.1): not a card in a graveyard
+            -- watching lands enter (Bloodghast), nor an emblem. A "triggers only
+            -- once" limit still caps the instances (docs/decisions.md, "A trigger
+            -- limit caps an additional trigger"). Delayed and reflexive triggers
+            -- are gathered elsewhere and never multiplied, as CR 603.2d asks.
+            additional = case Game.enteredBattlefieldChange event of
+              Just zc | Map.member oid board -> additionalEntryTriggers gs ctrl zc
+              _ -> 0
             -- CR 805.4d: one trigger per player whose step this is (stepCopies).
+            -- Each paired with which of CR 603.2d's instances it is.
             pends (cond, ab) =
               let perPlayer = stepCopies gs oid ctrl cond event ab (pend (cond, ab))
-               in maybe perPlayer (\n -> concat (List.genericReplicate n perPlayer)) (countersRemovedOccurrences oid cond event)
+                  occurrences = maybe perPlayer (\n -> concat (List.genericReplicate n perPlayer)) (countersRemovedOccurrences oid cond event)
+               in [(extra, trigger) | extra <- [0 .. additional], trigger <- occurrences]
             -- CR 603.2c's key, for `oncePerBatch` below: which ability of which
             -- bearer this pending trigger came from, or Nothing when the condition
             -- is per-occurrence and every member of the batch is its own trigger
@@ -2350,11 +2364,14 @@ eventTriggers events gs =
             -- sentence inside the batch: Norn's Decree's damagers two opponents
             -- control, and Feline Sovereign's Cats hitting two players, are two
             -- occurrences of one CR 510.2 step.
-            key (index, (cond, _)) trigger =
+            --
+            -- And by CR 603.2d's instance, so a batch trigger's additional
+            -- instances survive as triggers of their own.
+            key (index, (cond, _)) (extra, trigger) =
               if batchScoped cond
-                then Just (oid, index :: Natural, batchPartition cond (PendingTrigger.bindings trigger))
+                then Just (oid, index :: Natural, extra :: Natural, batchPartition cond (PendingTrigger.bindings trigger))
                 else Nothing
-            keyed indexed = fmap (\trigger -> (key indexed trigger, trigger)) (pends (snd indexed))
+            keyed indexed = fmap (\pair -> (key indexed pair, snd pair)) (pends (snd indexed))
          in concatMap keyed (filter (fires . snd) (zip [0 ..] abilities))
       -- Map.unions is left-biased, so the battlefield reading wins over a
       -- last-known one, a cycled card and a graveyard reading. That rules out a

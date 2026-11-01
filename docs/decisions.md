@@ -949,16 +949,20 @@ Entries are ordered by the first rule each cites.
   doesn't have to specify 'creatures' entering"), Hushbringer 2019-10-04 (a
   "leaves the battlefield" trigger does not trigger on a creature dying).
 - **Decision**: No. Every trigger the entering zone change satisfies is
-  silenced, whichever side of the move its condition names.
+  silenced, whichever side of the move its condition names. By the same
+  reading, Yarok, the Desecrated (CR 603.2d) makes every such trigger of a
+  permanent its controller controls trigger an additional time.
 - **Rejected**: Silencing only the CR 603.6a enters abilities. The entry rulings
   say the event need not be phrased as creatures entering, and Hushbringer's
   ruling silences the other-side wording ("leaves the battlefield") of a
   silenced dying. Reading the entry half by that mirror leaves no ground for
   sparing the departure half.
-- **Site**: `Parun.Engine.Event.Match.entryTriggers`. Proved by the scenarios
-  "Hushwing Gryff silences a leaves-your-graveyard trigger on a reanimated
-  creature" (Spirit Mascot) and "Hushwing Gryff silences a reanimated card's
-  own leaves-your-graveyard trigger" (Oglor's grant).
+- **Site**: `Parun.Engine.Event.Match.entryTriggers` and
+  `additionalEntryTriggers`. Proved by the scenarios "Hushwing Gryff silences
+  a leaves-your-graveyard trigger on a reanimated creature" (Spirit Mascot),
+  "Hushwing Gryff silences a reanimated card's own leaves-your-graveyard
+  trigger" (Oglor's grant) and
+  yarok-the-desecrated-doubles-a-leaves-your-graveyard-trigger-on-a-reanimated-creature.
 - **Issue**: #5713.
 
 ## A paid flash permission is offered at sorcery timing too
@@ -975,3 +979,22 @@ Entries are ordered by the first rule each cites.
 - **Site**: `Parun.Engine.Cost.withFlashPermission`. Proved by the scenario
   harbinger-of-the-tides-cast-in-a-main-phase-may-pay-two-more.
 - **Issue**: #5765.
+
+## A trigger limit caps an additional trigger
+
+- **Question**: Yarok, the Desecrated makes an ability a permanent entering
+  causes to trigger trigger an additional time. Enduring Innocence's entry
+  ability "triggers only once each turn". With both, does a creature entering
+  make it trigger twice?
+- **Rules**: CR 603.2c, 603.2d; CR of 2026-08-07. No ruling.
+- **Decision**: No. The limit counts each instance as a triggering, so the
+  additional instance is spent against it like any other.
+- **Rejected**: Letting the additional instance through. CR 603.2d says an
+  additional-times effect "doesn't apply to other effects that affect how many
+  times an ability triggers", and the limit is the ability's own text, not an
+  effect, so nothing exempts the second instance from it.
+- **Site**: `Parun.Engine.Event.withinTriggerLimit`, which spends the limit on
+  the instances `Parun.Engine.Event.Trigger.eventTriggers` multiplies. Proved
+  by the scenario
+  yarok-the-desecrated-doesn-t-lift-a-triggers-only-once-each-turn-limit.
+- **Issue**: #5837.
