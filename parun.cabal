@@ -300,6 +300,8 @@ library codec
     Parun.Codec.CantSearchLibraries
     Parun.Codec.CantSearchLibrariesSpec
     Parun.Codec.Card
+    Parun.Codec.CardAbilities
+    Parun.Codec.CardAbilitiesSpec
     Parun.Codec.CardArrivedIn
     Parun.Codec.CardArrivedInSpec
     Parun.Codec.CardIdentity
@@ -723,8 +725,6 @@ library codec
     Parun.Codec.ExileCardsFromGraveyardSpec
     Parun.Codec.ExileCardsFromHand
     Parun.Codec.ExileCardsFromHandSpec
-    Parun.Codec.ExiledCardAbilities
-    Parun.Codec.ExiledCardAbilitiesSpec
     Parun.Codec.ExiledPile
     Parun.Codec.ExiledPileSpec
     Parun.Codec.ExileFromGraveyard
@@ -868,6 +868,7 @@ library codec
     Parun.Codec.LayoutSpec
     Parun.Codec.LeftTheGame
     Parun.Codec.LeftTheGameSpec
+    Parun.Codec.LentCards
     Parun.Codec.LibraryDepth
     Parun.Codec.LibraryDepthSpec
     Parun.Codec.LibraryPlacement
@@ -2453,6 +2454,7 @@ library types
     Parun.Types.CantBlockCreatures
     Parun.Types.CantSearchLibraries
     Parun.Types.Card
+    Parun.Types.CardAbilities
     Parun.Types.CardArrivedIn
     Parun.Types.CardIdentity
     Parun.Types.CardLeavesZone
@@ -2689,7 +2691,6 @@ library types
     Parun.Types.ExchangeZones
     Parun.Types.ExileCardsFromGraveyard
     Parun.Types.ExileCardsFromHand
-    Parun.Types.ExiledCardAbilities
     Parun.Types.ExiledPile
     Parun.Types.ExileFromGraveyard
     Parun.Types.ExileHaunting
@@ -2778,6 +2779,7 @@ library types
     Parun.Types.Layout
     Parun.Types.LearnMode
     Parun.Types.LeftTheGame
+    Parun.Types.LentCards
     Parun.Types.LibraryDepth
     Parun.Types.LibraryPlacement
     Parun.Types.LibraryPosition

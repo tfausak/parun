@@ -51,7 +51,7 @@
           },
           "modifications": [
             {
-              "type": "GainExiledCardAbilities",
+              "type": "GainCardAbilities",
               "value": {
                 "cards": {
                   "type": "And",

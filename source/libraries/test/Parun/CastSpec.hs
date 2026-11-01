@@ -5067,6 +5067,42 @@ humiliationSpec s registry =
 -- resolves as the enchanted land is tapped in CR 601.2g's window, before CR
 -- 601.2h pays the rest. Magmatic Insight's land half is
 -- data/scenarios/cost's cr-121-8 pair.
+-- CR 401.5, the ruling on Conspicuous Snoop: while a spell is being cast, Snoop
+-- has nothing of a card that became the top card. Skirk Prospector's mana ability
+-- is the only thing that could tell: Snoop pays if offered, so the Piker's payment
+-- sacrifices a Goblin exactly when Snoop has it. The two boards differ in whether
+-- the Prospector was already on top as the cast began.
+announcedTopSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+announcedTopSpec s registry = Spec.describe s "CR 401.5" $ do
+  let board library held =
+        let alice =
+              (S.battlefield S.alice [S.ready (S.aliased "snoop" (S.permanent "Conspicuous Snoop")), S.ready (S.aliased "other" (S.permanent "Goblin Piker")), S.ready (S.permanent "Mountain"), S.ready (S.permanent "Island")])
+                { Seat.hand = Seq.fromList [S.aliased alias (S.cardSetup name) | (alias, name) <- held],
+                  Seat.library = Seq.fromList ([S.aliased alias (S.cardSetup name) | (alias, name) <- library] <> replicate 3 (S.cardSetup "Island"))
+                }
+         in S.board (alice NonEmpty.:| [S.playerSetup S.bob]) S.alice S.precombatMain
+      idOf alias built = maybe (Spec.assertFailure s ("no " <> alias)) pure (Map.lookup (Label.MkLabel (Text.pack alias)) (Staged.objects built))
+      answerer :: ObjectId.ObjectId -> ObjectId.ObjectId -> Prompt.Prompt r -> r
+      answerer snoop other p = case p of
+        Prompt.ChooseManaSource _ _ _ sources -> Just (if snoop `elem` sources then snoop else NonEmpty.head (NonEmpty.fromList (filter (/= other) (NonEmpty.toList sources))))
+        Prompt.ChooseExtraManaSource {} -> Nothing
+        _ -> S.identityAnswer p
+      cast library held = do
+        built <- S.buildBoardOrFail s registry (board library held)
+        snoop <- idOf "snoop" built
+        other <- idOf "other" built
+        piker <- idOf "piker" built
+        pure ([snoop, other], S.runPure (answerer snoop other) (Staged.state built) (S.cast S.alice piker))
+      sacrificed goblins after = any (\goblin -> Game.zoneOf goblin after /= Just Zone.Battlefield) goblins
+  Spec.it s "the control: a top card shown as the cast began pays for it" $ do
+    (goblins, after) <- cast [("prospector", "Skirk Prospector")] [("piker", "Goblin Piker")]
+    Spec.assertBool s (sacrificed goblins after) "Snoop paid with the Prospector's ability"
+  Spec.it s "a top card the cast itself exposed does not" $ do
+    (goblins, after) <- cast [("piker", "Goblin Piker"), ("prospector", "Skirk Prospector")] []
+    Spec.assertBool s (not (sacrificed goblins after)) "Snoop had no ability of the Prospector during the payment"
+    Spec.assertEqWith s "the Piker became cast" (fmap (\oid -> Game.namesOf oid after) (GameState.stack after)) [Set.singleton (CardName.MkCardName (Text.pack "Goblin Piker"))]
+    Spec.assertEqWith s "and the mark is gone with the window" (GameState.announcedTops after) Nothing
+
 keptFaceDownSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 keptFaceDownSpec s registry = Spec.describe s "KeptFaceDown" $ do
   let label = Label.MkLabel . Text.pack
@@ -5241,6 +5277,7 @@ spec s registry = Spec.describe s "Parun.Engine.Cast" $ do
   epicSpec s registry
   legendarySpellSpec s registry
   keptFaceDownSpec s registry
+  announcedTopSpec s registry
 
 -- Casts the first offered option, then declines (the loop re-offers until empty).
 castFirstOption :: Prompt.Prompt r -> r

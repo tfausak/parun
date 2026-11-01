@@ -93,6 +93,7 @@ import qualified Parun.Types.CantAttackPlayer as CantAttackPlayer
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.CantBlockCreatures as CantBlockCreatures
 import qualified Parun.Types.Card as Card
+import qualified Parun.Types.CardAbilities as CardAbilities
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
 import qualified Parun.Types.CardsPutIntoZone as CardsPutIntoZone
@@ -229,7 +230,6 @@ import qualified Parun.Types.ExileFromGraveyard as ExileFromGraveyard
 import qualified Parun.Types.ExileHaunting as ExileHaunting
 import qualified Parun.Types.ExileMaterials as ExileMaterials
 import qualified Parun.Types.ExilePermanents as ExilePermanents
-import qualified Parun.Types.ExiledCardAbilities as ExiledCardAbilities
 import qualified Parun.Types.Expiry as Expiry
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.FaceDownCharacteristics as FaceDownCharacteristics
@@ -2168,7 +2168,7 @@ modificationNames asking onAbility x = case x of
   Modification.GainCastingPermission castingPermission -> castingPermissionNames asking castingPermission
   Modification.GainAbility ability -> onAbility ability
   Modification.GainAbilitiesOfSource keyword -> foldMap (keywordNames asking) keyword
-  Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities cards items) -> filterNames asking cards <> foldMap (activationRestrictionNames asking) items
+  Modification.GainCardAbilities (CardAbilities.MkCardAbilities _ cards items) -> filterNames asking cards <> foldMap (activationRestrictionNames asking) items
   Modification.GainAbilitiesOfStickers -> mempty
   Modification.LoseAllAbilities -> mempty
   Modification.LoseNamedAbility abilityName -> names asking (`Binding.Engine.isAcquiredFrom` abilityName)

@@ -2,6 +2,7 @@ module Parun.Types.Modification where
 
 import qualified Data.Set as Set
 import qualified Parun.Types.AbilityName as AbilityName
+import qualified Parun.Types.CardAbilities as CardAbilities
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CastingPermission as CastingPermission
@@ -10,7 +11,6 @@ import qualified Parun.Types.ChangeWord as ChangeWord
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.CombatDamageOption as CombatDamageOption
 import qualified Parun.Types.CostKeyword as CostKeyword
-import qualified Parun.Types.ExiledCardAbilities as ExiledCardAbilities
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.FullText as FullText
 import qualified Parun.Types.Keyword as Keyword
@@ -155,9 +155,10 @@ data Modification ability
     -- proves the first half.
     GainAbilitiesOfSource (Set.Set Keyword.Keyword)
   | -- | layer 6, CR 613.1f: this object has each activated ability of each
-    -- card in exile the payload names, each carrying the payload's extra
-    -- restrictions (Locus of Enlightenment, Mairsil, the Pretender).
-    GainExiledCardAbilities ExiledCardAbilities.ExiledCardAbilities
+    -- card the payload names, in exile (Locus of Enlightenment, Mairsil, the
+    -- Pretender) or atop a library (Conspicuous Snoop), each carrying the
+    -- payload's extra restrictions.
+    GainCardAbilities CardAbilities.CardAbilities
   | -- | layer 6, CR 613.1f / 123.7a: this object has the abilities printed on
     -- the ability stickers on this effect's source, read off the stickers
     -- (Pin Collection).

@@ -267,7 +267,7 @@ atInstantSpeed restriction = case restriction of
 -- Parun.ActivateSpec's "CR 602.5c two Gliding Licids give the Locus two
 -- once-each-turn animate abilities" proves the per-turn record. The count is
 -- a REGRESSION FENCE: abilities acquired from two exiled cards are unequal
--- (Binding.exiledCardAbility), so only two equal grants of one ability
+-- (Binding.lentCardAbility), so only two equal grants of one ability
 -- printing the rider reach it -- two Auras quoting one. No card in
 -- data/cards/ carries both an OnlyOnce rider and a GainAbility (grep,
 -- 2026-10-19).

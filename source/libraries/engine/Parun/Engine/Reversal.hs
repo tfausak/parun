@@ -145,6 +145,7 @@ withoutAnnouncement before entry closed = do
   cardsPlayed <- mapOf GameState.cardsPlayed
   drawsThisTurn <- mapOf GameState.drawsThisTurn
   keptFaceDown <- one GameState.keptFaceDown
+  announcedTops <- one GameState.announcedTops
   departedThisTurn <- setOf GameState.departedThisTurn
   couldAttackThisTurn <- setOf GameState.couldAttackThisTurn
   activatedThisTurn <- mapOfMaps GameState.activatedThisTurn
@@ -269,6 +270,7 @@ withoutAnnouncement before entry closed = do
         GameState.cardsPlayed = cardsPlayed,
         GameState.drawsThisTurn = drawsThisTurn,
         GameState.keptFaceDown = keptFaceDown,
+        GameState.announcedTops = announcedTops,
         GameState.departedThisTurn = departedThisTurn,
         GameState.couldAttackThisTurn = couldAttackThisTurn,
         GameState.activatedThisTurn = activatedThisTurn,

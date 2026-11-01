@@ -1726,6 +1726,7 @@ oneMountainState mountain ph =
           GameState.cardsPlayed = mempty,
           GameState.drawsThisTurn = mempty,
           GameState.keptFaceDown = Nothing,
+          GameState.announcedTops = Nothing,
           GameState.departedThisTurn = mempty,
           GameState.couldAttackThisTurn = mempty,
           GameState.activatedThisTurn = mempty,

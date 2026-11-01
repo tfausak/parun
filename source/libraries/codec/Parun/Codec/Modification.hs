@@ -2,6 +2,7 @@ module Parun.Codec.Modification where
 
 import qualified Data.Typeable as Typeable
 import qualified Parun.Codec.AbilityName as AbilityName
+import qualified Parun.Codec.CardAbilities as CardAbilities
 import qualified Parun.Codec.CardName as CardName
 import qualified Parun.Codec.CardType as CardType
 import qualified Parun.Codec.CastingPermission as CastingPermission
@@ -10,7 +11,6 @@ import qualified Parun.Codec.ChangeWord as ChangeWord
 import qualified Parun.Codec.Color as Color
 import qualified Parun.Codec.CombatDamageOption as CombatDamageOption
 import qualified Parun.Codec.CostKeyword as CostKeyword
-import qualified Parun.Codec.ExiledCardAbilities as ExiledCardAbilities
 import qualified Parun.Codec.Filter as Filter
 import qualified Parun.Codec.FullText as FullText
 import qualified Parun.Codec.Keyword as Keyword
@@ -68,7 +68,7 @@ codec abilityCodec =
           Arm.payload "LoseEnchant" TargetSlot.codec Modification.LoseEnchant (\x -> case x of Modification.LoseEnchant y -> Just y; _ -> Nothing),
           Arm.payload "GainCastingPermission" CastingPermission.codec Modification.GainCastingPermission (\x -> case x of Modification.GainCastingPermission y -> Just y; _ -> Nothing),
           Arm.payload "GainAbilitiesOfSource" (Common.set Keyword.codec) Modification.GainAbilitiesOfSource (\x -> case x of Modification.GainAbilitiesOfSource y -> Just y; _ -> Nothing),
-          Arm.payload "GainExiledCardAbilities" ExiledCardAbilities.codec Modification.GainExiledCardAbilities (\x -> case x of Modification.GainExiledCardAbilities y -> Just y; _ -> Nothing),
+          Arm.payload "GainCardAbilities" CardAbilities.codec Modification.GainCardAbilities (\x -> case x of Modification.GainCardAbilities y -> Just y; _ -> Nothing),
           Arm.nullary "GainAbilitiesOfStickers" Modification.GainAbilitiesOfStickers,
           Arm.nullary "LoseAllAbilities" Modification.LoseAllAbilities,
           Arm.payload "LoseNamedAbility" AbilityName.codec Modification.LoseNamedAbility (\x -> case x of Modification.LoseNamedAbility y -> Just y; _ -> Nothing),
@@ -114,7 +114,7 @@ tagOf x = case x of
   Modification.LoseEnchant {} -> "LoseEnchant"
   Modification.GainCastingPermission {} -> "GainCastingPermission"
   Modification.GainAbilitiesOfSource {} -> "GainAbilitiesOfSource"
-  Modification.GainExiledCardAbilities {} -> "GainExiledCardAbilities"
+  Modification.GainCardAbilities {} -> "GainCardAbilities"
   Modification.GainAbilitiesOfStickers -> "GainAbilitiesOfStickers"
   Modification.LoseAllAbilities {} -> "LoseAllAbilities"
   Modification.LoseNamedAbility {} -> "LoseNamedAbility"

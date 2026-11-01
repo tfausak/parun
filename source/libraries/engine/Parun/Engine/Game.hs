@@ -659,6 +659,20 @@ topOf zone pid gs = case zone of
   Zone.Command -> Nothing
   Zone.Ante -> Nothing
 
+-- Each library's top card, by its player; a player with an empty library is
+-- absent.
+libraryTops :: GameState -> Map.Map PlayerId ObjectId
+libraryTops gs = Map.fromList [(pid, top) | pid <- Map.keys (GameState.players gs), Just top <- [topOf Zone.Library pid gs]]
+
+-- | CR 401.5: the top card of a player's library, unless it became the top while
+-- a spell is being cast or an ability activated (GameState.announcedTops), when
+-- it isn't revealed and can't be looked at until that ends. Not implemented: the
+-- same while a special action is taken (#5003).
+shownTop :: PlayerId -> GameState -> Maybe ObjectId
+shownTop pid gs = case (topOf Zone.Library pid gs, GameState.announcedTops gs) of
+  (Just top, Just tops) | Map.lookup pid tops /= Just top -> Nothing
+  (top, _) -> top
+
 -- CR 404.3: set a player's standing graveyard-order setting
 -- (Parun.Types.GraveyardOrder). The player's to change, not the rules': a client
 -- writes it at setup or between engine calls on that player's word. No game

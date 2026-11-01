@@ -57,6 +57,7 @@ import qualified Parun.Types.CantAttackPlayer as CantAttackPlayer
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.CantBlockCreatures as CantBlockCreatures
 import qualified Parun.Types.Card as Card.Type
+import qualified Parun.Types.CardAbilities as CardAbilities
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
@@ -148,7 +149,6 @@ import qualified Parun.Types.ExchangeOwnership as ExchangeOwnership
 import qualified Parun.Types.ExchangeValues as ExchangeValues
 import qualified Parun.Types.ExchangedValue as ExchangedValue
 import qualified Parun.Types.ExileFromGraveyard as ExileFromGraveyard
-import qualified Parun.Types.ExiledCardAbilities as ExiledCardAbilities
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.FaceDownCharacteristics as FaceDownCharacteristics
 import qualified Parun.Types.FaceDownState as FaceDownState
@@ -371,11 +371,11 @@ rewriteModification pairs m =
               -- restrictions, printed there too. The abilities are the cards', read
               -- at projection time. Unproven: no card in data/cards/ gives such a
               -- grant a subtype or colour word.
-              Modification.GainExiledCardAbilities e ->
-                Modification.GainExiledCardAbilities
+              Modification.GainCardAbilities e ->
+                Modification.GainCardAbilities
                   e
-                    { ExiledCardAbilities.cards = Filter.rewrite [(from, to)] (ExiledCardAbilities.cards e),
-                      ExiledCardAbilities.restrictions = fmap (rewriteRestriction [(from, to)]) (ExiledCardAbilities.restrictions e)
+                    { CardAbilities.cards = Filter.rewrite [(from, to)] (CardAbilities.cards e),
+                      CardAbilities.restrictions = fmap (rewriteRestriction [(from, to)]) (CardAbilities.restrictions e)
                     }
               -- Carries no word: the abilities are the stickers', read at projection
               -- time.

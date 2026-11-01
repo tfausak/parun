@@ -86,6 +86,17 @@ spec s registry = Spec.describe s "Parun.Engine.Visibility" $ do
     Spec.assertEqWith s "alice sees her top card" (Visibility.sees S.alice top looked) Visibility.Type.Visible
     Spec.assertEqWith s "bob does not see alice's top card" (Visibility.sees S.bob top looked) Visibility.Type.Obscured
     Spec.assertEqWith s "alice does not see her second card" (Visibility.sees S.alice second looked) Visibility.Type.Obscured
+  -- A library's top changes mid-announcement only when the card being cast leaves
+  -- it, and a prompt carries no state to read, so the mark is written directly.
+  -- Parun.CastSpec's "CR 401.5" group proves Event.announcing writes it.
+  Spec.it s "CR 401.5 a top card new since the announcement began is held back" $ do
+    (gs, _, top, second) <- shownBoard s registry
+    let revealed = showing ShownCards.TopOfLibrary Audience.Everyone gs
+        begunAt card = revealed {GameState.announcedTops = Just (Map.singleton S.alice card)}
+    Spec.assertEqWith s "the control: the top card as the announcement began stays shown" (Visibility.sees S.bob top (begunAt top)) Visibility.Type.Visible
+    Spec.assertEqWith s "a top card that is new is hidden" (Visibility.sees S.bob top (begunAt second)) Visibility.Type.Obscured
+    Spec.assertEqWith s "from its owner too" (Visibility.sees S.alice top (begunAt second)) Visibility.Type.Obscured
+    Spec.assertEqWith s "and so is one over a library then empty" (Visibility.sees S.bob top revealed {GameState.announcedTops = Just Map.empty}) Visibility.Type.Obscured
   -- CR 723.4: a scenario reaches this only through Mindslaver and bob's next
   -- turn, so the control row is written onto the state directly and the case
   -- pins the look's audience alone.

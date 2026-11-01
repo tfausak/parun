@@ -10125,15 +10125,17 @@ performDraw pid = do
 --
 -- A window already open is left to its owner: a card drawn in a nested one is
 -- drawn while the outer spell is still being cast.
+--
+-- CR 401.5: the window also holds back a new top card (Game.shownTop).
 announcing :: Game a -> Game a
 announcing body = do
   outer <- State.gets GameState.keptFaceDown
   case outer of
     Just _ -> body
     Nothing -> do
-      State.modify' (\g -> g {GameState.keptFaceDown = Just Map.empty})
+      State.modify' (\g -> g {GameState.keptFaceDown = Just Map.empty, GameState.announcedTops = Just (Game.libraryTops g)})
       result <- body
-      State.modify' (\g -> g {GameState.keptFaceDown = Nothing})
+      State.modify' (\g -> g {GameState.keptFaceDown = Nothing, GameState.announcedTops = Nothing})
       pure result
 
 -- CR 121.8: the spell became cast (CR 601.2i) or the ability activated (CR
@@ -10144,7 +10146,7 @@ announcing body = do
 turnUpKeptDraws :: Game ()
 turnUpKeptDraws = do
   kept <- State.gets GameState.keptFaceDown
-  State.modify' (\g -> g {GameState.keptFaceDown = Nothing})
+  State.modify' (\g -> g {GameState.keptFaceDown = Nothing, GameState.announcedTops = Nothing})
   Monad.forM_ (foldMap Map.toAscList kept) $ \(drawn, nth) -> do
     gs <- State.get
     case Game.lookupObject drawn gs of
