@@ -4,6 +4,7 @@ import qualified Data.Text as Text
 import qualified Parun.Codec.Scope as Scope
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
+import qualified Parun.Types.BoundReading as BoundReading
 import qualified Parun.Types.EventShape as EventShape
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.MovedBetween as MovedBetween
@@ -41,8 +42,15 @@ spec s = Spec.describe s "Parun.Codec.Scope" $ do
     Common.assertCodec
       s
       Scope.codec
-      (Scope.OverBound (SlotName.MkSlotName (Text.pack "discarded")))
+      (Scope.OverBound BoundReading.AsBound (SlotName.MkSlotName (Text.pack "discarded")))
       " {\"type\":\"OverBound\",\"value\":\"discarded\"} "
+  -- CR 608.2h: the same slot, read as what its arrivals were before the move.
+  Spec.it s "OverBoundBeforeMove" $
+    Common.assertCodec
+      s
+      Scope.codec
+      (Scope.OverBound BoundReading.BeforeMove (SlotName.MkSlotName (Text.pack "returned")))
+      " {\"type\":\"OverBoundBeforeMove\",\"value\":\"returned\"} "
   -- CR 401.2 / 404.1's domain: one POSITION in each named library or
   -- graveyard, rather than the whole pile the InZone arm above reads.
   Spec.it s "TopOf" $

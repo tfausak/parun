@@ -2808,7 +2808,7 @@ scopeNames asking x = case x of
   Scope.InZone inZone -> inZoneNames asking inZone
   Scope.InHistory eventShape -> eventShapeNames asking eventShape
   Scope.OverPlayers playerRef -> playerRefNames asking playerRef
-  Scope.OverBound slotName -> slotNames asking slotName
+  Scope.OverBound _ slotName -> slotNames asking slotName
   Scope.TopOf inZone -> inZoneNames asking inZone
 
 searchNames :: (Monoid r) => Asking r -> Search.Search -> r

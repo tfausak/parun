@@ -59,6 +59,7 @@ import qualified Parun.Types.Arithmetic as Arithmetic
 import qualified Parun.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import qualified Parun.Types.AttachAll as AttachAll
 import qualified Parun.Types.BoundMeasure as BoundMeasure
+import qualified Parun.Types.BoundReading as BoundReading
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CastFromZone as CastFromZone
@@ -178,7 +179,7 @@ scopeOffends scope = case scope of
   -- No zone at all either: this scope folds the objects a binding names,
   -- wherever they are, so there is no per-player copy of a zone for the pairing
   -- the lint rejects to arise in.
-  Scope.OverBound _ -> False
+  Scope.OverBound {} -> False
   -- The InZone arm's pairing, asked of a zone's top card.
   Scope.TopOf inZone -> scopeOffends (Scope.InZone inZone)
 
@@ -1021,7 +1022,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
     let overBound =
           Quantity.Type.Count
             ( Count.Type.MkCount
-                (Scope.OverBound target)
+                (Scope.OverBound BoundReading.AsBound target)
                 (Filter.Type.And [])
                 Aggregation.Members
             )

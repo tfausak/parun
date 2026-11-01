@@ -538,7 +538,7 @@ scopeRefs scope = case scope of
   Scope.InZone (InZone.MkInZone _ ref) -> Set.singleton (Left ref)
   Scope.InHistory _ -> Set.empty
   Scope.OverPlayers ref -> Set.singleton (Left ref)
-  Scope.OverBound slot -> Set.singleton (Right slot)
+  Scope.OverBound _ slot -> Set.singleton (Right slot)
   Scope.TopOf (InZone.MkInZone _ ref) -> Set.singleton (Left ref)
 
 -- Every slot NAME renameSlots above would rewrite, as a set: `slots`' amount half
@@ -602,7 +602,7 @@ overPlayerRefSlots f ref = case ref of
 -- mapScope instead.
 renameScope :: (SlotName -> SlotName) -> Scope.Scope -> Scope.Scope
 renameScope rename scope = case scope of
-  Scope.OverBound slot -> Scope.OverBound (rename slot)
+  Scope.OverBound reading slot -> Scope.OverBound reading (rename slot)
   Scope.InZone _ -> scope
   Scope.OverPlayers _ -> scope
   Scope.InHistory _ -> scope
@@ -724,5 +724,5 @@ mapScope f scope = case scope of
   Scope.InHistory _ -> scope
   -- CR 400.7j's fold names a SLOT rather than a player reference, so there is
   -- nothing here for either baking to rewrite.
-  Scope.OverBound _ -> scope
+  Scope.OverBound {} -> scope
   Scope.TopOf (InZone.MkInZone zone ref) -> Scope.TopOf (InZone.MkInZone zone (f ref))

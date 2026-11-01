@@ -35,6 +35,7 @@ import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackerDeclared as AttackerDeclared
 import qualified Parun.Types.BlockRole as BlockRole
 import qualified Parun.Types.BlocksDeclared as BlocksDeclared
+import qualified Parun.Types.BoundReading as BoundReading
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardArrivedIn as CardArrivedIn
 import qualified Parun.Types.Combat as Combat
@@ -185,8 +186,17 @@ evaluate viewOf quantityOf context gs count =
         -- (countsWithoutCharacteristics) keeps it: Flux's and Jace's Archivist's
         -- "discarded this way" under Library of Leng (data/scenarios'
         -- windfall-counts-the-cards-library-of-leng-put-on-top).
-        Scope.OverBound slot ->
-          let ids = Set.toList (Map.findWithDefault Set.empty slot (Filter.slotObjects context))
+        --
+        -- BoundReading.BeforeMove swaps each arrival for the id it departed as,
+        -- found by nothing, so read by CR 608.2h last known information:
+        -- Flood of Tears' "nontoken permanents you control" returned to a hand,
+        -- whatever zone a CR 614 redirect put one in instead (its 2019-07-12
+        -- ruling). A member no move arrived as is already its own departure.
+        Scope.OverBound reading slot ->
+          let bound = Set.toList (Map.findWithDefault Set.empty slot (Filter.slotObjects context))
+              ids = case reading of
+                BoundReading.AsBound -> bound
+                BoundReading.BeforeMove -> fmap (\oid -> Maybe.fromMaybe oid (departedAs gs oid)) bound
               member oid
                 | findableAfterMove gs oid = True
                 | otherwise = countsWithoutCharacteristics aggregation predicate && wasDiscarded gs oid
@@ -287,15 +297,20 @@ revealedInPlace gs oid =
 -- Revealed entry naming that id is the reveal (CR 701.20a).
 revealedArriving :: GameState -> ObjectId -> Bool
 revealedArriving gs oid =
-  let events = fmap LoggedEvent.event (Foldable.toList (GameState.events gs))
-      departedIds = Maybe.mapMaybe departedAs events
-      departedAs event = case event of
+  let departed = departedAs gs oid
+      revealed event = case LoggedEvent.event event of
+        GameEvent.Revealed r -> Just (Revealed.card r) == departed
+        _ -> False
+   in any revealed (GameState.events gs)
+
+-- CR 400.7: the id this incarnation had before the move that made it, off the
+-- Moved entry naming it as an arrival; Nothing if no move this turn made it.
+departedAs :: GameState -> ObjectId -> Maybe ObjectId
+departedAs gs oid =
+  let departure event = case LoggedEvent.event event of
         GameEvent.Moved m | Foldable.elem oid (Moved.arrivals m) -> Just (ZoneChange.departed (Moved.change m))
         _ -> Nothing
-      revealed event = case event of
-        GameEvent.Revealed r -> List.elem (Revealed.card r) departedIds
-        _ -> False
-   in any revealed events
+   in Maybe.listToMaybe (Maybe.mapMaybe departure (Foldable.toList (GameState.events gs)))
 
 -- CR 109.1 / 120.1: THE player candidate's view -- Parun.Engine.Filter.playerView
 -- with the one field a bare PlayerId cannot answer filled from the board.
