@@ -11,4 +11,6 @@ data DurationEvent
     SpellCast (Filter.Filter Keyword.Keyword)
   | -- | CR 901.11: a player planeswalks (Agyrem).
     Planeswalked
+  | -- | CR 607.2a: an instruction of the effect's source exiled a card (Furious Rise).
+    SourceExiledCard
   deriving (Eq, Ord, Show)

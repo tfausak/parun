@@ -2270,11 +2270,22 @@ linkCraftMaterials resolving entered gs =
 -- Filed for a SPELL's effects too, where CR 607.2a scopes the link to an
 -- activated or triggered ability -- unreadable rather than wrong, since CR
 -- 608.2n puts the spell into its graveyard as part of its own resolution.
+--
+-- A filing is the moment DurationEvent.SourceExiledCard ends at. Only a NEW key
+-- counts: an outer window re-seeing an inner one's arrival would end the
+-- permission the inner window's next instruction just granted, and a link the
+-- funnel filed names a card this instruction did not exile. A move replaced out
+-- of exile files nothing, so it ends nothing. The new-key half is a fence: every
+-- printed wording exiles and grants in two instructions of one clause, so
+-- `Set.null arrived` stays green.
 recordExiledWith :: ExileLink.ExileLink -> Set ObjectId -> GameState -> GameState
 recordExiledWith link before gs =
   let arrived = Set.difference (GameState.exile gs) before
       file oid = Map.insertWith (\_ inner -> inner) oid link
-   in gs {GameState.exiledWith = Map.restrictKeys (foldr file (GameState.exiledWith gs) arrived) (GameState.exile gs)}
+      filed = gs {GameState.exiledWith = Map.restrictKeys (foldr file (GameState.exiledWith gs) arrived) (GameState.exile gs)}
+   in if Set.null (Set.difference arrived (Map.keysSet (GameState.exiledWith gs)))
+        then filed
+        else Expiry.sweep (Expiry.ExiledWith (ExileLink.source link)) filed
 
 -- CR 406.4's separate piles, filed off the same window: "face-down cards in exile
 -- should be kept in separate piles based on when they were exiled and how they

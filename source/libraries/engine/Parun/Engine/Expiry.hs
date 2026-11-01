@@ -214,13 +214,15 @@ arm acquisition targets controller source duration gs = case duration of
   -- UntilPaid's is, and so is any seat the criterion names by slot
   -- (Parun.Engine.Filter.bakeBound), since the sweep has no resolution to read
   -- one off. Parun.Engine.Resolve.Arms.Damage's TurnFaceDown arm and
-  -- Parun.Engine.Cast's CR 601.2i event sweep the moments that end it.
+  -- Parun.Engine.Cast's CR 601.2i event sweep the moments that end it, and
+  -- Parun.Engine.Resolve.Common.recordExiledWith sweeps a source's exile.
   Duration.UntilEvent event ->
     Just
       ( Expiry.OnEvent
           ( EventExpiry.MkEventExpiry controller $ case event of
               DurationEvent.SourceTurnedFaceDown -> event
               DurationEvent.Planeswalked -> event
+              DurationEvent.SourceExiledCard -> event
               DurationEvent.SpellCast criterion -> DurationEvent.SpellCast (Filter.bakeBound (Binding.playersIn targets) Map.empty Map.empty criterion)
           )
       )
@@ -374,6 +376,9 @@ data Moment
     Cast ObjectId
   | -- | CR 901.11: a player planeswalked.
     Planeswalked
+  | -- | CR 607.2a: an instruction of this object exiled a card. Ends the
+    -- effects it is the source of, PaidFor's grain.
+    ExiledWith ObjectId
   deriving (Eq, Show)
 
 -- CR 611.2: does the expiry a row from `source` stores end at this moment? The
@@ -453,6 +458,10 @@ endsAt gs moment source expiry = case expiry of
   -- effect is a resolved one, and its plane is walked away from by the very
   -- planeswalk that ends it.
   Expiry.OnEvent (EventExpiry.MkEventExpiry _ DurationEvent.Planeswalked) -> moment == Planeswalked
+  -- CR 607.2a: ended by its own source exiling a card. Not by its source
+  -- leaving (Furious Rise's 2020-06-23 ruling): the row names the old id, which
+  -- CR 400.7 means a later object's exile can't end.
+  Expiry.OnEvent (EventExpiry.MkEventExpiry _ DurationEvent.SourceExiledCard) -> moment == ExiledWith source
   where
     departedTurnOf p = moment == TurnOf p && List.notElem p (Game.stillPlaying gs)
     namedTurnEnds at afterTurn =
