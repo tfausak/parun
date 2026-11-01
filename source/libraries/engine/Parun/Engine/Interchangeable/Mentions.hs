@@ -522,6 +522,7 @@ filterNames asking criterion = case criterion of
   Filter.HasKeywordFamily _family -> mempty
   Filter.Measures measures -> measuresNames asking measures
   Filter.ManaValueIsEven -> mempty
+  Filter.ControllerIsOwner -> mempty
   Filter.HeldBy _holder _relation -> mempty
   Filter.ControlledByRole _ -> mempty
   Filter.HeldByBound _holder slot -> slotNames asking slot

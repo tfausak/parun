@@ -156,6 +156,12 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       codec
       (Filter.HeldByRecipient Holder.Controller)
       " {\"type\":\"HeldByRecipient\",\"value\":{\"type\":\"Controller\"}} "
+  Spec.it s "ControllerIsOwner" $
+    Common.assertCodec
+      s
+      codec
+      Filter.ControllerIsOwner
+      " {\"type\":\"ControllerIsOwner\"} "
   Spec.it s "ManaValueIsEven" $
     Common.assertCodec
       s

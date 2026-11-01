@@ -279,6 +279,7 @@ filterAtomsOf leaf predicate = case predicate of
   Filter.Type.ControlledByRole _ -> leaf predicate
   -- A leaf: a Holder and a PlayerRelation hold no Filter for a card author to
   -- reach.
+  Filter.Type.ControllerIsOwner -> leaf predicate
   Filter.Type.HeldBy _ _ -> leaf predicate
   -- A leaf for HeldBy's reason: one carries a slot name and the other a
   -- PlayerId, and neither holds a Filter for a card author to reach.
