@@ -181,9 +181,11 @@ amounts context q = case q of
     whose <- target context s
     Monad.guard (number whose == Filter.Singular)
     -- Free for a card in a graveyard: "that card's toughness" (Rotfeaster
-    -- Maggot).
+    -- Maggot); for a creature: "that creature's mana value" (Niambi, Esteemed
+    -- Speaker).
     let carded = case fmap TargetSlot.pool (Map.lookup s (slots context)) of
           Just (Pool.CardsInGraveyard _) -> [MkAmount (EqualTo (Text.pack "that card's " <> word)) []]
+          Just Pool.Creatures -> [MkAmount (EqualTo (Text.pack "that creature's " <> word)) []]
           _ -> []
     [MkAmount (EqualTo (Text.pack "its " <> word)) [], MkAmount (EqualTo (Text.pack "the " <> word <> Text.pack " of " <> wording whose)) (mentions whose)] <> carded
   _ -> [MkAmount (Stated q) [] | not (null (amount q))]
@@ -372,8 +374,11 @@ player context ref = case ref of
     | s == youSlot -> [(MkReference (Text.pack "you") [] Filter.Singular, Second)]
     | Just word <- Map.lookup s (bound context) -> [(MkReference word [] Filter.Singular, Third)]
     | otherwise -> fmap (\r -> (r, Third)) (target context s)
-  PlayerRef.HolderOfBound holder Hop.Itself s -> [(MkReference (possessor <> Text.pack (holderWord holder)) [] Filter.Singular, Third)]
+  PlayerRef.HolderOfBound holder Hop.Itself s -> (MkReference (possessor <> Text.pack (holderWord holder)) [] Filter.Singular, Third) : thatPlayer
     where
+      -- Free for a controller: "its controller" or "that player" (Massacre
+      -- Wurm).
+      thatPlayer = [(MkReference (Text.pack "that player") [] Filter.Singular, Third) | holder == Holder.Controller]
       possessor = case Map.lookup s (bound context) of
         Just word | word /= Text.pack "it" -> word <> Text.pack "'s "
         _ -> Text.pack "its "

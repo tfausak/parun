@@ -623,8 +623,15 @@ joined context predicates = case predicates of
     -- an imperative, ", then" (Macabre Waltz).
     | implied p || implied q -> apart <> together <> togetherX <> thenImperative
     -- Free: "and" (Vampiric Feast) or two sentences (Soul Shred).
-    | otherwise -> together <> apart <> togetherX
+    | otherwise -> together <> apart <> togetherX <> durationFirst
     where
+      -- Free for one duration read twice: after each verb, above, or once ahead
+      -- of both (Rookie Mistake).
+      durationFirst =
+        [ (Prose.sentence (Text.pack "until end of turn, " <> clauseText p {verb = vp} <> Text.pack " and " <> clauseText q {verb = vq}) <> trailing q, allMentions p <> allMentions q)
+        | Just vp <- [Text.stripSuffix (Text.pack " until end of turn") (verb p)],
+          Just vq <- [Text.stripSuffix (Text.pack " until end of turn") (verb q)]
+        ]
       together = [(Prose.sentence (clauseText p <> Text.pack " and " <> clauseText q) <> trailing q, allMentions p <> allMentions q)]
       apart = [(text, allMentions p <> allMentions q) | text <- followedBy context (sentences p) (sentences q)]
       thenImperative = [(Prose.sentence (clauseText p <> Text.pack ", then " <> verb q) <> trailing q, allMentions p <> mentions q) | Maybe.isNothing (subject p), implied q]

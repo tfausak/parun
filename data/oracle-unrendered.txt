@@ -1545,6 +1545,7 @@ masterful-replication
 matca-rioters
 matoya-archon-elder
 mayhem-devil
+mazemind-tome
 meandering-towershell
 meekstone
 megrim
@@ -1648,6 +1649,7 @@ myr-welder
 myrkuls-edict
 mystic-compass
 mystic-forge
+mystic-skyfish
 mystifying-maze
 nacatl-hunt-pride
 nael-avizoa-aeronaut
@@ -1687,6 +1689,7 @@ nightpack-ambusher
 nightsnare
 nihiloor
 nimbus-maze
+nine-lives
 ninja-of-the-deep-hours
 nishoba-brawler
 nissa-steward-of-elements
@@ -1751,6 +1754,7 @@ oreskos-sun-guide
 orgg
 ori-keeper-of-songs
 ornate-imitations
+ornery-dilophosaur
 orzhova
 oscorp-industries
 osseous-exhale
@@ -1800,6 +1804,7 @@ pay-no-heed
 pearl-collector
 peek
 peema-aether-seer
+peer-into-the-abyss
 penregon-besieged
 pentagram-of-the-ages
 pentarch-paladin
@@ -1812,6 +1817,7 @@ personal-sanctuary
 persuasion
 pest-infestation
 pestilent-cauldron-restorative-burst
+pestilent-haze
 petra-sphinx
 petrified-wood-kin
 phage-the-untouchable
@@ -1872,9 +1878,11 @@ prey-upon
 price-of-knowledge
 prickly-marmoset
 pride-of-lions
+pridemalkin
 priest-of-yawgmoth
 primal-clay
 primal-cocoon
+primal-might
 primal-plasma
 primal-whisperer
 prime-ministers-cabinet-room
@@ -1913,6 +1921,7 @@ pull-from-eternity
 pulling-teeth
 pulmonic-sliver
 purging-scythe
+pursued-whale
 pyramids
 pyromancers-gauntlet
 pyromancers-goggles
@@ -1932,6 +1941,7 @@ quina-qu-gourmet
 qutrub-forayer
 rabid-elephant
 radha-coalition-warlord
+radha-heart-of-keld
 radiant-performer
 radiate
 radiating-lightning
@@ -2036,6 +2046,7 @@ rhystic-cave
 rhystic-circle
 rhythm-of-the-wild
 richlau-headmaster
+riddleform
 rienne-angel-of-rebirth
 riftmarked-knight
 riftsweeper
