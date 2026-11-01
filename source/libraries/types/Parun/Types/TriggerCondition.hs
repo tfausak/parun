@@ -450,8 +450,8 @@ data TriggerCondition
     -- stack, as SpellCast's is against the spell.
     AbilityActivated (Filter.Filter Keyword.Keyword)
   | -- | CR 601.2c: "whenever this permanent becomes the target of a spell or
-    -- ability [a player] controls" -- CR 702.21a's ward, once per instance of
-    -- the word "target".
+    -- ability [a player] controls" -- CR 702.21a's ward, once per spell or
+    -- ability however many of its "target" words name this permanent.
     SelfBecomesTargeted PlayerRelation.PlayerRelation
   | -- | CR 601.2c from the player's side: "whenever you become the target of a
     -- spell or ability" (Dormant Gomazoa).

@@ -7659,15 +7659,20 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- Firing ONCE for the whole announcement is Event.Trigger.batchScoped's
   -- answer and not this function's: matchesTriggerGiven sees one event at a
   -- time and answers the same for both readings, which is its contract.
+  --
+  -- With includesYou, CR 109.5's "you" named as a target is a member too, the
+  -- ControllerBecomesTarget arm's test: Leyline of Combustion's "you and/or at
+  -- least one permanent you control".
   TriggerCondition.PermanentsBecomeTargeted c -> case event of
-    GameEvent.BecameTarget t -> case Recipient.objectOf (BecameTarget.targeted t) of
-      Nothing -> False
-      Just oid -> case Map.lookup oid board of
-        Nothing -> False
-        Just candidate ->
-          maybe True (== BecameTarget.kind t) (PermanentsBecomeTargeted.kind c)
-            && PlayerRelation.holds (Game.teams gs) (PermanentsBecomeTargeted.relation c) you (BecameTarget.controller t)
-            && Filter.matches bearerContext (Projection.sampledView oid candidate gs) (PermanentsBecomeTargeted.filter c)
+    GameEvent.BecameTarget t ->
+      maybe True (== BecameTarget.kind t) (PermanentsBecomeTargeted.kind c)
+        && PlayerRelation.holds (Game.teams gs) (PermanentsBecomeTargeted.relation c) you (BecameTarget.controller t)
+        && case (Recipient.playerOf (BecameTarget.targeted t), Recipient.objectOf (BecameTarget.targeted t)) of
+          (Just player, _) -> PermanentsBecomeTargeted.includesYou c && player == you
+          (Nothing, Nothing) -> False
+          (Nothing, Just oid) -> case Map.lookup oid board of
+            Nothing -> False
+            Just candidate -> Filter.matches bearerContext (Projection.sampledView oid candidate gs) (PermanentsBecomeTargeted.filter c)
     GameEvent.BecameAttached {} -> False
     GameEvent.BecameUnattached {} -> False
     GameEvent.LeftTheGame _ -> False

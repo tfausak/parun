@@ -20,7 +20,8 @@ spec s = Spec.describe s "Parun.Codec.PermanentsBecomeTargeted" $ do
       ( PermanentsBecomeTargeted.MkPermanentsBecomeTargeted
           { PermanentsBecomeTargeted.filter = Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You],
             PermanentsBecomeTargeted.relation = PlayerRelation.AnyPlayer,
-            PermanentsBecomeTargeted.kind = Just StackObjectKind.ActivatedAbility
+            PermanentsBecomeTargeted.kind = Just StackObjectKind.ActivatedAbility,
+            PermanentsBecomeTargeted.includesYou = False
           }
       )
       " {\"filter\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}]},\"relation\":{\"type\":\"AnyPlayer\"},\"kind\":{\"type\":\"ActivatedAbility\"}} "
@@ -33,8 +34,22 @@ spec s = Spec.describe s "Parun.Codec.PermanentsBecomeTargeted" $ do
       ( PermanentsBecomeTargeted.MkPermanentsBecomeTargeted
           { PermanentsBecomeTargeted.filter = Filter.IsSource,
             PermanentsBecomeTargeted.relation = PlayerRelation.Opponent,
-            PermanentsBecomeTargeted.kind = Nothing
+            PermanentsBecomeTargeted.kind = Nothing,
+            PermanentsBecomeTargeted.includesYou = False
           }
       )
       " {\"filter\":{\"type\":\"IsSource\"},\"relation\":{\"type\":\"Opponent\"}} "
+  -- Leyline of Combustion's "you and/or at least one permanent you control".
+  Spec.it s "MkPermanentsBecomeTargeted, you included" $
+    Common.assertCodec
+      s
+      PermanentsBecomeTargeted.codec
+      ( PermanentsBecomeTargeted.MkPermanentsBecomeTargeted
+          { PermanentsBecomeTargeted.filter = Filter.IsSource,
+            PermanentsBecomeTargeted.relation = PlayerRelation.Opponent,
+            PermanentsBecomeTargeted.kind = Nothing,
+            PermanentsBecomeTargeted.includesYou = True
+          }
+      )
+      " {\"filter\":{\"type\":\"IsSource\"},\"relation\":{\"type\":\"Opponent\"},\"includesYou\":true} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PermanentsBecomeTargeted.codec

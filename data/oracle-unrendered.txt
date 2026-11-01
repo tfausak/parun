@@ -1365,6 +1365,7 @@ lesser-gargadon
 leveler
 leyline-of-abundance
 leyline-of-anticipation
+leyline-of-combustion
 leyline-of-punishment
 leyline-of-resonance
 leyline-of-sanctity
@@ -2597,6 +2598,7 @@ unexpectedly-absent
 unleash-fury
 unlicensed-hearse
 unlucky-witness
+unsettled-mariner
 unstable-shapeshifter
 upwelling
 urborg-tomb-of-yawgmoth

@@ -966,13 +966,13 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted {PermanentsBecomeTargeted.filter = Filter.HeldBy Holder.Controller PlayerRelation.You, PermanentsBecomeTargeted.relation = PlayerRelation.AnyPlayer, PermanentsBecomeTargeted.kind = Just StackObjectKind.ActivatedAbility}))
+      (TriggerCondition.PermanentsBecomeTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted {PermanentsBecomeTargeted.filter = Filter.HeldBy Holder.Controller PlayerRelation.You, PermanentsBecomeTargeted.relation = PlayerRelation.AnyPlayer, PermanentsBecomeTargeted.kind = Just StackObjectKind.ActivatedAbility, PermanentsBecomeTargeted.includesYou = False}))
       " {\"type\":\"PermanentsBecomeTargeted\",\"value\":{\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"relation\":{\"type\":\"AnyPlayer\"},\"kind\":{\"type\":\"ActivatedAbility\"}}} "
   Spec.it s "PermanentBecomesTargeted round-trips with its Filter, its relation and its kind" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted {PermanentsBecomeTargeted.filter = Filter.HeldBy Holder.Controller PlayerRelation.You, PermanentsBecomeTargeted.relation = PlayerRelation.Opponent, PermanentsBecomeTargeted.kind = Just StackObjectKind.Spell}))
+      (TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted {PermanentsBecomeTargeted.filter = Filter.HeldBy Holder.Controller PlayerRelation.You, PermanentsBecomeTargeted.relation = PlayerRelation.Opponent, PermanentsBecomeTargeted.kind = Just StackObjectKind.Spell, PermanentsBecomeTargeted.includesYou = False}))
       " {\"type\":\"PermanentBecomesTargeted\",\"value\":{\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},\"relation\":{\"type\":\"Opponent\"},\"kind\":{\"type\":\"Spell\"}}} "
   Spec.it s "SelfCast" $
     Common.assertCodec
