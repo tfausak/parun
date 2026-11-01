@@ -5677,6 +5677,9 @@ putOwnCounters oid kind n = do
 -- Projection.replacementsOf's does and for its reason. Parun.ReplacementSpec's
 -- Squad Captain pair proves it, over a Rise of the Dark Realms sweep: mutating
 -- this call back to the live board reddens "no +1/+1 counter".
+--
+-- Not implemented: a subject entering from a graveyard is not counted there,
+-- though its count is made before it leaves (Undergrowth Scavenger) (#5861).
 placeEntryCounters :: ReplacementCandidate -> ObjectId -> Map (CounterKind.CounterKind Keyword.Type.Keyword) Quantity.Type.Quantity -> Game ()
 placeEntryCounters candidate oid counters = do
   gs <- State.get
