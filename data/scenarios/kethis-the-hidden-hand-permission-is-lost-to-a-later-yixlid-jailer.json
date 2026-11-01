@@ -15,6 +15,10 @@
           {
             "card": "Swamp",
             "label": "swamp2"
+          },
+          {
+            "card": "Plains",
+            "label": "plains"
           }
         ],
         "graveyard": [
@@ -29,6 +33,10 @@
           {
             "card": "Phyrexian Tower",
             "label": "tower"
+          },
+          {
+            "card": "Isamaru, Hound of Konda",
+            "label": "isamaru"
           }
         ],
         "hand": [
@@ -61,7 +69,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "Yixlid Jailer arriving after Kethis, the Hidden Hand's ability resolves takes the granted ability away, so the legendary land in your graveyard can no longer be played",
+  "description": "Yixlid Jailer arriving after Kethis, the Hidden Hand's ability resolves takes the granted ability away, so the legendary cards in your graveyard can no longer be played or cast",
   "note": "CR 613.1f / 613.7: both effects apply in layer 6, the Jailer's later. kethis-the-hidden-hand-lets-legendary-cards-in-your-graveyard-be-played is the same play without the Jailer.",
   "timeline": [
     {
@@ -103,7 +111,8 @@
         "Cast": {
           "mana": [
             "$swamp1",
-            "$swamp2"
+            "$swamp2",
+            null
           ],
           "object": "$jailer"
         }
@@ -128,6 +137,19 @@
         }
       },
       "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "Cast": {
+          "mana": [
+            "$plains"
+          ],
+          "object": "$isamaru"
+        }
+      },
       "step": "PrecombatMain",
       "turn": 1
     },

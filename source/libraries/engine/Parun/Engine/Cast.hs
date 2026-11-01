@@ -1480,15 +1480,6 @@ permitsLandPlayFromExile pid oid gs =
   permitsPlayUnderPermission pid oid gs
     && fmap ExilePlayPermission.verb (Game.lookupObject oid gs >>= Object.playPermission) == Just PermissionVerb.Play
 
--- CR 601.3 / 305.1: does this graveyard card have a permission that lets its
--- owner play it as a land (CastingPermission.PlayFromGraveyard)? Asked only of
--- the owner's own graveyard by Parun.Engine.Action.playableLands, and read
--- through the projection (CR 613.1f), so Yixlid Jailer's "lose all abilities"
--- takes it away.
-permitsLandPlayFromGraveyard :: ObjectId -> GameState -> Bool
-permitsLandPlayFromGraveyard oid gs =
-  elem CastingPermission.PlayFromGraveyard (PC.castingPermissions (Projection.project oid gs))
-
 -- CR 118.14: how may this player spend mana toward casting THIS object, as the
 -- object lies right now? Dire Fleet Daredevil's "and mana of any type can be
 -- spent to cast that spell" is the only thing that answers anything but
@@ -2842,7 +2833,8 @@ exileLandEntry pid oid gs = case Game.lookupObject oid gs of
 
 -- CR 601.3: PlayerEffect.castPermissionOptions for a cast of `oid` out of
 -- `zone`, open without a grant where the card carries a permission of its own
--- (exileOpen in exile, Object.playPermission in a graveyard) as well as where
+-- (exileOpen in exile; Object.playPermission or
+-- PlayerEffect.mayPlayFromOwnGraveyard in a graveyard) as well as where
 -- `offered` says so.
 --
 -- The graveyard arm is a regression fence: no card in data/cards/ grants a
@@ -2852,7 +2844,7 @@ castWays :: (ObjectId -> Bool) -> Bool -> PlayerId -> ObjectId -> Zone.Zone -> F
 castWays rides offered pid oid zone face gs =
   let ownOpen = case zone of
         Zone.Exile -> exileOpen pid oid face gs
-        Zone.Graveyard -> permitsPlayUnderPermission pid oid gs
+        Zone.Graveyard -> permitsPlayUnderPermission pid oid gs || PlayerEffect.mayPlayFromOwnGraveyard pid oid gs
         _ -> False
    in PlayerEffect.castPermissionOptions rides (offered || ownOpen) pid zone oid gs
 

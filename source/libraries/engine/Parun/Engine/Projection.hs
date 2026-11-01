@@ -436,8 +436,9 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
               -- nothing in the pool wipes a noncreature permanent's abilities, so
               -- dropping this line leaves the suite green.
               PC.enchant = [],
-              -- CR 601.3's permission is an ability too. Unproven: nothing in
-              -- the pool wipes the abilities of a card in a library.
+              -- CR 601.3's permission is an ability too; the scenario
+              -- kethis-the-hidden-hand-permission-is-lost-to-a-later-yixlid-jailer
+              -- proves it.
               PC.castingPermissions = []
             }
         -- CR 613.1f layer 6, the wipe above narrowed to one name: every ability
