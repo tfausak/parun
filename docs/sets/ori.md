@@ -62,9 +62,9 @@ Finished 2026-10-31.
   - Hand batch #5780: Talent of the Telepath read spell mastery after its
     first cast.
 - Cost, approximate: `script/session-tokens.sh` then counted each API call
-  once per content block, and the transcripts are gone, so these are its
-  figures over M19's measured overcount (1.85 reads, 1.86 writes, 2.06
-  output). Cache reads ~0.88B (~0.74B over 70 agent sessions, ~0.14B
+  once per content block, and the cloud transcripts are not at hand, so
+  these are its figures over M19's measured overcount (1.85 reads, 1.86
+  writes, 2.06 output). Cache reads ~0.88B (~0.74B over 70 agent sessions, ~0.14B
   orchestrating); cache writes ~13M; output ~3.4M; ~4.4M cache reads per
   card. The costliest units: #5760 (~61M), #5787 (~48M), #5780 (~41M),
   #5797 (~39M). Wall clock ~32h.
