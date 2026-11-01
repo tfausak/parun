@@ -336,10 +336,24 @@ recordEvent event gs = recordEventOver gs event gs
 -- event"). The log's clearing at turn handoff makes it "of the turn".
 lifeLost :: PlayerId -> Natural -> GameState -> GameEvent
 lifeLost pid amount gs =
+  GameEvent.LifeLost (LifeLost.MkLifeLost {LifeLost.player = pid, LifeLost.amount = amount, LifeLost.first = firstLifeLoss pid (GameState.events gs)})
+
+-- Whether a loss of the player's after `earlier` is their first in the log.
+firstLifeLoss :: PlayerId -> Seq.Seq LoggedEvent.LoggedEvent -> Bool
+firstLifeLoss pid earlier =
   let spent logged = case LoggedEvent.event logged of
         GameEvent.LifeLost loss -> LifeLost.player loss == pid
         _ -> False
-   in GameEvent.LifeLost (LifeLost.MkLifeLost {LifeLost.player = pid, LifeLost.amount = amount, LifeLost.first = not (any spent (GameState.events gs))})
+   in not (any spent earlier)
+
+-- CR 733.1: `lifeLost`'s stamps over a log with an undone stretch cut out of it,
+-- which can leave a later loss the first (Parun.Engine.Reversal.withoutAnnouncement).
+restampLifeLosses :: Seq.Seq LoggedEvent.LoggedEvent -> Seq.Seq LoggedEvent.LoggedEvent
+restampLifeLosses logged =
+  let restamp index entry = case LoggedEvent.event entry of
+        GameEvent.LifeLost loss -> entry {LoggedEvent.event = GameEvent.LifeLost loss {LifeLost.first = firstLifeLoss (LifeLost.player loss) (Seq.take index logged)}}
+        _ -> entry
+   in Seq.mapWithIndex restamp logged
 
 -- `recordEvent`, sampling CR 603.10's board off `board` rather than off the state
 -- the entry is appended to: for an event the caller records after the moment it
