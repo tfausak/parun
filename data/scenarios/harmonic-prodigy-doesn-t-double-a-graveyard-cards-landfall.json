@@ -112,9 +112,7 @@
   "timeline": [
     {
       "do": {
-        "PlayLand": {
-          "object": "$land"
-        }
+        "PlayLand": "$land"
       },
       "player": "alice",
       "step": "PrecombatMain",
