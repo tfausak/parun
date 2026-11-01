@@ -573,7 +573,7 @@ candidateSlotsGiven :: Maybe AbilityName.AbilityName -> Target.Pools -> PlayerId
 candidateSlotsGiven reader pools pid srcId modal fillable gs =
   let -- CR 601.2c's per-player copies, as the announcement will offer them. A
       -- REGRESSION FENCE: no card pairs a per-player slot with a target-reading cost.
-      slotsOf chosen = Target.announcedSlots StackObjectKind.ActivatedAbility pid srcId gs (Modal.modesTargetSlots chosen modal)
+      slotsOf chosen = Target.announcedSlots pid srcId gs (Modal.modesTargetSlots chosen modal)
       -- CR 601.2b's announcement has NOT been made at this point, which is what
       -- `unannounced` says: a slot's CR 202.3 computed bound reading the X states
       -- no bound here rather than an unmeetable one, so the gate is measured

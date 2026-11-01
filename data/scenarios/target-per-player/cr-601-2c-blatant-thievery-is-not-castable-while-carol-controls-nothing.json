@@ -1,0 +1,58 @@
+{
+  "description": "CR 601.2c Blatant Thievery is not castable while carol controls nothing, though bob controls a Piker",
+  "note": "Carol's copy of the required slot has no legal target, so no legal announcement exists. Its castable twin, carol controlling an Ornithopter, is cr-601-2c-blatant-thievery-gains-control-of-one-permanent-from.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "island", "ready": true },
+          { "card": "Island", "label": "island-2", "ready": true },
+          { "card": "Island", "label": "island-3", "ready": true },
+          { "card": "Island", "label": "island-4", "ready": true },
+          { "card": "Island", "label": "island-5", "ready": true },
+          { "card": "Island", "label": "island-6", "ready": true },
+          { "card": "Island", "label": "island-7", "ready": true }
+        ],
+        "hand": [{ "card": "Blatant Thievery", "label": "blatant-thievery", "ready": true }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Goblin Piker", "label": "goblin-piker", "ready": true },
+          { "card": "Forest", "ready": true }
+        ]
+      },
+      {
+        "name": "carol"
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "refuse": {
+        "Cast": {
+          "object": "$blatant-thievery",
+          "targets": ["$goblin-piker"],
+          "mana": ["$island", "$island-2", "$island-3", "$island-4", "$island-5", "$island-6", "$island-7"]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "ActivateManaAbility $island", "ActivateManaAbility $island-2", "ActivateManaAbility $island-3", "ActivateManaAbility $island-4", "ActivateManaAbility $island-5", "ActivateManaAbility $island-6", "ActivateManaAbility $island-7"] } }
+    }
+  ],
+  "final": [
+    { "Count": { "player": "alice", "zone": "Hand", "card": "Blatant Thievery", "count": 1 } },
+    { "View": { "of": "Controller", "object": "$goblin-piker", "is": "bob" } },
+    { "Tapped": { "object": "$island", "tapped": false } }
+  ]
+}

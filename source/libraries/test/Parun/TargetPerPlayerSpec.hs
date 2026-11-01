@@ -82,6 +82,15 @@ spec s registry = Spec.describe s "Parun.Engine.Target" . Spec.describe s "PerPl
     let after = resolve (fst (enter (Set.singleton pikerId) cardId gs))
     Spec.assertEqWith s "bob's Piker went into his library" (onBattlefield "Goblin Piker" S.bob after) 0
     Spec.assertEqWith s "carol's Anthem stayed on the battlefield" (onBattlefield "Glorious Anthem" S.carol after) 1
+  -- CR 115.6: an "up to one" copy whose player controls nothing it could target
+  -- is asked nothing. carol's Anthem is bob's here, so her copy offers no slot;
+  -- a required copy fails instead (the target-per-player scenarios).
+  Spec.it s "CR 115.6 Riptide Gearhulk offers no slot for carol while she controls no nonland permanent" $ do
+    (gs, cardId, pikerId, anthemId) <- board "Riptide Gearhulk"
+    let (placed, offers) = enter (Set.singleton pikerId) cardId (S.giveControl anthemId S.bob gs)
+        after = resolve placed
+    Spec.assertEqWith s "bob's Piker went third from the top of bob's library" (namesIn Zone.Library S.bob after) (fmap named ["Griptide", "Unsummon", "Goblin Piker", "Lightning Bolt"])
+    Spec.assertEqWith s "one announcement, bob's slot alone, offering both his nonland permanents" offers [[Set.fromList [pikerId, anthemId]]]
   -- CR 608.2b per copy: the Piker was chosen for BOB's slot. Once carol
   -- controls it, it is still an opponent's nonland permanent -- so only the
   -- copy's own "that player" can make it illegal.
