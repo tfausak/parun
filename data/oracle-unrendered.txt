@@ -2741,6 +2741,7 @@ vine-snare
 viral-spawning
 visions-of-beyond
 vitalizing-cascade
+vito-thorn-of-the-dusk-rose
 vitu-ghazi-inspector
 vivien-of-the-arkbow
 vivien-reid
@@ -2750,11 +2751,13 @@ viviens-stampede
 vizier-of-many-faces
 vizier-of-remedies
 voda-sea-scavenger
+vodalian-arcanist
 voice-of-all
 void-stalker
 void-winnower
 voidpouncer
 volatile-rift
+volcanic-salvo
 volraths-curse
 volraths-shapeshifter
 volt-charge
@@ -2766,6 +2769,7 @@ vow-of-flight
 vulshok-battlemaster
 wake-the-reflections
 wake-thrasher
+waker-of-waves
 wall-of-dust
 wall-of-fortune
 wall-of-frost
@@ -2780,6 +2784,7 @@ war-falcon
 warbreak-trumpeter
 warden-of-evos-isle
 warden-of-the-beyond
+warden-of-the-woods
 warp-world
 warped-devotion
 warriors-oath
@@ -2788,6 +2793,7 @@ warstorm-surge
 wash-away
 waste-management
 waste-not
+watcher-of-the-spheres
 watchful-radstag
 water-whip
 waterbenders-restoration
@@ -2829,6 +2835,7 @@ wild-instincts
 wild-ricochet
 wildfire
 wildgrowth-walker
+wildwood-scourge
 willbreaker
 wilson-refined-grizzly
 windborn-muse
