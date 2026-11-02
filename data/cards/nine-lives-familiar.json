@@ -1,0 +1,239 @@
+{
+  "faces": [
+    {
+      "delayedAbilities": {
+        "return it with one fewer": {
+          "condition": {
+            "type": "StepBegins",
+            "value": {
+              "phase": {
+                "type": "Ending",
+                "value": {
+                  "type": "EndStep"
+                }
+              },
+              "scope": {
+                "type": "EachTurn"
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "MoveToZone",
+                        "value": {
+                          "origin": {
+                            "type": "Graveyard"
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "became"
+                          },
+                          "riders": {
+                            "counters": [
+                              {
+                                "count": {
+                                  "type": "Plus",
+                                  "value": {
+                                    "left": {
+                                      "type": "AgainstSlot",
+                                      "value": {
+                                        "quantity": {
+                                          "type": "ObjectCounters",
+                                          "value": {
+                                            "type": "Named",
+                                            "value": "revival"
+                                          }
+                                        },
+                                        "slot": "thatDepartedPermanent"
+                                      }
+                                    },
+                                    "right": {
+                                      "type": "Negate",
+                                      "value": {
+                                        "type": "Literal",
+                                        "value": 1
+                                      }
+                                    }
+                                  }
+                                },
+                                "kind": {
+                                  "type": "Named",
+                                  "value": "revival"
+                                }
+                              }
+                            ]
+                          },
+                          "zone": {
+                            "type": "Battlefield"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Nine-Lives Familiar",
+      "oracleText": "This creature enters with eight revival counters on it if you cast it.\nWhen this creature dies, if it had a revival counter on it, return it to the battlefield with one fewer revival counter on it at the beginning of the next end step.",
+      "power": {
+        "type": "Literal",
+        "value": 1
+      },
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "EntryR",
+            "value": {
+              "matching": {
+                "type": "And",
+                "value": [
+                  {
+                    "type": "IsSource"
+                  },
+                  {
+                    "type": "Or",
+                    "value": [
+                      {
+                        "type": "WasCastFrom",
+                        "value": {
+                          "type": "Hand"
+                        }
+                      },
+                      {
+                        "type": "WasCastFrom",
+                        "value": {
+                          "type": "Library"
+                        }
+                      },
+                      {
+                        "type": "WasCastFrom",
+                        "value": {
+                          "type": "Graveyard"
+                        }
+                      },
+                      {
+                        "type": "WasCastFrom",
+                        "value": {
+                          "type": "Exile"
+                        }
+                      },
+                      {
+                        "type": "WasCastFrom",
+                        "value": {
+                          "type": "Command"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "rewrite": {
+                "type": "WithCounters",
+                "value": [
+                  {
+                    "count": {
+                      "type": "Literal",
+                      "value": 8
+                    },
+                    "kind": {
+                      "type": "Named",
+                      "value": "revival"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "toughness": {
+        "type": "Literal",
+        "value": 1
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "PermanentDies",
+            "value": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "IsSource"
+                },
+                {
+                  "type": "HasCounters",
+                  "value": {
+                    "type": "Named",
+                    "value": "revival"
+                  }
+                }
+              ]
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "ArmDelayedTrigger",
+                        "value": {
+                          "name": "return it with one fewer"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Cat"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

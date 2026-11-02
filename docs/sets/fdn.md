@@ -10,26 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Maze's End: `_Cost:PutPermanentIntoItsOwnersHand`
-- Midnight Snack: `_Players:AttackedThisTurn`
-- Mild-Mannered Librarian: `_Action:CreatePermanentLayerEffect`
-- Mischievous Mystic: `_Trigger:WhenAPlayerDrawsTheirNthCardEachTurn`
-- Mocking Sprite: `_Rule:PlayerEffect`
-- Mossborn Hydra: `_ReplacementActionWouldEnter:EntersWithACounter`
-- Myojin of Night's Reach: `_ReplacementActionWouldEnter:If`
-- Mystical Teachings: `_CardsInLibrary:HasAbility`
-- Needletooth Pack: `_Condition:ACreatureOrPlaneswalkerDiedThisTurn`
-- Nessian Hornbeetle: `_Permanents:PowerIs`
-- New Horizons: `_Rule:Activated`
-- Nine-Lives Familiar: `_ReplacementActionWouldEnter:If`
-- Niv-Mizzet, Visionary: `_Rule:PlayerEffect`
-- Nullpriest of Oblivion: `_Condition:EnteringPermanentPassesFilter`
-- Obliterating Bolt: `_Action:CreateReplaceWouldPutIntoGraveyardUntil`
-- Ordeal of Nylea: `_Trigger:WhenACreatureAttacks`
-- Ovika, Enigma Goliath: `_Rule:Ward`
-- Painful Quandary: `_Action:PlayerMayCost`
-- Perforating Artist: `_Players:AttackedThisTurn`
-- Pilfer: `_Action:RevealHandAndPlayerChoosesACardToDiscard`
 - Pirate's Cutlass: `_Action:AttachPermanentToPermanent`
 - Prayer of Binding: `_Action:Exile`
 - Predator Ooze: `_Permanents:WasDealtDamageByPermanentThisTurn`

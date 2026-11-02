@@ -442,8 +442,11 @@ viewOfCharacteristics peers oid pc controller counters gs =
       -- squared: no projection carries a zone, and CR 400.7 leaves the spell no
       -- memory of the one it came from either, so Parun.Engine.Cast's two stamps
       -- are the only place the answer exists. Nothing for an id naming nothing
-      -- and for every object that was never cast.
-      Filter.castFrom = Game.lookupObject oid gs >>= Object.castFrom,
+      -- and for every object that was never cast, and for a permanent whose
+      -- controller isn't who cast it, Filter.WasCastFrom naming no caster.
+      Filter.castFrom = do
+        obj <- Game.lookupObject oid gs
+        if maybe True (\caster -> controller == Just caster) (Object.castBy obj) then Object.castFrom obj else Nothing,
       -- CR 115.1 off the OBJECT's bindings, live: CR 601.2c fixed the targets and
       -- CR 115.7 can move them, so nothing here is a stamp. Empty for an id
       -- naming nothing and for everything off the stack.

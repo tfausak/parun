@@ -604,7 +604,8 @@ data Filter keyword
     -- Parun.Types.Object.castFrom precisely because CR 400.7 leaves the spell no
     -- memory of it, so it is never IsInZone above, which reads where the object
     -- is now. Vacuously False for everything that was never cast, and for a
-    -- copy cast from outside the game (CR 400.11).
+    -- copy cast from outside the game (CR 400.11). On a permanent (CR 400.7d),
+    -- also False while its controller isn't who cast it, off Object.castBy.
     WasCastFrom Zone.Zone
   | -- | CR 601.2h read RETROSPECTIVELY off the candidate: mana carrying this
     -- production tag (CR 106.3) was among what paid the candidate's cost --

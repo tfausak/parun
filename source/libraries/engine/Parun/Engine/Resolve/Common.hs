@@ -4629,15 +4629,15 @@ paymentDecisionOf :: Maybe a -> PaymentDecision.PaymentDecision
 paymentDecisionOf paid = if Maybe.isJust paid then PaymentDecision.Pays else PaymentDecision.Declines
 
 -- CR 733.1 / 118.12a: what follows a payment `agreed` to and answered as it
--- was (payGateCost's record). A paid one stands. A failed one is reversed, which
--- returns the payer to the choice, so `again` asks it once more. The same
--- option paid the same way failing a second time stands, read as unpaid, as
--- Combat.attemptBlockDeclaration keeps a repeated illegal declaration.
-payAgain :: (Ord k) => Set k -> k -> Maybe a -> (Set k -> Game (Maybe a)) -> Game (Maybe a)
-payAgain failed agreed paid again = case paid of
-  Just _ -> pure paid
+-- was (payGateCost's record). A paid one stands, as `stands` reports it. A failed
+-- one is reversed, which returns the payer to the choice, so `again` asks it once
+-- more. The same option paid the same way failing a second time stands, read as
+-- unpaid, as Combat.attemptBlockDeclaration keeps a repeated illegal declaration.
+payAgain :: (Ord k) => Set k -> k -> Maybe a -> (Maybe a -> b) -> (Set k -> Game b) -> Game b
+payAgain failed agreed paid stands again = case paid of
+  Just _ -> pure (stands paid)
   Nothing
-    | Set.member agreed failed -> pure Nothing
+    | Set.member agreed failed -> pure (stands Nothing)
     | otherwise -> again (Set.insert agreed failed)
 
 -- The costs one offer of this gate may be paid with, one per option in printed

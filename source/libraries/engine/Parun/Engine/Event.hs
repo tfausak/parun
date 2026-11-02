@@ -7209,6 +7209,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
               -- rather than on the destination alone. The counterspell scenario
               -- "Desertion takes an evoked Mulldrifter and keeps it" proves it.
               resolvedOnto = carrying == CarryOver.Carried && dest == Zone.Battlefield
+              (carriedFrom, carriedBy) = if resolvedOnto then (Object.castFrom obj, under) else (Nothing, Nothing)
               arriving = case (Object.source obj, dest) of
                 (Source.OfSpellCopy printingId, Zone.Battlefield) -> becomesToken printingId
                 (Source.OfCardCopy printingId, Zone.Battlefield) | fromZone == Zone.Stack -> becomesToken printingId
@@ -7368,6 +7369,13 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                     -- "escaped" ask of the permanent. BATTLEFIELD ONLY, `paidCosts`'
                     -- gate and for its reason.
                     Object.castUsing = if resolvedOnto then Object.castUsing obj else Nothing,
+                    -- CR 400.7d again: the zone the spell was cast from and who
+                    -- cast it (`under`, CR 110.2b), what Myojin of Night's Reach's
+                    -- and Nine-Lives Familiar's CR 614.1c rewrites ask of the
+                    -- permanent. `paidCosts`' gate; a controller who isn't the
+                    -- caster is the view's to answer (Object.castBy).
+                    Object.castFrom = carriedFrom,
+                    Object.castBy = carriedBy,
                     -- CR 400.7d a sixth time, and CR 702.174b is the ability that
                     -- references it: the opponent the caster chose to pay each
                     -- instance of rule 702.174a's gift cost, which "the chosen

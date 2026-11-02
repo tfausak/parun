@@ -1387,12 +1387,19 @@ applyLoopBody runSubgame resolving source controller legal chosen bodyDefined bo
 -- its damage instead.
 --
 -- CR 101.4's APNAP order over the players the reference names, which is what
--- `apnapDecidersOf` imposes: rule 101.4b lets a later payer answer knowing what an
--- earlier one did. The board is re-read for each of them (payGatePaidBy's own
--- State.get) rather than measured once, so a cost that changes the board -- CR
--- 118.12's own "sacrifice this enchantment" -- is affordable to the next payer
--- against the board it left. Each payer spends only their own resources, so the
--- sequencing is not observable as an ordering of the ACTIONS.
+-- `apnapDecidersOf` imposes, each told whether the payers before them took the
+-- offer (CR 101.4b). Nothing a payer chose has happened when the next is asked,
+-- since each rehearsal is undone (CR 101.4a's hidden card stays hidden). Only
+-- then does every payment happen, made again from its answers, and two or more
+-- are ONE event: the "then the actions happen simultaneously" of CR 101.4 and
+-- Perforating Artist's ruling, which CR 603.10a's look-back reads. The scenarios
+-- named perforating-artist prove both. A payment the others have since made fail
+-- asks its payer again (payAgain), a fence: no pool cost depends on another
+-- payer's permanent, as is a lone payment's staying outside the bracket.
+--
+-- Not implemented: telling a later payer WHICH option or object an earlier one
+-- chose (#5933), and keeping a sacrifice made for mana out of the one event
+-- (#5934).
 --
 -- A player the reference names who has LEFT the game stays in this list and is
 -- answered unpaid by payGatePaidBy, CR 800.4f.
@@ -1403,14 +1410,24 @@ payGatePaid runSubgame resolving source controller idx cIdx legal announced comm
   -- when they announced the branch, so their offer is CR 118.12's mandatory
   -- limb: paid when CR 118.3 allows, and not asked.
   let offerTo payer = if Set.member payer committed then gate {PayGate.obligation = PayObligation.Mandatory} else gate
-  answered <-
+      rehearse earlier payer = payGatePaidBy runSubgame resolving source controller (PayOffer.AtClause idx cIdx) (fmap (fmap (Common.paymentDecisionOf . snd)) earlier) legal payer (offerTo payer)
+  rehearsed <-
     Monad.foldM
       ( \earlier payer -> do
-          paid <- payGatePaidBy runSubgame resolving source controller (PayOffer.AtClause idx cIdx) (fmap (fmap Common.paymentDecisionOf) earlier) legal payer (offerTo payer)
-          pure (earlier Seq.|> (payer, paid))
+          plan <- rehearse earlier payer
+          State.put gs
+          pure (earlier Seq.|> (payer, plan))
       )
       Seq.empty
       (Common.announcedOnly announced (Common.apnapDecidersOf (PayGate.payer gate) legal resolving source controller gs))
+  let together = if length (Seq.filter (Maybe.isJust . snd . snd) rehearsed) > 1 then Event.simultaneously else id
+  answered <-
+    together . Monad.forM rehearsed $ \(payer, (attempts, paid)) -> do
+      replayed <- Monad.foldM (\_ (slots, cost, answers) -> fmap fst (Replay.replaying answers (payGateCost runSubgame slots payer source cost))) Nothing attempts
+      asked <- case (paid, replayed) of
+        (Just _, Nothing) -> fmap snd (rehearse (Seq.takeWhileL ((/= payer) . fst) rehearsed) payer)
+        _ -> pure replayed
+      pure (payer, asked)
   State.modify' (Common.foldPaid resolving (foldr Binding.mergePaid Map.empty (Maybe.mapMaybe snd (Foldable.toList answered))))
   pure (Map.fromList [(payer, Maybe.isJust paid) | (payer, paid) <- Foldable.toList answered])
 
@@ -1465,7 +1482,7 @@ loopOffers runSubgame resolving source controller slot legal members gate = do
               Nothing -> pure (Just (done, current))
               Just taken -> do
                 (bound, answered) <- payGateCost runSubgame (fst (NonEmpty.head taken)) payer source (Cost.together (fmap snd taken))
-                Common.payAgain failed (fst (NonEmpty.head taken), NonEmpty.toList (fmap snd taken), answered) (fmap (\b -> (Map.insert payer b done, current)) bound) (\failed' -> reagree payer current >>= attempt failed')
+                Common.payAgain failed (fst (NonEmpty.head taken), NonEmpty.toList (fmap snd taken), answered) (fmap (\b -> (Map.insert payer b done, current)) bound) id (\failed' -> reagree payer current >>= attempt failed')
          in fmap (Maybe.fromMaybe (done, answers)) (attempt Set.empty answers)
   asked <- Monad.foldM (\acc (payer, member) -> fmap (acc Seq.|>) (agreeOne acc payer member)) Seq.empty offers
   (paid, answered) <- Monad.foldM payFor (Map.empty, asked) order
@@ -1479,10 +1496,8 @@ loopOffers runSubgame resolving source controller slot legal members gate = do
 -- sees -- CR 118.3's affordability test, the prompt the payer is shown, and the
 -- payment itself -- so none of them can disagree about what is owed.
 --
--- The multiplier is read HERE rather than once for the whole gate, which is the
--- posture payGatePaid's own comment states: rule 101.4b lets an earlier payer's
--- answer move the board, and CR 118.12's cost is measured against the board each
--- payer faces.
+-- The multiplier is read HERE rather than once for the whole gate, so a payer
+-- asked again (payAgain) is measured against the board they face.
 --
 -- Measured against the RESOLUTION, not against the payer: the context is the
 -- resolving controller's (`effectContext`, never Filter.contextFor), so
@@ -1516,55 +1531,62 @@ loopOffers runSubgame resolving source controller slot legal members gate = do
 -- opposite answer: the controller of the object picks another player to make it,
 -- which Parun.Engine.Resolve.Common.askedChooser does. Not here -- a cost is the
 -- whole of what this function asks about.
-payGatePaidBy :: Game Result -> ObjectId -> ObjectId -> PlayerId -> PayOffer.PayOffer -> Seq.Seq (PlayerId, PaymentDecision.PaymentDecision) -> Map.Map SlotName (Set Recipient) -> PlayerId -> PayGate.PayGate -> Game (Maybe (Map.Map SlotName Binding.Type.Binding))
-payGatePaidBy runSubgame resolving source controller offer earlier legal payer gate = attempt Set.empty
+--
+-- The answer is each attempt at the payment, the slots and cost it was made
+-- against and how it was answered (payGateCost's record), for payGatePaid to make
+-- again, and what the last one bound, if it was paid. A failed attempt counts: a
+-- mana ability the payer kept stands (CR 733.1).
+payGatePaidBy :: Game Result -> ObjectId -> ObjectId -> PlayerId -> PayOffer.PayOffer -> Seq.Seq (PlayerId, PaymentDecision.PaymentDecision) -> Map.Map SlotName (Set Recipient) -> PlayerId -> PayGate.PayGate -> Game (Seq.Seq (Map.Map SlotName (Set Recipient), Cost.Type.Cost Keyword.Type.Keyword, [Response.Response]), Maybe (Map.Map SlotName Binding.Type.Binding))
+payGatePaidBy runSubgame resolving source controller offer earlier legal payer gate = attempt Seq.empty Set.empty
   where
     -- CR 733.1 / 118.12a: a payment that fails is reversed, which returns the
     -- payer to the choice, so they are asked again (payAgain).
-    attempt failed = do
+    attempt tried failed = do
       (slots, options) <- State.gets (Common.gateCostOf resolving source controller legal gate)
       agreed <- Common.payGateAgreed resolving source offer earlier payer gate slots Nothing options
       case agreed of
-        Nothing -> pure Nothing
+        Nothing -> pure (tried, Nothing)
         Just cost -> do
           (paid, answered) <- payGateCost runSubgame slots payer source cost
-          Common.payAgain failed (cost, answered) paid attempt
+          let attempts = tried Seq.|> (slots, cost, answered)
+          Common.payAgain failed (cost, answered) paid ((,) attempts) (attempt attempts)
 
 -- The payment of a cost the payer agreed to, against `source` (CR 113.7a): the
 -- slots it bound when it was paid (foldPaid), Nothing when it was not, and the
 -- answers the payment was given (payAgain).
 payGateCost :: Game Result -> Map.Map SlotName (Set Recipient) -> PlayerId -> ObjectId -> Cost.Type.Cost Keyword.Type.Keyword -> Game (Maybe (Map.Map SlotName Binding.Type.Binding), [Response.Response])
 payGateCost runSubgame slots payer source cost = do
-  gs <- State.get
-  -- CR 118.13b: a symbol payable in multiple ways is announced by the
-  -- PAYER "immediately before they pay that cost" -- after CR 118.12's
-  -- "may" above, since what is announced is how to pay a cost already
-  -- chosen, and before the mana window Cost.pay opens.
-  --
-  -- CR 601.2f's totalling is `pure`, which is the identity in the list
-  -- applicative `Cost.announce` measures through: parun gathers cost
-  -- adjustments for a SPELL (Cast.castSpell) and for an ACTIVATION
-  -- (Activate.activateAbility) and nowhere else, and `Cost.pay` below
-  -- applies none of its own, so the announced cost IS the cost that will
-  -- be paid. A card that reduced a CR 118.12 cost would be the one to
-  -- refute that, and `data/cards/` prints none. That also keeps the offer
-  -- exactly as permissive as `Cost.canPay` above, which enumerates the
-  -- same CR 601.2b nonhybrid equivalents through Mana.resolutions --
-  -- so no route Mana.announce offers is one the gate refused, and its
-  -- no-payable-route fallback stays unreachable from here. CR 701.67a's
-  -- taps are folded into the totalling for the same reason, Activate's
-  -- `substitutedManas` posture: the gate weighs them too.
-  -- Discarded, Activate's reason: rule 702.150a asks about a spell's own
-  -- cost, not about a cost paid during a resolution (CR 118.13b).
-  (announced, _) <- Cost.announce PaymentSubject.ForNeither ManaSpending.AsProduced payer source (Cost.substitutedManas (Cost.waterbendSubstitutions (Cost.Type.components cost) slots payer source gs) pure) cost
-  -- DuringResolution: rule 118.12's cost is paid as the spell or ability
-  -- resolves, which is CR 609.1's effect, so a blight paid here is CR
-  -- 614.16's subject where Soul Immolation's additional cost is not.
-  -- CR 733.1's reversal base: rule 118.12's payment IS the whole of
-  -- the action that can fail, so the state it begins in is where a
-  -- failure returns to and the CR 605.3a window is the payer's to keep
-  -- (Cost.pay). Taken after the announcement above, which writes no
-  -- state of its own.
-  began <- State.get
-  (outcome, answered) <- Replay.recording (Cost.payReading slots (performManaAbility runSubgame) began PaymentMoment.DuringResolution PaymentSubject.ForNeither ManaSpending.AsProduced payer source announced)
+  (outcome, answered) <- Replay.recording $ do
+    gs <- State.get
+    -- CR 118.13b: a symbol payable in multiple ways is announced by the
+    -- PAYER "immediately before they pay that cost" -- after CR 118.12's
+    -- "may" above, since what is announced is how to pay a cost already
+    -- chosen, and before the mana window Cost.pay opens.
+    --
+    -- CR 601.2f's totalling is `pure`, which is the identity in the list
+    -- applicative `Cost.announce` measures through: parun gathers cost
+    -- adjustments for a SPELL (Cast.castSpell) and for an ACTIVATION
+    -- (Activate.activateAbility) and nowhere else, and `Cost.pay` below
+    -- applies none of its own, so the announced cost IS the cost that will
+    -- be paid. A card that reduced a CR 118.12 cost would be the one to
+    -- refute that, and `data/cards/` prints none. That also keeps the offer
+    -- exactly as permissive as `Cost.canPay` above, which enumerates the
+    -- same CR 601.2b nonhybrid equivalents through Mana.resolutions --
+    -- so no route Mana.announce offers is one the gate refused, and its
+    -- no-payable-route fallback stays unreachable from here. CR 701.67a's
+    -- taps are folded into the totalling for the same reason, Activate's
+    -- `substitutedManas` posture: the gate weighs them too.
+    -- Discarded, Activate's reason: rule 702.150a asks about a spell's own
+    -- cost, not about a cost paid during a resolution (CR 118.13b).
+    (announced, _) <- Cost.announce PaymentSubject.ForNeither ManaSpending.AsProduced payer source (Cost.substitutedManas (Cost.waterbendSubstitutions (Cost.Type.components cost) slots payer source gs) pure) cost
+    -- DuringResolution: rule 118.12's cost is paid as the spell or ability
+    -- resolves, which is CR 609.1's effect, so a blight paid here is CR
+    -- 614.16's subject where Soul Immolation's additional cost is not.
+    -- CR 733.1's reversal base: rule 118.12's payment IS the whole of
+    -- the action that can fail, so the state it begins in is where a
+    -- failure returns to and the CR 605.3a window is the payer's to keep
+    -- (Cost.pay). Taken after the announcement above, which writes no
+    -- state of its own.
+    began <- State.get
+    Cost.payReading slots (performManaAbility runSubgame) began PaymentMoment.DuringResolution PaymentSubject.ForNeither ManaSpending.AsProduced payer source announced
   pure (case outcome of Payment.Paid bound -> Just bound; Payment.Unpaid -> Nothing, answered)

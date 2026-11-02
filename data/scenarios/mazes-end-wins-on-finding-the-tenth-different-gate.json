@@ -1,0 +1,177 @@
+{
+  "description": "Nine names plus the found tenth win the game as the ability resolves.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Maze's End",
+            "label": "me"
+          },
+          {
+            "card": "Plains",
+            "label": "a1"
+          },
+          {
+            "card": "Plains",
+            "label": "a2"
+          },
+          {
+            "card": "Plains",
+            "label": "a3"
+          },
+          {
+            "card": "Azorius Guildgate",
+            "label": "g0"
+          },
+          {
+            "card": "Boros Guildgate",
+            "label": "g1"
+          },
+          {
+            "card": "Dimir Guildgate",
+            "label": "g2"
+          },
+          {
+            "card": "Golgari Guildgate",
+            "label": "g3"
+          },
+          {
+            "card": "Gruul Guildgate",
+            "label": "g4"
+          },
+          {
+            "card": "Izzet Guildgate",
+            "label": "g5"
+          },
+          {
+            "card": "Orzhov Guildgate",
+            "label": "g6"
+          },
+          {
+            "card": "Rakdos Guildgate",
+            "label": "g7"
+          },
+          {
+            "card": "Selesnya Guildgate",
+            "label": "g8"
+          }
+        ],
+        "library": [
+          {
+            "card": "Simic Guildgate",
+            "label": "tenth"
+          },
+          {
+            "card": "Hill Giant",
+            "label": "hill"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$me",
+          "ability": 1,
+          "mana": [
+            "$a1",
+            "$a2",
+            "$a3",
+            null
+          ],
+          "costOrder": [
+            0,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$tenth"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "$hill"
+          ]
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "View": {
+        "of": "Result",
+        "is": {
+          "won": "alice"
+        }
+      }
+    }
+  ]
+}
