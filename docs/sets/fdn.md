@@ -14,8 +14,6 @@ Every expressible Foundations card has been added to `data/cards/`.
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #5910: Curator of Destinies. A pile effect shows every card in both piles,
-  with no pile face down to its chooser (CR 700.3).
 - #5911: Muldrotha, the Gravetide. A graveyard permission has one budget, not
   one per permanent type (CR 110.4b).
 - #5912: Tinybones, Bauble Burglar. No standing permission plays exiled cards

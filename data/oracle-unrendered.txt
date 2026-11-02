@@ -3193,6 +3193,7 @@ harmonic-prodigy
 sanctum-of-all
 chandras-incinerator
 chandras-pyreling
+curator-of-destinies
 hooded-blightfang
 mazes-end
 midnight-snack

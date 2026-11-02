@@ -7974,7 +7974,7 @@ hideaway n =
       hide =
         Effect.MoveToZone
           ( MoveToZone.MkMoveToZone
-              (ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong hideawaySeen (Filter.And []) HowMany.one (PlayerRef.Relative PlayerRelation.You) Nothing))
+              (ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong hideawaySeen (Filter.And []) HowMany.one (PlayerRef.Relative PlayerRelation.You) Nothing False))
               Zone.Exile
               plain {EntryRiders.exiledFaceDown = True}
               (Just hideawayExiled)
