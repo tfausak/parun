@@ -950,8 +950,12 @@ candidateCostsGiven permitted pid name oid gs =
                       -- keyword of that family offers, never the printed cost.
                       -- Parun.CastSpec's "Blitz from a graveyard" group proves
                       -- both halves.
-                      usingFamilies = [family | CastingPermission.CastFromGraveyard (Just family) <- permissionsOf oid face gs]
+                      usingFamilies = [family | CastingPermission.CastFromGraveyard (Just family) _ <- permissionsOf oid face gs]
                       usingPermitted candidate = any (\family -> (CandidateCost.keyword candidate >>= Keyword.familyOf) == Just family) usingFamilies
+                      -- CR 118.8: a permission stating an additional cost admits
+                      -- the printed cost and its alternatives (Demonic Embrace);
+                      -- Parun.Engine.Cast.castWays adds what it states.
+                      payingPermitted = not (null [() | CastingPermission.CastFromGraveyard Nothing (_ : _) <- permissionsOf oid face gs])
                    in fmap flashback (Keyword.flashbackCosts keywords)
                         <> fmap escape (Keyword.escapeCosts keywords)
                         <> (if Game.discardedThisTurnBy pid oid gs then fmap mayhem (Keyword.mayhemCosts keywords) else [])
@@ -989,7 +993,7 @@ candidateCostsGiven permitted pid name oid gs =
                         -- Unbound's -3) states no cost either, and so does
                         -- CastingPermission.PlayFromGraveyard (Kethis, the
                         -- Hidden Hand's granted ability).
-                        <> ( if permitted || PlayerEffect.mayCastFrom pid Zone.Graveyard oid gs || PlayerEffect.mayPlayByMayhem pid oid gs || maybe False (\permission -> Expiry.permissionOpen pid permission gs) (Object.playPermission obj) || elem CastingPermission.PlayFromGraveyard (permissionsOf oid face gs)
+                        <> ( if permitted || PlayerEffect.mayCastFrom pid Zone.Graveyard oid gs || PlayerEffect.mayPlayByMayhem pid oid gs || maybe False (\permission -> Expiry.permissionOpen pid permission gs) (Object.playPermission obj) || elem CastingPermission.PlayFromGraveyard (permissionsOf oid face gs) || payingPermitted
                                then ordinary
                                else filter usingPermitted ordinary
                            )

@@ -610,6 +610,7 @@ delina-wild-mage
 delivery-moogle
 demon-of-deaths-gate
 demonic-attorney
+demonic-embrace
 denethor-stone-seer
 dense-foliage
 denying-wind

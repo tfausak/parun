@@ -473,7 +473,7 @@ spec s registry = Spec.describe s "Sticker" $ do
                 ptText p = Text.pack (show (PowerToughnessSticker.power p) <> "/" <> show (PowerToughnessSticker.toughness p))
                 keywordsAgree a (_, rest) =
                   let printed = [Oracle.Keyword.printed Text.empty k | k <- Map.keys (AbilitySticker.keywords a)]
-                   in not (null (AbilitySticker.abilities a)) || any (\p -> length p /= 1) printed || List.sort (Normalise.normalise (CardName.MkCardName Text.empty) rest) == List.sort (fmap Text.toLower (concat printed))
+                   in not (null (AbilitySticker.abilities a)) || not (null (AbilitySticker.castingPermissions a)) || any (\p -> length p /= 1) printed || List.sort (Normalise.normalise (CardName.MkCardName Text.empty) rest) == List.sort (fmap Text.toLower (concat printed))
                 checks =
                   [ ("file named for the sheet", Slug.unwrap (Slug.fromText (StickerSheet.name sheet)) <> Text.pack ".json" == Text.pack (reverse (takeWhile (/= '/') (reverse path)))),
                     ("names join to the name", Text.unwords (Foldable.toList (StickerSheet.names sheet)) == StickerSheet.name sheet),
@@ -1018,6 +1018,27 @@ spec s registry = Spec.describe s "Sticker" $ do
     Spec.assertEqWith s "CR 113.3b Contortionist's {T} ability is the Bears' one activated ability" (length (Activatable.abilitiesFor hasteBears hasteBoard)) 1
     Spec.assertEqWith s "CR 613.1f each keyword sticker's keywords" (fmap keywordsOn [nightMenace, aliceSticker 0 StickerKind.Ability 1, aliceSticker 1 StickerKind.Ability 0, aliceSticker 1 StickerKind.Ability 1, aliceSticker 2 StickerKind.Ability 1, aliceSticker 3 StickerKind.Ability 0, hotDogFlying, jugglerIndestructible]) (fmap Set.fromList [[Keyword.Menace], [Keyword.Persist], [Keyword.Bushido 2], [Keyword.DoubleStrike], [Keyword.Deathtouch, Keyword.Lifelink], [Keyword.Afflict 2], [Keyword.Flying], [Keyword.Indestructible]])
     Spec.assertEqWith s "CR 113.3c Juggler's bolster trigger is the Bears' one triggered ability" (length (PC.triggeredAbilities (Projection.project bolsterBears bolsterBoard))) 1
+  -- Eldrazi Guacamole Tightrope's second ability sticker, on a card in alice's
+  -- graveyard: the sticker is the only permission on the board, and 2 life the
+  -- only cost it adds.
+  Spec.it s "CR 113.6f/118.8 Eldrazi Guacamole Tightrope's ability sticker casts its card from a graveyard for 2 life more" $ do
+    root <- StickerSheets.defaultRoot
+    loaded <- StickerSheets.loadRoot root
+    forest <- S.printingOf s registry "Forest"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    jailer <- S.printingOf s registry "Yixlid Jailer"
+    let sheets = [sheet | (_, Right sheet) <- loaded, StickerSheet.name sheet == Text.pack "Eldrazi Guacamole Tightrope"]
+        (card, base) = S.addGraveyardCard bears S.alice (mainPhaseForAlice (S.landsFor forest S.alice 2 (withSheets sheets (Setup.gameWith GameSettings.plain S.bothPlayers))))
+        stickered = Sticker.put S.alice card (aliceSticker 0 StickerKind.Ability 1) Nothing base
+        atLife n = stickered {GameState.players = Map.adjust (\p -> p {Player.life = n}) S.alice (GameState.players stickered)}
+        (_, jailed) = S.addPermanent jailer S.bob base
+        jailedThenStickered = Sticker.put S.alice card (aliceSticker 0 StickerKind.Ability 1) Nothing jailed
+        cast = S.runPure S.identityAnswer (S.runPure S.identityAnswer stickered (S.cast S.alice card)) Stack.resolveTop
+    Spec.assertBool s (not (S.castable S.alice card base)) "CR 601.3 without the sticker the card stays in the graveyard"
+    Spec.assertBool s (S.castable S.alice card (atLife 2)) "CR 119.4 at 2 life the sticker's cost can be paid"
+    Spec.assertBool s (not (S.castable S.alice card (atLife 1))) "CR 119.4 at 1 life it cannot"
+    Spec.assertBool s (S.castable S.alice card jailedThenStickered) "CR 613.7 a sticker placed after Yixlid Jailer still applies"
+    Spec.assertEqWith s "CR 118.8 alice paid 2 life and the Bears resolved" (S.lifeOf S.alice cast, S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Grizzly Bears")) S.alice cast) (Just 18, 1)
   -- Review Focus 2. A Grizzly Bears card in alice's graveyard takes Hot Dog
   -- Minotaur's flying, Yixlid Jailer entering before the sticker on one board
   -- and after it on the other: CR 613.7 orders the two layer-6 effects.

@@ -5,6 +5,8 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.CastingPermission as CastingPermission
 import qualified Parun.Types.Condition as Condition
+import qualified Parun.Types.CostAmount as CostAmount
+import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.KeywordFamily as KeywordFamily
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
@@ -21,14 +23,20 @@ spec s = Spec.describe s "Parun.Codec.CastingPermission" $ do
     Common.assertCodec
       s
       CastingPermission.codec
-      (CastingPermission.CastFromGraveyard Nothing)
-      " {\"type\":\"CastFromGraveyard\"} "
+      (CastingPermission.CastFromGraveyard Nothing [])
+      " {\"type\":\"CastFromGraveyard\",\"value\":{}} "
   Spec.it s "CastFromGraveyard using a keyword" $
     Common.assertCodec
       s
       CastingPermission.codec
-      (CastingPermission.CastFromGraveyard (Just KeywordFamily.Blitz))
-      " {\"type\":\"CastFromGraveyard\",\"value\":{\"type\":\"Blitz\"}} "
+      (CastingPermission.CastFromGraveyard (Just KeywordFamily.Blitz) [])
+      " {\"type\":\"CastFromGraveyard\",\"value\":{\"using\":{\"type\":\"Blitz\"}}} "
+  Spec.it s "CastFromGraveyard paying an additional cost" $
+    Common.assertCodec
+      s
+      CastingPermission.codec
+      (CastingPermission.CastFromGraveyard Nothing [CostComponent.PayLife (CostAmount.Fixed 2)])
+      " {\"type\":\"CastFromGraveyard\",\"value\":{\"additionalCosts\":[{\"type\":\"PayLife\",\"value\":{\"type\":\"Fixed\",\"value\":2}}]}} "
   Spec.it s "PlayFromGraveyard" $
     Common.assertCodec
       s

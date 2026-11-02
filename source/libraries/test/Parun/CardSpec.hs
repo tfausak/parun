@@ -936,9 +936,17 @@ counterabilityConditions counterability = case counterability of
 castingPermissionConditions :: CastingPermission.CastingPermission -> [Condition.Type.Condition]
 castingPermissionConditions permission = case permission of
   CastingPermission.CastFromLibraryWhileSearching -> []
-  CastingPermission.CastFromGraveyard _ -> []
+  CastingPermission.CastFromGraveyard _ _ -> []
   CastingPermission.PlayFromGraveyard -> []
   CastingPermission.CastAsThoughItHadFlash condition _ -> Maybe.maybeToList condition
+
+-- Every additional cost a casting permission states (CR 118.8).
+castingPermissionCosts :: CastingPermission.CastingPermission -> [CostComponent.CostComponent Keyword.Keyword]
+castingPermissionCosts permission = case permission of
+  CastingPermission.CastFromGraveyard _ additional -> additional
+  CastingPermission.CastFromLibraryWhileSearching -> []
+  CastingPermission.PlayFromGraveyard -> []
+  CastingPermission.CastAsThoughItHadFlash _ _ -> []
 
 -- CR 701.46a's per-clause gate. Mode.allEffects and Modal.allEffects drop clause
 -- boundaries by design, so every lint that reaches a card through them needs
@@ -4535,7 +4543,7 @@ modificationFilters modification = case modification of
   -- included.
   Modification.GainEnchant slot -> targetSlotFilters slot
   Modification.LoseEnchant slot -> targetSlotFilters slot
-  Modification.GainCastingPermission permission -> concatMap conditionFilters (castingPermissionConditions permission)
+  Modification.GainCastingPermission permission -> concatMap conditionFilters (castingPermissionConditions permission) <> concatMap (unframed . costComponentFilters) (castingPermissionCosts permission)
   -- Nothing HERE, and that is not a hole: a granted ability's Filters are swept
   -- by grantedActivatedAbilities, grantedTriggeredAbilities and
   -- grantedStaticAbilities below, at the outer level, so they keep the Framing that a printed ability's do. Answering
@@ -6863,6 +6871,7 @@ cardFilters card =
         -- (Cost.announcedSlots), so a slot read here is answered -- Unframed's
         -- promise, kept. SlotlessCostFramed says which cost positions are not.
         <> concatMap (unframed . costComponentFilters) (Face.additionalCosts card)
+        <> concatMap (unframed . costComponentFilters) (concatMap castingPermissionCosts (Face.castingPermissions card))
         -- CR 118.8's other carrier, Unframed for the line above's reason: a
         -- choice's options are paid at CR 601.2h like the components beside
         -- them, and each option is a whole Cost.

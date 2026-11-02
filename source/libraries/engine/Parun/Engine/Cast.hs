@@ -70,11 +70,13 @@ import qualified Parun.Types.FaceDownCharacteristics as FaceDownCharacteristics
 import qualified Parun.Types.FaceDownReason as FaceDownReason
 import qualified Parun.Types.FaceDownState as FaceDownState
 import qualified Parun.Types.Facing as Facing
+import qualified Parun.Types.Filter as Filter.Type
 import Parun.Types.Game (Game)
 import qualified Parun.Types.GameEvent as GameEvent
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.InZone as InZone
 import Parun.Types.Keyword (Keyword)
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.KeywordInstance as KeywordInstance
@@ -95,11 +97,14 @@ import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.Payment as Payment
 import qualified Parun.Types.PaymentMoment as PaymentMoment
 import qualified Parun.Types.PaymentSubject as PaymentSubject
+import qualified Parun.Types.PermissionLimit as PermissionLimit
+import qualified Parun.Types.PermissionPool as PermissionPool
 import qualified Parun.Types.PermissionVerb as PermissionVerb
 import qualified Parun.Types.PlayBudget as PlayBudget
 import qualified Parun.Types.PlayPermissionOrigin as PlayPermissionOrigin
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.ProjectedCharacteristics as PC
@@ -2176,7 +2181,7 @@ permitsCastWhileSearching oid face gs =
 -- prices the cast, and offers nothing where the permission admits nothing.
 isGraveyardPermission :: CastingPermission.CastingPermission -> Bool
 isGraveyardPermission permission = case permission of
-  CastingPermission.CastFromGraveyard _ -> True
+  CastingPermission.CastFromGraveyard _ _ -> True
   CastingPermission.PlayFromGraveyard -> True
   CastingPermission.CastFromLibraryWhileSearching -> False
   CastingPermission.CastAsThoughItHadFlash _ _ -> False
@@ -2186,7 +2191,7 @@ isGraveyardPermission permission = case permission of
 isFlashPermission :: CastingPermission.CastingPermission -> Bool
 isFlashPermission permission = case permission of
   CastingPermission.CastAsThoughItHadFlash _ _ -> True
-  CastingPermission.CastFromGraveyard _ -> False
+  CastingPermission.CastFromGraveyard _ _ -> False
   CastingPermission.PlayFromGraveyard -> False
   CastingPermission.CastFromLibraryWhileSearching -> False
 
@@ -2846,7 +2851,29 @@ castWays rides offered pid oid zone face gs =
         Zone.Exile -> exileOpen pid oid face gs
         Zone.Graveyard -> permitsPlayUnderPermission pid oid gs || PlayerEffect.mayPlayFromOwnGraveyard pid oid gs
         _ -> False
-   in PlayerEffect.castPermissionOptions rides (offered || ownOpen) pid zone oid gs
+      -- CR 118.8: not under an effect's offer, which is the permission that
+      -- cast is made under (Demonic Embrace's second ruling).
+      own = if zone == Zone.Graveyard && not offered && ownedBy pid oid gs then ownPayingWays oid face gs else []
+   in PlayerEffect.castPermissionOptions rides (offered || ownOpen) own pid zone oid gs
+
+-- CR 118.8 / 601.3: each graveyard permission the card carries for itself that
+-- states an additional cost, as the unlimited CastFrom row a way is: the choice
+-- among ways is what lets a cast under another permission skip that cost.
+ownPayingWays :: ObjectId -> Face.Face Card.Type.Card -> GameState -> [(Maybe ObjectId, CastFromZone.CastFromZone)]
+ownPayingWays oid face gs =
+  [ ( Just oid,
+      CastFromZone.MkCastFromZone
+        { CastFromZone.from = InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You),
+          CastFromZone.matching = Filter.Type.And [],
+          CastFromZone.limit = PermissionLimit.Unlimited,
+          CastFromZone.verb = PermissionVerb.Cast,
+          CastFromZone.pool = PermissionPool.EveryCard,
+          CastFromZone.additionalCosts = additional,
+          CastFromZone.reduction = 0
+        }
+    )
+  | CastingPermission.CastFromGraveyard _ additional@(_ : _) <- Cost.permissionsOf oid face gs
+  ]
 
 -- CR 118.8 / 601.2f: the additional costs and the reductions each way castWays
 -- offers would bring, one empty pair where there is no permission to choose
@@ -3493,7 +3520,9 @@ castProposed perform spending pid oid sid printedFace castFrom preparedFor keywo
                   candidateReductions = CandidateCost.reductions chosenCandidate
               -- CR 601.3: otherwise, which of the permissions admitting the cast
               -- it is made under -- the budget it spends and the rider it gets.
-              permissionUsed <- if ownPermission then pure Nothing else choosePlayPermission pid sid permissions
+              -- CR 400.7: a permission the card carries for itself (ownPayingWays)
+              -- is named by the spell the card has become.
+              permissionUsed <- if ownPermission then pure Nothing else choosePlayPermission pid sid (fmap (fmap (\way@(src, grant) -> if src == oid then (sid, grant) else way)) permissions)
               let ridersUsed = riders permissionUsed
                   -- CR 118.8 / 601.2f: the permission's additional costs join
                   -- the chosen candidate's.

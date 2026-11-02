@@ -1,6 +1,8 @@
 module Parun.Codec.CastingPermission where
 
 import qualified Parun.Codec.Condition as Condition
+import qualified Parun.Codec.CostComponent as CostComponent
+import qualified Parun.Codec.Keyword as Keyword
 import qualified Parun.Codec.KeywordFamily as KeywordFamily
 import qualified Parun.Codec.ManaCost as ManaCost
 import qualified Parun.JsonCodec.Arm as Arm
@@ -14,11 +16,16 @@ codec =
   Arm.tagged
     tagOf
     [ Arm.nullary "CastFromLibraryWhileSearching" CastingPermission.CastFromLibraryWhileSearching,
-      Arm.optionalPayload "CastFromGraveyard" KeywordFamily.codec CastingPermission.CastFromGraveyard (\x -> case x of CastingPermission.CastFromGraveyard y -> Just y; _ -> Nothing),
+      Arm.payload "CastFromGraveyard" graveyard (uncurry CastingPermission.CastFromGraveyard) (\x -> case x of CastingPermission.CastFromGraveyard f c -> Just (f, c); _ -> Nothing),
       Arm.nullary "PlayFromGraveyard" CastingPermission.PlayFromGraveyard,
       Arm.payload "CastAsThoughItHadFlash" flash (uncurry CastingPermission.CastAsThoughItHadFlash) (\x -> case x of CastingPermission.CastAsThoughItHadFlash c m -> Just (c, m); _ -> Nothing)
     ]
   where
+    graveyard =
+      Fields.object $
+        (,)
+          <$> Fields.defaulted "using" Nothing (Common.maybe KeywordFamily.codec) fst
+          <*> Fields.defaulted "additionalCosts" [] (Common.list (CostComponent.codec Keyword.codec)) snd
     flash =
       Fields.object $
         (,)
