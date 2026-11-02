@@ -3334,6 +3334,7 @@ stickerGrants :: AbilitySticker.AbilitySticker -> [Modification]
 stickerGrants sticker =
   concatMap (\(k, n) -> List.genericReplicate n (Modification.GainKeyword k)) (Map.toList (AbilitySticker.keywords sticker))
     <> fmap Modification.GainAbility (AbilitySticker.abilities sticker)
+    <> fmap Modification.GainCastingPermission (AbilitySticker.castingPermissions sticker)
 
 -- Does a sticker write a modification satisfying `p`? The fifth road onto an
 -- object, beside a battlefield permanent's static ability, storedWrites,

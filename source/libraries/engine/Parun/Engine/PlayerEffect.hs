@@ -2352,10 +2352,13 @@ unspentPermission pid source grant gs =
 -- under it -- Parun.Engine.Cast.castProposed asks nothing then, and
 -- Parun.CastPermissionSpec's "CR 702.138a an escaped Chimera takes neither Serra
 -- Paragon's use nor its rider" proves it.
-castPermissionOptions :: (ObjectId -> Bool) -> Bool -> PlayerId -> Zone.Zone -> ObjectId -> GameState -> [Maybe (ObjectId, CastFromZone.CastFromZone)]
-castPermissionOptions rides offered pid zone oid gs =
+--
+-- `own` is a permission the card carries for itself that adds a cost of its
+-- own, and so is a way like a player's (Parun.Engine.Cast.castWays).
+castPermissionOptions :: (ObjectId -> Bool) -> Bool -> [(Maybe ObjectId, CastFromZone.CastFromZone)] -> PlayerId -> Zone.Zone -> ObjectId -> GameState -> [Maybe (ObjectId, CastFromZone.CastFromZone)]
+castPermissionOptions rides offered own pid zone oid gs =
   let owned = fmap Object.owner (Game.lookupObject oid gs) == Just pid
-   in permissionOptions rides (offered || (zone == Zone.Hand && owned)) (castPermissionsFrom pid zone oid gs)
+   in permissionOptions rides (offered || (zone == Zone.Hand && owned)) (castPermissionsFrom pid zone oid gs <> own)
 
 -- CR 601.3 / 305.1: the ways a play admitted by `usable` can be made, one per
 -- distinguishable outcome -- Nothing, where `open` says the play needs none of

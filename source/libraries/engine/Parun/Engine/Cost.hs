@@ -851,10 +851,11 @@ candidateCostsGiven permitted pid name oid gs =
                 -- card has; and CR 601.3 / Yawgmoth's Will is an EFFECT stating no
                 -- cost, offering the hand's list BESIDE the rest rather than instead
                 -- of them. Rule 702.34a's "if the resulting spell is an instant or
-                -- sorcery spell" gates the PERMISSION (Keyword.permissionsFor) and is
-                -- not re-asked here; rule 702.138a and rule 702.81a state no such
-                -- clause to gate, and rule 702.187b's own clause is asked here
-                -- rather than there, at the mayhem offer below.
+                -- sorcery spell" gates the permission and the cost that sentence
+                -- states alike (Keyword.permissionsFor, `stated`), so another
+                -- permission's cast is not offered that cost; rule 702.138a and rule
+                -- 702.81a state no such clause to gate, and rule 702.187b's own
+                -- clause is asked here rather than there, at the mayhem offer below.
                 Just Zone.Graveyard ->
                   let -- `keywords` is what the card HAS in the graveyard, not
                       -- what it prints: an ability granted there (CR 113.6f)
@@ -944,15 +945,20 @@ candidateCostsGiven permitted pid name oid gs =
                          in concatMap
                               (\cost -> tappingNone cost : fmap (tappingOne cost) tappable)
                               (Keyword.harmonizeCosts keywords)
+                      stated = not . null . Keyword.permissionsFor (TypeLine.types (Face.typeLine face)) . Keyword.Type.Flashback
                       -- CR 601.3: a permission naming the cost it admits --
                       -- Tenacious Underdog's "cast this card from your graveyard
                       -- using its blitz ability" -- opens only the candidates a
                       -- keyword of that family offers, never the printed cost.
                       -- Parun.CastSpec's "Blitz from a graveyard" group proves
                       -- both halves.
-                      usingFamilies = [family | CastingPermission.CastFromGraveyard (Just family) <- permissionsOf oid face gs]
+                      usingFamilies = [family | CastingPermission.CastFromGraveyard (Just family) _ <- permissionsOf oid face gs]
                       usingPermitted candidate = any (\family -> (CandidateCost.keyword candidate >>= Keyword.familyOf) == Just family) usingFamilies
-                   in fmap flashback (Keyword.flashbackCosts keywords)
+                      -- CR 118.8: a permission stating an additional cost admits
+                      -- the printed cost and its alternatives (Demonic Embrace);
+                      -- Parun.Engine.Cast.castWays adds what it states.
+                      payingPermitted = not (null [() | CastingPermission.CastFromGraveyard Nothing (_ : _) <- permissionsOf oid face gs])
+                   in fmap flashback (filter stated (Keyword.flashbackCosts keywords))
                         <> fmap escape (Keyword.escapeCosts keywords)
                         <> (if Game.discardedThisTurnBy pid oid gs then fmap mayhem (Keyword.mayhemCosts keywords) else [])
                         <> harmonized
@@ -989,7 +995,7 @@ candidateCostsGiven permitted pid name oid gs =
                         -- Unbound's -3) states no cost either, and so does
                         -- CastingPermission.PlayFromGraveyard (Kethis, the
                         -- Hidden Hand's granted ability).
-                        <> ( if permitted || PlayerEffect.mayCastFrom pid Zone.Graveyard oid gs || PlayerEffect.mayPlayByMayhem pid oid gs || maybe False (\permission -> Expiry.permissionOpen pid permission gs) (Object.playPermission obj) || elem CastingPermission.PlayFromGraveyard (permissionsOf oid face gs)
+                        <> ( if permitted || PlayerEffect.mayCastFrom pid Zone.Graveyard oid gs || PlayerEffect.mayPlayByMayhem pid oid gs || maybe False (\permission -> Expiry.permissionOpen pid permission gs) (Object.playPermission obj) || elem CastingPermission.PlayFromGraveyard (permissionsOf oid face gs) || payingPermitted
                                then ordinary
                                else filter usingPermitted ordinary
                            )

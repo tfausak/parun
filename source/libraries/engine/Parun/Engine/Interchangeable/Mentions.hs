@@ -879,7 +879,7 @@ castRepetitionNames asking x = case x of
 castingPermissionNames :: (Monoid r) => Asking r -> CastingPermission.CastingPermission -> r
 castingPermissionNames asking x = case x of
   CastingPermission.CastFromLibraryWhileSearching -> mempty
-  CastingPermission.CastFromGraveyard _family -> mempty
+  CastingPermission.CastFromGraveyard _family additionalCosts -> foldMap (costComponentNames asking (keywordNames asking)) additionalCosts
   CastingPermission.PlayFromGraveyard -> mempty
   CastingPermission.CastAsThoughItHadFlash condition _additionalCost -> foldMap (conditionNames asking) condition
 

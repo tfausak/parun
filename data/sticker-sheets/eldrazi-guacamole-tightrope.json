@@ -1,0 +1,52 @@
+{
+  "abilities": [
+    {
+      "keywords": [
+        {
+          "type": "Haste"
+        }
+      ],
+      "tickets": 2
+    },
+    {
+      "castingPermissions": [
+        {
+          "type": "CastFromGraveyard",
+          "value": {
+            "additionalCosts": [
+              {
+                "type": "PayLife",
+                "value": {
+                  "type": "Fixed",
+                  "value": 2
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "tickets": 5
+    }
+  ],
+  "art": 3,
+  "name": "Eldrazi Guacamole Tightrope",
+  "names": [
+    "Eldrazi",
+    "Guacamole",
+    "Tightrope"
+  ],
+  "number": 1,
+  "oracleText": "{TK}{TK} — Haste\n{TK}{TK}{TK}{TK}{TK} — You may cast this card from your graveyard by paying 2 life in addition to paying its other costs.\n{TK}{TK} — 1/4\n{TK}{TK}{TK} — 5/3",
+  "powerToughness": [
+    {
+      "power": 1,
+      "tickets": 2,
+      "toughness": 4
+    },
+    {
+      "power": 5,
+      "tickets": 3,
+      "toughness": 3
+    }
+  ]
+}

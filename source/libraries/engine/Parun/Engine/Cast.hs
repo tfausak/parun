@@ -70,13 +70,16 @@ import qualified Parun.Types.FaceDownCharacteristics as FaceDownCharacteristics
 import qualified Parun.Types.FaceDownReason as FaceDownReason
 import qualified Parun.Types.FaceDownState as FaceDownState
 import qualified Parun.Types.Facing as Facing
+import qualified Parun.Types.Filter as Filter.Type
 import Parun.Types.Game (Game)
 import qualified Parun.Types.GameEvent as GameEvent
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.InZone as InZone
 import Parun.Types.Keyword (Keyword)
 import qualified Parun.Types.Keyword as Keyword.Type
+import qualified Parun.Types.KeywordFamily as KeywordFamily
 import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.KickerDecision as KickerDecision
 import qualified Parun.Types.LandPlayed as LandPlayed
@@ -95,11 +98,14 @@ import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.Payment as Payment
 import qualified Parun.Types.PaymentMoment as PaymentMoment
 import qualified Parun.Types.PaymentSubject as PaymentSubject
+import qualified Parun.Types.PermissionLimit as PermissionLimit
+import qualified Parun.Types.PermissionPool as PermissionPool
 import qualified Parun.Types.PermissionVerb as PermissionVerb
 import qualified Parun.Types.PlayBudget as PlayBudget
 import qualified Parun.Types.PlayPermissionOrigin as PlayPermissionOrigin
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.ProjectedCharacteristics as PC
@@ -1963,11 +1969,11 @@ castableGiven shared pid oid name facing gs =
       -- CR 118.8 / 601.2f: payable together with the additional costs and the
       -- reduction of SOME permission the cast could be made under (Dawnhand
       -- Dissident's costs, Urianger Augurelt's reduction).
-      extras = maybe [([], [])] (\face -> permissionCostChoices pid oid face proposed) (proposedFace oid name proposed)
+      extras candidate = maybe [([], [])] (\face -> permissionCostChoices pid oid face proposed (CandidateCost.keyword candidate)) (proposedFace oid name proposed)
       candidateOk candidate =
         candidateAllowed pid oid proposed candidate
           && candidateFillable pid oid name proposed candidate
-          && any (\(extra, less) -> payable (CandidateCost.reductions candidate <> less) (spendingFor pid oid proposed) (proposedFor oid (CandidateCost.keyword candidate) proposed) (withPermissionCosts extra (CandidateCost.cost candidate))) extras
+          && any (\(extra, less) -> payable (CandidateCost.reductions candidate <> less) (spendingFor pid oid proposed) (proposedFor oid (CandidateCost.keyword candidate) proposed) (withPermissionCosts extra (CandidateCost.cost candidate))) (extras candidate)
    in cardGatesOk pid oid name proposed
         && lookGateOk pid oid name gs proposed
         -- Gated HERE, upstream of Action.legalActions, because the engine never
@@ -2176,7 +2182,7 @@ permitsCastWhileSearching oid face gs =
 -- prices the cast, and offers nothing where the permission admits nothing.
 isGraveyardPermission :: CastingPermission.CastingPermission -> Bool
 isGraveyardPermission permission = case permission of
-  CastingPermission.CastFromGraveyard _ -> True
+  CastingPermission.CastFromGraveyard _ _ -> True
   CastingPermission.PlayFromGraveyard -> True
   CastingPermission.CastFromLibraryWhileSearching -> False
   CastingPermission.CastAsThoughItHadFlash _ _ -> False
@@ -2186,7 +2192,7 @@ isGraveyardPermission permission = case permission of
 isFlashPermission :: CastingPermission.CastingPermission -> Bool
 isFlashPermission permission = case permission of
   CastingPermission.CastAsThoughItHadFlash _ _ -> True
-  CastingPermission.CastFromGraveyard _ -> False
+  CastingPermission.CastFromGraveyard _ _ -> False
   CastingPermission.PlayFromGraveyard -> False
   CastingPermission.CastFromLibraryWhileSearching -> False
 
@@ -2629,7 +2635,7 @@ castSpellWith perform timed offered applied widened pid oid name facing = Event.
           -- same PROPOSED state and for `spent`'s reason -- the ones the gate
           -- offered the cast under are the ones castProposed chooses among, and
           -- a rejected announcement spends none.
-          permissions = lookedWays looks (foldMap (\zone -> castWays (\src -> not (null (Event.permissionRiders src proposed oid))) offered pid oid zone face proposed) castFrom)
+          permissions = fmap (lookedWays looks) . candidateWays (\src -> not (null (Event.permissionRiders src proposed oid))) offered pid oid castFrom face proposed
           -- CR 400.7h / 611.3d: what the permission a cast is made under gives
           -- the spell it becomes, asked of the same PROPOSED state -- the board
           -- that source was offering it on.
@@ -2840,21 +2846,72 @@ exileLandEntry pid oid gs = case Game.lookupObject oid gs of
 -- The graveyard arm is a regression fence: no card in data/cards/ grants a
 -- budgeted graveyard cast an instant or sorcery could also be made under
 -- (Kess, Dissident Mage's "once during each of your turns" would observe it).
-castWays :: (ObjectId -> Bool) -> Bool -> PlayerId -> ObjectId -> Zone.Zone -> Face.Face Card.Type.Card -> GameState -> [Maybe (ObjectId, CastFromZone.CastFromZone)]
-castWays rides offered pid oid zone face gs =
-  let ownOpen = case zone of
+--
+-- `castFor` is the keyword the candidate's cost came from: a costless permission
+-- of the card's naming that keyword's family (Tenacious Underdog's "using its
+-- blitz ability") opens the zone for that cost alone.
+castWays :: (ObjectId -> Bool) -> Bool -> PlayerId -> ObjectId -> Zone.Zone -> Face.Face Card.Type.Card -> GameState -> Maybe Keyword -> [Maybe (ObjectId, CastFromZone.CastFromZone)]
+castWays rides offered pid oid zone face gs castFor =
+  let named = ownedBy pid oid gs && any (\family -> (castFor >>= Keyword.familyOf) == Just family) [family | CastingPermission.CastFromGraveyard (Just family) [] <- Cost.permissionsOf oid face gs]
+      ownOpen = case zone of
         Zone.Exile -> exileOpen pid oid face gs
-        Zone.Graveyard -> permitsPlayUnderPermission pid oid gs || PlayerEffect.mayPlayFromOwnGraveyard pid oid gs
+        Zone.Graveyard -> permitsPlayUnderPermission pid oid gs || PlayerEffect.mayPlayFromOwnGraveyard pid oid gs || named
         _ -> False
-   in PlayerEffect.castPermissionOptions rides (offered || ownOpen) pid zone oid gs
+      -- CR 118.8: not under an effect's offer, which is the permission that
+      -- cast is made under (Demonic Embrace's second ruling; StickerSpec's "a
+      -- stickered card offered by Chandra, Acolyte of Flame"). And only its
+      -- owner's, the permission's "your graveyard": a regression fence, since
+      -- data/cards/ holds no CastFrom row and no graveyard GrantPlayFromExile over
+      -- another player's graveyard outside an offer (jq, `from.player` other than
+      -- You, 2026-11-01); a card standing over an opponent's graveyard would refute it.
+      own = if zone == Zone.Graveyard && not offered && ownedBy pid oid gs then ownPayingWays oid face gs else []
+   in PlayerEffect.castPermissionOptions rides (offered || ownOpen) own pid zone oid gs
 
--- CR 118.8 / 601.2f: the additional costs and the reductions each way castWays
--- offers would bring, one empty pair where there is no permission to choose
+-- CR 118.8 / 601.3: each graveyard permission the card carries for itself that
+-- states an additional cost, as the unlimited CastFrom row a way is: the choice
+-- among ways is what lets a cast under another permission skip that cost.
+ownPayingWays :: ObjectId -> Face.Face Card.Type.Card -> GameState -> [(Maybe ObjectId, CastFromZone.CastFromZone)]
+ownPayingWays oid face gs =
+  [ ( Just oid,
+      CastFromZone.MkCastFromZone
+        { CastFromZone.from = InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You),
+          CastFromZone.matching = Filter.Type.And [],
+          CastFromZone.limit = PermissionLimit.Unlimited,
+          CastFromZone.verb = PermissionVerb.Cast,
+          CastFromZone.pool = PermissionPool.EveryCard,
+          CastFromZone.additionalCosts = additional,
+          CastFromZone.reduction = 0
+        }
+    )
+  | CastingPermission.CastFromGraveyard _ additional@(_ : _) <- Cost.permissionsOf oid face gs
+  ]
+
+-- CR 601.3 / 702.138a: what a cast for the cost of `castFor` is made under, the
+-- one answer the gate and castProposed read. Nothing where the keyword's own
+-- sentence is the permission and the cost at once (escape, flashback, disturb):
+-- no way is chosen and none of a way's costs is paid. Otherwise castWays.
+candidateWays :: (ObjectId -> Bool) -> Bool -> PlayerId -> ObjectId -> Maybe Zone.Zone -> Face.Face Card.Type.Card -> GameState -> Maybe Keyword -> Maybe [Maybe (ObjectId, CastFromZone.CastFromZone)]
+candidateWays rides offered pid oid zone face gs castFor =
+  let cardTypes = PC.cardTypes (Projection.copiableCharacteristics oid gs)
+      -- Keyword.permissionsFor answers [] for disturb, whose permission reaches
+      -- only the back face (permitsDisturb).
+      ownSentence keyword = not (null (Keyword.permissionsFor cardTypes keyword)) || Keyword.familyOf keyword == Just KeywordFamily.Disturb
+   in if any ownSentence castFor
+        then Nothing
+        else Just (foldMap (\from -> castWays rides offered pid oid from face gs castFor) zone)
+
+-- CR 118.8 / 601.2f: the additional costs and the reductions each way a cast
+-- could be made under would bring, one empty pair where there is none to choose
 -- among.
-permissionCostChoices :: PlayerId -> ObjectId -> Face.Face Card.Type.Card -> GameState -> [([CostComponent.CostComponent Keyword], [ManaCost.ManaCost])]
-permissionCostChoices pid oid face gs = case foldMap (\zone -> castWays (const False) False pid oid zone face gs) (Game.zoneOf oid gs) of
+wayCosts :: Maybe [Maybe (ObjectId, CastFromZone.CastFromZone)] -> [([CostComponent.CostComponent Keyword], [ManaCost.ManaCost])]
+wayCosts ways = case Maybe.fromMaybe [] ways of
   [] -> [([], [])]
-  ways -> fmap (\way -> (PlayerEffect.permissionCosts way, PlayerEffect.permissionReductions way)) ways
+  options -> fmap (\way -> (PlayerEffect.permissionCosts way, PlayerEffect.permissionReductions way)) options
+
+-- wayCosts at the gate, asked of the board castSpellWith asks: no rider weighed,
+-- since the gate prices a cast and a rider is no price.
+permissionCostChoices :: PlayerId -> ObjectId -> Face.Face Card.Type.Card -> GameState -> Maybe Keyword -> [([CostComponent.CostComponent Keyword], [ManaCost.ManaCost])]
+permissionCostChoices pid oid face gs = wayCosts . candidateWays (const False) False pid oid (Game.zoneOf oid gs) face gs
 
 -- CR 601.2f: `cost` with a permission's additional costs added to it.
 withPermissionCosts :: [CostComponent.CostComponent Keyword] -> Cost Keyword -> Cost Keyword
@@ -3192,11 +3249,12 @@ trimModalForCandidate castFor paid modal = modal {Modal.Type.modes = fmap (trimM
 -- for the same reason and spent beside the CR 601.2i event for `spent`'s: that
 -- rule's own words are "at the time the spell becomes cast".
 --
--- `permissions` are the CR 601.3 permissions the cast can be made under, asked
--- of the pre-move state for `spent`'s reason; the one chosen spends its budget
+-- `permissions` are the CR 601.3 permissions a cast for a candidate's keyword can
+-- be made under (candidateWays), asked of the pre-move state for `spent`'s reason;
+-- the one chosen spends its budget
 -- beside `spent`, and `riders` is what it gives the spell (CR 611.3d), asked
 -- there too and stored beside it.
-castProposed :: ManaAbilityPerformer.ManaAbilityPerformer -> ManaSpending -> PlayerId -> ObjectId -> ObjectId -> Face.Face Card.Type.Card -> Maybe Zone.Zone -> Maybe ObjectId -> Set Keyword -> [CandidateCost.CandidateCost] -> [ActivePlayerEffect.ActivePlayerEffect] -> [Maybe (ObjectId, CastFromZone.CastFromZone)] -> (Maybe (ObjectId, CastFromZone.CastFromZone) -> [ContinuousEffect.ContinuousEffect Card.Type.Card]) -> (CandidateCost.CandidateCost -> Maybe (ObjectId, CastFromZone.CastFromZone) -> Integer -> Bool) -> Maybe ExilePlayPermission.ExilePlayPermission -> GameState -> Game ()
+castProposed :: ManaAbilityPerformer.ManaAbilityPerformer -> ManaSpending -> PlayerId -> ObjectId -> ObjectId -> Face.Face Card.Type.Card -> Maybe Zone.Zone -> Maybe ObjectId -> Set Keyword -> [CandidateCost.CandidateCost] -> [ActivePlayerEffect.ActivePlayerEffect] -> (Maybe Keyword -> Maybe [Maybe (ObjectId, CastFromZone.CastFromZone)]) -> (Maybe (ObjectId, CastFromZone.CastFromZone) -> [ContinuousEffect.ContinuousEffect Card.Type.Card]) -> (CandidateCost.CandidateCost -> Maybe (ObjectId, CastFromZone.CastFromZone) -> Integer -> Bool) -> Maybe ExilePlayPermission.ExilePlayPermission -> GameState -> Game ()
 castProposed perform spending pid oid sid printedFace castFrom preparedFor keywordsBefore candidateCosts spent permissions riders refusedAt exilePermission before = do
   -- CR 700.2e: who chooses the modes, settled first -- the caster where
   -- several players could (Players.chooseOne, elided at one) -- and bound on the
@@ -3450,16 +3508,14 @@ castProposed perform spending pid oid sid printedFace castFrom preparedFor keywo
           -- spell rather than the creature it prints. Thalia's "noncreature
           -- spells cost {1} more" is what tells the two apart.
           --
-          -- CR 601.2f: payable under the reduction of SOME permission the cast
-          -- could be made under (Urianger Augurelt's {2} less). Which one it is
-          -- made under is asked below, and payableCost re-asks the cost with
-          -- that permission's own reduction once it is.
-          permissionReductionChoices = case permissions of
-            [] -> [[]]
-            ways -> fmap PlayerEffect.permissionReductions ways
+          -- CR 118.8 / 601.2f: payable with the costs and the reduction of SOME
+          -- permission the cast could be made under (Demonic Embrace's 3 life,
+          -- Urianger Augurelt's {2} less). Which one it is made under is asked
+          -- below, and payableCost re-asks the cost with that permission's own
+          -- reduction once it is.
           payableCandidates =
             filter
-              (\candidate -> any (\less -> payableCost (Just chosenModes) (CandidateCost.reductions candidate <> less) spending pid sid (stampPaidCosts paid sid (proposedFor sid (CandidateCost.keyword candidate) gs)) (CandidateCost.cost candidate)) permissionReductionChoices)
+              (\candidate -> any (\(extra, less) -> payableCost (Just chosenModes) (CandidateCost.reductions candidate <> less) spending pid sid (stampPaidCosts paid sid (proposedFor sid (CandidateCost.keyword candidate) gs)) (withPermissionCosts extra (CandidateCost.cost candidate))) (wayCosts (permissions (CandidateCost.keyword candidate))))
               (fmap (\candidate -> candidate {CandidateCost.cost = withSplice (withBuyback (withKicker (withModeCost (withEscalate (withEntwine (CandidateCost.cost candidate))))))}) candidateCosts)
       if null payableCandidates || overKickerLimit || not spliceValid
         then reject
@@ -3488,12 +3544,15 @@ castProposed perform spending pid oid sid printedFace castFrom preparedFor keywo
                   -- permission offered (escape, flashback) is that permission's
                   -- cost, so the cast is made under it -- a player permission's
                   -- budget is not spent and its rider not given.
-                  ownPermission = not (all (null . Keyword.permissionsFor (PC.cardTypes (Projection.copiableCharacteristics sid gs))) castFor)
+                  ways = permissions castFor
+                  ownPermission = Maybe.isNothing ways
                   -- CR 601.2f's reductions THIS candidate brought (CR 702.119a).
                   candidateReductions = CandidateCost.reductions chosenCandidate
               -- CR 601.3: otherwise, which of the permissions admitting the cast
               -- it is made under -- the budget it spends and the rider it gets.
-              permissionUsed <- if ownPermission then pure Nothing else choosePlayPermission pid sid permissions
+              -- CR 400.7: a permission the card carries for itself (ownPayingWays)
+              -- is named by the spell the card has become.
+              permissionUsed <- choosePlayPermission pid sid (fmap (fmap (\way@(src, grant) -> if src == oid then (sid, grant) else way)) (Maybe.fromMaybe [] ways))
               let ridersUsed = riders permissionUsed
                   -- CR 118.8 / 601.2f: the permission's additional costs join
                   -- the chosen candidate's.

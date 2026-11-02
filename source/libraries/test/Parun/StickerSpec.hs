@@ -1,4 +1,5 @@
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE RankNTypes #-}
 
 -- Covers CR 107.17's ticket counters, CR 103.2d's sheet draw
 -- (Parun.Engine.Setup), and CR 123's stickers: Parun.Engine.Sticker,
@@ -32,6 +33,7 @@ import qualified Parun.Engine.Keyword as KeywordEngine
 import qualified Parun.Engine.NameWords as NameWords
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
+import qualified Parun.Engine.Replay as Replay
 import qualified Parun.Engine.Requirement as Requirement
 import qualified Parun.Engine.Resolve.Effect as Resolve
 import qualified Parun.Engine.Setup as Setup
@@ -104,6 +106,30 @@ import qualified Parun.Types.Zone as Zone
 -- Alice active with priority in her precombat main phase.
 mainPhaseForAlice :: GameState.GameState -> GameState.GameState
 mainPhaseForAlice gs = gs {GameState.activePlayer = S.alice, GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.alice}
+
+-- `card` in alice's graveyard on her main phase, beside `lands` copies of `land`,
+-- carrying Eldrazi Guacamole Tightrope's permission sticker.
+tightropeBoard :: Spec.Spec IO n -> Registry.Registry IO -> String -> Int -> String -> IO (ObjectId.ObjectId, GameState.GameState)
+tightropeBoard s registry land lands card = do
+  root <- StickerSheets.defaultRoot
+  loaded <- StickerSheets.loadRoot root
+  landPrinting <- S.printingOf s registry land
+  cardPrinting <- S.printingOf s registry card
+  let sheets = [sheet | (_, Right sheet) <- loaded, StickerSheet.name sheet == Text.pack "Eldrazi Guacamole Tightrope"]
+      (oid, base) = S.addGraveyardCard cardPrinting S.alice (mainPhaseForAlice (S.landsFor landPrinting S.alice lands (withSheets sheets (Setup.gameWith GameSettings.plain S.bothPlayers))))
+  pure (oid, Sticker.put S.alice oid (aliceSticker 0 StickerKind.Ability 1) Nothing base)
+
+atLife :: Integer -> GameState.GameState -> GameState.GameState
+atLife n gs = gs {GameState.players = Map.adjust (\p -> p {Player.life = n}) S.alice (GameState.players gs)}
+
+-- CR 601.2b: the keyword's cost wherever a keyword's is offered, and `way`'s pick
+-- of the permissions the cast can be made under.
+castingFor :: (forall a. NonEmpty.NonEmpty a -> a) -> Prompt.Prompt r -> r
+castingFor way p = case p of
+  Prompt.ChooseCost _ _ _ candidates -> Maybe.fromMaybe (Cost.firstOffered candidates) (List.find (Maybe.isJust . CandidateCost.keyword) candidates)
+  Prompt.ChoosePlayPermission _ _ _ options -> way options
+  Prompt.OfferedCast {} -> OptionalDecision.Exercises
+  _ -> S.identityAnswer p
 
 -- Aetheric Amplifier's second mode, "each kind of counter you have".
 secondMode :: Prompt.Prompt r -> r
@@ -473,7 +499,7 @@ spec s registry = Spec.describe s "Sticker" $ do
                 ptText p = Text.pack (show (PowerToughnessSticker.power p) <> "/" <> show (PowerToughnessSticker.toughness p))
                 keywordsAgree a (_, rest) =
                   let printed = [Oracle.Keyword.printed Text.empty k | k <- Map.keys (AbilitySticker.keywords a)]
-                   in not (null (AbilitySticker.abilities a)) || any (\p -> length p /= 1) printed || List.sort (Normalise.normalise (CardName.MkCardName Text.empty) rest) == List.sort (fmap Text.toLower (concat printed))
+                   in not (null (AbilitySticker.abilities a)) || not (null (AbilitySticker.castingPermissions a)) || any (\p -> length p /= 1) printed || List.sort (Normalise.normalise (CardName.MkCardName Text.empty) rest) == List.sort (fmap Text.toLower (concat printed))
                 checks =
                   [ ("file named for the sheet", Slug.unwrap (Slug.fromText (StickerSheet.name sheet)) <> Text.pack ".json" == Text.pack (reverse (takeWhile (/= '/') (reverse path)))),
                     ("names join to the name", Text.unwords (Foldable.toList (StickerSheet.names sheet)) == StickerSheet.name sheet),
@@ -1018,6 +1044,105 @@ spec s registry = Spec.describe s "Sticker" $ do
     Spec.assertEqWith s "CR 113.3b Contortionist's {T} ability is the Bears' one activated ability" (length (Activatable.abilitiesFor hasteBears hasteBoard)) 1
     Spec.assertEqWith s "CR 613.1f each keyword sticker's keywords" (fmap keywordsOn [nightMenace, aliceSticker 0 StickerKind.Ability 1, aliceSticker 1 StickerKind.Ability 0, aliceSticker 1 StickerKind.Ability 1, aliceSticker 2 StickerKind.Ability 1, aliceSticker 3 StickerKind.Ability 0, hotDogFlying, jugglerIndestructible]) (fmap Set.fromList [[Keyword.Menace], [Keyword.Persist], [Keyword.Bushido 2], [Keyword.DoubleStrike], [Keyword.Deathtouch, Keyword.Lifelink], [Keyword.Afflict 2], [Keyword.Flying], [Keyword.Indestructible]])
     Spec.assertEqWith s "CR 113.3c Juggler's bolster trigger is the Bears' one triggered ability" (length (PC.triggeredAbilities (Projection.project bolsterBears bolsterBoard))) 1
+  -- Eldrazi Guacamole Tightrope's second ability sticker, on a card in alice's
+  -- graveyard: the sticker is the only permission on the board, and 2 life the
+  -- only cost it adds.
+  Spec.it s "CR 113.6f/118.8 Eldrazi Guacamole Tightrope's ability sticker casts its card from a graveyard for 2 life more" $ do
+    root <- StickerSheets.defaultRoot
+    loaded <- StickerSheets.loadRoot root
+    forest <- S.printingOf s registry "Forest"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    jailer <- S.printingOf s registry "Yixlid Jailer"
+    let sheets = [sheet | (_, Right sheet) <- loaded, StickerSheet.name sheet == Text.pack "Eldrazi Guacamole Tightrope"]
+        (card, base) = S.addGraveyardCard bears S.alice (mainPhaseForAlice (S.landsFor forest S.alice 2 (withSheets sheets (Setup.gameWith GameSettings.plain S.bothPlayers))))
+        stickered = Sticker.put S.alice card (aliceSticker 0 StickerKind.Ability 1) Nothing base
+        (_, jailed) = S.addPermanent jailer S.bob base
+        jailedThenStickered = Sticker.put S.alice card (aliceSticker 0 StickerKind.Ability 1) Nothing jailed
+        cast = S.runPure S.identityAnswer (S.runPure S.identityAnswer stickered (S.cast S.alice card)) Stack.resolveTop
+    Spec.assertBool s (not (S.castable S.alice card base)) "CR 601.3 without the sticker the card stays in the graveyard"
+    Spec.assertBool s (S.castable S.alice card (atLife 2 stickered)) "CR 119.4 at 2 life the sticker's cost can be paid"
+    Spec.assertBool s (not (S.castable S.alice card (atLife 1 stickered))) "CR 119.4 at 1 life it cannot"
+    Spec.assertBool s (S.castable S.alice card jailedThenStickered) "CR 613.7 a sticker placed after Yixlid Jailer still applies"
+    Spec.assertEqWith s "CR 118.8 alice paid 2 life and the Bears resolved" (S.lifeOf S.alice cast, S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Grizzly Bears")) S.alice cast) (Just 18, 1)
+  -- The sticker's way beside a keyword whose sentence is both permission and cost:
+  -- 1 life pays escape's three exiled cards and not the printed cost's 2 life, and
+  -- a pair of boards short of the exile turns on the life alone.
+  Spec.it s "CR 702.138a Eldrazi Guacamole Tightrope's 2 life is not owed by a stickered Chimera's escape" $ do
+    (chimera, bare) <- tightropeBoard s registry "Forest" 5 "Loathsome Chimera"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    let fodder n gs = List.foldl' (\g _ -> snd (S.addGraveyardCard bears S.alice g)) gs [1 .. n :: Int]
+        escaped = S.runPure (castingFor NonEmpty.head) (S.runPure (castingFor NonEmpty.head) (atLife 1 (fodder 3 bare)) (S.cast S.alice chimera)) Stack.resolveTop
+        printed = S.runPure S.identityAnswer (atLife 3 (fodder 2 bare)) (S.cast S.alice chimera)
+        printedFirst :: Prompt.Prompt r -> r
+        printedFirst p = case p of
+          Prompt.ChooseCost _ _ _ candidates -> Maybe.fromMaybe (Cost.firstOffered candidates) (List.find (Maybe.isNothing . CandidateCost.keyword) candidates)
+          _ -> S.identityAnswer p
+        askedPrinted = S.runPure printedFirst (S.runPure printedFirst (atLife 1 (fodder 3 bare)) (S.cast S.alice chimera)) Stack.resolveTop
+    Spec.assertBool s (S.castable S.alice chimera (atLife 1 (fodder 3 bare))) "CR 702.138a at 1 life the escape cost is payable"
+    Spec.assertBool s (not (S.castable S.alice chimera (atLife 1 (fodder 2 bare)))) "CR 119.4 at 1 life, two cards short, neither cost is"
+    Spec.assertBool s (S.castable S.alice chimera (atLife 2 (fodder 2 bare))) "CR 119.4 at 2 life the printed cost is, under the sticker"
+    Spec.assertEqWith s "CR 702.138a the escape paid no life and the Chimera resolved" (S.lifeOf S.alice escaped, S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Loathsome Chimera")) S.alice escaped) (Just 1, 1)
+    Spec.assertEqWith s "CR 118.8 the printed cost paid the sticker's 2 life" (S.lifeOf S.alice printed) (Just 1)
+    Spec.assertEqWith s "CR 119.4 at 1 life an answerer asking for the printed cost still escapes: it is not offered" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Loathsome Chimera")) S.alice askedPrinted) 1
+  -- Sabin's blitz discards rather than pays life, so 1 life tells a blitz under
+  -- its own permission from a cast under the sticker; the Underdog's pays life,
+  -- so what it paid tells which way it was made under.
+  Spec.it s "CR 601.3 a blitz under the card's own named permission owes the sticker nothing, and the player may still choose the sticker" $ do
+    (sabin, bare) <- tightropeBoard s registry "Mountain" 5 "Sabin, Master Monk"
+    mountain <- S.printingOf s registry "Mountain"
+    (underdog, swamps) <- tightropeBoard s registry "Swamp" 4 "Tenacious Underdog"
+    let holding = snd (S.addHandCard mountain S.alice bare)
+        made :: (forall a. NonEmpty.NonEmpty a -> a) -> Maybe Integer
+        made way = S.lifeOf S.alice (S.runPure (castingFor way) swamps (S.cast S.alice underdog))
+        printed = S.runPure S.identityAnswer (atLife 3 bare) (S.cast S.alice sabin)
+    Spec.assertBool s (S.castable S.alice sabin (atLife 1 holding)) "CR 702.152a at 1 life Sabin's blitz is payable by its discard"
+    Spec.assertBool s (not (S.castable S.alice sabin (atLife 1 bare))) "CR 119.4 at 1 life with an empty hand neither cost is"
+    Spec.assertEqWith s "CR 118.8 at 3 life with an empty hand the printed cost pays the sticker's 2 life" (S.lifeOf S.alice printed) (Just 1)
+    Spec.assertEqWith s "CR 601.3 the blitz under its own permission pays its own 2 life" (made NonEmpty.head) (Just 18)
+    Spec.assertEqWith s "CR 118.8 the blitz under the sticker pays 2 more" (made NonEmpty.last) (Just 16)
+  Spec.it s "CR 702.146a a stickered card's disturb owes the sticker nothing, its printed cost does" $ do
+    (angler, bare) <- tightropeBoard s registry "Island" 2 "Baithook Angler"
+    let front = CardName.MkCardName (Text.pack "Baithook Angler")
+        back = CardName.MkCardName (Text.pack "Hook-Haunt Drifter")
+        castableAs name life = Cast.castable S.alice angler name Facing.FaceUp (atLife life bare)
+        castAs name = S.lifeOf S.alice (S.runPure S.identityAnswer (atLife 5 bare) (Cast.castSpell S.manaPerformer S.alice angler name Facing.FaceUp))
+    Spec.assertEqWith s "CR 702.146a at 1 life disturb is payable and the front face under the sticker is not" (castableAs back 1, castableAs front 1) (True, False)
+    Spec.assertEqWith s "CR 118.8 at 2 life the sticker casts the front face" (castableAs front 2) True
+    Spec.assertEqWith s "CR 702.146a disturb paid no life, the front face paid 2" (castAs back, castAs front) (Just 5, Just 3)
+  -- CR 702.34a's cost exists only for an instant or sorcery spell, so the sticker
+  -- reaches this creature for its printed {R} and not for its {4}{R} flashback,
+  -- which would be offered first.
+  Spec.it s "CR 702.34a a stickered creature with flashback is not offered its flashback cost" $ do
+    (creature, board) <- tightropeBoard s registry "Mountain" 5 "Synthetic Flashback Creature"
+    let cast = S.runPure (castingFor NonEmpty.head) board (S.cast S.alice creature)
+    Spec.assertEqWith s "CR 118.8 alice paid {R} and the sticker's 2 life" (S.tappedCount S.alice cast, S.lifeOf S.alice cast) (1, Just 18)
+  -- Demonic Embrace's second ruling, on the sticker: an effect's offer is the
+  -- permission the cast is made under, so nothing asks about the sticker's way, and
+  -- an answerer that would take it pays nothing.
+  Spec.it s "CR 608.2g a stickered card offered by Chandra, Acolyte of Flame owes the sticker nothing" $ do
+    (divination, bare) <- tightropeBoard s registry "Island" 3 "Divination"
+    chandra <- S.printingOf s registry "Chandra, Acolyte of Flame"
+    island <- S.printingOf s registry "Island"
+    let (chandraId, placed) = S.addPermanent chandra S.alice bare
+        board = S.addCounter CounterKind.Loyalty 4 chandraId (List.foldl' (\g _ -> snd (S.addLibraryCard island S.alice g)) placed [1 .. 3 :: Int])
+        answer :: Prompt.Prompt r -> r
+        answer p = case p of
+          Prompt.ChooseTargets _ _ _ sets -> fmap (\(_, offered) -> Set.filter ((== Just divination) . Recipient.objectOf) offered) sets
+          _ -> castingFor NonEmpty.last p
+        resolved = case Activatable.abilitiesFor chandraId board of
+          [_, _, ability] -> S.runPure answer board (Activate.activateAbility S.alice chandraId ability >> Stack.resolveTop >> Stack.resolveTop)
+          _ -> board
+    Spec.assertBool s (S.castable S.alice divination (atLife 2 board)) "CR 118.8 the sticker alone admits the cast"
+    Spec.assertEqWith s "CR 608.2g alice paid no life and Divination drew two" (S.lifeOf S.alice resolved, length (Game.zoneMembers Zone.Hand S.alice resolved)) (Just 20, 2)
+  -- Replay.defaultAnswer takes the head, which PlayerEffect.permissionOptions keeps
+  -- free wherever a free way exists.
+  Spec.it s "CR 601.3 the default answer beside Yawgmoth's Will owes the sticker nothing" $ do
+    (bears, bare) <- tightropeBoard s registry "Forest" 5 "Grizzly Bears"
+    swamp <- S.printingOf s registry "Swamp"
+    will <- S.printingOf s registry "Yawgmoth's Will"
+    let (willId, board) = S.addHandCard will S.alice (S.landsFor swamp S.alice 5 bare)
+        cast = S.runPure Replay.defaultAnswer board (S.cast S.alice willId >> Stack.resolveTop >> S.cast S.alice bears >> Stack.resolveTop)
+    Spec.assertEqWith s "CR 601.3 alice paid no life and the Bears resolved" (S.lifeOf S.alice cast, S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Grizzly Bears")) S.alice cast) (Just 20, 1)
   -- Review Focus 2. A Grizzly Bears card in alice's graveyard takes Hot Dog
   -- Minotaur's flying, Yixlid Jailer entering before the sticker on one board
   -- and after it on the other: CR 613.7 orders the two layer-6 effects.

@@ -22,8 +22,8 @@ minotaur =
       StickerSheet.art = 3,
       StickerSheet.abilities =
         Seq.fromList
-          [ AbilitySticker.MkAbilitySticker {AbilitySticker.tickets = 2, AbilitySticker.keywords = Map.singleton (Keyword.Afflict 2) 1, AbilitySticker.abilities = []},
-            AbilitySticker.MkAbilitySticker {AbilitySticker.tickets = 3, AbilitySticker.keywords = Map.singleton Keyword.Flying 1, AbilitySticker.abilities = []}
+          [ AbilitySticker.MkAbilitySticker {AbilitySticker.tickets = 2, AbilitySticker.keywords = Map.singleton (Keyword.Afflict 2) 1, AbilitySticker.abilities = [], AbilitySticker.castingPermissions = []},
+            AbilitySticker.MkAbilitySticker {AbilitySticker.tickets = 3, AbilitySticker.keywords = Map.singleton Keyword.Flying 1, AbilitySticker.abilities = [], AbilitySticker.castingPermissions = []}
           ],
       StickerSheet.powerToughness =
         Seq.fromList
