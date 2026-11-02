@@ -37,7 +37,7 @@ spec s = Spec.describe s "Parun.Codec.CostModifier" $ do
       s
       CostModifier.codec
       ( CostModifier.Type.MkCostModifier
-          (CostSubject.Activations (ActivationCriteria.MkActivationCriteria Nothing (Just AbilityKind.NonManaAbility) Nothing))
+          (CostSubject.Activations (ActivationCriteria.MkActivationCriteria Nothing (Just AbilityKind.NonManaAbility) Nothing Nothing))
           (Filter.HasCardType CardType.Creature)
           (Just Filter.IsSource)
           (Just (Filter.HasCardType CardType.Creature))

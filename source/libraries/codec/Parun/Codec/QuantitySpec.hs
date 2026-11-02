@@ -688,7 +688,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
           ActivationsThisTurn.MkActivationsThisTurn
             { ActivationsThisTurn.activator = PlayerRef.Relative PlayerRelation.You,
               ActivationsThisTurn.source = Filter.HasCardType CardType.Planeswalker,
-              ActivationsThisTurn.criteria = ActivationCriteria.MkActivationCriteria {ActivationCriteria.grantedBy = Nothing, ActivationCriteria.whichKind = Nothing, ActivationCriteria.whichLoyalty = Just LoyaltyKind.LoyaltyAbility}
+              ActivationsThisTurn.criteria = ActivationCriteria.MkActivationCriteria {ActivationCriteria.grantedBy = Nothing, ActivationCriteria.whichKind = Nothing, ActivationCriteria.whichLoyalty = Just LoyaltyKind.LoyaltyAbility, ActivationCriteria.whichAbility = Nothing}
             }
       )
       " {\"type\":\"ActivationsThisTurn\",\"value\":{\"activator\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"source\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Planeswalker\"}},\"criteria\":{\"whichLoyalty\":{\"type\":\"LoyaltyAbility\"}}}} "

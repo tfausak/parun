@@ -1,9 +1,11 @@
 module Parun.Codec.CostSubjectSpec where
 
+import qualified Data.Text as Text
 import qualified Parun.Codec.CostSubject as CostSubject
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.AbilityKind as AbilityKind
+import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.ActivationCriteria as ActivationCriteria
 import qualified Parun.Types.CostSubject as CostSubject.Type
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
@@ -23,12 +25,12 @@ spec s = Spec.describe s "Parun.Codec.CostSubject" $ do
     Common.assertCodec
       s
       CostSubject.codec
-      (CostSubject.Type.Activations (ActivationCriteria.MkActivationCriteria Nothing Nothing Nothing))
+      (CostSubject.Type.Activations (ActivationCriteria.MkActivationCriteria Nothing Nothing Nothing Nothing))
       " {\"type\":\"Activations\",\"value\":{}} "
   Spec.it s "Activations, every criterion" $
     Common.assertCodec
       s
       CostSubject.codec
-      (CostSubject.Type.Activations (ActivationCriteria.MkActivationCriteria (Just (KeywordDesignator.OfFamily KeywordFamily.Equip)) (Just AbilityKind.NonManaAbility) (Just LoyaltyKind.LoyaltyAbility)))
-      " {\"type\":\"Activations\",\"value\":{\"grantedBy\":{\"type\":\"OfFamily\",\"value\":{\"type\":\"Equip\"}},\"whichKind\":{\"type\":\"NonManaAbility\"},\"whichLoyalty\":{\"type\":\"LoyaltyAbility\"}}} "
+      (CostSubject.Type.Activations (ActivationCriteria.MkActivationCriteria (Just (KeywordDesignator.OfFamily KeywordFamily.Equip)) (Just AbilityKind.NonManaAbility) (Just LoyaltyKind.LoyaltyAbility) (Just (AbilityName.MkAbilityName (Text.pack "tap")))))
+      " {\"type\":\"Activations\",\"value\":{\"grantedBy\":{\"type\":\"OfFamily\",\"value\":{\"type\":\"Equip\"}},\"whichAbility\":\"tap\",\"whichKind\":{\"type\":\"NonManaAbility\"},\"whichLoyalty\":{\"type\":\"LoyaltyAbility\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CostSubject.codec

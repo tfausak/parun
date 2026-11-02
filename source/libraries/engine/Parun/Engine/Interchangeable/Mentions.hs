@@ -2387,7 +2387,7 @@ playerDesignationTallyNames asking x = case x of
 
 activationCriteriaNames :: (Monoid r) => Asking r -> ActivationCriteria.ActivationCriteria -> r
 activationCriteriaNames asking x = case x of
-  ActivationCriteria.MkActivationCriteria grantedBy _whichKind _whichLoyalty -> foldMap (keywordDesignatorNames asking) grantedBy
+  ActivationCriteria.MkActivationCriteria grantedBy _whichKind _whichLoyalty _whichAbility -> foldMap (keywordDesignatorNames asking) grantedBy
 
 costAdditionNames :: (Monoid r) => Asking r -> CostAddition.CostAddition -> r
 costAdditionNames asking x = case x of

@@ -18,7 +18,7 @@ spec s = Spec.describe s "Parun.Codec.ActivationsThisTurn" $ do
       ( ActivationsThisTurn.MkActivationsThisTurn
           { ActivationsThisTurn.activator = PlayerRef.Relative PlayerRelation.You,
             ActivationsThisTurn.source = Filter.And [],
-            ActivationsThisTurn.criteria = ActivationCriteria.MkActivationCriteria {ActivationCriteria.grantedBy = Nothing, ActivationCriteria.whichKind = Nothing, ActivationCriteria.whichLoyalty = Nothing}
+            ActivationsThisTurn.criteria = ActivationCriteria.MkActivationCriteria {ActivationCriteria.grantedBy = Nothing, ActivationCriteria.whichKind = Nothing, ActivationCriteria.whichLoyalty = Nothing, ActivationCriteria.whichAbility = Nothing}
           }
       )
       " {\"activator\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"source\":{\"type\":\"And\",\"value\":[]},\"criteria\":{}} "

@@ -47,7 +47,8 @@
                 }
               }
             ]
-          }
+          },
+          "name": "tap"
         }
       ],
       "manaCost": [
@@ -128,7 +129,9 @@
               },
               "subject": {
                 "type": "Activations",
-                "value": {}
+                "value": {
+                  "whichAbility": "tap"
+                }
               }
             }
           },
