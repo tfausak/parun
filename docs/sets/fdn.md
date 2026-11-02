@@ -10,27 +10,7 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Into the Roil: `_Rule:SpellActions_Kicker`
-- Involuntary Employment: `_Action:GainControlOfPermanentUntil`
-- Jazal Goldmane: `_LayerEffect:AdjustPTX`
-- Joust Through: renders differently from its Oracle text
-- Kaito, Cunning Infiltrator: `field: Loyalty` (#5711)
-- Kalastria Highborn: `_Trigger:Or`
-- Kellan, Planar Trailblazer: `_Action:If`
-- Kiora, the Rising Tide: `_CreatableToken:NamedTokenWithPT`
-- Koma, World-Eater: `_Rule:FromStack`
-- Kykar, Zephyr Awakener: `_Action:CreateFutureTrigger`
-- Lathril, Blade of the Elves: `_GameNumber:Trigger_AmountOfDamageDealt`
-- Leyline Axe: `_Rule:IfCardIsInOpeningHand`
-- Lightshell Duo: `_Action:Surveil`
-- Linden, the Steadfast Queen: `_Trigger:WhenACreatureAttacks`
-- Loot, Exuberant Explorer: `_Rule:PlayerEffect`
-- Lunar Insight: `_GameNumber:NumDifferentManaValuesAmongPermanents`
-- Maelstrom Pulse: `_Permanents:SinglePermanent`
-- Make Your Move: `_Permanents:PowerIs`
-- Marauding Blight-Priest: `_Trigger:WhenAPlayerGainsLife`
 - Maze's End: `_Cost:PutPermanentIntoItsOwnersHand`
-- Micromancer: `_CardsInLibrary:ManaValueIs`
 - Midnight Snack: `_Players:AttackedThisTurn`
 - Mild-Mannered Librarian: `_Action:CreatePermanentLayerEffect`
 - Mischievous Mystic: `_Trigger:WhenAPlayerDrawsTheirNthCardEachTurn`

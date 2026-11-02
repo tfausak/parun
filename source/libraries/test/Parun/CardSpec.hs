@@ -3363,6 +3363,8 @@ namedTokens =
       CardName.MkCardName (Text.pack "Bearer of the Wilds"),
       -- CR 111.10j's Cursed Role (Spiteful Hexmage).
       CardName.MkCardName (Text.pack "Cursed"),
+      -- Koma, World-Eater's "3/3 blue Serpent creature tokens named Koma's Coil".
+      CardName.MkCardName (Text.pack "Koma's Coil"),
       -- Goblin Kaboomist's "a colorless artifact token named Land Mine".
       CardName.MkCardName (Text.pack "Land Mine"),
       CardName.MkCardName (Text.pack "Nalaar Aetherjet"),
