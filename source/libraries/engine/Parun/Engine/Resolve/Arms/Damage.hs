@@ -826,25 +826,24 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
                     -- both together; a REGRESSION FENCE, no card printing
                     -- "exactly" beside several descriptions.
                     required = min (Common.mostDiffering differentIn gs capHere matches) (List.genericLength (described searcher gs matches))
-                    fills given = Common.differing differentIn gs given == given && described searcher gs given == given && List.genericLength given == required
-                    -- RE-ASKED when short, Parun.Engine.Engine's CR 603.3d
+                    -- CR 701.23a: a find is cards matching the description, so
+                    -- an answer the filters below would cut down -- more than
+                    -- the count, two sharing a Search.differentIn value, one
+                    -- no description admits -- is asked again, not trimmed.
+                    admissible given = Common.differing differentIn gs given == given && described searcher gs given == given && (if exactly then List.genericLength given == required else List.genericLength given <= capHere)
+                    -- RE-ASKED when illegal, Parun.Engine.Engine's CR 603.3d
                     -- shape: a repeat of an answer already refused is taken
                     -- as it stands, since a pure decider repeats itself and
                     -- answering on its behalf is the one thing this may not
                     -- do. Keyed on the answer narrowed to the offer, so the
                     -- recursion terminates.
-                    askExactly rejected = do
+                    ask rejected = do
                       given <- ListUtils.nubOrd . filter (`List.elem` matches) <$> Game.choose (Prompt.Search decider searcher matches capHere)
-                      if fills given || Set.member given rejected then pure given else askExactly (Set.insert given rejected)
-                answer <-
-                  if Set.null searchedZones
-                    then pure []
-                    else
-                      if exactly
-                        then askExactly Set.empty
-                        else Game.choose (Prompt.Search decider searcher matches capHere)
+                      if admissible given || Set.member given rejected then pure given else ask (Set.insert given rejected)
+                answer <- if Set.null searchedZones then pure [] else ask Set.empty
                 -- CR 701.23a: every card found is one the filter admits.
-                -- Filtered, not trusted, deduplicated, and truncated to the cap.
+                -- Filtered, not trusted, deduplicated, and truncated to the cap:
+                -- an inadmissible answer is still taken when repeated.
                 -- What a SHORT answer leaves is the difference between CR
                 -- 701.23b and CR 701.23d, and it is settled PER ZONE: CR
                 -- 701.23b, CR 701.23c and CR 701.23d each speak of a HIDDEN

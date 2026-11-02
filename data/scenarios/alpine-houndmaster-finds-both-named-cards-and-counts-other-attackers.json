@@ -181,12 +181,25 @@
       "turn": 1
     },
     {
-      "do": {
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1,
+      "refuse": {
         "Answer": {
           "prompt": "Search",
           "with": [
             "$w1",
             "$w2"
+          ]
+        }
+      }
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$w1"
           ]
         }
       },

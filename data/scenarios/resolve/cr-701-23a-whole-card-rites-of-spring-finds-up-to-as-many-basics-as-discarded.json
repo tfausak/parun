@@ -1,6 +1,6 @@
 {
   "description": "CR 701.23a whole card: Rites of Spring finds up to as many basic lands as it discarded",
-  "note": "Two discarded and three basics named: the cap of two holds, so the third basic stays in the library with the Piker.",
+  "note": "Two discarded and three basics named: the cap of two holds, so that answer is asked again, and the third basic stays in the library with the Piker.",
   "board": {
     "seats": [
       {
@@ -115,13 +115,27 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "alice",
-      "do": {
+      "refuse": {
         "Answer": {
           "prompt": "Search",
           "with": [
             "$plains",
             "$swamp",
             "$lib-island"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$plains",
+            "$swamp"
           ]
         }
       }
