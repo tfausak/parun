@@ -3209,7 +3209,7 @@ castOf event = case event of
 -- trigger, or later in one CR 117.5 window -- is not counted. Nothing where the
 -- log holds no cast of `spell`: a spell that was never cast (CR 707.10's copy)
 -- has no place among the turn's casts. Storm's count (CR 702.40a,
--- EventShape.SpellCastBefore) and Clarion Spirit's ordinal
+-- CastWindow.BeforeEvaluated) and Clarion Spirit's ordinal
 -- (Event.Match.castOrdinal) read it.
 castsBefore :: ObjectId -> GameState -> Maybe [SpellWasCast.SpellWasCast]
 castsBefore spell gs =

@@ -45,6 +45,7 @@ import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CastObligation as CastObligation
 import qualified Parun.Types.CastOffer as CastOffer
 import qualified Parun.Types.CastRepetition as CastRepetition
+import qualified Parun.Types.CastWindow as CastWindow
 import Parun.Types.CastingPermission (CastingPermission)
 import qualified Parun.Types.CastingPermission as CastingPermission
 import qualified Parun.Types.ChangeMode as ChangeMode
@@ -8458,7 +8459,7 @@ storm =
   Mint.triggerOf
     TriggerCondition.SelfCast
     Nothing
-    (copiesOf (Quantity.Count (Count.MkCount (Scope.InHistory EventShape.SpellCastBefore) (Filter.And []) Aggregation.Members)))
+    (copiesOf (Quantity.Count (Count.MkCount (Scope.InHistory (EventShape.SpellCast CastWindow.BeforeEvaluated)) (Filter.And []) Aggregation.Members)))
 
 -- CR 702.69a: "When you cast this spell, copy it for each permanent that was put
 -- into a graveyard from the battlefield this turn. If the spell has any targets,

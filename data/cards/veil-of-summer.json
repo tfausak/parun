@@ -67,7 +67,10 @@
                         "scope": {
                           "type": "InHistory",
                           "value": {
-                            "type": "SpellCast"
+                            "type": "SpellCast",
+                            "value": {
+                              "type": "ThisTurn"
+                            }
                           }
                         }
                       }

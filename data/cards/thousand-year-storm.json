@@ -124,7 +124,10 @@
                                   "scope": {
                                     "type": "InHistory",
                                     "value": {
-                                      "type": "SpellCastBefore"
+                                      "type": "SpellCast",
+                                      "value": {
+                                        "type": "BeforeEvaluated"
+                                      }
                                     }
                                   }
                                 }

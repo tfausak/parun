@@ -1,5 +1,5 @@
 {
-  "description": "Three wish counters, one spent; alice can't activate it once it's bob's, and it passes back on bob's turn.",
+  "description": "Three wish counters, one spent; alice gives it to carol over bob, who can't activate it, and carol passes it on to bob, not back to alice.",
   "board": {
     "seats": [
       {
@@ -48,6 +48,29 @@
         "library": [
           {
             "card": "Island",
+            "label": "b0"
+          },
+          {
+            "card": "Island",
+            "label": "b1"
+          },
+          {
+            "card": "Island",
+            "label": "b2"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Swamp",
+            "label": "bs"
+          }
+        ]
+      },
+      {
+        "name": "carol",
+        "library": [
+          {
+            "card": "Island",
             "label": "is2"
           },
           {
@@ -62,7 +85,7 @@
         "battlefield": [
           {
             "card": "Swamp",
-            "label": "bs"
+            "label": "cs"
           }
         ]
       }
@@ -162,6 +185,17 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseOpponent",
+          "with": "carol"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
       "check": {
         "Count": {
           "player": "alice",
@@ -227,7 +261,7 @@
       "check": {
         "View": {
           "of": "Controller",
-          "is": "bob",
+          "is": "carol",
           "object": "Wishclaw Talisman"
         }
       }
@@ -249,11 +283,24 @@
       "turn": 2,
       "step": "PrecombatMain",
       "player": "bob",
-      "do": {
+      "refuse": {
         "Activate": {
           "object": "Wishclaw Talisman",
           "mana": [
             "$bs"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "carol",
+      "do": {
+        "Activate": {
+          "object": "Wishclaw Talisman",
+          "mana": [
+            "$cs"
           ],
           "costOrder": [
             0,
@@ -263,15 +310,15 @@
       }
     },
     {
-      "turn": 2,
+      "turn": 3,
       "step": "PrecombatMain",
-      "player": "bob",
+      "player": "carol",
       "do": "Pass"
     },
     {
-      "turn": 2,
+      "turn": 3,
       "step": "PrecombatMain",
-      "player": "bob",
+      "player": "carol",
       "do": {
         "Answer": {
           "prompt": "Search",
@@ -282,9 +329,9 @@
       }
     },
     {
-      "turn": 2,
+      "turn": 3,
       "step": "PrecombatMain",
-      "player": "bob",
+      "player": "carol",
       "do": {
         "Answer": {
           "prompt": "Shuffle",
@@ -295,12 +342,23 @@
       }
     },
     {
-      "turn": 2,
+      "turn": 3,
       "step": "PrecombatMain",
-      "player": "bob",
+      "player": "carol",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseOpponent",
+          "with": "bob"
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "carol",
       "check": {
         "Count": {
-          "player": "bob",
+          "player": "carol",
           "zone": "Hand",
           "card": "Plains",
           "count": 1
@@ -308,13 +366,13 @@
       }
     },
     {
-      "turn": 2,
+      "turn": 3,
       "step": "PrecombatMain",
-      "player": "bob",
+      "player": "carol",
       "check": {
         "View": {
           "of": "Controller",
-          "is": "alice",
+          "is": "bob",
           "object": "Wishclaw Talisman"
         }
       }
