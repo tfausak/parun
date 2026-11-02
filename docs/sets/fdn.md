@@ -10,27 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Abrade: `_Actions:Modal_ChooseOne`
-- Abyssal Harvester: `_CardsInGraveyards:And`
-- Adventuring Gear:
-  `_Trigger:WhenAPermanentEntersTheBattlefieldUnderAPlayersControl`
-- Affectionate Indrik: `_Players:Other`
-- Alesha, Who Laughs at Fate: `_Players:AttackedThisTurn`
-- Ambush Wolf: `_Target:UptoOneTargetGraveyardCard`
-- An Offer You Can't Refuse: `_Player:ControllerOfSpell`
-- Ancestor Dragon: `_Trigger:WhenAnyNumberOfCreaturesAttack`
-- Arahbo, the First Fang: `_Trigger:Or`
-- Arbiter of Woe: `_Rule:CastEffect`
-- Arcane Epiphany: `_Rule:CastEffect`
-- Archmage of Runes: `_Rule:PlayerEffect`
-- Armasaur Guide: `_Trigger:WhenAPlayerAttacksWithANumberOfCreatures`
-- Ashroot Animist: `_LayerEffect:AdjustPTX`
-- Authority of the Consuls: `_Rule:ReplaceWouldEnter`
-- Ayli, Eternal Pilgrim: `_GameNumber:ToughnessOfTheSacrificedCreature`
-- Bake into a Pie: `_CreatableToken:FoodToken`
-- Ballyrush Banneret: `_Rule:PlayerEffect`
-- Banishing Light: `_Action:Exile`
-- Banner of Kinship: `_ReplacementActionWouldEnter:ChooseACreatureType`
 - Battlesong Berserker: `_Trigger:WhenAPlayerAttacks`
 - Biogenic Upgrade: `_PutCountersAction:DistributedCounters`
 - Bite Down: `_Players:Other`
