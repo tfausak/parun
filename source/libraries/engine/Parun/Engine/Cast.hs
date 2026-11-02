@@ -59,7 +59,6 @@ import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.CostReduction as CostReduction
 import qualified Parun.Types.CounterCause as CounterCause
-import qualified Parun.Types.DelayedTrigger as DelayedTrigger
 import qualified Parun.Types.DuringPhase as DuringPhase
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EntwineDecision as EntwineDecision
@@ -2990,19 +2989,7 @@ choosePlayPermission pid oid options =
 followIntoSpell :: Maybe ExilePlayPermission.ExilePlayPermission -> ObjectId -> ObjectId -> GameState -> GameState
 followIntoSpell permission old new gs = case permission of
   Nothing -> gs
-  Just granted ->
-    let grantedBy = (== ExilePlayPermission.source granted)
-        follow row
-          | grantedBy (ActiveReplacement.source row) = Event.renameSlots old new row
-          | otherwise = row
-        followDelayed entry
-          | grantedBy (DelayedTrigger.source entry) =
-              entry {DelayedTrigger.bindings = fmap (Binding.renameObject old new) (DelayedTrigger.bindings entry)}
-          | otherwise = entry
-     in gs
-          { GameState.replacements = fmap follow (GameState.replacements gs),
-            GameState.delayedTriggers = fmap followDelayed (GameState.delayedTriggers gs)
-          }
+  Just granted -> Event.renameCaptured (== ExilePlayPermission.source granted) old new gs
 
 -- CR 611.2a / 611.2c: Savage Summoning's "the next creature spell you cast
 -- this turn ... That spell can't be countered. That creature enters with an

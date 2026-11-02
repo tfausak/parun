@@ -193,7 +193,9 @@ resolveOneWith runSubgame = do
             _ ->
               let chosen = Binding.modesOf (Object.bindings obj)
                   modal = TriggeredAbility.modal ability
-               in Resolve.resolveModesWith runSubgame oid srcId (Modal.chosenModes chosen modal)
+               in do
+                    Resolve.resolveModesWith runSubgame oid srcId (Modal.chosenModes chosen modal)
+                    afterMadness (TriggeredAbility.condition ability) srcId gs
         -- CR 114.5: an emblem is never on the stack (created into the command
         -- zone, never cast). Drop it, like a token.
         Source.OfEmblem _ -> State.put gs {GameState.stack = rest}
@@ -242,6 +244,23 @@ resolveOneWith runSubgame = do
               let chosen = Binding.modesOf (Object.bindings obj)
                   modal = TriggeredAbility.modal ability
                in Resolve.resolveModesWith runSubgame oid oid (Modal.chosenModes chosen modal)
+
+-- CR 400.7k: after a madness trigger resolves, what its exiled card became, unless
+-- that is a spell ("wasn't cast") or in a hidden zone ("a public zone"). Only a
+-- card still there as it began (`before`), the trigger's own move: see "What
+-- moved a madness card" in docs/decisions.md.
+afterMadness :: TriggerCondition.TriggerCondition -> ObjectId -> GameState.GameState -> Game ()
+afterMadness condition exiled before = case condition of
+  TriggerCondition.SelfExiledForMadness
+    | Maybe.isJust (Game.lookupObject exiled before) -> do
+        now <- State.get
+        let found arrival = case fmap Object.zone (Game.lookupObject arrival now) of
+              Nothing -> False
+              Just Zone.Stack -> False
+              Just zone -> not (Game.isHiddenZone zone)
+        Monad.forM_ (filter found (Game.arrivalsOf exiled now)) $ \arrival ->
+          State.modify' (Event.findDeclinedMadness exiled arrival)
+  _ -> pure ()
 
 -- CR 608.2a's re-check of an intervening "if", asked of a triggered ability that
 -- is ALREADY ON THE STACK: does its condition still hold? False is the removal

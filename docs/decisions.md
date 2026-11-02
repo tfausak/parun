@@ -599,6 +599,34 @@ Entries are ordered by the first rule each cites.
   printing with such a clause.
 - **Issue**: none.
 
+## How a mana of any type rider combines with an only-clause
+
+- **Question**: Celestial Dawn lets other mana be spent "only as though it were
+  colorless"; a cast permission says "mana of any type can be spent". May red
+  mana pay that spell's {B}?
+- **Rules**: CR 118.14, 609.4a, 609.4b; CR of 2026-08-07.
+- **Decision**: Yes. Both permissions apply (CR 609.4a), the only-clause naming
+  what it permits rather than saying "can't", as in the entry above.
+- **Rejected**: The only-clause overriding the rider under CR 101.2, which the
+  entry above rejects for two only-clauses.
+- **Site**: `Parun.Engine.Mana.relax`, proved by the scenario "CR 118.14 / 609.4a
+  Tinybones, Bauble Burglar under Celestial Dawn"; Dire Fleet Daredevil shares it.
+- **Issue**: none.
+
+## What moved a madness card
+
+- **Question**: CR 400.7k follows a madness card that "wasn't cast and was moved
+  to a public zone". Does that include a move by something else ahead of the
+  madness trigger's resolution, Pull from Eternity's?
+- **Rules**: CR 400.7, 400.7k, 702.35a, 702.35c; CR of 2026-08-07.
+- **Decision**: No, only the card the resolving trigger itself found in exile:
+  the exception is to CR 400.7 and is worded around that resolution.
+- **Rejected**: Any earlier move, which fits "was moved" alone but makes an
+  unrelated effect's move a madness outcome.
+- **Site**: `Parun.Engine.Stack.afterMadness`, proved by the scenario "CR 400.7k
+  Tinybones, Bauble Burglar: a madness card another effect moved".
+- **Issue**: none.
+
 ## Whether a condition that cannot be evaluated holds
 
 - **Question**: When a condition's quantity cannot be determined, is it true,
