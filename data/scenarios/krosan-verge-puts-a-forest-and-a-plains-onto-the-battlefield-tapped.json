@@ -1,11 +1,12 @@
 {
   "description": "CR 701.23h whole card: Krosan Verge's one search puts a Forest card and a Plains card onto the battlefield tapped",
-  "note": "Alice names two Forests and a Plains; only one Forest answers for a description, so the other stays in her library.",
+  "note": "Alice's answer of two Forests is asked again, since only one Forest answers for a description; she then names a Forest and the Plains, and the other Forest stays in her library.",
   "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Krosan Verge", "label": "verge"}, {"card": "Swamp", "label": "s1"}, {"card": "Swamp", "label": "s2"}], "library": [{"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}, {"card": "Plains", "label": "pl"}, {"card": "Island", "label": "isl"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$verge", "mana": ["$s1", "$s2", null], "costOrder": [0, 1]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$f1", "$f2", "$pl"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "Search", "with": ["$f1", "$f2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$f1", "$pl"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$f2", "$isl"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Forest", "count": 1}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Plains", "count": 1}}},

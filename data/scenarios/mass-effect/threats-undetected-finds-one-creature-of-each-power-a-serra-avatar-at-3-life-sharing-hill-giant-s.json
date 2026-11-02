@@ -1,6 +1,6 @@
 {
   "description": "Threats Undetected finds one creature of each power, a Serra Avatar at 3 life sharing Hill Giant's",
-  "note": "Alice names all five creature cards. Goblin Chariot shares Goblin Piker's power 2 and Serra Avatar's CR 208.2a power (her life, 3) shares Hill Giant's, so both are dropped and the find is Goblin Piker, Hill Giant and Bird Maiden. Bob picks two cards found under either reading, so a find not held to different powers would still reach the hand check, with Goblin Chariot and Serra Avatar in hand. The shuffle answers fix no outcome.",
+  "note": "Goblin Chariot shares Goblin Piker's power 2 and Serra Avatar's CR 208.2a power (her life, 3) shares Hill Giant's, so Alice's answers pairing each are asked again, and the find is Goblin Piker, Hill Giant and Bird Maiden. Bob picks two of them. The shuffle answers fix no outcome.",
   "board": {
     "seats": [
       {
@@ -72,14 +72,40 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "alice",
+      "refuse": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$goblin-piker",
+            "$goblin-chariot"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "refuse": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$hill-giant",
+            "$serra-avatar"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
       "do": {
         "Answer": {
           "prompt": "Search",
           "with": [
             "$goblin-piker",
-            "$goblin-chariot",
             "$hill-giant",
-            "$serra-avatar",
             "$bird-maiden"
           ]
         }
