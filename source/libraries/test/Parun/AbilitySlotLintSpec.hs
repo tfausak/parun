@@ -49,6 +49,7 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
 import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
+import qualified Parun.Types.ActivationCriteria as ActivationCriteria
 import qualified Parun.Types.ActivationProhibition as ActivationProhibition
 import qualified Parun.Types.AffectPlayers as AffectPlayers
 import qualified Parun.Types.AffectedPlayers as AffectedPlayers
@@ -73,6 +74,8 @@ import qualified Parun.Types.Condition as Condition.Type
 import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.CostChoice as CostChoice
 import qualified Parun.Types.CostComponent as CostComponent
+import qualified Parun.Types.CostModifier as CostModifier
+import qualified Parun.Types.CostSubject as CostSubject
 import qualified Parun.Types.Count as Count.Type
 import qualified Parun.Types.CountedDiscard as CountedDiscard
 import qualified Parun.Types.CounterKind as CounterKind
@@ -703,11 +706,15 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- It must name an ACTIVATED ability, the one carrier
   -- Parun.Engine.Resolve.Slots.resolvingAbilityName files a name for.
   --
+  -- CR 601.2f's ActivationCriteria.whichAbility is the fourth
+  -- (namedCostAbilities), and must name an ACTIVATED ability too: a cost
+  -- reduction naming anything else reduces nothing.
+  --
   -- A removal may name any carrier, the rule and player abilities CR 116.2d's
   -- ignore names included (Synthetic Grounded Sentry, Synthetic Hushed Warden),
   -- so the "unused" half reads every reader: a named ability is used when a
-  -- removal, an exile reference or an ignore reads it.
-  Spec.it s "CR 613.1f/607.2a every named removal or exile reference names an ability its face declares, and every named ability is read" $ do
+  -- removal, an exile reference, a cost reduction or an ignore reads it.
+  Spec.it s "CR 613.1f/607.2a/601.2f every named removal, exile reference or cost reduction names an ability its face declares, and every named ability is read" $ do
     ps <- S.allPrintings s corpus
     let offenders = filter (anyFace abilityNameOffends . Printing.card) ps
     Spec.assertEqWith s "no dangling or unused ability names" (fmap (S.nameOf . Printing.card) offenders) []
@@ -1590,17 +1597,32 @@ namedRemovals face =
             <> concatMap removals (concatMap stored (cardAuthoredEffects face))
         )
 
--- CR 613.1f / 607.2a / 116.2d: does a face name an ability it does not
--- declare, declare one nothing reads, or name a non-activated one as an exile
--- pile? The case "every named removal or exile reference names an ability its
--- face declares" asks it of every printing.
+-- CR 613.1f / 607.2a / 116.2d / 601.2f: does a face name an ability it does
+-- not declare, declare one nothing reads, or name a non-activated one as an
+-- exile pile or a cost reduction's ability? The case "every named removal,
+-- exile reference or cost reduction names an ability its face declares" asks
+-- it of every printing.
 abilityNameOffends :: Face.Face Card.Type.Card -> Bool
 abilityNameOffends face =
   let declared = Set.union (declaredAbilityNames face) (declaredIgnorableAbilityNames face)
-      readNames = Set.unions [namedRemovals face, namedExileReferences face, ignoredAbilityNames face]
-   in not (Set.isSubsetOf (Set.union (namedRemovals face) (namedExileReferences face)) declared)
+      activatedOnly = Set.union (namedExileReferences face) (namedCostAbilities face)
+      readNames = Set.unions [namedRemovals face, activatedOnly, ignoredAbilityNames face]
+   in not (Set.isSubsetOf (Set.union (namedRemovals face) activatedOnly) declared)
         || declared /= readNames
-        || not (Set.isSubsetOf (namedExileReferences face) (Set.fromList (Maybe.mapMaybe ActivatedAbility.name (Face.activatedAbilities face))))
+        || not (Set.isSubsetOf activatedOnly (Set.fromList (Maybe.mapMaybe ActivatedAbility.name (Face.activatedAbilities face))))
+
+-- Every AbilityName a face's printed cost modifiers narrow to
+-- (ActivationCriteria.whichAbility): Sanctum of Tranquil Light's "this
+-- ability costs {1} less". Printed player abilities only, the one place "this
+-- ability" is written.
+namedCostAbilities :: Face.Face Card.Type.Card -> Set.Set AbilityName.AbilityName
+namedCostAbilities face =
+  Set.fromList
+    [ name
+    | PlayerEffect.ModifyCost modifier <- fmap PlayerStaticAbility.effect (Face.playerAbilities face),
+      CostSubject.Activations criteria <- [CostModifier.subject modifier],
+      Just name <- [ActivationCriteria.whichAbility criteria]
+    ]
 
 -- Every AbilityName a face's CR 607.2a references name: the exiling ability
 -- each OfAbility pile reads, wherever one is written. Parun.CardSpec.cardFilters

@@ -428,7 +428,7 @@ graceUsed pid srcId gs =
 -- demands nothing at all (Mana.waysOf), so leaving it in place would answer the
 -- same as X=0 by accident rather than by rule -- the accident that made the {X}
 -- free (#544).
-payableCost :: [(Map.Map SlotName (Natural, Natural), Map.Map SlotName (Set.Set ObjectId))] -> Maybe Keyword -> Maybe (Set.Set ManaType.ManaType) -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Bool
+payableCost :: [(Map.Map SlotName (Natural, Natural), Map.Map SlotName (Set.Set ObjectId))] -> Maybe Keyword -> Maybe AbilityName.AbilityName -> Maybe (Set.Set ManaType.ManaType) -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Bool
 payableCost aimable = payableCostAt aimable 0
 
 -- The same question asked at some OTHER value of X -- `activatable` asks it at
@@ -452,16 +452,16 @@ payableCost aimable = payableCostAt aimable 0
 -- offers: CR 601.2b's completion comes before CR 601.2f's totalling, so a {2/R}
 -- totalled while still spelled {2/R} would hide the generic reduction the
 -- announcement exposes.
-payableCostAt :: [(Map.Map SlotName (Natural, Natural), Map.Map SlotName (Set.Set ObjectId))] -> Natural -> Maybe Keyword -> Maybe (Set.Set ManaType.ManaType) -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Bool
-payableCostAt aimable x stamp spendable pid srcId gs =
+payableCostAt :: [(Map.Map SlotName (Natural, Natural), Map.Map SlotName (Set.Set ObjectId))] -> Natural -> Maybe Keyword -> Maybe AbilityName.AbilityName -> Maybe (Set.Set ManaType.ManaType) -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Bool
+payableCostAt aimable x stamp named spendable pid srcId gs =
   let pcs = Projection.projectAll gs
-   in payableCostAtGiven aimable (Cost.supplyManaSourcesGiven (Projection.controlGrants gs) pcs pid gs) pcs x stamp spendable pid srcId gs
+   in payableCostAtGiven aimable (Cost.supplyManaSourcesGiven (Projection.controlGrants gs) pcs pid gs) pcs x stamp named spendable pid srcId gs
 
 -- The same predicate on a board the caller already walked -- see
 -- Cost.canPaySomeCompletionGiven.
-payableCostAtGiven :: [(Map.Map SlotName (Natural, Natural), Map.Map SlotName (Set.Set ObjectId))] -> [ObjectId] -> Map.Map ObjectId PC.ProjectedCharacteristics -> Natural -> Maybe Keyword -> Maybe (Set.Set ManaType.ManaType) -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Bool
-payableCostAtGiven aimable sources pcs x stamp spendable pid srcId gs cost =
-  aimingSomewhere (\adjustments -> Cost.plusComponents adjustments (Cost.substituteX x cost)) aimable stamp (Loyalty.loyaltyKindOf cost) pid srcId gs (\slots adjustments -> let totalled = Cost.plusComponents adjustments (Cost.substituteX x cost) in Cost.canPaySomeCompletionGiven slots (PaymentSubject.Activating srcId stamp spendable) ManaSpending.AsProduced sources pcs pid srcId (Cost.totalManas adjustments) (Cost.waterbendSubstitutions (Cost.Type.components totalled) slots pid srcId gs) totalled gs)
+payableCostAtGiven :: [(Map.Map SlotName (Natural, Natural), Map.Map SlotName (Set.Set ObjectId))] -> [ObjectId] -> Map.Map ObjectId PC.ProjectedCharacteristics -> Natural -> Maybe Keyword -> Maybe AbilityName.AbilityName -> Maybe (Set.Set ManaType.ManaType) -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Bool
+payableCostAtGiven aimable sources pcs x stamp named spendable pid srcId gs cost =
+  aimingSomewhere (\adjustments -> Cost.plusComponents adjustments (Cost.substituteX x cost)) aimable stamp named (Loyalty.loyaltyKindOf cost) pid srcId gs (\slots adjustments -> let totalled = Cost.plusComponents adjustments (Cost.substituteX x cost) in Cost.canPaySomeCompletionGiven slots (PaymentSubject.Activating srcId stamp spendable) ManaSpending.AsProduced sources pcs pid srcId (Cost.totalManas adjustments) (Cost.waterbendSubstitutions (Cost.Type.components totalled) slots pid srcId gs) totalled gs)
 
 -- CR 601.2f's totalling asked where CR 601.2c's targets do not exist yet: the
 -- predicate holds if SOME aiming this activation could still take leaves the
@@ -517,8 +517,8 @@ payableCostAtGiven aimable sources pcs x stamp spendable pid srcId gs cost =
 -- `slotReading` is asked of the cost with the blind gather's components added,
 -- so a criterion arriving on a component CR 601.2f's adjustments add takes the
 -- cost search as a printed one does.
-aimingSomewhere :: (CostAdjustments.CostAdjustments -> Cost Keyword) -> [(Map.Map SlotName (Natural, Natural), Map.Map SlotName (Set.Set ObjectId))] -> Maybe Keyword -> LoyaltyKind.LoyaltyKind -> PlayerId -> ObjectId -> GameState -> (Map.Map SlotName (Set.Set Recipient.Recipient) -> CostAdjustments.CostAdjustments -> Bool) -> Bool
-aimingSomewhere costWith aimable stamp loyalty pid srcId gs payable =
+aimingSomewhere :: (CostAdjustments.CostAdjustments -> Cost Keyword) -> [(Map.Map SlotName (Natural, Natural), Map.Map SlotName (Set.Set ObjectId))] -> Maybe Keyword -> Maybe AbilityName.AbilityName -> LoyaltyKind.LoyaltyKind -> PlayerId -> ObjectId -> GameState -> (Map.Map SlotName (Set.Set Recipient.Recipient) -> CostAdjustments.CostAdjustments -> Bool) -> Bool
+aimingSomewhere costWith aimable stamp named loyalty pid srcId gs payable =
   -- CR 605.1a's kind is AbilityKind.NonManaAbility at all three sites in this
   -- module, and CR 605.3b is why: activatableGiven refuses a mana ability
   -- outright and the cost conjunct this gate serves sits after that refusal,
@@ -532,7 +532,7 @@ aimingSomewhere costWith aimable stamp loyalty pid srcId gs payable =
   -- than an ability: Loyalty.loyaltyKindOf reads it off the same printed cost the
   -- caller is measuring, so Carth the Lion's addition is totalled in here only
   -- for an ability whose own cost carries a loyalty symbol.
-  let gather aimedAt = Cost.activationAdjustments aimedAt stamp AbilityKind.NonManaAbility loyalty pid srcId gs
+  let gather aimedAt = Cost.activationAdjustments aimedAt stamp named AbilityKind.NonManaAbility loyalty pid srcId gs
       candidates = Set.unions (concatMap (Map.elems . snd) aimable)
       blind = gather Set.empty
       -- The added components are the blind gather's under every aiming:
@@ -605,8 +605,8 @@ leastX pid srcId ability gs = Maybe.fromMaybe (ActivatedAbility.minimumX ability
 -- Blighted Nightmare's blight route terminate -- an announced blight's demand
 -- never grows (Cost.demandGrowsWithX), so the climb has no other ground to stop
 -- on. Cast.affordableX takes the same argument off Face.maximumX.
-affordableX :: Maybe Natural -> [(Map.Map SlotName (Natural, Natural), Map.Map SlotName (Set.Set ObjectId))] -> Maybe Keyword -> Maybe (Set.Set ManaType.ManaType) -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Natural
-affordableX mCeiling aimable stamp spendable pid srcId gs cost = Cost.greatestPayableX mCeiling (\x -> payableCostAt aimable x stamp spendable pid srcId gs cost) cost
+affordableX :: Maybe Natural -> [(Map.Map SlotName (Natural, Natural), Map.Map SlotName (Set.Set ObjectId))] -> Maybe Keyword -> Maybe AbilityName.AbilityName -> Maybe (Set.Set ManaType.ManaType) -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Natural
+affordableX mCeiling aimable stamp named spendable pid srcId gs cost = Cost.greatestPayableX mCeiling (\x -> payableCostAt aimable x stamp named spendable pid srcId gs cost) cost
 
 -- CR 601.2b / 118.9 through CR 602.2b: the costs a player may announce for this
 -- activation -- its printed activation cost, then each alternative an effect
@@ -722,4 +722,4 @@ activatableGiven pools sources pid srcId ability gs =
         && riderOk pid srcId ability gs
         && loyaltyOk pid srcId ability gs
         && Modal.selectionPossible fillable (Modal.Type.selection modal)
-        && any (payableCostAtGiven aimable sources pcs (leastX pid srcId ability gs) (ActivatedAbility.keyword ability) (ActivationRestriction.spendableTypes srcId (ActivatedAbility.restrictions ability) gs) pid srcId gs) (costsFor pid ability gs)
+        && any (payableCostAtGiven aimable sources pcs (leastX pid srcId ability gs) (ActivatedAbility.keyword ability) (ActivatedAbility.name ability) (ActivationRestriction.spendableTypes srcId (ActivatedAbility.restrictions ability) gs) pid srcId gs) (costsFor pid ability gs)
