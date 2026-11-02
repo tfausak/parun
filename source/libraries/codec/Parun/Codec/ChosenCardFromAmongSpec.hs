@@ -27,7 +27,8 @@ spec s = Spec.describe s "Parun.Codec.ChosenCardFromAmong" $ do
             ChosenCardFromAmong.filter = Filter.HasCardType CardType.Creature,
             ChosenCardFromAmong.count = HowMany.one,
             ChosenCardFromAmong.chooser = PlayerRef.Relative PlayerRelation.You,
-            ChosenCardFromAmong.pileChooser = Nothing
+            ChosenCardFromAmong.pileChooser = Nothing,
+            ChosenCardFromAmong.faceUpPile = False
           }
       )
       " {\"slot\":\"revealed\",\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
@@ -42,7 +43,8 @@ spec s = Spec.describe s "Parun.Codec.ChosenCardFromAmong" $ do
             ChosenCardFromAmong.filter = Filter.HasCardType CardType.Creature,
             ChosenCardFromAmong.count = HowMany.UpTo (Just (Quantity.Literal 2)),
             ChosenCardFromAmong.chooser = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "opponent")),
-            ChosenCardFromAmong.pileChooser = Nothing
+            ChosenCardFromAmong.pileChooser = Nothing,
+            ChosenCardFromAmong.faceUpPile = False
           }
       )
       " {\"slot\":\"revealed\",\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"count\":{\"type\":\"UpTo\",\"value\":{\"type\":\"Literal\",\"value\":2}},\"chooser\":{\"type\":\"InSlot\",\"value\":\"opponent\"}} "
@@ -56,8 +58,25 @@ spec s = Spec.describe s "Parun.Codec.ChosenCardFromAmong" $ do
             ChosenCardFromAmong.filter = Filter.And [],
             ChosenCardFromAmong.count = HowMany.UpTo Nothing,
             ChosenCardFromAmong.chooser = PlayerRef.Relative PlayerRelation.Opponent,
-            ChosenCardFromAmong.pileChooser = Just (PlayerRef.Relative PlayerRelation.You)
+            ChosenCardFromAmong.pileChooser = Just (PlayerRef.Relative PlayerRelation.You),
+            ChosenCardFromAmong.faceUpPile = False
           }
       )
       " {\"slot\":\"revealed\",\"filter\":{\"type\":\"And\",\"value\":[]},\"count\":{\"type\":\"UpTo\"},\"chooser\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}},\"pileChooser\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+  -- Curator of Destinies: you separate into a face-up and a face-down pile, and
+  -- an opponent takes one (CR 700.3).
+  Spec.it s "MkChosenCardFromAmong, a face-up pile" $
+    Common.assertCodec
+      s
+      ChosenCardFromAmong.codec
+      ( ChosenCardFromAmong.MkChosenCardFromAmong
+          { ChosenCardFromAmong.slot = SlotName.MkSlotName (Text.pack "looked"),
+            ChosenCardFromAmong.filter = Filter.And [],
+            ChosenCardFromAmong.count = HowMany.UpTo Nothing,
+            ChosenCardFromAmong.chooser = PlayerRef.Relative PlayerRelation.You,
+            ChosenCardFromAmong.pileChooser = Just (PlayerRef.Relative PlayerRelation.Opponent),
+            ChosenCardFromAmong.faceUpPile = True
+          }
+      )
+      " {\"slot\":\"looked\",\"filter\":{\"type\":\"And\",\"value\":[]},\"count\":{\"type\":\"UpTo\"},\"pileChooser\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}},\"faceUpPile\":true} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ChosenCardFromAmong.codec

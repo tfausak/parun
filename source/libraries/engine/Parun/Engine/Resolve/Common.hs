@@ -2100,7 +2100,7 @@ chooseCardFromAmong ::
   Map.Map SlotName (Set Recipient) ->
   ChosenCardFromAmong.ChosenCardFromAmong ->
   Game [ObjectId]
-chooseCardFromAmong resolving source controller legal chosen (ChosenCardFromAmong.MkChosenCardFromAmong slot filter_ count chooser pileChooser) = do
+chooseCardFromAmong resolving source controller legal chosen (ChosenCardFromAmong.MkChosenCardFromAmong slot filter_ count chooser pileChooser faceUpPile) = do
   members <- fromAmongMembers legal resolving chosen slot
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
@@ -2124,15 +2124,19 @@ chooseCardFromAmong resolving source controller legal chosen (ChosenCardFromAmon
     -- Fact or Fiction. Proved by the scenario "CR 700.3 Sphinx of Uthuun".
     Just pileRef -> do
       split <- case matching of
-        [_] -> pure matching
+        [_] | not faceUpPile -> pure matching
         _ -> pick AnyNumberOf.IntoPile matching
+      -- The face-up pile is shown as a reveal is, the other staying with those
+      -- who looked: every proof is a CR 700.3 Curator of Destinies scenario.
+      Monad.when faceUpPile (Monad.mapM_ (Event.revealResolving resolving controller) split)
       takePile resolving source controller legal pileRef matching split
 
 -- CR 700.3: the separating player's pick is one pile and the rest of the
 -- matching objects the other (CR 700.3a), either possibly empty (CR 700.3d),
 -- and the seat the ref names takes one, which is what this answers. A single
--- object splits only one way, so callers do not ask its separation; piles alike
--- (none matched) are not offered either. A ref naming nobody takes nothing (CR
+-- object splits only one way unless the piles differ in facing, so callers do
+-- not otherwise ask its separation; piles alike (none matched) are not offered
+-- either. A ref naming nobody takes nothing (CR
 -- 101.3).
 takePile :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerRef -> [ObjectId] -> [ObjectId] -> Game [ObjectId]
 takePile resolving source controller legal pileRef matching split = do
@@ -3460,7 +3464,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
             let scoped = Target.zoneScopePlayers (Plane.rangePerspective source controller gs) (Just controller) legal scope gs
              in not (null scoped) && all (\pid -> null (graveyardCardsOf context gs pid filter_)) scoped
           Chooser.BoundInSlot _ -> False
-      ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong slot filter_ count _ _) ->
+      ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong slot filter_ count _ _ _) ->
         mustPick count && maybe False (null . matchingFromAmong legal resolving controller source gs filter_ . stillPresent gs) (fromAmongBound slot)
       ObjectRef.ChosenPermanents choice -> mustPick (ChosenPermanents.count choice) && null (chosenCandidates legal resolving controller source gs choice)
       -- Only when no member names anything: a read always might.

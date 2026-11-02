@@ -5,6 +5,7 @@ import qualified Parun.Codec.EventShape as EventShape
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.CardArrivedIn as CardArrivedIn
+import qualified Parun.Types.CastWindow as CastWindow
 import qualified Parun.Types.EventShape as EventShape
 import qualified Parun.Types.MovedBetween as MovedBetween
 import qualified Parun.Types.Zone as Zone
@@ -36,16 +37,10 @@ spec s = Spec.describe s "Parun.Codec.EventShape" $ do
       " {\"type\":\"CardArrivedIn\",\"value\":{\"excluding\":[{\"type\":\"Battlefield\"}],\"to\":{\"type\":\"Graveyard\"}}} "
   -- CR 601.2i's cast: PAYLOADLESS, so the encoded form is the bare tag and a
   -- decoder that demanded a value would reject every card that names it.
-  Spec.it s "SpellCast" $
+  Spec.it s "SpellCast names its window" $
     Common.assertCodec
       s
       EventShape.codec
-      EventShape.SpellCast
-      " {\"type\":\"SpellCast\"} "
-  Spec.it s "SpellCastThisGame" $
-    Common.assertCodec
-      s
-      EventShape.codec
-      EventShape.SpellCastThisGame
-      " {\"type\":\"SpellCastThisGame\"} "
+      (EventShape.SpellCast CastWindow.BeforeEvaluated)
+      " {\"type\":\"SpellCast\",\"value\":{\"type\":\"BeforeEvaluated\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s EventShape.codec

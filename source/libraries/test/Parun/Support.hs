@@ -1731,6 +1731,7 @@ oneMountainState mountain ph =
           GameState.drawsThisTurn = mempty,
           GameState.keptFaceDown = Nothing,
           GameState.announcedTops = Nothing,
+          GameState.revealedTops = mempty,
           GameState.departedThisTurn = mempty,
           GameState.couldAttackThisTurn = mempty,
           GameState.activatedThisTurn = mempty,

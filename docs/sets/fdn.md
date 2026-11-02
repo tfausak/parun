@@ -7,42 +7,13 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 
 ## Expressible today
 
-These need no new capability, but `parun translate` does not translate them yet.
-Each names the mtgish node the translator stops at.
-
-- Teach by Example: `_Action:CreateFutureTrigger`
-- Tempest Djinn: `_StaticLayerEffect:AdjustPTForEach`
-- Thousand-Year Storm: `_Action:CopySpellForEachAndMayChooseNewTargets`
-- Tolarian Terror: `_Rule:CastEffect`
-- Tragic Banshee: `_Action:IfElse`
-- Tribute to Hunger: `_Action:SacrificeAPermanent`
-- Twinflame Tyrant: `_Rule:ReplaceWouldDealDamage`
-- Uncharted Haven: `_ReplacementActionWouldEnter:EntersTapped`
-- Uncharted Voyage: `_Player:OwnerOfPermanent`
-- Undying Malice: `_Rule:TriggerA`
-- Valkyrie's Call: `_Action:ReturnDeadGraveyardCardToBattlefield`
-- Valorous Stance: `_Permanents:ToughnessIs`
-- Vampire Gourmand: renders differently from its Oracle text
-- Vengeful Bloodwitch: `_Trigger:Or`
-- Venom Connoisseur: `_Action:If`
-- Vile Entomber: `_SearchLibraryAction:PutFoundCardsIntoGraveyard`
-- Vizier of the Menagerie: `_Rule:PlayerEffect`
-- Wardens of the Cycle: `_Condition:ACreatureOrPlaneswalkerDiedThisTurn`
-- Wary Thespian: `_Action:Surveil`
-- Wildborn Preserver: `_Action:Reflexive_PayManaAnyX_WhenYouDo`
-- Wilt-Leaf Liege: `_Rule:ReplaceWouldDiscard`
-- Wishclaw Talisman: `_ReplacementActionWouldEnter:EntersWithNumberCounters`
-- Zimone, Paradox Sculptor:
-  `_PutCountersAction:DoubleAllCountersOnEachPermanent`
-- Zul Ashur, Lich Lord: `_Rule:Ward`
+Every expressible Foundations card has been added to `data/cards/`.
 
 ## Needs a capability
 
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #5910: Curator of Destinies. A pile effect shows every card in both piles,
-  with no pile face down to its chooser (CR 700.3).
 - #5911: Muldrotha, the Gravetide. A graveyard permission has one budget, not
   one per permanent type (CR 110.4b).
 - #5912: Tinybones, Bauble Burglar. No standing permission plays exiled cards
@@ -51,6 +22,8 @@ first.
   type and sacrifices the rest (CR 110.4).
 - #5914: Fishing Pole. A granted ability's cost can't tap the Equipment that
   granted it (CR 602.2).
+- #5942: Vizier of the Menagerie. A spend-mana permission can't be limited to the
+  spell being cast (CR 118.14).
 - #5915: Steel Hellkite. No filter reads whether an object's controller was
   dealt combat damage by this creature.
 - #5916: Goblin Negotiation. No quantity reads the excess damage an effect just
