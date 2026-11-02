@@ -14,6 +14,7 @@ import qualified Parun.Types.DamageKind as DamageKind
 -- recipient the damage has already killed.
 data DealsDamageToPermanent = MkDealsDamageToPermanent
   { actor :: ActingPermanent.ActingPermanent,
+    -- | CR 120.1a: Battle, Creature or Planeswalker; any other never fires.
     recipient :: CardType.CardType,
     -- | Nothing for damage of any kind.
     kind :: Maybe DamageKind.DamageKind

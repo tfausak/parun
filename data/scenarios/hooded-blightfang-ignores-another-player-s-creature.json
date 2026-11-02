@@ -1,6 +1,6 @@
 {
-  "description": "CR 603.2 / 120.3 Hooded Blightfang: it watches only your creatures, and only a planeswalker as what was dealt damage",
-  "note": "Alice's Ankle Biter hits carol: a drain, and nothing to destroy. On bob's turn his Ankle Biter hits alice's Ajani with her Blightfang out: Ajani loses 1 loyalty and stays, and nobody drains.",
+  "description": "CR 603.2 / 120.3 Hooded Blightfang: it watches only your creatures, attacking or dealing damage to a planeswalker",
+  "note": "Alice's Ankle Biter hits carol: a drain, the baseline for bob's. On bob's turn his Ankle Biter hits alice's Ajani with her Blightfang out: Ajani loses 1 loyalty and stays, and nobody drains.",
   "board": {
     "active": "alice",
     "step": "BeginningOfCombat",
