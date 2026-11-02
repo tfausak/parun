@@ -22,6 +22,7 @@ import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.PlayerEffect as PlayerEffect
 import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Projection.View as ProjectionView
 import qualified Parun.Engine.Replacement as Replacement
 import qualified Parun.Engine.Saga as Saga
 import qualified Parun.Engine.Turn as Turn
@@ -67,6 +68,7 @@ import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamagePrevented as DamagePrevented
+import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Designation as Designation
@@ -712,7 +714,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.TriggeredAbilityResolved _ -> False
     GameEvent.CardArrived _ -> False
   -- CR 510.1b / 310.5: the arm above with a battle beside the player. The
-  -- battle is read the way SelfDealsDamageToCreature reads a creature, off
+  -- battle is read the way DealsDamageToPermanent reads its card type, off
   -- Projection.damagedCardTypes, so an attacked permanent that is a battle and
   -- something else still counts.
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> case event of
@@ -953,10 +955,10 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.ActivatedAbilityResolved _ -> False
     GameEvent.TriggeredAbilityResolved _ -> False
     GameEvent.CardArrived _ -> False
-  -- CR 603.2 / 120.3: the same arm with rule 120.3's other recipient -- a CREATURE
-  -- rather than a player. Strax, Sontaran Nurse's "Glory of Battle" is a reader,
-  -- and its own "Grenades!" fight is a noncombat source, so it names no kind;
-  -- Phage the Untouchable's "combat damage" names CR 510.2's.
+  -- CR 603.2 / 120.3: the same arm with rule 120.3's other recipient, a permanent
+  -- of a card type rather than a player. Strax, Sontaran Nurse's "Glory of Battle"
+  -- is a reader, and its own "Grenades!" fight is a noncombat source, so it names
+  -- no kind; Phage the Untouchable's "combat damage" names CR 510.2's.
   --
   -- Projection.damagedCardTypes rather than a Recipient.ToCreature test, the same
   -- reading CR 120.3's own results take: the TAG is the classification made
@@ -965,11 +967,11 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- dealt damage to a creature. The tag is unioned in rather than replaced,
   -- which is CR 608.2h's last known information for a recipient the damage has
   -- already killed.
-  TriggerCondition.SelfDealsDamageToCreature kind -> case event of
+  TriggerCondition.DealsDamageToPermanent watched -> case event of
     GameEvent.DamageDealt ev ->
-      DamageEvent.source ev == bearer
-        && all (== DamageEvent.kind ev) kind
-        && Set.member CardType.Creature (Projection.damagedCardTypes gs (DamageEvent.target ev))
+      damageBy (DealsDamageToPermanent.actor watched) (DamageEvent.source ev)
+        && all (== DamageEvent.kind ev) (DealsDamageToPermanent.kind watched)
+        && Set.member (DealsDamageToPermanent.recipient watched) (Projection.damagedCardTypes gs (DamageEvent.target ev))
     GameEvent.Moved {} -> False
     GameEvent.StepBegan {} -> False
     GameEvent.SpellCast {} -> False
@@ -1115,7 +1117,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- Death Pits of Rath's. DealsDamage's arm with the check moved from the
   -- event's SOURCE to its RECIPIENT.
   --
-  -- The KIND conjunct is SelfDealsDamageToCreature's: Nothing for Ripjaw
+  -- The KIND conjunct is DealsDamageToPermanent's: Nothing for Ripjaw
   -- Raptor's unqualified phrase, which a Prodigal Sorcerer's ping fires exactly
   -- as combat damage does; Just Combat for Wall of Essence's CR 510.2 damage.
   --
@@ -10726,9 +10728,12 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     -- link has to be read as it stood. A spell source is on no such board and is
     -- read from its last known information (CR 608.2h), Chandra's Phoenix's "red
     -- instant or sorcery spell".
+    -- CR 113.7a / 608.2h: a source gone before its ability dealt the damage is
+    -- judged in the zone it last existed in, so "a creature you control" still
+    -- admits it. Scenario hooded-blightfang-destroys-for-noncombat-damage-from-a-pinger-gone-in-response.
     damageBy watched oid = case watched of
       ActingPermanent.Self -> oid == bearer
-      ActingPermanent.Matching f -> maybe False (\view -> Filter.matches bearerContext view f) (postEventView board gs oid)
+      ActingPermanent.Matching f -> maybe False (\view -> Filter.matches bearerContext (ProjectionView.lastZoned gs oid view) f) (postEventView board gs oid)
 
 -- CR 106.12a's second half: did an activation that produced @produced@ produce
 -- the mana this condition specified? The narrowing half of the

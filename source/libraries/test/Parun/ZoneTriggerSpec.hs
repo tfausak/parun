@@ -82,6 +82,7 @@ import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamagePrevented as DamagePrevented
+import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Decider as Decider
@@ -1848,7 +1849,7 @@ representativeEvents cond =
         -- CR 120.3's other recipient, the bearer still the SOURCE. TWO of them for
         -- the arm above's reason: with no kind named this condition admits both
         -- damage kinds, and the combat one is among them for the arm naming it.
-        TriggerCondition.SelfDealsDamageToCreature _ ->
+        TriggerCondition.DealsDamageToPermanent _ ->
           noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToCreature arrived) 4 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat))
             NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToCreature arrived) 5 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
         -- TWO again, a creature and a player, one of each kind: this arm admits
@@ -2431,8 +2432,8 @@ everyTriggerCondition =
     TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self PlayerRelation.AnyPlayer Nothing),
     TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer (ActingPermanent.Matching (Filter.Type.And [])) PlayerRelation.Opponent Nothing),
     TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer (ActingPermanent.Matching (Filter.Type.And [])) PlayerRelation.Opponent (Just DamageKind.Noncombat)),
-    TriggerCondition.SelfDealsDamageToCreature Nothing,
-    TriggerCondition.SelfDealsDamageToCreature (Just DamageKind.Combat),
+    TriggerCondition.DealsDamageToPermanent (DealsDamageToPermanent.MkDealsDamageToPermanent ActingPermanent.Self CardType.Creature Nothing),
+    TriggerCondition.DealsDamageToPermanent (DealsDamageToPermanent.MkDealsDamageToPermanent ActingPermanent.Self CardType.Creature (Just DamageKind.Combat)),
     TriggerCondition.DealsDamage ActingPermanent.Self,
     TriggerCondition.DealsDamage (ActingPermanent.Matching (Filter.Type.HasAttached Filter.Type.IsSource)),
     TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing),

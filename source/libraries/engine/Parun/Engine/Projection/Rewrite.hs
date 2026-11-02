@@ -114,6 +114,7 @@ import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.DealDamage as DealDamage
+import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Designate as Designate
@@ -2087,7 +2088,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> condition
   TriggerCondition.DealsCombatDamage watched -> TriggerCondition.DealsCombatDamage (acting watched)
   TriggerCondition.DealsDamageToPlayer p -> TriggerCondition.DealsDamageToPlayer p {DealsDamageToPlayer.actor = acting (DealsDamageToPlayer.actor p)}
-  TriggerCondition.SelfDealsDamageToCreature _ -> condition
+  TriggerCondition.DealsDamageToPermanent p -> TriggerCondition.DealsDamageToPermanent p {DealsDamageToPermanent.actor = acting (DealsDamageToPermanent.actor p)}
   TriggerCondition.DealsDamage watched -> TriggerCondition.DealsDamage (acting watched)
   TriggerCondition.IsDealtDamage dealt -> TriggerCondition.IsDealtDamage dealt {DealtDamage.recipient = acting (DealtDamage.recipient dealt)}
   TriggerCondition.PlayerIsDealtDamage _ -> condition

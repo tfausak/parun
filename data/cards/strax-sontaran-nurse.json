@@ -158,7 +158,15 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfDealsDamageToCreature"
+            "type": "DealsDamageToPermanent",
+            "value": {
+              "actor": {
+                "type": "Self"
+              },
+              "recipient": {
+                "type": "Creature"
+              }
+            }
           },
           "modal": {
             "modes": [

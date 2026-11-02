@@ -110,9 +110,17 @@
         },
         {
           "condition": {
-            "type": "SelfDealsDamageToCreature",
+            "type": "DealsDamageToPermanent",
             "value": {
-              "type": "Combat"
+              "actor": {
+                "type": "Self"
+              },
+              "kind": {
+                "type": "Combat"
+              },
+              "recipient": {
+                "type": "Creature"
+              }
             }
           },
           "modal": {

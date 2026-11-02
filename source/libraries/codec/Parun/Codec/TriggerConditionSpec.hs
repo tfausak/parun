@@ -26,6 +26,7 @@ import qualified Parun.Types.CounterPlacement as CounterPlacement
 import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.DamageKind as DamageKind
+import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Designation as Designation
@@ -159,19 +160,18 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self PlayerRelation.Opponent Nothing))
       " {\"type\":\"DealsDamageToPlayer\",\"value\":{\"actor\":{\"type\":\"Self\"},\"recipient\":{\"type\":\"Opponent\"}}} "
-  -- CR 120.3's other recipient: a bare tag for damage of any kind, the kind as
-  -- the value otherwise.
-  Spec.it s "SelfDealsDamageToCreature" $ do
+  -- CR 120.3's other recipient; `kind` omitted for damage of any kind.
+  Spec.it s "DealsDamageToPermanent" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfDealsDamageToCreature Nothing)
-      " {\"type\":\"SelfDealsDamageToCreature\"} "
+      (TriggerCondition.DealsDamageToPermanent (DealsDamageToPermanent.MkDealsDamageToPermanent ActingPermanent.Self CardType.Creature Nothing))
+      " {\"type\":\"DealsDamageToPermanent\",\"value\":{\"actor\":{\"type\":\"Self\"},\"recipient\":{\"type\":\"Creature\"}}} "
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfDealsDamageToCreature (Just DamageKind.Combat))
-      " {\"type\":\"SelfDealsDamageToCreature\",\"value\":{\"type\":\"Combat\"}} "
+      (TriggerCondition.DealsDamageToPermanent (DealsDamageToPermanent.MkDealsDamageToPermanent ActingPermanent.Self CardType.Planeswalker (Just DamageKind.Combat)))
+      " {\"type\":\"DealsDamageToPermanent\",\"value\":{\"actor\":{\"type\":\"Self\"},\"recipient\":{\"type\":\"Planeswalker\"},\"kind\":{\"type\":\"Combat\"}}} "
   Spec.it s "DealsDamage round-trips both actors" $ do
     Common.assertCodec
       s
