@@ -162,7 +162,8 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- own earlier clause has already bounced.
         _ -> Count.playersFor viewOf context gs ref
       -- playersOf for a tally of what happened, whose players are judged over
-      -- every seat that began the game (CR 800.4i).
+      -- every seat that began the game (CR 800.4i) within the reader's range (CR
+      -- 801.11).
       historyPlayersOf ref = case ref of
         PlayerRef.Candidate -> playersOf ref
         _ -> Count.historyPlayersFor viewOf context gs ref

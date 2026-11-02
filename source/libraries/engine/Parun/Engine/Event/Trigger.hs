@@ -1688,7 +1688,9 @@ eventTriggers events gs =
           Nothing -> Map.empty
           Just obj -> case Game.faceOf oid gs of
             Nothing -> Map.empty
-            Just face -> Map.singleton oid (Object.owner obj, Maybe.mapMaybe (functionsIn (TypeLine.subtypes (Face.typeLine face)) (Face.delayedAbilities face) Zone.Graveyard) (Projection.triggeredAbilitiesOf oid gs))
+            Just _ ->
+              let pc = Projection.project oid gs
+               in Map.singleton oid (Object.owner obj, Maybe.mapMaybe (functionsIn (PC.subtypes pc) (PC.delayedAbilities pc) Zone.Graveyard) (PC.triggeredAbilities pc))
         GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.Ordinary _ _) -> Map.empty
         GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.ByEffect _ _) -> Map.empty
         -- A draw names no object either. The card it puts in a hand may well bear
@@ -2398,8 +2400,9 @@ eventTriggers events gs =
       -- was taken -- nor with each other, an id departing at exactly one group.
       -- `graveyard` genuinely overlaps `cycledCard` on purpose -- a card
       -- cycled into a graveyard is honestly a member of both -- and the winner
-      -- offers that card's projected abilities unfiltered, a superset of the
-      -- other's projected, `functionsIn`-filtered read.
+      -- makes the other's projected, `functionsIn`-filtered read without its
+      -- keyword-minted abilities: recover and haunt, neither of which any discard
+      -- can match.
       -- `walkedAwayFrom` overlaps nothing: its ids no longer exist, and none
       -- of them stood on the battlefield or is in the command zone `inCommand`
       -- walks.

@@ -15,7 +15,7 @@
 -- redirectDestination (CR 801.13), Parun.Engine.Resolve.Slots'
 -- playerRefPlayers and battlefieldMatching, Parun.Engine.Target.zoneScopePlayers,
 -- Parun.Engine.Resolve.Common's objectRefRecipients, Parun.Engine.Count's
--- playersFor and the choice offers Parun.Engine.Players.offer and
+-- playersFor and historyPlayersFor and the choice offers Parun.Engine.Players.offer and
 -- Game.inRangeOf feed (CR 801.5a, 801.10, 801.11), and
 -- Parun.Engine.Resolve.Arms.Zones's WinGame and DrawGame (CR 801.14,
 -- 801.15), and Parun.Engine.Departure's checkMandatoryLoop (CR 801.16); CR

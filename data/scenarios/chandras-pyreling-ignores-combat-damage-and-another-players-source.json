@@ -111,6 +111,17 @@
       "step": "PrecombatMain",
       "player": "alice",
       "check": {
+        "View": {
+          "of": "Stack",
+          "is": []
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
         "PowerToughness": {
           "object": "$py",
           "power": 1,
