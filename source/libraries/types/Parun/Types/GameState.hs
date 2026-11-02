@@ -254,6 +254,11 @@ data GameState = MkGameState
     -- `enteringBeside`, what Parun.Engine.Projection.boardAsEntering subtracts.
     -- Empty at every priority window.
     enteringSubjects :: Map.Map ObjectId.ObjectId (Maybe EntryOrigin.EntryOrigin),
+    -- | CR 614.12 / 608.2f: the zone each permanent that has entered so far in
+    -- the Event.arrivingTogether scope under way left, so a later member's entry
+    -- still counts it there (Parun.Engine.Projection.boardAsEntering). Empty
+    -- outside one.
+    enteredFrom :: Map.Map ObjectId.ObjectId EntryOrigin.EntryOrigin,
     -- | CR 614.12b: the members of a CR 608.2f move onto the battlefield that
     -- have not yet been moved, each with the player it will enter under, which
     -- the one-at-a-time funnel would otherwise hide from an earlier member's

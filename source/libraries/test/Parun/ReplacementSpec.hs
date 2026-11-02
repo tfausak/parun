@@ -1251,7 +1251,7 @@ scavengerBoard forest piker mountain scavenger aliceCreatures aliceLands bobCrea
 
 -- CR 614.1c's variable amount: "This creature enters with a number of +1/+1
 -- counters on it equal to the number of creature cards in all graveyards."
-undergrowthScavengerSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+undergrowthScavengerSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 undergrowthScavengerSpec s registry =
   Spec.describe s "Undergrowth Scavenger (CR 614.1c)" $ do
     Spec.it s "CR 614.1c one +1/+1 counter per creature card in EVERY graveyard" $ do
@@ -1275,6 +1275,20 @@ undergrowthScavengerSpec s registry =
           -- half that separates a stamped count from one re-read live.
           let (_, later) = S.addGraveyardCard piker S.bob after
           Spec.assertEqWith s "still 3/3 after a fourth creature card is buried" (Projection.powerOf scavengerId later) (Just 3)
+    -- CR 614.12 / 608.2f: GameState.enteredFrom, which lets the second
+    -- Scavenger Rise of the Dark Realms returns count the first, lasts only as
+    -- long as the move's arrivingTogether scope. The count itself is the
+    -- scenario undergrowth-scavengers-returned-together-count-each-other.
+    Spec.it s "CR 614.12 a batch's recorded origins are gone once it has moved" $ do
+      swamp <- S.printingOf s registry "Swamp"
+      scavenger <- S.printingOf s registry "Undergrowth Scavenger"
+      rise <- S.printingOf s registry "Rise of the Dark Realms"
+      let buried = snd (S.addGraveyardCard scavenger S.alice (snd (S.addGraveyardCard scavenger S.alice (S.landsInPlay swamp 9))))
+          (gs, held) = S.handOne rise buried
+          ready = gs {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
+          after = S.runPure S.identityAnswer ready (S.cast S.alice held >> Stack.resolveTop >> Engine.settleForPriority)
+      Spec.assertEqWith s "both Scavengers entered" (onBattlefieldNamed "Undergrowth Scavenger" after) 2
+      Spec.assertEqWith s "no origin is left recorded" (GameState.enteredFrom after) Map.empty
 
 -- How many of alice's permanents carry this name.
 onBattlefieldNamed :: String -> GameState.GameState -> Int

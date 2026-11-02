@@ -1687,6 +1687,7 @@ oneMountainState mountain ph =
           GameState.pendingEntryEffects = Seq.empty,
           GameState.enteringBeside = Set.empty,
           GameState.enteringSubjects = Map.empty,
+          GameState.enteredFrom = Map.empty,
           GameState.enteringPending = Map.empty,
           GameState.refusedEntries = Nothing,
           GameState.enteringCounters = Map.empty,
