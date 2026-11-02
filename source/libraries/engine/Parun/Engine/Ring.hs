@@ -599,7 +599,7 @@ tempt pid = do
 -- A SAMPLE of derived state, and a near-clone of Engine.checkControlContinuity
 -- (CR 302.6) for the same reason: control is computed by CR 613.1b's layer 2, so
 -- nothing announces a change to it, while this designation is stored.
--- Engine.sampleControl mints a GameEvent.ControlChanged off the same difference for
+-- Event.sampleControl mints a GameEvent.ControlChanged off the same difference for
 -- CR 603.2's benefit; this stays a sampler for the reason given there.
 --
 -- Running in the settle loop is indistinguishable from checking continuously

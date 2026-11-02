@@ -181,11 +181,11 @@ data GameState = MkGameState
     -- controller, keyed by group, the board a look-back ability reads; each
     -- entry's own copy of this field, of `boardAfterEvent` and of
     -- `boardAtControlSample` is empty. Written by
-    -- Parun.Engine.Event.fileBoardBefore, for Parun.Engine.Engine.sampleControl
+    -- Parun.Engine.Event.fileBoardBefore, for Parun.Engine.Event.sampleControl
     -- too, cleared with `battlefieldWhenTriggered`.
     boardBeforeEvent :: Map.Map EventGroup.EventGroup GameState,
     -- | Who controlled each permanent the last time
-    -- Parun.Engine.Engine.sampleControl looked; diffing it against the live
+    -- Parun.Engine.Event.sampleControl looked; diffing it against the live
     -- projection is what yields GameEvent.ControlChanged (CR 603.2). Rebuilt
     -- at every sample, so a first sighting is not a change.
     controlSample :: Map.Map ObjectId.ObjectId PlayerId.PlayerId,

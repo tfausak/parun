@@ -9223,7 +9223,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- here rather than any one of them.
   --
   -- `before == you` and nothing about `after`, because losing control is the whole
-  -- of what the sentence asks. Engine.sampleControl only mints the event when the
+  -- of what the sentence asks. Event.sampleControl only mints the event when the
   -- two players differ, so no separate "and somebody else has it now" conjunct is
   -- needed for the match to mean a change.
   --

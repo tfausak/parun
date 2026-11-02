@@ -1435,7 +1435,7 @@ monarchTriggerSpec s registry =
 
 -- CR 603.7: Ray of Command's THIRD sentence -- "When you lose control of the
 -- creature, tap it." A delayed triggered ability whose event is a CONTROL CHANGE,
--- which is the observation point Engine.sampleControl exists to provide: control is
+-- which is the observation point Event.sampleControl exists to provide: control is
 -- derived (CR 613.1b layer 2), so the CR 514.2 sweep that ends the spell's
 -- until-end-of-turn control effect announces nothing, and the diff against
 -- GameState.controlSample is what mints the GameEvent.ControlChanged the condition
@@ -1518,7 +1518,7 @@ rayOfCommandSpec s registry = Spec.describe s "RayOfCommand" $ do
     -- handoff.
     Spec.assertEqWith s "CR 514.3a the turn has not handed off" (GameState.turnNumber afterCleanup) (GameState.turnNumber scheduled)
     -- The observation point fired at all.
-    Spec.assertBool s (elem (GameEvent.ControlChanged (ControlChanged.MkControlChanged bobPiker S.alice S.bob)) (S.eventsOf afterCleanup)) "Engine.sampleControl minted CR 603.2's event for the reversion"
+    Spec.assertBool s (elem (GameEvent.ControlChanged (ControlChanged.MkControlChanged bobPiker S.alice S.bob)) (S.eventsOf afterCleanup)) "Event.sampleControl minted CR 603.2's event for the reversion"
 
 -- Matoya, Archon Elder {2}{U} Legendary Creature -- Human Warlock 1/4, "Whenever
 -- you scry or surveil, draw a card" -- CR 603.1b's AnyOf over

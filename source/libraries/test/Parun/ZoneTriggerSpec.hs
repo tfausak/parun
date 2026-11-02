@@ -2331,7 +2331,7 @@ representativeEvents cond =
         -- 109.5's "you" instead of the crowned player would still agree with
         -- eventBindingSlots here if the two coincided.
         TriggerCondition.PlayerBecomesMonarch _ -> one (GameEvent.BecameMonarch S.bob)
-        -- CR 603.7's own event, and the only shape of it: Engine.sampleControl mints
+        -- CR 603.7's own event, and the only shape of it: Event.sampleControl mints
         -- a ControlChanged only where the two players differ, so there is no
         -- same-player shape for the floor to come apart on. The ids and seats are
         -- arbitrary -- this condition binds nothing from the log, which is what

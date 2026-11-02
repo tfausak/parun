@@ -17,7 +17,7 @@ module Parun.Types.ControlClock where
 -- answers both: `SinceLastUpkeep` holds for the whole of the upkeep it was
 -- promoted in, and the entry is dropped at the upkeep after that.
 --
--- Written by Parun.Engine.Engine.sampleControl, which opens a window for the
+-- Written by Parun.Engine.Event.sampleControl, which opens a window for the
 -- player a permanent has just come under the control of, and advanced by
 -- Engine.advanceControlClock at the beginning of that player's upkeep.
 data ControlClock
