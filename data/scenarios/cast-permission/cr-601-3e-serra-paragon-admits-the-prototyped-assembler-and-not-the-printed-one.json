@@ -66,7 +66,16 @@
     {
       "check": {
         "View": {
-          "is": [],
+          "is": [
+            "Pass",
+            "PlayLand Forest",
+            "Cast $autonomous-assembler",
+            "ActivateManaAbility $plains",
+            "ActivateManaAbility $plains-2",
+            "ActivateManaAbility $plains-3",
+            "ActivateManaAbility $plains-4",
+            "ActivateManaAbility $plains-5"
+          ],
           "of": "Offered",
           "player": "alice"
         }
@@ -80,7 +89,8 @@
         "Cast": {
           "mana": [
             "$plains",
-            "$plains-2"
+            "$plains-2",
+            null
           ],
           "object": "$autonomous-assembler"
         }
@@ -134,7 +144,12 @@
     {
       "check": {
         "View": {
-          "is": [],
+          "is": [
+            "Pass",
+            "ActivateManaAbility $plains-3",
+            "ActivateManaAbility $plains-4",
+            "ActivateManaAbility $plains-5"
+          ],
           "of": "Offered",
           "player": "alice"
         }
