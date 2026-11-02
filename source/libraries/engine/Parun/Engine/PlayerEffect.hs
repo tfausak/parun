@@ -98,6 +98,7 @@ import qualified Parun.Types.LoyaltyGrant as LoyaltyGrant
 import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaRestriction as ManaRestriction
+import qualified Parun.Types.ManaSpending as ManaSpending
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import Parun.Types.ManaUnit (ManaUnit)
 import qualified Parun.Types.ModifiedRoll as ModifiedRoll
@@ -1589,6 +1590,11 @@ prohibitsAtManaValue pid oid manaValue gs =
         _ -> False
    in any prohibits (applying pid gs)
 
+-- CR 109.5: the "you" of a CastFrom row's filter, its source's controller, or
+-- the caster for a row with no source.
+permissionHolder :: PlayerId -> Maybe ObjectId -> GameState -> PlayerId
+permissionHolder pid source gs = Maybe.fromMaybe pid (source >>= \sid -> Projection.controllerOf sid gs)
+
 -- CR 601.2e / 601.3: prohibitsAtManaValue's permission-side twin. Does the CR
 -- 601.3 permission the cast is made under still admit `oid` at `manaValue`?
 -- Judged as castPermissionsFrom judged it, with only the mana value replaced;
@@ -1606,7 +1612,7 @@ admitsAtManaValue pid permission oid manaValue gs = case permission of
   Nothing -> True
   Just (sid, grant) ->
     let view = (Projection.viewOfObject oid gs) {Filter.manaValue = Just manaValue}
-        admits source = Filter.matches (contextFrom source oid gs) view (CastFromZone.matching grant)
+        admits source = Filter.matches (contextFor (Just (permissionHolder pid (RowSource.object source) gs)) source gs) view (CastFromZone.matching grant)
         rows = [source | (source, PlayerEffect.CastFrom granted) <- applying pid gs, RowSource.object source == Just sid, granted == grant]
      in if null rows then admits (liveSource (Just sid)) else any admits rows
 
@@ -2232,7 +2238,7 @@ castPermissionsFrom pid zone oid gs =
         PlayerEffect.CastFrom grant ->
           opensZoneOf pid zone oid (CastFromZone.from grant) gs
             && inPool source (CastFromZone.pool grant)
-            && matchesObjectFor (holder (RowSource.object source)) source (CastFromZone.matching grant) oid gs
+            && matchesObjectFor (permissionHolder pid (RowSource.object source) gs) source (CastFromZone.matching grant) oid gs
             && unspentPermission pid (RowSource.object source) grant gs
         -- The other CR 601.3 permission on this axis names a TIME, and this
         -- question is about a ZONE.
@@ -2303,7 +2309,6 @@ castPermissionsFrom pid zone oid gs =
       -- CR 109.5: the Filter's "you" is the granting ability's controller, not
       -- the card's -- an exiled card's is its owner (CR 108.4a), which would
       -- make Dawnhand Dissident's "cards you own" true of every card.
-      holder source = Maybe.fromMaybe pid (source >>= \sid -> Projection.controllerOf sid gs)
       -- CR 607.2a: the linked set is the cards GameState.exiledWith files
       -- against this very source object, under the granting ability's pair
       -- (CR 607.5, Binding.isLinkedExile).
@@ -2366,7 +2371,8 @@ castPermissionOptions rides offered own pid zone oid gs =
 -- each group in timestamp order. Two ways are ONE where they spend the same
 -- budget, give the same rider (`rides` answers whether a source's permission
 -- gives one, Parun.Engine.Event.permissionRiders), add the same costs (CR
--- 118.8) and take off the same reduction (CR 601.2f), and the first is kept: a riderless, costless unlimited permission
+-- 118.8), take off the same reduction (CR 601.2f) and let mana be spent alike
+-- (CR 118.14), and the first is kept: a riderless, costless unlimited permission
 -- beside an open zone changes nothing.
 -- So the head spends nothing wherever something admits the play for free.
 --
@@ -2376,7 +2382,7 @@ permissionOptions :: (ObjectId -> Bool) -> Bool -> [(Maybe ObjectId, CastFromZon
 permissionOptions rides open usable =
   let rows = [(sid, grant) | (Just sid, grant) <- usable]
       (unlimited, limited) = List.partition ((== PermissionLimit.Unlimited) . CastFromZone.limit . snd) rows
-      key option = (permissionSpent option, option >>= \(sid, _) -> if rides sid then Just sid else Nothing, permissionCosts option, permissionReductions option)
+      key option = (permissionSpent option, option >>= \(sid, _) -> if rides sid then Just sid else Nothing, permissionCosts option, permissionReductions option, permissionSpending option)
    in ListUtils.nubOrdOn key ([Nothing | open] <> fmap Just (unlimited <> limited))
 
 -- CR 118.8: the additional costs a cast made under `option` pays on top of its
@@ -2395,6 +2401,11 @@ permissionReductions option =
     let n = CastFromZone.reduction grant,
     n > 0
   ]
+
+-- CR 118.14: how mana may be spent on a spell cast under `option`, as produced
+-- for a cast made under no permission.
+permissionSpending :: Maybe (ObjectId, CastFromZone.CastFromZone) -> ManaSpending.ManaSpending
+permissionSpending = maybe ManaSpending.AsProduced (CastFromZone.spending . snd)
 
 -- The budget a play made under `option` spends: a once-each-turn permission's,
 -- and nothing for an unlimited one or for none.

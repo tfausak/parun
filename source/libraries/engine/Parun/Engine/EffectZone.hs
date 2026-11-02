@@ -76,10 +76,10 @@ conjoin named
 -- what decides, off the condition; Parun.Engine.AbilityZone.zonesFunctionedIn
 -- passes the source slot alone, an activation binding no event slot.
 --
--- The origin is only ever consulted here, so a card file that states one on a
--- move of anything but its own source states something nothing reads. That is a
--- card-data error rather than a rules question, and it is inert: this function
--- answers empty for it, which is the same answer the effect had before.
+-- A card file stating the origin on a move of anything but its own source gets
+-- no classification from it: this function answers empty for it, which is the
+-- same answer the effect had before. The resolver's only other read is
+-- Parun.Engine.Resolve.Arms.Zones.moveToZone's, which moves only what is there.
 --
 -- The DELAYED ABILITIES the reading is against -- CR 113.6m's final sentence
 -- needs the text an Effect.ArmDelayedTrigger stands for. An arm inside a quoted

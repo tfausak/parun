@@ -6,6 +6,7 @@ import qualified Parun.Codec.CostComponent as CostComponent
 import qualified Parun.Codec.Filter as Filter
 import qualified Parun.Codec.InZone as InZone
 import qualified Parun.Codec.Keyword as Keyword
+import qualified Parun.Codec.ManaSpending as ManaSpending
 import qualified Parun.Codec.PermissionLimit as PermissionLimit
 import qualified Parun.Codec.PermissionPool as PermissionPool
 import qualified Parun.Codec.PermissionVerb as PermissionVerb
@@ -13,6 +14,7 @@ import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.CastFromZone as CastFromZone
+import qualified Parun.Types.ManaSpending as ManaSpending.Type
 import qualified Parun.Types.PermissionLimit as PermissionLimit
 import qualified Parun.Types.PermissionPool as PermissionPool
 import qualified Parun.Types.PermissionVerb as PermissionVerb
@@ -24,7 +26,8 @@ import qualified Parun.Types.PermissionVerb as PermissionVerb
 -- The limit DEFAULTS to Unlimited, which is the permission every card that
 -- prints no budget grants (Future Sight, Garruk's Horde, Sen Triplets), and the
 -- verb to Cast, which is what a permission naming no land play grants. The pool
--- defaults to the whole zone and the additional costs to none.
+-- defaults to the whole zone, the additional costs to none and the spending to
+-- mana as produced.
 codec :: Codec.Codec CastFromZone.CastFromZone
 codec = Fields.object $ do
   from <- Fields.required "from" InZone.codec CastFromZone.from
@@ -34,4 +37,5 @@ codec = Fields.object $ do
   pool <- Fields.defaulted "pool" PermissionPool.EveryCard PermissionPool.codec CastFromZone.pool
   additionalCosts <- Fields.defaulted "additionalCosts" [] (Common.list (CostComponent.codec Keyword.codec)) CastFromZone.additionalCosts
   reduction <- Fields.defaulted "reduction" 0 Common.natural CastFromZone.reduction
-  pure CastFromZone.MkCastFromZone {CastFromZone.from = from, CastFromZone.matching = matching, CastFromZone.limit = limit, CastFromZone.verb = verb, CastFromZone.pool = pool, CastFromZone.additionalCosts = additionalCosts, CastFromZone.reduction = reduction}
+  spending <- Fields.defaulted "spending" ManaSpending.Type.AsProduced ManaSpending.codec CastFromZone.spending
+  pure CastFromZone.MkCastFromZone {CastFromZone.from = from, CastFromZone.matching = matching, CastFromZone.limit = limit, CastFromZone.verb = verb, CastFromZone.pool = pool, CastFromZone.additionalCosts = additionalCosts, CastFromZone.reduction = reduction, CastFromZone.spending = spending}

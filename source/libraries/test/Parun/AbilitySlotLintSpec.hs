@@ -94,6 +94,7 @@ import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeTally as LifeTally
 import qualified Parun.Types.ManaAddition as ManaAddition
 import qualified Parun.Types.ManaCost as ManaCost
+import qualified Parun.Types.ManaSpending as ManaSpending
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.Measures as Measures
@@ -723,7 +724,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         positions =
           [ ("quantity", \n -> Effect.Draw (Draw.MkDraw you (Quantity.Type.AgainstExiledPile (AgainstExiledPile.MkAgainstExiledPile (pileOf n) (Quantity.Type.Literal 1))) Nothing)),
             ("filter", \n -> Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices you (Filter.Type.IsExiledWithSource (pileOf n)) (Quantity.Type.Literal 1) Nothing)),
-            ("permission pool", \n -> Effect.AffectPlayers (AffectPlayers.MkAffectPlayers Duration.UntilEndOfTurn (AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.You)) (PlayerEffect.CastFrom (CastFromZone.MkCastFromZone (InZone.MkInZone Zone.Exile (PlayerRef.Relative PlayerRelation.AnyPlayer)) (Filter.Type.And []) PermissionLimit.Unlimited PermissionVerb.Cast (PermissionPool.InExiledPile (pileOf n)) [] 0))))
+            ("permission pool", \n -> Effect.AffectPlayers (AffectPlayers.MkAffectPlayers Duration.UntilEndOfTurn (AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.You)) (PlayerEffect.CastFrom (CastFromZone.MkCastFromZone (InZone.MkInZone Zone.Exile (PlayerRef.Relative PlayerRelation.AnyPlayer)) (Filter.Type.And []) PermissionLimit.Unlimited PermissionVerb.Cast (PermissionPool.InExiledPile (pileOf n)) [] 0 ManaSpending.AsProduced))))
           ]
         fixture effect = (vanillaFace "Synthetic Dangling Pile" instantLine) {Face.activatedAbilities = [(oneEffectActivated Nothing effect) {ActivatedAbility.name = Just (named "warden")}]}
         verdict (label, plant) = (label, abilityNameOffends (fixture (plant "warden")), abilityNameOffends (fixture (plant "nobody")))

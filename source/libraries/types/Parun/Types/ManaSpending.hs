@@ -21,8 +21,8 @@ module Parun.Types.ManaSpending where
 -- the spells cast under the effect that granted it ("this applies only to mana
 -- that player spends to cast spells that way"), which is why it rides the
 -- granting effect -- Parun.Types.ExilePlayPermission for a standing permission,
--- Parun.Types.CastOffer for a one-cast-now offer -- rather than sitting on the
--- player.
+-- Parun.Types.CastFromZone for a static one and Parun.Types.CastOffer for a
+-- one-cast-now offer -- rather than sitting on the player.
 --
 -- The per-player half of CR 609.4b is Parun.Types.SpendManaAsThough, and the two
 -- cannot be one type. This one is applied to a COST's demands, so no constructor

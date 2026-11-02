@@ -14,8 +14,6 @@ Every expressible Foundations card has been added to `data/cards/`.
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #5912: Tinybones, Bauble Burglar. No standing permission plays exiled cards
-  picked out by a counter on them.
 - #5913: Liliana, Dreadhorde General. Nothing asks for one choice per permanent
   type and sacrifices the rest (CR 110.4).
 - #5914: Fishing Pole. A granted ability's cost can't tap the Equipment that

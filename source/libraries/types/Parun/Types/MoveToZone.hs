@@ -19,9 +19,9 @@ import qualified Parun.Types.Zone as Zone
 -- variable-length array tail, and which element was which had to be recovered
 -- from each one's JSON type.
 --
--- The origin zone is what CR 113.6m's "out of a particular zone" reads, and it
--- is a CLASSIFICATION of the effect (Parun.Engine.EffectZone) rather than
--- something the resolver consults.
+-- The origin zone is what CR 113.6m's "out of a particular zone" reads, a
+-- CLASSIFICATION of the effect (Parun.Engine.EffectZone), and the resolver moves
+-- only what is in it.
 --
 -- The LibraryPlacement is the END a LIBRARY destination arrives at (CR 401.2's
 -- order), either stated -- Griptide's "on top of its owner's library", against
