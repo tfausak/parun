@@ -115,6 +115,20 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "alice",
+      "refuse": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$p1",
+            "$p2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
       "do": {
         "Answer": {
           "prompt": "Search",
