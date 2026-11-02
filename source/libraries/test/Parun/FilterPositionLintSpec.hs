@@ -1690,6 +1690,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Doubling Chant", 1), -- its search's filter, against its loop's member
         ("Shimian Specter", 1), -- its search's filter, against its loop's member
         ("Legion's End", 3), -- its battlefield and graveyard exiles' objects and its hand sweep's filter
+        ("Maelstrom Pulse", 1), -- its destroy's object
         ("Pattern Matcher", 1) -- its search's filter, at AnyPermanent
       ]
     -- Both sides of the split, with room to spare under the pool's real figures:

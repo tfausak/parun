@@ -1363,6 +1363,7 @@ intruder-alarm
 intuition
 invasion-of-arcavios-invocation-of-the-founders
 invasion-of-dominaria-serra-faithkeeper
+involuntary-employment
 inys-haen
 iridescent-angel
 iron-apprentice
@@ -1398,6 +1399,7 @@ jade-statue
 jalira-master-polymorphist
 jarad-golgari-lich-lord
 jared-carthalion-true-heir
+jazal-goldmane
 jeering-homunculus
 jesters-cap
 jet-medallion
@@ -1416,6 +1418,8 @@ justice-vance-astrovik
 juxtapose
 kaalia-zenith-seeker
 kadenas-silencer
+kaito-cunning-infiltrator
+kalastria-highborn
 kalonian-hydra
 kalonian-twingrove
 kami-of-mourning
@@ -1429,6 +1433,7 @@ katara-seeking-revenge
 katara-water-tribes-hope
 keening-stone
 kellan-joins-up
+kellan-planar-trailblazer
 kembas-legion
 kenessos-priest-of-thassa
 kenriths-transformation
@@ -1448,6 +1453,7 @@ kindred-discovery
 kinetic-augur
 king-haralds-revenge
 kiora-behemoth-beckoner
+kiora-the-rising-tide
 kishla-skimmer
 kismet
 kitesail-freebooter
@@ -1457,6 +1463,7 @@ kjeldoran-royal-guard
 knight-of-dusk
 knight-of-the-ebon-legion
 knight-of-the-white-orchid
+koma-world-eater
 kongmings-contraptions
 kopala-warden-of-waves
 kormus-bell
@@ -1466,6 +1473,7 @@ krarks-thumb
 krav-the-unredeemed
 krosan-vorine
 kurkesh-onakke-ancient
+kykar-zephyr-awakener
 kytheon-hero-of-akros-gideon-battle-forged
 labyrinth-of-skophos
 lady-sun
@@ -1475,6 +1483,7 @@ lam-storm-crane-elder
 lantern-flare
 last-chance
 last-rites
+lathril-blade-of-the-elves
 lava-burst
 lavinia-foil-to-conspiracy
 lead-golem
@@ -1492,6 +1501,7 @@ leonin-shikari
 leonin-warleader
 lesser-gargadon
 leveler
+leyline-axe
 leyline-of-abundance
 leyline-of-anticipation
 leyline-of-combustion
@@ -1514,6 +1524,7 @@ lifes-legacy
 lightmine-field
 lightning-mare
 light-of-promise
+lightshell-duo
 lightstall-inquisitor
 lightwielder-paladin
 liliana-death-mage
@@ -1532,6 +1543,7 @@ lilianas-contract
 lilianas-reaver
 lilianas-spoils
 liliana-waker-of-the-dead
+linden-the-steadfast-queen
 lineprancers
 liquimetal-coating
 lithoform-engine
@@ -1558,6 +1570,7 @@ long-lake-nuisance
 longstalk-brawl
 longtusk-cub
 look-skyward-and-despair
+loot-exuberant-explorer
 loot-the-pathfinder
 lord-of-the-pit
 lorescale-coatl
@@ -1578,6 +1591,7 @@ lumbering-lightshield
 lumen-class-frigate
 luminesce
 luminous-rebuke
+lunar-insight
 lunar-rejection
 lure
 lurking-evil
@@ -1586,6 +1600,7 @@ luxior-giadas-gift
 lys-alana-dignitary
 ma-chao-western-warrior
 maddening-imp
+maelstrom-pulse
 magar-of-the-magic-strings
 mage-ring-bully
 mage-ring-network
@@ -1603,6 +1618,7 @@ magnus-the-red
 mairsil-the-pretender
 make-a-_-splash
 make-a-wish
+make-your-move
 makeshift-battalion
 malefic-scythe
 malignus
@@ -1617,6 +1633,7 @@ manaweft-sliver
 mandate-of-peace
 mangara-the-diplomat
 manifest-dread
+marauding-blight-priest
 marauding-maulhorn
 marauding-raptor
 marble-titan
@@ -1663,6 +1680,7 @@ metamorphic-alteration
 meteor-shower
 miasma-demon
 michelangelo-mutant-bff
+micromancer
 midnight-ritual
 midnight-scavengers
 midnight-tilling

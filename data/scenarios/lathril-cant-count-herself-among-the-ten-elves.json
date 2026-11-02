@@ -1,0 +1,135 @@
+{
+  "description": "Nine other untapped Elves and Lathril are not enough: the activation is refused.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Lathril, Blade of the Elves",
+            "label": "l",
+            "ready": true
+          },
+          {
+            "card": "Llanowar Elves",
+            "label": "e1"
+          },
+          {
+            "card": "Llanowar Elves",
+            "label": "e2"
+          },
+          {
+            "card": "Llanowar Elves",
+            "label": "e3"
+          },
+          {
+            "card": "Llanowar Elves",
+            "label": "e4"
+          },
+          {
+            "card": "Llanowar Elves",
+            "label": "e5"
+          },
+          {
+            "card": "Llanowar Elves",
+            "label": "e6"
+          },
+          {
+            "card": "Llanowar Elves",
+            "label": "e7"
+          },
+          {
+            "card": "Llanowar Elves",
+            "label": "e8"
+          },
+          {
+            "card": "Llanowar Elves",
+            "label": "e9"
+          },
+          {
+            "card": "Llanowar Elves",
+            "label": "e10",
+            "tapped": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "b"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Llanowar Elves",
+            "label": "theirs"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "refuse": {
+        "Activate": {
+          "object": "$l",
+          "ability": 0,
+          "costOrder": [
+            1,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 20
+        }
+      }
+    }
+  ]
+}
