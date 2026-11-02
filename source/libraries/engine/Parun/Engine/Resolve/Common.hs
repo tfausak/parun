@@ -455,7 +455,10 @@ fallShort = State.modify' (\gs -> gs {GameState.fellShort = GameState.fellShort 
 -- applyClauseEffects reads), CR 607.2a's exiledWith and CR 406.4's exilePiles (applyEffectWith
 -- prunes both after EVERY instruction, and a card can leave exile off that
 -- road -- CR 704.5d ceasing a token -- so the prune of a stale key is no act;
--- a real exile already shows in `exile` and `objects`), and every bound
+-- a real exile already shows in `exile` and `objects`), CR 603.2's control
+-- sample and the CR 702.30a clock it stamps (applyEffectWith retakes it after
+-- EVERY instruction, its first sighting of a permanent is no act, and a change
+-- it finds is an event), and every bound
 -- AMOUNT and vote tally, since a tally binds zero for an instruction that did nothing -- a
 -- slot that holds nothing else is dropped, so a FIRST zero bind is not a
 -- difference either. Everything else is compared, so a new GameState field
@@ -476,7 +479,7 @@ happenedBetween before after =
   let tallyless :: Map.Map SlotName Binding.Type.Binding -> Map.Map SlotName Binding.Type.Binding
       tallyless = Map.filter (/= Binding.Type.empty) . Map.map (\binding -> binding {Binding.Type.amount = Nothing, Binding.Type.votes = Nothing})
       objectTallyless :: Map.Map ObjectId Object.Object -> Map.Map ObjectId Object.Object
-      objectTallyless = Map.map (\obj -> obj {Object.bindings = tallyless (Object.bindings obj)})
+      objectTallyless = Map.map (\obj -> obj {Object.bindings = tallyless (Object.bindings obj), Object.controlClock = Map.empty})
       comparable gs =
         gs
           { GameState.events = Seq.empty,
@@ -498,6 +501,8 @@ happenedBetween before after =
             GameState.exiledWith = GameState.exiledWith before,
             GameState.exilePiles = GameState.exilePiles before,
             GameState.ambientAmounts = GameState.ambientAmounts before,
+            GameState.controlSample = GameState.controlSample before,
+            GameState.boardAtControlSample = GameState.boardAtControlSample before,
             GameState.objects = objectTallyless (GameState.objects gs),
             GameState.stackArchive = objectTallyless (GameState.stackArchive gs),
             GameState.detachedBindings = Map.filter (not . Map.null) (fmap tallyless (GameState.detachedBindings gs))
