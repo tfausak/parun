@@ -3085,6 +3085,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SagaFinalChapterTriggers _playerRelation -> mempty
   TriggerCondition.PlayerBecomesMonarch _playerRelation -> mempty
   TriggerCondition.LoseControlOfBound slotName -> slotNames asking slotName
+  TriggerCondition.LoseControlOfSelf -> mempty
   TriggerCondition.BoundDiesOrIsExiled slotName -> slotNames asking slotName
   TriggerCondition.BoundDies slotName -> slotNames asking slotName
   TriggerCondition.RoomEntered _roomIndex -> mempty

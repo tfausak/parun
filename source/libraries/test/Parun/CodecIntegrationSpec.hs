@@ -392,11 +392,17 @@ gameStateRoundTripSpec s registry corpus = do
     let board = S.oneMountainState mountain Phase.PrecombatMain
     roundTrips "a board after an event" board {GameState.boardAfterEvent = Map.singleton EventGroup.first board}
 
-  -- GameState.boardBeforeDeparture, CR 603.10a's board, likewise.
+  -- GameState.boardBeforeEvent, CR 603.10a / 603.10d's board, likewise.
   Spec.it s "a board before a departure round trips" $ do
     mountain <- S.printingOf s registry "Mountain"
     let board = S.oneMountainState mountain Phase.PrecombatMain
-    roundTrips "a board before a departure" board {GameState.boardBeforeDeparture = Map.singleton EventGroup.first board}
+    roundTrips "a board before a departure" board {GameState.boardBeforeEvent = Map.singleton EventGroup.first board}
+
+  -- GameState.boardAtControlSample, CR 603.10d's board in waiting, likewise.
+  Spec.it s "a board at a control sample round trips" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    let board = S.oneMountainState mountain Phase.PrecombatMain
+    roundTrips "a board at a control sample" board {GameState.boardAtControlSample = Just board}
 
   Spec.it s "a non-empty stack round trips" $ do
     mountain <- S.printingOf s registry "Mountain"

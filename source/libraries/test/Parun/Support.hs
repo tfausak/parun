@@ -1440,7 +1440,7 @@ withEvents events gs =
       -- Event.eventTriggers to its live reading -- the only honest one for an event
       -- no funnel recorded.
       GameState.boardAfterEvent = Map.empty,
-      GameState.boardBeforeDeparture = Map.empty,
+      GameState.boardBeforeEvent = Map.empty,
       GameState.battlefieldWhenTriggered = Map.empty
     }
 
@@ -1671,9 +1671,10 @@ oneMountainState mountain ph =
           GameState.lastKnown = Map.empty,
           GameState.scannedThrough = 0,
           GameState.boardAfterEvent = Map.empty,
-          GameState.boardBeforeDeparture = Map.empty,
+          GameState.boardBeforeEvent = Map.empty,
           GameState.battlefieldWhenTriggered = Map.empty,
           GameState.controlSample = Map.empty,
+          GameState.boardAtControlSample = Nothing,
           GameState.damageScannedThrough = 0,
           GameState.delayedTriggers = Seq.empty,
           GameState.continuousEffects = [],

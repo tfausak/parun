@@ -1210,8 +1210,9 @@ happened verb before after = case verb of
 
 -- | Whether a state is the one a move was taken on, but for the bookkeeping
 -- written whatever the move did: who has passed and holds priority (CR
--- 117.3c), CR 104.4b's last optional action, and the counters that allocate
--- event groups, timestamps and object ids, which a reversal need not rewind.
+-- 117.3c), CR 104.4b's last optional action, the counters that allocate
+-- event groups, timestamps and object ids, which a reversal need not rewind,
+-- and the board the last control sample read, retaken at every check.
 untouched :: GameState.GameState -> GameState.GameState -> Bool
 untouched before after =
   let quiet gs =
@@ -1221,7 +1222,8 @@ untouched before after =
             GameState.lastChoice = GameState.lastChoice before,
             GameState.nextEventGroup = GameState.nextEventGroup before,
             GameState.nextTimestamp = GameState.nextTimestamp before,
-            GameState.nextObjectId = GameState.nextObjectId before
+            GameState.nextObjectId = GameState.nextObjectId before,
+            GameState.boardAtControlSample = GameState.boardAtControlSample before
           }
    in quiet before == quiet after
 

@@ -547,6 +547,9 @@ data TriggerCondition
     -- the first of the three conditions naming a slot, its subject being an
     -- object CR 603.7c's captured environment chose earlier.
     LoseControlOfBound SlotName.SlotName
+  | -- | CR 603.10d: "when you lose control of [this permanent]" (Khârn the
+    -- Betrayer), against GameEvent.ControlChanged.
+    LoseControlOfSelf
   | -- | CR 701.66a: the object bound at this slot is put into a graveyard or
     -- into exile from the battlefield -- "when that land dies or is put into
     -- exile", the far end of earthbend's delayed ability. Minted by

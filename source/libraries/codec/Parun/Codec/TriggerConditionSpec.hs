@@ -1201,6 +1201,9 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.LoseControlOfBound (SlotName.MkSlotName (Text.pack "target")))
       " {\"type\":\"LoseControlOfBound\",\"value\":\"target\"} "
+  -- CR 603.10d's self-scoped twin, a bare tag.
+  Spec.it s "LoseControlOfSelf round-trips" $
+    Common.assertCodec s TriggerCondition.codec TriggerCondition.LoseControlOfSelf " {\"type\":\"LoseControlOfSelf\"} "
   -- CR 701.66a's slot-named condition, the arm above's wire shape. No card prints
   -- it -- Parun.Engine.Earthbend mints the only ability that carries it -- and it
   -- must not collapse into LoseControlOfBound, which shares the payload exactly.

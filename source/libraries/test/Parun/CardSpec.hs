@@ -1252,6 +1252,8 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.BoundDiesOrIsExiled _ -> []
   TriggerCondition.BoundDies _ -> []
   TriggerCondition.RoomEntered _ -> []
+  -- CR 603.10d's self condition carries nothing at all.
+  TriggerCondition.LoseControlOfSelf -> []
   -- CR 603.2's PlayerActs carries a PlayerAction and a PlayerRelation, neither
   -- a Count.
   TriggerCondition.PlayerActs _ -> []
@@ -4817,6 +4819,8 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.BoundDiesOrIsExiled _ -> []
   TriggerCondition.BoundDies _ -> []
   TriggerCondition.RoomEntered _ -> []
+  -- CR 603.10d's self condition carries nothing at all.
+  TriggerCondition.LoseControlOfSelf -> []
   -- CR 603.2's PlayerActs carries a PlayerAction and a PlayerRelation, neither
   -- a Filter.
   TriggerCondition.PlayerActs _ -> []
@@ -5044,6 +5048,8 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   -- Ray of Command's "when you lose control of the creature" watches the
   -- permanent its own spell targeted.
   TriggerCondition.LoseControlOfBound slot -> [slot]
+  -- CR 603.10d's self condition names no slot.
+  TriggerCondition.LoseControlOfSelf -> []
   -- Rule 701.66a's slot-named condition. Never reached from card data --
   -- Parun.Engine.Earthbend mints the only ability that carries it -- but answered
   -- rather than defaulted, so the singularity above is claimed for it too.

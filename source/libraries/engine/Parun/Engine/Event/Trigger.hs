@@ -223,7 +223,7 @@ fileBoards gs =
       open group = GameState.eventGroupDepth gs > 0 && group == GameState.nextEventGroup gs
       unfiled = Seq.takeWhileR (\logged -> Map.notMember (LoggedEvent.group logged) filed) (Seq.drop (Natural.toIntSaturating (GameState.scannedThrough gs)) (GameState.events gs))
       groups = filter (not . open) (fmap LoggedEvent.group (Foldable.toList unfiled))
-      board = gs {GameState.boardAfterEvent = Map.empty, GameState.boardBeforeDeparture = Map.empty}
+      board = gs {GameState.boardAfterEvent = Map.empty, GameState.boardBeforeEvent = Map.empty, GameState.boardAtControlSample = Nothing}
    in if null groups then gs else gs {GameState.boardAfterEvent = List.foldl' (\m group -> Map.insert group board m) filed groups}
 
 -- The zone change an event describes, if it is one.
@@ -441,8 +441,8 @@ participants event =
                 TriggerSource.Sourceless -> []
            in (source, [AbilityTriggered.controller t])
         -- CR 801.7a: read under the controller it had before the change, which
-        -- is what TriggerCondition.LoseControlOfBound, the one condition this
-        -- event matches, asks about.
+        -- is what TriggerCondition.LoseControlOfBound and LoseControlOfSelf, the
+        -- two conditions this event matches, ask about.
         GameEvent.ControlChanged c -> player (ControlChanged.before c)
         GameEvent.VentureMarkerEntered v -> ([VentureMarkerEntered.dungeon v], [VentureMarkerEntered.player v])
         GameEvent.BecameTarget t -> ([BecameTarget.source t], []) <> recipient (BecameTarget.targeted t)
@@ -778,6 +778,8 @@ looksBack condition = case condition of
   -- permanent still on the battlefield, Engine.sampleControl sampling nowhere else,
   -- and its bearer is a CR 603.7 delayed entry the store keeps rather than the log.
   TriggerCondition.LoseControlOfBound _ -> False
+  -- CR 603.10d: the bearer stays, but under the controller it had before.
+  TriggerCondition.LoseControlOfSelf -> True
   -- CR 603.10a's look-back IS this condition's subject -- the land is gone by the
   -- time the ability triggers -- but the match reads the bound id rather than any
   -- characteristic of it, so nothing here needs a snapshot to answer from.
@@ -1096,6 +1098,7 @@ batchScoped condition = case condition of
   TriggerCondition.PlayerBecomesMonarch _ -> False
   TriggerCondition.LoseControlOfBound _ -> False
   TriggerCondition.BoundDiesOrIsExiled _ -> False
+  TriggerCondition.LoseControlOfSelf -> False
   TriggerCondition.BoundDies _ -> False
   TriggerCondition.Reflexive -> False
 
@@ -1354,6 +1357,20 @@ eventTriggers events gs =
       -- look-back). It takes the departing id as well as the characteristics: CR
       -- 113.6m's final sentence reads the CR 603.7 declarations, which the
       -- characteristics carry (PC.delayedAbilities).
+      -- CR 603.10d: the permanent this event took out of a player's control,
+      -- offered under that player for its look-back abilities as they stood on
+      -- the board before the change (GameState.boardBeforeEvent), or on the board
+      -- after it for a change none is filed for. Wins the union below over
+      -- `onBattlefield`'s offer of the same id under its new controller: only
+      -- look-back conditions match GameEvent.ControlChanged, so that offer could
+      -- match nothing here.
+      lostControlOf onBattlefield logged = case LoggedEvent.event logged of
+        GameEvent.ControlChanged (ControlChanged.MkControlChanged oid before _) ->
+          let abilities = case Map.lookup (LoggedEvent.group logged) (GameState.boardBeforeEvent gs) of
+                Just board | Set.member oid (GameState.battlefield board) -> battlefieldAbilitiesOf oid (Projection.project oid board)
+                _ -> foldMap snd (Map.lookup oid onBattlefield)
+           in Map.singleton oid (before, filter (looksBack . fst) abilities)
+        _ -> Map.empty
       leftBattlefield event = case event of
         GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)
           | ZoneChange.from zc == Zone.Battlefield && ZoneChange.to zc /= Zone.Battlefield ->
@@ -2390,8 +2407,10 @@ eventTriggers events gs =
       -- Map.unions is left-biased, so the battlefield reading wins over a
       -- last-known one, a cycled card and a graveyard reading. That rules out a
       -- double fire: one entry per id means one pass of `forOne` per id.
+      -- `lostControlOf` overlaps `onBattlefield` on purpose and wins, for the
+      -- reason its own comment gives.
       --
-      -- Two of the first four genuinely overlap, and there the bias is load-bearing
+      -- Two of the next four genuinely overlap, and there the bias is load-bearing
       -- rather than belt and braces: a permanent that departs at a LATER group was
       -- still standing when this group's sample was taken, so it is in both
       -- `onBattlefield` and `later`, and the sample's at-the-event reading is the
@@ -2414,8 +2433,8 @@ eventTriggers events gs =
       -- no other. `revealedInHand` and `spellCast` overlap `inStatedZones`, which
       -- comes last so the bias hands them the id: each offers the stated
       -- abilities the scan would, plus its keyword-minted ones.
-      candidates onBattlefield event later same graveyard = Map.toAscList (Map.unions [onBattlefield, leftBattlefield event, later, same, walkedAwayFrom event, cycledCard event, spellCast event, revealedInHand event, graveyard, inCommand, Map.unionWith (\(c, a) (_, b) -> (c, a <> b)) inExile (exiledForMadness event), inStatedZones])
-      scanOne board later same graveyard logged = concatMap (forOne board logged) (candidates (onBattlefieldOf board) (LoggedEvent.event logged) later same graveyard)
+      candidates onBattlefield logged later same graveyard = let event = LoggedEvent.event logged in Map.toAscList (Map.unions [lostControlOf onBattlefield logged, onBattlefield, leftBattlefield event, later, same, walkedAwayFrom event, cycledCard event, spellCast event, revealedInHand event, graveyard, inCommand, Map.unionWith (\(c, a) (_, b) -> (c, a <> b)) inExile (exiledForMadness event), inStatedZones])
+      scanOne board later same graveyard logged = concatMap (forOne board logged) (candidates (onBattlefieldOf board) logged later same graveyard)
       -- The battlefield reading is per GROUP and so is hoisted out of the block:
       -- every event in one group happened at the same time, so they share it. A
       -- group with no events cannot occur, which `eventGroups` states in the type.
@@ -3195,6 +3214,8 @@ zonesTriggeredFrom cond =
         -- GameState.delayedTriggers rather than out of a zone. The default is right
         -- anyway -- the event it matches happens on the battlefield.
         TriggerCondition.LoseControlOfBound _ -> battlefield
+        -- CR 113.6's default: the bearer stays on the battlefield.
+        TriggerCondition.LoseControlOfSelf -> battlefield
         -- Never consulted either, and for LoseControlOfBound's reason: rule 701.66a's
         -- delayed ability is a GameState.delayedTriggers entry, gathered out of the
         -- store rather than out of a zone.
@@ -3416,6 +3437,7 @@ stateTriggersOn gs
             -- CHANGING, and a settle re-reading "somebody else controls it" would
             -- fire it again on every pass thereafter.
             TriggerCondition.LoseControlOfBound _ -> False
+            TriggerCondition.LoseControlOfSelf -> False
             -- CR 603.2 event trigger too: it fires on the land BEING put into a
             -- graveyard or into exile, not on its being there.
             TriggerCondition.BoundDiesOrIsExiled _ -> False
@@ -4053,7 +4075,7 @@ firesWithout gone pending gs =
                 GameState.command = Set.difference (GameState.command gs) gone,
                 GameState.continuousEffects = filter (\e -> Set.notMember (ContinuousEffect.source e) gone) (GameState.continuousEffects gs),
                 GameState.boardAfterEvent = Map.empty,
-                GameState.boardBeforeDeparture = Map.empty,
+                GameState.boardBeforeEvent = Map.empty,
                 GameState.battlefieldWhenTriggered = Map.empty
               }
           same p =
