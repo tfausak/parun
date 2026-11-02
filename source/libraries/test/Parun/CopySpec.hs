@@ -2123,7 +2123,8 @@ faceDownCopyBoard island arbiter clone piker cyber =
       (_, staged) = S.spellOnStack clone S.alice gs3
       resolved = resolveAndSettle (copyNamed arbiterId) staged
       killed = S.runPure S.identityAnswer resolved (Event.destroy Regenerability.Regenerable [arbiterId])
-      (withSpell, spell) = S.handOne cyber killed
+      -- CR 304.1: bob casts it, so it is in bob's hand.
+      (spell, withSpell) = S.addHandCard cyber S.bob killed
    in fmap (\cloneId -> (withSpell, spell, cloneId, one, two)) (cloneOnBattlefield killed)
 
 faceDownCopySpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
