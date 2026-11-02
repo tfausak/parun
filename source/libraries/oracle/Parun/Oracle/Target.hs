@@ -330,6 +330,10 @@ object context determiner ref = case ref of
       let bare = null (Filter.adjectives p) && null (Filter.qualifiers p)
       [MkReference w [] Filter.Plural | w <- if bare then [Text.pack "all " <> text, text] else [text]]
   ObjectRef.EachCardInGraveyard e
+    | determiner == All,
+      EachCardInGraveyard.filter e == Filter.Type.And [],
+      EachCardInGraveyard.graveyards e == ZoneScope.Scoped (PlayerScope.Related PlayerRelation.Opponent) ->
+        [MkReference (Text.pack "each opponent's graveyard") [] Filter.Singular]
     | determiner == All -> do
         p <- Filter.phrase (EachCardInGraveyard.filter e) (keyword context)
         from <- graveyard (EachCardInGraveyard.graveyards e) Nothing
