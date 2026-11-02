@@ -692,15 +692,7 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
             }
       )
       " {\"type\":\"ActivationsThisTurn\",\"value\":{\"activator\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"source\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Planeswalker\"}},\"criteria\":{\"whichLoyalty\":{\"type\":\"LoyaltyAbility\"}}}} "
-  -- CR 702.40a with nothing on the wire: the spell is the one the quantity is
-  -- evaluated against, and "this turn" is the event log's own extent.
-  Spec.it s "SpellsCastBefore is nullary" $
-    Common.assertCodec
-      s
-      Quantity.codec
-      Quantity.SpellsCastBefore
-      " {\"type\":\"SpellsCastBefore\"} "
-  -- CR 702.69a with nothing on the wire either: the count reads the whole of the
+  -- CR 702.69a with nothing on the wire: the count reads the whole of the
   -- event log's extent and names no object at all.
   Spec.it s "PermanentsDiedThisTurn is nullary" $
     Common.assertCodec

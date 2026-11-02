@@ -129,10 +129,15 @@ evaluate viewOf quantityOf context gs count =
         -- turns' casts, which GameState.castsBeforeThisTurn keeps as the same
         -- record the log's SpellCast entries carry.
         Scope.InHistory shape ->
-          let logged = fmap LoggedEvent.event (Foldable.toList (GameState.events gs))
+          let logged = case shape of
+                -- Nothing for an evaluation aimed at no object, or at one whose cast
+                -- is not in this turn's log: CR 707.10's copy was never cast.
+                EventShape.SpellCastBefore -> foldMap (fmap GameEvent.SpellCast) (Filter.evaluated context >>= \spell -> Game.castsBefore spell gs)
+                _ -> fmap LoggedEvent.event (Foldable.toList (GameState.events gs))
               earlier = case shape of
                 EventShape.SpellCastThisGame -> fmap GameEvent.SpellCast (Foldable.toList (GameState.castsBeforeThisTurn gs))
                 EventShape.SpellCast -> []
+                EventShape.SpellCastBefore -> []
                 EventShape.MovedBetween {} -> []
                 EventShape.MovedFrom {} -> []
                 EventShape.CardArrivedIn {} -> []
@@ -802,6 +807,7 @@ snapshotView viewOf gs shape event = case event of
         then Just (Maybe.fromMaybe (departedView viewOf gs zc snapshot) (orLastKnown viewOf gs (ZoneChange.object zc)))
         else Nothing
     EventShape.SpellCast -> Nothing
+    EventShape.SpellCastBefore -> Nothing
     EventShape.SpellCastThisGame -> Nothing
   GameEvent.DamageDealt _ -> Nothing
   -- CR 615.13's record names two ids, a recipient and an amount, and snapshots no
@@ -832,6 +838,7 @@ snapshotView viewOf gs shape event = case event of
     -- again, whom CR 405.4 makes the spell's controller and no more: Dire Fleet
     -- Daredevil casts a card its owner never touched (Parun.CountSpec).
     EventShape.SpellCast -> Just castView
+    EventShape.SpellCastBefore -> Just castView
     EventShape.SpellCastThisGame -> Just castView
     EventShape.MovedBetween {} -> Nothing
     EventShape.MovedFrom {} -> Nothing
@@ -966,6 +973,7 @@ snapshotView viewOf gs shape event = case event of
     EventShape.MovedBetween {} -> Nothing
     EventShape.MovedFrom {} -> Nothing
     EventShape.SpellCast -> Nothing
+    EventShape.SpellCastBefore -> Nothing
     EventShape.SpellCastThisGame -> Nothing
 
 -- CR 712.21e's destination narrowed by the printed clause's origin: the arrival

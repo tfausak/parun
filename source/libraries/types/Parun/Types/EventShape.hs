@@ -61,4 +61,7 @@ data EventShape
     SpellCast
   | -- | CR 601.2i: SpellCast above, over the whole game rather than this turn.
     SpellCastThisGame
+  | -- | CR 702.40a: SpellCast above, over this turn's casts before the object the
+    -- count is evaluated against, so a spell cast in response isn't counted.
+    SpellCastBefore
   deriving (Eq, Ord, Show)

@@ -48,4 +48,10 @@ spec s = Spec.describe s "Parun.Codec.EventShape" $ do
       EventShape.codec
       EventShape.SpellCastThisGame
       " {\"type\":\"SpellCastThisGame\"} "
+  Spec.it s "SpellCastBefore" $
+    Common.assertCodec
+      s
+      EventShape.codec
+      EventShape.SpellCastBefore
+      " {\"type\":\"SpellCastBefore\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s EventShape.codec

@@ -2440,7 +2440,6 @@ rewriteQuantity pairs quantity = case quantity of
   Quantity.Type.SpellsCast _ -> quantity
   Quantity.Type.TimesThisTurn _ -> quantity
   Quantity.Type.ActivationsThisTurn tally -> Quantity.Type.ActivationsThisTurn tally {ActivationsThisTurn.source = Filter.rewrite pairs (ActivationsThisTurn.source tally)}
-  Quantity.Type.SpellsCastBefore -> quantity
   Quantity.Type.PermanentsDiedThisTurn -> quantity
   Quantity.Type.SpellsCastUsingThisTurn _ -> quantity
   Quantity.Type.SubgamesThisMatch -> quantity

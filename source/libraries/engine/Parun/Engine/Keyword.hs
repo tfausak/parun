@@ -110,6 +110,7 @@ import qualified Parun.Types.EntryRewrite as EntryRewrite
 import qualified Parun.Types.EntryRiders as EntryRiders
 import qualified Parun.Types.Equip as Equip
 import qualified Parun.Types.EquipTarget as EquipTarget
+import qualified Parun.Types.EventShape as EventShape
 import qualified Parun.Types.ExchangeCardZones as ExchangeCardZones
 import qualified Parun.Types.ExileHaunting as ExileHaunting
 import qualified Parun.Types.ExiledPile as ExiledPile
@@ -8457,7 +8458,7 @@ storm =
   Mint.triggerOf
     TriggerCondition.SelfCast
     Nothing
-    (copiesOf Quantity.SpellsCastBefore)
+    (copiesOf (Quantity.Count (Count.MkCount (Scope.InHistory EventShape.SpellCastBefore) (Filter.And []) Aggregation.Members)))
 
 -- CR 702.69a: "When you cast this spell, copy it for each permanent that was put
 -- into a graveyard from the battlefield this turn. If the spell has any targets,
