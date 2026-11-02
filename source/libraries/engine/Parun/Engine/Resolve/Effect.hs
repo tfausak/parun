@@ -489,6 +489,9 @@ applyEffectWith runSubgame resolving source controller legal chosen effect = Eve
   -- no test loses a player the game mid-resolution and reads the board after,
   -- so Engine.performSettle's drain answers every test the same without it.
   runReplacementEffects runSubgame
+  -- CR 603.2 / 603.10d: a control change this instruction made, observed before
+  -- the next one can make another.
+  Monad.void Event.sampleControl
   -- CR 603.4: the board this instruction's events left, before the next one
   -- changes it. data/scenarios/trigger's Slaughterhouse Bouncer scenario proves
   -- it.

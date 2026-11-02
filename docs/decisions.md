@@ -441,10 +441,11 @@ Entries are ordered by the first rule each cites.
 - **Decision**: It happened if it recorded a game event or changed any state
   but bookkeeping. Bookkeeping is whatever an instruction that did not happen
   can still write (event-log samples, allocators, the last choice, a draw from
-  an empty library, a shortfall, exile-link prunes, bound zero amounts, vote
-  tallies), and is copied across from the state before. Not covered, because
-  rulings settle them for CR 603.12: an "any number" choice, which happened
-  even at zero, and a draw or mill finding too few cards, which did not.
+  an empty library, a shortfall, exile-link prunes, the control sample and the
+  clock it stamps, bound zero amounts, vote tallies), and is copied across from
+  the state before. Not covered, because rulings settle them for CR 603.12: an
+  "any number" choice, which happened even at zero, and a draw or mill finding
+  too few cards, which did not.
 - **Rejected**: An allow-list of state that counts, the earlier event-log
   reading, which misses every state-only instruction writing a field it does
   not name.
@@ -456,8 +457,11 @@ Entries are ordered by the first rule each cites.
   an empty mill after a face-down card left exile arms no reflexive",
   `nextTimestamp` by "CR 701.28e / 603.12 an ignored convert arms no
   reflexive", `nextEventGroup` by `Parun.ResolveSpec`'s "CR 118.12 Victimize
-  with no creature to sacrifice returns nothing". The other copies are a
-  regression fence.
+  with no creature to sacrifice returns nothing", `controlSample` and
+  `Object.controlClock` by the same test, `boardAtControlSample` by
+  `Parun.AuraSpec`'s "CR 603.12 Thorin's Equipment go to its target, which
+  then deals damage equal to its power". The other copies are a regression
+  fence.
 - **Issue**: none.
 
 ## Whether an ability a merge grafts is still characteristic-defining

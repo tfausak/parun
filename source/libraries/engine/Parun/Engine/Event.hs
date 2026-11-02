@@ -107,6 +107,8 @@ import qualified Parun.Types.Combat as Combat
 import qualified Parun.Types.CommandZoneDecision as CommandZoneDecision
 import qualified Parun.Types.ComponentCard as ComponentCard
 import qualified Parun.Types.ContinuousEffect as ContinuousEffect
+import qualified Parun.Types.ControlChanged as ControlChanged
+import qualified Parun.Types.ControlClock as ControlClock
 import qualified Parun.Types.CopyClause as CopyClause
 import qualified Parun.Types.CopyCoverage as CopyCoverage
 import qualified Parun.Types.CopyDomain as CopyDomain
@@ -340,6 +342,69 @@ fileBoardBefore :: GameState -> GameState -> GameState
 fileBoardBefore before gs =
   let board = before {GameState.boardAfterEvent = Map.empty, GameState.boardBeforeEvent = Map.empty, GameState.boardAtControlSample = Nothing}
    in gs {GameState.boardBeforeEvent = Map.insertWith (\_ filed -> filed) (GameState.nextEventGroup gs) board (GameState.boardBeforeEvent gs)}
+
+-- The OBSERVATION POINT for a control change (CR 613.1b puts control in layer 2,
+-- so the projection re-reads it live and nothing announces the answer changing).
+-- Diffs the live controller of every battlefield permanent against
+-- GameState.controlSample, records a GameEvent.ControlChanged for each
+-- difference, stores the new snapshot, and reports whether it recorded anything.
+--
+-- MINTING AN EVENT is what makes this different from the three other samplers
+-- (Engine.checkControlContinuity, Combat.removeChanged, Ring.endOnControlChange), which
+-- each clear one piece of stored state and tell nobody: a trigger condition cannot
+-- be written against stored state that quietly changes, so CR 603.2 needs an entry
+-- in the log. FIRST SIGHTING IS NOT A CHANGE, so a permanent entering mints no
+-- event, and the snapshot is REBUILT from the battlefield -- CR 400.7 gives what
+-- comes back a new id, so a creature borrowed, killed and reanimated does not
+-- come home. Terminates: it only mints on a difference.
+--
+-- CR 702.30a's clock rides the same pass, because it asks the same question of
+-- the same map and Projection.controlGrants is the expensive part. A window
+-- opens on every ARRIVAL -- each difference the diff above found, plus the first
+-- sighting it declines to mint an event for, CR 110.2's battlefield entry being
+-- one of those. OVERWRITING, and on a RETURN as much as on a first arrival: rule
+-- 702.30a asks whether the permanent came under your control since your last
+-- upkeep, not whether this is the first time you ever controlled it, so a seat
+-- whose window ran out gets a fresh one when control comes back to it
+-- (Parun.KeywordTriggerSpec's "control coming back re-opens the window it
+-- closed"). Two samples straddling a change and a change back see no difference
+-- and open nothing, which is the gap Engine.checkControlContinuity documents,
+-- for that function's reason.
+--
+-- Taken at every priority settle (CR 704.3) and after every instruction a
+-- resolution performs (Resolve.Effect.applyEffectWith), so a permanent that
+-- changes hands twice in one resolution mints two events, each looking back to
+-- the board after the instruction before it. data/scenarios's Fiery Confluence
+-- and Khârn the Betrayer scenario proves it.
+sampleControl :: Game Bool
+sampleControl = do
+  gs <- State.get
+  let grants = Projection.controlGrants gs
+      sampled =
+        Map.fromList $ do
+          oid <- Set.toList (GameState.battlefield gs)
+          Just pid <- [Projection.controllerOfGiven grants oid gs]
+          pure (oid, pid)
+      changes = do
+        (oid, after) <- Map.toList sampled
+        Just before <- [Map.lookup oid (GameState.controlSample gs)]
+        Monad.guard (before /= after)
+        pure (GameEvent.ControlChanged (ControlChanged.MkControlChanged oid before after))
+      arrivals = do
+        (oid, after) <- Map.toList sampled
+        Monad.guard (Map.lookup oid (GameState.controlSample gs) /= Just after)
+        pure (oid, after)
+      gain (oid, who) objs = case Map.lookup oid objs of
+        Just obj -> Map.insert oid obj {Object.controlClock = Map.insert who ControlClock.Gained (Object.controlClock obj)} objs
+        Nothing -> objs
+      board = gs {GameState.boardAfterEvent = Map.empty, GameState.boardBeforeEvent = Map.empty, GameState.boardAtControlSample = Nothing}
+  State.put gs {GameState.controlSample = sampled, GameState.objects = foldr gain (GameState.objects gs) arrivals, GameState.boardAtControlSample = Just board}
+  -- CR 603.2's simultaneity: two permanents whose control reverted in the same CR
+  -- 514.2 sweep changed hands at the same moment, so the batch is one event group.
+  -- CR 603.10d: the batch looks back to the board the previous sample read.
+  Monad.unless (null changes) . simultaneously $
+    State.modify' (\g -> List.foldl' (flip recordEvent) (maybe g (`fileBoardBefore` g) (GameState.boardAtControlSample gs)) changes)
+  pure (not (null changes))
 
 -- The GameEvent.LifeLost for a loss recorded next, stamped with whether the log
 -- holds an earlier one of the player's. Stamped here because the trigger scan runs

@@ -17,7 +17,7 @@ import qualified Parun.Types.PlayerId as PlayerId
 -- `Settled pid` at pid's untap step for everything pid controls; and
 -- Engine.checkControlContinuity DROPS a `Settled p` whose object p no longer
 -- controls. Control is DERIVED, so nothing announces a change and the check
--- samples wherever the board can change -- the same diff Engine.sampleControl
+-- samples wherever the board can change -- the same diff Event.sampleControl
 -- takes for CR 603.2, taken again rather than read off the event log, for the
 -- reason checkControlContinuity's own comment gives. It only ever clears, never
 -- grants, so a stolen creature stays sick after the Aura leaves and control returns.

@@ -777,7 +777,7 @@ looksBack condition = case condition of
   -- not an object -- so none of CR 603.10a's four families reaches it.
   TriggerCondition.PlayerBecomesMonarch _ -> False
   -- CR 603.10a's look-back is for a bearer that left; this condition's subject is a
-  -- permanent still on the battlefield, Engine.sampleControl sampling nowhere else,
+  -- permanent still on the battlefield, Event.sampleControl sampling nowhere else,
   -- and its bearer is a CR 603.7 delayed entry the store keeps rather than the log.
   TriggerCondition.LoseControlOfBound _ -> False
   -- CR 603.10d: the bearer stays, but under the controller it had before.

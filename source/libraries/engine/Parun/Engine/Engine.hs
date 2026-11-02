@@ -82,7 +82,6 @@ import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Completion as Completion
 import qualified Parun.Types.Concession as Concession
-import qualified Parun.Types.ControlChanged as ControlChanged
 import qualified Parun.Types.ControlClock as ControlClock
 import qualified Parun.Types.CounterCause as CounterCause
 import qualified Parun.Types.CounterKind as CounterKind
@@ -404,7 +403,7 @@ checkControlContinuity = do
 -- upkeep is dropped. Only `pid`'s, rule 702.30a measuring the window in the
 -- upkeeps of the player whose control it asks about, so a permanent stolen and
 -- given back has an untouched clock for the seat that did not take a turn in
--- between. Dropping rather than marking spent: `sampleControl` below opens a
+-- between. Dropping rather than marking spent: `Event.sampleControl` opens a
 -- window on an ARRIVAL and never on an absence, so there is nothing for a
 -- tombstone to suppress, and Parun.Types.ControlClock says why "no window" then
 -- has one representation.
@@ -448,66 +447,6 @@ sampleWorldSince = do
       let (ts, gs1) = Game.freshTimestamp gs
           stamp obj = obj {Object.worldSince = Just ts}
       State.put gs1 {GameState.objects = foldr (Map.adjust stamp) cleared toStamp}
-
--- The OBSERVATION POINT for a control change (CR 613.1b puts control in layer 2,
--- so the projection re-reads it live and nothing announces the answer changing).
--- Diffs the live controller of every battlefield permanent against
--- GameState.controlSample, records a GameEvent.ControlChanged for each
--- difference, stores the new snapshot, and reports whether it recorded anything.
---
--- MINTING AN EVENT is what makes this different from the three samplers beside it
--- (checkControlContinuity, Combat.removeChanged, Ring.endOnControlChange), which
--- each clear one piece of stored state and tell nobody: a trigger condition cannot
--- be written against stored state that quietly changes, so CR 603.2 needs an entry
--- in the log. FIRST SIGHTING IS NOT A CHANGE, so a permanent entering mints no
--- event, and the snapshot is REBUILT from the battlefield -- CR 400.7 gives what
--- comes back a new id, so a creature borrowed, killed and reanimated does not
--- come home. Terminates: it only mints on a difference.
---
--- CR 702.30a's clock rides the same pass, because it asks the same question of
--- the same map and Projection.controlGrants is the expensive part. A window
--- opens on every ARRIVAL -- each difference the diff above found, plus the first
--- sighting it declines to mint an event for, CR 110.2's battlefield entry being
--- one of those. OVERWRITING, and on a RETURN as much as on a first arrival: rule
--- 702.30a asks whether the permanent came under your control since your last
--- upkeep, not whether this is the first time you ever controlled it, so a seat
--- whose window ran out gets a fresh one when control comes back to it
--- (Parun.KeywordTriggerSpec's "control coming back re-opens the window it
--- closed"). Two samples straddling a change and a change back see no difference
--- and open nothing, which is the gap `checkControlContinuity` above documents,
--- for that function's reason.
-sampleControl :: Game Bool
-sampleControl = do
-  gs <- State.get
-  let grants = Projection.controlGrants gs
-      sampled =
-        Map.fromList $ do
-          oid <- Set.toList (GameState.battlefield gs)
-          Just pid <- [Projection.controllerOfGiven grants oid gs]
-          pure (oid, pid)
-      changes = do
-        (oid, after) <- Map.toList sampled
-        Just before <- [Map.lookup oid (GameState.controlSample gs)]
-        Monad.guard (before /= after)
-        pure (GameEvent.ControlChanged (ControlChanged.MkControlChanged oid before after))
-      arrivals = do
-        (oid, after) <- Map.toList sampled
-        Monad.guard (Map.lookup oid (GameState.controlSample gs) /= Just after)
-        pure (oid, after)
-      gain (oid, who) objs = case Map.lookup oid objs of
-        Just obj -> Map.insert oid obj {Object.controlClock = Map.insert who ControlClock.Gained (Object.controlClock obj)} objs
-        Nothing -> objs
-      board = gs {GameState.boardAfterEvent = Map.empty, GameState.boardBeforeEvent = Map.empty, GameState.boardAtControlSample = Nothing}
-  State.put gs {GameState.controlSample = sampled, GameState.objects = foldr gain (GameState.objects gs) arrivals, GameState.boardAtControlSample = Just board}
-  -- CR 603.2's simultaneity: two permanents whose control reverted in the same CR
-  -- 514.2 sweep changed hands at the same moment, so the batch is one event group.
-  -- CR 603.10d: the batch looks back to the board the previous sample read.
-  --
-  -- Not implemented: the board immediately before a change made partway through
-  -- a resolution, nor a second change of the same permanent within it (#5943).
-  Monad.unless (null changes) . Event.simultaneously $
-    State.modify' (\g -> List.foldl' (flip Event.recordEvent) (maybe g (`Event.fileBoardBefore` g) (GameState.boardAtControlSample gs)) changes)
-  pure (not (null changes))
 
 -- CR 514.1's cleanup discard -- NOT CR 514.2, the sweep beside it. The choice is
 -- the player's: trimming front-of-hand would be the engine choosing what to
@@ -1277,7 +1216,7 @@ settleForPriority = Monad.void performSettle
 -- none -- put triggered abilities on the stack, repeating until none of the three
 -- does anything. Every pass also pays a sample of derived state for each rule
 -- that stores what a projection answers live -- sampleWorldSince for CR 704.5k,
--- sampleControl for CR 603.2, Exile.accrueLookers for CR 406.3,
+-- Event.sampleControl for CR 603.2, Exile.accrueLookers for CR 406.3,
 -- checkControlContinuity for CR 302.6, Combat.removeChanged for CR 506.4,
 -- Ring.endOnControlChange for CR 701.54a.
 --
@@ -1339,9 +1278,9 @@ settlePasses passes boards = do
   -- Unlike the other samples here it MAKES WORK: a GameEvent.ControlChanged
   -- it mints has to be scanned, so it runs before placePendingTriggers and joins
   -- the recursion guard below.
-  sampledControl <- sampleControl
-  -- CR 406.3's continuing look, sampled off the control sampleControl just read
-  -- and for the same reason it is sampled: nothing announces a control change a
+  sampledControl <- Event.sampleControl
+  -- CR 406.3's continuing look, sampled off the control the line above just
+  -- read and for the same reason it is sampled: nothing announces a control change a
   -- grant could hang on. Stamp-only, so its position among the passes does not
   -- matter -- a change any later step here makes is seen on the next pass, and a
   -- pass on which nothing acted is one on which control did not move.
@@ -2155,7 +2094,7 @@ runStepThatBegan phase = do
   -- first, because no player receives priority during the untap step (CR 502.4),
   -- so a permanent that arrived there has no Gained entry yet.
   Monad.when (phase == Phase.Beginning BeginningStep.Upkeep) $ do
-    _ <- sampleControl
+    _ <- Event.sampleControl
     State.gets Turn.activePlayers >>= Monad.mapM_ advanceControlClock
   -- CR 611.2a: "until the beginning of your next upkeep" and "until
   -- your next end step" end here, before this step's first priority boundary
