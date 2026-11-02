@@ -3025,3 +3025,4 @@ harmonic-prodigy
 sanctum-of-all
 chandras-incinerator
 chandras-pyreling
+hooded-blightfang

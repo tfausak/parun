@@ -1,0 +1,285 @@
+1 Adherent of Hope
+1 Alchemist's Gift
+1 Alpine Houndmaster
+1 Alpine Watchdog
+1 Angelic Ascension
+1 Animal Sanctuary
+1 Anointed Chorister
+1 Archfiend's Vessel
+1 Aven Gagglemaster
+1 Azusa, Lost but Seeking
+1 Bad Deal
+1 Baneslayer Angel
+1 Barrin, Tolarian Archmage
+1 Basri Ket
+1 Basri's Acolyte
+1 Basri's Aegis
+1 Basri's Lieutenant
+1 Basri's Solidarity
+1 Basri, Devoted Paladin
+1 Battle-Rattle Shaman
+1 Blood Glutton
+1 Bloodfell Caves
+1 Blossoming Sands
+1 Bolt Hound
+1 Bone Pit Brute
+1 Brash Taunter
+1 Burlfist Oak
+1 Burn Bright
+1 Caged Zombie
+1 Cancel
+1 Canopy Stalker
+1 Capture Sphere
+1 Carrion Grub
+1 Celestial Enforcer
+1 Chandra's Firemaw
+1 Chandra's Incinerator
+1 Chandra's Magmutt
+1 Chandra's Pyreling
+1 Chandra, Flame's Catalyst
+1 Chandra, Heart of Fire
+1 Chromatic Orrery
+1 Chrome Replicator
+1 Colossal Dreadmaw
+1 Conclave Mentor
+1 Concordia Pegasus
+1 Conspicuous Snoop
+1 Containment Priest
+1 Crash Through
+1 Crypt Lurker
+1 Cultivate
+1 Daybreak Charger
+1 Deathbloom Thallid
+1 Defiant Strike
+1 Demonic Embrace
+1 Destructive Tampering
+1 Dire Fleet Warmonger
+1 Discontinuity
+1 Dismal Backwater
+1 Double Vision
+1 Drowsing Tyrannodon
+1 Dub
+1 Duress
+1 Elder Gargaroth
+1 Eliminate
+1 Enthralling Hold
+1 Epitaph Golem
+1 Experimental Overload
+1 Fabled Passage
+1 Faith's Fetters
+1 Falconer Adept
+1 Feat of Resistance
+1 Feline Sovereign
+1 Fetid Imp
+1 Fierce Empath
+1 Fiery Emancipation
+1 Finishing Blow
+1 Forest
+1 Forgotten Sentinel
+1 Frantic Inventory
+1 Frost Breath
+1 Fungal Rebirth
+1 Furious Rise
+1 Furor of the Bitten
+1 Gadrak, the Crown-Scourge
+1 Gale Swooper
+1 Garruk's Gorehorn
+1 Garruk's Harbinger
+1 Garruk's Uprising
+1 Garruk's Warsteed
+1 Garruk, Savage Herald
+1 Garruk, Unleashed
+1 Ghostly Pilferer
+1 Gloom Sower
+1 Glorious Anthem
+1 Gnarled Sage
+1 Goblin Arsonist
+1 Goblin Wizardry
+1 Goremand
+1 Grasp of Darkness
+1 Griffin Aerie
+1 Grim Tutor
+1 Havoc Jester
+1 Heartfire Immolator
+1 Hellkite Punisher
+1 Heroic Intervention
+1 Historian of Zhalfir
+1 Hobblefiend
+1 Hooded Blightfang
+1 Hunter's Edge
+1 Idol of Endurance
+1 Igneous Cur
+1 Indulging Patrician
+1 Infernal Scarring
+1 Invigorating Surge
+1 Island
+1 Jeskai Elder
+1 Jolrael, Mwonvuli Recluse
+1 Jungle Hollow
+1 Kaervek, the Spiteful
+1 Keen Glidemaster
+1 Keral Keep Disciples
+1 Kinetic Augur
+1 Kitesail Freebooter
+1 Leafkin Avenger
+1 Legion's Judgment
+1 Library Larcenist
+1 Life Goes On
+1 Light of Promise
+1 Liliana's Devotee
+1 Liliana's Scorn
+1 Liliana's Scrounger
+1 Liliana's Standard Bearer
+1 Liliana's Steward
+1 Liliana, Death Mage
+1 Liliana, Waker of the Dead
+1 Llanowar Visionary
+1 Lofty Denial
+1 Lorescale Coatl
+1 Makeshift Battalion
+1 Malefic Scythe
+1 Mangara, the Diplomat
+1 Masked Blackguard
+1 Massacre Wurm
+1 Mazemind Tome
+1 Meteorite
+1 Mind Rot
+1 Miscast
+1 Mistral Singer
+1 Mountain
+1 Mystic Skyfish
+1 Necromentia
+1 Niambi, Esteemed Speaker
+1 Nine Lives
+1 Obsessive Stitcher
+1 Onakke Ogre
+1 Opt
+1 Ornery Dilophosaur
+1 Pack Leader
+1 Palladium Myr
+1 Peer into the Abyss
+1 Pestilent Haze
+1 Pitchburn Devils
+1 Plains
+1 Portcullis Vine
+1 Predatory Wurm
+1 Pridemalkin
+1 Primal Might
+1 Prismite
+1 Pursued Whale
+1 Quirion Dryad
+1 Radha, Heart of Keld
+1 Radiant Fountain
+1 Rain of Revelation
+1 Rambunctious Mutt
+1 Ranger's Guile
+1 Read the Tides
+1 Return to Nature
+1 Revitalize
+1 Rewind
+1 Riddleform
+1 Rin and Seri, Inseparable
+1 Rise Again
+1 Roaming Ghostlight
+1 Rookie Mistake
+1 Rousing Read
+1 Rugged Highlands
+1 Run Afoul
+1 Runed Halo
+1 Sabertooth Mauler
+1 Sanctum of All
+1 Sanctum of Calm Waters
+1 Sanctum of Fruitful Harvest
+1 Sanctum of Shattered Heights
+1 Sanctum of Stone Fangs
+1 Sanctum of Tranquil Light
+1 Sanguine Indulgence
+1 Scavenging Ooze
+1 Scorching Dragonfire
+1 Scoured Barrens
+1 Seasoned Hallowblade
+1 Secure the Scene
+1 See the Truth
+1 Selfless Savior
+1 Setessan Training
+1 Shacklegeist
+1 Shipwreck Dowser
+1 Shock
+1 Short Sword
+1 Siege Striker
+1 Sigiled Contender
+1 Silent Dart
+1 Silversmote Ghoul
+1 Skeleton Archer
+1 Skyscanner
+1 Skyway Sniper
+1 Snarespinner
+1 Solemn Simulacrum
+1 Soul Sear
+1 Sparkhunter Masticore
+1 Speaker of the Heavens
+1 Spellgorger Weird
+1 Spined Megalodon
+1 Spirit of Malevolence
+1 Sporeweb Weaver
+1 Staunch Shieldmate
+1 Storm Caller
+1 Stormwing Entity
+1 Subira, Tulzidi Caravanner
+1 Sublime Epiphany
+1 Sure Strike
+1 Swamp
+1 Swift Response
+1 Swiftwater Cliffs
+1 Tavern Swindler
+1 Teferi's Ageless Insight
+1 Teferi's Protege
+1 Teferi's Tutelage
+1 Teferi's Wavecaster
+1 Teferi, Master of Time
+1 Teferi, Timeless Voyager
+1 Tempered Veteran
+1 Temple of Epiphany
+1 Temple of Malady
+1 Temple of Mystery
+1 Temple of Silence
+1 Temple of Triumph
+1 Terror of the Peaks
+1 Thieves' Guild Enforcer
+1 Thornwood Falls
+1 Thrashing Brontodon
+1 Thrill of Possibility
+1 Tide Skimmer
+1 Titanic Growth
+1 Tolarian Kraken
+1 Tome Anima
+1 Tormod's Crypt
+1 Track Down
+1 Traitorous Greed
+1 Tranquil Cove
+1 Transmogrify
+1 Trufflesnout
+1 Turn to Slag
+1 Turret Ogre
+1 Twinblade Assassins
+1 Ugin, the Spirit Dragon
+1 Unleash Fury
+1 Unsubstantiate
+1 Valorous Steed
+1 Village Rites
+1 Vito, Thorn of the Dusk Rose
+1 Vodalian Arcanist
+1 Volcanic Geyser
+1 Volcanic Salvo
+1 Vryn Wingmare
+1 Waker of Waves
+1 Walking Corpse
+1 Wall of Runes
+1 Warded Battlements
+1 Warden of the Woods
+1 Watcher of the Spheres
+1 Wildwood Patrol
+1 Wildwood Scourge
+1 Wind-Scarred Crag
+1 Wishcoin Crab
+1 Witch's Cauldron

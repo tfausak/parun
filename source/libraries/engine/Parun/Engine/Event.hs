@@ -10683,7 +10683,7 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> False
   TriggerCondition.DealsCombatDamage _ -> False
   TriggerCondition.DealsDamageToPlayer _ -> False
-  TriggerCondition.SelfDealsDamageToCreature _ -> False
+  TriggerCondition.DealsDamageToPermanent _ -> False
   TriggerCondition.DealsDamage _ -> False
   TriggerCondition.IsDealtDamage _ -> False
   TriggerCondition.PlayerIsDealtDamage _ -> False

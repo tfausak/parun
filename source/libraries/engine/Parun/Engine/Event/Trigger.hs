@@ -690,7 +690,7 @@ looksBack condition = case condition of
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> False
   TriggerCondition.DealsCombatDamage _ -> False
   TriggerCondition.DealsDamageToPlayer _ -> False
-  TriggerCondition.SelfDealsDamageToCreature _ -> False
+  TriggerCondition.DealsDamageToPermanent _ -> False
   TriggerCondition.DealsDamage _ -> False
   TriggerCondition.IsDealtDamage _ -> False
   TriggerCondition.PlayerIsDealtDamage _ -> False
@@ -943,7 +943,7 @@ batchScoped condition = case condition of
   -- connecting are two.
   TriggerCondition.DealsCombatDamage _ -> True
   TriggerCondition.DealsDamageToPlayer _ -> False
-  TriggerCondition.SelfDealsDamageToCreature _ -> False
+  TriggerCondition.DealsDamageToPermanent _ -> False
   -- DealsCombatDamage's True without the combat narrowing: one damage
   -- event to several recipients -- a CR 510.2 step, or one CR 608.2f
   -- instruction -- is one trigger event, its amount summed by batchBindings.
@@ -2973,7 +2973,7 @@ zonesTriggeredFrom cond =
         -- CR 113.6's default once more, for the DealsDamageToPlayer arm's
         -- reason: the bearer is the damage's SOURCE, and a source anywhere but the
         -- battlefield is a different object from this permanent.
-        TriggerCondition.SelfDealsDamageToCreature _ -> battlefield
+        TriggerCondition.DealsDamageToPermanent _ -> battlefield
         -- CR 113.6's default again, for the DealsDamageToPlayer arm's reason.
         TriggerCondition.DealsDamage _ -> battlefield
         -- CR 113.6's default again, and the match's own shape on top of it: a Self
@@ -3336,7 +3336,7 @@ stateTriggersOn gs
             TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> False
             TriggerCondition.DealsCombatDamage _ -> False
             TriggerCondition.DealsDamageToPlayer _ -> False
-            TriggerCondition.SelfDealsDamageToCreature _ -> False
+            TriggerCondition.DealsDamageToPermanent _ -> False
             TriggerCondition.DealsDamage _ -> False
             TriggerCondition.IsDealtDamage _ -> False
             TriggerCondition.PlayerIsDealtDamage _ -> False

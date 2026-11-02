@@ -178,6 +178,7 @@ import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.DealDamage as DealDamage
+import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Defense as Defense
@@ -1168,7 +1169,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> []
   TriggerCondition.DealsCombatDamage _ -> []
   TriggerCondition.DealsDamageToPlayer _ -> []
-  TriggerCondition.SelfDealsDamageToCreature _ -> []
+  TriggerCondition.DealsDamageToPermanent _ -> []
   TriggerCondition.DealsDamage _ -> []
   TriggerCondition.IsDealtDamage _ -> []
   TriggerCondition.PlayerIsDealtDamage _ -> []
@@ -4718,9 +4719,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- creature". The self-scoped readings carry nothing.
   TriggerCondition.DealsCombatDamage watched -> actingFilters watched
   TriggerCondition.DealsDamageToPlayer p -> actingFilters (DealsDamageToPlayer.actor p)
-  -- Nullary as well: the printed form qualifies the damaged creature in no way,
-  -- so a text change has nothing here to rewrite.
-  TriggerCondition.SelfDealsDamageToCreature _ -> []
+  TriggerCondition.DealsDamageToPermanent p -> actingFilters (DealsDamageToPermanent.actor p)
   TriggerCondition.DealsDamage watched -> actingFilters watched
   TriggerCondition.IsDealtDamage dealt -> actingFilters (DealtDamage.recipient dealt)
   TriggerCondition.PlayerIsDealtDamage _ -> []
@@ -4927,7 +4926,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> []
   TriggerCondition.DealsCombatDamage _ -> []
   TriggerCondition.DealsDamageToPlayer _ -> []
-  TriggerCondition.SelfDealsDamageToCreature _ -> []
+  TriggerCondition.DealsDamageToPermanent _ -> []
   TriggerCondition.DealsDamage _ -> []
   TriggerCondition.IsDealtDamage _ -> []
   TriggerCondition.PlayerIsDealtDamage _ -> []

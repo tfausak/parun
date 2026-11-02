@@ -183,11 +183,11 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
       Recipient.ToObject _ -> Map.empty
       -- Unreachable, for the reason the DamageToPlayerPrevented arm above gives.
       Recipient.ToPile _ -> Map.empty
-  -- CR 120.3's amount for the arm one recipient over, and the damaged creature
+  -- CR 120.3's amount for the arm one recipient over, and the damaged permanent
   -- under `became`, the object the event names: Bellowing Fiend's "that
-  -- creature's controller". Both are unconditional given a match, which admits
-  -- only an object recipient.
-  (TriggerCondition.SelfDealsDamageToCreature _, GameEvent.DamageDealt ev) ->
+  -- creature's controller", Hooded Blightfang's "that planeswalker". Both are
+  -- unconditional given a match, which admits only an object recipient.
+  (TriggerCondition.DealsDamageToPermanent _, GameEvent.DamageDealt ev) ->
     maybe id Binding.setBecame (Recipient.objectOf (DamageEvent.target ev)) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty)
   -- Horned Cheetah's and Spirit Link's "that much" for the any-recipient arm,
   -- which batchBindings sums across one damage event, and the damager, which
@@ -1514,9 +1514,9 @@ eventBindingSlots cond = case cond of
   -- The same pair for the arm without the combat narrowing, and equally guaranteed
   -- -- every DamageDealt event carries an amount, whichever CR 120.3 kind it was.
   TriggerCondition.DealsDamageToPlayer _ -> Set.fromList [Binding.eventAmount, Binding.triggerPlayer]
-  -- The amount and the damaged creature for the arm one recipient over, both
+  -- The amount and the damaged permanent for the arm one recipient over, both
   -- guaranteed given a match.
-  TriggerCondition.SelfDealsDamageToCreature _ -> Set.fromList [Binding.eventAmount, Binding.became]
+  TriggerCondition.DealsDamageToPermanent _ -> Set.fromList [Binding.eventAmount, Binding.became]
   TriggerCondition.DealsDamage _ -> Set.fromList [Binding.combatDamager, Binding.eventAmount]
   -- CR 120.3's amount for enrage, which Coalhauler Swine's "it deals that much
   -- damage to each player" reads: the same slot CR 615.13's prevention and CR

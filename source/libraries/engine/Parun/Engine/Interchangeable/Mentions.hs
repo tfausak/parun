@@ -171,6 +171,7 @@ import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.DealDamage as DealDamage
+import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.DelayedTrigger as DelayedTrigger
@@ -2976,7 +2977,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> mempty
   TriggerCondition.DealsCombatDamage actingPermanent -> actingPermanentNames asking actingPermanent
   TriggerCondition.DealsDamageToPlayer dealsDamageToPlayer -> dealsDamageToPlayerNames asking dealsDamageToPlayer
-  TriggerCondition.SelfDealsDamageToCreature _ -> mempty
+  TriggerCondition.DealsDamageToPermanent dealsDamageToPermanent -> actingPermanentNames asking (DealsDamageToPermanent.actor dealsDamageToPermanent)
   TriggerCondition.DealsDamage actingPermanent -> actingPermanentNames asking actingPermanent
   TriggerCondition.IsDealtDamage dealt -> actingPermanentNames asking (DealtDamage.recipient dealt)
   TriggerCondition.PlayerIsDealtDamage _playerIsDealtDamage -> mempty

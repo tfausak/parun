@@ -564,6 +564,8 @@ library codec
     Parun.Codec.DaytimeSpec
     Parun.Codec.DealDamage
     Parun.Codec.DealDamageSpec
+    Parun.Codec.DealsDamageToPermanent
+    Parun.Codec.DealsDamageToPermanentSpec
     Parun.Codec.DealsDamageToPlayer
     Parun.Codec.DealsDamageToPlayerSpec
     Parun.Codec.DealtDamage
@@ -2600,6 +2602,7 @@ library types
     Parun.Types.DamageRewrite
     Parun.Types.Daytime
     Parun.Types.DealDamage
+    Parun.Types.DealsDamageToPermanent
     Parun.Types.DealsDamageToPlayer
     Parun.Types.DealtDamage
     Parun.Types.DealtDamageTo

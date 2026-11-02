@@ -258,6 +258,7 @@ import qualified Parun.Codec.DamageRewriteSpec
 import qualified Parun.Codec.DamagedPartySpec
 import qualified Parun.Codec.DaytimeSpec
 import qualified Parun.Codec.DealDamageSpec
+import qualified Parun.Codec.DealsDamageToPermanentSpec
 import qualified Parun.Codec.DealsDamageToPlayerSpec
 import qualified Parun.Codec.DealtDamageSpec
 import qualified Parun.Codec.DealtDamageToSpec
@@ -1209,6 +1210,7 @@ spec s registry corpus = do
   Parun.Codec.DamageRSpec.spec s
   Parun.Codec.DaytimeSpec.spec s
   Parun.Codec.DealDamageSpec.spec s
+  Parun.Codec.DealsDamageToPermanentSpec.spec s
   Parun.Codec.DealsDamageToPlayerSpec.spec s
   Parun.Codec.DeciderSpec.spec s
   Parun.Codec.DefendersAreSpec.spec s
