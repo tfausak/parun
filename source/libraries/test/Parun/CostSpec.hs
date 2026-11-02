@@ -60,6 +60,7 @@ import qualified Parun.Types.CandidateCost as CandidateCost
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
+import qualified Parun.Types.CastWindow as CastWindow
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Combat as Combat.Type
 import qualified Parun.Types.CombatStep as CombatStep
@@ -3074,7 +3075,7 @@ thrastaSpec s registry =
         (Face.costReductions face)
         [ CostReduction.MkCostReduction
             (ManaCost.MkManaCost [ManaSymbol.Generic 3])
-            (Quantity.Type.Count (Count.Type.MkCount (Scope.InHistory EventShape.SpellCast) (Filter.Type.And []) Aggregation.Members))
+            (Quantity.Type.Count (Count.Type.MkCount (Scope.InHistory (EventShape.SpellCast CastWindow.ThisTurn)) (Filter.Type.And []) Aggregation.Members))
             Nothing
             Nothing
             CostDirection.Less

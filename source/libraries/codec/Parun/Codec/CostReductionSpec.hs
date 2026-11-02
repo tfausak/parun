@@ -4,6 +4,7 @@ import qualified Parun.Codec.CostReduction as CostReduction
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.Aggregation as Aggregation
+import qualified Parun.Types.CastWindow as CastWindow
 import qualified Parun.Types.Compares as Compares
 import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.Condition as Condition
@@ -31,7 +32,7 @@ spec s = Spec.describe s "Parun.Codec.CostReduction" $ do
             CostReduction.perEach =
               Quantity.Count
                 Count.MkCount
-                  { Count.scope = Scope.InHistory EventShape.SpellCast,
+                  { Count.scope = Scope.InHistory (EventShape.SpellCast CastWindow.ThisTurn),
                     Count.filter = Filter.And [],
                     Count.aggregation = Aggregation.Members
                   },
@@ -40,7 +41,7 @@ spec s = Spec.describe s "Parun.Codec.CostReduction" $ do
             CostReduction.direction = CostDirection.Less
           }
       )
-      " {\"amount\":[{\"type\":\"Generic\",\"value\":3}],\"perEach\":{\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InHistory\",\"value\":{\"type\":\"SpellCast\"}},\"filter\":{\"type\":\"And\",\"value\":[]},\"aggregation\":{\"type\":\"Members\"}}}} "
+      " {\"amount\":[{\"type\":\"Generic\",\"value\":3}],\"perEach\":{\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InHistory\",\"value\":{\"type\":\"SpellCast\",\"value\":{\"type\":\"ThisTurn\"}}},\"filter\":{\"type\":\"And\",\"value\":[]},\"aggregation\":{\"type\":\"Members\"}}}} "
   -- CR 601.2f, as Ertai's Scorn costs {U} less if an opponent cast two or more
   -- spells this turn.
   Spec.it s "with a condition" $

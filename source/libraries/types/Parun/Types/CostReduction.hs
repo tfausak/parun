@@ -43,7 +43,7 @@ data CostReduction = MkCostReduction
     amount :: ManaCost.ManaCost,
     -- | How many times 'amount' comes off -- Thrasta's "for each other spell
     -- cast this turn", which is a Count over Scope.InHistory
-    -- EventShape.SpellCast.
+    -- (EventShape.SpellCast CastWindow.ThisTurn).
     --
     -- A Quantity rather than a Natural, which is the whole reason this type
     -- exists: a fixed self-reduction is expressible as a Literal, and a scaling

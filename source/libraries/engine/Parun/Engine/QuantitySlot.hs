@@ -201,7 +201,6 @@ overSlots f quantity =
         -- And another: the tally's PlayerRef is nestedRefs' half, and its Filter
         -- names no amount.
         Quantity.ActivationsThisTurn _ -> pure quantity
-        Quantity.SpellsCastBefore -> pure quantity
         Quantity.PermanentsDiedThisTurn -> pure quantity
         Quantity.SpellsCastUsingThisTurn _ -> pure quantity
         Quantity.SubgamesThisMatch -> pure quantity
@@ -378,7 +377,6 @@ nestedRefs quantity = case quantity of
   Quantity.SpellsCast tally -> Set.singleton (Left (SpellTally.player tally))
   Quantity.TimesThisTurn _ -> Set.empty
   Quantity.ActivationsThisTurn tally -> Set.singleton (Left (ActivationsThisTurn.activator tally))
-  Quantity.SpellsCastBefore -> Set.empty
   Quantity.PermanentsDiedThisTurn -> Set.empty
   Quantity.SpellsCastUsingThisTurn _ -> Set.empty
   Quantity.SubgamesThisMatch -> Set.empty
@@ -501,7 +499,6 @@ nestedCounts quantity = case quantity of
   Quantity.SpellsCast _ -> []
   Quantity.TimesThisTurn _ -> []
   Quantity.ActivationsThisTurn _ -> []
-  Quantity.SpellsCastBefore -> []
   Quantity.PermanentsDiedThisTurn -> []
   Quantity.SpellsCastUsingThisTurn {} -> []
   Quantity.SubgamesThisMatch -> []
@@ -651,7 +648,6 @@ mapPlayerRefs f intoCount quantity =
         Quantity.SpellsCast tally -> Quantity.SpellsCast tally {SpellTally.player = f (SpellTally.player tally)}
         Quantity.TimesThisTurn _ -> quantity
         Quantity.ActivationsThisTurn tally -> Quantity.ActivationsThisTurn tally {ActivationsThisTurn.activator = f (ActivationsThisTurn.activator tally)}
-        Quantity.SpellsCastBefore -> quantity
         Quantity.PermanentsDiedThisTurn -> quantity
         Quantity.SpellsCastUsingThisTurn _ -> quantity
         Quantity.SubgamesThisMatch -> quantity

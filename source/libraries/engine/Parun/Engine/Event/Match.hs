@@ -51,6 +51,7 @@ import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CardsPutIntoZone as CardsPutIntoZone
+import qualified Parun.Types.CastWindow as CastWindow
 import qualified Parun.Types.CausedBy as CausedBy
 import qualified Parun.Types.Chosen as Chosen
 import qualified Parun.Types.ClassLevelChange as ClassLevelChange
@@ -222,7 +223,7 @@ castOrdinal context predicate fromZone caster spell gs =
   let counted cast =
         SpellWasCast.player cast == caster
           && maybe True (\z -> SpellWasCast.zone cast == Just z) fromZone
-          && maybe False (\view -> Filter.matches context view predicate) (Count.snapshotView (Projection.viewWithLastKnownAnywhere gs) gs EventShape.SpellCast (GameEvent.SpellCast cast))
+          && maybe False (\view -> Filter.matches context view predicate) (Count.snapshotView (Projection.viewWithLastKnownAnywhere gs) gs (EventShape.SpellCast CastWindow.BeforeEvaluated) (GameEvent.SpellCast cast))
    in fmap ((1 +) . Natural.length . filter counted) (Game.castsBefore spell gs)
 
 -- CR 805.4d: the players whose step this is, among those the scope names, read

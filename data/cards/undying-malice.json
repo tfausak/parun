@@ -1,0 +1,111 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Undying Malice",
+      "oracleText": "Until end of turn, target creature gains \"When this creature dies, return it to the battlefield tapped under its owner's control with a +1/+1 counter on it.\"",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "ModifyTarget",
+                    "value": {
+                      "duration": {
+                        "type": "UntilEndOfTurn"
+                      },
+                      "modification": {
+                        "type": "GainAbility",
+                        "value": {
+                          "type": "Triggered",
+                          "value": {
+                            "condition": {
+                              "type": "SelfDies"
+                            },
+                            "modal": {
+                              "modes": [
+                                {
+                                  "clauses": [
+                                    {
+                                      "effects": [
+                                        {
+                                          "type": "MoveToZone",
+                                          "value": {
+                                            "ref": {
+                                              "type": "InSlot",
+                                              "value": "became"
+                                            },
+                                            "riders": {
+                                              "counters": [
+                                                {
+                                                  "count": {
+                                                    "type": "Literal",
+                                                    "value": 1
+                                                  },
+                                                  "kind": {
+                                                    "type": "PlusOnePlusOne"
+                                                  }
+                                                }
+                                              ],
+                                              "tapped": {
+                                                "type": "Tapped"
+                                              },
+                                              "under": {
+                                                "type": "Owner"
+                                              }
+                                            },
+                                            "zone": {
+                                              "type": "Battlefield"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "target"
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "target": {
+                "pool": {
+                  "type": "Creatures"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}

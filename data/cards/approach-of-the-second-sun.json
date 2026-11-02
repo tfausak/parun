@@ -120,7 +120,10 @@
                             "scope": {
                               "type": "InHistory",
                               "value": {
-                                "type": "SpellCastThisGame"
+                                "type": "SpellCast",
+                                "value": {
+                                  "type": "ThisGame"
+                                }
                               }
                             }
                           }
@@ -243,7 +246,10 @@
                             "scope": {
                               "type": "InHistory",
                               "value": {
-                                "type": "SpellCastThisGame"
+                                "type": "SpellCast",
+                                "value": {
+                                  "type": "ThisGame"
+                                }
                               }
                             }
                           }

@@ -1,6 +1,7 @@
 module Parun.Codec.EventShape where
 
 import qualified Parun.Codec.CardArrivedIn as CardArrivedIn
+import qualified Parun.Codec.CastWindow as CastWindow
 import qualified Parun.Codec.MovedBetween as MovedBetween
 import qualified Parun.Codec.Zone as Zone
 import qualified Parun.JsonCodec.Arm as Arm
@@ -17,8 +18,7 @@ codec =
     [ Arm.payload "MovedBetween" MovedBetween.codec EventShape.MovedBetween (\x -> case x of EventShape.MovedBetween y -> Just y; _ -> Nothing),
       Arm.payload "MovedFrom" Zone.codec EventShape.MovedFrom (\x -> case x of EventShape.MovedFrom y -> Just y; _ -> Nothing),
       Arm.payload "CardArrivedIn" CardArrivedIn.codec EventShape.CardArrivedIn (\x -> case x of EventShape.CardArrivedIn y -> Just y; _ -> Nothing),
-      Arm.nullary "SpellCast" EventShape.SpellCast,
-      Arm.nullary "SpellCastThisGame" EventShape.SpellCastThisGame
+      Arm.payload "SpellCast" CastWindow.codec EventShape.SpellCast (\x -> case x of EventShape.SpellCast y -> Just y; _ -> Nothing)
     ]
 
 tagOf :: EventShape.EventShape -> String
@@ -27,4 +27,3 @@ tagOf x = case x of
   EventShape.MovedFrom {} -> "MovedFrom"
   EventShape.CardArrivedIn {} -> "CardArrivedIn"
   EventShape.SpellCast {} -> "SpellCast"
-  EventShape.SpellCastThisGame {} -> "SpellCastThisGame"
