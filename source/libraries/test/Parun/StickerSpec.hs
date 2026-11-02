@@ -60,6 +60,8 @@ import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.Deck as Deck
 import qualified Parun.Types.Effect as Effect
+import qualified Parun.Types.ExilePlayPermission as ExilePlayPermission
+import qualified Parun.Types.Expiry as Expiry
 import qualified Parun.Types.FaceDownReason as FaceDownReason
 import qualified Parun.Types.Facing as Facing
 import qualified Parun.Types.Game as Game.Type
@@ -72,6 +74,7 @@ import qualified Parun.Types.KickerDecision as KickerDecision
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Mana as Mana
 import qualified Parun.Types.ManaCost as ManaCost
+import qualified Parun.Types.ManaSpending as ManaSpending
 import qualified Parun.Types.Meld as Meld
 import qualified Parun.Types.ModeIndex as ModeIndex
 import qualified Parun.Types.MulliganDecision as MulliganDecision
@@ -80,7 +83,9 @@ import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.OptionalDecision as OptionalDecision
+import qualified Parun.Types.PermissionVerb as PermissionVerb
 import qualified Parun.Types.Phase as Phase
+import qualified Parun.Types.PlayPermissionOrigin as PlayPermissionOrigin
 import qualified Parun.Types.Player as Player
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Types.PlayerId as PlayerId
@@ -100,6 +105,7 @@ import qualified Parun.Types.StickerKind as StickerKind
 import qualified Parun.Types.StickerPlacement as StickerPlacement
 import qualified Parun.Types.StickerRef as StickerRef
 import qualified Parun.Types.StickerSheet as StickerSheet
+import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.Zone as Zone
 
@@ -715,7 +721,11 @@ spec s registry = Spec.describe s "Sticker" $ do
     island <- S.printingOf s registry "Island"
     let base = mainPhaseForAlice (S.landsFor island S.alice 4 (withSheets sheets (Setup.gameWith GameSettings.plain S.bothPlayers)))
         (faeId, exiled) = S.addExiledCard fae S.alice base
-        stickered = Sticker.put S.alice faeId otter (Just 2) exiled
+        -- CR 601.3: an effect's permission to play it, under which the
+        -- Adventure half may be cast from exile (CR 715.3d's own may not).
+        grant = ExilePlayPermission.MkExilePlayPermission S.alice S.noSource Expiry.Never ManaSpending.AnyType Nothing Nothing PlayPermissionOrigin.Granted PermissionVerb.Play 0 TapState.Untapped Nothing
+        permitted = exiled {GameState.objects = Map.adjust (\o -> o {Object.playPermission = Just grant}) faeId (GameState.objects exiled)}
+        stickered = Sticker.put S.alice faeId otter (Just 2) permitted
         granted = CardName.MkCardName (Text.pack "Granted")
         casting = S.runPure S.identityAnswer stickered (Cast.castSpell S.manaPerformer S.alice faeId granted Facing.FaceUp)
         resolved = S.runPure S.identityAnswer casting Stack.resolveTop

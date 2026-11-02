@@ -1753,6 +1753,7 @@ mu-yanling-celestial-wind
 mu-yanling-sky-dancer
 mudbutton-clanger
 mulch
+muldrotha-the-gravetide
 multiversal-recruitment
 muraganda-raceway
 murder-investigation
@@ -2626,6 +2627,7 @@ talent-of-the-telepath
 tameshi-reality-architect
 tamiyo-compleated-sage
 tamiyos-compleation
+tangled-florahedron-tangled-vale
 tannuk-memorial-ensign
 tapestry-warden
 targeting-rocket
@@ -2648,6 +2650,7 @@ teferi-mage-of-zhalfir
 teferi-master-of-time
 teferi-timeless-voyager
 teferis-ageless-insight
+teferis-imp
 teferis-moat
 teferis-puzzle-box
 teferis-tutelage

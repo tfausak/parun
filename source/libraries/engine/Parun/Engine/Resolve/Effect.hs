@@ -1339,7 +1339,7 @@ activateWhileRolling runSubgame pid oid ability = do
   before <- State.get
   let stamp = ActivatedAbility.keyword ability
       loyalty = Loyalty.loyaltyKindOf (ActivatedAbility.cost ability)
-      gathered = Cost.activationAdjustments Set.empty stamp AbilityKind.NonManaAbility loyalty pid oid before
+      gathered = Cost.activationAdjustments Set.empty stamp (ActivatedAbility.name ability) AbilityKind.NonManaAbility loyalty pid oid before
       totalled = Cost.plusComponents gathered (ActivatedAbility.cost ability)
       spendable = ActivationRestriction.spendableTypes oid (ActivatedAbility.restrictions ability) before
   (announced, _) <- Cost.announce (PaymentSubject.Activating oid stamp spendable) ManaSpending.AsProduced pid oid (Cost.substitutedManas (Cost.waterbendSubstitutions (Cost.Type.components totalled) Map.empty pid oid before) (Cost.totalManas gathered)) totalled

@@ -242,14 +242,14 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
       -- alternative cost. Only the payable ones are offered, as the gate
       -- measured them, and a question with one answer is not asked. The
       -- printed cost is FIRST, so a default answer pays it.
-      let offeredCosts = filter (Activatable.payableCostAt aimableUnannounced floorX stamp spendable pid srcId gs) (Activatable.costsFor pid ability gs)
+      let offeredCosts = filter (Activatable.payableCostAt aimableUnannounced floorX stamp (ActivatedAbility.name ability) spendable pid srcId gs) (Activatable.costsFor pid ability gs)
       printedCost <- case offeredCosts of
         _ : _ : _ -> CandidateCost.cost <$> Game.choose (Prompt.ChooseCost decider pid abilId (fmap Cost.untagged offeredCosts))
         [only] -> pure only
         [] -> pure (ActivatedAbility.cost ability)
       mAmount <-
         if Cost.hasVariable printedCost
-          then maybe (fmap Just (Game.choose (Prompt.ChooseX decider pid abilId Binding.variableX floorX (Activatable.affordableX mCeiling aimableUnannounced stamp spendable pid srcId gs printedCost)))) (pure . Just) defined
+          then maybe (fmap Just (Game.choose (Prompt.ChooseX decider pid abilId Binding.variableX floorX (Activatable.affordableX mCeiling aimableUnannounced stamp (ActivatedAbility.name ability) spendable pid srcId gs printedCost)))) (pure . Just) defined
           else pure Nothing
       let announcedAtX = maybe printedCost (\x -> Cost.substituteX x printedCost) mAmount
           -- CR 101.1, and CR 101.2 for its direction, exactly as Cast.castProposed
@@ -308,7 +308,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
       -- one predicate over one cost instead of two spellings of when the gate
       -- applies.
       -- An answer outside the offered costs is rejected, ChooseCost's contract.
-      if overCeiling || underFloor || (length offeredCosts > 1 && notElem printedCost offeredCosts) || not (Activatable.payableCost aimable stamp spendable pid srcId gs announcedAtX)
+      if overCeiling || underFloor || (length offeredCosts > 1 && notElem printedCost offeredCosts) || not (Activatable.payableCost aimable stamp (ActivatedAbility.name ability) spendable pid srcId gs announcedAtX)
         then Nothing <$ State.put before -- reject: the whole activation is a no-op
         else do
           -- CR 118.13a's announcement, which names an activated ability's
@@ -343,7 +343,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
           -- than this one -- and that is CR 601.2b's own order: the halves are
           -- announced before the targets exist. Both are gathered again below,
           -- once they do.
-          let gathered = Cost.activationAdjustments Set.empty stamp AbilityKind.NonManaAbility (Loyalty.loyaltyKindOf (ActivatedAbility.cost ability)) pid srcId gs
+          let gathered = Cost.activationAdjustments Set.empty stamp (ActivatedAbility.name ability) AbilityKind.NonManaAbility (Loyalty.loyaltyKindOf (ActivatedAbility.cost ability)) pid srcId gs
           -- The Phyrexian life record is DISCARDED here: CR 702.150a reads what
           -- the player who CAST a spell announced, and no rule asks the same of
           -- an activation cost.
@@ -413,7 +413,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
               -- to an activation, so the ones the announcement above measured are
               -- the ones charged below.
               let aimedAt = Set.unions (fmap Activatable.recipientObjects (Map.elems chosen))
-                  targeted = Cost.activationAdjustments aimedAt stamp AbilityKind.NonManaAbility (Loyalty.loyaltyKindOf (ActivatedAbility.cost ability)) pid srcId gs
+                  targeted = Cost.activationAdjustments aimedAt stamp (ActivatedAbility.name ability) AbilityKind.NonManaAbility (Loyalty.loyaltyKindOf (ActivatedAbility.cost ability)) pid srcId gs
               adjustments <- Cost.announceReductions pid srcId gs announcedCost targeted
               -- Cast.castProposed's lock of a computed amount, one road over.
               boundGs <- State.get
