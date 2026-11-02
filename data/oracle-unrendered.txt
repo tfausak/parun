@@ -257,6 +257,7 @@ berserkers-of-blood-ridge
 betrayal
 bewitching-leechcraft
 bifurcate
+biogenic-upgrade
 biolume-egg-biolume-serpent
 bioplasm
 biorhythm
@@ -269,6 +270,7 @@ black-mana-battery
 black-panther-wakandan-king
 black-ward
 blackmail
+blasphemous-edict
 blastfire-bolt
 blatant-thievery
 blazing-archon
@@ -292,6 +294,8 @@ bloodghast
 bloodletter-of-aclazotz
 bloodrock-cyclops
 bloodshot-cyclops
+bloodthirsty-conqueror
+bloodtithe-collector
 blooming-blast
 blorbian-buddy
 blossoming-calm
@@ -300,6 +304,7 @@ blue-mana-battery
 blue-ward
 blurred-mongoose
 bogbrew-witch
+bolt-bend
 bonded-construct
 bone-mask
 booby-trap
@@ -320,6 +325,7 @@ bramble-elemental
 brash-taunter
 brass-herald
 brassclaw-orcs
+brasss-bounty
 brave-the-elements
 brazen-cannonade
 break-open
@@ -351,6 +357,7 @@ brutal-suppression
 bruvac-the-grandiloquent
 bubble-smuggler
 bubbling-cauldron
+bulk-up
 bumper-cars
 bureau-headmaster
 burlfist-oak
@@ -360,11 +367,13 @@ burning-eye-zubera
 burning-of-xinye
 burning-rune-demon
 burning-wish
+burnished-hart
 burrenton-forge-tender
 burst-lightning
 bury-in-books
 cached-defenses
 cackling-counterpart
+cackling-prowler
 cadaverous-bloom
 caged-sun
 caged-zombie
@@ -381,6 +390,7 @@ captains-maneuver
 captivating-vampire
 capture-of-jingzhou
 capture-sphere
+carnelian-orb-of-dragonkind
 carom
 carrion-grub
 carry-away
@@ -397,13 +407,16 @@ caverns-of-despair
 cease-desist
 cease-fire
 celebr-8000
+celestial-armor
 celestial-dawn
 celestial-enforcer
 celestial-flare
 celestine-reef
 celestine-the-living-saint
+cemetery-recruitment
 centaur-of-attention
 cephalid-constable
+cephalid-inkmage
 cerulean-drake
 chains-of-mephistopheles
 challenger-troll
@@ -418,6 +431,7 @@ chandra-fire-artisan
 chandra-fire-of-kaladesh-chandra-roaring-flame
 chandra-flames-catalyst
 chandra-flames-fury
+chandra-flameshaper
 chandra-heart-of-fire
 chandra-nalaar
 chandra-novice-pyromancer
@@ -433,6 +447,7 @@ chandras-regulator
 chandras-spitfire
 chaos-dragon
 charging-rhino
+charming-prince
 chasm-skulker
 chatterfang-squirrel-general
 cheering-fanatic
@@ -2972,6 +2987,7 @@ bone-splinters
 boreal-elemental
 brightwood-tracker
 brought-back
+bushwhack
 cavalier-of-gales
 cavalier-of-night
 chrome-replicator
