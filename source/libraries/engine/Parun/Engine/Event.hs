@@ -7371,7 +7371,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                     -- "escaped" ask of the permanent. BATTLEFIELD ONLY, `paidCosts`'
                     -- gate and for its reason.
                     Object.castUsing = if resolvedOnto then Object.castUsing obj else Nothing,
-                    -- CR 400.7d a seventh time: the zone the spell was cast from,
+                    -- CR 400.7d again: the zone the spell was cast from,
                     -- what Myojin of Night's Reach's and Nine-Lives Familiar's CR
                     -- 614.1c rewrites ask of the permanent. `paidCosts`' gate, and
                     -- only while the permanent's controller is the caster: "you
