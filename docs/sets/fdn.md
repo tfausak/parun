@@ -14,8 +14,6 @@ Every expressible Foundations card has been added to `data/cards/`.
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #5911: Muldrotha, the Gravetide. A graveyard permission has one budget, not
-  one per permanent type (CR 110.4b).
 - #5912: Tinybones, Bauble Burglar. No standing permission plays exiled cards
   picked out by a counter on them.
 - #5913: Liliana, Dreadhorde General. Nothing asks for one choice per permanent
