@@ -10,26 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Pirate's Cutlass: `_Action:AttachPermanentToPermanent`
-- Prayer of Binding: `_Action:Exile`
-- Predator Ooze: `_Permanents:WasDealtDamageByPermanentThisTurn`
-- Prime Speaker Zegana: `_ReplacementActionWouldEnter:EntersWithNumberCounters`
-- Quilled Greatwurm: `_Trigger:If`
-- Raise the Past: `_Action:ReturnEachCardFromPlayersGraveyardToBattlefield`
-- Ramos, Dragon Engine: `_GameNumber:TheNumberOfColorsSpellIs`
-- Ravenous Amulet: `_CounterType:SoulCounter`
-- Redcap Gutter-Dweller: `_Rule:PermanentRuleEffect`
-- Revenge of the Rats: `_Action:CreateTokens`
-- River's Rebuke: renders differently from its Oracle text
-- Rune-Sealed Wall: `_Action:Surveil`
-- Savage Ventmaw: `_Action:AddManaWithModifiers`
-- Scrawling Crawler: `_Trigger:WhenAPlayerDrawsACard`
-- Searslicer Goblin: `_Players:AttackedThisTurn`
-- Secluded Courtyard: `_ReplacementActionWouldEnter:ChooseACreatureType`
-- Seize the Spoils: `_Rule:CastEffect`
-- Self-Reflection: `_CreatableToken:TokenCopyOfPermanent`
-- Sire of Seven Deaths: `_Rule:Ward`
-- Skyknight Squire: `_Permanents:HasNumberCountersOfType`
 - Skyship Buccaneer: `_Players:AttackedThisTurn`
 - Slumbering Cerberus: `_PermanentRule:DoesntUntapDuringControllersUntap`
 - Sorcerous Spyglass: `_ReplacementActionWouldEnter:LookAtAPlayersHand`
