@@ -9,6 +9,7 @@ import qualified Control.Applicative as Applicative
 import qualified Data.Bifunctor as Bifunctor
 import qualified Data.Containers.ListUtils as ListUtils
 import qualified Data.Foldable as Foldable
+import qualified Data.Graph as Graph
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Map.Strict (Map)
@@ -386,9 +387,9 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         --
         -- CR 401.5: atop a library, only a card that is shown: a new top card
         -- lends nothing until the spell becomes cast or the ability activated
-        -- (Game.shownTop, the ruling on Conspicuous Snoop). Not implemented: CR
-        -- 401.6's new object, for a card returned to the top from within its
-        -- library (#5897).
+        -- (Game.shownTop, the ruling on Conspicuous Snoop). A card returned to
+        -- the top from within its library is a new object (CR 401.6,
+        -- Event.settleRevealedTops), so it lends afresh.
         Modification.GainCardAbilities (CardAbilities.MkCardAbilities from criterion extra) ->
           let (zone, lenders) = case from of
                 LentCards.InExile -> (Zone.Exile, Set.toAscList (GameState.exile gs))
@@ -1869,7 +1870,7 @@ setLandSubtypeEffects :: GameState -> [SetEffect]
 setLandSubtypeEffects gs =
   let functioning =
         if anyConditional gs
-          then conditionHolds (gatherGiven (\_ _ _ -> False) alwaysFunctioning Nothing gs) gs
+          then conditionHolds (gatherGiven (\_ _ _ -> False) (const False) alwaysFunctioning Nothing gs) gs
           else alwaysFunctioning
    in setLandSubtypeEffectsGiven functioning gs
 
@@ -2258,12 +2259,14 @@ wordSwapOf m = case m of
 -- built with every gate open -- nothing here re-enters gather.
 gather :: GameState -> [Gathered]
 gather gs =
-  let ungated = gatherGiven (\_ _ _ -> False) alwaysFunctioning Nothing gs
+  let ungated = gatherGiven (\_ _ _ -> False) (const False) alwaysFunctioning Nothing gs
    in -- Almost every board has no ability-removing effect, no conditional static
       -- ability and nothing setting a land's subtype, and then the gathered list
       -- IS the ungated one.
       if any (removesAbilities . gModification) ungated || anyConditional gs || any (setsLandSubtype . gModification) ungated
-        then gatherGiven (\name keep -> abilitiesRemovedBy name keep ungated gs) (conditionHolds ungated gs) (Just ungated) gs
+        then
+          let (stripped, waited) = layerSixGate ungated gs
+           in gatherGiven stripped waited (conditionHolds ungated gs) (Just ungated) gs
         else ungated
 
 -- The open CR 604.2 gate: every "as long as" clause answered true without being
@@ -2410,8 +2413,8 @@ boardAsEntering gs =
 
 -- gather's body with both ability gates left open. Called twice by gather --
 -- once wired shut to build the list the gates read, once with the real answers.
-gatherGiven :: (Maybe AbilityName.AbilityName -> (Gathered -> Bool) -> ObjectId -> Bool) -> (ObjectId -> Layer -> Condition.Type.Condition -> Bool) -> Maybe [Gathered] -> GameState -> [Gathered]
-gatherGiven stripped functioning seed gs =
+gatherGiven :: (Maybe AbilityName.AbilityName -> (Gathered -> Bool) -> ObjectId -> Bool) -> ((ObjectId, Natural) -> Bool) -> (ObjectId -> Layer -> Condition.Type.Condition -> Bool) -> Maybe [Gathered] -> GameState -> [Gathered]
+gatherGiven stripped waited functioning seed gs =
   let setEffs = setLandSubtypeEffectsGiven functioning gs
       -- CR 305.7's post-layer-4 half, wired open in the seed pass for the reason
       -- `stripped` is: the list this gate projects against is the seed itself.
@@ -2454,7 +2457,7 @@ gatherGiven stripped functioning seed gs =
                 }
          in fmap one (NonEmpty.toList (grantedDefiningParts (ContinuousEffect.modification eff)))
       stored = concatMap fromStored (GameState.continuousEffects gs)
-      static = concatMap (fmap snd . permanentParts stripped functioning setEffs setStripped gs) (abilitySources gs)
+      static = concatMap (fmap snd . permanentParts stripped waited functioning setEffs setStripped gs) (abilitySources gs)
       fromCommandZone commandId = case Game.lookupObject commandId gs of
         Nothing -> []
         Just commandObj -> case abilityFaceOf commandId commandObj gs of
@@ -2600,7 +2603,7 @@ gatherGiven stripped functioning seed gs =
       castGrants = castGrantGathered gs
       encodings = encodedGathered gs
       stickers = stickerGathered gs
-   in withStaticGrants stripped setStripped functioning gs (stored <> static <> inCommand <> spells <> graveyards <> hands <> libraries <> exiles <> counters <> designations <> bestows <> castGrants <> encodings <> stickers)
+   in withStaticGrants stripped waited setStripped functioning gs (stored <> static <> inCommand <> spells <> graveyards <> hands <> libraries <> exiles <> counters <> designations <> bestows <> castGrants <> encodings <> stickers)
 
 -- CR 613.1f / 113.7: `base` with the effects of the static abilities that other
 -- static abilities grant appended -- Rune of Flight's "Equipped creature has
@@ -2642,8 +2645,8 @@ gatherGiven stripped functioning seed gs =
 -- gathered off the copiable values though its text is gone, which is CR 613.6.
 -- Parun.ProjectionSpec's "CR 612.6 the Shapeshifter as Lord of Atlantis pumps
 -- the other Merfolk" proves it.
-withStaticGrants :: (Maybe AbilityName.AbilityName -> (Gathered -> Bool) -> ObjectId -> Bool) -> (ObjectId -> Bool) -> (ObjectId -> Layer -> Condition.Type.Condition -> Bool) -> GameState -> [Gathered] -> [Gathered]
-withStaticGrants stripped setStripped functioning gs base =
+withStaticGrants :: (Maybe AbilityName.AbilityName -> (Gathered -> Bool) -> ObjectId -> Bool) -> ((ObjectId, Natural) -> Bool) -> (ObjectId -> Bool) -> (ObjectId -> Layer -> Condition.Type.Condition -> Bool) -> GameState -> [Gathered] -> [Gathered]
+withStaticGrants stripped waited setStripped functioning gs base =
   if any readsBack base then settle staticGrantRounds (receivedGiven base) else base
   where
     -- A stored grant's set is fixed (CR 611.2c), and permanentParts has
@@ -2675,10 +2678,13 @@ withStaticGrants stripped setStripped functioning gs base =
       Nothing -> []
       Just obj ->
         let offset = List.genericLength (staticAbilitiesOf oid gs) + List.genericLength (grantedStaticAbilitiesOf oid gs) :: Natural
-            removed sa lowest = (removalReaches sa lowest && stripped (StaticAbility.name sa) (const True) oid) || (lowest > Layer.Type && setStripped oid)
+            removed n sa lowest =
+              (removalReaches sa lowest && stripped (StaticAbility.name sa) (const True) oid)
+                || (waitsOnRemoval sa lowest && waited (oid, n))
+                || (lowest > Layer.Type && setStripped oid)
             fromText n sa =
               if functionsFromZone Zone.Battlefield sa
-                then gatherStatic (functioning oid) oid (staticTimestampOf oid obj gs) [] (removed sa) n sa
+                then gatherStatic (functioning oid) oid (staticTimestampOf oid obj gs) [] (removed n sa) n sa
                 else []
             one n (stamp, sa) =
               if functionsFromZone Zone.Battlefield sa
@@ -2783,8 +2789,8 @@ spellStaticTypes = Set.fromList [CardType.Instant, CardType.Sorcery]
 -- carrying `name`, counting only the removers `keep` admits
 -- (abilitiesRemovedBy): every one for a printed ability, and for a granted one
 -- only those applied after the grant.
-permanentParts :: (Maybe AbilityName.AbilityName -> (Gathered -> Bool) -> ObjectId -> Bool) -> (ObjectId -> Layer -> Condition.Type.Condition -> Bool) -> [SetEffect] -> (ObjectId -> Bool) -> GameState -> ObjectId -> [(Natural, Gathered)]
-permanentParts stripped functioning setEffs setStripped gs permId = case Game.lookupObject permId gs of
+permanentParts :: (Maybe AbilityName.AbilityName -> (Gathered -> Bool) -> ObjectId -> Bool) -> ((ObjectId, Natural) -> Bool) -> (ObjectId -> Layer -> Condition.Type.Condition -> Bool) -> [SetEffect] -> (ObjectId -> Bool) -> GameState -> ObjectId -> [(Natural, Gathered)]
+permanentParts stripped waited functioning setEffs setStripped gs permId = case Game.lookupObject permId gs of
   Nothing -> []
   Just permObj ->
     let printed = staticAbilitiesOf permId gs
@@ -2804,7 +2810,9 @@ permanentParts stripped functioning setEffs setStripped gs permId = case Game.lo
         -- the removal order and the Blood Moon case through Streetwise
         -- Negotiator.
         granted n (grantTs, sa) =
-          let removedAfter lowest = removalReaches sa lowest && stripped (StaticAbility.name sa) ((> grantTs) . gTimestamp) permId
+          let removedAfter lowest =
+                (removalReaches sa lowest && stripped (StaticAbility.name sa) ((> grantTs) . gTimestamp) permId)
+                  || (waitsOnRemoval sa lowest && waited (permId, n))
            in if functionsFromZone Zone.Battlefield sa
                 then fmap ((,) n) (gatherStatic (functioning permId) permId (max (Object.timestamp permObj) grantTs) [] removedAfter n sa)
                 else []
@@ -2831,12 +2839,13 @@ permanentParts stripped functioning setEffs setStripped gs permId = case Game.lo
           -- one answer per permanent shared by all of them; a named one asks
           -- again, counting a removal of its name too.
           wiped = stripped Nothing (const True) permId
-          removed sa lowest =
-            (removalReaches sa lowest && maybe wiped (\n -> stripped (Just n) (const True) permId) (StaticAbility.name sa))
+          removed n sa lowest =
+            (removalReaches sa lowest && maybe wiped (\nm -> stripped (Just nm) (const True) permId) (StaticAbility.name sa))
+              || (waitsOnRemoval sa lowest && waited (permId, n))
               || (lowest > Layer.Type && setStripped permId)
           -- Bound here, OUTSIDE the zipWith, so every ability shares it.
           ts = staticTimestampOf permId permObj gs
-          partsOf n sa = gatherStatic (functioning permId) permId ts changes (removed sa) n sa
+          partsOf n sa = gatherStatic (functioning permId) permId ts changes (removed n sa) n sa
           -- CR 113.6b, applied WITHOUT disturbing the index: `n` is the key
           -- half of CR 613.6's decision memo and Parun.Engine.Event's
           -- departure handover indexes the SAME list by it, so an ability
@@ -2864,11 +2873,12 @@ frozenStaticParts :: ObjectId -> GameState -> [(Natural, Timestamp, Modification
 frozenStaticParts src gs =
   let cands = gather gs
       -- gather's own seed list, and the same one it feeds its two gates.
-      ungated = gatherGiven (\_ _ _ -> False) alwaysFunctioning Nothing gs
+      ungated = gatherGiven (\_ _ _ -> False) (const False) alwaysFunctioning Nothing gs
       -- gather's CR 604.2 gate, shared by the two readers that must agree on it.
       functioning = conditionHolds ungated gs
       setEffs = setLandSubtypeEffectsGiven functioning gs
-      parts = permanentParts (\name keep -> abilitiesRemovedBy name keep ungated gs) functioning setEffs (setSubtypeStripped ungated setEffs gs) gs src
+      (stripped, waited) = layerSixGate ungated gs
+      parts = permanentParts stripped waited functioning setEffs (setSubtypeStripped ungated setEffs gs) gs src
       grants = controlGrants gs
       applies c oid =
         let lyr = gLowest c
@@ -2934,15 +2944,22 @@ abilityRemoval gs = namedAbilityRemoval gs Nothing
 -- Synthetic Hushed Warden groups prove it.
 namedAbilityRemoval :: GameState -> Maybe AbilityName.AbilityName -> ObjectId -> Bool
 namedAbilityRemoval gs =
-  let gated = gatedGather gs
-      wiped = any (wipesAbilities . gModification) gated
-      named = Set.fromList [n | c <- gated, Modification.LoseNamedAbility n <- [gModification c]]
+  let (gated, applied) = removalsApplied gs
+      wiped = any (\c -> wipesAbilities (gModification c) && applied c) gated
+      named = Set.fromList [n | c <- gated, applied c, Modification.LoseNamedAbility n <- [gModification c]]
    in -- Almost every board has no ability-removing effect, and then no projection
       -- is spent on the question.
       \name ->
         if wiped || maybe False (`Set.member` named) name
-          then abilitiesRemovedBy name (const True) gated gs
+          then abilitiesRemovedBy name applied gated gs
           else const False
+
+-- gatedGather's list, with which of its parts are not a removal that waited
+-- (removerWaits): what the outside-the-fold removal readers count.
+removalsApplied :: GameState -> ([Gathered], Gathered -> Bool)
+removalsApplied gs =
+  let gated = gatedGather gs
+   in (gated, notWaited (removerWaits gated gs))
 
 -- gather's candidate list with CR 604.2's gate asked and CR 613.1f's layer-6 gate
 -- left open -- what the two outside-the-fold removal readers below share. The
@@ -2952,9 +2969,9 @@ namedAbilityRemoval gs =
 -- well-founded for gather's reason, since the seed is built with every gate open.
 gatedGather :: GameState -> [Gathered]
 gatedGather gs =
-  let ungated = gatherGiven (\_ _ _ -> False) alwaysFunctioning Nothing gs
+  let ungated = gatherGiven (\_ _ _ -> False) (const False) alwaysFunctioning Nothing gs
    in if anyConditional gs
-        then gatherGiven (\_ _ _ -> False) (conditionHolds ungated gs) Nothing gs
+        then gatherGiven (\_ _ _ -> False) (const False) (conditionHolds ungated gs) Nothing gs
         else ungated
 
 -- abilityRemoval asked AT A TIMESTAMP: "were this object's abilities removed by a
@@ -2980,12 +2997,12 @@ abilityRemovalAfter gs = namedAbilityRemovalAfter gs Nothing
 -- namedAbilityRemoval asks abilityRemoval's question.
 namedAbilityRemovalAfter :: GameState -> Maybe AbilityName.AbilityName -> Timestamp -> ObjectId -> Bool
 namedAbilityRemovalAfter gs =
-  let gated = gatedGather gs
-      wiped = any (wipesAbilities . gModification) gated
-      named = Set.fromList [n | c <- gated, Modification.LoseNamedAbility n <- [gModification c]]
+  let (gated, applied) = removalsApplied gs
+      wiped = any (\c -> wipesAbilities (gModification c) && applied c) gated
+      named = Set.fromList [n | c <- gated, applied c, Modification.LoseNamedAbility n <- [gModification c]]
    in \name ->
         if wiped || maybe False (`Set.member` named) name
-          then \ts -> abilitiesRemovedBy name ((> ts) . gTimestamp) gated gs
+          then \ts -> abilitiesRemovedBy name (\c -> gTimestamp c > ts && applied c) gated gs
           else \_ _ -> False
 
 -- CR 613.11 / 613.1f: the rule abilities layer-6 grants give `oid`, which each
@@ -3206,10 +3223,61 @@ grantedDefiningParts m = case m of
 -- data/scenarios/conspicuous-snoop-lends-nothing-under-*-humility.json for one
 -- lending abilities.
 --
--- Not implemented: an ability that itself removes abilities waiting on a removal
--- of its source; it stays in the fold's timestamp order (#5899).
+-- An ability that itself removes abilities is answered by removerWaits instead
+-- (waitsOnRemoval).
 removalReaches :: StaticAbility.StaticAbility (GrantedAbility.GrantedAbility Card.Type.Card) -> Layer -> Bool
-removalReaches sa lowest = lowest > Layer.Ability || (lowest == Layer.Ability && not (any removesAbilities (staticParts [] sa)))
+removalReaches sa lowest = lowest >= Layer.Ability && not (waitsOnRemoval sa lowest)
+
+-- Does this ability start applying in layer 6 carrying a removal of its own?
+-- CR 613.8's dependency between such removals is removerWaits'.
+waitsOnRemoval :: StaticAbility.StaticAbility (GrantedAbility.GrantedAbility Card.Type.Card) -> Layer -> Bool
+waitsOnRemoval sa lowest = lowest == Layer.Ability && any removesAbilities (staticParts [] sa)
+
+-- CR 613.8a / 613.8b: the ability-removing static abilities deciding in layer 6
+-- that never start, by effect key. One depends on any other removal reaching its
+-- source (CR 613.8a's "existence"), so waits for it and finds its ability gone.
+-- A stored removal, or one that started below layer 6 (CR 613.6), always
+-- applies. Its own removal is no dependency, so Humility under Opalescence still
+-- applies; removals reaching each other's sources are a loop and apply in
+-- timestamp order (CR 613.8b). A removal that waited reaches nothing, so the
+-- rest are re-asked without it (CR 613.8c).
+--
+-- Judged against the seed list, as abilitiesRemovedBy is. Each is asked as an
+-- unnamed ability: no ability-removing static ability in data/cards carries a
+-- name. data/scenarios/yixlid-jailer-losing-its-abilities-gives-think-twice-flashback-back.json
+-- proves the wait on a stored removal, and Parun.ProjectionSpec's "CR 613.8b a
+-- removal losing its own source's abilities" group the wait on another static
+-- removal, the loop and the re-ask.
+removerWaits :: [Gathered] -> GameState -> Set (ObjectId, Natural)
+removerWaits cands gs =
+  let removers = filter (removesAbilities . gModification) cands
+      deciding = Set.fromList [k | c <- removers, gLowest c == Layer.Ability, Just k <- [gEffect c]]
+      reaches keep (src, _) = abilitiesRemovedBy Nothing keep cands gs src
+      started c = maybe True (`Set.notMember` deciding) (gEffect c)
+      pending = Set.filter (not . reaches started) deciding
+      deps = Map.fromSet (\k -> Set.filter (\k' -> k' /= k && reaches ((== Just k') . gEffect) k) pending) pending
+      depsIn alive k = Set.intersection alive (Map.findWithDefault Set.empty k deps)
+      settle alive =
+        let loops = fmap Graph.flattenSCC (Graph.stronglyConnComp [(k, k, Set.toList (depsIn alive k)) | k <- Set.toList alive])
+            loopOf = Map.fromList [(k, Set.fromList l) | l <- loops, k <- l]
+            outside k = Set.difference (depsIn alive k) (Map.findWithDefault Set.empty k loopOf)
+            -- A loop depending on nothing outside it applies.
+            applies = Set.fromList [k | l <- loops, all (Set.null . outside) l, k <- l]
+            waits = Set.filter (not . Set.disjoint applies . outside) alive
+         in if Set.null waits then alive else settle (Set.difference alive waits)
+   in Set.difference deciding (settle pending)
+
+-- gather's CR 613.1f gates, read against the seed list: `stripped` for an ability
+-- removerWaits does not answer, counting no removal that waited, and `waited`
+-- for one it does.
+layerSixGate :: [Gathered] -> GameState -> (Maybe AbilityName.AbilityName -> (Gathered -> Bool) -> ObjectId -> Bool, (ObjectId, Natural) -> Bool)
+layerSixGate ungated gs =
+  let waits = removerWaits ungated gs
+   in (\name keep -> abilitiesRemovedBy name (\c -> keep c && notWaited waits c) ungated gs, (`Set.member` waits))
+
+-- Is this part not one of a removal that waited (removerWaits)?
+notWaited :: Set (ObjectId, Natural) -> Gathered -> Bool
+notWaited waits = maybe True (`Set.notMember` waits) . gEffect
 
 -- One static ability's parts, ready to fold: CR 613.6's unit. (src, n) is the
 -- key every part carries, so projectWith can tell that a layer-4 part and a

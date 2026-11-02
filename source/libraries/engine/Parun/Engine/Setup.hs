@@ -247,9 +247,10 @@ gameWith settings order =
           GameState.stackArchive = Map.empty,
           GameState.scannedThrough = 0,
           GameState.boardAfterEvent = Map.empty,
-          GameState.boardBeforeDeparture = Map.empty,
+          GameState.boardBeforeEvent = Map.empty,
           GameState.battlefieldWhenTriggered = Map.empty,
           GameState.controlSample = Map.empty,
+          GameState.boardAtControlSample = Nothing,
           GameState.damageScannedThrough = 0,
           GameState.delayedTriggers = Seq.empty,
           GameState.continuousEffects = [],
@@ -306,6 +307,7 @@ gameWith settings order =
           GameState.drawsThisTurn = mempty,
           GameState.keptFaceDown = Nothing,
           GameState.announcedTops = Nothing,
+          GameState.revealedTops = mempty,
           GameState.departedThisTurn = mempty,
           GameState.couldAttackThisTurn = mempty,
           GameState.activatedThisTurn = mempty,
@@ -1021,9 +1023,10 @@ restartGame perform exempt starter = do
             GameState.stackArchive = Map.empty,
             GameState.scannedThrough = 0,
             GameState.boardAfterEvent = Map.empty,
-            GameState.boardBeforeDeparture = Map.empty,
+            GameState.boardBeforeEvent = Map.empty,
             GameState.battlefieldWhenTriggered = Map.empty,
             GameState.controlSample = Map.empty,
+            GameState.boardAtControlSample = Nothing,
             GameState.damageScannedThrough = 0,
             GameState.delayedTriggers = Seq.empty,
             GameState.continuousEffects = [],
@@ -1081,6 +1084,7 @@ restartGame perform exempt starter = do
             GameState.drawsThisTurn = mempty,
             GameState.keptFaceDown = Nothing,
             GameState.announcedTops = Nothing,
+            GameState.revealedTops = mempty,
             GameState.departedThisTurn = mempty,
             GameState.couldAttackThisTurn = mempty,
             GameState.activatedThisTurn = mempty,
@@ -1314,9 +1318,10 @@ subgameStateFrom starter parent =
           GameState.stackArchive = Map.empty,
           GameState.scannedThrough = 0,
           GameState.boardAfterEvent = Map.empty,
-          GameState.boardBeforeDeparture = Map.empty,
+          GameState.boardBeforeEvent = Map.empty,
           GameState.battlefieldWhenTriggered = Map.empty,
           GameState.controlSample = Map.empty,
+          GameState.boardAtControlSample = Nothing,
           GameState.damageScannedThrough = 0,
           GameState.delayedTriggers = Seq.empty,
           GameState.continuousEffects = [],
@@ -1366,6 +1371,7 @@ subgameStateFrom starter parent =
           GameState.drawsThisTurn = mempty,
           GameState.keptFaceDown = Nothing,
           GameState.announcedTops = Nothing,
+          GameState.revealedTops = mempty,
           GameState.departedThisTurn = mempty,
           GameState.couldAttackThisTurn = mempty,
           GameState.activatedThisTurn = mempty,
@@ -1509,7 +1515,7 @@ applyCrossings finalSub parent =
               [] -> Event.recordEvent (left zone)
               revealed -> Event.simultaneouslyPure (Event.recordEvent (left zone) . (\g1 -> List.foldl' (flip Event.recordEvent) g1 revealed))
          in if Set.member oid (GameState.battlefield g)
-              then recordLeft Zone.Battlefield (Event.fileBoardBeforeDeparture g gone)
+              then recordLeft Zone.Battlefield (Event.fileBoardBefore g gone)
               else case fmap Object.zone (Map.lookup oid (GameState.objects g)) of
                 -- Phased out, CR 702.26b above.
                 Just Zone.Battlefield -> gone

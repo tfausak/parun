@@ -1185,6 +1185,51 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
       Spec.assertEqWith s "the grant stamped after Humility stands" (S.powerToughnessOf seerId (granted (stamp + 1))) (Just (2, 2))
       Spec.assertEqWith s "the grant stamped before Humility is taken" (S.powerToughnessOf seerId (granted (stamp - 1))) (Just (1, 1))
 
+  -- CR 613.8a / 613.8b between two removals (Projection.removerWaits).
+  Spec.describe s "CR 613.8b a removal losing its own source's abilities" $ do
+    -- Humility reaches the Jailer, the Jailer not Humility: the Jailer waits,
+    -- finds its ability gone and never starts, whichever is older.
+    Spec.it s "Yixlid Jailer waits for Humility and takes nothing" $ do
+      jailer <- S.printingOf s registry "Yixlid Jailer"
+      thinkTwice <- S.printingOf s registry "Think Twice"
+      humility <- S.printingOf s registry "Humility"
+      let (ttId, g0) = S.addGraveyardCard thinkTwice S.alice (Setup.emptyGame S.bothPlayers)
+          jailed = snd (S.addPermanent jailer S.alice g0)
+          younger = S.withHumility humility jailed
+          older = snd (S.addPermanent jailer S.alice (S.withHumility humility g0))
+      Spec.assertEqWith s "control: the Jailer takes Think Twice's flashback" (Projection.keywordsOf ttId jailed) Map.empty
+      Spec.assertBool s (not (Map.null (Projection.keywordsOf ttId younger))) "flashback kept under a younger Humility"
+      Spec.assertBool s (not (Map.null (Projection.keywordsOf ttId older))) "flashback kept under an older Humility"
+    -- Under Opalescence each Humility reaches the other: a loop, applied in
+    -- timestamp order, so neither waits and the Lord stays silenced.
+    Spec.it s "two Humilities under Opalescence keep each other" $ do
+      lord <- S.printingOf s registry "Lord of Atlantis"
+      seer <- S.printingOf s registry "Merfolk Seer"
+      humility <- S.printingOf s registry "Humility"
+      opalescence <- S.printingOf s registry "Opalescence"
+      let (seerId, g0) = S.addPermanent seer S.alice (Setup.emptyGame S.bothPlayers)
+          g1 = snd (S.addPermanent opalescence S.alice (snd (S.addPermanent lord S.alice g0)))
+          gs = S.withHumility humility (S.withHumility humility g1)
+      Spec.assertEqWith s "control: the Lord pumps the Seer" (S.powerToughnessOf seerId g1) (Just (3, 3))
+      Spec.assertEqWith s "no pump under the pair" (S.powerToughnessOf seerId gs) (Just (1, 1))
+    -- A stored removal reaches the animated Humility, which waits; the Lord's
+    -- ability, reached only by the Humility that waited, stands (CR 613.8c).
+    Spec.it s "a stored removal of an animated Humility gives the Lord its pump back" $ do
+      lord <- S.printingOf s registry "Lord of Atlantis"
+      seer <- S.printingOf s registry "Merfolk Seer"
+      humility <- S.printingOf s registry "Humility"
+      opalescence <- S.printingOf s registry "Opalescence"
+      let (seerId, g0) = S.addPermanent seer S.alice (Setup.emptyGame S.bothPlayers)
+          (lordId, g1) = S.addPermanent lord S.alice g0
+          g2 = snd (S.addPermanent opalescence S.alice g1)
+          (humilityId, humbled) = S.addPermanent humility S.bob g2
+          frogged = S.withEffectAt humilityId (Timestamp.MkTimestamp 1000) Modification.LoseAllAbilities humbled
+      Spec.assertEqWith s "control: no pump under Humility" (S.powerToughnessOf seerId humbled) (Just (1, 1))
+      Spec.assertEqWith s "the pump is back once Humility loses its ability" (S.powerToughnessOf seerId frogged) (Just (3, 3))
+      -- The same answer from outside the fold (Projection.abilityRemoval).
+      Spec.assertBool s (Projection.abilityRemoval humbled lordId) "control: the Lord's abilities are removed under Humility"
+      Spec.assertBool s (not (Projection.abilityRemoval frogged lordId)) "and not once Humility loses its ability"
+
   -- The same layer-6 removal from the OTHER kind of ability, and the card whose
   -- ability does not sit at layer 6 alone: Titania's Song removes at 6, animates
   -- at 4 and sets base P/T at 7b, all as ONE effect. CR 613.6 fixes its "each

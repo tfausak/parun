@@ -88,8 +88,10 @@ withoutAnnouncement before entry closed = do
   scannedThrough <- one GameState.scannedThrough
   battlefieldWhenTriggered <- mapOfMaps GameState.battlefieldWhenTriggered
   boardAfterEvent <- mapOf GameState.boardAfterEvent
-  boardBeforeDeparture <- mapOf GameState.boardBeforeDeparture
+  boardBeforeEvent <- mapOf GameState.boardBeforeEvent
   controlSample <- mapOf GameState.controlSample
+  -- A sample, retaken at every check either side ran.
+  boardAtControlSample <- newest GameState.boardAtControlSample
   damageScannedThrough <- one GameState.damageScannedThrough
   delayedTriggers <- seqOf GameState.delayedTriggers
   continuousEffects <- listOf GameState.continuousEffects
@@ -148,6 +150,7 @@ withoutAnnouncement before entry closed = do
   drawsThisTurn <- mapOf GameState.drawsThisTurn
   keptFaceDown <- one GameState.keptFaceDown
   announcedTops <- one GameState.announcedTops
+  revealedTops <- mapOf GameState.revealedTops
   departedThisTurn <- setOf GameState.departedThisTurn
   couldAttackThisTurn <- setOf GameState.couldAttackThisTurn
   activatedThisTurn <- mapOfMaps GameState.activatedThisTurn
@@ -217,8 +220,9 @@ withoutAnnouncement before entry closed = do
         GameState.scannedThrough = scannedThrough,
         GameState.battlefieldWhenTriggered = battlefieldWhenTriggered,
         GameState.boardAfterEvent = boardAfterEvent,
-        GameState.boardBeforeDeparture = boardBeforeDeparture,
+        GameState.boardBeforeEvent = boardBeforeEvent,
         GameState.controlSample = controlSample,
+        GameState.boardAtControlSample = boardAtControlSample,
         GameState.damageScannedThrough = damageScannedThrough,
         GameState.delayedTriggers = delayedTriggers,
         GameState.continuousEffects = continuousEffects,
@@ -275,6 +279,7 @@ withoutAnnouncement before entry closed = do
         GameState.drawsThisTurn = drawsThisTurn,
         GameState.keptFaceDown = keptFaceDown,
         GameState.announcedTops = announcedTops,
+        GameState.revealedTops = revealedTops,
         GameState.departedThisTurn = departedThisTurn,
         GameState.couldAttackThisTurn = couldAttackThisTurn,
         GameState.activatedThisTurn = activatedThisTurn,

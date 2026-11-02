@@ -1086,7 +1086,7 @@ Entries are ordered by the first rule each cites.
   staying (Xathrid Necromancer) or leaving beside it. Sanctum's count has no such
   split yet: Scryfall `t:shrine (o:"leaves the battlefield" or o:"dies" or o:"put
   into a graveyard")`, 2026-11-01, no hit.
-- **Rules**: CR 603.2d, 603.10, 603.10a; CR of 2026-08-07. No ruling on either
+- **Rules**: CR 603.2d, 603.10, 603.10a, 603.10d; CR of 2026-08-07. No ruling on either
   card. Teysa Karlov and Drivnod, Carnage Dominus rule the same split for a dying
   cause: an effect's source dying beside the creature still counts, whether or not
   the ability's permanent leaves too.
@@ -1098,5 +1098,6 @@ Entries are ordered by the first rule each cites.
   the after board, one trigger under a lone Prodigy's death and two under a Wrath;
   the Teysa rulings give both the same answer.
 - **Site**: `Parun.Engine.Event.Match.additionalTriggers`, reading
-  `GameState.boardBeforeDeparture`. data/scenarios's "Harmonic Prodigy dying alone"
-  and "Harmonic Prodigy dying beside a Wizard" scenarios prove it.
+  `GameState.boardBeforeEvent`. data/scenarios's "Harmonic Prodigy dying alone"
+  and "Harmonic Prodigy dying beside a Wizard" scenarios prove it, and its two
+  Harmonic Prodigy and Khârn the Betrayer scenarios for a control change.
