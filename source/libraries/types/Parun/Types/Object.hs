@@ -178,7 +178,7 @@ data Object = MkObject
     -- enough, and why there is no third.
     --
     -- SAMPLED rather than hooked, for `sickness` above's reason -- control is
-    -- DERIVED (CR 613.1b) and nothing announces a change. Engine.sampleControl
+    -- DERIVED (CR 613.1b) and nothing announces a change. Event.sampleControl
     -- opens a seat's window wherever it finds the permanent has arrived under
     -- them, and Engine.advanceControlClock moves that seat's window on at the
     -- beginning of their upkeep. Its one reader is

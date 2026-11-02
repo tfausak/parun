@@ -498,13 +498,13 @@ additionalEntryTriggers gs you zc
 -- in a graveyard or an emblem has no such abilities. Read off the board the
 -- ability itself reads: CR 603.10's after the event (GameState.boardAfterEvent),
 -- or for `looksBack` the board before it (GameState.boardBeforeEvent; CR
--- 603.10a, 603.10d, docs/decisions.md, "A look-back ability's additional
--- triggers look back"). A look-back ability's event with no such board took
--- nothing off the battlefield and changed no controller, so the after board
--- answers.
+-- 603.10a, 603.10b, 603.10d, docs/decisions.md, "A look-back ability's
+-- additional triggers look back"). A look-back ability's event with no such
+-- board took nothing off the battlefield, changed no controller and phased
+-- nothing out, so the after board answers.
 --
--- Not implemented: the board before any other look-back event, CR 603.10b's
--- phasing or 603.10c's unattaching, say (#5944).
+-- Not implemented: the board before any other look-back event, CR 603.10c's
+-- unattaching or 603.10e's countering, say (#5950).
 additionalTriggers :: GameState -> PlayerId -> ObjectId -> EventGroup.EventGroup -> Bool -> Natural
 additionalTriggers gs you bearer group looksBack =
   let after = Map.findWithDefault gs group (GameState.boardAfterEvent gs)
@@ -9223,7 +9223,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- here rather than any one of them.
   --
   -- `before == you` and nothing about `after`, because losing control is the whole
-  -- of what the sentence asks. Engine.sampleControl only mints the event when the
+  -- of what the sentence asks. Event.sampleControl only mints the event when the
   -- two players differ, so no separate "and somebody else has it now" conjunct is
   -- needed for the match to mean a change.
   --

@@ -383,7 +383,7 @@ data GameEvent
     -- (CR 603.7), and both players because that condition asks about the player
     -- control left.
     --
-    -- SAMPLED into being by Parun.Engine.Engine.sampleControl rather than emitted
+    -- SAMPLED into being by Parun.Engine.Event.sampleControl rather than emitted
     -- by an action, control being derived in CR 613.1b's layer 2 with no
     -- resolution to announce the change. Battlefield-scoped, since that is where
     -- the sample is taken.

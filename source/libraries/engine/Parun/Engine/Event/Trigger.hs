@@ -107,6 +107,7 @@ import qualified Parun.Types.OwnedZone as OwnedZone
 import Parun.Types.PendingTrigger (PendingTrigger)
 import qualified Parun.Types.PendingTrigger as PendingTrigger
 import qualified Parun.Types.PermanentActed as PermanentActed
+import qualified Parun.Types.PermanentAction as PermanentAction
 import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
 import qualified Parun.Types.PlanarDieRolled as PlanarDieRolled
 import qualified Parun.Types.PlayerActed as PlayerActed
@@ -515,7 +516,8 @@ looksBack condition = case condition of
   -- and CR 702.149a's counters go on a permanent there, and CR 730.2b keeps a
   -- mutated permanent the same object. An explore or connive moves cards, but
   -- its event says the keyword action COMPLETED, not that anything left a zone.
-  TriggerCondition.PermanentActs _ -> False
+  -- Phasing out is CR 603.10b's own entry; phasing in is not on the list.
+  TriggerCondition.PermanentActs watched -> PermanentActed.action watched == PermanentAction.PhaseOut
   TriggerCondition.PlacesSticker _ -> False
   -- Not on CR 603.10a's list, and CR 706.1's roll is no zone change: it moves
   -- no object at all, so CR 603.10's first sentence governs.
@@ -775,7 +777,7 @@ looksBack condition = case condition of
   -- not an object -- so none of CR 603.10a's four families reaches it.
   TriggerCondition.PlayerBecomesMonarch _ -> False
   -- CR 603.10a's look-back is for a bearer that left; this condition's subject is a
-  -- permanent still on the battlefield, Engine.sampleControl sampling nowhere else,
+  -- permanent still on the battlefield, Event.sampleControl sampling nowhere else,
   -- and its bearer is a CR 603.7 delayed entry the store keeps rather than the log.
   TriggerCondition.LoseControlOfBound _ -> False
   -- CR 603.10d: the bearer stays, but under the controller it had before.
@@ -1366,13 +1368,23 @@ eventTriggers events gs =
       -- match nothing here. Reading the abilities off the board before is a
       -- regression fence: no pool board changes a permanent's abilities as it
       -- changes hands.
-      lostControlOf onBattlefield logged = case LoggedEvent.event logged of
-        GameEvent.ControlChanged (ControlChanged.MkControlChanged oid before _) ->
-          let abilities = case Map.lookup (LoggedEvent.group logged) (GameState.boardBeforeEvent gs) of
-                Just board | Set.member oid (GameState.battlefield board) -> battlefieldAbilitiesOf oid (Projection.project oid board)
-                _ -> foldMap snd (Map.lookup oid onBattlefield)
-           in Map.singleton oid (before, filter (looksBack . fst) abilities)
-        _ -> Map.empty
+      --
+      -- CR 603.10b: likewise the permanent this event phased out, which no board
+      -- after it holds, offered under its controller on the board before, the
+      -- one Parun.Engine.Phasing.phaseOutSet always files.
+      lookedBackAt onBattlefield logged =
+        let filed oid = case Map.lookup (LoggedEvent.group logged) (GameState.boardBeforeEvent gs) of
+              Just board | Set.member oid (GameState.battlefield board) -> Just board
+              _ -> Nothing
+            lookingBack = filter (looksBack . fst)
+         in case LoggedEvent.event logged of
+              GameEvent.ControlChanged (ControlChanged.MkControlChanged oid before _) ->
+                let abilities = maybe (foldMap snd (Map.lookup oid onBattlefield)) (battlefieldAbilitiesOf oid . Projection.project oid) (filed oid)
+                 in Map.singleton oid (before, lookingBack abilities)
+              GameEvent.PermanentActed (PermanentActed.MkPermanentActed PermanentAction.PhaseOut oid) -> case filed oid of
+                Just board | Just controller <- Projection.controllerOf oid board -> Map.singleton oid (controller, lookingBack (battlefieldAbilitiesOf oid (Projection.project oid board)))
+                _ -> Map.empty
+              _ -> Map.empty
       leftBattlefield event = case event of
         GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)
           | ZoneChange.from zc == Zone.Battlefield && ZoneChange.to zc /= Zone.Battlefield ->
@@ -2409,7 +2421,7 @@ eventTriggers events gs =
       -- Map.unions is left-biased, so the battlefield reading wins over a
       -- last-known one, a cycled card and a graveyard reading. That rules out a
       -- double fire: one entry per id means one pass of `forOne` per id.
-      -- `lostControlOf` overlaps `onBattlefield` on purpose and wins, for the
+      -- `lookedBackAt` overlaps `onBattlefield` on purpose and wins, for the
       -- reason its own comment gives.
       --
       -- Two of the next four genuinely overlap, and there the bias is load-bearing
@@ -2435,7 +2447,7 @@ eventTriggers events gs =
       -- no other. `revealedInHand` and `spellCast` overlap `inStatedZones`, which
       -- comes last so the bias hands them the id: each offers the stated
       -- abilities the scan would, plus its keyword-minted ones.
-      candidates onBattlefield logged later same graveyard = let event = LoggedEvent.event logged in Map.toAscList (Map.unions [lostControlOf onBattlefield logged, onBattlefield, leftBattlefield event, later, same, walkedAwayFrom event, cycledCard event, spellCast event, revealedInHand event, graveyard, inCommand, Map.unionWith (\(c, a) (_, b) -> (c, a <> b)) inExile (exiledForMadness event), inStatedZones])
+      candidates onBattlefield logged later same graveyard = let event = LoggedEvent.event logged in Map.toAscList (Map.unions [lookedBackAt onBattlefield logged, onBattlefield, leftBattlefield event, later, same, walkedAwayFrom event, cycledCard event, spellCast event, revealedInHand event, graveyard, inCommand, Map.unionWith (\(c, a) (_, b) -> (c, a <> b)) inExile (exiledForMadness event), inStatedZones])
       scanOne board later same graveyard logged = concatMap (forOne board logged) (candidates (onBattlefieldOf board) logged later same graveyard)
       -- The battlefield reading is per GROUP and so is hoisted out of the block:
       -- every event in one group happened at the same time, so they share it. A

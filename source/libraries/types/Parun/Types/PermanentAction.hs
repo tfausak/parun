@@ -24,4 +24,8 @@ data PermanentAction
   | -- | The Unstable FAQ: its controller cranked this Contraption, as the CRANK!
     -- counter reached its sprocket (Parun.Engine.Contraption.crank).
     Crank
+  | -- | CR 702.26b: it phased out, directly or indirectly (CR 702.26g).
+    PhaseOut
+  | -- | CR 702.26c: it phased in.
+    PhaseIn
   deriving (Bounded, Enum, Eq, Ord, Show)

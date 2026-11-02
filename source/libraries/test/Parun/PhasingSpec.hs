@@ -54,9 +54,11 @@
 module Parun.PhasingSpec where
 
 import qualified Control.Monad as Monad
+import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
+import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Parun.Engine.Activate as Activate
 import qualified Parun.Engine.Combat as Combat
@@ -84,12 +86,16 @@ import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.Departure as Departure.Type
 import qualified Parun.Types.Expiry as Expiry
 import qualified Parun.Types.Face as Face
+import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.PermanentActed as PermanentActed
+import qualified Parun.Types.PermanentAction as PermanentAction
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PhasedOut as PhasedOut
 import qualified Parun.Types.PlayerId as PlayerId
@@ -528,23 +534,25 @@ indirectSpec s registry = Spec.describe s "Indirect" $ do
     Spec.assertEqWith s "the Aura phased out under alice, who controls it" (Phasing.phasedOutStatus auraId gone) (Just (PhasedOut.Indirectly S.alice))
   -- CR 702.26j: "abilities that trigger when a permanent becomes attached or
   -- unattached from an object or player don't trigger when that permanent phases
-  -- in or out." Asserted as the stronger fact that the phasing event appends
-  -- NOTHING to CR 608.2i's log across either transition -- which also restates CR
-  -- 702.26d's "zone-change triggers don't trigger".
+  -- in or out." Asserted as the stronger fact that each transition appends to CR
+  -- 608.2i's log only its own CR 603.2 acts, one per permanent and the Aura's
+  -- included (CR 702.26g) -- which also restates CR 702.26d's "zone-change
+  -- triggers don't trigger".
   --
   -- A REGRESSION FENCE rather than a proof, and it stays one: this board attaches
   -- through Parun.Support.attach, which writes Object.attachedTo directly, so no
   -- GameEvent.BecameAttached was ever recorded here to begin with. The case below
   -- is the one that reaches the rule with a real event behind it.
-  Spec.it s "CR 702.26j/702.26d neither transition emits an event" $ do
+  Spec.it s "CR 702.26j/702.26d each transition logs only its phasing acts" $ do
     crocodile <- S.printingOf s registry "Sandbar Crocodile"
     pacifism <- S.printingOf s registry "Pacifism"
-    let (_, _, board) = enchantedCrocodile crocodile pacifism S.alice S.alice (Setup.emptyGame S.bothPlayers)
+    let (crocId, auraId, board) = enchantedCrocodile crocodile pacifism S.alice S.alice (Setup.emptyGame S.bothPlayers)
         gone = untapStep S.alice board
         back = untapStep S.alice gone
-        events = length . GameState.events
-    Spec.assertEqWith s "phasing out logged nothing" (events gone) (events board)
-    Spec.assertEqWith s "and phasing in logged nothing" (events back) (events gone)
+        logged before after = fmap LoggedEvent.event (Foldable.toList (Seq.drop (length (GameState.events before)) (GameState.events after)))
+        acts action = List.sort [GameEvent.PermanentActed (PermanentActed.MkPermanentActed action oid) | oid <- [crocId, auraId]]
+    Spec.assertEqWith s "phasing out logged its two phase-outs alone" (List.sort (logged board gone)) (acts PermanentAction.PhaseOut)
+    Spec.assertEqWith s "and phasing in its two phase-ins alone" (List.sort (logged gone back)) (acts PermanentAction.PhaseIn)
 
 phaseOutSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 phaseOutSpec s registry = Spec.describe s "PhaseOut" $ do
