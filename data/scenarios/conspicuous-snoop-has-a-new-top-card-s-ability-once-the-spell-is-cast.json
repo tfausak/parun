@@ -1,0 +1,108 @@
+{
+  "description": "CR 601.2i: once the spell becomes cast the new top card is shown, so Conspicuous Snoop has its mana ability",
+  "note": "Ruling 2020-06-23. Casting Goblin Piker from the top exposes Skirk Prospector, and Snoop has its ability once the Piker is cast. Parun.CastSpec's \"CR 401.5\" group proves the hold-back during the payment.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Conspicuous Snoop",
+            "label": "snoop",
+            "ready": true
+          },
+          {
+            "card": "Goblin Piker",
+            "label": "other"
+          },
+          {
+            "card": "Mountain",
+            "label": "m"
+          },
+          {
+            "card": "Island",
+            "label": "i"
+          }
+        ],
+        "library": [
+          {
+            "card": "Goblin Piker",
+            "label": "piker"
+          },
+          {
+            "card": "Skirk Prospector",
+            "label": "prospector"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$piker",
+          "mana": [
+            "$m",
+            "$i"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Offered",
+          "player": "alice",
+          "is": [
+            "Pass",
+            "ActivateManaAbility $snoop"
+          ]
+        }
+      }
+    }
+  ]
+}

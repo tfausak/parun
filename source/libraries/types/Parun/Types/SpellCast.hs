@@ -24,9 +24,8 @@ data SpellCast = MkSpellCast
     -- of the zone it left, so no characteristic of the candidate can answer the
     -- question. The event carries it instead (Parun.Types.SpellWasCast.zone).
     --
-    -- ONE zone, not a set and not a negation: every printing in the pool names a
-    -- single zone. Vega, the Watcher's "from anywhere other than your hand" is
-    -- the shape that would want more, and no card here prints it.
+    -- ONE zone, not a set and not a negation: Ghostly Pilferer's "from anywhere
+    -- other than their hand" negates in the Filter, off Filter.WasCastFrom.
     zone :: Maybe Zone.Zone,
     -- | Clarion Spirit's "your SECOND spell each turn": the cast fires the
     -- ability only when it is the nth one of the turn matching everything
@@ -41,7 +40,8 @@ data SpellCast = MkSpellCast
     -- Counted over the casts the rest of this record ALREADY admits rather than
     -- over every cast in the log -- the printed sentence puts the ordinal
     -- inside the description ("your second spell", "your first spell during
-    -- each opponent's turn"), so the set counted is the set matched.
+    -- each opponent's turn"), so the set counted is the set matched, narrowed to
+    -- the caster's own ("an opponent casts their second spell").
     --
     -- Which is why the number is not stamped on GameEvent.SpellCast the way CR
     -- 121.1's is stamped on GameEvent.Drew: a draw's ordinal is per player and

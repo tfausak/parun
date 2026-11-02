@@ -1,0 +1,226 @@
+{
+  "board": {
+    "active": "bob",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "l0",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "l1",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "l2",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "l3",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "l4",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Voracious Greatshark",
+            "label": "shark"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Mountain",
+            "label": "g0",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "g1",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "g2",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "g3",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "g4",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Hill Giant",
+            "label": "giant"
+          },
+          {
+            "card": "Lightning Bolt",
+            "label": "bolt"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 701.6a: Voracious Greatshark's trigger counters a creature spell, not an instant",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$g0",
+            "$g1",
+            "$g2",
+            "$g3",
+            null
+          ],
+          "object": "$giant"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$g4"
+          ],
+          "object": "$bolt",
+          "targets": [
+            "$alice"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$l0",
+            "$l1",
+            "$l2",
+            "$l3",
+            "$l4"
+          ],
+          "object": "$shark"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "ChooseTargets": {
+          "target": [
+            "Lightning Bolt"
+          ]
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseTargets": {
+          "target": [
+            "Hill Giant"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Hill Giant",
+          "count": 1,
+          "player": "bob",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

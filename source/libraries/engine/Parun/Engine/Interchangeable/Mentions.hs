@@ -93,6 +93,7 @@ import qualified Parun.Types.CantAttackPlayer as CantAttackPlayer
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.CantBlockCreatures as CantBlockCreatures
 import qualified Parun.Types.Card as Card
+import qualified Parun.Types.CardAbilities as CardAbilities
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
 import qualified Parun.Types.CardsPutIntoZone as CardsPutIntoZone
@@ -170,6 +171,7 @@ import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.DealDamage as DealDamage
+import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.DelayedTrigger as DelayedTrigger
@@ -229,7 +231,6 @@ import qualified Parun.Types.ExileFromGraveyard as ExileFromGraveyard
 import qualified Parun.Types.ExileHaunting as ExileHaunting
 import qualified Parun.Types.ExileMaterials as ExileMaterials
 import qualified Parun.Types.ExilePermanents as ExilePermanents
-import qualified Parun.Types.ExiledCardAbilities as ExiledCardAbilities
 import qualified Parun.Types.Expiry as Expiry
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.FaceDownCharacteristics as FaceDownCharacteristics
@@ -522,6 +523,7 @@ filterNames asking criterion = case criterion of
   Filter.HasKeywordFamily _family -> mempty
   Filter.Measures measures -> measuresNames asking measures
   Filter.ManaValueIsEven -> mempty
+  Filter.ControllerIsOwner -> mempty
   Filter.HeldBy _holder _relation -> mempty
   Filter.ControlledByRole _ -> mempty
   Filter.HeldByBound _holder slot -> slotNames asking slot
@@ -771,7 +773,7 @@ attackLimitUnlessNames asking x = case x of
 
 attackPermissionNames :: (Monoid r) => Asking r -> AttackPermission.AttackPermission -> r
 attackPermissionNames asking x = case x of
-  AttackPermission.MkAttackPermission affected -> affectedNames asking affected
+  AttackPermission.MkAttackPermission affected while -> affectedNames asking affected <> foldMap (conditionNames asking) while
 
 attackRequirementNames :: (Monoid r) => Asking r -> AttackRequirement.AttackRequirement -> r
 attackRequirementNames asking x = case x of
@@ -878,7 +880,7 @@ castRepetitionNames asking x = case x of
 castingPermissionNames :: (Monoid r) => Asking r -> CastingPermission.CastingPermission -> r
 castingPermissionNames asking x = case x of
   CastingPermission.CastFromLibraryWhileSearching -> mempty
-  CastingPermission.CastFromGraveyard _family -> mempty
+  CastingPermission.CastFromGraveyard _family additionalCosts -> foldMap (costComponentNames asking (keywordNames asking)) additionalCosts
   CastingPermission.PlayFromGraveyard -> mempty
   CastingPermission.CastAsThoughItHadFlash condition _additionalCost -> foldMap (conditionNames asking) condition
 
@@ -1363,6 +1365,7 @@ durationEventNames asking x = case x of
   DurationEvent.SourceTurnedFaceDown -> mempty
   DurationEvent.SpellCast filter_ -> filterNames asking filter_
   DurationEvent.Planeswalked -> mempty
+  DurationEvent.SourceExiledCard -> mempty
 
 eachCardFromAmongNames :: (Monoid r) => Asking r -> EachCardFromAmong.EachCardFromAmong -> r
 eachCardFromAmongNames asking x = case x of
@@ -2167,7 +2170,7 @@ modificationNames asking onAbility x = case x of
   Modification.GainCastingPermission castingPermission -> castingPermissionNames asking castingPermission
   Modification.GainAbility ability -> onAbility ability
   Modification.GainAbilitiesOfSource keyword -> foldMap (keywordNames asking) keyword
-  Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities cards items) -> filterNames asking cards <> foldMap (activationRestrictionNames asking) items
+  Modification.GainCardAbilities (CardAbilities.MkCardAbilities _ cards items) -> filterNames asking cards <> foldMap (activationRestrictionNames asking) items
   Modification.GainAbilitiesOfStickers -> mempty
   Modification.LoseAllAbilities -> mempty
   Modification.LoseNamedAbility abilityName -> names asking (`Binding.Engine.isAcquiredFrom` abilityName)
@@ -2345,7 +2348,7 @@ permanentCandidateNames asking x = case x of
 
 dealsDamageToPlayerNames :: (Monoid r) => Asking r -> DealsDamageToPlayer.DealsDamageToPlayer -> r
 dealsDamageToPlayerNames asking x = case x of
-  DealsDamageToPlayer.MkDealsDamageToPlayer actor _recipient -> actingPermanentNames asking actor
+  DealsDamageToPlayer.MkDealsDamageToPlayer actor _recipient _kind -> actingPermanentNames asking actor
 
 permanentDealsCombatDamageToPlayerNames :: (Monoid r) => Asking r -> PermanentDealsCombatDamageToPlayer.PermanentDealsCombatDamageToPlayer -> r
 permanentDealsCombatDamageToPlayerNames asking x = case x of
@@ -2442,6 +2445,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.CantBecomeMonarch -> mempty
   PlayerEffect.CantSetSchemesInMotion -> mempty
   PlayerEffect.EntriesTrigger entries -> filterNames asking (EntriesTrigger.entrants entries)
+  PlayerEffect.AdditionalTriggers bearers -> filterNames asking bearers
   PlayerEffect.ControlledWhileSearching -> mempty
   PlayerEffect.YouChoose _declaration -> mempty
   PlayerEffect.ExilesFoundWhileSearching -> mempty
@@ -2639,7 +2643,7 @@ quantityNames asking x = case x of
   Quantity.BendingsThisTurn playerRef -> history asking HistoryRead.Bendings <> playerRefNames asking playerRef
   Quantity.LifeChanged tally -> turnHistory asking (LifeTally.turn tally) (case LifeTally.direction tally of LifeDirection.Gained -> HistoryRead.LifeGains; LifeDirection.Lost -> HistoryRead.LifeLosses) <> playerRefNames asking (LifeTally.player tally)
   Quantity.PlayersDealtDamageThisTurn tally -> history asking HistoryRead.Damage <> playerRefNames asking (DealtDamage.recipient tally)
-  Quantity.DamageDealtToPlayersThisTurn playerRef -> history asking HistoryRead.Damage <> playerRefNames asking playerRef
+  Quantity.DamageDealtToPlayersThisTurn tally -> history asking HistoryRead.Damage <> playerRefNames asking (DealtDamage.recipient tally)
   Quantity.DamageDealtThisTurn _ -> history asking HistoryRead.Damage
   Quantity.SpellsCast tally -> turnHistory asking (SpellTally.turn tally) HistoryRead.Casts <> playerRefNames asking (SpellTally.player tally)
   Quantity.TimesThisTurn act -> history asking $ case act of
@@ -2815,7 +2819,7 @@ scopeNames asking x = case x of
 
 searchNames :: (Monoid r) => Asking r -> Search.Search -> r
 searchNames asking x = case x of
-  Search.MkSearch searcher owner _zones _outsideTheGame quantity filter_ descriptions _upTo _destination subject slot _differentIn _exactly _andOr -> playerRefNames asking searcher <> playerRefNames asking owner <> foldMap (quantityNames asking) quantity <> filterNames asking filter_ <> foldMap (filterNames asking) descriptions <> foldMap (slotNames asking) subject <> foldMap (slotNames asking) slot
+  Search.MkSearch searcher owner _zones _outsideTheGame quantity filter_ descriptions _upTo _destination subject slot handSlot _differentIn _exactly _andOr -> playerRefNames asking searcher <> playerRefNames asking owner <> foldMap (quantityNames asking) quantity <> filterNames asking filter_ <> foldMap (filterNames asking) descriptions <> foldMap (slotNames asking) subject <> foldMap (slotNames asking) slot <> foldMap (slotNames asking) handSlot
 
 selfCountersReachedNames :: (Monoid r) => Asking r -> SelfCountersReached.SelfCountersReached -> r
 selfCountersReachedNames asking x = case x of
@@ -2927,7 +2931,7 @@ tapPermanentsNames asking x = case x of
 
 targetSlotNames :: (Monoid r) => Asking r -> TargetSlot.TargetSlot -> r
 targetSlotNames asking x = case x of
-  TargetSlot.MkTargetSlot pool filter_ count amount chooser perPlayer divided _together -> poolNames asking pool <> foldMap (filterNames asking) filter_ <> slotCountNames asking count <> foldMap (quantityNames asking) amount <> foldMap (playerRefNames asking) chooser <> foldMap (slotPerPlayerNames asking) perPlayer <> foldMap (quantityNames asking) divided
+  TargetSlot.MkTargetSlot pool filter_ count amount chooser perPlayer divided _together asCast -> poolNames asking pool <> foldMap (filterNames asking) filter_ <> foldMap (filterNames asking) asCast <> slotCountNames asking count <> foldMap (quantityNames asking) amount <> foldMap (playerRefNames asking) chooser <> foldMap (slotPerPlayerNames asking) perPlayer <> foldMap (quantityNames asking) divided
 
 theseDiscardNames :: (Monoid r) => Asking r -> TheseDiscard.TheseDiscard -> r
 theseDiscardNames asking x = case x of
@@ -2973,7 +2977,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> mempty
   TriggerCondition.DealsCombatDamage actingPermanent -> actingPermanentNames asking actingPermanent
   TriggerCondition.DealsDamageToPlayer dealsDamageToPlayer -> dealsDamageToPlayerNames asking dealsDamageToPlayer
-  TriggerCondition.SelfDealsDamageToCreature _ -> mempty
+  TriggerCondition.DealsDamageToPermanent dealsDamageToPermanent -> actingPermanentNames asking (DealsDamageToPermanent.actor dealsDamageToPermanent)
   TriggerCondition.DealsDamage actingPermanent -> actingPermanentNames asking actingPermanent
   TriggerCondition.IsDealtDamage dealt -> actingPermanentNames asking (DealtDamage.recipient dealt)
   TriggerCondition.PlayerIsDealtDamage _playerIsDealtDamage -> mempty

@@ -481,6 +481,7 @@ happenedBetween before after =
         gs
           { GameState.events = Seq.empty,
             GameState.boardAfterEvent = Map.empty,
+            GameState.boardBeforeDeparture = Map.empty,
             GameState.battlefieldWhenTriggered = Map.empty,
             GameState.nextEventGroup = GameState.nextEventGroup before,
             GameState.eventGroupDepth = GameState.eventGroupDepth before,
@@ -2269,11 +2270,22 @@ linkCraftMaterials resolving entered gs =
 -- Filed for a SPELL's effects too, where CR 607.2a scopes the link to an
 -- activated or triggered ability -- unreadable rather than wrong, since CR
 -- 608.2n puts the spell into its graveyard as part of its own resolution.
+--
+-- A filing is the moment DurationEvent.SourceExiledCard ends at. Only a NEW key
+-- counts: an outer window re-seeing an inner one's arrival would end the
+-- permission the inner window's next instruction just granted, and a link the
+-- funnel filed names a card this instruction did not exile. A move replaced out
+-- of exile files nothing, so it ends nothing. The new-key half is a fence: every
+-- printed wording exiles and grants in two instructions of one clause, so
+-- `Set.null arrived` stays green.
 recordExiledWith :: ExileLink.ExileLink -> Set ObjectId -> GameState -> GameState
 recordExiledWith link before gs =
   let arrived = Set.difference (GameState.exile gs) before
       file oid = Map.insertWith (\_ inner -> inner) oid link
-   in gs {GameState.exiledWith = Map.restrictKeys (foldr file (GameState.exiledWith gs) arrived) (GameState.exile gs)}
+      filed = gs {GameState.exiledWith = Map.restrictKeys (foldr file (GameState.exiledWith gs) arrived) (GameState.exile gs)}
+   in if Set.null (Set.difference arrived (Map.keysSet (GameState.exiledWith gs)))
+        then filed
+        else Expiry.sweep (Expiry.ExiledWith (ExileLink.source link)) filed
 
 -- CR 406.4's separate piles, filed off the same window: "face-down cards in exile
 -- should be kept in separate piles based on when they were exiled and how they
@@ -4617,15 +4629,15 @@ paymentDecisionOf :: Maybe a -> PaymentDecision.PaymentDecision
 paymentDecisionOf paid = if Maybe.isJust paid then PaymentDecision.Pays else PaymentDecision.Declines
 
 -- CR 733.1 / 118.12a: what follows a payment `agreed` to and answered as it
--- was (payGateCost's record). A paid one stands. A failed one is reversed, which
--- returns the payer to the choice, so `again` asks it once more. The same
--- option paid the same way failing a second time stands, read as unpaid, as
--- Combat.attemptBlockDeclaration keeps a repeated illegal declaration.
-payAgain :: (Ord k) => Set k -> k -> Maybe a -> (Set k -> Game (Maybe a)) -> Game (Maybe a)
-payAgain failed agreed paid again = case paid of
-  Just _ -> pure paid
+-- was (payGateCost's record). A paid one stands, as `stands` reports it. A failed
+-- one is reversed, which returns the payer to the choice, so `again` asks it once
+-- more. The same option paid the same way failing a second time stands, read as
+-- unpaid, as Combat.attemptBlockDeclaration keeps a repeated illegal declaration.
+payAgain :: (Ord k) => Set k -> k -> Maybe a -> (Maybe a -> b) -> (Set k -> Game b) -> Game b
+payAgain failed agreed paid stands again = case paid of
+  Just _ -> pure (stands paid)
   Nothing
-    | Set.member agreed failed -> pure Nothing
+    | Set.member agreed failed -> pure (stands Nothing)
     | otherwise -> again (Set.insert agreed failed)
 
 -- The costs one offer of this gate may be paid with, one per option in printed

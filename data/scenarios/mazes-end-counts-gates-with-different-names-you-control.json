@@ -1,0 +1,262 @@
+{
+  "description": "Returned as a cost, it finds a Gate, not a Hill Giant. Ten Gates but nine names, with the tenth name under bob's control, win nothing.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Maze's End",
+            "label": "me"
+          },
+          {
+            "card": "Plains",
+            "label": "a1"
+          },
+          {
+            "card": "Plains",
+            "label": "a2"
+          },
+          {
+            "card": "Plains",
+            "label": "a3"
+          },
+          {
+            "card": "Azorius Guildgate",
+            "label": "g0"
+          },
+          {
+            "card": "Boros Guildgate",
+            "label": "g1"
+          },
+          {
+            "card": "Dimir Guildgate",
+            "label": "g2"
+          },
+          {
+            "card": "Golgari Guildgate",
+            "label": "g3"
+          },
+          {
+            "card": "Gruul Guildgate",
+            "label": "g4"
+          },
+          {
+            "card": "Izzet Guildgate",
+            "label": "g5"
+          },
+          {
+            "card": "Orzhov Guildgate",
+            "label": "g6"
+          },
+          {
+            "card": "Rakdos Guildgate",
+            "label": "g7"
+          },
+          {
+            "card": "Selesnya Guildgate",
+            "label": "g8"
+          }
+        ],
+        "library": [
+          {
+            "card": "Azorius Guildgate",
+            "label": "dup"
+          },
+          {
+            "card": "Hill Giant",
+            "label": "hill"
+          },
+          {
+            "card": "Simic Guildgate",
+            "label": "left"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Simic Guildgate"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$me",
+          "ability": 1,
+          "mana": [
+            "$a1",
+            "$a2",
+            "$a3",
+            null
+          ],
+          "costOrder": [
+            0,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "ManaPool",
+          "player": "alice",
+          "is": []
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Hand",
+          "card": "Maze's End",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Stack",
+          "is": [
+            "ability of $me"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "refuse": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$hill"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$dup"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "$hill",
+            "$left"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Azorius Guildgate",
+          "count": 2
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$g1",
+          "tapped": false
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Result",
+          "is": null
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Conspicuous Snoop",
+      "oracleText": "Play with the top card of your library revealed.\nYou may cast Goblin spells from the top of your library.\nAs long as the top card of your library is a Goblin card, this creature has all activated abilities of that card.",
+      "playerAbilities": [
+        {
+          "effect": {
+            "type": "Shows",
+            "value": {
+              "cards": {
+                "type": "TopOfLibrary"
+              },
+              "to": {
+                "type": "Everyone"
+              }
+            }
+          },
+          "scope": {
+            "type": "You"
+          }
+        },
+        {
+          "effect": {
+            "type": "CastFrom",
+            "value": {
+              "from": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                },
+                "zone": {
+                  "type": "Library"
+                }
+              },
+              "matching": {
+                "type": "HasSubtype",
+                "value": {
+                  "type": "Goblin"
+                }
+              }
+            }
+          },
+          "scope": {
+            "type": "You"
+          }
+        }
+      ],
+      "power": {
+        "type": "Literal",
+        "value": 2
+      },
+      "staticAbilities": [
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "IsSource"
+            }
+          },
+          "modifications": [
+            {
+              "type": "GainCardAbilities",
+              "value": {
+                "cards": {
+                  "type": "HasSubtype",
+                  "value": {
+                    "type": "Goblin"
+                  }
+                },
+                "from": {
+                  "type": "TopOfYourLibrary"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "toughness": {
+        "type": "Literal",
+        "value": 2
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Goblin"
+          },
+          {
+            "type": "Rogue"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

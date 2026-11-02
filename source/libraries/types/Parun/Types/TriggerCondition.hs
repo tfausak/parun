@@ -15,7 +15,7 @@ import qualified Parun.Types.ControllerBecomesTarget as ControllerBecomesTarget
 import qualified Parun.Types.CounterPlacement as CounterPlacement
 import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Parun.Types.CreatureExploits as CreatureExploits
-import qualified Parun.Types.DamageKind as DamageKind
+import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.DieResult as DieResult
@@ -89,15 +89,9 @@ data TriggerCondition
   | -- | CR 603.2 / 120.1: a permanent or spell dealt damage of any kind to a
     -- player the relation admits (Akki Lavarunner, Curiosity, Chandra's Phoenix).
     DealsDamageToPlayer DealsDamageToPlayer.DealsDamageToPlayer
-  | -- | CR 603.2 / 120.3: the bearer dealt damage to a CREATURE -- the arm
-    -- above with rule 120.3's other recipient -- of this kind, or of any kind
-    -- for Nothing: Phage the Untouchable's "deals combat damage to a creature",
-    -- Strax, Sontaran Nurse's "Glory of Battle".
-    --
-    -- No Filter on the recipient: the printed forms qualify it no further than
-    -- "a creature", and a Filter would owe CR 608.2h last known information for
-    -- a recipient the damage has already killed.
-    SelfDealsDamageToCreature (Maybe DamageKind.DamageKind)
+  | -- | CR 603.2 / 120.3: a permanent or spell dealt damage to a permanent of a
+    -- card type (Phage the Untouchable, Hooded Blightfang).
+    DealsDamageToPermanent DealsDamageToPermanent.DealsDamageToPermanent
   | -- | CR 603.2 / 120.1: a permanent dealt damage of any kind to any
     -- recipient, once per damage event and damager (Horned Cheetah, Spirit Link).
     DealsDamage ActingPermanent.ActingPermanent

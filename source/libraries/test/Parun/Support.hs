@@ -1440,6 +1440,7 @@ withEvents events gs =
       -- Event.eventTriggers to its live reading -- the only honest one for an event
       -- no funnel recorded.
       GameState.boardAfterEvent = Map.empty,
+      GameState.boardBeforeDeparture = Map.empty,
       GameState.battlefieldWhenTriggered = Map.empty
     }
 
@@ -1670,6 +1671,7 @@ oneMountainState mountain ph =
           GameState.lastKnown = Map.empty,
           GameState.scannedThrough = 0,
           GameState.boardAfterEvent = Map.empty,
+          GameState.boardBeforeDeparture = Map.empty,
           GameState.battlefieldWhenTriggered = Map.empty,
           GameState.controlSample = Map.empty,
           GameState.damageScannedThrough = 0,
@@ -1684,7 +1686,7 @@ oneMountainState mountain ph =
           GameState.detachedBindings = Map.empty,
           GameState.pendingEntryEffects = Seq.empty,
           GameState.enteringBeside = Set.empty,
-          GameState.enteringSubjects = Set.empty,
+          GameState.enteringSubjects = Map.empty,
           GameState.enteringPending = Map.empty,
           GameState.refusedEntries = Nothing,
           GameState.enteringCounters = Map.empty,
@@ -1726,6 +1728,7 @@ oneMountainState mountain ph =
           GameState.cardsPlayed = mempty,
           GameState.drawsThisTurn = mempty,
           GameState.keptFaceDown = Nothing,
+          GameState.announcedTops = Nothing,
           GameState.departedThisTurn = mempty,
           GameState.couldAttackThisTurn = mempty,
           GameState.activatedThisTurn = mempty,

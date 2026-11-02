@@ -1,0 +1,283 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          },
+          {
+            "card": "Goblin Piker",
+            "label": "spare"
+          },
+          {
+            "card": "Swamp",
+            "label": "sw1"
+          },
+          {
+            "card": "Swamp",
+            "label": "sw2"
+          },
+          {
+            "card": "Swamp",
+            "label": "sw3"
+          },
+          {
+            "card": "Swamp",
+            "label": "sw4"
+          },
+          {
+            "card": "Swamp",
+            "label": "sw5"
+          },
+          {
+            "card": "Swamp",
+            "label": "sw6"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Eaten Alive",
+            "label": "e1"
+          },
+          {
+            "card": "Eaten Alive",
+            "label": "e2"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Hill Giant",
+            "label": "giant"
+          },
+          {
+            "card": "Ajani Goldmane",
+            "counters": [
+              {
+                "key": {
+                  "type": "Loyalty"
+                },
+                "value": 4
+              }
+            ],
+            "label": "aj"
+          },
+          {
+            "card": "Island",
+            "label": "isl"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 118.8, 601.2b: Eaten Alive costs a sacrificed creature or {3}{B} more, and exiles a creature or planeswalker",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "cost": [
+            {
+              "type": "OfType",
+              "value": {
+                "type": "Colored",
+                "value": {
+                  "type": "Black"
+                }
+              }
+            }
+          ],
+          "mana": [
+            "$sw1",
+            null
+          ],
+          "object": "$e1",
+          "targets": [
+            "$giant"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseSacrifices",
+          "with": [
+            "$bears"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Hill Giant",
+          "count": 1,
+          "player": "bob",
+          "zone": "Exile"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Grizzly Bears",
+          "count": 1,
+          "player": "alice",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "cost": [
+            {
+              "type": "OfType",
+              "value": {
+                "type": "Colored",
+                "value": {
+                  "type": "Black"
+                }
+              }
+            },
+            {
+              "type": "Generic",
+              "value": 3
+            },
+            {
+              "type": "OfType",
+              "value": {
+                "type": "Colored",
+                "value": {
+                  "type": "Black"
+                }
+              }
+            }
+          ],
+          "mana": [
+            "$sw2",
+            "$sw3",
+            "$sw4",
+            "$sw5",
+            "$sw6"
+          ],
+          "object": "$e2",
+          "targets": [
+            "$aj"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Ajani Goldmane",
+          "count": 1,
+          "player": "bob",
+          "zone": "Exile"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

@@ -633,13 +633,13 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   Spec.it s "render deals damage equal to a number" $ do
     let mountains = countOf (Filter.And [Filter.HasSubtype Subtype.Mountain, Filter.HeldBy Holder.Controller PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
         ambush = spell [clause [damageBy [(ObjectRef.InSlot target, mountains)]]] [(target, TargetSlot.required Pool.Creatures Nothing)]
-    Spec.assertEq s [[Text.pack "Spark deals damage to target creature equal to the number of Mountains you control.", Text.pack "Spark deals damage equal to the number of Mountains you control to target creature."]] (Oracle.abilities ambush)
+    Spec.assertEq s [[Text.pack "Spark deals damage to target creature equal to the number of Mountains you control.", Text.pack "Spark deals damage equal to the number of Mountains you control to target creature.", Text.pack "Spark deals X damage to target creature, where X is the number of Mountains you control."]] (Oracle.abilities ambush)
     let theirs = countOf (Filter.And [Filter.HasCardType CardType.Land, Filter.HeldByRecipient Holder.Controller]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
     Spec.assertEq s (Just (Text.pack "Spark deals damage to each player equal to the number of lands they control.")) (Oracle.render (spell [clause [damageBy [(ObjectRef.EachPlayer, theirs)]]] []))
     let dealer = SlotName.MkSlotName (Text.pack "dealer")
         fire = Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot target) (powerOf dealer))) (Just dealer) Nothing Nothing Nothing)
         slots = [(dealer, TargetSlot.required Pool.Creatures (Just (Filter.HeldBy Holder.Controller PlayerRelation.You))), (target, TargetSlot.required Pool.AnyTarget Nothing)]
-    Spec.assertEq s [[Text.pack "Target creature you control deals damage equal to its power to any target.", Text.pack "Target creature you control deals damage to any target equal to its power."]] (Oracle.abilities (spell [clause [fire]] slots))
+    Spec.assertEq s [[Text.pack "Target creature you control deals damage equal to its power to any target.", Text.pack "Target creature you control deals X damage to any target, where X is its power.", Text.pack "Target creature you control deals damage to any target equal to its power.", Text.pack "Target creature you control deals damage equal to that creature's power to any target.", Text.pack "Target creature you control deals X damage to any target, where X is that creature's power.", Text.pack "Target creature you control deals damage to any target equal to that creature's power."]] (Oracle.abilities (spell [clause [fire]] slots))
     let victim f = [(dealer, TargetSlot.required Pool.Creatures (Just (Filter.HeldBy Holder.Controller PlayerRelation.You))), (target, TargetSlot.required Pool.Creatures (Just f))]
     Spec.assertEq s (Just (Text.pack "Target creature you control deals damage equal to its power to another target creature.")) (Oracle.render (spell [clause [fire]] (victim (Filter.Not (Filter.IsBound dealer)))))
     Spec.assertEq s (Just (Text.pack "Target creature you control deals damage equal to its power to target creature you don't control.")) (Oracle.render (spell [clause [fire]] (victim (Filter.Not (Filter.HeldBy Holder.Controller PlayerRelation.You)))))
@@ -853,7 +853,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
 
   -- CR 701.23a: a search of your library for one card, and where it goes.
   Spec.it s "render prints a search of your library" $ do
-    let search f destination = Effect.Search (Search.MkSearch (PlayerRef.Relative PlayerRelation.You) (PlayerRef.Relative PlayerRelation.You) (Set.singleton Zone.Library) False (Just (Quantity.Literal 1)) f Seq.empty False destination Nothing Nothing Set.empty False False)
+    let search f destination = Effect.Search (Search.MkSearch (PlayerRef.Relative PlayerRelation.You) (PlayerRef.Relative PlayerRelation.You) (Set.singleton Zone.Library) False (Just (Quantity.Literal 1)) f Seq.empty False destination Nothing Nothing Nothing Set.empty False False)
         searching f destination = Oracle.abilities (spell [clause [search f destination]] [])
     Spec.assertEq s [[Text.pack "Search your library for a card, put that card into your hand, then shuffle.", Text.pack "Search your library for a card, put it into your hand, then shuffle."]] (searching (Filter.And []) SearchDestination.Hand)
     Spec.assertEq s [[Text.pack "Search your library for an artifact or enchantment card, reveal it, then shuffle and put that card on top.", Text.pack "Search your library for an artifact or enchantment card, reveal it, then shuffle and put the card on top."]] (searching (Filter.Or [Filter.HasCardType CardType.Artifact, Filter.HasCardType CardType.Enchantment]) SearchDestination.RevealThenTop)

@@ -271,6 +271,33 @@ Entries are ordered by the first rule each cites.
   prove it.
 - **Issue**: #4781.
 
+## The seat of a departed attacker's planeswalker
+
+- **Question**: Mangara, the Diplomat rechecks, as its trigger resolves, how
+  many of "those creatures" are attacking you and/or planeswalkers you control.
+  Its ruling reads an attacker that has left by "the player or planeswalker they
+  were attacking before they left". Is "you control" read of that planeswalker
+  as the attacker left, or now, when the planeswalker has since changed
+  controllers? Bob attacks alice's planeswalker with two creatures, both die,
+  bob takes the planeswalker: a draw, or none? Carol attacks alice with one and
+  bob's planeswalker with another, that one dies, alice takes the planeswalker:
+  does it make two?
+- **Rules**: CR 506.4, 506.4c, 508.1b, 603.4, 608.2h; Mangara's ruling of
+  2020-06-23; CR of 2026-08-07.
+- **Decision**: As it left. The attacker's last known information is what it
+  was attacking under whom, so the first board draws and the second counts one.
+- **Rejected**: Now. CR 608.2h gives it a footing, current information of a
+  planeswalker still on the battlefield, but only by reading "you control" as a
+  question about the planeswalker rather than about the attack. It answers with
+  a state no attacker can be in: CR 506.4 ends an attack on a planeswalker whose
+  controller changes, so a creature still attacking would read as attacking
+  nothing, and one that left a moment earlier would read as attacking the new
+  controller, on the second board a player it never attacked.
+- **Site**: `Parun.Engine.Count.lastKnownView`, reading
+  `Combat.removedDefending`. Proved by turns 12 and 17 of the scenario
+  mangara-draws-when-two-attack-you-or-your-planeswalkers-and-for-an-opponents-second-spell.
+- **Issue**: #5890.
+
 ## Who may block a creature attacking nothing
 
 - **Question**: CR 506.4c's creature, its planeswalker or battle removed from
@@ -937,6 +964,34 @@ Entries are ordered by the first rule each cites.
   it stays".
 - **Issue**: #592.
 
+## Which range a tally of what happened reads through
+
+- **Question**: CR 801.11 hides events outside a controller's range; CR 800.4i
+  and the rulings below keep a departed player's record. Under a limited range,
+  (a) does a tally over an earlier turn use the range now or the range when the
+  event happened, given CR 801.2c re-determines it as each turn begins and a
+  player who left before this turn holds no seat? (b) Does damage or a loss
+  count when its source is outside the range and the player it happened to is
+  inside?
+- **Rules**: CR 801.11, 801.2c, 801.7a, 800.4i, 801.18; CR of 2026-08-07.
+  Rulings: Skewer the Critics (2024-01-12), Florian, Voldaren Scion
+  (2021-09-24), Tymna the Weaver, Chandra's Incinerator. None speaks to a
+  limited range.
+- **Decision**: (a) the range as the tally is read. A seat emptied this turn is
+  judged by where it stood, CR 801.7a's reading; a player who left in an earlier
+  turn is in nobody's range, so Feast on the Fallen does not see them. (b) The
+  cut asks only about the player the tally names: "an opponent who was dealt
+  damage" is information about that opponent, so an in-range opponent counts
+  whoever dealt it.
+- **Rejected**: (a) the range when the event happened. The text allows it equally;
+  it lost on cost, needing last turn's seats kept for a board needing both a
+  limited range and a departure. (b) Requiring the whole event in range: that is
+  CR 801.7's wording for a trigger event, and CR 801.11 does not repeat it.
+- **Site**: `Parun.Engine.Count.historyPlayersFor`; scenarios
+  `feast-on-the-fallen-does-not-see-a-seat-emptied-last-turn-under-a-range`
+  and `furious-spinesplitter-counts-damage-from-a-source-outside-range`.
+- **Issue**: #5878.
+
 ## A silenced entry silences its departure
 
 - **Question**: Hushwing Gryff's "creatures entering don't cause abilities to
@@ -1021,3 +1076,27 @@ Entries are ordered by the first rule each cites.
   by the scenario
   yarok-the-desecrated-doesn-t-lift-a-triggers-only-once-each-turn-limit.
 - **Issue**: #5837.
+
+## A look-back ability's additional triggers look back
+
+- **Question**: Sanctum of All ("while you control six or more Shrines") and
+  Harmonic Prodigy double an ability by whose it is, not by its cause. A
+  leaves-the-battlefield ability looks back. Is its doubling read before the
+  event, or after? It splits on Harmonic Prodigy dying alone, with the bearer
+  staying (Xathrid Necromancer) or leaving beside it. Sanctum's count has no such
+  split yet: Scryfall `t:shrine (o:"leaves the battlefield" or o:"dies" or o:"put
+  into a graveyard")`, 2026-11-01, no hit.
+- **Rules**: CR 603.2d, 603.10, 603.10a; CR of 2026-08-07. No ruling on either
+  card. Teysa Karlov and Drivnod, Carnage Dominus rule the same split for a dying
+  cause: an effect's source dying beside the creature still counts, whether or not
+  the ability's permanent leaves too.
+- **Decision**: Before. The ability decides, not its bearer: CR 603.10a's look-back
+  reads the whole board before the event, the bearer, the effect's source and its
+  condition. Any other ability reads the board immediately after its event (CR
+  603.10), a bearer that left later in the same cost included.
+- **Rejected**: Choosing by whether the bearer left, which gives a staying bearer
+  the after board, one trigger under a lone Prodigy's death and two under a Wrath;
+  the Teysa rulings give both the same answer.
+- **Site**: `Parun.Engine.Event.Match.additionalTriggers`, reading
+  `GameState.boardBeforeDeparture`. data/scenarios's "Harmonic Prodigy dying alone"
+  and "Harmonic Prodigy dying beside a Wizard" scenarios prove it.

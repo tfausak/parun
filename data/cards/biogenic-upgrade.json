@@ -1,0 +1,121 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 4
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Biogenic Upgrade",
+      "oracleText": "Distribute three +1/+1 counters among one, two, or three target creatures, then double the number of +1/+1 counters on each of those creatures.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "PutCounters",
+                    "value": {
+                      "kind": {
+                        "type": "PlusOnePlusOne"
+                      },
+                      "quantity": {
+                        "type": "Share",
+                        "value": "targets"
+                      },
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "targets"
+                      }
+                    }
+                  },
+                  {
+                    "type": "ForEach",
+                    "value": {
+                      "body": [
+                        {
+                          "type": "PutCounters",
+                          "value": {
+                            "kind": {
+                              "type": "PlusOnePlusOne"
+                            },
+                            "quantity": {
+                              "type": "AgainstSlot",
+                              "value": {
+                                "quantity": {
+                                  "type": "ObjectCounters",
+                                  "value": {
+                                    "type": "PlusOnePlusOne"
+                                  }
+                                },
+                                "slot": "creature"
+                              }
+                            },
+                            "ref": {
+                              "type": "InSlot",
+                              "value": "creature"
+                            }
+                          }
+                        }
+                      ],
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "targets"
+                      },
+                      "slot": "creature"
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "targets": {
+                "count": {
+                  "type": "Printed",
+                  "value": {
+                    "least": 1,
+                    "most": 3
+                  }
+                },
+                "divided": {
+                  "type": "Literal",
+                  "value": 3
+                },
+                "pool": {
+                  "type": "Creatures"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

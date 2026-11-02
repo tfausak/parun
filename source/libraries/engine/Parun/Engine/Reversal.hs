@@ -88,6 +88,7 @@ withoutAnnouncement before entry closed = do
   scannedThrough <- one GameState.scannedThrough
   battlefieldWhenTriggered <- mapOfMaps GameState.battlefieldWhenTriggered
   boardAfterEvent <- mapOf GameState.boardAfterEvent
+  boardBeforeDeparture <- mapOf GameState.boardBeforeDeparture
   controlSample <- mapOf GameState.controlSample
   damageScannedThrough <- one GameState.damageScannedThrough
   delayedTriggers <- seqOf GameState.delayedTriggers
@@ -101,7 +102,7 @@ withoutAnnouncement before entry closed = do
   detachedBindings <- mapOfMaps GameState.detachedBindings
   pendingEntryEffects <- seqOf GameState.pendingEntryEffects
   enteringBeside <- setOf GameState.enteringBeside
-  enteringSubjects <- setOf GameState.enteringSubjects
+  enteringSubjects <- mapOf GameState.enteringSubjects
   enteringPending <- mapOf GameState.enteringPending
   refusedEntries <- one GameState.refusedEntries
   enteringCounters <- mapOfMaps GameState.enteringCounters
@@ -145,6 +146,7 @@ withoutAnnouncement before entry closed = do
   cardsPlayed <- mapOf GameState.cardsPlayed
   drawsThisTurn <- mapOf GameState.drawsThisTurn
   keptFaceDown <- one GameState.keptFaceDown
+  announcedTops <- one GameState.announcedTops
   departedThisTurn <- setOf GameState.departedThisTurn
   couldAttackThisTurn <- setOf GameState.couldAttackThisTurn
   activatedThisTurn <- mapOfMaps GameState.activatedThisTurn
@@ -214,6 +216,7 @@ withoutAnnouncement before entry closed = do
         GameState.scannedThrough = scannedThrough,
         GameState.battlefieldWhenTriggered = battlefieldWhenTriggered,
         GameState.boardAfterEvent = boardAfterEvent,
+        GameState.boardBeforeDeparture = boardBeforeDeparture,
         GameState.controlSample = controlSample,
         GameState.damageScannedThrough = damageScannedThrough,
         GameState.delayedTriggers = delayedTriggers,
@@ -269,6 +272,7 @@ withoutAnnouncement before entry closed = do
         GameState.cardsPlayed = cardsPlayed,
         GameState.drawsThisTurn = drawsThisTurn,
         GameState.keptFaceDown = keptFaceDown,
+        GameState.announcedTops = announcedTops,
         GameState.departedThisTurn = departedThisTurn,
         GameState.couldAttackThisTurn = couldAttackThisTurn,
         GameState.activatedThisTurn = activatedThisTurn,
@@ -417,6 +421,7 @@ objectWith before entry closed = do
   announcedX <- field Object.announcedX
   manaCostPaid <- field Object.manaCostPaid
   castFrom <- field Object.castFrom
+  castBy <- field Object.castBy
   castUsing <- field Object.castUsing
   castGrant <- field Object.castGrant
   detainedUntil <- field Object.detainedUntil
@@ -484,6 +489,7 @@ objectWith before entry closed = do
         Object.announcedX = announcedX,
         Object.manaCostPaid = manaCostPaid,
         Object.castFrom = castFrom,
+        Object.castBy = castBy,
         Object.castUsing = castUsing,
         Object.castGrant = castGrant,
         Object.detainedUntil = detainedUntil,

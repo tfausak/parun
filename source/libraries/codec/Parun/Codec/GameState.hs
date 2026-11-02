@@ -31,6 +31,7 @@ import qualified Parun.Codec.Daytime as Daytime
 import qualified Parun.Codec.DelayedTrigger as DelayedTrigger
 import qualified Parun.Codec.EndTurnSignal as EndTurnSignal
 import qualified Parun.Codec.EnteringTogether as EnteringTogether
+import qualified Parun.Codec.EntryOrigin as EntryOrigin
 import qualified Parun.Codec.EventGroup as EventGroup
 import qualified Parun.Codec.ExileLink as ExileLink
 import qualified Parun.Codec.ExtraTurn as ExtraTurn
@@ -142,6 +143,7 @@ codec resolve = Fields.object $ do
   scannedThrough <- Fields.defaulted "scannedThrough" 0 Common.natural GameState.scannedThrough
   battlefieldWhenTriggered <- Fields.defaulted "battlefieldWhenTriggered" Map.empty (Common.naturalMap EventGroup.codec (Common.naturalMap ObjectId.codec (BattlefieldCandidate.codec ProjectedCharacteristics.codec))) GameState.battlefieldWhenTriggered
   boardAfterEvent <- Fields.defaulted "boardAfterEvent" Map.empty (Common.naturalMap EventGroup.codec (codec resolve)) GameState.boardAfterEvent
+  boardBeforeDeparture <- Fields.defaulted "boardBeforeDeparture" Map.empty (Common.naturalMap EventGroup.codec (codec resolve)) GameState.boardBeforeDeparture
   controlSample <- Fields.defaulted "controlSample" Map.empty (Common.naturalMap ObjectId.codec PlayerId.codec) GameState.controlSample
   damageScannedThrough <- Fields.defaulted "damageScannedThrough" 0 Common.natural GameState.damageScannedThrough
   delayedTriggers <- Fields.defaulted "delayedTriggers" Seq.empty (Common.seq DelayedTrigger.codec) GameState.delayedTriggers
@@ -155,7 +157,7 @@ codec resolve = Fields.object $ do
   detachedBindings <- Fields.defaulted "detachedBindings" Map.empty (Common.naturalMap ObjectId.codec Binding.codecMap) GameState.detachedBindings
   pendingEntryEffects <- Fields.defaulted "pendingEntryEffects" Seq.empty (Common.seq PendingEntryEffect.codec) GameState.pendingEntryEffects
   enteringBeside <- Fields.defaulted "enteringBeside" Set.empty (Common.set ObjectId.codec) GameState.enteringBeside
-  enteringSubjects <- Fields.defaulted "enteringSubjects" Set.empty (Common.set ObjectId.codec) GameState.enteringSubjects
+  enteringSubjects <- Fields.defaulted "enteringSubjects" Map.empty (Common.naturalMap ObjectId.codec (Common.maybe EntryOrigin.codec)) GameState.enteringSubjects
   enteringPending <- Fields.defaulted "enteringPending" Map.empty (Common.naturalMap ObjectId.codec PlayerId.codec) GameState.enteringPending
   refusedEntries <- Fields.defaulted "refusedEntries" Nothing (Common.maybe (Common.set ObjectId.codec)) GameState.refusedEntries
   enteringCounters <- Fields.defaulted "enteringCounters" Map.empty (Common.naturalMap ObjectId.codec (Common.multiset (CounterKind.codec Keyword.codec))) GameState.enteringCounters
@@ -196,6 +198,7 @@ codec resolve = Fields.object $ do
   cardsPlayed <- Fields.defaulted "cardsPlayed" Map.empty (Common.naturalMap ObjectId.codec PlayerId.codec) GameState.cardsPlayed
   drawsThisTurn <- Fields.defaulted "drawsThisTurn" Map.empty (Common.naturalMap PlayerId.codec Common.natural) GameState.drawsThisTurn
   keptFaceDown <- Fields.defaulted "keptFaceDown" Nothing (Common.maybe (Common.naturalMap ObjectId.codec Common.natural)) GameState.keptFaceDown
+  announcedTops <- Fields.defaulted "announcedTops" Nothing (Common.maybe (Common.naturalMap PlayerId.codec ObjectId.codec)) GameState.announcedTops
   departedThisTurn <- Fields.defaulted "departedThisTurn" Set.empty (Common.set PlayerId.codec) GameState.departedThisTurn
   couldAttackThisTurn <- Fields.defaulted "couldAttackThisTurn" Set.empty (Common.set ObjectId.codec) GameState.couldAttackThisTurn
   -- Common.repeats, for Parun.Codec.Object's activatedOnce reason.
@@ -259,6 +262,7 @@ codec resolve = Fields.object $ do
         GameState.scannedThrough = scannedThrough,
         GameState.battlefieldWhenTriggered = battlefieldWhenTriggered,
         GameState.boardAfterEvent = boardAfterEvent,
+        GameState.boardBeforeDeparture = boardBeforeDeparture,
         GameState.controlSample = controlSample,
         GameState.damageScannedThrough = damageScannedThrough,
         GameState.delayedTriggers = delayedTriggers,
@@ -313,6 +317,7 @@ codec resolve = Fields.object $ do
         GameState.cardsPlayed = cardsPlayed,
         GameState.drawsThisTurn = drawsThisTurn,
         GameState.keptFaceDown = keptFaceDown,
+        GameState.announcedTops = announcedTops,
         GameState.departedThisTurn = departedThisTurn,
         GameState.couldAttackThisTurn = couldAttackThisTurn,
         GameState.activatedThisTurn = activatedThisTurn,

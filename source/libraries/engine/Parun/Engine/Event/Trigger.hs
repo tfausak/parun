@@ -22,13 +22,14 @@ import qualified Parun.Engine.Condition as Condition
 import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.EffectZone as EffectZone
 import Parun.Engine.Event.Binding (batchBindings, batchPartition, eventBindingsOver)
-import Parun.Engine.Event.Match (additionalEntryTriggers, matchesTriggerGiven, stepPlayers)
+import Parun.Engine.Event.Match (additionalEntryTriggers, additionalTriggers, matchesTriggerGiven, stepPlayers)
 import qualified Parun.Engine.Expiry as Expiry
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Keyword as Keyword
 import qualified Parun.Engine.Modal as Modal
 import qualified Parun.Engine.Plane as Plane
+import qualified Parun.Engine.PlayerEffect as PlayerEffect
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Replacement as Replacement
@@ -207,8 +208,9 @@ resampleEntry oid gs = case Game.entryGroup oid gs of
 -- CR 603.4: file `gs` as the board after every unscanned event that has none
 -- yet (GameState.boardAfterEvent). Called where an event is over with whatever
 -- else its instruction or action does: as each instruction of a resolution
--- finishes (CR 608.2c, Resolve.applyEffectWith) and before each state-based
--- action check (Sba.performStateBasedActions). The first filing stands, and a group a
+-- finishes (CR 608.2c, Resolve.applyEffectWith), as each part of a cost is paid
+-- (CR 601.2h, Cost.payInOrder) and before each state-based action check
+-- (Sba.performStateBasedActions). The first filing stands, and a group a
 -- `simultaneously` bracket still holds open is left for the filing after it
 -- closes (CR 608.2f). Each board's own copy of the field is empty.
 --
@@ -221,7 +223,7 @@ fileBoards gs =
       open group = GameState.eventGroupDepth gs > 0 && group == GameState.nextEventGroup gs
       unfiled = Seq.takeWhileR (\logged -> Map.notMember (LoggedEvent.group logged) filed) (Seq.drop (Natural.toIntSaturating (GameState.scannedThrough gs)) (GameState.events gs))
       groups = filter (not . open) (fmap LoggedEvent.group (Foldable.toList unfiled))
-      board = gs {GameState.boardAfterEvent = Map.empty}
+      board = gs {GameState.boardAfterEvent = Map.empty, GameState.boardBeforeDeparture = Map.empty}
    in if null groups then gs else gs {GameState.boardAfterEvent = List.foldl' (\m group -> Map.insert group board m) filed groups}
 
 -- The zone change an event describes, if it is one.
@@ -688,7 +690,7 @@ looksBack condition = case condition of
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> False
   TriggerCondition.DealsCombatDamage _ -> False
   TriggerCondition.DealsDamageToPlayer _ -> False
-  TriggerCondition.SelfDealsDamageToCreature _ -> False
+  TriggerCondition.DealsDamageToPermanent _ -> False
   TriggerCondition.DealsDamage _ -> False
   TriggerCondition.IsDealtDamage _ -> False
   TriggerCondition.PlayerIsDealtDamage _ -> False
@@ -941,7 +943,7 @@ batchScoped condition = case condition of
   -- connecting are two.
   TriggerCondition.DealsCombatDamage _ -> True
   TriggerCondition.DealsDamageToPlayer _ -> False
-  TriggerCondition.SelfDealsDamageToCreature _ -> False
+  TriggerCondition.DealsDamageToPermanent _ -> False
   -- DealsCombatDamage's True without the combat narrowing: one damage
   -- event to several recipients -- a CR 510.2 step, or one CR 608.2f
   -- instruction -- is one trigger event, its amount summed by batchBindings.
@@ -1675,6 +1677,9 @@ eventTriggers events gs =
       -- The controller is the OWNER, CR 113.8's second clause: a card in a
       -- graveyard has no controller (CR 108.4).
       --
+      -- Only what functions off the battlefield: Magmakin Artillerist's "whenever
+      -- you discard" is CR 113.6's default, and misses its own cycling.
+      --
       -- Scoped to the CYCLING cause, not every discard, rule 702.29c speaking
       -- about cycling specifically. An ordinary discard's card reaches the
       -- graveyard too and is offered by `inGraveyards` under CR 113.6k.
@@ -1683,7 +1688,9 @@ eventTriggers events gs =
           Nothing -> Map.empty
           Just obj -> case Game.faceOf oid gs of
             Nothing -> Map.empty
-            Just _ -> Map.singleton oid (Object.owner obj, fmap whole (Projection.triggeredAbilitiesOf oid gs))
+            Just _ ->
+              let pc = Projection.project oid gs
+               in Map.singleton oid (Object.owner obj, Maybe.mapMaybe (functionsIn (PC.subtypes pc) (PC.delayedAbilities pc) Zone.Graveyard) (PC.triggeredAbilities pc))
         GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.Ordinary _ _) -> Map.empty
         GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.ByEffect _ _) -> Map.empty
         -- A draw names no object either. The card it puts in a hand may well bear
@@ -2346,15 +2353,18 @@ eventTriggers events gs =
             -- once" limit still caps the instances (docs/decisions.md, "A trigger
             -- limit caps an additional trigger"). Delayed and reflexive triggers
             -- are gathered elsewhere and never multiplied, as CR 603.2d asks.
-            additional = case Game.enteredBattlefieldChange event of
-              Just zc | Map.member oid board -> additionalEntryTriggers gs ctrl zc
-              _ -> 0
+            -- Each effect adds its own, so one that names the bearer (Sanctum
+            -- of All) adds to one that names the entry.
+            additional cond =
+              additionalTriggers gs ctrl oid (LoggedEvent.group logged) (looksBack cond) + case Game.enteredBattlefieldChange event of
+                Just zc | Map.member oid board -> additionalEntryTriggers gs ctrl zc
+                _ -> 0
             -- CR 805.4d: one trigger per player whose step this is (stepCopies).
             -- Each paired with which of CR 603.2d's instances it is.
             pends (cond, ab) =
               let perPlayer = stepCopies gs oid ctrl cond event ab (pend (cond, ab))
                   occurrences = maybe perPlayer (\n -> concat (List.genericReplicate n perPlayer)) (countersRemovedOccurrences oid cond event)
-               in [(extra, trigger) | extra <- [0 .. additional], trigger <- occurrences]
+               in [(extra, trigger) | extra <- [0 .. additional cond], trigger <- occurrences]
             -- CR 603.2c's key, for `oncePerBatch` below: which ability of which
             -- bearer this pending trigger came from, or Nothing when the condition
             -- is per-occurrence and every member of the batch is its own trigger
@@ -2390,8 +2400,9 @@ eventTriggers events gs =
       -- was taken -- nor with each other, an id departing at exactly one group.
       -- `graveyard` genuinely overlaps `cycledCard` on purpose -- a card
       -- cycled into a graveyard is honestly a member of both -- and the winner
-      -- offers that card's projected abilities unfiltered, a superset of the
-      -- other's projected, `functionsIn`-filtered read.
+      -- makes the other's projected, `functionsIn`-filtered read without its
+      -- keyword-minted abilities: recover and haunt, neither of which any discard
+      -- can match.
       -- `walkedAwayFrom` overlaps nothing: its ids no longer exist, and none
       -- of them stood on the battlefield or is in the command zone `inCommand`
       -- walks.
@@ -2962,7 +2973,7 @@ zonesTriggeredFrom cond =
         -- CR 113.6's default once more, for the DealsDamageToPlayer arm's
         -- reason: the bearer is the damage's SOURCE, and a source anywhere but the
         -- battlefield is a different object from this permanent.
-        TriggerCondition.SelfDealsDamageToCreature _ -> battlefield
+        TriggerCondition.DealsDamageToPermanent _ -> battlefield
         -- CR 113.6's default again, for the DealsDamageToPlayer arm's reason.
         TriggerCondition.DealsDamage _ -> battlefield
         -- CR 113.6's default again, and the match's own shape on top of it: a Self
@@ -3325,7 +3336,7 @@ stateTriggersOn gs
             TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> False
             TriggerCondition.DealsCombatDamage _ -> False
             TriggerCondition.DealsDamageToPlayer _ -> False
-            TriggerCondition.SelfDealsDamageToCreature _ -> False
+            TriggerCondition.DealsDamageToPermanent _ -> False
             TriggerCondition.DealsDamage _ -> False
             TriggerCondition.IsDealtDamage _ -> False
             TriggerCondition.PlayerIsDealtDamage _ -> False
@@ -3530,7 +3541,10 @@ stateTriggersOn gs
           -- CR 400.7d, the event scan's stamp above on this road too. A
           -- fence: no state trigger in data/cards/ reads the record.
           pend ab = PendingTrigger.MkPendingTrigger (TriggerSource.OfObject oid) ctrl ab (maybe Map.empty (Binding.paidCostRecord . Object.bindings) (Game.lookupObject oid gs)) Nothing Nothing (copiesIn abilities ab) (Projection.delayedSnapshotOf oid gs)
-       in fmap (pend . snd) (filter armed (zip (List.inits lives) lives))
+          -- CR 603.2d: a state trigger triggers additional times like any other,
+          -- on a permanent; CR 603.8 holds each back while any is on the stack.
+          instances = if Set.member oid (GameState.battlefield gs) then 1 + PlayerEffect.additionalTriggers ctrl oid gs else 1
+       in concatMap (List.genericReplicate instances . pend . snd) (filter armed (zip (List.inits lives) lives))
 
 -- CR 603.8 across one settle: a state trigger triggers "as soon as the game
 -- state matches", so one armed on any of `boards` (Engine.settlePasses') has
@@ -4039,6 +4053,7 @@ firesWithout gone pending gs =
                 GameState.command = Set.difference (GameState.command gs) gone,
                 GameState.continuousEffects = filter (\e -> Set.notMember (ContinuousEffect.source e) gone) (GameState.continuousEffects gs),
                 GameState.boardAfterEvent = Map.empty,
+                GameState.boardBeforeDeparture = Map.empty,
                 GameState.battlefieldWhenTriggered = Map.empty
               }
           same p =

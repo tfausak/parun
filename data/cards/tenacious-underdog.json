@@ -5,7 +5,9 @@
         {
           "type": "CastFromGraveyard",
           "value": {
-            "type": "Blitz"
+            "using": {
+              "type": "Blitz"
+            }
           }
         }
       ],

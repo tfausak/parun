@@ -201,6 +201,7 @@ spec s = Spec.describe s "Parun.Codec.Object" $ do
           Object.announcedX = Just 20,
           Object.manaCostPaid = Nothing,
           Object.castFrom = Just Zone.Graveyard,
+          Object.castBy = Just (PlayerId.MkPlayerId 2),
           Object.castUsing = Just Keyword.JumpStart,
           Object.castGrant = Just Keyword.Retrace,
           Object.exileLookers = Set.singleton (ExileLooker.ThePlayer (PlayerId.MkPlayerId 27)),
@@ -253,6 +254,7 @@ spec s = Spec.describe s "Parun.Codec.Object" $ do
           <> ",\"manaSpent\":[{\"manaType\":{\"type\":\"Colored\",\"value\":{\"type\":\"Green\"}}"
           <> ",\"tags\":[],\"retention\":{\"type\":\"Ordinary\"},\"restriction\":null,\"rider\":null,\"sourceChoices\":null}]"
           <> ",\"announcedX\":20,\"castFrom\":{\"type\":\"Graveyard\"}"
+          <> ",\"castBy\":2"
           <> ",\"castUsing\":{\"type\":\"JumpStart\"}"
           <> ",\"castGrant\":{\"type\":\"Retrace\"}"
           <> ",\"exileLookers\":[{\"type\":\"ThePlayer\",\"value\":27}]"

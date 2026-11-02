@@ -374,7 +374,7 @@ nestedRefs quantity = case quantity of
   Quantity.BendingsThisTurn ref -> Set.singleton (Left ref)
   Quantity.LifeChanged tally -> Set.singleton (Left (LifeTally.player tally))
   Quantity.PlayersDealtDamageThisTurn tally -> Set.singleton (Left (DealtDamage.recipient tally))
-  Quantity.DamageDealtToPlayersThisTurn ref -> Set.singleton (Left ref)
+  Quantity.DamageDealtToPlayersThisTurn tally -> Set.singleton (Left (DealtDamage.recipient tally))
   Quantity.SpellsCast tally -> Set.singleton (Left (SpellTally.player tally))
   Quantity.TimesThisTurn _ -> Set.empty
   Quantity.ActivationsThisTurn tally -> Set.singleton (Left (ActivationsThisTurn.activator tally))
@@ -647,7 +647,7 @@ mapPlayerRefs f intoCount quantity =
         Quantity.BendingsThisTurn ref -> Quantity.BendingsThisTurn (f ref)
         Quantity.LifeChanged tally -> Quantity.LifeChanged tally {LifeTally.player = f (LifeTally.player tally)}
         Quantity.PlayersDealtDamageThisTurn tally -> Quantity.PlayersDealtDamageThisTurn tally {DealtDamage.recipient = f (DealtDamage.recipient tally)}
-        Quantity.DamageDealtToPlayersThisTurn ref -> Quantity.DamageDealtToPlayersThisTurn (f ref)
+        Quantity.DamageDealtToPlayersThisTurn tally -> Quantity.DamageDealtToPlayersThisTurn tally {DealtDamage.recipient = f (DealtDamage.recipient tally)}
         Quantity.SpellsCast tally -> Quantity.SpellsCast tally {SpellTally.player = f (SpellTally.player tally)}
         Quantity.TimesThisTurn _ -> quantity
         Quantity.ActivationsThisTurn tally -> Quantity.ActivationsThisTurn tally {ActivationsThisTurn.activator = f (ActivationsThisTurn.activator tally)}
