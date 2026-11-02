@@ -1220,11 +1220,15 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
       humility <- S.printingOf s registry "Humility"
       opalescence <- S.printingOf s registry "Opalescence"
       let (seerId, g0) = S.addPermanent seer S.alice (Setup.emptyGame S.bothPlayers)
-          g1 = snd (S.addPermanent opalescence S.alice (snd (S.addPermanent lord S.alice g0)))
-          (humilityId, humbled) = S.addPermanent humility S.bob g1
+          (lordId, g1) = S.addPermanent lord S.alice g0
+          g2 = snd (S.addPermanent opalescence S.alice g1)
+          (humilityId, humbled) = S.addPermanent humility S.bob g2
           frogged = S.withEffectAt humilityId (Timestamp.MkTimestamp 1000) Modification.LoseAllAbilities humbled
       Spec.assertEqWith s "control: no pump under Humility" (S.powerToughnessOf seerId humbled) (Just (1, 1))
       Spec.assertEqWith s "the pump is back once Humility loses its ability" (S.powerToughnessOf seerId frogged) (Just (3, 3))
+      -- The same answer from outside the fold (Projection.abilityRemoval).
+      Spec.assertBool s (Projection.abilityRemoval humbled lordId) "control: the Lord's abilities are removed under Humility"
+      Spec.assertBool s (not (Projection.abilityRemoval frogged lordId)) "and not once Humility loses its ability"
 
   -- The same layer-6 removal from the OTHER kind of ability, and the card whose
   -- ability does not sit at layer 6 alone: Titania's Song removes at 6, animates
