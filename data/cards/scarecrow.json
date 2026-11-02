@@ -46,6 +46,12 @@
                                 "value": {
                                   "type": "Flying"
                                 }
+                              },
+                              {
+                                "type": "IsInZone",
+                                "value": {
+                                  "type": "Battlefield"
+                                }
                               }
                             ]
                           }

@@ -114,6 +114,7 @@ import qualified Parun.Types.InstanceOrdinal as InstanceOrdinal
 import qualified Parun.Types.InstructionR as InstructionR
 import qualified Parun.Types.InstructionRewrite as InstructionRewrite
 import qualified Parun.Types.Keyword as Keyword.Type
+import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LifeGainR as LifeGainR
 import qualified Parun.Types.LifeGainRewrite as LifeGainRewrite
@@ -1537,7 +1538,11 @@ matchesDamageSource :: (ObjectId -> Filter.View) -> GameState -> Filter.Context 
 matchesDamageSource viewOf gs context filter_ de =
   let oid = DamageEvent.source de
       view = Maybe.fromMaybe (viewOf oid) (Projection.viewWithLastKnownAnywhere gs oid)
-   in Filter.matches context view filter_
+      -- CR 113.7a: a departed source deals damage as it last existed, zone
+      -- included, so a permanent's record still answers a battlefield filter
+      -- (CR 109.2) and a cycled creature card's does not.
+      located = maybe view (\lastKnown -> view {Filter.zone = Just (LastKnown.zone lastKnown)}) (Game.lastKnownOf oid gs)
+   in Filter.matches context located filter_
 
 -- CR 615.1 / 614.1a: does this damage event have the qualities the pattern
 -- names? Five of them: a pattern naming no KIND admits combat and noncombat

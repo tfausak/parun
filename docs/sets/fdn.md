@@ -10,26 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Grappling Kraken: `_CounterType:StunCounter`
-- Gratuitous Violence: `_Rule:ReplaceWouldDealDamage`
-- Grow from the Ashes: `_Rule:SpellActions_Kicker`
-- Gutless Plunderer: `_Players:AttackedThisTurn`
-- Halana and Alena, Partners: renders differently from its Oracle text
-- Hare Apparent: `_Permanents:IsNamed`
-- Harmless Offering: `_Action:GainControlOfPermanent`
-- Herald of Eternal Dawn: `_Rule:PlayerEffect`
-- Heraldic Banner: `_ReplacementActionWouldEnter:ChooseAColor`
-- Heroes' Bane: `_ReplacementActionWouldEnter:EntersWithNumberCounters`
-- Hidetsugu's Second Rite: `_Action:If`
-- High Fae Trickster: `_Rule:PlayerEffect`
-- Homunculus Horde: `_Trigger:WhenAPlayerDrawsTheirNthCardEachTurn`
-- Immersturm Predator: `_Trigger:WhenAPermanentBecomesTapped`
-- Imprisoned in the Moon: `_Permanent:HostPermanent`
-- Incinerating Blast: `_Cost:DiscardACard`
-- Ingenious Leonin: `_Action:If`
-- Inspiration from Beyond: `_Action:PutACardFromGraveyardIntoHand`
-- Inspiring Call: `_Permanents:HasACounterOfType`
-- Inspiring Paladin: `_Permanents:HasACounterOfType`
 - Into the Roil: `_Rule:SpellActions_Kicker`
 - Involuntary Employment: `_Action:GainControlOfPermanentUntil`
 - Jazal Goldmane: `_LayerEffect:AdjustPTX`

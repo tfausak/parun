@@ -28,6 +28,12 @@
                           "type": "You"
                         }
                       }
+                    },
+                    {
+                      "type": "IsInZone",
+                      "value": {
+                        "type": "Battlefield"
+                      }
                     }
                   ]
                 }
