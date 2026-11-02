@@ -29,6 +29,8 @@ import qualified Parun.Engine.Plane as Plane
 import qualified Parun.Engine.Players as Players
 import qualified Parun.Engine.Sector as Sector
 import qualified Parun.Engine.Subtype as Subtype
+import qualified Parun.Types.AbilityKind as AbilityKind
+import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.ActivationCriteria as ActivationCriteria
 import qualified Parun.Types.Aggregation as Aggregation
@@ -1287,8 +1289,8 @@ pastView snapshot =
     }
 
 -- What only the ABILITY of a past activation can answer
--- (Parun.Types.ActivationCriteria): its rule-702 keyword, CR 605.1a's kind and
--- CR 606.2's loyalty, the last off the printed cost as
+-- (Parun.Types.ActivationCriteria): its rule-702 keyword, its name, CR 605.1a's
+-- kind and CR 606.2's loyalty, the last off the printed cost as
 -- Parun.Engine.Loyalty.loyaltyKindOf reads it for the activation in progress.
 -- CR 305.6's intrinsic mana route records no ability, and is no loyalty ability.
 --
@@ -1300,9 +1302,20 @@ pastView snapshot =
 -- Giada's Gift observes (data/scenarios/the-chain-veil).
 activationMeets :: ActivationCriteria.ActivationCriteria -> PastActivation.PastActivation -> Bool
 activationMeets criteria past =
-  maybe True (\g -> any (Keyword.designates g) (ActivatedAbility.keyword =<< PastActivation.ability past)) (ActivationCriteria.grantedBy criteria)
-    && maybe True (== PastActivation.kind past) (ActivationCriteria.whichKind criteria)
-    && maybe True (== maybe LoyaltyKind.NonLoyaltyAbility (Loyalty.loyaltyKindOf . ActivatedAbility.cost) (PastActivation.ability past)) (ActivationCriteria.whichLoyalty criteria)
+  let ability = PastActivation.ability past
+   in abilityMeets criteria (ActivatedAbility.keyword =<< ability) (ActivatedAbility.name =<< ability) (PastActivation.kind past) (maybe LoyaltyKind.NonLoyaltyAbility (Loyalty.loyaltyKindOf . ActivatedAbility.cost) ability)
+
+-- Parun.Types.ActivationCriteria asked of an ability's facts: its rule-702
+-- keyword, its name, CR 605.1a's kind and CR 606.2's loyalty. Each is compared
+-- and never inspected further. The one reading of every criterion, shared by a
+-- past activation (activationMeets) and one in progress
+-- (Parun.Engine.PlayerEffect.activationCostAdjustmentsGiven).
+abilityMeets :: ActivationCriteria.ActivationCriteria -> Maybe Keyword.Type.Keyword -> Maybe AbilityName.AbilityName -> AbilityKind.AbilityKind -> LoyaltyKind.LoyaltyKind -> Bool
+abilityMeets criteria stamp named kind loyalty =
+  maybe True (\g -> any (Keyword.designates g) stamp) (ActivationCriteria.grantedBy criteria)
+    && maybe True ((== named) . Just) (ActivationCriteria.whichAbility criteria)
+    && maybe True (== kind) (ActivationCriteria.whichKind criteria)
+    && maybe True (== loyalty) (ActivationCriteria.whichLoyalty criteria)
 
 -- The Filter.View a recorded snapshot yields, shared by every arm of
 -- snapshotView above so that two shapes of event cannot disagree about what a

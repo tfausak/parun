@@ -1,6 +1,7 @@
 module Parun.Types.ActivationCriteria where
 
 import qualified Parun.Types.AbilityKind as AbilityKind
+import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.LoyaltyKind as LoyaltyKind
@@ -11,9 +12,6 @@ import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 -- counterpart, a spell being one object with one cost.
 --
 -- Nothing in every field is every activated ability of a matching source.
---
--- Not implemented: naming one ability of the source, so Sanctum of Tranquil
--- Light's "this ability" also reaches an ability granted to it (#5893).
 data ActivationCriteria = MkActivationCriteria
   { -- | Only an ability under this rule-702 keyword (Parun.Types.ActivatedAbility.keyword):
     -- Fluctuator's "cycling abilities", Bureau Headmaster's "equip abilities".
@@ -26,6 +24,9 @@ data ActivationCriteria = MkActivationCriteria
     whichKind :: Maybe AbilityKind.AbilityKind,
     -- | CR 606.2: Carth the Lion's "planeswalkers' loyalty abilities". Spell-free
     -- because rule 606.2 classifies only activated abilities.
-    whichLoyalty :: Maybe LoyaltyKind.LoyaltyKind
+    whichLoyalty :: Maybe LoyaltyKind.LoyaltyKind,
+    -- | Only the ability of this Parun.Types.ActivatedAbility.name: Sanctum of
+    -- Tranquil Light's "this ability costs {1} less" (CR 602.2b, 601.2f).
+    whichAbility :: Maybe AbilityName.AbilityName
   }
   deriving (Eq, Ord, Show)
