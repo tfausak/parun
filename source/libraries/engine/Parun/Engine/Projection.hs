@@ -2385,14 +2385,28 @@ conditionHolds cands gs src lowest =
 -- resolves a card's effects can reach another replacement, and the permanent is
 -- no more on the battlefield for that one than for its own.
 --
+-- The subject is put back in the zone it left (Game.returnToOrigin), since the
+-- count is made before it moves: Undergrowth Scavenger's ruling, "if
+-- Undergrowth Scavenger enters the battlefield from a graveyard, it will count
+-- itself". Restored newest subject first, so a nested entry's index reads the
+-- pile its outer one left. The scenarios
+-- undergrowth-scavenger-returned-from-a-graveyard-counts-itself and
+-- embodiment-of-agonies-returned-from-a-graveyard-counts-its-own-mana-cost
+-- prove it.
+--
+-- Not implemented: a sibling of the batch that has already moved is not put
+-- back in the zone it left (#5883).
+--
 -- Answers `gs` unchanged outside an entry loop, where both sets are empty, so
 -- the ordinary board is untouched.
 boardAsEntering :: GameState -> GameState
 boardAsEntering gs =
-  let entering = Set.union (GameState.enteringBeside gs) (GameState.enteringSubjects gs)
+  let subjects = GameState.enteringSubjects gs
+      entering = Set.union (GameState.enteringBeside gs) (Map.keysSet subjects)
+      returned = Map.foldrWithKey (\oid origin g -> maybe g (\o -> Game.returnToOrigin o oid g) origin) gs subjects
    in if Set.null entering
         then gs
-        else gs {GameState.battlefield = Set.difference (GameState.battlefield gs) entering}
+        else returned {GameState.battlefield = Set.difference (GameState.battlefield gs) entering}
 
 -- gather's body with both ability gates left open. Called twice by gather --
 -- once wired shut to build the list the gates read, once with the real answers.

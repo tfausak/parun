@@ -102,7 +102,7 @@ withoutAnnouncement before entry closed = do
   detachedBindings <- mapOfMaps GameState.detachedBindings
   pendingEntryEffects <- seqOf GameState.pendingEntryEffects
   enteringBeside <- setOf GameState.enteringBeside
-  enteringSubjects <- setOf GameState.enteringSubjects
+  enteringSubjects <- mapOf GameState.enteringSubjects
   enteringPending <- mapOf GameState.enteringPending
   refusedEntries <- one GameState.refusedEntries
   enteringCounters <- mapOfMaps GameState.enteringCounters

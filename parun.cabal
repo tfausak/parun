@@ -685,6 +685,8 @@ library codec
     Parun.Codec.EntryHostSpec
     Parun.Codec.EntryOption
     Parun.Codec.EntryOptionSpec
+    Parun.Codec.EntryOrigin
+    Parun.Codec.EntryOriginSpec
     Parun.Codec.EntryPrice
     Parun.Codec.EntryPriceSpec
     Parun.Codec.EntryR
@@ -2668,6 +2670,7 @@ library types
     Parun.Types.EntryFlip
     Parun.Types.EntryHost
     Parun.Types.EntryOption
+    Parun.Types.EntryOrigin
     Parun.Types.EntryPrice
     Parun.Types.EntryR
     Parun.Types.EntryRefusal
