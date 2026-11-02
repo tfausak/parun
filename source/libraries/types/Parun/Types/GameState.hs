@@ -30,6 +30,7 @@ import qualified Parun.Types.Daytime as Daytime
 import qualified Parun.Types.DelayedTrigger as DelayedTrigger
 import qualified Parun.Types.EndTurnSignal as EndTurnSignal
 import qualified Parun.Types.EnteringTogether as EnteringTogether
+import qualified Parun.Types.EntryOrigin as EntryOrigin
 import qualified Parun.Types.EventGroup as EventGroup
 import qualified Parun.Types.ExileLink as ExileLink
 import qualified Parun.Types.ExtraTurn as ExtraTurn
@@ -249,10 +250,10 @@ data GameState = MkGameState
     -- battlefield sweep skips it. Empty at every priority window.
     enteringBeside :: Set.Set ObjectId.ObjectId,
     -- | CR 614.12: the subject of every entry loop currently running,
-    -- materialized but not entered; with `enteringBeside`, what
-    -- Parun.Engine.Projection.boardAsEntering subtracts. Empty at every priority
-    -- window.
-    enteringSubjects :: Set.Set ObjectId.ObjectId,
+    -- materialized but not entered, with the zone it left, if any; with
+    -- `enteringBeside`, what Parun.Engine.Projection.boardAsEntering subtracts.
+    -- Empty at every priority window.
+    enteringSubjects :: Map.Map ObjectId.ObjectId (Maybe EntryOrigin.EntryOrigin),
     -- | CR 614.12b: the members of a CR 608.2f move onto the battlefield that
     -- have not yet been moved, each with the player it will enter under, which
     -- the one-at-a-time funnel would otherwise hide from an earlier member's
