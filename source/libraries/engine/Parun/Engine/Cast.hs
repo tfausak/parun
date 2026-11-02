@@ -1308,9 +1308,15 @@ candidateFillable pid oid name proposed candidate =
 -- permission does not name, so none is offered and then refused at CR 601.2e.
 -- data/scenarios/cast-permission/cr-601-3e-serra-paragon-admits-the-prototyped-assembler-and-not-the-printed-one.json
 -- is the proof.
+--
+-- Asks castableZones of the zone the card lies in, not inCastableZone's
+-- membership: cardGatesOk asked that, and no stamp moves the card.
 candidateInZone :: PlayerId -> ObjectId -> CardName.CardName -> GameState -> CandidateCost.CandidateCost -> Bool
 candidateInZone pid oid name proposed candidate =
-  inCastableZone pid oid name (proposedFor oid (CandidateCost.keyword candidate) proposed)
+  let board = proposedFor oid (CandidateCost.keyword candidate) proposed
+   in case (Game.zoneOf oid board, proposedFace oid name board) of
+        (Just zone, Just face) -> elem zone (castableZones pid oid face board)
+        _ -> False
 
 -- CR 601.3: the zones a spell can be cast from at all, in the engine's
 -- canonical order -- what castableSpells scans, and the list castableZones
