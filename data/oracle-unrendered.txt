@@ -1964,6 +1964,7 @@ pin-collection
 pine-walker
 pir-imaginative-rascal
 piracy
+pirates-cutlass
 pithing-needle
 pixie-guide
 plagiarize
@@ -1985,7 +1986,9 @@ portent
 possessed-skaab
 power-play
 power-sink
+prayer-of-binding
 precursor-golem
+predator-ooze
 predatory-nightstalker
 predatory-rampage
 predict
@@ -2004,6 +2007,7 @@ primal-might
 primal-plasma
 primal-whisperer
 prime-ministers-cabinet-room
+prime-speaker-zegana
 primeval-titan
 primitive-etchings
 primordial-hydra
@@ -2054,6 +2058,7 @@ quicken
 quickling
 quicksilver-amulet
 quicksilver-gargantuan
+quilled-greatwurm
 quillspike
 quina-qu-gourmet
 qutrub-forayer
@@ -2069,6 +2074,7 @@ rag-man
 raiders-allegiance
 rain-of-daggers
 raise-the-draugr
+raise-the-past
 raised-by-giants
 rakavolver
 rakdos-the-muscle
@@ -2076,6 +2082,7 @@ rakshasa-vizier
 ral-zarek
 rally-the-troops
 rambling-possum
+ramos-dragon-engine
 rampage-of-the-clans
 rampaging-ceratops
 ramroller
@@ -2089,6 +2096,7 @@ rat-out
 ratchet-bomb
 ratchet-field-medic-ratchet-rescue-racer
 ravaging-blaze
+ravenous-amulet
 ray-of-command
 ray-of-frost
 razorfin-abolisher
@@ -2113,6 +2121,7 @@ red-cliffs-armada
 red-mana-battery
 red-priest-of-yawgmoth
 red-ward
+redcap-gutter-dweller
 redeem
 redirect
 reduce-to-ashes
@@ -2151,6 +2160,7 @@ retributive-wand
 return-from-extinction
 return-the-favor
 return-to-the-ranks
+revenge-of-the-rats
 reverberate
 revered-unicorn
 reverse-damage
@@ -2189,6 +2199,7 @@ rites-of-initiation
 rites-of-refusal
 rites-of-spring
 ritual-of-subdual
+rivers-rebuke
 riveteers-charm
 riveteers-requisitioner
 roaring-furnace-steaming-sauna
@@ -2223,6 +2234,7 @@ rune-of-might
 rune-of-mortality
 rune-of-speed
 rune-of-sustenance
+rune-sealed-wall
 runed-halo
 runic-armasaur
 runic-repetition
@@ -2266,6 +2278,7 @@ satyr-piper
 satyr-wayfinder
 sauroform-hybrid
 savage-summoning
+savage-ventmaw
 savanti-romero-times-exile
 save-point
 savior-of-ollenbock
@@ -2289,6 +2302,7 @@ scouts-warning
 scrambleverse
 scrapshooter
 scrapskin-drake
+scrawling-crawler
 screaming-swarm
 screams-from-within
 scrounging-bandar
@@ -2300,6 +2314,7 @@ sea-monster
 sealed-fate
 seas-claim
 season-of-the-witch
+secluded-courtyard
 second-sight
 secret-door
 secret-tunnel
@@ -2311,8 +2326,10 @@ seeker-of-slaanesh
 seifer-balamb-rival
 seismic-elemental
 seismic-stomp
+seize-the-spoils
 seized-from-slumber
 selenia
+self-reflection
 selfless-police-captain
 selfless-squire
 sen-triplets
@@ -2388,6 +2405,7 @@ skirk-marauder
 skull-skaab
 skullclamp
 skullwinder
+skyknight-squire
 skymarcher-aspirant
 skyrider-patrol
 skyshroud-condor
