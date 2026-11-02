@@ -4875,7 +4875,11 @@ actionPayableAt subject x pid oid cost = canPay subject pid oid (substituteX x c
 -- Island's ward and Waterbending Lesson's unless cost are waterbend costs paid
 -- here (Parun.CostSpec's groups of those names).
 payReading :: Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> ManaAbilityPerformer.ManaAbilityPerformer -> GameState -> PaymentMoment.PaymentMoment -> PaymentSubject.PaymentSubject -> ManaSpending.ManaSpending -> PlayerId -> ObjectId -> Cost Keyword.Type.Keyword -> Game Payment.Payment
-payReading slots perform began moment subject spending pid oid cost = fmap fst (paySubstitutingReading (const False) slots perform began [] moment subject Nothing spending pid oid (announceSubstitutionsReading slots waterbendSubstitutions pid oid) cost)
+payReading slots perform began moment subject spending pid oid cost = Monad.join (payReadingThen slots perform began moment subject spending pid oid cost)
+
+-- `payReading` split at its mana window (`paySubstitutingReadingThen`).
+payReadingThen :: Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> ManaAbilityPerformer.ManaAbilityPerformer -> GameState -> PaymentMoment.PaymentMoment -> PaymentSubject.PaymentSubject -> ManaSpending.ManaSpending -> PlayerId -> ObjectId -> Cost Keyword.Type.Keyword -> Game (Game Payment.Payment)
+payReadingThen slots perform began moment subject spending pid oid cost = fmap (fmap fst) (paySubstitutingReadingThen (const False) slots perform began [] moment subject Nothing spending pid oid (announceSubstitutionsReading slots waterbendSubstitutions pid oid) cost)
 
 -- `pay` with CR 702.51a's, CR 702.66a's and CR 702.126a's substitution offered
 -- INSIDE the mana window rather than ahead of it, and the components it adds
@@ -4921,11 +4925,18 @@ paySubstituting refuses perform began earlier moment subject announced spending 
 -- `paySubstituting` with the slot map its component criteria read handed in
 -- rather than read off `announced` (`payReading`).
 paySubstitutingReading :: (GameState -> Bool) -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> ManaAbilityPerformer.ManaAbilityPerformer -> GameState -> [ManaWindow.ManaWindow] -> PaymentMoment.PaymentMoment -> PaymentSubject.PaymentSubject -> Maybe ObjectId -> ManaSpending.ManaSpending -> PlayerId -> ObjectId -> (Cost Keyword.Type.Keyword -> Game (Cost Keyword.Type.Keyword, [(Keyword.Substitute, Natural)])) -> Cost Keyword.Type.Keyword -> Game (Payment.Payment, Map.Map SlotName.SlotName Binding.Type.Binding)
-paySubstitutingReading refuses slots perform began earlier moment subject announced spending pid oid substituting cost =
+paySubstitutingReading refuses slots perform began earlier moment subject announced spending pid oid substituting cost = Monad.join (paySubstitutingReadingThen refuses slots perform began earlier moment subject announced spending pid oid substituting cost)
+
+-- `paySubstitutingReading` with its mana window's activations run and the rest
+-- of the payment handed back unrun (`payManaWindowThen`): what
+-- Parun.Engine.Resolve.Effect.payGatePaid needs to run every payer's window
+-- ahead of the one event their payments are (CR 101.4).
+paySubstitutingReadingThen :: (GameState -> Bool) -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> ManaAbilityPerformer.ManaAbilityPerformer -> GameState -> [ManaWindow.ManaWindow] -> PaymentMoment.PaymentMoment -> PaymentSubject.PaymentSubject -> Maybe ObjectId -> ManaSpending.ManaSpending -> PlayerId -> ObjectId -> (Cost Keyword.Type.Keyword -> Game (Cost Keyword.Type.Keyword, [(Keyword.Substitute, Natural)])) -> Cost Keyword.Type.Keyword -> Game (Game (Payment.Payment, Map.Map SlotName.SlotName Binding.Type.Binding))
+paySubstitutingReadingThen refuses slots perform began earlier moment subject announced spending pid oid substituting cost =
   case Cost.mana cost of
     -- CR 118.6: attempting to pay an unpayable cost is an illegal action, and
     -- CR 733.1 reverses it with no window to ask about.
-    Nothing -> do
+    Nothing -> pure $ do
       Monad.void (reverseIllegal earlier began)
       pure (Payment.Unpaid, Map.empty)
     -- CR 601.2g: the window PROMPTS for which sources to activate, so it is
@@ -4935,45 +4946,47 @@ paySubstitutingReading refuses slots perform began earlier moment subject announ
       let announceMana mc = do
             (chosen, extra) <- substituting cost {Cost.mana = Just mc}
             pure (Maybe.fromMaybe mc (Cost.mana chosen), extra)
-      (paidMana, substitutes, own) <- payManaWindow perform Set.empty announced subject spending pid announceMana manaCost
-      paidOwn <-
-        if paidMana
-          then payComponents perform moment announced slots pid oid (Cost.components cost)
-          else pure Payment.Unpaid
-      -- The convoking taps are paid as a group of their own so that their
-      -- bindings stay apart (CR 702.51c), after the other substitutes. The
-      -- payer still picks every permanent in each group, so the order between
-      -- the groups decides nothing.
-      let (convoking, others) = List.partition (convokes . fst) substitutes
-      (outcome, substituted) <- case paidOwn of
-        Payment.Unpaid -> pure (Payment.Unpaid, Map.empty)
-        Payment.Paid bound -> do
-          paidOthers <- payComponents perform moment announced slots pid oid (substituteComponents others)
-          case paidOthers of
-            Payment.Unpaid -> pure (Payment.Unpaid, Map.empty)
-            Payment.Paid _ -> do
-              paidConvoking <- payComponents perform moment announced slots pid oid (substituteComponents convoking)
-              pure $ case paidConvoking of
-                Payment.Unpaid -> (Payment.Unpaid, Map.empty)
-                Payment.Paid convoked -> (mergeBound bound (mergeBound convoked paidOthers), convoked)
-      -- CR 732.3 via 733.1: a payment completing a game choice the caller
-      -- may not make again (Parun.Engine.Fragmented.forbidden) is reversed
-      -- like an unpaid one, each window its payer's to keep.
-      refused <- State.gets refuses
-      case outcome of
-        Payment.Paid _
-          | refused -> do
-              Monad.void (reverseIllegal (earlier <> [own]) began)
-              pure (Payment.Unpaid, Map.empty)
-        -- The components' bound slots ride out unchanged: the mana window
-        -- above binds none, and a caller that has a binding environment to
-        -- write them into is the only thing between here and CR 608.2h.
-        Payment.Paid _ -> pure (outcome, substituted)
-        -- CR 733.1: the action is reversed back to `began`, and each window is
-        -- its payer's to keep.
-        Payment.Unpaid -> do
-          Monad.void (reverseIllegal (earlier <> [own]) began)
-          pure (Payment.Unpaid, Map.empty)
+      settle <- payManaWindowThen perform Set.empty announced subject spending pid announceMana manaCost
+      pure $ do
+        (paidMana, substitutes, own) <- settle
+        paidOwn <-
+          if paidMana
+            then payComponents perform moment announced slots pid oid (Cost.components cost)
+            else pure Payment.Unpaid
+        -- The convoking taps are paid as a group of their own so that their
+        -- bindings stay apart (CR 702.51c), after the other substitutes. The
+        -- payer still picks every permanent in each group, so the order between
+        -- the groups decides nothing.
+        let (convoking, others) = List.partition (convokes . fst) substitutes
+        (outcome, substituted) <- case paidOwn of
+          Payment.Unpaid -> pure (Payment.Unpaid, Map.empty)
+          Payment.Paid bound -> do
+            paidOthers <- payComponents perform moment announced slots pid oid (substituteComponents others)
+            case paidOthers of
+              Payment.Unpaid -> pure (Payment.Unpaid, Map.empty)
+              Payment.Paid _ -> do
+                paidConvoking <- payComponents perform moment announced slots pid oid (substituteComponents convoking)
+                pure $ case paidConvoking of
+                  Payment.Unpaid -> (Payment.Unpaid, Map.empty)
+                  Payment.Paid convoked -> (mergeBound bound (mergeBound convoked paidOthers), convoked)
+        -- CR 732.3 via 733.1: a payment completing a game choice the caller
+        -- may not make again (Parun.Engine.Fragmented.forbidden) is reversed
+        -- like an unpaid one, each window its payer's to keep.
+        refused <- State.gets refuses
+        case outcome of
+          Payment.Paid _
+            | refused -> do
+                Monad.void (reverseIllegal (earlier <> [own]) began)
+                pure (Payment.Unpaid, Map.empty)
+          -- The components' bound slots ride out unchanged: the mana window
+          -- above binds none, and a caller that has a binding environment to
+          -- write them into is the only thing between here and CR 608.2h.
+          Payment.Paid _ -> pure (outcome, substituted)
+          -- CR 733.1: the action is reversed back to `began`, and each window is
+          -- its payer's to keep.
+          Payment.Unpaid -> do
+            Monad.void (reverseIllegal (earlier <> [own]) began)
+            pure (Payment.Unpaid, Map.empty)
 
 -- CR 508.1h-508.1j and CR 509.1d-509.1f: pay a COMBAT TOLL -- the costs to attack
 -- or to block that one declaration incurred, each tagged with the permanent that
@@ -5614,7 +5627,14 @@ payManaExcept perform inFlight record subject spending pid cost = do
 -- below asks about: nothing has been substituted yet while the window is open,
 -- so CR 118.3c's question is put against the whole of it.
 payManaWindow :: ManaAbilityPerformer.ManaAbilityPerformer -> Mana.InFlight -> Maybe ObjectId -> PaymentSubject.PaymentSubject -> ManaSpending.ManaSpending -> PlayerId -> (ManaCost.ManaCost -> Game (ManaCost.ManaCost, [(Keyword.Substitute, Natural)])) -> ManaCost.ManaCost -> Game (Bool, [(Keyword.Substitute, Natural)], ManaWindow.ManaWindow)
-payManaWindow perform inFlight record subject spending pid substituting cost = do
+payManaWindow perform inFlight record subject spending pid substituting cost = Monad.join (payManaWindowThen perform inFlight record subject spending pid substituting cost)
+
+-- `payManaWindow` with the window's activations run and the payment out of the
+-- pool handed back unrun: CR 601.2g puts CR 605.3a's activations before CR
+-- 601.2h's payment, so a caller making several payments as one event (CR 101.4) runs
+-- every window ahead of all of them (`paySubstitutingReadingThen`).
+payManaWindowThen :: ManaAbilityPerformer.ManaAbilityPerformer -> Mana.InFlight -> Maybe ObjectId -> PaymentSubject.PaymentSubject -> ManaSpending.ManaSpending -> PlayerId -> (ManaCost.ManaCost -> Game (ManaCost.ManaCost, [(Keyword.Substitute, Natural)])) -> ManaCost.ManaCost -> Game (Game (Bool, [(Keyword.Substitute, Natural)], ManaWindow.ManaWindow))
+payManaWindowThen perform inFlight record subject spending pid substituting cost = do
   -- Where the window OPENED, which is the far end of the announcement's diff:
   -- everything between the caller's own snapshot and this is what the
   -- announcement wrote, and everything after it is the window's. Taken here
@@ -5658,11 +5678,11 @@ payManaWindow perform inFlight record subject spending pid substituting cost = d
             -- open, and `refused` is not handed down to a nested window.
             offered = Mana.manaSourcesGiven (Set.union inFlight refused) windowCapacity (Projection.controlGrants gs) pcs pid gs
         case offered of
-          [] -> settle activated
+          [] -> shut activated
           candidate : rest -> do
             answer <- chooseSource covered cost pid (Interchangeable.representatives pcs gs (candidate NonEmpty.:| rest)) gs
             case answer of
-              Nothing -> settle activated
+              Nothing -> shut activated
               Just oid -> do
                 start <- State.get
                 (produced, nested, nestedSpent, failed) <- tapForManaWith perform midPayment inFlight refused pid oid
@@ -5680,14 +5700,16 @@ payManaWindow perform inFlight record subject spending pid substituting cost = d
       -- WHICH mana goes is the payer's (Mana.spendChosen), so this asks rather
       -- than reading `settlement`'s assignment: that one answers only whether the
       -- pool pays.
-      settle :: ([ManaActivation.ManaActivation], [ManaSegment.ManaSegment]) -> Game (Bool, [(Keyword.Substitute, Natural)], ManaWindow.ManaWindow)
-      settle (activated, segments) = do
-        -- The state the window CLOSED on, which is the one a payer who declines
-        -- to reverse their mana abilities goes back to: this is after every
-        -- activation and before a symbol of the cost has been paid out of the
-        -- pool. Taken AHEAD of `substituting`, since CR 702.132a's assisting
-        -- player pays there and CR 733.1 cancels that payment too.
-        closed <- State.get
+      --
+      -- `closed` is the state the window CLOSED on, which is the one a payer who
+      -- declines to reverse their mana abilities goes back to: this is after
+      -- every activation and before a symbol of the cost has been paid out of
+      -- the pool. Taken AHEAD of `substituting`, since CR 702.132a's assisting
+      -- player pays there and CR 733.1 cancels that payment too, and as the
+      -- window shuts, so another payer's window run before `settle` is not in it.
+      shut activated = fmap (`settle` activated) State.get
+      settle :: GameState -> ([ManaActivation.ManaActivation], [ManaSegment.ManaSegment]) -> Game (Bool, [(Keyword.Substitute, Natural)], ManaWindow.ManaWindow)
+      settle closed (activated, segments) = do
         -- CR 601.2g then the reminder text: the substitutes are offered HERE,
         -- with the window shut and nothing spent, so the payer answers knowing
         -- what their mana abilities produced.
@@ -5700,10 +5722,10 @@ payManaWindow perform inFlight record subject spending pid substituting cost = d
         -- CR 106.6: the payment sees only the mana it may spend, and the rest of
         -- the pool goes back beside what it leaves (CR 106.4 -- unspent mana stays
         -- unspent, it does not vanish because one cost could not use it).
-        let shut = ManaWindow.MkManaWindow {ManaWindow.payer = pid, ManaWindow.activated = activated, ManaWindow.segments = segments, ManaWindow.spent = [], ManaWindow.opened = entry, ManaWindow.closed = closed, ManaWindow.unreversible = False}
+        let shutWindow = ManaWindow.MkManaWindow {ManaWindow.payer = pid, ManaWindow.activated = activated, ManaWindow.segments = segments, ManaWindow.spent = [], ManaWindow.opened = entry, ManaWindow.closed = closed, ManaWindow.unreversible = False}
             (available, withheld) = Mana.spendableFor subject pid gs
         case Mana.plan (PlayerEffect.spendManaAsThoughFor pid subject gs) spending (Maybe.fromMaybe 0 (Mana.lifeNeeded subject (midPayment (manaActivationsGiven (PlayerEffect.applying pid gs))) spending pid residual gs)) residual (Mana.Type.MkMana available) of
-          Nothing -> pure (False, extra, shut)
+          Nothing -> pure (False, extra, shutWindow)
           Just (steps, life) -> do
             (Mana.Type.MkMana left, spent) <- Mana.spendChosen pid (PlayerEffect.spendManaAsThoughFor pid subject gs) steps (Mana.Type.MkMana available)
             -- Three writes in the order the one composed `State.modify'` they
@@ -5713,7 +5735,7 @@ payManaWindow perform inFlight record subject spending pid substituting cost = d
             State.modify' (Mana.setPool pid (Mana.Type.MkMana (withheld <> left)))
             Event.payLife pid life
             State.modify' (recordSpent spent)
-            pure (True, extra, shut {ManaWindow.spent = Mana.Type.unwrap spent})
+            pure (True, extra, shutWindow {ManaWindow.spent = Mana.Type.unwrap spent})
       -- CR 400.7d's cost record for the MANA, kept where CR 107.4h's third
       -- sentence can be asked about it afterwards -- "the {S} symbol can also be
       -- used to refer to mana of any type produced by a snow source spent to pay a
