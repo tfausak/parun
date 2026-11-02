@@ -30,4 +30,11 @@ spec s = Spec.describe s "Parun.Codec.DurationEvent" $ do
       Codec.codec
       DurationEvent.Planeswalked
       " {\"type\":\"Planeswalked\"} "
+  -- CR 607.2a (Furious Rise).
+  Spec.it s "SourceExiledCard" $
+    Common.assertCodec
+      s
+      Codec.codec
+      DurationEvent.SourceExiledCard
+      " {\"type\":\"SourceExiledCard\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Codec.codec

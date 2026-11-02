@@ -39,22 +39,49 @@
                       "type": "Or",
                       "value": [
                         {
-                          "type": "HasCardType",
-                          "value": {
-                            "type": "Instant"
-                          }
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "IsInZone",
+                              "value": {
+                                "type": "Stack"
+                              }
+                            },
+                            {
+                              "type": "Or",
+                              "value": [
+                                {
+                                  "type": "HasCardType",
+                                  "value": {
+                                    "type": "Instant"
+                                  }
+                                },
+                                {
+                                  "type": "HasCardType",
+                                  "value": {
+                                    "type": "Sorcery"
+                                  }
+                                }
+                              ]
+                            }
+                          ]
                         },
                         {
-                          "type": "HasCardType",
-                          "value": {
-                            "type": "Sorcery"
-                          }
-                        },
-                        {
-                          "type": "HasCardType",
-                          "value": {
-                            "type": "Planeswalker"
-                          }
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "IsInZone",
+                              "value": {
+                                "type": "Battlefield"
+                              }
+                            },
+                            {
+                              "type": "HasCardType",
+                              "value": {
+                                "type": "Planeswalker"
+                              }
+                            }
+                          ]
                         }
                       ]
                     }

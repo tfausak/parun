@@ -1,0 +1,271 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "a0",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "a1",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "a2",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "a3",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "a4",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "a5",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "b0",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "b1",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "b2",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "b3",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "b4",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "b5",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Apothecary Stomper",
+            "label": "one"
+          },
+          {
+            "card": "Apothecary Stomper",
+            "label": "two"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Hill Giant",
+            "label": "giant",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 700.2 / 122.1: Apothecary Stomper's entering trigger puts two counters on a creature you control, or gains 4 life",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$a0",
+            "$a1",
+            "$a2",
+            "$a3",
+            "$a4",
+            "$a5",
+            null
+          ],
+          "object": "$one"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseModes",
+          "with": [
+            0
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "ChooseTargets": {
+          "target": [
+            "$giant"
+          ]
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseTargets": {
+          "target": [
+            "$bears"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Counters": {
+          "count": 2,
+          "kind": {
+            "type": "PlusOnePlusOne"
+          },
+          "object": "$bears"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$b0",
+            "$b1",
+            "$b2",
+            "$b3",
+            "$b4",
+            "$b5"
+          ],
+          "object": "$two"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseModes",
+          "with": [
+            1
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 24,
+          "player": "alice"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

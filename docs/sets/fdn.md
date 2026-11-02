@@ -1,0 +1,115 @@
+# Foundations census
+
+The Foundations (FDN) cards not yet in the pool, and which wait on a capability.
+Derived 2026-11-02 from MTGJSON's set list against `data/cards/`. Re-derive the
+missing list by writing the set list as a deck (`1 Name` per line) and running
+`parun deck` on it: every unresolved name is reported.
+
+## Expressible today
+
+These need no new capability, but `parun translate` does not translate them yet.
+Each names the mtgish node the translator stops at.
+
+- Pirate's Cutlass: `_Action:AttachPermanentToPermanent`
+- Prayer of Binding: `_Action:Exile`
+- Predator Ooze: `_Permanents:WasDealtDamageByPermanentThisTurn`
+- Prime Speaker Zegana: `_ReplacementActionWouldEnter:EntersWithNumberCounters`
+- Quilled Greatwurm: `_Trigger:If`
+- Raise the Past: `_Action:ReturnEachCardFromPlayersGraveyardToBattlefield`
+- Ramos, Dragon Engine: `_GameNumber:TheNumberOfColorsSpellIs`
+- Ravenous Amulet: `_CounterType:SoulCounter`
+- Redcap Gutter-Dweller: `_Rule:PermanentRuleEffect`
+- Revenge of the Rats: `_Action:CreateTokens`
+- River's Rebuke: renders differently from its Oracle text
+- Rune-Sealed Wall: `_Action:Surveil`
+- Savage Ventmaw: `_Action:AddManaWithModifiers`
+- Scrawling Crawler: `_Trigger:WhenAPlayerDrawsACard`
+- Searslicer Goblin: `_Players:AttackedThisTurn`
+- Secluded Courtyard: `_ReplacementActionWouldEnter:ChooseACreatureType`
+- Seize the Spoils: `_Rule:CastEffect`
+- Self-Reflection: `_CreatableToken:TokenCopyOfPermanent`
+- Sire of Seven Deaths: `_Rule:Ward`
+- Skyknight Squire: `_Permanents:HasNumberCountersOfType`
+- Skyship Buccaneer: `_Players:AttackedThisTurn`
+- Slumbering Cerberus: `_PermanentRule:DoesntUntapDuringControllersUntap`
+- Sorcerous Spyglass: `_ReplacementActionWouldEnter:LookAtAPlayersHand`
+- Soul-Guide Lantern: `_Action:Exile`
+- Soulstone Sanctuary: `_Action:CreatePermanentLayerEffect`
+- Sower of Chaos: `_Action:CreatePermanentRuleEffectUntil`
+- Sphinx of Forgotten Lore: `_Action:CreateGraveyardCardEffectUntil`
+- Sphinx of the Final Word: `_Rule:FromStack`
+- Spinner of Souls:
+  `_Action:RevealCardsFromTheTopOfLibraryUntilACardOfTypeIsRevealed`
+- Springbloom Druid: `_SearchLibraryAction:FindNumberCardsOfType`
+- Squad Rallier: `_Action:LookAtTheTopNumberCardsOfLibrary`
+- Starlight Snare: `_PermanentRule:DoesntUntapDuringControllersUntap`
+- Stasis Snare: `_Action:Exile`
+- Storm Fleet Spy: `_Players:AttackedThisTurn`
+- Stromkirk Bloodthief: `_Players:LostLifeThisTurn`
+- Strongbox Raider: `_Players:AttackedThisTurn`
+- Sun-Blessed Healer: `_Condition:EnteringPermanentPassesFilter`
+- Surrak, the Hunt Caller: `_Condition:TotalPowerOfPermanentsIs`
+- Suspicious Shambler: `_Rule:FromGraveyard`
+- Sylvan Scavenging: `_Action:If`
+- Teach by Example: `_Action:CreateFutureTrigger`
+- Tempest Djinn: `_StaticLayerEffect:AdjustPTForEach`
+- Thousand-Year Storm: `_Action:CopySpellForEachAndMayChooseNewTargets`
+- Tolarian Terror: `_Rule:CastEffect`
+- Tragic Banshee: `_Action:IfElse`
+- Tribute to Hunger: `_Action:SacrificeAPermanent`
+- Twinflame Tyrant: `_Rule:ReplaceWouldDealDamage`
+- Uncharted Haven: `_ReplacementActionWouldEnter:EntersTapped`
+- Uncharted Voyage: `_Player:OwnerOfPermanent`
+- Undying Malice: `_Rule:TriggerA`
+- Valkyrie's Call: `_Action:ReturnDeadGraveyardCardToBattlefield`
+- Valorous Stance: `_Permanents:ToughnessIs`
+- Vampire Gourmand: renders differently from its Oracle text
+- Vengeful Bloodwitch: `_Trigger:Or`
+- Venom Connoisseur: `_Action:If`
+- Vile Entomber: `_SearchLibraryAction:PutFoundCardsIntoGraveyard`
+- Vizier of the Menagerie: `_Rule:PlayerEffect`
+- Wardens of the Cycle: `_Condition:ACreatureOrPlaneswalkerDiedThisTurn`
+- Wary Thespian: `_Action:Surveil`
+- Wildborn Preserver: `_Action:Reflexive_PayManaAnyX_WhenYouDo`
+- Wilt-Leaf Liege: `_Rule:ReplaceWouldDiscard`
+- Wishclaw Talisman: `_ReplacementActionWouldEnter:EntersWithNumberCounters`
+- Zimone, Paradox Sculptor:
+  `_PutCountersAction:DoubleAllCountersOnEachPermanent`
+- Zul Ashur, Lich Lord: `_Rule:Ward`
+
+## Needs a capability
+
+Each card is tracked by its issue and is added when that issue lands. Hardest
+first.
+
+- #5910: Curator of Destinies. A pile effect shows every card in both piles,
+  with no pile face down to its chooser (CR 700.3).
+- #5911: Muldrotha, the Gravetide. A graveyard permission has one budget, not
+  one per permanent type (CR 110.4b).
+- #5912: Tinybones, Bauble Burglar. No standing permission plays exiled cards
+  picked out by a counter on them.
+- #5913: Liliana, Dreadhorde General. Nothing asks for one choice per permanent
+  type and sacrifices the rest (CR 110.4).
+- #5914: Fishing Pole. A granted ability's cost can't tap the Equipment that
+  granted it (CR 602.2).
+- #5915: Steel Hellkite. No filter reads whether an object's controller was
+  dealt combat damage by this creature.
+- #5916: Goblin Negotiation. No quantity reads the excess damage an effect just
+  dealt (CR 120.10).
+- #5921: Cat Collector; Vanguard Seraph. A life-gain trigger has no "first time
+  each turn", where a life-loss trigger does.
+- #5926: Exemplar of Light. A counters trigger can't say who put the counters (CR
+  122.6).
+- #5923: Divine Resilience. A kicked spell can't take a different number of targets
+  (CR 601.2c).
+- #5924: Deadly Brew. Nothing excludes the card a sacrificed permanent became (CR
+  400.7).
+- #5636: Fiery Annihilation. A target slot can't be narrowed to what's attached to
+  another target of the spell: no filter reads the sibling slot as a host.
+- #5929: Fiendish Panda. A dies trigger's "another target card" can't exclude the
+  card the source became, so a copy could return itself (CR 400.7).
+- #5917: Run Away Together. A target slot judges each object alone, with no
+  relation among its targets (CR 115.1).
+- #5918: Courageous Goblin; Ruby, Daring Tracker. An intervening "if" checks
+  again on resolution, where "attacks while" checks only at the event (CR
+  603.4).

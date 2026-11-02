@@ -126,6 +126,7 @@ import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
+import qualified Parun.Types.DealtDamage as DealtDamage
 import Parun.Types.DelayedTrigger (DelayedTrigger)
 import qualified Parun.Types.DelayedTrigger as DelayedTrigger
 import qualified Parun.Types.Designation as Designation
@@ -328,6 +329,15 @@ import qualified Parun.Types.ZoneChangeR as ZoneChangeR
 -- depth 0, which is what freezes it.
 recordEvent :: GameEvent -> GameState -> GameState
 recordEvent event gs = recordEventOver gs event gs
+
+-- CR 603.10a: file `before` as the board the next event's group looks back to.
+-- The first filing stands: in a CR 608.2f group it is the board before any of
+-- the group's permanents left. A regression fence: every multi-permanent group
+-- in the suite moves with one batch board, so a later filing would read the same.
+fileBoardBeforeDeparture :: GameState -> GameState -> GameState
+fileBoardBeforeDeparture before gs =
+  let board = before {GameState.boardAfterEvent = Map.empty, GameState.boardBeforeDeparture = Map.empty}
+   in gs {GameState.boardBeforeDeparture = Map.insertWith (\_ filed -> filed) (GameState.nextEventGroup gs) board (GameState.boardBeforeDeparture gs)}
 
 -- The GameEvent.LifeLost for a loss recorded next, stamped with whether the log
 -- holds an earlier one of the player's. Stamped here because the trigger scan runs
@@ -3505,7 +3515,7 @@ apply batch applied candidate event =
               Just printed -> printed
               Nothing ->
                 let context = Projection.sourceContext gs (Projection.controllerOf oid gs) oid
-                    quantity = Quantity.Type.DamageDealtToPlayersThisTurn (PlayerRef.Relative PlayerRelation.Opponent)
+                    quantity = Quantity.Type.DamageDealtToPlayersThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Nothing}
                  in maybe 0 Integer.toNaturalSaturating (Quantity.evaluate (Projection.fullView gs) context gs oid quantity)
         Replacement.consume (ReplacementCandidate.identity candidate)
         addEnteringCounters oid CounterKind.PlusOnePlusOne count
@@ -7201,6 +7211,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
               -- rather than on the destination alone. The counterspell scenario
               -- "Desertion takes an evoked Mulldrifter and keeps it" proves it.
               resolvedOnto = carrying == CarryOver.Carried && dest == Zone.Battlefield
+              (carriedFrom, carriedBy) = if resolvedOnto then (Object.castFrom obj, under) else (Nothing, Nothing)
               arriving = case (Object.source obj, dest) of
                 (Source.OfSpellCopy printingId, Zone.Battlefield) -> becomesToken printingId
                 (Source.OfCardCopy printingId, Zone.Battlefield) | fromZone == Zone.Stack -> becomesToken printingId
@@ -7360,6 +7371,13 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                     -- "escaped" ask of the permanent. BATTLEFIELD ONLY, `paidCosts`'
                     -- gate and for its reason.
                     Object.castUsing = if resolvedOnto then Object.castUsing obj else Nothing,
+                    -- CR 400.7d again: the zone the spell was cast from and who
+                    -- cast it (`under`, CR 110.2b), what Myojin of Night's Reach's
+                    -- and Nine-Lives Familiar's CR 614.1c rewrites ask of the
+                    -- permanent. `paidCosts`' gate; a controller who isn't the
+                    -- caster is the view's to answer (Object.castBy).
+                    Object.castFrom = carriedFrom,
+                    Object.castBy = carriedBy,
                     -- CR 400.7d a sixth time, and CR 702.174b is the ability that
                     -- references it: the opponent the caster chose to pay each
                     -- instance of rule 702.174a's gift cost, which "the chosen
@@ -8016,6 +8034,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                     Monad.forM_ (Object.attachedTo obj) (unattach oid)
                   seenArriving <- State.gets (Visibility.seenByEveryone newId)
                   causer <- State.gets Game.causeNow
+                  Monad.when (fromZone == Zone.Battlefield) (State.modify' (fileBoardBeforeDeparture lki))
                   State.modify'
                     . recordEvent
                     . GameEvent.Moved
@@ -10127,15 +10146,17 @@ performDraw pid = do
 --
 -- A window already open is left to its owner: a card drawn in a nested one is
 -- drawn while the outer spell is still being cast.
+--
+-- CR 401.5: the window also holds back a new top card (Game.shownTop).
 announcing :: Game a -> Game a
 announcing body = do
   outer <- State.gets GameState.keptFaceDown
   case outer of
     Just _ -> body
     Nothing -> do
-      State.modify' (\g -> g {GameState.keptFaceDown = Just Map.empty})
+      State.modify' (\g -> g {GameState.keptFaceDown = Just Map.empty, GameState.announcedTops = Just (Game.libraryTops g)})
       result <- body
-      State.modify' (\g -> g {GameState.keptFaceDown = Nothing})
+      State.modify' (\g -> g {GameState.keptFaceDown = Nothing, GameState.announcedTops = Nothing})
       pure result
 
 -- CR 121.8: the spell became cast (CR 601.2i) or the ability activated (CR
@@ -10146,7 +10167,7 @@ announcing body = do
 turnUpKeptDraws :: Game ()
 turnUpKeptDraws = do
   kept <- State.gets GameState.keptFaceDown
-  State.modify' (\g -> g {GameState.keptFaceDown = Nothing})
+  State.modify' (\g -> g {GameState.keptFaceDown = Nothing, GameState.announcedTops = Nothing})
   Monad.forM_ (foldMap Map.toAscList kept) $ \(drawn, nth) -> do
     gs <- State.get
     case Game.lookupObject drawn gs of
@@ -10672,7 +10693,7 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> False
   TriggerCondition.DealsCombatDamage _ -> False
   TriggerCondition.DealsDamageToPlayer _ -> False
-  TriggerCondition.SelfDealsDamageToCreature _ -> False
+  TriggerCondition.DealsDamageToPermanent _ -> False
   TriggerCondition.DealsDamage _ -> False
   TriggerCondition.IsDealtDamage _ -> False
   TriggerCondition.PlayerIsDealtDamage _ -> False

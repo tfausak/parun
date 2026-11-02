@@ -135,6 +135,12 @@ data Search = MkSearch
     -- the destination minted (CR 400.7), so a later clause or a delayed ability
     -- can say "that card" -- Grinning Totem's "you may play that card".
     slot :: Maybe SlotName.SlotName,
+    -- | CR 608.2c: the slot just the cards found in a hand are bound to, as `slot`
+    -- binds, for "each card exiled from their hand this way". A slot rather than
+    -- a Filter: only this resolution ever asks. The hand alone: MTGJSON dump of
+    -- 2026-10-26, text "Search" with "from (their|your) (hand|graveyard|library)
+    -- this way", finds no card asking after another zone.
+    handSlot :: Maybe SlotName.SlotName,
     -- | What no two found cards may share -- Gifts Ungiven's "with different
     -- names" (CR 201.2b), Threats Undetected's "with different powers". A
     -- constraint on the found SET, which no per-card filter can state.

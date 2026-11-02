@@ -60,7 +60,8 @@ data Reads = MkReads
     acquisitionOf :: ObjectId -> Acquisition.Acquisition,
     -- | The players a relation is judged over: CR 801.10 / 801.11's 'table'
     -- for a spell or ability, every player still in the game where no range
-    -- applies (Parun.Engine.PlayerEffect.zoneOwners).
+    -- applies (Parun.Engine.PlayerEffect.zoneOwners), and departed seats too for
+    -- a tally of what happened (Parun.Engine.Count.historyPlayersFor).
     roster :: [PlayerId],
     -- | CR 801.10: whether an answer read off a slot, an object or a choice
     -- still reaches this position. A resolution cuts it to its 'table'; a

@@ -1,0 +1,136 @@
+{
+  "faces": [
+    {
+      "enchant": [
+        {
+          "filter": {
+            "type": "Or",
+            "value": [
+              {
+                "type": "HasCardType",
+                "value": {
+                  "type": "Creature"
+                }
+              },
+              {
+                "type": "HasCardType",
+                "value": {
+                  "type": "Land"
+                }
+              },
+              {
+                "type": "HasCardType",
+                "value": {
+                  "type": "Planeswalker"
+                }
+              }
+            ]
+          },
+          "pool": {
+            "type": "Permanents"
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Imprisoned in the Moon",
+      "oracleText": "Enchant creature, land, or planeswalker\nEnchanted permanent is a colorless land with \"{T}: Add {C}\" and loses all other card types and abilities.",
+      "staticAbilities": [
+        {
+          "affected": {
+            "type": "Attached"
+          },
+          "modifications": [
+            {
+              "type": "LoseAllAbilities"
+            },
+            {
+              "type": "Colors",
+              "value": {
+                "colors": [],
+                "mode": {
+                  "type": "Replace"
+                }
+              }
+            },
+            {
+              "type": "CardType",
+              "value": {
+                "cardType": {
+                  "type": "Land"
+                },
+                "mode": {
+                  "type": "Replace"
+                }
+              }
+            },
+            {
+              "type": "GainAbility",
+              "value": {
+                "type": "Activated",
+                "value": {
+                  "cost": {
+                    "components": [
+                      {
+                        "type": "TapThis"
+                      }
+                    ],
+                    "mana": []
+                  },
+                  "modal": {
+                    "modes": [
+                      {
+                        "clauses": [
+                          {
+                            "effects": [
+                              {
+                                "type": "AddMana",
+                                "value": {
+                                  "production": {
+                                    "type": "OfType",
+                                    "value": {
+                                      "type": "Colorless"
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Aura"
+          }
+        ],
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}

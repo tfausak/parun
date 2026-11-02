@@ -1,0 +1,74 @@
+{
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Hill Giant",
+            "label": "giant"
+          },
+          {
+            "card": "Yixlid Jailer"
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Demonic Embrace",
+            "label": "embrace"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Hill Giant"
+          }
+        ],
+        "manaPool": "BBB"
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "description": "CR 113.6f / 613.1f: Yixlid Jailer takes the permission from the card in the graveyard, so the cast is not offered",
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Offered",
+          "player": "alice",
+          "is": [
+            "Pass"
+          ]
+        }
+      }
+    }
+  ]
+}

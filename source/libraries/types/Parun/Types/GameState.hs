@@ -176,6 +176,13 @@ data GameState = MkGameState
     -- entry's own copy of this field is empty. Written by
     -- Parun.Engine.Event.Trigger.fileBoards, cleared with `battlefieldWhenTriggered`.
     boardAfterEvent :: Map.Map EventGroup.EventGroup GameState,
+    -- | CR 603.10a: the whole game immediately before each unscanned event that
+    -- took a permanent off the battlefield, keyed by group, the board a
+    -- leaves-the-battlefield ability looks back to; each entry's own copy of this
+    -- field and of `boardAfterEvent` is empty. Written by
+    -- Parun.Engine.Event.fileBoardBeforeDeparture, cleared with
+    -- `battlefieldWhenTriggered`.
+    boardBeforeDeparture :: Map.Map EventGroup.EventGroup GameState,
     -- | Who controlled each permanent the last time
     -- Parun.Engine.Engine.sampleControl looked; diffing it against the live
     -- projection is what yields GameEvent.ControlChanged (CR 603.2). Rebuilt
@@ -382,6 +389,10 @@ data GameState = MkGameState
     -- kept face down in its hand with no characteristics, keyed to the ordinal
     -- GameEvent.Drew stamped on its draw.
     keptFaceDown :: Maybe (Map.Map ObjectId.ObjectId Natural.Natural),
+    -- | CR 401.5: Nothing unless a spell is being cast or an ability activated
+    -- (Parun.Engine.Event.announcing); then each library's top card as it
+    -- began, the only one that stays shown until it ends (Game.shownTop).
+    announcedTops :: Maybe (Map.Map PlayerId.PlayerId ObjectId.ObjectId),
     -- | CR 801.2c: the players who have left the game since this turn began,
     -- whose seats still count toward range of influence until the next turn
     -- begins; cleared at turn handoff.

@@ -181,9 +181,11 @@ amounts context q = case q of
     whose <- target context s
     Monad.guard (number whose == Filter.Singular)
     -- Free for a card in a graveyard: "that card's toughness" (Rotfeaster
-    -- Maggot).
+    -- Maggot); for a creature: "that creature's mana value" (Niambi, Esteemed
+    -- Speaker).
     let carded = case fmap TargetSlot.pool (Map.lookup s (slots context)) of
           Just (Pool.CardsInGraveyard _) -> [MkAmount (EqualTo (Text.pack "that card's " <> word)) []]
+          Just Pool.Creatures -> [MkAmount (EqualTo (Text.pack "that creature's " <> word)) []]
           _ -> []
     [MkAmount (EqualTo (Text.pack "its " <> word)) [], MkAmount (EqualTo (Text.pack "the " <> word <> Text.pack " of " <> wording whose)) (mentions whose)] <> carded
   _ -> [MkAmount (Stated q) [] | not (null (amount q))]
@@ -372,8 +374,17 @@ player context ref = case ref of
     | s == youSlot -> [(MkReference (Text.pack "you") [] Filter.Singular, Second)]
     | Just word <- Map.lookup s (bound context) -> [(MkReference word [] Filter.Singular, Third)]
     | otherwise -> fmap (\r -> (r, Third)) (target context s)
-  PlayerRef.HolderOfBound Holder.Owner Hop.Itself _ -> [(MkReference (Text.pack "its owner") [] Filter.Singular, Third)]
-  PlayerRef.HolderOfBound Holder.Controller Hop.Itself _ -> [(MkReference (Text.pack "its controller") [] Filter.Singular, Third)]
+  PlayerRef.HolderOfBound holder Hop.Itself s -> (MkReference (possessor <> Text.pack (holderWord holder)) [] Filter.Singular, Third) : thatPlayer
+    where
+      -- Free for a controller: "its controller" or "that player" (Massacre
+      -- Wurm).
+      thatPlayer = [(MkReference (Text.pack "that player") [] Filter.Singular, Third) | holder == Holder.Controller]
+      possessor = case Map.lookup s (bound context) of
+        Just word | word /= Text.pack "it" -> word <> Text.pack "'s "
+        _ -> Text.pack "its "
+      holderWord h = case h of
+        Holder.Owner -> "owner"
+        Holder.Controller -> "controller"
   _ -> []
 
 -- | A target slot as its announcement reads: "target creature", "any
@@ -473,8 +484,7 @@ creature p
 
 -- | A slot's count before its head: one target reads singular, a fixed number
 -- or a range plural ("up to three target creatures", "one or two target
--- creatures"). Free: a plural instant-or-sorcery head reads "and/or" (Scholar
--- of the Ages).
+-- creatures"), any plural head passing through 'andOr'.
 counted :: SlotCount.SlotCount -> Text.Text -> Text.Text -> [(Text.Text, Filter.Number)]
 counted c one many = concatMap andOr $ case c of
   SlotCount.Printed (TargetCount.MkTargetCount 1 (Just 1)) -> [(one, Filter.Singular)]
@@ -488,11 +498,15 @@ counted c one many = concatMap andOr $ case c of
   SlotCount.Printed (TargetCount.MkTargetCount 0 Nothing) -> [(Text.pack "any number of " <> many, Filter.Plural)]
   SlotCount.AnnouncedX -> [(Text.pack "X " <> many, Filter.Plural)]
   _ -> []
+
+-- | Free: a plural instant-or-sorcery head reads "and/or" (Scholar of the Ages,
+-- Ghitu Lavarunner).
+andOr :: (Text.Text, Filter.Number) -> [(Text.Text, Filter.Number)]
+andOr (words', Filter.Plural)
+  | Text.isInfixOf orCards words' = [(words', Filter.Plural), (Text.replace orCards (Text.pack "instant and/or sorcery cards") words', Filter.Plural)]
   where
-    andOr (words', Filter.Plural)
-      | Text.isInfixOf orCards words' = [(words', Filter.Plural), (Text.replace orCards (Text.pack "instant and/or sorcery cards") words', Filter.Plural)]
-    andOr other = [other]
     orCards = Text.pack "instant or sorcery cards"
+andOr other = [other]
 
 -- | Which graveyards cards are in, as words after their noun: "from your
 -- graveyard", "from a graveyard" or "from graveyards", "from a single

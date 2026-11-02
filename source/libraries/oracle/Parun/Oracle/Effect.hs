@@ -389,8 +389,11 @@ paid context g predicates
               instruction = if implied p then verb p else clauseText p
               payment' = Target.wording who <> Text.pack " " <> pays <> each'
           -- Free: "unless" after the instruction (Soul Strings) or before it
-          -- (Rhystic Tutor).
-          text <- [instruction <> Text.pack " unless " <> payment', Text.pack "unless " <> payment' <> Text.pack ", " <> instruction]
+          -- (Rhystic Tutor), and "unless they" where the instruction's subject
+          -- is the payer (Painful Quandary).
+          text <-
+            [instruction <> Text.pack " unless " <> payment', Text.pack "unless " <> payment' <> Text.pack ", " <> instruction]
+              <> [instruction <> Text.pack " unless they " <> second <> each' | Target.wording who `Text.isPrefixOf` instruction]
           [(Prose.sentence text, allMentions p <> Target.mentions who <> counted)]
 
 -- | A clause's instructions as predicates, consecutive changes to the same
@@ -598,7 +601,16 @@ addedTogether p rest = case (mana p, rest) of
 -- Untap up to three lands." (Frantic Search).
 joined :: Target.Context -> [Predicate] -> [(Text.Text, [SlotName.SlotName])]
 joined context predicates = case predicates of
-  [p] -> [(sentences p, allMentions p)]
+  -- Free for an amount of damage: "equal to" or an X defined after (Sanctum of
+  -- Shattered Heights's "deals X damage to target creature or planeswalker,
+  -- where X is the number of Shrines you control").
+  [p] ->
+    (sentences p, allMentions p)
+      : [ (Prose.sentence (clauseText p {verb = vx} <> Text.pack ", where X is " <> e) <> trailing p, allMentions p)
+        | not (implied p),
+          (vx, e) <- equalToX (verb p),
+          Text.pack " X damage to " `Text.isInfixOf` vx
+        ]
   _ : _ : _ : _ -> ListUtils.nubOrd $ do
     (first, rest) <- [splitAt 1 predicates, splitAt 2 predicates]
     (text, ms) <- joined context first
@@ -623,8 +635,15 @@ joined context predicates = case predicates of
     -- an imperative, ", then" (Macabre Waltz).
     | implied p || implied q -> apart <> together <> togetherX <> thenImperative
     -- Free: "and" (Vampiric Feast) or two sentences (Soul Shred).
-    | otherwise -> together <> apart <> togetherX
+    | otherwise -> together <> apart <> togetherX <> durationFirst
     where
+      -- Free for one duration read twice: after each verb, above, or once ahead
+      -- of both (Rookie Mistake).
+      durationFirst =
+        [ (Prose.sentence (Text.pack "until end of turn, " <> clauseText p {verb = vp} <> Text.pack " and " <> clauseText q {verb = vq}) <> trailing q, allMentions p <> allMentions q)
+        | Just vp <- [Text.stripSuffix (Text.pack " until end of turn") (verb p)],
+          Just vq <- [Text.stripSuffix (Text.pack " until end of turn") (verb q)]
+        ]
       together = [(Prose.sentence (clauseText p <> Text.pack " and " <> clauseText q) <> trailing q, allMentions p <> allMentions q)]
       apart = [(text, allMentions p <> allMentions q) | text <- followedBy context (sentences p) (sentences q)]
       thenImperative = [(Prose.sentence (clauseText p <> Text.pack ", then " <> verb q) <> trailing q, allMentions p <> mentions q) | Maybe.isNothing (subject p), implied q]
@@ -1004,6 +1023,7 @@ searched context s
         && not (Search.upTo s)
         && Maybe.isNothing (Search.subject s)
         && Maybe.isNothing (Search.slot s)
+        && Maybe.isNothing (Search.handSlot s)
         && Set.null (Search.differentIn s)
         && not (Search.exactly s)
         && not (Search.andOr s)

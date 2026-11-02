@@ -1,0 +1,261 @@
+{
+  "description": "Ingenious Leonin counters another attacker, with first strike only if it is a Cat",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Ingenious Leonin",
+            "label": "il",
+            "ready": true
+          },
+          {
+            "card": "Savannah Lions",
+            "label": "sl",
+            "ready": true
+          },
+          {
+            "card": "Goblin Piker",
+            "label": "pk",
+            "ready": true
+          },
+          {
+            "card": "Savannah Lions",
+            "label": "home"
+          },
+          {
+            "card": "Plains",
+            "label": "a1"
+          },
+          {
+            "card": "Plains",
+            "label": "a2"
+          },
+          {
+            "card": "Plains",
+            "label": "a3"
+          },
+          {
+            "card": "Plains",
+            "label": "a4"
+          },
+          {
+            "card": "Plains",
+            "label": "a5"
+          },
+          {
+            "card": "Plains",
+            "label": "a6"
+          },
+          {
+            "card": "Plains",
+            "label": "a7"
+          },
+          {
+            "card": "Plains",
+            "label": "a8"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$il",
+          "$sl",
+          "$pk"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "refuse": {
+        "Activate": {
+          "object": "$il",
+          "targets": [
+            "$il"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "refuse": {
+        "Activate": {
+          "object": "$il",
+          "targets": [
+            "$home"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$il",
+          "targets": [
+            "$sl"
+          ],
+          "mana": [
+            "$a1",
+            "$a2",
+            "$a3",
+            "$a4",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "check": {
+        "Counters": {
+          "object": "$sl",
+          "kind": {
+            "type": "PlusOnePlusOne"
+          },
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "check": {
+        "Keywords": {
+          "object": "$sl",
+          "keyword": {
+            "type": "FirstStrike"
+          },
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$il",
+          "targets": [
+            "$pk"
+          ],
+          "mana": [
+            "$a5",
+            "$a6",
+            "$a7",
+            "$a8"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "check": {
+        "Counters": {
+          "object": "$pk",
+          "kind": {
+            "type": "PlusOnePlusOne"
+          },
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "check": {
+        "Keywords": {
+          "object": "$pk",
+          "keyword": {
+            "type": "FirstStrike"
+          },
+          "count": 0
+        }
+      }
+    }
+  ]
+}

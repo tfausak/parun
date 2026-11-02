@@ -1,0 +1,81 @@
+{
+  "faces": [
+    {
+      "combatRestrictions": [
+        {
+          "type": "CantBeBlockedBy",
+          "value": {
+            "affected": {
+              "type": "Matching",
+              "value": {
+                "type": "IsSource"
+              }
+            },
+            "blockers": {
+              "type": "And",
+              "value": []
+            },
+            "unless": {
+              "type": "Compares",
+              "value": {
+                "comparison": {
+                  "type": "AtMost"
+                },
+                "measured": {
+                  "type": "CardsDrawnThisTurn",
+                  "value": {
+                    "type": "Relative",
+                    "value": {
+                      "type": "You"
+                    }
+                  }
+                },
+                "threshold": {
+                  "type": "Literal",
+                  "value": 1
+                }
+              }
+            }
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Tome Anima",
+      "oracleText": "This creature can't be blocked as long as you've drawn two or more cards this turn.",
+      "power": {
+        "type": "Literal",
+        "value": 3
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 3
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Spirit"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

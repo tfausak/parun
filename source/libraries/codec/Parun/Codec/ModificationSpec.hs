@@ -13,6 +13,7 @@ import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.ActivationRestriction as ActivationRestriction
 import qualified Parun.Types.Activator as Activator
+import qualified Parun.Types.CardAbilities as CardAbilities
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CastingPermission as CastingPermission
@@ -23,13 +24,13 @@ import qualified Parun.Types.CombatDamageOption as CombatDamageOption
 import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.CostKeyword as CostKeyword
-import qualified Parun.Types.ExiledCardAbilities as ExiledCardAbilities
 import qualified Parun.Types.ExiledPile as ExiledPile
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.FullText as FullText
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordFamily as KeywordFamily
+import qualified Parun.Types.LentCards as LentCards
 import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
 import qualified Parun.Types.ModeMemory as ModeMemory
@@ -315,12 +316,12 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       " {\"type\":\"GainAbilitiesOfSource\",\"value\":[{\"type\":\"Flash\"}]} "
   -- layer 6, CR 607.2a: the abilities come off the linked cards, so the arm
   -- carries only which pile and the rider's restrictions.
-  Spec.it s "GainExiledCardAbilities" $
+  Spec.it s "GainCardAbilities" $
     Common.assertCodec
       s
       codec
-      (Modification.GainExiledCardAbilities ExiledCardAbilities.MkExiledCardAbilities {ExiledCardAbilities.cards = Filter.IsExiledWithSource ExiledPile.CraftMaterials, ExiledCardAbilities.restrictions = [ActivationRestriction.TimesEachTurn 1]})
-      " {\"type\":\"GainExiledCardAbilities\",\"value\":{\"cards\":{\"type\":\"IsExiledWithSource\",\"value\":{\"type\":\"CraftMaterials\"}},\"restrictions\":[{\"type\":\"TimesEachTurn\",\"value\":1}]}} "
+      (Modification.GainCardAbilities CardAbilities.MkCardAbilities {CardAbilities.from = LentCards.InExile, CardAbilities.cards = Filter.IsExiledWithSource ExiledPile.CraftMaterials, CardAbilities.restrictions = [ActivationRestriction.TimesEachTurn 1]})
+      " {\"type\":\"GainCardAbilities\",\"value\":{\"cards\":{\"type\":\"IsExiledWithSource\",\"value\":{\"type\":\"CraftMaterials\"}},\"restrictions\":[{\"type\":\"TimesEachTurn\",\"value\":1}]}} "
   -- layer 3, CR 612.5: the two sides come from the effect's affected set, so
   -- the arm itself is payload-free.
   Spec.it s "ExchangeTextBoxes" $

@@ -279,6 +279,7 @@ filterAtomsOf leaf predicate = case predicate of
   Filter.Type.ControlledByRole _ -> leaf predicate
   -- A leaf: a Holder and a PlayerRelation hold no Filter for a card author to
   -- reach.
+  Filter.Type.ControllerIsOwner -> leaf predicate
   Filter.Type.HeldBy _ _ -> leaf predicate
   -- A leaf for HeldBy's reason: one carries a slot name and the other a
   -- PlayerId, and neither holds a Filter for a card author to reach.
@@ -1582,6 +1583,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Phyrexian Revoker", 1), -- its activation prohibition's affected set
         ("Stain the Mind", 1), -- its own search
         ("Infinite Obliteration", 1), -- its own search
+        ("Necromentia", 1), -- its own search
         ("Sphinx Ambassador", 1), -- its move clause's gate
         ("Diviner's Lockbox", 1) -- its sacrifice clause's gate
       ]
@@ -1688,6 +1690,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Doubling Chant", 1), -- its search's filter, against its loop's member
         ("Shimian Specter", 1), -- its search's filter, against its loop's member
         ("Legion's End", 3), -- its battlefield and graveyard exiles' objects and its hand sweep's filter
+        ("Maelstrom Pulse", 1), -- its destroy's object
         ("Pattern Matcher", 1) -- its search's filter, at AnyPermanent
       ]
     -- Both sides of the split, with room to spare under the pool's real figures:
@@ -2030,6 +2033,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Freed from the Real", 2), -- an activated tap and untap
         ("Infinite Reflection", 1), -- a CR 707.5 copy entry, read as Pariah's is
         ("Firebreathing", 1), -- an activated pump
+        ("Adventuring Gear", 1), -- Firebreathing's pump, from a landfall trigger
         ("Shiv's Embrace", 1), -- Firebreathing's wording
         ("Blessing", 1), -- Firebreathing's shape, its pump +1/+1
         ("Regeneration", 1), -- a loop whose member its shield names
@@ -2920,7 +2924,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
                 }
             ),
             ( "a Search filter",
-              base {Face.spell = spellOf [Effect.Search Search.MkSearch {Search.searcher = PlayerRef.Relative PlayerRelation.You, Search.owner = PlayerRef.Relative PlayerRelation.You, Search.zones = Set.singleton Zone.Library, Search.outsideTheGame = False, Search.quantity = Just (Quantity.Type.Literal 1), Search.filter = buried, Search.descriptions = Seq.empty, Search.upTo = False, Search.destination = SearchDestination.RevealThenHand, Search.subject = Nothing, Search.slot = Nothing, Search.differentIn = Set.empty, Search.exactly = False, Search.andOr = False}] Map.empty}
+              base {Face.spell = spellOf [Effect.Search Search.MkSearch {Search.searcher = PlayerRef.Relative PlayerRelation.You, Search.owner = PlayerRef.Relative PlayerRelation.You, Search.zones = Set.singleton Zone.Library, Search.outsideTheGame = False, Search.quantity = Just (Quantity.Type.Literal 1), Search.filter = buried, Search.descriptions = Seq.empty, Search.upTo = False, Search.destination = SearchDestination.RevealThenHand, Search.subject = Nothing, Search.slot = Nothing, Search.handSlot = Nothing, Search.differentIn = Set.empty, Search.exactly = False, Search.andOr = False}] Map.empty}
             ),
             ( "an ObjectRef.EachMatching set",
               base {Face.spell = spellOf [Effect.Destroy (Destroy.MkDestroy (ObjectRef.EachMatching buried) Regenerability.Regenerable Nothing Nothing Nothing)] Map.empty}
@@ -3042,7 +3046,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
                 }
             ),
             ( "CR 103.5b's pregame action",
-              base {Face.mulliganActions = [HandAction.MkHandAction Nothing [Effect.Search Search.MkSearch {Search.searcher = PlayerRef.Relative PlayerRelation.You, Search.owner = PlayerRef.Relative PlayerRelation.You, Search.zones = Set.singleton Zone.Library, Search.outsideTheGame = False, Search.quantity = Just (Quantity.Type.Literal 1), Search.filter = buried, Search.descriptions = Seq.empty, Search.upTo = False, Search.destination = SearchDestination.RevealThenHand, Search.subject = Nothing, Search.slot = Nothing, Search.differentIn = Set.empty, Search.exactly = False, Search.andOr = False}]]}
+              base {Face.mulliganActions = [HandAction.MkHandAction Nothing [Effect.Search Search.MkSearch {Search.searcher = PlayerRef.Relative PlayerRelation.You, Search.owner = PlayerRef.Relative PlayerRelation.You, Search.zones = Set.singleton Zone.Library, Search.outsideTheGame = False, Search.quantity = Just (Quantity.Type.Literal 1), Search.filter = buried, Search.descriptions = Seq.empty, Search.upTo = False, Search.destination = SearchDestination.RevealThenHand, Search.subject = Nothing, Search.slot = Nothing, Search.handSlot = Nothing, Search.differentIn = Set.empty, Search.exactly = False, Search.andOr = False}]]}
             )
           ]
         report (label, card) = (label, canHostSubjectOffends card, canHostSubjectCounts card)
@@ -3239,7 +3243,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- filter is matched in the resolution's own context
     -- (Parun.Engine.Resolve.Slots.effectContext), so the same buried atom that offends
     -- in every position above is accepted here.
-    let searched = base {Face.spell = spellOf [Effect.Search Search.MkSearch {Search.searcher = PlayerRef.Relative PlayerRelation.You, Search.owner = PlayerRef.Relative PlayerRelation.You, Search.zones = Set.singleton Zone.Library, Search.outsideTheGame = False, Search.quantity = Just (Quantity.Type.Literal 1), Search.filter = buried, Search.descriptions = Seq.empty, Search.upTo = False, Search.destination = SearchDestination.RevealThenHand, Search.subject = Nothing, Search.slot = Nothing, Search.differentIn = Set.empty, Search.exactly = False, Search.andOr = False}] Map.empty}
+    let searched = base {Face.spell = spellOf [Effect.Search Search.MkSearch {Search.searcher = PlayerRef.Relative PlayerRelation.You, Search.owner = PlayerRef.Relative PlayerRelation.You, Search.zones = Set.singleton Zone.Library, Search.outsideTheGame = False, Search.quantity = Just (Quantity.Type.Literal 1), Search.filter = buried, Search.descriptions = Seq.empty, Search.upTo = False, Search.destination = SearchDestination.RevealThenHand, Search.subject = Nothing, Search.slot = Nothing, Search.handSlot = Nothing, Search.differentIn = Set.empty, Search.exactly = False, Search.andOr = False}] Map.empty}
     Spec.assertEqWith
       s
       "a buried atom in a search's filter is accepted"
@@ -3278,7 +3282,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         buried = Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not atom]]
         spellOf effects slots =
           Mint.oneModeTargeting slots (Seq.fromList effects)
-        searchFor f = Effect.Search Search.MkSearch {Search.searcher = PlayerRef.Relative PlayerRelation.You, Search.owner = PlayerRef.Relative PlayerRelation.You, Search.zones = Set.singleton Zone.Library, Search.outsideTheGame = False, Search.quantity = Just (Quantity.Type.Literal 1), Search.filter = f, Search.descriptions = Seq.empty, Search.upTo = False, Search.destination = SearchDestination.Exile, Search.subject = Nothing, Search.slot = Nothing, Search.differentIn = Set.empty, Search.exactly = False, Search.andOr = False}
+        searchFor f = Effect.Search Search.MkSearch {Search.searcher = PlayerRef.Relative PlayerRelation.You, Search.owner = PlayerRef.Relative PlayerRelation.You, Search.zones = Set.singleton Zone.Library, Search.outsideTheGame = False, Search.quantity = Just (Quantity.Type.Literal 1), Search.filter = f, Search.descriptions = Seq.empty, Search.upTo = False, Search.destination = SearchDestination.Exile, Search.subject = Nothing, Search.slot = Nothing, Search.handSlot = Nothing, Search.differentIn = Set.empty, Search.exactly = False, Search.andOr = False}
         planted =
           [ ( "CR 303.4a's enchant ability",
               base {Face.enchant = [TargetSlot.required Pool.Permanents (Just buried)]}

@@ -99,6 +99,9 @@ data Filter keyword
   | -- | CR 108.3 / 108.4 / 110.2: the candidate's holder relates thus to the
     -- perspective; False where it has none (CR 108.4, 109.1).
     HeldBy Holder.Holder PlayerRelation.PlayerRelation
+  | -- | CR 108.3 / 110.2: the candidate's controller is its owner -- Ghostly
+    -- Pilferer's "their hand" on a spell (Sen Triplets casts from another's).
+    ControllerIsOwner
   | -- | CR 102.1 / 508.5: the candidate's controller holds this role -- an active
     -- player (Nettling Imp's "the active player has controlled"; every member of
     -- the active team under CR 805.4a) or the defending player for the object the
@@ -601,7 +604,8 @@ data Filter keyword
     -- Parun.Types.Object.castFrom precisely because CR 400.7 leaves the spell no
     -- memory of it, so it is never IsInZone above, which reads where the object
     -- is now. Vacuously False for everything that was never cast, and for a
-    -- copy cast from outside the game (CR 400.11).
+    -- copy cast from outside the game (CR 400.11). On a permanent (CR 400.7d),
+    -- also False while its controller isn't who cast it, off Object.castBy.
     WasCastFrom Zone.Zone
   | -- | CR 601.2h read RETROSPECTIVELY off the candidate: mana carrying this
     -- production tag (CR 106.3) was among what paid the candidate's cost --

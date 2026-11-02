@@ -43,8 +43,10 @@
                       "quantity": {
                         "type": "DamageDealtToPlayersThisTurn",
                         "value": {
-                          "type": "InSlot",
-                          "value": "target"
+                          "recipient": {
+                            "type": "InSlot",
+                            "value": "target"
+                          }
                         }
                       }
                     }

@@ -1,0 +1,190 @@
+{
+  "description": "Heroes' Bane's rulings: X is read as its ability resolves, and a power below zero puts no counters",
+  "note": "Five counters make it 5/5; Disorient in response makes it -2/5, so its X is 0 rather than the 5 it had when activated.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Disorient",
+            "label": "w"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Heroes' Bane",
+            "label": "hb",
+            "counters": [
+              {
+                "key": {
+                  "type": "PlusOnePlusOne"
+                },
+                "value": 5
+              }
+            ]
+          },
+          {
+            "card": "Forest",
+            "label": "f1"
+          },
+          {
+            "card": "Forest",
+            "label": "f2"
+          },
+          {
+            "card": "Forest",
+            "label": "f3"
+          },
+          {
+            "card": "Forest",
+            "label": "f4"
+          },
+          {
+            "card": "Island",
+            "label": "u1"
+          },
+          {
+            "card": "Island",
+            "label": "u2"
+          },
+          {
+            "card": "Island",
+            "label": "u3"
+          },
+          {
+            "card": "Island",
+            "label": "u4"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$hb",
+          "mana": [
+            "$f1",
+            "$f2",
+            "$f3",
+            "$f4",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$w",
+          "targets": [
+            "$hb"
+          ],
+          "mana": [
+            "$u1",
+            "$u2",
+            "$u3",
+            "$u4"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "check": {
+        "Counters": {
+          "object": "$hb",
+          "kind": {
+            "type": "PlusOnePlusOne"
+          },
+          "count": 5
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$hb",
+          "power": -2,
+          "toughness": 5
+        }
+      }
+    }
+  ]
+}

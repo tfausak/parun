@@ -283,8 +283,8 @@ data Combat = MkCombat
     -- combat, the defending player it was attacking before it was removed.
     -- Written by Parun.Engine.Game.removeFromCombat and ceaseAttacking (and CR
     -- 800.4a's Parun.Engine.Departure.objectsLeaveWith), read by
-    -- Parun.Engine.Defender.defendingPlayerOf. Parun.RemoveCounterSpec's bounced
-    -- Sensational Spider-Man proves it.
+    -- Parun.Engine.Defender.defendingPlayerOf and Parun.Engine.Count.lastKnownView.
+    -- Parun.RemoveCounterSpec's bounced Sensational Spider-Man proves it.
     removedDefending :: Map.Map ObjectId.ObjectId PlayerId.PlayerId,
     -- | Who is defending the combat phase in progress, in APNAP order (CR
     -- 101.4) -- the order CR 802.4 has them declare blockers in and CR 802.5

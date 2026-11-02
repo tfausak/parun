@@ -723,7 +723,7 @@ trigger n = case Node.tag n of
   "WhenACreatureBlocksACreature" -> other TriggerCondition.SelfBlocksCreature Oracle.Trigger.thatAttacker
   "WhenACreatureBecomesBlockedByACreature" -> other TriggerCondition.SelfBecomesBlockedBy Oracle.Trigger.thatBlocker
   "WhenACreatureDealsCombatDamageToAPlayer" -> damaged TriggerCondition.SelfDealsCombatDamageToPlayer
-  "WhenAPermanentDealsDamageToAPlayer" -> damaged (TriggerCondition.DealsDamageToPlayer . DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self)
+  "WhenAPermanentDealsDamageToAPlayer" -> damaged (\relation -> TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self relation Nothing))
   "AtTheBeginningOfAPlayersUpkeep" -> step (Phase.Beginning BeginningStep.Upkeep)
   "AtTheBeginningOfAPlayersDrawStep" -> step (Phase.Beginning BeginningStep.DrawStep)
   "AtTheBeginningOfAPlayersEndStep" -> step (Phase.Ending EndingStep.EndStep)
@@ -1294,6 +1294,7 @@ searchLibrary who steps = case steps of
               Search.destination = destination,
               Search.subject = Nothing,
               Search.slot = Nothing,
+              Search.handSlot = Nothing,
               Search.differentIn = Set.empty,
               Search.exactly = False,
               Search.andOr = False
@@ -1657,7 +1658,8 @@ slot pool f =
       TargetSlot.chooser = Nothing,
       TargetSlot.perPlayer = Nothing,
       TargetSlot.divided = Nothing,
-      TargetSlot.together = Nothing
+      TargetSlot.together = Nothing,
+      TargetSlot.asCast = Nothing
     }
 
 -- | A slot of permanents: creatures (CR 109.2) where the description says

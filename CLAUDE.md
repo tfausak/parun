@@ -175,7 +175,9 @@ to agents as written. What it doesn't say:
   on stderr with the node it stopped at; `--out DIR` writes the pool's own
   cards too, for comparison. An accepted ability marked `new` owes a
   scenario; a shared one does too unless a test of the card it names
-  exercises it.
+  exercises it. Rendering back proves the words, not the binding: read an
+  accepted filter's `And`/`Or` where a type list takes a trailing qualifier
+  ("artifact, enchantment, or creature with flying" qualifies the last only).
 
 - `Filter.HasCardType` matches in every zone, but "a creature" with no zone,
   "card" or "spell" means a permanent (CR 109.2). Where nothing else confines
