@@ -398,7 +398,8 @@ counted context n comparison k = case Count.scope n of
   Scope.InZone (InZone.MkInZone Zone.Graveyard who@(PlayerRef.Relative PlayerRelation.You)) -> do
     p <- Filter.phrase (Count.filter n) (Target.keyword context)
     (before, number) <- quantifier comparison k
-    noun <- Filter.describe number Target.card (Filter.merge p (Filter.MkPhrase [] [Target.card] []))
+    plain <- Filter.describe number Target.card (Filter.merge p (Filter.MkPhrase [] [Target.card] []))
+    (noun, _) <- Target.andOr (plain, number)
     place <- Target.zoneOf Zone.Graveyard who
     let be = if number == Filter.Singular then Text.pack "is" else Text.pack "are"
     [Text.pack "there " <> be <> Text.pack " " <> before noun <> Text.pack " " <> noun <> Text.pack " " <> place]

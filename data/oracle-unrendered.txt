@@ -942,6 +942,7 @@ fight-or-flight
 final-fortune
 final-punishment
 final-strike
+finale-of-revelation
 fire-lord-ozai
 fire-lord-zuko
 fire-magic
@@ -950,6 +951,7 @@ fireball
 firebending-student
 fireblast
 fires-of-mount-doom
+firespitter-whelp
 first-pick
 fixed-point-in-time
 flame-spill
@@ -959,11 +961,13 @@ flameblast-dragon
 flamerush-rider
 flameshadow-conjuring
 flameskull
+flamewake-phoenix
 flare-of-malice
 flash
 flash-foliage
 flaxen-intruder-welcome-home
 fleet-footed-monk
+fleeting-flight
 flensing-raptor
 fleshbag-marauder
 fleshpulper-giant
@@ -1015,6 +1019,7 @@ fulgent-distraction
 full-steam-ahead
 full-throttle
 fumble
+fumigate
 fungal-behemoth
 fungal-sprouting
 furgul-quag-nurturer
@@ -1023,6 +1028,7 @@ furious-spinesplitter
 furnace-of-rath
 future-sight
 fyndhorn-druid
+fynn-the-fangbearer
 gaeas-blessing
 gaeas-herald
 gaeas-protector
@@ -1043,6 +1049,8 @@ garruks-horde
 garruks-packleader
 garth-one-eye
 gaseous-form
+gate-colossus
+gatekeeper-of-malakir
 gather-specimens
 gather-the-pack
 gauntlet-of-power
@@ -1053,9 +1061,11 @@ gemstone-caverns
 general-jarkeld
 generator-servant
 genesis-hydra
+genesis-wave
 geosurge
 gerrard
 geyser-leaper
+ghalta-primal-hunger
 ghastbark-twins
 ghirapur-aether-grid
 ghirapur-guide
@@ -1063,6 +1073,7 @@ ghitu-encampment
 ghitu-fire
 ghostly-prison
 ghoulraiser
+giada-font-of-hope
 giant-albatross
 giant-beaver
 giant-cindermaw
@@ -1084,6 +1095,7 @@ glacial-fortress
 glamer-spinners
 glamerdye
 glasses-of-urza
+gleaming-barrier
 glen-elendras-answer
 gliding-licid
 glimpse-the-future
@@ -1094,6 +1106,7 @@ glorfindel-dauntless-rescuer
 glorious-protector
 glory-bound-initiate
 gnarlback-rhino
+gnarlid-colony
 gnarlid-pack
 gnarlroot-trapper
 gnat-miser
@@ -1102,6 +1115,7 @@ goblin-artillery
 goblin-bangchuckers
 goblin-battle-jester
 goblin-bird-grabber
+goblin-boarders
 goblin-bookie
 goblin-brawler
 goblin-brigand
@@ -1125,6 +1139,7 @@ gods-willing
 goldberry-river-daughter
 goldenhide-ox
 goldmane-griffin
+goldvein-pick
 golem-skin-gauntlets
 golgothian-sylex
 golos-tireless-pilgrim

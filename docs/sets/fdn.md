@@ -10,26 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Fiendish Panda: `_Trigger:WhenAPlayerGainsLife`
-- Fiery Annihilation: `_Permanents:AttachedToPermanent`
-- Finale of Revelation: `_Action:IfElse`
-- Firespitter Whelp: renders differently from its Oracle text
-- Flamewake Phoenix: `_PermanentRule:MustAttack`
-- Fleeting Flight: `_Action:CreatePreventDamageUntil`
-- Fumigate: `_GameNumber:NumPermanentsDestroyedThisWay`
-- Fynn, the Fangbearer: `_Trigger:WhenACreatureDealsCombatDamageToAPlayer`
-- Gate Colossus: `_Rule:Affinity`
-- Gatekeeper of Malakir: `_Condition:EnteringPermanentPassesFilter`
-- Genesis Wave: `_Action:RevealTheTopNumberCardsOfLibrary`
-- Ghalta, Primal Hunger: `_Rule:CastEffect`
-- Ghitu Lavarunner: `_Players:NumCardsOfTypeInGraveyardIs`
-- Giada, Font of Hope: `_Rule:ReplaceWouldEnter`
-- Gleaming Barrier: `_CreatableToken:TreasureToken`
-- Gnarlid Colony: `_ReplacementActionWouldEnter:IfPassesFilter`
-- Goblin Boarders: `_ReplacementActionWouldEnter:If`
-- Goldvein Pick: `_Trigger:WhenACreatureDealsCombatDamageToAPlayer`
-- Good-Fortune Unicorn: `_Permanent:Trigger_ThatPermanent`
-- Gorehorn Raider: `_Players:AttackedThisTurn`
 - Grappling Kraken: `_CounterType:StunCounter`
 - Gratuitous Violence: `_Rule:ReplaceWouldDealDamage`
 - Grow from the Ashes: `_Rule:SpellActions_Kicker`
@@ -184,6 +164,10 @@ first.
   (CR 601.2c).
 - #5924: Deadly Brew. Nothing excludes the card a sacrificed permanent became (CR
   400.7).
+- #5636: Fiery Annihilation. A target slot can't be narrowed to what's attached to
+  another target of the spell: no filter reads the sibling slot as a host.
+- #5929: Fiendish Panda. A dies trigger's "another target card" can't exclude the
+  card the source became, so a copy could return itself (CR 400.7).
 - #5917: Run Away Together. A target slot judges each object alone, with no
   relation among its targets (CR 115.1).
 - #5918: Courageous Goblin; Ruby, Daring Tracker. An intervening "if" checks
