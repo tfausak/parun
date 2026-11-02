@@ -2876,7 +2876,9 @@ apply batch applied candidate event =
           Nothing -> pure (Just event)
           Just you -> do
             State.modify' $ \gs ->
-              let claim obj = obj {Object.enteredUnder = Just you}
+              -- `castFrom` for "you cast it", which is false of the new taker
+              -- (Event's CR 400.7d carry).
+              let claim obj = obj {Object.enteredUnder = Just you, Object.castFrom = Nothing}
                in gs {GameState.objects = Map.adjust claim oid (GameState.objects gs)}
             pure (Just event)
       -- CR 614.1c: Shimatsu the Bloodcloaked. "As this creature enters, sacrifice
@@ -7209,6 +7211,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
               -- rather than on the destination alone. The counterspell scenario
               -- "Desertion takes an evoked Mulldrifter and keeps it" proves it.
               resolvedOnto = carrying == CarryOver.Carried && dest == Zone.Battlefield
+              controllerBefore = Projection.controllerOf oid gs
               arriving = case (Object.source obj, dest) of
                 (Source.OfSpellCopy printingId, Zone.Battlefield) -> becomesToken printingId
                 (Source.OfCardCopy printingId, Zone.Battlefield) | fromZone == Zone.Stack -> becomesToken printingId
@@ -7368,6 +7371,13 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                     -- "escaped" ask of the permanent. BATTLEFIELD ONLY, `paidCosts`'
                     -- gate and for its reason.
                     Object.castUsing = if resolvedOnto then Object.castUsing obj else Nothing,
+                    -- CR 400.7d a seventh time: the zone the spell was cast from,
+                    -- what Myojin of Night's Reach's and Nine-Lives Familiar's CR
+                    -- 614.1c rewrites ask of the permanent. `paidCosts`' gate, and
+                    -- only while the permanent's controller is the caster: "you
+                    -- cast it" is false of a spell Aethersnatch stole, and
+                    -- Filter.WasCastFrom names no caster.
+                    Object.castFrom = if resolvedOnto && controllerBefore == under then Object.castFrom obj else Nothing,
                     -- CR 400.7d a sixth time, and CR 702.174b is the ability that
                     -- references it: the opponent the caster chose to pay each
                     -- instance of rule 702.174a's gift cost, which "the chosen

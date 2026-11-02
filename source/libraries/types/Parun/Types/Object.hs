@@ -771,8 +771,7 @@ data Object = MkObject
     --
     -- Nothing for every object that was not cast or was cast from outside the
     -- game (CR 400.11, Parun.Engine.Game.zoneOf), and forgotten by
-    -- newIncarnation: CR 400.7d's exception is about costs paid, and the zone a
-    -- spell came from is not one.
+    -- newIncarnation but for CR 400.7d's move, Parun.Engine.Event's carry.
     castFrom :: Maybe Zone.Zone,
     -- | CR 601.2b: the keyword ability that offered the cost this SPELL was cast
     -- for -- Parun.Types.CandidateCost's tag, stamped by Parun.Engine.Cast onto the
