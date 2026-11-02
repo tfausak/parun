@@ -2100,11 +2100,20 @@ castFlashGrant effect = case effect of
 choiceCouldApply :: RowSource -> Filter Keyword -> ObjectId -> GameState -> Bool
 choiceCouldApply src criterion oid gs =
   let bestowable = not (null (Keyword.bestowCosts (Map.keysSet (Projection.keywordsOf oid gs))))
-      prototypable = not (null (Keyword.prototypes (Map.keysSet (Projection.keywordsOf oid gs))))
-      prototyped = gs {GameState.objects = Map.adjust (\o -> o {Object.prototyped = True}) oid (GameState.objects gs)}
    in (bestowable && Filter.matches (contextFrom src oid gs) (Projection.bestowedView oid gs) criterion)
         || xCouldApply src criterion oid VariableChoice.Announced gs
-        || (prototypable && matchesObjectFrom src criterion oid prototyped)
+        || any (matchesObjectFrom src criterion oid) (prototypedReading oid gs)
+
+-- CR 601.3e / 718.3a: the board a cast of `oid` as a prototyped spell is judged
+-- on, where its projection has prototype (CR 702.160a); none otherwise. A
+-- lookahead's board, for choiceCouldApply above, couldCastFrom below and
+-- Parun.Engine.Cast.cardGatesOk: Parun.Engine.Cast.proposedFor writes the same
+-- stamp for the candidate that makes the choice.
+prototypedReading :: ObjectId -> GameState -> [GameState]
+prototypedReading oid gs =
+  [ gs {GameState.objects = Map.adjust (\o -> o {Object.prototyped = True}) oid (GameState.objects gs)}
+  | not (null (Keyword.prototypes (Map.keysSet (Projection.keywordsOf oid gs))))
+  ]
 
 -- choiceCouldApply's X half: could some X the candidate lets its caster announce
 -- (CR 107.3b fixes it at 0 under FixedAtZero) make `criterion` name `oid`?
@@ -2217,6 +2226,13 @@ opensZoneOf pid zone oid inZone gs =
 -- matchesObject reads the chosen half rather than CR 709.4's combined view.
 mayCastFrom :: PlayerId -> Zone.Zone -> ObjectId -> GameState -> Bool
 mayCastFrom pid zone oid gs = not (null (castPermissionsFrom pid zone oid gs))
+
+-- CR 601.3e: mayCastFrom on the card as printed or as a prototyped spell
+-- (prototypedReading), for a gate asked before the candidate is chosen.
+-- Parun.Engine.Cast.candidateInZone asks each candidate exactly, on its own
+-- board.
+couldCastFrom :: PlayerId -> Zone.Zone -> ObjectId -> GameState -> Bool
+couldCastFrom pid zone oid gs = any (mayCastFrom pid zone oid) (gs : prototypedReading oid gs)
 
 -- The permissions mayCastFrom answers off: every CR 601.3 CastFrom row applying
 -- to `pid` that opens `zone` for `oid` and has a use left, paired with the object

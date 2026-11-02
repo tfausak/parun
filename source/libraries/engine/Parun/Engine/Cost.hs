@@ -996,7 +996,7 @@ candidateCostsGiven permitted pid name oid gs =
                         -- Unbound's -3) states no cost either, and so does
                         -- CastingPermission.PlayFromGraveyard (Kethis, the
                         -- Hidden Hand's granted ability).
-                        <> ( if permitted || PlayerEffect.mayCastFrom pid Zone.Graveyard oid gs || PlayerEffect.mayPlayByMayhem pid oid gs || maybe False (\permission -> Expiry.permissionOpen pid permission gs) (Object.playPermission obj) || elem CastingPermission.PlayFromGraveyard (permissionsOf oid face gs) || payingPermitted
+                        <> ( if permitted || PlayerEffect.couldCastFrom pid Zone.Graveyard oid gs || PlayerEffect.mayPlayByMayhem pid oid gs || maybe False (\permission -> Expiry.permissionOpen pid permission gs) (Object.playPermission obj) || elem CastingPermission.PlayFromGraveyard (permissionsOf oid face gs) || payingPermitted
                                then ordinary
                                else filter usingPermitted ordinary
                            )

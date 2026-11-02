@@ -1301,6 +1301,17 @@ candidateFillable :: PlayerId -> ObjectId -> CardName.CardName -> GameState -> C
 candidateFillable pid oid name proposed candidate =
   targetable (CandidateCost.keyword candidate) pid oid name (proposedFor oid (CandidateCost.keyword candidate) proposed)
 
+-- CR 601.3e / 718.3a: CR 601.3's zone permission asked of ONE candidate, on the
+-- board its own choice produces: Serra Paragon admits a graveyard Autonomous
+-- Assembler's prototyped cast (mana value 2) and not its printed one (5).
+-- cardGatesOk's lookahead lets the cast begin; this withholds the candidates the
+-- permission does not name, so none is offered and then refused at CR 601.2e.
+-- data/scenarios/cast-permission/cr-601-3e-serra-paragon-admits-the-prototyped-assembler-and-not-the-printed-one.json
+-- is the proof.
+candidateInZone :: PlayerId -> ObjectId -> CardName.CardName -> GameState -> CandidateCost.CandidateCost -> Bool
+candidateInZone pid oid name proposed candidate =
+  inCastableZone pid oid name (proposedFor oid (CandidateCost.keyword candidate) proposed)
+
 -- CR 601.3: the zones a spell can be cast from at all, in the engine's
 -- canonical order -- what castableSpells scans, and the list castableZones
 -- filters, so the two can never disagree about where to look.
@@ -1972,6 +1983,7 @@ castableGiven shared pid oid name facing gs =
       extras candidate = maybe [([], [])] (\face -> permissionCostChoices pid oid face proposed (CandidateCost.keyword candidate)) (proposedFace oid name proposed)
       candidateOk candidate =
         candidateAllowed pid oid proposed candidate
+          && candidateInZone pid oid name proposed candidate
           && candidateFillable pid oid name proposed candidate
           && any (\(extra, less) -> payable (CandidateCost.reductions candidate <> less) (spendingFor pid oid proposed) (proposedFor oid (CandidateCost.keyword candidate) proposed) (withPermissionCosts extra (CandidateCost.cost candidate))) (extras candidate)
    in cardGatesOk pid oid name proposed
@@ -1995,7 +2007,10 @@ castableGiven shared pid oid name facing gs =
 cardGatesOk :: PlayerId -> ObjectId -> CardName.CardName -> GameState -> Bool
 cardGatesOk pid oid name proposed =
   cardTimingOk pid oid name proposed
-    && inCastableZone pid oid name proposed
+    -- CR 601.3e / 718.3a: on the card as printed or as a prototyped spell, a
+    -- lookahead; candidateInZone narrows the candidates to the reading each
+    -- one makes.
+    && any (inCastableZone pid oid name) (proposed : PlayerEffect.prototypedReading oid proposed)
     -- CR 601.3's prohibit half from a different CARRIER: a spell on the stack
     -- (CR 702.61a) rather than a continuous effect on a player. It names
     -- neither a player nor a quality of the spell, so no candidate can escape
@@ -2023,7 +2038,7 @@ cardGatesOk pid oid name proposed =
 couldBeginToCast :: PlayerId -> ObjectId -> CardName.CardName -> GameState -> Bool
 couldBeginToCast pid oid name gs =
   let proposed = asProposed oid name Facing.FaceUp gs
-      allowed = candidateAllowed pid oid proposed
+      allowed candidate = candidateAllowed pid oid proposed candidate && candidateInZone pid oid name proposed candidate
       candidates = windowedCandidates True pid oid name proposed (Cost.candidateCostsFor pid name oid proposed)
    in cardGatesOk pid oid name proposed && lookGateOk pid oid name gs proposed && any allowed candidates
 
@@ -2603,7 +2618,10 @@ castSpellWith perform timed offered applied widened pid oid name facing = Event.
           -- all of them or the gate above kept none.
           candidates =
             filter
-              (\candidate -> candidateAllowed pid oid proposed candidate && candidateFillable pid oid name proposed candidate)
+              -- candidateInZone only where `castable` gated the cast: an
+              -- offered cast (CR 608.2g) and one made while searching carry
+              -- their own permission.
+              (\candidate -> candidateAllowed pid oid proposed candidate && (not timed || candidateInZone pid oid name proposed candidate) && candidateFillable pid oid name proposed candidate)
               ( fmap
                   (\candidate -> candidate {CandidateCost.cost = taxed (CandidateCost.cost candidate)})
                   (windowedCandidates timed pid oid name proposed (if null applied then Cost.candidateCostsGiven offered pid name oid proposed else applied))
@@ -2898,7 +2916,9 @@ candidateWays rides offered pid oid zone face gs castFor =
       ownSentence keyword = not (null (Keyword.permissionsFor cardTypes keyword)) || Keyword.familyOf keyword == Just KeywordFamily.Disturb
    in if any ownSentence castFor
         then Nothing
-        else Just (foldMap (\from -> castWays rides offered pid oid from face gs castFor) zone)
+        -- CR 601.3e / 718.3a: the permissions naming the spell this
+        -- candidate makes, read off the board its choice produces.
+        else Just (foldMap (\from -> castWays rides offered pid oid from face (proposedFor oid castFor gs) castFor) zone)
 
 -- CR 118.8 / 601.2f: the additional costs and the reductions each way a cast
 -- could be made under would bring, one empty pair where there is none to choose
