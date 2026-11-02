@@ -2358,7 +2358,7 @@ unspentPermission pid source grant gs =
 castPermissionOptions :: (ObjectId -> Bool) -> Bool -> [(Maybe ObjectId, CastFromZone.CastFromZone)] -> PlayerId -> Zone.Zone -> ObjectId -> GameState -> [Maybe (ObjectId, CastFromZone.CastFromZone)]
 castPermissionOptions rides offered own pid zone oid gs =
   let owned = fmap Object.owner (Game.lookupObject oid gs) == Just pid
-   in permissionOptions rides (offered || (zone == Zone.Hand && owned)) (own <> castPermissionsFrom pid zone oid gs)
+   in permissionOptions rides (offered || (zone == Zone.Hand && owned)) (castPermissionsFrom pid zone oid gs <> own)
 
 -- CR 601.3 / 305.1: the ways a play admitted by `usable` can be made, one per
 -- distinguishable outcome -- Nothing, where `open` says the play needs none of

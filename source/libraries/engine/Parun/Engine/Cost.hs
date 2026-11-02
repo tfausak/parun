@@ -851,10 +851,11 @@ candidateCostsGiven permitted pid name oid gs =
                 -- card has; and CR 601.3 / Yawgmoth's Will is an EFFECT stating no
                 -- cost, offering the hand's list BESIDE the rest rather than instead
                 -- of them. Rule 702.34a's "if the resulting spell is an instant or
-                -- sorcery spell" gates the PERMISSION (Keyword.permissionsFor) and is
-                -- not re-asked here; rule 702.138a and rule 702.81a state no such
-                -- clause to gate, and rule 702.187b's own clause is asked here
-                -- rather than there, at the mayhem offer below.
+                -- sorcery spell" gates the permission and the cost that sentence
+                -- states alike (Keyword.permissionsFor, `stated`), so another
+                -- permission's cast is not offered that cost; rule 702.138a and rule
+                -- 702.81a state no such clause to gate, and rule 702.187b's own
+                -- clause is asked here rather than there, at the mayhem offer below.
                 Just Zone.Graveyard ->
                   let -- `keywords` is what the card HAS in the graveyard, not
                       -- what it prints: an ability granted there (CR 113.6f)
@@ -944,6 +945,7 @@ candidateCostsGiven permitted pid name oid gs =
                          in concatMap
                               (\cost -> tappingNone cost : fmap (tappingOne cost) tappable)
                               (Keyword.harmonizeCosts keywords)
+                      stated = not . null . Keyword.permissionsFor (TypeLine.types (Face.typeLine face)) . Keyword.Type.Flashback
                       -- CR 601.3: a permission naming the cost it admits --
                       -- Tenacious Underdog's "cast this card from your graveyard
                       -- using its blitz ability" -- opens only the candidates a
@@ -956,7 +958,7 @@ candidateCostsGiven permitted pid name oid gs =
                       -- the printed cost and its alternatives (Demonic Embrace);
                       -- Parun.Engine.Cast.castWays adds what it states.
                       payingPermitted = not (null [() | CastingPermission.CastFromGraveyard Nothing (_ : _) <- permissionsOf oid face gs])
-                   in fmap flashback (Keyword.flashbackCosts keywords)
+                   in fmap flashback (filter stated (Keyword.flashbackCosts keywords))
                         <> fmap escape (Keyword.escapeCosts keywords)
                         <> (if Game.discardedThisTurnBy pid oid gs then fmap mayhem (Keyword.mayhemCosts keywords) else [])
                         <> harmonized
