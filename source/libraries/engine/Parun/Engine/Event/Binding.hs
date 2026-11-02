@@ -2128,6 +2128,8 @@ eventBindingSlots cond = case cond of
   -- anything the event bound. A slot for the player who GAINED control is what a
   -- card printing "that player" would earn; nothing prints one.
   TriggerCondition.LoseControlOfBound _ -> Set.empty
+  -- Empty: "it" is the bearer, which the ability already names.
+  TriggerCondition.LoseControlOfSelf -> Set.empty
   -- PermanentDies' two slots, and for its reasons: one printed "it" is two
   -- objects, and rule 701.66a's return means the card in the graveyard or in
   -- exile. Unconditional, CR 400.2 making both destinations public where

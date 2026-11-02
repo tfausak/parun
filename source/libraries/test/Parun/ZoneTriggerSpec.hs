@@ -2337,6 +2337,8 @@ representativeEvents cond =
         -- arbitrary -- this condition binds nothing from the log, which is what
         -- Event.eventBindingSlots claims for it.
         TriggerCondition.LoseControlOfBound _ -> one (GameEvent.ControlChanged (ControlChanged.MkControlChanged departed S.alice S.bob))
+        -- The same event, the bearer's own: it too binds nothing.
+        TriggerCondition.LoseControlOfSelf -> one (GameEvent.ControlChanged (ControlChanged.MkControlChanged departed S.alice S.bob))
         -- CR 701.66a's first destination. Rule 701.66a's other one (exile) would
         -- do as well: Event.eventBindings' arm reads the ZoneChange without
         -- casing on the destination, and both are public zones (CR 400.2), so
@@ -2640,6 +2642,7 @@ everyTriggerCondition =
     TriggerCondition.PlayerBecomesMonarch PlayerRelation.You,
     TriggerCondition.PlayerBecomesMonarch PlayerRelation.Opponent,
     TriggerCondition.LoseControlOfBound (SlotName.MkSlotName (Text.pack "target")),
+    TriggerCondition.LoseControlOfSelf,
     TriggerCondition.BoundDiesOrIsExiled (SlotName.MkSlotName (Text.pack "target")),
     TriggerCondition.BoundDies (SlotName.MkSlotName (Text.pack "target")),
     TriggerCondition.RoomEntered RoomIndex.topmost,

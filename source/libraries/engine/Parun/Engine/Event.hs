@@ -331,14 +331,15 @@ import qualified Parun.Types.ZoneChangeR as ZoneChangeR
 recordEvent :: GameEvent -> GameState -> GameState
 recordEvent event gs = recordEventOver gs event gs
 
--- CR 603.10a: file `before` as the board the next event's group looks back to.
+-- CR 603.10a / 603.10d: file `before` as the board the next event's group looks
+-- back to.
 -- The first filing stands: in a CR 608.2f group it is the board before any of
 -- the group's permanents left. A regression fence: every multi-permanent group
 -- in the suite moves with one batch board, so a later filing would read the same.
-fileBoardBeforeDeparture :: GameState -> GameState -> GameState
-fileBoardBeforeDeparture before gs =
-  let board = before {GameState.boardAfterEvent = Map.empty, GameState.boardBeforeDeparture = Map.empty}
-   in gs {GameState.boardBeforeDeparture = Map.insertWith (\_ filed -> filed) (GameState.nextEventGroup gs) board (GameState.boardBeforeDeparture gs)}
+fileBoardBefore :: GameState -> GameState -> GameState
+fileBoardBefore before gs =
+  let board = before {GameState.boardAfterEvent = Map.empty, GameState.boardBeforeEvent = Map.empty, GameState.boardAtControlSample = Nothing}
+   in gs {GameState.boardBeforeEvent = Map.insertWith (\_ filed -> filed) (GameState.nextEventGroup gs) board (GameState.boardBeforeEvent gs)}
 
 -- The GameEvent.LifeLost for a loss recorded next, stamped with whether the log
 -- holds an earlier one of the player's. Stamped here because the trigger scan runs
@@ -8075,7 +8076,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                     Monad.forM_ (Object.attachedTo obj) (unattach oid)
                   seenArriving <- State.gets (Visibility.seenByEveryone newId)
                   causer <- State.gets Game.causeNow
-                  Monad.when (fromZone == Zone.Battlefield) (State.modify' (fileBoardBeforeDeparture lki))
+                  Monad.when (fromZone == Zone.Battlefield) (State.modify' (fileBoardBefore lki))
                   State.modify'
                     . recordEvent
                     . GameEvent.Moved
@@ -10902,6 +10903,8 @@ controllerTurnScoped cond = case cond of
   -- delayed ability watches on the turn the spell resolved, but that is the
   -- DURATION's doing rather than a restriction the condition states.
   TriggerCondition.LoseControlOfBound _ -> False
+  -- Carries no TurnScope: control may change on anyone's turn.
+  TriggerCondition.LoseControlOfSelf -> False
   -- Carries no TurnScope either: rule 701.66a's delayed ability watches for as
   -- long as it takes, on whoever's turn the land dies or is exiled.
   TriggerCondition.BoundDiesOrIsExiled _ -> False

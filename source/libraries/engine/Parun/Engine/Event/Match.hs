@@ -497,17 +497,18 @@ additionalEntryTriggers gs you zc
 -- the event of `group`, for a bearer that was a permanent then (CR 110.1): a card
 -- in a graveyard or an emblem has no such abilities. Read off the board the
 -- ability itself reads: CR 603.10's after the event (GameState.boardAfterEvent),
--- or for `looksBack` the board before it (GameState.boardBeforeDeparture; CR
--- 603.10a, docs/decisions.md, "A look-back ability's additional triggers look
--- back"). A look-back ability's event with no such board took nothing off the
--- battlefield, so the after board answers.
+-- or for `looksBack` the board before it (GameState.boardBeforeEvent; CR
+-- 603.10a, 603.10d, docs/decisions.md, "A look-back ability's additional
+-- triggers look back"). A look-back ability's event with no such board took
+-- nothing off the battlefield and changed no controller, so the after board
+-- answers.
 --
--- Not implemented: the board before a look-back event that takes nothing off
--- the battlefield, a control change, say (#5901).
+-- Not implemented: the board before any other look-back event, CR 603.10b's
+-- phasing or 603.10c's unattaching, say (#5944).
 additionalTriggers :: GameState -> PlayerId -> ObjectId -> EventGroup.EventGroup -> Bool -> Natural
 additionalTriggers gs you bearer group looksBack =
   let after = Map.findWithDefault gs group (GameState.boardAfterEvent gs)
-      before = if looksBack then Maybe.maybeToList (Map.lookup group (GameState.boardBeforeDeparture gs)) else []
+      before = if looksBack then Maybe.maybeToList (Map.lookup group (GameState.boardBeforeEvent gs)) else []
    in case filter (Set.member bearer . GameState.battlefield) (before <> [after]) of
         board : _ -> PlayerEffect.additionalTriggers you bearer board
         [] -> 0
@@ -9236,6 +9237,78 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   TriggerCondition.LoseControlOfBound slot -> case event of
     GameEvent.ControlChanged (ControlChanged.MkControlChanged oid before _) ->
       Map.lookup slot (Binding.objectSlots bindings) == Just oid && before == you
+    GameEvent.VentureMarkerEntered {} -> False
+    GameEvent.BecameTarget {} -> False
+    GameEvent.BecameAttached {} -> False
+    GameEvent.BecameUnattached {} -> False
+    GameEvent.LeftTheGame _ -> False
+    GameEvent.Milled {} -> False
+    GameEvent.PlayerActed _ -> False
+    GameEvent.LandPlayed {} -> False
+    GameEvent.LostTheGame _ -> False
+    GameEvent.ManifestedDread {} -> False
+    GameEvent.DieResultSettled _ -> False
+    GameEvent.RolledToVisit _ -> False
+    GameEvent.PlanarDieRolled _ -> False
+    GameEvent.TurnedUpOffDeck _ -> False
+    GameEvent.ChaosEnsued -> False
+    GameEvent.ClassLevelSet _ -> False
+    GameEvent.Plotted _ -> False
+    GameEvent.PermanentActed _ -> False
+    GameEvent.BecameAttacked _ -> False
+    GameEvent.AttackersDeclared _ -> False
+    GameEvent.BecameTapped _ -> False
+    GameEvent.BecameUntapped _ -> False
+    GameEvent.TappedForMana _ -> False
+    GameEvent.ManaAdded _ -> False
+    GameEvent.ManaAbilityResolved _ -> False
+    GameEvent.CoinFlipped {} -> False
+    GameEvent.StickerPut _ -> False
+    GameEvent.ActivatedAbilityResolved _ -> False
+    GameEvent.TriggeredAbilityResolved _ -> False
+    GameEvent.CardArrived _ -> False
+    GameEvent.AbilityTriggered {} -> False
+    GameEvent.PermanentSacrificed {} -> False
+    GameEvent.TurnedFaceUp _ -> False
+    GameEvent.Transformed {} -> False
+    GameEvent.BecameDesignated {} -> False
+    GameEvent.Mentored {} -> False
+    GameEvent.Exploited {} -> False
+    GameEvent.BecameCrewed _ -> False
+    GameEvent.Convoked _ -> False
+    GameEvent.Saddled _ -> False
+    GameEvent.Crewed _ -> False
+    GameEvent.HalfUnlocked {} -> False
+    GameEvent.SpellCast {} -> False
+    GameEvent.SpellCopied _ -> False
+    GameEvent.CountersRemoved {} -> False
+    GameEvent.CountersPut {} -> False
+    GameEvent.Moved {} -> False
+    GameEvent.DamageDealt _ -> False
+    GameEvent.DamagePrevented {} -> False
+    GameEvent.StepBegan {} -> False
+    GameEvent.BecameMonarch _ -> False
+    GameEvent.TookInitiative _ -> False
+    GameEvent.Discarded {} -> False
+    GameEvent.Drew {} -> False
+    GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
+    GameEvent.Voted {} -> False
+    GameEvent.VotesRevealed {} -> False
+    GameEvent.AttackerDeclared {} -> False
+    GameEvent.BecameBlocking {} -> False
+    GameEvent.BlocksDeclared {} -> False
+    GameEvent.AttackerBlocked {} -> False
+    GameEvent.AttackerUnblocked _ -> False
+    GameEvent.SpellCountered _ -> False
+    GameEvent.AbilityCountered _ -> False
+    GameEvent.AbilityActivated _ -> False
+    GameEvent.LifeLost {} -> False
+    GameEvent.LifeGained {} -> False
+  -- CR 603.10d: the bearer itself changed hands away from `you`, the controller
+  -- the scan offers it under for this event (Event.Trigger.lostControlOf).
+  TriggerCondition.LoseControlOfSelf -> case event of
+    GameEvent.ControlChanged (ControlChanged.MkControlChanged oid before _) -> oid == bearer && before == you
     GameEvent.VentureMarkerEntered {} -> False
     GameEvent.BecameTarget {} -> False
     GameEvent.BecameAttached {} -> False

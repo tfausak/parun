@@ -497,11 +497,16 @@ sampleControl = do
       gain (oid, who) objs = case Map.lookup oid objs of
         Just obj -> Map.insert oid obj {Object.controlClock = Map.insert who ControlClock.Gained (Object.controlClock obj)} objs
         Nothing -> objs
-  State.put gs {GameState.controlSample = sampled, GameState.objects = foldr gain (GameState.objects gs) arrivals}
+      board = gs {GameState.boardAfterEvent = Map.empty, GameState.boardBeforeEvent = Map.empty, GameState.boardAtControlSample = Nothing}
+  State.put gs {GameState.controlSample = sampled, GameState.objects = foldr gain (GameState.objects gs) arrivals, GameState.boardAtControlSample = Just board}
   -- CR 603.2's simultaneity: two permanents whose control reverted in the same CR
   -- 514.2 sweep changed hands at the same moment, so the batch is one event group.
+  -- CR 603.10d: the batch looks back to the board the previous sample read.
+  --
+  -- Not implemented: the board immediately before a change made partway through
+  -- a resolution, nor a second change of the same permanent within it (#5943).
   Monad.unless (null changes) . Event.simultaneously $
-    State.modify' (\g -> List.foldl' (flip Event.recordEvent) g changes)
+    State.modify' (\g -> List.foldl' (flip Event.recordEvent) (maybe g (`Event.fileBoardBefore` g) (GameState.boardAtControlSample gs)) changes)
   pure (not (null changes))
 
 -- CR 514.1's cleanup discard -- NOT CR 514.2, the sweep beside it. The choice is
@@ -735,7 +740,7 @@ placePendingTriggers boards = do
         -- for. Cleared rather than left standing, which bounds both the map and
         -- the game states its unforced thunks retain.
         GameState.boardAfterEvent = Map.empty,
-        GameState.boardBeforeDeparture = Map.empty,
+        GameState.boardBeforeEvent = Map.empty,
         GameState.battlefieldWhenTriggered = Map.empty,
         GameState.delayedTriggers = surviving
       }
@@ -823,7 +828,7 @@ reactions incoming = do
             g
               { GameState.scannedThrough = Natural.length (GameState.events g),
                 GameState.boardAfterEvent = Map.empty,
-                GameState.boardBeforeDeparture = Map.empty,
+                GameState.boardBeforeEvent = Map.empty,
                 GameState.battlefieldWhenTriggered = Map.empty,
                 GameState.delayedTriggers = surviving
               }
@@ -1896,7 +1901,7 @@ beginTurn extra pid gs =
             -- Cleared with the log it describes: the settle Engine.advance runs
             -- immediately before this leaves nothing unscanned.
             GameState.boardAfterEvent = Map.empty,
-            GameState.boardBeforeDeparture = Map.empty,
+            GameState.boardBeforeEvent = Map.empty,
             GameState.battlefieldWhenTriggered = Map.empty,
             GameState.damageScannedThrough = 0,
             -- GameState.lastKnown is deliberately NOT cleared alongside them: CR

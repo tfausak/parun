@@ -2198,6 +2198,7 @@ rewriteTriggerCondition pairs condition = case condition of
   -- CR 603.7's slot name is card data but not card TEXT, so no CR 612.1 swap
   -- reaches it; what the slot holds is read off the projection instead.
   TriggerCondition.LoseControlOfBound _ -> condition
+  TriggerCondition.LoseControlOfSelf -> condition
   -- Rule 701.66a's slot name is engine text, not card text, so no CR 612.1 swap
   -- reaches it either.
   TriggerCondition.BoundDiesOrIsExiled _ -> condition

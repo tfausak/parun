@@ -88,8 +88,10 @@ withoutAnnouncement before entry closed = do
   scannedThrough <- one GameState.scannedThrough
   battlefieldWhenTriggered <- mapOfMaps GameState.battlefieldWhenTriggered
   boardAfterEvent <- mapOf GameState.boardAfterEvent
-  boardBeforeDeparture <- mapOf GameState.boardBeforeDeparture
+  boardBeforeEvent <- mapOf GameState.boardBeforeEvent
   controlSample <- mapOf GameState.controlSample
+  -- A sample, retaken at every check either side ran.
+  boardAtControlSample <- newest GameState.boardAtControlSample
   damageScannedThrough <- one GameState.damageScannedThrough
   delayedTriggers <- seqOf GameState.delayedTriggers
   continuousEffects <- listOf GameState.continuousEffects
@@ -218,8 +220,9 @@ withoutAnnouncement before entry closed = do
         GameState.scannedThrough = scannedThrough,
         GameState.battlefieldWhenTriggered = battlefieldWhenTriggered,
         GameState.boardAfterEvent = boardAfterEvent,
-        GameState.boardBeforeDeparture = boardBeforeDeparture,
+        GameState.boardBeforeEvent = boardBeforeEvent,
         GameState.controlSample = controlSample,
+        GameState.boardAtControlSample = boardAtControlSample,
         GameState.damageScannedThrough = damageScannedThrough,
         GameState.delayedTriggers = delayedTriggers,
         GameState.continuousEffects = continuousEffects,
