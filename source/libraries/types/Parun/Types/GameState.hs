@@ -398,6 +398,9 @@ data GameState = MkGameState
     -- (Parun.Engine.Event.announcing); then each library's top card as it
     -- began, the only one that stays shown until it ends (Game.shownTop).
     announcedTops :: Maybe (Map.Map PlayerId.PlayerId ObjectId.ObjectId),
+    -- | CR 401.6: each library's top card as the last settle found it revealed
+    -- to every player by a player effect (Event.settleRevealedTops).
+    revealedTops :: Map.Map PlayerId.PlayerId ObjectId.ObjectId,
     -- | CR 801.2c: the players who have left the game since this turn began,
     -- whose seats still count toward range of influence until the next turn
     -- begins; cleared at turn handoff.

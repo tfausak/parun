@@ -192,5 +192,13 @@ shownTo seat oid gs = case Game.lookupObject oid gs of
           then Visibility.Obscured
           else visibleIf (any (\grant -> covers grant && reaches grant) (PlayerEffect.shownGrants owner gs))
 
+-- | CR 401.6: the top card of a player's library, if a player effect reveals it
+-- to every player now. A grant showing it to its owner alone is a look, not a
+-- reveal.
+revealedTop :: PlayerId -> GameState.GameState -> Maybe ObjectId
+revealedTop pid gs =
+  let reveals grant = Shows.cards grant == ShownCards.TopOfLibrary && Shows.to grant == Audience.Everyone
+   in if any reveals (PlayerEffect.shownGrants pid gs) then Game.shownTop pid gs else Nothing
+
 visibleIf :: Bool -> Visibility.Visibility
 visibleIf seen = if seen then Visibility.Visible else Visibility.Obscured

@@ -386,9 +386,9 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         --
         -- CR 401.5: atop a library, only a card that is shown: a new top card
         -- lends nothing until the spell becomes cast or the ability activated
-        -- (Game.shownTop, the ruling on Conspicuous Snoop). Not implemented: CR
-        -- 401.6's new object, for a card returned to the top from within its
-        -- library (#5897).
+        -- (Game.shownTop, the ruling on Conspicuous Snoop). A card returned to
+        -- the top from within its library is a new object (CR 401.6,
+        -- Event.settleRevealedTops), so it lends afresh.
         Modification.GainCardAbilities (CardAbilities.MkCardAbilities from criterion extra) ->
           let (zone, lenders) = case from of
                 LentCards.InExile -> (Zone.Exile, Set.toAscList (GameState.exile gs))

@@ -1341,6 +1341,10 @@ settlePasses passes boards = do
   -- matter -- a change any later step here makes is seen on the next pass, and a
   -- pass on which nothing acted is one on which control did not move.
   State.modify' Exile.accrueLookers
+  -- CR 401.6's revealed top card, sampled for accrueLookers' reason: nothing
+  -- announces that a card stops being revealed. Stamp-only, so its position does
+  -- not matter either.
+  State.modify' Event.settleRevealedTops
   -- CR 702.95e, checked here for CR 704.3's reason and not because it is a
   -- state-based action -- rule 704.5 lists it nowhere, rule 702.95a giving the
   -- pairing its own duration. BEFORE the SBA pass, unlike the three samples
