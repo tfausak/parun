@@ -21,7 +21,8 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 -- @count@ and @chooser@ are defaulted rather than required, so the printed
 -- singular addressed to the resolving controller -- which is every "from among
 -- them" but Ancestral Memories', Animal Magnetism's and the "up to" ones --
--- writes neither. @pileChooser@ is elided rather than written null.
+-- writes neither. @pileChooser@ is elided rather than written null, and
+-- @faceUpPile@ rather than written false.
 codec :: Codec.Codec ChosenCardFromAmong.ChosenCardFromAmong
 codec = Fields.object $ do
   slot <- Fields.required "slot" SlotName.codec ChosenCardFromAmong.slot
@@ -29,11 +30,13 @@ codec = Fields.object $ do
   count <- Fields.defaulted "count" HowMany.one HowMany.codec ChosenCardFromAmong.count
   chooser <- Fields.defaulted "chooser" (PlayerRef.Relative PlayerRelation.You) PlayerRef.codec ChosenCardFromAmong.chooser
   pileChooser <- Fields.defaulted "pileChooser" Nothing (Common.maybe PlayerRef.codec) ChosenCardFromAmong.pileChooser
+  faceUpPile <- Fields.defaulted "faceUpPile" False Common.boolean ChosenCardFromAmong.faceUpPile
   pure
     ChosenCardFromAmong.MkChosenCardFromAmong
       { ChosenCardFromAmong.slot = slot,
         ChosenCardFromAmong.filter = filter_,
         ChosenCardFromAmong.count = count,
         ChosenCardFromAmong.chooser = chooser,
-        ChosenCardFromAmong.pileChooser = pileChooser
+        ChosenCardFromAmong.pileChooser = pileChooser,
+        ChosenCardFromAmong.faceUpPile = faceUpPile
       }

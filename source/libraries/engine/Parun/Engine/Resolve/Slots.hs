@@ -561,7 +561,7 @@ objectRefSlots ref = joinTwo (joinSlots (fmap playerRefSlots (objectRefPlayerRef
   -- Joined with the COUNT's own slots, TopOfLibrary's arm above and for its
   -- reason; the CHOOSER's are the generic playerRefSlots fold this case is joined
   -- into, which is what makes Intuition's target opponent a read.
-  ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong slot _ count _ _) -> joinTwo (Map.singleton slot SlotArity.Many) (maybe Map.empty quantitySlots (HowMany.quantity count))
+  ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong slot _ count _ _ _) -> joinTwo (Map.singleton slot SlotArity.Many) (maybe Map.empty quantitySlots (HowMany.quantity count))
   -- The arm above's read, for its reasons: the candidates come from a slot, and
   -- the ref reads every member of the group to match them.
   ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong slot _) -> Map.singleton slot SlotArity.Many
@@ -632,7 +632,7 @@ objectRefQuantities ref = case ref of
   -- two, the library walks' counts above being the only other ObjectRef numbers.
   -- A REGRESSION FENCE rather than proven behaviour: every count in the pool is a
   -- Literal, which reads no slot, so dropping this leaves the suite green.
-  ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong _ _ count _ _) -> Foldable.toList (HowMany.quantity count)
+  ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong _ _ count _ _ _) -> Foldable.toList (HowMany.quantity count)
   ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong _ _) -> []
   -- How many cards randomness names out of each hand -- Fall's printed two. A
   -- REGRESSION FENCE for the arm above's reason: every count in the pool is a
@@ -692,7 +692,7 @@ objectRefPlayerRefs ref = case ref of
   -- mode's own ChoosePlayer DEFINES from both sides of its equality, and that is
   -- the only kind of slot a printed chooser names. Parun.CardSpec's planted
   -- objectRefPlayerRefPositions pins it, and this arm's sibling below.
-  ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong _ _ _ chooser pileChooser) -> chooser : Foldable.toList pileChooser
+  ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong _ _ _ chooser pileChooser _) -> chooser : Foldable.toList pileChooser
   ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong _ _) -> []
   ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand player _ _) -> [player]
   -- ChosenCardInGraveyard's answer: the graveyards are named by a ZoneScope,

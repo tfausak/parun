@@ -38,8 +38,8 @@ import qualified Parun.Types.SlotName as SlotName
 -- Nothing here says the chooser has SEEN the group. A reveal is public (CR
 -- 701.20a) and a look is not (CR 701.20e): a GameEvent.Looked names its
 -- audience, so an opponent-chooser over a looked-at group chooses among cards
--- its log never showed it. Not implemented: the prompt names them to it
--- regardless (#5418).
+-- its log never showed it, as a pile chooser does over a face-down pile. Not
+-- implemented: the prompt names them to it regardless (#5418).
 --
 -- The fields are named rather than positional for ChosenCardInHand's reason.
 data ChosenCardFromAmong = MkChosenCardFromAmong
@@ -52,6 +52,10 @@ data ChosenCardFromAmong = MkChosenCardFromAmong
     -- cards -- and that pile is what the ref names: Fact or Fiction's "an
     -- opponent separates those cards into two piles. Put one pile into your
     -- hand". Parun.Types.ChoosePermanents' pileChooser over a bound group.
-    pileChooser :: Maybe PlayerRef.PlayerRef
+    pileChooser :: Maybe PlayerRef.PlayerRef,
+    -- | CR 700.3: under a pileChooser, the pick is a face-up pile shown to every
+    -- player and the rest a face-down one, so the split is asked even of one
+    -- card. Curator of Destinies; proved by its CR 700.3 scenarios.
+    faceUpPile :: Bool
   }
   deriving (Eq, Ord, Show)
