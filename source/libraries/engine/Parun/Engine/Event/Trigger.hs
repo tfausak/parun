@@ -1363,7 +1363,9 @@ eventTriggers events gs =
       -- after it for a change none is filed for. Wins the union below over
       -- `onBattlefield`'s offer of the same id under its new controller: only
       -- look-back conditions match GameEvent.ControlChanged, so that offer could
-      -- match nothing here.
+      -- match nothing here. Reading the abilities off the board before is a
+      -- regression fence: no pool board changes a permanent's abilities as it
+      -- changes hands.
       lostControlOf onBattlefield logged = case LoggedEvent.event logged of
         GameEvent.ControlChanged (ControlChanged.MkControlChanged oid before _) ->
           let abilities = case Map.lookup (LoggedEvent.group logged) (GameState.boardBeforeEvent gs) of
