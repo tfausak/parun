@@ -448,6 +448,7 @@ chandras-spitfire
 chaos-dragon
 charging-rhino
 charming-prince
+chart-a-course
 chasm-skulker
 chatterfang-squirrel-general
 cheering-fanatic
@@ -471,6 +472,7 @@ circle-of-protection-green
 circle-of-protection-red
 circle-of-protection-white
 circling-vultures
+circuitous-route
 citanul-flute
 city-in-a-bottle
 city-of-brass
@@ -484,6 +486,7 @@ cleopatra-exiled-pharaoh
 cleric-of-the-forward-order
 clever-concealment
 clever-impersonator
+clinquant-skymage
 clock-of-omens
 clone
 cloud-dragon
@@ -525,6 +528,7 @@ constricting-sliver
 consuls-lieutenant
 consume-spirit
 consumed-by-greed
+consuming-aberration
 consuming-blob
 contaminated-bond
 contract-from-below
@@ -539,6 +543,7 @@ corpse-churn
 corpseberry-cultivator
 corpsejack-menace
 corrupt
+corsair-captain
 council-guardian
 councils-judgment
 count-on-luck
@@ -551,6 +556,7 @@ crafty-pathmage
 cragganwick-cremator
 cram-session
 crashing-wave
+crawling-barrens
 crawlspace
 creeping-peeper
 crime-punishment
@@ -572,6 +578,7 @@ crypt-cobra
 crypt-rats
 cryptex
 cryptic-caves
+crystal-barricade
 crystal-spray
 cubwarden
 culling-mark
@@ -641,6 +648,7 @@ delay
 delighted-halfling
 delina-wild-mage
 delivery-moogle
+demolition-field
 demon-of-deaths-gate
 demonic-attorney
 demonic-embrace
@@ -650,6 +658,7 @@ denying-wind
 departed-deckhand
 dermotaxi
 desecrated-tomb
+desecration-demon
 desert
 desertion
 desolation-twin
@@ -718,16 +727,19 @@ dragon-mage
 dragon-mask
 dragon-whelp
 dragonhawk-fates-tempest
+dragonlords-servant
 dragons-hoard
 dragons-prey
 dragonskull-summit
 dragonstorm-globe
 drain-power
+drake-hatcher
 drakuseth-maw-of-flames
 drannith-magistrate
 drawn-from-dreams
 dread-charge
 dread-fugue
+dread-summons
 dreadwaters
 dream-cache
 dream-devourer
