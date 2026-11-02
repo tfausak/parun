@@ -10,26 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Chart a Course: `_Action:Unless`
-- Circuitous Route: `_SearchLibraryAction:FindNumberCardsOfType`
-- Claws Out: `_Rule:Affinity`
-- Clinquant Skymage: `_Trigger:WhenAPlayerDrawsACard`
-- Consuming Aberration: `_Players:Opponent`
-- Corsair Captain: `_CreatableToken:TreasureToken`
-- Crawling Barrens: `_LayerEffect:SetPT`
-- Crow of Dark Tidings: renders differently from its Oracle text
-- Crystal Barricade: `_Rule:PlayerEffect`
-- Cultivator's Caravan: `_Rule:Crew`
-- Deadly Brew: `_Action:SacrificeAPermanent`
-- Deadly Plot: `_Action:PutGraveyardCardOntoBattlefield`
-- Deadly Riposte: renders differently from its Oracle text
-- Demolition Field: `_Player:ControllerOfDestroyedPermanent`
-- Desecration Demon: `_Action:AnyPlayerMayCost`
-- Divine Resilience: `_Rule:SpellActions_Kicker`
-- Dragonlord's Servant: `_Rule:PlayerEffect`
-- Drake Hatcher: `_GameNumber:Trigger_AmountOfDamageDealt`
-- Dread Summons: `_Action:CreateTokens`
-- Dreadwing Scavenger: `_Trigger:Or`
 - Driver of the Dead: `_CardsInGraveyards:ManaValueIs`
 - Drogskol Reaver: `_Trigger:WhenAPlayerGainsLife`
 - Dropkick Bomber: `_Rule:TriggerA`
@@ -218,6 +198,10 @@ first.
   dealt (CR 120.10).
 - #5921: Cat Collector; Vanguard Seraph. A life-gain trigger has no "first time
   each turn", where a life-loss trigger does.
+- #5923: Divine Resilience. A kicked spell can't take a different number of targets
+  (CR 601.2c).
+- #5924: Deadly Brew. Nothing excludes the card a sacrificed permanent became (CR
+  400.7).
 - #5917: Run Away Together. A target slot judges each object alone, with no
   relation among its targets (CR 115.1).
 - #5918: Courageous Goblin; Ruby, Daring Tracker. An intervening "if" checks
