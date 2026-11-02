@@ -166,6 +166,8 @@ first.
   400.7).
 - #5636: Fiery Annihilation. A target slot can't be narrowed to what's attached to
   another target of the spell: no filter reads the sibling slot as a host.
+- #5929: Fiendish Panda. A dies trigger's "another target card" can't exclude the
+  card the source became, so a copy could return itself (CR 400.7).
 - #5917: Run Away Together. A target slot judges each object alone, with no
   relation among its targets (CR 115.1).
 - #5918: Courageous Goblin; Ruby, Daring Tracker. An intervening "if" checks
