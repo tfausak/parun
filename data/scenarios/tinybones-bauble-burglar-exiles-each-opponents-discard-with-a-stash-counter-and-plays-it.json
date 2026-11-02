@@ -1,10 +1,8 @@
 {
-  "description": "CR 118.14 Tinybones, Bauble Burglar: each opponent discards, each discard is exiled with a stash counter, and alice casts bob's red creature with black mana, while her own red creature stays uncastable",
-  "note": "Three seats, so 'each opponent' is two discards. Alice's Goblin Piker is the pair: the same Swamps can't cast her own {1}{R} spell, so the rider belongs to the permission.",
   "board": {
+    "active": "alice",
     "seats": [
       {
-        "name": "alice",
         "battlefield": [
           {
             "card": "Tinybones, Bauble Burglar",
@@ -74,10 +72,10 @@
           {
             "card": "Island"
           }
-        ]
+        ],
+        "name": "alice"
       },
       {
-        "name": "bob",
         "hand": [
           {
             "card": "Hill Giant",
@@ -104,10 +102,10 @@
           {
             "card": "Island"
           }
-        ]
+        ],
+        "name": "bob"
       },
       {
-        "name": "carol",
         "hand": [
           {
             "card": "Savannah Lions",
@@ -130,41 +128,52 @@
           {
             "card": "Island"
           }
-        ]
+        ],
+        "name": "carol"
       }
     ],
-    "active": "alice",
     "step": "PrecombatMain"
   },
+  "description": "CR 118.14 Tinybones, Bauble Burglar: each opponent discards, each discard is exiled with a stash counter, and alice casts bob's red creature with black mana, while her own red creature stays uncastable",
+  "note": "Three seats, so 'each opponent' is two discards. Alice's Goblin Piker is the pair: the same Swamps can't cast her own {1}{R} spell, so the rider belongs to the permission.",
   "timeline": [
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "do": {
         "Activate": {
           "ability": 0,
-          "object": "$tb",
           "mana": [
             "$s1",
             "$s2",
             "$s3",
             "$s4",
             null
-          ]
+          ],
+          "object": "$tb"
         }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
+      },
       "player": "alice",
-      "do": "Pass"
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
+      "check": {
+        "View": {
+          "is": [],
+          "of": "ManaPool",
+          "player": "alice"
+        }
+      },
+      "player": "alice",
       "step": "PrecombatMain",
-      "player": "bob",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
       "do": {
         "Answer": {
           "prompt": "ChooseDiscard",
@@ -172,12 +181,12 @@
             "$giant"
           ]
         }
-      }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "do": {
         "Answer": {
           "prompt": "OrderTriggers",
@@ -186,136 +195,139 @@
             1
           ]
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
+      "do": "Pass",
       "player": "alice",
-      "do": "Pass"
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
+      "do": "Pass",
       "player": "alice",
-      "do": "Pass"
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Count": {
-          "player": "bob",
-          "zone": "Exile",
           "card": "Hill Giant",
-          "count": 1
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "check": {
-        "Count": {
+          "count": 1,
           "player": "bob",
-          "zone": "Graveyard",
-          "card": "Hill Giant",
-          "count": 0
+          "zone": "Exile"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Count": {
-          "player": "carol",
-          "zone": "Exile",
+          "card": "Hill Giant",
+          "count": 0,
+          "player": "bob",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
           "card": "Savannah Lions",
-          "count": 1
+          "count": 1,
+          "player": "carol",
+          "zone": "Exile"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Counters": {
-          "object": "Hill Giant",
+          "count": 1,
           "kind": {
             "type": "Named",
             "value": "stash"
           },
-          "count": 1
+          "object": "Hill Giant"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "Counters": {
-          "object": "Savannah Lions",
+          "count": 1,
           "kind": {
             "type": "Named",
             "value": "stash"
           },
-          "count": 1
+          "object": "Savannah Lions"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
       "player": "alice",
       "refuse": {
         "Cast": {
-          "object": "$piker",
           "mana": [
             "$s5",
             "$s6"
-          ]
+          ],
+          "object": "$piker"
         }
-      }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "do": {
         "Cast": {
-          "object": "Hill Giant",
           "mana": [
             "$s5",
             "$s6",
             "$s7",
             "$s8"
-          ]
+          ],
+          "object": "Hill Giant"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
+      "do": "Pass",
       "player": "alice",
-      "do": "Pass"
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "View": {
-          "of": "Controller",
+          "is": "alice",
           "object": "Hill Giant",
-          "is": "alice"
+          "of": "Controller"
         }
-      }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
     }
   ]
 }
