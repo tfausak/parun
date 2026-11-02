@@ -489,7 +489,7 @@ data GameState = MkGameState
     eventsLastTurn :: Seq.Seq LoggedEvent.LoggedEvent,
     -- | CR 601.2i / 608.2i: every spell cast this game BEFORE the turn in
     -- progress, oldest first, appended at the turn handoff from the log it
-    -- clears. Parun.Engine.Count's EventShape.SpellCastThisGame fold joins it
+    -- clears. Parun.Engine.Count's CastWindow.ThisGame fold joins it
     -- to the live log.
     castsBeforeThisTurn :: Seq.Seq SpellWasCast.SpellWasCast,
     -- | CR 120.1 / 608.2i: every damage event dealt this game BEFORE the turn in

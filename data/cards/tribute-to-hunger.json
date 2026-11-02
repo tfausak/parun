@@ -1,0 +1,98 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Tribute to Hunger",
+      "oracleText": "Target opponent sacrifices a creature of their choice. You gain life equal to that creature's toughness.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "PlayerSacrifices",
+                    "value": {
+                      "filter": {
+                        "type": "HasCardType",
+                        "value": {
+                          "type": "Creature"
+                        }
+                      },
+                      "permanents": "sacrificed",
+                      "players": {
+                        "type": "EachInSlot",
+                        "value": "target"
+                      },
+                      "quantity": {
+                        "type": "Literal",
+                        "value": 1
+                      }
+                    }
+                  },
+                  {
+                    "type": "GainLife",
+                    "value": {
+                      "player": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "You"
+                        }
+                      },
+                      "quantity": {
+                        "type": "AgainstSlot",
+                        "value": {
+                          "quantity": {
+                            "type": "Measure",
+                            "value": {
+                              "type": "Toughness"
+                            }
+                          },
+                          "slot": "sacrificed"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "target": {
+                "filter": {
+                  "type": "IsPlayer",
+                  "value": {
+                    "type": "Opponent"
+                  }
+                },
+                "pool": {
+                  "type": "Players"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -143,6 +143,7 @@ import qualified Parun.Codec.CastFromZoneSpec
 import qualified Parun.Codec.CastObligationSpec
 import qualified Parun.Codec.CastOfferSpec
 import qualified Parun.Codec.CastRepetitionSpec
+import qualified Parun.Codec.CastWindowSpec
 import qualified Parun.Codec.CastingPermissionSpec
 import qualified Parun.Codec.CastingRestrictionSpec
 import qualified Parun.Codec.CastingSpec
@@ -1098,6 +1099,7 @@ spec s registry corpus = do
   Parun.Codec.CastObligationSpec.spec s
   Parun.Codec.CastOfferSpec.spec s
   Parun.Codec.CastRepetitionSpec.spec s
+  Parun.Codec.CastWindowSpec.spec s
   Parun.Codec.ChangeWordSpec.spec s
   Parun.Codec.ChangeTextSpec.spec s
   Parun.Codec.CharacteristicPTSpec.spec s

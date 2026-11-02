@@ -633,7 +633,7 @@ joined context predicates = case predicates of
              ]
     -- Free: two sentences (Afterlife Insurance), "and" (Bad Deal) or, after
     -- an imperative, ", then" (Macabre Waltz).
-    | implied p || implied q -> apart <> together <> togetherX <> thenImperative
+    | implied p || implied q -> apart <> together <> togetherX <> thenImperative <> imperativeAnd
     -- Free: "and" (Vampiric Feast) or two sentences (Soul Shred).
     | otherwise -> together <> apart <> togetherX <> durationFirst
     where
@@ -647,6 +647,8 @@ joined context predicates = case predicates of
       together = [(Prose.sentence (clauseText p <> Text.pack " and " <> clauseText q) <> trailing q, allMentions p <> allMentions q)]
       apart = [(text, allMentions p <> allMentions q) | text <- followedBy context (sentences p) (sentences q)]
       thenImperative = [(Prose.sentence (clauseText p <> Text.pack ", then " <> verb q) <> trailing q, allMentions p <> mentions q) | Maybe.isNothing (subject p), implied q]
+      -- Free: an imperative joined to a stated subject (Vampire Gourmand).
+      imperativeAnd = [(Prose.sentence (verb p <> Text.pack " and " <> clauseText q) <> trailing q, allMentions p <> allMentions q) | implied p, not (implied q)]
       -- Free for one count read by two subjects: "equal to" each time, above,
       -- or one X defined once (Tendrils of Corruption's "deals X damage to
       -- target creature and you gain X life, where X is the number of Swamps
