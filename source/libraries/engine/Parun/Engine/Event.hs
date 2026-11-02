@@ -8251,30 +8251,11 @@ renameSlots old new row =
   let rename oid = if oid == old then new else oid
    in row {ActiveReplacement.slots = fmap (Set.map rename) (ActiveReplacement.slots row)}
 
--- The two captured environments an effect can leave behind, the floating
--- replacement store's and a delayed triggered ability's (CR 603.7c), with every
--- naming of `old` renamed to `new`, for the sources `leftBy` picks: CR 400.7h's
--- Parun.Engine.Cast.followIntoSpell and CR 400.7k's findDeclinedMadness.
-renameCaptured :: (ObjectId -> Bool) -> ObjectId -> ObjectId -> GameState -> GameState
-renameCaptured leftBy old new gs =
-  let follow row
-        | leftBy (ActiveReplacement.source row) = renameSlots old new row
-        | otherwise = row
-      followDelayed entry
-        | leftBy (DelayedTrigger.source entry) =
-            entry {DelayedTrigger.bindings = fmap (Binding.renameObject old new) (DelayedTrigger.bindings entry)}
-        | otherwise = entry
-   in gs
-        { GameState.replacements = fmap follow (GameState.replacements gs),
-          GameState.delayedTriggers = fmap followDelayed (GameState.delayedTriggers gs)
-        }
-
 -- CR 400.7k / 702.35c: "effects referencing the discarded card can find" what a
--- madness card not cast became, in a public zone: every environment holding its
--- exile id `old`, on the stack and off it. A declared target is no such reference
--- and stays on the object CR 400.7 ended (CR 608.2b), its slots left unrenamed; no
--- trigger waits unstacked here, CR 603.3b having stacked them all ahead of this
--- resolution.
+-- madness card not cast became, in a public zone: every stack object holding its
+-- exile id `old`. A declared target is no such reference and stays on the object
+-- CR 400.7 ended (CR 608.2b), its slots left unrenamed, a fence. No trigger waits unstacked here, CR 603.3b
+-- having stacked them all ahead of this resolution.
 findDeclinedMadness :: ObjectId -> ObjectId -> GameState -> GameState
 findDeclinedMadness old new gs =
   let follow oid =
@@ -8283,8 +8264,7 @@ findDeclinedMadness old new gs =
               | Set.member slot declared = binding
               | otherwise = Binding.renameObject old new binding
          in Map.adjust (\obj -> obj {Object.bindings = Map.mapWithKey rename (Object.bindings obj)}) oid
-      onStack = foldr follow (GameState.objects gs) (GameState.stack gs)
-   in renameCaptured (const True) old new gs {GameState.objects = onStack}
+   in gs {GameState.objects = foldr follow (GameState.objects gs) (GameState.stack gs)}
 
 -- carryOver's damage-row half, and CR 400.7c's whole of it: a floating damage row
 -- watching the spell watches the permanent instead. DamagePattern.whichSource is

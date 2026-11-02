@@ -248,7 +248,8 @@ resolveOneWith runSubgame = do
 -- CR 400.7k: after a madness trigger resolves, what its exiled card became, unless
 -- that is a spell ("wasn't cast") or in a hidden zone ("a public zone"). Only a
 -- card still there as it began (`before`), the trigger's own move: see "What
--- moved a madness card" in docs/decisions.md.
+-- moved a madness card" in docs/decisions.md. Both zone conditions are the rule's
+-- and fences: a move stating its origin already misses such an arrival.
 afterMadness :: TriggerCondition.TriggerCondition -> ObjectId -> GameState.GameState -> Game ()
 afterMadness condition exiled before = case condition of
   TriggerCondition.SelfExiledForMadness
