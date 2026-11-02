@@ -1877,6 +1877,12 @@ asProposed :: ObjectId -> CardName.CardName -> Facing.Facing -> GameState -> Gam
 asProposed oid name facing gs =
   turnedUpForPlay oid facing gs {GameState.objects = Map.adjust (\o -> o {Object.face = Just name, Object.facing = facing, Object.castFrom = Game.zoneOf oid gs}) oid (GameState.objects gs)}
 
+-- CR 712.12: `asProposed` for a land play, the board a permission is judged on:
+-- the land face the player chose where the card has one to choose, and per
+-- Kazandu Mammoth's ruling only that face's characteristics.
+asPlayed :: ObjectId -> Maybe CardName.CardName -> GameState -> GameState
+asPlayed oid mName gs = maybe (turnedUpForPlay oid Facing.FaceUp gs) (\name -> asProposed oid name Facing.FaceUp gs) mName
+
 -- CR 406.3a: a card exiled face down is turned face up just before the player
 -- announces they are playing it (CR 601.2), which is what gives the
 -- announcement a card to read -- Projection.View.baseCharacteristics answers
@@ -1969,7 +1975,7 @@ castableGiven shared pid oid name facing gs =
       -- CR 118.8 / 601.2f: payable together with the additional costs and the
       -- reduction of SOME permission the cast could be made under (Dawnhand
       -- Dissident's costs, Urianger Augurelt's reduction).
-      extras candidate = maybe [([], [])] (\face -> permissionCostChoices pid oid face proposed (CandidateCost.keyword candidate)) (proposedFace oid name proposed)
+      extras candidate = maybe [([], [])] (\face -> permissionCostChoices pid oid face (proposedFor oid (CandidateCost.keyword candidate) proposed) (CandidateCost.keyword candidate)) (proposedFace oid name proposed)
       candidateOk candidate =
         candidateAllowed pid oid proposed candidate
           && candidateFillable pid oid name proposed candidate
@@ -1978,7 +1984,7 @@ castableGiven shared pid oid name facing gs =
         && lookGateOk pid oid name gs proposed
         -- Gated HERE, upstream of Action.legalActions, because the engine never
         -- offers an illegal action and then rejects it.
-        && any candidateOk (windowedCandidates True pid oid name proposed (Cost.candidateCostsFor pid name oid proposed))
+        && any candidateOk (candidatesWithWays pid oid name proposed (windowedCandidates True pid oid name proposed (Cost.candidateCostsFor pid name oid proposed)))
 
 -- `castable`'s conjuncts that are about the CARD and the board rather than about
 -- one candidate cost -- the timing window, the zone's permission, and the three
@@ -2606,7 +2612,7 @@ castSpellWith perform timed offered applied widened pid oid name facing = Event.
               (\candidate -> candidateAllowed pid oid proposed candidate && candidateFillable pid oid name proposed candidate)
               ( fmap
                   (\candidate -> candidate {CandidateCost.cost = taxed (CandidateCost.cost candidate)})
-                  (windowedCandidates timed pid oid name proposed (if null applied then Cost.candidateCostsGiven offered pid name oid proposed else applied))
+                  ((if timed then candidatesWithWays pid oid name proposed else id) (windowedCandidates timed pid oid name proposed (if null applied then Cost.candidateCostsGiven offered pid name oid proposed else applied)))
               )
           -- CR 400.7g / 613.1: the keywords the card has WHERE IT LIES, read one
           -- step ahead of the move below for the reason `castFrom` is. The move
@@ -2629,13 +2635,21 @@ castSpellWith perform timed offered applied widened pid oid name facing = Event.
           -- CR 611.2a: the one-shot rows this cast would spend, asked of
           -- the PROPOSED state -- the view the gate read, one step ahead of the
           -- move that forgets the card -- and consumed by castProposed only once
-          -- the announcement has succeeded, so a rejection spends nothing.
-          spent = PlayerEffect.spentByCast pid oid proposed
+          -- the announcement has succeeded, so a rejection spends nothing. Each
+          -- candidate's own board, by CR 702.103d: Savage Summoning's next creature
+          -- spell is not a bestowed Aura spell.
+          spent castFor = PlayerEffect.spentByCast pid oid (proposedFor oid castFor proposed)
           -- CR 601.3: the permissions this cast can be made under, asked of the
           -- same PROPOSED state and for `spent`'s reason -- the ones the gate
           -- offered the cast under are the ones castProposed chooses among, and
-          -- a rejected announcement spends none.
-          permissions = fmap (lookedWays looks) . candidateWays (\src -> not (null (Event.permissionRiders src proposed oid))) offered pid oid castFrom face proposed
+          -- a rejected announcement spends none. Each candidate's own board, by
+          -- CR 702.103d: a bestowed spell is no creature spell.
+          --
+          -- A search cast (neither timed nor offered) is made under the search
+          -- permission alone, CR 601.3: Thundermane Dragon's row leaves the timing
+          -- as it is, so it admits nothing mid-resolution and gives no haste.
+          searching = not timed && not offered
+          permissions castFor = (if searching then const [] else lookedWays looks) <$> candidateWays (\src -> not (null (Event.permissionRiders src proposed oid))) offered pid oid castFrom face (proposedFor oid castFor proposed) castFor
           -- CR 400.7h / 611.3d: what the permission a cast is made under gives
           -- the spell it becomes, asked of the same PROPOSED state -- the board
           -- that source was offering it on.
@@ -2749,7 +2763,7 @@ playLand offered pid oid mName = do
   -- PRE-MOVE id while Parun.Engine.PlayerEffect.matchesObjectFrom can still read
   -- the card -- CR 400.7 gives it a new one below -- and consumed only once the
   -- land has moved, a CR 616.1 loop that cancels the move having played nothing.
-  spent <- if offered then pure [] else State.gets (PlayerEffect.spentByLandPlay pid oid)
+  spent <- if offered then pure [] else State.gets (PlayerEffect.spentByLandPlay pid oid . asPlayed oid mName)
   -- CR 305.1 / 400.7i: the Play-verb permission this play is made under, which
   -- says the budget it spends and the riders it hands the land, asked of the
   -- pre-move board for `spent`'s reason.
@@ -2757,7 +2771,7 @@ playLand offered pid oid mName = do
   permission <-
     if offered
       then pure Nothing
-      else choosePlayPermission pid oid (PlayerEffect.landPermissionOptions (\src -> not (null (Event.permissionRiders src before oid))) pid oid before)
+      else choosePlayPermission pid oid (PlayerEffect.landPermissionOptions (\src -> not (null (Event.permissionRiders src before oid))) pid oid (asPlayed oid mName before))
   let riders played = foldMap (\(src, _) -> Event.permissionRiders src before played) permission
       entering = if Maybe.isNothing permission && not offered then exileLandEntry pid oid before else TapState.Untapped
   -- CR 110.2 / 305.1: the permanent enters under the player who PLAYED it, which
@@ -2899,6 +2913,23 @@ candidateWays rides offered pid oid zone face gs castFor =
    in if any ownSentence castFor
         then Nothing
         else Just (foldMap (\from -> castWays rides offered pid oid from face gs castFor) zone)
+
+-- CR 601.3 / 702.103d: `candidates` less any no way admits on its own board, where
+-- another's way does: with only Muldrotha's creature permission left, Nyxborn
+-- Rollicker's printed cost and not its bestow cost. A list with no way at all is
+-- left alone, its cast being allowed by something no way names (CR 903.8).
+--
+-- For a timed cast alone: one an effect offers has a way open for every candidate
+-- by `offered`, and a search cast is admitted by no way (castSpellWith's
+-- `permissions`).
+candidatesWithWays :: PlayerId -> ObjectId -> CardName.CardName -> GameState -> [CandidateCost.CandidateCost] -> [CandidateCost.CandidateCost]
+candidatesWithWays pid oid name proposed candidates = case proposedFace oid name proposed of
+  Nothing -> candidates
+  Just face ->
+    let hasWay candidate =
+          let castFor = CandidateCost.keyword candidate
+           in maybe True (not . null) (candidateWays (const False) False pid oid (Game.zoneOf oid proposed) face (proposedFor oid castFor proposed) castFor)
+     in if any hasWay candidates then filter hasWay candidates else candidates
 
 -- CR 118.8 / 601.2f: the additional costs and the reductions each way a cast
 -- could be made under would bring, one empty pair where there is none to choose
@@ -3241,7 +3272,7 @@ trimModalForCandidate castFor paid modal = modal {Modal.Type.modes = fmap (trimM
 -- taken as a VALUE for the reason `candidates` and `keywordsBefore` are: the
 -- object it was a fact about no longer exists.
 --
--- `spent` is the one-shot flash grants the cast spends (CR 611.2a), asked of the
+-- `spent` is the one-shot flash grants a cast for a candidate's keyword spends (CR 611.2a), asked of the
 -- pre-move state by castSpellWith for the reason the two above are, and dropped
 -- beside the CR 601.2i event below -- after the last step that can reject.
 --
@@ -3254,7 +3285,7 @@ trimModalForCandidate castFor paid modal = modal {Modal.Type.modes = fmap (trimM
 -- the one chosen spends its budget
 -- beside `spent`, and `riders` is what it gives the spell (CR 611.3d), asked
 -- there too and stored beside it.
-castProposed :: ManaAbilityPerformer.ManaAbilityPerformer -> ManaSpending -> PlayerId -> ObjectId -> ObjectId -> Face.Face Card.Type.Card -> Maybe Zone.Zone -> Maybe ObjectId -> Set Keyword -> [CandidateCost.CandidateCost] -> [ActivePlayerEffect.ActivePlayerEffect] -> (Maybe Keyword -> Maybe [Maybe (ObjectId, CastFromZone.CastFromZone)]) -> (Maybe (ObjectId, CastFromZone.CastFromZone) -> [ContinuousEffect.ContinuousEffect Card.Type.Card]) -> (CandidateCost.CandidateCost -> Maybe (ObjectId, CastFromZone.CastFromZone) -> Integer -> Bool) -> Maybe ExilePlayPermission.ExilePlayPermission -> GameState -> Game ()
+castProposed :: ManaAbilityPerformer.ManaAbilityPerformer -> ManaSpending -> PlayerId -> ObjectId -> ObjectId -> Face.Face Card.Type.Card -> Maybe Zone.Zone -> Maybe ObjectId -> Set Keyword -> [CandidateCost.CandidateCost] -> (Maybe Keyword -> [ActivePlayerEffect.ActivePlayerEffect]) -> (Maybe Keyword -> Maybe [Maybe (ObjectId, CastFromZone.CastFromZone)]) -> (Maybe (ObjectId, CastFromZone.CastFromZone) -> [ContinuousEffect.ContinuousEffect Card.Type.Card]) -> (CandidateCost.CandidateCost -> Maybe (ObjectId, CastFromZone.CastFromZone) -> Integer -> Bool) -> Maybe ExilePlayPermission.ExilePlayPermission -> GameState -> Game ()
 castProposed perform spending pid oid sid printedFace castFrom preparedFor keywordsBefore candidateCosts spent permissions riders refusedAt exilePermission before = do
   -- CR 700.2e: who chooses the modes, settled first -- the caster where
   -- several players could (Players.chooseOne, elided at one) -- and bound on the
@@ -4058,11 +4089,11 @@ castProposed perform spending pid oid sid printedFace castFrom preparedFor keywo
                           Monad.mapM_ Prepare.unprepare preparedFor
                           -- CR 611.2a: the rows this cast spends, for the
                           -- event's own reason -- nothing past this line rejects.
-                          State.modify' (PlayerEffect.consume spent)
+                          State.modify' (PlayerEffect.consume (spent castFor))
                           -- CR 611.2c: and the spell that used them is "that
                           -- spell" to the rows their sources installed beside
                           -- them (Savage Summoning), for the same reason.
-                          State.modify' (bindUser spent sid)
+                          State.modify' (bindUser (spent castFor) sid)
                           -- CR 601.3: the once-each-turn permission this cast
                           -- spends, for the line above's reason -- nothing past
                           -- here rejects, and CR 733.1's reversal restores the
