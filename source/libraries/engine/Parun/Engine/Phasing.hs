@@ -54,8 +54,11 @@
 -- Either of two things starts a phase-out, and `phaseOutSet` is both of their
 -- one performer: CR 502.1's turn-based action, and Effect.PhaseOut -- Reality
 -- Ripple's "target artifact, creature, or land phases out" -- resolved by
--- Parun.Engine.Resolve. The effect mints no event and goes through no funnel,
--- which is CR 702.26d.
+-- Parun.Engine.Resolve. It goes through no zone-change funnel, which is CR
+-- 702.26d; what it records is one GameEvent.PermanentActed per permanent that
+-- phased (PermanentAction.PhaseOut and PhaseIn), for CR 603.2's "whenever this
+-- phases out", with the board before the phasing filed for CR 603.10b's
+-- look-back (Parun.Engine.Event.fileBoardBefore).
 --
 -- CR 702.26n's second sentence is the third thing this module maintains, and the
 -- one schedule that is not read off the untap step's own player: a permanent
@@ -86,19 +89,24 @@
 -- 611.3a), which walks only GameState.battlefield.
 module Parun.Engine.Phasing where
 
+import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
+import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Prepare as Prepare
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.RestrictedCreatures as RestrictedCreatures
+import qualified Parun.Types.GameEvent as GameEvent
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
+import qualified Parun.Types.PermanentActed as PermanentActed
+import qualified Parun.Types.PermanentAction as PermanentAction
 import qualified Parun.Types.PhasedOut as PhasedOut
 import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.Prohibition as Prohibition
@@ -115,10 +123,13 @@ import qualified Parun.Types.Zone as Zone
 -- permanents this very action just removed and put them straight back, so a
 -- creature with phasing would never actually leave.
 --
--- Nothing triggers here (CR 702.26d), nothing chooses anything, and no
--- state-based action is checked -- CR 502.4 gives no player priority during the
--- untap step, so the next check is the upkeep's. That is what lets this be a
--- pure GameState -> GameState rather than a Game action.
+-- No zone-change ability triggers here (CR 702.26d), nothing chooses anything,
+-- and no state-based action is checked -- CR 502.4 gives no player priority
+-- during the untap step, so the next check is the upkeep's. That is what lets
+-- this be a pure GameState -> GameState rather than a Game action. The phasing
+-- is one event group: what phases out and what phases in do so simultaneously,
+-- each recorded as it acted, and a phase-out or phase-in trigger waits for the
+-- upkeep (CR 502.4).
 --
 -- CR 722.3c's "or phases in prepared" is the one thing that happens after the
 -- phasing itself: Parun.Engine.Prepare.mintOnPhasedIn runs over the returning
@@ -137,7 +148,11 @@ import qualified Parun.Types.Zone as Zone
 phasingEvent :: PlayerId -> GameState -> GameState
 phasingEvent pid gs =
   let returning = phasingIn pid gs
-      phased = foldr (phaseIn pid) (phaseOutSet pid (Set.fromList (phasingOut pid gs)) gs) returning
+      leaving = phasingOut pid gs
+      -- Guarded so a step where nothing phases opens no event group.
+      phased
+        | null returning && null leaving = gs
+        | otherwise = Event.simultaneouslyPure (\g -> recordActs PermanentAction.PhaseIn returning (foldr (phaseIn pid) (phaseOutSet pid (Set.fromList leaving) g) returning)) gs
    in foldr Prepare.mintOnPhasedIn phased returning
 
 -- | CR 702.26b: `hosts` phase out, and -- CR 702.26g -- so does everything
@@ -156,6 +171,10 @@ phasingEvent pid gs =
 -- permanent's host is leaving in this same event, so a per-victim call could not
 -- tell an Equipment whose creature is also going from one whose creature is
 -- staying.
+--
+-- Records a PermanentAction.PhaseOut for everything in `leaving`, indirect
+-- riders included (CR 702.26g phases them out too), as one event group, and
+-- files the board before it (CR 603.10b).
 phaseOutSet :: PlayerId -> Set.Set ObjectId -> GameState -> GameState
 phaseOutSet fallback hosts gs =
   let leaving = draggedAlong hosts gs
@@ -176,7 +195,15 @@ phaseOutSet fallback hosts gs =
         -- For the turn-based action the two coincide, phasingOut having filtered
         -- on control.
         | otherwise = PhasedOut.Directly (heldBy fallback oid gs)
-   in foldr (\oid -> phaseOut (status oid) oid) gs (Set.toAscList leaving)
+      gone = foldr (\oid -> phaseOut (status oid) oid) gs (Set.toAscList leaving)
+   in if Set.null leaving
+        then gs
+        else Event.simultaneouslyPure (recordActs PermanentAction.PhaseOut (Set.toAscList leaving) . Event.fileBoardBefore gs) gone
+
+-- CR 603.2: one GameEvent.PermanentActed per permanent, in ascending order,
+-- each against the board as it stands once every write is made.
+recordActs :: PermanentAction.PermanentAction -> [ObjectId] -> GameState -> GameState
+recordActs action oids gs = List.foldl' (\g oid -> Event.recordEvent (GameEvent.PermanentActed (PermanentActed.MkPermanentActed action oid)) g) gs oids
 
 -- CR 702.26a's first half: the phased-in permanents with phasing this player
 -- controls.

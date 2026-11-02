@@ -331,8 +331,8 @@ import qualified Parun.Types.ZoneChangeR as ZoneChangeR
 recordEvent :: GameEvent -> GameState -> GameState
 recordEvent event gs = recordEventOver gs event gs
 
--- CR 603.10a / 603.10d: file `before` as the board the next event's group looks
--- back to.
+-- CR 603.10a / 603.10b / 603.10d: file `before` as the board the next event's
+-- group looks back to.
 -- The first filing stands: in a CR 608.2f group it is the board before any of
 -- the group's permanents left. A regression fence: every multi-permanent group
 -- in the suite moves with one batch board, so a later filing would read the same.

@@ -3,6 +3,7 @@
 module Parun.Codec.ActivationCriteria where
 
 import qualified Parun.Codec.AbilityKind as AbilityKind
+import qualified Parun.Codec.AbilityName as AbilityName
 import qualified Parun.Codec.Keyword as Keyword
 import qualified Parun.Codec.KeywordDesignator as KeywordDesignator
 import qualified Parun.Codec.LoyaltyKind as LoyaltyKind
@@ -19,4 +20,5 @@ codec = Fields.object $ do
   grantedBy <- Fields.defaulted "grantedBy" Nothing (Common.maybe (KeywordDesignator.codec Keyword.codec)) ActivationCriteria.grantedBy
   whichKind <- Fields.defaulted "whichKind" Nothing (Common.maybe AbilityKind.codec) ActivationCriteria.whichKind
   whichLoyalty <- Fields.defaulted "whichLoyalty" Nothing (Common.maybe LoyaltyKind.codec) ActivationCriteria.whichLoyalty
-  pure ActivationCriteria.MkActivationCriteria {ActivationCriteria.grantedBy = grantedBy, ActivationCriteria.whichKind = whichKind, ActivationCriteria.whichLoyalty = whichLoyalty}
+  whichAbility <- Fields.defaulted "whichAbility" Nothing (Common.maybe AbilityName.codec) ActivationCriteria.whichAbility
+  pure ActivationCriteria.MkActivationCriteria {ActivationCriteria.grantedBy = grantedBy, ActivationCriteria.whichKind = whichKind, ActivationCriteria.whichLoyalty = whichLoyalty, ActivationCriteria.whichAbility = whichAbility}

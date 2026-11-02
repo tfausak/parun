@@ -1790,7 +1790,7 @@ alternativeActivationCosts :: PlayerId -> Maybe Keyword -> GameState -> [ManaCos
 alternativeActivationCosts pid stamp gs =
   let offered (source, effect) = case effect of
         PlayerEffect.AlternativeActivationCost (AlternativeActivationCost.MkAlternativeActivationCost granted onlyFirst amount) ->
-          if any (Keyword.designates granted) stamp && maybe True (firstActivation pid source (Filter.Type.And []) ActivationCriteria.MkActivationCriteria {ActivationCriteria.grantedBy = Just granted, ActivationCriteria.whichKind = Nothing, ActivationCriteria.whichLoyalty = Nothing} Nothing gs) onlyFirst
+          if any (Keyword.designates granted) stamp && maybe True (firstActivation pid source (Filter.Type.And []) ActivationCriteria.MkActivationCriteria {ActivationCriteria.grantedBy = Just granted, ActivationCriteria.whichKind = Nothing, ActivationCriteria.whichLoyalty = Nothing, ActivationCriteria.whichAbility = Nothing} Nothing gs) onlyFirst
             then Just amount
             else Nothing
         _ -> Nothing
@@ -1803,11 +1803,12 @@ alternativeActivationCosts pid stamp gs =
 --
 -- The criterion is matched against `srcId`, the ability's SOURCE PERMANENT
 -- (Heartstone's "activated abilities of creatures"), projected rather than
--- printed (an animated Vehicle's abilities are a creature's). `stamp`, `kind`
--- and `loyalty` are the facts about the ABILITY that Parun.Types.ActivationCriteria
--- asks: its rule-702 keyword (Fluctuator's "cycling abilities"), CR 605.1a's
--- classification (Zirda's "that aren't mana abilities") and CR 606.2's (Carth
--- the Lion's "loyalty abilities"). The caller answers them, because only the
+-- printed (an animated Vehicle's abilities are a creature's). `stamp`, `named`,
+-- `kind` and `loyalty` are the facts about the ABILITY that
+-- Parun.Types.ActivationCriteria asks: its rule-702 keyword (Fluctuator's
+-- "cycling abilities"), its name (Sanctum of Tranquil Light's "this ability"),
+-- CR 605.1a's classification (Zirda's "that aren't mana abilities") and CR
+-- 606.2's (Carth the Lion's "loyalty abilities"). The caller answers them, because only the
 -- caller has the ability -- Parun.Engine.Cost.manaActivationAdjustmentsGiven is
 -- the mana window and says so. Each is compared and never inspected further: a
 -- rulebook citation or classification, never what the ability does.
@@ -1818,8 +1819,8 @@ alternativeActivationCosts pid stamp gs =
 -- Parun.Engine.Activate.activateAbility, which gathers once before the targets
 -- exist and again after -- and a caller that has to MEASURE the cost before
 -- that moment searches the aimings (Parun.Engine.Activatable.aimingSomewhere).
-activationCostAdjustments :: Set.Set ObjectId -> Maybe Keyword -> AbilityKind.AbilityKind -> LoyaltyKind.LoyaltyKind -> PlayerId -> ObjectId -> GameState -> CostAdjustments
-activationCostAdjustments targets stamp kind loyalty pid srcId gs = activationCostAdjustmentsGiven (applying pid gs) pid targets stamp kind loyalty srcId gs
+activationCostAdjustments :: Set.Set ObjectId -> Maybe Keyword -> Maybe AbilityName.AbilityName -> AbilityKind.AbilityKind -> LoyaltyKind.LoyaltyKind -> PlayerId -> ObjectId -> GameState -> CostAdjustments
+activationCostAdjustments targets stamp named kind loyalty pid srcId gs = activationCostAdjustmentsGiven (applying pid gs) pid targets stamp named kind loyalty srcId gs
 
 -- The same gather given the effect list the CALLER has already taken, which is
 -- the half a per-permanent loop wants: `applying` is a walk of everything in
@@ -1835,8 +1836,8 @@ activationCostAdjustments targets stamp kind loyalty pid srcId gs = activationCo
 -- The rows arrive PAIRED WITH THEIR SOURCE and not stripped to bare effects,
 -- because CR 303.4b's "enchanted" is a fact about the row's own permanent: the
 -- criterion is matched through matchesObjectFrom, which needs it.
-activationCostAdjustmentsGiven :: [(RowSource, PlayerEffect)] -> PlayerId -> Set.Set ObjectId -> Maybe Keyword -> AbilityKind.AbilityKind -> LoyaltyKind.LoyaltyKind -> ObjectId -> GameState -> CostAdjustments
-activationCostAdjustmentsGiven effects pid targets stamp kind loyalty srcId gs =
+activationCostAdjustmentsGiven :: [(RowSource, PlayerEffect)] -> PlayerId -> Set.Set ObjectId -> Maybe Keyword -> Maybe AbilityName.AbilityName -> AbilityKind.AbilityKind -> LoyaltyKind.LoyaltyKind -> ObjectId -> GameState -> CostAdjustments
+activationCostAdjustmentsGiven effects pid targets stamp named kind loyalty srcId gs =
   let -- CR 601.2c's chosen targets: Dwarven Mauler's "equip abilities you
       -- activate THAT TARGET THIS CREATURE", Kopala's "that target a Merfolk you
       -- control". False on an empty set -- an ability that targets nothing is
@@ -1846,20 +1847,14 @@ activationCostAdjustmentsGiven effects pid targets stamp kind loyalty srcId gs =
       -- as Parun.Engine.Filter's source, which is what makes Filter.IsSource read
       -- "this creature" here, and with `targetPerspective`'s "you".
       matchingTargets source wanted = filter (\oid -> matchesObjectFor (targetPerspective pid source gs) source wanted oid gs) (Set.toList targets)
-      -- The source filter, then the three facts about the ABILITY being
-      -- activated that no source filter can answer (Parun.Types.ActivationCriteria):
-      -- its rule-702 keyword off `stamp`, CR 605.1a's `kind` and CR 606.2's
-      -- `loyalty`, each compared and never inspected further. Then Professor
+      -- The source filter, then the facts about the ABILITY being activated
+      -- that no source filter can answer (Count.abilityMeets). Then Professor
       -- Hojo's "first", asked with the same criteria.
       reaches source modifier = case CostModifier.subject modifier of
         CostSubject.Activations criteria ->
-          let granted = ActivationCriteria.grantedBy criteria
-              wantedKind = ActivationCriteria.whichKind criteria
-              criterion = CostModifier.matching modifier
+          let criterion = CostModifier.matching modifier
            in matchesObjectFrom source criterion srcId gs
-                && maybe True (\g -> any (Keyword.designates g) stamp) granted
-                && maybe True (== kind) wantedKind
-                && maybe True (== loyalty) (ActivationCriteria.whichLoyalty criteria)
+                && Count.abilityMeets criteria stamp named kind loyalty
                 && maybe True (firstActivation pid source criterion criteria (CostModifier.whichTargets modifier) gs) (CostModifier.onlyFirst modifier)
         -- Thalia and Sapphire Medallion, turned away by the SUBJECT and not by
         -- their Filters, which is what keeps a noncreature permanent's activated

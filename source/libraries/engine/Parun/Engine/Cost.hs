@@ -1299,7 +1299,7 @@ readsTargets pid oid gs =
 -- way and read by the same gather -- empty for every caller standing before CR
 -- 601.2c, which is where a reducer naming a target (Dwarven Mauler) simply does
 -- not apply.
-activationAdjustments :: Set.Set ObjectId -> Maybe Keyword.Type.Keyword -> AbilityKind.AbilityKind -> LoyaltyKind.LoyaltyKind -> PlayerId -> ObjectId -> GameState -> CostAdjustments.CostAdjustments
+activationAdjustments :: Set.Set ObjectId -> Maybe Keyword.Type.Keyword -> Maybe AbilityName.AbilityName -> AbilityKind.AbilityKind -> LoyaltyKind.LoyaltyKind -> PlayerId -> ObjectId -> GameState -> CostAdjustments.CostAdjustments
 activationAdjustments = PlayerEffect.activationCostAdjustments
 
 -- Every way CR 118.7e's choice could resolve the reductions that apply --
@@ -3057,7 +3057,7 @@ manaActivations measure pcs pid oid cost restrictions ability gs = manaActivatio
 -- and no reader here reads: see Parun.Engine.PlayerEffect.matchesObjectFrom.
 manaActivationsGiven :: [(RowSource, PlayerEffect.Type.PlayerEffect)] -> Mana.Capacity
 manaActivationsGiven effects measure pcs pid oid printedCost restrictions ability gs =
-  let adjustments = manaActivationAdjustmentsGiven effects pid (ActivatedAbility.keyword =<< ability) oid gs
+  let adjustments = manaActivationAdjustmentsGiven effects pid (ActivatedAbility.keyword =<< ability) (ActivatedAbility.name =<< ability) oid gs
       -- The COMPONENT half of CR 601.2f, applied here so every conjunct below
       -- measures the components an effect added as well as the printed ones. The
       -- MANA half is not folded in, because CR 118.7e and CR 601.2f leave two
@@ -3153,12 +3153,12 @@ manaActivationsGiven effects measure pcs pid oid printedCost restrictions abilit
 -- what makes Suppression Field's "unless they're mana abilities" and Zirda, the
 -- Dawnwaker's "that aren't mana abilities" spare every activation gathered here,
 -- the increase side and the reduction side of one rider.
-manaActivationAdjustments :: Maybe Keyword.Type.Keyword -> PlayerId -> ObjectId -> GameState -> CostAdjustments.CostAdjustments
-manaActivationAdjustments stamp pid oid gs = manaActivationAdjustmentsGiven (PlayerEffect.applying pid gs) pid stamp oid gs
+manaActivationAdjustments :: Maybe Keyword.Type.Keyword -> Maybe AbilityName.AbilityName -> PlayerId -> ObjectId -> GameState -> CostAdjustments.CostAdjustments
+manaActivationAdjustments stamp named pid oid gs = manaActivationAdjustmentsGiven (PlayerEffect.applying pid gs) pid stamp named oid gs
 
 -- The same gather off a hoisted effect list; see manaActivationsGiven.
-manaActivationAdjustmentsGiven :: [(RowSource, PlayerEffect.Type.PlayerEffect)] -> PlayerId -> Maybe Keyword.Type.Keyword -> ObjectId -> GameState -> CostAdjustments.CostAdjustments
-manaActivationAdjustmentsGiven effects pid stamp = PlayerEffect.activationCostAdjustmentsGiven effects pid Set.empty stamp AbilityKind.ManaAbility LoyaltyKind.NonLoyaltyAbility
+manaActivationAdjustmentsGiven :: [(RowSource, PlayerEffect.Type.PlayerEffect)] -> PlayerId -> Maybe Keyword.Type.Keyword -> Maybe AbilityName.AbilityName -> ObjectId -> GameState -> CostAdjustments.CostAdjustments
+manaActivationAdjustmentsGiven effects pid stamp named = PlayerEffect.activationCostAdjustmentsGiven effects pid Set.empty stamp named AbilityKind.ManaAbility LoyaltyKind.NonLoyaltyAbility
 
 -- CR 118.3 asked of a mana ability's own MANA part, and the one read
 -- manaActivations makes that could ask itself. Nothing is CR 118.6's unpayable
@@ -6065,7 +6065,7 @@ tapForManaWith perform window inFlight refused activator oid = do
           -- them no stack window in.
           --
           -- `gs` is still current: chooseManaYield only prompts.
-          let gathered = manaActivationAdjustments (ActivatedAbility.keyword =<< ManaOption.ability chosen) controller oid gs
+          let gathered = manaActivationAdjustments (ActivatedAbility.keyword =<< ManaOption.ability chosen) (ActivatedAbility.name =<< ManaOption.ability chosen) controller oid gs
               withComponents = plusComponents gathered (ManaOption.cost chosen)
           -- CR 118.13a: a mana ability is an activated ability (CR 605.1a) and
           -- CR 602.2b sends its activation cost through CR 601.2b, so a symbol
