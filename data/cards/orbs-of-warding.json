@@ -31,10 +31,21 @@
             "value": {
               "matching": {
                 "whatSource": {
-                  "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    },
+                    {
+                      "type": "IsInZone",
+                      "value": {
+                        "type": "Battlefield"
+                      }
+                    }
+                  ]
                 },
                 "whoRecipient": {
                   "type": "You"

@@ -6616,10 +6616,8 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- application being one CR 615.13 trigger however many sources it covered.
   -- The bearer contributes only CR 109.5's "you" and the Filter.Context's
   -- source, as in the PermanentDealsCombatDamageToPlayer arm above. viewWithLastKnown:
-  -- CR 608.2h's record is what still answers "was it black" for a source that
-  -- died to the very batch this prevented. A fence rather than a tested branch:
-  -- Samite Ministration's shield covers a PLAYER, so nothing that reaches this
-  -- arm kills the damage's source.
+  -- CR 608.2h's record is what still answers "was it a creature" for a source
+  -- gone by now. Proved by judgment-of-alexander-fires-for-a-sacrificed-creature.
   --
   -- Filter.IsSource is meaningless in THIS position where it is meaningful
   -- there: the context's source is the bearer, and the bearer is the object whose
