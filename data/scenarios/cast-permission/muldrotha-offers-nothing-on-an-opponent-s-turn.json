@@ -133,7 +133,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "Muldrotha: \"during each of your turns\" with Vedalken Orrery's flash: no type is cast on bob's upkeep, and every type is on alice's",
+  "description": "Muldrotha: \"during each of your turns\" with Vedalken Orrery's flash: none of an artifact, a battle, an enchantment or a planeswalker is cast on bob's upkeep, and all four are on alice's",
   "timeline": [
     {
       "player": "alice",
@@ -274,6 +274,42 @@
       "check": {
         "Count": {
           "card": "Exploration",
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 3
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$p4",
+            "$p5",
+            "$p6",
+            "$p7",
+            null
+          ],
+          "object": "$ajani"
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 3
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 3
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Ajani Goldmane",
           "count": 1,
           "player": "alice",
           "zone": "Battlefield"

@@ -27,20 +27,16 @@
         ],
         "graveyard": [
           {
-            "card": "Dryad Arbor",
-            "label": "arbor"
-          },
-          {
             "card": "Darksteel Citadel",
             "label": "citadel"
           },
           {
-            "card": "Sol Ring",
-            "label": "ring"
+            "card": "Dryad Arbor",
+            "label": "arbor"
           },
           {
-            "card": "Llanowar Elves",
-            "label": "elves"
+            "card": "Sol Ring",
+            "label": "ring"
           }
         ],
         "hand": [],
@@ -105,22 +101,11 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "CR 305.1 Muldrotha: Dryad Arbor and Darksteel Citadel are played under the land permission, never cast, and leave the creature and artifact budgets",
+  "description": "CR 305.1 Muldrotha: Darksteel Citadel is played under the land permission alone: another land waits with a drop open, and an artifact is still cast",
   "timeline": [
     {
-      "player": "alice",
-      "refuse": {
-        "Cast": {
-          "mana": [],
-          "object": "$arbor"
-        }
-      },
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
       "do": {
-        "PlayLand": "$arbor"
+        "PlayLand": "$citadel"
       },
       "player": "alice",
       "step": "PrecombatMain",
@@ -129,7 +114,7 @@
     {
       "check": {
         "Count": {
-          "card": "Dryad Arbor",
+          "card": "Darksteel Citadel",
           "count": 1,
           "player": "alice",
           "zone": "Battlefield"
@@ -142,7 +127,7 @@
     {
       "player": "alice",
       "refuse": {
-        "PlayLand": "$citadel"
+        "PlayLand": "$arbor"
       },
       "step": "PrecombatMain",
       "turn": 1
@@ -152,39 +137,6 @@
         "Cast": {
           "mana": [
             "$f0",
-            null
-          ],
-          "object": "$elves"
-        }
-      },
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
-      "do": "Pass",
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
-      "check": {
-        "Count": {
-          "card": "Llanowar Elves",
-          "count": 1,
-          "player": "alice",
-          "zone": "Battlefield"
-        }
-      },
-      "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
-      "do": {
-        "Cast": {
-          "mana": [
-            "$f1",
             null
           ],
           "object": "$ring"

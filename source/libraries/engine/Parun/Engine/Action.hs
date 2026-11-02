@@ -3,6 +3,7 @@ module Parun.Engine.Action where
 import qualified Data.Containers.ListUtils as ListUtils
 import qualified Data.List as List
 import qualified Data.Maybe as Maybe
+import qualified Data.Set as Set
 import qualified Parun.Engine.Activatable as Activatable
 import qualified Parun.Engine.Cast as Cast
 import qualified Parun.Engine.Companion as Companion
@@ -96,7 +97,7 @@ playableLands pid gs =
         (Just obj, Just card) ->
           if PlayerEffect.prohibitsPlayingLand pid oid (Cast.turnedUpForPlay oid Facing.FaceUp gs)
             then []
-            else fmap (\(mName, _) -> (oid, mName)) (Game.landFacesOf obj card)
+            else [(oid, mName) | (mName, _) <- Game.landFacesOf obj card, Set.member oid open || permitted oid mName]
         _ -> []
       -- CR 305.1's own zone, which needs no permission.
       fromHand = Game.zoneMembers Zone.Hand pid gs
@@ -116,9 +117,10 @@ playableLands pid gs =
       fromGranted = ListUtils.nubOrd (concatMap (\(zone, owner) -> Cast.pileCandidates zone owner gs) (PlayerEffect.playLandPiles pid gs))
       -- CR 305.1 / 601.3: a Play-verb permission (Serra Paragon) narrows by
       -- card and has a budget, so each land in the piles it opens is asked
-      -- whether a use is left for it.
-      permitted oid = maybe False (\obj -> not (null (PlayerEffect.landPermissionsFrom pid (Object.zone obj) oid gs))) (Game.lookupObject oid gs)
-      fromPermitted = concatMap (\(zone, owner) -> filter permitted (Cast.pileCandidates zone owner gs)) (PlayerEffect.playPermissionPiles pid gs)
+      -- whether a use is left for it, and CR 712.12's chosen face is what is
+      -- asked: Muldrotha's land row admits Zof Consumption as Zof Bloodbog.
+      permitted oid mName = maybe False (\obj -> not (null (PlayerEffect.landPermissionsFrom pid (Object.zone obj) oid (Cast.asPlayed oid mName gs)))) (Game.lookupObject oid gs)
+      fromPermitted = concatMap (\(zone, owner) -> Cast.pileCandidates zone owner gs) (PlayerEffect.playPermissionPiles pid gs)
       -- Per card instead, because CR 715.3d's permission is state on ONE exiled
       -- incarnation naming ONE player.
       fromExile = filter (\oid -> Cast.permitsLandPlayFromExile pid oid gs) (Cast.zoneCandidates Zone.Exile pid gs)
@@ -129,6 +131,8 @@ playableLands pid gs =
       -- card has where it lies (CastingPermission.PlayFromGraveyard), so it is
       -- read through the projection and a layer-6 removal takes it away.
       fromGraveyard = filter (\oid -> PlayerEffect.mayPlayFromOwnGraveyard pid oid gs) (Game.zoneMembers Zone.Graveyard pid gs)
+      -- Every card here is open whichever land face it is played as.
+      open = Set.fromList (fromHand <> fromGranted <> fromExile <> fromMayhem <> fromGraveyard)
    in concatMap playable (ListUtils.nubOrd (fromHand <> fromGranted <> fromPermitted <> fromExile <> fromMayhem <> fromGraveyard))
 
 -- The cards in this player's hand whose text grants CR 116.2e's special
@@ -183,7 +187,7 @@ legalActions pid gs =
       landTimingOk (oid, mName) =
         Turn.sorcerySpeedWindow pid gs
           || maybe False (\card -> Cast.flashOn oid (Game.resolveFace mName card) gs) (Game.cardOf oid gs)
-          || PlayerEffect.mayPlayAsThoughItHadFlash pid oid gs
+          || PlayerEffect.mayPlayAsThoughItHadFlash pid oid (Cast.asPlayed oid mName gs)
       lands = if canPlayLand then fmap (uncurry Action.Play) (filter landTimingOk (playableLands pid gs)) else []
       -- CR 709.3: one action per castable HALF, so choosing a half is choosing
       -- an action and the engine never asks which one. CR 702.37d adds one more
