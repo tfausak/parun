@@ -5,6 +5,7 @@ import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.ManaSpending as ManaSpending
 import qualified Parun.Types.PermissionLimit as PermissionLimit
 import qualified Parun.Types.PermissionPool as PermissionPool
 import qualified Parun.Types.PermissionVerb as PermissionVerb
@@ -42,6 +43,9 @@ data CastFromZone = MkCastFromZone
     additionalCosts :: [CostComponent.CostComponent Keyword.Keyword],
     -- | CR 601.2f: the generic mana a spell cast under it costs less --
     -- Urianger Augurelt's "spells you cast this way cost {2} less to cast".
-    reduction :: Natural.Natural
+    reduction :: Natural.Natural,
+    -- | CR 118.14: how mana may be spent on a spell cast under it (Tinybones,
+    -- Bauble Burglar).
+    spending :: ManaSpending.ManaSpending
   }
   deriving (Eq, Ord, Show)

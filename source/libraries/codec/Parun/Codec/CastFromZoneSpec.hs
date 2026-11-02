@@ -14,6 +14,7 @@ import qualified Parun.Types.ExiledPile as ExiledPile
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.InZone as InZone
+import qualified Parun.Types.ManaSpending as ManaSpending
 import qualified Parun.Types.PermissionLimit as PermissionLimit
 import qualified Parun.Types.PermissionPool as PermissionPool
 import qualified Parun.Types.PermissionVerb as PermissionVerb
@@ -37,7 +38,8 @@ spec s = Spec.describe s "Parun.Codec.CastFromZone" $ do
             CastFromZone.verb = PermissionVerb.Cast,
             CastFromZone.pool = PermissionPool.EveryCard,
             CastFromZone.additionalCosts = [],
-            CastFromZone.reduction = 0
+            CastFromZone.reduction = 0,
+            CastFromZone.spending = ManaSpending.AsProduced
           }
       )
       " {\"from\":{\"zone\":{\"type\":\"Graveyard\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"matching\":{\"type\":\"And\",\"value\":[]}} "
@@ -53,7 +55,8 @@ spec s = Spec.describe s "Parun.Codec.CastFromZone" $ do
             CastFromZone.verb = PermissionVerb.Cast,
             CastFromZone.pool = PermissionPool.EveryCard,
             CastFromZone.additionalCosts = [],
-            CastFromZone.reduction = 0
+            CastFromZone.reduction = 0,
+            CastFromZone.spending = ManaSpending.AsProduced
           }
       )
       " {\"from\":{\"zone\":{\"type\":\"Hand\"},\"player\":{\"type\":\"InSlot\",\"value\":\"opponent\"}},\"matching\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
@@ -71,7 +74,8 @@ spec s = Spec.describe s "Parun.Codec.CastFromZone" $ do
             CastFromZone.verb = PermissionVerb.Cast,
             CastFromZone.pool = PermissionPool.EveryCard,
             CastFromZone.additionalCosts = [],
-            CastFromZone.reduction = 0
+            CastFromZone.reduction = 0,
+            CastFromZone.spending = ManaSpending.AsProduced
           }
       )
       " {\"from\":{\"zone\":{\"type\":\"Library\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"matching\":{\"type\":\"And\",\"value\":[]},\"limit\":{\"type\":\"OnceEachTurn\"}} "
@@ -88,10 +92,28 @@ spec s = Spec.describe s "Parun.Codec.CastFromZone" $ do
             CastFromZone.verb = PermissionVerb.Play,
             CastFromZone.pool = PermissionPool.EveryCard,
             CastFromZone.additionalCosts = [],
-            CastFromZone.reduction = 0
+            CastFromZone.reduction = 0,
+            CastFromZone.spending = ManaSpending.AsProduced
           }
       )
       " {\"from\":{\"zone\":{\"type\":\"Graveyard\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"matching\":{\"type\":\"And\",\"value\":[]},\"limit\":{\"type\":\"OnceEachOfYourTurns\"},\"verb\":{\"type\":\"Play\"}} "
+  -- Tinybones, Bauble Burglar's rider.
+  Spec.it s "a spending rider" $
+    Common.assertCodec
+      s
+      CastFromZone.codec
+      ( CastFromZone.MkCastFromZone
+          { CastFromZone.from = InZone.MkInZone {InZone.zone = Zone.Exile, InZone.player = PlayerRef.Relative PlayerRelation.AnyPlayer},
+            CastFromZone.matching = Filter.And [],
+            CastFromZone.limit = PermissionLimit.Unlimited,
+            CastFromZone.verb = PermissionVerb.Cast,
+            CastFromZone.pool = PermissionPool.EveryCard,
+            CastFromZone.additionalCosts = [],
+            CastFromZone.reduction = 0,
+            CastFromZone.spending = ManaSpending.AnyType
+          }
+      )
+      " {\"from\":{\"zone\":{\"type\":\"Exile\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}},\"matching\":{\"type\":\"And\",\"value\":[]},\"spending\":{\"type\":\"AnyType\"}} "
   -- Dawnhand Dissident's shape: the cards exiled with it, for three counters
   -- removed from among your creatures on top of the spell's other costs.
   Spec.it s "a linked pool and an additional cost" $
@@ -105,6 +127,7 @@ spec s = Spec.describe s "Parun.Codec.CastFromZone" $ do
             CastFromZone.verb = PermissionVerb.Cast,
             CastFromZone.pool = PermissionPool.InExiledPile ExiledPile.OwnAbilities,
             CastFromZone.reduction = 0,
+            CastFromZone.spending = ManaSpending.AsProduced,
             CastFromZone.additionalCosts = [CostComponent.RemoveCounters (CountersFromPermanents.MkCountersFromPermanents (CostAmount.Fixed 3) WhichCounters.OfAnyKind (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You]) CounterSpread.FromAmong)]
           }
       )
@@ -122,7 +145,8 @@ spec s = Spec.describe s "Parun.Codec.CastFromZone" $ do
             CastFromZone.verb = PermissionVerb.Play,
             CastFromZone.pool = PermissionPool.InExiledPile ExiledPile.OwnAbilities,
             CastFromZone.additionalCosts = [],
-            CastFromZone.reduction = 2
+            CastFromZone.reduction = 2,
+            CastFromZone.spending = ManaSpending.AsProduced
           }
       )
       " {\"from\":{\"zone\":{\"type\":\"Exile\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}},\"matching\":{\"type\":\"And\",\"value\":[]},\"verb\":{\"type\":\"Play\"},\"pool\":{\"type\":\"InExiledPile\",\"value\":{\"type\":\"OwnAbilities\"}},\"reduction\":2} "

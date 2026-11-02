@@ -164,7 +164,7 @@ import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZonePair as ZonePair
 
 moveToZone :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> MoveToZone.MoveToZone (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
-moveToZone resolving source controller legal chosen (MoveToZone.MkMoveToZone ref zone entry mSlot _ placement duration) =
+moveToZone resolving source controller legal chosen (MoveToZone.MkMoveToZone ref zone entry mSlot origin placement duration) =
   -- ONE object through CR 400.7's funnel, shared by the two arms below.
   let -- CR 400.7: the funnel mints a new incarnation in `zone`, owner-relative
       -- (CR 400.3). The riders (CR 110.5b), the library position (CR 401.2) and
@@ -358,7 +358,12 @@ moveToZone resolving source controller legal chosen (MoveToZone.MkMoveToZone ref
                 -- is classified there; only a slot read needing fromAmongMembers'
                 -- single binding, as the two arms above do, belongs here.
                 _ -> Common.askingObjects resolving source controller legal chosen r
-          targets <- gather ref
+          -- A move stating its origin finds only what is in that zone: Tinybones,
+          -- Bauble Burglar's "from their graveyard" with a discarded card madness
+          -- exiled.
+          gathered <- gather ref
+          gathering <- State.get
+          let targets = filter (\target -> all (\from -> Game.zoneOf target gathering == Just from) origin) gathered
           -- CR 608.2h: a depth's amount is read once, off the pre-move board.
           depthBoard <- State.get
           let depthOf quantity =

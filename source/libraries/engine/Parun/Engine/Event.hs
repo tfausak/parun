@@ -8316,6 +8316,21 @@ renameSlots old new row =
   let rename oid = if oid == old then new else oid
    in row {ActiveReplacement.slots = fmap (Set.map rename) (ActiveReplacement.slots row)}
 
+-- CR 400.7k / 702.35c: "effects referencing the discarded card can find" what a
+-- madness card not cast became, in a public zone: every stack object holding its
+-- exile id `old`. A declared target is no such reference and stays on the object
+-- CR 400.7 ended (CR 608.2b), its slots left unrenamed, a fence. No trigger waits unstacked here, CR 603.3b
+-- having stacked them all ahead of this resolution.
+findDeclinedMadness :: ObjectId -> ObjectId -> GameState -> GameState
+findDeclinedMadness old new gs =
+  let follow oid =
+        let declared = Map.keysSet (Projection.targetSlotsOfStackObject gs oid)
+            rename slot binding
+              | Set.member slot declared = binding
+              | otherwise = Binding.renameObject old new binding
+         in Map.adjust (\obj -> obj {Object.bindings = Map.mapWithKey rename (Object.bindings obj)}) oid
+   in gs {GameState.objects = foldr follow (GameState.objects gs) (GameState.stack gs)}
+
 -- carryOver's damage-row half, and CR 400.7c's whole of it: a floating damage row
 -- watching the spell watches the permanent instead. DamagePattern.whichSource is
 -- the one field that can name a permanent spell -- CR 609.7a's chosen source is

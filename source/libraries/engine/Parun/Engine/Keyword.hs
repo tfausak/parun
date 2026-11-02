@@ -9105,9 +9105,9 @@ madnessCast manaCost payload =
             }
       -- Rule 702.35a's last sentence. No riders and no slot: the destination is
       -- a graveyard, which CR 400.3 makes the owner's, and nothing reads the
-      -- arrival. `origin` is Nothing because that field is
-      -- Parun.Engine.Activatable.zoneAbilitiesOf's question about where an ability
-      -- may be ACTIVATED from, and this is a trigger.
+      -- arrival, but for CR 400.7k's Parun.Engine.Stack.afterMadness. `origin` is
+      -- Nothing because the slot names this exile card and rule 702.35a names no
+      -- zone it moves out of.
       toGraveyard =
         Effect.MoveToZone
           MoveToZone.MkMoveToZone

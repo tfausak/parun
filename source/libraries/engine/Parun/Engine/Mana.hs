@@ -1669,6 +1669,9 @@ anyTypeDemand = ofTypes everyManaType
 -- that mana came from, so a snow demand still wants a snow supply. It is also
 -- why this widens rather than deleting the demand outright -- a demand nothing
 -- constrains would spend a non-snow mana on {S}.
+--
+-- A rider beside Celestial Dawn's only-clause: docs/decisions.md, "How a mana of
+-- any type rider combines with an only-clause".
 relax :: ManaSpending -> Demand -> Demand
 relax spending demand = case spending of
   ManaSpending.AsProduced -> demand

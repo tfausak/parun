@@ -864,7 +864,7 @@ castFromNames asking x = case x of
 
 castFromZoneNames :: (Monoid r) => Asking r -> CastFromZone.CastFromZone -> r
 castFromZoneNames asking x = case x of
-  CastFromZone.MkCastFromZone from matching _limit _verb _pool additionalCosts _reduction -> inZoneNames asking from <> filterNames asking matching <> foldMap (costComponentNames asking (keywordNames asking)) additionalCosts
+  CastFromZone.MkCastFromZone from matching _limit _verb _pool additionalCosts _reduction _spending -> inZoneNames asking from <> filterNames asking matching <> foldMap (costComponentNames asking (keywordNames asking)) additionalCosts
 
 castOfferNames :: (Monoid r) => Asking r -> CastOffer.CastOffer -> r
 castOfferNames asking x = case x of

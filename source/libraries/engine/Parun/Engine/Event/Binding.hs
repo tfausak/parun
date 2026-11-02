@@ -1061,6 +1061,9 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- no batch at all. A payload that then finds nothing is what CR 400.7e
   -- prescribes rather than the silent no-op the card lint exists to catch.
   --
+  -- Not implemented: finding a card a replacement sent to another public zone
+  -- (#5958).
+  --
   -- The BEARER's own arrival is not consulted, unlike the AttachedCreatureDies arm
   -- above: this is a bystander condition and the permanent the event names is
   -- somebody else's -- Prowling Geistcatcher's "another creature".

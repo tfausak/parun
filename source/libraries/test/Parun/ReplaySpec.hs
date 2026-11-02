@@ -68,6 +68,7 @@ import qualified Parun.Types.Mana as Mana.Type
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaOption as ManaOption
 import qualified Parun.Types.ManaRetention as ManaRetention
+import qualified Parun.Types.ManaSpending as ManaSpending
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.ManaUnit as ManaUnit
@@ -324,7 +325,7 @@ combatReplaySpec s =
         -- included, has to survive a transcript; the enlist answer is the foil
         -- of the same Maybe-ObjectId head.
         Spec.it s "ChoosePlayPermission records and replays a permission, and rejects an enlist answer" $ do
-          let grant limit = CastFromZone.MkCastFromZone (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You)) (Filter.Type.HasCardType CardType.Creature) limit PermissionVerb.Play PermissionPool.EveryCard [] 0
+          let grant limit = CastFromZone.MkCastFromZone (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You)) (Filter.Type.HasCardType CardType.Creature) limit PermissionVerb.Play PermissionPool.EveryCard [] 0 ManaSpending.AsProduced
               paragon = Just (ObjectId.MkObjectId 8, grant PermissionLimit.OnceEachOfYourTurns)
               will = Just (ObjectId.MkObjectId 9, grant PermissionLimit.Unlimited)
               p = Prompt.ChoosePlayPermission decider S.alice oid (will NonEmpty.:| [paragon, Nothing])
