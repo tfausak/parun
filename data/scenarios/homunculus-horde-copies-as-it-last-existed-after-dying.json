@@ -1,39 +1,14 @@
 {
-  "description": "Homunculus Horde's ruling: gone before its trigger resolves, the token still copies its last known copiable values",
+  "description": "Homunculus Horde's ruling, CR 707.2: a Clone copying the Horde, gone before its trigger resolves, leaves a token copying the Horde it last was, not the Clone it is printed as",
+  "note": "The Horde is bob's so only the Clone copying it answers alice's second draw, and the token is the only Homunculus Horde alice controls.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
     "seats": [
       {
         "name": "alice",
-        "library": [
-          {
-            "card": "Island"
-          },
-          {
-            "card": "Island"
-          },
-          {
-            "card": "Island"
-          },
-          {
-            "card": "Island"
-          },
-          {
-            "card": "Island"
-          }
-        ],
-        "hand": [
-          {
-            "card": "Divination",
-            "label": "d1"
-          }
-        ],
+        "manaPool": "UUU",
         "battlefield": [
-          {
-            "card": "Homunculus Horde",
-            "label": "hh"
-          },
           {
             "card": "Island",
             "label": "i1"
@@ -45,11 +20,22 @@
           {
             "card": "Island",
             "label": "i3"
+          },
+          {
+            "card": "Island",
+            "label": "i4"
           }
-        ]
-      },
-      {
-        "name": "bob",
+        ],
+        "hand": [
+          {
+            "card": "Clone",
+            "label": "clone"
+          },
+          {
+            "card": "Divination",
+            "label": "d1"
+          }
+        ],
         "library": [
           {
             "card": "Island"
@@ -66,6 +52,16 @@
           {
             "card": "Island"
           }
+        ]
+      },
+      {
+        "name": "bob",
+        "manaPool": "R",
+        "battlefield": [
+          {
+            "card": "Homunculus Horde",
+            "label": "hh"
+          }
         ],
         "hand": [
           {
@@ -73,7 +69,23 @@
             "label": "sh"
           }
         ],
-        "manaPool": "R"
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
       }
     ]
   },
@@ -84,11 +96,12 @@
       "player": "alice",
       "do": {
         "Cast": {
-          "object": "$d1",
+          "object": "$clone",
           "mana": [
             "$i1",
             "$i2",
-            "$i3"
+            "$i3",
+            "$i4"
           ]
         }
       }
@@ -108,12 +121,48 @@
     {
       "turn": 1,
       "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "ChooseCopyTarget": "$hh"
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$d1"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
       "player": "bob",
       "do": {
         "Cast": {
           "object": "$sh",
           "targets": [
-            "$hh"
+            "Clone"
           ]
         }
       }
@@ -138,7 +187,7 @@
         "Count": {
           "player": "alice",
           "zone": "Graveyard",
-          "card": "Homunculus Horde",
+          "card": "Clone",
           "count": 1
         }
       }
@@ -174,9 +223,22 @@
       "player": "alice",
       "check": {
         "PowerToughness": {
-          "object": "Homunculus Horde",
+          "object": "Clone#2",
           "power": 2,
           "toughness": 2
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Clone",
+          "count": 0
         }
       }
     }
