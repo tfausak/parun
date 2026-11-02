@@ -359,6 +359,7 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
               Search.destination = SearchDestination.BattlefieldTapped,
               Search.subject = Nothing,
               Search.slot = Nothing,
+              Search.handSlot = Nothing,
               Search.differentIn = Set.empty,
               Search.exactly = False,
               Search.andOr = False

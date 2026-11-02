@@ -735,6 +735,7 @@ placePendingTriggers boards = do
         -- for. Cleared rather than left standing, which bounds both the map and
         -- the game states its unforced thunks retain.
         GameState.boardAfterEvent = Map.empty,
+        GameState.boardBeforeDeparture = Map.empty,
         GameState.battlefieldWhenTriggered = Map.empty,
         GameState.delayedTriggers = surviving
       }
@@ -822,6 +823,7 @@ reactions incoming = do
             g
               { GameState.scannedThrough = Natural.length (GameState.events g),
                 GameState.boardAfterEvent = Map.empty,
+                GameState.boardBeforeDeparture = Map.empty,
                 GameState.battlefieldWhenTriggered = Map.empty,
                 GameState.delayedTriggers = surviving
               }
@@ -1890,6 +1892,7 @@ beginTurn extra pid gs =
             -- Cleared with the log it describes: the settle Engine.advance runs
             -- immediately before this leaves nothing unscanned.
             GameState.boardAfterEvent = Map.empty,
+            GameState.boardBeforeDeparture = Map.empty,
             GameState.battlefieldWhenTriggered = Map.empty,
             GameState.damageScannedThrough = 0,
             -- GameState.lastKnown is deliberately NOT cleared alongside them: CR

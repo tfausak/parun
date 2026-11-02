@@ -678,6 +678,12 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
       Spec.assertBool s (not (Filter.matches (sourced [Color.Black]) colorless (Filter.Type.Shares Trait.Color Anchor.Source))) "colourless candidate"
       Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.Shares Trait.Color Anchor.Source))) "no source colours"
 
+  Spec.it s "ControllerIsOwner compares the two seats, never two absences" $ do
+    let owned = blackCreature {Filter.owner = Filter.controller blackCreature}
+    Spec.assertBool s (Filter.matches self owned Filter.Type.ControllerIsOwner) "its owner controls it"
+    Spec.assertBool s (not (Filter.matches self blackCreature Filter.Type.ControllerIsOwner)) "another player controls it"
+    Spec.assertBool s (not (Filter.matches self aPlayer Filter.Type.ControllerIsOwner)) "a player has neither"
+
   -- CR 202.3 read for parity: Void Winnower's "spells with even mana values",
   -- whose reminder text settles the boundary -- "(Zero is even.)"
   Spec.it s "ManaValueIsEven splits the mana values by parity" $ do

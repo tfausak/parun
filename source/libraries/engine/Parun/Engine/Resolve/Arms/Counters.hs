@@ -1699,6 +1699,7 @@ endTurn runDamageRewriteEffect runReplacementEffects runSubgame = do
     gs
       { GameState.scannedThrough = Natural.length (GameState.events gs),
         GameState.boardAfterEvent = Map.empty,
+        GameState.boardBeforeDeparture = Map.empty,
         GameState.battlefieldWhenTriggered = Map.empty
       }
   -- CR 724.1b: exile every object on the stack, INCLUDING the one that is
@@ -1811,6 +1812,7 @@ endCombatPhase runDamageRewriteEffect runReplacementEffects runSubgame = do
         gs
           { GameState.scannedThrough = Natural.length (GameState.events gs),
             GameState.boardAfterEvent = Map.empty,
+            GameState.boardBeforeDeparture = Map.empty,
             GameState.battlefieldWhenTriggered = Map.empty
           }
       -- CR 724.2b: exile every object on the stack, the resolving one included.

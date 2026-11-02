@@ -797,6 +797,22 @@ raidersSpec s registry = Spec.describe s "Raiders' Allegiance" $ do
     Spec.assertEqWith s "CR 510.2 two players took combat damage: alice has two point counters" (S.playerCounterOf PlayerCounterKind.Point S.alice raided) 2
     Spec.assertEqWith s "and two Pirates" (controllersNamed "Pirate Token" raided) [Just S.alice, Just S.alice]
 
+  -- CR 801.18 for a plane's read of what happened: four seats at range 1. alice's
+  -- Piker hits bob and dave's hits carol, outside alice's range; the plane sees
+  -- both, where Furious Spinesplitter on the same board would see bob alone.
+  Spec.it s "CR 801.18 raid counts a player dealt combat damage outside the planar controller's range" $ do
+    piker <- S.printingOf s registry "Goblin Piker"
+    board <- seatedPlanarBoard s registry S.alice [(S.alice, ["Raiders' Allegiance"]), (S.bob, []), (S.carol, []), (S.dave, [])]
+    let (alicePiker, withAlice) = S.addPermanent piker S.alice board
+        (davePiker, stocked) = S.addPermanent piker S.dave withAlice
+        ranged = S.withRange 1 stocked
+        begin phase gs = Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan phase S.alice)) (gs {GameState.activePlayer = S.alice, GameState.phase = phase, GameState.priority = Just S.alice})
+        hit source target = DamageEvent.MkDamageEvent source (Recipient.ToPlayer target) 1 False False False 0 Nothing Nothing mempty False DamageKind.Combat
+        damaged = S.runPure S.identityAnswer (begin Phase.PrecombatMain ranged) (Damage.applyDamage [hit alicePiker S.bob, hit davePiker S.carol])
+        raided = S.runPure S.identityAnswer (begin Phase.PostcombatMain damaged) Engine.priorityLoop
+    Spec.assertEqWith s "CR 801.18 two players took combat damage: alice has two point counters" (S.playerCounterOf PlayerCounterKind.Point S.alice raided) 2
+    Spec.assertBool s (not (Game.inRangeOf S.alice S.carol ranged)) "carol is outside alice's range"
+
   -- Three seats: alice and bob tied on three point counters, carol on two.
   -- alice planeswalks away; the two leaders each create three Treasures and draw
   -- three, carol neither, and every point counter goes.

@@ -16,6 +16,7 @@ import qualified Parun.Engine.Binding as Binding
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Projection.View as ProjectionView
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
 import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
@@ -183,11 +184,11 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
       Recipient.ToObject _ -> Map.empty
       -- Unreachable, for the reason the DamageToPlayerPrevented arm above gives.
       Recipient.ToPile _ -> Map.empty
-  -- CR 120.3's amount for the arm one recipient over, and the damaged creature
+  -- CR 120.3's amount for the arm one recipient over, and the damaged permanent
   -- under `became`, the object the event names: Bellowing Fiend's "that
-  -- creature's controller". Both are unconditional given a match, which admits
-  -- only an object recipient.
-  (TriggerCondition.SelfDealsDamageToCreature _, GameEvent.DamageDealt ev) ->
+  -- creature's controller", Hooded Blightfang's "that planeswalker". Both are
+  -- unconditional given a match, which admits only an object recipient.
+  (TriggerCondition.DealsDamageToPermanent _, GameEvent.DamageDealt ev) ->
     maybe id Binding.setBecame (Recipient.objectOf (DamageEvent.target ev)) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty)
   -- Horned Cheetah's and Spirit Link's "that much" for the any-recipient arm,
   -- which batchBindings sums across one damage event, and the damager, which
@@ -1332,16 +1333,16 @@ admitsDeparture gs bearer you p departed = case Projection.viewWithLastKnown dep
 
 -- CR 615.13 / 120.1: the sources of one prevention that a SelfPreventsDamage
 -- Filter admits, each with its per-recipient share, read off CR 608.2h's last
--- known information since a source may have left by now. A source whose share
--- is 0 is not admitted: rule 615.13 fires where some damage "is prevented", and
--- CR 615.12's inert application prevented none of that source's. `context` is
--- the caller's, so the match arm can pass the delayed ability's slot objects
--- (CR 603.7c).
+-- known information, zone included, since a source may have left by now. A
+-- source whose share is 0 is not admitted: rule 615.13 fires where some damage
+-- "is prevented", and CR 615.12's inert application prevented none of that
+-- source's. `context` is the caller's, so the match arm can pass the delayed
+-- ability's slot objects (CR 603.7c).
 admittedPreventedSources :: Filter.Context -> GameState -> Filter.Type.Filter Keyword.Type.Keyword -> DamagePrevented.DamagePrevented -> Map.Map ObjectId (Map.Map Recipient.Recipient Numeric.Natural.Natural)
 admittedPreventedSources context gs f = Map.filterWithKey admits . DamagePrevented.amounts
   where
     admits damager share =
-      sum share > 0 && maybe False (\view -> Filter.matches context view f) (Projection.viewWithLastKnown damager gs damager)
+      sum share > 0 && maybe False (\view -> Filter.matches context (ProjectionView.lastZoned gs damager view) f) (Projection.viewWithLastKnown damager gs damager)
 
 -- The attackers `attacker` declared that the condition's Filter admits, CR
 -- 508.3c's "a creature that player controls" read through Combat.joinedUnder
@@ -1514,9 +1515,9 @@ eventBindingSlots cond = case cond of
   -- The same pair for the arm without the combat narrowing, and equally guaranteed
   -- -- every DamageDealt event carries an amount, whichever CR 120.3 kind it was.
   TriggerCondition.DealsDamageToPlayer _ -> Set.fromList [Binding.eventAmount, Binding.triggerPlayer]
-  -- The amount and the damaged creature for the arm one recipient over, both
+  -- The amount and the damaged permanent for the arm one recipient over, both
   -- guaranteed given a match.
-  TriggerCondition.SelfDealsDamageToCreature _ -> Set.fromList [Binding.eventAmount, Binding.became]
+  TriggerCondition.DealsDamageToPermanent _ -> Set.fromList [Binding.eventAmount, Binding.became]
   TriggerCondition.DealsDamage _ -> Set.fromList [Binding.combatDamager, Binding.eventAmount]
   -- CR 120.3's amount for enrage, which Coalhauler Swine's "it deals that much
   -- damage to each player" reads: the same slot CR 615.13's prevention and CR

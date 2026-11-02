@@ -11,6 +11,9 @@ import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 -- counterpart, a spell being one object with one cost.
 --
 -- Nothing in every field is every activated ability of a matching source.
+--
+-- Not implemented: naming one ability of the source, so Sanctum of Tranquil
+-- Light's "this ability" also reaches an ability granted to it (#5893).
 data ActivationCriteria = MkActivationCriteria
   { -- | Only an ability under this rule-702 keyword (Parun.Types.ActivatedAbility.keyword):
     -- Fluctuator's "cycling abilities", Bureau Headmaster's "equip abilities".

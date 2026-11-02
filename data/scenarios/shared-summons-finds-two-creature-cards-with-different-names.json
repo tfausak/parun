@@ -73,7 +73,7 @@
     "step": "PrecombatMain"
   },
   "description": "CR 701.23 / 201.2b: Shared Summons finds up to two creature cards with different names, reveals them and puts them into your hand",
-  "note": "Asked for both Grizzly Bears, the first Summons keeps only one, since the two share a name; the second takes the other Grizzly Bears with a Hill Giant, both revealed to bob. Shock is no creature card.",
+  "note": "Asked for both Grizzly Bears, the first Summons asks again, since the two share a name, and takes one; the second takes the other Grizzly Bears with a Hill Giant, both revealed to bob. Shock is no creature card.",
   "timeline": [
     {
       "do": {
@@ -92,12 +92,25 @@
       "turn": 1
     },
     {
-      "do": {
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1,
+      "refuse": {
         "Answer": {
           "prompt": "Search",
           "with": [
             "$gb1",
             "$gb2"
+          ]
+        }
+      }
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$gb1"
           ]
         }
       },

@@ -129,6 +129,7 @@ import qualified Parun.Codec.CantAttackPlayerSpec
 import qualified Parun.Codec.CantBeBlockedBySpec
 import qualified Parun.Codec.CantBlockCreaturesSpec
 import qualified Parun.Codec.CantSearchLibrariesSpec
+import qualified Parun.Codec.CardAbilitiesSpec
 import qualified Parun.Codec.CardArrivedInSpec
 import qualified Parun.Codec.CardIdentitySpec
 import qualified Parun.Codec.CardLeavesZoneSpec
@@ -257,6 +258,7 @@ import qualified Parun.Codec.DamageRewriteSpec
 import qualified Parun.Codec.DamagedPartySpec
 import qualified Parun.Codec.DaytimeSpec
 import qualified Parun.Codec.DealDamageSpec
+import qualified Parun.Codec.DealsDamageToPermanentSpec
 import qualified Parun.Codec.DealsDamageToPlayerSpec
 import qualified Parun.Codec.DealtDamageSpec
 import qualified Parun.Codec.DealtDamageToSpec
@@ -316,6 +318,7 @@ import qualified Parun.Codec.EntryControllerSpec
 import qualified Parun.Codec.EntryFlipSpec
 import qualified Parun.Codec.EntryHostSpec
 import qualified Parun.Codec.EntryOptionSpec
+import qualified Parun.Codec.EntryOriginSpec
 import qualified Parun.Codec.EntryPriceSpec
 import qualified Parun.Codec.EntryRSpec
 import qualified Parun.Codec.EntryRestrictionSpec
@@ -342,7 +345,6 @@ import qualified Parun.Codec.ExileLookerSpec
 import qualified Parun.Codec.ExileMaterialsSpec
 import qualified Parun.Codec.ExilePermanentsSpec
 import qualified Parun.Codec.ExilePlayPermissionSpec
-import qualified Parun.Codec.ExiledCardAbilitiesSpec
 import qualified Parun.Codec.ExiledPileSpec
 import qualified Parun.Codec.ExpansionSpec
 import qualified Parun.Codec.ExpirySpec
@@ -1209,6 +1211,7 @@ spec s registry corpus = do
   Parun.Codec.DamageRSpec.spec s
   Parun.Codec.DaytimeSpec.spec s
   Parun.Codec.DealDamageSpec.spec s
+  Parun.Codec.DealsDamageToPermanentSpec.spec s
   Parun.Codec.DealsDamageToPlayerSpec.spec s
   Parun.Codec.DeciderSpec.spec s
   Parun.Codec.DefendersAreSpec.spec s
@@ -1257,6 +1260,7 @@ spec s registry corpus = do
   Parun.Codec.EndingStepSpec.spec s
   Parun.Codec.EndTurnSignalSpec.spec s
   Parun.Codec.EnteringTogetherSpec.spec s
+  Parun.Codec.EntryOriginSpec.spec s
   Parun.Codec.EntersWithSpec.spec s
   Parun.Codec.EntrantSpec.spec s
   Parun.Codec.EntryAttackSpec.spec s
@@ -1283,7 +1287,7 @@ spec s registry corpus = do
   Parun.Codec.ExchangeZonesSpec.spec s
   Parun.Codec.ExileCardsFromGraveyardSpec.spec s
   Parun.Codec.ExileCardsFromHandSpec.spec s
-  Parun.Codec.ExiledCardAbilitiesSpec.spec s
+  Parun.Codec.CardAbilitiesSpec.spec s
   Parun.Codec.ExiledPileSpec.spec s
   Parun.Codec.ExileFromGraveyardSpec.spec s
   Parun.Codec.ExileHauntingSpec.spec s

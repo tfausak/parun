@@ -75,12 +75,14 @@ import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
+import qualified Parun.Types.ActiveObjectProhibition as ActiveObjectProhibition
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.CandidateCost as CandidateCost
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.Departure as Departure.Type
+import qualified Parun.Types.Expiry as Expiry
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.ManaCost as ManaCost
@@ -92,10 +94,13 @@ import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PhasedOut as PhasedOut
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.Printing as Printing
+import qualified Parun.Types.Prohibition as Prohibition
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Recipient as Recipient
+import qualified Parun.Types.RestrictedCreatures as RestrictedCreatures
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TapState as TapState
+import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.Zone as Zone
 
 -- The sweep every settle runs, at the answerer these boards take. Duplicated
@@ -767,6 +772,30 @@ departureSpec s registry = Spec.describe s "Departure" $ do
   -- bob's SECOND Piker is the positive control, phased out under bob himself in
   -- the same event. It comes back at the first of those untap steps, so a
   -- negative that passed because the untap step never ran at all is caught.
+  Spec.it s "CR 702.26n a held orphaned row waits out the hold" $ do
+    island <- S.printingOf s registry "Island"
+    piker <- S.printingOf s registry "Goblin Piker"
+    ripple <- S.printingOf s registry "Reality Ripple"
+    command <- S.printingOf s registry "Ray of Command"
+    let (victim, _, borrow, first, _, board) = borrowedBoard island piker ripple command
+        row =
+          ActiveObjectProhibition.MkActiveObjectProhibition
+            { ActiveObjectProhibition.source = victim,
+              ActiveObjectProhibition.controller = S.bob,
+              ActiveObjectProhibition.timestamp = Timestamp.MkTimestamp 0,
+              ActiveObjectProhibition.expiry = Expiry.Never,
+              ActiveObjectProhibition.what = Prohibition.PhaseIn,
+              ActiveObjectProhibition.affected = RestrictedCreatures.Named victim
+            }
+        gone = rippleAt victim first (rippleAt victim borrow board)
+        held = gone {GameState.objectProhibitions = [row]}
+        left = S.runPure S.identityAnswer held (Departure.leaveGame Departure.Type.Conceded S.alice)
+        handoff gs = S.runPure S.identityAnswer gs Engine.handoffTurn
+        walked = handoff (handoff (handoff left))
+        released = walked {GameState.objectProhibitions = []}
+    Spec.assertEqWith s "the row is on rule 702.26n's schedule" (Phasing.phasedOutStatus victim walked) (Just (PhasedOut.Orphaned S.alice))
+    Spec.assertEqWith s "the hold keeps it out of that untap step" (onBattlefield victim (untapStep S.bob walked)) False
+    Spec.assertEqWith s "the same untap step takes it once the hold is gone" (onBattlefield victim (untapStep S.bob released)) True
   Spec.it s "CR 702.26n a permanent phased out under a departed player phases in anyway" $ do
     island <- S.printingOf s registry "Island"
     piker <- S.printingOf s registry "Goblin Piker"

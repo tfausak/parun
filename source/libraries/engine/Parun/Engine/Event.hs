@@ -127,6 +127,7 @@ import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
+import qualified Parun.Types.DealtDamage as DealtDamage
 import Parun.Types.DelayedTrigger (DelayedTrigger)
 import qualified Parun.Types.DelayedTrigger as DelayedTrigger
 import qualified Parun.Types.Designation as Designation
@@ -151,6 +152,7 @@ import qualified Parun.Types.EnteringTogether as EnteringTogether
 import qualified Parun.Types.EntersWith as EntersWith
 import qualified Parun.Types.EntryController as EntryController
 import qualified Parun.Types.EntryFlip as EntryFlip
+import qualified Parun.Types.EntryOrigin as EntryOrigin
 import qualified Parun.Types.EntryPrice as EntryPrice
 import qualified Parun.Types.EntryR as EntryR
 import qualified Parun.Types.EntryRefusal as EntryRefusal
@@ -328,6 +330,15 @@ import qualified Parun.Types.ZoneChangeR as ZoneChangeR
 -- depth 0, which is what freezes it.
 recordEvent :: GameEvent -> GameState -> GameState
 recordEvent event gs = recordEventOver gs event gs
+
+-- CR 603.10a: file `before` as the board the next event's group looks back to.
+-- The first filing stands: in a CR 608.2f group it is the board before any of
+-- the group's permanents left. A regression fence: every multi-permanent group
+-- in the suite moves with one batch board, so a later filing would read the same.
+fileBoardBeforeDeparture :: GameState -> GameState -> GameState
+fileBoardBeforeDeparture before gs =
+  let board = before {GameState.boardAfterEvent = Map.empty, GameState.boardBeforeDeparture = Map.empty}
+   in gs {GameState.boardBeforeDeparture = Map.insertWith (\_ filed -> filed) (GameState.nextEventGroup gs) board (GameState.boardBeforeDeparture gs)}
 
 -- The GameEvent.LifeLost for a loss recorded next, stamped with whether the log
 -- holds an earlier one of the player's. Stamped here because the trigger scan runs
@@ -1464,7 +1475,7 @@ conjureOntoBattlefield controller card copied count tapped = do
       ids <- Monad.replicateM (Natural.toIntSaturating count) (State.state (mintCard controller (Just controller) printingId Zone.Battlefield LibraryPosition.defaultValue tapped))
       Monad.forM_ copied (\snapshot -> Monad.mapM_ (`markDuplicate` snapshot) ids)
       let siblingsOf oid = Set.delete oid (Set.fromList ids)
-      refusals <- traverse (\oid -> (,) oid <$> runEntry True (siblingsOf oid) oid) ids
+      refusals <- traverse (\oid -> (,) oid <$> runEntry True Nothing (siblingsOf oid) oid) ids
       let entered = [oid | (oid, Nothing) <- refusals]
       Monad.mapM_ unmake [oid | (oid, Just refusal) <- refusals, refusal /= EntryRefusal.Diverted]
       settleMinted (GameState.nextTimestamp gs) entered
@@ -2955,7 +2966,7 @@ apply batch applied candidate event =
                 -- arm's reading. An answer is legal when their costs stay
                 -- jointly payable, or were not payable to begin with -- then the
                 -- answer causes nothing.
-                stillEntering oid2 = entering oid2 || Set.member oid2 (GameState.enteringSubjects gs)
+                stillEntering oid2 = entering oid2 || Map.member oid2 (GameState.enteringSubjects gs)
                 owed = fmap (fmap (filter (not . stillEntering))) (pendingSacrifices controller gs)
                 legal chosen = Replacement.jointlyPayable chosen owed || not (Replacement.jointlyPayable Set.empty owed)
                 decider = Decide.deciderFor controller gs
@@ -3048,7 +3059,7 @@ apply batch applied candidate event =
           -- than guessing whose permanents "a Forest" means.
           Nothing -> pure (Just event)
           Just controller -> do
-            let entering oid2 = oid2 == oid || Set.member oid2 batch || Set.member oid2 (GameState.enteringSubjects gs)
+            let entering oid2 = oid2 == oid || Set.member oid2 batch || Map.member oid2 (GameState.enteringSubjects gs)
                 own = filter (not . entering) (Replacement.sacrificeCandidates (Just controller) Map.empty controller (Just oid) criterion gs)
                 owed = fmap (fmap (filter (not . entering))) (pendingSacrifices controller gs)
                 sets = Replacement.subsetsOf n own
@@ -3281,7 +3292,7 @@ apply batch applied candidate event =
           -- anyway.
           Nothing -> pure (Just event)
           Just controller -> do
-            let entering oid2 = Set.member oid2 batch || Set.member oid2 (GameState.enteringSubjects gs)
+            let entering oid2 = Set.member oid2 batch || Map.member oid2 (GameState.enteringSubjects gs)
                 hosts = filter (not . entering) (Attach.hostsFor (Projection.sourceContext gs (Just controller) oid) oid filter_ gs)
             chosen <- Attach.chooseHost controller oid hosts
             -- CR 301.5e: no candidate leaves the Equipment on the battlefield
@@ -3508,7 +3519,7 @@ apply batch applied candidate event =
               Just printed -> printed
               Nothing ->
                 let context = Projection.sourceContext gs (Projection.controllerOf oid gs) oid
-                    quantity = Quantity.Type.DamageDealtToPlayersThisTurn (PlayerRef.Relative PlayerRelation.Opponent)
+                    quantity = Quantity.Type.DamageDealtToPlayersThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Nothing}
                  in maybe 0 Integer.toNaturalSaturating (Quantity.evaluate (Projection.fullView gs) context gs oid quantity)
         Replacement.consume (ReplacementCandidate.identity candidate)
         addEnteringCounters oid CounterKind.PlusOnePlusOne count
@@ -5185,7 +5196,9 @@ copiedSnapshotWithLastKnown oid gs = case Game.lastKnownOf oid gs of
   Nothing -> copiedSnapshot oid gs
 
 -- CR 614.1c / 614.12: run the entry loop for an object that has just been
--- materialized on the battlefield.
+-- materialized on the battlefield, from `origin` (Game.entryOriginOf), the zone
+-- it left; Nothing for a token, a conjured card, a meld or a move off the
+-- stack.
 --
 -- The object is in GameState.objects and its zone index BEFORE this runs,
 -- because CR 614.12 asks for the permanent's characteristics AS IT WOULD EXIST
@@ -5212,8 +5225,8 @@ copiedSnapshotWithLastKnown oid gs = case Game.lastKnownOf oid gs of
 -- engine's reading, resting on CR 614.12; no rule states it outright.
 -- docs/decisions.md, "Which board an entry inside a batch collects replacement
 -- effects from".
-runEntry :: Bool -> Set ObjectId -> ObjectId -> Game (Maybe EntryRefusal.EntryRefusal)
-runEntry minted given oid = do
+runEntry :: Bool -> Maybe EntryOrigin.EntryOrigin -> Set ObjectId -> ObjectId -> Game (Maybe EntryRefusal.EntryRefusal)
+runEntry minted origin given oid = do
   -- CR 608.2f / 614.12: inside one action (`together`), what an EARLIER call
   -- put onto the battlefield entered at the same moment as this object, so it
   -- is a sibling too -- Ornate Imitations' later numbers and Mirror Match's later
@@ -5230,11 +5243,12 @@ runEntry minted given oid = do
   before <- State.gets GameState.enteringBeside
   -- CR 614.12's OTHER half, one field over: the subject is materialized but not
   -- on the battlefield either, so a determination about it counts neither its
-  -- siblings nor itself (Projection.boardAsEntering). INSERTED rather than
-  -- written, so a nested entry leaves the outer subject uncountable too, and
-  -- restored wholesale below for the reason `before` is.
+  -- siblings nor itself (Projection.boardAsEntering), though it still counts
+  -- in `origin`, the zone it left. INSERTED rather than written, so a nested
+  -- entry leaves the outer subject uncountable too, and restored wholesale
+  -- below for the reason `before` is.
   beforeSubjects <- State.gets GameState.enteringSubjects
-  State.modify' (\gs -> gs {GameState.enteringBeside = batch, GameState.enteringSubjects = Set.insert oid beforeSubjects})
+  State.modify' (\gs -> gs {GameState.enteringBeside = batch, GameState.enteringSubjects = Map.insert oid origin beforeSubjects})
   -- `minted`: a token or conjured card, which `loop` offers to the redirects
   -- the move funnel offers a moving card (divertEntry).
   (outcome, _, _, _, _, _) <- loop Nothing batch minted Map.empty Set.empty [] Nothing False Nothing (ProposedEvent.WouldEnter oid)
@@ -5279,7 +5293,7 @@ seatEnteringAura batch oid = do
   let unattached = Maybe.isNothing (Game.lookupObject oid gs >>= Object.attachedTo)
   case Projection.controllerOf oid gs of
     Just controller | unattached && Set.member Subtype.Aura (Projection.subtypesOf oid gs) -> do
-      let entering h = Set.member h batch || Set.member h (GameState.enteringSubjects gs)
+      let entering h = Set.member h batch || Map.member h (GameState.enteringSubjects gs)
           hosts = filter (not . maybe False entering . Recipient.objectOf) (Attach.entryHostsFor controller oid gs)
       chosen <- Attach.chooseEntryHost controller oid hosts
       -- THE TAG the enchant slot produced, for changeZoneAttaching's reason:
@@ -5717,13 +5731,11 @@ putOwnCounters oid kind n = do
 -- The AMOUNT is CR 614.12's "how they apply", so it counts over
 -- Projection.boardAsEntering rather than the live battlefield -- Squad Captain's
 -- "a +1/+1 counter on it for each other creature you control" must not count a
--- creature arriving in the same batch. The VIEW stays the live one, as
+-- creature arriving in the same batch, and Undergrowth Scavenger returning from
+-- a graveyard counts itself there. The VIEW stays the live one, as
 -- Projection.replacementsOf's does and for its reason. Parun.ReplacementSpec's
 -- Squad Captain pair proves it, over a Rise of the Dark Realms sweep: mutating
 -- this call back to the live board reddens "no +1/+1 counter".
---
--- Not implemented: a subject entering from a graveyard is not counted there,
--- though its count is made before it leaves (Undergrowth Scavenger) (#5861).
 placeEntryCounters :: ReplacementCandidate -> ObjectId -> Map (CounterKind.CounterKind Keyword.Type.Keyword) Quantity.Type.Quantity -> Game ()
 placeEntryCounters candidate oid counters = do
   gs <- State.get
@@ -7203,6 +7215,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
               -- rather than on the destination alone. The counterspell scenario
               -- "Desertion takes an evoked Mulldrifter and keeps it" proves it.
               resolvedOnto = carrying == CarryOver.Carried && dest == Zone.Battlefield
+              (carriedFrom, carriedBy) = if resolvedOnto then (Object.castFrom obj, under) else (Nothing, Nothing)
               arriving = case (Object.source obj, dest) of
                 (Source.OfSpellCopy printingId, Zone.Battlefield) -> becomesToken printingId
                 (Source.OfCardCopy printingId, Zone.Battlefield) | fromZone == Zone.Stack -> becomesToken printingId
@@ -7362,6 +7375,13 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                     -- "escaped" ask of the permanent. BATTLEFIELD ONLY, `paidCosts`'
                     -- gate and for its reason.
                     Object.castUsing = if resolvedOnto then Object.castUsing obj else Nothing,
+                    -- CR 400.7d again: the zone the spell was cast from and who
+                    -- cast it (`under`, CR 110.2b), what Myojin of Night's Reach's
+                    -- and Nine-Lives Familiar's CR 614.1c rewrites ask of the
+                    -- permanent. `paidCosts`' gate; a controller who isn't the
+                    -- caster is the view's to answer (Object.castBy).
+                    Object.castFrom = carriedFrom,
+                    Object.castBy = carriedBy,
                     -- CR 400.7d a sixth time, and CR 702.174b is the ability that
                     -- references it: the opponent the caster chose to pay each
                     -- instance of rule 702.174a's gift cost, which "the chosen
@@ -7853,7 +7873,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                     -- under data/scenarios/aura prove it.
                     State.modify' (\g -> List.foldl' (storeEntryEffect newId) g defining)
                     Monad.mapM_ (uncurry (addEnteringCounters newId)) (Map.toAscList entering)
-                    refusal <- runEntry False batch newId
+                    refusal <- runEntry False (Game.entryOriginOf oid unentered) batch newId
                     fallen <- case refusal of
                       Nothing -> pure Seq.empty
                       -- CR 614.1a: EntryRewrite.SacrificeToEnter's "if you don't, put
@@ -8018,6 +8038,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                     Monad.forM_ (Object.attachedTo obj) (unattach oid)
                   seenArriving <- State.gets (Visibility.seenByEveryone newId)
                   causer <- State.gets Game.causeNow
+                  Monad.when (fromZone == Zone.Battlefield) (State.modify' (fileBoardBeforeDeparture lki))
                   State.modify'
                     . recordEvent
                     . GameEvent.Moved
@@ -9232,7 +9253,7 @@ createTokens controller card copy n tapped entering attached marks = do
               -- `siblingsOf` then hands each entry loop.
               let siblingsOf oid = Set.delete oid (Set.fromList ids)
               Monad.mapM_ (\oid -> Monad.mapM_ (uncurry (addEnteringCounters oid)) (Map.toAscList entering)) ids
-              refusals <- traverse (\oid -> (,) oid <$> runEntry True (siblingsOf oid) oid) ids
+              refusals <- traverse (\oid -> (,) oid <$> runEntry True Nothing (siblingsOf oid) oid) ids
               let entered = [oid | (oid, Nothing) <- refusals]
               Monad.mapM_ unmake [oid | (oid, Just refusal) <- refusals, refusal /= EntryRefusal.Diverted]
               settleMinted (GameState.nextTimestamp unminted) entered
@@ -9432,7 +9453,7 @@ meld controller victims resultCard = do
       -- only EntryRewrite.SacrificeToEnter and an ExileFromGraveyard carrying
       -- `orGraveyard` refuse an entry, and a melded permanent's rows are its meld
       -- result's, none of which prints either.
-      Monad.void (runEntry False Set.empty newId)
+      Monad.void (runEntry False Nothing Set.empty newId)
       -- CR 603.6a's enters-the-battlefield triggers scan this, and it is recorded
       -- after the entry loop so the snapshot describes a settled permanent --
       -- recordMintedEntry's reasons, one zone over. `from` is where the cards were,
@@ -10129,15 +10150,17 @@ performDraw pid = do
 --
 -- A window already open is left to its owner: a card drawn in a nested one is
 -- drawn while the outer spell is still being cast.
+--
+-- CR 401.5: the window also holds back a new top card (Game.shownTop).
 announcing :: Game a -> Game a
 announcing body = do
   outer <- State.gets GameState.keptFaceDown
   case outer of
     Just _ -> body
     Nothing -> do
-      State.modify' (\g -> g {GameState.keptFaceDown = Just Map.empty})
+      State.modify' (\g -> g {GameState.keptFaceDown = Just Map.empty, GameState.announcedTops = Just (Game.libraryTops g)})
       result <- body
-      State.modify' (\g -> g {GameState.keptFaceDown = Nothing})
+      State.modify' (\g -> g {GameState.keptFaceDown = Nothing, GameState.announcedTops = Nothing})
       pure result
 
 -- CR 121.8: the spell became cast (CR 601.2i) or the ability activated (CR
@@ -10148,7 +10171,7 @@ announcing body = do
 turnUpKeptDraws :: Game ()
 turnUpKeptDraws = do
   kept <- State.gets GameState.keptFaceDown
-  State.modify' (\g -> g {GameState.keptFaceDown = Nothing})
+  State.modify' (\g -> g {GameState.keptFaceDown = Nothing, GameState.announcedTops = Nothing})
   Monad.forM_ (foldMap Map.toAscList kept) $ \(drawn, nth) -> do
     gs <- State.get
     case Game.lookupObject drawn gs of
@@ -10674,7 +10697,7 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> False
   TriggerCondition.DealsCombatDamage _ -> False
   TriggerCondition.DealsDamageToPlayer _ -> False
-  TriggerCondition.SelfDealsDamageToCreature _ -> False
+  TriggerCondition.DealsDamageToPermanent _ -> False
   TriggerCondition.DealsDamage _ -> False
   TriggerCondition.IsDealtDamage _ -> False
   TriggerCondition.PlayerIsDealtDamage _ -> False

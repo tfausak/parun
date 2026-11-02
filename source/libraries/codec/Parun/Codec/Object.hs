@@ -152,6 +152,7 @@ codec = Fields.object $ do
   announcedX <- Fields.defaulted "announcedX" (Object.announcedX defaults) (Common.maybe Common.natural) Object.announcedX
   manaCostPaid <- Fields.defaulted "manaCostPaid" (Object.manaCostPaid defaults) (Common.maybe ManaCost.codec) Object.manaCostPaid
   castFrom <- Fields.defaulted "castFrom" (Object.castFrom defaults) (Common.maybe Zone.codec) Object.castFrom
+  castBy <- Fields.defaulted "castBy" (Object.castBy defaults) (Common.maybe PlayerId.codec) Object.castBy
   castUsing <- Fields.defaulted "castUsing" (Object.castUsing defaults) (Common.maybe Keyword.codec) Object.castUsing
   castGrant <- Fields.defaulted "castGrant" (Object.castGrant defaults) (Common.maybe Keyword.codec) Object.castGrant
   exileLookers <- Fields.defaulted "exileLookers" (Object.exileLookers defaults) (Common.set ExileLooker.codec) Object.exileLookers
@@ -221,6 +222,7 @@ codec = Fields.object $ do
         Object.announcedX = announcedX,
         Object.manaCostPaid = manaCostPaid,
         Object.castFrom = castFrom,
+        Object.castBy = castBy,
         Object.castUsing = castUsing,
         Object.castGrant = castGrant,
         Object.exileLookers = exileLookers,

@@ -106,6 +106,7 @@ import qualified Parun.Types.CantAttackPlayer as CantAttackPlayer
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.CantBlockCreatures as CantBlockCreatures
 import qualified Parun.Types.Card as Card.Type
+import qualified Parun.Types.CardAbilities as CardAbilities
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
@@ -177,6 +178,7 @@ import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.DealDamage as DealDamage
+import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Defense as Defense
@@ -224,7 +226,6 @@ import qualified Parun.Types.ExileCardsFromHand as ExileCardsFromHand
 import qualified Parun.Types.ExileFromGraveyard as ExileFromGraveyard
 import qualified Parun.Types.ExileMaterials as ExileMaterials
 import qualified Parun.Types.ExilePermanents as ExilePermanents
-import qualified Parun.Types.ExiledCardAbilities as ExiledCardAbilities
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.FaceDownCharacteristics as FaceDownCharacteristics
 import qualified Parun.Types.FaceDownState as FaceDownState
@@ -777,7 +778,7 @@ playerRefPositions =
    in [ ("add-mana", Effect.AddMana (ManaAddition.MkManaAddition (plantedPlayer "am") ManaProduction.AnyColor (Quantity.Type.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing), [plantedPlayer "am"]),
         ("add-mana-pooled", Effect.AddMana (ManaAddition.MkManaAddition (plantedPlayer "amp") (ManaProduction.Pooled (ManaCount.MkManaCount (plantedPlayer "amp-pool") ManaFilter.Any)) (Quantity.Type.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing), [plantedPlayer "amp", plantedPlayer "amp-pool"]),
         ("firebend", Effect.Firebend (ManaAddition.MkManaAddition (plantedPlayer "fb") ManaProduction.AnyColor (Quantity.Type.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing), [plantedPlayer "fb"]),
-        ("search", Effect.Search (Search.MkSearch (plantedPlayer "se-searcher") (plantedPlayer "se-owner") Set.empty False Nothing (Filter.Type.And []) Seq.empty False SearchDestination.Battlefield Nothing Nothing Set.empty False False), [plantedPlayer "se-searcher", plantedPlayer "se-owner"]),
+        ("search", Effect.Search (Search.MkSearch (plantedPlayer "se-searcher") (plantedPlayer "se-owner") Set.empty False Nothing (Filter.Type.And []) Seq.empty False SearchDestination.Battlefield Nothing Nothing Nothing Set.empty False False), [plantedPlayer "se-searcher", plantedPlayer "se-owner"]),
         ("draw", Effect.Draw (Draw.MkDraw (plantedPlayer "dr") one Nothing), [plantedPlayer "dr"]),
         ("mill", Effect.Mill (Mill.MkMill (plantedPlayer "mi") one Nothing Nothing), [plantedPlayer "mi"]),
         ("scry", Effect.Scry (playerQuantity "sc"), [plantedPlayer "sc"]),
@@ -936,9 +937,17 @@ counterabilityConditions counterability = case counterability of
 castingPermissionConditions :: CastingPermission.CastingPermission -> [Condition.Type.Condition]
 castingPermissionConditions permission = case permission of
   CastingPermission.CastFromLibraryWhileSearching -> []
-  CastingPermission.CastFromGraveyard _ -> []
+  CastingPermission.CastFromGraveyard _ _ -> []
   CastingPermission.PlayFromGraveyard -> []
   CastingPermission.CastAsThoughItHadFlash condition _ -> Maybe.maybeToList condition
+
+-- Every additional cost a casting permission states (CR 118.8).
+castingPermissionCosts :: CastingPermission.CastingPermission -> [CostComponent.CostComponent Keyword.Keyword]
+castingPermissionCosts permission = case permission of
+  CastingPermission.CastFromGraveyard _ additional -> additional
+  CastingPermission.CastFromLibraryWhileSearching -> []
+  CastingPermission.PlayFromGraveyard -> []
+  CastingPermission.CastAsThoughItHadFlash _ _ -> []
 
 -- CR 701.46a's per-clause gate. Mode.allEffects and Modal.allEffects drop clause
 -- boundaries by design, so every lint that reaches a card through them needs
@@ -1031,7 +1040,7 @@ modificationCounts modification = case modification of
   Modification.GainAbilitiesOfSource _ -> []
   -- The rider's CR 602.5 conditions; the abilities are the exiled cards', and
   -- their Filter's Counts are reached through modificationFilters.
-  Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities _ extra) -> concatMap conditionCounts (concatMap restrictionConditions extra)
+  Modification.GainCardAbilities (CardAbilities.MkCardAbilities _ _ extra) -> concatMap conditionCounts (concatMap restrictionConditions extra)
   Modification.GainAbilitiesOfStickers -> []
   Modification.LoseAllAbilities -> []
   -- Carries a name, which reaches no Count.
@@ -1160,7 +1169,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> []
   TriggerCondition.DealsCombatDamage _ -> []
   TriggerCondition.DealsDamageToPlayer _ -> []
-  TriggerCondition.SelfDealsDamageToCreature _ -> []
+  TriggerCondition.DealsDamageToPermanent _ -> []
   TriggerCondition.DealsDamage _ -> []
   TriggerCondition.IsDealtDamage _ -> []
   TriggerCondition.PlayerIsDealtDamage _ -> []
@@ -1343,7 +1352,7 @@ ownCounts effect = case effect of
   -- The search's count is a Quantity like any other -- Explosive Vegetation's
   -- "up to two" -- so its Counts are reachable from here. A search stating no
   -- count (Mana Severance) has none to reach.
-  Effect.Search (Search.MkSearch _ _ _ _ quantity _ _ _ _ _ _ _ _ _) -> foldMap quantityCounts quantity
+  Effect.Search (Search.MkSearch _ _ _ _ quantity _ _ _ _ _ _ _ _ _ _) -> foldMap quantityCounts quantity
   Effect.ExileAllGraveyards -> []
   Effect.Proliferate -> []
   Effect.Reroll -> []
@@ -3354,6 +3363,8 @@ namedTokens =
       CardName.MkCardName (Text.pack "Bearer of the Wilds"),
       -- CR 111.10j's Cursed Role (Spiteful Hexmage).
       CardName.MkCardName (Text.pack "Cursed"),
+      -- Koma, World-Eater's "3/3 blue Serpent creature tokens named Koma's Coil".
+      CardName.MkCardName (Text.pack "Koma's Coil"),
       -- Goblin Kaboomist's "a colorless artifact token named Land Mine".
       CardName.MkCardName (Text.pack "Land Mine"),
       CardName.MkCardName (Text.pack "Nalaar Aetherjet"),
@@ -4116,7 +4127,7 @@ costComponentFilters component = case component of
 -- flying" -- and CR 303.4a's enchant slot, which is a TargetSlot too.
 targetSlotFilters :: TargetSlot.TargetSlot -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
 targetSlotFilters slot =
-  unframed (Maybe.maybeToList (TargetSlot.filter slot))
+  unframed (Maybe.maybeToList (TargetSlot.filter slot) <> Maybe.maybeToList (TargetSlot.asCast slot))
     -- CR 202.3's computed bound is a Quantity, and a Quantity reaches a Count and
     -- so a Filter -- so the slot's `amount` is a Filter position like any other
     -- and has to be swept, or the cross-checks below would report an atom buried
@@ -4535,7 +4546,7 @@ modificationFilters modification = case modification of
   -- included.
   Modification.GainEnchant slot -> targetSlotFilters slot
   Modification.LoseEnchant slot -> targetSlotFilters slot
-  Modification.GainCastingPermission permission -> concatMap conditionFilters (castingPermissionConditions permission)
+  Modification.GainCastingPermission permission -> concatMap conditionFilters (castingPermissionConditions permission) <> concatMap (unframed . costComponentFilters) (castingPermissionCosts permission)
   -- Nothing HERE, and that is not a hole: a granted ability's Filters are swept
   -- by grantedActivatedAbilities, grantedTriggeredAbilities and
   -- grantedStaticAbilities below, at the outer level, so they keep the Framing that a printed ability's do. Answering
@@ -4546,7 +4557,7 @@ modificationFilters modification = case modification of
   Modification.GainAbilitiesOfSource _ -> []
   -- The rider's CR 602.5 conditions, as a printed ability's are swept, and the
   -- Filter naming the exiled cards.
-  Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities cards extra) -> (Unframed, cards) : frame Unframed (concatMap conditionFilters (concatMap restrictionConditions extra))
+  Modification.GainCardAbilities (CardAbilities.MkCardAbilities _ cards extra) -> (Unframed, cards) : frame Unframed (concatMap conditionFilters (concatMap restrictionConditions extra))
   Modification.GainAbilitiesOfStickers -> []
   Modification.SetBasePowerToughness (SetBasePowerToughness.MkSetBasePowerToughness p t) -> foldMap quantityFilters p <> foldMap quantityFilters t
   Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness p t) -> quantityFilters p <> quantityFilters t
@@ -4710,9 +4721,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- creature". The self-scoped readings carry nothing.
   TriggerCondition.DealsCombatDamage watched -> actingFilters watched
   TriggerCondition.DealsDamageToPlayer p -> actingFilters (DealsDamageToPlayer.actor p)
-  -- Nullary as well: the printed form qualifies the damaged creature in no way,
-  -- so a text change has nothing here to rewrite.
-  TriggerCondition.SelfDealsDamageToCreature _ -> []
+  TriggerCondition.DealsDamageToPermanent p -> actingFilters (DealsDamageToPermanent.actor p)
   TriggerCondition.DealsDamage watched -> actingFilters watched
   TriggerCondition.IsDealtDamage dealt -> actingFilters (DealtDamage.recipient dealt)
   TriggerCondition.PlayerIsDealtDamage _ -> []
@@ -4919,7 +4928,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> []
   TriggerCondition.DealsCombatDamage _ -> []
   TriggerCondition.DealsDamageToPlayer _ -> []
-  TriggerCondition.SelfDealsDamageToCreature _ -> []
+  TriggerCondition.DealsDamageToPermanent _ -> []
   TriggerCondition.DealsDamage _ -> []
   TriggerCondition.IsDealtDamage _ -> []
   TriggerCondition.PlayerIsDealtDamage _ -> []
@@ -5185,6 +5194,7 @@ playerEffectFilters playerEffect = case playerEffect of
   PlayerEffect.CantBecomeMonarch -> []
   PlayerEffect.CantSetSchemesInMotion -> []
   PlayerEffect.EntriesTrigger e -> [EntriesTrigger.entrants e]
+  PlayerEffect.AdditionalTriggers bearers -> [bearers]
   PlayerEffect.ControlledWhileSearching -> []
   PlayerEffect.YouChoose _ -> []
   PlayerEffect.ExilesFoundWhileSearching -> []
@@ -6128,7 +6138,7 @@ effectFilters effect = case effect of
   -- THE one search-framed position. CR 701.3a from the candidate's side:
   -- Auratouched Mage's "an Aura card that could enchant it", where the host is
   -- fixed for the whole evaluation and the Aura varies per candidate.
-  Effect.Search (Search.MkSearch _ _ _ _ _ f descriptions _ _ _ _ _ _ _) -> searchFramed (f : Foldable.toList descriptions)
+  Effect.Search (Search.MkSearch _ _ _ _ _ f descriptions _ _ _ _ _ _ _ _) -> searchFramed (f : Foldable.toList descriptions)
   Effect.ExileAllGraveyards -> []
   Effect.Proliferate -> []
   Effect.Reroll -> []
@@ -6862,6 +6872,7 @@ cardFilters card =
         -- (Cost.announcedSlots), so a slot read here is answered -- Unframed's
         -- promise, kept. SlotlessCostFramed says which cost positions are not.
         <> concatMap (unframed . costComponentFilters) (Face.additionalCosts card)
+        <> concatMap (unframed . costComponentFilters) (concatMap castingPermissionCosts (Face.castingPermissions card))
         -- CR 118.8's other carrier, Unframed for the line above's reason: a
         -- choice's options are paid at CR 601.2h like the components beside
         -- them, and each option is a whole Cost.

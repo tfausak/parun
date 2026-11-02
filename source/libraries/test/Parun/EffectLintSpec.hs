@@ -287,7 +287,7 @@ ownQuantities effect = case effect of
   Effect.Firebend _ -> []
   Effect.ActivateManaAbilities _ -> []
   Effect.MoveMana _ -> []
-  Effect.Search (Search.MkSearch _ _ _ _ quantity _ _ _ _ _ _ _ _ _) -> Maybe.maybeToList quantity
+  Effect.Search (Search.MkSearch _ _ _ _ quantity _ _ _ _ _ _ _ _ _ _) -> Maybe.maybeToList quantity
   Effect.ExileAllGraveyards -> []
   Effect.Proliferate -> []
   Effect.Reroll -> []
@@ -1160,6 +1160,7 @@ unpreventableScopeOffends scope playerEffect = case playerEffect of
   PlayerEffect.CantBecomeMonarch -> False
   PlayerEffect.CantSetSchemesInMotion -> False
   PlayerEffect.EntriesTrigger _ -> False
+  PlayerEffect.AdditionalTriggers _ -> False
   PlayerEffect.ControlledWhileSearching -> False
   PlayerEffect.YouChoose _ -> False
   PlayerEffect.ExilesFoundWhileSearching -> False
@@ -1241,6 +1242,7 @@ unpreventablePatternOffends playerEffect = case playerEffect of
   PlayerEffect.CantBecomeMonarch -> False
   PlayerEffect.CantSetSchemesInMotion -> False
   PlayerEffect.EntriesTrigger _ -> False
+  PlayerEffect.AdditionalTriggers _ -> False
   PlayerEffect.ControlledWhileSearching -> False
   PlayerEffect.YouChoose _ -> False
   PlayerEffect.ExilesFoundWhileSearching -> False

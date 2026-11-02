@@ -21,6 +21,7 @@ import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.Loyalty as Loyalty
 import qualified Parun.Engine.Modal as Modal
 import qualified Parun.Engine.Turn as Turn
+import qualified Parun.Extra.Int as Int
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.Acquisition as Acquisition
@@ -46,6 +47,7 @@ import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.Discarded as Discarded
+import qualified Parun.Types.EntryOrigin as EntryOrigin
 import qualified Parun.Types.EventGroup as EventGroup
 import qualified Parun.Types.ExiledPile as ExiledPile
 import Parun.Types.Face (Face)
@@ -659,6 +661,20 @@ topOf zone pid gs = case zone of
   Zone.Command -> Nothing
   Zone.Ante -> Nothing
 
+-- Each library's top card, by its player; a player with an empty library is
+-- absent.
+libraryTops :: GameState -> Map.Map PlayerId ObjectId
+libraryTops gs = Map.fromList [(pid, top) | pid <- Map.keys (GameState.players gs), Just top <- [topOf Zone.Library pid gs]]
+
+-- | CR 401.5: the top card of a player's library, unless it became the top while
+-- a spell is being cast or an ability activated (GameState.announcedTops), when
+-- it isn't revealed and can't be looked at until that ends. Not implemented: the
+-- same while a special action is taken (#5003).
+shownTop :: PlayerId -> GameState -> Maybe ObjectId
+shownTop pid gs = case (topOf Zone.Library pid gs, GameState.announcedTops gs) of
+  (Just top, Just tops) | Map.lookup pid tops /= Just top -> Nothing
+  (top, _) -> top
+
 -- CR 404.3: set a player's standing graveyard-order setting
 -- (Parun.Types.GraveyardOrder). The player's to change, not the rules': a client
 -- writes it at setup or between engine calls on that player's word. No game
@@ -988,6 +1004,46 @@ removeFromZones oid gs =
           GameState.sideDecks = fmap (fromPile Zone.Command) (GameState.sideDecks gs),
           GameState.stack = filter (/= oid) (GameState.stack gs)
         }
+
+-- CR 614.12: where an object is, so that an entry it is about to make can
+-- still count it there (Projection.boardAsEntering). Nothing on the
+-- battlefield, in a side deck, and on the stack: a resolving permanent spell
+-- becomes the permanent (CR 608.3a-b), and no entry in the pool counts the stack.
+entryOriginOf :: ObjectId -> GameState -> Maybe EntryOrigin.EntryOrigin
+entryOriginOf oid gs = do
+  obj <- lookupObject oid gs
+  let zone = Object.zone obj
+      inPile piles = do
+        pid <- pileHolderOf oid gs
+        index <- Map.lookup pid (piles gs) >>= Seq.elemIndexL oid
+        pure (EntryOrigin.MkEntryOrigin zone (Just pid) (Int.toNaturalSaturating index))
+      inShared members = if Set.member oid (members gs) then Just (EntryOrigin.MkEntryOrigin zone Nothing 0) else Nothing
+  case zone of
+    Zone.Library -> inPile GameState.library
+    Zone.Hand -> inPile GameState.hand
+    Zone.Graveyard -> inPile GameState.graveyard
+    Zone.Exile -> inShared GameState.exile
+    Zone.Command -> inShared GameState.command
+    Zone.Ante -> inShared GameState.ante
+    Zone.Battlefield -> Nothing
+    Zone.Stack -> Nothing
+
+-- CR 614.12: an object back where entryOriginOf found it, at its index in a
+-- pile, beside whatever it left there. Writes the zone index only.
+returnToOrigin :: EntryOrigin.EntryOrigin -> ObjectId -> GameState -> GameState
+returnToOrigin origin oid gs =
+  let into piles = case EntryOrigin.holder origin of
+        Just pid -> Map.alter (Just . Seq.insertAt (Natural.toIntSaturating (EntryOrigin.index origin)) oid . Maybe.fromMaybe Seq.empty) pid piles
+        Nothing -> piles
+   in case EntryOrigin.zone origin of
+        Zone.Library -> gs {GameState.library = into (GameState.library gs)}
+        Zone.Hand -> gs {GameState.hand = into (GameState.hand gs)}
+        Zone.Graveyard -> gs {GameState.graveyard = into (GameState.graveyard gs)}
+        Zone.Exile -> gs {GameState.exile = Set.insert oid (GameState.exile gs)}
+        Zone.Command -> gs {GameState.command = Set.insert oid (GameState.command gs)}
+        Zone.Ante -> gs {GameState.ante = Set.insert oid (GameState.ante gs)}
+        Zone.Battlefield -> gs
+        Zone.Stack -> gs
 
 -- CR 401.2: a library is an ORDERED pile, so a library arrival needs the END it
 -- arrives at. The Seq's HEAD is the top -- Event.drawCard takes the head, which
@@ -3777,11 +3833,14 @@ freerunningDamageThisTurn pid gs =
 -- narrows the question to that damage alone (CR 510.2's combat damage).
 wasDealtDamageThisTurn :: Maybe DamageKind.DamageKind -> GameState -> PlayerId -> Bool
 wasDealtDamageThisTurn kind gs pid =
-  let counts event =
-        damagedPlayer event == Just pid && case event of
-          GameEvent.DamageDealt ev -> all (== DamageEvent.kind ev) kind
-          _ -> Maybe.isNothing kind
+  let counts event = damagedPlayer event == Just pid && damageOfKind kind event
    in any (counts . LoggedEvent.event) (GameState.events gs)
+
+-- Is this event damage of that kind? Nothing admits every event.
+damageOfKind :: Maybe DamageKind.DamageKind -> GameEvent -> Bool
+damageOfKind kind event = case event of
+  GameEvent.DamageDealt ev -> all (== DamageEvent.kind ev) kind
+  _ -> Maybe.isNothing kind
 
 -- CR 120.1 / 608.2i: how much damage was dealt to this PLAYER this turn --
 -- wasDealtDamageThisTurn's twin summing amounts where that one answers yes or
@@ -3791,13 +3850,14 @@ wasDealtDamageThisTurn kind gs pid =
 --
 -- damageDealt and not damagedPlayer, because the AMOUNT is what a total wants;
 -- damageRecipient is the same answer with it dropped. CR 120.8's `amount > 0`
--- fence lives in damageDealt, so a 0 contributes nothing here either.
-damageDealtToPlayerThisTurn :: GameState -> PlayerId -> Natural
-damageDealtToPlayerThisTurn gs pid =
+-- fence lives in damageDealt, so a 0 contributes nothing here either. A kind
+-- narrows the total as it narrows the yes or no.
+damageDealtToPlayerThisTurn :: Maybe DamageKind.DamageKind -> GameState -> PlayerId -> Natural
+damageDealtToPlayerThisTurn kind gs pid =
   sum
     ( Maybe.mapMaybe
         ( \logged -> case damageDealt (LoggedEvent.event logged) of
-            Just (recipient, amount) | Recipient.playerOf recipient == Just pid -> Just amount
+            Just (recipient, amount) | Recipient.playerOf recipient == Just pid && damageOfKind kind (LoggedEvent.event logged) -> Just amount
             _ -> Nothing
         )
         (Foldable.toList (GameState.events gs))

@@ -159,6 +159,10 @@ data PlayerEffect
     -- how entries change the triggering of this player's abilities.
     -- Not implemented: the same for a creature dying (Hushbringer) (#5725).
     EntriesTrigger EntriesTrigger.EntriesTrigger
+  | -- | CR 603.2d / Sanctum of All, Harmonic Prodigy: a triggered ability of a
+    -- permanent matching the filter, whatever its event, triggers an additional
+    -- time.
+    AdditionalTriggers (Filter.Filter Keyword.Keyword)
   | -- | CR 723.2 / Opposition Agent: while this player searches their library,
     -- CR 109.5's "you" of the row controls them.
     ControlledWhileSearching

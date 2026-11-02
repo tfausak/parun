@@ -57,6 +57,7 @@ import qualified Parun.Types.CantAttackPlayer as CantAttackPlayer
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.CantBlockCreatures as CantBlockCreatures
 import qualified Parun.Types.Card as Card.Type
+import qualified Parun.Types.CardAbilities as CardAbilities
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
@@ -113,6 +114,7 @@ import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.DealDamage as DealDamage
+import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Designate as Designate
@@ -148,7 +150,6 @@ import qualified Parun.Types.ExchangeOwnership as ExchangeOwnership
 import qualified Parun.Types.ExchangeValues as ExchangeValues
 import qualified Parun.Types.ExchangedValue as ExchangedValue
 import qualified Parun.Types.ExileFromGraveyard as ExileFromGraveyard
-import qualified Parun.Types.ExiledCardAbilities as ExiledCardAbilities
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.FaceDownCharacteristics as FaceDownCharacteristics
 import qualified Parun.Types.FaceDownState as FaceDownState
@@ -371,11 +372,11 @@ rewriteModification pairs m =
               -- restrictions, printed there too. The abilities are the cards', read
               -- at projection time. Unproven: no card in data/cards/ gives such a
               -- grant a subtype or colour word.
-              Modification.GainExiledCardAbilities e ->
-                Modification.GainExiledCardAbilities
+              Modification.GainCardAbilities e ->
+                Modification.GainCardAbilities
                   e
-                    { ExiledCardAbilities.cards = Filter.rewrite [(from, to)] (ExiledCardAbilities.cards e),
-                      ExiledCardAbilities.restrictions = fmap (rewriteRestriction [(from, to)]) (ExiledCardAbilities.restrictions e)
+                    { CardAbilities.cards = Filter.rewrite [(from, to)] (CardAbilities.cards e),
+                      CardAbilities.restrictions = fmap (rewriteRestriction [(from, to)]) (CardAbilities.restrictions e)
                     }
               -- Carries no word: the abilities are the stickers', read at projection
               -- time.
@@ -576,6 +577,7 @@ rewritePlayerEffect pairs effect = case effect of
   PlayerEffect.CantBecomeMonarch -> effect
   PlayerEffect.CantSetSchemesInMotion -> effect
   PlayerEffect.EntriesTrigger e -> PlayerEffect.EntriesTrigger e {EntriesTrigger.entrants = Filter.rewrite pairs (EntriesTrigger.entrants e)}
+  PlayerEffect.AdditionalTriggers bearers -> PlayerEffect.AdditionalTriggers (Filter.rewrite pairs bearers)
   PlayerEffect.ControlledWhileSearching -> effect
   PlayerEffect.YouChoose _ -> effect
   PlayerEffect.ExilesFoundWhileSearching -> effect
@@ -664,7 +666,7 @@ rewriteEffect pairs effect = case effect of
   Effect.Firebend addition -> Effect.Firebend (rewriteManaAddition pairs addition)
   Effect.ActivateManaAbilities (ActivateManaAbilities.MkActivateManaAbilities ref filter_) -> Effect.ActivateManaAbilities (ActivateManaAbilities.MkActivateManaAbilities ref (Filter.rewrite pairs filter_))
   Effect.MoveMana _ -> effect
-  Effect.Search (Search.MkSearch searcher owner zones outside quantity filter_ descriptions upTo destination subject slot differentIn exactly andOr) -> Effect.Search (Search.MkSearch searcher owner zones outside (fmap (rewriteQuantity pairs) quantity) (Filter.rewrite pairs filter_) (fmap (Filter.rewrite pairs) descriptions) upTo destination subject slot differentIn exactly andOr)
+  Effect.Search (Search.MkSearch searcher owner zones outside quantity filter_ descriptions upTo destination subject slot handSlot differentIn exactly andOr) -> Effect.Search (Search.MkSearch searcher owner zones outside (fmap (rewriteQuantity pairs) quantity) (Filter.rewrite pairs filter_) (fmap (Filter.rewrite pairs) descriptions) upTo destination subject slot handSlot differentIn exactly andOr)
   Effect.ExileAllGraveyards -> effect
   Effect.Proliferate -> effect
   Effect.Reroll -> effect
@@ -2044,6 +2046,7 @@ rewriteTargetSlot :: [(TextWord.TextWord, TextWord.TextWord)] -> TargetSlot.Targ
 rewriteTargetSlot pairs slot =
   slot
     { TargetSlot.filter = fmap (Filter.rewrite pairs) (TargetSlot.filter slot),
+      TargetSlot.asCast = fmap (Filter.rewrite pairs) (TargetSlot.asCast slot),
       TargetSlot.amount = fmap (rewriteQuantity pairs) (TargetSlot.amount slot),
       TargetSlot.count = SlotCount.mapQuantity (rewriteQuantity pairs) (TargetSlot.count slot),
       TargetSlot.divided = fmap (rewriteQuantity pairs) (TargetSlot.divided slot)
@@ -2085,7 +2088,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> condition
   TriggerCondition.DealsCombatDamage watched -> TriggerCondition.DealsCombatDamage (acting watched)
   TriggerCondition.DealsDamageToPlayer p -> TriggerCondition.DealsDamageToPlayer p {DealsDamageToPlayer.actor = acting (DealsDamageToPlayer.actor p)}
-  TriggerCondition.SelfDealsDamageToCreature _ -> condition
+  TriggerCondition.DealsDamageToPermanent p -> TriggerCondition.DealsDamageToPermanent p {DealsDamageToPermanent.actor = acting (DealsDamageToPermanent.actor p)}
   TriggerCondition.DealsDamage watched -> TriggerCondition.DealsDamage (acting watched)
   TriggerCondition.IsDealtDamage dealt -> TriggerCondition.IsDealtDamage dealt {DealtDamage.recipient = acting (DealtDamage.recipient dealt)}
   TriggerCondition.PlayerIsDealtDamage _ -> condition
@@ -2230,7 +2233,7 @@ rewriteTriggerCondition pairs condition = case condition of
 rewriteCastingPermission :: [(TextWord.TextWord, TextWord.TextWord)] -> CastingPermission.CastingPermission -> CastingPermission.CastingPermission
 rewriteCastingPermission pairs permission = case permission of
   CastingPermission.CastAsThoughItHadFlash condition additional -> CastingPermission.CastAsThoughItHadFlash (fmap (rewriteCondition pairs) condition) additional
-  CastingPermission.CastFromGraveyard _ -> permission
+  CastingPermission.CastFromGraveyard family additional -> CastingPermission.CastFromGraveyard family (fmap (Filter.rewriteComponent pairs) additional)
   CastingPermission.PlayFromGraveyard -> permission
   CastingPermission.CastFromLibraryWhileSearching -> permission
 
@@ -2314,6 +2317,7 @@ rewriteDuration pairs duration = case duration of
   Duration.UntilUsed _ -> duration
   Duration.UntilEvent DurationEvent.SourceTurnedFaceDown -> duration
   Duration.UntilEvent DurationEvent.Planeswalked -> duration
+  Duration.UntilEvent DurationEvent.SourceExiledCard -> duration
   Duration.UntilEvent (DurationEvent.SpellCast criterion) -> Duration.UntilEvent (DurationEvent.SpellCast (Filter.rewrite pairs criterion))
 
 -- CR 612.1 through the counters a CR 122.5 move carries: the count, and the
