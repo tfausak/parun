@@ -10,27 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Skyship Buccaneer: `_Players:AttackedThisTurn`
-- Slumbering Cerberus: `_PermanentRule:DoesntUntapDuringControllersUntap`
-- Sorcerous Spyglass: `_ReplacementActionWouldEnter:LookAtAPlayersHand`
-- Soul-Guide Lantern: `_Action:Exile`
-- Soulstone Sanctuary: `_Action:CreatePermanentLayerEffect`
-- Sower of Chaos: `_Action:CreatePermanentRuleEffectUntil`
-- Sphinx of Forgotten Lore: `_Action:CreateGraveyardCardEffectUntil`
-- Sphinx of the Final Word: `_Rule:FromStack`
-- Spinner of Souls:
-  `_Action:RevealCardsFromTheTopOfLibraryUntilACardOfTypeIsRevealed`
-- Springbloom Druid: `_SearchLibraryAction:FindNumberCardsOfType`
-- Squad Rallier: `_Action:LookAtTheTopNumberCardsOfLibrary`
-- Starlight Snare: `_PermanentRule:DoesntUntapDuringControllersUntap`
-- Stasis Snare: `_Action:Exile`
-- Storm Fleet Spy: `_Players:AttackedThisTurn`
-- Stromkirk Bloodthief: `_Players:LostLifeThisTurn`
-- Strongbox Raider: `_Players:AttackedThisTurn`
-- Sun-Blessed Healer: `_Condition:EnteringPermanentPassesFilter`
-- Surrak, the Hunt Caller: `_Condition:TotalPowerOfPermanentsIs`
-- Suspicious Shambler: `_Rule:FromGraveyard`
-- Sylvan Scavenging: `_Action:If`
 - Teach by Example: `_Action:CreateFutureTrigger`
 - Tempest Djinn: `_StaticLayerEffect:AdjustPTForEach`
 - Thousand-Year Storm: `_Action:CopySpellForEachAndMayChooseNewTargets`

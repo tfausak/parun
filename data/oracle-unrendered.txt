@@ -2421,6 +2421,7 @@ slimy-dualleech
 slivdrazi-monstrosity
 sliver-hive
 slobad-iron-goblin
+slumbering-cerberus
 slumbering-dragon
 smallpox
 smash-to-smithereens
@@ -2439,6 +2440,7 @@ sonorous-howlbonder
 sorcerer-class
 sorcerers-strongbox
 sorcerous-sight
+sorcerous-spyglass
 sorin-markov
 sorrows-path
 soul-conduit
@@ -2458,8 +2460,10 @@ soul-snare
 soul-summons
 soulblast
 soulfire-eruption
+soulstone-sanctuary
 south-pole-voyager
 sovereigns-of-lost-alara
+sower-of-chaos
 space-beleren
 spark-double
 sparkhunter-masticore
@@ -2479,6 +2483,8 @@ spelltwine
 sphere-of-safety
 sphinx-ambassador
 sphinx-of-clear-skies
+sphinx-of-forgotten-lore
+sphinx-of-the-final-word
 sphinx-of-the-revelation
 sphinx-of-uthuun
 sphinxs-decree
@@ -2489,6 +2495,7 @@ spiked-corridor-torture-pit
 spikeshell-harrier
 spin-into-myth
 spinebiter
+spinner-of-souls
 spirit-link
 spirit-mascot
 spirit-water-revival
@@ -2497,10 +2504,12 @@ spiteful-hexmage
 spitfire-handler
 splinter-twin
 spreading-algae
+springbloom-druid
 springleaf-drum
 spy-kit
 spymasters-vault
 squad-captain
+squad-rallier
 squadron-hawk
 squelch
 stadium-vendors
@@ -2517,6 +2526,8 @@ star-compass
 star-crowned-stag
 starfield-of-nyx
 starforged-sword
+starlight-snare
+stasis-snare
 static-discharge
 static-orb
 stave-off
@@ -2549,7 +2560,9 @@ stream-of-acid
 streetwise-negotiator
 strionic-resonator
 strixhaven
+stromkirk-bloodthief
 strong-the-brutish-thespian
+strongbox-raider
 student-of-warfare
 stuffy-doll
 stun
@@ -2563,6 +2576,7 @@ summitfest-closing-ceremony
 summon-choco-mog
 summon-valefor
 summoners-pact
+sun-blessed-healer
 sun-titan
 sun-warriors
 suncleanser
@@ -2579,12 +2593,14 @@ superior-spider-man
 suppression-bonds
 suppression-field
 suqata-assassin
+surrak-the-hunt-caller
 surrounded-by-orcs
 surveillance-monitor
 surveyors-scope
 susan-foreman
 suspend
 suspend-aggression
+suspicious-shambler
 sutured-ghoul
 swamp-mosquito
 swans-of-bryn-argoll
@@ -2596,6 +2612,7 @@ swooping-protector
 sword-of-the-animist
 sword-swallowing-seraph
 sylvan-messenger
+sylvan-scavenging
 synchronized-eviction
 syphon-soul
 tablet-of-the-guilds

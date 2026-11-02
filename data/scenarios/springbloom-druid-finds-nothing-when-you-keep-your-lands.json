@@ -1,0 +1,143 @@
+{
+  "description": "Declining the sacrifice skips the search.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "library": [
+          {
+            "card": "Forest",
+            "label": "lf"
+          },
+          {
+            "card": "Plains",
+            "label": "lp"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Springbloom Druid",
+            "label": "d"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "fo1"
+          },
+          {
+            "card": "Forest",
+            "label": "fo2"
+          },
+          {
+            "card": "Forest",
+            "label": "fo3"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$d",
+          "mana": [
+            "$fo1",
+            "$fo2",
+            "$fo3"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "ChooseOptional": {
+          "type": "Declines"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Forest",
+          "count": 3
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Plains",
+          "count": 0
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Zone",
+          "player": "alice",
+          "zone": "Library",
+          "is": [
+            "$lf",
+            "$lp"
+          ]
+        }
+      }
+    }
+  ]
+}

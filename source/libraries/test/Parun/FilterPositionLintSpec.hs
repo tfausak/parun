@@ -1581,6 +1581,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Booby Trap", 1), -- its trigger condition
         ("Pithing Needle", 1), -- its activation prohibition's affected set
         ("Phyrexian Revoker", 1), -- its activation prohibition's affected set
+        ("Sorcerous Spyglass", 1), -- its activation prohibition's affected set
         ("Stain the Mind", 1), -- its own search
         ("Infinite Obliteration", 1), -- its own search
         ("Necromentia", 1), -- its own search
@@ -2043,6 +2044,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Sleep Paralysis", 1), -- Claustrophobia's wording
         ("Capture Sphere", 1), -- Claustrophobia's wording
         ("Blossombind", 1), -- Claustrophobia's wording
+        ("Starlight Snare", 1), -- Claustrophobia's wording
         ("Artificer's Hex", 2) -- its intervening "if" and the destruction it gates
       ]
     -- The rejected side, which the sweep above cannot show while the pool has no

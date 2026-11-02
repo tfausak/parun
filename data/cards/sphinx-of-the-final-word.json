@@ -1,0 +1,92 @@
+{
+  "faces": [
+    {
+      "counterability": {
+        "type": "CantBeCountered"
+      },
+      "keywords": [
+        {
+          "type": "Flying"
+        },
+        {
+          "type": "Hexproof"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 5
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Sphinx of the Final Word",
+      "oracleText": "This spell can't be countered.\nFlying\nHexproof (This creature can't be the target of spells or abilities your opponents control.)\nInstant and sorcery spells you control can't be countered.",
+      "playerAbilities": [
+        {
+          "effect": {
+            "type": "CantBeCountered",
+            "value": {
+              "countered": {
+                "type": "Or",
+                "value": [
+                  {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Instant"
+                    }
+                  },
+                  {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Sorcery"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "scope": {
+            "type": "You"
+          }
+        }
+      ],
+      "power": {
+        "type": "Literal",
+        "value": 5
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 5
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Sphinx"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

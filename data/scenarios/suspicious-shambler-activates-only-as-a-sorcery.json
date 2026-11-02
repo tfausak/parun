@@ -1,0 +1,184 @@
+{
+  "description": "It isn't offered in combat or on an opponent's turn, and not from hand or the battlefield.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Suspicious Shambler",
+            "label": "h"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Swamp",
+            "label": "s1"
+          },
+          {
+            "card": "Swamp",
+            "label": "s2"
+          },
+          {
+            "card": "Swamp",
+            "label": "s3"
+          },
+          {
+            "card": "Swamp",
+            "label": "s4"
+          },
+          {
+            "card": "Swamp",
+            "label": "s5"
+          },
+          {
+            "card": "Swamp",
+            "label": "s6"
+          },
+          {
+            "card": "Suspicious Shambler",
+            "label": "up",
+            "ready": true
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Suspicious Shambler",
+            "label": "z"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "BeginningOfCombat",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Offered",
+          "player": "alice",
+          "is": [
+            "Pass",
+            "ActivateManaAbility $s1",
+            "ActivateManaAbility $s2",
+            "ActivateManaAbility $s3",
+            "ActivateManaAbility $s4",
+            "ActivateManaAbility $s5",
+            "ActivateManaAbility $s6"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": []
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Offered",
+          "player": "alice",
+          "is": [
+            "Pass",
+            "ActivateManaAbility $s1",
+            "ActivateManaAbility $s2",
+            "ActivateManaAbility $s3",
+            "ActivateManaAbility $s4",
+            "ActivateManaAbility $s5",
+            "ActivateManaAbility $s6"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "faces": [
+    {
+      "activationProhibitions": [
+        {
+          "affected": {
+            "type": "MatchingAnywhere",
+            "value": {
+              "type": "HasChosenName",
+              "value": {
+                "type": "AnyChooser"
+              }
+            }
+          },
+          "kind": {
+            "type": "NonManaAbility"
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        }
+      ],
+      "name": "Sorcerous Spyglass",
+      "oracleText": "As this artifact enters, look at an opponent's hand, then choose any card name.\nActivated abilities of sources with the chosen name can't be activated unless they're mana abilities.",
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "EntryR",
+            "value": {
+              "matching": {
+                "type": "IsSource"
+              },
+              "rewrite": {
+                "type": "RunEffects",
+                "value": [
+                  {
+                    "type": "ChoosePlayer",
+                    "value": {
+                      "scope": {
+                        "type": "Opponent"
+                      },
+                      "slot": "opponent"
+                    }
+                  },
+                  {
+                    "type": "LookAt",
+                    "value": {
+                      "ref": {
+                        "type": "EachCardInHand",
+                        "value": {
+                          "hands": {
+                            "type": "InSlot",
+                            "value": "opponent"
+                          }
+                        }
+                      },
+                      "slot": "looked"
+                    }
+                  },
+                  {
+                    "type": "ChooseCardName",
+                    "value": {
+                      "player": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "You"
+                        }
+                      },
+                      "restriction": {
+                        "type": "And",
+                        "value": []
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Artifact"
+          }
+        ]
+      }
+    }
+  ]
+}
