@@ -2385,17 +2385,15 @@ conditionHolds cands gs src lowest =
 -- resolves a card's effects can reach another replacement, and the permanent is
 -- no more on the battlefield for that one than for its own.
 --
--- The subject is put back in the zone it left (Game.returnToOrigin), since the
--- count is made before it moves: Undergrowth Scavenger's ruling, "if
--- Undergrowth Scavenger enters the battlefield from a graveyard, it will count
--- itself". Restored newest subject first, so a nested entry's index reads the
--- pile its outer one left. The scenarios
--- undergrowth-scavenger-returned-from-a-graveyard-counts-itself and
--- embodiment-of-agonies-returned-from-a-graveyard-counts-its-own-mana-cost
--- prove it.
---
--- Not implemented: a sibling of the batch that has already moved is not put
--- back in the zone it left (#5883).
+-- The subject, and every sibling that has already moved (GameState.enteredFrom),
+-- is put back in the zone it left (Game.returnToOrigin), since the count is made
+-- before it moves: Undergrowth Scavenger's ruling, "if Undergrowth Scavenger
+-- enters the battlefield from a graveyard, it will count itself". Restored
+-- newest first, so each index reads the pile as the one restored after it left
+-- it. The scenarios
+-- undergrowth-scavenger-returned-from-a-graveyard-counts-itself,
+-- embodiment-of-agonies-returned-from-a-graveyard-counts-its-own-mana-cost and
+-- undergrowth-scavengers-returned-together-count-each-other prove it.
 --
 -- Answers `gs` unchanged outside an entry loop, where both sets are empty, so
 -- the ordinary board is untouched.
@@ -2403,7 +2401,9 @@ boardAsEntering :: GameState -> GameState
 boardAsEntering gs =
   let subjects = GameState.enteringSubjects gs
       entering = Set.union (GameState.enteringBeside gs) (Map.keysSet subjects)
-      returned = Map.foldrWithKey (\oid origin g -> maybe g (\o -> Game.returnToOrigin o oid g) origin) gs subjects
+      siblings = Map.restrictKeys (GameState.enteredFrom gs) (GameState.enteringBeside gs)
+      origins = Map.union (Map.mapMaybe id subjects) siblings
+      returned = Map.foldrWithKey Game.returnToOrigin gs origins
    in if Set.null entering
         then gs
         else returned {GameState.battlefield = Set.difference (GameState.battlefield gs) entering}

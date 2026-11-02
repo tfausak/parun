@@ -267,20 +267,21 @@ representatives pcs gs candidates =
 -- filterNames answers for it.
 --
 -- GameState.enteringCounters, GameState.copyExceptionCounters,
--- GameState.enteringTogether, GameState.arrivals, GameState.contested,
--- GameState.detachedBindings and GameState.broughtIn are listed below because
--- each holds ObjectIds, and NOT because any board reaches this with one of them
--- non-empty: the first two are empty outside an entry loop, the next two
--- outside a CR 608.2f action or an arrival, the fifth outside a state-based
--- action check, and the last two are CR 729's subgame bookkeeping. They are
--- in the list rather than in the account above because requiring a field empty
--- is the direction that cannot make a player's choice, so an unreachable row
--- is the cheap side to be wrong on.
+-- GameState.enteringTogether, GameState.arrivals, GameState.enteredFrom,
+-- GameState.contested, GameState.detachedBindings and GameState.broughtIn are
+-- listed below because each holds ObjectIds, and NOT because any board reaches
+-- this with one of them non-empty: the first two are empty outside an entry
+-- loop, the next three outside a CR 608.2f action or an arrival, the sixth
+-- outside a state-based action check, and the last two are CR 729's subgame
+-- bookkeeping. They are in the list rather than in the account above because
+-- requiring a field empty is the direction that cannot make a player's choice,
+-- so an unreachable row is the cheap side to be wrong on.
 quiet :: GameState -> Bool
 quiet gs =
   Seq.null (GameState.broughtIn gs)
     && Set.null (GameState.enteringBeside gs)
     && Map.null (GameState.enteringSubjects gs)
+    && Map.null (GameState.enteredFrom gs)
     && Map.null (GameState.enteringPending gs)
     && Maybe.isNothing (GameState.refusedEntries gs)
     && Map.null (GameState.enteringCounters gs)

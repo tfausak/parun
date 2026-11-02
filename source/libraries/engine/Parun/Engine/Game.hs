@@ -1030,8 +1030,8 @@ entryOriginOf oid gs = do
 
 -- CR 614.12: an object back where entryOriginOf found it, at its index in a
 -- pile, beside whatever it left there. Writes the zone index only.
-returnToOrigin :: EntryOrigin.EntryOrigin -> ObjectId -> GameState -> GameState
-returnToOrigin origin oid gs =
+returnToOrigin :: ObjectId -> EntryOrigin.EntryOrigin -> GameState -> GameState
+returnToOrigin oid origin gs =
   let into piles = case EntryOrigin.holder origin of
         Just pid -> Map.alter (Just . Seq.insertAt (Natural.toIntSaturating (EntryOrigin.index origin)) oid . Maybe.fromMaybe Seq.empty) pid piles
         Nothing -> piles

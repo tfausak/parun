@@ -103,6 +103,7 @@ withoutAnnouncement before entry closed = do
   pendingEntryEffects <- seqOf GameState.pendingEntryEffects
   enteringBeside <- setOf GameState.enteringBeside
   enteringSubjects <- mapOf GameState.enteringSubjects
+  enteredFrom <- mapOf GameState.enteredFrom
   enteringPending <- mapOf GameState.enteringPending
   refusedEntries <- one GameState.refusedEntries
   enteringCounters <- mapOfMaps GameState.enteringCounters
@@ -231,6 +232,7 @@ withoutAnnouncement before entry closed = do
         GameState.pendingEntryEffects = pendingEntryEffects,
         GameState.enteringBeside = enteringBeside,
         GameState.enteringSubjects = enteringSubjects,
+        GameState.enteredFrom = enteredFrom,
         GameState.enteringPending = enteringPending,
         GameState.refusedEntries = refusedEntries,
         GameState.enteringCounters = enteringCounters,
