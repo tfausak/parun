@@ -193,7 +193,6 @@ codec =
       -- time" is the Comparison's.
       Arm.payload "TimesThisTurn" AbilityAct.codec Quantity.TimesThisTurn (\x -> case x of Quantity.TimesThisTurn y -> Just y; _ -> Nothing),
       Arm.payload "ActivationsThisTurn" ActivationsThisTurn.codec Quantity.ActivationsThisTurn (\x -> case x of Quantity.ActivationsThisTurn y -> Just y; _ -> Nothing),
-      Arm.nullary "SpellsCastBefore" Quantity.SpellsCastBefore,
       Arm.nullary "PermanentsDiedThisTurn" Quantity.PermanentsDiedThisTurn,
       Arm.payload "SpellsCastUsingThisTurn" KeywordFamily.codec Quantity.SpellsCastUsingThisTurn (\x -> case x of Quantity.SpellsCastUsingThisTurn y -> Just y; _ -> Nothing),
       Arm.nullary "SubgamesThisMatch" Quantity.SubgamesThisMatch,
@@ -304,7 +303,6 @@ tagOf x = case x of
   Quantity.SpellsCast {} -> "SpellsCast"
   Quantity.TimesThisTurn {} -> "TimesThisTurn"
   Quantity.ActivationsThisTurn {} -> "ActivationsThisTurn"
-  Quantity.SpellsCastBefore {} -> "SpellsCastBefore"
   Quantity.PermanentsDiedThisTurn {} -> "PermanentsDiedThisTurn"
   Quantity.SpellsCastUsingThisTurn {} -> "SpellsCastUsingThisTurn"
   Quantity.SubgamesThisMatch {} -> "SubgamesThisMatch"

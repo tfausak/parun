@@ -1,13 +1,14 @@
 module Parun.Types.EventShape where
 
 import qualified Parun.Types.CardArrivedIn as CardArrivedIn
+import qualified Parun.Types.CastWindow as CastWindow
 import qualified Parun.Types.MovedBetween as MovedBetween
 import qualified Parun.Types.Zone as Zone
 
 -- | Which recorded events a history count folds over. GameState.events is cleared
 -- at the turn change (Parun.Engine.Engine), an engine choice made under CR 608.2i,
 -- so the log's extent IS the window -- "this turn" -- for every shape but
--- SpellCastThisGame, whose window is the game (GameState.castsBeforeThisTurn).
+-- SpellCast, which names its own (Parun.Types.CastWindow).
 --
 -- Only the zone changes, GameEvent.LeftTheGame and the cast have a shape: every
 -- other GameEvent constructor is recorded in the log with no EventShape arm, so a
@@ -51,14 +52,12 @@ data EventShape
   | -- | CR 601.2i: a spell became cast. What "for each spell you've cast this
     -- turn" folds over (Aetherflux Reservoir).
     --
-    -- NO PAYLOAD, unlike MovedBetween above, and that asymmetry is the point: a
+    -- ONLY A WINDOW, unlike MovedBetween above, and that asymmetry is the point: a
     -- zone change is only a shape once its two zones are named, and no Filter atom
-    -- can name a zone. Everything a cast count narrows by IS a Filter atom --
+    -- can name a zone. Everything else a cast count narrows by IS a Filter atom --
     -- "you've cast" is Filter.HeldBy Holder.Controller against the caster CR 601.2a made the
     -- spell's controller, "instant and sorcery spell" a disjunction of
     -- Filter.HasCardType -- so putting any of it here would be a second way to
     -- say what the Count's own filter already says.
-    SpellCast
-  | -- | CR 601.2i: SpellCast above, over the whole game rather than this turn.
-    SpellCastThisGame
+    SpellCast CastWindow.CastWindow
   deriving (Eq, Ord, Show)

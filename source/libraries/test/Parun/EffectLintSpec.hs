@@ -549,7 +549,6 @@ printedBoxQuantity quantity = case quantity of
   Quantity.Type.SpellsCast {} -> False
   Quantity.Type.TimesThisTurn _ -> False
   Quantity.Type.ActivationsThisTurn _ -> False
-  Quantity.Type.SpellsCastBefore -> False
   Quantity.Type.PermanentsDiedThisTurn -> False
   Quantity.Type.SpellsCastUsingThisTurn {} -> False
   Quantity.Type.SubgamesThisMatch -> False

@@ -1718,8 +1718,7 @@ eventShapeNames asking x = case x of
   EventShape.MovedBetween _movedBetween -> history asking HistoryRead.Moves
   EventShape.MovedFrom _zone -> history asking HistoryRead.Moves
   EventShape.CardArrivedIn _cardArrivedIn -> history asking HistoryRead.Moves
-  EventShape.SpellCast -> history asking HistoryRead.Casts
-  EventShape.SpellCastThisGame -> history asking HistoryRead.Casts
+  EventShape.SpellCast _castWindow -> history asking HistoryRead.Casts
 
 eventExpiryNames :: (Monoid r) => Asking r -> EventExpiry.EventExpiry -> r
 eventExpiryNames asking x = case x of
@@ -2650,7 +2649,6 @@ quantityNames asking x = case x of
     AbilityAct.Activated -> HistoryRead.Activations
     AbilityAct.Resolved -> HistoryRead.Resolutions
   Quantity.ActivationsThisTurn tally -> history asking HistoryRead.Activations <> playerRefNames asking (ActivationsThisTurn.activator tally) <> filterNames asking (ActivationsThisTurn.source tally) <> activationCriteriaNames asking (ActivationsThisTurn.criteria tally)
-  Quantity.SpellsCastBefore -> history asking HistoryRead.Casts
   Quantity.PermanentsDiedThisTurn -> history asking HistoryRead.Deaths
   Quantity.SpellsCastUsingThisTurn _keywordFamily -> history asking HistoryRead.Casts
   Quantity.SubgamesThisMatch -> mempty
