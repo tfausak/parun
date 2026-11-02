@@ -10,26 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Battlesong Berserker: `_Trigger:WhenAPlayerAttacks`
-- Biogenic Upgrade: `_PutCountersAction:DistributedCounters`
-- Bite Down: `_Players:Other`
-- Blasphemous Edict: `_Rule:CastEffect`
-- Bloodthirsty Conqueror: `_Trigger:WhenAPlayerLosesLife`
-- Bloodtithe Collector: `_Players:LostLifeThisTurn`
-- Bolt Bend: `_Rule:CastEffect`
-- Boros Charm: `_Permanents:IsPermanent`
-- Brass's Bounty: `_CreatableToken:TreasureToken`
-- Bulk Up: `_Action:DoubleCreaturesPowerUntilEndOfTurn`
-- Burnished Hart: `_SearchLibraryAction:FindNumberCardsOfType`
-- Bushwhack: `_Players:Other`
-- Cackling Prowler: `_Rule:Ward`
-- Carnelian Orb of Dragonkind: `_Action:AddManaWithModifiers`
-- Cat Collector: `_CreatableToken:FoodToken`
-- Celestial Armor: `_Action:AttachPermanentToPermanent`
-- Cemetery Recruitment: `_Action:If`
-- Cephalid Inkmage: `_Action:Surveil`
-- Chandra, Flameshaper: `field: Loyalty` (#5711)
-- Charming Prince: `_Permanents:OwnedByAPlayer`
 - Chart a Course: `_Action:Unless`
 - Circuitous Route: `_SearchLibraryAction:FindNumberCardsOfType`
 - Claws Out: `_Rule:Affinity`
@@ -204,7 +184,6 @@ Each names the mtgish node the translator stops at.
 - Valkyrie's Call: `_Action:ReturnDeadGraveyardCardToBattlefield`
 - Valorous Stance: `_Permanents:ToughnessIs`
 - Vampire Gourmand: renders differently from its Oracle text
-- Vanguard Seraph: `_Trigger:WhenAPlayerGainsLifeForTheFirstTimeEachTurn`
 - Vengeful Bloodwitch: `_Trigger:Or`
 - Venom Connoisseur: `_Action:If`
 - Vile Entomber: `_SearchLibraryAction:PutFoundCardsIntoGraveyard`
@@ -237,6 +216,8 @@ first.
   dealt combat damage by this creature.
 - #5916: Goblin Negotiation. No quantity reads the excess damage an effect just
   dealt (CR 120.10).
+- #5921: Cat Collector; Vanguard Seraph. A life-gain trigger has no "first time
+  each turn", where a life-loss trigger does.
 - #5917: Run Away Together. A target slot judges each object alone, with no
   relation among its targets (CR 115.1).
 - #5918: Courageous Goblin; Ruby, Daring Tracker. An intervening "if" checks
