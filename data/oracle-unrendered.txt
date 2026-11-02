@@ -3153,6 +3153,8 @@ yaroks-fenlurker
 yarok-the-desecrated
 scorch-spitter
 vengeful-warchief
+blossombind
+gideon-blackblade
 harmonic-prodigy
 sanctum-of-all
 chandras-incinerator

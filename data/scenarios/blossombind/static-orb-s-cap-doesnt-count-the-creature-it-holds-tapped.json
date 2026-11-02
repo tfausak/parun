@@ -1,0 +1,106 @@
+{
+  "board": {
+    "active": "bob",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Static Orb",
+            "label": "orb"
+          },
+          {
+            "card": "Island",
+            "label": "island-1",
+            "tapped": true
+          },
+          {
+            "card": "Island",
+            "label": "island-2",
+            "tapped": true
+          },
+          {
+            "card": "Hill Giant",
+            "label": "giant",
+            "ready": true,
+            "tapped": true
+          },
+          {
+            "attached": "giant",
+            "card": "Blossombind",
+            "label": "bind"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "EndStep"
+  },
+  "description": "CR 502.3 / 101.2: Static Orb's cap doesn't count the creature Blossombind holds tapped, so both tapped Islands untap with nothing asked",
+  "note": "An unscheduled ChooseAnyNumberToUntap prompt would fail the scenario: offering the Giant would make three candidates for Static Orb's two.",
+  "timeline": [
+    {
+      "check": {
+        "Tapped": {
+          "object": "$island-1",
+          "tapped": false
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 2
+    },
+    {
+      "check": {
+        "Tapped": {
+          "object": "$island-2",
+          "tapped": false
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 2
+    },
+    {
+      "check": {
+        "Tapped": {
+          "object": "$giant",
+          "tapped": true
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 2
+    }
+  ]
+}

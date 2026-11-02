@@ -11,10 +11,10 @@
 -- The only reader of Parun.Types.UntapRestriction. Its caller asks for a SET OF
 -- IDS and never learns which card produced it.
 --
--- ONE place asks, unlike Parun.Engine.SacrificeRestriction's two: the sentence
--- names the untap step's turn-based action and nothing else, so an Effect.Untap
--- during the turn (CR 701.26b) is untouched -- which is the printed reading, not
--- a shortcut.
+-- Every hold but one names the untap step's turn-based action and nothing else,
+-- so an Effect.Untap during the turn (CR 701.26b) is untouched by it -- the
+-- printed reading, not a shortcut. UntapHold.Never is the exception, asked at
+-- every untap through `cantBecomeUntapped`.
 --
 -- The printed carrier, and the stored Untap rows beside it: the rows a
 -- resolution leaves behind (Parun.Types.ActiveObjectProhibition, Wall of Stolen
@@ -53,8 +53,9 @@ import qualified Parun.Types.UntapRestriction as UntapRestriction
 -- untap (Static Orb), UntapHold.Elective what its controller MAY leave tapped
 -- (Amber Prison's first sentence), UntapHold.DuringOthersSteps what untaps
 -- in a step that is not its source's controller's (Seedborn Muse), and only
--- in such a step, and UntapHold.OfChosenType what untaps only if it has the
--- card type the active player chooses (Storage Matrix). `untapRestrictions` in
+-- in such a step, UntapHold.OfChosenType what untaps only if it has the
+-- card type the active player chooses (Storage Matrix), and UntapHold.Never
+-- what can't become untapped at all (Blossombind). `untapRestrictions` in
 -- data/cards is the
 -- carrier, and this answers for every card that fills it. One entry per
 -- restriction rather than a union, because a cap counts its own set (CR 101.2:
@@ -140,3 +141,9 @@ settle caps elective offered chosen =
       add taken oid = if fits taken oid then Set.insert oid taken else taken
       kept = List.foldl' add Set.empty (filter (`Set.member` chosen) offered)
    in List.foldl' add kept (filter (\oid -> not (Set.member oid elective) && not (Set.member oid kept)) offered)
+
+-- CR 701.26b with CR 101.2: does an effect in force say `oid` can't become
+-- untapped (UntapHold.Never, Blossombind)? Asked by Parun.Engine.Event's untap
+-- funnel, so the untap step, Effect.Untap and CR 107.6's untap symbol all see it.
+cantBecomeUntapped :: ObjectId -> GameState -> Bool
+cantBecomeUntapped oid gs = any (\(hold, named) -> hold == UntapHold.Never && Set.member oid named) (gathered [oid] gs)
