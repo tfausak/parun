@@ -2648,6 +2648,7 @@ teferi-mage-of-zhalfir
 teferi-master-of-time
 teferi-timeless-voyager
 teferis-ageless-insight
+teferis-imp
 teferis-moat
 teferis-puzzle-box
 teferis-tutelage
