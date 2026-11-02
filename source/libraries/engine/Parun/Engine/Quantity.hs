@@ -952,17 +952,6 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
                     && Count.activationMeets (ActivationsThisTurn.criteria tally) past
              in Just (toInteger (length (filter counts (Foldable.toList (GameState.activationsThisTurn gs)))))
           _ -> Nothing
-        -- CR 702.40a: how many spells were cast this turn before the object this
-        -- evaluation is aimed at. Keyed on that object's OWN cast in the log, so a
-        -- spell cast after it -- in response to the storm trigger -- is not
-        -- counted, where a this-turn tally would count it. Every caster counts, and
-        -- a countered spell was still cast.
-        --
-        -- Nothing for an evaluation aimed at no object, or at one whose cast is not
-        -- in this turn's log: CR 707.10's copy was never cast.
-        Quantity.SpellsCastBefore -> do
-          oid <- mOid
-          fmap (toInteger . length) (Game.castsBefore oid gs)
         -- CR 700.4 / 702.69a: how many permanents, of any controller, were put into
         -- a graveyard from the battlefield this turn. The arm above's log fold with
         -- no keying on the evaluation's own object: rule 702.69a counts the whole
@@ -1417,7 +1406,6 @@ objectSlots quantity = case quantity of
   Quantity.SpellsCast _ -> Set.empty
   Quantity.TimesThisTurn _ -> Set.empty
   Quantity.ActivationsThisTurn _ -> Set.empty
-  Quantity.SpellsCastBefore -> Set.empty
   Quantity.PermanentsDiedThisTurn -> Set.empty
   Quantity.SpellsCastUsingThisTurn _ -> Set.empty
   Quantity.SubgamesThisMatch -> Set.empty
@@ -1698,7 +1686,6 @@ readsX quantity = case quantity of
   Quantity.SpellsCast _ -> False
   Quantity.TimesThisTurn _ -> False
   Quantity.ActivationsThisTurn _ -> False
-  Quantity.SpellsCastBefore -> False
   Quantity.PermanentsDiedThisTurn -> False
   Quantity.SpellsCastUsingThisTurn _ -> False
   Quantity.SubgamesThisMatch -> False

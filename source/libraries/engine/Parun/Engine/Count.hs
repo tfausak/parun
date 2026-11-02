@@ -39,6 +39,7 @@ import qualified Parun.Types.BlocksDeclared as BlocksDeclared
 import qualified Parun.Types.BoundReading as BoundReading
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardArrivedIn as CardArrivedIn
+import qualified Parun.Types.CastWindow as CastWindow
 import qualified Parun.Types.Combat as Combat
 import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.ControlMargin as ControlMargin
@@ -125,14 +126,19 @@ evaluate viewOf quantityOf context gs count =
         -- ARRIVED reads the arriving object instead (see the CardArrived arm), which is why
         -- the fold hands snapshotView the same reader the zone arm uses.
         --
-        -- SpellCastThisGame's window reaches back past the log to the earlier
+        -- CastWindow.ThisGame reaches back past the log to the earlier
         -- turns' casts, which GameState.castsBeforeThisTurn keeps as the same
         -- record the log's SpellCast entries carry.
         Scope.InHistory shape ->
-          let logged = fmap LoggedEvent.event (Foldable.toList (GameState.events gs))
+          let logged = case shape of
+                -- Nothing for an evaluation aimed at no object, or at one whose cast
+                -- is not in this turn's log: CR 707.10's copy was never cast.
+                EventShape.SpellCast CastWindow.BeforeEvaluated -> foldMap (fmap GameEvent.SpellCast) (Filter.evaluated context >>= \spell -> Game.castsBefore spell gs)
+                _ -> fmap LoggedEvent.event (Foldable.toList (GameState.events gs))
               earlier = case shape of
-                EventShape.SpellCastThisGame -> fmap GameEvent.SpellCast (Foldable.toList (GameState.castsBeforeThisTurn gs))
-                EventShape.SpellCast -> []
+                EventShape.SpellCast CastWindow.ThisGame -> fmap GameEvent.SpellCast (Foldable.toList (GameState.castsBeforeThisTurn gs))
+                EventShape.SpellCast CastWindow.ThisTurn -> []
+                EventShape.SpellCast CastWindow.BeforeEvaluated -> []
                 EventShape.MovedBetween {} -> []
                 EventShape.MovedFrom {} -> []
                 EventShape.CardArrivedIn {} -> []
@@ -801,8 +807,7 @@ snapshotView viewOf gs shape event = case event of
       if arrivalMatches arrival zc
         then Just (Maybe.fromMaybe (departedView viewOf gs zc snapshot) (orLastKnown viewOf gs (ZoneChange.object zc)))
         else Nothing
-    EventShape.SpellCast -> Nothing
-    EventShape.SpellCastThisGame -> Nothing
+    EventShape.SpellCast _ -> Nothing
   GameEvent.DamageDealt _ -> Nothing
   -- CR 615.13's record names two ids, a recipient and an amount, and snapshots no
   -- characteristics, so there is nothing for a Filter to look at.
@@ -831,8 +836,7 @@ snapshotView viewOf gs shape event = case event of
     -- CR 108.3's owner comes from Game.ownerWithLastKnown, and is NOT `caster`
     -- again, whom CR 405.4 makes the spell's controller and no more: Dire Fleet
     -- Daredevil casts a card its owner never touched (Parun.CountSpec).
-    EventShape.SpellCast -> Just castView
-    EventShape.SpellCastThisGame -> Just castView
+    EventShape.SpellCast _ -> Just castView
     EventShape.MovedBetween {} -> Nothing
     EventShape.MovedFrom {} -> Nothing
     -- CR 601.2a moves a card to the STACK, so a cast IS a card arriving there --
@@ -965,8 +969,7 @@ snapshotView viewOf gs shape event = case event of
         else Nothing
     EventShape.MovedBetween {} -> Nothing
     EventShape.MovedFrom {} -> Nothing
-    EventShape.SpellCast -> Nothing
-    EventShape.SpellCastThisGame -> Nothing
+    EventShape.SpellCast _ -> Nothing
 
 -- CR 712.21e's destination narrowed by the printed clause's origin: the arrival
 -- landed in the named zone, and it did not come from one this shape excludes. An

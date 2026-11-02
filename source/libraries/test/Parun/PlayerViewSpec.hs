@@ -308,6 +308,34 @@ spec s registry = Spec.describe s "PlayerView" $ do
       Spec.assertEqWith s (seat <> "CR 400.2 the land, seen arriving") [ProjectedCharacteristics.names (Moved.characteristics m) | GameEvent.Moved m <- witnessedBy pid gs, ZoneChange.from (Moved.change m) == Zone.Library] [Set.singleton (CardName.MkCardName (Text.pack "Plains"))]
       Spec.assertBool s (Text.pack "Plains moves from a library to the battlefield." `elem` drawnFor pid gs) (seat <> "drawn")
     Spec.assertBool s (not ("Hill Giant" `List.isInfixOf` encodedFor S.bob gs)) "CR 701.23a the card alice saw searching reaches no part of bob's view"
+  Spec.it s "CR 700.3 Curator of Destinies's face-up pile is seen moving to the hand, and its face-down pile is not" $ do
+    let islands = fmap (\n -> "i" <> show n) [1 :: Int .. 6]
+        mine =
+          (S.battlefield S.alice (fmap (`S.settled` "Island") islands))
+            { Seat.hand = Seq.singleton (S.aliased "curator" (S.cardSetup "Curator of Destinies")),
+              Seat.library = Seq.fromList [S.aliased "piker" (S.cardSetup "Goblin Piker"), S.aliased "giant" (S.cardSetup "Hill Giant")]
+            }
+        setup = S.board (mine NonEmpty.:| [S.playerSetup S.bob]) S.alice S.precombatMain
+        choices = Choices.none {Choices.manaSources = Seq.fromList (fmap (Just . S.aliasRef) islands)}
+        answering prompt label = Move.Answer (Answer.MkAnswer (Text.pack prompt) (Reply.Array [Reply.Text (Text.pack label)]) False)
+        taking label =
+          S.turn
+            1
+            [ S.on S.precombatMain S.alice (S.castAction (S.aliasRef "curator") choices),
+              S.on S.precombatMain S.alice Move.Pass,
+              S.on S.precombatMain S.alice Move.Pass,
+              S.on S.precombatMain S.alice (answering "ChooseAnyNumberIntoPile" "$piker"),
+              S.on S.precombatMain S.bob (answering "ChoosePile" label)
+            ]
+        nameOf card = Set.singleton (CardName.MkCardName (Text.pack card))
+        movedTo zone gs = [ProjectedCharacteristics.names (Moved.characteristics m) | GameEvent.Moved m <- witnessedBy S.bob gs, ZoneChange.from (Moved.change m) == Zone.Library, ZoneChange.to (Moved.change m) == zone]
+    faceUpTaken <- S.play s registry setup (taking "$piker") S.priorityGame
+    Spec.assertEqWith s "bob saw the face-up pile reach alice's hand" (movedTo Zone.Hand faceUpTaken) [nameOf "Goblin Piker"]
+    Spec.assertEqWith s "and the face-down one land in her graveyard" (movedTo Zone.Graveyard faceUpTaken) [nameOf "Hill Giant"]
+    faceDownTaken <- S.play s registry setup (taking "$giant") S.priorityGame
+    Spec.assertEqWith s "bob did not see the face-down pile reach alice's hand" (movedTo Zone.Hand faceDownTaken) []
+    Spec.assertEqWith s "bob saw the face-up pile land in her graveyard" (movedTo Zone.Graveyard faceDownTaken) [nameOf "Goblin Piker"]
+    Spec.assertBool s (not ("Hill Giant" `List.isInfixOf` encodedFor S.bob faceDownTaken)) "the face-down card reaches no part of bob's view"
   Spec.it s "CR 305.1 / 701.8a a land played this turn and then destroyed is drawn leaving the battlefield like every other" $ do
     let lands = [("p1", "Plains"), ("p2", "Plains"), ("p3", "Plains"), ("p4", "Plains")]
         mine =

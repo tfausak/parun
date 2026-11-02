@@ -48,8 +48,8 @@ spec s = Spec.describe s "Parun.Codec.CopyStackObject" $ do
     Common.assertCodec
       s
       (CopyStackObject.codec Common.text)
-      (CopyStackObject.MkCopyStackObject (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "spell"))) CopyTargets.ChosenByController Quantity.SpellsCastBefore CopyStackObject.defaultCopier [])
-      " {\"ref\":{\"type\":\"InSlot\",\"value\":\"spell\"},\"targets\":{\"type\":\"ChosenByController\"},\"quantity\":{\"type\":\"SpellsCastBefore\"}} "
+      (CopyStackObject.MkCopyStackObject (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "spell"))) CopyTargets.ChosenByController Quantity.PermanentsDiedThisTurn CopyStackObject.defaultCopier [])
+      " {\"ref\":{\"type\":\"InSlot\",\"value\":\"spell\"},\"targets\":{\"type\":\"ChosenByController\"},\"quantity\":{\"type\":\"PermanentsDiedThisTurn\"}} "
   -- CR 707.10, Meletis Charlatan's "the controller of target ... spell copies it".
   Spec.it s "MkCopyStackObject, another player copies it: the copier is written" $
     Common.assertCodec

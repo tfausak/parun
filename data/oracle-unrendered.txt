@@ -2638,6 +2638,7 @@ tavern-swindler
 tayam-luminous-enigma
 tazeem
 tazri-beacon-of-unity
+teach-by-example
 team-tactics
 tectonic-reformation
 tectonic-rift
@@ -2721,6 +2722,7 @@ thornbow-archer
 thorncaster-sliver
 thornvault-forager
 thoughtleech
+thousand-year-storm
 thraben-gargoyle-stonewing-antagonizer
 thraben-inspector
 thran-golem
@@ -2765,6 +2767,7 @@ tivit-seller-of-secrets
 tobias-doomed-conqueror
 tocatli-honor-guard
 tolarian-kraken
+tolarian-terror
 tolarian-winds
 tomb-of-annihilation
 tome-anima
@@ -2787,6 +2790,7 @@ toxic-deluge
 track-down
 trade-secrets
 tragic-arrogance
+tragic-banshee
 trait-doctoring
 traitorous-greed
 transcantation
@@ -2802,6 +2806,7 @@ treetop-defense
 treetop-sentries
 treetop-village
 tribal-flames
+tribute-to-hunger
 tricksters-stratagem
 triskelion
 troll-of-khazad-dum
@@ -2821,6 +2826,7 @@ turret-ogre
 tusk-and-whiskers
 twinblade-assassins
 twincast
+twinflame-tyrant
 twisted-fealty
 twisted-image
 two-headed-dragon
@@ -2829,6 +2835,8 @@ tyvar-the-bellicose
 ugin-the-spirit-dragon
 ultima
 unbury
+uncharted-haven
+uncharted-voyage
 uncontrollable-anger
 uncovered-clues
 undead-servant
@@ -2839,6 +2847,7 @@ underdark-rift
 undergrowth-scavenger
 underworld-dreams
 undying-flames
+undying-malice
 unerring-sling
 unesh-criosphinx-sovereign
 unexpectedly-absent
@@ -2860,8 +2869,10 @@ urzas-tower
 vaevictis-asmadi-the-dire
 valeron-wardens
 valiant-endeavor
+valkyries-call
 valley-rally
 valleymaker
+valorous-stance
 vampire-nocturnus
 vanish-into-eternity
 varolz-the-scar-striped
@@ -2879,6 +2890,7 @@ vengeful-archon
 vengeful-pharaoh
 vengeful-townsfolk
 vengeful-tracker
+venom-connoisseur
 verdant-haven
 vernal-bloom
 vesuva
@@ -2889,6 +2901,7 @@ vexing-arcanix
 victimize
 victor-mancha-runaway
 vigorspore-wurm
+vile-entomber
 village-rites
 villainous-ogre
 vine-snare
@@ -2934,6 +2947,7 @@ wan-shi-tong-all-knowing
 wand-of-denial
 wanderguard-sentry
 wanderwine-prophets
+wardens-of-the-cycle
 war-falcon
 warbreak-trumpeter
 warden-of-evos-isle
@@ -2944,6 +2958,7 @@ warped-devotion
 warriors-oath
 warriors-stand
 warstorm-surge
+wary-thespian
 wash-away
 waste-management
 waste-not
@@ -2982,6 +2997,7 @@ wiccan-young-avenger
 wicker-picker
 wickersmiths-tools
 wicks-patrol
+wildborn-preserver
 wild-evocation
 wild-growth
 wild-guess
@@ -2992,6 +3008,7 @@ wildgrowth-walker
 wildwood-scourge
 willbreaker
 wilson-refined-grizzly
+wilt-leaf-liege
 windborn-muse
 windbrisk-heights
 windcaller-aven
@@ -3176,6 +3193,7 @@ harmonic-prodigy
 sanctum-of-all
 chandras-incinerator
 chandras-pyreling
+curator-of-destinies
 hooded-blightfang
 mazes-end
 midnight-snack
@@ -3196,3 +3214,6 @@ ordeal-of-nylea
 ovika-enigma-goliath
 perforating-artist
 pilfer
+wishclaw-talisman
+zimone-paradox-sculptor
+zul-ashur-lich-lord

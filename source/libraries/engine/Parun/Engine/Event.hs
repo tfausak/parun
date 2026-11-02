@@ -6808,37 +6808,65 @@ stayPut oid obj requestedDest position shuffling = case Object.zone obj of
   _ -> pure Seq.empty
 
 -- CR 701.20d's new object for a library card shown to a player -- revealed (a
--- live CR 701.20a window, or a Revealed entry this turn) or looked at (CR
--- 701.20e's Looked) -- swapped into the same place in its pile under a fresh id,
+-- live CR 701.20a window, a Revealed entry this turn, or CR 401.6's revealed top
+-- card, GameState.revealedTops) or looked at (CR 701.20e's Looked) -- re-minted
+-- where it lies (remint). Answers the id the card now has.
+forgetShown :: ObjectId -> GameState -> (ObjectId, GameState)
+forgetShown oid gs = case Game.lookupObject oid gs of
+  Just obj
+    | Object.zone obj == Zone.Library && shown -> remint oid gs
+    where
+      shown = not (Set.null (Object.revealed obj)) || elem oid (GameState.revealedTops gs) || any names (GameState.events gs)
+      names logged = case LoggedEvent.event logged of
+        GameEvent.Revealed r -> Revealed.card r == oid
+        GameEvent.Looked l -> Looked.card l == oid
+        _ -> False
+  _ -> (oid, gs)
+
+-- A library card swapped into the same place in its pile under a fresh id,
 -- through Object.newIncarnation. Not a zone change, so nothing is logged and no
 -- last known information is filed; a perpetual effect follows it all the same
 -- (perpetuated), as it follows a card across a zone change. Answers the id the
 -- card now has. The scenario
 -- cr-701-20e-the-kavu-mine-security-conjured-keeps-its-perpetual-0-through-a-shuffle
 -- is the proof.
-forgetShown :: ObjectId -> GameState -> (ObjectId, GameState)
-forgetShown oid gs = case Game.lookupObject oid gs of
-  Just obj
-    | Object.zone obj == Zone.Library && shown ->
-        let (newId, gs1) = Game.freshObjectId gs
-            (ts, gs2) = Game.freshTimestamp gs1
-            fresh = (Object.newIncarnation obj) {Object.zone = Zone.Library, Object.timestamp = ts}
-         in ( newId,
-              perpetuated
-                oid
-                (Set.singleton newId)
-                gs2
-                  { GameState.objects = Map.insert newId fresh (Map.delete oid (GameState.objects gs2)),
-                    GameState.library = fmap (fmap (\member -> if member == oid then newId else member)) (GameState.library gs2)
-                  }
-            )
-    where
-      shown = not (Set.null (Object.revealed obj)) || any names (GameState.events gs)
-      names logged = case LoggedEvent.event logged of
-        GameEvent.Revealed r -> Revealed.card r == oid
-        GameEvent.Looked l -> Looked.card l == oid
-        _ -> False
-  _ -> (oid, gs)
+remint :: ObjectId -> GameState -> (ObjectId, GameState)
+remint oid gs = case Game.lookupObject oid gs of
+  Just obj ->
+    let (newId, gs1) = Game.freshObjectId gs
+        (ts, gs2) = Game.freshTimestamp gs1
+        fresh = (Object.newIncarnation obj) {Object.zone = Zone.Library, Object.timestamp = ts}
+        renamed member = if member == oid then newId else member
+     in ( newId,
+          perpetuated
+            oid
+            (Set.singleton newId)
+            gs2
+              { GameState.objects = Map.insert newId fresh (Map.delete oid (GameState.objects gs2)),
+                GameState.library = fmap (fmap renamed) (GameState.library gs2),
+                GameState.revealedTops = fmap renamed (GameState.revealedTops gs2)
+              }
+        )
+  Nothing -> (oid, gs)
+
+-- | CR 401.6: a card a player effect revealed atop its library at the last
+-- settle that is no longer revealed there -- a card is over it, or nothing
+-- reveals it now -- is re-minted where it lies (remint), so it is a new object
+-- once revealed again; then each library's revealed top is recorded
+-- (Visibility.revealedTop). Not implemented: a run on top that ends and resumes
+-- between two settles, with no reorder between, keeps the card the same object
+-- (#5940).
+--
+-- data/scenarios/conspicuous-snoop-a-goblin-back-on-top-after-another-card-is-a-new-object.json
+-- proves a run that ends under another card, and
+-- data/scenarios/conspicuous-snoop-a-goblin-shuffled-back-on-top-is-a-new-object.json
+-- one that a shuffle ends (forgetShown).
+settleRevealedTops :: GameState -> GameState
+settleRevealedTops gs =
+  let now = Map.fromList [(pid, top) | pid <- Map.keys (GameState.players gs), Just top <- [Visibility.revealedTop pid gs]]
+      lapsed = [oid | (pid, oid) <- Map.toList (GameState.revealedTops gs), Map.lookup pid now /= Just oid, Game.zoneOf oid gs == Just Zone.Library]
+      reminted = Foldable.foldl' (\g oid -> snd (remint oid g)) gs lapsed
+   in reminted {GameState.revealedTops = now}
 
 -- forgetShown over every card an instruction reordered, in the order given.
 forgetAllShown :: (Foldable t) => t ObjectId -> GameState -> GameState

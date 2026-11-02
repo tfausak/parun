@@ -398,6 +398,9 @@ data GameState = MkGameState
     -- (Parun.Engine.Event.announcing); then each library's top card as it
     -- began, the only one that stays shown until it ends (Game.shownTop).
     announcedTops :: Maybe (Map.Map PlayerId.PlayerId ObjectId.ObjectId),
+    -- | CR 401.6: each library's top card as the last settle found it revealed
+    -- to every player by a player effect (Event.settleRevealedTops).
+    revealedTops :: Map.Map PlayerId.PlayerId ObjectId.ObjectId,
     -- | CR 801.2c: the players who have left the game since this turn began,
     -- whose seats still count toward range of influence until the next turn
     -- begins; cleared at turn handoff.
@@ -486,7 +489,7 @@ data GameState = MkGameState
     eventsLastTurn :: Seq.Seq LoggedEvent.LoggedEvent,
     -- | CR 601.2i / 608.2i: every spell cast this game BEFORE the turn in
     -- progress, oldest first, appended at the turn handoff from the log it
-    -- clears. Parun.Engine.Count's EventShape.SpellCastThisGame fold joins it
+    -- clears. Parun.Engine.Count's CastWindow.ThisGame fold joins it
     -- to the live log.
     castsBeforeThisTurn :: Seq.Seq SpellWasCast.SpellWasCast,
     -- | CR 120.1 / 608.2i: every damage event dealt this game BEFORE the turn in
