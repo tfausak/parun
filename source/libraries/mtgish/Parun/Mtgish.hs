@@ -723,7 +723,7 @@ trigger n = case Node.tag n of
   "WhenACreatureBlocksACreature" -> other TriggerCondition.SelfBlocksCreature Oracle.Trigger.thatAttacker
   "WhenACreatureBecomesBlockedByACreature" -> other TriggerCondition.SelfBecomesBlockedBy Oracle.Trigger.thatBlocker
   "WhenACreatureDealsCombatDamageToAPlayer" -> damaged TriggerCondition.SelfDealsCombatDamageToPlayer
-  "WhenAPermanentDealsDamageToAPlayer" -> damaged (TriggerCondition.DealsDamageToPlayer . DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self)
+  "WhenAPermanentDealsDamageToAPlayer" -> damaged (\relation -> TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self relation Nothing))
   "AtTheBeginningOfAPlayersUpkeep" -> step (Phase.Beginning BeginningStep.Upkeep)
   "AtTheBeginningOfAPlayersDrawStep" -> step (Phase.Beginning BeginningStep.DrawStep)
   "AtTheBeginningOfAPlayersEndStep" -> step (Phase.Ending EndingStep.EndStep)

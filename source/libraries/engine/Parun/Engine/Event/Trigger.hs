@@ -1677,6 +1677,9 @@ eventTriggers events gs =
       -- The controller is the OWNER, CR 113.8's second clause: a card in a
       -- graveyard has no controller (CR 108.4).
       --
+      -- Only what functions off the battlefield: Magmakin Artillerist's "whenever
+      -- you discard" is CR 113.6's default, and misses its own cycling.
+      --
       -- Scoped to the CYCLING cause, not every discard, rule 702.29c speaking
       -- about cycling specifically. An ordinary discard's card reaches the
       -- graveyard too and is offered by `inGraveyards` under CR 113.6k.
@@ -1685,7 +1688,7 @@ eventTriggers events gs =
           Nothing -> Map.empty
           Just obj -> case Game.faceOf oid gs of
             Nothing -> Map.empty
-            Just _ -> Map.singleton oid (Object.owner obj, fmap whole (Projection.triggeredAbilitiesOf oid gs))
+            Just face -> Map.singleton oid (Object.owner obj, Maybe.mapMaybe (functionsIn (TypeLine.subtypes (Face.typeLine face)) (Face.delayedAbilities face) Zone.Graveyard) (Projection.triggeredAbilitiesOf oid gs))
         GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.Ordinary _ _) -> Map.empty
         GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.ByEffect _ _) -> Map.empty
         -- A draw names no object either. The card it puts in a hand may well bear

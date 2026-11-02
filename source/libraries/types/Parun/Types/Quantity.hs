@@ -276,9 +276,9 @@ data Quantity
     -- dealt damage, or combat damage alone, this turn -- players, not events
     -- (rule 702.54a).
     PlayersDealtDamageThisTurn (DealtDamage.DealtDamage PlayerRef.PlayerRef)
-  | -- | CR 120.1 / 608.2i: the total damage dealt this turn to the players that
-    -- reference names (rule 702.54b).
-    DamageDealtToPlayersThisTurn PlayerRef.PlayerRef
+  | -- | CR 120.1 / 608.2i: the total damage, or combat or noncombat damage alone,
+    -- dealt this turn to the players that reference names (rule 702.54b).
+    DamageDealtToPlayersThisTurn (DealtDamage.DealtDamage PlayerRef.PlayerRef)
   | -- | CR 120.1 / 608.2i: the total damage dealt this turn to, or by, the
     -- object this quantity is evaluated against.
     DamageDealtThisTurn DamageDirection.DamageDirection

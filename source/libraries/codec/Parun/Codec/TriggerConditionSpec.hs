@@ -157,7 +157,7 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self PlayerRelation.Opponent))
+      (TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self PlayerRelation.Opponent Nothing))
       " {\"type\":\"DealsDamageToPlayer\",\"value\":{\"actor\":{\"type\":\"Self\"},\"recipient\":{\"type\":\"Opponent\"}}} "
   -- CR 120.3's other recipient: a bare tag for damage of any kind, the kind as
   -- the value otherwise.

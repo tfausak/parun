@@ -544,12 +544,12 @@ spec s registry = Spec.describe s "Parun.Engine.Event" $ do
   Spec.it s "CR 603.2 DealsDamageToPlayer matches the bearer's NONCOMBAT damage to a player" $ do
     let bearer = ObjectId.MkObjectId 1
         ev = GameEvent.DamageDealt (DamageEvent.MkDamageEvent bearer (Recipient.ToPlayer S.bob) 2 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat)
-    Spec.assertBool s (Event.matchesTrigger (Setup.emptyGame S.bothPlayers) bearer S.alice (TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self PlayerRelation.AnyPlayer)) ev) "matches"
+    Spec.assertBool s (Event.matchesTrigger (Setup.emptyGame S.bothPlayers) bearer S.alice (TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self PlayerRelation.AnyPlayer Nothing)) ev) "matches"
 
   Spec.it s "it does not match noncombat damage to a creature" $ do
     let bearer = ObjectId.MkObjectId 1
         ev = GameEvent.DamageDealt (DamageEvent.MkDamageEvent bearer (Recipient.ToCreature (ObjectId.MkObjectId 2)) 2 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat)
-    Spec.assertBool s (not (Event.matchesTrigger (Setup.emptyGame S.bothPlayers) bearer S.alice (TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self PlayerRelation.AnyPlayer)) ev)) "no match"
+    Spec.assertBool s (not (Event.matchesTrigger (Setup.emptyGame S.bothPlayers) bearer S.alice (TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self PlayerRelation.AnyPlayer Nothing)) ev)) "no match"
 
   Spec.it s "CR 400.7: a zone change forgets attachment" $ do
     plains <- S.printingOf s registry "Plains"

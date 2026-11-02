@@ -839,18 +839,15 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- The PLAYERS are counted and not the events, which is why this filters the
         -- player list rather than the log: two bolts at one opponent is one opponent.
         --
-        -- NO liveness test on the players counted, OpponentsAttacked's posture and for
-        -- its reason: the record is what the rule asks about, so an opponent who has
-        -- since left the game (CR 800.4) still answers -- though playersFor's Opponent
-        -- arm will already have dropped them from `pids`, so this only matters for a
-        -- reference that names a player outright.
+        -- The history roster, LifeChanged's: an opponent dealt damage who has since
+        -- left the game still counts (CR 800.4i; Tymna the Weaver's ruling).
         --
         -- An EMPTY log answers 0 rather than Nothing, as CardsDiscardedThisTurn's does.
         -- What is unanswered is only the reference.
         --
         -- The kind narrows the log to CR 510.2's combat damage where a card says
         -- so -- Tymna the Weaver's "opponents that were dealt combat damage".
-        Quantity.PlayersDealtDamageThisTurn tally -> case playersOf (DealtDamage.recipient tally) of
+        Quantity.PlayersDealtDamageThisTurn tally -> case historyPlayersOf (DealtDamage.recipient tally) of
           Nothing -> Nothing
           Just pids -> Just (toInteger (length (filter (wasDealtDamage (DealtDamage.kind tally)) pids)))
         -- CR 120.1 / 608.2i: how much damage in total the players this reference names
@@ -862,11 +859,12 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- between rule 702.54a's threshold and rule 702.54b's X: three damage to one
         -- opponent and two to another is two opponents there and five here.
         --
-        -- Same log, same CR 120.3a recipient and the same empty-log answer of 0; only
-        -- the reference is ever unanswered.
-        Quantity.DamageDealtToPlayersThisTurn ref -> case playersOf ref of
+        -- Same log, same CR 120.3a recipient, same roster (Chandra's Incinerator's
+        -- ruling) and the same empty-log answer of 0; only the reference is ever
+        -- unanswered.
+        Quantity.DamageDealtToPlayersThisTurn tally -> case historyPlayersOf (DealtDamage.recipient tally) of
           Nothing -> Nothing
-          Just pids -> Just (toInteger (sum (fmap (Game.damageDealtToPlayerThisTurn gs) pids)))
+          Just pids -> Just (toInteger (sum (fmap (Game.damageDealtToPlayerThisTurn (DealtDamage.kind tally) gs) pids)))
         -- CR 601.2i / 608.2i: how many spells that player cast during the turn the
         -- tally names, folded off that turn's log (Game.turnLog). LifeTotal's arm in
         -- ARITY -- one player's tally, so a reference naming several answers "whose?"

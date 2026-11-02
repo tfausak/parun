@@ -3023,3 +3023,5 @@ scorch-spitter
 vengeful-warchief
 harmonic-prodigy
 sanctum-of-all
+chandras-incinerator
+chandras-pyreling
