@@ -25,6 +25,7 @@ import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Keyword as Keyword
 import qualified Parun.Engine.Loyalty as Loyalty
 import qualified Parun.Engine.ManaAbility as ManaAbility
+import qualified Parun.Engine.Plane as Plane
 import qualified Parun.Engine.Players as Players
 import qualified Parun.Engine.Sector as Sector
 import qualified Parun.Engine.Subtype as Subtype
@@ -419,6 +420,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.HasKeywordFamily _ -> predicate
         Filter.Type.Measures _ -> predicate
         Filter.Type.ManaValueIsEven -> predicate
+        Filter.Type.ControllerIsOwner -> predicate
         Filter.Type.HeldBy _ _ -> predicate
         Filter.Type.ControlledByRole _ -> predicate
         Filter.Type.HeldByBound _ _ -> predicate
@@ -698,21 +700,27 @@ playersFor viewOf context gs =
 -- every seat that began the game rather than over those still in it: a player
 -- who lost life and then left still lost it (Skewer the Critics' ruling,
 -- 2024-01-12; Florian, Voldaren Scion's, 2021-09-24).
+--
+-- CR 801.11 still hides a seat outside the reader's range, and a seat emptied
+-- this turn is judged by where it stood (Game.wasInRangeOf); CR 801.18 lifts
+-- the cut for a planar source. docs/decisions.md, "Which range a tally of what
+-- happened reads through".
 historyPlayersFor :: ViewOf -> Filter.Context -> GameState -> PlayerRef.PlayerRef -> Maybe [PlayerId]
 historyPlayersFor viewOf context gs =
-  Players.named
-    Players.MkReads
-      { Players.perspective = Filter.perspective context,
-        Players.bound = Maybe.isJust (Filter.source context),
-        Players.slotPlayers = slotPlayers context gs,
-        Players.slotObject = (`Filter.slotOneObject` context),
-        Players.controllerOf = viewOf Monad.>=> Filter.controller,
-        Players.ownerOf = viewOf Monad.>=> Filter.owner,
-        Players.acquisitionOf = (`Game.acquisitionOf` gs),
-        Players.roster = GameState.turnOrder gs,
-        Players.reaches = const True
-      }
-    gs
+  let reach = Filter.perspective context >>= \you -> maybe (Just you) (\source -> Plane.rangePerspective source you gs) (Filter.source context)
+   in Players.named
+        Players.MkReads
+          { Players.perspective = Filter.perspective context,
+            Players.bound = Maybe.isJust (Filter.source context),
+            Players.slotPlayers = slotPlayers context gs,
+            Players.slotObject = (`Filter.slotOneObject` context),
+            Players.controllerOf = viewOf Monad.>=> Filter.controller,
+            Players.ownerOf = viewOf Monad.>=> Filter.owner,
+            Players.acquisitionOf = (`Game.acquisitionOf` gs),
+            Players.roster = filter (\pid -> all (\you -> Game.wasInRangeOf you pid gs) reach) (GameState.turnOrder gs),
+            Players.reaches = const True
+          }
+        gs
 
 -- CR 102.1: the players a TurnScope.PlayersTurn reference names, which is
 -- playersFor with CR 113.7's source slot naming the context's source where
@@ -1031,12 +1039,10 @@ orLastKnown live gs oid = Monad.join (Game.liveOrLastKnown (const (live oid)) (J
 -- your graveyard" (Parun.CountSpec), TOKEN status by Sunpearl Kirin's "if it
 -- was a token",
 -- BLOCKING by Guildsworn Prowler's intervening "if" and ATTACKING by Garna,
--- Bloodfist of Keld's "if it was attacking". The three fields that follow the
--- combat lookup on to the attacked permanent -- attackingPlayer,
--- attackingPlaneswalkerController and attackingBattleProtector -- answer
--- Nothing, and Parun.Types.LastKnown's `attacking` records the query behind
--- that; so does `blockStatus`, Nothing too, whose one printing asks a CR 608.2i
--- question.
+-- Bloodfist of Keld's "if it was attacking", and ATTACK TARGET, attackingPlayer
+-- and attackingPlaneswalkerController, by Mangara, the Diplomat's scenario.
+-- attackingBattleProtector answers Nothing, since no card asks it of a departed
+-- attacker, and `blockStatus` too, whose one printing asks a CR 608.2i question.
 --
 -- `oid` is the id it had, so the turn's log still answers what it did while it
 -- existed (CR 608.2i) -- it attacked, it was dealt damage, it entered -- and
@@ -1069,6 +1075,18 @@ lastKnownView peers oid gs lastKnown =
       )
         { Filter.identity = Just oid,
           Filter.attacking = LastKnown.attacking lastKnown,
+          -- CR 508.1b: what it was attacking as it left (Mangara, the Diplomat's
+          -- ruling), and that planeswalker's controller as it left, which
+          -- docs/decisions.md's "The seat of a departed attacker's planeswalker"
+          -- settles: Combat.removedDefending, since CR 506.4 ends the attack on
+          -- any change from that seat. It lasts the combat, as this read's one
+          -- asker does.
+          Filter.attackingPlayer = case LastKnown.attackTarget lastKnown of
+            Just (AttackTarget.OfPlayer pid) -> Just pid
+            _ -> Nothing,
+          Filter.attackingPlaneswalkerController = case LastKnown.attackTarget lastKnown of
+            Just (AttackTarget.OfPlaneswalker _) -> Map.lookup oid (Combat.removedDefending (GameState.combat gs))
+            _ -> Nothing,
           Filter.blocking = LastKnown.blocking lastKnown,
           Filter.paidCosts = LastKnown.paidCosts lastKnown,
           -- CR 718.3d: the copiable record or the object's own, viewOfCharacteristics'

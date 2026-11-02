@@ -46,6 +46,7 @@ import qualified Parun.Engine.CrewRestriction as CrewRestriction
 import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.Detain as Detain
 import qualified Parun.Engine.Event as Event
+import qualified Parun.Engine.Event.Trigger as Trigger
 import qualified Parun.Engine.Expiry as Expiry
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Forage as Forage
@@ -67,6 +68,7 @@ import qualified Parun.Engine.Reversal as Reversal
 import qualified Parun.Engine.SacrificeRestriction as SacrificeRestriction
 import qualified Parun.Engine.Subtype as Subtype
 import qualified Parun.Engine.Summoning as Summoning
+import qualified Parun.Engine.UntapRestriction as UntapRestriction
 import qualified Parun.Extra.Integer as Integer
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.AbilityKind as AbilityKind
@@ -850,10 +852,11 @@ candidateCostsGiven permitted pid name oid gs =
                 -- card has; and CR 601.3 / Yawgmoth's Will is an EFFECT stating no
                 -- cost, offering the hand's list BESIDE the rest rather than instead
                 -- of them. Rule 702.34a's "if the resulting spell is an instant or
-                -- sorcery spell" gates the PERMISSION (Keyword.permissionsFor) and is
-                -- not re-asked here; rule 702.138a and rule 702.81a state no such
-                -- clause to gate, and rule 702.187b's own clause is asked here
-                -- rather than there, at the mayhem offer below.
+                -- sorcery spell" gates the permission and the cost that sentence
+                -- states alike (Keyword.permissionsFor, `stated`), so another
+                -- permission's cast is not offered that cost; rule 702.138a and rule
+                -- 702.81a state no such clause to gate, and rule 702.187b's own
+                -- clause is asked here rather than there, at the mayhem offer below.
                 Just Zone.Graveyard ->
                   let -- `keywords` is what the card HAS in the graveyard, not
                       -- what it prints: an ability granted there (CR 113.6f)
@@ -943,15 +946,20 @@ candidateCostsGiven permitted pid name oid gs =
                          in concatMap
                               (\cost -> tappingNone cost : fmap (tappingOne cost) tappable)
                               (Keyword.harmonizeCosts keywords)
+                      stated = not . null . Keyword.permissionsFor (TypeLine.types (Face.typeLine face)) . Keyword.Type.Flashback
                       -- CR 601.3: a permission naming the cost it admits --
                       -- Tenacious Underdog's "cast this card from your graveyard
                       -- using its blitz ability" -- opens only the candidates a
                       -- keyword of that family offers, never the printed cost.
                       -- Parun.CastSpec's "Blitz from a graveyard" group proves
                       -- both halves.
-                      usingFamilies = [family | CastingPermission.CastFromGraveyard (Just family) <- permissionsOf oid face gs]
+                      usingFamilies = [family | CastingPermission.CastFromGraveyard (Just family) _ <- permissionsOf oid face gs]
                       usingPermitted candidate = any (\family -> (CandidateCost.keyword candidate >>= Keyword.familyOf) == Just family) usingFamilies
-                   in fmap flashback (Keyword.flashbackCosts keywords)
+                      -- CR 118.8: a permission stating an additional cost admits
+                      -- the printed cost and its alternatives (Demonic Embrace);
+                      -- Parun.Engine.Cast.castWays adds what it states.
+                      payingPermitted = not (null [() | CastingPermission.CastFromGraveyard Nothing (_ : _) <- permissionsOf oid face gs])
+                   in fmap flashback (filter stated (Keyword.flashbackCosts keywords))
                         <> fmap escape (Keyword.escapeCosts keywords)
                         <> (if Game.discardedThisTurnBy pid oid gs then fmap mayhem (Keyword.mayhemCosts keywords) else [])
                         <> harmonized
@@ -988,7 +996,7 @@ candidateCostsGiven permitted pid name oid gs =
                         -- Unbound's -3) states no cost either, and so does
                         -- CastingPermission.PlayFromGraveyard (Kethis, the
                         -- Hidden Hand's granted ability).
-                        <> ( if permitted || PlayerEffect.mayCastFrom pid Zone.Graveyard oid gs || PlayerEffect.mayPlayByMayhem pid oid gs || maybe False (\permission -> Expiry.permissionOpen pid permission gs) (Object.playPermission obj) || elem CastingPermission.PlayFromGraveyard (permissionsOf oid face gs)
+                        <> ( if permitted || PlayerEffect.mayCastFrom pid Zone.Graveyard oid gs || PlayerEffect.mayPlayByMayhem pid oid gs || maybe False (\permission -> Expiry.permissionOpen pid permission gs) (Object.playPermission obj) || elem CastingPermission.PlayFromGraveyard (permissionsOf oid face gs) || payingPermitted
                                then ordinary
                                else filter usingPermitted ordinary
                            )
@@ -3854,10 +3862,14 @@ canPayComponent slots pid oid component gs = case component of
   CostComponent.TapThis -> case Game.lookupObject oid gs of
     Nothing -> False
     Just obj -> Set.member oid (GameState.battlefield gs) && Object.tapped obj == TapState.Untapped
-  -- CR 107.6: the exact mirror of TapThis above.
+  -- CR 107.6: the mirror of TapThis above, and CR 614.17b: not while an effect
+  -- says it can't become untapped (Blossombind's ruling).
   CostComponent.UntapThis -> case Game.lookupObject oid gs of
     Nothing -> False
-    Just obj -> Set.member oid (GameState.battlefield gs) && Object.tapped obj == TapState.Tapped
+    Just obj ->
+      Set.member oid (GameState.battlefield gs)
+        && Object.tapped obj == TapState.Tapped
+        && not (UntapRestriction.cantBecomeUntapped oid gs)
   -- CR 701.21a: only a permanent, and only one this player controls -- and CR
   -- 101.2, only one no effect says can't be sacrificed. Read here and not left to
   -- the funnel, a cost announced as payable and then unpayable spending an
@@ -4031,12 +4043,13 @@ canPayComponent slots pid oid component gs = case component of
   CostComponent.PayEnergy amount -> payableAnnounced amount (Game.energyOf pid gs >=)
   -- CR 606.4: always payable, CR 606.6 gating only the removing half -- but the
   -- permanent must still be one this player controls on the battlefield, rule
-  -- 606.4 putting the counters on "that permanent".
-  --
-  -- Not implemented: a counter prohibition on the planeswalker making it
-  -- unpayable, as PutCountersOnThis below is (#5828).
-  CostComponent.AddLoyaltyToThis _ ->
-    Set.member oid (GameState.battlefield gs) && Projection.controllerOf oid gs == Just pid
+  -- 606.4 putting the counters on "that permanent". CR 614.17b with CR 101.2: a
+  -- prohibition on loyalty counters going on it makes a nonzero one unpayable,
+  -- PutCountersOnThis below's gate; CR 107.7's [0] puts none and stays payable.
+  CostComponent.AddLoyaltyToThis n ->
+    Set.member oid (GameState.battlefield gs)
+      && Projection.controllerOf oid gs == Just pid
+      && (n == 0 || not (CounterRestriction.prohibited oid CounterKind.Loyalty gs))
   -- CR 606.6: a negative loyalty cost can't be activated unless the permanent
   -- has at least that many loyalty counters. "At least that many" is >=, so a -1
   -- at exactly 1 loyalty IS activatable and CR 704.5i then buries the
@@ -5381,6 +5394,9 @@ payInOrder perform moment paidFor slots pid oid components = case components of
   [] -> pure bindsNothing
   component : rest -> do
     outcome <- payComponent perform moment paidFor slots pid oid component
+    -- CR 603.4: this part's event is over, and the next part may take a
+    -- permanent away.
+    State.modify' Trigger.fileBoards
     case outcome of
       Payment.Unpaid -> pure Payment.Unpaid
       Payment.Paid bound -> fmap (mergeBound bound) (payInOrder perform moment paidFor slots pid oid rest)

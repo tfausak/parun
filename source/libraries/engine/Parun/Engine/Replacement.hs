@@ -841,6 +841,13 @@ matchesPrinted viewOf gs event candidate =
         -- so matchesPutter still parts Vorinclex's "if you would put" from CR
         -- 614.16's "if an effect would put" (#847). Reading it off the flush
         -- rather than off the event is what keeps the two levels answering alike.
+        --
+        -- CR 614.12, as in the entry arm below: a row naming a general subset
+        -- does not apply to its own source entering (Conclave Mentor's, Pir's and
+        -- Vizier of Remedies's rulings). The scenario
+        -- cr-614-12-conclave-mentor-scales-another-creature-s-entering-counters-and-not-its-own
+        -- proves it. `confinedToSource` is the rule's other half: no pool row
+        -- confines itself, so nothing observes it.
         (ReplacementEffect.CounterR (CounterR.MkCounterR pat _), ProposedEvent.WouldEnter oid) ->
           case Projection.controllerOf oid gs of
             Nothing -> False
@@ -849,6 +856,7 @@ matchesPrinted viewOf gs event candidate =
                 && matchesPutter gs candidate (CounterPattern.subject pat) (CounterCause.ByEffect putter)
                 && matchesController gs candidate (CounterPattern.whose pat) oid
                 && matchesPermanent viewOf gs Nothing Map.empty Nothing (CounterPattern.onWhat pat) oid
+                && (src /= oid || confinedToSource (CounterPattern.onWhat pat))
         -- CR 109.5: "under YOUR control" -- the tokens' controller against the
         -- candidate's "you". No producer today names an opponent here.
         --
@@ -1529,7 +1537,12 @@ matchesDamageSource :: (ObjectId -> Filter.View) -> GameState -> Filter.Context 
 matchesDamageSource viewOf gs context filter_ de =
   let oid = DamageEvent.source de
       view = Maybe.fromMaybe (viewOf oid) (Projection.viewWithLastKnownAnywhere gs oid)
-   in Filter.matches context view filter_
+      -- CR 113.7a: a departed source deals damage as it last existed, zone
+      -- included, so a dead permanent's record answers a battlefield filter
+      -- (CR 109.2) and a cycled creature card, in the graveyard or exiled from
+      -- it since, does not.
+      located = Projection.lastZoned gs oid view
+   in Filter.matches context located filter_
 
 -- CR 615.1 / 614.1a: does this damage event have the qualities the pattern
 -- names? Five of them: a pattern naming no KIND admits combat and noncombat
@@ -2600,12 +2613,24 @@ choose gs event candidates =
 -- no order to ask. The rows of two separate "as this enters, choose" sentences
 -- would be elided too; MTGJSON AtomicCards, regex for two such sentences on one
 -- face, 2026-10-24, no hit.
+--
+-- CR 113.2c: Banner of Kinship's "choose a creature type" and "enters with a
+-- counter ... of the chosen type" share a paragraph, so one ability, written as
+-- a choice row and then a counter row. The choice goes first, or the count reads
+-- no type; a counter row reading no choice makes the same order unobservable.
 oneSentenceOfChoices :: [ReplacementCandidate] -> Bool
 oneSentenceOfChoices candidates = case candidates of
   [] -> False
   first : rest ->
-    all (recordsAChoice . ReplacementCandidate.effect) candidates
+    recordsAChoice (ReplacementCandidate.effect first)
+      && all (\c -> recordsAChoice (ReplacementCandidate.effect c) || placesCounters (ReplacementCandidate.effect c)) rest
       && all ((== ReplacementCandidate.source first) . ReplacementCandidate.source) rest
+
+-- Whether a row's whole work is placing counters as its object enters.
+placesCounters :: ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card)) -> Bool
+placesCounters effect = case effect of
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.WithCounters {})) -> True
+  _ -> False
 
 -- Whether a row's whole work is a choice its entering object's controller alone
 -- makes and the object records (Object.chosenColors, chosenSubtype,

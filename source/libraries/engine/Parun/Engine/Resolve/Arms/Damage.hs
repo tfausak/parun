@@ -563,7 +563,7 @@ moveMana resolving source controller legal (MoveMana.MkMoveMana fromRef toRef) =
   Mana.moveMana (Common.apnapPlayersOf fromRef legal resolving source controller gs) (foldMap (\ref -> Common.apnapPlayersOf ref legal resolving source controller gs) toRef)
 
 search :: (Game Result -> ManaAbilityPerformer.ManaAbilityPerformer) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Search.Search -> Game ()
-search performManaAbility runSubgame resolving source controller legal (Search.MkSearch searcherRef ownerRef zones outside quantity filter_ descriptions upTo destination subject foundSlot differentIn exactly andOr) =
+search performManaAbility runSubgame resolving source controller legal (Search.MkSearch searcherRef ownerRef zones outside quantity filter_ descriptions upTo destination subject foundSlot handSlot differentIn exactly andOr) =
   -- CR 701.23a: match each candidate through its own CR 613 projection --
   -- rule 613.1 names no zone, so a card in any of the searched zones is folded
   -- exactly as a permanent is, and CR 208.2a's characteristic-defining power
@@ -826,25 +826,24 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
                     -- both together; a REGRESSION FENCE, no card printing
                     -- "exactly" beside several descriptions.
                     required = min (Common.mostDiffering differentIn gs capHere matches) (List.genericLength (described searcher gs matches))
-                    fills given = Common.differing differentIn gs given == given && described searcher gs given == given && List.genericLength given == required
-                    -- RE-ASKED when short, Parun.Engine.Engine's CR 603.3d
+                    -- CR 701.23a: a find is cards matching the description, so
+                    -- an answer the filters below would cut down -- more than
+                    -- the count, two sharing a Search.differentIn value, one
+                    -- no description admits -- is asked again, not trimmed.
+                    admissible given = Common.differing differentIn gs given == given && described searcher gs given == given && (if exactly then List.genericLength given == required else List.genericLength given <= capHere)
+                    -- RE-ASKED when illegal, Parun.Engine.Engine's CR 603.3d
                     -- shape: a repeat of an answer already refused is taken
                     -- as it stands, since a pure decider repeats itself and
                     -- answering on its behalf is the one thing this may not
                     -- do. Keyed on the answer narrowed to the offer, so the
                     -- recursion terminates.
-                    askExactly rejected = do
+                    ask rejected = do
                       given <- ListUtils.nubOrd . filter (`List.elem` matches) <$> Game.choose (Prompt.Search decider searcher matches capHere)
-                      if fills given || Set.member given rejected then pure given else askExactly (Set.insert given rejected)
-                answer <-
-                  if Set.null searchedZones
-                    then pure []
-                    else
-                      if exactly
-                        then askExactly Set.empty
-                        else Game.choose (Prompt.Search decider searcher matches capHere)
+                      if admissible given || Set.member given rejected then pure given else ask (Set.insert given rejected)
+                answer <- if Set.null searchedZones then pure [] else ask Set.empty
                 -- CR 701.23a: every card found is one the filter admits.
-                -- Filtered, not trusted, deduplicated, and truncated to the cap.
+                -- Filtered, not trusted, deduplicated, and truncated to the cap:
+                -- an inadmissible answer is still taken when repeated.
                 -- What a SHORT answer leaves is the difference between CR
                 -- 701.23b and CR 701.23d, and it is settled PER ZONE: CR
                 -- 701.23b, CR 701.23c and CR 701.23d each speak of a HIDDEN
@@ -931,26 +930,27 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
         -- observe each other, so removing the bracket or the board reddens
         -- nothing.
         before <- State.get
-        arrivals <- Event.simultaneously . Event.together . fmap concat . Monad.forM decisions $ \(searcher, owner, chosenZones, found, foundOutside, exiler) -> do
+        (arrivals, fromHand) <- Event.simultaneously . Event.together . fmap Foldable.fold . Monad.forM decisions $ \(searcher, owner, chosenZones, found, foundOutside, exiler) -> do
           -- Read HERE rather than when the arm was entered, the reason the
           -- context above is a function of the board: CR 608.2c carries the
           -- clauses out in order, so the slot an earlier clause bound is read
           -- as it stands now.
           host <- State.gets subjectOf
           let stillThere gs oid = any (\zone -> List.elem oid (Game.zoneMembers zone owner gs)) (Set.toList chosenZones)
-          fromZones <- fmap concat . Monad.forM found $ \oid -> do
+          (fromZones, handArrivals) <- fmap Foldable.fold . Monad.forM found $ \oid -> do
             present <- State.gets (`stillThere` oid)
-            case (present, exiler) of
+            moved <- case (present, exiler) of
               (False, _) -> pure []
               (True, Nothing) -> Common.putFound resolving before searcher host destination oid
               (True, Just agent) -> [] <$ (Common.exileFoundFor agent =<< Event.changeZoneInBatchReturning before oid Zone.Exile)
+            pure (moved, if List.elem oid (Game.zoneMembers Zone.Hand owner before) then moved else [])
           -- CR 400.11b: a card found outside the game is brought in rather
           -- than moved, the reveal riding along as it arrives (#2450).
           fromOutside <- case (Common.outsideArrival destination, exiler) of
             (Nothing, _) -> pure []
             (Just (arrival, revealIt), Nothing) -> Event.bringChosen arrival revealIt searcher foundOutside
             (Just _, Just agent) -> [] <$ (Common.exileFoundFor agent . Seq.fromList =<< Event.bringChosen OutsideDestination.Exile False searcher foundOutside)
-          pure (fromZones <> fromOutside)
+          pure (fromZones <> fromOutside, handArrivals)
         -- The shuffle is the CARD's instruction too (CR 701.23h, CR 701.24b).
         -- The library shuffled is the one that was READ, so the seat is the
         -- owner -- and only where a LIBRARY is among the zones a searcher
@@ -1005,6 +1005,7 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
         -- CR 608.2c: "that card" in a later clause, or in a delayed ability
         -- this resolution arms (CR 603.7c), is what arrived.
         Common.bindObjects resolving foundSlot placed
+        Common.bindObjects resolving handSlot fromHand
 
 -- Exile every card in every graveyard as ONE event (CR 608.2f), so "one or
 -- more cards leave your graveyard" fires once (CR 603.2c). "Every graveyard"

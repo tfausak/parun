@@ -22,6 +22,7 @@ import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.PlayerEffect as PlayerEffect
 import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Projection.View as ProjectionView
 import qualified Parun.Engine.Replacement as Replacement
 import qualified Parun.Engine.Saga as Saga
 import qualified Parun.Engine.Turn as Turn
@@ -67,6 +68,7 @@ import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamagePrevented as DamagePrevented
+import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Designation as Designation
@@ -75,6 +77,7 @@ import qualified Parun.Types.DiscardCause as DiscardCause
 import qualified Parun.Types.Discarded as Discarded
 import qualified Parun.Types.DrawnUnder as DrawnUnder
 import qualified Parun.Types.Drew as Drew
+import qualified Parun.Types.EventGroup as EventGroup
 import qualified Parun.Types.EventShape as EventShape
 import qualified Parun.Types.Exploited as Exploited
 import qualified Parun.Types.Filter as Filter.Type
@@ -195,7 +198,8 @@ crewingsOf bearer gs =
 --
 -- Counted over the casts the SAME condition admits, since the printed sentence
 -- puts the ordinal inside the description -- so the Filter and the zone are
--- applied to each earlier cast too. Each earlier one is read through
+-- applied to each earlier cast too. And over the caster's own alone: Mangara, the
+-- Diplomat's "an opponent casts THEIR second spell" counts per opponent. Each earlier one is read through
 -- Count.snapshotView, the CR 608.2h snapshot its event recorded, because CR
 -- 601.2a's stack incarnation is long gone for every cast but the one being
 -- matched.
@@ -213,10 +217,11 @@ crewingsOf bearer gs =
 -- list holding two Effect.OfferCast would, and the DSL admits one. So the stop
 -- is a fence resting on the rule's ordering rather than a behaviour a test
 -- proves.
-castOrdinal :: Filter.Context -> Filter.Type.Filter Keyword.Type.Keyword -> Maybe Zone -> ObjectId -> GameState -> Maybe Natural
-castOrdinal context predicate fromZone spell gs =
+castOrdinal :: Filter.Context -> Filter.Type.Filter Keyword.Type.Keyword -> Maybe Zone -> PlayerId -> ObjectId -> GameState -> Maybe Natural
+castOrdinal context predicate fromZone caster spell gs =
   let counted cast =
-        maybe True (\z -> SpellWasCast.zone cast == Just z) fromZone
+        SpellWasCast.player cast == caster
+          && maybe True (\z -> SpellWasCast.zone cast == Just z) fromZone
           && maybe False (\view -> Filter.matches context view predicate) (Count.snapshotView (Projection.viewWithLastKnownAnywhere gs) gs EventShape.SpellCast (GameEvent.SpellCast cast))
    in fmap ((1 +) . Natural.length . filter counted) (Game.castsBefore spell gs)
 
@@ -487,6 +492,25 @@ additionalEntryTriggers gs you zc
   | ZoneChange.to zc == Zone.Battlefield = PlayerEffect.additionalEntryTriggers you (ZoneChange.object zc) (atEntry gs (ZoneChange.object zc))
   | otherwise = 0
 
+-- CR 603.2d: how many additional times `bearer`'s triggered ability triggers on
+-- the event of `group`, for a bearer that was a permanent then (CR 110.1): a card
+-- in a graveyard or an emblem has no such abilities. Read off the board the
+-- ability itself reads: CR 603.10's after the event (GameState.boardAfterEvent),
+-- or for `looksBack` the board before it (GameState.boardBeforeDeparture; CR
+-- 603.10a, docs/decisions.md, "A look-back ability's additional triggers look
+-- back"). A look-back ability's event with no such board took nothing off the
+-- battlefield, so the after board answers.
+--
+-- Not implemented: the board before a look-back event that takes nothing off
+-- the battlefield, a control change, say (#5901).
+additionalTriggers :: GameState -> PlayerId -> ObjectId -> EventGroup.EventGroup -> Bool -> Natural
+additionalTriggers gs you bearer group looksBack =
+  let after = Map.findWithDefault gs group (GameState.boardAfterEvent gs)
+      before = if looksBack then Maybe.maybeToList (Map.lookup group (GameState.boardBeforeDeparture gs)) else []
+   in case filter (Set.member bearer . GameState.battlefield) (before <> [after]) of
+        board : _ -> PlayerEffect.additionalTriggers you bearer board
+        [] -> 0
+
 -- The game filed immediately after `entrant` entered the battlefield
 -- (GameState.boardAfterEvent), or the live game for an entry none is filed for.
 atEntry :: GameState -> ObjectId -> GameState
@@ -690,7 +714,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.TriggeredAbilityResolved _ -> False
     GameEvent.CardArrived _ -> False
   -- CR 510.1b / 310.5: the arm above with a battle beside the player. The
-  -- battle is read the way SelfDealsDamageToCreature reads a creature, off
+  -- battle is read the way DealsDamageToPermanent reads its card type, off
   -- Projection.damagedCardTypes, so an attacked permanent that is a battle and
   -- something else still counts.
   TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> case event of
@@ -861,6 +885,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   TriggerCondition.DealsDamageToPlayer watched -> case event of
     GameEvent.DamageDealt ev ->
       damageBy (DealsDamageToPlayer.actor watched) (DamageEvent.source ev)
+        && all (== DamageEvent.kind ev) (DealsDamageToPlayer.kind watched)
         && maybe False (PlayerRelation.holds (Game.teams gs) (DealsDamageToPlayer.recipient watched) you) (Recipient.playerOf (DamageEvent.target ev))
     GameEvent.Moved {} -> False
     GameEvent.StepBegan {} -> False
@@ -930,10 +955,10 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.ActivatedAbilityResolved _ -> False
     GameEvent.TriggeredAbilityResolved _ -> False
     GameEvent.CardArrived _ -> False
-  -- CR 603.2 / 120.3: the same arm with rule 120.3's other recipient -- a CREATURE
-  -- rather than a player. Strax, Sontaran Nurse's "Glory of Battle" is a reader,
-  -- and its own "Grenades!" fight is a noncombat source, so it names no kind;
-  -- Phage the Untouchable's "combat damage" names CR 510.2's.
+  -- CR 603.2 / 120.3: the same arm with rule 120.3's other recipient, a permanent
+  -- of a card type rather than a player. Strax, Sontaran Nurse's "Glory of Battle"
+  -- is a reader, and its own "Grenades!" fight is a noncombat source, so it names
+  -- no kind; Phage the Untouchable's "combat damage" names CR 510.2's.
   --
   -- Projection.damagedCardTypes rather than a Recipient.ToCreature test, the same
   -- reading CR 120.3's own results take: the TAG is the classification made
@@ -942,11 +967,11 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- dealt damage to a creature. The tag is unioned in rather than replaced,
   -- which is CR 608.2h's last known information for a recipient the damage has
   -- already killed.
-  TriggerCondition.SelfDealsDamageToCreature kind -> case event of
+  TriggerCondition.DealsDamageToPermanent watched -> case event of
     GameEvent.DamageDealt ev ->
-      DamageEvent.source ev == bearer
-        && all (== DamageEvent.kind ev) kind
-        && Set.member CardType.Creature (Projection.damagedCardTypes gs (DamageEvent.target ev))
+      damageBy (DealsDamageToPermanent.actor watched) (DamageEvent.source ev)
+        && all (== DamageEvent.kind ev) (DealsDamageToPermanent.kind watched)
+        && Set.member (DealsDamageToPermanent.recipient watched) (Projection.damagedCardTypes gs (DamageEvent.target ev))
     GameEvent.Moved {} -> False
     GameEvent.StepBegan {} -> False
     GameEvent.SpellCast {} -> False
@@ -1092,7 +1117,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- Death Pits of Rath's. DealsDamage's arm with the check moved from the
   -- event's SOURCE to its RECIPIENT.
   --
-  -- The KIND conjunct is SelfDealsDamageToCreature's: Nothing for Ripjaw
+  -- The KIND conjunct is DealsDamageToPermanent's: Nothing for Ripjaw
   -- Raptor's unqualified phrase, which a Prodigal Sorcerer's ping fires exactly
   -- as combat damage does; Just Combat for Wall of Essence's CR 510.2 damage.
   --
@@ -6591,10 +6616,8 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- application being one CR 615.13 trigger however many sources it covered.
   -- The bearer contributes only CR 109.5's "you" and the Filter.Context's
   -- source, as in the PermanentDealsCombatDamageToPlayer arm above. viewWithLastKnown:
-  -- CR 608.2h's record is what still answers "was it black" for a source that
-  -- died to the very batch this prevented. A fence rather than a tested branch:
-  -- Samite Ministration's shield covers a PLAYER, so nothing that reaches this
-  -- arm kills the damage's source.
+  -- CR 608.2h's record is what still answers "was it a creature" for a source
+  -- gone by now. Proved by judgment-of-alexander-fires-for-a-sacrificed-creature.
   --
   -- Filter.IsSource is meaningless in THIS position where it is meaningful
   -- there: the context's source is the bearer, and the bearer is the object whose
@@ -7228,7 +7251,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
                 -- Clarion Spirit's "your SECOND spell each turn", asked LAST so the
                 -- log walk happens only for a cast the rest of the condition
                 -- already admits.
-                && maybe True ((castOrdinal bearerContext f fromZone spell gs ==) . Just) ordinal
+                && maybe True ((castOrdinal bearerContext f fromZone caster spell gs ==) . Just) ordinal
           -- Magecraft's "or copy" (CR 707.10): the player who copied the spell,
           -- the copy's controller, is the one whose "you copy" this is -- not
           -- the copied spell's. data/scenarios/copy's
@@ -10703,9 +10726,12 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     -- link has to be read as it stood. A spell source is on no such board and is
     -- read from its last known information (CR 608.2h), Chandra's Phoenix's "red
     -- instant or sorcery spell".
+    -- CR 113.7a / 608.2h: a source gone before its ability dealt the damage is
+    -- judged in the zone it last existed in, so "a creature you control" still
+    -- admits it. Scenario hooded-blightfang-destroys-for-noncombat-damage-from-a-pinger-gone-in-response.
     damageBy watched oid = case watched of
       ActingPermanent.Self -> oid == bearer
-      ActingPermanent.Matching f -> maybe False (\view -> Filter.matches bearerContext view f) (postEventView board gs oid)
+      ActingPermanent.Matching f -> maybe False (\view -> Filter.matches bearerContext (ProjectionView.lastZoned gs oid view) f) (postEventView board gs oid)
 
 -- CR 106.12a's second half: did an activation that produced @produced@ produce
 -- the mana this condition specified? The narrowing half of the

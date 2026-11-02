@@ -16,3 +16,9 @@ spec s = Spec.describe s "Parun.Codec.Prohibition" $ do
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s Prohibition.codec
   Spec.it s "has a schema" $
     Common.assertHasSchema s Prohibition.codec
+  Spec.it s "PhaseIn" $
+    Common.assertCodec
+      s
+      Prohibition.codec
+      Prohibition.PhaseIn
+      " {\"type\":\"PhaseIn\"} "

@@ -991,7 +991,7 @@ effectPlayerRefs effect = case effect of
   Effect.Firebend (ManaAddition.MkManaAddition ref production _ _ _ _ _) -> ref : productionPlayerRefs production
   Effect.ActivateManaAbilities (ActivateManaAbilities.MkActivateManaAbilities ref _) -> [ref]
   Effect.MoveMana (MoveMana.MkMoveMana from to) -> from : Maybe.maybeToList to
-  Effect.Search (Search.MkSearch searcher owner _ _ _ _ _ _ _ _ _ _ _ _) -> [searcher, owner]
+  Effect.Search (Search.MkSearch searcher owner _ _ _ _ _ _ _ _ _ _ _ _ _) -> [searcher, owner]
   Effect.ExileAllGraveyards -> []
   Effect.RestartGame {} -> []
   Effect.ControlPlayerNextTurn {} -> []
@@ -1283,7 +1283,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   -- matches it in the resolution's own context -- Bifurcate's "with the same
   -- name as target nontoken creature" is the whole of what its target slot is
   -- for, so without this the D4 dataflow lint would call that slot unread.
-  Effect.Search (Search.MkSearch _ _ _ _ quantity filter_ descriptions _ _ subject _ _ _ _) ->
+  Effect.Search (Search.MkSearch _ _ _ _ quantity filter_ descriptions _ _ subject _ _ _ _ _) ->
     joinTwo
       (joinTwo (joinSlots (fmap quantitySlots (Maybe.maybeToList quantity))) (joinSlots (fmap filterSlotsOf (filter_ : Foldable.toList descriptions))))
       -- CR 701.3a's fixed host, read at arity ONE: a slot naming several objects
@@ -1696,6 +1696,7 @@ durationSlots duration = case duration of
   -- Parun.Engine.Expiry.arm bakes.
   Duration.UntilEvent DurationEvent.SourceTurnedFaceDown -> Map.empty
   Duration.UntilEvent DurationEvent.Planeswalked -> Map.empty
+  Duration.UntilEvent DurationEvent.SourceExiledCard -> Map.empty
   Duration.UntilEvent (DurationEvent.SpellCast criterion) -> filterSlotsOf criterion
 
 -- Both sides of a comparison are a Quantity, and either may read a slot.
@@ -2153,7 +2154,7 @@ ownSlotsAreExhaustive effect = case effect of
   -- slotsOf reports them through Filter.boundSlots, the one walk that enumerates
   -- what a Filter reads, and no Filter atom carries a Quantity for
   -- Quantity.slotsAreExhaustive to be about.
-  Effect.Search (Search.MkSearch _ _ _ _ quantity _ _ _ _ _ _ _ _ _) -> all Quantity.slotsAreExhaustive quantity
+  Effect.Search (Search.MkSearch _ _ _ _ quantity _ _ _ _ _ _ _ _ _ _) -> all Quantity.slotsAreExhaustive quantity
   Effect.ExileAllGraveyards -> True
   Effect.Proliferate -> True
   Effect.Reroll -> True
@@ -2430,7 +2431,9 @@ conditionReadsX condition = case condition of
 -- taken from effectObjectRefs ahead of the case and no arm below names one.
 readsX :: [Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)] -> Bool
 readsX =
-  let effectReadsX effect = any (any Quantity.readsX . objectRefQuantities) (effectObjectRefs effect) || effectOwnReadsX effect
+  let -- A ref's filter too: Ugin, the Spirit Dragon's "mana value X or less".
+      refReadsX ref = any Quantity.readsX (objectRefQuantities ref) || Map.member Binding.variableX (objectRefSlots ref)
+      effectReadsX effect = any refReadsX (effectObjectRefs effect) || effectOwnReadsX effect
       -- effectReadsX's half that is not an ObjectRef's: this opcode's own fields,
       -- and its nested effects through the recursion back into readsX.
       effectOwnReadsX effect = case effect of
@@ -2445,7 +2448,7 @@ readsX =
         Effect.MoveMana _ -> False
         -- The filter too: Citanul Flute's "mana value X or less" compares against
         -- X itself (Operand.AmountInSlot), which no Quantity holds.
-        Effect.Search (Search.MkSearch _ _ _ _ quantity filter_ descriptions _ _ _ _ _ _ _) -> any Quantity.readsX quantity || any (Set.member Binding.variableX . Filter.boundSlots) (filter_ : Foldable.toList descriptions)
+        Effect.Search (Search.MkSearch _ _ _ _ quantity filter_ descriptions _ _ _ _ _ _ _ _) -> any Quantity.readsX quantity || any (Set.member Binding.variableX . Filter.boundSlots) (filter_ : Foldable.toList descriptions)
         Effect.ExileAllGraveyards -> False
         Effect.Proliferate -> False
         Effect.Reroll -> False
@@ -2723,7 +2726,7 @@ boundSlots effect = case effect of
   Effect.ActivateManaAbilities _ -> Set.empty
   Effect.MoveMana _ -> Set.empty
   -- CR 400.7: the incarnations the destination minted.
-  Effect.Search search -> foldMap Set.singleton (Search.slot search)
+  Effect.Search search -> foldMap Set.singleton (Search.slot search) <> foldMap Set.singleton (Search.handSlot search)
   Effect.ExileAllGraveyards -> Set.empty
   Effect.Proliferate -> Set.empty
   Effect.Reroll -> Set.empty
@@ -3579,6 +3582,7 @@ targetSlotSlots slot =
         -- Every slot the slot's own FILTER names -- CR 603.2's "target artifact or
         -- enchantment that player controls".
         maybe Map.empty (Map.fromSet (const SlotArity.One) . Filter.boundSlots) (TargetSlot.filter slot),
+        maybe Map.empty (Map.fromSet (const SlotArity.One) . Filter.boundSlots) (TargetSlot.asCast slot),
         -- And every slot its CR 202.3 computed bound names -- Venerable Warsinger's
         -- "mana value X or less ... where X is the amount of damage this creature
         -- dealt to that player", whose X is the trigger's own event amount

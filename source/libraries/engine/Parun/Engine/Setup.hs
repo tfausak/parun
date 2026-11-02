@@ -247,6 +247,7 @@ gameWith settings order =
           GameState.stackArchive = Map.empty,
           GameState.scannedThrough = 0,
           GameState.boardAfterEvent = Map.empty,
+          GameState.boardBeforeDeparture = Map.empty,
           GameState.battlefieldWhenTriggered = Map.empty,
           GameState.controlSample = Map.empty,
           GameState.damageScannedThrough = 0,
@@ -261,7 +262,7 @@ gameWith settings order =
           GameState.detachedBindings = Map.empty,
           GameState.pendingEntryEffects = Seq.empty,
           GameState.enteringBeside = Set.empty,
-          GameState.enteringSubjects = Set.empty,
+          GameState.enteringSubjects = Map.empty,
           GameState.enteringPending = Map.empty,
           GameState.refusedEntries = Nothing,
           GameState.enteringCounters = Map.empty,
@@ -303,6 +304,7 @@ gameWith settings order =
           GameState.cardsPlayed = mempty,
           GameState.drawsThisTurn = mempty,
           GameState.keptFaceDown = Nothing,
+          GameState.announcedTops = Nothing,
           GameState.departedThisTurn = mempty,
           GameState.couldAttackThisTurn = mempty,
           GameState.activatedThisTurn = mempty,
@@ -1018,6 +1020,7 @@ restartGame perform exempt starter = do
             GameState.stackArchive = Map.empty,
             GameState.scannedThrough = 0,
             GameState.boardAfterEvent = Map.empty,
+            GameState.boardBeforeDeparture = Map.empty,
             GameState.battlefieldWhenTriggered = Map.empty,
             GameState.controlSample = Map.empty,
             GameState.damageScannedThrough = 0,
@@ -1032,7 +1035,7 @@ restartGame perform exempt starter = do
             GameState.detachedBindings = Map.empty,
             GameState.pendingEntryEffects = Seq.empty,
             GameState.enteringBeside = Set.empty,
-            GameState.enteringSubjects = Set.empty,
+            GameState.enteringSubjects = Map.empty,
             GameState.enteringPending = Map.empty,
             GameState.refusedEntries = Nothing,
             GameState.enteringCounters = Map.empty,
@@ -1075,6 +1078,7 @@ restartGame perform exempt starter = do
             GameState.cardsPlayed = mempty,
             GameState.drawsThisTurn = mempty,
             GameState.keptFaceDown = Nothing,
+            GameState.announcedTops = Nothing,
             GameState.departedThisTurn = mempty,
             GameState.couldAttackThisTurn = mempty,
             GameState.activatedThisTurn = mempty,
@@ -1308,6 +1312,7 @@ subgameStateFrom starter parent =
           GameState.stackArchive = Map.empty,
           GameState.scannedThrough = 0,
           GameState.boardAfterEvent = Map.empty,
+          GameState.boardBeforeDeparture = Map.empty,
           GameState.battlefieldWhenTriggered = Map.empty,
           GameState.controlSample = Map.empty,
           GameState.damageScannedThrough = 0,
@@ -1322,7 +1327,7 @@ subgameStateFrom starter parent =
           GameState.detachedBindings = Map.empty,
           GameState.pendingEntryEffects = Seq.empty,
           GameState.enteringBeside = Set.empty,
-          GameState.enteringSubjects = Set.empty,
+          GameState.enteringSubjects = Map.empty,
           GameState.enteringPending = Map.empty,
           GameState.refusedEntries = Nothing,
           GameState.enteringCounters = Map.empty,
@@ -1357,6 +1362,7 @@ subgameStateFrom starter parent =
           GameState.cardsPlayed = mempty,
           GameState.drawsThisTurn = mempty,
           GameState.keptFaceDown = Nothing,
+          GameState.announcedTops = Nothing,
           GameState.departedThisTurn = mempty,
           GameState.couldAttackThisTurn = mempty,
           GameState.activatedThisTurn = mempty,
@@ -1500,7 +1506,7 @@ applyCrossings finalSub parent =
               [] -> Event.recordEvent (left zone)
               revealed -> Event.simultaneouslyPure (Event.recordEvent (left zone) . (\g1 -> List.foldl' (flip Event.recordEvent) g1 revealed))
          in if Set.member oid (GameState.battlefield g)
-              then recordLeft Zone.Battlefield gone
+              then recordLeft Zone.Battlefield (Event.fileBoardBeforeDeparture g gone)
               else case fmap Object.zone (Map.lookup oid (GameState.objects g)) of
                 -- Phased out, CR 702.26b above.
                 Just Zone.Battlefield -> gone

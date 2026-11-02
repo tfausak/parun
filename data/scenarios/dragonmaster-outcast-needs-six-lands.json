@@ -1,0 +1,153 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Dragonmaster Outcast",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Dragonmaster Outcast",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "Untap"
+  },
+  "description": "CR 603.4: Dragonmaster Outcast makes a Dragon at upkeep with six lands, not five",
+  "timeline": [
+    {
+      "check": {
+        "Count": {
+          "card": "Dragon Token",
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "DrawStep",
+      "turn": 1
+    },
+    {
+      "check": {
+        "PowerToughness": {
+          "object": "Dragon Token",
+          "power": 5,
+          "toughness": 5
+        }
+      },
+      "player": "alice",
+      "step": "DrawStep",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Attack": []
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Dragon Token",
+          "count": 0,
+          "player": "bob",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "bob",
+      "step": "DrawStep",
+      "turn": 2
+    }
+  ]
+}

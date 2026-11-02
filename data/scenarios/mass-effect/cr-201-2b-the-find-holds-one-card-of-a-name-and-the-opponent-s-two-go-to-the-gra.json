@@ -97,12 +97,25 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "alice",
+      "refuse": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$murder-2",
+            "$murder"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
       "do": {
         "Answer": {
           "prompt": "Search",
           "with": [
             "$murder-2",
-            "$murder",
             "$hill-giant",
             "$bird-maiden",
             "$goblin-piker"

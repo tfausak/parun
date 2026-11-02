@@ -9,6 +9,7 @@ module Parun.Engine.AttackPermission where
 
 import Data.Set (Set)
 import qualified Data.Set as Set
+import qualified Parun.Engine.Condition as Condition
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.Rewrite as Projection
 import qualified Parun.Engine.Projection.View as Projection
@@ -44,7 +45,20 @@ waivesDefender candidates gs =
             && not (removed source)
             then concatMap (fromPermission source (Projection.readerTextChanges source gs)) permissions
             else []
+      -- CR 604.2's "as long as", BlockPermission's `granted`: asked once per
+      -- permission, against the source, since CR 109.5 fixes the "you" inside it.
+      granted source changes permission = case AttackPermission.while permission of
+        Nothing -> True
+        Just condition ->
+          Condition.holds
+            (Projection.fullView gs)
+            (Projection.sourceContext gs (Projection.controllerOf source gs) source)
+            gs
+            source
+            (if null changes then condition else Projection.rewriteCondition changes condition)
       fromPermission source changes permission =
         let affected = AttackPermission.affected permission
-         in filter (named source (if null changes then affected else Projection.rewriteAffected changes affected)) candidates
+         in if granted source changes permission
+              then filter (named source (if null changes then affected else Projection.rewriteAffected changes affected)) candidates
+              else []
    in Set.fromList (concatMap (\source -> fromPermanent source <> fromGrant source) (Set.toList (GameState.battlefield gs)))

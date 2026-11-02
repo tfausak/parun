@@ -559,29 +559,29 @@ entryExileLink :: AbilityName.AbilityName
 entryExileLink = AbilityName.MkAbilityName (Text.pack "exiledAsThisEntered")
 
 -- CR 602.5c / 607.5: the name each activated ability an object acquires from
--- one exiled card carries (Modification.GainExiledCardAbilities), drawn from
+-- one card lends it carries (Modification.GainCardAbilities), drawn from
 -- that card's id and, for a named one, its own name, so two identically worded
 -- abilities acquired from two cards are two abilities to a restriction on their
 -- use, and none is the holder's own ability of that name. Reserved, as
 -- craftLink is.
-exiledCardAbility :: ObjectId -> Maybe AbilityName.AbilityName -> AbilityName.AbilityName
-exiledCardAbility oid = maybe card (qualified card)
+lentCardAbility :: ObjectId -> Maybe AbilityName.AbilityName -> AbilityName.AbilityName
+lentCardAbility oid = maybe card (qualified card)
   where
-    card = AbilityName.MkAbilityName (exiledCardPrefix <> Text.pack (show (ObjectId.unwrap oid)))
+    card = AbilityName.MkAbilityName (lentCardPrefix <> Text.pack (show (ObjectId.unwrap oid)))
 
--- CR 607.2a / 607.5: whether exiledCardAbility gave this name, so what an
+-- CR 607.2a / 607.5: whether lentCardAbility gave this name, so what an
 -- ability acquired that way exiled is linked to none of its holder's own
 -- abilities.
-isExiledCardAbility :: AbilityName.AbilityName -> Bool
-isExiledCardAbility = Text.isPrefixOf exiledCardPrefix . AbilityName.unwrap
+isLentCardAbility :: AbilityName.AbilityName -> Bool
+isLentCardAbility = Text.isPrefixOf lentCardPrefix . AbilityName.unwrap
 
--- Whether exiledCardAbility drew this name from `oid`.
+-- Whether lentCardAbility drew this name from `oid`.
 isAcquiredFrom :: ObjectId -> AbilityName.AbilityName -> Bool
-isAcquiredFrom oid name = pairOf (Just name) == Just (exiledCardAbility oid Nothing)
+isAcquiredFrom oid name = pairOf (Just name) == Just (lentCardAbility oid Nothing)
 
 -- | CR 607.5: the ability a name stated inside the ability `reader` means. A
--- reader acquired from an exiled card means that card's ability of the name,
--- as acquired beside it (exiledCardAbility); any other reader the name as
+-- reader acquired from a lending card means that card's ability of the name,
+-- as acquired beside it (lentCardAbility); any other reader the name as
 -- written. Synthetic Split Reliquary's "the cards exiled with warden" and
 -- Gliding Licid's "loses this ability" are the readers, the second only for
 -- its own object (Parun.Engine.Resolve.Arms.Damage's ModifyTarget).
@@ -595,7 +595,7 @@ nameAsRead reader name = maybe name (`qualified` name) (pairOf reader)
 -- GameState.exiledWith goes through (Parun.Engine.Game.linkedPile).
 --
 -- OwnAbilities is every exiling ability paired with the reader: a reader
--- acquired from an exiled card (isExiledCardAbility) is linked only to the
+-- acquired from a lending card (isLentCardAbility) is linked only to the
 -- abilities acquired from that card; every other reader -- printed, or
 -- "printed" by CR 607.1a's grant -- only to exiling abilities that were not
 -- acquired that way. OfAbility names one exiling ability as the reader means
@@ -609,23 +609,23 @@ isLinkedExile reader pile src link =
     ExiledPile.AsItEntered -> ExileLink.ability link == Just entryExileLink
     ExiledPile.CraftMaterials -> ExileLink.ability link == Just craftLink
 
--- The exiled card a link's or a reader's ability name was acquired from, as
--- exiledCardAbility names an unnamed ability of it; Nothing for the holder's
+-- The lending card a link's or a reader's ability name was acquired from, as
+-- lentCardAbility names an unnamed ability of it; Nothing for the holder's
 -- own. Dropping a named one's own name is a REGRESSION FENCE: no card in
 -- data/cards/ pairs an acquired "exiled with" reader with a NAMED exiling
 -- ability beside it, so keeping the whole name leaves the suite green.
 pairOf :: Maybe AbilityName.AbilityName -> Maybe AbilityName.AbilityName
-pairOf = fmap (AbilityName.MkAbilityName . card . AbilityName.unwrap) . Monad.mfilter isExiledCardAbility
+pairOf = fmap (AbilityName.MkAbilityName . card . AbilityName.unwrap) . Monad.mfilter isLentCardAbility
   where
-    card t = exiledCardPrefix <> Text.takeWhile Char.isDigit (Text.drop (Text.length exiledCardPrefix) t)
+    card t = lentCardPrefix <> Text.takeWhile Char.isDigit (Text.drop (Text.length lentCardPrefix) t)
 
--- The name exiledCardAbility gives the ability named `name` acquired from the
+-- The name lentCardAbility gives the ability named `name` acquired from the
 -- card whose unnamed abilities it names `card`.
 qualified :: AbilityName.AbilityName -> AbilityName.AbilityName -> AbilityName.AbilityName
 qualified card name = AbilityName.MkAbilityName (AbilityName.unwrap card <> Text.pack "/" <> AbilityName.unwrap name)
 
-exiledCardPrefix :: Text.Text
-exiledCardPrefix = Text.pack "thatExiledCard"
+lentCardPrefix :: Text.Text
+lentCardPrefix = Text.pack "thatExiledCard"
 
 -- CR 400.7j: the reserved slot under which the cards a DiscardThis or
 -- DiscardCards COST payment discarded are bound, as the objects they became in

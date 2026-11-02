@@ -269,8 +269,9 @@ passPriorityFrom gs pid =
 -- (Seedborn Muse) joins the same simultaneous untap, with no choice in it (its
 -- ruling of 2007-07-15). None of the carriers above holds it back or is spent
 -- by it: each is worded against its controller's own untap step, which this
--- one is not (its ruling of 2004-10-04). A stun counter (CR 122.1d) still takes
--- it, any untap being its event.
+-- one is not (its ruling of 2004-10-04). UntapHold.Never is the exception,
+-- worded against every untap and asked in Event.proposeUntap. A stun counter
+-- (CR 122.1d) still takes it, any untap being its event.
 untapAll :: [PlayerId] -> Game ()
 untapAll actives = do
   determined <- Monad.mapM determineUntap actives
@@ -318,7 +319,7 @@ determineUntap pid = do
   let ids = Projection.controls pid gs
       restrictions = UntapRestriction.gathered ids gs
       holding hold = Set.unions [named | (h, named) <- restrictions, h == hold]
-      prohibited = holding UntapHold.Forbidden
+      prohibited = Set.union (holding UntapHold.Forbidden) (holding UntapHold.Never)
       elective = holding UntapHold.Elective
       caps = [(n, counted) | (UntapHold.AtMost n, counted) <- restrictions]
       asks f oid = maybe False f (Game.lookupObject oid gs)
@@ -734,6 +735,7 @@ placePendingTriggers boards = do
         -- for. Cleared rather than left standing, which bounds both the map and
         -- the game states its unforced thunks retain.
         GameState.boardAfterEvent = Map.empty,
+        GameState.boardBeforeDeparture = Map.empty,
         GameState.battlefieldWhenTriggered = Map.empty,
         GameState.delayedTriggers = surviving
       }
@@ -821,6 +823,7 @@ reactions incoming = do
             g
               { GameState.scannedThrough = Natural.length (GameState.events g),
                 GameState.boardAfterEvent = Map.empty,
+                GameState.boardBeforeDeparture = Map.empty,
                 GameState.battlefieldWhenTriggered = Map.empty,
                 GameState.delayedTriggers = surviving
               }
@@ -1889,6 +1892,7 @@ beginTurn extra pid gs =
             -- Cleared with the log it describes: the settle Engine.advance runs
             -- immediately before this leaves nothing unscanned.
             GameState.boardAfterEvent = Map.empty,
+            GameState.boardBeforeDeparture = Map.empty,
             GameState.battlefieldWhenTriggered = Map.empty,
             GameState.damageScannedThrough = 0,
             -- GameState.lastKnown is deliberately NOT cleared alongside them: CR
