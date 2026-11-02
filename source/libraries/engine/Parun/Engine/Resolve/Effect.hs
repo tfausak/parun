@@ -490,10 +490,8 @@ applyEffectWith runSubgame resolving source controller legal chosen effect = Eve
   -- so Engine.performSettle's drain answers every test the same without it.
   runReplacementEffects runSubgame
   -- CR 603.2 / 603.10d: a control change this instruction made, observed before
-  -- the next one can make another. Not inside an open event group: CR 608.2f's
-  -- single event is observed whole, by the instruction that opened it.
-  depth <- State.gets GameState.eventGroupDepth
-  Monad.when (depth == 0) (Monad.void Event.sampleControl)
+  -- the next one can make another.
+  Monad.void Event.sampleControl
   -- CR 603.4: the board this instruction's events left, before the next one
   -- changes it. data/scenarios/trigger's Slaughterhouse Bouncer scenario proves
   -- it.

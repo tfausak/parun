@@ -458,9 +458,10 @@ Entries are ordered by the first rule each cites.
   `nextTimestamp` by "CR 701.28e / 603.12 an ignored convert arms no
   reflexive", `nextEventGroup` by `Parun.ResolveSpec`'s "CR 118.12 Victimize
   with no creature to sacrifice returns nothing", `controlSample` and
-  `boardAtControlSample` together by the ignored convert's scenario,
-  `Object.controlClock` by the same Victimize test. The other copies are a
-  regression fence.
+  `Object.controlClock` by the same test, `boardAtControlSample` by
+  `Parun.AuraSpec`'s "CR 603.12 Thorin's Equipment go to its target, which
+  then deals damage equal to its power". The other copies are a regression
+  fence.
 - **Issue**: none.
 
 ## Whether an ability a merge grafts is still characteristic-defining

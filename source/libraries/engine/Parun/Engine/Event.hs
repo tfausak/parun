@@ -349,8 +349,8 @@ fileBoardBefore before gs =
 -- GameState.controlSample, records a GameEvent.ControlChanged for each
 -- difference, stores the new snapshot, and reports whether it recorded anything.
 --
--- MINTING AN EVENT is what makes this different from the three samplers beside it
--- (checkControlContinuity, Combat.removeChanged, Ring.endOnControlChange), which
+-- MINTING AN EVENT is what makes this different from the three other samplers
+-- (Engine.checkControlContinuity, Combat.removeChanged, Ring.endOnControlChange), which
 -- each clear one piece of stored state and tell nobody: a trigger condition cannot
 -- be written against stored state that quietly changes, so CR 603.2 needs an entry
 -- in the log. FIRST SIGHTING IS NOT A CHANGE, so a permanent entering mints no
