@@ -1969,7 +1969,7 @@ castableGiven shared pid oid name facing gs =
       -- CR 118.8 / 601.2f: payable together with the additional costs and the
       -- reduction of SOME permission the cast could be made under (Dawnhand
       -- Dissident's costs, Urianger Augurelt's reduction).
-      extras candidate = maybe [([], [])] (\face -> permissionCostChoices pid oid face proposed (CandidateCost.keyword candidate)) (proposedFace oid name proposed)
+      extras candidate = maybe [([], [])] (\face -> permissionCostChoices pid oid face (proposedFor oid (CandidateCost.keyword candidate) proposed) (CandidateCost.keyword candidate)) (proposedFace oid name proposed)
       candidateOk candidate =
         candidateAllowed pid oid proposed candidate
           && candidateFillable pid oid name proposed candidate
@@ -1978,7 +1978,7 @@ castableGiven shared pid oid name facing gs =
         && lookGateOk pid oid name gs proposed
         -- Gated HERE, upstream of Action.legalActions, because the engine never
         -- offers an illegal action and then rejects it.
-        && any candidateOk (windowedCandidates True pid oid name proposed (Cost.candidateCostsFor pid name oid proposed))
+        && any candidateOk (candidatesWithWays False pid oid name proposed (windowedCandidates True pid oid name proposed (Cost.candidateCostsFor pid name oid proposed)))
 
 -- `castable`'s conjuncts that are about the CARD and the board rather than about
 -- one candidate cost -- the timing window, the zone's permission, and the three
@@ -2606,7 +2606,7 @@ castSpellWith perform timed offered applied widened pid oid name facing = Event.
               (\candidate -> candidateAllowed pid oid proposed candidate && candidateFillable pid oid name proposed candidate)
               ( fmap
                   (\candidate -> candidate {CandidateCost.cost = taxed (CandidateCost.cost candidate)})
-                  (windowedCandidates timed pid oid name proposed (if null applied then Cost.candidateCostsGiven offered pid name oid proposed else applied))
+                  (candidatesWithWays offered pid oid name proposed (windowedCandidates timed pid oid name proposed (if null applied then Cost.candidateCostsGiven offered pid name oid proposed else applied)))
               )
           -- CR 400.7g / 613.1: the keywords the card has WHERE IT LIES, read one
           -- step ahead of the move below for the reason `castFrom` is. The move
@@ -2634,8 +2634,9 @@ castSpellWith perform timed offered applied widened pid oid name facing = Event.
           -- CR 601.3: the permissions this cast can be made under, asked of the
           -- same PROPOSED state and for `spent`'s reason -- the ones the gate
           -- offered the cast under are the ones castProposed chooses among, and
-          -- a rejected announcement spends none.
-          permissions = fmap (lookedWays looks) . candidateWays (\src -> not (null (Event.permissionRiders src proposed oid))) offered pid oid castFrom face proposed
+          -- a rejected announcement spends none. Each candidate's own board, by
+          -- CR 702.103d: a bestowed spell is no creature spell.
+          permissions castFor = lookedWays looks <$> candidateWays (\src -> not (null (Event.permissionRiders src proposed oid))) offered pid oid castFrom face (proposedFor oid castFor proposed) castFor
           -- CR 400.7h / 611.3d: what the permission a cast is made under gives
           -- the spell it becomes, asked of the same PROPOSED state -- the board
           -- that source was offering it on.
@@ -2899,6 +2900,19 @@ candidateWays rides offered pid oid zone face gs castFor =
    in if any ownSentence castFor
         then Nothing
         else Just (foldMap (\from -> castWays rides offered pid oid from face gs castFor) zone)
+
+-- CR 601.3 / 702.103d: `candidates` less any no way admits on its own board, where
+-- another's way does: with only Muldrotha's creature permission left, Nyxborn
+-- Rollicker's printed cost and not its bestow cost. A list with no way at all is
+-- left alone, its cast being allowed by something no way names (CR 903.8).
+candidatesWithWays :: Bool -> PlayerId -> ObjectId -> CardName.CardName -> GameState -> [CandidateCost.CandidateCost] -> [CandidateCost.CandidateCost]
+candidatesWithWays offered pid oid name proposed candidates = case proposedFace oid name proposed of
+  Nothing -> candidates
+  Just face ->
+    let hasWay candidate =
+          let castFor = CandidateCost.keyword candidate
+           in maybe True (not . null) (candidateWays (const False) offered pid oid (Game.zoneOf oid proposed) face (proposedFor oid castFor proposed) castFor)
+     in if any hasWay candidates then filter hasWay candidates else candidates
 
 -- CR 118.8 / 601.2f: the additional costs and the reductions each way a cast
 -- could be made under would bring, one empty pair where there is none to choose

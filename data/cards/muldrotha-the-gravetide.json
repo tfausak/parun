@@ -1,0 +1,254 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Muldrotha, the Gravetide",
+      "oracleText": "During each of your turns, you may play a land and cast a permanent spell of each permanent type from your graveyard. (If a card has multiple permanent types, choose one as you play it.)",
+      "playerAbilities": [
+        {
+          "effect": {
+            "type": "CastFrom",
+            "value": {
+              "from": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                },
+                "zone": {
+                  "type": "Graveyard"
+                }
+              },
+              "limit": {
+                "type": "OnceEachOfYourTurns"
+              },
+              "matching": {
+                "type": "HasCardType",
+                "value": {
+                  "type": "Land"
+                }
+              },
+              "verb": {
+                "type": "Play"
+              }
+            }
+          },
+          "scope": {
+            "type": "You"
+          }
+        },
+        {
+          "effect": {
+            "type": "CastFrom",
+            "value": {
+              "from": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                },
+                "zone": {
+                  "type": "Graveyard"
+                }
+              },
+              "limit": {
+                "type": "OnceEachOfYourTurns"
+              },
+              "matching": {
+                "type": "HasCardType",
+                "value": {
+                  "type": "Artifact"
+                }
+              }
+            }
+          },
+          "scope": {
+            "type": "You"
+          }
+        },
+        {
+          "effect": {
+            "type": "CastFrom",
+            "value": {
+              "from": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                },
+                "zone": {
+                  "type": "Graveyard"
+                }
+              },
+              "limit": {
+                "type": "OnceEachOfYourTurns"
+              },
+              "matching": {
+                "type": "HasCardType",
+                "value": {
+                  "type": "Battle"
+                }
+              }
+            }
+          },
+          "scope": {
+            "type": "You"
+          }
+        },
+        {
+          "effect": {
+            "type": "CastFrom",
+            "value": {
+              "from": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                },
+                "zone": {
+                  "type": "Graveyard"
+                }
+              },
+              "limit": {
+                "type": "OnceEachOfYourTurns"
+              },
+              "matching": {
+                "type": "HasCardType",
+                "value": {
+                  "type": "Creature"
+                }
+              }
+            }
+          },
+          "scope": {
+            "type": "You"
+          }
+        },
+        {
+          "effect": {
+            "type": "CastFrom",
+            "value": {
+              "from": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                },
+                "zone": {
+                  "type": "Graveyard"
+                }
+              },
+              "limit": {
+                "type": "OnceEachOfYourTurns"
+              },
+              "matching": {
+                "type": "HasCardType",
+                "value": {
+                  "type": "Enchantment"
+                }
+              }
+            }
+          },
+          "scope": {
+            "type": "You"
+          }
+        },
+        {
+          "effect": {
+            "type": "CastFrom",
+            "value": {
+              "from": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                },
+                "zone": {
+                  "type": "Graveyard"
+                }
+              },
+              "limit": {
+                "type": "OnceEachOfYourTurns"
+              },
+              "matching": {
+                "type": "HasCardType",
+                "value": {
+                  "type": "Planeswalker"
+                }
+              }
+            }
+          },
+          "scope": {
+            "type": "You"
+          }
+        }
+      ],
+      "power": {
+        "type": "Literal",
+        "value": 6
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 6
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Avatar"
+          },
+          {
+            "type": "Elemental"
+          }
+        ],
+        "supertypes": [
+          {
+            "type": "Legendary"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}
