@@ -10,26 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Driver of the Dead: `_CardsInGraveyards:ManaValueIs`
-- Drogskol Reaver: `_Trigger:WhenAPlayerGainsLife`
-- Dropkick Bomber: `_Rule:TriggerA`
-- Dryad Militant: `_Rule:ReplaceWouldPutIntoGraveyard`
-- Eager Trufflesnout: `_CreatableToken:FoodToken`
-- Eaten Alive: `_Rule:CastEffect`
-- Eaten by Piranhas: `_StaticLayerEffect:LosesAllAbilities`
-- Electroduplicate: `_CreatableToken:TokenCopyOfPermanent`
-- Elenda, Saint of Dusk: `_Rule:HexproofFrom`
-- Elspeth's Smite: `_Action:CreateReplaceWouldPutIntoGraveyardUntil`
-- Elvish Regrower: `_CardsInGraveyards:IsPermanent`
-- Etali, Primal Storm: `_Action:Exile`
-- Exemplar of Light: `_Trigger:WhenAPlayerGainsLife`
-- Exsanguinate: `_GameNumber:LifeLostThisWay`
-- Extravagant Replication: `_CreatableToken:TokenCopyOfPermanent`
-- Faebloom Trick: `_Action:Reflexive_CreateTokens_WhenYouDo`
-- Fake Your Own Death: `_Rule:TriggerA`
-- Feed the Swarm: `_GameNumber:ManaValueOfPermanent`
-- Feldon's Cane: `_Cost:Exile`
-- Felidar Retreat: `_Action:CreatePermanentsList`
 - Fiendish Panda: `_Trigger:WhenAPlayerGainsLife`
 - Fiery Annihilation: `_Permanents:AttachedToPermanent`
 - Finale of Revelation: `_Action:IfElse`
@@ -198,6 +178,8 @@ first.
   dealt (CR 120.10).
 - #5921: Cat Collector; Vanguard Seraph. A life-gain trigger has no "first time
   each turn", where a life-loss trigger does.
+- #5926: Exemplar of Light. A counters trigger can't say who put the counters (CR
+  122.6).
 - #5923: Divine Resilience. A kicked spell can't take a different number of targets
   (CR 601.2c).
 - #5924: Deadly Brew. Nothing excludes the card a sacrificed permanent became (CR
