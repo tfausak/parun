@@ -421,6 +421,7 @@ objectWith before entry closed = do
   announcedX <- field Object.announcedX
   manaCostPaid <- field Object.manaCostPaid
   castFrom <- field Object.castFrom
+  castBy <- field Object.castBy
   castUsing <- field Object.castUsing
   castGrant <- field Object.castGrant
   detainedUntil <- field Object.detainedUntil
@@ -488,6 +489,7 @@ objectWith before entry closed = do
         Object.announcedX = announcedX,
         Object.manaCostPaid = manaCostPaid,
         Object.castFrom = castFrom,
+        Object.castBy = castBy,
         Object.castUsing = castUsing,
         Object.castGrant = castGrant,
         Object.detainedUntil = detainedUntil,

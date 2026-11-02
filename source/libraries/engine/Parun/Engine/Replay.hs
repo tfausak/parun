@@ -66,6 +66,19 @@ recording game = State.StateT (go . State.runStateT game)
       Program.Return (a, gs) -> Program.Return ((a, []), gs)
       Program.Then asked k -> Program.Then asked (\answer -> fmap (\((a, rest), gs) -> ((a, encode (Asked.prompt asked) answer : rest), gs)) (go (k answer)))
 
+-- | `recording`'s inverse: run `game` answering its questions from `answers`,
+-- each answer the next question's for as long as it fits, and ask from there on.
+-- A re-run of a choice already made, so no question is asked twice (CR 101.4).
+replaying :: [Response] -> Game a -> Game a
+replaying answers game = State.StateT (go answers . State.runStateT game)
+  where
+    go :: [Response] -> Program.Program Asked.Asked (a, GameState) -> Program.Program Asked.Asked (a, GameState)
+    go remaining program = case program of
+      Program.Return result -> Program.Return result
+      Program.Then asked k -> case remaining of
+        next : rest | Just answer <- decode (Asked.prompt asked) next -> go rest (k answer)
+        _ -> Program.Then asked (go [] . k)
+
 -- Flatten an answer into the log. The GADT refines 'r' per branch, so each
 -- constructor pairs with the response that carries its payload.
 encode :: Prompt r -> r -> Response
