@@ -455,6 +455,7 @@ arrivingTogether body = do
       State.modify' (\g -> g {GameState.arrivals = Just Seq.empty})
       result <- body
       arrangeArrivals
+      State.modify' (\g -> g {GameState.enteredFrom = Map.empty})
       pure result
 
 -- CR 401.4: "if an effect puts two or more cards in a specific position in a
@@ -5269,6 +5270,14 @@ runEntry minted origin given oid = do
       flushEnteringCounters oid
       designateProtector oid
       State.modify' (\gs -> gs {GameState.enteringBeside = before, GameState.enteringSubjects = beforeSubjects})
+      -- CR 614.12 / 608.2f: an entered member of a simultaneous batch is still
+      -- in the zone it left for a later member's count (GameState.enteredFrom),
+      -- kept only while an arrivingTogether scope is open, which a member of a
+      -- batch is always inside.
+      scoped <- State.gets (Maybe.isJust . GameState.arrivals)
+      let entered = scoped && Maybe.isJust outcome && hosted
+      Foldable.for_ (if entered then origin else Nothing) $ \from ->
+        State.modify' (\gs -> gs {GameState.enteredFrom = Map.insert oid from (GameState.enteredFrom gs)})
       pure $ case outcome of
         Nothing -> Just EntryRefusal.Unpaid
         Just _ -> if hosted then Nothing else Just EntryRefusal.Unhosted
