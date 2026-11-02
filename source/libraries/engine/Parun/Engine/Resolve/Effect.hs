@@ -1399,9 +1399,12 @@ applyLoopBody runSubgame resolving source controller legal chosen bodyDefined bo
 -- bracket.
 --
 -- The mana windows are not in the event: CR 605.3a's activations come before
--- the payment they are for (CR 601.2g's order), so every payer's window closes, in APNAP order,
--- before any payment is made (Cost.payReadingThen), and a creature Ashnod's
--- Altar sacrificed for mana dies apart from another payer's.
+-- the payment they are for (CR 601.2g's order), so every payer's window
+-- closes, in APNAP order, before any payment is made (Cost.payReadingThen), and
+-- a creature Ashnod's Altar sacrificed for mana dies apart from another
+-- payer's. The scenario
+-- cr-605-3a-each-altar-sacrifice-paying-for-rhystic-tutor-is-its-own-event
+-- proves it.
 --
 -- Not implemented: telling a later payer WHICH option or object an earlier one
 -- chose (#5933).
@@ -1425,9 +1428,9 @@ payGatePaid runSubgame resolving source controller idx cIdx legal announced comm
       )
       Seq.empty
       (Common.announcedOnly announced (Common.apnapDecidersOf (PayGate.payer gate) legal resolving source controller gs))
-  -- CR 605.3a's activations ahead of the one event (CR 601.2g): each payer's last attempt
-  -- is replayed up to its mana window's close, and its earlier, failed ones
-  -- whole, in APNAP order, before any payment is made.
+  -- CR 605.3a's activations ahead of the one event (CR 601.2g): each payer's
+  -- last attempt is replayed up to its mana window's close, and its earlier,
+  -- failed ones whole, in APNAP order, before any payment is made.
   settles <-
     Monad.forM rehearsed $ \(payer, (attempts, paid)) -> case Seq.viewr attempts of
       Seq.EmptyR -> pure (payer, paid, pure Nothing)

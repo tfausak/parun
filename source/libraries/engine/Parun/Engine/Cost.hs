@@ -5631,8 +5631,8 @@ payManaWindow perform inFlight record subject spending pid substituting cost = M
 
 -- `payManaWindow` with the window's activations run and the payment out of the
 -- pool handed back unrun: CR 601.2g puts CR 605.3a's activations before CR
--- 601.2h's payment, so a caller making several payments as one event (CR 101.4) runs
--- every window ahead of all of them (`paySubstitutingReadingThen`).
+-- 601.2h's payment, so a caller making several payments as one event (CR
+-- 101.4) runs every window ahead of all of them (`paySubstitutingReadingThen`).
 payManaWindowThen :: ManaAbilityPerformer.ManaAbilityPerformer -> Mana.InFlight -> Maybe ObjectId -> PaymentSubject.PaymentSubject -> ManaSpending.ManaSpending -> PlayerId -> (ManaCost.ManaCost -> Game (ManaCost.ManaCost, [(Keyword.Substitute, Natural)])) -> ManaCost.ManaCost -> Game (Game (Bool, [(Keyword.Substitute, Natural)], ManaWindow.ManaWindow))
 payManaWindowThen perform inFlight record subject spending pid substituting cost = do
   -- Where the window OPENED, which is the far end of the announcement's diff:
