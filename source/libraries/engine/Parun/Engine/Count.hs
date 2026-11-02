@@ -25,6 +25,7 @@ import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Keyword as Keyword
 import qualified Parun.Engine.Loyalty as Loyalty
 import qualified Parun.Engine.ManaAbility as ManaAbility
+import qualified Parun.Engine.Plane as Plane
 import qualified Parun.Engine.Players as Players
 import qualified Parun.Engine.Sector as Sector
 import qualified Parun.Engine.Subtype as Subtype
@@ -699,21 +700,27 @@ playersFor viewOf context gs =
 -- every seat that began the game rather than over those still in it: a player
 -- who lost life and then left still lost it (Skewer the Critics' ruling,
 -- 2024-01-12; Florian, Voldaren Scion's, 2021-09-24).
+--
+-- CR 801.11 still hides a seat outside the reader's range, and a seat emptied
+-- this turn is judged by where it stood (Game.wasInRangeOf); CR 801.18 lifts
+-- the cut for a planar source. docs/decisions.md, "Which range a tally of what
+-- happened reads through".
 historyPlayersFor :: ViewOf -> Filter.Context -> GameState -> PlayerRef.PlayerRef -> Maybe [PlayerId]
 historyPlayersFor viewOf context gs =
-  Players.named
-    Players.MkReads
-      { Players.perspective = Filter.perspective context,
-        Players.bound = Maybe.isJust (Filter.source context),
-        Players.slotPlayers = slotPlayers context gs,
-        Players.slotObject = (`Filter.slotOneObject` context),
-        Players.controllerOf = viewOf Monad.>=> Filter.controller,
-        Players.ownerOf = viewOf Monad.>=> Filter.owner,
-        Players.acquisitionOf = (`Game.acquisitionOf` gs),
-        Players.roster = GameState.turnOrder gs,
-        Players.reaches = const True
-      }
-    gs
+  let reach = Filter.perspective context >>= \you -> maybe (Just you) (\source -> Plane.rangePerspective source you gs) (Filter.source context)
+   in Players.named
+        Players.MkReads
+          { Players.perspective = Filter.perspective context,
+            Players.bound = Maybe.isJust (Filter.source context),
+            Players.slotPlayers = slotPlayers context gs,
+            Players.slotObject = (`Filter.slotOneObject` context),
+            Players.controllerOf = viewOf Monad.>=> Filter.controller,
+            Players.ownerOf = viewOf Monad.>=> Filter.owner,
+            Players.acquisitionOf = (`Game.acquisitionOf` gs),
+            Players.roster = filter (\pid -> all (\you -> Game.wasInRangeOf you pid gs) reach) (GameState.turnOrder gs),
+            Players.reaches = const True
+          }
+        gs
 
 -- CR 102.1: the players a TurnScope.PlayersTurn reference names, which is
 -- playersFor with CR 113.7's source slot naming the context's source where

@@ -107,8 +107,9 @@ exemptFromRange oid gs = maybe False isPlanarFace (Game.faceOfWithLastKnown oid 
 -- battlefield sweep (battlefieldMatching), and targeting's CR 801.4 and CR
 -- 801.5a cuts (Target's legalRecipientsGiven and askChooser), a per-player
 -- slot's roster (Target's announcedSlots), the graveyards a zone scope names
--- (Target's zoneScopePlayers), and Resolve.Effect's table-wide reads -- its
--- voters among them. Parun.PlanechaseSpec's "CR 801.18 Fields of Summer sees and
+-- (Target's zoneScopePlayers), a tally of what happened
+-- (Count.historyPlayersFor), and Resolve.Effect's table-wide reads -- its voters
+-- among them. Parun.PlanechaseSpec's "CR 801.18 Fields of Summer sees and
 -- reaches a caster outside the planar controller's range", "Mutual Epiphany
 -- draws four for a player outside", "Astral Arena's chaos damages a creature
 -- outside", "Akoum's chaos targets a creature outside", "The Moonbase's chaos

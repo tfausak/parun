@@ -2347,7 +2347,7 @@ permanentCandidateNames asking x = case x of
 
 dealsDamageToPlayerNames :: (Monoid r) => Asking r -> DealsDamageToPlayer.DealsDamageToPlayer -> r
 dealsDamageToPlayerNames asking x = case x of
-  DealsDamageToPlayer.MkDealsDamageToPlayer actor _recipient -> actingPermanentNames asking actor
+  DealsDamageToPlayer.MkDealsDamageToPlayer actor _recipient _kind -> actingPermanentNames asking actor
 
 permanentDealsCombatDamageToPlayerNames :: (Monoid r) => Asking r -> PermanentDealsCombatDamageToPlayer.PermanentDealsCombatDamageToPlayer -> r
 permanentDealsCombatDamageToPlayerNames asking x = case x of
@@ -2642,7 +2642,7 @@ quantityNames asking x = case x of
   Quantity.BendingsThisTurn playerRef -> history asking HistoryRead.Bendings <> playerRefNames asking playerRef
   Quantity.LifeChanged tally -> turnHistory asking (LifeTally.turn tally) (case LifeTally.direction tally of LifeDirection.Gained -> HistoryRead.LifeGains; LifeDirection.Lost -> HistoryRead.LifeLosses) <> playerRefNames asking (LifeTally.player tally)
   Quantity.PlayersDealtDamageThisTurn tally -> history asking HistoryRead.Damage <> playerRefNames asking (DealtDamage.recipient tally)
-  Quantity.DamageDealtToPlayersThisTurn playerRef -> history asking HistoryRead.Damage <> playerRefNames asking playerRef
+  Quantity.DamageDealtToPlayersThisTurn tally -> history asking HistoryRead.Damage <> playerRefNames asking (DealtDamage.recipient tally)
   Quantity.DamageDealtThisTurn _ -> history asking HistoryRead.Damage
   Quantity.SpellsCast tally -> turnHistory asking (SpellTally.turn tally) HistoryRead.Casts <> playerRefNames asking (SpellTally.player tally)
   Quantity.TimesThisTurn act -> history asking $ case act of

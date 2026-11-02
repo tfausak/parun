@@ -964,6 +964,34 @@ Entries are ordered by the first rule each cites.
   it stays".
 - **Issue**: #592.
 
+## Which range a tally of what happened reads through
+
+- **Question**: CR 801.11 hides events outside a controller's range; CR 800.4i
+  and the rulings below keep a departed player's record. Under a limited range,
+  (a) does a tally over an earlier turn use the range now or the range when the
+  event happened, given CR 801.2c re-determines it as each turn begins and a
+  player who left before this turn holds no seat? (b) Does damage or a loss
+  count when its source is outside the range and the player it happened to is
+  inside?
+- **Rules**: CR 801.11, 801.2c, 801.7a, 800.4i, 801.18; CR of 2026-08-07.
+  Rulings: Skewer the Critics (2024-01-12), Florian, Voldaren Scion
+  (2021-09-24), Tymna the Weaver, Chandra's Incinerator. None speaks to a
+  limited range.
+- **Decision**: (a) the range as the tally is read. A seat emptied this turn is
+  judged by where it stood, CR 801.7a's reading; a player who left in an earlier
+  turn is in nobody's range, so Feast on the Fallen does not see them. (b) The
+  cut asks only about the player the tally names: "an opponent who was dealt
+  damage" is information about that opponent, so an in-range opponent counts
+  whoever dealt it.
+- **Rejected**: (a) the range when the event happened. The text allows it equally;
+  it lost on cost, needing last turn's seats kept for a board needing both a
+  limited range and a departure. (b) Requiring the whole event in range: that is
+  CR 801.7's wording for a trigger event, and CR 801.11 does not repeat it.
+- **Site**: `Parun.Engine.Count.historyPlayersFor`; scenarios
+  `feast-on-the-fallen-does-not-see-a-seat-emptied-last-turn-under-a-range`
+  and `furious-spinesplitter-counts-damage-from-a-source-outside-range`.
+- **Issue**: #5878.
+
 ## A silenced entry silences its departure
 
 - **Question**: Hushwing Gryff's "creatures entering don't cause abilities to

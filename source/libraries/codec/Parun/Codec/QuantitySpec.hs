@@ -650,13 +650,13 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.DamageDealtToPlayersThisTurn (PlayerRef.Relative PlayerRelation.Opponent))
-      " {\"type\":\"DamageDealtToPlayersThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}} "
+      (Quantity.DamageDealtToPlayersThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Just DamageKind.Noncombat})
+      " {\"type\":\"DamageDealtToPlayersThisTurn\",\"value\":{\"kind\":{\"type\":\"Noncombat\"},\"recipient\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}}} "
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.DamageDealtToPlayersThisTurn (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))
-      " {\"type\":\"DamageDealtToPlayersThisTurn\",\"value\":{\"type\":\"InSlot\",\"value\":\"target\"}} "
+      (Quantity.DamageDealtToPlayersThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target")), DealtDamage.kind = Nothing})
+      " {\"type\":\"DamageDealtToPlayersThisTurn\",\"value\":{\"recipient\":{\"type\":\"InSlot\",\"value\":\"target\"}}} "
   -- CR 601.2i: the tally's record. Daybreak Ranger // Nightfall Predator writes
   -- the Candidate arm last turn, Ertai's Scorn this turn.
   Spec.it s "SpellsCast" $ do

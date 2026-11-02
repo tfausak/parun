@@ -209,7 +209,7 @@ selfEvent context creature c = case c of
   TriggerCondition.SelfDealsCombatDamageToPlayer relation -> do
     (whom, that) <- player relation
     [(recurring, "deals combat damage to " <> whom, [(thatPlayer, that)])]
-  TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self relation) -> do
+  TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self relation Nothing) -> do
     (whom, that) <- player relation
     [(recurring, "deals damage to " <> whom, [(thatPlayer, that)])]
   _ -> []

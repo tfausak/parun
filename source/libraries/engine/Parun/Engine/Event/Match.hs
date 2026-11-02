@@ -883,6 +883,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   TriggerCondition.DealsDamageToPlayer watched -> case event of
     GameEvent.DamageDealt ev ->
       damageBy (DealsDamageToPlayer.actor watched) (DamageEvent.source ev)
+        && all (== DamageEvent.kind ev) (DealsDamageToPlayer.kind watched)
         && maybe False (PlayerRelation.holds (Game.teams gs) (DealsDamageToPlayer.recipient watched) you) (Recipient.playerOf (DamageEvent.target ev))
     GameEvent.Moved {} -> False
     GameEvent.StepBegan {} -> False
