@@ -70,11 +70,16 @@ recording game = State.StateT (go . State.runStateT game)
 -- each answer the next question's for as long as it fits, and ask from there on.
 -- A re-run of a choice already made, so no question is asked twice (CR 101.4).
 replaying :: [Response] -> Game a -> Game a
-replaying answers game = State.StateT (go answers . State.runStateT game)
+replaying answers = fmap fst . replayingRest answers
+
+-- | `replaying`, also handing back the answers `game` did not use, for the rest
+-- of the same choice run later (Parun.Engine.Resolve.Effect.payGatePaid).
+replayingRest :: [Response] -> Game a -> Game (a, [Response])
+replayingRest answers game = State.StateT (go answers . State.runStateT game)
   where
-    go :: [Response] -> Program.Program Asked.Asked (a, GameState) -> Program.Program Asked.Asked (a, GameState)
+    go :: [Response] -> Program.Program Asked.Asked (a, GameState) -> Program.Program Asked.Asked ((a, [Response]), GameState)
     go remaining program = case program of
-      Program.Return result -> Program.Return result
+      Program.Return (a, gs) -> Program.Return ((a, remaining), gs)
       Program.Then asked k -> case remaining of
         next : rest | Just answer <- decode (Asked.prompt asked) next -> go rest (k answer)
         _ -> Program.Then asked (go [] . k)
