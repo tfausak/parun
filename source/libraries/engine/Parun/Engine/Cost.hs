@@ -1432,6 +1432,13 @@ totalManas adjustments =
 -- the payer is never asked (CR 601.2f). An increase is
 -- unconfined mana. data/scenarios/cost's "Jet Medallion's reduction comes off
 -- Consume Spirit's X" proves the split.
+--
+-- A spend-as-though clause answers the confined symbols like any other
+-- (Mana.rewriteSupply): the confinement governs how the cost may be paid, which
+-- is what CR 609.4b's clause reaches, and Celestial Dawn's ruling lets white pay
+-- "an ability that can only be activated by spending another color of mana".
+-- data/scenarios/cost's "Chromatic Orrery lets green mana pay Consume Spirit's
+-- black-only X" proves it.
 confineX :: Maybe Color.Color -> Natural -> CostAdjustments.CostAdjustments -> ManaCost.ManaCost -> ManaCost.ManaCost -> ManaCost.ManaCost
 confineX confinement x adjustments untotalled totalled = case confinement of
   Nothing -> totalled
