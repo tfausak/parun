@@ -76,6 +76,7 @@ import qualified Parun.Types.CounterChange as CounterChange
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CounterPlacement as CounterPlacement
 import qualified Parun.Types.Countering as Countering
+import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.Crewing as Crewing
@@ -2141,7 +2142,7 @@ representativeEvents cond =
         -- CR 714.2b: a placement on the BEARER that crosses the chapter. The
         -- bearer here is `departed`, the id Event.matchesTrigger is asked about
         -- below, and the counts straddle N so the event really matches.
-        TriggerCondition.SelfCountersReached (SelfCountersReached.MkSelfCountersReached kind n) -> one (GameEvent.CountersPut (CounterChange.MkCounterChange departed kind 0 n))
+        TriggerCondition.SelfCountersReached (SelfCountersReached.MkSelfCountersReached kind n) -> one (GameEvent.CountersPut (CountersPlaced.MkCountersPlaced S.alice departed kind 0 n))
         -- CR 716.2a's own event, on `departed` and not the bearer, the arm above's
         -- shape: the pair does not match, which is what pins the floor.
         TriggerCondition.SelfBecomesClassLevel n -> one (GameEvent.ClassLevelSet (ClassLevelChange.MkClassLevelChange departed (ClassLevel.MkClassLevel 1) n))
@@ -2158,12 +2159,12 @@ representativeEvents cond =
         -- applied to rather than the bearer. The Filter below is the trivial one,
         -- so what decides the match is whether the subject can be viewed at all --
         -- and the floor is empty either way, a batch condition binding nothing.
-        TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind _) -> one (GameEvent.CountersPut (CounterChange.MkCounterChange departed kind 0 1))
+        TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind _ _) -> one (GameEvent.CountersPut (CountersPlaced.MkCountersPlaced S.alice departed kind 0 1))
         -- Its per-permanent scope, on the same event: the two share a payload and a
         -- matcher, and what parts them here is the floor -- this one names ONE
         -- permanent, so `became` is stamped and claimed where the batch above
         -- claims nothing.
-        TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind _) -> one (GameEvent.CountersPut (CounterChange.MkCounterChange departed kind 0 1))
+        TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind _ _) -> one (GameEvent.CountersPut (CountersPlaced.MkCountersPlaced S.alice departed kind 0 1))
         -- CR 601.2i's own event, and CR 707.10's copy where the condition
         -- watches copies too. Both halves are bound whichever ids the event
         -- names -- the spell under `thatSpell`, the caster or copier under
@@ -2528,8 +2529,8 @@ everyTriggerCondition =
     TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Defense),
     TriggerCondition.SelfCountersRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Loyalty),
     TriggerCondition.SelfCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.PlusOnePlusOne),
-    TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement CounterKind.MinusOneMinusOne (Filter.Type.And [])),
-    TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement CounterKind.MinusOneMinusOne (Filter.Type.And [])),
+    TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement CounterKind.MinusOneMinusOne (Filter.Type.And []) PlayerRelation.AnyPlayer),
+    TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement CounterKind.MinusOneMinusOne (Filter.Type.And []) PlayerRelation.AnyPlayer),
     -- BOTH scopes, unlike StepBegins' one above: the TurnScope is new on this
     -- condition, and the pin below asserts eventBindingSlots against what
     -- eventBindings stamps for every event -- so an arm that had cased on the

@@ -903,7 +903,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       ( TriggerCondition.PermanentsGetCounters
           ( CounterPlacement.MkCounterPlacement
               { CounterPlacement.kind = CounterKind.MinusOneMinusOne,
-                CounterPlacement.permanents = Filter.HasCardType CardType.Creature
+                CounterPlacement.permanents = Filter.HasCardType CardType.Creature,
+                CounterPlacement.putter = PlayerRelation.AnyPlayer
               }
           )
       )
@@ -918,7 +919,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       ( TriggerCondition.PermanentGetsCounters
           ( CounterPlacement.MkCounterPlacement
               { CounterPlacement.kind = CounterKind.MinusOneMinusOne,
-                CounterPlacement.permanents = Filter.HasCardType CardType.Creature
+                CounterPlacement.permanents = Filter.HasCardType CardType.Creature,
+                CounterPlacement.putter = PlayerRelation.AnyPlayer
               }
           )
       )

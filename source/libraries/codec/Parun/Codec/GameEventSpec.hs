@@ -41,6 +41,7 @@ import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.CounterChange as CounterChange
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.Countering as Countering
+import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
@@ -326,8 +327,8 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
     Common.assertCodec
       s
       GameEvent.codec
-      (GameEvent.CountersPut (CounterChange.MkCounterChange (ObjectId.MkObjectId 3) CounterKind.Lore 1 2))
-      " {\"type\":\"CountersPut\",\"value\":{\"object\":3,\"kind\":{\"type\":\"Lore\"},\"before\":1,\"after\":2}} "
+      (GameEvent.CountersPut (CountersPlaced.MkCountersPlaced (PlayerId.MkPlayerId 1) (ObjectId.MkObjectId 3) CounterKind.Lore 1 2))
+      " {\"type\":\"CountersPut\",\"value\":{\"putter\":1,\"object\":3,\"kind\":{\"type\":\"Lore\"},\"before\":1,\"after\":2}} "
   -- CR 310.12b's record, and the pair runs the other way: before > after.
   Spec.it s "CountersRemoved" $
     Common.assertCodec

@@ -33,8 +33,8 @@ import qualified Data.Set as Set
 import Numeric.Natural (Natural)
 import qualified Parun.Engine.Game as Game
 import Parun.Types.Card (Card)
-import qualified Parun.Types.CounterChange as CounterChange
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EntryR as EntryR
 import qualified Parun.Types.EntryRewrite as EntryRewrite
@@ -294,7 +294,7 @@ awaitingChapter pcs events gs oid =
       -- the SBA and the matcher to agree, not because a test reddens without it.
       restricted = any (\pc -> readAheadRestricted pc gs oid) (Map.lookup oid pcs)
       pending event = case event of
-        GameEvent.CountersPut (CounterChange.MkCounterChange target CounterKind.Lore before after) ->
+        GameEvent.CountersPut (CountersPlaced.MkCountersPlaced _ target CounterKind.Lore before after) ->
           target == oid && any (chapterTriggers restricted before after) chapters
         _ -> False
    in any onStack (GameState.stack gs) || any pending events

@@ -1166,7 +1166,7 @@ counterPatternNames asking x = case x of
 
 counterPlacementNames :: (Monoid r) => Asking r -> CounterPlacement.CounterPlacement -> r
 counterPlacementNames asking x = case x of
-  CounterPlacement.MkCounterPlacement kind permanents -> counterKindNames asking (keywordNames asking) kind <> filterNames asking permanents
+  CounterPlacement.MkCounterPlacement kind permanents _ -> counterKindNames asking (keywordNames asking) kind <> filterNames asking permanents
 
 counterRNames :: (Monoid r) => Asking r -> CounterR.CounterR -> r
 counterRNames asking x = case x of
