@@ -701,6 +701,7 @@ distress
 disturbed-slumber
 divine-deflection
 divine-intervention
+divine-resilience
 diviners-lockbox
 diviners-portent
 djinn-of-wishes
