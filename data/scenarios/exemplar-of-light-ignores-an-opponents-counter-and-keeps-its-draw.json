@@ -123,7 +123,7 @@
     "step": "PrecombatMain"
   },
   "description": "An opponent's counter on Exemplar of Light neither draws nor spends the turn's trigger; its controller's counter then draws.",
-  "note": "Three seats keep \"you\" from collapsing into \"not an opponent\". The pair differs only in who casts the same spell.",
+  "note": "The pair differs only in who casts the same spell.",
   "timeline": [
     {
       "do": "Pass",

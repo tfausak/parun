@@ -7,8 +7,8 @@ import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.PlayerId as PlayerId
 
 -- | CR 122.6: a player put counters of one kind on an object, with the count
--- BEFORE and the count AFTER (CR 714.2b's threshold crossing;
--- Parun.Types.CounterChange has the reasoning). CR 122.6a's `putter` is what
+-- BEFORE and the count AFTER (CR 714.2b's threshold crossing, which
+-- neither count alone can answer). CR 122.6a's `putter` is what
 -- "whenever you put" reads.
 data CountersPlaced = MkCountersPlaced
   { putter :: PlayerId.PlayerId,
