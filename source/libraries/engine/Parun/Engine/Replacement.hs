@@ -3169,18 +3169,16 @@ splitDamage covered event = case event of
 -- the order its events are offered in when CR 615.7 asks which of them a shield
 -- prevents.
 --
--- TWO callers, each over one moment with one dealer -- which is why the key's
--- source component is a fence rather than an observable: neither hands this a
--- list with two dealers in it. A CR 510.2 batch does hold several, and it never
--- comes here as a batch; two blockers striking one creature stay two events and
--- fire enrage twice (Parun.LifeTriggerSpec).
+-- TWO callers. A CR 510.2 batch holds several dealers, and the key's source
+-- component is what keeps them apart: two blockers striking one creature stay
+-- two events and fire enrage twice (Parun.LifeTriggerSpec).
 --
 --   * Parun.Engine.Resolve's DealDamage arm, over ONE instruction, which has
 --     exactly one dealer (CR 120.1) and one moment (CR 608.2f). Combat must NOT
 --     come through there -- two attacking creatures hitting one player are two
 --     sources, so CR 615.10's floor applies to each -- and neither must a fight,
 --     whose two blows have different dealers (CR 701.14a).
---   * Event.resolveDamage, over what ONE proposal's CR 616.1 loop came out with:
+--   * Event.resolveDamageBatch, over what the batch's CR 616.1 loops came out with:
 --     `splitDamage`'s inverse, rejoining the halves a counted redirect split off
 --     when both ended up on the same recipient. Without it that recipient is
 --     recorded as taking two events, and its "whenever this creature is dealt
@@ -3716,21 +3714,25 @@ groupPreventions ps =
 -- and `askAllocation` divides, only within that player's own positions. CR
 -- 101.4c is the rule that licenses it: a player making several simultaneous
 -- choices makes them in the order specified, or chooses the order themselves.
-orderBatch :: [DamageEvent.DamageEvent] -> Game ([DamageEvent.DamageEvent], [Map.Map CandidateId Natural])
-orderBatch events = do
+--
+-- `asked` narrows the questions to those touching an event it admits, and
+-- `spentOn` names the rows CR 614.5 keeps from each event (Event.settleThreads).
+orderBatch :: (DamageEvent.DamageEvent -> Bool) -> (DamageEvent.DamageEvent -> Set.Set CandidateId) -> [DamageEvent.DamageEvent] -> Game ([DamageEvent.DamageEvent], [Map.Map CandidateId Natural])
+orderBatch asked spentOn events = do
   gs <- State.get
   -- Sorted FIRST: `contested` and `allocations` both report batch positions, so
   -- they have to see the list `askOne` will splice into.
   let sorted = byApnap gs events
+      (orders, divisions) = batchQuestions asked spentOn gs sorted
       seats =
         List.sortOn
           (seatOf gs)
           ( Set.toList
               ( Set.fromList
-                  (fmap fst (contested gs sorted) <> fmap (\(_, _, pid, _) -> pid) (allocations gs sorted))
+                  (fmap fst orders <> fmap (\(_, _, pid, _) -> pid) divisions)
               )
           )
-  (ordered, allowances) <- Monad.foldM askSeat (sorted, Map.empty) seats
+  (ordered, allowances) <- Monad.foldM (askSeat asked spentOn) (sorted, Map.empty) seats
   pure (ordered, fmap (\i -> Map.findWithDefault Map.empty i allowances) (zipWith const [0 ..] ordered))
 
 -- Every question one seat is owed about this batch, asked before the next
@@ -3743,15 +3745,26 @@ orderBatch events = do
 -- positions, and both `contested` and `allocations` read the chooser off each
 -- hit's recipient, so no later seat's answer can move an event this seat has
 -- already divided its countdown over.
-askSeat :: ([DamageEvent.DamageEvent], Map.Map Natural (Map.Map CandidateId Natural)) -> PlayerId -> Game ([DamageEvent.DamageEvent], Map.Map Natural (Map.Map CandidateId Natural))
-askSeat (batch, allowances) pid = do
+askSeat :: (DamageEvent.DamageEvent -> Bool) -> (DamageEvent.DamageEvent -> Set.Set CandidateId) -> ([DamageEvent.DamageEvent], Map.Map Natural (Map.Map CandidateId Natural)) -> PlayerId -> Game ([DamageEvent.DamageEvent], Map.Map Natural (Map.Map CandidateId Natural))
+askSeat asked spentOn (batch, allowances) pid = do
   before <- State.get
-  ordered <- case lookup pid (contested before batch) of
+  ordered <- case lookup pid (fst (batchQuestions asked spentOn before batch)) of
     Nothing -> pure batch
     Just positions -> askOne batch (pid, positions)
   after <- State.get
-  divided <- Monad.foldM (askAllocation ordered) allowances (filter (\(_, _, chooser, _) -> chooser == pid) (allocations after ordered))
+  divided <- Monad.foldM (askAllocation ordered) allowances (filter (\(_, _, chooser, _) -> chooser == pid) (snd (batchQuestions asked spentOn after ordered)))
   pure (ordered, divided)
+
+-- `contested` and `allocations`, narrowed to the questions touching an event
+-- `asked` admits.
+batchQuestions :: (DamageEvent.DamageEvent -> Bool) -> (DamageEvent.DamageEvent -> Set.Set CandidateId) -> GameState -> [DamageEvent.DamageEvent] -> ([(PlayerId, [Natural])], [(CandidateId, Natural, PlayerId, [Natural])])
+batchQuestions asked spentOn gs batch =
+  let byPosition :: Map.Map Natural DamageEvent.DamageEvent
+      byPosition = Map.fromList (zip [0 ..] batch)
+      touches = any asked . Maybe.mapMaybe (\i -> Map.lookup i byPosition)
+   in ( filter (touches . snd) (contested spentOn gs batch),
+        filter (\(_, _, _, positions) -> touches positions) (allocations spentOn gs batch)
+      )
 
 -- CR 615.7's own sentence -- "the player or the controller of the permanent
 -- chooses which damage the shield prevents" -- asked as an ALLOCATION: how many
@@ -3812,8 +3825,8 @@ spendDown countdown =
 -- the rule's own unit: the pool is exhausted by everything it admits, not by one
 -- seat's share of it. Two seats sharing one row are then asked in APNAP order,
 -- each seeing what is left (`askAllocation`).
-allocations :: GameState -> [DamageEvent.DamageEvent] -> [(CandidateId, Natural, PlayerId, [Natural])]
-allocations gs events =
+allocations :: (DamageEvent.DamageEvent -> Set.Set CandidateId) -> GameState -> [DamageEvent.DamageEvent] -> [(CandidateId, Natural, PlayerId, [Natural])]
+allocations spentOn gs events =
   let indexed :: [(Natural, DamageEvent.DamageEvent)]
       indexed = zip [0 ..] events
       viewOf = Projection.viewsOf gs
@@ -3821,7 +3834,7 @@ allocations gs events =
       allocationsBy candidate = Maybe.fromMaybe [] $ do
         rewrite <- damageRewriteOf candidate
         left <- remainingOf rewrite
-        let hits = hitsOf viewOf grants gs indexed candidate
+        let hits = hitsOf spentOn viewOf grants gs indexed candidate
         Monad.guard (length hits >= 2)
         Monad.guard (left < sum (fmap (DamageEvent.amount . snd) hits))
         pure
@@ -3845,14 +3858,15 @@ damageRewriteOf candidate = case ReplacementCandidate.effect candidate of
 -- CR 615.12's filter is a PREVENTION's: a redirect never prevents, so
 -- unpreventable damage contends for Harm's Way's 2 exactly as any other damage
 -- does, and `applies` alone says whether the row reaches it.
-hitsOf :: (ObjectId -> Filter.View) -> [Projection.ControlGrant] -> GameState -> [(Natural, DamageEvent.DamageEvent)] -> ReplacementCandidate -> [(Natural, DamageEvent.DamageEvent)]
-hitsOf viewOf grants gs indexed candidate =
+hitsOf :: (DamageEvent.DamageEvent -> Set.Set CandidateId) -> (ObjectId -> Filter.View) -> [Projection.ControlGrant] -> GameState -> [(Natural, DamageEvent.DamageEvent)] -> ReplacementCandidate -> [(Natural, DamageEvent.DamageEvent)]
+hitsOf spentOn viewOf grants gs indexed candidate =
   let contends event = case damageRewriteOf candidate of
         Just rewrite -> not (prevents rewrite) || preventable viewOf gs event || spentInertly rewrite
         Nothing -> False
    in filter
         ( \entry ->
             contends (snd entry)
+              && not (Set.member (ReplacementCandidate.identity candidate) (spentOn (snd entry)))
               && applies viewOf grants gs (ProposedEvent.WouldDealDamage (snd entry)) candidate
         )
         indexed
@@ -3945,8 +3959,8 @@ askOne batch (pid, positions) = do
 -- shield's own resource is contested over -- which a narrowed clause reaches: an
 -- Excruciator and an ordinary creature hitting one shielded permanent at once is
 -- exactly that batch.
-contested :: GameState -> [DamageEvent.DamageEvent] -> [(PlayerId, [Natural])]
-contested gs events =
+contested :: (DamageEvent.DamageEvent -> Set.Set CandidateId) -> GameState -> [DamageEvent.DamageEvent] -> [(PlayerId, [Natural])]
+contested spentOn gs events =
   let indexed :: [(Natural, DamageEvent.DamageEvent)]
       indexed = zip [0 ..] events
       viewOf = Projection.viewsOf gs
@@ -3963,7 +3977,7 @@ contested gs events =
       -- by one seat's share of it.
       contestedBy candidate = Maybe.fromMaybe [] $ do
         (left, demand) <- contestedResource gs candidate
-        case hitsOf viewOf grants gs indexed candidate of
+        case hitsOf spentOn viewOf grants gs indexed candidate of
           hits@(_ : _ : _)
             | left < demand (fmap snd hits) ->
                 pure

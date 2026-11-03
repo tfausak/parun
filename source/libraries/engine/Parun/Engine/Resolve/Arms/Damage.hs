@@ -196,7 +196,11 @@ dealDamage runPreventionRiders runReplacementEffects runSubgame resolving source
           -- CR 615.5's "immediately afterward": a shield this damage spent runs
           -- its additional effect inside this resolution.
           runPreventionRiders runSubgame
-          pure (settled, Damage.excessDealt gs dealt (fmap DamageEvent.target events) settled)
+          -- "This way" is what this instruction's dealer dealt (CR 120.1): a
+          -- redirect keeps the dealer, and Eye for an Eye's added damage is its
+          -- own, the scenario eye-for-an-eye-damage-back-is-not-damage-dealt-this-way.
+          let own = filter ((== dealt) . DamageEvent.source) settled
+          pure (own, Damage.excessDealt gs dealt (fmap DamageEvent.target events) own)
   -- Syphon Soul's "the damage dealt this way": the SETTLED total, after CR
   -- 615's prevention had its say, so a shielded player contributes only what
   -- got through. Bound even at 0, LoseLife's tally's posture.
