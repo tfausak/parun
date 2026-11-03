@@ -24,6 +24,7 @@ import qualified Parun.Engine.Cost as Cost
 import qualified Parun.Engine.Engine as Engine
 import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Event.Binding as Event
+import qualified Parun.Engine.Event.Match as Event
 import qualified Parun.Engine.Event.Trigger as Event
 import qualified Parun.Engine.Foretell as Foretell
 import qualified Parun.Engine.Game as Game
@@ -1283,6 +1284,16 @@ becameSlotSpec s registry =
                       ("the slots ever bound for " <> show cond)
                       (Set.union (Event.eventBindingSlots cond) (Event.eventBindingSlotsSometimes cond))
                       (foldr Set.union (NonEmpty.head stamped) (NonEmpty.tail stamped))
+            )
+            everyTriggerCondition
+        -- Event.anyTriggerReads answers False ahead of every arm, so a wrong False
+        -- turns a condition off with nothing else to notice it.
+        Spec.it s "CR 603.2 anyTriggerReads admits every event a condition's representatives use" $ do
+          mapM_
+            ( \cond ->
+                mapM_
+                  (\(_, event) -> Spec.assertBool s (Event.anyTriggerReads event) ("anyTriggerReads refuses " <> show event <> ", which " <> show cond <> " reads"))
+                  (representativeEvents cond)
             )
             everyTriggerCondition
 
