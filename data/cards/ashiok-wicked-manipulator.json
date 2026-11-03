@@ -272,26 +272,15 @@
                                     }
                                   },
                                   "filter": {
-                                    "type": "And",
-                                    "value": [
-                                      {
-                                        "type": "Not",
-                                        "value": {
-                                          "type": "IsToken"
-                                        }
+                                    "type": "HeldBy",
+                                    "value": {
+                                      "holder": {
+                                        "type": "Owner"
                                       },
-                                      {
-                                        "type": "HeldBy",
-                                        "value": {
-                                          "holder": {
-                                            "type": "Owner"
-                                          },
-                                          "relation": {
-                                            "type": "You"
-                                          }
-                                        }
+                                      "relation": {
+                                        "type": "You"
                                       }
-                                    ]
+                                    }
                                   },
                                   "scope": {
                                     "type": "InZone",

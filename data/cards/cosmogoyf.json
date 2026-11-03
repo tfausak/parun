@@ -1,0 +1,126 @@
+{
+  "faces": [
+    {
+      "characteristicPT": {
+        "power": {
+          "type": "Count",
+          "value": {
+            "aggregation": {
+              "type": "Members"
+            },
+            "filter": {
+              "type": "HeldBy",
+              "value": {
+                "holder": {
+                  "type": "Owner"
+                },
+                "relation": {
+                  "type": "You"
+                }
+              }
+            },
+            "scope": {
+              "type": "InZone",
+              "value": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                },
+                "zone": {
+                  "type": "Exile"
+                }
+              }
+            }
+          }
+        },
+        "toughness": {
+          "type": "Count",
+          "value": {
+            "aggregation": {
+              "type": "Members"
+            },
+            "filter": {
+              "type": "HeldBy",
+              "value": {
+                "holder": {
+                  "type": "Owner"
+                },
+                "relation": {
+                  "type": "You"
+                }
+              }
+            },
+            "scope": {
+              "type": "InZone",
+              "value": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                },
+                "zone": {
+                  "type": "Exile"
+                }
+              }
+            }
+          }
+        }
+      },
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Cosmogoyf",
+      "oracleText": "Cosmogoyf's power is equal to the number of cards you own in exile and its toughness is equal to that number plus 1.",
+      "power": {
+        "type": "Star"
+      },
+      "toughness": {
+        "type": "Plus",
+        "value": {
+          "left": {
+            "type": "Literal",
+            "value": 1
+          },
+          "right": {
+            "type": "Star"
+          }
+        }
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Elemental"
+          },
+          {
+            "type": "Lhurgoyf"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}
