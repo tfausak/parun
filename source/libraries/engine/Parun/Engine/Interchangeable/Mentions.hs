@@ -2602,6 +2602,7 @@ quantityNames asking x = case x of
   Quantity.VotesReceived votesReceived -> slotNames asking (VotesReceived.slot votesReceived) <> playerRefNames asking (VotesReceived.player votesReceived)
   Quantity.Star -> mempty
   Quantity.Arithmetic arithmetic -> arithmeticNames asking (quantityNames asking) arithmetic
+  Quantity.AtMost atMost -> foldMap (quantityNames asking) atMost
   Quantity.Count count -> countNames asking (quantityNames asking) count
   Quantity.ManaCount manaCount -> manaCountNames asking manaCount
   Quantity.LifeTotal playerRef -> playerRefNames asking playerRef
@@ -2631,7 +2632,7 @@ quantityNames asking x = case x of
   Quantity.TagWasSpent _productionTag -> mempty
   Quantity.TagWasSpentOfOwnColor _productionTag -> mempty
   Quantity.ChosenColorsItIs -> mempty
-  Quantity.ManaSpent -> mempty
+  Quantity.ManaSpent _ -> mempty
   Quantity.WasToken -> mempty
   Quantity.WasAttacking -> mempty
   Quantity.WasBlocking -> mempty

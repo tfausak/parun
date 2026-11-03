@@ -150,6 +150,7 @@ import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaProduction as ManaProduction
 import qualified Parun.Types.ManaRetention as ManaRetention
 import qualified Parun.Types.ManaSpending as ManaSpending
+import qualified Parun.Types.ManaSpent as ManaSpent
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.Measure as Measure
@@ -6661,7 +6662,7 @@ increment =
       spentExceeds quantity =
         Condition.Compares
           ( Compares.MkCompares
-              (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot Binding.castSpell Quantity.ManaSpent))
+              (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot Binding.castSpell (Quantity.ManaSpent ManaSpent.Total)))
               Comparison.AtLeast
               (Quantity.Arithmetic (Arithmetic.Plus (Plus.MkPlus quantity (Quantity.Literal 1))))
           )

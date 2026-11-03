@@ -1541,6 +1541,7 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       Filter.manaSpentTagColors = Map.empty,
       -- The same field one question over -- `manaSpentTagColors` above, same sentence.
       Filter.manaSpentAmount = 0,
+      Filter.manaSpentOnX = [],
       -- CR 602.1 / 605.1a off the snapshot, which is what it reads for `keywords`
       -- and `power` too -- so this answers what the object HAD at the event,
       -- through abilitiesOf, the roster every view builder reads, less what CR

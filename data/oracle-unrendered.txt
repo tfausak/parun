@@ -736,6 +736,7 @@ dragons-hoard
 dragons-prey
 dragonskull-summit
 dragonstorm-globe
+drain-life
 drain-power
 drake-hatcher
 drakuseth-maw-of-flames
@@ -970,6 +971,7 @@ flamerush-rider
 flameshadow-conjuring
 flameskull
 flamewake-phoenix
+flare
 flare-of-malice
 flash
 flash-foliage
@@ -1012,6 +1014,7 @@ fortifying-draught
 fortress-kin-guard
 foul-spirit
 foundry-groundbreaker
+foxfire
 frankensteins-monster
 fraying-omnipotence
 frenetic-sliver
@@ -1109,6 +1112,7 @@ gliding-licid
 glimpse-the-future
 glint-horn-buccaneer
 glittering-lion
+gloom
 gloom-stalker
 glorfindel-dauntless-rescuer
 glorious-protector
@@ -1173,6 +1177,8 @@ graxiplon
 great-intelligences-plan
 great-sable-stag
 greater-good
+greater-realm-of-preservation
+greater-werewolf
 green-mana-battery
 green-slime
 green-ward
@@ -1242,6 +1248,7 @@ hawkeye-avenging-archer
 head-banger
 head-games
 headless-skaab
+heal
 healing-grace
 heart-of-light
 heart-of-yavimaya
@@ -1283,6 +1290,7 @@ hoarding-dragon
 hollow-trees
 hollow-warrior
 holy-day
+homarid-warrior
 homunculus-horde
 honored-hierarch
 hopeful-initiate
@@ -1310,6 +1318,7 @@ hydraulic-helper
 icatian-store
 ice-cage
 ice-cauldron
+ice-floe
 ichor-rats
 icon-of-ancestry
 icy-prison
@@ -1347,10 +1356,12 @@ infernal-reckoning
 infernal-scarring
 infernal-vessel
 infestation-expert-infested-werewolf
+infinite-hourglass
 infinite-obliteration
 infinite-reflection
 ingenious-leonin
 ingenious-thief
+initiates-of-the-ebon-hand
 inkshield
 innocent-traveler-malicious-invader
 inquisitor-eisenhorn
@@ -1389,6 +1400,7 @@ isolate
 it-that-betrays
 itzquinth-firstborn-of-gishath
 ivory-gargoyle
+ivory-guardians
 ivory-mask
 ivy-gleeful-spellthief
 ixidron
@@ -1415,6 +1427,7 @@ jet-medallion
 jeweled-bird
 jinxed-idol
 johann-apprentice-sorcerer
+johtull-wurm
 joiner-adept
 jolly-gerbils
 jolrael-mwonvuli-recluse
@@ -1423,6 +1436,7 @@ judgment-of-alexander
 juggernaut
 jungle-wayfinder
 just-fate
+justice
 justice-vance-astrovik
 juxtapose
 kaalia-zenith-seeker
@@ -1482,9 +1496,12 @@ kothophed-soul-hoarder
 krarks-thumb
 krav-the-unredeemed
 krosan-vorine
+krovikan-fetish
+krovikan-sorcerer
 kurkesh-onakke-ancient
 kykar-zephyr-awakener
 kytheon-hero-of-akros-gideon-battle-forged
+labyrinth-minotaur
 labyrinth-of-skophos
 lady-sun
 lairwatch-giant
@@ -2458,6 +2475,7 @@ sorcerous-sight
 sorcerous-spyglass
 sorin-markov
 sorrows-path
+soul-burn
 soul-conduit
 soul-diviner
 soul-foundry
@@ -3216,6 +3234,7 @@ chandras-incinerator
 chandras-pyreling
 curator-of-destinies
 hooded-blightfang
+hydroblast
 mazes-end
 midnight-snack
 mild-mannered-librarian

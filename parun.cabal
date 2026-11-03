@@ -194,6 +194,8 @@ library codec
     Parun.Codec.ArrivalSpec
     Parun.Codec.AsCopy
     Parun.Codec.AsCopySpec
+    Parun.Codec.AtMost
+    Parun.Codec.AtMostSpec
     Parun.Codec.AttachAll
     Parun.Codec.AttachAllSpec
     Parun.Codec.AttachBound
@@ -965,6 +967,8 @@ library codec
     Parun.Codec.ManaSpecificationSpec
     Parun.Codec.ManaSpending
     Parun.Codec.ManaSpendingSpec
+    Parun.Codec.ManaSpent
+    Parun.Codec.ManaSpentSpec
     Parun.Codec.ManaSymbol
     Parun.Codec.ManaSymbolSpec
     Parun.Codec.ManaType
@@ -2402,6 +2406,7 @@ library types
     Parun.Types.ArrivalEnd
     Parun.Types.AsCopy
     Parun.Types.Asked
+    Parun.Types.AtMost
     Parun.Types.AttachAll
     Parun.Types.AttachBound
     Parun.Types.AttachedToBound
@@ -2841,6 +2846,7 @@ library types
     Parun.Types.ManaSegment
     Parun.Types.ManaSpecification
     Parun.Types.ManaSpending
+    Parun.Types.ManaSpent
     Parun.Types.ManaSymbol
     Parun.Types.ManaType
     Parun.Types.ManaUnit

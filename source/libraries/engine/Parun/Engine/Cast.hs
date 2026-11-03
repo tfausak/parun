@@ -49,7 +49,6 @@ import qualified Parun.Types.CastFromZone as CastFromZone
 import qualified Parun.Types.CastingPermission as CastingPermission
 import qualified Parun.Types.CastingRestriction as CastingRestriction
 import qualified Parun.Types.Clause as Clause
-import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Compares as Compares
 import qualified Parun.Types.Condition as Condition.Type
 import qualified Parun.Types.ContinuousEffect as ContinuousEffect
@@ -88,6 +87,7 @@ import qualified Parun.Types.ManaAbilityPerformer as ManaAbilityPerformer
 import qualified Parun.Types.ManaCost as ManaCost
 import Parun.Types.ManaSpending (ManaSpending)
 import qualified Parun.Types.ManaSpending as ManaSpending
+import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaUnit as ManaUnit
 import qualified Parun.Types.Modal as Modal.Type
 import qualified Parun.Types.Mode as Mode
@@ -1783,13 +1783,13 @@ printedRestrictionsOk pid oid name gs = case proposedFace oid name gs of
   Nothing -> False
   Just face -> not (Card.isLand face) && all (restrictionMet pid oid gs) (Face.castingRestrictions face)
 
--- The colour a printed "Spend only [colour] mana on X" confines the spell's X
--- to (CastingRestriction.SpendOnlyOnX), read off the card as
+-- The symbol a printed "Spend only [colour] mana on X" pays the spell's X as
+-- (CastingRestriction.SpendOnlyOnX), read off the card as
 -- `printedRestrictionsOk` reads the rest.
-xConfinement :: ObjectId -> GameState -> Maybe Color.Color
+xConfinement :: ObjectId -> GameState -> Maybe ManaSymbol.ManaSymbol
 xConfinement oid gs = do
   face <- Game.faceOf oid gs
-  Maybe.listToMaybe [color | CastingRestriction.SpendOnlyOnX color <- Face.castingRestrictions face]
+  Maybe.listToMaybe [symbol | CastingRestriction.SpendOnlyOnX symbol <- Face.castingRestrictions face]
 
 -- Does the game state satisfy this one printed clause?
 restrictionMet :: PlayerId -> ObjectId -> GameState -> CastingRestriction.CastingRestriction -> Bool
@@ -4048,6 +4048,10 @@ castProposed perform baseSpending pid oid sid printedFace castFrom preparedFor k
                           -- resolution is folded the same way
                           -- (Parun.Engine.Resolve.Common.foldPaid).
                           State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.bindings = Binding.setPaid bound (Object.bindings o)}) sid (GameState.objects g)})
+                          -- CR 107.3 / 601.2h: which of the spent mana could have
+                          -- paid X (Object.manaSpentOnX), split off the total as
+                          -- confineX split it.
+                          State.modify' (Cost.recordXShares (PaymentSubject.Casting sid) pid sid (Cost.splitX confinement <$> mAmount <*> pure adjustments <*> Cost.Type.mana announcedCost <*> Cost.Type.mana totalledPaid))
                           -- CR 702.51c: the creatures tapped to pay for mana in
                           -- this spell's total cost convoked it, so the relation
                           -- is recorded at the payment and a spell that is
