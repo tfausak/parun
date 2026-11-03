@@ -9017,8 +9017,8 @@ becameAttached subject host = do
 --
 -- CR 603.10c: `before`, the board ahead of the site's write, is filed as the one
 -- the event looks back to (fileBoardBefore), which is what CR 603.2d's
--- additional triggers read. data/scenarios/cloud-midgar-mercenary proves each
--- route.
+-- additional triggers read. data/scenarios/cloud-midgar-mercenary proves the
+-- move, `detach` and CR 704.5n routes; a departure files the same board.
 unattach :: GameState -> ObjectId -> Recipient.Recipient -> Game ()
 unattach before subject host =
   State.modify' $

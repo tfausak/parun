@@ -135,10 +135,10 @@
             "type": "Human"
           },
           {
-            "type": "Soldier"
+            "type": "Mercenary"
           },
           {
-            "type": "Mercenary"
+            "type": "Soldier"
           }
         ],
         "supertypes": [
