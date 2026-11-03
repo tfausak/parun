@@ -8,6 +8,7 @@ import qualified Parun.JsonCodec.Arm as Arm
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.Types.BoundReading as BoundReading
 import qualified Parun.Types.Scope as Scope
+import qualified Parun.Types.ZonePosition as ZonePosition
 
 -- | The wire format is unchanged by the conversion to a bundle; what it adds is
 -- the schema. OverBound's reading is its tag, so a slot stays a bare string.
@@ -20,7 +21,8 @@ codec =
       Arm.payload "OverPlayers" PlayerRef.codec Scope.OverPlayers (\x -> case x of Scope.OverPlayers y -> Just y; _ -> Nothing),
       Arm.payload "OverBound" SlotName.codec (Scope.OverBound BoundReading.AsBound) (\x -> case x of Scope.OverBound BoundReading.AsBound y -> Just y; _ -> Nothing),
       Arm.payload "OverBoundBeforeMove" SlotName.codec (Scope.OverBound BoundReading.BeforeMove) (\x -> case x of Scope.OverBound BoundReading.BeforeMove y -> Just y; _ -> Nothing),
-      Arm.payload "TopOf" InZone.codec Scope.TopOf (\x -> case x of Scope.TopOf y -> Just y; _ -> Nothing)
+      Arm.payload "TopOf" InZone.codec (Scope.InPosition ZonePosition.Top) (\x -> case x of Scope.InPosition ZonePosition.Top y -> Just y; _ -> Nothing),
+      Arm.payload "AboveSource" InZone.codec (Scope.InPosition ZonePosition.AboveSource) (\x -> case x of Scope.InPosition ZonePosition.AboveSource y -> Just y; _ -> Nothing)
     ]
 
 tagOf :: Scope.Scope -> String
@@ -30,4 +32,5 @@ tagOf x = case x of
   Scope.OverPlayers {} -> "OverPlayers"
   Scope.OverBound BoundReading.AsBound _ -> "OverBound"
   Scope.OverBound BoundReading.BeforeMove _ -> "OverBoundBeforeMove"
-  Scope.TopOf {} -> "TopOf"
+  Scope.InPosition ZonePosition.Top _ -> "TopOf"
+  Scope.InPosition ZonePosition.AboveSource _ -> "AboveSource"

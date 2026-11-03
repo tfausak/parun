@@ -5,6 +5,7 @@ import qualified Parun.Types.EventShape as EventShape
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.ZonePosition as ZonePosition
 
 -- | What a Parun.Types.Count folds over: a zone's current residents, the event
 -- log, the players themselves, the objects one of the surrounding
@@ -81,7 +82,7 @@ data Scope
     -- information wherever it went. BoundReading.BeforeMove reads each arrival
     -- as that departure (Flood of Tears).
     OverBound BoundReading.BoundReading SlotName.SlotName
-  | -- | CR 401.2 / 404.1: the top card of each library or graveyard the InZone
-    -- names (Vampire Nocturnus, Guiding Spirit); no candidate in an unordered zone.
-    TopOf InZone.InZone
+  | -- | CR 401.2 / 404.1: the cards at this position of each library or graveyard
+    -- the InZone names; no candidate in an unordered zone.
+    InPosition ZonePosition.ZonePosition InZone.InZone
   deriving (Eq, Ord, Show)

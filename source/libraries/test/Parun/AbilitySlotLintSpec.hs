@@ -185,8 +185,8 @@ scopeOffends scope = case scope of
   -- wherever they are, so there is no per-player copy of a zone for the pairing
   -- the lint rejects to arise in.
   Scope.OverBound {} -> False
-  -- The InZone arm's pairing, asked of a zone's top card.
-  Scope.TopOf inZone -> scopeOffends (Scope.InZone inZone)
+  -- The InZone arm's pairing, asked of a position in a zone.
+  Scope.InPosition _ inZone -> scopeOffends (Scope.InZone inZone)
 
 cardOffendsSharedZoneScope :: Face.Face Card.Type.Card -> Bool
 cardOffendsSharedZoneScope card =

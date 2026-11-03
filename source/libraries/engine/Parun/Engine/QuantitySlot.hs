@@ -539,7 +539,7 @@ scopeRefs scope = case scope of
   Scope.InHistory _ -> Set.empty
   Scope.OverPlayers ref -> Set.singleton (Left ref)
   Scope.OverBound _ slot -> Set.singleton (Right slot)
-  Scope.TopOf (InZone.MkInZone _ ref) -> Set.singleton (Left ref)
+  Scope.InPosition _ (InZone.MkInZone _ ref) -> Set.singleton (Left ref)
 
 -- Every slot NAME renameSlots above would rewrite, as a set: `slots`' amount half
 -- plus the target slots the nested references name. The READING partner of that
@@ -606,7 +606,7 @@ renameScope rename scope = case scope of
   Scope.InZone _ -> scope
   Scope.OverPlayers _ -> scope
   Scope.InHistory _ -> scope
-  Scope.TopOf _ -> scope
+  Scope.InPosition {} -> scope
 
 -- Every PlayerRef this quantity names, rewritten -- the traversal bakeBound and
 -- forCandidate share, so the arm list is written once and a new arm carrying a
@@ -725,4 +725,4 @@ mapScope f scope = case scope of
   -- CR 400.7j's fold names a SLOT rather than a player reference, so there is
   -- nothing here for either baking to rewrite.
   Scope.OverBound {} -> scope
-  Scope.TopOf (InZone.MkInZone zone ref) -> Scope.TopOf (InZone.MkInZone zone (f ref))
+  Scope.InPosition position (InZone.MkInZone zone ref) -> Scope.InPosition position (InZone.MkInZone zone (f ref))
