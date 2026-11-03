@@ -1,5 +1,6 @@
 name: CI
 on:
+  merge_group:
   pull_request:
     branches:
       - main
@@ -13,7 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: nixbuild/nix-quick-install-action@v35
-      - uses: actions/cache@v6
+      - id: cache
+        uses: actions/cache/restore@v6
         with:
           path: |
             ~/.cache/cabal
@@ -31,9 +33,21 @@ jobs:
             --jobs \
             --semaphore
       - run: nix develop .#ci --command cabal build all
-      - run: nix develop .#ci --command cabal run parun -- test --timeout=120s
+      # A push to main is a commit the queue already tested; it only feeds the cache.
+      - if: github.event_name != 'push'
+        run: nix develop .#ci --command cabal run parun -- test --timeout=120s
+      # A cache saved from a queue's temporary ref could never be restored.
+      - if: github.event_name != 'merge_group' && steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ~/.cache/cabal
+            ~/.local/state/cabal
+            dist-newstyle
+          key: ${{ steps.cache.outputs.cache-primary-key }}
   cabal:
     name: Cabal
+    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -41,6 +55,7 @@ jobs:
       - run: nix build --print-build-logs .#checks.x86_64-linux.cabal
   gild:
     name: Gild
+    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -48,6 +63,7 @@ jobs:
       - run: nix build --print-build-logs .#checks.x86_64-linux.gild
   hlint:
     name: HLint
+    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -55,6 +71,7 @@ jobs:
       - run: nix build --print-build-logs .#checks.x86_64-linux.hlint
   nixfmt:
     name: Nixfmt
+    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -62,6 +79,7 @@ jobs:
       - run: nix build --print-build-logs .#checks.x86_64-linux.nixfmt
   ormolu:
     name: Ormolu
+    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
