@@ -1933,6 +1933,7 @@ pay-no-heed
 pearl-collector
 peek
 peema-aether-seer
+peel-from-reality
 peer-into-the-abyss
 penregon-besieged
 pentagram-of-the-ages
@@ -2240,6 +2241,7 @@ rule-of-law
 rumbling-crescendo
 rumor-gatherer
 run-afoul
+run-away-together
 rune-brand-juggler
 rune-of-flight
 rune-of-might
