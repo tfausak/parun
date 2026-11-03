@@ -54,6 +54,10 @@
             "label": "top"
           },
           {
+            "card": "Mountain",
+            "label": "second"
+          },
+          {
             "card": "Island"
           },
           {
@@ -156,6 +160,58 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$necro"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "Life": {
+          "player": "alice",
+          "life": 18
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Exile",
+          "card": "Mountain",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
       "do": {
         "Cast": {
           "object": "$dis",
@@ -214,6 +270,17 @@
       }
     },
     {
+      "turn": 2,
+      "step": "EndStep",
+      "player": "alice",
+      "do": {
+        "OrderTriggers": [
+          "$necro",
+          "$necro"
+        ]
+      }
+    },
+    {
       "turn": 3,
       "step": "PrecombatMain",
       "player": "bob",
@@ -236,6 +303,19 @@
           "zone": "Exile",
           "card": "Forest",
           "count": 0
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Hand",
+          "card": "Mountain",
+          "count": 1
         }
       }
     }

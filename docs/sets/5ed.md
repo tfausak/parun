@@ -75,8 +75,6 @@ first.
   any player, not its owner.
 - #5686: Panic. No casting restriction spans combat before blockers are
   declared.
-- #5571: Drain Life. Life gain can't be capped by what its target had; PR #5975
-  is open for it.
 - #5992: Serra Bestiary. A prohibition can't name activated abilities with {T}
   in their cost (CR 602.5).
 - #5993: Instill Energy. Nothing lifts only the attack half of summoning
