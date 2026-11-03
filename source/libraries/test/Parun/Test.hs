@@ -411,6 +411,7 @@ import qualified Parun.Codec.LandPlayedSpec
 import qualified Parun.Codec.LastKnownSpec
 import qualified Parun.Codec.LayoutSpec
 import qualified Parun.Codec.LeftTheGameSpec
+import qualified Parun.Codec.LibraryDepartureSpec
 import qualified Parun.Codec.LibraryDepthSpec
 import qualified Parun.Codec.LibraryPlacementSpec
 import qualified Parun.Codec.LibraryPositionSpec
@@ -1365,6 +1366,7 @@ spec s registry corpus = do
   Parun.Codec.LastKnownSpec.spec s
   Parun.Codec.LayoutSpec.spec s
   Parun.Codec.LeftTheGameSpec.spec s
+  Parun.Codec.LibraryDepartureSpec.spec s
   Parun.Codec.LibraryDepthSpec.spec s
   Parun.Codec.LibraryPlacementSpec.spec s
   Parun.Codec.LibraryPositionSpec.spec s

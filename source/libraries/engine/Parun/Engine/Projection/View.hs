@@ -191,18 +191,18 @@ viewOfCardLapsed lapsed face =
           Filter.declaredBlockerThisCombat = False,
           -- CR 701.17a mills an OBJECT; this builder describes a printed FACE.
           -- viewOfCharacteristics is the view that holds an id and answers.
-          Filter.milledThisTurn = False,
+          Filter.leftLibraryThisTurn = Set.empty,
           -- CR 120.1a: damage is dealt to a battle, a creature or a
           -- planeswalker, and this builder describes a printed FACE rather than
           -- a permanent. viewOfCharacteristics is the view that holds an id and
           -- answers.
           Filter.dealtDamageThisTurn = False,
           -- CR 400.7 enters an OBJECT; this builder describes a printed FACE --
-          -- `milledThisTurn` above's reason.
+          -- `leftLibraryThisTurn` above's reason.
           Filter.arrivalThisTurn = Nothing,
           -- CR 702.122c relates a creature to a Vehicle it crewed, and this
           -- builder describes a printed FACE rather than either --
-          -- `milledThisTurn` above's reason.
+          -- `leftLibraryThisTurn` above's reason.
           Filter.crewedThisTurn = Set.empty,
           -- CR 702.51c relates a creature to a spell it convoked, and this
           -- builder describes a printed FACE rather than either -- the field
@@ -215,7 +215,7 @@ viewOfCardLapsed lapsed face =
           Filter.dealtDamageTo = Set.empty,
           Filter.dealtDamageEarlier = Set.empty,
           -- CR 302.6 asks about an OBJECT a player controls; this builder
-          -- describes a printed FACE, which is none -- `milledThisTurn` above's
+          -- describes a printed FACE, which is none -- `leftLibraryThisTurn` above's
           -- reason.
           Filter.controlledSinceTurnBegan = False,
           Filter.attachedToView = Nothing,
@@ -655,7 +655,7 @@ viewOfCharacteristics peers oid pc controller counters gs =
       Filter.declaredAttackerThisCombat = Count.declaredAttackerThisCombat oid gs,
       Filter.declaredAttackedThisCombat = Count.declaredAttackedThisCombat oid gs,
       Filter.declaredBlockerThisCombat = Count.declaredBlockerThisCombat oid gs,
-      Filter.milledThisTurn = Count.milledThisTurn oid gs,
+      Filter.leftLibraryThisTurn = Count.leftLibraryThisTurn oid gs,
       Filter.dealtDamageThisTurn = Count.dealtDamageThisTurn oid gs,
       Filter.arrivalThisTurn = Game.arrivalThisTurn oid gs,
       Filter.beforeMoveView = Count.departedAs gs oid >>= Count.orLastKnown peers gs,

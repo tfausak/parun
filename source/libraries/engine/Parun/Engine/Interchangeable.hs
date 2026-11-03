@@ -146,7 +146,7 @@ objects pcs gs a b =
       lookBack view =
         ( Filter.Engine.declaredThisTurn view,
           Filter.Engine.couldAttackThisTurn view,
-          Filter.Engine.milledThisTurn view,
+          Filter.Engine.leftLibraryThisTurn view,
           Filter.Engine.dealtDamageThisTurn view,
           Filter.Engine.arrivalThisTurn view,
           Filter.Engine.crewedThisTurn view,
@@ -234,7 +234,7 @@ representatives pcs gs candidates =
 --     names a Decider, a lifetime and rule 723.7's restriction -- no object),
 --     GameState.monarch, GameState.initiative, GameState.drewFromEmpty,
 --     GameState.loopInvolvement, GameState.extraTurns and the per-player
---     counters (landsPlayed, drawsThisTurn, departedThisTurn, turnsBegun,
+--     counters (landsPlayed, departedThisTurn, turnsBegun,
 --     spellsCastLastTurn, resolvedNames) are keyed by or valued
 --     at a PLAYER and name no object.
 --   * GameState.lastKnown is about objects that have LEFT, bar the host each
@@ -245,6 +245,8 @@ representatives pcs gs candidates =
 --     its bindings are read only on behalf of a stack object or a delayed
 --     trigger (CR 608.2h), which namedByAnother and namedByStored already
 --     cover.
+--   * GameState.drawsThisTurn names cards, and is read here through the same two
+--     views (Filter.LeftLibraryThisTurn), where a draw shows as a look-back.
 --   * GameState.events is read here through the two Filter views objects
 --     compares, which is where a Filter's look-back atoms read it, and through
 --     actedOnBy, the relations those views hold from the other end; an event

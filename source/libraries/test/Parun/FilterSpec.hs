@@ -31,6 +31,7 @@ import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
 import qualified Parun.Types.KeywordInstance as KeywordInstance
+import qualified Parun.Types.LibraryDeparture as LibraryDeparture
 import qualified Parun.Types.Lookback as Lookback
 import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import qualified Parun.Types.ManaCost as ManaCost
@@ -107,7 +108,7 @@ blackCreature =
       Filter.couldAttackThisTurn = False,
       Filter.declaredAttackerThisCombat = False,
       Filter.declaredBlockerThisCombat = False,
-      Filter.milledThisTurn = False,
+      Filter.leftLibraryThisTurn = Set.empty,
       Filter.dealtDamageThisTurn = False,
       Filter.arrivalThisTurn = Nothing,
       Filter.crewedThisTurn = Set.empty,
@@ -194,7 +195,7 @@ devoidBigCreature =
       Filter.couldAttackThisTurn = False,
       Filter.declaredAttackerThisCombat = False,
       Filter.declaredBlockerThisCombat = False,
-      Filter.milledThisTurn = False,
+      Filter.leftLibraryThisTurn = Set.empty,
       Filter.dealtDamageThisTurn = False,
       Filter.arrivalThisTurn = Nothing,
       Filter.crewedThisTurn = Set.empty,
@@ -1682,21 +1683,29 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
       Spec.assertEqWith s "baked in place" (Filter.bakeBound Map.empty (Map.singleton slot (Set.singleton before)) Map.empty nested) (Filter.Type.BeforeMove (Filter.Type.Or [Filter.Type.IsObject before]))
       Spec.assertEqWith s "the subtype word is swapped" swapped (Filter.Type.BeforeMove (Filter.Type.HasSubtype Subtype.Equipment))
 
-  Spec.describe s "MilledThisTurn" $ do
+  Spec.describe s "LeftLibraryThisTurn" $ do
     Spec.it s "matches a view whose history says so" $ do
-      Spec.assertBool s (Filter.matches self (blackCreature {Filter.milledThisTurn = True}) Filter.Type.MilledThisTurn) "milled"
+      Spec.assertBool s (Filter.matches self (blackCreature {Filter.leftLibraryThisTurn = Set.singleton LibraryDeparture.Milled}) (Filter.Type.LeftLibraryThisTurn LibraryDeparture.Milled)) "milled"
 
     Spec.it s "does not match a card that reached the graveyard another way" $ do
-      Spec.assertBool s (not (Filter.matches self blackCreature Filter.Type.MilledThisTurn)) "not milled"
+      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.LeftLibraryThisTurn LibraryDeparture.Milled))) "not milled"
+
+    -- The parameter is read: a card drawn this turn was not milled, and the reverse.
+    Spec.it s "tells a draw from a mill" $ do
+      let drawn = blackCreature {Filter.leftLibraryThisTurn = Set.singleton LibraryDeparture.Drawn}
+          milled = blackCreature {Filter.leftLibraryThisTurn = Set.singleton LibraryDeparture.Milled}
+      Spec.assertBool s (Filter.matches self drawn (Filter.Type.LeftLibraryThisTurn LibraryDeparture.Drawn)) "drawn"
+      Spec.assertBool s (not (Filter.matches self drawn (Filter.Type.LeftLibraryThisTurn LibraryDeparture.Milled))) "drawn is not milled"
+      Spec.assertBool s (not (Filter.matches self milled (Filter.Type.LeftLibraryThisTurn LibraryDeparture.Drawn))) "milled is not drawn"
 
     -- Independent of the OTHER look-back atom, which reads the same log for a
     -- different entry: a milled card was never declared as an attacker.
     Spec.it s "is not implied by having attacked" $ do
-      Spec.assertBool s (not (Filter.matches self (blackCreature {Filter.declaredThisTurn = Set.singleton BlockRole.Attacker}) Filter.Type.MilledThisTurn)) "attacked does not imply milled"
+      Spec.assertBool s (not (Filter.matches self (blackCreature {Filter.declaredThisTurn = Set.singleton BlockRole.Attacker}) (Filter.Type.LeftLibraryThisTurn LibraryDeparture.Milled))) "attacked does not imply milled"
 
     -- CR 701.17a mills CARDS, and a player is not one.
     Spec.it s "a player candidate is vacuously false" $ do
-      Spec.assertBool s (not (Filter.matches self aPlayer Filter.Type.MilledThisTurn)) "player"
+      Spec.assertBool s (not (Filter.matches self aPlayer (Filter.Type.LeftLibraryThisTurn LibraryDeparture.Milled))) "player"
 
   -- CR 702.122d, the one atom answered off the CONTEXT's gathered set rather
   -- than off the candidate's own view: a prohibition is another permanent's

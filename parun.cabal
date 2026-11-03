@@ -881,6 +881,8 @@ library codec
     Parun.Codec.LeftTheGame
     Parun.Codec.LeftTheGameSpec
     Parun.Codec.LentCards
+    Parun.Codec.LibraryDeparture
+    Parun.Codec.LibraryDepartureSpec
     Parun.Codec.LibraryDepth
     Parun.Codec.LibraryDepthSpec
     Parun.Codec.LibraryPlacement
@@ -2799,6 +2801,7 @@ library types
     Parun.Types.LearnMode
     Parun.Types.LeftTheGame
     Parun.Types.LentCards
+    Parun.Types.LibraryDeparture
     Parun.Types.LibraryDepth
     Parun.Types.LibraryPlacement
     Parun.Types.LibraryPosition
