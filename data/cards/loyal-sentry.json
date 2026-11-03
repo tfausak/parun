@@ -43,20 +43,17 @@
                         "type": "Destroy",
                         "value": {
                           "ref": {
-                            "type": "InSlot",
-                            "value": "thatAttacker"
-                          },
-                          "regenerability": {
-                            "type": "Regenerable"
-                          }
-                        }
-                      },
-                      {
-                        "type": "Destroy",
-                        "value": {
-                          "ref": {
-                            "type": "InSlot",
-                            "value": "self"
+                            "type": "AllOf",
+                            "value": [
+                              {
+                                "type": "InSlot",
+                                "value": "thatAttacker"
+                              },
+                              {
+                                "type": "InSlot",
+                                "value": "self"
+                              }
+                            ]
                           },
                           "regenerability": {
                             "type": "Regenerable"
