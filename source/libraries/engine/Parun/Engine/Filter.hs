@@ -33,6 +33,7 @@ import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CountersFromPermanents as CountersFromPermanents
 import qualified Parun.Types.Craft as Craft
 import qualified Parun.Types.Cycling as Cycling
+import qualified Parun.Types.DamageDealer as DamageDealer
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamagedParty as DamagedParty
 import qualified Parun.Types.DealtDamageTo as DealtDamageTo
@@ -1100,6 +1101,13 @@ data Context = MkContext
     -- SLOT. Filled with sourceMeasures, and a SET for sourceColors' reason (CR
     -- 708.2a's nameless object).
     sourceNames :: Set.Set CardName.CardName,
+    -- CR 120.1: whom the SOURCE dealt damage to this turn, each beside the kind,
+    -- for DealtDamageTo's Source dealer. View.dealtDamageTo's answer for the
+    -- source. Filled with sourceMeasures, and lazy for its reason.
+    sourceDealtDamage :: Set.Set (Recipient.Recipient, DamageKind.DamageKind),
+    -- CR 120.1 / 400.7: the same for every earlier turn, View.dealtDamageEarlier's
+    -- answer for the source. Filled with sourceMeasures.
+    sourceDealtDamageEarlier :: Set.Set (Recipient.Recipient, DamageKind.DamageKind),
     -- CR 202.3, the computed half: the number the TARGET SLOT being matched
     -- names as its bound, for the Measures atom's EnclosingAmount operand --
     -- Celestine, the Living Saint's "where X is the amount of life you gained
@@ -1713,7 +1721,7 @@ data Context = MkContext
 -- here owes both halves of the same pair: which way its unfilled read answers,
 -- and what holds a card to the positions that fill it.
 contextFor :: Teams.Teams -> Maybe PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> Context
-contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], activePlayers = [], recipient = Nothing, shares = Map.empty, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, slotVotes = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, evaluatedCreatureTypes = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Map.empty, reader = Nothing, candidateMeasures = Nothing, battlefieldViews = Seq.empty}
+contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, sourceDealtDamage = Set.empty, sourceDealtDamageEarlier = Set.empty, slotAmount = Nothing, defendingPlayers = [], activePlayers = [], recipient = Nothing, shares = Map.empty, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, slotVotes = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, evaluatedCreatureTypes = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Map.empty, reader = Nothing, candidateMeasures = Nothing, battlefieldViews = Seq.empty}
 
 -- contextFor over a game: its teams (CR 102.4) and its active players (CR 102.1,
 -- 805.4a) filled from the state, the two facts about the table a match may ask.
@@ -2263,7 +2271,11 @@ matches context view predicate = case predicate of
   -- party names nothing. The Anyone party names every recipient, and
   -- Lookback.AsThisObject adds the earlier turns' damage, the Palladia-Mors
   -- scenarios' subject.
-  Filter.DealtDamageTo (DealtDamageTo.MkDealtDamageTo party wanted window) ->
+  --
+  -- The Source dealer reads the same pair off the context, and a holder party
+  -- is the candidate's holder as it is now: Steel Hellkite's ruling, proved by
+  -- its scenarios under data/scenarios/damage.
+  Filter.DealtDamageTo (DealtDamageTo.MkDealtDamageTo party wanted window dealer) ->
     let toParty damaged = case party of
           DamagedParty.Anyone -> True
           DamagedParty.Source -> Maybe.isJust (source context) && Recipient.objectOf damaged == source context
@@ -2273,11 +2285,15 @@ matches context view predicate = case predicate of
           DamagedParty.InSlot slot -> case Recipient.objectOf damaged of
             Just oid -> Set.member oid (Map.findWithDefault Set.empty slot (slotObjects context))
             Nothing -> False
+          DamagedParty.HolderOfCandidate holder -> Maybe.isJust (Recipient.playerOf damaged) && Recipient.playerOf damaged == heldBy holder view
         hit (damaged, dealtKind) = toParty damaged && all (== dealtKind) wanted
+        (thisTurn, allEarlier) = case dealer of
+          DamageDealer.Candidate -> (dealtDamageTo view, dealtDamageEarlier view)
+          DamageDealer.Source -> (sourceDealtDamage context, sourceDealtDamageEarlier context)
         earlier = case window of
           Lookback.ThisTurn -> Set.empty
-          Lookback.AsThisObject -> dealtDamageEarlier view
-     in any hit (dealtDamageTo view) || any hit earlier
+          Lookback.AsThisObject -> allEarlier
+     in any hit thisTurn || any hit earlier
   -- CR 400.7 / 608.2i: the same look-back over the zone changes. A permanent
   -- that left and came back is a new object whose entry this is; one that phased
   -- in or turned face up made no entry at all (CR 702.26d, CR 708.8). A card that
@@ -4057,6 +4073,7 @@ overBoundSlotsWith f predicate = case predicate of
     DamagedParty.Source -> pure predicate
     DamagedParty.Related _ -> pure predicate
     DamagedParty.Anyone -> pure predicate
+    DamagedParty.HolderOfCandidate _ -> pure predicate
   Filter.EnteredThisTurn _ -> pure predicate
   Filter.CrewedSourceThisTurn -> pure predicate
   Filter.ConvokedSourceThisTurn -> pure predicate

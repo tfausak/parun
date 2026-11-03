@@ -69,6 +69,8 @@ import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
+import qualified Parun.Types.DamagedParty as DamagedParty
+import qualified Parun.Types.DealtDamageTo as DealtDamageTo
 import qualified Parun.Types.Defense as Defense
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.DestructionR as DestructionR
@@ -1355,7 +1357,9 @@ withCharacteristicsOf object gs context =
         { Filter.sourceMeasures = foldMap Filter.measuresOf view,
           Filter.sourceColors = foldMap Filter.colors view,
           Filter.sourceSectors = foldMap (Sector.sectorsIn . Filter.designations) view,
-          Filter.sourceNames = foldMap Filter.names view
+          Filter.sourceNames = foldMap Filter.names view,
+          Filter.sourceDealtDamage = Count.dealtDamageTo object gs,
+          Filter.sourceDealtDamageEarlier = Count.dealtDamageEarlier object gs
         }
 
 -- CR 509.1b: the context a pairwise blocking restriction or cost is matched
@@ -3960,7 +3964,9 @@ filterReads f = case f of
   -- handed in on the context, so it is a fixed input to any single projection.
   Filter.Type.CantCrewVehicles -> Set.empty
   Filter.Type.DealtDamageThisTurn -> Set.empty
-  Filter.Type.DealtDamageTo _ -> Set.empty
+  Filter.Type.DealtDamageTo asked -> case DealtDamageTo.party asked of
+    DamagedParty.HolderOfCandidate holder -> holderReads holder
+    _ -> Set.empty
   Filter.Type.EnteredThisTurn _ -> Set.empty
   Filter.Type.CrewedSourceThisTurn -> Set.empty
   Filter.Type.ConvokedSourceThisTurn -> Set.empty
