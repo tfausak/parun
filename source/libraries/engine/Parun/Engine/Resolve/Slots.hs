@@ -3341,13 +3341,14 @@ libraryCards pid gs = filter (`Game.isCardObject` gs) (Game.zoneMembers Zone.Lib
 -- CR 109.5's "you" is the resolving controller rather than whoever is choosing,
 -- and the resolution's own slots ride along: Midnight Tilling's "from among
 -- them" is `IsBound` over the slot its own mill defined, which a bare contextFor
--- would answer False for on every candidate.
+-- would answer False for on every candidate. A token awaiting CR 704.5d is in
+-- the zone but is no card (CR 108.2): data/scenarios' Deadly Brew token case.
 graveyardCardsOf :: Filter.Context -> GameState -> PlayerId -> Filter.Type.Filter Keyword.Type.Keyword -> [ObjectId]
 graveyardCardsOf context gs pid filter_ =
   let viewOf = Projection.viewsOf gs
    in List.sort
         ( filter
-            (\oid -> Filter.matches context (viewOf oid) filter_)
+            (\oid -> not (Game.isToken oid gs) && Filter.matches context (viewOf oid) filter_)
             (Game.zoneMembers Zone.Graveyard pid gs)
         )
 

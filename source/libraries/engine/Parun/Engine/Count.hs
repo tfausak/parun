@@ -490,6 +490,8 @@ bakePerspective viewOf context gs candidate predicate =
         -- Baking the nest against this candidate would bake a question about the HOST
         -- against a player who is not it.
         Filter.Type.AttachedTo _ -> predicate
+        -- A player never moved, so Parun.Engine.Filter answers this atom False for one.
+        Filter.Type.BeforeMove _ -> predicate
         -- CR 303.4b / 301.5a: something the nested Filter admits is attached TO this
         -- PLAYER candidate. Baked here for CardsInGraveyardAtLeast's reason -- CR
         -- 109.3 keeps attachment off the characteristics, so this is a board
@@ -1105,6 +1107,7 @@ lastKnownView peers oid gs lastKnown =
           Filter.milledThisTurn = milledThisTurn oid gs,
           Filter.dealtDamageThisTurn = dealtDamageThisTurn oid gs,
           Filter.arrivalThisTurn = Game.arrivalThisTurn oid gs,
+          Filter.beforeMoveView = departedAs gs oid >>= orLastKnown peers gs,
           Filter.crewedThisTurn = crewedThisTurn oid gs,
           Filter.convokedThisTurn = convokedThisTurn oid gs,
           Filter.saddledThisTurn = saddledThisTurn oid gs,
@@ -1435,6 +1438,8 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       -- CR 303.4 / 110.1: a snapshot is not an object on the battlefield and
       -- carries no attachment, so there is no host here for AttachedTo's nest.
       Filter.attachedToView = Nothing,
+      -- Filled over this by lastKnownView, a snapshot having no id to look up.
+      Filter.beforeMoveView = Nothing,
       -- CR 303.4b's mirror: nothing is attached to a snapshot either, there being
       -- no object here for a permanent's Object.attachedTo to have named.
       Filter.attachedViews = [],

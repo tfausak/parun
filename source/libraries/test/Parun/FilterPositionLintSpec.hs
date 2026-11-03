@@ -344,6 +344,7 @@ filterAtomsOf leaf predicate = case predicate of
   -- write any other filter. A leaf would under-count against jsonAtoms, which counts
   -- the tag at any depth, and turn a legitimate card into a reported offence.
   Filter.Type.AttachedTo f -> filterAtomsOf leaf f
+  Filter.Type.BeforeMove f -> filterAtomsOf leaf f
   -- A DESCENT for the atom above's reason, the nest describing the ATTACHER: CR
   -- 303.4b's atom is a Filter position a card author writes into like any other.
   Filter.Type.HasAttached f -> filterAtomsOf leaf f

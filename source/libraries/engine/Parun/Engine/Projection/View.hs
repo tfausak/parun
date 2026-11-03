@@ -219,6 +219,8 @@ viewOfCardLapsed lapsed face =
           -- reason.
           Filter.controlledSinceTurnBegan = False,
           Filter.attachedToView = Nothing,
+          -- A printed face is no object, so no move made it.
+          Filter.beforeMoveView = Nothing,
           -- CR 303.4b's mirror, and Nothing for the same reason: a printed face
           -- is not an object, so no permanent's Object.attachedTo names it.
           Filter.attachedViews = [],
@@ -655,6 +657,7 @@ viewOfCharacteristics peers oid pc controller counters gs =
       Filter.milledThisTurn = Count.milledThisTurn oid gs,
       Filter.dealtDamageThisTurn = Count.dealtDamageThisTurn oid gs,
       Filter.arrivalThisTurn = Game.arrivalThisTurn oid gs,
+      Filter.beforeMoveView = Count.departedAs gs oid >>= Count.orLastKnown peers gs,
       Filter.crewedThisTurn = Count.crewedThisTurn oid gs,
       Filter.convokedThisTurn = Count.convokedThisTurn oid gs,
       Filter.saddledThisTurn = Count.saddledThisTurn oid gs,

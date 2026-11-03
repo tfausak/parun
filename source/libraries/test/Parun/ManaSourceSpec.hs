@@ -23,13 +23,16 @@ import qualified Parun.Engine.Activate as Activate
 import qualified Parun.Engine.Cast as Cast
 import qualified Parun.Engine.Combat as Combat
 import qualified Parun.Engine.Cost as Cost
+import qualified Parun.Engine.Count as Count.Engine
 import qualified Parun.Engine.Damage as Damage
 import qualified Parun.Engine.Engine as Engine
 import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.FaceDown as FaceDown
 import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Interchangeable as Interchangeable
 import qualified Parun.Engine.Mana as Mana
 import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Resolve.Common as Common
 import qualified Parun.Engine.Room as Room
 import qualified Parun.Engine.Setup as Setup
 import qualified Parun.Engine.Stack as Stack
@@ -63,6 +66,7 @@ import qualified Parun.Types.CopyCoverage as CopyCoverage
 import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.Count as Count
+import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DelayedTrigger as DelayedTrigger
 import qualified Parun.Types.EndingStep as EndingStep
@@ -105,6 +109,7 @@ import qualified Parun.Types.RequirementArity as RequirementArity
 import qualified Parun.Types.RestrictedCreatures as RestrictedCreatures
 import qualified Parun.Types.RoomHalf as RoomHalf
 import qualified Parun.Types.Scope as Scope
+import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.StepBegan as StepBegan
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TargetSlot as TargetSlot
@@ -1564,6 +1569,23 @@ interchangeableSourcesSpec s registry = Spec.describe s "Interchangeable mana so
     Spec.assertEqWith s "asked once, and the three Elves are one candidate" (fmap length offers) [1]
     Spec.assertBool s paid "the {G} was paid"
     Spec.assertEqWith s "off exactly one Elf" (tappedCount (NonEmpty.toList elves) after) 1
+
+  -- Filter.BeforeMove's nest reads the record of what a card was and any slot
+  -- naming that earlier id, so both tell two graveyard cards apart.
+  Spec.it s "CR 400.7 cards that were different permanents are different options" $ do
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (plain, g1) = S.addPermanent piker S.alice (Setup.emptyGame S.bothPlayers)
+        (twin, g2) = S.addPermanent piker S.alice g1
+        (grown, board) = S.addPermanent piker S.alice g2
+        counted = board {GameState.objects = Map.adjust (\o -> o {Object.counters = Map.singleton CounterKind.PlusOnePlusOne 1}) grown (GameState.objects board)}
+        moved = List.foldl' (\g oid -> S.runPure S.identityAnswer g (Event.changeZone oid Zone.Graveyard)) counted [plain, twin, grown]
+        cardOf gs oid = List.find (\card -> Count.Engine.departedAs gs card == Just oid) (Game.zoneMembers Zone.Graveyard S.alice gs)
+        alike gs x y = Interchangeable.objects (Projection.projectAll gs) gs <$> cardOf gs x <*> cardOf gs y
+        (holder, bound) = S.addPermanent piker S.alice moved
+        naming = Common.bindObjectsSlot holder (SlotName.MkSlotName (Text.pack "sacrificed")) (Seq.singleton plain) bound
+    Spec.assertEqWith s "the same record, with nothing naming either" (alike moved plain twin) (Just True)
+    Spec.assertEqWith s "a counter on the record tells them apart" (alike moved plain grown) (Just False)
+    Spec.assertEqWith s "the same record, with a slot naming one's earlier id" (alike naming plain twin) (Just False)
 
   -- The owner's minimal falsifier for collapsing by printed card: what the
   -- elision must not do is answer "which Elf" for a player whose Elves are a 3/1

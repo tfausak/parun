@@ -3982,6 +3982,8 @@ filterReads f = case f of
   -- characteristics, so no Modification writes Object.attachedTo, and CR 303.4's
   -- attaching runs between projections as CR 110.1's zone change does.
   Filter.Type.AttachedTo g -> filterReads g
+  -- A record filed when the object left, which no Modification writes.
+  Filter.Type.BeforeMove _ -> Set.empty
   -- The nest's own reads again, declared as if they were the CANDIDATE's even
   -- though they are an ATTACHER's -- exactly right rather than merely safe, for
   -- the atom above's reason. The attachment itself reads nothing, for that atom's
@@ -4127,6 +4129,8 @@ filterReadsPeers f = case f of
   -- The atoms that read a peer view directly, off a field of the candidate's
   -- own view.
   Filter.Type.AttachedTo _ -> True
+  -- A record filed when the object left, not a projection of a second object.
+  Filter.Type.BeforeMove _ -> False
   Filter.Type.HasAttached _ -> True
   Filter.Type.IsAttackingPlaneswalker _ -> True
   Filter.Type.IsAttackingBattle _ -> True

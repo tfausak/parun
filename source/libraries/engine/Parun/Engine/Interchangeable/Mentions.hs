@@ -573,6 +573,7 @@ filterNames asking criterion = case criterion of
   Filter.EnteredThisTurn (EnteredZone.MkEnteredZone to _from) -> keyed asking <> history asking (if to == Zone.Battlefield then HistoryRead.Entries else HistoryRead.Moves)
   Filter.ControlledSinceTurnBegan -> mempty
   Filter.AttachedTo nested -> filterNames asking nested
+  Filter.BeforeMove nested -> keyed asking <> history asking HistoryRead.Moves <> filterNames asking nested
   Filter.HasAttached nested -> filterNames asking nested
   Filter.IsAttachedTo anchor -> anchorNames asking anchor
   Filter.IsEvaluated -> mempty
