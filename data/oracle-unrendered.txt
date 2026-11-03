@@ -1528,6 +1528,7 @@ leonin-shikari
 leonin-warleader
 lesser-gargadon
 leveler
+leviathan
 leyline-axe
 leyline-of-abundance
 leyline-of-anticipation
@@ -1548,6 +1549,7 @@ life-and-limb
 lifebane-zombie
 life-goes-on
 lifes-legacy
+lifetap
 lightmine-field
 lightning-mare
 light-of-promise
@@ -1578,6 +1580,7 @@ lithoform-engine
 littjara-kinseekers
 littjara-mirrorlake
 liu-bei-lord-of-shu
+living-artifact
 living-destiny
 living-lands
 living-lore
@@ -1643,6 +1646,7 @@ magmatic-insight
 magnetic-theft
 magnivore
 magnus-the-red
+magus-of-the-unseen
 mairsil-the-pretender
 make-a-_-splash
 make-a-wish
@@ -1656,6 +1660,7 @@ mana-clash
 mana-severance
 mana-short
 mana-vapors
+mana-vault
 manabarbs
 manaweft-sliver
 mandate-of-peace
@@ -1674,6 +1679,7 @@ march-of-wretched-sorrow
 marchesas-decree
 mark-for-death
 mark-of-mutiny
+marsh-viper
 marshaling-the-troops
 mask-of-immolation
 mask-of-intolerance
@@ -1725,6 +1731,7 @@ mind-bomb
 mind-control
 mind-grind
 mind-maggots
+mind-ravel
 mind-slash
 mind-sludge
 mind-unbound
@@ -1758,6 +1765,7 @@ mob-verdict
 mobilizer-mech
 mogg-flunkies
 mogiss-marauder
+mole-worms
 molecule-man
 molten-birth
 molten-disaster
@@ -1785,6 +1793,7 @@ multiversal-recruitment
 muraganda-raceway
 murder-investigation
 murderous-betrayal
+murk-dwellers
 mutagen-connoisseur
 mutalith-vortex-beast
 mutavault
@@ -1815,6 +1824,7 @@ necrologia
 necromancers-stockpile
 necromantic-summons
 necromentia
+necropotence
 necrosynthesis
 necrotic-plague
 needle-drop
@@ -1858,6 +1868,7 @@ novijen-sages
 null-chamber
 oath-of-the-ancient-wood
 ob-nixilis-unshackled
+obelisk-of-undoing
 obelisk-of-urd
 obliterate
 oblivion-ring
@@ -1894,6 +1905,7 @@ oracles-attendants
 orbs-of-warding
 orchard-spirit
 orcish-artillery
+orcish-captain
 orcish-spy
 orcish-veteran
 oreskos-explorer
@@ -1931,6 +1943,7 @@ palladia-mors-the-ruiner
 panglacial-wurm
 panic-attack
 panopticon
+paralyze
 paranormal-analyst
 parasitic-grasp
 pariah
@@ -1994,10 +2007,13 @@ pin-collection
 pine-walker
 pir-imaginative-rascal
 piracy
+pirate-ship
 pirates-cutlass
+pit-scorpion
 pithing-needle
 pixie-guide
 plagiarize
+plague-rats
 planar-void
 planeswalkers-mischief
 platinum-angel
@@ -2016,6 +2032,7 @@ portent
 possessed-skaab
 power-play
 power-sink
+pox
 prayer-of-binding
 precursor-golem
 predator-ooze
@@ -2041,6 +2058,7 @@ prime-speaker-zegana
 primeval-titan
 primitive-etchings
 primordial-hydra
+primordial-ooze
 printlifter-ooze
 prism-ring
 prison-barricade
