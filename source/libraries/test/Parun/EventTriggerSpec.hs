@@ -1384,6 +1384,20 @@ blightChroniclerSpec s registry =
           Spec.assertEqWith s "bob loses 1 all the same" (S.lifeOf S.bob after) (Just 19)
           Spec.assertEqWith s "though no counter was put on the Gnarlbark" (minusCountersOn gnarlbarkId blighted) (Just 0)
           Spec.assertEqWith s "and alice's own draw still happened" (S.handSize S.alice blighted) 1
+        -- CR 608.2d: with Blossombind on the Gnarlbark and Grizzly Bears beside
+        -- it, the Bears is the only creature that can take the counter, so the
+        -- blight goes there although the answerer names the Gnarlbark. The
+        -- Solemnity case above is docs/decisions.md's "What a mandatory blight
+        -- puts its counters on when no creature can take them".
+        Spec.it s "CR 608.2d a mandatory blight refuses the creature that can't take the counter" $ do
+          (gnarlbarkId, board) <- blightChroniclerBoard s registry False False
+          bears <- S.printingOf s registry "Grizzly Bears"
+          blossombind <- S.printingOf s registry "Blossombind"
+          let (bearsId, g1) = S.addPermanent bears S.alice board
+              (auraId, g2) = S.addPermanent blossombind S.bob g1
+              blighted = S.runPure (answerBlightOnto gnarlbarkId) (S.attach auraId gnarlbarkId g2) Stack.resolveTop
+          Spec.assertEqWith s "the Bears took rule 701.68a's counter" (minusCountersOn bearsId blighted) (Just 1)
+          Spec.assertEqWith s "and the Gnarlbark none" (minusCountersOn gnarlbarkId blighted) (Just 0)
         -- Rule 701.68b's board, and the negative of the first case one
         -- permanent apart: the Gnarlbark dies to state-based actions with its
         -- own trigger already on the stack (CR 603.3b), so alice controls no
@@ -1414,6 +1428,13 @@ blightChroniclerSpec s registry =
           Spec.assertEqWith s "alice loses 1 to her own Chronicler" (S.lifeOf S.alice after) (Just 19)
           Spec.assertEqWith s "and bob loses 1 to his" (S.lifeOf S.bob after) (Just 19)
           Spec.assertEqWith s "both triggers reached the stack" (length (GameState.stack placed)) 2
+
+-- Answers Prompt.ChooseBlight with this creature, deferring everything else to
+-- S.identityAnswer.
+answerBlightOnto :: ObjectId.ObjectId -> Prompt.Prompt r -> r
+answerBlightOnto blighted p = case p of
+  Prompt.ChooseBlight {} -> blighted
+  _ -> S.identityAnswer p
 
 -- Sinister Gnarlbark on alice's battlefield and a Synthetic Blight Chronicler
 -- on bob's, with the libraries stocked past every draw these cases take (CR

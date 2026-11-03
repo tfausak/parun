@@ -54,6 +54,19 @@ candidates pid gs = List.sort (filter (\oid -> Projection.isCreatureOf oid gs) (
 payable :: PlayerId -> GameState.GameState -> [ObjectId]
 payable pid gs = filter (\oid -> not (CounterRestriction.prohibited oid CounterKind.MinusOneMinusOne gs)) (candidates pid gs)
 
+-- | CR 701.68a's pool for a blight an effect INSTRUCTS: `payable` where it holds
+-- a creature, since CR 608.2d forbids choosing an impossible option, and
+-- `candidates` where it holds none, so the blight still happens (CR 701.68c and
+-- 701.68d); see docs/decisions.md, "What a mandatory blight puts its counters on
+-- when no creature can take them". Proved by Parun.EventTriggerSpec's "CR
+-- 608.2d a mandatory blight refuses the creature that can't take the counter"
+-- and "CR 701.68d Solemnity keeps every counter off and the Chronicler still
+-- triggers".
+instructed :: PlayerId -> GameState.GameState -> [ObjectId]
+instructed pid gs = case payable pid gs of
+  [] -> candidates pid gs
+  able -> able
+
 -- | CR 701.68b: can this player blight at all? "If a player is given the choice
 -- to blight but is unable to put N -1\/-1 counters on a creature they control
 -- (usually because they control no creatures), they can't choose to blight."
@@ -81,7 +94,7 @@ canBlight pid gs = not (null (payable pid gs))
 -- same resolution to read (Grub, Notorious Auntie). The COST callers bind
 -- nothing: no printing pays a blight and then names what it blighted.
 --
--- The pool is `candidates` for a mandatory blight and `payable` for a cost.
+-- The pool is `instructed` for a mandatory blight and `payable` for a cost.
 --
 -- The ObjectId is the object the prompt names -- the spell or ability resolving,
 -- or the one whose cost is being paid. The CounterCause is the caller's, and the
