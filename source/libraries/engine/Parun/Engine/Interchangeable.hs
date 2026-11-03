@@ -158,7 +158,14 @@ objects pcs gs a b =
       -- Quantity.DamageDealtThisTurn's totals, which no View field carries: two
       -- objects that dealt damage to the same recipients but in different amounts.
       dealtAmounts oid = fmap (\direction -> Game.damageDealtThisTurn direction gs oid) [minBound .. maxBound :: DamageDirection.DamageDirection]
-      sameView = lookBack (viewOf a) == lookBack (viewOf b) && dealtAmounts a == dealtAmounts b && actedOnBy a gs == actedOnBy b gs
+      -- What Filter.BeforeMove's nest reads: the record of what each was before
+      -- its move, and any slot naming that earlier id, which no search for the
+      -- two ids below would find.
+      before = Count.departedAs gs
+      beforeRecord oid = before oid >>= \gone -> Map.lookup gone (GameState.lastKnown gs)
+      beforeNamed oid = maybe False (\gone -> namedByAnother gone gs) (before oid)
+      sameBefore = beforeRecord a == beforeRecord b && not (beforeNamed a) && not (beforeNamed b)
+      sameView = lookBack (viewOf a) == lookBack (viewOf b) && dealtAmounts a == dealtAmounts b && actedOnBy a gs == actedOnBy b gs && sameBefore
       -- Keyed by every permanent alike, so compared rather than searched.
       sameSample m = Map.lookup a m == Map.lookup b m
       sameSamples =

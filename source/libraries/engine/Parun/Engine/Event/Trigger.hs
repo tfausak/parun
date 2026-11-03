@@ -66,6 +66,7 @@ import qualified Parun.Types.ControlChanged as ControlChanged
 import qualified Parun.Types.Convoking as Convoking
 import qualified Parun.Types.CounterChange as CounterChange
 import qualified Parun.Types.Countering as Countering
+import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamagePrevented as DamagePrevented
@@ -90,7 +91,6 @@ import qualified Parun.Types.LandPlayed as LandPlayed
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
-import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Looked as Looked
 import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
@@ -417,10 +417,10 @@ participants event =
         GameEvent.VotesRevealed ballots -> foldMap ballotParticipants ballots
         GameEvent.SpellCountered c -> ([Countering.countered c, Countering.source c], [])
         GameEvent.AbilityCountered c -> ([Countering.countered c, Countering.source c], [])
-        GameEvent.LifeLost c -> player (LifeLost.player c)
+        GameEvent.LifeLost c -> player (LifeChange.player c)
         GameEvent.LifeGained c -> player (LifeChange.player c)
         GameEvent.AbilityActivated a -> ([AbilityWasActivated.ability a, AbilityWasActivated.source a], [AbilityWasActivated.player a])
-        GameEvent.CountersPut c -> one (CounterChange.object c)
+        GameEvent.CountersPut c -> one (CountersPlaced.object c)
         GameEvent.CountersRemoved c -> one (CounterChange.object c)
         GameEvent.HalfUnlocked h -> ([HalfUnlocked.object h], [HalfUnlocked.actor h])
         GameEvent.TurnedFaceUp t -> one (TurnedFaceUp.object t)
@@ -1485,10 +1485,7 @@ eventTriggers events gs =
       -- this batch put from the battlefield into a graveyard, the id it BECAME
       -- there. `departed` is the key because that is the id a borne trigger
       -- carries as its source (CR 113.7a), so `pend` below can ask it about the
-      -- bearer -- and because CR 603.10a's look-back events name the pre-move id
-      -- too, which is why the WHOLE table goes to eventBindings beside the
-      -- bearer's own row: a sacrifice is recorded before its move, so nothing on
-      -- GameEvent.PermanentSacrificed names CR 400.7e's new object.
+      -- bearer.
       --
       -- Battlefield to GRAVEYARD alone, that being the only destination the rule
       -- names ("in its owner's graveyard"); every other departure contributes
@@ -1506,6 +1503,22 @@ eventTriggers events gs =
               (fmap (\zc -> (ZoneChange.departed zc, ZoneChange.object zc)) . Game.diedChange . LoggedEvent.event)
               events
           )
+      -- CR 400.7e's new object for the sacrifice a CR 603.10a look-back event
+      -- names by its pre-move id, which is why the WHOLE table goes to
+      -- eventBindings: nothing on GameEvent.PermanentSacrificed names what the
+      -- permanent became. Every PUBLIC destination, the rule's "in the zone it
+      -- moved to ... if that zone is a public zone", so Rest in Peace's exile
+      -- (CR 614.1) is found as a graveyard is; a hand or library contributes
+      -- nothing.
+      becameInPublicZone =
+        Map.fromList
+          ( Maybe.mapMaybe
+              (fmap (\zc -> (ZoneChange.departed zc, ZoneChange.object zc)) . publicDeparture . LoggedEvent.event)
+              events
+          )
+      publicDeparture event = do
+        change <- Game.movedChange event
+        if ZoneChange.from change == Zone.Battlefield && not (Game.isHiddenZone (ZoneChange.to change)) then Just change else Nothing
       -- The batch cut into its CR 704.3 / CR 608.2f events, by the one reading of
       -- simultaneity delayedPending shares (`eventGroups` above).
       groups = eventGroups events
@@ -2372,7 +2385,7 @@ eventTriggers events gs =
             -- CR 400.7d: an ability of a permanent may read what costs were
             -- paid for the spell it was, so the bearer's record rides on every
             -- ability it triggers (Binding.paidCostRecord).
-            pend (cond, ab) = PendingTrigger.MkPendingTrigger (TriggerSource.OfObject oid) ctrl ab (Map.union (Binding.paidCostRecord bindings) (eventBindingsOver board gs (Map.lookup oid becameInGraveyard) becameInGraveyard oid ctrl cond event)) Nothing (Just logged) (copiesIn (fmap snd abilities) ab) (delayedAsTriggered board oid gs)
+            pend (cond, ab) = PendingTrigger.MkPendingTrigger (TriggerSource.OfObject oid) ctrl ab (Map.union (Binding.paidCostRecord bindings) (eventBindingsOver board gs (Map.lookup oid becameInGraveyard) becameInPublicZone oid ctrl cond event)) Nothing (Just logged) (copiesIn (fmap snd abilities) ab) (delayedAsTriggered board oid gs)
             -- CR 603.2d: a permanent entering may make an ability of a
             -- permanent trigger additional times (Yarok, the Desecrated),
             -- whichever side of the move its condition names (docs/decisions.md,

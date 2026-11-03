@@ -9,10 +9,10 @@ import qualified Parun.Types.PlayerId as PlayerId
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.LifeChange" $ do
   -- CR 119.3.
-  Spec.it s "MkLifeChange, both keys" $
+  Spec.it s "MkLifeChange, every key" $
     Common.assertCodec
       s
       LifeChange.codec
-      (LifeChange.MkLifeChange {LifeChange.player = PlayerId.MkPlayerId 0, LifeChange.amount = 3})
-      " {\"player\":0,\"amount\":3} "
+      (LifeChange.MkLifeChange {LifeChange.player = PlayerId.MkPlayerId 0, LifeChange.amount = 3, LifeChange.first = False})
+      " {\"player\":0,\"amount\":3,\"first\":false} "
   Spec.it s "has a schema" $ Common.assertHasSchema s LifeChange.codec

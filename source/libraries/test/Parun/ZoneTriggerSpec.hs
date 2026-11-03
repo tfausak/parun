@@ -76,6 +76,7 @@ import qualified Parun.Types.CounterChange as CounterChange
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CounterPlacement as CounterPlacement
 import qualified Parun.Types.Countering as Countering
+import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.Crewing as Crewing
@@ -107,7 +108,7 @@ import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LandPlayed as LandPlayed
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
-import qualified Parun.Types.LifeLost as LifeLost
+import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.MadnessCost as MadnessCost
 import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
@@ -147,7 +148,6 @@ import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
-import qualified Parun.Types.PlayerLosesLife as PlayerLosesLife
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.ProjectedCharacteristics as PC
@@ -1893,7 +1893,7 @@ representativeEvents cond =
         -- CR 726.2's third ability is controlled by the taker, so alice's take.
         TriggerCondition.PlayerTookInitiative -> one (GameEvent.TookInitiative S.alice)
         -- CR 702.179d's own event, an opponent's loss.
-        TriggerCondition.OpponentLostLifeDuringYourTurn -> one (GameEvent.LifeLost (LifeLost.MkLifeLost S.bob 2 True))
+        TriggerCondition.OpponentLostLifeDuringYourTurn -> one (GameEvent.LifeLost (LifeChange.MkLifeChange S.bob 2 True))
         TriggerCondition.SelfCycled -> one (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.ToPayCyclingCost Nothing Nothing))
         -- CR 702.94a's cause, so the event is one this condition genuinely
         -- admits; an Ordinary reveal would pin nothing.
@@ -2132,17 +2132,17 @@ representativeEvents cond =
         TriggerCondition.SelfPreventsDamage _ -> one (GameEvent.DamagePrevented (DamagePrevented.MkDamagePrevented preventedByBearer (Map.singleton arrived (Map.singleton (Recipient.ToCreature departed) 2))))
         -- CR 119.9's own event, and the only one this condition admits: the
         -- payload is a player and an amount, and the amount is the floor.
-        TriggerCondition.PlayerGainsLife _ -> one (GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 2))
+        TriggerCondition.PlayerGainsLife _ -> one (GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 2 True))
         -- The same event, the batch reading admitting exactly what the per-seat
         -- one does: the two differ in Event.batchScoped, never in the matcher.
-        TriggerCondition.PlayersGainLife _ -> one (GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 2))
+        TriggerCondition.PlayersGainLife _ -> one (GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 2 True))
         -- The loss condition's own event, and the only one it admits, on the
         -- gain arm's reasoning: same payload shape, same amount floor.
-        TriggerCondition.PlayerLosesLife _ -> one (GameEvent.LifeLost (LifeLost.MkLifeLost S.bob 2 True))
+        TriggerCondition.PlayerLosesLife _ -> one (GameEvent.LifeLost (LifeChange.MkLifeChange S.bob 2 True))
         -- CR 714.2b: a placement on the BEARER that crosses the chapter. The
         -- bearer here is `departed`, the id Event.matchesTrigger is asked about
         -- below, and the counts straddle N so the event really matches.
-        TriggerCondition.SelfCountersReached (SelfCountersReached.MkSelfCountersReached kind n) -> one (GameEvent.CountersPut (CounterChange.MkCounterChange departed kind 0 n))
+        TriggerCondition.SelfCountersReached (SelfCountersReached.MkSelfCountersReached kind n) -> one (GameEvent.CountersPut (CountersPlaced.MkCountersPlaced S.alice departed kind 0 n))
         -- CR 716.2a's own event, on `departed` and not the bearer, the arm above's
         -- shape: the pair does not match, which is what pins the floor.
         TriggerCondition.SelfBecomesClassLevel n -> one (GameEvent.ClassLevelSet (ClassLevelChange.MkClassLevelChange departed (ClassLevel.MkClassLevel 1) n))
@@ -2159,12 +2159,12 @@ representativeEvents cond =
         -- applied to rather than the bearer. The Filter below is the trivial one,
         -- so what decides the match is whether the subject can be viewed at all --
         -- and the floor is empty either way, a batch condition binding nothing.
-        TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind _) -> one (GameEvent.CountersPut (CounterChange.MkCounterChange departed kind 0 1))
+        TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind _ _) -> one (GameEvent.CountersPut (CountersPlaced.MkCountersPlaced S.alice departed kind 0 1))
         -- Its per-permanent scope, on the same event: the two share a payload and a
         -- matcher, and what parts them here is the floor -- this one names ONE
         -- permanent, so `became` is stamped and claimed where the batch above
         -- claims nothing.
-        TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind _) -> one (GameEvent.CountersPut (CounterChange.MkCounterChange departed kind 0 1))
+        TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind _ _) -> one (GameEvent.CountersPut (CountersPlaced.MkCountersPlaced S.alice departed kind 0 1))
         -- CR 601.2i's own event, and CR 707.10's copy where the condition
         -- watches copies too. Both halves are bound whichever ids the event
         -- names -- the spell under `thatSpell`, the caster or copier under
@@ -2521,16 +2521,16 @@ everyTriggerCondition =
     TriggerCondition.AbilityIsCountered,
     TriggerCondition.DamageToPlayerPrevented PlayerRelation.You,
     TriggerCondition.SelfPreventsDamage (Filter.Type.And []),
-    TriggerCondition.PlayerGainsLife PlayerRelation.You,
+    TriggerCondition.PlayerGainsLife (LifeTrigger.MkLifeTrigger PlayerRelation.You TriggerFrequency.EveryTime),
     TriggerCondition.PlayersGainLife PlayerRelation.AnyPlayer,
-    TriggerCondition.PlayerLosesLife (PlayerLosesLife.MkPlayerLosesLife PlayerRelation.Opponent TriggerFrequency.EveryTime),
+    TriggerCondition.PlayerLosesLife (LifeTrigger.MkLifeTrigger PlayerRelation.Opponent TriggerFrequency.EveryTime),
     TriggerCondition.SelfCountersReached (SelfCountersReached.MkSelfCountersReached CounterKind.Lore 1),
     TriggerCondition.SelfBecomesClassLevel (ClassLevel.MkClassLevel 2),
     TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Defense),
     TriggerCondition.SelfCountersRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Loyalty),
     TriggerCondition.SelfCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.PlusOnePlusOne),
-    TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement CounterKind.MinusOneMinusOne (Filter.Type.And [])),
-    TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement CounterKind.MinusOneMinusOne (Filter.Type.And [])),
+    TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement CounterKind.MinusOneMinusOne (Filter.Type.And []) PlayerRelation.AnyPlayer),
+    TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement CounterKind.MinusOneMinusOne (Filter.Type.And []) PlayerRelation.AnyPlayer),
     -- BOTH scopes, unlike StepBegins' one above: the TurnScope is new on this
     -- condition, and the pin below asserts eventBindingSlots against what
     -- eventBindings stamps for every event -- so an arm that had cased on the

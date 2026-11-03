@@ -69,6 +69,8 @@ import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
+import qualified Parun.Types.DamagedParty as DamagedParty
+import qualified Parun.Types.DealtDamageTo as DealtDamageTo
 import qualified Parun.Types.Defense as Defense
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.DestructionR as DestructionR
@@ -1355,7 +1357,9 @@ withCharacteristicsOf object gs context =
         { Filter.sourceMeasures = foldMap Filter.measuresOf view,
           Filter.sourceColors = foldMap Filter.colors view,
           Filter.sourceSectors = foldMap (Sector.sectorsIn . Filter.designations) view,
-          Filter.sourceNames = foldMap Filter.names view
+          Filter.sourceNames = foldMap Filter.names view,
+          Filter.sourceDealtDamage = Count.dealtDamageTo object gs,
+          Filter.sourceDealtDamageEarlier = Count.dealtDamageEarlier object gs
         }
 
 -- CR 509.1b: the context a pairwise blocking restriction or cost is matched
@@ -3960,7 +3964,9 @@ filterReads f = case f of
   -- handed in on the context, so it is a fixed input to any single projection.
   Filter.Type.CantCrewVehicles -> Set.empty
   Filter.Type.DealtDamageThisTurn -> Set.empty
-  Filter.Type.DealtDamageTo _ -> Set.empty
+  Filter.Type.DealtDamageTo asked -> case DealtDamageTo.party asked of
+    DamagedParty.HolderOfCandidate holder -> holderReads holder
+    _ -> Set.empty
   Filter.Type.EnteredThisTurn _ -> Set.empty
   Filter.Type.CrewedSourceThisTurn -> Set.empty
   Filter.Type.ConvokedSourceThisTurn -> Set.empty
@@ -3976,6 +3982,8 @@ filterReads f = case f of
   -- characteristics, so no Modification writes Object.attachedTo, and CR 303.4's
   -- attaching runs between projections as CR 110.1's zone change does.
   Filter.Type.AttachedTo g -> filterReads g
+  -- A record filed when the object left, which no Modification writes.
+  Filter.Type.BeforeMove _ -> Set.empty
   -- The nest's own reads again, declared as if they were the CANDIDATE's even
   -- though they are an ATTACHER's -- exactly right rather than merely safe, for
   -- the atom above's reason. The attachment itself reads nothing, for that atom's
@@ -4121,6 +4129,8 @@ filterReadsPeers f = case f of
   -- The atoms that read a peer view directly, off a field of the candidate's
   -- own view.
   Filter.Type.AttachedTo _ -> True
+  -- A record filed when the object left, not a projection of a second object.
+  Filter.Type.BeforeMove _ -> False
   Filter.Type.HasAttached _ -> True
   Filter.Type.IsAttackingPlaneswalker _ -> True
   Filter.Type.IsAttackingBattle _ -> True

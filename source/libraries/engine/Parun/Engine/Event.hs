@@ -123,6 +123,7 @@ import qualified Parun.Types.CounterKindFor as CounterKindFor
 import qualified Parun.Types.CounterR as CounterR
 import qualified Parun.Types.Counterability as Counterability
 import qualified Parun.Types.Countering as Countering
+import qualified Parun.Types.CountersPlaced as CountersPlaced
 import Parun.Types.DamageEvent (DamageEvent)
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
@@ -192,12 +193,12 @@ import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.Layout as Layout
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeGainR as LifeGainR
 import qualified Parun.Types.LifeGainRewrite as LifeGainRewrite
 import qualified Parun.Types.LifeLossCause as LifeLossCause
 import qualified Parun.Types.LifeLossR as LifeLossR
 import qualified Parun.Types.LifeLossRewrite as LifeLossRewrite
-import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Looked as Looked
 import qualified Parun.Types.MadnessCost as MadnessCost
@@ -406,31 +407,39 @@ sampleControl = do
     State.modify' (\g -> List.foldl' (flip recordEvent) (maybe g (`fileBoardBefore` g) (GameState.boardAtControlSample gs)) changes)
   pure (not (null changes))
 
--- The GameEvent.LifeLost for a loss recorded next, stamped with whether the log
--- holds an earlier one of the player's. Stamped here because the trigger scan runs
--- after a whole resolution or cast, when the log no longer says which of two losses
--- came first. Of losses dealt together only the first recorded is stamped, so
--- they fire once (Intermediate Chirography's ruling, "your first life-losing
--- event"). The log's clearing at turn handoff makes it "of the turn".
-lifeLost :: PlayerId -> Natural -> GameState -> GameEvent
-lifeLost pid amount gs =
-  GameEvent.LifeLost (LifeLost.MkLifeLost {LifeLost.player = pid, LifeLost.amount = amount, LifeLost.first = firstLifeLoss pid (GameState.events gs)})
+-- The GameEvent for a gain or loss recorded next, stamped with whether the log
+-- holds an earlier one of the player's in that direction. Stamped here because the
+-- trigger scan runs after a whole resolution or cast, when the log no longer says
+-- which of two came first. Of those dealt together only the first recorded is
+-- stamped, so they fire once (Intermediate Chirography's and Vanguard Seraph's
+-- rulings, "your first life-losing event", "your first life-gaining event"). The
+-- log's clearing at turn handoff makes it "of the turn".
+lifeChanged :: LifeDirection.LifeDirection -> PlayerId -> Natural -> GameState -> GameEvent
+lifeChanged direction pid amount gs =
+  lifeChangeEvent direction (LifeChange.MkLifeChange {LifeChange.player = pid, LifeChange.amount = amount, LifeChange.first = firstLifeChange direction pid (GameState.events gs)})
 
--- Whether a loss of the player's after `earlier` is their first in the log.
-firstLifeLoss :: PlayerId -> Seq.Seq LoggedEvent.LoggedEvent -> Bool
-firstLifeLoss pid earlier =
-  let spent logged = case LoggedEvent.event logged of
-        GameEvent.LifeLost loss -> LifeLost.player loss == pid
-        _ -> False
+lifeChangeEvent :: LifeDirection.LifeDirection -> LifeChange.LifeChange -> GameEvent
+lifeChangeEvent direction = case direction of
+  LifeDirection.Gained -> GameEvent.LifeGained
+  LifeDirection.Lost -> GameEvent.LifeLost
+
+-- Whether a change of the player's after `earlier` is their first that way in the log.
+firstLifeChange :: LifeDirection.LifeDirection -> PlayerId -> Seq.Seq LoggedEvent.LoggedEvent -> Bool
+firstLifeChange direction pid earlier =
+  let spent logged = fmap fst (Game.lifeChangeOf direction (LoggedEvent.event logged)) == Just pid
    in not (any spent earlier)
 
--- CR 733.1: `lifeLost`'s stamps over a log with an undone stretch cut out of it,
--- which can leave a later loss the first (Parun.Engine.Reversal.withoutAnnouncement).
-restampLifeLosses :: Seq.Seq LoggedEvent.LoggedEvent -> Seq.Seq LoggedEvent.LoggedEvent
-restampLifeLosses logged =
-  let restamp index entry = case LoggedEvent.event entry of
-        GameEvent.LifeLost loss -> entry {LoggedEvent.event = GameEvent.LifeLost loss {LifeLost.first = firstLifeLoss (LifeLost.player loss) (Seq.take index logged)}}
-        _ -> entry
+-- CR 733.1: `lifeChanged`'s stamps over a log with an undone stretch cut out of it,
+-- which can leave a later change the first (Parun.Engine.Reversal.withoutAnnouncement).
+restampLifeChanges :: Seq.Seq LoggedEvent.LoggedEvent -> Seq.Seq LoggedEvent.LoggedEvent
+restampLifeChanges logged =
+  let restamp index entry =
+        let again direction change =
+              entry {LoggedEvent.event = lifeChangeEvent direction change {LifeChange.first = firstLifeChange direction (LifeChange.player change) (Seq.take index logged)}}
+         in case LoggedEvent.event entry of
+              GameEvent.LifeLost change -> again LifeDirection.Lost change
+              GameEvent.LifeGained change -> again LifeDirection.Gained change
+              _ -> entry
    in Seq.mapWithIndex restamp logged
 
 -- `recordEvent`, sampling CR 603.10's board off `board` rather than off the state
@@ -795,7 +804,7 @@ payLife :: PlayerId -> Natural -> Game ()
 payLife pid n = do
   settled <- resolveLifeLoss LifeLossCause.ByPayment pid n
   Monad.when (settled /= 0) . State.modify' $
-    \gs -> recordEvent (lifeLost pid settled gs) (Game.adjustLife pid (negate (toInteger settled)) gs)
+    \gs -> recordEvent (lifeChanged LifeDirection.Lost pid settled gs) (Game.adjustLife pid (negate (toInteger settled)) gs)
 
 -- CR 110.5b: stamp the tapped status onto an entering permanent, the write shared
 -- by EntryRewrite.Tapped (CR 614.1d), by the declining half of
@@ -4424,7 +4433,7 @@ apply batch applied candidate event =
       DrawRewrite.FromGraveyardOrLose -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
         gs <- State.get
-        let cards = filter (`Game.isCardObject` gs) (Game.zoneMembers Zone.Graveyard pid gs)
+        let cards = Game.cardsIn Zone.Graveyard pid gs
         picked <- Game.chooseAmong (\decider who pool -> Prompt.ChooseCardInGraveyard decider who (ReplacementCandidate.source candidate) pool Seq.empty) pid cards
         arrived <- maybe (pure Seq.empty) (`changeZoneReturning` Zone.Hand) picked
         after <- State.get
@@ -5430,7 +5439,11 @@ showsInstantBackFace oid gs = Maybe.fromMaybe False $ do
 flushEnteringCounters :: ObjectId -> Game ()
 flushEnteringCounters oid = do
   pending <- takeEnteringCounters oid
-  Monad.mapM_ (\(kind, n) -> Monad.void (settleCounters oid kind n)) (Map.toAscList pending)
+  gs <- State.get
+  -- CR 122.6a's default putter, the object's controller. Not implemented: CR
+  -- 702.104a's opponent as the player putting tribute's counters (#5976).
+  Monad.unless (Map.null pending) . Monad.forM_ (Projection.controllerOf oid gs) $ \putter ->
+    Monad.mapM_ (\(kind, n) -> Monad.void (settleCounters putter oid kind n)) (Map.toAscList pending)
 
 -- The counters pending for an entering object, cleared; a diverted one drops
 -- them, since it never entered (CR 614.6).
@@ -5700,7 +5713,7 @@ putCounters cause oid kind n = do
   resolved <- resolveCounters cause oid kind n
   case resolved of
     Nothing -> pure 0
-    Just (target, settledKind, settledCount) -> settleCounters target settledKind settledCount
+    Just (target, settledKind, settledCount) -> settleCounters (CounterCause.putter cause) target settledKind settledCount
 
 -- The WRITE-AND-EMIT half of putCounters, with no CR 616.1 loop in front of it:
 -- the counters have already been settled and this records them. Its second caller
@@ -5709,8 +5722,8 @@ putCounters cause oid kind n = do
 --
 -- Not a second funnel. putCounters is still the only door that both settles and
 -- writes; this is that door's tail, shared rather than copied.
-settleCounters :: ObjectId -> CounterKind.CounterKind Keyword.Type.Keyword -> Natural -> Game Natural
-settleCounters target settledKind settledCount
+settleCounters :: PlayerId -> ObjectId -> CounterKind.CounterKind Keyword.Type.Keyword -> Natural -> Game Natural
+settleCounters putter target settledKind settledCount
   | settledCount == 0 = pure 0
   | otherwise = do
       gs <- State.get
@@ -5757,7 +5770,7 @@ settleCounters target settledKind settledCount
           -- Guarded by the same `settledCount > 0` the write is: an event
           -- recorded for a placement that did not happen would fire a chapter
           -- ability off nothing.
-          State.modify' (recordEvent (GameEvent.CountersPut (CounterChange.MkCounterChange target settledKind before (before + settledCount))) . bumped)
+          State.modify' (recordEvent (GameEvent.CountersPut (CountersPlaced.MkCountersPlaced putter target settledKind before (before + settledCount))) . bumped)
           pure settledCount
 
 -- CR 122.6a: putCounters with the rule's DEFAULT putter -- "if the effect doesn't
@@ -5766,9 +5779,8 @@ settleCounters target settledKind settledCount
 -- is left: CR 702.37b's megamorph counter, at `apply`'s TurnUpR arm. The entry
 -- roads -- CR 614.1c-d's rewrites and a spell's entry riders -- accumulate through
 -- addEnteringCounters below and reach this module's tail by the other route, and
--- rule 122.6a's default putter is what the flush places under either way. No
--- printing in the pool exercises the rule's exception by naming a player, so
--- nothing needs to pass one.
+-- rule 122.6a's default putter is what the flush places under either way.
+-- Not implemented: tribute naming its opponent as the putter (#5976).
 --
 -- An object with no controller is one that is not on the battlefield, and
 -- putCounters places nothing on such an object anyway -- so answering 0 without
@@ -10152,10 +10164,7 @@ changeLife :: PlayerId -> Integer -> Game ()
 changeLife pid delta =
   Monad.when (delta /= 0) . State.modify' $ \gs ->
     recordEvent
-      ( if delta > 0
-          then GameEvent.LifeGained (LifeChange.MkLifeChange pid (Integer.toNaturalSaturating delta))
-          else lifeLost pid (Integer.toNaturalSaturating (negate delta)) gs
-      )
+      (lifeChanged (if delta > 0 then LifeDirection.Gained else LifeDirection.Lost) pid (Integer.toNaturalSaturating (abs delta)) gs)
       (Game.adjustLife pid delta gs)
 
 -- CR 121.1, one card at a time per CR 121.2, with CR 614's say first (CR 121.6).
@@ -10228,7 +10237,7 @@ performDraw pid = do
   -- The top CARD (CR 121.1): a token shuffled in waits there for CR 704.5d (CR
   -- 111.7) and is no card. Proved by
   -- data/scenarios/game-outcome/cr-111-7-lich-s-mirror-draws-seven-cards-past-a-token-it-shuffled-in.json.
-  case filter (`Game.isCardObject` gs) (Game.zoneMembers Zone.Library pid gs) of
+  case Game.cardsIn Zone.Library pid gs of
     [] -> do
       State.put gs {GameState.drewFromEmpty = Set.insert pid (GameState.drewFromEmpty gs)}
       pure Nothing

@@ -26,9 +26,6 @@
                       {
                         "type": "MoveToZone",
                         "value": {
-                          "origin": {
-                            "type": "Graveyard"
-                          },
                           "ref": {
                             "type": "InSlot",
                             "value": "became"

@@ -1,0 +1,93 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Run Away Together",
+      "oracleText": "Choose two target creatures controlled by different players. Return those creatures to their owners' hands.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "MoveToZone",
+                    "value": {
+                      "ref": {
+                        "type": "AllOf",
+                        "value": [
+                          {
+                            "type": "InSlot",
+                            "value": "first"
+                          },
+                          {
+                            "type": "InSlot",
+                            "value": "second"
+                          }
+                        ]
+                      },
+                      "zone": {
+                        "type": "Hand"
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "first": {
+                "filter": {
+                  "type": "ControllerRelatesToBound",
+                  "value": {
+                    "relation": {
+                      "type": "AnotherPlayer"
+                    },
+                    "slot": "second"
+                  }
+                },
+                "pool": {
+                  "type": "Creatures"
+                }
+              },
+              "second": {
+                "filter": {
+                  "type": "ControllerRelatesToBound",
+                  "value": {
+                    "relation": {
+                      "type": "AnotherPlayer"
+                    },
+                    "slot": "first"
+                  }
+                },
+                "pool": {
+                  "type": "Creatures"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}

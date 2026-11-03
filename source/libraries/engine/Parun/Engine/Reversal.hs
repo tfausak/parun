@@ -76,7 +76,7 @@ withoutAnnouncement before entry closed = do
   broughtIn <- seqOf GameState.broughtIn
   manaPool <- pools (GameState.manaPool before) (GameState.manaPool entry) (GameState.manaPool closed)
   combat <- one GameState.combat
-  events <- Event.restampLifeLosses <$> eventsOf GameState.events
+  events <- Event.restampLifeChanges <$> eventsOf GameState.events
   nextEventGroup <- newest GameState.nextEventGroup
   eventGroupDepth <- one GameState.eventGroupDepth
   enteringTogether <- one GameState.enteringTogether
@@ -354,8 +354,8 @@ withoutAnnouncement before entry closed = do
     -- CR 733.1: "no abilities trigger and no effects apply as a result of an
     -- undone action", so the announcement's own segment of the log goes and the
     -- window's stands. The log only grows, so that segment is the one between
-    -- the two lengths. A kept life loss can become its player's first by the cut,
-    -- so `withoutAnnouncement` restamps what this keeps.
+    -- the two lengths. A kept life gain or loss can become its player's first by
+    -- the cut, so `withoutAnnouncement` restamps what this keeps.
     --
     -- GameState.scannedThrough and GameState.damageScannedThrough are the two
     -- fields that index this log by position, and both sit at or before

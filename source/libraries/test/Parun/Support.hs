@@ -1965,6 +1965,7 @@ stubView table oid =
                 -- False against this stub.
                 Filter.controlledSinceTurnBegan = False,
                 Filter.attachedToView = Nothing,
+                Filter.beforeMoveView = Nothing,
                 Filter.attachedViews = [],
                 Filter.attachedTo = Nothing,
                 Filter.canHostSubject = False,

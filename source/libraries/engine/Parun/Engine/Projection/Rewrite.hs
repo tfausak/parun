@@ -643,7 +643,7 @@ rewriteEffect pairs effect = case effect of
   -- Strike's "damage equal to the number of Goblins you control". CR 120.2b's
   -- dealer is a slot name and CR 120.4a's excess rider a destination; neither is a
   -- word rule 612 can swap.
-  Effect.DealDamage (DealDamage.MkDealDamage parts dealer excess tally damaged) -> Effect.DealDamage (DealDamage.MkDealDamage (fmap (rewriteDamagePart pairs) parts) dealer excess tally damaged)
+  Effect.DealDamage (DealDamage.MkDealDamage parts dealer excess tally damaged excessTally) -> Effect.DealDamage (DealDamage.MkDealDamage (fmap (rewriteDamagePart pairs) parts) dealer excess tally damaged excessTally)
   -- Two SlotNames and nothing else: no word a swap could reach.
   Effect.Fight _ -> effect
   -- CR 612.1: a text-changer's own restriction clause is text like any other,
@@ -2076,10 +2076,10 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.SelfLeavesGraveyard -> condition
   -- The Filter is rewritten and the counter kind is not: CR 612.1's pairs swap
   -- SUBTYPE words, and a counter kind names none.
-  TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind f) -> TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind (Filter.rewrite pairs f))
+  TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind f putter) -> TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind (Filter.rewrite pairs f) putter)
   -- The arm above's per-permanent scope, rewritten the same way and for the same
   -- reason: same payload, and CR 612.1 knows nothing about the scope.
-  TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind f) -> TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind (Filter.rewrite pairs f))
+  TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind f putter) -> TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind (Filter.rewrite pairs f) putter)
   -- The TurnScope is carried through untouched, not dropped: a rebuild that
   -- forgot the field would reset a text-changed trigger to firing every turn.
   TriggerCondition.SpellCast (SpellCast.MkSpellCast f scope fromZone ordinal window copies) -> TriggerCondition.SpellCast (SpellCast.MkSpellCast (Filter.rewrite pairs f) scope fromZone ordinal window copies)

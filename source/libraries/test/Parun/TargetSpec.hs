@@ -2560,7 +2560,7 @@ celestineGraveyard piker wolves bolt gained =
   let (pikerId, g1) = S.addGraveyardCard piker S.alice (Setup.emptyGame S.bothPlayers)
       (wolvesId, g2) = S.addGraveyardCard wolves S.alice g1
       (boltId, g3) = S.addGraveyardCard bolt S.alice g2
-   in (pikerId, wolvesId, boltId, S.withEvents [GameEvent.LifeGained (LifeChange.MkLifeChange S.alice gained)] g3)
+   in (pikerId, wolvesId, boltId, S.withEvents [GameEvent.LifeGained (LifeChange.MkLifeChange S.alice gained True)] g3)
 
 -- Celestine, the Living Saint ({4}{W} Legendary Creature -- Human Warrior 3/4,
 -- Oracle text verified against Scryfall): "Flying, lifelink / Healing Tears -- At

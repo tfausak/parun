@@ -1589,7 +1589,7 @@ combatReplaySpec s =
                   decider
                   S.alice
                   oid
-                  (GameEvent.LifeGained (LifeChange.MkLifeChange S.alice 4) NonEmpty.:| [GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 4)])
+                  (GameEvent.LifeGained (LifeChange.MkLifeChange S.alice 4 True) NonEmpty.:| [GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 4 True)])
           Spec.assertEqWith s "choosing the second round trips" (Replay.decode p (Replay.encode p 1)) (Just 1)
           Spec.assertEqWith s "choosing the first round trips" (Replay.decode p (Replay.encode p 0)) (Just 0)
         Spec.it s "a chosen simultaneous occurrence does not decode as a read-ahead chapter" $ do
@@ -1602,7 +1602,7 @@ combatReplaySpec s =
                   decider
                   S.alice
                   oid
-                  (GameEvent.LifeGained (LifeChange.MkLifeChange S.alice 4) NonEmpty.:| [GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 4)])
+                  (GameEvent.LifeGained (LifeChange.MkLifeChange S.alice 4 True) NonEmpty.:| [GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 4 True)])
           Spec.assertEqWith s "mismatch" (Replay.decode p (Response.ChoseReadAheadChapter 1)) Nothing
         Spec.it s "a short delayed-occurrence transcript returns the earliest offered" $
           -- CR 603.7b: every offered occurrence already matched the entry's
@@ -1616,7 +1616,7 @@ combatReplaySpec s =
                     decider
                     S.alice
                     oid
-                    (GameEvent.LifeGained (LifeChange.MkLifeChange S.alice 4) NonEmpty.:| [GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 4)])
+                    (GameEvent.LifeGained (LifeChange.MkLifeChange S.alice 4 True) NonEmpty.:| [GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 4 True)])
                 )
             )
             0

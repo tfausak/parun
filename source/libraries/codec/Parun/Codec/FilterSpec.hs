@@ -18,6 +18,7 @@ import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.ControlMargin as ControlMargin
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.DamageDealer as DamageDealer
 import qualified Parun.Types.DamagedParty as DamagedParty
 import qualified Parun.Types.DealtDamageTo as DealtDamageTo
 import qualified Parun.Types.Designation as Designation
@@ -427,7 +428,7 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
     Common.assertCodec
       s
       codec
-      (Filter.DealtDamageTo DealtDamageTo.MkDealtDamageTo {DealtDamageTo.party = DamagedParty.Source, DealtDamageTo.kind = Nothing, DealtDamageTo.window = Lookback.ThisTurn})
+      (Filter.DealtDamageTo DealtDamageTo.MkDealtDamageTo {DealtDamageTo.party = DamagedParty.Source, DealtDamageTo.kind = Nothing, DealtDamageTo.window = Lookback.ThisTurn, DealtDamageTo.dealer = DamageDealer.Candidate})
       " {\"type\":\"DealtDamageTo\",\"value\":{\"party\":{\"type\":\"Source\"}}} "
   Spec.it s "EnteredThisTurn" $
     Common.assertCodec
@@ -462,6 +463,12 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       codec
       (Filter.HasAttached (Filter.HasSubtype Subtype.Aura))
       " {\"type\":\"HasAttached\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Aura\"}}} "
+  Spec.it s "BeforeMove" $
+    Common.assertCodec
+      s
+      codec
+      (Filter.BeforeMove Filter.IsSource)
+      " {\"type\":\"BeforeMove\",\"value\":{\"type\":\"IsSource\"}} "
   -- CR 303.4b's atom is not CR 701.3a's, and the two tags are what says so: a
   -- codec that spelled both "AttachedTo" would read an enchanted creature as an
   -- Aura.

@@ -736,7 +736,7 @@ copyTargetsRefs targets = case targets of
 -- objectRefPositions, which is the only observer of a position no card writes.
 effectObjectRefs :: Effect card ability -> [ObjectRef]
 effectObjectRefs effect = case effect of
-  Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _ _) -> Foldable.toList (fmap DamagePart.ref parts)
+  Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _ _ _) -> Foldable.toList (fmap DamagePart.ref parts)
   Effect.Fight {} -> []
   Effect.ModifyTarget (ModifyTarget.MkModifyTarget _ _ ref _) -> [ref]
   Effect.ChangeText {} -> []
@@ -1258,7 +1258,7 @@ sequenceSlots defined = joinSlots . snd . List.mapAccumL (\seen effect -> (seen 
 slotsOf :: Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Map.Map SlotName SlotArity
 slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectRefs effect))) (joinSlots (fmap playerRefSlots (effectPlayerRefs effect)))) $ case effect of
   -- The dealer is a read like any other (CR 120.2b), and one object (CR 120.1).
-  Effect.DealDamage (DealDamage.MkDealDamage parts dealer _ _ _) ->
+  Effect.DealDamage (DealDamage.MkDealDamage parts dealer _ _ _ _) ->
     joinTwo
       (joinSlots (fmap (quantitySlots . DamagePart.quantity) (Foldable.toList parts)))
       (maybe Map.empty oneSlot dealer)
@@ -2140,7 +2140,7 @@ slotsAreExhaustive effect = all (all Quantity.slotsAreExhaustive . objectRefQuan
 -- arms answer a constant, so a new FIELD on one is not forced.
 ownSlotsAreExhaustive :: Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
 ownSlotsAreExhaustive effect = case effect of
-  Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _ _) -> all (Quantity.slotsAreExhaustive . DamagePart.quantity) parts
+  Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _ _ _) -> all (Quantity.slotsAreExhaustive . DamagePart.quantity) parts
   Effect.Fight {} -> True
   Effect.ModifyTarget (ModifyTarget.MkModifyTarget duration modification _ _) ->
     durationSlotsAreExhaustive duration
@@ -2437,7 +2437,7 @@ readsX =
       -- effectReadsX's half that is not an ObjectRef's: this opcode's own fields,
       -- and its nested effects through the recursion back into readsX.
       effectOwnReadsX effect = case effect of
-        Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _ _) -> any (Quantity.readsX . DamagePart.quantity) parts
+        Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _ _ _) -> any (Quantity.readsX . DamagePart.quantity) parts
         Effect.Fight {} -> False
         -- Untamed Might's "+X/+X" sits inside the Modification, not on the effect.
         Effect.ModifyTarget (ModifyTarget.MkModifyTarget _ modification _ _) -> any Quantity.readsX (Projection.quantitiesOf modification)
@@ -2716,8 +2716,9 @@ boundSlots effect = case effect of
   Effect.Connive {} -> Set.empty
   -- CR 120.4b's damage actually dealt, summed over every recipient, for Syphon
   -- Soul's "the damage dealt this way" (Parun.Types.DealDamage.tally), and the
-  -- objects it reached, for Incinerate's "a creature dealt damage this way".
-  Effect.DealDamage (DealDamage.MkDealDamage _ _ _ mTally mDamaged) -> foldMap Set.singleton mTally <> foldMap Set.singleton mDamaged
+  -- objects it reached, for Incinerate's "a creature dealt damage this way", and
+  -- CR 120.10's excess, for Goblin Negotiation's "excess damage dealt this way".
+  Effect.DealDamage (DealDamage.MkDealDamage _ _ _ mTally mDamaged mExcessTally) -> foldMap Set.singleton mTally <> foldMap Set.singleton mDamaged <> foldMap Set.singleton mExcessTally
   Effect.Fight {} -> Set.empty
   Effect.ModifyTarget {} -> Set.empty
   Effect.ChangeText {} -> Set.empty
@@ -3333,7 +3334,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
 -- The CARDS in one player's library, top first (CR 401.2): a token shuffled in
 -- is there until CR 704.5d removes it (CR 111.7), and is not a card.
 libraryCards :: PlayerId -> GameState -> [ObjectId]
-libraryCards pid gs = filter (`Game.isCardObject` gs) (Game.zoneMembers Zone.Library pid gs)
+libraryCards = Game.cardsIn Zone.Library
 
 -- The cards in ONE player's graveyard matching the filter, in ascending
 -- ObjectId. The filter is matched in THIS EFFECT's context -- the caller's, so
@@ -3347,7 +3348,7 @@ graveyardCardsOf context gs pid filter_ =
    in List.sort
         ( filter
             (\oid -> Filter.matches context (viewOf oid) filter_)
-            (Game.zoneMembers Zone.Graveyard pid gs)
+            (Game.cardsIn Zone.Graveyard pid gs)
         )
 
 -- The cards in ONE player's hand matching the filter: graveyardCardsOf one zone

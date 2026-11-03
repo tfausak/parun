@@ -841,6 +841,7 @@ matchesPrinted viewOf gs event candidate =
         -- so matchesPutter still parts Vorinclex's "if you would put" from CR
         -- 614.16's "if an effect would put" (#847). Reading it off the flush
         -- rather than off the event is what keeps the two levels answering alike.
+        -- Not implemented: tribute naming its opponent as the putter (#5976).
         --
         -- CR 614.12, as in the entry arm below: a row naming a general subset
         -- does not apply to its own source entering (Conclave Mentor's, Pir's and
@@ -1778,7 +1779,7 @@ graveyardCandidates pid scope filter_ gs =
       viewOf = Projection.viewsOf gs
       owners = Maybe.fromMaybe [] (PlayerEffect.playersInScope (Just pid) (Just pid) gs scope)
       offered oid = not (Map.member oid (GameState.enteringPending gs)) && Filter.matches context (viewOf oid) filter_
-   in List.sort (concatMap (\owner -> filter offered (Game.zoneMembers Zone.Graveyard owner gs)) owners)
+   in List.sort (concatMap (\owner -> filter offered (Game.cardsIn Zone.Graveyard owner gs)) owners)
 
 -- CR 614.1a / 614.1c-d: does the event's subject satisfy this replacement's
 -- Filter? Both the ENTERING object of an entry replacement and the MOVING object
@@ -2917,7 +2918,7 @@ legalCopyTargets context batch filter_ among self gs =
           && all (\you -> Projection.objectInRangeGiven grants you oid gs) chooser
       domain = case among of
         CopyDomain.InZone Zone.Battlefield -> Set.toAscList (GameState.battlefield gs)
-        CopyDomain.InZone Zone.Graveyard -> concatMap (\pid -> Game.zoneMembers Zone.Graveyard pid gs) (GameState.turnOrder gs)
+        CopyDomain.InZone Zone.Graveyard -> concatMap (\pid -> Game.cardsIn Zone.Graveyard pid gs) (GameState.turnOrder gs)
         CopyDomain.InZone _ -> []
         CopyDomain.InPile pile -> Game.linkedPile Nothing pile (Maybe.fromMaybe self (Filter.source context)) gs
    in filter eligible domain

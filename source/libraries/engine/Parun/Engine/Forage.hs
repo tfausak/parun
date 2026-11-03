@@ -44,7 +44,7 @@ import qualified Parun.Types.Zone as Zone
 -- answers, so the forced-choice shortcut below and a transcript are
 -- deterministic.
 exileCandidates :: PlayerId -> GameState.GameState -> [ObjectId]
-exileCandidates = Game.zoneMembers Zone.Graveyard
+exileCandidates = Game.cardsIn Zone.Graveyard
 
 -- | CR 701.61a's second candidate set: every permanent this player controls with
 -- the Food subtype. Read off the PROJECTION (CR 613), so a permanent that is a

@@ -394,9 +394,12 @@ slotContext reader perspective unannounced bindings acquisition source amount gs
       -- selectionLegal is where an announcement naming one creature twice is
       -- rejected.
       --
-      -- Not implemented: CR 608.2b's last sentence blanking a departed
-      -- sibling TARGET's names, controller and creature types here, as
-      -- slotAmount's bound below does (#4865).
+      -- A departed sibling TARGET answers from last known information: its
+      -- controller by Run Away Together's ruling, its creature types by Raise
+      -- the Draugr's.
+      --
+      -- Not implemented: CR 608.2b's last sentence blanking its names here,
+      -- as slotAmount's bound below does (#4865).
       base = Projection.framedBySlots gs (Binding.recipientsBySlot targets bindings) framed
       framed =
         -- CR 607.5: the choices of the abilities `acquisition` names -- the
@@ -1150,7 +1153,7 @@ graveyardsOf :: [PlayerId] -> GameState -> Set Recipient
 graveyardsOf pids gs =
   Set.fromList
     . fmap Recipient.ToObject
-    $ concatMap (\pid -> Game.zoneMembers Zone.Graveyard pid gs) pids
+    $ concatMap (\pid -> Game.cardsIn Zone.Graveyard pid gs) pids
 
 -- CR 406.1: the cards in the exile zone, tagged ToObject -- Riftsweeper's
 -- "choose target face-up exiled card". CR 115.2's clause (a) again, the same
