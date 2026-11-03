@@ -33,6 +33,7 @@ import qualified Parun.Extra.Int as Int
 import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
+import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.Action as Action
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.Activator as Activator
@@ -249,7 +250,7 @@ leylineShape src ts =
       ActiveReplacement.condition = Nothing,
       ActiveReplacement.rider = Nothing,
       ActiveReplacement.slots = Map.empty,
-      ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing
+      ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing Acquisition.Own
     }
 
 -- Eon Hub {5} Artifact: "Players skip their upkeep steps."

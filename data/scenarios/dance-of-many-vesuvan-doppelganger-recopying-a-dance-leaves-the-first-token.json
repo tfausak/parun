@@ -1,0 +1,330 @@
+{
+  "description": "CR 607.5 / 608.2h: a Vesuvan Doppelganger that entered as a Dance and later became a Dance again has only the later pair, and its leave trigger reads the acquisition it left with",
+  "note": "The later copy has no duration, so no stored row answers once it has left.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Opalescence",
+            "label": "op"
+          },
+          {
+            "card": "Plains",
+            "label": "p1"
+          },
+          {
+            "card": "Plains",
+            "label": "p2"
+          },
+          {
+            "card": "Island",
+            "label": "i1"
+          },
+          {
+            "card": "Island",
+            "label": "i2"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Vesuvan Doppelganger",
+            "label": "v"
+          },
+          {
+            "card": "Disenchant",
+            "label": "dis"
+          }
+        ],
+        "graveyard": [],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "manaPool": "UUUUU"
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Dance of Many",
+            "label": "model"
+          },
+          {
+            "card": "Hill Giant",
+            "label": "giant"
+          },
+          {
+            "card": "Island",
+            "label": "b1"
+          },
+          {
+            "card": "Island",
+            "label": "b2"
+          }
+        ],
+        "hand": [],
+        "graveyard": [],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$v",
+          "mana": [
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "ChooseCopyTarget": "$model"
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "ChooseTargets": {
+          "target": [
+            "$giant"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Hill Giant",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "bob",
+      "do": {
+        "ChooseToPay": {
+          "decision": {
+            "type": "Pays"
+          },
+          "mana": [
+            "$b1",
+            "$b2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "do": {
+        "Attack": []
+      }
+    },
+    {
+      "turn": 3,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": {
+        "OrderTriggers": [
+          "Vesuvan Doppelganger",
+          "Vesuvan Doppelganger"
+        ]
+      }
+    },
+    {
+      "turn": 3,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": {
+        "ChooseTargets": {
+          "copied": [
+            "$model"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": {
+        "ChooseOptional": {
+          "type": "Exercises"
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 3,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": {
+        "ChooseToPay": {
+          "decision": {
+            "type": "Pays"
+          },
+          "mana": [
+            "$i1",
+            "$i2",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$dis",
+          "targets": [
+            "Vesuvan Doppelganger"
+          ],
+          "mana": [
+            "$p1",
+            "$p2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Graveyard",
+          "card": "Vesuvan Doppelganger",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Hill Giant",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Exile",
+          "card": "Hill Giant",
+          "count": 0
+        }
+      }
+    }
+  ]
+}

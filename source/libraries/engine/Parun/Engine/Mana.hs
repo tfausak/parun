@@ -38,6 +38,7 @@ import qualified Parun.Engine.Subtype as Subtype.Engine
 import qualified Parun.Extra.Integer as Integer
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.AbilityName as AbilityName
+import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.ActivationRestriction as ActivationRestriction
 import qualified Parun.Types.Activations as Activations
@@ -959,13 +960,14 @@ recipientsOf controller chosen gs ref =
 -- (CR 707.6) rather than with the copied permanent's.
 --
 -- Nothing where the source chose nothing, which is almost every source, so a
--- plain unit stays equal to every other plain unit of its type.
+-- plain unit stays equal to every other plain unit of its type; and Own in place
+-- of the acquisition, which CR 106.6's restriction never reads, for that reason.
 sourceChoicesOf :: ObjectId -> GameState -> Maybe SourceChoices.SourceChoices
 sourceChoicesOf oid gs = case Game.lookupObject oid gs of
   Nothing -> Nothing
   Just _ ->
     let choices = SourceContext.choicesOf (Game.acquisitionOf oid gs) oid gs
-     in if Map.null (SourceChoices.names choices) && Set.null (SourceChoices.colors choices) && Maybe.isNothing (SourceChoices.subtype choices) then Nothing else Just choices
+     in if Map.null (SourceChoices.names choices) && Set.null (SourceChoices.colors choices) && Maybe.isNothing (SourceChoices.subtype choices) then Nothing else Just choices {SourceChoices.acquisition = Acquisition.Own}
 
 -- CR 607.2a's production-time capture, sourceChoicesOf's twin: the last
 -- card exiled with this source that is still in exile, baked onto every unit it

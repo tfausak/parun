@@ -815,7 +815,7 @@ rewriteEffect pairs effect = case effect of
   -- token becomes is not rewritten -- only the ref, the count and the riders'
   -- counter amounts and their keys are. A REGRESSION FENCE on this arm too,
   -- Create's reason one opcode up.
-  Effect.CreateCopy (CreateCopy.MkCreateCopy quantity ref riders slot exceptions) -> Effect.CreateCopy (CreateCopy.MkCreateCopy (rewriteQuantity pairs quantity) (rewriteObjectRef pairs ref) (rewriteEntryRiders pairs riders) slot (fmap (rewriteCopyException pairs) exceptions))
+  Effect.CreateCopy (CreateCopy.MkCreateCopy quantity ref riders slot exceptions linked) -> Effect.CreateCopy (CreateCopy.MkCreateCopy (rewriteQuantity pairs quantity) (rewriteObjectRef pairs ref) (rewriteEntryRiders pairs riders) slot (fmap (rewriteCopyException pairs) exceptions) linked)
   -- The exceptions ride this opcode too, and take the same walk AsCopy's do
   -- (rewriteEntryRewrite below).
   -- A NAMED original is left alone: CR 612.2 keeps a card name out of a text

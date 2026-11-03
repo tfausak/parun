@@ -61,6 +61,7 @@ spec s = Spec.describe s "Parun.Codec.LastKnown" $ do
           LastKnown.chosenPlayers = Map.singleton (Acquisition.Copied (Timestamp.MkTimestamp 5)) (Map.singleton (PlayerChoice.Promised Gift.Food (KeywordInstance.Own 1)) (PlayerId.MkPlayerId 3)),
           LastKnown.chosenColors = Map.singleton Acquisition.Own (Set.singleton Color.Green),
           LastKnown.chosenSubtype = Map.singleton (Acquisition.Copied (Timestamp.MkTimestamp 6)) Subtype.Goblin,
+          LastKnown.acquisition = Acquisition.Copied (Timestamp.MkTimestamp 5),
           LastKnown.attacking = False,
           LastKnown.attackTarget = Nothing,
           LastKnown.blocking = True,
@@ -81,7 +82,7 @@ spec s = Spec.describe s "Parun.Codec.LastKnown" $ do
           <> ",\"copiable\":"
           <> minimalJson
           <> ",\"attached\":[9],\"host\":11"
-          <> ",\"chosenNames\":[{\"key\":{\"type\":\"Own\"},\"value\":{\"8\":\"Goblin Piker\"}}],\"chosenPlayers\":[{\"key\":{\"type\":\"Copied\",\"value\":5},\"value\":[{\"key\":{\"type\":\"Promised\",\"value\":[{\"type\":\"Food\"},{\"type\":\"Own\",\"value\":1}]},\"value\":3}]}],\"chosenColors\":[{\"key\":{\"type\":\"Own\"},\"value\":[{\"type\":\"Green\"}]}],\"chosenSubtype\":[{\"key\":{\"type\":\"Copied\",\"value\":6},\"value\":{\"type\":\"Goblin\"}}],\"attacking\":false,\"attackTarget\":null,\"blocking\":true,\"protector\":7"
+          <> ",\"chosenNames\":[{\"key\":{\"type\":\"Own\"},\"value\":{\"8\":\"Goblin Piker\"}}],\"chosenPlayers\":[{\"key\":{\"type\":\"Copied\",\"value\":5},\"value\":[{\"key\":{\"type\":\"Promised\",\"value\":[{\"type\":\"Food\"},{\"type\":\"Own\",\"value\":1}]},\"value\":3}]}],\"chosenColors\":[{\"key\":{\"type\":\"Own\"},\"value\":[{\"type\":\"Green\"}]}],\"chosenSubtype\":[{\"key\":{\"type\":\"Copied\",\"value\":6},\"value\":{\"type\":\"Goblin\"}}],\"acquisition\":{\"type\":\"Copied\",\"value\":5},\"attacking\":false,\"attackTarget\":null,\"blocking\":true,\"protector\":7"
           <> ",\"paidCosts\":[{\"key\":{\"type\":\"Offspring\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}},\"value\":[{\"key\":{\"type\":\"Own\",\"value\":1},\"value\":1}]}]"
           <> ",\"prototyped\":true"
           <> ",\"announcedX\":4"
@@ -109,6 +110,7 @@ spec s = Spec.describe s "Parun.Codec.LastKnown" $ do
           LastKnown.chosenPlayers = Map.empty,
           LastKnown.chosenColors = Map.empty,
           LastKnown.chosenSubtype = Map.empty,
+          LastKnown.acquisition = Acquisition.Own,
           LastKnown.attacking = True,
           LastKnown.attackTarget = Just (AttackTarget.OfPlaneswalker (ObjectId.MkObjectId 8)),
           LastKnown.blocking = False,

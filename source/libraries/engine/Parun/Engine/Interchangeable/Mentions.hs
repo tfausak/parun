@@ -1207,7 +1207,7 @@ createEmblemNames asking onCard x = case x of
 
 createCopyNames :: (Monoid r) => Asking r -> (ability -> r) -> CreateCopy.CreateCopy ability -> r
 createCopyNames asking onAbility x = case x of
-  CreateCopy.MkCreateCopy quantity ref riders slot exceptions -> quantityNames asking quantity <> objectRefNames asking ref <> entryRidersNames asking (quantityNames asking) onAbility riders <> foldMap (slotNames asking) slot <> foldMap (copyExceptionNames asking onAbility) exceptions
+  CreateCopy.MkCreateCopy quantity ref riders slot exceptions _ -> quantityNames asking quantity <> objectRefNames asking ref <> entryRidersNames asking (quantityNames asking) onAbility riders <> foldMap (slotNames asking) slot <> foldMap (copyExceptionNames asking onAbility) exceptions
 
 creatureExploitsNames :: (Monoid r) => Asking r -> CreatureExploits.CreatureExploits -> r
 creatureExploitsNames asking x = case x of

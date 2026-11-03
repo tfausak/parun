@@ -41,6 +41,7 @@ import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
 import qualified Parun.Types.AbilityName as AbilityName
+import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.Action as Action.Type
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.ActiveAttackProhibition as ActiveAttackProhibition
@@ -113,6 +114,7 @@ import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.StepBegan as StepBegan
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TargetSlot as TargetSlot
+import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.TurnUpProcedure as TurnUpProcedure
 import qualified Parun.Types.While as While
 import qualified Parun.Types.Zone as Zone
@@ -1562,6 +1564,16 @@ plainColor color = ManaUnit.MkManaUnit {ManaUnit.manaType = ManaType.Colored col
 -- Object.doesNotUntapFor.
 interchangeableSourcesSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 interchangeableSourcesSpec s registry = Spec.describe s "Interchangeable mana sources" $ do
+  Spec.it s "CR 106.6 the acquisition behind a choice does not split the mana baking it" $ do
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (oid, board) = S.addPermanent piker S.alice (Setup.emptyGame S.bothPlayers)
+        chose acquisition = board {GameState.objects = Map.adjust (\o -> o {Object.acquisition = acquisition, Object.chosenColors = Map.singleton acquisition (Set.singleton Color.Blue)}) oid (GameState.objects board)}
+    Spec.assertEqWith
+      s
+      "one unit either way"
+      (Mana.sourceChoicesOf oid (chose (Acquisition.Copied (Timestamp.MkTimestamp 3))))
+      (Mana.sourceChoicesOf oid (chose Acquisition.Own))
+
   Spec.it s "CR 601.2g three indistinguishable Elves are offered as one candidate" $ do
     elf <- S.printingOf s registry "Llanowar Elves"
     let (elves, board) = elfBoard elf 3

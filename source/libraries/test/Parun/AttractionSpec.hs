@@ -38,6 +38,7 @@ import qualified Parun.Engine.Stack as Stack
 import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
+import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.ActiveReplacement as ActiveReplacement
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.Combat as Combat.Type
@@ -345,7 +346,7 @@ exileEnteringAttractions src =
       ActiveReplacement.condition = Nothing,
       ActiveReplacement.rider = Nothing,
       ActiveReplacement.slots = Map.empty,
-      ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing
+      ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing Acquisition.Own
     }
 
 -- CR 701.51c: "whenever you open an Attraction".

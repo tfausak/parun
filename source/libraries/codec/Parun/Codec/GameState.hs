@@ -31,6 +31,7 @@ import qualified Parun.Codec.Daytime as Daytime
 import qualified Parun.Codec.DelayedTrigger as DelayedTrigger
 import qualified Parun.Codec.EndTurnSignal as EndTurnSignal
 import qualified Parun.Codec.EnteringTogether as EnteringTogether
+import qualified Parun.Codec.EntryLink as EntryLink
 import qualified Parun.Codec.EntryOrigin as EntryOrigin
 import qualified Parun.Codec.EventGroup as EventGroup
 import qualified Parun.Codec.ExileLink as ExileLink
@@ -226,7 +227,7 @@ codec resolve = Fields.object $ do
   haunting <- Fields.defaulted "haunting" Map.empty (Common.naturalMap ObjectId.codec ObjectId.codec) GameState.haunting
   encoded <- Fields.defaulted "encoded" Map.empty (Common.naturalMap ObjectId.codec ObjectId.codec) GameState.encoded
   exiledWith <- Fields.defaulted "exiledWith" Map.empty (Common.naturalMap ObjectId.codec ExileLink.codec) GameState.exiledWith
-  enteredWith <- Fields.defaulted "enteredWith" Map.empty (Common.naturalMap ObjectId.codec ObjectId.codec) GameState.enteredWith
+  enteredWith <- Fields.defaulted "enteredWith" Map.empty (Common.naturalMap ObjectId.codec EntryLink.codec) GameState.enteredWith
   exilePiles <- Fields.defaulted "exilePiles" Map.empty (Common.naturalMap ObjectId.codec Timestamp.codec) GameState.exilePiles
   extraTurns <- Fields.defaulted "extraTurns" [] (Common.list ExtraTurn.codec) GameState.extraTurns
   subgamesThisMatch <- Fields.defaulted "subgamesThisMatch" 0 Common.natural GameState.subgamesThisMatch

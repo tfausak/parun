@@ -94,6 +94,7 @@ import qualified Parun.Types.Designation as Designation
 import Parun.Types.Effect (Effect)
 import qualified Parun.Types.EntryBlock as EntryBlock
 import qualified Parun.Types.EntryHost as EntryHost
+import qualified Parun.Types.EntryLink as EntryLink
 import qualified Parun.Types.EntryRiders as EntryRiders
 import qualified Parun.Types.ExileHaunting as ExileHaunting
 import qualified Parun.Types.Exploited as Exploited
@@ -408,7 +409,7 @@ conjure resolving source controller legal (Conjure.MkConjure quantity cards sele
   Common.bindObjects resolving mSlot conjured
 
 createCopy :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> CreateCopy.CreateCopy (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
-createCopy resolving source controller legal chosen (CreateCopy.MkCreateCopy quantity ref entry mSlot exceptions) = do
+createCopy resolving source controller legal chosen (CreateCopy.MkCreateCopy quantity ref entry mSlot exceptions linked) = do
   gs <- State.get
   -- CR 707.2 / 111.3: this many tokens per named permanent, minted through the
   -- same CR 111.2 funnel, carrying the copied permanent's COPIABLE values
@@ -483,6 +484,10 @@ createCopy resolving source controller legal chosen (CreateCopy.MkCreateCopy qua
               Monad.forM_ mBlocked (\blocked -> Monad.mapM_ (Combat.putOntoBattlefieldBlocking blocked) made)
               pure made
     _ -> pure []
+  -- CR 607.1 / 607.5: Dance of Many's later abilities mean this token, those
+  -- that came with the ability making it.
+  Monad.when linked $
+    State.modify' (\g -> g {GameState.enteredWith = foldr (`Map.insert` EntryLink.MkEntryLink source (Game.readingAcquisition resolving source g source)) (GameState.enteredWith g) minted})
   Common.bindObjects resolving mSlot minted
 
 becomeCopy :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> BecomeCopy.BecomeCopy (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()

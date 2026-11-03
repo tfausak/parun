@@ -705,7 +705,7 @@ objectRefPositions =
         ("arrange-in-library", Effect.ArrangeInLibrary (ArrangeInLibrary.MkArrangeInLibrary (plantedRef "al") (PlayerRef.Relative PlayerRelation.You)), [plantedRef "al"]),
         ("connive", Effect.Connive (Connive.MkConnive (Quantity.Type.Literal 1) (plantedRef "cn")), [plantedRef "cn"]),
         ("discard-these", Effect.Discard (Discard.These (TheseDiscard.MkTheseDiscard (plantedRef "di") Nothing)), [plantedRef "di"]),
-        ("create-copy", Effect.CreateCopy (CreateCopy.MkCreateCopy (Quantity.Type.Literal 1) (plantedRef "cc") plainRiders Nothing []), [plantedRef "cc"]),
+        ("create-copy", Effect.CreateCopy (CreateCopy.MkCreateCopy (Quantity.Type.Literal 1) (plantedRef "cc") plainRiders Nothing [] False), [plantedRef "cc"]),
         ("become-copy", Effect.BecomeCopy (BecomeCopy.MkBecomeCopy (CopyOriginal.OfObject (plantedRef "bc-original")) (plantedRef "bc-subject") Nothing [] False), [plantedRef "bc-original", plantedRef "bc-subject"]),
         ("copy-spell", Effect.CopyStackObject (CopyStackObject.MkCopyStackObject (plantedRef "cs") CopyTargets.Copied CopyStackObject.defaultQuantity CopyStackObject.defaultCopier []), [plantedRef "cs"]),
         -- CR 707.10d names a SECOND ref, the candidates', which the sweep must
@@ -1444,7 +1444,7 @@ ownCounts effect = case effect of
   -- is card data like Create's. The riders are skipped for the reason Create's
   -- arm above skips its own: a rider count is a Quantity, and effectFilters below
   -- is where a Filter under one is swept.
-  Effect.CreateCopy (CreateCopy.MkCreateCopy quantity _ _ _ _) -> quantityCounts quantity
+  Effect.CreateCopy (CreateCopy.MkCreateCopy quantity _ _ _ _ _) -> quantityCounts quantity
   -- The DURATION's own Counts, ModifyTarget's arm above; the refs' Filters are
   -- effectFilters' business below.
   Effect.BecomeCopy (BecomeCopy.MkBecomeCopy _ _ duration _ _) -> foldMap durationCounts duration
@@ -6283,7 +6283,7 @@ effectFilters effect = case effect of
   -- An EachMatching ref's Filter is card text like RequireBlock's below, and the
   -- count's and the riders' Filters are as much card text as Create's. The
   -- exceptions frame themselves, BecomeCopy's arm below.
-  Effect.CreateCopy (CreateCopy.MkCreateCopy quantity ref riders _ exceptions) -> frame Unframed (quantityFilters quantity <> riderFilters riders) <> frame SourceHostFramed (objectRefFilters ref) <> concatMap copyExceptionFilters exceptions
+  Effect.CreateCopy (CreateCopy.MkCreateCopy quantity ref riders _ exceptions _) -> frame Unframed (quantityFilters quantity <> riderFilters riders) <> frame SourceHostFramed (objectRefFilters ref) <> concatMap copyExceptionFilters exceptions
   -- BOTH refs, RequireBlock's arm below: each EachMatching Filter is card text.
   -- The exceptions beside them carry Filters through a KEYWORD, and frame them
   -- themselves (copyExceptionFilters) -- EntryRewrite's AsCopy arm takes the same

@@ -321,6 +321,7 @@ import qualified Parun.Codec.EntryBlockSpec
 import qualified Parun.Codec.EntryControllerSpec
 import qualified Parun.Codec.EntryFlipSpec
 import qualified Parun.Codec.EntryHostSpec
+import qualified Parun.Codec.EntryLinkSpec
 import qualified Parun.Codec.EntryOptionSpec
 import qualified Parun.Codec.EntryOriginSpec
 import qualified Parun.Codec.EntryPriceSpec
@@ -1301,6 +1302,7 @@ spec s registry corpus = do
   Parun.Codec.ExiledPileSpec.spec s
   Parun.Codec.ExileFromGraveyardSpec.spec s
   Parun.Codec.ExileHauntingSpec.spec s
+  Parun.Codec.EntryLinkSpec.spec s
   Parun.Codec.ExileLinkSpec.spec s
   Parun.Codec.ExileLookerSpec.spec s
   Parun.Codec.ExileMaterialsSpec.spec s

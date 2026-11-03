@@ -1,0 +1,241 @@
+{
+  "description": "Dance of Many's upkeep: its controller pays {U}{U} to keep it, and declining sacrifices it, which exiles the token",
+  "note": "Alice pays on turn 3 and keeps both. She declines on turn 5: the Dance is sacrificed and its leave trigger exiles the token.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "i1"
+          },
+          {
+            "card": "Island",
+            "label": "i2"
+          },
+          {
+            "card": "Island",
+            "label": "i3"
+          },
+          {
+            "card": "Island",
+            "label": "i4"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Dance of Many",
+            "label": "dance"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "manaPool": "UU"
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Wall of Air",
+            "label": "giant"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$dance",
+          "mana": [
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "ChooseTargets": {
+          "target": [
+            "$giant"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 3,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": {
+        "ChooseToPay": {
+          "decision": {
+            "type": "Pays"
+          },
+          "mana": [
+            "$i1",
+            "$i2",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$i1",
+          "tapped": true
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$i2",
+          "tapped": true
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "DrawStep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Dance of Many",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "DrawStep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Wall of Air",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 5,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": {
+        "ChooseToPay": {
+          "decision": {
+            "type": "Declines"
+          }
+        }
+      }
+    },
+    {
+      "turn": 5,
+      "step": "DrawStep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Graveyard",
+          "card": "Dance of Many",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 5,
+      "step": "DrawStep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Wall of Air",
+          "count": 0
+        }
+      }
+    }
+  ]
+}

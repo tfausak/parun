@@ -23,6 +23,7 @@ import qualified Parun.Codec.Zone as Zone
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
+import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.Zone as Zone
 
@@ -42,6 +43,7 @@ codec = Fields.object $ do
   chosenPlayers <- Fields.defaulted "chosenPlayers" Map.empty (Common.keyedList (Common.keyValue Acquisition.codec (Common.keyedList (Common.keyValue PlayerChoice.codec PlayerId.codec)))) LastKnown.chosenPlayers
   chosenColors <- Fields.defaulted "chosenColors" Map.empty (Common.keyedList (Common.keyValue Acquisition.codec (Common.set Color.codec))) LastKnown.chosenColors
   chosenSubtype <- Fields.defaulted "chosenSubtype" Map.empty (Common.keyedList (Common.keyValue Acquisition.codec Subtype.codec)) LastKnown.chosenSubtype
+  acquisition <- Fields.defaulted "acquisition" Acquisition.Own Acquisition.codec LastKnown.acquisition
   attacking <- Fields.required "attacking" Common.boolean LastKnown.attacking
   attackTarget <- Fields.required "attackTarget" (Common.maybe AttackTarget.codec) LastKnown.attackTarget
   blocking <- Fields.required "blocking" Common.boolean LastKnown.blocking
@@ -68,6 +70,7 @@ codec = Fields.object $ do
         LastKnown.chosenPlayers = chosenPlayers,
         LastKnown.chosenColors = chosenColors,
         LastKnown.chosenSubtype = chosenSubtype,
+        LastKnown.acquisition = acquisition,
         LastKnown.attacking = attacking,
         LastKnown.attackTarget = attackTarget,
         LastKnown.blocking = blocking,

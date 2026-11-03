@@ -2,6 +2,7 @@ module Parun.Types.SourceChoices where
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
+import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.PlayerId as PlayerId
@@ -15,6 +16,9 @@ data SourceChoices = MkSourceChoices
     -- | CR 105.2: the chosen colours.
     colors :: Set.Set Color.Color,
     -- | CR 205.3: the chosen subtype.
-    subtype :: Maybe Subtype.Subtype
+    subtype :: Maybe Subtype.Subtype,
+    -- | CR 607.5: the acquisition of the source's abilities these belong to,
+    -- under which Parun.Engine.SourceContext.framedWith reads its entrants too.
+    acquisition :: Acquisition.Acquisition
   }
   deriving (Eq, Ord, Show)

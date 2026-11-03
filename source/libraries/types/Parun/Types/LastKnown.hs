@@ -152,6 +152,9 @@ data LastKnown = MkLastKnown
     -- | The subtype chosen for it as it entered, `chosenColors`'s sibling for
     -- Object.chosenSubtype.
     chosenSubtype :: !(Map.Map Acquisition.Acquisition Subtype.Subtype),
+    -- | CR 607.5: the acquisition of the abilities it had as it left --
+    -- Game.acquisitionOf, for what a leave trigger refers to.
+    acquisition :: !Acquisition.Acquisition,
     -- | CR 508.1k: was it attacking as it left -- the same membership
     -- Parun.Engine.Filter.View's `attacking` reports, through the one classifier
     -- Game.isAttacking, read off GameState.combat before the object ceased.

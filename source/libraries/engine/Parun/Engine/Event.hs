@@ -10017,6 +10017,8 @@ lastKnownFrom gs oid obj =
     (Object.chosenPlayers obj)
     (Object.chosenColors obj)
     (Object.chosenSubtype obj)
+    -- CR 607.5: which of its abilities' links a leave trigger reads.
+    (Game.acquisitionOf oid gs)
     -- CR 508.1k / 509.1g.
     (Game.isAttacking oid gs)
     (Game.attackTargetOf oid gs)
