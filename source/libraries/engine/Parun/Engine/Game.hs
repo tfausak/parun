@@ -2258,17 +2258,17 @@ copyRowTimestamp gs row = case ActiveCopy.covers row of
 
 -- | CR 607.5: the acquisition of the abilities layer 1a leaves this object --
 -- the latest stored copy effect covering it, `storedCopyOf`'s row, named by its
--- timestamp, and otherwise the one its copy binding records (Object.acquisition).
--- Own for an id naming no object: CR 400.7 gives a departed object's id to no
--- other, so nothing can be noted under it again.
+-- timestamp, and otherwise the one its copy binding records (Object.acquisition),
+-- through CR 608.2h's last known information. Own for an id naming no object
+-- and no last known information.
 acquisitionOf :: ObjectId -> GameState -> Acquisition.Acquisition
 acquisitionOf oid gs =
   case latestStoredCopy oid gs of
     Just row -> Acquisition.Copied (copyRowTimestamp gs row)
-    Nothing -> maybe Acquisition.Own Object.acquisition (lookupObject oid gs)
+    Nothing -> Maybe.fromMaybe Acquisition.Own (liveOrLastKnown Object.acquisition LastKnown.acquisition oid gs)
 
--- | CR 607.5: the acquisition whose choices and stored results the object
--- resolving as `resolving`, a spell or an ability of `source`, reads off
+-- | CR 607.5: the acquisition whose choices, stored results and entrants the
+-- object resolving as `resolving`, a spell or an ability of `source`, reads off
 -- `oid`. For an ability reading its own source, the one it froze as it went
 -- on the stack (Parun.Types.TriggeredAbilitySource,
 -- Parun.Types.ActivatedAbilitySource), since it stays linked to the abilities it

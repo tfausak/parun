@@ -1489,9 +1489,10 @@ data Context = MkContext
     -- Count arm was handed, so the CR 613 projection's types and not the printed
     -- ones. Nothing where unfilled, and the atom then answers False.
     evaluatedCreatureTypes :: Maybe (Set.Set Subtype.Subtype),
-    -- CR 400.7: the objects an effect of the SOURCE put onto the battlefield, as
-    -- those objects, for EnteredWithSource (Animate Dead's enchant ability). Filled
-    -- from GameState.enteredWith by Parun.Engine.SourceContext; empty in contextFor
+    -- CR 400.7 / 607.5: the objects an effect of the SOURCE's reading abilities
+    -- put onto the battlefield, as those objects, for EnteredWithSource (Animate
+    -- Dead's enchant ability). Filled from GameState.enteredWith by
+    -- Parun.Engine.SourceContext; empty in contextFor
     -- below, and the atom then matches nothing. LAZY: filling it scans the
     -- relation.
     sourceEntrants :: Set.Set ObjectId.ObjectId,
@@ -1644,8 +1645,11 @@ data Context = MkContext
     -- IsExiledWithSource. Filled for every source by
     -- Parun.Engine.SourceContext.framedWith, sourceEntrants's twin, and keyed by
     -- the object, so the link outlives the permanent becoming a copy that keeps
-    -- the referring ability (CR 607.1a, 607.5). Empty in contextFor below, so
-    -- the atom is vacuously False wherever no source frames the read.
+    -- the referring ability (CR 607.1a). Empty in contextFor below, so the atom
+    -- is vacuously False wherever no source frames the read.
+    --
+    -- Not implemented: CR 607.5's keying by acquisition, which sourceEntrants
+    -- has (#4985).
     sourceExiled :: Map.Map ObjectId.ObjectId ExileLink.ExileLink,
     -- | CR 607.5: the name of the ability doing the reading, for what it means by
     -- "exiled with" its source (Binding.isLinkedExile): the resolving ability's

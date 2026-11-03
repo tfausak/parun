@@ -94,6 +94,7 @@ import qualified Parun.Types.Designation as Designation
 import Parun.Types.Effect (Effect)
 import qualified Parun.Types.EntryBlock as EntryBlock
 import qualified Parun.Types.EntryHost as EntryHost
+import qualified Parun.Types.EntryLink as EntryLink
 import qualified Parun.Types.EntryRiders as EntryRiders
 import qualified Parun.Types.ExileHaunting as ExileHaunting
 import qualified Parun.Types.Exploited as Exploited
@@ -483,9 +484,10 @@ createCopy resolving source controller legal chosen (CreateCopy.MkCreateCopy qua
               Monad.forM_ mBlocked (\blocked -> Monad.mapM_ (Combat.putOntoBattlefieldBlocking blocked) made)
               pure made
     _ -> pure []
-  -- CR 607.1: Dance of Many's later abilities mean this token.
+  -- CR 607.1 / 607.5: Dance of Many's later abilities mean this token, those
+  -- that came with the ability making it.
   Monad.when linked $
-    State.modify' (\g -> g {GameState.enteredWith = foldr (`Map.insert` source) (GameState.enteredWith g) minted})
+    State.modify' (\g -> g {GameState.enteredWith = foldr (`Map.insert` EntryLink.MkEntryLink source (Game.readingAcquisition resolving source g source)) (GameState.enteredWith g) minted})
   Common.bindObjects resolving mSlot minted
 
 becomeCopy :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> BecomeCopy.BecomeCopy (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()

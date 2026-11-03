@@ -48,6 +48,7 @@ import qualified Parun.Types.CopyCoverage as CopyCoverage
 import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageDirection as DamageDirection
 import qualified Parun.Types.DamageEvent as DamageEvent
+import qualified Parun.Types.EntryLink as EntryLink
 import qualified Parun.Types.ExileLink as ExileLink
 import qualified Parun.Types.GameEvent as GameEvent
 import Parun.Types.GameState (GameState)
@@ -501,8 +502,8 @@ affectedNames oid source gs affected = case affected of
 --     naming the object CR 607.2a's or CR 607.2b's link names.
 --   * GameState.exilePiles (CR 406.4), keyed by the card in exile face down, its
 --     value the stamp of the pile it is in.
---   * GameState.enteredWith (CR 400.7), keyed by the permanent, its value the
---     source whose effect put it onto the battlefield.
+--   * GameState.enteredWith (CR 400.7), keyed by the permanent, its value
+--     naming the source whose effect put it onto the battlefield.
 --   * The per-object budgets and notes: GameState.activatedThisTurn (CR
 --     602.5b), castPermissionsUsedThisTurn (CR 601.3), rollModifiersUsedThisTurn
 --     (CR 706.2), namedCopyChoices (CR 707.13), notedCards (CR 707.14),
@@ -551,7 +552,7 @@ namedByRelation oid gs =
         || relates Set.singleton (GameState.encoded gs)
         || relates (Set.singleton . ExileLink.source) (GameState.exiledWith gs)
         || relates pileNames (GameState.exilePiles gs)
-        || relates Set.singleton (GameState.enteredWith gs)
+        || relates (Set.singleton . EntryLink.source) (GameState.enteredWith gs)
         -- CR 305.1 / 601.2a: keyed by the spell or permanent a play made, too.
         || keyed (GameState.cardsPlayed gs)
         || keyed (GameState.activatedThisTurn gs)

@@ -30,6 +30,7 @@ import qualified Parun.Types.Daytime as Daytime
 import qualified Parun.Types.DelayedTrigger as DelayedTrigger
 import qualified Parun.Types.EndTurnSignal as EndTurnSignal
 import qualified Parun.Types.EnteringTogether as EnteringTogether
+import qualified Parun.Types.EntryLink as EntryLink
 import qualified Parun.Types.EntryOrigin as EntryOrigin
 import qualified Parun.Types.EventGroup as EventGroup
 import qualified Parun.Types.ExileLink as ExileLink
@@ -545,12 +546,13 @@ data GameState = MkGameState
     -- being neither an opcode's window nor a redirected move. Cleaned up by key
     -- only.
     exiledWith :: Map.Map ObjectId.ObjectId ExileLink.ExileLink,
-    -- | CR 400.7: the object whose effect put each permanent onto the
-    -- battlefield, keyed by the entered incarnation and written by
-    -- Parun.Engine.Resolve.Arms.Zones's Effect.MoveToZone arm and, for a
-    -- CreateCopy.linked token, Parun.Engine.Resolve.Arms.Objects's. Read by
-    -- Filter.EnteredWithSource. Cleaned up by key only.
-    enteredWith :: Map.Map ObjectId.ObjectId ObjectId.ObjectId,
+    -- | CR 400.7 / 607.5: the object whose effect put each permanent onto the
+    -- battlefield and the acquisition the ability came with, keyed by the
+    -- entered incarnation and written by Parun.Engine.Resolve.Arms.Zones's
+    -- Effect.MoveToZone arm and, for a CreateCopy.linked token,
+    -- Parun.Engine.Resolve.Arms.Objects's. Read by Filter.EnteredWithSource.
+    -- Cleaned up by key only.
+    enteredWith :: Map.Map ObjectId.ObjectId EntryLink.EntryLink,
     -- | CR 406.4: which pile each face-down exiled card is in, a name drawn from
     -- nextTimestamp and shared by every card one execution of one instruction
     -- exiled (Parun.Engine.Resolve.Common.recordExilePile). Cleaned up by key only.

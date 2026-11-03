@@ -18,6 +18,7 @@ import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.Chosen as Chosen
+import qualified Parun.Types.EntryLink as EntryLink
 import qualified Parun.Types.ExileLink as ExileLink
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Object as Object
@@ -40,8 +41,8 @@ framedBy source gs = framedWith (choicesOf (Game.acquisitionOf source gs) source
 
 -- | framedBy with the choices supplied: what a stored effect baked as it began
 -- (CR 608.2h), in place of the source's current ones. Every other field is
--- still read off the board. All are thunks: a filter that names none of their
--- atoms forces none of them.
+-- still read off the board, the entrants under the choices' acquisition. All
+-- are thunks: a filter that names none of their atoms forces none of them.
 framedWith :: SourceChoices.SourceChoices -> ObjectId.ObjectId -> GameState.GameState -> Filter.Context -> Filter.Context
 framedWith choices source gs context =
   (withChoices choices context)
@@ -51,20 +52,22 @@ framedWith choices source gs context =
       -- CR 108.3 fixes an owner when the game starts, so a live read; a source
       -- the state no longer holds answers Nothing.
       Filter.sourceOwner = fmap Object.owner (Game.lookupObject source gs),
-      Filter.sourceEntrants = Map.keysSet (Map.filter (== source) (GameState.enteredWith gs)),
+      -- CR 607.5: only those the abilities doing the reading put there.
+      Filter.sourceEntrants = Map.keysSet (Map.filter (== EntryLink.MkEntryLink source (SourceChoices.acquisition choices)) (GameState.enteredWith gs)),
       -- CR 607.2a: the cards in exile now (CR 400.7) linked to the source.
       Filter.sourceExiled = Map.filter ((== source) . ExileLink.source) (Map.restrictKeys (GameState.exiledWith gs) (GameState.exile gs))
     }
 
 -- | The choices `source`'s abilities acquired as `acquisition` have made so
--- far (CR 607.5), through CR 608.2h's last known information; what a stored
--- effect bakes as it begins.
+-- far (CR 607.5), carrying that acquisition, through CR 608.2h's last known
+-- information; what a stored effect bakes as it begins.
 choicesOf :: Acquisition.Acquisition -> ObjectId.ObjectId -> GameState.GameState -> SourceChoices.SourceChoices
 choicesOf acquisition source gs =
   SourceChoices.MkSourceChoices
     { SourceChoices.names = Maybe.fromMaybe Map.empty (Game.choiceWithLastKnown Chosen.Names acquisition source gs),
       SourceChoices.colors = Maybe.fromMaybe Set.empty (Game.choiceWithLastKnown Chosen.Colors acquisition source gs),
-      SourceChoices.subtype = Game.choiceWithLastKnown Chosen.Subtype acquisition source gs
+      SourceChoices.subtype = Game.choiceWithLastKnown Chosen.Subtype acquisition source gs,
+      SourceChoices.acquisition = acquisition
     }
 
 -- | `context` with these choices as the source's: CR 105.2's colours, CR
