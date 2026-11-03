@@ -13,6 +13,7 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Scope as Scope
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.Zone as Zone
+import qualified Parun.Types.ZonePosition as ZonePosition
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.Scope" $ do
@@ -57,6 +58,13 @@ spec s = Spec.describe s "Parun.Codec.Scope" $ do
     Common.assertCodec
       s
       Scope.codec
-      (Scope.TopOf (InZone.MkInZone Zone.Library (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "player")))))
+      (Scope.InPosition ZonePosition.Top (InZone.MkInZone Zone.Library (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "player")))))
       " {\"type\":\"TopOf\",\"value\":{\"zone\":{\"type\":\"Library\"},\"player\":{\"type\":\"InSlot\",\"value\":\"player\"}}} "
+  -- CR 404.1: the same pile, read from the source up.
+  Spec.it s "AboveSource" $
+    Common.assertCodec
+      s
+      Scope.codec
+      (Scope.InPosition ZonePosition.AboveSource (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You)))
+      " {\"type\":\"AboveSource\",\"value\":{\"zone\":{\"type\":\"Graveyard\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Scope.codec

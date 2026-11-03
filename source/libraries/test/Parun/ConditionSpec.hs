@@ -739,7 +739,7 @@ enterFromHand oid gs =
 scriesBy :: PlayerId.PlayerId -> GameState.GameState -> Int
 scriesBy pid gs = length [() | GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.Scry p) <- fmap LoggedEvent.event (Foldable.toList (GameState.events gs)), p == pid]
 
--- CR 404.1 read from inside a CONDITION: Scope.TopOf, which names ONE
+-- CR 404.1 read from inside a CONDITION: Scope.InPosition, which names ONE
 -- position in a graveyard so that a Filter over it TESTS that card rather than
 -- sweeping the pile.
 --

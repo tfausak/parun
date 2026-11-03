@@ -5,7 +5,8 @@ module Parun.Types.GraveyardOrder where
 -- setting, like an auto-yield: while it is Indifferent their batches land in
 -- the order they moved, unasked, which is the player's choice made in advance
 -- rather than the engine's. Indifferent by default; the engine never turns it
--- on, so a client that sees a reader of graveyard order in a deck may.
+-- on, so a client that sees a reader of graveyard order in a deck may. No client
+-- offers it yet (gap #6024).
 data GraveyardOrder
   = -- | Any order will do: the batch keeps the order it moved in.
     Indifferent
