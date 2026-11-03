@@ -413,9 +413,9 @@ objectsLeaveWith pid gs =
 -- CR 800.4a to end (#199).
 --
 -- CR 800.4a is immediate. Master Thief's ForAsLongAs condition would eventually
--- drop its effect through Expiry.sweepConditional, but a sweep runs at the next
--- settle, and the gap between the two is exactly the difference between the rule
--- and an approximation of it.
+-- drop its effect through Expiry.sweepConditional, but a sweep runs only at the
+-- next settle or the end of an instruction, and the gap between the two is
+-- exactly the difference between the rule and an approximation of it.
 controlEffectsEnd :: PlayerId -> GameState -> GameState
 controlEffectsEnd pid gs =
   let heldBy decider = case decider of
