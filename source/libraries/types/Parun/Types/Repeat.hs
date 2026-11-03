@@ -19,7 +19,8 @@ data Repeat effect = MkRepeat
     -- time.
     gate :: Maybe Condition.Condition,
     -- | Who is asked instead when the gate fails -- Game of Chaos's "that
-    -- player decides". Absent ends the loop unasked.
+    -- player decides". Absent ends the loop unasked. Read only beside a gate;
+    -- Parun.EffectLintSpec rejects one without.
     otherChooser :: Maybe PlayerRef.PlayerRef,
     -- | What going again does before the next run, in written order -- Game of
     -- Chaos's "double the life stakes". A slot only this binds survives the

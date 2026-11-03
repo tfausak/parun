@@ -2953,6 +2953,19 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- prints one.
     Spec.assertBool s (any (anyFace (any hides . cardResolutionEffects) . Printing.card) ps) "the pool has a card exiling face down"
     Spec.assertEqWith s "only exile keeps a card face down (CR 406.3)" (fmap (S.nameOf . Printing.card) offenders) []
+  -- Parun.Types.Repeat's otherChooser is read only when a gate fails, so without
+  -- a gate it is inert card data. Game of Chaos keeps the sweep from being vacuous.
+  Spec.it s "no Repeat names another chooser without a gate" $ do
+    ps <- S.allPrintings s corpus
+    let names effect = case effect of
+          Effect.Repeat loop -> Maybe.isJust (Repeat.otherChooser loop)
+          _ -> False
+        offends effect = case effect of
+          Effect.Repeat loop -> Maybe.isJust (Repeat.otherChooser loop) && Maybe.isNothing (Repeat.gate loop)
+          _ -> False
+        offenders = filter (anyFace (any offends . cardResolutionEffects) . Printing.card) ps
+    Spec.assertBool s (any (anyFace (any names . cardResolutionEffects) . Printing.card) ps) "the pool has a Repeat naming another chooser"
+    Spec.assertEqWith s "otherChooser is read only when the gate fails" (fmap (S.nameOf . Printing.card) offenders) []
   -- CR 509.4's rider is a rule about entering the BATTLEFIELD, so on any other
   -- destination it is inert card data. Both opcodes read it and both apply it --
   -- Parun.Engine.Resolve's Create arm hands its tokens to

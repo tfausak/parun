@@ -77,7 +77,19 @@
                                     "value": "stake"
                                   }
                                 }
-                              },
+                              }
+                            ],
+                            "slot": "flip",
+                            "upTo": {
+                              "type": "InSlot",
+                              "value": "won"
+                            }
+                          }
+                        },
+                        {
+                          "type": "ForEachNumber",
+                          "value": {
+                            "body": [
                               {
                                 "type": "LoseLife",
                                 "value": {
@@ -117,7 +129,19 @@
                                     "value": "stake"
                                   }
                                 }
-                              },
+                              }
+                            ],
+                            "slot": "flip",
+                            "upTo": {
+                              "type": "InSlot",
+                              "value": "lost"
+                            }
+                          }
+                        },
+                        {
+                          "type": "ForEachNumber",
+                          "value": {
+                            "body": [
                               {
                                 "type": "GainLife",
                                 "value": {
