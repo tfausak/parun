@@ -1,0 +1,181 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "activator": {
+            "type": "AnyPlayer"
+          },
+          "cost": {
+            "mana": [
+              {
+                "type": "Generic",
+                "value": 3
+              }
+            ]
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "RemoveCounters",
+                        "value": {
+                          "kind": {
+                            "type": "Time"
+                          },
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 1
+                          },
+                          "slot": "self"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "restrictions": [
+            {
+              "type": "DuringPhase",
+              "value": {
+                "scope": {
+                  "type": "EachTurn"
+                },
+                "window": {
+                  "type": "Step",
+                  "value": {
+                    "type": "Beginning",
+                    "value": {
+                      "type": "Upkeep"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 4
+        }
+      ],
+      "name": "Infinite Hourglass",
+      "oracleText": "At the beginning of your upkeep, put a time counter on this artifact.\nAll creatures get +1/+0 for each time counter on this artifact.\n{3}: Remove a time counter from this artifact. Any player may activate this ability but only during any upkeep step.",
+      "staticAbilities": [
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "HasCardType",
+              "value": {
+                "type": "Creature"
+              }
+            }
+          },
+          "modifications": [
+            {
+              "type": "ModifyPowerToughness",
+              "value": {
+                "power": {
+                  "type": "Count",
+                  "value": {
+                    "aggregation": {
+                      "type": "Total",
+                      "value": {
+                        "type": "ObjectCounters",
+                        "value": {
+                          "type": "Time"
+                        }
+                      }
+                    },
+                    "filter": {
+                      "type": "IsSource"
+                    },
+                    "scope": {
+                      "type": "InZone",
+                      "value": {
+                        "player": {
+                          "type": "Relative",
+                          "value": {
+                            "type": "AnyPlayer"
+                          }
+                        },
+                        "zone": {
+                          "type": "Battlefield"
+                        }
+                      }
+                    }
+                  }
+                },
+                "toughness": {
+                  "type": "Literal",
+                  "value": 0
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "StepBegins",
+            "value": {
+              "phase": {
+                "type": "Beginning",
+                "value": {
+                  "type": "Upkeep"
+                }
+              },
+              "scope": {
+                "type": "ControllersTurn"
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "PutCounters",
+                        "value": {
+                          "kind": {
+                            "type": "Time"
+                          },
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 1
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "self"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Artifact"
+          }
+        ]
+      }
+    }
+  ]
+}

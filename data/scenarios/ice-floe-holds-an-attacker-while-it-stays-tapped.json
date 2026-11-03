@@ -1,0 +1,331 @@
+{
+  "description": "Ice Floe: taps target creature without flying attacking you; it doesn't untap for as long as Ice Floe stays tapped, and Ice Floe needn't untap",
+  "board": {
+    "active": "bob",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Darksteel Sentinel",
+            "ready": true,
+            "label": "giant"
+          },
+          {
+            "card": "Flying Men",
+            "ready": true,
+            "label": "men"
+          },
+          {
+            "card": "Grizzly Bears",
+            "ready": true,
+            "label": "bears"
+          },
+          {
+            "card": "Goblin Piker",
+            "ready": true,
+            "label": "home"
+          }
+        ]
+      },
+      {
+        "name": "alice",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Ice Floe",
+            "ready": true,
+            "label": "floe"
+          }
+        ]
+      },
+      {
+        "name": "carol",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "do": {
+        "Attack": [
+          "$giant",
+          "$men",
+          "$bears"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "do": {
+        "ChooseAttackTarget": "$alice"
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "do": {
+        "ChooseAttackTarget": "$alice"
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "do": {
+        "ChooseAttackTarget": "$carol"
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$giant",
+          "tapped": false
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "refuse": {
+        "Activate": {
+          "object": "$floe",
+          "targets": [
+            "$men"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "refuse": {
+        "Activate": {
+          "object": "$floe",
+          "targets": [
+            "$bears"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "refuse": {
+        "Activate": {
+          "object": "$floe",
+          "targets": [
+            "$home"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$floe",
+          "targets": [
+            "$giant"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$giant",
+          "tapped": true
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "bob",
+      "check": {
+        "Life": {
+          "player": "alice",
+          "life": 16
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Untap",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseAnyNumberToUntap",
+          "with": []
+        }
+      }
+    },
+    {
+      "turn": 4,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "Tapped": {
+          "object": "$giant",
+          "tapped": true
+        }
+      }
+    },
+    {
+      "turn": 4,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "Tapped": {
+          "object": "$bears",
+          "tapped": false
+        }
+      }
+    },
+    {
+      "turn": 4,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "Tapped": {
+          "object": "$men",
+          "tapped": false
+        }
+      }
+    },
+    {
+      "turn": 4,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "do": {
+        "Attack": []
+      }
+    },
+    {
+      "turn": 5,
+      "step": "Untap",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseAnyNumberToUntap",
+          "with": [
+            "$floe"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 7,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "Tapped": {
+          "object": "$giant",
+          "tapped": false
+        }
+      }
+    }
+  ],
+  "note": "bob attacks alice with the Giant and flying Men and carol with the Bears. Turn 2 alice keeps the Floe tapped, so turn 4 bob's Giant stays tapped; turn 5 she untaps it, so turn 7 his Giant untaps."
+}

@@ -1,0 +1,224 @@
+{
+  "description": "Gloom: white spells cost {3} more and activated abilities of white enchantments cost {3} more; a white creature's ability, a nonwhite enchantment's and a red spell pay nothing extra",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Gloom"
+          },
+          {
+            "card": "Circle of Protection: Red",
+            "label": "circle"
+          },
+          {
+            "card": "Aether Storm",
+            "label": "storm"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Healing Salve",
+            "label": "salve"
+          }
+        ],
+        "manaPool": "WCC"
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Samite Healer",
+            "ready": true,
+            "label": "healer"
+          },
+          {
+            "card": "Mountain",
+            "label": "m"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Shock",
+            "label": "shock"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "refuse": {
+        "Cast": {
+          "object": "$salve",
+          "modes": [
+            0
+          ],
+          "targets": [
+            "$alice"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "refuse": {
+        "Activate": {
+          "object": "$circle"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Activate": {
+          "object": "$healer",
+          "targets": [
+            "$bob"
+          ],
+          "mana": [
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Activate": {
+          "object": "$storm",
+          "mana": [
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 16
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Cast": {
+          "object": "$shock",
+          "targets": [
+            "$alice"
+          ],
+          "mana": [
+            "$m"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "Life": {
+          "player": "alice",
+          "life": 18
+        }
+      }
+    }
+  ],
+  "note": "alice's three mana is one short of each taxed cost. bob has one Mountain and nothing else: the white creature's free ability, the blue enchantment's 4 life and the red Shock's {R} all go through."
+}

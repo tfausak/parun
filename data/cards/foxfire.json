@@ -1,0 +1,143 @@
+{
+  "faces": [
+    {
+      "delayedAbilities": {
+        "you draw a card": {
+          "condition": {
+            "type": "StepBegins",
+            "value": {
+              "phase": {
+                "type": "Beginning",
+                "value": {
+                  "type": "Upkeep"
+                }
+              },
+              "scope": {
+                "type": "EachTurn"
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Draw",
+                        "value": {
+                          "player": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          },
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 1
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Foxfire",
+      "oracleText": "Untap target attacking creature. Prevent all combat damage that would be dealt to and dealt by that creature this turn.\nDraw a card at the beginning of the next turn's upkeep.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "Untap",
+                    "value": {
+                      "type": "InSlot",
+                      "value": "target"
+                    }
+                  },
+                  {
+                    "type": "PreventAllDamage",
+                    "value": {
+                      "duration": {
+                        "type": "UntilEndOfTurn"
+                      },
+                      "kind": {
+                        "type": "Combat"
+                      },
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "target"
+                      }
+                    }
+                  },
+                  {
+                    "type": "PreventAllDamage",
+                    "value": {
+                      "direction": {
+                        "type": "DealtBy"
+                      },
+                      "duration": {
+                        "type": "UntilEndOfTurn"
+                      },
+                      "kind": {
+                        "type": "Combat"
+                      },
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "target"
+                      }
+                    }
+                  },
+                  {
+                    "type": "ArmDelayedTrigger",
+                    "value": {
+                      "name": "you draw a card"
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "target": {
+                "filter": {
+                  "type": "IsAttacking"
+                },
+                "pool": {
+                  "type": "Creatures"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,310 @@
+{
+  "description": "Justice: a spell or creature its owner doesn't control costs its controller, even after it has left the stack or the battlefield",
+  "board": {
+    "active": "bob",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Mogg Fanatic",
+            "ready": true,
+            "label": "fanatic"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Shock",
+            "label": "shock"
+          }
+        ],
+        "manaPool": "R"
+      },
+      {
+        "name": "alice",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Justice",
+            "label": "j"
+          },
+          {
+            "card": "Plains",
+            "label": "p1"
+          },
+          {
+            "card": "Plains",
+            "label": "p2"
+          },
+          {
+            "card": "Mountain",
+            "label": "m1"
+          },
+          {
+            "card": "Mountain",
+            "label": "m2"
+          },
+          {
+            "card": "Mountain",
+            "label": "m3"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Aethersnatch",
+            "label": "snatch"
+          },
+          {
+            "card": "Act of Treason",
+            "label": "treason"
+          }
+        ],
+        "manaPool": "UUCCCC"
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Cast": {
+          "object": "$shock",
+          "targets": [
+            "$alice"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$snatch",
+          "targets": [
+            "Shock"
+          ],
+          "mana": [
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "ChooseTargets": {
+          "target": [
+            "$bob"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 18
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "alice",
+          "life": 18
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "do": {
+        "Attack": []
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": {
+        "ChooseToPay": {
+          "decision": {
+            "type": "Pays"
+          },
+          "mana": [
+            "$p1",
+            "$p2",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$treason",
+          "targets": [
+            "$fanatic"
+          ],
+          "mana": [
+            "$m1",
+            "$m2",
+            "$m3"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$fanatic",
+          "targets": [
+            "$bob"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 17
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "alice",
+          "life": 17
+        }
+      }
+    }
+  ],
+  "note": "alice takes each: the snatched Shock's 2 hit bob and cost her 2 though bob owns it, and the stolen Fanatic's 1 hit bob and cost her 1 though it's in bob's graveyard."
+}
