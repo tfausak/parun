@@ -62,6 +62,7 @@ import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Compares as Compares
 import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.Condition as Condition
+import qualified Parun.Types.ControlWindow as ControlWindow
 import qualified Parun.Types.ControllerRelation as ControllerRelation
 import qualified Parun.Types.CopyException as CopyException
 import qualified Parun.Types.CopyStackObject as CopyStackObject
@@ -150,6 +151,7 @@ import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaProduction as ManaProduction
 import qualified Parun.Types.ManaRetention as ManaRetention
 import qualified Parun.Types.ManaSpending as ManaSpending
+import qualified Parun.Types.ManaSpent as ManaSpent
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.Measure as Measure
@@ -6661,7 +6663,7 @@ increment =
       spentExceeds quantity =
         Condition.Compares
           ( Compares.MkCompares
-              (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot Binding.castSpell Quantity.ManaSpent))
+              (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot Binding.castSpell (Quantity.ManaSpent ManaSpent.Total)))
               Comparison.AtLeast
               (Quantity.Arithmetic (Arithmetic.Plus (Plus.MkPlus quantity (Quantity.Literal 1))))
           )
@@ -9351,7 +9353,7 @@ cumulativeUpkeep cost =
 -- NOT `cumulativeUpkeep`'s shape: that one counts the battlefield because rule
 -- 702.24a prints "if this permanent is on the battlefield", and rule 702.30a
 -- prints no such clause. So this asks about the ABILITY'S OWN state instead --
--- Quantity.ControlGainedSinceLastUpkeep, read of CR 113.7a's source and of CR
+-- Quantity.ControlGained's SinceLastUpkeep window, read of CR 113.7a's source and of CR
 -- 603.3a's controller, neither of which a battlefield fold can name.
 --
 -- Both halves of that matter, and Parun.KeywordTriggerSpec's Echo group proves
@@ -9365,7 +9367,7 @@ echo cost =
   let cameUnderYourControl =
         Condition.Compares
           ( Compares.MkCompares
-              (Quantity.ControlGainedSinceLastUpkeep (PlayerRef.Relative PlayerRelation.You))
+              (Quantity.ControlGained ControlWindow.SinceLastUpkeep (PlayerRef.Relative PlayerRelation.You))
               Comparison.AtLeast
               (Quantity.Literal 1)
           )

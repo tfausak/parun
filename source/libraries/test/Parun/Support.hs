@@ -1998,6 +1998,7 @@ stubView table oid =
                 Filter.prototyped = False,
                 Filter.manaSpentTagColors = Map.empty,
                 Filter.manaSpentAmount = 0,
+                Filter.manaSpentOnX = [],
                 -- CR 602.1: the table registers no abilities either, for the
                 -- reason `owner` above gives -- no Count in the pool filters on
                 -- one.

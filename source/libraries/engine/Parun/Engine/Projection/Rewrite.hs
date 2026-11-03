@@ -2370,6 +2370,7 @@ rewriteQuantity pairs quantity = case quantity of
           Count.Type.aggregation = rewriteAggregation pairs (Count.Type.aggregation c)
         }
   Quantity.Type.Arithmetic arithmetic -> Quantity.Type.Arithmetic (fmap (rewriteQuantity pairs) arithmetic)
+  Quantity.Type.AtMost atMost -> Quantity.Type.AtMost (fmap (rewriteQuantity pairs) atMost)
   Quantity.Type.Literal _ -> quantity
   Quantity.Type.Measure _ -> quantity
   Quantity.Type.Intensity -> quantity
@@ -2406,12 +2407,12 @@ rewriteQuantity pairs quantity = case quantity of
   Quantity.Type.TagWasSpent {} -> quantity
   Quantity.Type.TagWasSpentOfOwnColor {} -> quantity
   Quantity.Type.ChosenColorsItIs -> quantity
-  Quantity.Type.ManaSpent -> quantity
+  Quantity.Type.ManaSpent _ -> quantity
   Quantity.Type.WasToken -> quantity
   Quantity.Type.WasAttacking -> quantity
   Quantity.Type.WasBlocking -> quantity
   Quantity.Type.WasBlockedThisTurn -> quantity
-  Quantity.Type.ControlGainedSinceLastUpkeep _ -> quantity
+  Quantity.Type.ControlGained _ _ -> quantity
   Quantity.Type.PlayedBy _ -> quantity
   Quantity.Type.DamageDealtThisTurn _ -> quantity
   Quantity.Type.PlayerCounters {} -> quantity

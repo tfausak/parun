@@ -64,6 +64,7 @@ import qualified Parun.Types.KeywordTally as KeywordTally
 import qualified Parun.Types.Lookback as Lookback
 import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import qualified Parun.Types.MadnessCost as MadnessCost
+import qualified Parun.Types.Mana as Mana
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.Measures as Measures
@@ -813,6 +814,11 @@ data View = MkView
     -- reader is Parun.Engine.Quantity's ManaSpent arm, answering rule 702.191a's
     -- "the amount of mana spent to cast that spell".
     manaSpentAmount :: Natural.Natural,
+    -- | CR 107.3 / 601.2h: the shares of that mana that could have paid the
+    -- candidate's X (Parun.Types.Object.manaSpentOnX), none where nothing
+    -- recorded any. Its one reader is Parun.Engine.Quantity's ManaSpent arm,
+    -- answering Soul Burn's "the amount of {B} spent on X".
+    manaSpentOnX :: [Mana.Mana],
     -- CR 602.1 / 605.1a: which kinds of activated ability does the candidate
     -- have? The kinds and not the ability list, because that is the whole of what
     -- Filter.HasActivatedAbility asks and this module holds no board to measure an
@@ -1051,6 +1057,7 @@ playerView pid =
       -- A player is no object to have been paid for -- `manaSpentTagColors` above,
       -- same sentence.
       manaSpentAmount = 0,
+      manaSpentOnX = [],
       -- CR 602.1: an activated ability is an ability OF AN OBJECT, and CR 109.1's
       -- list of what an object is has no player in it -- `keywords` above, one
       -- rule over.
@@ -1774,6 +1781,12 @@ measureOf measure = case measure of
   Measure.Toughness -> toughness
   Measure.ManaValue -> manaValue
   Measure.ColorCount -> Just . toInteger . Set.size . colors
+  -- CR 306.5: only a planeswalker has loyalty, and CR 306.5c's counters are its
+  -- loyalty on the battlefield (Drain Life's target).
+  --
+  -- A planeswalker card's printed loyalty off the battlefield (CR 306.5a) is not
+  -- implemented (#5972).
+  Measure.Loyalty -> \view -> if Set.member CardType.Planeswalker (cardTypes view) then Just (toInteger (Map.findWithDefault 0 CounterKind.Loyalty (counters view))) else Nothing
 
 -- What a Measures atom's operand reads: a literal, the candidate's own view, or
 -- a number the Context carries, Nothing where the Context carries none.
@@ -1824,6 +1837,7 @@ sharesAnchored trait anchor = case anchor of
     Trait.Color -> Just (\context view -> meets (colors view) (sourceColors context))
     Trait.Name -> Just (\context view -> meets (names view) (sourceNames context))
     Trait.Owner -> Just (\context view -> meets (foldMap Set.singleton (owner view)) (foldMap Set.singleton (sourceOwner context)))
+    Trait.Controller -> Nothing
     Trait.Sector -> Just (\context view -> meets (Sector.sectorsIn (designations view)) (sourceSectors context))
     Trait.CreatureType -> Nothing
     Trait.CardType -> Nothing
@@ -1839,6 +1853,7 @@ sharesAnchored trait anchor = case anchor of
     Trait.CreatureType -> Just (\context view -> maybe True (meets (subtypes view)) (Map.lookup slot (slotCreatureTypes context)))
     Trait.Color -> Nothing
     Trait.Owner -> Nothing
+    Trait.Controller -> Nothing
     Trait.Sector -> Nothing
     Trait.CardType -> Nothing
   Anchor.Evaluated -> case trait of
@@ -1849,6 +1864,7 @@ sharesAnchored trait anchor = case anchor of
     Trait.Color -> Nothing
     Trait.Name -> Nothing
     Trait.Owner -> Nothing
+    Trait.Controller -> Nothing
     Trait.Sector -> Nothing
     Trait.CardType -> Nothing
   -- Some permanent the nest admits, matched in the OUTER context, so its "you"
@@ -1856,6 +1872,7 @@ sharesAnchored trait anchor = case anchor of
   -- you control"). Vacuously False where nothing fills battlefieldViews.
   Anchor.AnyPermanent group -> case trait of
     Trait.Name -> Just (\context view -> any (\permanent -> matches context permanent group && meets (names view) (names permanent)) (battlefieldViews context))
+    Trait.Controller -> Just (\context view -> any (\permanent -> matches context permanent group && meets (held view) (held permanent)) (battlefieldViews context))
     Trait.Color -> Nothing
     Trait.Owner -> Nothing
     Trait.Sector -> Nothing
@@ -1863,6 +1880,7 @@ sharesAnchored trait anchor = case anchor of
     Trait.CardType -> Nothing
   where
     meets a b = not (Set.disjoint a b)
+    held = foldMap Set.singleton . controller
 
 -- CR 701.3a / 301.5a: does a candidate attached to this object relate to the
 -- anchor -- the match's source, or under CR 613.4c the object the surrounding
@@ -3507,6 +3525,7 @@ manaValueThresholds predicate = case predicate of
     Operand.Literal n -> case Measures.measure m of
       Measure.ManaValue -> [n]
       Measure.ColorCount -> []
+      Measure.Loyalty -> []
       -- Reads power or toughness against the literal, so it bounds nothing.
       Measure.Power -> []
       Measure.Toughness -> []
@@ -3868,6 +3887,7 @@ readsSourceValues predicate = case predicate of
       Trait.Color -> True
       Trait.Name -> True
       Trait.Owner -> False
+      Trait.Controller -> False
       Trait.Sector -> False
       Trait.CreatureType -> False
       Trait.CardType -> False

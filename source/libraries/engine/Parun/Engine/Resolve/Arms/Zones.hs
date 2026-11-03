@@ -711,14 +711,12 @@ offerCastArm offerCast runSubgame resolving source controller legal chosen (Offe
       -- CastOffer.payableFromSpent: only a card whose mana cost the mana spent
       -- on this ability's {X} could pay stays on offer. That mana is
       -- Object.manaSpent less what paid the rest of the total
-      -- (Object.manaCostPaid, Mana.xShares), so a cost increase's mana is not
-      -- counted; any share the payment leaves open will do. The CARD's mana
-      -- cost, which in a hand is Card.combined's (CR 709.4, 712.8a, 715.4).
+      -- (Object.manaSpentOnX), so a cost increase's mana is not counted; any
+      -- share the payment leaves open will do. The CARD's mana cost, which in a
+      -- hand is Card.combined's (CR 709.4, 712.8a, 715.4).
       ability = Game.lookupObject resolving gs
       spent = maybe (Mana.Type.MkMana []) Object.manaSpent ability
-      shares = case (ability >>= Object.manaCostPaid, ability >>= Binding.amountOf Binding.variableX . Object.bindings) of
-        (Just paid, Just x) -> Mana.xShares x paid spent
-        _ -> [spent]
+      shares = Maybe.fromMaybe [spent] (ability >>= Object.manaSpentOnX)
       affordable oid = not (CastOffer.payableFromSpent offer) || maybe False (\card -> any (`Mana.couldPayFrom` Face.manaCost (Card.combined card)) shares) (Game.cardOf oid gs)
   -- CR 608.2g names "a player", and a reference resolving to nobody offers the
   -- cast to nobody.
@@ -1296,19 +1294,20 @@ reveal resolving source controller legal chosen (Reveal.MkReveal ref mSlot) = do
   Monad.mapM_ (\oid -> Event.revealResolving resolving (shower oid) oid) named
   bindShown named
 
-lookAt :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> LookAt.LookAt -> Game ()
-lookAt resolving source controller legal (LookAt.MkLookAt ref slot looker) = do
+lookAt :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> LookAt.LookAt -> Game ()
+lookAt resolving source controller legal chosen (LookAt.MkLookAt ref slot looker) = do
   -- CR 608.2c: the cards are named as this instruction is reached, and CR 701.20b
   -- (via rule 701.20e) leaves every one where it is -- so the arm is the
   -- binding plus a GameEvent.Looked per card and looker, and an empty library
   -- binds and records nothing. A public GameEvent.Revealed would be a different
   -- rule (CR 701.20a).
   --
-  -- A read and never an ask: the look shows every card it names, so a choice
-  -- among them is a later instruction's, Word of Command's "choose a card from
-  -- it" reading this slot from its OfferCast.
+  -- The look shows every card it names, so a choice among them is a later
+  -- instruction's, Word of Command's "choose a card from it" reading this slot
+  -- from its OfferCast. Named through askingObjects as Reveal's are, for Urza's
+  -- Bauble's "a card at random", which objectRefObjects answers with nothing.
+  named <- Common.askingObjects resolving source controller legal chosen ref
   gs <- State.get
-  let named = objectRefObjects legal resolving controller source gs ref
   Monad.forM_ named $ \oid ->
     Monad.forM_ (playerRefPlayers legal resolving source controller gs looker) $ \pid -> Event.look pid oid
   -- Several cards take the group, which Filter.IsBound reads as CR 701.20e's

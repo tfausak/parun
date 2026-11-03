@@ -197,6 +197,7 @@ import qualified Parun.Types.Optionality as Optionality
 import qualified Parun.Types.OrElse as OrElse
 import qualified Parun.Types.PayGate as PayGate
 import qualified Parun.Types.PermanentActed as PermanentActed
+import qualified Parun.Types.PhasePattern as PhasePattern
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
 import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Parun.Types.PlayerCounters as PlayerCounters
@@ -1969,6 +1970,7 @@ overRelations f re = case re of
   ReplacementEffect.ManaR _ -> pure re
   ReplacementEffect.GameLossR r -> (\w -> ReplacementEffect.GameLossR r {GameLossR.whose = w}) <$> f (GameLossR.whose r)
   ReplacementEffect.PlaneswalkR r -> (\w -> ReplacementEffect.PlaneswalkR r {PlaneswalkR.whose = w}) <$> f (PlaneswalkR.whose r)
+  ReplacementEffect.PhaseR r -> (\w -> ReplacementEffect.PhaseR r {PhasePattern.whosePhase = w}) <$> f (PhasePattern.whosePhase r)
   -- CR 109.5's relation rides EntryR's Filter (Filter.HeldBy Holder.Controller) and DamageR's
   -- PlayerRelation; the other four name no player at all.
   ReplacementEffect.EntryR _ -> pure re
@@ -1977,7 +1979,6 @@ overRelations f re = case re of
   ReplacementEffect.TurnUpR _ -> pure re
   ReplacementEffect.AttachR _ -> pure re
   ReplacementEffect.UntapR _ -> pure re
-  ReplacementEffect.PhaseR _ -> pure re
   where
     overSubject subject = case subject of
       CounterSubject.ByPlayer rel -> CounterSubject.ByPlayer <$> f rel

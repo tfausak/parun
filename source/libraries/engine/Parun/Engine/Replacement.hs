@@ -874,17 +874,17 @@ matchesPrinted viewOf gs event candidate =
         --
         -- The event's PlayerId is the ACTIVE player, which is also whose step
         -- this is: every step and phase in a turn belongs to the player whose
-        -- turn it is, or to their team (CR 805.4). So Fatigue is `whosePhase ==
-        -- Just that player`, widened to the team by the paragraph below, and
-        -- Nothing is Eon Hub's symmetric skip, which reads no PlayerId at all.
-        -- The SOURCE's controller is not consulted: unlike matchesController's
-        -- CR 109.5 "you", the player here was named by the effect, not derived.
+        -- turn it is, or to their team (CR 805.4). So Fatigue is `whosePhase`
+        -- Among that player, Necropotence is Related You (CR 109.5, the row's
+        -- controller), and Eon Hub is Related AnyPlayer.
         --
         -- CR 805.8: under the shared team turns option a skip naming any player
         -- on the active team is that team's, so a teammate's row matches too.
         (ReplacementEffect.PhaseR pat, ProposedEvent.WouldBeginPhase selector pid) ->
           PhasePattern.whichPhase pat == selector
-            && maybe True (Turn.sharesTurn gs pid) (PhasePattern.whosePhase pat)
+            && any
+              (\other -> Turn.sharesTurn gs pid other && matchesPlayer gs candidate (PhasePattern.whosePhase pat) other)
+              (GameState.turnOrder gs)
         -- CR 614.1c-d: which entering permanents this replacement watches, as a
         -- Filter over the entering object (see Parun.Types.ReplacementEffect).
         -- 614.1c's self-scope is Filter.IsSource; 614.1d's is a characteristic
@@ -2402,9 +2402,8 @@ readsApplier re = case re of
   ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _ _ PlaneswalkRewrite.ArrangeTopTwo) -> False
   -- GameLossR's answer, and for its reason.
   ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _ _ (PlaneswalkRewrite.RunEffects _)) -> True
-  -- CR 614.10: a skip replaces the step or phase with nothing. The player it is
-  -- ABOUT is baked into PhasePattern.whosePhase, on the EFFECT, where this
-  -- comparison already sees it.
+  -- CR 614.10: a skip replaces the step or phase with nothing, whoever applies it;
+  -- whether a row's "you" is the player it is ABOUT was settled by `applies`.
   ReplacementEffect.PhaseR _ -> False
 
 -- CR 614.6: does applying this effect replace a coin flip with a die roll or a
@@ -4383,13 +4382,13 @@ installTurnSkips entry gs =
                         { PhasePattern.whichPhase = selector,
                           -- The turn's taker, which for a step or phase OF that
                           -- turn is also whose step it is (see PhasePattern).
-                          PhasePattern.whosePhase = Just (ExtraTurn.taker entry)
+                          PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton (ExtraTurn.taker entry))
                         },
                   -- CR 113.7: the source of the effect that created the turn.
                   ActiveReplacement.source = ExtraTurn.source entry,
-                  -- CR 109.5's "you" for this row. Nothing reads it: a PhaseR
-                  -- names its player outright and has no ControllerRelation to
-                  -- resolve. The TAKER rather than the effect's controller,
+                  -- CR 109.5's "you" for this row. Nothing reads it: Among
+                  -- names its player outright, relationHolds asking the "you"
+                  -- only of Related. The TAKER rather than the effect's controller,
                   -- because these skips ride the turn (see Parun.Types.ExtraTurn)
                   -- and the effect that created it is long gone by the time the
                   -- turn begins.

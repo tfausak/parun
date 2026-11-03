@@ -1,8 +1,8 @@
 module Parun.Codec.CastingRestriction where
 
-import qualified Parun.Codec.Color as Color
 import qualified Parun.Codec.Condition as Condition
 import qualified Parun.Codec.DuringPhase as DuringPhase
+import qualified Parun.Codec.ManaSymbol as ManaSymbol
 import qualified Parun.Codec.Phase as Phase
 import qualified Parun.Codec.TurnScope as TurnScope
 import qualified Parun.JsonCodec.Arm as Arm
@@ -21,7 +21,7 @@ codec =
       Arm.payload "DuringTurn" TurnScope.codec CastingRestriction.DuringTurn (\x -> case x of CastingRestriction.DuringTurn y -> Just y; _ -> Nothing),
       Arm.payload "NotDuringFirstTurns" Common.natural CastingRestriction.NotDuringFirstTurns (\x -> case x of CastingRestriction.NotDuringFirstTurns y -> Just y; _ -> Nothing),
       Arm.payload "OnlyIf" Condition.codec CastingRestriction.OnlyIf (\x -> case x of CastingRestriction.OnlyIf y -> Just y; _ -> Nothing),
-      Arm.payload "SpendOnlyOnX" Color.codec CastingRestriction.SpendOnlyOnX (\x -> case x of CastingRestriction.SpendOnlyOnX y -> Just y; _ -> Nothing)
+      Arm.payload "SpendOnlyOnX" ManaSymbol.codec CastingRestriction.SpendOnlyOnX (\x -> case x of CastingRestriction.SpendOnlyOnX y -> Just y; _ -> Nothing)
     ]
 
 tagOf :: CastingRestriction.CastingRestriction -> String

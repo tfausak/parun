@@ -24,7 +24,8 @@ data ControllerRelation
     -- -- Plagiarize's "if target player would draw". Parun.Engine.Resolve.Effect
     -- bakes it into Among as the row is installed; unbaked, it admits nobody.
     InSlot SlotName.SlotName
-  | -- | The players an InSlot named when its row was installed. Runtime-only: a
+  | -- | The players a resolution named, baked when its row was installed: an
+    -- InSlot's, or a skip's (Fatigue, an extra turn's taker). Runtime-only: a
     -- card cannot name a PlayerId, and Parun.EffectLintSpec keeps the pool from
     -- authoring one.
     Among (Set.Set PlayerId.PlayerId)

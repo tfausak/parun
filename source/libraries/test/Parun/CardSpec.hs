@@ -4376,6 +4376,7 @@ quantityKindFilters quantity = case quantity of
   Quantity.Type.VotesReceived _ -> []
   Quantity.Type.Star -> []
   Quantity.Type.Arithmetic arithmetic -> foldMap quantityKindFilters arithmetic
+  Quantity.Type.AtMost atMost -> foldMap quantityKindFilters atMost
   -- The Count's own Filter is countFilters' half above; what this half adds is
   -- the CounterKind a Greatest's per-member Quantity may hide, which is
   -- QuantitySlot.nestedCounts' descent.
@@ -4399,12 +4400,12 @@ quantityKindFilters quantity = case quantity of
   Quantity.Type.TagWasSpent {} -> []
   Quantity.Type.TagWasSpentOfOwnColor {} -> []
   Quantity.Type.ChosenColorsItIs -> []
-  Quantity.Type.ManaSpent -> []
+  Quantity.Type.ManaSpent _ -> []
   Quantity.Type.WasToken -> []
   Quantity.Type.WasAttacking -> []
   Quantity.Type.WasBlocking -> []
   Quantity.Type.WasBlockedThisTurn -> []
-  Quantity.Type.ControlGainedSinceLastUpkeep _ -> []
+  Quantity.Type.ControlGained _ _ -> []
   Quantity.Type.PlayedBy _ -> []
   Quantity.Type.DamageDealtThisTurn _ -> []
   -- CR 122.1's PER-PLAYER tally, whose kind is a Parun.Types.PlayerCounterKind --

@@ -26,7 +26,7 @@ data TurnUpR ability effect = MkTurnUpR
     -- CR 702.168d's disguise procedure. Gating the WithCounters constructor
     -- instead would refuse them; see #987.
     --
-    -- ENGINE-BAKED, like Parun.Types.PhasePattern's whosePhase: the codec accepts
+    -- ENGINE-BAKED, like Parun.Types.PhasePattern's Among: the codec accepts
     -- it so a minted row round-trips, and Parun.CardSpec holds that no printing
     -- authors one.
     requiring :: Maybe TurnUpProcedure.TurnUpProcedure,

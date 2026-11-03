@@ -111,6 +111,7 @@ overSlots f quantity =
         -- Whatever the operands name: a calculation's own payload (a rounding, a
         -- factor) names no slot.
         Quantity.Arithmetic arithmetic -> fmap Quantity.Arithmetic (traverse recur arithmetic)
+        Quantity.AtMost atMost -> fmap Quantity.AtMost (traverse recur atMost)
         -- Terminating for the reason evaluate's Count arm is: a Greatest's payload is
         -- a strictly smaller subterm.
         Quantity.Count c -> fmap Quantity.Count (overCount recur c)
@@ -168,7 +169,7 @@ overSlots f quantity =
         Quantity.TagWasSpent {} -> pure quantity
         Quantity.TagWasSpentOfOwnColor {} -> pure quantity
         Quantity.ChosenColorsItIs -> pure quantity
-        Quantity.ManaSpent -> pure quantity
+        Quantity.ManaSpent _ -> pure quantity
         Quantity.WasToken -> pure quantity
         Quantity.WasAttacking -> pure quantity
         Quantity.WasBlocking -> pure quantity
@@ -228,7 +229,7 @@ overSlots f quantity =
         -- And another PlayerRef in ManaCount's position, CR 702.30a's echo window
         -- having nothing beside it: the OBJECT it asks about is the one the
         -- evaluation is aimed at, as ObjectCounters' is.
-        Quantity.ControlGainedSinceLastUpkeep _ -> pure quantity
+        Quantity.ControlGained _ _ -> pure quantity
         Quantity.PlayedBy _ -> pure quantity
         -- The one arm that names a TARGET slot and is visited here anyway. Every other
         -- nested target slot is a PlayerRef this function leaves to nestedRefs below;
@@ -322,6 +323,7 @@ nestedRefs quantity = case quantity of
   -- What the operands hide is the whole question: a rounding or a factor hides
   -- no reference.
   Quantity.Arithmetic arithmetic -> foldMap nestedRefs arithmetic
+  Quantity.AtMost atMost -> foldMap nestedRefs atMost
   -- Both halves `slots` skips: the Scope's own read, and the per-member quantity
   -- of a Greatest, which may hide a reference of its own.
   Quantity.Count c -> Set.union (scopeRefs (Count.Type.scope c)) (foldCount nestedRefs c)
@@ -333,7 +335,7 @@ nestedRefs quantity = case quantity of
   Quantity.HasPlayerDesignation (PlayerDesignationTally.MkPlayerDesignationTally ref _) -> Set.singleton (Left ref)
   Quantity.IsStartingPlayer ref -> Set.singleton (Left ref)
   Quantity.IsActivePlayer ref -> Set.singleton (Left ref)
-  Quantity.ControlGainedSinceLastUpkeep ref -> Set.singleton (Left ref)
+  Quantity.ControlGained _ ref -> Set.singleton (Left ref)
   Quantity.PlayedBy ref -> Set.singleton (Left ref)
   Quantity.PlayerCounters (PlayerCounterTally.MkPlayerCounterTally ref _) -> Set.singleton (Left ref)
   Quantity.Devotion d -> Set.singleton (Left (Devotion.player d))
@@ -357,7 +359,7 @@ nestedRefs quantity = case quantity of
   Quantity.TagWasSpent {} -> Set.empty
   Quantity.TagWasSpentOfOwnColor {} -> Set.empty
   Quantity.ChosenColorsItIs -> Set.empty
-  Quantity.ManaSpent -> Set.empty
+  Quantity.ManaSpent _ -> Set.empty
   Quantity.WasToken -> Set.empty
   Quantity.WasAttacking -> Set.empty
   Quantity.WasBlocking -> Set.empty
@@ -435,6 +437,7 @@ nestedCounts quantity = case quantity of
   -- An operand may be a Count -- Malignus halves a fold over players, Blessed
   -- Reversal multiplies one over the battlefield.
   Quantity.Arithmetic arithmetic -> foldMap nestedCounts arithmetic
+  Quantity.AtMost atMost -> foldMap nestedCounts atMost
   -- The leaf itself, and DESCENT into a Greatest's per-member number, which may
   -- be a Count of its own.
   Quantity.Count c -> c : foldCount nestedCounts c
@@ -450,7 +453,7 @@ nestedCounts quantity = case quantity of
   Quantity.HasPlayerDesignation {} -> []
   Quantity.IsStartingPlayer _ -> []
   Quantity.IsActivePlayer _ -> []
-  Quantity.ControlGainedSinceLastUpkeep _ -> []
+  Quantity.ControlGained _ _ -> []
   Quantity.PlayedBy _ -> []
   Quantity.HasDesignation _ -> []
   Quantity.DesignationValue _ -> []
@@ -467,7 +470,7 @@ nestedCounts quantity = case quantity of
   Quantity.TagWasSpent {} -> []
   Quantity.TagWasSpentOfOwnColor {} -> []
   Quantity.ChosenColorsItIs -> []
-  Quantity.ManaSpent -> []
+  Quantity.ManaSpent _ -> []
   Quantity.WasToken -> []
   Quantity.WasAttacking -> []
   Quantity.WasBlocking -> []
@@ -629,7 +632,7 @@ mapPlayerRefs f intoCount quantity =
         Quantity.HasPlayerDesignation (PlayerDesignationTally.MkPlayerDesignationTally ref mark) -> Quantity.HasPlayerDesignation (PlayerDesignationTally.MkPlayerDesignationTally (f ref) mark)
         Quantity.IsStartingPlayer ref -> Quantity.IsStartingPlayer (f ref)
         Quantity.IsActivePlayer ref -> Quantity.IsActivePlayer (f ref)
-        Quantity.ControlGainedSinceLastUpkeep ref -> Quantity.ControlGainedSinceLastUpkeep (f ref)
+        Quantity.ControlGained window ref -> Quantity.ControlGained window (f ref)
         Quantity.PlayedBy ref -> Quantity.PlayedBy (f ref)
         Quantity.PlayerCounters (PlayerCounterTally.MkPlayerCounterTally ref kind) -> Quantity.PlayerCounters (PlayerCounterTally.MkPlayerCounterTally (f ref) kind)
         Quantity.Devotion d -> Quantity.Devotion d {Devotion.player = f (Devotion.player d)}
@@ -664,6 +667,7 @@ mapPlayerRefs f intoCount quantity =
         Quantity.ManaCount c -> Quantity.ManaCount c {ManaCount.Type.player = f (ManaCount.Type.player c)}
         Quantity.Count c -> Quantity.Count (intoCount c)
         Quantity.Arithmetic arithmetic -> Quantity.Arithmetic (fmap recur arithmetic)
+        Quantity.AtMost atMost -> Quantity.AtMost (fmap recur atMost)
         Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot slot inner) -> Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot slot (recur inner))
         Quantity.AgainstExiledPile a -> Quantity.AgainstExiledPile a {AgainstExiledPile.quantity = recur (AgainstExiledPile.quantity a)}
         Quantity.AgainstLastCardExiledWith l -> Quantity.AgainstLastCardExiledWith l {AgainstLastCardExiledWith.quantity = recur (AgainstLastCardExiledWith.quantity l)}
@@ -699,7 +703,7 @@ mapPlayerRefs f intoCount quantity =
         Quantity.TagWasSpent {} -> quantity
         Quantity.TagWasSpentOfOwnColor {} -> quantity
         Quantity.ChosenColorsItIs -> quantity
-        Quantity.ManaSpent -> quantity
+        Quantity.ManaSpent _ -> quantity
         Quantity.WasToken -> quantity
         Quantity.WasAttacking -> quantity
         Quantity.WasBlocking -> quantity
