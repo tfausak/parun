@@ -101,13 +101,41 @@ Entries are ordered by the first rule each cites.
 - **Question**: Char aimed at its own caster deals 4 and 2 to one player. Is
   that two damage events or one of 6? CR 615.10's per-event floor observes it.
 - **Rules**: CR 120.4, 608.2f, 615.7, 615.10, 701.14c; CR of 2026-08-07.
-- **Decision**: One event per recipient, source and moment; the amounts sum.
-- **Rejected**: Two events, which applies CR 615.10 twice. Merging in
-  `applyDamage`: combat and fights have several dealers.
+- **Decision**: One event per recipient, source and moment; the amounts sum,
+  over an instruction's aims and over a whole batch's survivors, since a
+  redirect can land two proposals of one source together.
+- **Rejected**: Two events, which applies CR 615.10 twice. A key without the
+  source: combat and fights have several dealers.
 - **Site**: `Parun.Engine.Replacement.oneEventPerRecipient`, proved by
   `Parun.DamageReplacementSpec`'s "CR 120.4 one sentence naming alice twice
-  deals her ONE event, of 6".
+  deals her ONE event, of 6" and the scenario
+  `harms-way-onto-another-recipient-of-its-source-is-one-event`.
 - **Issue**: #2586.
+
+## Whether damage a replacement adds joins a division already owed
+
+- **Question**: Eye for an Eye adds a damage event as it applies, of an amount
+  CR 616.1's choices fix. Bob, active, owes a CR 615.7 division over two hits,
+  and alice's Eye would add a third. Does his division span it? Lifelink
+  observes it. And if alice has a second effect on her event, and so a choice,
+  whose question comes first?
+- **Rules**: CR 101.4, 101.4b, 615.7, 616.1, 616.1f; CR of 2026-08-07.
+- **Decision**: A row that adds damage and is its event's only effect asks no
+  one anything, so it applies first and the division spans what it adds. A row
+  beside another effect is its chooser's choice, which takes its APNAP turn:
+  earlier seats' questions and CR 616.1 choices come first and cannot see what
+  it may add, and whatever of a shield they leave is divided afterwards. A
+  player with neither waits, keeping a shield for the added damage.
+- **Rejected**: Every seat answering first over what exists: bob's shield could
+  never meet damage no one had any say in. Every adding row first: bob, the
+  nonactive player, would spend a shared shield ahead of alice by a choice
+  nothing puts first. Expanding the batch up front: the amount depends on the
+  choices.
+- **Site**: `Parun.Engine.Event.settlesFirst`, proved by the scenarios
+  `eye-for-an-eye-damage-back-joins-a-division-over-two-hits`,
+  `eye-for-an-eye-waits-its-apnap-turn-behind-a-shared-shield` and
+  `eye-for-an-eye-waits-behind-an-earlier-seats-own-choice`.
+- **Issue**: #5991.
 
 ## Whether "each creature and each planeswalker" reaches a permanent twice
 

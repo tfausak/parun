@@ -2223,7 +2223,7 @@ applyReplacementsIn asOf batch spent event = do
 -- where it was, so one proposed damage event can come out of the loop as two.
 -- Every other class comes out as at most one, which applyReplacementsIn reads
 -- off the first component alone.
-applyReplacementsReporting :: Maybe GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> ProposedEvent -> Game ([ProposedEvent], [DamageThread], [Prevention])
+applyReplacementsReporting :: Maybe GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> ProposedEvent -> Game ([ProposedEvent], [Replacement.DamageThread], [Prevention])
 applyReplacementsReporting asOf batch allowances spent event = do
   (outcome, residue, prevented, _, _, _) <- applyReplacementsFully asOf batch allowances spent event
   let (added, dealt) = Either.partitionEithers residue
@@ -2246,13 +2246,13 @@ applyReplacementsReporting asOf batch allowances spent event = do
 -- carried in per event: it caps what a countdown covers here, and a share of 0
 -- keeps its row out of CR 616.1's offer entirely. Empty for every caller but
 -- the batch, which is every caller but resolveDamage.
-applyReplacementsFully :: Maybe GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
+applyReplacementsFully :: Maybe GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
 applyReplacementsFully asOf batch allowances spent = loop asOf batch False allowances spent [] Nothing False Nothing
 
 -- The last accumulator is CR 903.9c's split, taken when the owner accepted CR
 -- 903.9b's offer for a melded or merged commander inside the loop -- see
 -- `offerCommandZoneFirst`.
-loop :: Maybe GameState -> Set ObjectId -> Bool -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
+loop :: Maybe GameState -> Set ObjectId -> Bool -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
 loop asOf batch diverting allowances applied prevented exiledBy shuffling split event = do
   gs <- State.get
   -- From scratch each iteration: collect against the CURRENT state (or, for a
@@ -2309,7 +2309,7 @@ loop asOf batch diverting allowances applied prevented exiledBy shuffling split 
 -- The CR 616.1 choice among the card-borne candidates of one bucket, and its
 -- application. Split out of `loop` so `offerCommandZoneFirst` can stand in front
 -- of it.
-chooseAndApply :: Maybe GameState -> Set ObjectId -> Bool -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> GameState -> ProposedEvent -> [ReplacementCandidate] -> Game (Maybe ProposedEvent, [Either DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
+chooseAndApply :: Maybe GameState -> Set ObjectId -> Bool -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> GameState -> ProposedEvent -> [ReplacementCandidate] -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
 chooseAndApply asOf batch diverting allowances applied prevented exiledBy shuffling split gs event bucket = do
   picked <- Replacement.choose gs event bucket
   case picked of
@@ -2360,10 +2360,6 @@ chooseAndApply asOf batch diverting allowances applied prevented exiledBy shuffl
           pure (Nothing, [Left (de, applied1), Left (also, applied1)], prevented, exiledBy, shuffling, split)
     Just candidate -> applyChosen asOf batch diverting allowances applied prevented exiledBy shuffling split candidate event
 
--- A damage event the loop hands back to Event.resolveDamageBatch unsettled, with
--- the rows CR 614.5 keeps from applying to it again.
-type DamageThread = (DamageEvent.DamageEvent, Set CandidateId)
-
 -- CR 614.1a: the noncombat damage a DamageRewrite.AlsoToSourceController row adds
 -- beside the event it replaces, from the row's source, sized as the event is now,
 -- to the damage source's controller as the damage is dealt (CR 108.4a: its owner
@@ -2383,7 +2379,7 @@ alsoDealt gs candidate de = case ReplacementCandidate.effect candidate of
 -- One iteration of `loop`: apply the chosen candidate to the event and continue
 -- with what comes back. Split out so the partial-cover branch above and the
 -- ordinary one apply a candidate the same way.
-applyChosen :: Maybe GameState -> Set ObjectId -> Bool -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent, [Either DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
+applyChosen :: Maybe GameState -> Set ObjectId -> Bool -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
 applyChosen asOf batch diverting allowances applied prevented exiledBy shuffling split candidate event = do
   gs <- State.get
   -- CR 615.12: the chosen effect is a prevention effect and this damage
@@ -5662,7 +5658,7 @@ fullyUnlockedAfter halves card = case card of
 -- Way). The second answer is what comes back unsettled (`DamageThread`), and the
 -- third CR 615.13's, one entry per prevention effect that applied to THIS event
 -- and prevented some of it.
-resolveDamage :: Map CandidateId Natural -> Set CandidateId -> DamageEvent.DamageEvent -> Game ([DamageEvent.DamageEvent], [DamageThread], [Prevention])
+resolveDamage :: Map CandidateId Natural -> Set CandidateId -> DamageEvent.DamageEvent -> Game ([DamageEvent.DamageEvent], [Replacement.DamageThread], [Prevention])
 resolveDamage allowances spent de = do
   (outcome, added, prevented) <- applyReplacementsReporting Nothing Set.empty allowances spent (ProposedEvent.WouldDealDamage de)
   pure (Maybe.mapMaybe Replacement.asDamageEvent outcome, added, prevented)
@@ -5700,27 +5696,49 @@ resolveDamageBatch events = do
   pure (Replacement.oneEventPerRecipient dealt, Replacement.groupPreventions prevented)
 
 -- CR 615.7: a row owes its division over damage an Eye for an Eye adds as much
--- as over what was proposed, so the events a row of that shape reaches settle
--- first, asking only what touches them, and the rest wait for what they add.
--- Their chooser therefore answers ahead of APNAP (CR 616.1) when the batch holds
--- such an event: what the others are dividing does not exist until they choose.
-settleThreads :: [DamageThread] -> Game ([DamageEvent.DamageEvent], [Prevention])
+-- as over what was proposed, so a batch holding a thread such a row reaches
+-- settles what `settlesFirst` admits, asking only what touches it, and the rest
+-- wait for what that adds.
+settleThreads :: [Replacement.DamageThread] -> Game ([DamageEvent.DamageEvent], [Prevention])
 settleThreads threads = do
   gs <- State.get
-  let adds de = any (Maybe.isJust . flip (alsoDealt gs) de) (Replacement.applicable Nothing gs (ProposedEvent.WouldDealDamage de))
-      first = if any (adds . fst) threads then adds else const True
-      spentOn de = Maybe.fromMaybe Set.empty (lookup de threads)
-  (ordered, allowances) <- Replacement.orderBatch first spentOn (fmap fst threads)
-  let (now, later) = List.partition (first . fst) (zip ordered allowances)
-  settled <- mapM (\(de, allowance) -> resolveDamage allowance (spentOn de) de) now
+  let first = settlesFirst gs threads
+  ordered <- Replacement.orderBatch first threads
+  let (now, later) = List.partition (first . fst) ordered
+  settled <- mapM (\((de, spent), allowance) -> resolveDamage allowance spent de) now
   let dealt = concatMap (\(survivors, _, _) -> survivors) settled
       prevented = concatMap (\(_, _, ps) -> ps) settled
-      waiting = concatMap (\(_, added, _) -> added) settled <> fmap (\(de, _) -> (de, spentOn de)) later
+      waiting = concatMap (\(_, added, _) -> added) settled <> fmap fst later
   if null waiting
     then pure (dealt, prevented)
     else do
       (dealt2, prevented2) <- settleThreads waiting
       pure (dealt <> dealt2, prevented <> prevented2)
+
+-- Which threads settle this round. A row that adds damage and is its event's only
+-- effect asks no one anything (CR 616.1's "two or more"), so it goes ahead of
+-- every question. Otherwise the adding row's chooser has a choice, which takes its
+-- APNAP turn (CR 101.4): the earliest such seat's adding threads settle, behind
+-- every earlier seat's threads with a question or a CR 616.1 choice of their own.
+-- A thread with neither waits, its shield free to meet what is added.
+-- docs/decisions.md, "Whether damage a replacement adds joins a division already
+-- owed".
+settlesFirst :: GameState -> [Replacement.DamageThread] -> Replacement.DamageThread -> Bool
+settlesFirst gs threads =
+  let rows (de, spent) = filter (\row -> not (Set.member (ReplacementCandidate.identity row) spent)) (Replacement.applicable Nothing gs (ProposedEvent.WouldDealDamage de))
+      adds thread = any (Maybe.isJust . flip (alsoDealt gs) (fst thread)) (rows thread)
+      lone thread = adds thread && length (rows thread) == 1
+      rank = Replacement.apnapRank gs . fst
+      asked = Replacement.questioned gs threads
+      chooses thread = length (rows thread) >= 2 || elem thread asked
+      adding = filter adds threads
+      seat = minimum (fmap rank adding)
+   in if any lone threads
+        then lone
+        else
+          if null adding
+            then const True
+            else \thread -> if rank thread == seat then adds thread else rank thread < seat && chooses thread
 
 -- CR 701.8 / 614.8: settle a proposed destruction. `Just` is the object actually
 -- destroyed -- which need not be the one asked about, since a rewrite may
