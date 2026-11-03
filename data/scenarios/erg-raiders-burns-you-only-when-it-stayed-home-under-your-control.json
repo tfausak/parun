@@ -237,5 +237,5 @@
       }
     }
   ],
-  "note": "Turn 1: just cast, so no damage. Turn 2: your end step only. Turn 3: attacked. Turn 5: stayed home and is bounced with the trigger on the stack: the 2 damage still happens. Not implemented: the trigger going on the stack on turn 1, when the creature came under your control this turn (#6000)."
+  "note": "Turn 1: just cast, so no damage. Turn 2: your end step only. Turn 3: attacked. Turn 5: stayed home and is bounced with the trigger on the stack: the 2 damage still happens."
 }

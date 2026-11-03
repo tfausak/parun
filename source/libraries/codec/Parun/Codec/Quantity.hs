@@ -36,6 +36,7 @@ import qualified Parun.JsonCodec.Arm as Arm
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Types.Arithmetic as Arithmetic
+import qualified Parun.Types.ControlWindow as ControlWindow
 import qualified Parun.Types.Quantity as Quantity
 
 -- | Quantity.Count's arm is tagged HERE, like every other arm. Parun.Codec.Count
@@ -144,7 +145,9 @@ codec =
       -- one zone wider: the object is the one the quantity is evaluated against,
       -- and the answer comes off the log rather than off that object.
       Arm.nullary "WasBlockedThisTurn" Quantity.WasBlockedThisTurn,
-      Arm.payload "ControlGainedSinceLastUpkeep" PlayerRef.codec Quantity.ControlGainedSinceLastUpkeep (\x -> case x of Quantity.ControlGainedSinceLastUpkeep y -> Just y; _ -> Nothing),
+      -- The window is the tag, Parun.Codec.Scope's OverBound posture.
+      Arm.payload "ControlGainedSinceLastUpkeep" PlayerRef.codec (Quantity.ControlGained ControlWindow.SinceLastUpkeep) (\x -> case x of Quantity.ControlGained ControlWindow.SinceLastUpkeep y -> Just y; _ -> Nothing),
+      Arm.payload "ControlGainedThisTurn" PlayerRef.codec (Quantity.ControlGained ControlWindow.ThisTurn) (\x -> case x of Quantity.ControlGained ControlWindow.ThisTurn y -> Just y; _ -> Nothing),
       Arm.payload "PlayedBy" PlayerRef.codec Quantity.PlayedBy (\x -> case x of Quantity.PlayedBy y -> Just y; _ -> Nothing),
       Arm.nullary "ClassLevel" Quantity.ClassLevel,
       -- CR 508.3b's record, with only a PlayerRef on the wire: what is counted
@@ -289,7 +292,8 @@ tagOf x = case x of
   Quantity.WasAttacking {} -> "WasAttacking"
   Quantity.WasBlocking {} -> "WasBlocking"
   Quantity.WasBlockedThisTurn {} -> "WasBlockedThisTurn"
-  Quantity.ControlGainedSinceLastUpkeep {} -> "ControlGainedSinceLastUpkeep"
+  Quantity.ControlGained ControlWindow.SinceLastUpkeep _ -> "ControlGainedSinceLastUpkeep"
+  Quantity.ControlGained ControlWindow.ThisTurn _ -> "ControlGainedThisTurn"
   Quantity.PlayedBy {} -> "PlayedBy"
   Quantity.ClassLevel {} -> "ClassLevel"
   Quantity.OpponentsAttacked {} -> "OpponentsAttacked"

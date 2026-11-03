@@ -182,7 +182,7 @@ data Object = MkObject
     -- opens a seat's window wherever it finds the permanent has arrived under
     -- them, and Engine.advanceControlClock moves that seat's window on at the
     -- beginning of their upkeep. Its one reader is
-    -- Parun.Engine.Quantity's ControlGainedSinceLastUpkeep arm, through
+    -- Parun.Engine.Quantity's ControlGained SinceLastUpkeep arm, through
     -- Quantity.controlClockOf, which falls back to the CR 608.2h record
     -- (Parun.Types.LastKnown.controlClock) for a permanent this one has left with.
     --
