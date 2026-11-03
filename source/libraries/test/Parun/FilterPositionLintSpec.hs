@@ -2102,7 +2102,12 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Capture Sphere", 1), -- Claustrophobia's wording
         ("Blossombind", 1), -- Claustrophobia's wording
         ("Starlight Snare", 1), -- Claustrophobia's wording
-        ("Artificer's Hex", 2) -- its intervening "if" and the destruction it gates
+        ("Artificer's Hex", 2), -- its intervening "if" and the destruction it gates
+        ("Armor of Faith", 1), -- an activated ability pumping the Aura's host
+        ("Torture", 1), -- an activated ability putting a counter on it
+        ("The Brute", 1), -- an activated ability regenerating it
+        ("Carapace", 1), -- the same, with the Aura sacrificed as the cost (CR 113.7a)
+        ("Thrull Retainer", 1) -- the same as Carapace
       ]
     -- The rejected side, which the sweep above cannot show while the pool has no
     -- offender: the same atom planted in a SPELL's target slot -- the position a
