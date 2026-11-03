@@ -2200,6 +2200,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
           ZoneScope.Scoped (PlayerScope.Related PlayerRelation.AnyPlayer) -> False
           ZoneScope.Scoped (PlayerScope.Related PlayerRelation.Teammate) -> False
           ZoneScope.Scoped (PlayerScope.Related PlayerRelation.YourTeam) -> False
+          ZoneScope.Scoped (PlayerScope.Related PlayerRelation.AnotherPlayer) -> False
           ZoneScope.Scoped (PlayerScope.Superlative leading) -> strictSuperlative leading
           -- A shared team turn has several active players (CR 805.4a), and a
           -- combat several defending ones (CR 802.2a).
@@ -2217,6 +2218,8 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
           PlayerRef.Relative PlayerRelation.Teammate -> False
           -- CR 102.4's you and your teammates.
           PlayerRef.Relative PlayerRelation.YourTeam -> False
+          -- The whole table but one seat, EachPlayerExcept's answer below.
+          PlayerRef.Relative PlayerRelation.AnotherPlayer -> False
           PlayerRef.InSlot _ -> True
           -- A SET -- the arm above's plural, and the whole of what parts them.
           PlayerRef.EachInSlot _ -> False

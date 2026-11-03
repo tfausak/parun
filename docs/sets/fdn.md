@@ -14,8 +14,6 @@ Every expressible Foundations card has been added to `data/cards/`.
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #5917: Run Away Together. A target slot judges each object alone, with no
-  relation among its targets (CR 115.1).
 - #5918: Courageous Goblin; Ruby, Daring Tracker. An intervening "if" checks
   again on resolution, where "attacks while" checks only at the event (CR
   603.4).

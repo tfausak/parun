@@ -45,6 +45,9 @@ data PlayerRelation
     -- your team controls"; Parun.TeamSpec's "CR 102.4 a your-team replacement
     -- reaches a teammate's permanent and not an opponent's" proves it.
     YourTeam
+  | -- | CR 102.1's players other than the perspective, teammates among them: Run
+    -- Away Together's "controlled by different players".
+    AnotherPlayer
   deriving (Bounded, Enum, Eq, Ord, Show)
 
 -- | Does @candidate@ stand in this relation to @you@, the perspective? The one
@@ -68,6 +71,7 @@ holds teams relation you candidate = case relation of
   AnyPlayer -> True
   Teammate -> Teams.sameTeam teams you candidate
   YourTeam -> candidate == you || Teams.sameTeam teams you candidate
+  AnotherPlayer -> candidate /= you
 
 -- | Does this relation hold whoever the perspective is -- so that a reader with
 -- no CR 109.5 "you" to supply can still answer it? Only AnyPlayer, which asks
@@ -80,6 +84,7 @@ perspectiveFree relation = case relation of
   AnyPlayer -> True
   Teammate -> False
   YourTeam -> False
+  AnotherPlayer -> False
 
 -- | 'holds' where either player may be absent: CR 109.5's "you" with nobody to
 -- be, or a candidate naming no player. Only a 'perspectiveFree' relation holds

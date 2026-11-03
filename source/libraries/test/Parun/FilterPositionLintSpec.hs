@@ -1833,7 +1833,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Necrotic Plague", 1), -- its trigger's target slot, relative to the dead creature's controller
         ("Chandra, Pyromaster", 1), -- its +1's second target slot, Flame Wave's sentence
         ("Soul of Shandalar", 2), -- both abilities' second target slots, Flame Wave's sentence
-        ("Legion's End", 1) -- its exile's object, relative to the target's controller
+        ("Legion's End", 1), -- its exile's object, relative to the target's controller
+        ("Run Away Together", 2) -- both target slots, each relative to the other
       ]
     -- The REJECTING direction, hand-built for the reason every sibling lint's is:
     -- a card that offends must not be loadable, so no file can carry one. Buried
