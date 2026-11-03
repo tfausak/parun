@@ -8,8 +8,8 @@
             "card": "Chromatic Orrery"
           },
           {
-            "card": "Forest",
-            "label": "f1"
+            "card": "Swamp",
+            "label": "s1"
           },
           {
             "card": "Forest",
@@ -45,15 +45,16 @@
     "step": "PrecombatMain"
   },
   "description": "CR 609.4b Chromatic Orrery lets green mana pay Consume Spirit's black-only X",
-  "note": "Three Forests and an untapped Orrery. Spend-as-though answers how a cost may be paid, and the X confinement is a payment rule, so X 1 is paid with three green: bob takes 1 and alice gains 1. Celestial Dawn's ruling on an ability that can only be activated by spending another color forces the reading.",
+  "note": "A Swamp, two Forests and an untapped Orrery. The Swamp pays the {B} and a Forest the {1}, so only the X needs the Orrery: spend-as-though answers how a cost may be paid, the X confinement is a payment rule, and Celestial Dawn's ruling on an ability that can only be activated by spending another color forces the reading. Bob takes 1 and alice gains 1.",
   "timeline": [
     {
       "do": {
         "Cast": {
           "mana": [
-            "$f1",
+            "$s1",
             "$f2",
-            "$f3"
+            "$f3",
+            null
           ],
           "object": "$spirit",
           "targets": [
