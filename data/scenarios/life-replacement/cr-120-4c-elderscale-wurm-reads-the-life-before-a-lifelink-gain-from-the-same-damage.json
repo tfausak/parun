@@ -1,0 +1,76 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Silverback Ape",
+            "label": "ape",
+            "ready": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears",
+            "ready": true
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Elderscale Wurm",
+            "ready": true
+          },
+          {
+            "card": "Vampire Nighthawk",
+            "label": "hawk",
+            "ready": true
+          }
+        ],
+        "life": 6,
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 120.4c Elderscale Wurm reads the life before a lifelink gain from the same damage",
+  "note": "Bob at 6 blocks Grizzly Bears with Vampire Nighthawk while Silverback Ape hits him for 5. The Wurm's condition reads the 6 he had before the damage, not the 8 his lifelink gain leaves, so the floor is off and he ends at 3.",
+  "timeline": [
+    {
+      "do": {
+        "Attack": [
+          "$ape",
+          "$bears"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Block": {
+          "$hawk": [
+            "$bears"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 3,
+          "player": "bob"
+        }
+      },
+      "player": "alice",
+      "step": "EndOfCombat",
+      "turn": 1
+    }
+  ]
+}

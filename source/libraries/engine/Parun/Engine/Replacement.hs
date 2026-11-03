@@ -541,13 +541,28 @@ numberInstances =
 -- `applies` reads the pre-batch board too, not just `collect`: `collect` derives
 -- a permanent row's CR 109.5 "you" off it, and a source the batch has already
 -- removed has no controller, so the two have to agree on which board that is.
+--
+-- `breaches` alone reads the LIVE board (`changesLoss`).
 applicable :: Maybe GameState -> GameState -> ProposedEvent -> [ReplacementCandidate]
 applicable asOf gs event =
   let sources = Maybe.fromMaybe gs asOf
       -- One gather and one grant walk, shared by every candidate asked.
       viewOf = Projection.viewsOf sources
       grants = Projection.controlGrants sources
-   in filter (applies viewOf grants sources event) (collect sources (GameState.replacements gs))
+   in filter (\candidate -> applies viewOf grants sources event candidate && changesLoss gs event candidate) (collect sources (GameState.replacements gs))
+
+-- CR 120.4c / 120.4d: would a LifeLossR row change this loss, judged on the
+-- live board even where `asOf` freezes the candidates. A damage batch's
+-- results land one at a time on the running total (Parun.Engine.Damage's note
+-- on `lost`), and the Worship example's floor is judged on what the WHOLE
+-- event leaves, so it reads that running total; the row's condition, gathered
+-- by `collect`, reads the pre-batch board (docs/decisions.md, "A life-total
+-- condition during damage processing").
+changesLoss :: GameState -> ProposedEvent -> ReplacementCandidate -> Bool
+changesLoss gs event candidate = case (ReplacementCandidate.effect candidate, event) of
+  (ReplacementEffect.LifeLossR (LifeLossR.MkLifeLossR _ rewrite), ProposedEvent.WouldLoseLife _ pid n) ->
+    breaches gs (ReplacementCandidate.controller candidate) rewrite pid n
+  _ -> True
 
 -- CR 106.12b: the type each ManaR row applying to this permanent being tapped
 -- for mana makes it produce, one entry per row. CR 616.1 lets the player order
@@ -955,8 +970,9 @@ matchesPrinted viewOf gs event candidate =
           src == oid
             && maybe True (\phase -> phase == GameState.phase gs && maybe False (Turn.isActive gs) (Projection.controllerOf oid gs)) (UntapR.during untapR)
         -- CR 614.1a / 120.4c: whose life total the row watches (CR 109.5's
-        -- "your"), what caused the loss, and whether the loss would actually
-        -- carry the player past the total the rewrite leaves them at.
+        -- "your") and what caused the loss. Whether the loss would actually
+        -- carry the player past the total the rewrite leaves them at is a third
+        -- conjunct, asked of the live board by `changesLoss`.
         --
         -- That third conjunct is CR 120.4d's own Worship example, which states
         -- it as APPLICABILITY rather than as a rewrite that changes nothing:
@@ -964,10 +980,9 @@ matchesPrinted viewOf gs event candidate =
         -- player's life total to less than 1, so Worship's effect is not
         -- applied." So a loss the row would leave alone never reaches CR 616.1's
         -- choice, is never spent under CR 614.5, and prompts nobody.
-        (ReplacementEffect.LifeLossR (LifeLossR.MkLifeLossR pat rewrite), ProposedEvent.WouldLoseLife cause pid n) ->
+        (ReplacementEffect.LifeLossR (LifeLossR.MkLifeLossR pat _), ProposedEvent.WouldLoseLife cause pid _) ->
           maybe True (== cause) (LifeLossPattern.whichCause pat)
             && matchesPlayer gs candidate (LifeLossPattern.whose pat) pid
-            && breaches gs (ReplacementCandidate.controller candidate) rewrite pid n
         -- CR 614.1a / 119.10: whose life total the row watches (CR 109.5's
         -- "your"), and whether the rewrite would actually resize the gain. That
         -- second conjunct is LifeLossR's third above, and for its reason: a gain
