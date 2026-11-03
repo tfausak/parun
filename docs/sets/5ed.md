@@ -10,26 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Prismatic Ward: `_ReplacementActionWouldEnter:ChooseAColor`
-- Pyroblast: `_Action:If`
-- Rabid Wombat: `_StaticLayerEffect:AdjustPTForEach`
-- Reef Pirates: `_Action:MillACard`
-- Sacred Boon: `_Action:CreateFuturePreventDamage`
-- Sea Serpent: `_PermanentRule:CantAttackUnlessDefendingPlayer`
-- Seasinger: `_Trigger:WhenAPlayerControlsNoPermanents`
-- Seraph: `_Permanents:WasDealtDamageByPermanentThisTurn`
-- Serpent Generator: `_Rule:TriggerA`
-- Serra Paladin: `_Action:CreateFuturePreventDamage`
-- Smoke: `_PlayerEffect:CantUntapMoreThanNumberPermanentsDuringTheirUntapStep`
-- Sorceress Queen: `_LayerEffect:SetPT`
-- Soul Barrier: `_Action:PlayerMayCost`
-- Stasis: `_PlayerEffect:SkipsUntapStep`
-- Tawnos's Weaponry: `_PermanentRule:MayChooseNotToUntapDuringUntap`
-- The Wretched: `_Trigger:AtTheEndOfCombat`
-- Time Bomb: `_CounterType:TimeCounter`
-- Time Elemental: `_Action:CreateFutureTrigger`
-- Touch of Death: `_Action:CreateFutureTrigger`
-- Unstable Mutation: renders differently
 - Updraft: `_Action:CreateFutureTrigger`
 - Urza's Avenger: `_Action:ChooseAnAbility`
 - Urza's Bauble: `_Action:LookAtARandomCardInPlayersHand`
@@ -58,6 +38,8 @@ first.
   lets the damage through and copies it (CR 614).
 - #5990: Clockwork Beast; Clockwork Steed. A counter effect can't put up to X
   on, capped by a total, as `ChooseNumber.upTo` is fixed.
+- #6010: Sacred Boon. A delayed trigger can't read how much damage a shield
+  stopped; a rider arming one misplays (CR 615.5, 615.7).
 - #6002: Island Sanctuary. No draw replacement offers skipping the draw for an
   effect, or reads "during your draw step" (CR 614.10).
 - #5999: Errantry. Nothing lets a creature attack only with no other attacker

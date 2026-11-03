@@ -2061,6 +2061,7 @@ primordial-hydra
 primordial-ooze
 printlifter-ooze
 prism-ring
+prismatic-ward
 prison-barricade
 prized-amalgam
 prized-unicorn
@@ -2093,6 +2094,7 @@ pulmonic-sliver
 purging-scythe
 pursued-whale
 pyramids
+pyroblast
 pyromancers-gauntlet
 pyromancers-goggles
 qarsi-sadist
@@ -2111,6 +2113,7 @@ quillspike
 quina-qu-gourmet
 qutrub-forayer
 rabid-elephant
+rabid-wombat
 radha-coalition-warlord
 radha-heart-of-keld
 radiant-performer
@@ -2361,8 +2364,10 @@ scuttlemutt
 scuttling-doom-engine
 sea-gate-restoration-sea-gate-reborn
 sea-monster
+sea-serpent
 sealed-fate
 seas-claim
+seasinger
 season-of-the-witch
 secluded-courtyard
 second-sight
@@ -2390,9 +2395,11 @@ sensational-spider-man
 sentinel-dispatch
 sentinel-of-the-eternal-watch
 sepulchral-primordial
+seraph
 seraph-of-the-sword
 serene-master
 serene-remembrance
+serpent-generator
 serpent-of-the-endless-sea
 serra-avatar
 serra-avenger
@@ -2476,6 +2483,7 @@ slumbering-dragon
 smallpox
 smash-to-smithereens
 smog-smasher
+smoke
 smoke-teller
 snake-basket
 snake-of-the-golden-grove
@@ -2489,6 +2497,7 @@ song-of-the-dryads
 sonorous-howlbonder
 sorcerer-class
 sorcerers-strongbox
+sorceress-queen
 sorcerous-sight
 sorcerous-spyglass
 sorin-markov
@@ -2578,6 +2587,7 @@ star-crowned-stag
 starfield-of-nyx
 starforged-sword
 starlight-snare
+stasis
 stasis-snare
 static-discharge
 static-orb
@@ -2688,6 +2698,7 @@ taunt
 taunting-challenge
 tavern-scoundrel
 tavern-swindler
+tawnoss-weaponry
 tayam-luminous-enigma
 tazeem
 tazri-beacon-of-unity
@@ -2764,6 +2775,7 @@ the-valeyard
 the-very-soil-shall-shake
 the-wandering-emperor
 the-weatherseed-treaty
+the-wretched
 thelonite-hermit
 thicket-basilisk
 thieves-auction
@@ -2805,6 +2817,8 @@ tide-skimmer
 tidebinder-mage
 tidewalker
 timberpack-wolf
+time-bomb
+time-elemental
 time-reversal
 time-stop
 time-stretch
@@ -2837,6 +2851,7 @@ tormods-crypt
 tornado-elemental
 torpor-orb
 total-war
+touch-of-death
 touch-of-moonglove
 touch-of-the-eternal
 tovolar-dire-overlord-tovolar-the-midnight-scourge

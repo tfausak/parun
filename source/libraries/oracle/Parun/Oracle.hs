@@ -121,7 +121,8 @@ faceAbilities face =
         word <- Maybe.maybeToList attached
         slot' <- Face.enchant face <> [TargetSlot.required Pool.Creatures Nothing | null (Face.enchant face)]
         (one, _) <- Target.described context slot'
-        [word <> Text.pack " " <> one]
+        -- Free: a later reference may be "that creature" (Unstable Mutation).
+        [word <> Text.pack " " <> one, Text.pack "that " <> one]
       context = Target.MkContext self Map.empty (Keyword.keywordWord self) [Text.pack " "] Map.empty [] [] [] host
       rest = face {Face.keywords = Map.empty, Face.spell = Face.defaultSpell, Face.activatedAbilities = [], Face.triggeredAbilities = [], Face.staticAbilities = [], Face.replacementEffects = [], Face.combatRestrictions = [], Face.playerAbilities = [], Face.enchant = [], Face.characteristicPT = Nothing}
       subtypes = TypeLine.subtypes (Face.typeLine face)

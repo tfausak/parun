@@ -631,6 +631,7 @@ aggregate quantityOf aggregation members = case aggregation of
     Trait.Color -> largestGroup Filter.colors
     Trait.Name -> largestGroup Filter.names
     Trait.Owner -> largestGroup (foldMap Set.singleton . Filter.owner)
+    Trait.Controller -> largestGroup (foldMap Set.singleton . Filter.controller)
     Trait.Sector -> largestGroup (Sector.sectorsIn . Filter.designations)
   -- CR 201.2b: the largest group in which every member has a name and no two
   -- share one. Single-named members contribute one per distinct name; a

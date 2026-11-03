@@ -15,6 +15,8 @@ data Trait
     -- spell may target the owner's creature and not the caster's" proves the two
     -- part.
     Owner
+  | -- | CR 108.4: the controller (Seasinger's "whose controller controls an Island").
+    Controller
   | -- | CR 702.158e: a sector designation.
     Sector
   | -- | CR 205.3m: a creature type.

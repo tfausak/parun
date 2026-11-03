@@ -389,11 +389,11 @@ paid context g predicates
               instruction = if implied p then verb p else clauseText p
               payment' = Target.wording who <> Text.pack " " <> pays <> each'
           -- Free: "unless" after the instruction (Soul Strings) or before it
-          -- (Rhystic Tutor), and "unless they" where the instruction's subject
-          -- is the payer (Painful Quandary).
+          -- (Rhystic Tutor), and "unless they" where the instruction opens with
+          -- the payer (Painful Quandary) or closes on it (Soul Barrier).
           text <-
             [instruction <> Text.pack " unless " <> payment', Text.pack "unless " <> payment' <> Text.pack ", " <> instruction]
-              <> [instruction <> Text.pack " unless they " <> second <> each' | Target.wording who `Text.isPrefixOf` instruction]
+              <> [instruction <> Text.pack " unless they " <> second <> each' | Target.wording who `Text.isPrefixOf` instruction || Target.wording who `Text.isSuffixOf` instruction]
           [(Prose.sentence text, allMentions p <> Target.mentions who <> counted)]
 
 -- | A clause's instructions as predicates, consecutive changes to the same

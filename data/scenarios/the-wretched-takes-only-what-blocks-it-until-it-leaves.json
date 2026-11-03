@@ -1,0 +1,200 @@
+{
+  "description": "The Wretched: at end of combat, gain control of all creatures blocking it for as long as you control it",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "The Wretched",
+            "ready": true,
+            "label": "w"
+          },
+          {
+            "card": "Scathe Zombies",
+            "ready": true,
+            "label": "z"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Grizzly Bears",
+            "ready": true,
+            "label": "b1"
+          },
+          {
+            "card": "Grizzly Bears",
+            "ready": true,
+            "label": "b2"
+          },
+          {
+            "card": "Hill Giant",
+            "ready": true,
+            "label": "g"
+          },
+          {
+            "card": "Llanowar Elves",
+            "ready": true,
+            "label": "e"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Terror",
+            "label": "terror"
+          }
+        ],
+        "manaPool": ""
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$w",
+          "$z"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "bob",
+      "do": {
+        "Block": {
+          "$b1": [
+            "$w"
+          ],
+          "$b2": [
+            "$w"
+          ],
+          "$g": [
+            "$z"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "source": "$w",
+      "do": {
+        "AssignDamage": {
+          "$b1": 1,
+          "$b2": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Controller",
+          "object": "$b1",
+          "is": "alice"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Controller",
+          "object": "$b2",
+          "is": "alice"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Controller",
+          "object": "$g",
+          "is": "bob"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Controller",
+          "object": "$e",
+          "is": "bob"
+        }
+      }
+    }
+  ],
+  "note": "The Giant blocked another attacker, the Elves blocked nothing."
+}
