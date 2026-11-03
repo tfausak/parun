@@ -2150,15 +2150,23 @@ chooseCardFromAmong resolving source controller legal chosen (ChosenCardFromAmon
 -- not otherwise ask its separation; piles alike (none matched) are not offered
 -- either. A ref naming nobody takes nothing (CR
 -- 101.3).
+--
+-- CR 101.4b: the prompt carries GameState.loopPicks, and a nonempty take joins
+-- it beside its taker. Proved by Parun.BoardEffectSpec's "CR 101.4b the later
+-- defending player is told the earlier one's pile" (Stand or Fall).
 takePile :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerRef -> [ObjectId] -> [ObjectId] -> Game [ObjectId]
 takePile resolving source controller legal pileRef matching split = do
   let first = Set.fromList split
       rest = Set.difference (Set.fromList matching) first
       piles = if rest == first then [first] else [first, rest]
   seat <- askedChooser resolving source controller legal pileRef
+  earlier <- State.gets (Maybe.fromMaybe Seq.empty . GameState.loopPicks)
   taken <- case seat of
     Nothing -> pure Nothing
-    Just who -> Game.chooseAmong (\decider asked -> Prompt.ChoosePile decider asked source) who piles
+    Just who -> Game.chooseAmong (\decider asked offered -> Prompt.ChoosePile decider asked source offered earlier) who piles
+  let record who pile g = g {GameState.loopPicks = fmap (Seq.|> (who, pile)) (GameState.loopPicks g)}
+  Monad.forM_ ((,) <$> seat <*> taken) $ \(who, pile) ->
+    Monad.unless (Set.null pile) (State.modify' (record who pile))
   pure (foldMap Set.toList taken)
 
 -- CR 701.20a / 701.9b: the cards randomness names out of each hand the ref

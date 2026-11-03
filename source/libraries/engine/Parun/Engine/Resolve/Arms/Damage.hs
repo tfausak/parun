@@ -1169,10 +1169,8 @@ choosePlayerAtRandom resolving source controller choice = do
 -- names -- so a later pick's prompt carries it. Proved by
 -- Parun.BoardEffectSpec's "CR 101.4b each player is told the earlier players'
 -- picks" (Covetous Elegy) and "CR 101.4b the later opponent is told the earlier
--- one's pick, asked or not" (Summon: Valefor).
---
--- Not implemented: recording a pile chooser's take, whose Prompt.ChoosePile
--- carries no earlier picks (#5968).
+-- one's pick, asked or not" (Summon: Valefor). A pile chooser's take is
+-- Common.takePile's to record.
 choosePermanents :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ChoosePermanents.ChoosePermanents -> Game ()
 choosePermanents resolving source controller legal (ChoosePermanents.MkChoosePermanents choice slot pileChooser) = do
   picked <- case pileChooser of
