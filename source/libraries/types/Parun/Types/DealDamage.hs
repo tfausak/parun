@@ -88,8 +88,7 @@ data DealDamage = MkDealDamage
     damaged :: Maybe SlotName.SlotName,
     -- | Where to record how much of `tally`'s settled damage was EXCESS (CR
     -- 120.10), summed over the instruction's own recipients: Goblin Negotiation's
-    -- "excess damage dealt to that creature this way". Beside `tally` rather than
-    -- a reading of it, since one sentence can state both.
+    -- "excess damage dealt to that creature this way".
     excessTally :: Maybe SlotName.SlotName
   }
   deriving (Eq, Ord, Show)
