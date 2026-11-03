@@ -1355,13 +1355,10 @@ storedPlayerScope effect = case effect of
 -- split (CR 700.3), which only a move's test (Sphinx of Uthuun) reaches.
 -- ChosenCardInHand splits off its "up to", which only a move's test (The Great
 -- Aurora) reaches, and ChosenCardInGraveyard its "up to", which only a move's
--- test (Liliana, the Necromancer) reaches; under Chooser.EachInScope that "up
--- to" is allowed nowhere, since its ask names no earlier chooser's picks
--- (#5832).
+-- test (Liliana, the Necromancer; Ill-Gotten Gains) reaches.
 data Question
   = CardInGraveyard
   | AnyCardsInGraveyards
-  | AnyCardsInEachGraveyard
   | CardInHand
   | AnyCardsInHand
   | CardFromAmong
@@ -1409,10 +1406,9 @@ questionOf ref = case ref of
   ObjectRef.TopOfLibraryUntil {} -> Nothing
   ObjectRef.TopOfGraveyard {} -> Nothing
   ObjectRef.EachCardFromAmong {} -> Nothing
-  ObjectRef.ChosenCardInGraveyard choice -> case (ChosenCardInGraveyard.count choice, ChosenCardInGraveyard.chooser choice) of
-    (HowMany.UpTo _, Chooser.EachInScope) -> Just AnyCardsInEachGraveyard
-    (HowMany.UpTo _, _) -> Just AnyCardsInGraveyards
-    (HowMany.Exactly _, _) -> Just CardInGraveyard
+  ObjectRef.ChosenCardInGraveyard choice -> case ChosenCardInGraveyard.count choice of
+    HowMany.UpTo _ -> Just AnyCardsInGraveyards
+    HowMany.Exactly _ -> Just CardInGraveyard
   ObjectRef.ChosenCardInHand choice -> case ChosenCardInHand.count choice of
     HowMany.UpTo _ -> Just AnyCardsInHand
     HowMany.Exactly _ -> Just CardInHand
@@ -1444,14 +1440,13 @@ chooserRef = Maybe.isJust . questionOf
 -- reached, so this is the fence that keeps a card from loading a combination no
 -- test reaches. A position read through the pure objectRefObjects allows none.
 --
--- A move's: every question but SeveralPermanents, RandomAmong and
--- AnyCardsInEachGraveyard. The scenario
+-- A move's: every question but SeveralPermanents and RandomAmong. The scenario
 -- ransack-sends-the-chosen-to-the-bottom-and-orders-the-rest reaches
 -- AnyCardsFromAmong. OffBattlefield's ask is Parun.Engine.Resolve.Effect's
 -- chosenPermanents, which Mirror of Fate's scenario reaches through
 -- Effect.ChoosePermanents; no permanent opcode's test reaches it.
 movedQuestions :: [Question]
-movedQuestions = filter (`notElem` [SeveralPermanents, RandomAmong, AnyCardsInEachGraveyard]) [minBound .. maxBound]
+movedQuestions = filter (`notElem` [SeveralPermanents, RandomAmong]) [minBound .. maxBound]
 
 -- The battlefield questions, for the opcodes that act on PERMANENTS -- Tovolar,
 -- Dire Overlord's transform, Teferi, Hero of Dominaria's untap, God-Eternal
