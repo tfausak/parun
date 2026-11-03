@@ -134,12 +134,15 @@ summary, and its title carries no CR numbers.
 - **Merging.** When a PR has cleared any audit, `gh pr ready` it and arm
   auto-merge (`gh pr merge --auto`; the merge queue sets the method) in the
   same step; a later fix undoes ready first
-  (`gh pr ready --undo`). Re-check `autoMergeRequest` after arming and after
-  every push. On a conflict, brief a fresh agent on the branch to merge
-  `origin/main` (`docs/agents/set-by-set.md`, "Git and the PR").
+  (`gh pr ready --undo`). After arming and after every push, read `gh api
+  repos/parun-mtg/parun/issues/P/events`: the last `auto_merge_*` or
+  `*_merge_queue` event must be neither a disabling nor a removal, since a
+  queued PR shows no `autoMergeRequest`. On a conflict, brief a fresh agent on
+  the branch to merge `origin/main` (`docs/agents/set-by-set.md`, "Git and the
+  PR").
 - **Shepherd** each PR with `script/shepherd.sh PR` in the background: it
-  exits on merge, conflict or a failed check. Don't update a `BEHIND` branch:
-  the queue tests each PR against main.
+  exits on merge, conflict, a failed check or removal from the queue. Don't
+  update a `BEHIND` branch: the queue tests each PR against main.
   Read a failed job's log first: one that died in `Set up job` is not a real
   failure.
 - **Reap after every merge**, from the primary checkout: `git worktree remove
