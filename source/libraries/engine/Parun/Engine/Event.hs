@@ -8156,7 +8156,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                   -- The BATTLEFIELD conjunct is the rule's own scope; an object in any
                   -- other zone carries no attachment for CR 701.3a to have made.
                   Monad.when (fromZone == Zone.Battlefield) $
-                    Monad.forM_ (Object.attachedTo obj) (unattach oid)
+                    Monad.forM_ (Object.attachedTo obj) (unattach lki oid)
                   seenArriving <- State.gets (Visibility.seenByEveryone newId)
                   causer <- State.gets Game.causeNow
                   Monad.when (fromZone == Zone.Battlefield) (State.modify' (fileBoardBefore lki))
@@ -8970,7 +8970,7 @@ attachVia legality subject destination = do
       --
       -- The equality guard above is what keeps a re-attach to the SAME host from
       -- reaching here: CR 701.3b makes that "do nothing", so neither event fires.
-      Monad.forM_ (Game.lookupObject subject gs >>= Object.attachedTo) (unattach subject)
+      Monad.forM_ (Game.lookupObject subject gs >>= Object.attachedTo) (unattach gs subject)
       becameAttached subject attachment
 
 -- CR 303.4 / 301.5e: a permanent that ARRIVES attached became attached, with
@@ -9014,15 +9014,22 @@ becameAttached subject host = do
 --
 -- `detach` below, Effect.Unattach's funnel, is a fourth route, clearing the
 -- field as the Sba fold does.
-unattach :: ObjectId -> Recipient.Recipient -> Game ()
-unattach subject host =
-  State.modify'
-    . recordEvent
-    $ GameEvent.BecameUnattached
-      BecameUnattached.MkBecameUnattached
-        { BecameUnattached.attachment = subject,
-          BecameUnattached.host = host
-        }
+--
+-- CR 603.10c: `before`, the board ahead of the site's write, is filed as the one
+-- the event looks back to (fileBoardBefore), which is what CR 603.2d's
+-- additional triggers read. data/scenarios/cloud-midgar-mercenary proves each
+-- route.
+unattach :: GameState -> ObjectId -> Recipient.Recipient -> Game ()
+unattach before subject host =
+  State.modify' $
+    recordEvent
+      ( GameEvent.BecameUnattached
+          BecameUnattached.MkBecameUnattached
+            { BecameUnattached.attachment = subject,
+              BecameUnattached.host = host
+            }
+      )
+      . fileBoardBefore before
 
 -- CR 701.3d: move `subject` off whatever it is attached to, leaving it on the
 -- battlefield. Attached to nothing, nothing happens and no event is recorded.
@@ -9031,7 +9038,7 @@ detach subject = do
   gs <- State.get
   Monad.forM_ (Game.lookupObject subject gs >>= Object.attachedTo) $ \host -> do
     State.put gs {GameState.objects = Map.adjust (\o -> o {Object.attachedTo = Nothing}) subject (GameState.objects gs)}
-    unattach subject host
+    unattach gs subject host
 
 -- CR 611.1 / 613.11: does a rules-modifying continuous effect stop this spell or
 -- ability from being countered (Spider-Punk, Prowling Serpopard)? The victim's

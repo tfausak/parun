@@ -1,0 +1,77 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Cloud, Midgar Mercenary",
+            "label": "cloud",
+            "ready": true
+          },
+          {
+            "attached": "cloud",
+            "card": "Grafted Wargear",
+            "label": "wargear"
+          },
+          {
+            "card": "Island",
+            "label": "i1",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Disarm",
+            "label": "disarm"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "Cloud, Midgar Mercenary: Disarm unattaching the Wargear doubles its unattach trigger",
+  "note": "CR 603.10c: Effect.Unattach's route. On the board after the unattaching Cloud is unequipped, which would trigger it once.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$i1"
+          ],
+          "object": "$disarm",
+          "targets": [
+            "$cloud"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "trigger of $wargear",
+            "trigger of $wargear"
+          ],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

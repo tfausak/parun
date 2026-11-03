@@ -1,0 +1,92 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Cloud, Midgar Mercenary",
+            "label": "cloud",
+            "ready": true
+          },
+          {
+            "attached": "cloud",
+            "card": "Grafted Wargear",
+            "label": "wargear"
+          },
+          {
+            "card": "Island",
+            "label": "i1",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "i2",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "i3",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "i4",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "March of the Machines",
+            "label": "march"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "Cloud, Midgar Mercenary: March of the Machines unattaching the Wargear doubles its unattach trigger",
+  "note": "CR 603.10c and CR 704.5n: the Wargear becomes a 3/3 creature and the state-based action unattaches it. On the board after, Cloud is unequipped, which would trigger it once.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$i1",
+            "$i2",
+            "$i3",
+            "$i4"
+          ],
+          "object": "$march"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "trigger of $wargear",
+            "trigger of $wargear"
+          ],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}
