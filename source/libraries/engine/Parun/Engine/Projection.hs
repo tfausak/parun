@@ -317,8 +317,10 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- A PLAYER ability, applied after the layers too (CR 613.10), is
         -- recorded here whoever grants it.
         Modification.GainAbility g -> case g of
+          -- The cost names its granter by id (Binding.grantingPermanent);
+          -- data/scenarios' Fishing Pole files prove each names its own.
           GrantedAbility.Activated a ->
-            pc {PC.activatedAbilities = PC.activatedAbilities pc <> [a]}
+            pc {PC.activatedAbilities = PC.activatedAbilities pc <> [a {ActivatedAbility.cost = Filter.bakeCost Binding.grantingPermanent src (ActivatedAbility.cost a)}]}
           GrantedAbility.Triggered t ->
             pc {PC.triggeredAbilities = PC.triggeredAbilities pc <> [t]}
           GrantedAbility.Static sa -> case affected of

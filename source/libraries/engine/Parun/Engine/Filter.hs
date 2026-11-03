@@ -3218,26 +3218,35 @@ rewriteWhichCounters pairs which = case which of
 -- from your hand" come closest and are still not one -- CR 612.2 swaps a SUBTYPE
 -- word, and the land CARD TYPE is not one.
 rewriteComponent :: [(TextWord.TextWord, TextWord.TextWord)] -> CostComponent.CostComponent Keyword.Type.Keyword -> CostComponent.CostComponent Keyword.Type.Keyword
-rewriteComponent pairs component = case component of
-  CostComponent.Sacrifice (Sacrifice.MkSacrifice n criterion) -> CostComponent.Sacrifice (Sacrifice.MkSacrifice n (rewrite pairs criterion))
-  CostComponent.TapForTotalPower (TapForTotalPower.MkTapForTotalPower n criterion) -> CostComponent.TapForTotalPower (TapForTotalPower.MkTapForTotalPower n (rewrite pairs criterion))
-  CostComponent.TapPermanents (TapPermanents.MkTapPermanents n criterion sharing) -> CostComponent.TapPermanents (TapPermanents.MkTapPermanents n (rewrite pairs criterion) sharing)
-  CostComponent.ReturnPermanents (ReturnPermanents.MkReturnPermanents n criterion) -> CostComponent.ReturnPermanents (ReturnPermanents.MkReturnPermanents n (rewrite pairs criterion))
-  CostComponent.ExilePermanents (ExilePermanents.MkExilePermanents n criterion) -> CostComponent.ExilePermanents (ExilePermanents.MkExilePermanents n (rewrite pairs criterion))
-  CostComponent.ExileCardsFromGraveyard (ExileCardsFromGraveyard.MkExileCardsFromGraveyard n criterion) -> CostComponent.ExileCardsFromGraveyard (ExileCardsFromGraveyard.MkExileCardsFromGraveyard n (rewrite pairs criterion))
-  CostComponent.ExileMaterials (ExileMaterials.MkExileMaterials n orMore criterion) -> CostComponent.ExileMaterials (ExileMaterials.MkExileMaterials n orMore (rewrite pairs criterion))
-  CostComponent.ExileTopFromGraveyard criterion -> CostComponent.ExileTopFromGraveyard (rewrite pairs criterion)
+rewriteComponent pairs = overComponent (rewrite pairs) (rewriteWhichCounters pairs)
+
+-- Every Filter and counter kind a cost component names, rewritten; the one
+-- descent rewriteComponent and bakeCost share.
+overComponent ::
+  (Filter.Filter Keyword.Type.Keyword -> Filter.Filter Keyword.Type.Keyword) ->
+  (WhichCounters.WhichCounters Keyword.Type.Keyword -> WhichCounters.WhichCounters Keyword.Type.Keyword) ->
+  CostComponent.CostComponent Keyword.Type.Keyword ->
+  CostComponent.CostComponent Keyword.Type.Keyword
+overComponent onFilter onCounters component = case component of
+  CostComponent.Sacrifice (Sacrifice.MkSacrifice n criterion) -> CostComponent.Sacrifice (Sacrifice.MkSacrifice n (onFilter criterion))
+  CostComponent.TapForTotalPower (TapForTotalPower.MkTapForTotalPower n criterion) -> CostComponent.TapForTotalPower (TapForTotalPower.MkTapForTotalPower n (onFilter criterion))
+  CostComponent.TapPermanents (TapPermanents.MkTapPermanents n criterion sharing) -> CostComponent.TapPermanents (TapPermanents.MkTapPermanents n (onFilter criterion) sharing)
+  CostComponent.ReturnPermanents (ReturnPermanents.MkReturnPermanents n criterion) -> CostComponent.ReturnPermanents (ReturnPermanents.MkReturnPermanents n (onFilter criterion))
+  CostComponent.ExilePermanents (ExilePermanents.MkExilePermanents n criterion) -> CostComponent.ExilePermanents (ExilePermanents.MkExilePermanents n (onFilter criterion))
+  CostComponent.ExileCardsFromGraveyard (ExileCardsFromGraveyard.MkExileCardsFromGraveyard n criterion) -> CostComponent.ExileCardsFromGraveyard (ExileCardsFromGraveyard.MkExileCardsFromGraveyard n (onFilter criterion))
+  CostComponent.ExileMaterials (ExileMaterials.MkExileMaterials n orMore criterion) -> CostComponent.ExileMaterials (ExileMaterials.MkExileMaterials n orMore (onFilter criterion))
+  CostComponent.ExileTopFromGraveyard criterion -> CostComponent.ExileTopFromGraveyard (onFilter criterion)
   -- Untouched: CR 701.59a describes the cards by a total and states no card type,
   -- so rule 612.1 finds no word in this component to swap.
   CostComponent.CollectEvidence _ -> component
   CostComponent.CollectEvidenceOfTargets -> component
-  CostComponent.DiscardCards (DiscardCards.MkDiscardCards n criterion) -> CostComponent.DiscardCards (DiscardCards.MkDiscardCards n (rewrite pairs criterion))
-  CostComponent.PutCardFromHandOntoBattlefield criterion -> CostComponent.PutCardFromHandOntoBattlefield (rewrite pairs criterion)
-  CostComponent.ExileCardsFromHand (ExileCardsFromHand.MkExileCardsFromHand n criterion) -> CostComponent.ExileCardsFromHand (ExileCardsFromHand.MkExileCardsFromHand n (rewrite pairs criterion))
-  CostComponent.RevealCardFromHand criterion -> CostComponent.RevealCardFromHand (rewrite pairs criterion)
-  CostComponent.Behold (Behold.MkBehold n criterion) -> CostComponent.Behold (Behold.MkBehold n (rewrite pairs criterion))
-  CostComponent.BeholdAndExile criterion -> CostComponent.BeholdAndExile (rewrite pairs criterion)
-  CostComponent.RemoveCounters (CountersFromPermanents.MkCountersFromPermanents n which criterion spread) -> CostComponent.RemoveCounters (CountersFromPermanents.MkCountersFromPermanents n (rewriteWhichCounters pairs which) (rewrite pairs criterion) spread)
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards n criterion) -> CostComponent.DiscardCards (DiscardCards.MkDiscardCards n (onFilter criterion))
+  CostComponent.PutCardFromHandOntoBattlefield criterion -> CostComponent.PutCardFromHandOntoBattlefield (onFilter criterion)
+  CostComponent.ExileCardsFromHand (ExileCardsFromHand.MkExileCardsFromHand n criterion) -> CostComponent.ExileCardsFromHand (ExileCardsFromHand.MkExileCardsFromHand n (onFilter criterion))
+  CostComponent.RevealCardFromHand criterion -> CostComponent.RevealCardFromHand (onFilter criterion)
+  CostComponent.Behold (Behold.MkBehold n criterion) -> CostComponent.Behold (Behold.MkBehold n (onFilter criterion))
+  CostComponent.BeholdAndExile criterion -> CostComponent.BeholdAndExile (onFilter criterion)
+  CostComponent.RemoveCounters (CountersFromPermanents.MkCountersFromPermanents n which criterion spread) -> CostComponent.RemoveCounters (CountersFromPermanents.MkCountersFromPermanents n (onCounters which) (onFilter criterion) spread)
   CostComponent.TapThis -> component
   CostComponent.UntapThis -> component
   CostComponent.SacrificeThis -> component
@@ -3260,6 +3269,11 @@ rewriteComponent pairs component = case component of
   CostComponent.ChooseOpponent _ -> component
   CostComponent.Waterbend _ -> component
   CostComponent.WaterbendInstead _ -> component
+
+-- bakeBound over every Filter a cost names, for a slot the cost is read under
+-- only once a grant fills it (Parun.Engine.Binding.grantingPermanent).
+bakeCost :: SlotName.SlotName -> ObjectId.ObjectId -> Cost.Cost Keyword.Type.Keyword -> Cost.Cost Keyword.Type.Keyword
+bakeCost slot object cost = cost {Cost.components = fmap (overComponent (bakeBound Map.empty (Map.singleton slot (Set.singleton object)) Map.empty) id) (Cost.components cost)}
 
 -- CR 603.2: replace every HeldByBound atom whose slot this environment names
 -- with its baked HeldByPlayer, every IsBound atom whose slot

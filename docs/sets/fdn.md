@@ -14,8 +14,6 @@ Every expressible Foundations card has been added to `data/cards/`.
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #5914: Fishing Pole. A granted ability's cost can't tap the Equipment that
-  granted it (CR 602.2).
 - #5942: Vizier of the Menagerie. A spend-mana permission can't be limited to the
   spell being cast (CR 118.14).
 - #5915: Steel Hellkite. No filter reads whether an object's controller was

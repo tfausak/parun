@@ -953,6 +953,7 @@ fireblast
 fires-of-mount-doom
 firespitter-whelp
 first-pick
+fishing-pole
 fixed-point-in-time
 flame-spill
 flame-sweep
