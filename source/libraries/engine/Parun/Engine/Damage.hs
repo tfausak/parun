@@ -130,7 +130,7 @@ tier r = case r of
 -- own answer, which is the last sentence of both CR 702.19b and CR 702.19c: "take
 -- into account ... damage from other creatures that's being assigned during the
 -- same combat damage step". The THRESHOLD stays this creature's own reading of
--- the bar (blockerThreshold's toughness-minus-marked, the planeswalker's
+-- the bar (lethalFrom's toughness-minus-marked, the planeswalker's
 -- loyalty), because that half of the same sentence -- "damage already marked on
 -- the creature" -- is knowable when the division is offered, where the other
 -- half is not settled until the whole step's assignment is announced.
@@ -180,19 +180,21 @@ deathtouchedRecipients events =
       Recipient.ToPlayer _ -> []
       Recipient.ToPile _ -> []
 
--- CR 702.19b / 702.2c: a blocker's lethal threshold is toughness minus marked
--- damage -- but 702.2c makes any nonzero assignment by a deathtouch source
--- lethal, so a deathtouch attacker needs only 1 (0 if the blocker is already
--- lethal). Read through the projection, the same way the CR 704.5h SBA reads it.
+-- CR 702.19b / 702.2c / 120.4a: what is lethal to this creature from this source:
+-- toughness minus marked damage, but only 1 from a source with deathtouch (0 if
+-- the creature is already at lethal: 702.19b and 120.4a take marked damage into
+-- account, and their deathtouch sentences only add to what is lethal or excess).
+-- Read through the projection, the same way the CR 704.5h SBA reads it.
 --
--- THIS attacker's own reading of the bar, which is what the division is OFFERED
--- at. Another creature's deathtouch damage clears the same bar for everyone (CR
--- 702.2c, in tiersCleared's `lethal`), but only once the whole step has been
--- announced, where this much is knowable when the offer is made.
-blockerThreshold :: GameState -> ObjectId -> ObjectId -> Natural
-blockerThreshold gs attacker blocker =
-  let lethal = lethalRemaining gs blocker
-   in if lethal > 0 && Projection.hasKeyword Keyword.Deathtouch attacker gs
+-- For a trampler, THIS attacker's own reading of the bar, which is what the
+-- division is OFFERED at. Another creature's deathtouch damage clears the same
+-- bar for everyone (CR 702.2c, in tiersCleared's `lethal`), but only once the
+-- whole step has been announced, where this much is knowable when the offer is
+-- made.
+lethalFrom :: GameState -> ObjectId -> ObjectId -> Natural
+lethalFrom gs source creature =
+  let lethal = lethalRemaining gs creature
+   in if lethal > 0 && Projection.hasKeyword Keyword.Deathtouch source gs
         then 1
         else lethal
 
@@ -200,16 +202,6 @@ blockerThreshold gs attacker blocker =
 -- marked on [it] is greater than or equal to its toughness" -- toughness minus
 -- what is already marked, floored at 0. Read through the projection, the same
 -- way the CR 704.5g SBA reads it.
---
--- The bar both of its callers START from, and neither of them is this alone,
--- because the two rules that mention deathtouch here do not agree. CR 702.2c
--- makes any nonzero COMBAT assignment by a deathtouch source lethal, so
--- blockerThreshold above asks for 1 -- and 0 from a creature already at its bar,
--- which is the reading that lets a trampler spill everything past it. CR 120.4a
--- instead says "any amount of damage greater than 1 is EXCESS damage if the
--- source dealing that damage to a creature has deathtouch", unconditionally, so
--- excessThreshold below asks for a flat 1 there. Each caller applies its own
--- rather than sharing one, and this function is what they share.
 lethalRemaining :: GameState -> ObjectId -> Natural
 lethalRemaining gs oid =
   let marked = maybe 0 Object.damage (Game.lookupObject oid gs)
@@ -452,7 +444,7 @@ attackerAssignment gs contested (attacker, target) = case Projection.combatDamag
             -- pay part of that threshold -- is forced: all onto the blocker. A
             -- single trample blocker WITH excess falls to the prompt arm.
             [blocker]
-              | not trample || (not contested && power <= blockerThreshold gs attacker blocker) ->
+              | not trample || (not contested && power <= lethalFrom gs attacker blocker) ->
                   pure (Nothing, Right [Event.damageEvent gs DamageKind.Combat attacker (Recipient.ToCreature blocker) power], Map.empty)
             blockers -> case Projection.controllerOf attacker gs of
               Nothing -> pure (Nothing, Right [], Map.empty)
@@ -482,7 +474,7 @@ attackerAssignment gs contested (attacker, target) = case Projection.combatDamag
                 -- nobody, which CR 310.11's repair does not leave standing.
                 let banded = any (\b -> Projection.hasKeyword Keyword.Banding b gs) blockers
                     chooser = if banded then Maybe.fromMaybe pid defending else pid
-                    thresholdOf b = if trample then blockerThreshold gs attacker b else 0
+                    thresholdOf b = if trample then lethalFrom gs attacker b else 0
                     blockerEntries = fmap (\b -> (Recipient.ToCreature b, thresholdOf b)) blockers
                 divide chooser (blockerEntries <> (if trample then defenderEntries else []))
 
@@ -872,9 +864,7 @@ damageRecipient gs recipient = case recipient of
 -- so this and CR 120.3's results agree about what the permanent is:
 --
 --   * a creature's bar is CR 120.6's lethal damage, "taking into account damage
---     already marked" (lethalRemaining) -- or a flat 1 from a source with
---     deathtouch, which is 120.4a's own sentence and not CR 702.2c's (see
---     lethalRemaining's note on the difference).
+--     already marked", or 1 from a source with deathtouch (lethalFrom).
 --   * a planeswalker's is its loyalty, which is its loyalty counters (CR 306.5c).
 --   * a battle's is its defense, which is its defense counters (CR 310.4c).
 --
@@ -904,11 +894,7 @@ excessThreshold gs source recipient = do
           snd
           ( filter
               (\(cardType, _) -> Set.member cardType types)
-              [ ( CardType.Creature,
-                  if Projection.hasKeyword Keyword.Deathtouch source gs
-                    then 1
-                    else lethalRemaining gs oid
-                ),
+              [ (CardType.Creature, lethalFrom gs source oid),
                 (CardType.Planeswalker, Cost.loyaltyCountersOn oid gs),
                 (CardType.Battle, Battle.defenseOn oid gs)
               ]
@@ -964,6 +950,19 @@ splitExcess gs event =
     pure $
       (if bar > 0 then [event {DamageEvent.amount = bar}] else [])
         <> [Event.damageEvent gs (DamageEvent.kind event) (DamageEvent.source event) (Recipient.ToPlayer player) excess]
+
+-- CR 120.10: how much excess damage an instruction dealt its own recipients, from
+-- what it settled (CR 120.4b), so prevention shrinks it and a replacement grows it,
+-- against the bars of the board it was dealt on. A recipient is the one the
+-- instruction aimed at: damage a replacement dealt elsewhere (CR 614.9) is not
+-- dealt "to that creature", and a player has no bar.
+excessDealt :: GameState -> ObjectId -> [Recipient.Recipient] -> [DamageEvent.DamageEvent] -> Natural
+excessDealt before source aimed settled =
+  sum (Maybe.mapMaybe excessOn (ListUtils.nubOrd aimed))
+  where
+    excessOn recipient = do
+      bar <- excessThreshold before source recipient
+      pure (Natural.minusSaturating (sum (fmap DamageEvent.amount (filter ((== recipient) . DamageEvent.target) settled))) bar)
 
 -- CR 120.3: carry out a batch of damage events' results -- mark damage on
 -- creatures (CR 120.3e), drain life from players (CR 120.3a), take loyalty and

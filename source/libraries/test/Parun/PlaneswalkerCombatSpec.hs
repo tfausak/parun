@@ -704,7 +704,7 @@ sharedBlockerSpec s registry = Spec.describe s "SharedBlocker" $ do
           runCombatLogging (pinnedAssignments (blockingAll [elvesId, plainWurm]) (spillItAll plainWurm plainGuard)) plain
         (paid, _) = runCombatLogging (pinnedAssignments (blockingAll [elvesId, plainWurm]) payTheBar) plain
     -- The OFFER is unchanged: a threshold is the blocker's own toughness-minus-
-    -- marked bar (Damage.blockerThreshold), and CR 702.2c reaches the CHECK, which
+    -- marked bar (Damage.lethalFrom), and CR 702.2c reaches the CHECK, which
     -- is not settled until the whole step is announced.
     Spec.assertEqWith
       s
