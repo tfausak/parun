@@ -670,9 +670,10 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
           -- CR 107.3 / 601.2h: Soul Burn's "the amount of {B} spent on X", off
           -- the shares the payment could have spent on X (Object.manaSpentOnX),
           -- 0 where none was. A unit counts by the type it IS, not one a
-          -- spend-as-though clause let it pay as (CR 609.4b). The payer is not
-          -- asked which share they spent; the most of that type any share
-          -- holds is counted (#5973).
+          -- spend-as-though clause let it pay as (CR 609.4b).
+          --
+          -- Asking the payer which share they spent is not implemented: the
+          -- most of that type any share holds is counted (#5973).
           ManaSpent.OfTypeOnX manaType ->
             let ofType = toInteger . length . filter ((== manaType) . ManaUnit.manaType) . Mana.unwrap
              in fmap (\view -> maximum (0 : fmap ofType (Filter.manaSpentOnX view))) mView

@@ -1776,10 +1776,11 @@ measureOf measure = case measure of
   Measure.Toughness -> toughness
   Measure.ManaValue -> manaValue
   Measure.ColorCount -> Just . toInteger . Set.size . colors
-  -- CR 306.5: only a planeswalker has loyalty. CR 306.5c's counters are its
-  -- loyalty on the battlefield, where every reader asks (Drain Life's target);
-  -- a planeswalker card elsewhere carries none, so its printed loyalty
-  -- (CR 306.5a) is not implemented (gap #5972).
+  -- CR 306.5: only a planeswalker has loyalty, and CR 306.5c's counters are its
+  -- loyalty on the battlefield (Drain Life's target).
+  --
+  -- A planeswalker card's printed loyalty off the battlefield (CR 306.5a) is not
+  -- implemented (#5972).
   Measure.Loyalty -> \view -> if Set.member CardType.Planeswalker (cardTypes view) then Just (toInteger (Map.findWithDefault 0 CounterKind.Loyalty (counters view))) else Nothing
 
 -- What a Measures atom's operand reads: a literal, the candidate's own view, or

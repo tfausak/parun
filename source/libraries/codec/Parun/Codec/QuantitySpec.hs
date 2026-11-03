@@ -1,5 +1,6 @@
 module Parun.Codec.QuantitySpec where
 
+import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Parun.Codec.Quantity as Quantity
@@ -13,6 +14,7 @@ import qualified Parun.Types.AgainstLastCardExiledWith as AgainstLastCardExiledW
 import qualified Parun.Types.AgainstSlot as AgainstSlot
 import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.Arithmetic as Arithmetic
+import qualified Parun.Types.AtMost as AtMost
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CastFrom as CastFrom
@@ -421,6 +423,13 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       Quantity.codec
       (Quantity.TagWasSpentOfOwnColor ProductionTag.Snow)
       " {\"type\":\"TagWasSpentOfOwnColor\",\"value\":{\"type\":\"Snow\"}} "
+  -- CR 107.1: Drain Life's gain under its limits, through Quantity's own arm.
+  Spec.it s "AtMost" $
+    Common.assertCodec
+      s
+      Quantity.codec
+      (Quantity.AtMost (AtMost.MkAtMost (Quantity.InSlot (SlotName.MkSlotName (Text.pack "dealt"))) (Quantity.Literal 3 NonEmpty.:| [])))
+      " {\"type\":\"AtMost\",\"value\":{\"quantity\":{\"type\":\"InSlot\",\"value\":\"dealt\"},\"limits\":[{\"type\":\"Literal\",\"value\":3}]}} "
   -- CR 202.1a's amount.
   Spec.it s "ManaSpent" $
     Common.assertCodec
