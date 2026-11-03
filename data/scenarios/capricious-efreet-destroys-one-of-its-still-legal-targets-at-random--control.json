@@ -28,9 +28,9 @@
   "timeline": [
     { "turn": 1, "step": "Upkeep", "player": "alice", "do": { "ChooseTargets": { "theirs": ["$troll", "$b-angel"], "yours": ["$a-bears"] } } },
     { "turn": 1, "step": "Upkeep", "player": "alice", "do": { "Answer": { "prompt": "RandomObject", "with": "$troll" } } },
-    { "turn": 1, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Barkhide Troll", "count": 1 } } },
-    { "turn": 1, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Serra Angel", "count": 1 } } },
-    { "turn": 1, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1 } } },
-    { "turn": 1, "step": "DrawStep", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Craw Wurm", "count": 1 } } }
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Barkhide Troll", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Serra Angel", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Craw Wurm", "count": 1 } } }
   ]
 }

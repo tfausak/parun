@@ -113,7 +113,7 @@
         }
       },
       "player": "alice",
-      "step": "DrawStep",
+      "step": "PrecombatMain",
       "turn": 1
     },
     {
@@ -125,7 +125,7 @@
         }
       },
       "player": "alice",
-      "step": "DrawStep",
+      "step": "PrecombatMain",
       "turn": 1
     },
     {

@@ -54,7 +54,7 @@
     },
     {
       "turn": 1,
-      "step": "DrawStep",
+      "step": "PrecombatMain",
       "player": "alice",
       "check": {
         "Life": {
