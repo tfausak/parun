@@ -260,7 +260,9 @@ to agents as written. What it doesn't say:
     stands.
 
     A `{}` or `_` pattern absorbs a new constructor or field silently:
-    `Parun.Engine.Event.Binding`'s `eventBindings` fallthrough,
+    `Parun.Engine.Event.Binding`'s `eventBindings` fallthrough, the arms of
+    `Parun.Engine.Event.Match`'s `matchesTriggerGiven` (a new `GameEvent` stops
+    the build only in `anyTriggerReads`; grep the arms a sibling event reaches),
     `Parun.ZoneTriggerSpec`'s hand-kept `everyTriggerCondition` and
     `representativeEvents`, `Parun.CardSpec`'s filter and keyword traversals.
     An `Arm.tagged` codec forces only the new constructor's tag; a tag with no

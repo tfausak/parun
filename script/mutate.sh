@@ -23,6 +23,9 @@
 #   rather than exit, which no retry can reach. They are not passed
 #   unconditionally: the semaphore is what keeps concurrent worktrees off each
 #   other's cores.
+# - The heap is capped because a mutation that loops the engine otherwise grows
+#   until the machine runs out of memory. The cap holds the run there and does
+#   not end it.
 # - The build is -O0 in its own `dist-mutate/`, never `dist-newstyle/`. At -O1 a
 #   module's interface carries its function bodies, so a body-only mutation
 #   recompiles every module downstream, and restoring the file does it again:
@@ -143,6 +146,7 @@ run() {
     --test-option=-p \
     --test-option="$pattern" \
     --test-option=--hide-successes \
+    --test-option=+RTS --test-option=-M8G --test-option=-RTS \
     ${1:+"$@"} >"$log" 2>&1 || true
 }
 
