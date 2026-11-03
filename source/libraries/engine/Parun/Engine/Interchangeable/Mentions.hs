@@ -926,7 +926,7 @@ bindAmountNames asking x = case x of
 
 chooseNumberNames :: (Monoid r) => Asking r -> ChooseNumber.ChooseNumber -> r
 chooseNumberNames asking x = case x of
-  ChooseNumber.MkChooseNumber slot _upTo chooser -> slotNames asking slot <> playerRefNames asking chooser
+  ChooseNumber.MkChooseNumber slot upTo chooser -> slotNames asking slot <> foldMap (quantityNames asking) upTo <> playerRefNames asking chooser
 
 choosePermanentsNames :: (Monoid r) => Asking r -> ChoosePermanents.ChoosePermanents -> r
 choosePermanentsNames asking x = case x of
@@ -2586,7 +2586,7 @@ protectionNames asking x = case x of
 
 putCountersNames :: (Monoid r) => Asking r -> PutCounters.PutCounters -> r
 putCountersNames asking x = case x of
-  PutCounters.MkPutCounters kind quantity ref -> counterKindNames asking (keywordNames asking) kind <> quantityNames asking quantity <> objectRefNames asking ref
+  PutCounters.MkPutCounters kind quantity ref _ -> counterKindNames asking (keywordNames asking) kind <> quantityNames asking quantity <> objectRefNames asking ref
 
 putCountersFromNames :: (Monoid r) => Asking r -> PutCountersFrom.PutCountersFrom -> r
 putCountersFromNames asking x = case x of

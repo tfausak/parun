@@ -87,7 +87,8 @@ instructions earthbend =
           PutCounters.MkPutCounters
             { PutCounters.kind = CounterKind.PlusOnePlusOne,
               PutCounters.quantity = Earthbend.quantity earthbend,
-              PutCounters.ref = ref
+              PutCounters.ref = ref,
+              PutCounters.totalAtMost = Nothing
             }
       ]
 

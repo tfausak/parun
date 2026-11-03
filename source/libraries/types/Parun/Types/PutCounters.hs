@@ -1,5 +1,6 @@
 module Parun.Types.PutCounters where
 
+import qualified Numeric.Natural as Natural
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.ObjectRef as ObjectRef
@@ -22,9 +23,16 @@ import qualified Parun.Types.Quantity as Quantity
 -- Each named permanent gets its OWN call to Event.putCounters, because CR 614.16
 -- replaces one placement at a time: a Hardened Scales seeing three creatures gets
 -- three opportunities, not one.
+--
+-- TOTALATMOST is Clockwork Beast's "this ability can't cause the total number of
+-- +1/+0 counters on this creature to be greater than seven", asked of the settled
+-- placement after CR 614.16, so a Doubling Season can't carry it past the limit
+-- (CR 101.2). The scenario clockwork-beast-stops-at-seven-under-doubling-season
+-- proves it.
 data PutCounters = MkPutCounters
   { kind :: CounterKind.CounterKind Keyword.Keyword,
     quantity :: Quantity.Quantity,
-    ref :: ObjectRef.ObjectRef
+    ref :: ObjectRef.ObjectRef,
+    totalAtMost :: Maybe Natural.Natural
   }
   deriving (Eq, Ord, Show)

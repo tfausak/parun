@@ -771,7 +771,8 @@ effect context e = case e of
           Target.ForEach n each' -> fmap (<> Text.pack " for each " <> each') (some (Quantity.Literal n))
           Target.EqualTo equal -> [Text.pack "a number of " <> many <> Text.pack " equal to " <> equal, Text.pack "X " <> many <> Text.pack ", where X is " <> equal]
         naming (Target.names a) (imperative context (Create.creator c) (Text.pack "create " <> tokens) (Text.pack "creates " <> tokens))
-  Effect.PutCounters p -> do
+  -- A limit on the total has no wording yet, so a limited placement renders nothing.
+  Effect.PutCounters p | Maybe.isNothing (PutCounters.totalAtMost p) -> do
     ref <- Target.object context Target.Each (PutCounters.ref p)
     a <- Target.amounts context (PutCounters.quantity p)
     let on = Text.pack " on " <> Target.wording ref

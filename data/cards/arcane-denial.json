@@ -39,7 +39,10 @@
                             }
                           },
                           "slot": "number",
-                          "upTo": 2
+                          "upTo": {
+                            "type": "Literal",
+                            "value": 2
+                          }
                         }
                       },
                       {

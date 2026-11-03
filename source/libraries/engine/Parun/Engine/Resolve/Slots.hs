@@ -824,7 +824,7 @@ effectObjectRefs effect = case effect of
   -- describes it instead -- and its new one.
   Effect.RedirectDamage (RedirectDamage.MkRedirectDamage _ _ _ from _ _ to _ _ _) -> Maybe.maybeToList from <> [to]
   Effect.Counter (Counter.MkCounter ref _ _ _) -> [ref]
-  Effect.PutCounters (PutCounters.MkPutCounters _ _ ref) -> [ref]
+  Effect.PutCounters (PutCounters.MkPutCounters _ _ ref _) -> [ref]
   Effect.Divide divide -> [Divide.among divide]
   Effect.RemoveCounters {} -> []
   Effect.RemoveCountersAmong (RemoveCountersAmong.MkRemoveCountersAmong _ from _ _) -> [from]
@@ -1473,7 +1473,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
       ]
   -- The bound slot is a DEFINITION, not a read: see boundSlots below.
   Effect.Counter {} -> Map.empty
-  Effect.PutCounters (PutCounters.MkPutCounters _ quantity _) -> quantitySlots quantity
+  Effect.PutCounters (PutCounters.MkPutCounters _ quantity _ _) -> quantitySlots quantity
   Effect.Divide divide -> quantitySlots (Divide.quantity divide)
   -- CR 122.8 reads its tally off ONE object, so `from` is read singly, where the
   -- destination is an ObjectRef and may sweep.
@@ -1499,7 +1499,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   Effect.RemovePlayerCounters removal -> quantitySlots (RemovePlayerCounters.quantity removal)
   -- The SlotName is a DEFINITION, not a read; it belongs to boundSlots below.
   Effect.PayAnyEnergy _ -> Map.empty
-  Effect.ChooseNumber _ -> Map.empty
+  Effect.ChooseNumber number -> foldMap quantitySlots (ChooseNumber.upTo number)
   Effect.BindAmount payload -> quantitySlots (BindAmount.quantity payload)
   Effect.Tap _ -> Map.empty
   Effect.Untap _ -> Map.empty
@@ -2270,7 +2270,7 @@ ownSlotsAreExhaustive effect = case effect of
     durationSlotsAreExhaustive duration && all slotsAreExhaustive rider
   Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration _ amount _ _ _ _ _ _ _) -> durationSlotsAreExhaustive duration && all Quantity.slotsAreExhaustive amount
   Effect.Counter {} -> True
-  Effect.PutCounters (PutCounters.MkPutCounters _ quantity _) -> Quantity.slotsAreExhaustive quantity
+  Effect.PutCounters (PutCounters.MkPutCounters _ quantity _ _) -> Quantity.slotsAreExhaustive quantity
   Effect.Divide divide -> Quantity.slotsAreExhaustive (Divide.quantity divide)
   -- No Quantity at all: CR 122.8 names neither a kind nor a count.
   Effect.PutCountersFrom {} -> True
@@ -2284,7 +2284,7 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.GainPlayerCounters (PlayerCounters.MkPlayerCounters _ _ quantity) -> Quantity.slotsAreExhaustive quantity
   Effect.RemovePlayerCounters removal -> Quantity.slotsAreExhaustive (RemovePlayerCounters.quantity removal)
   Effect.PayAnyEnergy _ -> True
-  Effect.ChooseNumber _ -> True
+  Effect.ChooseNumber number -> all Quantity.slotsAreExhaustive (ChooseNumber.upTo number)
   Effect.BindAmount payload -> Quantity.slotsAreExhaustive (BindAmount.quantity payload)
   Effect.Tap _ -> True
   Effect.Untap _ -> True
@@ -2547,7 +2547,7 @@ readsX =
         Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ rider _) -> readsX (Foldable.toList rider)
         Effect.RedirectDamage (RedirectDamage.MkRedirectDamage _ _ amount _ _ _ _ _ _ _) -> any Quantity.readsX amount
         Effect.Counter {} -> False
-        Effect.PutCounters (PutCounters.MkPutCounters _ quantity _) -> Quantity.readsX quantity
+        Effect.PutCounters (PutCounters.MkPutCounters _ quantity _ _) -> Quantity.readsX quantity
         Effect.Divide divide -> Quantity.readsX (Divide.quantity divide)
         Effect.PutCountersFrom {} -> False
         Effect.RemoveCounters (RemoveCounters.MkRemoveCounters _ quantity _ _) -> Quantity.readsX quantity
@@ -2558,7 +2558,7 @@ readsX =
         -- CR 107.14's amount is asked for as the spell resolves, never CR
         -- 601.2b's announced X.
         Effect.PayAnyEnergy _ -> False
-        Effect.ChooseNumber _ -> False
+        Effect.ChooseNumber number -> any Quantity.readsX (ChooseNumber.upTo number)
         Effect.BindAmount payload -> Quantity.readsX (BindAmount.quantity payload)
         Effect.Tap _ -> False
         Effect.Untap _ -> False

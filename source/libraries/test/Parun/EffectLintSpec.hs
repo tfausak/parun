@@ -73,6 +73,7 @@ import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.ChangeTargets as ChangeTargets
 import qualified Parun.Types.ChangeText as ChangeText
+import qualified Parun.Types.ChooseNumber as ChooseNumber
 import qualified Parun.Types.ChoosePermanents as ChoosePermanents
 import qualified Parun.Types.Chooser as Chooser
 import qualified Parun.Types.ChosenCardFromAmong as ChosenCardFromAmong
@@ -385,7 +386,7 @@ ownQuantities effect = case effect of
   Effect.SwitchBlockers _ -> []
   Effect.ExchangeBlocks _ -> []
   Effect.Counter {} -> []
-  Effect.PutCounters (PutCounters.MkPutCounters _ quantity _) -> [quantity]
+  Effect.PutCounters (PutCounters.MkPutCounters _ quantity _ _) -> [quantity]
   Effect.Divide divide -> [Divide.quantity divide]
   Effect.PutCountersFrom {} -> []
   Effect.MoveCounters (MoveCounters.MkMoveCounters _ kinds _ _) -> Maybe.maybeToList (MovedKinds.quantityOf kinds)
@@ -394,7 +395,7 @@ ownQuantities effect = case effect of
   Effect.GainPlayerCounters (PlayerCounters.MkPlayerCounters _ _ quantity) -> [quantity]
   Effect.RemovePlayerCounters removal -> [RemovePlayerCounters.quantity removal]
   Effect.PayAnyEnergy _ -> []
-  Effect.ChooseNumber _ -> []
+  Effect.ChooseNumber number -> Foldable.toList (ChooseNumber.upTo number)
   Effect.BindAmount payload -> [BindAmount.quantity payload]
   Effect.Tap _ -> []
   Effect.Untap _ -> []
@@ -1618,7 +1619,7 @@ effectObjectRefs effect =
         Effect.ExchangeBlocks {} -> []
         Effect.Counter (Counter.MkCounter ref _ _ _) -> read_ [ref]
         -- Only the one permanent Phylactery Lich chooses: no test reaches "up to".
-        Effect.PutCounters (PutCounters.MkPutCounters _ _ ref) -> [([OnePermanent], ref)]
+        Effect.PutCounters (PutCounters.MkPutCounters _ _ ref _) -> [([OnePermanent], ref)]
         -- A READ: which of the swept objects get a part is asked of the
         -- answer (Prompt.ChooseDistribution), not of the ref.
         Effect.Divide divide -> read_ [Divide.among divide]

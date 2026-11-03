@@ -2555,7 +2555,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         -- traversal that has to reach it. An arm that stops digging names itself.
         walked =
           [ ("EntryRiders' kinds", holds (riderFilters riders)),
-            ("Effect.PutCounters' kind", holds (effectFilters (Effect.PutCounters (PutCounters.MkPutCounters kind one anywhere)))),
+            ("Effect.PutCounters' kind", holds (effectFilters (Effect.PutCounters (PutCounters.MkPutCounters kind one anywhere Nothing)))),
             ("Effect.RemoveCounters' kind", holds (effectFilters (Effect.RemoveCounters (RemoveCounters.MkRemoveCounters kind one slot Nothing)))),
             ("Effect.RemoveCountersAmong' kind", holds (effectFilters (Effect.RemoveCountersAmong (RemoveCountersAmong.MkRemoveCountersAmong (RemovalCount.Exactly one) anywhere (WhichCounters.OfKind kind) Nothing)))),
             ("Effect.MoveCounters' kinds", holds (effectFilters (Effect.MoveCounters (MoveCounters.MkMoveCounters anywhere (MovedKinds.Named kind one) Nothing anywhere)))),
@@ -2677,7 +2677,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         -- TOP-LEVEL: the same keyword, the same atom, handed back by
         -- counterKindFilters as its own (KeywordFramed, f) pair -- the route that
         -- used to disagree.
-        topLevel = concatMap framedSlotsReadSingly (effectFilters (Effect.PutCounters (PutCounters.MkPutCounters kind one anywhere)))
+        topLevel = concatMap framedSlotsReadSingly (effectFilters (Effect.PutCounters (PutCounters.MkPutCounters kind one anywhere Nothing)))
     -- Ordered FIRST, and the assertion this case exists for.
     Spec.assertEqWith s "both routes to a keyword's own Filter read no slot" (nested, topLevel) ([], [])
     -- NOT vacuous, and the pair differing in exactly ONE thing: the same atom in

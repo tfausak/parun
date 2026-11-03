@@ -5801,11 +5801,22 @@ strengthen gs oid regenerability =
 -- read it at Parun.Engine.Resolve.Arms.Objects's Effect.CounterAndMark arm, and a move of
 -- counters reads it to count what crossed.
 putCounters :: CounterCause.CounterCause -> ObjectId -> CounterKind.CounterKind Keyword.Type.Keyword -> Natural -> Game Natural
-putCounters cause oid kind n = do
+putCounters = putCountersWithin Nothing
+
+-- The funnel itself, with a limit on the total of the settled kind the settled
+-- object may reach: PutCounters.totalAtMost's reading, asked after CR 614.16's loop
+-- for the reason the prohibition in settleCounters is (CR 101.2). A permanent
+-- already past the limit takes none and loses none.
+putCountersWithin :: Maybe Natural -> CounterCause.CounterCause -> ObjectId -> CounterKind.CounterKind Keyword.Type.Keyword -> Natural -> Game Natural
+putCountersWithin totalAtMost cause oid kind n = do
   resolved <- resolveCounters cause oid kind n
   case resolved of
     Nothing -> pure 0
-    Just (target, settledKind, settledCount) -> settleCounters (CounterCause.putter cause) target settledKind settledCount
+    Just (target, settledKind, settledCount) -> do
+      gs <- State.get
+      let already = maybe 0 (Map.findWithDefault 0 settledKind . Object.counters) (Game.lookupObject target gs)
+          room total = total - min total already
+      settleCounters (CounterCause.putter cause) target settledKind (maybe settledCount (min settledCount . room) totalAtMost)
 
 -- The WRITE-AND-EMIT half of putCounters, with no CR 616.1 loop in front of it:
 -- the counters have already been settled and this records them. Its second caller

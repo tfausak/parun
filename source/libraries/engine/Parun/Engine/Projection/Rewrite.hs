@@ -71,6 +71,7 @@ import qualified Parun.Types.ChangeTargets as ChangeTargets
 import qualified Parun.Types.ChangeText as ChangeText
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
 import qualified Parun.Types.ChooseCardName as ChooseCardName
+import qualified Parun.Types.ChooseNumber as ChooseNumber
 import qualified Parun.Types.ChoosePermanents as ChoosePermanents
 import qualified Parun.Types.ChosenCardFromAmong as ChosenCardFromAmong
 import qualified Parun.Types.ChosenCardInGraveyard as ChosenCardInGraveyard
@@ -917,8 +918,8 @@ rewriteEffect pairs effect = case effect of
   -- the same one: CR 122.1b's keyword counter carries a keyword, and a word
   -- inside it is swapped like any other. Parun.CounterspellSpec's Synthetic
   -- Warding Sigil proves it.
-  Effect.PutCounters (PutCounters.MkPutCounters kind quantity ref) ->
-    Effect.PutCounters (PutCounters.MkPutCounters (Filter.rewriteCounterKind pairs kind) (rewriteQuantity pairs quantity) (rewriteObjectRef pairs ref))
+  Effect.PutCounters (PutCounters.MkPutCounters kind quantity ref totalAtMost) ->
+    Effect.PutCounters (PutCounters.MkPutCounters (Filter.rewriteCounterKind pairs kind) (rewriteQuantity pairs quantity) (rewriteObjectRef pairs ref) totalAtMost)
   Effect.Divide (Divide.MkDivide quantity among chooser slot) ->
     Effect.Divide (Divide.MkDivide (rewriteQuantity pairs quantity) (rewriteObjectRef pairs among) chooser slot)
   -- The count and the kind both take the descent PutCounters' case above makes.
@@ -955,7 +956,7 @@ rewriteEffect pairs effect = case effect of
   Effect.GainPlayerCounters x -> Effect.GainPlayerCounters x {PlayerCounters.quantity = rewriteQuantity pairs (PlayerCounters.quantity x)}
   Effect.RemovePlayerCounters x -> Effect.RemovePlayerCounters x {RemovePlayerCounters.quantity = rewriteQuantity pairs (RemovePlayerCounters.quantity x)}
   Effect.PayAnyEnergy _ -> effect
-  Effect.ChooseNumber _ -> effect
+  Effect.ChooseNumber number -> Effect.ChooseNumber number {ChooseNumber.upTo = fmap (rewriteQuantity pairs) (ChooseNumber.upTo number)}
   Effect.BindAmount payload -> Effect.BindAmount payload {BindAmount.quantity = rewriteQuantity pairs (BindAmount.quantity payload)}
   Effect.Tap (Tap.MkTap ref tapped) -> Effect.Tap (Tap.MkTap (rewriteObjectRef pairs ref) tapped)
   Effect.Untap ref -> Effect.Untap (rewriteObjectRef pairs ref)
