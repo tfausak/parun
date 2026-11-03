@@ -1,0 +1,101 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Vizier of the Menagerie",
+            "label": "vizier"
+          },
+          {
+            "card": "Ashnod's Altar",
+            "label": "altar"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Savannah Lions",
+            "label": "lions"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 604.2 / 733.1: a Vizier of the Menagerie sacrificed mid-payment stops applying, so its own mana cannot pay the white spell and the cast is reversed",
+  "note": "Ashnod's Altar's {C}{C} could pay Savannah Lions' {W} only under the Vizier it sacrifices. The cast is reversed and the Vizier is back.",
+  "timeline": [
+    {
+      "player": "alice",
+      "refuse": {
+        "Cast": {
+          "mana": [
+            "$altar"
+          ],
+          "object": "$lions"
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ReverseManaAbilities",
+          "with": {
+            "type": "Exercises"
+          }
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Vizier of the Menagerie",
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

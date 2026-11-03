@@ -615,6 +615,8 @@ Entries are ordered by the first rule each cites.
   entry above rejects for two only-clauses.
 - **Site**: `Parun.Engine.Mana.relax`, proved by the scenario "CR 118.14 / 609.4a
   Tinybones, Bauble Burglar under Celestial Dawn"; Dire Fleet Daredevil shares it.
+  A static clause reaches the same reading through `Parun.Engine.Mana.spendableAs`
+  (scenario vizier-of-the-menagerie-under-celestial-dawn-spends-colorless-as-white).
 - **Issue**: none.
 
 ## What moved a madness card
