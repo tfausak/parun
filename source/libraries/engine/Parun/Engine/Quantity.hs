@@ -5,6 +5,7 @@ import qualified Control.Monad as Monad
 import qualified Data.Foldable as Foldable
 import qualified Data.Map as Map
 import qualified Data.Maybe as Maybe
+import qualified Data.Sequence as Seq
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Numeric.Natural (Natural)
@@ -829,7 +830,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- CardsDiscardedThisTurn's arm in footing and in arity, read off the
         -- turn-scoped tally Event keeps per draw rather than a fold.
         Quantity.CardsDrawnThisTurn ref -> case playersOf ref of
-          Just [pid] -> Just (toInteger (Map.findWithDefault 0 pid (GameState.drawsThisTurn gs)))
+          Just [pid] -> Just (toInteger (Seq.length (Map.findWithDefault Seq.empty pid (GameState.drawsThisTurn gs))))
           _ -> Nothing
         -- CR 603.1b: how many of the four bending verbs that player has done this
         -- turn. CardsDiscardedThisTurn's arm in footing and in arity; Game.bendingsThisTurn

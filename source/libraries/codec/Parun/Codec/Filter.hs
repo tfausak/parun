@@ -18,6 +18,7 @@ import qualified Parun.Codec.Expansion as Expansion
 import qualified Parun.Codec.Holder as Holder
 import qualified Parun.Codec.KeywordDesignator as KeywordDesignator
 import qualified Parun.Codec.KeywordFamily as KeywordFamily
+import qualified Parun.Codec.LibraryDeparture as LibraryDeparture
 import qualified Parun.Codec.LoyaltyKind as LoyaltyKind
 import qualified Parun.Codec.Measures as Measures
 import qualified Parun.Codec.NameChooser as NameChooser
@@ -123,7 +124,7 @@ codec keywordCodec =
       Arm.nullary "CouldAttackThisTurn" Filter.CouldAttackThisTurn,
       Arm.nullary "DeclaredAttackerThisCombat" Filter.DeclaredAttackerThisCombat,
       Arm.nullary "DeclaredBlockerThisCombat" Filter.DeclaredBlockerThisCombat,
-      Arm.nullary "MilledThisTurn" Filter.MilledThisTurn,
+      Arm.payload "LeftLibraryThisTurn" LibraryDeparture.codec Filter.LeftLibraryThisTurn (\x -> case x of Filter.LeftLibraryThisTurn y -> Just y; _ -> Nothing),
       Arm.nullary "CrewedSourceThisTurn" Filter.CrewedSourceThisTurn,
       Arm.nullary "ConvokedSourceThisTurn" Filter.ConvokedSourceThisTurn,
       Arm.nullary "SaddledSourceThisTurn" Filter.SaddledSourceThisTurn,
@@ -289,7 +290,7 @@ tagOf x = case x of
   Filter.CouldAttackThisTurn {} -> "CouldAttackThisTurn"
   Filter.DeclaredAttackerThisCombat {} -> "DeclaredAttackerThisCombat"
   Filter.DeclaredBlockerThisCombat {} -> "DeclaredBlockerThisCombat"
-  Filter.MilledThisTurn {} -> "MilledThisTurn"
+  Filter.LeftLibraryThisTurn {} -> "LeftLibraryThisTurn"
   Filter.CrewedSourceThisTurn {} -> "CrewedSourceThisTurn"
   Filter.ConvokedSourceThisTurn {} -> "ConvokedSourceThisTurn"
   Filter.SaddledSourceThisTurn {} -> "SaddledSourceThisTurn"

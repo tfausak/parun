@@ -1944,7 +1944,7 @@ stubView table oid =
                 Filter.couldAttackThisTurn = False,
                 Filter.declaredAttackerThisCombat = False,
                 Filter.declaredBlockerThisCombat = False,
-                Filter.milledThisTurn = False,
+                Filter.leftLibraryThisTurn = Set.empty,
                 Filter.dealtDamageThisTurn = False,
                 Filter.arrivalThisTurn = Nothing,
                 -- CR 702.122c: the table registers no crewing, and no Count in

@@ -266,6 +266,7 @@ import qualified Parun.Types.KeywordCount as KeywordCount
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.KeywordTally as KeywordTally
+import qualified Parun.Types.LibraryDeparture as LibraryDeparture
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeGainR as LifeGainR
@@ -494,7 +495,7 @@ contextNames = context
 --
 --   * IDENTITY: IsObject names an id outright.
 --   * The turn's EVENT LOG: the look-back atoms (DeclaredThisTurn,
---     MilledThisTurn, DealtDamageThisTurn, EnteredThisTurn, the
+--     LeftLibraryThisTurn, DealtDamageThisTurn, EnteredThisTurn, the
 --     crewed/convoked/saddled-the-source atoms) and EnteredWithSource
 --     (GameState.enteredWith) and CouldAttackThisTurn
 --     (GameState.couldAttackThisTurn) read a record kept per object id,
@@ -564,7 +565,7 @@ filterNames asking criterion = case criterion of
   Filter.DeclaredBlockerThisCombat -> mempty
   Filter.DeclaredThisTurn role -> keyed asking <> history asking (case role of BlockRole.Attacker -> HistoryRead.Attacks; BlockRole.Blocker -> HistoryRead.Blockers)
   Filter.CouldAttackThisTurn -> keyed asking
-  Filter.MilledThisTurn -> keyed asking <> history asking HistoryRead.Mills
+  Filter.LeftLibraryThisTurn how -> keyed asking <> case how of LibraryDeparture.Drawn -> mempty; LibraryDeparture.Milled -> history asking HistoryRead.Mills
   Filter.CantCrewVehicles -> contextNames asking
   Filter.CrewedSourceThisTurn -> keyed asking <> history asking HistoryRead.Crews
   Filter.ConvokedSourceThisTurn -> keyed asking <> history asking HistoryRead.Convokes <> history asking HistoryRead.Moves

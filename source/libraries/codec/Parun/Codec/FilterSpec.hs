@@ -30,6 +30,7 @@ import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
+import qualified Parun.Types.LibraryDeparture as LibraryDeparture
 import qualified Parun.Types.Lookback as Lookback
 import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import qualified Parun.Types.Measure as Measure
@@ -406,12 +407,12 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       codec
       Filter.DeclaredBlockerThisCombat
       " {\"type\":\"DeclaredBlockerThisCombat\"} "
-  Spec.it s "MilledThisTurn" $
+  Spec.it s "LeftLibraryThisTurn" $
     Common.assertCodec
       s
       codec
-      Filter.MilledThisTurn
-      " {\"type\":\"MilledThisTurn\"} "
+      (Filter.LeftLibraryThisTurn LibraryDeparture.Milled)
+      " {\"type\":\"LeftLibraryThisTurn\",\"value\":{\"type\":\"Milled\"}} "
   Spec.it s "CantCrewVehicles" $
     Common.assertCodec
       s

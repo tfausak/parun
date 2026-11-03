@@ -85,7 +85,10 @@
                           }
                         },
                         {
-                          "type": "MilledThisTurn"
+                          "type": "LeftLibraryThisTurn",
+                          "value": {
+                            "type": "Milled"
+                          }
                         }
                       ]
                     },

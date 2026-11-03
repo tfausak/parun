@@ -198,7 +198,7 @@ codec resolve = Fields.object $ do
   fellShort <- Fields.defaulted "fellShort" 0 Common.natural GameState.fellShort
   landsPlayed <- Fields.defaulted "landsPlayed" Map.empty (Common.naturalMap PlayerId.codec Common.natural) GameState.landsPlayed
   cardsPlayed <- Fields.defaulted "cardsPlayed" Map.empty (Common.naturalMap ObjectId.codec PlayerId.codec) GameState.cardsPlayed
-  drawsThisTurn <- Fields.defaulted "drawsThisTurn" Map.empty (Common.naturalMap PlayerId.codec Common.natural) GameState.drawsThisTurn
+  drawsThisTurn <- Fields.defaulted "drawsThisTurn" Map.empty (Common.naturalMap PlayerId.codec (Common.seq ObjectId.codec)) GameState.drawsThisTurn
   keptFaceDown <- Fields.defaulted "keptFaceDown" Nothing (Common.maybe (Common.naturalMap ObjectId.codec Common.natural)) GameState.keptFaceDown
   announcedTops <- Fields.defaulted "announcedTops" Nothing (Common.maybe (Common.naturalMap PlayerId.codec ObjectId.codec)) GameState.announcedTops
   loopPicks <- Fields.defaulted "loopPicks" Nothing (Common.maybe (Common.seq (Common.tuple PlayerId.codec (Common.set ObjectId.codec)))) GameState.loopPicks

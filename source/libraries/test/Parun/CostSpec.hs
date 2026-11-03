@@ -89,6 +89,7 @@ import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Hybrid as Hybrid
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.Label as Label
+import qualified Parun.Types.LibraryDeparture as LibraryDeparture
 import qualified Parun.Types.Mana as Mana.Type
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaOption as ManaOption
@@ -2968,7 +2969,7 @@ deemInferiorSpec s registry =
       let board drawn =
             let (_, gs1) = S.addPermanent giant S.bob (S.landsInPlay island 2)
                 (deemId, gs2) = S.addHandCard deem S.alice gs1
-             in (deemId, gs2 {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice, GameState.drawsThisTurn = Map.fromList drawn})
+             in (deemId, gs2 {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice, GameState.drawsThisTurn = fmap (\n -> Seq.replicate n deemId) (Map.fromList drawn)})
           (twoId, two) = board [(S.alice, 2)]
           (oneId, one) = board [(S.alice, 1), (S.bob, 2)]
       Spec.assertBool s (S.castable S.alice twoId two) "alice drew two, so it costs {1}{U} and is offered"
@@ -4653,7 +4654,7 @@ millikinSpec s registry =
     -- CR 701.17a makes an action a mill wherever it happens, so the payment
     -- records one exactly as a resolution does. The Master, Transcendent's
     -- "target creature card in a graveyard that was milled this turn" is what
-    -- reads that record (Filter.MilledThisTurn), and a payment that moved the
+    -- reads that record (Filter.LeftLibraryThisTurn), and a payment that moved the
     -- card without recording would leave it invisible to that card while sitting
     -- in the same graveyard.
     --
@@ -4664,7 +4665,7 @@ millikinSpec s registry =
       let (millikinId, board) = millikinBoard millikin 3
           after = S.runPure S.identityAnswer board (Activate.activateAbility S.alice millikinId (theAbility millikin))
           context = Filter.contextFor Teams.none (Just S.alice) Nothing
-          milledThisTurn oid = Filter.matches context (Projection.viewOfObject oid after) Filter.Type.MilledThisTurn
+          milledThisTurn oid = Filter.matches context (Projection.viewOfObject oid after) (Filter.Type.LeftLibraryThisTurn LibraryDeparture.Milled)
       Spec.assertEqWith s "the mill put one card in the graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice after)) 1
       Spec.assertBool s (all milledThisTurn (Game.zoneMembers Zone.Graveyard S.alice after)) "which answers CR 701.17a's look-back"
       Spec.assertBool s (not (any milledThisTurn (Game.zoneMembers Zone.Library S.alice after))) "where the two cards it left in the library do not"

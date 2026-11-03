@@ -65,6 +65,7 @@ import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LeftTheGame as LeftTheGame
+import qualified Parun.Types.LibraryDeparture as LibraryDeparture
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import qualified Parun.Types.ManaCost as ManaCost
@@ -477,7 +478,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.CouldAttackThisTurn -> predicate
         Filter.Type.DeclaredAttackerThisCombat -> predicate
         Filter.Type.DeclaredBlockerThisCombat -> predicate
-        Filter.Type.MilledThisTurn -> predicate
+        Filter.Type.LeftLibraryThisTurn _ -> predicate
         Filter.Type.CantCrewVehicles -> predicate
         Filter.Type.DealtDamageThisTurn -> predicate
         Filter.Type.DealtDamageTo _ -> predicate
@@ -1109,7 +1110,7 @@ lastKnownView peers oid gs lastKnown =
           Filter.declaredAttackerThisCombat = declaredAttackerThisCombat oid gs,
           Filter.declaredAttackedThisCombat = declaredAttackedThisCombat oid gs,
           Filter.declaredBlockerThisCombat = declaredBlockerThisCombat oid gs,
-          Filter.milledThisTurn = milledThisTurn oid gs,
+          Filter.leftLibraryThisTurn = leftLibraryThisTurn oid gs,
           Filter.dealtDamageThisTurn = dealtDamageThisTurn oid gs,
           Filter.arrivalThisTurn = Game.arrivalThisTurn oid gs,
           Filter.beforeMoveView = departedAs gs oid >>= orLastKnown peers gs,
@@ -1165,15 +1166,17 @@ declaredAttackedThisCombat oid gs =
 declaredBlockerThisCombat :: ObjectId -> GameState -> Bool
 declaredBlockerThisCombat oid gs = Set.member oid (Combat.declaredBlockers (GameState.combat gs))
 
--- CR 701.17a / 608.2i: was this object one of a mill's cards this turn? Only
+-- CR 121.1, 701.17a, 608.2i: how this object left a library this turn. Only
 -- Resolve's Mill arm appends the event, so a surveil's or an explore's bin stays
--- out.
-milledThisTurn :: ObjectId -> GameState -> Bool
-milledThisTurn oid gs =
+-- out; only Event.drawCard stamps the tally, so a tutor stays out.
+leftLibraryThisTurn :: ObjectId -> GameState -> Set.Set LibraryDeparture.LibraryDeparture
+leftLibraryThisTurn oid gs =
   let milledIt event = case event of
         GameEvent.Milled (Milled.MkMilled _ cards) -> Foldable.elem oid cards
         _ -> False
-   in any (milledIt . LoggedEvent.event) (GameState.events gs)
+      milled = any (milledIt . LoggedEvent.event) (GameState.events gs)
+      drawn = any (Foldable.elem oid) (GameState.drawsThisTurn gs)
+   in Set.fromList ([LibraryDeparture.Milled | milled] <> [LibraryDeparture.Drawn | drawn])
 
 -- CR 120.1 / 608.2i: was this object dealt damage this turn? Never
 -- Object.damage -- CR 120.6 removes the marks on a regeneration, CR 701.69a heals
@@ -1423,22 +1426,22 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       Filter.declaredBlockerThisCombat = False,
       -- CR 701.17a mills a CARD, and this view describes a snapshot rather than
       -- an object -- there is no id here for the turn's mills to have named.
-      Filter.milledThisTurn = False,
+      Filter.leftLibraryThisTurn = Set.empty,
       -- CR 120.1 damages an OBJECT, and this view describes a snapshot rather
       -- than one -- there is no id here for the turn's damage to have named.
       Filter.dealtDamageThisTurn = False,
       -- CR 400.7 enters an OBJECT, and this view describes a snapshot rather
-      -- than one -- `milledThisTurn` above's reason again.
+      -- than one -- `leftLibraryThisTurn` above's reason again.
       Filter.arrivalThisTurn = Nothing,
       -- CR 702.122c relates two OBJECTS, and this view describes a snapshot
-      -- rather than one -- `milledThisTurn` above's reason again.
+      -- rather than one -- `leftLibraryThisTurn` above's reason again.
       Filter.crewedThisTurn = Set.empty,
       Filter.convokedThisTurn = Set.empty,
       Filter.saddledThisTurn = Set.empty,
       Filter.dealtDamageTo = Set.empty,
       Filter.dealtDamageEarlier = Set.empty,
       -- CR 302.6 asks about an OBJECT under a player's control; this view
-      -- describes a snapshot rather than one -- `milledThisTurn` above's reason.
+      -- describes a snapshot rather than one -- `leftLibraryThisTurn` above's reason.
       Filter.controlledSinceTurnBegan = False,
       -- CR 303.4 / 110.1: a snapshot is not an object on the battlefield and
       -- carries no attachment, so there is no host here for AttachedTo's nest.
