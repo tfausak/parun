@@ -250,7 +250,7 @@ leylineShape src ts =
       ActiveReplacement.condition = Nothing,
       ActiveReplacement.rider = Nothing,
       ActiveReplacement.slots = Map.empty,
-      ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing Acquisition.Own
+      ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing Nothing Acquisition.Own
     }
 
 -- Eon Hub {5} Artifact: "Players skip their upkeep steps."

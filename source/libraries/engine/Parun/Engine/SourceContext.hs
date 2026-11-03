@@ -67,15 +67,17 @@ choicesOf acquisition source gs =
     { SourceChoices.names = Maybe.fromMaybe Map.empty (Game.choiceWithLastKnown Chosen.Names acquisition source gs),
       SourceChoices.colors = Maybe.fromMaybe Set.empty (Game.choiceWithLastKnown Chosen.Colors acquisition source gs),
       SourceChoices.subtype = Game.choiceWithLastKnown Chosen.Subtype acquisition source gs,
+      SourceChoices.number = Game.choiceWithLastKnown Chosen.Number acquisition source gs,
       SourceChoices.acquisition = acquisition
     }
 
 -- | `context` with these choices as the source's: CR 105.2's colours, CR
--- 205.3's subtype and CR 201.4's names.
+-- 205.3's subtype, CR 201.4's names and CR 107.1c's number.
 withChoices :: SourceChoices.SourceChoices -> Filter.Context -> Filter.Context
 withChoices choices context =
   context
     { Filter.sourceChosenColors = SourceChoices.colors choices,
       Filter.sourceChosenSubtype = SourceChoices.subtype choices,
+      Filter.sourceChosenNumber = SourceChoices.number choices,
       Filter.sourceChosenNames = SourceChoices.names choices
     }

@@ -10,8 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #5989: Shapeshifter. A permanent can't keep a chosen number, change it later,
-  and read it as its power and toughness.
 - #5991: Eye for an Eye. A one-shot damage shield prevents or redirects; none
   lets the damage through and copies it (CR 614).
 - #5990: Clockwork Beast; Clockwork Steed. A counter effect can't put up to X

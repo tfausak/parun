@@ -4400,6 +4400,7 @@ quantityKindFilters quantity = case quantity of
   Quantity.Type.TagWasSpent {} -> []
   Quantity.Type.TagWasSpentOfOwnColor {} -> []
   Quantity.Type.ChosenColorsItIs -> []
+  Quantity.Type.ChosenNumber -> []
   Quantity.Type.ManaSpent _ -> []
   Quantity.Type.WasToken -> []
   Quantity.Type.WasAttacking -> []

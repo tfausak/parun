@@ -3328,3 +3328,4 @@ enervate
 erg-raiders
 evil-presence
 nether-shadow
+shapeshifter

@@ -860,6 +860,7 @@ objectChoices field = case field of
   Chosen.Subtype -> Object.chosenSubtype
   Chosen.Names -> Object.chosenNames
   Chosen.Players -> Object.chosenPlayers
+  Chosen.Number -> Object.chosenNumber
 
 -- | objectChoices' field, rewritten.
 overObjectChoices :: Chosen.Chosen a -> (Map.Map Acquisition.Acquisition a -> Map.Map Acquisition.Acquisition a) -> Object -> Object
@@ -868,6 +869,7 @@ overObjectChoices field f o = case field of
   Chosen.Subtype -> o {Object.chosenSubtype = f (Object.chosenSubtype o)}
   Chosen.Names -> o {Object.chosenNames = f (Object.chosenNames o)}
   Chosen.Players -> o {Object.chosenPlayers = f (Object.chosenPlayers o)}
+  Chosen.Number -> o {Object.chosenNumber = f (Object.chosenNumber o)}
 
 -- | The LastKnown field `field` names: objectChoices' as the object left.
 lastKnownChoices :: Chosen.Chosen a -> LastKnown.LastKnown -> Map.Map Acquisition.Acquisition a
@@ -876,6 +878,7 @@ lastKnownChoices field = case field of
   Chosen.Subtype -> LastKnown.chosenSubtype
   Chosen.Names -> LastKnown.chosenNames
   Chosen.Players -> LastKnown.chosenPlayers
+  Chosen.Number -> LastKnown.chosenNumber
 
 -- | lastKnownChoices' field, rewritten.
 overLastKnownChoices :: Chosen.Chosen a -> (Map.Map Acquisition.Acquisition a -> Map.Map Acquisition.Acquisition a) -> LastKnown.LastKnown -> LastKnown.LastKnown
@@ -884,6 +887,7 @@ overLastKnownChoices field f lk = case field of
   Chosen.Subtype -> lk {LastKnown.chosenSubtype = f (LastKnown.chosenSubtype lk)}
   Chosen.Names -> lk {LastKnown.chosenNames = f (LastKnown.chosenNames lk)}
   Chosen.Players -> lk {LastKnown.chosenPlayers = f (LastKnown.chosenPlayers lk)}
+  Chosen.Number -> lk {LastKnown.chosenNumber = f (LastKnown.chosenNumber lk)}
 
 -- CR 509.1g: is this creature blocking? Combat.blockers is keyed by ATTACKER, so
 -- the answer is membership in some attacker's set rather than a key lookup, or

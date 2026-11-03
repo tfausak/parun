@@ -4579,6 +4579,7 @@ quantityReads q = case q of
   Quantity.Type.TagWasSpent {} -> Set.empty
   Quantity.Type.TagWasSpentOfOwnColor {} -> Set.empty
   Quantity.Type.ChosenColorsItIs -> Set.empty
+  Quantity.Type.ChosenNumber -> Set.empty
   Quantity.Type.ManaSpent _ -> Set.empty
   Quantity.Type.WasToken -> Set.empty
   Quantity.Type.WasAttacking -> Set.empty

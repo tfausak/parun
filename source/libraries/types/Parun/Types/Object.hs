@@ -226,12 +226,12 @@ data Object = MkObject
     -- and makes its own new choice (CR 707.5, CR 707.6).
     -- Per-incarnation: reset by newIncarnation (CR 400.7).
     --
-    -- One of FOUR `chosen` fields -- chosenSubtype, chosenNames and chosenPlayers
-    -- below are the others -- whose shared property is that each is read back OFF
+    -- One of FIVE `chosen` fields -- chosenSubtype, chosenNames, chosenPlayers and
+    -- chosenNumber below are the others -- whose shared property is that each is read back OFF
     -- THE EFFECT'S SOURCE. `protector` below is chosen as the object enters too
     -- and is not one of them, being a designation rule 310 reads directly.
     --
-    -- All four are KEYED BY THE ACQUISITION of the choosing ability, as
+    -- All five are KEYED BY THE ACQUISITION of the choosing ability, as
     -- `storedResults` is (CR 607.5): a pair of linked abilities a copy effect
     -- brings never made the choice its reading ability asks after, so that
     -- reference is undefined (CR 607.5a) until the copy ends. An absent key is
@@ -277,6 +277,11 @@ data Object = MkObject
     -- reasons, save for CR 400.7d's carry of the promises to the permanent the
     -- spell becomes.
     chosenPlayers :: Map.Map Acquisition.Acquisition (Map.Map PlayerChoice.PlayerChoice PlayerId.PlayerId),
+    -- | CR 107.1c: the last number chosen for this object, assigned by each choice
+    -- (Shapeshifter's as it enters and each upkeep). Read by Quantity.ChosenNumber
+    -- off the effect's SOURCE. Not a copiable value and per-incarnation, for
+    -- chosenColors's reasons.
+    chosenNumber :: Map.Map Acquisition.Acquisition Natural.Natural,
     -- | CR 613.7d: when this object entered its current zone. A static ability's
     -- continuous effect shares this timestamp (CR 613.7a); stamped fresh on every
     -- zone change (CR 400.7 makes each a new object). Read by the projection when
@@ -987,6 +992,7 @@ new o s z t =
       chosenSubtype = Map.empty,
       chosenNames = Map.empty,
       chosenPlayers = Map.empty,
+      chosenNumber = Map.empty,
       face = Nothing,
       turnedOverAt = Nothing,
       worldSince = Nothing,

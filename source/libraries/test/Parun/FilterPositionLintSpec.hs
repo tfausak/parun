@@ -919,13 +919,22 @@ afterChoice answers modal =
               )
    in modalFilters modal {Modal.modes = Seq.fromList (Maybe.mapMaybe rest (Foldable.toList (Modal.modes modal)))}
 
--- Whether a choice of this quality answers HasChosenColor rather than
--- HasChosenSubtype: the field Parun.Engine.Event.chooseQuality writes.
+-- Whether a choice of this quality answers HasChosenColor: the field
+-- Parun.Engine.Event.chooseQuality writes.
 writesColors :: ChosenQuality.ChosenQuality -> Bool
 writesColors quality = case quality of
   ChosenQuality.Colors _ -> True
   ChosenQuality.BasicLandType -> False
   ChosenQuality.CreatureType -> False
+  ChosenQuality.Number _ -> False
+
+-- Whether a choice of this quality answers HasChosenSubtype, writesColors' twin.
+writesSubtype :: ChosenQuality.ChosenQuality -> Bool
+writesSubtype quality = case quality of
+  ChosenQuality.Colors _ -> False
+  ChosenQuality.BasicLandType -> True
+  ChosenQuality.CreatureType -> True
+  ChosenQuality.Number _ -> False
 
 -- CR 105.2's chosen colour is answerable only where Filter.Context.sourceChosenColors
 -- is filled: every source-framed position (sourceFramed), plus a static grant's
@@ -958,7 +967,7 @@ grantedChosenColors card =
 -- which Parun.Engine.Mana.admitsUnder answers off the mana unit (Pillar of
 -- Origins). The colour has no such reading, so the two lists differ.
 hasChosenSubtypeCounts :: Face.Face Card.Type.Card -> (Int, Int)
-hasChosenSubtypeCounts = chosenValueCounts (\framing -> framing == ManaRestrictionFramed || sourceFramed framing) (not . writesColors) hasChosenSubtypeTag
+hasChosenSubtypeCounts = chosenValueCounts (\framing -> framing == ManaRestrictionFramed || sourceFramed framing) writesSubtype hasChosenSubtypeTag
 
 -- CR 607.2a's last-exiled atom, spelled once: IsLastExiledWithSource's tag.
 isLastExiledWithSourceTag :: Text.Text

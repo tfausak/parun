@@ -20,11 +20,13 @@ codec = Fields.object $ do
   names <- Fields.defaulted "names" Map.empty (Common.naturalMap PlayerId.codec CardName.codec) SourceChoices.names
   colors <- Fields.defaulted "colors" Set.empty (Common.set Color.codec) SourceChoices.colors
   subtype <- Fields.defaulted "subtype" Nothing (Common.maybe Subtype.codec) SourceChoices.subtype
+  number <- Fields.defaulted "number" Nothing (Common.maybe Common.natural) SourceChoices.number
   acquisition <- Fields.defaulted "acquisition" Acquisition.Own Acquisition.codec SourceChoices.acquisition
   pure
     SourceChoices.MkSourceChoices
       { SourceChoices.names = names,
         SourceChoices.colors = colors,
         SourceChoices.subtype = subtype,
+        SourceChoices.number = number,
         SourceChoices.acquisition = acquisition
       }

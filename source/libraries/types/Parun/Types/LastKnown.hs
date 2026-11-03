@@ -152,6 +152,9 @@ data LastKnown = MkLastKnown
     -- | The subtype chosen for it as it entered, `chosenColors`'s sibling for
     -- Object.chosenSubtype.
     chosenSubtype :: !(Map.Map Acquisition.Acquisition Subtype.Subtype),
+    -- | The number last chosen for it, `chosenColors`'s sibling for
+    -- Object.chosenNumber.
+    chosenNumber :: !(Map.Map Acquisition.Acquisition Natural.Natural),
     -- | CR 607.5: the acquisition of the abilities it had as it left --
     -- Game.acquisitionOf, for what a leave trigger refers to.
     acquisition :: !Acquisition.Acquisition,

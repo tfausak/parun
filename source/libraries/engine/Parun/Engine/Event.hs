@@ -5008,6 +5008,12 @@ chooseQuality quality chooser acquisition oid = case quality of
     State.modify' (Game.recordChoice Chosen.Colors acquisition (const (Just picked)) oid)
   ChosenQuality.BasicLandType -> subtype Prompt.ChooseBasicLandType
   ChosenQuality.CreatureType -> subtype Prompt.ChooseCreatureType
+  ChosenQuality.Number range -> do
+    gs <- State.get
+    let least = ChooseBetween.least range
+        most = ChooseBetween.most range
+    answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor chooser gs) chooser oid least (Just most))
+    State.modify' (Game.recordChoice Chosen.Number acquisition (const (Just (max least (min most answer)))) oid)
   where
     subtype prompt = do
       gs <- State.get
@@ -10017,6 +10023,7 @@ lastKnownFrom gs oid obj =
     (Object.chosenPlayers obj)
     (Object.chosenColors obj)
     (Object.chosenSubtype obj)
+    (Object.chosenNumber obj)
     -- CR 607.5: which of its abilities' links a leave trigger reads.
     (Game.acquisitionOf oid gs)
     -- CR 508.1k / 509.1g.

@@ -2407,6 +2407,7 @@ rewriteQuantity pairs quantity = case quantity of
   Quantity.Type.TagWasSpent {} -> quantity
   Quantity.Type.TagWasSpentOfOwnColor {} -> quantity
   Quantity.Type.ChosenColorsItIs -> quantity
+  Quantity.Type.ChosenNumber -> quantity
   Quantity.Type.ManaSpent _ -> quantity
   Quantity.Type.WasToken -> quantity
   Quantity.Type.WasAttacking -> quantity

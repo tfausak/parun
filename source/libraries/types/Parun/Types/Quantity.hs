@@ -199,6 +199,8 @@ data Quantity
     -- Filter.Context.sourceChosenColors, so 0 wherever
     -- Parun.Engine.SourceContext did not fill it.
     ChosenColorsItIs
+  | -- | CR 107.1c / 607.2d: the number last chosen for the source, undefined (CR 607.5a) being 0 (CR 107.2). Read off Filter.Context.sourceChosenNumber (Shapeshifter).
+    ChosenNumber
   | -- | CR 202.1a \/ 702.191a: how many mana were spent to pay for the object this
     -- quantity is evaluated against -- rule 702.191a's "the amount of mana spent
     -- to cast that spell".

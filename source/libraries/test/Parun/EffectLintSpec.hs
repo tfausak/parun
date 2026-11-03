@@ -472,8 +472,8 @@ ownQuantities effect = case effect of
 
 -- The shapes CR 208.1 and CR 208.2 allow in a printed power or toughness box:
 -- "two numbers separated by a slash", or a value that "includes a star (*)" --
--- so a Literal, a bare Star, and the Plus that composes them into Tarmogoyf's
--- 1+*. Exhaustive rather than a fallthrough: a new Quantity constructor must
+-- so a Literal, a bare Star, and the Plus and Negate that compose them into
+-- Tarmogoyf's 1+* and Shapeshifter's 7-*. Exhaustive rather than a fallthrough: a new Quantity constructor must
 -- say whether a card can print it, and -Werror is what asks.
 printedBoxQuantity :: Quantity.Type.Quantity -> Bool
 printedBoxQuantity quantity = case quantity of
@@ -485,7 +485,7 @@ printedBoxQuantity quantity = case quantity of
     Arithmetic.Plus (Plus.MkPlus left right) -> printedBoxQuantity left && printedBoxQuantity right
     Arithmetic.Quotient {} -> False
     Arithmetic.Times {} -> False
-    Arithmetic.Negate {} -> False
+    Arithmetic.Negate inner -> printedBoxQuantity inner
   Quantity.Type.AtMost {} -> False
   Quantity.Type.Measure _ -> False
   Quantity.Type.Intensity -> False
@@ -528,6 +528,7 @@ printedBoxQuantity quantity = case quantity of
   Quantity.Type.TagWasSpent {} -> False
   Quantity.Type.TagWasSpentOfOwnColor {} -> False
   Quantity.Type.ChosenColorsItIs -> False
+  Quantity.Type.ChosenNumber -> False
   Quantity.Type.ManaSpent _ -> False
   Quantity.Type.WasToken -> False
   Quantity.Type.WasAttacking -> False

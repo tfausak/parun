@@ -20,6 +20,12 @@ spec s = Spec.describe s "Parun.Codec.ChosenQuality" $ do
       ChosenQuality.codec
       (ChosenQuality.Colors (ChooseBetween.MkChooseBetween 1 5))
       " {\"type\":\"Colors\",\"value\":{\"least\":1,\"most\":5}} "
+  Spec.it s "Number (Shapeshifter)" $
+    Common.assertCodec
+      s
+      ChosenQuality.codec
+      (ChosenQuality.Number ChooseBetween.MkChooseBetween {ChooseBetween.least = 0, ChooseBetween.most = 7})
+      " {\"type\":\"Number\",\"value\":{\"least\":0,\"most\":7}} "
   Spec.it s "BasicLandType (Convincing Mirage)" $
     Common.assertCodec
       s
