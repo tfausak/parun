@@ -14,8 +14,6 @@ Every expressible Foundations card has been added to `data/cards/`.
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #5915: Steel Hellkite. No filter reads whether an object's controller was
-  dealt combat damage by this creature.
 - #5916: Goblin Negotiation. No quantity reads the excess damage an effect just
   dealt (CR 120.10).
 - #5921: Cat Collector; Vanguard Seraph. A life-gain trigger has no "first time

@@ -542,6 +542,8 @@ library codec
     Parun.Codec.CrewRestrictionSpec
     Parun.Codec.Cycling
     Parun.Codec.CyclingSpec
+    Parun.Codec.DamageDealer
+    Parun.Codec.DamageDealerSpec
     Parun.Codec.DamageDirection
     Parun.Codec.DamageDirectionSpec
     Parun.Codec.DamagedParty
@@ -2595,6 +2597,7 @@ library types
     Parun.Types.Crewing
     Parun.Types.CrewRestriction
     Parun.Types.Cycling
+    Parun.Types.DamageDealer
     Parun.Types.DamageDirection
     Parun.Types.DamagedParty
     Parun.Types.DamageEvent

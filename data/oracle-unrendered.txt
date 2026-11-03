@@ -2541,6 +2541,7 @@ steal-the-show
 steam-frigate
 steamflogger-boss
 steel-golem
+steel-hellkite
 steeling-stance
 steward-of-the-harvest
 stifle
