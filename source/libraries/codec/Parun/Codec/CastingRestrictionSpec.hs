@@ -11,6 +11,9 @@ import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.DuringPhase as DuringPhase
 import qualified Parun.Types.EndingStep as EndingStep
+import qualified Parun.Types.Hybrid as Hybrid
+import qualified Parun.Types.ManaSymbol as ManaSymbol
+import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PhaseSelector as PhaseSelector
 import qualified Parun.Types.PlayerRef as PlayerRef
@@ -112,12 +115,12 @@ spec s = Spec.describe s "Parun.Codec.CastingRestriction" $ do
           )
       )
       " {\"type\":\"OnlyIf\",\"value\":{\"type\":\"Compares\",\"value\":{\"comparison\":{\"type\":\"AtLeast\"},\"measured\":{\"type\":\"SpellsCast\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}},\"threshold\":{\"type\":\"Literal\",\"value\":1}}}} "
-  -- Consume Spirit's "Spend only black mana on X" (CR 601.2h).
+  -- Soul Burn's "Spend only black and/or red mana on X" (CR 601.2h).
   Spec.it s "SpendOnlyOnX" $
     Common.assertCodec
       s
       CastingRestriction.codec
-      (CastingRestriction.SpendOnlyOnX Color.Black)
-      " {\"type\":\"SpendOnlyOnX\",\"value\":{\"type\":\"Black\"}} "
+      (CastingRestriction.SpendOnlyOnX (ManaSymbol.Hybrid (Hybrid.MkHybrid (ManaType.Colored Color.Black) (ManaType.Colored Color.Red))))
+      " {\"type\":\"SpendOnlyOnX\",\"value\":{\"type\":\"Hybrid\",\"value\":{\"left\":{\"type\":\"Colored\",\"value\":{\"type\":\"Black\"}},\"right\":{\"type\":\"Colored\",\"value\":{\"type\":\"Red\"}}}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s CastingRestriction.codec

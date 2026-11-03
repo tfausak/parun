@@ -94,7 +94,7 @@ data CastOffer = MkCastOffer
     -- whose mana cost the mana spent on the offering ability's {X} could pay is
     -- on offer, colours and all -- the activation's mana (CR 602.2b,
     -- Parun.Types.Object.manaSpent) less what paid the rest of its total, a cost
-    -- increase's included (Object.manaCostPaid).
+    -- increase's included (Object.manaSpentOnX).
     payableFromSpent :: Bool,
     -- | CR 601.2f: the generic mana the offered cast costs less -- God-Eternal
     -- Kefnet's "that copy costs {2} less to cast" -- in Parun.Types.CandidateCost's

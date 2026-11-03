@@ -148,6 +148,7 @@ blackCreature =
       Filter.prototyped = False,
       Filter.manaSpentTagColors = Map.empty,
       Filter.manaSpentAmount = 0,
+      Filter.manaSpentOnX = [],
       -- CR 602.1 / 605.1a: a vanilla creature as far as this axis goes, so the
       -- atom's own cases below say which view they want rather than inheriting it.
       Filter.activatedAbilityKinds = Set.empty,
@@ -234,6 +235,7 @@ devoidBigCreature =
       Filter.prototyped = False,
       Filter.manaSpentTagColors = Map.empty,
       Filter.manaSpentAmount = 0,
+      Filter.manaSpentOnX = [],
       Filter.activatedAbilityKinds = Set.empty,
       Filter.grantsStationToughness = False
     }
