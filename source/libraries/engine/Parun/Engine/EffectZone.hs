@@ -370,7 +370,7 @@ zonesFunctionedAgainst itself delayed effect = case effect of
   -- card in the pool writes such a body.
   Effect.ForEach (ForEach.MkForEach _ _ _ body _ _ _) -> foldMap (zonesFunctionedAgainst itself delayed) body
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber _ _ body) -> foldMap (zonesFunctionedAgainst itself delayed) body
-  Effect.Repeat (Repeat.MkRepeat _ body _) -> foldMap (zonesFunctionedAgainst itself delayed) body
+  Effect.Repeat (Repeat.MkRepeat _ body _ _ ifAgain) -> foldMap (zonesFunctionedAgainst itself delayed) (body <> ifAgain)
   Effect.RepeatIf (RepeatIf.MkRepeatIf process _ ifHolds) -> foldMap (zonesFunctionedAgainst itself delayed) (process <> ifHolds)
   Effect.Heal _ -> Set.empty
   Effect.ChooseNewTargets _ -> Set.empty

@@ -1,0 +1,33 @@
+{
+  "description": "CR 705.2 / 608.2d: Game of Chaos flips, doubling the life stakes with each flip, and whoever the last flip favoured decides whether to go again",
+  "note": "Three seats, so the target is not merely the other player. Won at 1: alice 11, bob 19, alice asked. Lost at 2: alice 9, bob 21, bob asked. Won at 4: alice 13, bob 17, alice asked and stops. carol never moves.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "life": 10, "hand": [{"card": "Game of Chaos", "label": "chaos"}], "manaPool": "RRR"},
+    {"name": "bob", "life": 20},
+    {"name": "carol", "life": 30}
+  ]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$chaos", "targets": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "ManaPool", "player": "alice", "is": []}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "carol", "do": "Pass"},
+
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "CallCoin", "with": {"type": "Heads"}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "FlipCoin", "with": {"type": "Heads"}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseRepeat", "with": {"type": "Exercises"}}}},
+
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "CallCoin", "with": {"type": "Heads"}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "FlipCoin", "with": {"type": "Tails"}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Answer": {"prompt": "ChooseRepeat", "with": {"type": "Exercises"}}}},
+
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "CallCoin", "with": {"type": "Heads"}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "FlipCoin", "with": {"type": "Heads"}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseRepeat", "with": {"type": "Declines"}}}},
+
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 13}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 17}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "carol", "life": 30}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Game of Chaos", "count": 1}}}
+  ]
+}

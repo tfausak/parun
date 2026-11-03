@@ -1187,7 +1187,7 @@ effectPlayerRefs effect = case effect of
   Effect.MakeWarped {} -> []
   Effect.ForEach loop -> Maybe.maybeToList (ForEach.startingWith loop)
   Effect.ForEachNumber {} -> []
-  Effect.Repeat (Repeat.MkRepeat chooser _ _) -> [chooser]
+  Effect.Repeat (Repeat.MkRepeat chooser _ _ otherChooser _) -> chooser : Maybe.maybeToList otherChooser
   Effect.RepeatIf {} -> []
   Effect.Heal {} -> []
   Effect.ChooseNewTargets {} -> []
@@ -1628,7 +1628,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   -- attach to it any number of Auras").
   Effect.ForEach (ForEach.MkForEach _ _ slot body _ gate _) -> joinTwo (maybe Map.empty payGateSlots gate) (sequenceSlots (Set.singleton slot) (Foldable.toList body))
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber upTo slot body) -> joinTwo (quantitySlots upTo) (sequenceSlots (Set.singleton slot) (Foldable.toList body))
-  Effect.Repeat (Repeat.MkRepeat _ body gate) -> joinSlots (maybe Map.empty conditionSlots gate : fmap slotsOf (Foldable.toList body))
+  Effect.Repeat (Repeat.MkRepeat _ body gate _ ifAgain) -> joinSlots (maybe Map.empty conditionSlots gate : fmap slotsOf (Foldable.toList (body <> ifAgain)))
   -- What the process and the "if" read, and the condition itself: a read of
   -- what the process bound, which boundSlots below defines.
   Effect.RepeatIf (RepeatIf.MkRepeatIf process condition ifHolds) -> joinSlots (conditionSlots condition : fmap slotsOf (Foldable.toList (process <> ifHolds)))
@@ -2374,7 +2374,7 @@ ownSlotsAreExhaustive effect = case effect of
   -- nested in the DEPTH is one slotsOf cannot see.
   Effect.ForEach (ForEach.MkForEach _ _ _ body _ gate _) -> all slotsAreExhaustive body && all (\g -> all Quantity.slotsAreExhaustive (PayGate.perEach g) && all Quantity.slotsAreExhaustive (PayGate.x g)) gate
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber upTo _ body) -> Quantity.slotsAreExhaustive upTo && all slotsAreExhaustive body
-  Effect.Repeat (Repeat.MkRepeat _ body gate) -> all conditionSlotsAreExhaustive gate && all slotsAreExhaustive body
+  Effect.Repeat (Repeat.MkRepeat _ body gate _ ifAgain) -> all conditionSlotsAreExhaustive gate && all slotsAreExhaustive (body <> ifAgain)
   Effect.RepeatIf (RepeatIf.MkRepeatIf process condition ifHolds) -> conditionSlotsAreExhaustive condition && all slotsAreExhaustive (process <> ifHolds)
   Effect.Heal _ -> True
   Effect.ChooseNewTargets _ -> True
@@ -2635,7 +2635,7 @@ readsX =
         -- CR 608.2f's body is an effect list like any other, so an X inside it counts.
         Effect.ForEach (ForEach.MkForEach _ _ _ body _ _ _) -> readsX (Foldable.toList body)
         Effect.ForEachNumber (ForEachNumber.MkForEachNumber upTo _ body) -> Quantity.readsX upTo || readsX (Foldable.toList body)
-        Effect.Repeat (Repeat.MkRepeat _ body gate) -> any conditionReadsX gate || readsX (Foldable.toList body)
+        Effect.Repeat (Repeat.MkRepeat _ body gate _ ifAgain) -> any conditionReadsX gate || readsX (Foldable.toList (body <> ifAgain))
         Effect.RepeatIf (RepeatIf.MkRepeatIf process condition ifHolds) -> conditionReadsX condition || readsX (Foldable.toList (process <> ifHolds))
         Effect.Heal _ -> False
         Effect.ChooseNewTargets _ -> False
@@ -2909,7 +2909,7 @@ boundSlots effect = case effect of
   -- (Parun.Engine.Resolve.Arms.Zones's arm).
   Effect.ForEach (ForEach.MkForEach _ _ slot body _ _ _) -> Set.insert slot (foldMap boundSlots body)
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber _ slot body) -> Set.insert slot (foldMap boundSlots body)
-  Effect.Repeat (Repeat.MkRepeat _ body _) -> foldMap boundSlots body
+  Effect.Repeat (Repeat.MkRepeat _ body _ _ ifAgain) -> foldMap boundSlots (body <> ifAgain)
   Effect.RepeatIf (RepeatIf.MkRepeatIf process _ ifHolds) -> foldMap boundSlots (process <> ifHolds)
   Effect.Heal _ -> Set.empty
   Effect.ChooseNewTargets _ -> Set.empty

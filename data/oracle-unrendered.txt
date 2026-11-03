@@ -1048,6 +1048,7 @@ galactus-devourer-of-worlds
 galloping-lizrog
 galvanic-blast
 galvanic-relay
+game-of-chaos
 gang-of-elk
 gargos-vicious-watcher
 garland-royal-kidnapper
