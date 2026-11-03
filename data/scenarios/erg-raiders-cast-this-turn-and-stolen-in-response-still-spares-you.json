@@ -110,8 +110,7 @@
         "Cast": {
           "mana": [
             "$s1",
-            "$s2",
-            null
+            "$s2"
           ],
           "object": "$raiders"
         }
@@ -185,6 +184,18 @@
     {
       "do": "Pass",
       "player": "bob",
+      "step": "EndStep",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "bob",
+          "object": "Erg Raiders",
+          "of": "Controller"
+        }
+      },
+      "player": "alice",
       "step": "EndStep",
       "turn": 1
     },
