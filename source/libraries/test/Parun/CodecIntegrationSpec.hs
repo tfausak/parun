@@ -538,11 +538,11 @@ gameStateRoundTripSpec s registry corpus = do
         gs =
           gs0
             { GameState.enteringCounters =
-                Map.singleton oid (Map.singleton CounterKind.PlusOnePlusOne 2),
+                Map.singleton oid (Map.fromList [(Nothing, Map.singleton CounterKind.PlusOnePlusOne 2), (Just S.bob, Map.singleton CounterKind.PlusOnePlusOne 3)]),
               GameState.copyExceptionCounters =
                 Map.singleton oid (Map.singleton CounterKind.PlusOnePlusOne 1)
             }
-    roundTrips "a pending +1/+1 counter" gs
+    roundTrips "a pending +1/+1 counter, by putter" gs
 
   -- CR 729.4: a non-empty outsideObjects, not only the empty default every
   -- other case here carries. Setup.subgameStateFrom is the one producer, so

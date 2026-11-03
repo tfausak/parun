@@ -836,12 +836,12 @@ matchesPrinted viewOf gs event candidate =
         -- every other row modifying the same entry. What it scales is the PENDING
         -- count; see GameState.enteringCounters.
         --
-        -- The cause is synthesized as the one the entry counters WOULD have been
-        -- placed under -- CR 122.6a's default putter, the object's controller --
-        -- so matchesPutter still parts Vorinclex's "if you would put" from CR
-        -- 614.16's "if an effect would put" (#847). Reading it off the flush
-        -- rather than off the event is what keeps the two levels answering alike.
-        -- Not implemented: tribute naming its opponent as the putter (#5976).
+        -- The cause is synthesized per share as the one the flush will place it
+        -- under (enteringPutter), so matchesPutter still parts Vorinclex's "if
+        -- you would put" from CR 614.16's "if an effect would put" (#847), and a
+        -- share CR 702.104a's opponent puts answers to that opponent's "you".
+        -- Reading it off the flush rather than off the event is what keeps the
+        -- two levels answering alike.
         --
         -- CR 614.12, as in the entry arm below: a row naming a general subset
         -- does not apply to its own source entering (Conclave Mentor's, Pir's and
@@ -850,14 +850,10 @@ matchesPrinted viewOf gs event candidate =
         -- proves it. `confinedToSource` is the rule's other half: no pool row
         -- confines itself, so nothing observes it.
         (ReplacementEffect.CounterR (CounterR.MkCounterR pat _), ProposedEvent.WouldEnter oid) ->
-          case Projection.controllerOf oid gs of
-            Nothing -> False
-            Just putter ->
-              not (Map.null (matchingEnteringCounters gs pat oid))
-                && matchesPutter gs candidate (CounterPattern.subject pat) (CounterCause.ByEffect putter)
-                && matchesController gs candidate (CounterPattern.whose pat) oid
-                && matchesPermanent viewOf gs Nothing Map.empty Nothing (CounterPattern.onWhat pat) oid
-                && (src /= oid || confinedToSource (CounterPattern.onWhat pat))
+          not (Map.null (matchingEnteringCounters gs candidate pat oid))
+            && matchesController gs candidate (CounterPattern.whose pat) oid
+            && matchesPermanent viewOf gs Nothing Map.empty Nothing (CounterPattern.onWhat pat) oid
+            && (src /= oid || confinedToSource (CounterPattern.onWhat pat))
         -- CR 109.5: "under YOUR control" -- the tokens' controller against the
         -- candidate's "you". No producer today names an opponent here.
         --
@@ -1329,7 +1325,7 @@ admitsEntry gs oid rewrite = case rewrite of
   -- (Parun.Engine.Projection.intrinsicReplacementsOf), since CR 118.13a's
   -- announcement is recorded on the SPELL and this function is handed the
   -- permanent.
-  EntryRewrite.Compleated _ -> Map.findWithDefault 0 CounterKind.Loyalty (enteringCountersOf gs oid) > 0
+  EntryRewrite.Compleated _ -> any ((> 0) . Map.findWithDefault 0 CounterKind.Loyalty) (enteringCountersOf gs oid)
   -- CR 702.104a states no condition at all: the ability functions as the creature
   -- enters, and both of the questions it asks are players'.
   EntryRewrite.Tribute _ -> True
@@ -1889,20 +1885,30 @@ matchesTokenLot gs context filter_ pid lot =
            in (Projection.viewOfCardLapsed (clausesOf (Projection.printedAbilitiesOf face)) face) {Filter.controller = Just pid, Filter.token = True}
    in Filter.matches context view filter_
 
--- The counters `oid` is so far entering with, empty outside an entry (see
--- GameState.enteringCounters).
-enteringCountersOf :: GameState -> ObjectId -> Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural
+-- The counters `oid` is so far entering with, by putter, empty outside an entry
+-- (see GameState.enteringCounters).
+enteringCountersOf :: GameState -> ObjectId -> Map.Map (Maybe PlayerId) (Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural)
 enteringCountersOf gs oid = Map.findWithDefault Map.empty oid (GameState.enteringCounters gs)
 
--- Those of them a pattern's kind admits. CR 614.16's rows name no kind (Doubling
+-- CR 122.6a: the player putting one share of them -- the one the effect named,
+-- else the object's controller.
+enteringPutter :: GameState -> ObjectId -> Maybe PlayerId -> Maybe PlayerId
+enteringPutter gs oid named = named Applicative.<|> Projection.controllerOf oid gs
+
+-- Those of them a row's pattern admits: the shares whose putter its subject
+-- admits, each cut to the kind it names. CR 614.16's rows name no kind (Doubling
 -- Season doubles any counter), and `whichKind = Nothing` is this module's "any
--- kind" for the reason the WouldPutCounters arm gives.
-matchingEnteringCounters :: GameState -> CounterPattern.CounterPattern -> ObjectId -> Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural
-matchingEnteringCounters gs pat oid =
-  let pending = enteringCountersOf gs oid
-   in case CounterPattern.whichKind pat of
-        Nothing -> pending
-        Just kind -> Map.filterWithKey (\k _ -> k == kind) pending
+-- kind" for the reason the WouldPutCounters arm gives. No empty share is kept.
+matchingEnteringCounters :: GameState -> ReplacementCandidate -> CounterPattern.CounterPattern -> ObjectId -> Map.Map (Maybe PlayerId) (Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural)
+matchingEnteringCounters gs candidate pat oid =
+  Map.filter (not . Map.null) (Map.mapWithKey admitted (enteringCountersOf gs oid))
+  where
+    admitted named pending
+      | maybe False (matchesPutter gs candidate (CounterPattern.subject pat) . CounterCause.ByEffect) (enteringPutter gs oid named) =
+          case CounterPattern.whichKind pat of
+            Nothing -> pending
+            Just kind -> Map.filterWithKey (\k _ -> k == kind) pending
+      | otherwise = Map.empty
 
 -- CR 614.1a: apply a scaling to a number. "Plus one" and "twice that many" are
 -- the same operation with different data, and so is Furnace of Rath's doubling
