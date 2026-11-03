@@ -3226,6 +3226,7 @@ library types
     Parun.Types.ZoneChangePattern
     Parun.Types.ZoneChangeR
     Parun.Types.ZonePair
+    Parun.Types.ZonePosition
     Parun.Types.ZoneScope
 
 -- URI components, and the encoding each of them takes.

@@ -121,6 +121,7 @@ import qualified Parun.Types.WhichTurn as WhichTurn
 import Parun.Types.Zone (Zone)
 import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZoneChange as ZoneChange
+import qualified Parun.Types.ZonePosition as ZonePosition
 
 -- Ask a player a question and wait for the answer. The ONE way the engine
 -- suspends: every prompt in the codebase goes through here, including the ones
@@ -640,25 +641,40 @@ zoneMembers zone pid gs =
         Zone.Stack -> filter ownedBy (GameState.stack gs)
 
 -- CR 404.1: the top card of a player's graveyard, its NEWEST arrival and so its
--- LAST member (insertIntoZone appends one). The one reader both
--- Parun.Types.ObjectRef.TopOfGraveyard and Parun.Types.Scope.TopOf go
--- through, so the card a Condition tests is the card the effect then moves.
+-- LAST member (insertIntoZone appends one). Parun.Types.ObjectRef.TopOfGraveyard
+-- and Parun.Types.Scope.InPosition both read topDown, so the card a Condition tests
+-- is the card the effect then moves.
 topOfGraveyard :: PlayerId -> GameState -> Maybe ObjectId
-topOfGraveyard pid gs = Maybe.listToMaybe (reverse (cardsIn Zone.Graveyard pid gs))
+topOfGraveyard = topOf Zone.Graveyard
 
--- CR 401.2 / 404.1: the top card of a player's library, its FIRST member, or of
--- their graveyard (topOfGraveyard). Nothing for every other zone: no rule orders
--- a hand or a shared zone's cards by player.
+-- CR 401.2 / 404.1: a player's library or graveyard from the top down: a library's
+-- top is its FIRST member, a graveyard's its LAST (topOfGraveyard). Empty for every
+-- other zone: no rule orders a hand or a shared zone's cards by player.
+topDown :: Zone.Zone -> PlayerId -> GameState -> [ObjectId]
+topDown zone pid gs = case zone of
+  Zone.Library -> zoneMembers Zone.Library pid gs
+  Zone.Graveyard -> reverse (cardsIn Zone.Graveyard pid gs)
+  Zone.Hand -> []
+  Zone.Battlefield -> []
+  Zone.Stack -> []
+  Zone.Exile -> []
+  Zone.Command -> []
+  Zone.Ante -> []
+
+-- CR 401.2 / 404.1: the top card of a player's library or graveyard.
 topOf :: Zone.Zone -> PlayerId -> GameState -> Maybe ObjectId
-topOf zone pid gs = case zone of
-  Zone.Library -> Maybe.listToMaybe (zoneMembers Zone.Library pid gs)
-  Zone.Graveyard -> topOfGraveyard pid gs
-  Zone.Hand -> Nothing
-  Zone.Battlefield -> Nothing
-  Zone.Stack -> Nothing
-  Zone.Exile -> Nothing
-  Zone.Command -> Nothing
-  Zone.Ante -> Nothing
+topOf zone pid gs = Maybe.listToMaybe (topDown zone pid gs)
+
+-- The cards a Parun.Types.Scope's InPosition names in one player's zone, the source
+-- being the object asking.
+atPosition :: ZonePosition.ZonePosition -> Maybe ObjectId -> Zone.Zone -> PlayerId -> GameState -> [ObjectId]
+atPosition position source zone pid gs =
+  let pile = topDown zone pid gs
+   in case position of
+        ZonePosition.Top -> take 1 pile
+        ZonePosition.AboveSource -> case source of
+          Just oid | oid `elem` pile -> takeWhile (/= oid) pile
+          _ -> []
 
 -- Each library's top card, by its player; a player with an empty library is
 -- absent.

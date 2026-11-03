@@ -3327,3 +3327,4 @@ energy-flux
 enervate
 erg-raiders
 evil-presence
+nether-shadow
