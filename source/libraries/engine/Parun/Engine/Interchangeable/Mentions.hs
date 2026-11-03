@@ -304,6 +304,7 @@ import qualified Parun.Types.MoveDuration as MoveDuration
 import qualified Parun.Types.MoveMana as MoveMana
 import qualified Parun.Types.MoveToZone as MoveToZone
 import qualified Parun.Types.MovedKinds as MovedKinds
+import qualified Parun.Types.NextDamageInstance as NextDamageInstance
 import qualified Parun.Types.Ninjutsu as Ninjutsu
 import qualified Parun.Types.ObjectCount as ObjectCount
 import Parun.Types.ObjectId (ObjectId)
@@ -348,7 +349,6 @@ import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.Power as Power
 import qualified Parun.Types.PreventAllDamage as PreventAllDamage
 import qualified Parun.Types.PreventNextDamage as PreventNextDamage
-import qualified Parun.Types.PreventNextDamageInstance as PreventNextDamageInstance
 import qualified Parun.Types.Prevention as Prevention
 import qualified Parun.Types.PreventionRider as PreventionRider
 import qualified Parun.Types.PrintedReplacement as PrintedReplacement
@@ -1255,6 +1255,7 @@ damageRewriteNames asking onEffect x = case x of
   DamageRewrite.RedirectMatching filter_ -> filterNames asking filter_
   DamageRewrite.RunEffects seq_ -> foldMap onEffect seq_
   DamageRewrite.TurnFaceUp -> mempty
+  DamageRewrite.AlsoToSourceController -> mempty
 
 dealDamageNames :: (Monoid r) => Asking r -> DealDamage.DealDamage -> r
 dealDamageNames asking x = case x of
@@ -1457,7 +1458,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.SkipPhase skipPhase -> skipPhaseNames asking skipPhase
   Effect.PreventNextDamage preventNextDamage -> preventNextDamageNames asking (effectNames asking onCard onAbility) preventNextDamage
   Effect.PreventAllDamage preventAllDamage -> preventAllDamageNames asking (effectNames asking onCard onAbility) preventAllDamage
-  Effect.PreventNextDamageInstance preventNextDamageInstance -> preventNextDamageInstanceNames asking (effectNames asking onCard onAbility) preventNextDamageInstance
+  Effect.NextDamageInstance nextDamageInstance -> nextDamageInstanceNames asking (effectNames asking onCard onAbility) nextDamageInstance
   Effect.RedirectDamage redirectDamage -> redirectDamageNames asking redirectDamage
   Effect.Counter counter -> counterNames asking counter
   Effect.PutCounters putCounters -> putCountersNames asking putCounters
@@ -2554,9 +2555,9 @@ preventNextDamageNames :: (Monoid r) => Asking r -> (effect -> r) -> PreventNext
 preventNextDamageNames asking onEffect x = case x of
   PreventNextDamage.MkPreventNextDamage duration _kind ref whatRecipient _whoRecipient chosenSource quantity riders -> durationNames asking duration <> foldMap (objectRefNames asking) ref <> foldMap (filterNames asking) whatRecipient <> foldMap (filterNames asking) chosenSource <> quantityNames asking quantity <> foldMap onEffect riders
 
-preventNextDamageInstanceNames :: (Monoid r) => Asking r -> (effect -> r) -> PreventNextDamageInstance.PreventNextDamageInstance effect -> r
-preventNextDamageInstanceNames asking onEffect x = case x of
-  PreventNextDamageInstance.MkPreventNextDamageInstance duration ref chosenSource riders -> durationNames asking duration <> objectRefNames asking ref <> filterNames asking chosenSource <> foldMap onEffect riders
+nextDamageInstanceNames :: (Monoid r) => Asking r -> (effect -> r) -> NextDamageInstance.NextDamageInstance effect -> r
+nextDamageInstanceNames asking onEffect x = case x of
+  NextDamageInstance.MkNextDamageInstance duration ref chosenSource riders _outcome -> durationNames asking duration <> objectRefNames asking ref <> filterNames asking chosenSource <> foldMap onEffect riders
 
 preventionNames :: (Monoid r) => Asking r -> Prevention.Prevention -> r
 preventionNames asking x = case x of

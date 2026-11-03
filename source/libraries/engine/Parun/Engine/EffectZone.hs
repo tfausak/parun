@@ -252,7 +252,7 @@ zonesFunctionedAgainst itself delayed effect = case effect of
   -- nothing it does can be this ability moving "the object it's on".
   Effect.PreventNextDamage {} -> Set.empty
   Effect.PreventAllDamage {} -> Set.empty
-  Effect.PreventNextDamageInstance {} -> Set.empty
+  Effect.NextDamageInstance {} -> Set.empty
   Effect.RedirectDamage {} -> Set.empty
   Effect.Counter {} -> Set.empty
   Effect.PutCounters {} -> Set.empty

@@ -895,6 +895,7 @@ extract-a-confession
 extract-power
 extravagant-replication
 extus-oriq-overlord-awaken-the-blood-avatar
+eye-for-an-eye
 eye-spy
 eyes-of-gitaxias
 ezuri-claw-of-progress

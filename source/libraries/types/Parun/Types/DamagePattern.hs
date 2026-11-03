@@ -43,7 +43,7 @@ import qualified Parun.Types.SlotName as SlotName
 -- That Recipient is BAKED by the engine, never authored, exactly as
 -- Parun.Types.PhasePattern's Among is: card data cannot name an ObjectId or a
 -- PlayerId. Resolve's four arms that bake one (PreventNextDamage,
--- PreventAllDamage, PreventNextDamageInstance and RedirectDamage) share one
+-- PreventAllDamage, NextDamageInstance and RedirectDamage) share one
 -- `installDamageRow`, and all but the CR 615.8 shield thread a printed KIND
 -- through -- Turn the Tables' "all combat damage", Decorated Griffin's "the next
 -- 1 combat damage"; no printing of CR 615.8's shape narrows the kind, so that

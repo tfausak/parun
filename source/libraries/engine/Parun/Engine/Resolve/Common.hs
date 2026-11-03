@@ -1425,10 +1425,10 @@ preventionRider chosen controller source riderEffects =
 
 -- CR 615.3: install one floating damage row, for a duration. Shared by
 -- Effect.PreventNextDamage, Effect.PreventAllDamage,
--- Effect.PreventNextDamageInstance and Effect.RedirectDamage, which differ only
+-- Effect.NextDamageInstance and Effect.RedirectDamage, which differ only
 -- in the DamageRewrite and the use count -- CR 615.7's countdown, CR 615.1's
 -- unbounded shield, that same shield with CR 614.3's single use beside it (CR
--- 615.8), or CR 614.9's redirection.
+-- 615.8) or its replacement (Eye for an Eye), or CR 614.9's redirection.
 --
 -- One shield PER RECIPIENT the caller's ObjectRef NAMES, which is why the callers
 -- fold this over that set: those recipients were fixed by the resolution (CR
@@ -1798,6 +1798,7 @@ damageRewriteRecipients rewrite = case rewrite of
   DamageRewrite.RunEffects _ -> []
   -- The row's own permanent is its source, which is no baked id of the rewrite's.
   DamageRewrite.TurnFaceUp -> []
+  DamageRewrite.AlsoToSourceController -> []
 
 -- What one object on the stack refers to: its CR 113.7 source object, and every
 -- object its bindings name.
@@ -3224,7 +3225,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.SkipPhase {} -> False
   Effect.PreventNextDamage {} -> False
   Effect.PreventAllDamage {} -> False
-  Effect.PreventNextDamageInstance {} -> False
+  Effect.NextDamageInstance {} -> False
   Effect.RedirectDamage {} -> False
   Effect.Counter {} -> False
   Effect.PutCounters {} -> False

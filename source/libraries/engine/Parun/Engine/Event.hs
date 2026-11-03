@@ -2340,12 +2340,35 @@ chooseAndApply asOf batch diverting allowances applied prevented exiledBy shuffl
     -- iteration can still move either half.
     Just candidate
       | Just covered <- Replacement.partialCoverage gs allowances candidate event,
-        Just (front, rest) <- Replacement.splitDamage covered event -> do
-          let applied1 = Set.insert (ReplacementCandidate.identity candidate) applied
-          (survivor, residue1, prevented1, exiledBy1, shuffling1, split1) <- applyChosen asOf batch diverting allowances applied prevented exiledBy shuffling split candidate front
-          (leftover, residue2, prevented2, exiledBy2, shuffling2, split2) <- loop asOf batch diverting allowances applied1 prevented1 exiledBy1 shuffling1 split1 rest
-          pure (survivor, residue1 <> Maybe.maybeToList leftover <> residue2, prevented2, exiledBy2, shuffling2, split2)
+        Just (front, rest) <- Replacement.splitDamage covered event ->
+          bothThreads candidate front rest
+    -- CR 614.5: Eye for an Eye's second damage is part of the same modified
+    -- event, so it takes the same continuation: what has applied so far does
+    -- not apply to it again, and what applies later may reach both.
+    Just candidate
+      | Just also <- alsoDealt gs candidate event -> bothThreads candidate event also
     Just candidate -> applyChosen asOf batch diverting allowances applied prevented exiledBy shuffling split candidate event
+  where
+    bothThreads candidate front rest = do
+      let applied1 = Set.insert (ReplacementCandidate.identity candidate) applied
+      (survivor, residue1, prevented1, exiledBy1, shuffling1, split1) <- applyChosen asOf batch diverting allowances applied prevented exiledBy shuffling split candidate front
+      (leftover, residue2, prevented2, exiledBy2, shuffling2, split2) <- loop asOf batch diverting allowances applied1 prevented1 exiledBy1 shuffling1 split1 rest
+      pure (survivor, residue1 <> Maybe.maybeToList leftover <> residue2, prevented2, exiledBy2, shuffling2, split2)
+
+-- CR 614.1a: the noncombat damage a DamageRewrite.AlsoToSourceController row adds
+-- beside the event it replaces, from the row's source, sized as the event is now,
+-- to the damage source's controller as the damage is dealt (CR 108.4a: its owner
+-- if it has none). redirectDestination is CR 801.13a's range check and leaves out
+-- a player no longer in the game.
+alsoDealt :: GameState -> ReplacementCandidate -> ProposedEvent -> Maybe ProposedEvent
+alsoDealt gs candidate event = case (ReplacementCandidate.effect candidate, event) of
+  (ReplacementEffect.DamageR (DamageR.MkDamageR _ DamageRewrite.AlsoToSourceController _), ProposedEvent.WouldDealDamage de) -> do
+    payer <- case DamageEvent.dealtByController de of
+      Just controller -> Just controller
+      Nothing -> Filter.owner =<< Projection.viewWithLastKnownAnywhere gs (DamageEvent.source de)
+    target <- Replacement.redirectDestination gs candidate (Recipient.ToPlayer payer)
+    pure (ProposedEvent.WouldDealDamage (damageEvent gs DamageKind.Noncombat (ReplacementCandidate.source candidate) target (DamageEvent.amount de)))
+  _ -> Nothing
 
 -- One iteration of `loop`: apply the chosen candidate to the event and continue
 -- with what comes back. Split out so the partial-cover branch above and the
@@ -2520,6 +2543,7 @@ applyInertly candidate rewrite event = do
     DamageRewrite.RedirectMatching _ -> pure ()
     DamageRewrite.RunEffects _ -> pure ()
     DamageRewrite.TurnFaceUp -> pure ()
+    DamageRewrite.AlsoToSourceController -> pure ()
   pure (Just event)
 
 -- CR 120.8: a damage event an amount rewrite left at 0 is no event at all, so
@@ -4066,6 +4090,11 @@ apply batch applied candidate event =
           if DamageEvent.source de == turning
             then damageEvent gs (DamageEvent.kind de) turning (DamageEvent.target de) (DamageEvent.amount de)
             else de
+      -- CR 614.1a: the damage goes on as it was, and chooseAndApply sends
+      -- `alsoDealt`'s event through the loop beside it.
+      DamageRewrite.AlsoToSourceController -> do
+        Replacement.consume (ReplacementCandidate.identity candidate)
+        pure (Just event)
     -- Unreachable: `applies` admits DamageR only against WouldDealDamage.
     (ReplacementEffect.DamageR {}, _) -> pure (Just event)
     -- CR 701.19a / 122.1c / 702.89a / 614.1a: under every arm the DESTRUCTION does not

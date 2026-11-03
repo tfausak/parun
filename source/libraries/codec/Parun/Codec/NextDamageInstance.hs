@@ -1,18 +1,20 @@
 {-# LANGUAGE ApplicativeDo #-}
 
-module Parun.Codec.PreventNextDamageInstance where
+module Parun.Codec.NextDamageInstance where
 
 import qualified Data.Sequence as Seq
 import qualified Data.Typeable as Typeable
 import qualified Parun.Codec.Duration as Duration
 import qualified Parun.Codec.Filter as Filter
 import qualified Parun.Codec.Keyword as Keyword
+import qualified Parun.Codec.NextDamageOutcome as NextDamageOutcome
 import qualified Parun.Codec.ObjectRef as ObjectRef
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.Filter as Filter
-import qualified Parun.Types.PreventNextDamageInstance as PreventNextDamageInstance
+import qualified Parun.Types.NextDamageInstance as NextDamageInstance
+import qualified Parun.Types.NextDamageOutcome as NextDamageOutcome.Type
 
 -- | A bare object keyed by the record's field names, as
 -- Parun.Codec.PreventAllDamage writes the unbounded shield's.
@@ -26,16 +28,18 @@ import qualified Parun.Types.PreventNextDamageInstance as PreventNextDamageInsta
 codec ::
   (Typeable.Typeable effect, Eq effect) =>
   Codec.Codec effect ->
-  Codec.Codec (PreventNextDamageInstance.PreventNextDamageInstance effect)
+  Codec.Codec (NextDamageInstance.NextDamageInstance effect)
 codec effectCodec = Fields.object $ do
-  duration <- Fields.required "duration" Duration.codec PreventNextDamageInstance.duration
-  ref <- Fields.required "ref" ObjectRef.codec PreventNextDamageInstance.ref
-  chosenSource <- Fields.defaulted "chosenSource" (Filter.And []) (Filter.codec Keyword.codec) PreventNextDamageInstance.chosenSource
-  riders <- Fields.defaulted "riders" Seq.empty (Common.seq effectCodec) PreventNextDamageInstance.riders
+  duration <- Fields.required "duration" Duration.codec NextDamageInstance.duration
+  ref <- Fields.required "ref" ObjectRef.codec NextDamageInstance.ref
+  chosenSource <- Fields.defaulted "chosenSource" (Filter.And []) (Filter.codec Keyword.codec) NextDamageInstance.chosenSource
+  riders <- Fields.defaulted "riders" Seq.empty (Common.seq effectCodec) NextDamageInstance.riders
+  outcome <- Fields.defaulted "outcome" NextDamageOutcome.Type.Prevented NextDamageOutcome.codec NextDamageInstance.outcome
   pure
-    PreventNextDamageInstance.MkPreventNextDamageInstance
-      { PreventNextDamageInstance.duration = duration,
-        PreventNextDamageInstance.ref = ref,
-        PreventNextDamageInstance.chosenSource = chosenSource,
-        PreventNextDamageInstance.riders = riders
+    NextDamageInstance.MkNextDamageInstance
+      { NextDamageInstance.duration = duration,
+        NextDamageInstance.ref = ref,
+        NextDamageInstance.chosenSource = chosenSource,
+        NextDamageInstance.riders = riders,
+        NextDamageInstance.outcome = outcome
       }

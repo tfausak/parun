@@ -494,6 +494,7 @@ import qualified Parun.Codec.MovedKindsSpec
 import qualified Parun.Codec.MovedSpec
 import qualified Parun.Codec.NameChooserSpec
 import qualified Parun.Codec.NamesAreSpec
+import qualified Parun.Codec.NextDamageOutcomeSpec
 import qualified Parun.Codec.NinjutsuSpec
 import qualified Parun.Codec.NinjutsuVariantSpec
 import qualified Parun.Codec.ObjectCountSpec
@@ -1542,6 +1543,7 @@ spec s registry corpus = do
   Parun.Codec.PowerSpec.spec s
   Parun.Codec.PowerToughnessIsSpec.spec s
   Parun.Codec.PreventAllDamageSpec.spec s
+  Parun.Codec.NextDamageOutcomeSpec.spec s
   Parun.Codec.PreventionRiderSpec.spec s
   Parun.Codec.PreventionSpec.spec s
   Parun.Codec.PreventNextDamageSpec.spec s
