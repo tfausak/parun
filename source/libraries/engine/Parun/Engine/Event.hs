@@ -3038,7 +3038,7 @@ apply batch applied candidate event =
                 legal chosen = Replacement.jointlyPayable chosen owed || not (Replacement.jointlyPayable Set.empty owed)
                 decider = Decide.deciderFor controller gs
                 ask rejected = do
-                  answer <- Game.choose (Prompt.ChooseAnyNumber decider controller oid AnyNumberOf.ToSacrifice offered Nothing)
+                  answer <- Game.choose (Prompt.ChooseAnyNumber decider controller oid AnyNumberOf.ToSacrifice offered Nothing Seq.empty)
                   -- FILTERED, NOT TRUSTED (#222): an answer naming a permanent
                   -- that was never offered would otherwise sacrifice it and pay
                   -- for a counter with it.
@@ -3197,7 +3197,7 @@ apply batch applied candidate event =
               if null offered
                 then pure Set.empty
                 else do
-                  answer <- Game.choose (Prompt.ChooseAnyNumber (Decide.deciderFor controller gs) controller oid AnyNumberOf.ToReveal offered Nothing)
+                  answer <- Game.choose (Prompt.ChooseAnyNumber (Decide.deciderFor controller gs) controller oid AnyNumberOf.ToReveal offered Nothing Seq.empty)
                   -- FILTERED, NOT TRUSTED (#222): an answer naming a card that
                   -- was never offered would otherwise buy counters with a card
                   -- sharing no creature type, or with a card in another hand.
@@ -3277,12 +3277,12 @@ apply batch applied candidate event =
                 -- answer. FILTERED, NOT TRUSTED (#222), inside pickCounted: an answer
                 -- naming a card that was never offered would otherwise exile a card
                 -- the printed criterion excludes.
-                chosen <-
+                (_, chosen) <-
                   Game.pickCounted
                     True
                     (pure (Just controller))
                     (\decider asked candidates -> Prompt.ChooseCardInGraveyard decider asked oid candidates Seq.empty)
-                    (\decider asked candidates ceiling_ -> Prompt.ChooseAnyNumber decider asked oid AnyNumberOf.ToExile candidates ceiling_)
+                    (\decider asked candidates ceiling_ -> Prompt.ChooseAnyNumber decider asked oid AnyNumberOf.ToExile candidates ceiling_ Seq.empty)
                     amount
                     count
                     offered
@@ -5029,7 +5029,7 @@ becomeCopyAs batch candidate asCopy oid = do
       let legal = Replacement.legalCopyTargets (Replacement.candidateContext gs candidate) batch (AsCopy.eligible asCopy) (AsCopy.among asCopy) oid gs
           -- A permanent is asked as one, a card as one from among the rest.
           pick = case AsCopy.among asCopy of
-            CopyDomain.InZone Zone.Battlefield -> Prompt.ChoosePermanent
+            CopyDomain.InZone Zone.Battlefield -> \chooser who source pool -> Prompt.ChoosePermanent chooser who source pool Seq.empty
             CopyDomain.InZone _ -> Prompt.ChooseCardFromAmong
             CopyDomain.InPile _ -> Prompt.ChooseCardFromAmong
       answer <-

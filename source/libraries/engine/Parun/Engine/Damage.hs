@@ -421,7 +421,7 @@ attackerAssignment gs contested (attacker, target) = case Projection.combatDamag
                     offer CombatDamageOption.ToDefendingCreature pid (toCreature pid) toDefender
               _ -> toDefender
             toCreature pid = do
-              chosen <- Game.chooseAmong (\decider who -> Prompt.ChoosePermanent decider who attacker) pid defendingCreatures
+              chosen <- Game.chooseAmong (\decider who pool -> Prompt.ChoosePermanent decider who attacker pool Seq.empty) pid defendingCreatures
               case chosen of
                 Just creature -> pure (Nothing, Right [Event.damageEvent gs DamageKind.Combat attacker (Recipient.ToCreature creature) power], Map.empty)
                 Nothing -> toDefender

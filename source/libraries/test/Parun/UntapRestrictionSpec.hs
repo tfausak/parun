@@ -339,7 +339,7 @@ untapAnswering pick gs = S.runPure answer gs (Engine.runTurnBasedActions (Phase.
   where
     answer :: Prompt.Prompt r -> r
     answer p = case p of
-      Prompt.ChooseAnyNumber _ _ _ _ offered atMost -> pick offered atMost
+      Prompt.ChooseAnyNumber _ _ _ _ offered atMost _ -> pick offered atMost
       _ -> S.identityAnswer p
 
 -- CR 502.3 / 101.2's CAP (UntapHold.AtMost): Static Orb's "can't untap more

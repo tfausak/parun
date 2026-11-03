@@ -369,7 +369,7 @@ combatReplaySpec s =
         -- a transcript cannot sacrifice what it should have revealed.
         Spec.it s "ChooseAnyNumber records and replays each kind, and rejects every other kind's answer" $ do
           let answer = Set.fromList [oid]
-              prompt purpose = Prompt.ChooseAnyNumber decider S.alice oid purpose [oid] Nothing
+              prompt purpose = Prompt.ChooseAnyNumber decider S.alice oid purpose [oid] Nothing Seq.empty
               purposes = [minBound .. maxBound] :: [AnyNumberOf.AnyNumberOf]
           Monad.forM_ purposes $ \purpose ->
             Monad.forM_ purposes $ \other ->
@@ -1991,7 +1991,7 @@ combatReplaySpec s =
         Spec.it s "ChoosePermanent round-trips and does not decode as another ObjectId answer" $ do
           let a = ObjectId.MkObjectId 7
               b = ObjectId.MkObjectId 9
-              p = Prompt.ChoosePermanent decider S.alice oid (a NonEmpty.:| [b])
+              p = Prompt.ChoosePermanent decider S.alice oid (a NonEmpty.:| [b]) Seq.empty
           Spec.assertEqWith s "returning the second round trips" (Replay.decode p (Replay.encode p b)) (Just b)
           Spec.assertEqWith s "returning the first round trips" (Replay.decode p (Replay.encode p a)) (Just a)
           Spec.assertEqWith s "a graveyard answer does not satisfy it" (Replay.decode p (Response.ChoseCardInGraveyard a)) Nothing

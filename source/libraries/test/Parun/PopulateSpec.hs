@@ -51,7 +51,7 @@ populated spell gs =
 -- and took the offered set's front copies the other token.
 choosingLast :: Prompt.Prompt r -> r
 choosingLast p = case p of
-  Prompt.ChoosePermanent _ _ _ candidates -> NonEmpty.last candidates
+  Prompt.ChoosePermanent _ _ _ candidates _ -> NonEmpty.last candidates
   _ -> S.castAnswer p
 
 -- How many of this player's battlefield permanents are tokens (CR 111.6).

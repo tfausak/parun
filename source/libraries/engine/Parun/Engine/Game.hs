@@ -4111,6 +4111,8 @@ declaredBy pid event = case event of
 -- naming an object never offered is dropped, and one naming more than the
 -- ceiling keeps its first that many in the offer's order, which carries CR
 -- 608.2f's APNAP order where a Set does not.
+--
+-- Beside the picks, the seat that was asked: Nothing where nobody was.
 pickCounted ::
   Bool ->
   Game (Maybe PlayerId) ->
@@ -4119,14 +4121,14 @@ pickCounted ::
   (Quantity.Quantity -> Natural) ->
   HowMany.HowMany ->
   [ObjectId] ->
-  Game [ObjectId]
+  Game (Maybe PlayerId, [ObjectId])
 pickCounted named chooser one_ several amount count candidates = case count of
   HowMany.Exactly q
-    | not named -> pure []
-    | Natural.length candidates <= amount q -> pure candidates
+    | not named -> pure (Nothing, [])
+    | Natural.length candidates <= amount q -> pure (Nothing, candidates)
     | otherwise -> asking (\who -> pick who (amount q) candidates)
   HowMany.UpTo q
-    | null candidates || ceiling_ == Just 0 -> pure []
+    | null candidates || ceiling_ == Just 0 -> pure (Nothing, [])
     | otherwise -> asking $ \who -> do
         gs <- State.get
         answer <- choose (several (Decide.deciderFor who gs) who candidates ceiling_)
@@ -4134,7 +4136,7 @@ pickCounted named chooser one_ several amount count candidates = case count of
     where
       ceiling_ = fmap amount q
   where
-    asking body = chooser >>= maybe (pure []) body
+    asking body = chooser >>= maybe (pure (Nothing, [])) (\who -> (,) (Just who) <$> body who)
     pick who n available
       | n <= (0 :: Natural) = pure []
       | otherwise = do

@@ -905,7 +905,7 @@ mirkwoodTrapperSpec s registry =
         Prompt.ChooseDefender _ _ options -> pure (Maybe.fromMaybe (NonEmpty.head options) (List.find (== defender) (NonEmpty.toList options)))
         Prompt.DeclareAttackers _ _ ids -> pure (filter (`elem` attackers) ids)
         Prompt.ChooseAttackTarget _ _ _ options -> pure (Maybe.fromMaybe (NonEmpty.head options) (List.find (== AttackTarget.OfPlayer defender) (NonEmpty.toList options)))
-        Prompt.ChoosePermanent _ chooser _ options -> do
+        Prompt.ChoosePermanent _ chooser _ options _ -> do
           State.modify' (<> [chooser])
           pure (NonEmpty.last options)
         _ -> pure (S.aggressiveAnswer p)
@@ -2668,7 +2668,7 @@ profanerSpec s registry =
       exploiting :: ObjectId.ObjectId -> Prompt.Prompt r -> r
       exploiting victim p = case p of
         Prompt.ChooseOptional {} -> OptionalDecision.Exercises
-        Prompt.ChoosePermanent _ _ _ offered ->
+        Prompt.ChoosePermanent _ _ _ offered _ ->
           Maybe.fromMaybe (NonEmpty.head offered) (List.find (== victim) (NonEmpty.toList offered))
         _ -> S.identityAnswer p
       -- The Profaner on the stack over the shared board: alice holds the two
@@ -2756,7 +2756,7 @@ creatureExploitsSpec s registry =
       exploiting :: (ObjectId.ObjectId -> Bool) -> Prompt.Prompt r -> r
       exploiting wanted p = case p of
         Prompt.ChooseOptional {} -> OptionalDecision.Exercises
-        Prompt.ChoosePermanent _ _ _ offered ->
+        Prompt.ChoosePermanent _ _ _ offered _ ->
           Maybe.fromMaybe (NonEmpty.head offered) (List.find wanted (NonEmpty.toList offered))
         Prompt.ChooseTargets _ _ _ slots -> fmap (\(_, legal) -> Set.take 1 legal) slots
         _ -> S.identityAnswer p

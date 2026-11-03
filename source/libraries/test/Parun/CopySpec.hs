@@ -2618,7 +2618,7 @@ metamorphicAlterationSpec s registry = Spec.describe s "Parun.Engine.Copy" $ do
             answer :: Prompt.Prompt r -> r
             answer p = case p of
               Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter ((==) (Just pikerId) . Recipient.objectOf) . snd) sets
-              Prompt.ChoosePermanent _ _ _ candidates -> if elem mammothId candidates then mammothId else NonEmpty.head candidates
+              Prompt.ChoosePermanent _ _ _ candidates _ -> if elem mammothId candidates then mammothId else NonEmpty.head candidates
               _ -> S.identityAnswer p
             cast = snd (Engine.runGamePure answer withSpell (S.cast S.alice spellId))
             resolved = resolveAndSettle answer cast
