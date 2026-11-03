@@ -192,12 +192,12 @@ import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.Layout as Layout
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeGainR as LifeGainR
 import qualified Parun.Types.LifeGainRewrite as LifeGainRewrite
 import qualified Parun.Types.LifeLossCause as LifeLossCause
 import qualified Parun.Types.LifeLossR as LifeLossR
 import qualified Parun.Types.LifeLossRewrite as LifeLossRewrite
-import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Looked as Looked
 import qualified Parun.Types.MadnessCost as MadnessCost
@@ -406,31 +406,39 @@ sampleControl = do
     State.modify' (\g -> List.foldl' (flip recordEvent) (maybe g (`fileBoardBefore` g) (GameState.boardAtControlSample gs)) changes)
   pure (not (null changes))
 
--- The GameEvent.LifeLost for a loss recorded next, stamped with whether the log
--- holds an earlier one of the player's. Stamped here because the trigger scan runs
--- after a whole resolution or cast, when the log no longer says which of two losses
--- came first. Of losses dealt together only the first recorded is stamped, so
--- they fire once (Intermediate Chirography's ruling, "your first life-losing
--- event"). The log's clearing at turn handoff makes it "of the turn".
-lifeLost :: PlayerId -> Natural -> GameState -> GameEvent
-lifeLost pid amount gs =
-  GameEvent.LifeLost (LifeLost.MkLifeLost {LifeLost.player = pid, LifeLost.amount = amount, LifeLost.first = firstLifeLoss pid (GameState.events gs)})
+-- The GameEvent for a gain or loss recorded next, stamped with whether the log
+-- holds an earlier one of the player's in that direction. Stamped here because the
+-- trigger scan runs after a whole resolution or cast, when the log no longer says
+-- which of two came first. Of those dealt together only the first recorded is
+-- stamped, so they fire once (Intermediate Chirography's and Vanguard Seraph's
+-- rulings, "your first life-losing event", "your first life-gaining event"). The
+-- log's clearing at turn handoff makes it "of the turn".
+lifeChanged :: LifeDirection.LifeDirection -> PlayerId -> Natural -> GameState -> GameEvent
+lifeChanged direction pid amount gs =
+  lifeChangeEvent direction (LifeChange.MkLifeChange {LifeChange.player = pid, LifeChange.amount = amount, LifeChange.first = firstLifeChange direction pid (GameState.events gs)})
 
--- Whether a loss of the player's after `earlier` is their first in the log.
-firstLifeLoss :: PlayerId -> Seq.Seq LoggedEvent.LoggedEvent -> Bool
-firstLifeLoss pid earlier =
-  let spent logged = case LoggedEvent.event logged of
-        GameEvent.LifeLost loss -> LifeLost.player loss == pid
-        _ -> False
+lifeChangeEvent :: LifeDirection.LifeDirection -> LifeChange.LifeChange -> GameEvent
+lifeChangeEvent direction = case direction of
+  LifeDirection.Gained -> GameEvent.LifeGained
+  LifeDirection.Lost -> GameEvent.LifeLost
+
+-- Whether a change of the player's after `earlier` is their first that way in the log.
+firstLifeChange :: LifeDirection.LifeDirection -> PlayerId -> Seq.Seq LoggedEvent.LoggedEvent -> Bool
+firstLifeChange direction pid earlier =
+  let spent logged = fmap fst (Game.lifeChangeOf direction (LoggedEvent.event logged)) == Just pid
    in not (any spent earlier)
 
--- CR 733.1: `lifeLost`'s stamps over a log with an undone stretch cut out of it,
--- which can leave a later loss the first (Parun.Engine.Reversal.withoutAnnouncement).
-restampLifeLosses :: Seq.Seq LoggedEvent.LoggedEvent -> Seq.Seq LoggedEvent.LoggedEvent
-restampLifeLosses logged =
-  let restamp index entry = case LoggedEvent.event entry of
-        GameEvent.LifeLost loss -> entry {LoggedEvent.event = GameEvent.LifeLost loss {LifeLost.first = firstLifeLoss (LifeLost.player loss) (Seq.take index logged)}}
-        _ -> entry
+-- CR 733.1: `lifeChanged`'s stamps over a log with an undone stretch cut out of it,
+-- which can leave a later change the first (Parun.Engine.Reversal.withoutAnnouncement).
+restampLifeChanges :: Seq.Seq LoggedEvent.LoggedEvent -> Seq.Seq LoggedEvent.LoggedEvent
+restampLifeChanges logged =
+  let restamp index entry =
+        let again direction change =
+              entry {LoggedEvent.event = lifeChangeEvent direction change {LifeChange.first = firstLifeChange direction (LifeChange.player change) (Seq.take index logged)}}
+         in case LoggedEvent.event entry of
+              GameEvent.LifeLost change -> again LifeDirection.Lost change
+              GameEvent.LifeGained change -> again LifeDirection.Gained change
+              _ -> entry
    in Seq.mapWithIndex restamp logged
 
 -- `recordEvent`, sampling CR 603.10's board off `board` rather than off the state
@@ -795,7 +803,7 @@ payLife :: PlayerId -> Natural -> Game ()
 payLife pid n = do
   settled <- resolveLifeLoss LifeLossCause.ByPayment pid n
   Monad.when (settled /= 0) . State.modify' $
-    \gs -> recordEvent (lifeLost pid settled gs) (Game.adjustLife pid (negate (toInteger settled)) gs)
+    \gs -> recordEvent (lifeChanged LifeDirection.Lost pid settled gs) (Game.adjustLife pid (negate (toInteger settled)) gs)
 
 -- CR 110.5b: stamp the tapped status onto an entering permanent, the write shared
 -- by EntryRewrite.Tapped (CR 614.1d), by the declining half of
@@ -10152,10 +10160,7 @@ changeLife :: PlayerId -> Integer -> Game ()
 changeLife pid delta =
   Monad.when (delta /= 0) . State.modify' $ \gs ->
     recordEvent
-      ( if delta > 0
-          then GameEvent.LifeGained (LifeChange.MkLifeChange pid (Integer.toNaturalSaturating delta))
-          else lifeLost pid (Integer.toNaturalSaturating (negate delta)) gs
-      )
+      (lifeChanged (if delta > 0 then LifeDirection.Gained else LifeDirection.Lost) pid (Integer.toNaturalSaturating (abs delta)) gs)
       (Game.adjustLife pid delta gs)
 
 -- CR 121.1, one card at a time per CR 121.2, with CR 614's say first (CR 121.6).

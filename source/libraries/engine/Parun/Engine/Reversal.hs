@@ -76,7 +76,7 @@ withoutAnnouncement before entry closed = do
   broughtIn <- seqOf GameState.broughtIn
   manaPool <- pools (GameState.manaPool before) (GameState.manaPool entry) (GameState.manaPool closed)
   combat <- one GameState.combat
-  events <- Event.restampLifeLosses <$> eventsOf GameState.events
+  events <- Event.restampLifeChanges <$> eventsOf GameState.events
   nextEventGroup <- newest GameState.nextEventGroup
   eventGroupDepth <- one GameState.eventGroupDepth
   enteringTogether <- one GameState.enteringTogether

@@ -398,6 +398,7 @@ carth-the-lion
 case-of-the-gorgons-kiss
 case-of-the-pilfered-proof
 case-of-the-ransacked-lab
+cat-collector
 cathartic-reunion
 caustic-exhale
 caustic-tar
@@ -2884,6 +2885,7 @@ valley-rally
 valleymaker
 valorous-stance
 vampire-nocturnus
+vanguard-seraph
 vanish-into-eternity
 varolz-the-scar-striped
 varragoth-bloodsky-sire

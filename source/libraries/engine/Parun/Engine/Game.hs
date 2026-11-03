@@ -67,7 +67,6 @@ import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LifeChange as LifeChange
 import qualified Parun.Types.LifeDirection as LifeDirection
-import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import Parun.Types.Mana (Mana)
@@ -3912,7 +3911,7 @@ lifeChangeOf direction event = case event of
   -- CR 119.3's other sign. A loss is not a negative gain: "the amount of life you
   -- gained this turn" is not reduced by life lost since, and a loss stays a loss
   -- whatever is gained after it (First Response's ruling, 2020-11-10).
-  GameEvent.LifeLost (LifeLost.MkLifeLost pid amount _) -> toward LifeDirection.Lost (LifeChange.MkLifeChange pid amount)
+  GameEvent.LifeLost change -> toward LifeDirection.Lost change
   GameEvent.Moved {} -> Nothing
   GameEvent.Discarded {} -> Nothing
   GameEvent.Drew {} -> Nothing
@@ -3981,7 +3980,7 @@ lifeChangeOf direction event = case event of
   GameEvent.TriggeredAbilityResolved _ -> Nothing
   GameEvent.CardArrived _ -> Nothing
   where
-    toward side (LifeChange.MkLifeChange pid amount) = if side == direction then Just (pid, amount) else Nothing
+    toward side (LifeChange.MkLifeChange pid amount _) = if side == direction then Just (pid, amount) else Nothing
 
 -- CR 119.3 / 608.2i: how much life this player gained or lost during the turn
 -- this log holds (turnLog). The log fold lifeChangeOf exists for.

@@ -14,8 +14,6 @@ Every expressible Foundations card has been added to `data/cards/`.
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #5921: Cat Collector; Vanguard Seraph. A life-gain trigger has no "first time
-  each turn", where a life-loss trigger does.
 - #5926: Exemplar of Light. A counters trigger can't say who put the counters (CR
   122.6).
 - #5923: Divine Resilience. A kicked spell can't take a different number of targets

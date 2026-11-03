@@ -41,7 +41,7 @@ import qualified Parun.Types.GameSettings as GameSettings
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Keyword as Keyword
-import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeLossCause as LifeLossCause
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
@@ -1175,7 +1175,7 @@ processDamage events = do
         Recipient.ToPlayer pid
           | not (DamageEvent.dealtByInfect ev),
             losing > 0 ->
-              [Event.lifeLost pid losing]
+              [Event.lifeChanged LifeDirection.Lost pid losing]
         _ -> []
       -- CR 120.3h's and CR 120.3c's counter removals, recorded so a trigger
       -- watching counters come off has an event to fire off: CR 310.12b's "when
@@ -1523,7 +1523,7 @@ recordLifelinkGains :: [(PlayerId, Natural)] -> Game ()
 recordLifelinkGains gains =
   State.modify' $ \gs ->
     List.foldl'
-      (\g (pid, total) -> Event.recordEvent (GameEvent.LifeGained (LifeChange.MkLifeChange pid total)) g)
+      (\g (pid, total) -> Event.recordEvent (Event.lifeChanged LifeDirection.Gained pid total g) g)
       gs
       (filter ((> 0) . snd) gains)
 
