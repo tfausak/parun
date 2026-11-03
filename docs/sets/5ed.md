@@ -10,8 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #5987: Dance of Many. A permanent's separate abilities can't share the token
-  one of them made (CR 607).
 - #5988: Nether Shadow. Nothing reads a card's position in a graveyard (CR
   404.1).
 - #5989: Shapeshifter. A permanent can't keep a chosen number, change it later,

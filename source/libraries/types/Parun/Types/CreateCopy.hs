@@ -42,7 +42,13 @@ data CreateCopy ability = MkCreateCopy
     -- it enters with an additional +1/+1 counter on it" prints as an exception
     -- and is a rider, which is CR 707.9e's distinction rather than a spelling
     -- choice.
-    exceptions :: [CopyException.CopyException ability]
+    exceptions :: [CopyException.CopyException ability],
+    -- | CR 607.1: does a later ability of the source refer to this token? Files
+    -- it in GameState.enteredWith for Filter.EnteredWithSource; opt-in, since a
+    -- row keeps two otherwise identical mana sources from being interchangeable
+    -- (Parun.Engine.Interchangeable.namedByRelation). Dance of Many's scenarios
+    -- prove it.
+    linked :: Bool
   }
   deriving (Eq, Ord, Show)
 

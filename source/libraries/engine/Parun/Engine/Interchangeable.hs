@@ -531,9 +531,9 @@ affectedNames oid source gs affected = case affected of
 -- row's value moved.
 --
 -- The KEY side is a regression fence rather than a proof, and so is exiledWith's
--- value side, encoded's whole arm and exilePiles' whole arm. Every one of these relations keys on an
--- object that is not on the battlefield -- an exiled incarnation, or a permanent
--- GameState.battlefield excludes (CR 702.26b) -- so no key can ever be a
+-- value side, encoded's whole arm and exilePiles' whole arm. Every one of these relations but
+-- enteredWith keys on an object that is not on the battlefield -- an exiled incarnation, or a permanent
+-- GameState.battlefield excludes (CR 702.26b) -- so no such key can ever be a
 -- mana-source candidate, and neutering `key == oid` below leaves the whole suite
 -- green. The line stays because a row does name its key; do not read the green as
 -- coverage. The per-object budgets, notes and logs are fences too: no board in

@@ -365,7 +365,7 @@ ownQuantities effect = case effect of
       ConjureCards.Written {} -> []
       ConjureCards.Duplicate {} -> []
       ConjureCards.Reference from -> Maybe.maybeToList (FromReference.amount from)
-  Effect.CreateCopy (CreateCopy.MkCreateCopy quantity _ riders _ _) -> quantity : Resolve.riderQuantities riders
+  Effect.CreateCopy (CreateCopy.MkCreateCopy quantity _ riders _ _ _) -> quantity : Resolve.riderQuantities riders
   Effect.BecomeCopy (BecomeCopy.MkBecomeCopy _ _ duration _ _) -> foldMap durationQuantities duration
   Effect.CopyStackObject (CopyStackObject.MkCopyStackObject _ _ quantity _ _) -> [quantity]
   Effect.Replace (Replace.MkReplace duration _ _ condition _) -> durationQuantities duration <> foldMap Resolve.conditionQuantities condition
@@ -1597,7 +1597,7 @@ effectObjectRefs effect =
           ConjureCards.Duplicate ref -> read_ [ref]
           -- A reference pick names no object at all.
           ConjureCards.Reference {} -> []
-        Effect.CreateCopy (CreateCopy.MkCreateCopy _ ref _ _ _) -> read_ [ref]
+        Effect.CreateCopy (CreateCopy.MkCreateCopy _ ref _ _ _ _) -> read_ [ref]
         Effect.BecomeCopy (BecomeCopy.MkBecomeCopy original subject _ _ _) -> read_ (case original of CopyOriginal.OfObject ref -> [ref, subject]; CopyOriginal.Named _ -> [subject])
         Effect.CopyStackObject (CopyStackObject.MkCopyStackObject ref targets _ _ _) -> read_ (ref : copyTargetsRefs targets)
         Effect.Replace {} -> []
@@ -2316,7 +2316,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
           -- appending a Soldier.
           Effect.Create (Create.MkCreate _ _ _ mSlot _) -> Maybe.maybeToList mSlot
           -- Create's arm and Create's test: Resolve.bindObjects binds both.
-          Effect.CreateCopy (CreateCopy.MkCreateCopy _ _ _ mSlot _) -> Maybe.maybeToList mSlot
+          Effect.CreateCopy (CreateCopy.MkCreateCopy _ _ _ mSlot _ _) -> Maybe.maybeToList mSlot
           -- The destruction's shape: Resolve's Tap and Divide arms bind the
           -- group however few objects it holds.
           Effect.Tap (Tap.MkTap _ mTapped) -> Maybe.maybeToList mTapped
@@ -3109,7 +3109,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
         offends effect = case effect of
           Effect.MoveToZone (MoveToZone.MkMoveToZone _ zone riders _ _ _ _) -> carries riders && zone /= Zone.Battlefield
           Effect.Create (Create.MkCreate _ _ riders _ _) -> carries riders
-          Effect.CreateCopy (CreateCopy.MkCreateCopy _ _ riders _ _) -> carries riders
+          Effect.CreateCopy (CreateCopy.MkCreateCopy _ _ riders _ _ _) -> carries riders
           _ -> False
         defines effect = case effect of
           Effect.MoveToZone (MoveToZone.MkMoveToZone _ _ riders _ _ _ _) -> carries riders
@@ -3139,10 +3139,10 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     ps <- S.allPrintings s corpus
     let bare riders = riders == EntryRiders.defaultValue {EntryRiders.counters = EntryRiders.counters riders, EntryRiders.tapped = EntryRiders.tapped riders, EntryRiders.attacking = EntryRiders.attacking riders, EntryRiders.blocking = EntryRiders.blocking riders}
         offends effect = case effect of
-          Effect.CreateCopy (CreateCopy.MkCreateCopy _ _ riders _ _) -> not (bare riders)
+          Effect.CreateCopy (CreateCopy.MkCreateCopy _ _ riders _ _ _) -> not (bare riders)
           _ -> False
         counters effect = case effect of
-          Effect.CreateCopy (CreateCopy.MkCreateCopy _ _ riders _ _) -> not (Map.null (EntryRiders.counters riders))
+          Effect.CreateCopy (CreateCopy.MkCreateCopy _ _ riders _ _ _) -> not (Map.null (EntryRiders.counters riders))
           _ -> False
         offenders = filter (anyFace (any offends . cardResolutionEffects) . Printing.card) ps
     -- Guards against a vacuous sweep: with no copy token carrying a rider at all

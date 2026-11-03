@@ -34,11 +34,13 @@ codec abilityCodec = Fields.object $ do
   riders <- Fields.defaulted "riders" EntryRiders.defaultValue (EntryRiders.codec abilityCodec) CreateCopy.riders
   slot <- Fields.defaulted "slot" Nothing (Common.maybe SlotName.codec) CreateCopy.slot
   exceptions <- Fields.defaulted "exceptions" [] (Common.list (CopyException.codec abilityCodec)) CreateCopy.exceptions
+  linked <- Fields.defaulted "linked" False Common.boolean CreateCopy.linked
   pure
     CreateCopy.MkCreateCopy
       { CreateCopy.quantity = quantity,
         CreateCopy.ref = ref,
         CreateCopy.riders = riders,
         CreateCopy.slot = slot,
-        CreateCopy.exceptions = exceptions
+        CreateCopy.exceptions = exceptions,
+        CreateCopy.linked = linked
       }

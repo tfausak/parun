@@ -547,7 +547,8 @@ data GameState = MkGameState
     exiledWith :: Map.Map ObjectId.ObjectId ExileLink.ExileLink,
     -- | CR 400.7: the object whose effect put each permanent onto the
     -- battlefield, keyed by the entered incarnation and written by
-    -- Parun.Engine.Resolve.Arms.Zones's Effect.MoveToZone arm. Read by
+    -- Parun.Engine.Resolve.Arms.Zones's Effect.MoveToZone arm and, for a
+    -- CreateCopy.linked token, Parun.Engine.Resolve.Arms.Objects's. Read by
     -- Filter.EnteredWithSource. Cleaned up by key only.
     enteredWith :: Map.Map ObjectId.ObjectId ObjectId.ObjectId,
     -- | CR 406.4: which pile each face-down exiled card is in, a name drawn from
