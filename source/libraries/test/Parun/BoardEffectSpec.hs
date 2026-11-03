@@ -2857,6 +2857,46 @@ summonValeforSpec s registry =
             [(S.carol, carols, [(S.bob, Set.fromList (take 1 bobs))])]
           Spec.assertEqWith s "and bob's Air Elemental and carol's Angel went back to hand" (fmap (`S.onBattlefield` after) (bobs <> carols)) [False, True, True, False]
 
+-- Stand or Fall {3}{R} Enchantment: "At the beginning of combat on your turn,
+-- for each defending player, separate all creatures that player controls into
+-- two piles and that player chooses one. Only creatures in the chosen piles can
+-- block this turn." (Oracle text checked against api.scryfall.com 2026-11-03.)
+-- Effect.ChoosePermanents with a pile chooser in an Effect.ForEach over the
+-- defending players, each take asked as Prompt.ChoosePile.
+--
+-- alice puts each defending player's first creature in one pile, and each takes
+-- the other.
+standOrFallSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+standOrFallSpec s registry =
+  let told :: Prompt.Prompt r -> State.State [(PlayerId.PlayerId, Set.Set ObjectId.ObjectId, [(PlayerId.PlayerId, Set.Set ObjectId.ObjectId)])] r
+      told p = case p of
+        Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.IntoPile candidates _ _ -> pure (Set.fromList (take 1 candidates))
+        Prompt.ChoosePile decider _ _ piles earlier -> do
+          State.modify (<> [(Decider.unwrap decider, NonEmpty.last piles, Foldable.toList earlier)])
+          pure (NonEmpty.last piles)
+        _ -> pure (S.identityAnswer p)
+      beginCombat = Phase.Combat CombatStep.BeginningOfCombat
+   in Spec.describe s "StandOrFall"
+        . Spec.it s "CR 101.4b the later defending player is told the earlier one's pile"
+        $ do
+          standOrFall <- S.printingOf s registry "Stand or Fall"
+          giant <- S.printingOf s registry "Hill Giant"
+          bears <- S.printingOf s registry "Grizzly Bears"
+          ogre <- S.printingOf s registry "Gray Ogre"
+          cadet <- S.printingOf s registry "Eager Cadet"
+          let addCreature (ids, g) (p, pid) = let (oid, g') = S.addPermanent p pid g in (ids <> [oid], g')
+              (_, g0) = S.addPermanent standOrFall S.alice S.threePlayerGame
+              (bobs, g1) = List.foldl' addCreature ([], g0) [(giant, S.bob), (bears, S.bob)]
+              (carols, g2) = List.foldl' addCreature ([], g1) [(ogre, S.carol), (cadet, S.carol)]
+              gs = g2 {GameState.activePlayer = S.alice, GameState.phase = beginCombat, GameState.remaining = S.phasesAfter beginCombat}
+              asked = State.execState (Engine.runGame told gs Engine.runStep) []
+              bobTook = Set.fromList (drop 1 bobs)
+          Spec.assertEqWith
+            s
+            "bob takes his second creature told nothing, carol her second told bob's take"
+            asked
+            [(S.bob, bobTook, []), (S.carol, Set.fromList (drop 1 carols), [(S.bob, bobTook)])]
+
 -- Come Back Wrong {2}{B} Sorcery (DSK 86): "Destroy target creature. If a
 -- creature card is put into a graveyard this way, return it to the battlefield
 -- under your control. Sacrifice it at the beginning of your next end step."
@@ -3218,6 +3258,7 @@ spec s registry = Spec.describe s "Parun.Engine.Resolve" $ do
   archfiendOfDepravitySpec s registry
   covetousElegySpec s registry
   summonValeforSpec s registry
+  standOrFallSpec s registry
   banisherPriestSpec s registry
   levelerSpec s registry
   calderaBreakerSpec s registry

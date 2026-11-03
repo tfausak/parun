@@ -1240,7 +1240,7 @@ defaultAnswer p = case p of
   -- fallback, not a recommendation.
   Prompt.ChooseLoopMembers _ _ _ candidates -> Set.fromList candidates
   -- CR 700.3: every offered pile is one the chooser may take.
-  Prompt.ChoosePile _ _ _ piles -> NonEmpty.head piles
+  Prompt.ChoosePile _ _ _ piles _ -> NonEmpty.head piles
   -- Stopping, so a transcript that ran out cannot loop forever.
   Prompt.ChooseRepeat {} -> OptionalDecision.Declines
   -- CR 613.7m: likewise, and it is the engine's own APNAP-then-ascending order --
