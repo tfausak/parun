@@ -548,6 +548,7 @@ corsair-captain
 council-guardian
 councils-judgment
 count-on-luck
+courageous-goblin
 courtly-provocateur
 covetous-elegy
 cowardice
@@ -2234,6 +2235,7 @@ rout
 rowdy-crew
 rowen
 ruhan-of-the-fomori
+ruby-daring-tracker
 ruinous-waterbending
 rukh-egg
 rule-of-law

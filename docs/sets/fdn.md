@@ -11,9 +11,4 @@ Every expressible Foundations card has been added to `data/cards/`.
 
 ## Needs a capability
 
-Each card is tracked by its issue and is added when that issue lands. Hardest
-first.
-
-- #5918: Courageous Goblin; Ruby, Daring Tracker. An intervening "if" checks
-  again on resolution, where "attacks while" checks only at the event (CR
-  603.4).
+Nothing. Every Foundations card is in the pool.
