@@ -782,8 +782,8 @@ askingObjects resolving source controller legal chosen ref = case ref of
 -- CR 608.2f: the members Effect.ForEach runs its body over, swept once. A card
 -- the controller chooses from among revealed ones is asked here (Shimian
 -- Specter's "You choose a nonland card from it", proved by the scenario
--- shimian-specter-exiles-every-card-named-like-the-one-it-picks); every other
--- ref is objectRefRecipients' read, and Parun.EffectLintSpec's inertChoosers
+-- shimian-specter-exiles-every-card-named-like-the-one-it-picks), and so is one
+-- chosen from a hand (Sylvan Library's scenarios); every other ref is objectRefRecipients' read, and Parun.EffectLintSpec's inertChoosers
 -- keeps a card from writing any other chooser here.
 loopMembers :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> ObjectRef.ObjectRef -> Game [Recipient]
 loopMembers resolving source controller legal chosen ref = case ref of
