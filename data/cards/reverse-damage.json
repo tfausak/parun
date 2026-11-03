@@ -34,7 +34,7 @@
               {
                 "effects": [
                   {
-                    "type": "PreventNextDamageInstance",
+                    "type": "NextDamageInstance",
                     "value": {
                       "duration": {
                         "type": "UntilEndOfTurn"

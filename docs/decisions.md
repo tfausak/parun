@@ -101,13 +101,41 @@ Entries are ordered by the first rule each cites.
 - **Question**: Char aimed at its own caster deals 4 and 2 to one player. Is
   that two damage events or one of 6? CR 615.10's per-event floor observes it.
 - **Rules**: CR 120.4, 608.2f, 615.7, 615.10, 701.14c; CR of 2026-08-07.
-- **Decision**: One event per recipient, source and moment; the amounts sum.
-- **Rejected**: Two events, which applies CR 615.10 twice. Merging in
-  `applyDamage`: combat and fights have several dealers.
+- **Decision**: One event per recipient, source and moment; the amounts sum,
+  over an instruction's aims and over a whole batch's survivors, since a
+  redirect can land two proposals of one source together.
+- **Rejected**: Two events, which applies CR 615.10 twice. A key without the
+  source: combat and fights have several dealers.
 - **Site**: `Parun.Engine.Replacement.oneEventPerRecipient`, proved by
   `Parun.DamageReplacementSpec`'s "CR 120.4 one sentence naming alice twice
-  deals her ONE event, of 6".
+  deals her ONE event, of 6" and the scenario
+  `harms-way-onto-another-recipient-of-its-source-is-one-event`.
 - **Issue**: #2586.
+
+## Whether damage a replacement adds joins a division already owed
+
+- **Question**: Eye for an Eye adds a damage event as it applies, of an amount
+  CR 616.1's choices fix. Bob, active, owes a CR 615.7 division over two hits,
+  and alice's Eye would add a third. Does his division span it? Lifelink
+  observes it. And if alice has a second effect on her event, and so a choice,
+  whose question comes first?
+- **Rules**: CR 101.4, 101.4b, 615.7, 616.1, 616.1f; CR of 2026-08-07.
+- **Decision**: A row that adds damage and is its event's only effect asks no
+  one anything, so it applies first and the division spans what it adds. A row
+  beside another effect is its chooser's choice, which takes its APNAP turn:
+  earlier seats' questions and CR 616.1 choices come first and cannot see what
+  it may add, and whatever of a shield they leave is divided afterwards. A
+  player with neither waits, keeping a shield for the added damage.
+- **Rejected**: Every seat answering first over what exists: bob's shield could
+  never meet damage no one had any say in. Every adding row first: bob, the
+  nonactive player, would spend a shared shield ahead of alice by a choice
+  nothing puts first. Expanding the batch up front: the amount depends on the
+  choices.
+- **Site**: `Parun.Engine.Event.settlesFirst`, proved by the scenarios
+  `eye-for-an-eye-damage-back-joins-a-division-over-two-hits`,
+  `eye-for-an-eye-waits-its-apnap-turn-behind-a-shared-shield` and
+  `eye-for-an-eye-waits-behind-an-earlier-seats-own-choice`.
+- **Issue**: #5991.
 
 ## Whether "each creature and each planeswalker" reaches a permanent twice
 
@@ -135,6 +163,30 @@ Entries are ordered by the first rule each cites.
   planeswalker without flying X once, not once per description" proves it on
   a Chandra Nalaar that Liquimetal Coating and March of the Machines animate.
 - **Issue**: none.
+
+## A life-total condition during damage processing
+
+- **Question**: CR 120.4c processes a damage event into all its results
+  before CR 120.4d's event occurs. A life-loss replacement conditioned on a
+  life total (Elderscale Wurm's "as long as you have 7 or more life") is asked
+  while a lifelink gain from the same event, or the loss Tainted Remedy makes
+  of it, is already a result. Does the condition read the total before the
+  event, or net of those results?
+- **Rules**: CR 120.3f, 120.4c, 120.4d, 611.3a, 702.15e; CR of 2026-08-07.
+- **Decision**: Before the event. The life total has not moved until CR
+  120.4d. The floor itself still judges what the whole event leaves, as CR
+  120.4d's Worship example forces (#2563), and Elderscale Wurm's ruling that it
+  "doesn't affect the loss or payment of life" leaves Tainted Remedy's loss
+  standing: bob at 8 losing 2 to Tainted Remedy and dealt 5 ends at 6; bob at
+  6 gaining 2 by lifelink and dealt 5 ends at 3.
+- **Rejected**: Net of the event's other results, which reads 6 on the first
+  board (bob ends at 1) and 8 on the second (bob ends at 7): a result of the
+  very event would decide whether the event is replaced.
+- **Site**: `Parun.Engine.Damage.processDamage`'s life-loss pass, gathering
+  its rows off the pre-batch board, and
+  `Parun.Engine.Replacement.changesLoss`, judging the floor live. Proved by
+  the scenarios `cr-120-4c-elderscale-wurm-reads-the-life-before-*`.
+- **Issue**: #5809.
 
 ## Where a name sticker's word goes beside a blank
 
@@ -523,6 +575,26 @@ Entries are ordered by the first rule each cites.
   the scenario "CR 303.4g / Thieves' Auction's 2005 ruling: an Aura chosen
   while there is nothing it can enchant stays exiled".
 - **Issue**: none.
+
+## What a mandatory blight puts its counters on when no creature can take them
+
+- **Question**: An effect says "blight N" and every creature the player
+  controls can't have -1/-1 counters put on it (Solemnity, Melira, Sylvok
+  Outcast). Does the player still choose one, so the blight happens, or is it
+  CR 101.3's no-op? Where some creature can take them, CR 608.2d forbids
+  choosing one that can't; no ruling covers the case where none can.
+- **Rules**: CR 608.2d, 609.3, 701.68a, 701.68c, 701.68d; CR of 2026-08-07.
+- **Decision**: The player chooses among every creature they control, nothing
+  is put, and they have blighted: the chosen creature is CR 701.68c's
+  "blighted creature" and "whenever a player blights" triggers.
+- **Rejected**: No choice and no blight, which reads CR 608.2d's impossible
+  option as emptying the pool. CR 609.3 has the effect do as much as it can,
+  and choosing the creature can be done; CR 701.68d's "regardless of what
+  events actually occurred" says a blight putting nothing still counts.
+- **Site**: `Parun.Engine.Blight.instructed`, proved by
+  `Parun.EventTriggerSpec`'s "CR 701.68d Solemnity keeps every counter off
+  and the Chronicler still triggers".
+- **Issue**: #5830.
 
 ## Which board an entry inside a batch collects replacement effects from
 

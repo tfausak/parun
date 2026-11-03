@@ -3,7 +3,30 @@
     "active": "alice",
     "seats": [
       {
-        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Ugin, the Spirit Dragon",
+            "counters": [
+              {
+                "key": {
+                  "type": "Loyalty"
+                },
+                "value": 12
+              }
+            ],
+            "label": "u"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          },
+          {
+            "card": "Lightning Bolt",
+            "label": "bolt"
+          }
+        ],
         "library": [
           {
             "card": "Forest"
@@ -42,33 +65,9 @@
             "card": "Island"
           }
         ],
-        "battlefield": [
-          {
-            "card": "Ugin, the Spirit Dragon",
-            "label": "u",
-            "counters": [
-              {
-                "key": {
-                  "type": "Loyalty"
-                },
-                "value": 12
-              }
-            ]
-          }
-        ],
-        "hand": [
-          {
-            "card": "Grizzly Bears",
-            "label": "bears"
-          },
-          {
-            "card": "Lightning Bolt",
-            "label": "bolt"
-          }
-        ]
+        "name": "alice"
       },
       {
-        "name": "bob",
         "library": [
           {
             "card": "Island"
@@ -106,7 +105,8 @@
           {
             "card": "Island"
           }
-        ]
+        ],
+        "name": "bob"
       }
     ],
     "step": "PrecombatMain"
@@ -131,6 +131,7 @@
       "turn": 1
     },
     {
+      "player": "alice",
       "refuse": {
         "Answer": {
           "prompt": "ChooseCardsInHand",
@@ -139,7 +140,26 @@
           ]
         }
       },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
       "player": "alice",
+      "refuse": {
+        "Answer": {
+          "prompt": "ChooseCardsInHand",
+          "with": [
+            "$bears",
+            "Forest",
+            "Mountain",
+            "Plains",
+            "Swamp",
+            "Hill Giant",
+            "Elite Vanguard",
+            "Serra Angel"
+          ]
+        }
+      },
       "step": "PrecombatMain",
       "turn": 1
     },
@@ -153,7 +173,6 @@
             "Mountain",
             "Plains",
             "Swamp",
-            "Hill Giant",
             "Elite Vanguard",
             "Serra Angel"
           ]
@@ -269,6 +288,5 @@
       "step": "PrecombatMain",
       "turn": 1
     }
-  ],
-  "note": "An eighth pick is dropped rather than asked again (#5889); once that lands, refuse it instead."
+  ]
 }

@@ -1048,6 +1048,9 @@ library codec
     Parun.Codec.NameInsertion
     Parun.Codec.NamesAre
     Parun.Codec.NamesAreSpec
+    Parun.Codec.NextDamageInstance
+    Parun.Codec.NextDamageOutcome
+    Parun.Codec.NextDamageOutcomeSpec
     Parun.Codec.Ninjutsu
     Parun.Codec.NinjutsuSpec
     Parun.Codec.NinjutsuVariant
@@ -1235,7 +1238,6 @@ library codec
     Parun.Codec.PreventionRiderSpec
     Parun.Codec.PreventionSpec
     Parun.Codec.PreventNextDamage
-    Parun.Codec.PreventNextDamageInstance
     Parun.Codec.PreventNextDamageSpec
     Parun.Codec.PrintedReplacement
     Parun.Codec.PrintedReplacementSpec
@@ -2898,6 +2900,8 @@ library types
     Parun.Types.NameChooser
     Parun.Types.NameInsertion
     Parun.Types.NamesAre
+    Parun.Types.NextDamageInstance
+    Parun.Types.NextDamageOutcome
     Parun.Types.Ninjutsu
     Parun.Types.NinjutsuVariant
     Parun.Types.Object
@@ -3004,7 +3008,6 @@ library types
     Parun.Types.Prevention
     Parun.Types.PreventionRider
     Parun.Types.PreventNextDamage
-    Parun.Types.PreventNextDamageInstance
     Parun.Types.PrintedReplacement
     Parun.Types.Printing
     Parun.Types.PrintingId

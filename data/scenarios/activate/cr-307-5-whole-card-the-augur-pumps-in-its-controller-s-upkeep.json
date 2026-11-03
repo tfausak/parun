@@ -40,7 +40,7 @@
     },
     {
       "turn": 1,
-      "step": "DrawStep",
+      "step": "PrecombatMain",
       "player": "alice",
       "check": {
         "Count": {
@@ -53,7 +53,7 @@
     },
     {
       "turn": 1,
-      "step": "DrawStep",
+      "step": "PrecombatMain",
       "player": "alice",
       "check": {
         "Count": {
@@ -66,7 +66,7 @@
     },
     {
       "turn": 1,
-      "step": "DrawStep",
+      "step": "PrecombatMain",
       "player": "alice",
       "check": {
         "PowerToughness": {
@@ -78,7 +78,7 @@
     },
     {
       "turn": 1,
-      "step": "DrawStep",
+      "step": "PrecombatMain",
       "player": "alice",
       "check": {
         "Keywords": {

@@ -356,9 +356,20 @@ scenario s registry steps = do
     Setup.newGame S.performer matchup
     steps
 
--- Alice starts, so her turn-1 draw is skipped.
+-- Alice starts, so her turn-1 draw step is skipped.
 aliceFirstDraw :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> m GameState.GameState
-aliceFirstDraw s registry = scenario s registry S.drawStep
+aliceFirstDraw s registry = scenario s registry wholeDrawStep
+
+-- The draw step as Engine.runStep takes it, not just its turn-based actions:
+-- CR 103.8a skips the whole step (Engine.skipsDraw).
+wholeDrawStep :: Game.Type.Game ()
+wholeDrawStep = do
+  State.modify' $ \gs ->
+    gs
+      { GameState.phase = Phase.Beginning BeginningStep.DrawStep,
+        GameState.remaining = Seq.singleton Phase.PrecombatMain
+      }
+  Engine.runStep
 
 -- Bob is not the starting player, so his draw happens normally.
 bobFirstDraw :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> m GameState.GameState
@@ -402,15 +413,14 @@ ruleSpec s registry = Spec.describe s "Rules" $ do
     -- player who plays first skips the draw step ... of their first turn."
     -- CR 103.8c: "In all other multiplayer games, no player skips the draw
     -- step of their first turn." Alice heads the three-seat order and is
-    -- active on turn 1, so today she skips and this fails.
+    -- active on turn 1.
     --
     -- Neither fixture has a library, so the attempted draw is observable as
     -- drewFromEmpty -- Event.drawCard flags a draw from an empty library.
     -- turnNumber is 1 from Setup.emptyGame, which is load-bearing: it is
     -- skipsDraw's first conjunct.
-    let atDrawStep gs = gs {GameState.phase = Phase.Beginning BeginningStep.DrawStep}
-        afterThree = S.runPure S.identityAnswer (atDrawStep S.threePlayerGame) S.drawStep
-        afterTwo = S.runPure S.identityAnswer (atDrawStep (Setup.emptyGame S.bothPlayers)) S.drawStep
+    let afterThree = S.runPure S.identityAnswer S.threePlayerGame wholeDrawStep
+        afterTwo = S.runPure S.identityAnswer (Setup.emptyGame S.bothPlayers) wholeDrawStep
     Spec.assertBool s (Set.member S.alice (GameState.drewFromEmpty afterThree)) "CR 103.8c: alice draws on turn one at three seats"
     Spec.assertBool s (not (Set.member S.alice (GameState.drewFromEmpty afterTwo))) "CR 103.8a: alice still skips at two seats"
     -- CR 121.4's attempt draws no card, so it is not one of CR 121.1's draws: the

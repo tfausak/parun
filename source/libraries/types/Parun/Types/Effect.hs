@@ -73,6 +73,7 @@ import qualified Parun.Types.MonarchTarget as MonarchTarget
 import qualified Parun.Types.MoveCounters as MoveCounters
 import qualified Parun.Types.MoveMana as MoveMana
 import qualified Parun.Types.MoveToZone as MoveToZone
+import qualified Parun.Types.NextDamageInstance as NextDamageInstance
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.OfferCast as OfferCast
 import qualified Parun.Types.PermanentActed as PermanentActed
@@ -82,7 +83,6 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerSacrifices as PlayerSacrifices
 import qualified Parun.Types.PreventAllDamage as PreventAllDamage
 import qualified Parun.Types.PreventNextDamage as PreventNextDamage
-import qualified Parun.Types.PreventNextDamageInstance as PreventNextDamageInstance
 import qualified Parun.Types.Prohibit as Prohibit
 import qualified Parun.Types.PutCounters as PutCounters
 import qualified Parun.Types.PutCountersFrom as PutCountersFrom
@@ -395,12 +395,12 @@ data Effect card ability
     -- recipients (Selfless Squire) -- PreventNextDamage with the Quantity
     -- removed, so it ends only when its duration does.
     PreventAllDamage (PreventAllDamage.PreventAllDamage (Effect card ability))
-  | -- | CR 615.8: install a shield that stops ONE instance of damage from the
+  | -- | CR 615.8 / 614.1a: install a shield over ONE instance of damage from the
     -- source CR 609.7a had its controller choose, whatever that instance's size,
-    -- and is then used up (Deflecting Palm). Between the two above: no counted
-    -- amount, and no second application. PreventNextDamageInstance.riders is CR
+    -- used up by it (Deflecting Palm, Eye for an Eye). Between the two above: no
+    -- counted amount, and no second application. NextDamageInstance.riders is CR
     -- 615.5's additional effect.
-    PreventNextDamageInstance (PreventNextDamageInstance.PreventNextDamageInstance (Effect card ability))
+    NextDamageInstance (NextDamageInstance.NextDamageInstance (Effect card ability))
   | -- | CR 614.9: install a floating redirection effect (Turn the Tables); the
     -- Maybe DamageKind is printed rather than assumed.
     RedirectDamage RedirectDamage.RedirectDamage

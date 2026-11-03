@@ -895,6 +895,7 @@ extract-a-confession
 extract-power
 extravagant-replication
 extus-oriq-overlord-awaken-the-blood-avatar
+eye-for-an-eye
 eye-spy
 eyes-of-gitaxias
 ezuri-claw-of-progress
@@ -1262,6 +1263,7 @@ heavy-fog
 hecatomb
 hei-bai-forest-guardian
 heirloom-blade
+heliod-sun-crowned
 hellion-crucible
 henry-wu-ingen-geneticist
 henzie-toolbox-torre
@@ -1326,6 +1328,7 @@ ichor-rats
 icon-of-ancestry
 icy-prison
 ignorant-bliss
+ill-gotten-gains
 illicit-auction
 illuminate-history
 illuminor-szeras

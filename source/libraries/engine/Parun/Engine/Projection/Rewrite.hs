@@ -196,6 +196,7 @@ import qualified Parun.Types.ModifyTarget as ModifyTarget
 import qualified Parun.Types.MoveCounters as MoveCounters
 import qualified Parun.Types.MoveToZone as MoveToZone
 import qualified Parun.Types.MovedKinds as MovedKinds
+import qualified Parun.Types.NextDamageInstance as NextDamageInstance
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.OfferCast as OfferCast
 import qualified Parun.Types.PayGate as PayGate
@@ -221,7 +222,6 @@ import qualified Parun.Types.PlotFromZone as PlotFromZone
 import qualified Parun.Types.Plus as Plus
 import qualified Parun.Types.PreventAllDamage as PreventAllDamage
 import qualified Parun.Types.PreventNextDamage as PreventNextDamage
-import qualified Parun.Types.PreventNextDamageInstance as PreventNextDamageInstance
 import qualified Parun.Types.PrintedReplacement as PrintedReplacement
 import qualified Parun.Types.Prohibit as Prohibit
 import qualified Parun.Types.PutCounters as PutCounters
@@ -879,8 +879,8 @@ rewriteEffect pairs effect = case effect of
     Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage (rewriteDuration pairs duration) kind (fmap (rewriteObjectRef pairs) ref) (fmap (Filter.rewrite pairs) whatRecipient) whoRecipient (fmap (Filter.rewrite pairs) chosenSource) (rewriteQuantity pairs quantity) (fmap (rewriteEffect pairs) rider))
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration kind ref whatRecipient whoRecipient direction chosenSource whatSource rider) ->
     Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage (rewriteDuration pairs duration) kind (fmap (rewriteObjectRef pairs) ref) (fmap (Filter.rewrite pairs) whatRecipient) whoRecipient direction (fmap (Filter.rewrite pairs) chosenSource) (Filter.rewrite pairs whatSource) (fmap (rewriteEffect pairs) rider))
-  Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance duration ref chosenSource rider) ->
-    Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance (rewriteDuration pairs duration) (rewriteObjectRef pairs ref) (Filter.rewrite pairs chosenSource) (fmap (rewriteEffect pairs) rider))
+  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance duration ref chosenSource rider outcome) ->
+    Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance (rewriteDuration pairs duration) (rewriteObjectRef pairs ref) (Filter.rewrite pairs chosenSource) (fmap (rewriteEffect pairs) rider) outcome)
   -- CR 612.1 through every half of the redirection that holds printed words: the
   -- two ends of the rewrite, the predicate describing CR 609.7a's chosen source,
   -- and the duration. `kind` is not a word a subtype swap can find: it says
@@ -1730,6 +1730,7 @@ rewriteDamageRewrite pairs rewrite = case rewrite of
   -- clauses -- EntryRewrite.RunEffects' arm exactly.
   DamageRewrite.RunEffects es -> DamageRewrite.RunEffects (fmap (rewriteEffect pairs) es)
   DamageRewrite.TurnFaceUp -> rewrite
+  DamageRewrite.AlsoToSourceController -> rewrite
 
 -- CR 612.1 through what a CR 614.1a draw replacement does. The wish filter is the
 -- one printed word a draw rewrite can hold, and it is the SAME Filter

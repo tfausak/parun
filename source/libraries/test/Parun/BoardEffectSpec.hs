@@ -328,6 +328,97 @@ exhumeSpec s registry =
           Spec.assertEqWith s "nothing arrived" (arrivals after) []
           Spec.assertEqWith s "and the spell really did resolve" (namesIn Zone.Graveyard S.alice after) [named "Exhume"]
 
+-- Ill-Gotten Gains {2}{B}{B} Sorcery -- "Exile Ill-Gotten Gains. Each player
+-- discards their hand, then returns up to three cards from their graveyard to
+-- their hand." (checked against api.scryfall.com).
+--
+-- Each player chooses in APNAP order (CR 101.4) out of their own graveyard,
+-- which by then holds the hand they discarded (CR 608.2c), and knows what the
+-- earlier players took (CR 101.4b). Three seats, so the third is told two
+-- earlier picks.
+illGottenGainsSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+illGottenGainsSpec s registry =
+  let named = Just . CardName.MkCardName . Text.pack
+      run :: (forall r. Prompt.Prompt r -> r) -> ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
+      run answer spell gs = snd (fst (Replay.record answer gs (S.cast S.alice spell >> Stack.resolveTop)))
+   in Spec.describe s "IllGottenGains" $ do
+        -- alice holds the spell and a Goblin Piker over Bird Maiden, Ogre Sentry
+        -- and Murder; bob holds Benalish Cavalry over Bog Wraith and Benalish
+        -- Hero; carol holds nothing over Day of Judgment.
+        let stock = do
+              gains <- S.printingOf s registry "Ill-Gotten Gains"
+              swamp <- S.printingOf s registry "Swamp"
+              piker <- S.printingOf s registry "Goblin Piker"
+              maiden <- S.printingOf s registry "Bird Maiden"
+              sentry <- S.printingOf s registry "Ogre Sentry"
+              murder <- S.printingOf s registry "Murder"
+              cavalry <- S.printingOf s registry "Benalish Cavalry"
+              wraith <- S.printingOf s registry "Bog Wraith"
+              hero <- S.printingOf s registry "Benalish Hero"
+              judgment <- S.printingOf s registry "Day of Judgment"
+              let mana = S.landsFor swamp S.alice 4 S.threePlayerGame
+                  (maidenId, g1) = S.addGraveyardCard maiden S.alice mana
+                  (sentryId, g2) = S.addGraveyardCard sentry S.alice g1
+                  (murderId, g3) = S.addGraveyardCard murder S.alice g2
+                  (_, g4) = S.addGraveyardCard wraith S.bob g3
+                  (_, g5) = S.addGraveyardCard hero S.bob g4
+                  (_, g6) = S.addGraveyardCard judgment S.carol g5
+                  (_, g7) = S.addHandCard cavalry S.bob g6
+                  -- After the spell: S.handOne replaces alice's hand.
+                  (g8, spell) = S.handOne gains g7
+                  (_, withSpell) = S.addHandCard piker S.alice g8
+              pure (spell, withSpell {GameState.priority = Just S.alice}, (maidenId, sentryId, murderId))
+        Spec.it s "CR 608.2c each player discards, then returns up to three cards of their own graveyard, the discarded ones included" $ do
+          (spell, gs, (maidenId, _, murderId)) <- stock
+          let answer :: Prompt.Prompt r -> r
+              answer p = case p of
+                Prompt.ChooseAnyNumber _ pid _ AnyNumberOf.CardsInGraveyards offered _ _
+                  | pid == S.alice -> Set.fromList [maidenId, murderId]
+                  | pid == S.bob -> Set.fromList offered
+                  | otherwise -> Set.empty
+                _ -> S.identityAnswer p
+              after = run answer spell gs
+          Spec.assertEqWith
+            s
+            "each hand holds what its player chose, bob's discarded Cavalry among it"
+            (fmap (\pid -> List.sort (namesIn Zone.Hand pid after)) [S.alice, S.bob, S.carol])
+            [ List.sort [named "Bird Maiden", named "Murder"],
+              List.sort [named "Benalish Cavalry", named "Bog Wraith", named "Benalish Hero"],
+              []
+            ]
+          Spec.assertEqWith
+            s
+            "the rest stays in each graveyard, and the spell is exiled"
+            (fmap (\pid -> List.sort (namesIn Zone.Graveyard pid after)) [S.alice, S.bob, S.carol], namesIn Zone.Exile S.alice after)
+            ([List.sort [named "Ogre Sentry", named "Goblin Piker"], [], [named "Day of Judgment"]], [named "Ill-Gotten Gains"])
+        -- CR 101.4b: a pair of casts differing only in alice's pick. bob takes
+        -- everything when told alice took her Bird Maiden alone, and nothing
+        -- otherwise; carol takes her card when told alice's pick and then bob's
+        -- three, one entry per chooser.
+        Spec.it s "CR 101.4b a later player knows the cards the earlier players took" $ do
+          (spell, gs, (maidenId, sentryId, _)) <- stock
+          let answer :: ObjectId.ObjectId -> Prompt.Prompt r -> r
+              answer hers p = case p of
+                Prompt.ChooseAnyNumber _ pid _ AnyNumberOf.CardsInGraveyards offered _ earlier
+                  | pid == S.alice -> Set.singleton hers
+                  | pid == S.bob ->
+                      if Foldable.toList earlier == [(S.alice, Set.singleton maidenId)] then Set.fromList offered else Set.empty
+                  | otherwise -> case Foldable.toList earlier of
+                      [(first, mine), (who, theirs)] | first == S.alice && mine == Set.singleton maidenId && who == S.bob && Set.size theirs == 3 -> Set.fromList offered
+                      _ -> Set.empty
+                _ -> S.identityAnswer p
+              hands after = fmap (\pid -> List.sort (namesIn Zone.Hand pid after)) [S.bob, S.carol]
+          Spec.assertEqWith
+            s
+            "CR 101.4b told alice took her Bird Maiden, bob took all three and carol her card"
+            (hands (run (answer maidenId) spell gs))
+            [List.sort [named "Benalish Cavalry", named "Bog Wraith", named "Benalish Hero"], [named "Day of Judgment"]]
+          Spec.assertEqWith
+            s
+            "CR 101.4b told alice took her Ogre Sentry, bob and carol took nothing"
+            (hands (run (answer sentryId) spell gs))
+            [[], []]
+
 -- TWO chosen graveyard cards in ONE resolution, where the second must not be the
 -- first: Blood for Bones, the card that made #1433 look like a missing exclusion.
 --
@@ -3250,6 +3341,7 @@ spec s registry = Spec.describe s "Parun.Engine.Resolve" $ do
   plummetSpec s registry
   corrosiveGaleSpec s registry
   exhumeSpec s registry
+  illGottenGainsSpec s registry
   bloodForBonesSpec s registry
   skullwinderSpec s registry
   elvishPiperSpec s registry

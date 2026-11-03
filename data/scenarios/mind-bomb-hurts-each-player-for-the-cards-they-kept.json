@@ -1,6 +1,6 @@
 {
   "description": "CR 608.2e Mind Bomb deals each player 3 minus the cards they discarded",
-  "note": "Three seats each holding three cards discard none, one and three of them. Each seat's damage reads only its own discards, so alice takes 3, bob 2 and carol none.",
+  "note": "Three seats holding three, three and four cards discard none, one and three of them; carol's four is over Mind Bomb's limit and asked again. Each seat's damage reads only its own discards, so alice takes 3, bob 2 and carol none.",
   "board": {
     "seats": [
       {
@@ -26,7 +26,8 @@
         "hand": [
           { "card": "Goblin Piker", "label": "carol-1" },
           { "card": "Goblin Piker", "label": "carol-2" },
-          { "card": "Goblin Piker", "label": "carol-3" }
+          { "card": "Goblin Piker", "label": "carol-3" },
+          { "card": "Goblin Piker", "label": "carol-4" }
         ]
       }
     ],
@@ -38,10 +39,12 @@
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseAnyNumberToDiscard", "with": [] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Answer": { "prompt": "ChooseAnyNumberToDiscard", "with": ["$bob-1"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "carol", "refuse": { "Answer": { "prompt": "ChooseAnyNumberToDiscard", "with": ["$carol-1", "$carol-2", "$carol-3", "$carol-4"] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "carol", "do": { "Answer": { "prompt": "ChooseAnyNumberToDiscard", "with": ["$carol-1", "$carol-2", "$carol-3"] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 17 } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 18 } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "carol", "life": 20 } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Hand", "card": "Llanowar Elves", "count": 2 } } }
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Hand", "card": "Llanowar Elves", "count": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "carol", "zone": "Hand", "card": "Goblin Piker", "count": 1 } } }
   ]
 }

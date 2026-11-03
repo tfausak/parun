@@ -163,6 +163,8 @@ import qualified Parun.Types.ModifyTarget as ModifyTarget
 import qualified Parun.Types.MoveCounters as MoveCounters
 import qualified Parun.Types.MoveToZone as MoveToZone
 import qualified Parun.Types.MovedKinds as MovedKinds
+import qualified Parun.Types.NextDamageInstance as NextDamageInstance
+import qualified Parun.Types.NextDamageOutcome as NextDamageOutcome
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.OfferCast as OfferCast
@@ -188,7 +190,6 @@ import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.Power as Power
 import qualified Parun.Types.PreventAllDamage as PreventAllDamage
 import qualified Parun.Types.PreventNextDamage as PreventNextDamage
-import qualified Parun.Types.PreventNextDamageInstance as PreventNextDamageInstance
 import qualified Parun.Types.PrintedReplacement as PrintedReplacement
 import qualified Parun.Types.Printing as Printing
 import qualified Parun.Types.Prohibit as Prohibit
@@ -372,7 +373,7 @@ ownQuantities effect = case effect of
   Effect.SkipPhase (SkipPhase.MkSkipPhase _ _ _ duration) -> durationQuantities duration
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ _ _ _ _ quantity _) -> quantity : durationQuantities duration
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration _ _ _ _ _ _ _ _) -> durationQuantities duration
-  Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance duration _ _ _) -> durationQuantities duration
+  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance duration _ _ _ _) -> durationQuantities duration
   Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration _ amount _ _ _ _ _ _ _) -> Maybe.maybeToList amount <> durationQuantities duration
   Effect.TurnFaceDown (TurnFaceDown.MkTurnFaceDown _ listed) ->
     fmap (\(Power.MkPower quantity) -> quantity) (Maybe.maybeToList (FaceDownCharacteristics.power listed))
@@ -752,7 +753,7 @@ isInstructionR replacement = case replacement of
 -- SOURCE beside it likewise, and CR 615.7's remaining amount rides the same
 -- carrier. A card says "a source of your choice" through the chosenSource of
 -- Effect.PreventNextDamage, Effect.PreventAllDamage,
--- Effect.PreventNextDamageInstance or Effect.RedirectDamage, which is a Filter
+-- Effect.NextDamageInstance or Effect.RedirectDamage, which is a Filter
 -- and names nothing. CR 122.1c's pair is engine-only for a
 -- different reason: a RULE creates it off a permanent's counters, so a card
 -- printing either half would be claiming an ability no rule gives it.
@@ -858,6 +859,7 @@ engineMintedDamage rewrite = case rewrite of
   -- (Parun.Types.FaceDownState's `turnsUpBefore`), which is where a card writes
   -- it instead.
   DamageRewrite.TurnFaceUp -> True
+  DamageRewrite.AlsoToSourceController -> True
 
 -- The destruction half of the same question. CR 701.19a's regeneration IS printed
 -- (Drudge Skeletons), where CR 122.1c's removal and CR 702.89a's umbra armor are
@@ -981,6 +983,7 @@ preventsDamage rewrite = case rewrite of
   DamageRewrite.RunEffects _ -> False
   -- Illusionary Mask's damage is dealt, to or from the face-up permanent.
   DamageRewrite.TurnFaceUp -> False
+  DamageRewrite.AlsoToSourceController -> False
 
 -- The non-vacuity half of riderWithoutPreventionOffends' lint, isPhaseR's shape.
 hasRider :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Bool
@@ -1051,7 +1054,7 @@ shieldNamingNothingOffends effect = case effect of
   -- printing counts an amount down while naming only a source. The printings
   -- that name one -- Pilgrim of Justice, Penance, Deflecting Palm -- are CR
   -- 615.8's "the next time ... would deal damage", which is
-  -- Effect.PreventNextDamageInstance's arm below and not this one.
+  -- Effect.NextDamageInstance's arm below and not this one.
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ ref whatRecipient whoRecipient _ _ _) ->
     Maybe.isNothing ref && Maybe.isNothing whatRecipient && Maybe.isNothing whoRecipient
   -- `direction` IS read here, because it decides whether `whatRecipient` can
@@ -1080,7 +1083,7 @@ shieldNamingNothingOffends effect = case effect of
   -- there is no shape of it that names neither end. An arm rather than the
   -- fallthrough below, so a card data change that made either optional lands
   -- here.
-  Effect.PreventNextDamageInstance {} -> False
+  Effect.NextDamageInstance {} -> False
   _ -> False
 
 -- The non-vacuity half of that lint, isPhaseR's shape.
@@ -1088,7 +1091,7 @@ isPreventionShield :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbilit
 isPreventionShield effect = case effect of
   Effect.PreventNextDamage {} -> True
   Effect.PreventAllDamage {} -> True
-  Effect.PreventNextDamageInstance {} -> True
+  Effect.NextDamageInstance {} -> True
   Effect.RedirectDamage {} -> True
   _ -> False
 
@@ -1355,13 +1358,10 @@ storedPlayerScope effect = case effect of
 -- split (CR 700.3), which only a move's test (Sphinx of Uthuun) reaches.
 -- ChosenCardInHand splits off its "up to", which only a move's test (The Great
 -- Aurora) reaches, and ChosenCardInGraveyard its "up to", which only a move's
--- test (Liliana, the Necromancer) reaches; under Chooser.EachInScope that "up
--- to" is allowed nowhere, since its ask names no earlier chooser's picks
--- (#5832).
+-- test (Liliana, the Necromancer; Ill-Gotten Gains) reaches.
 data Question
   = CardInGraveyard
   | AnyCardsInGraveyards
-  | AnyCardsInEachGraveyard
   | CardInHand
   | AnyCardsInHand
   | CardFromAmong
@@ -1409,10 +1409,9 @@ questionOf ref = case ref of
   ObjectRef.TopOfLibraryUntil {} -> Nothing
   ObjectRef.TopOfGraveyard {} -> Nothing
   ObjectRef.EachCardFromAmong {} -> Nothing
-  ObjectRef.ChosenCardInGraveyard choice -> case (ChosenCardInGraveyard.count choice, ChosenCardInGraveyard.chooser choice) of
-    (HowMany.UpTo _, Chooser.EachInScope) -> Just AnyCardsInEachGraveyard
-    (HowMany.UpTo _, _) -> Just AnyCardsInGraveyards
-    (HowMany.Exactly _, _) -> Just CardInGraveyard
+  ObjectRef.ChosenCardInGraveyard choice -> case ChosenCardInGraveyard.count choice of
+    HowMany.UpTo _ -> Just AnyCardsInGraveyards
+    HowMany.Exactly _ -> Just CardInGraveyard
   ObjectRef.ChosenCardInHand choice -> case ChosenCardInHand.count choice of
     HowMany.UpTo _ -> Just AnyCardsInHand
     HowMany.Exactly _ -> Just CardInHand
@@ -1444,14 +1443,13 @@ chooserRef = Maybe.isJust . questionOf
 -- reached, so this is the fence that keeps a card from loading a combination no
 -- test reaches. A position read through the pure objectRefObjects allows none.
 --
--- A move's: every question but SeveralPermanents, RandomAmong and
--- AnyCardsInEachGraveyard. The scenario
+-- A move's: every question but SeveralPermanents and RandomAmong. The scenario
 -- ransack-sends-the-chosen-to-the-bottom-and-orders-the-rest reaches
 -- AnyCardsFromAmong. OffBattlefield's ask is Parun.Engine.Resolve.Effect's
 -- chosenPermanents, which Mirror of Fate's scenario reaches through
 -- Effect.ChoosePermanents; no permanent opcode's test reaches it.
 movedQuestions :: [Question]
-movedQuestions = filter (`notElem` [SeveralPermanents, RandomAmong, AnyCardsInEachGraveyard]) [minBound .. maxBound]
+movedQuestions = filter (`notElem` [SeveralPermanents, RandomAmong]) [minBound .. maxBound]
 
 -- The battlefield questions, for the opcodes that act on PERMANENTS -- Tovolar,
 -- Dire Overlord's transform, Teferi, Hero of Dominaria's untap, God-Eternal
@@ -1605,7 +1603,7 @@ effectObjectRefs effect =
         Effect.SkipPhase {} -> []
         Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ ref _ _ _ _ _) -> read_ (Maybe.maybeToList ref)
         Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ ref _ _ _ _ _ _) -> read_ (Maybe.maybeToList ref)
-        Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance _ ref _ _) -> read_ [ref]
+        Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ ref _ _ _) -> read_ [ref]
         Effect.RedirectDamage (RedirectDamage.MkRedirectDamage _ _ _ srcRef _ _ destRef _ _ _) -> read_ (Maybe.maybeToList srcRef <> [destRef])
         -- A READ and not an ask: CR 708.2's turning-over takes no choice of its own, and
         -- this arm never reaches the Game monad, so a ChosenPermanents ref written
@@ -3347,6 +3345,19 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     Spec.assertEqWith s "and every one of them rides a prevention" (fmap (S.nameOf . Printing.card) offenders) []
   -- The rejecting direction, proven against Stormwild Capridor rather than a
   -- card file, exactly as the two cases above are.
+  -- A rider on Effect.NextDamageInstance runs only if the instance is prevented.
+  Spec.it s "no card hangs CR 615.5's additional effect off a next instance it does not prevent" $ do
+    ps <- S.allPrintings s corpus
+    let offends effect = case effect of
+          Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ riders outcome) -> not (null riders) && outcome /= NextDamageOutcome.Prevented
+          _ -> False
+        reachesRiderless effect = case effect of
+          Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ _ outcome) -> outcome /= NextDamageOutcome.Prevented
+          _ -> False
+    -- Guards against a vacuous sweep: Eye for an Eye is the card that lets the
+    -- instance happen.
+    Spec.assertBool s (any (anyFace (any reachesRiderless . cardResolutionEffects) . Printing.card) ps) "the pool has a next instance it does not prevent"
+    Spec.assertEqWith s "and none of them carries a rider" (fmap (S.nameOf . Printing.card) (filter (anyFace (any offends . cardResolutionEffects) . Printing.card) ps)) []
   Spec.it s "the lint itself catches a rider on a rewrite that prevents nothing" $ do
     capridor <- S.printingOf s registry "Stormwild Capridor"
     let printed = cardReplacementEffects (S.combinedFace capridor)

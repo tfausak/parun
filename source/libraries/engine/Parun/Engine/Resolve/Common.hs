@@ -960,6 +960,15 @@ graveyardCards :: Filter.Context -> Map.Map SlotName (Set Recipient) -> ObjectId
 graveyardCards context bindings source controller gs scope filter_ =
   concatMap (\pid -> graveyardCardsOf context gs pid filter_) (Target.zoneScopePlayers (Plane.rangePerspective source controller gs) (Just controller) bindings scope gs)
 
+-- One-card picks folded into one set per run of a single chooser, the shape
+-- Prompt.ChooseAnyNumber names earlier picks in.
+byChooser :: Seq.Seq (PlayerId, ObjectId) -> Seq.Seq (PlayerId, Set ObjectId)
+byChooser = Foldable.foldl' join Seq.empty
+  where
+    join runs (who, oid) = case Seq.viewr runs of
+      rest Seq.:> (last_, taken) | last_ == who -> rest Seq.|> (who, Set.insert oid taken)
+      _ -> runs Seq.|> (who, Set.singleton oid)
+
 -- askingObjects' ChosenCardInGraveyard arm.
 chosenCardsInGraveyard :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> ChosenCardInGraveyard.ChosenCardInGraveyard -> Game [ObjectId]
 chosenCardsInGraveyard legal resolving controller source (ChosenCardInGraveyard.MkChosenCardInGraveyard chooser scope filter_ count) = do
@@ -976,9 +985,8 @@ chosenCardsInGraveyard legal resolving controller source (ChosenCardInGraveyard.
             case picked of
               Nothing -> pure made
               Just taken -> pickExactly (made Seq.|> (asked, taken)) asked (n - 1) (List.delete taken candidates)
-      -- "Up to" is one ask over every candidate, through Game.pickCounted.
-      -- Not implemented: that ask names no earlier chooser's picks, which CR
-      -- 101.4b lets a later chooser know (#5832).
+      -- "Up to" is one ask over every candidate, through Game.pickCounted,
+      -- naming the earlier picks grouped by chooser (CR 101.4b).
       pick made asked candidates = case count of
         HowMany.Exactly q -> pickExactly made asked (amount q) candidates
         HowMany.UpTo _ ->
@@ -987,7 +995,7 @@ chosenCardsInGraveyard legal resolving controller source (ChosenCardInGraveyard.
               True
               (pure (Just asked))
               (\decider who pool -> Prompt.ChooseCardInGraveyard decider who source pool made)
-              (\decider who pool ceiling_ -> Prompt.ChooseAnyNumber decider who source AnyNumberOf.CardsInGraveyards pool ceiling_ Seq.empty)
+              (\decider who pool ceiling_ -> Prompt.ChooseAnyNumber decider who source AnyNumberOf.CardsInGraveyards pool ceiling_ (byChooser made))
               amount
               count
               candidates
@@ -1425,10 +1433,10 @@ preventionRider chosen controller source riderEffects =
 
 -- CR 615.3: install one floating damage row, for a duration. Shared by
 -- Effect.PreventNextDamage, Effect.PreventAllDamage,
--- Effect.PreventNextDamageInstance and Effect.RedirectDamage, which differ only
+-- Effect.NextDamageInstance and Effect.RedirectDamage, which differ only
 -- in the DamageRewrite and the use count -- CR 615.7's countdown, CR 615.1's
 -- unbounded shield, that same shield with CR 614.3's single use beside it (CR
--- 615.8), or CR 614.9's redirection.
+-- 615.8) or its replacement (Eye for an Eye), or CR 614.9's redirection.
 --
 -- One shield PER RECIPIENT the caller's ObjectRef NAMES, which is why the callers
 -- fold this over that set: those recipients were fixed by the resolution (CR
@@ -1798,6 +1806,7 @@ damageRewriteRecipients rewrite = case rewrite of
   DamageRewrite.RunEffects _ -> []
   -- The row's own permanent is its source, which is no baked id of the rewrite's.
   DamageRewrite.TurnFaceUp -> []
+  DamageRewrite.AlsoToSourceController -> []
 
 -- What one object on the stack refers to: its CR 113.7 source object, and every
 -- object its bindings name.
@@ -3224,7 +3233,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.SkipPhase {} -> False
   Effect.PreventNextDamage {} -> False
   Effect.PreventAllDamage {} -> False
-  Effect.PreventNextDamageInstance {} -> False
+  Effect.NextDamageInstance {} -> False
   Effect.RedirectDamage {} -> False
   Effect.Counter {} -> False
   Effect.PutCounters {} -> False

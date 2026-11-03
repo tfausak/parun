@@ -1,17 +1,19 @@
-module Parun.Types.PreventNextDamageInstance where
+module Parun.Types.NextDamageInstance where
 
 import qualified Data.Sequence as Seq
 import qualified Parun.Types.Duration as Duration
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.NextDamageOutcome as NextDamageOutcome
 import qualified Parun.Types.ObjectRef as ObjectRef
 
--- | CR 615.8's prevention shield: over whom, from which chosen source, for how
--- long, and CR 615.5's additional effect riding it. One INSTANCE of damage goes,
--- whatever its size, and the shield is then used up.
+-- | CR 609.7's "the next time a source of your choice would deal damage": over
+-- whom, from which chosen source, for how long, what it does to that one INSTANCE
+-- of damage, whatever its size, and CR 615.5's additional effect riding a
+-- prevention. The shield is then used up.
 
 -- Parametric in the effect for Parun.Types.PreventNextDamage's reason.
-data PreventNextDamageInstance effect = MkPreventNextDamageInstance
+data NextDamageInstance effect = MkNextDamageInstance
   { duration :: Duration.Duration,
     -- | The recipients this RESOLUTION names -- Deflecting Palm's "to you",
     -- Honorable Passage's "to any target" -- one CR 615.8 shield each.
@@ -37,6 +39,8 @@ data PreventNextDamageInstance effect = MkPreventNextDamageInstance
     -- | CR 615.5's additional effect -- Reverse Damage's "you gain life equal to
     -- the damage prevented this way". Empty for a shield with no such clause,
     -- so the key is elided rather than written as an empty array.
-    riders :: Seq.Seq effect
+    riders :: Seq.Seq effect,
+    -- | What happens to the instance. Elided when it is prevented.
+    outcome :: NextDamageOutcome.NextDamageOutcome
   }
   deriving (Eq, Ord, Show)

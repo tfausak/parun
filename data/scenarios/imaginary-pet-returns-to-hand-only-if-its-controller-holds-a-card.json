@@ -3,7 +3,7 @@
   "note": "Alice holds a card and her Pet returns; bob's hand is empty in his upkeep and his stays.",
   "board": {"active": "alice", "step": "Untap", "seats": [{"name": "alice", "battlefield": [{"card": "Imaginary Pet", "label": "alice-pet"}], "hand": [{"card": "Island"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Imaginary Pet", "label": "bob-pet"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [
-    {"turn": 1, "step": "DrawStep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Imaginary Pet", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Imaginary Pet", "count": 1}}},
     {"turn": 2, "step": "DrawStep", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Imaginary Pet", "count": 1}}}
   ]
 }

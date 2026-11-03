@@ -1,16 +1,11 @@
 {
-  "description": "CR 608.2d an answer naming more than two untaps only two",
   "board": {
     "active": "alice",
-    "turn": 2,
-    "step": "PrecombatMain",
     "seats": [
       {
-        "name": "alice",
         "battlefield": [
           {
             "card": "Teferi, Hero of Dominaria",
-            "label": "teferi",
             "counters": [
               {
                 "key": {
@@ -18,7 +13,8 @@
                 },
                 "value": 4
               }
-            ]
+            ],
+            "label": "teferi"
           },
           {
             "card": "Island",
@@ -46,10 +42,10 @@
           {
             "card": "Goblin Piker"
           }
-        ]
+        ],
+        "name": "alice"
       },
       {
-        "name": "bob",
         "battlefield": [
           {
             "card": "Mountain",
@@ -72,46 +68,14 @@
           {
             "card": "Goblin Piker"
           }
-        ]
+        ],
+        "name": "bob"
       }
-    ]
+    ],
+    "step": "PrecombatMain",
+    "turn": 2
   },
-  "timeline": [
-    {
-      "turn": 2,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
-        "Activate": {
-          "object": "$teferi",
-          "ability": 0
-        }
-      }
-    },
-    {
-      "turn": 2,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": "Pass"
-    },
-    {
-      "turn": 2,
-      "step": "EndStep",
-      "player": "alice",
-      "do": {
-        "Answer": {
-          "prompt": "ChooseAnyNumberOfPermanents",
-          "with": [
-            "$island",
-            "$island-2",
-            "$island-3",
-            "$mountain",
-            "$mountain-2"
-          ]
-        }
-      }
-    }
-  ],
+  "description": "CR 608.2d an answer naming more than two untaps is asked again",
   "final": [
     {
       "Tapped": {
@@ -142,6 +106,56 @@
         "object": "$mountain-2",
         "tapped": true
       }
+    }
+  ],
+  "timeline": [
+    {
+      "do": {
+        "Activate": {
+          "ability": 0,
+          "object": "$teferi"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 2
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 2
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "Answer": {
+          "prompt": "ChooseAnyNumberOfPermanents",
+          "with": [
+            "$island",
+            "$island-2",
+            "$island-3",
+            "$mountain",
+            "$mountain-2"
+          ]
+        }
+      },
+      "step": "EndStep",
+      "turn": 2
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseAnyNumberOfPermanents",
+          "with": [
+            "$island",
+            "$island-2"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "EndStep",
+      "turn": 2
     }
   ]
 }

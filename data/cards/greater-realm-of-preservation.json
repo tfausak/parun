@@ -27,7 +27,7 @@
                   {
                     "effects": [
                       {
-                        "type": "PreventNextDamageInstance",
+                        "type": "NextDamageInstance",
                         "value": {
                           "chosenSource": {
                             "type": "Or",

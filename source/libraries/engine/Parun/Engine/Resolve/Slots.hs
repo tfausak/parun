@@ -187,6 +187,7 @@ import qualified Parun.Types.MoveCounters as MoveCounters
 import qualified Parun.Types.MoveMana as MoveMana
 import qualified Parun.Types.MoveToZone as MoveToZone
 import qualified Parun.Types.MovedKinds as MovedKinds
+import qualified Parun.Types.NextDamageInstance as NextDamageInstance
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
 import Parun.Types.ObjectRef (ObjectRef)
@@ -211,7 +212,6 @@ import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.Power as Power
 import qualified Parun.Types.PreventAllDamage as PreventAllDamage
 import qualified Parun.Types.PreventNextDamage as PreventNextDamage
-import qualified Parun.Types.PreventNextDamageInstance as PreventNextDamageInstance
 import qualified Parun.Types.Prohibit as Prohibit
 import qualified Parun.Types.PutCounters as PutCounters
 import qualified Parun.Types.PutCountersFrom as PutCountersFrom
@@ -819,7 +819,7 @@ effectObjectRefs effect = case effect of
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ ref _ _ _ _ _) -> Maybe.maybeToList ref
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ ref _ _ _ _ _ _) -> Maybe.maybeToList ref
   -- One ref, and never optional: CR 615.8's shield always names its recipient.
-  Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance _ ref _ _) -> [ref]
+  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ ref _ _ _) -> [ref]
   -- CR 614.9's two sides, the damage's old recipient -- absent where the card
   -- describes it instead -- and its new one.
   Effect.RedirectDamage (RedirectDamage.MkRedirectDamage _ _ _ from _ _ to _ _ _) -> Maybe.maybeToList from <> [to]
@@ -1052,7 +1052,7 @@ effectPlayerRefs effect = case effect of
   Effect.SkipPhase (SkipPhase.MkSkipPhase ref _ _ duration) -> ref : durationPlayerRefs duration
   Effect.PreventNextDamage x -> durationPlayerRefs (PreventNextDamage.duration x)
   Effect.PreventAllDamage x -> durationPlayerRefs (PreventAllDamage.duration x)
-  Effect.PreventNextDamageInstance x -> durationPlayerRefs (PreventNextDamageInstance.duration x)
+  Effect.NextDamageInstance x -> durationPlayerRefs (NextDamageInstance.duration x)
   Effect.RedirectDamage x -> durationPlayerRefs (RedirectDamage.duration x)
   Effect.Counter {} -> []
   Effect.PutCounters {} -> []
@@ -1459,7 +1459,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
       ]
   -- The two arms above's reads, minus every field this opcode does not carry: a
   -- duration, CR 609.7a's chosen-source predicate, and the rider.
-  Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance duration _ chosenSource rider) ->
+  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance duration _ chosenSource rider _) ->
     joinSlots [durationSlots duration, filterSlotsOf chosenSource, riderSlotsOf rider]
   -- CR 614.9's redirection reads what PreventNextDamage reads, minus a rider it
   -- cannot carry: the recipient and source descriptions ride the row, CR
@@ -2080,6 +2080,7 @@ damageRewriteEffects rewrite = case rewrite of
   DamageRewrite.RedirectNext _ _ -> []
   DamageRewrite.RedirectMatching _ -> []
   DamageRewrite.TurnFaceUp -> []
+  DamageRewrite.AlsoToSourceController -> []
 
 -- What a damage REWRITE reads, entryRewriteReads' twin: CR 614.9's printed
 -- destination, a Filter, and CR 702.64a's ceiling, a Quantity read against the
@@ -2102,6 +2103,7 @@ damageRewriteReads rewrite = case rewrite of
   -- the rewrite's own.
   DamageRewrite.RunEffects _ -> ([], [])
   DamageRewrite.TurnFaceUp -> ([], [])
+  DamageRewrite.AlsoToSourceController -> ([], [])
 
 -- One Filter's slot reads, each at the arity its atom reads it with
 -- (Filter.slotArities): Many for an atom taking the whole set, which since
@@ -2264,7 +2266,7 @@ ownSlotsAreExhaustive effect = case effect of
     durationSlotsAreExhaustive duration && Quantity.slotsAreExhaustive quantity && all slotsAreExhaustive rider
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration _ _ _ _ _ _ _ rider) ->
     durationSlotsAreExhaustive duration && all slotsAreExhaustive rider
-  Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance duration _ _ rider) ->
+  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance duration _ _ rider _) ->
     durationSlotsAreExhaustive duration && all slotsAreExhaustive rider
   Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration _ amount _ _ _ _ _ _ _) -> durationSlotsAreExhaustive duration && all Quantity.slotsAreExhaustive amount
   Effect.Counter {} -> True
@@ -2542,7 +2544,7 @@ readsX =
         -- CR 601.2b's X reaches the rider too.
         Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ quantity rider) -> Quantity.readsX quantity || readsX (Foldable.toList rider)
         Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ _ _ _ _ _ _ rider) -> readsX (Foldable.toList rider)
-        Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance _ _ _ rider) -> readsX (Foldable.toList rider)
+        Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ rider _) -> readsX (Foldable.toList rider)
         Effect.RedirectDamage (RedirectDamage.MkRedirectDamage _ _ amount _ _ _ _ _ _ _) -> any Quantity.readsX amount
         Effect.Counter {} -> False
         Effect.PutCounters (PutCounters.MkPutCounters _ quantity _) -> Quantity.readsX quantity
@@ -2824,7 +2826,7 @@ boundSlots effect = case effect of
   -- name IT authors is a name this card authors. All three shields.
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ _ rider) -> foldMap boundSlots rider
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ _ _ _ _ _ _ rider) -> foldMap boundSlots rider
-  Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance _ _ _ rider) -> foldMap boundSlots rider
+  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ rider _) -> foldMap boundSlots rider
   Effect.RedirectDamage {} -> Set.empty
   -- How many spells this countering ACTUALLY countered, for a "for each spell
   -- countered this way", and which (Psychic Rebuttal's "copy the spell countered
