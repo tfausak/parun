@@ -44,7 +44,7 @@ discardNewest ids n = List.genericTake n (reverse ids)
 -- degrading gracefully and wrong for anything meant to develop a board.
 declining :: Prompt r -> r
 declining p = case p of
-  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToSacrifice _ _ -> Set.empty
+  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToSacrifice _ _ _ -> Set.empty
   _ -> Replay.defaultAnswer p
 
 -- What the whole-game scripts below share: 'declining', plus the discard a long

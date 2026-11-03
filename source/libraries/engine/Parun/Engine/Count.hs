@@ -118,7 +118,8 @@ evaluate viewOf quantityOf context gs count =
    in case Count.Type.scope count of
         Scope.InZone (InZone.MkInZone zone ref) -> do
           pids <- playersFor viewOf context gs ref
-          let ids = concatMap (\pid -> Game.zoneMembers zone pid gs) pids
+          let members = if zone == Zone.Graveyard then Game.cardsIn else Game.zoneMembers
+              ids = concatMap (\pid -> members zone pid gs) pids
               kept = Maybe.mapMaybe (\oid -> fmap ((,) (Just oid)) (keep predicate context (viewOf oid))) ids
           aggregate quantityOf aggregation kept
         -- CR 608.2i: the event log. Views of the object that MOVED come from each
@@ -411,7 +412,7 @@ bakePerspective viewOf context gs candidate predicate =
         -- graveyard. CR 608.2h fixes the moment: the answer is determined once, as the
         -- effect is applied, which is when this fold runs.
         Filter.Type.CardsInGraveyardAtLeast n ->
-          truth (toInteger (length (Game.zoneMembers Zone.Graveyard candidate gs)) >= toInteger n)
+          truth (toInteger (length (Game.cardsIn Zone.Graveyard candidate gs)) >= toInteger n)
         Filter.Type.And fs -> Filter.Type.And (fmap recur fs)
         Filter.Type.Or fs -> Filter.Type.Or (fmap recur fs)
         Filter.Type.Not f -> Filter.Type.Not (recur f)
@@ -490,6 +491,8 @@ bakePerspective viewOf context gs candidate predicate =
         -- Baking the nest against this candidate would bake a question about the HOST
         -- against a player who is not it.
         Filter.Type.AttachedTo _ -> predicate
+        -- A player never moved, so Parun.Engine.Filter answers this atom False for one.
+        Filter.Type.BeforeMove _ -> predicate
         -- CR 303.4b / 301.5a: something the nested Filter admits is attached TO this
         -- PLAYER candidate. Baked here for CardsInGraveyardAtLeast's reason -- CR
         -- 109.3 keeps attachment off the characteristics, so this is a board
@@ -1105,6 +1108,7 @@ lastKnownView peers oid gs lastKnown =
           Filter.milledThisTurn = milledThisTurn oid gs,
           Filter.dealtDamageThisTurn = dealtDamageThisTurn oid gs,
           Filter.arrivalThisTurn = Game.arrivalThisTurn oid gs,
+          Filter.beforeMoveView = departedAs gs oid >>= orLastKnown peers gs,
           Filter.crewedThisTurn = crewedThisTurn oid gs,
           Filter.convokedThisTurn = convokedThisTurn oid gs,
           Filter.saddledThisTurn = saddledThisTurn oid gs,
@@ -1435,6 +1439,8 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       -- CR 303.4 / 110.1: a snapshot is not an object on the battlefield and
       -- carries no attachment, so there is no host here for AttachedTo's nest.
       Filter.attachedToView = Nothing,
+      -- Filled over this by lastKnownView, a snapshot having no id to look up.
+      Filter.beforeMoveView = Nothing,
       -- CR 303.4b's mirror: nothing is attached to a snapshot either, there being
       -- no object here for a permanent's Object.attachedTo to have named.
       Filter.attachedViews = [],

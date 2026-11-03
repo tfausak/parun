@@ -25,7 +25,8 @@ import qualified Parun.Types.PlayerId as PlayerId
 -- different players whenever one player puts a counter on another's permanent, so
 -- only the caller knows which is which.
 --
--- Read by Parun.Engine.Replacement.matchesPutter, and by nothing else.
+-- Read by Parun.Engine.Replacement.matchesPutter; Parun.Engine.Event.putCounters
+-- records its `putter` on GameEvent.CountersPut.
 data CounterCause
   = -- | A resolving spell or ability's effect (CR 609.1), or another replacement
     -- or prevention effect -- CR 614.16's two admitted causes, which it treats

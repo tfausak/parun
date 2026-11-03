@@ -369,7 +369,7 @@ combatReplaySpec s =
         -- a transcript cannot sacrifice what it should have revealed.
         Spec.it s "ChooseAnyNumber records and replays each kind, and rejects every other kind's answer" $ do
           let answer = Set.fromList [oid]
-              prompt purpose = Prompt.ChooseAnyNumber decider S.alice oid purpose [oid] Nothing
+              prompt purpose = Prompt.ChooseAnyNumber decider S.alice oid purpose [oid] Nothing Seq.empty
               purposes = [minBound .. maxBound] :: [AnyNumberOf.AnyNumberOf]
           Monad.forM_ purposes $ \purpose ->
             Monad.forM_ purposes $ \other ->
@@ -1589,7 +1589,7 @@ combatReplaySpec s =
                   decider
                   S.alice
                   oid
-                  (GameEvent.LifeGained (LifeChange.MkLifeChange S.alice 4) NonEmpty.:| [GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 4)])
+                  (GameEvent.LifeGained (LifeChange.MkLifeChange S.alice 4 True) NonEmpty.:| [GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 4 True)])
           Spec.assertEqWith s "choosing the second round trips" (Replay.decode p (Replay.encode p 1)) (Just 1)
           Spec.assertEqWith s "choosing the first round trips" (Replay.decode p (Replay.encode p 0)) (Just 0)
         Spec.it s "a chosen simultaneous occurrence does not decode as a read-ahead chapter" $ do
@@ -1602,7 +1602,7 @@ combatReplaySpec s =
                   decider
                   S.alice
                   oid
-                  (GameEvent.LifeGained (LifeChange.MkLifeChange S.alice 4) NonEmpty.:| [GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 4)])
+                  (GameEvent.LifeGained (LifeChange.MkLifeChange S.alice 4 True) NonEmpty.:| [GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 4 True)])
           Spec.assertEqWith s "mismatch" (Replay.decode p (Response.ChoseReadAheadChapter 1)) Nothing
         Spec.it s "a short delayed-occurrence transcript returns the earliest offered" $
           -- CR 603.7b: every offered occurrence already matched the entry's
@@ -1616,7 +1616,7 @@ combatReplaySpec s =
                     decider
                     S.alice
                     oid
-                    (GameEvent.LifeGained (LifeChange.MkLifeChange S.alice 4) NonEmpty.:| [GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 4)])
+                    (GameEvent.LifeGained (LifeChange.MkLifeChange S.alice 4 True) NonEmpty.:| [GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 4 True)])
                 )
             )
             0
@@ -1991,7 +1991,7 @@ combatReplaySpec s =
         Spec.it s "ChoosePermanent round-trips and does not decode as another ObjectId answer" $ do
           let a = ObjectId.MkObjectId 7
               b = ObjectId.MkObjectId 9
-              p = Prompt.ChoosePermanent decider S.alice oid (a NonEmpty.:| [b])
+              p = Prompt.ChoosePermanent decider S.alice oid (a NonEmpty.:| [b]) Seq.empty
           Spec.assertEqWith s "returning the second round trips" (Replay.decode p (Replay.encode p b)) (Just b)
           Spec.assertEqWith s "returning the first round trips" (Replay.decode p (Replay.encode p a)) (Just a)
           Spec.assertEqWith s "a graveyard answer does not satisfy it" (Replay.decode p (Response.ChoseCardInGraveyard a)) Nothing

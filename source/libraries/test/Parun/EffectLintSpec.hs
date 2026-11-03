@@ -280,7 +280,7 @@ effectQuantities effect = concatMap Resolve.objectRefQuantities (Resolve.effectO
 -- leaves to the Filter sweep.
 ownQuantities :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> [Quantity.Type.Quantity]
 ownQuantities effect = case effect of
-  Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _ _) -> fmap DamagePart.quantity (Foldable.toList parts)
+  Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _ _ _) -> fmap DamagePart.quantity (Foldable.toList parts)
   Effect.ModifyTarget (ModifyTarget.MkModifyTarget duration modification _ _) -> durationQuantities duration <> Projection.quantitiesOf modification
   Effect.ChangeText x -> durationQuantities (ChangeText.duration x)
   Effect.AddMana _ -> []
@@ -1487,7 +1487,7 @@ effectObjectRefs effect =
         Effect.AttachTargetToEach {} -> []
         Effect.AttachBound {} -> []
         Effect.AttachAll (AttachAll.MkAttachAll ref _) -> [(permanentQuestions, ref)]
-        Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _ _) -> read_ (fmap DamagePart.ref (Foldable.toList parts))
+        Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _ _ _) -> read_ (fmap DamagePart.ref (Foldable.toList parts))
         Effect.ModifyTarget (ModifyTarget.MkModifyTarget _ _ ref _) -> [(permanentQuestions, ref)]
         Effect.ChangeText {} -> []
         Effect.AddMana {} -> []
@@ -2201,6 +2201,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
           ZoneScope.Scoped (PlayerScope.Related PlayerRelation.AnyPlayer) -> False
           ZoneScope.Scoped (PlayerScope.Related PlayerRelation.Teammate) -> False
           ZoneScope.Scoped (PlayerScope.Related PlayerRelation.YourTeam) -> False
+          ZoneScope.Scoped (PlayerScope.Related PlayerRelation.AnotherPlayer) -> False
           ZoneScope.Scoped (PlayerScope.Superlative leading) -> strictSuperlative leading
           -- A shared team turn has several active players (CR 805.4a), and a
           -- combat several defending ones (CR 802.2a).
@@ -2218,6 +2219,8 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
           PlayerRef.Relative PlayerRelation.Teammate -> False
           -- CR 102.4's you and your teammates.
           PlayerRef.Relative PlayerRelation.YourTeam -> False
+          -- The whole table but one seat, EachPlayerExcept's answer below.
+          PlayerRef.Relative PlayerRelation.AnotherPlayer -> False
           PlayerRef.InSlot _ -> True
           -- A SET -- the arm above's plural, and the whole of what parts them.
           PlayerRef.EachInSlot _ -> False

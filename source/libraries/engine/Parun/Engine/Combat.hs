@@ -2816,7 +2816,7 @@ putOntoBattlefieldBlocking choice oid = do
           mAttacker <- case choice of
             SpecifiedAttacker attacker -> pure (if blockable controller attacker then Just attacker else Nothing)
             -- Through Game.chooseAmong, announceAttackTarget's posture.
-            AnyAttacker -> Game.chooseAmong (\decider who -> Prompt.ChoosePermanent decider who oid) controller (filter (blockable controller) (Map.keys (Combat.attackers (GameState.combat start))))
+            AnyAttacker -> Game.chooseAmong (\decider who pool -> Prompt.ChoosePermanent decider who oid pool Seq.empty) controller (filter (blockable controller) (Map.keys (Combat.attackers (GameState.combat start))))
           Monad.forM_ mAttacker (enterBlocking controller oid)
     _ -> pure ()
 

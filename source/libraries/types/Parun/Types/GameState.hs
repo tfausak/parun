@@ -176,13 +176,14 @@ data GameState = MkGameState
     -- entry's own copy of this field is empty. Written by
     -- Parun.Engine.Event.Trigger.fileBoards, cleared with `battlefieldWhenTriggered`.
     boardAfterEvent :: Map.Map EventGroup.EventGroup GameState,
-    -- | CR 603.10a / 603.10b / 603.10d: the whole game immediately before each
-    -- unscanned event that took a permanent off the battlefield, phased one out
-    -- or changed a permanent's controller, keyed by group, the board a
-    -- look-back ability reads; each entry's own copy of this field, of
-    -- `boardAfterEvent` and of `boardAtControlSample` is empty. Written by
-    -- Parun.Engine.Event.fileBoardBefore, for Parun.Engine.Event.sampleControl
-    -- and Parun.Engine.Phasing.phaseOutSet too, cleared with
+    -- | CR 603.10a / 603.10b / 603.10d / 603.10f: the whole game immediately
+    -- before each unscanned event that took a permanent off the battlefield,
+    -- phased one out, changed a permanent's controller or saw a player leave,
+    -- keyed by group, the board a look-back ability reads; each entry's own
+    -- copy of this field, of `boardAfterEvent` and of `boardAtControlSample` is
+    -- empty. Written by Parun.Engine.Event.fileBoardBefore, for
+    -- Parun.Engine.Event.sampleControl, Parun.Engine.Phasing.phaseOutSet and
+    -- Parun.Engine.Departure.leaveAll too, cleared with
     -- `battlefieldWhenTriggered`.
     boardBeforeEvent :: Map.Map EventGroup.EventGroup GameState,
     -- | Who controlled each permanent the last time
@@ -405,6 +406,11 @@ data GameState = MkGameState
     -- (Parun.Engine.Event.announcing); then each library's top card as it
     -- began, the only one that stays shown until it ends (Game.shownTop).
     announcedTops :: Maybe (Map.Map PlayerId.PlayerId ObjectId.ObjectId),
+    -- | CR 101.4b: Nothing outside a Parun.Types.ForEach loop; inside one, the
+    -- permanents each ChoosePermanents of it has picked so far, beside who
+    -- picked them, which a later pick's prompt carries
+    -- (Parun.Engine.Resolve.Arms.Zones.forEach).
+    loopPicks :: Maybe (Seq.Seq (PlayerId.PlayerId, Set.Set ObjectId.ObjectId)),
     -- | CR 401.6: each library's top card as the last settle found it revealed
     -- to every player by a player effect (Event.settleRevealedTops).
     revealedTops :: Map.Map PlayerId.PlayerId ObjectId.ObjectId,

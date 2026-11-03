@@ -18,6 +18,7 @@ import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.List as List
 import qualified Data.Maybe as Maybe
+import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.Event as Event
@@ -43,7 +44,7 @@ import qualified Parun.Types.Zone as Zone
 -- answers, so the forced-choice shortcut below and a transcript are
 -- deterministic.
 exileCandidates :: PlayerId -> GameState.GameState -> [ObjectId]
-exileCandidates = Game.zoneMembers Zone.Graveyard
+exileCandidates = Game.cardsIn Zone.Graveyard
 
 -- | CR 701.61a's second candidate set: every permanent this player controls with
 -- the Food subtype. Read off the PROJECTION (CR 613), so a permanent that is a
@@ -120,7 +121,7 @@ forage pid resolving = do
       Monad.mapM_ (\oid -> Event.changeZone oid Zone.Exile) (Set.toAscList chosen)
       pure True
     Just ForageMode.SacrificeFood -> do
-      food <- Game.chooseAmong (\chooser asked -> Prompt.ChoosePermanent chooser asked resolving) pid foods
+      food <- Game.chooseAmong (\chooser asked pool -> Prompt.ChoosePermanent chooser asked resolving pool Seq.empty) pid foods
       -- CR 701.21a, through the one funnel a sacrifice goes through.
       Monad.forM_ food (Event.sacrifice pid)
       pure (Maybe.isJust food)

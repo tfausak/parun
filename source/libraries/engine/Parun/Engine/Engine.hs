@@ -357,7 +357,7 @@ determineUntap pid = do
   untapping <- case offered of
     first : _
       | overflows || any (`Set.member` elective) offered -> do
-          chosen <- Game.choose (Prompt.ChooseAnyNumber (Decide.deciderFor pid gs) pid first AnyNumberOf.ToUntap offered ceiling_)
+          chosen <- Game.choose (Prompt.ChooseAnyNumber (Decide.deciderFor pid gs) pid first AnyNumberOf.ToUntap offered ceiling_ Seq.empty)
           let settled = UntapRestriction.settle caps elective offered chosen
           pure (filter (\oid -> List.notElem oid offered || Set.member oid settled) allowed)
     _ -> pure allowed

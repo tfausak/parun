@@ -415,10 +415,9 @@ instructions context es = case es of
         p <- destroyed context (d : Maybe.mapMaybe destroyOf run)
         fmap (p :) (instructions (noting context (e : run)) others)
   e : rest
-    | Just m <- returnOf context e,
-      (run@(_ : _), others) <- span (Maybe.isJust . returnOf context) rest -> do
-        p <- returned context (m : Maybe.mapMaybe (returnOf context) run)
-        fmap (p :) (instructions (noting context (e : run)) others)
+    | Just refs <- returnOf context e -> do
+        p <- returned context refs
+        fmap (p :) (instructions (noting context [e]) rest)
   e : rest -> do
     p <- effect context e
     fmap (p :) (instructions (noting context [e]) rest)
@@ -489,27 +488,32 @@ destroyed context ds = do
   objects <- Prose.listing "and" (fmap Target.wording refs) : both
   [MkPredicate Nothing (Text.pack "destroy " <> objects) regenerate (concatMap Target.mentions refs) Nothing False]
 
--- | The instruction, if it returns one targeted object to its owner's hand
--- from the battlefield and nothing more, which 'returned' may list with its
--- neighbours.
-returnOf :: Target.Context -> Effect.Effect card Continuous.Ability -> Maybe (MoveToZone.MoveToZone Continuous.Ability)
+-- | The objects, if the instruction returns several targeted objects to their
+-- owners' hands from the battlefield, as one action (CR 608.2f), and nothing
+-- more.
+returnOf :: Target.Context -> Effect.Effect card Continuous.Ability -> Maybe [ObjectRef.ObjectRef]
 returnOf context e = case e of
   Effect.MoveToZone m
     | MoveToZone.zone m == Zone.Hand,
       MoveToZone.riders m == EntryRiders.defaultValue,
       Maybe.isNothing (MoveToZone.duration m),
       Maybe.isNothing (MoveToZone.origin m),
-      ObjectRef.InSlot s <- MoveToZone.ref m,
-      Just slot <- Map.lookup s (Target.slots context),
-      TargetSlot.pool slot `elem` [Pool.Creatures, Pool.Permanents] ->
-        Just m
+      ObjectRef.AllOf refs <- MoveToZone.ref m,
+      all targeted refs ->
+        Just (NonEmpty.toList refs)
   _ -> Nothing
+  where
+    targeted ref = case ref of
+      ObjectRef.InSlot s -> case Map.lookup s (Target.slots context) of
+        Just slot -> TargetSlot.pool slot `elem` [Pool.Creatures, Pool.Permanents]
+        Nothing -> False
+      _ -> False
 
--- | "Return [objects] to their owners' hands", the targets of consecutive
--- instructions listed in one sentence (Peel from Reality).
-returned :: Target.Context -> [MoveToZone.MoveToZone Continuous.Ability] -> [Predicate]
-returned context ms = do
-  refs <- traverse (Target.object context Target.All . MoveToZone.ref) ms
+-- | "Return [objects] to their owners' hands", listed in one sentence (Peel from
+-- Reality).
+returned :: Target.Context -> [ObjectRef.ObjectRef] -> [Predicate]
+returned context objects = do
+  refs <- traverse (Target.object context Target.All) objects
   [MkPredicate Nothing (Text.pack "return " <> Prose.listing "and" (fmap Target.wording refs) <> Text.pack " to their owners' hands") [] (concatMap Target.mentions refs) Nothing False]
 
 -- | The instruction's continuous effect, if it is one.
@@ -1069,7 +1073,7 @@ added production count = case (production, count) of
 -- you control deals damage", Soul's Fire).
 dealDamage :: Target.Context -> DealDamage.DealDamage -> [Predicate]
 dealDamage context d
-  | Maybe.isJust (DealDamage.excess d) || Maybe.isJust (DealDamage.tally d) || Maybe.isJust (DealDamage.damaged d) = []
+  | Maybe.isJust (DealDamage.excess d) || Maybe.isJust (DealDamage.tally d) || Maybe.isJust (DealDamage.damaged d) || Maybe.isJust (DealDamage.excessTally d) = []
   | otherwise = do
       source <- Target.object context Target.All (ObjectRef.InSlot (Maybe.fromMaybe Target.selfSlot (DealDamage.dealer d)))
       -- The source is the sentence's subject, so the amount calls it "it":

@@ -274,7 +274,7 @@ placing onto p = case p of
   Prompt.ChooseOptional {} -> do
     State.modify' (\o -> o {mays = mays o + 1})
     pure OptionalDecision.Exercises
-  Prompt.ChoosePermanent _ _ _ offered -> do
+  Prompt.ChoosePermanent _ _ _ offered _ -> do
     State.modify' (\o -> o {permanents = NonEmpty.toList offered : permanents o})
     pure (case onto of Just oid | List.elem oid offered -> oid; _ -> NonEmpty.head offered)
   Prompt.ChooseSticker _ _ _ offered -> do
@@ -338,7 +338,7 @@ placingAt onto ref k = MkNaming {namingOnto = onto, namingSticker = ref, namingP
 naming :: Naming -> Prompt.Prompt r -> State.State [Asked] r
 naming how p = case p of
   Prompt.ChooseOptional {} -> pure OptionalDecision.Exercises
-  Prompt.ChoosePermanent _ _ _ offered ->
+  Prompt.ChoosePermanent _ _ _ offered _ ->
     pure
       ( case namingOnto how of
           Just oid | List.elem oid offered -> oid

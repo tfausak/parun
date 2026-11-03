@@ -1,0 +1,517 @@
+1 Abrade
+1 Abyssal Harvester
+1 Adamant Will
+1 Adaptive Automaton
+1 Adventuring Gear
+1 Aegis Turtle
+1 Aetherize
+1 Affectionate Indrik
+1 Aggressive Mammoth
+1 Ajani's Pridemate
+1 Ajani, Caller of the Pride
+1 Alesha, Who Laughs at Fate
+1 Ambush Wolf
+1 An Offer You Can't Refuse
+1 Ancestor Dragon
+1 Angel of Finality
+1 Angel of Vitality
+1 Angelic Destiny
+1 Angelic Edict
+1 Anthem of Champions
+1 Apothecary Stomper
+1 Arahbo, the First Fang
+1 Arbiter of Woe
+1 Arcane Epiphany
+1 Arcanis the Omnipotent
+1 Archmage of Runes
+1 Archway Angel
+1 Armasaur Guide
+1 Ashroot Animist
+1 Aurelia, the Warleader
+1 Authority of the Consuls
+1 Axgard Cavalry
+1 Ayli, Eternal Pilgrim
+1 Azorius Guildgate
+1 Bake into a Pie
+1 Ball Lightning
+1 Ballyrush Banneret
+1 Balmor, Battlemage Captain
+1 Banishing Light
+1 Banner of Kinship
+1 Basilisk Collar
+1 Battle-Rattle Shaman
+1 Battlesong Berserker
+1 Bear Cub
+1 Beast-Kin Ranger
+1 Bigfin Bouncer
+1 Billowing Shriekmass
+1 Biogenic Upgrade
+1 Bishop's Soldier
+1 Bite Down
+1 Blanchwood Armor
+1 Blasphemous Edict
+1 Bloodfell Caves
+1 Bloodthirsty Conqueror
+1 Bloodtithe Collector
+1 Blossoming Sands
+1 Bolt Bend
+1 Boltwave
+1 Boros Charm
+1 Boros Guildgate
+1 Brass's Bounty
+1 Brazen Scourge
+1 Brineborn Cutthroat
+1 Broken Wings
+1 Bulk Up
+1 Burglar Rat
+1 Burnished Hart
+1 Burrog Befuddler
+1 Burst Lightning
+1 Bushwhack
+1 Cackling Prowler
+1 Campus Guide
+1 Cancel
+1 Carnelian Orb of Dragonkind
+1 Cat Collector
+1 Cathar Commando
+1 Celestial Armor
+1 Cemetery Recruitment
+1 Cephalid Inkmage
+1 Chandra, Flameshaper
+1 Charming Prince
+1 Chart a Course
+1 Circuitous Route
+1 Claws Out
+1 Clinquant Skymage
+1 Cloudblazer
+1 Confiscate
+1 Consuming Aberration
+1 Corsair Captain
+1 Courageous Goblin
+1 Crackling Cyclops
+1 Crash Through
+1 Crawling Barrens
+1 Crossway Troublemakers
+1 Crow of Dark Tidings
+1 Crusader of Odric
+1 Crypt Feaster
+1 Cryptic Caves
+1 Crystal Barricade
+1 Cultivator's Caravan
+1 Curator of Destinies
+1 Darksteel Colossus
+1 Dauntless Veteran
+1 Dawnwing Marshal
+1 Day of Judgment
+1 Dazzling Angel
+1 Deadly Brew
+1 Deadly Plot
+1 Deadly Riposte
+1 Death Baron
+1 Deathmark
+1 Demolition Field
+1 Demonic Pact
+1 Desecration Demon
+1 Devout Decree
+1 Diamond Mare
+1 Dictate of Kruphix
+1 Dimir Guildgate
+1 Diregraf Ghoul
+1 Disenchant
+1 Dismal Backwater
+1 Dive Down
+1 Divine Resilience
+1 Doubling Season
+1 Dragon Fodder
+1 Dragon Mage
+1 Dragon Trainer
+1 Dragonlord's Servant
+1 Dragonmaster Outcast
+1 Drake Hatcher
+1 Drakuseth, Maw of Flames
+1 Dread Summons
+1 Dreadwing Scavenger
+1 Driver of the Dead
+1 Drogskol Reaver
+1 Dropkick Bomber
+1 Druid of the Cowl
+1 Dryad Militant
+1 Duress
+1 Dwynen's Elite
+1 Dwynen, Gilt-Leaf Daen
+1 Eager Trufflesnout
+1 Eaten Alive
+1 Eaten by Piranhas
+1 Electroduplicate
+1 Elementalist Adept
+1 Elenda, Saint of Dusk
+1 Elfsworn Giant
+1 Elspeth's Smite
+1 Elvish Archdruid
+1 Elvish Regrower
+1 Empyrean Eagle
+1 Enigma Drake
+1 Erudite Wizard
+1 Essence Scatter
+1 Etali, Primal Storm
+1 Evolving Wilds
+1 Exclusion Mage
+1 Exemplar of Light
+1 Expedition Map
+1 Exsanguinate
+1 Extravagant Replication
+1 Faebloom Trick
+1 Fake Your Own Death
+1 Fanatical Firebrand
+1 Feed the Swarm
+1 Feldon's Cane
+1 Felidar Cub
+1 Felidar Retreat
+1 Felidar Savior
+1 Felling Blow
+1 Fiendish Panda
+1 Fierce Empath
+1 Fiery Annihilation
+1 Finale of Revelation
+1 Fire Elemental
+1 Firebrand Archer
+1 Fireshrieker
+1 Firespitter Whelp
+1 Fishing Pole
+1 Flamewake Phoenix
+1 Flashfreeze
+1 Fleeting Distraction
+1 Fleeting Flight
+1 Fog Bank
+1 Forest
+1 Frenzied Goblin
+1 Fumigate
+1 Fynn, the Fangbearer
+1 Garna, Bloodfist of Keld
+1 Garruk's Uprising
+1 Gate Colossus
+1 Gatekeeper of Malakir
+1 Gateway Sneak
+1 Genesis Wave
+1 Ghalta, Primal Hunger
+1 Ghitu Lavarunner
+1 Giada, Font of Hope
+1 Giant Cindermaw
+1 Giant Growth
+1 Gigantosaurus
+1 Gilded Lotus
+1 Gleaming Barrier
+1 Gnarlback Rhino
+1 Gnarlid Colony
+1 Goblin Boarders
+1 Goblin Firebomb
+1 Goblin Negotiation
+1 Goblin Oriflamme
+1 Goblin Smuggler
+1 Goblin Surprise
+1 Goldvein Pick
+1 Golgari Guildgate
+1 Good-Fortune Unicorn
+1 Gorehorn Raider
+1 Grappling Kraken
+1 Gratuitous Violence
+1 Grow from the Ashes
+1 Gruul Guildgate
+1 Guarded Heir
+1 Gutless Plunderer
+1 Guttersnipe
+1 Halana and Alena, Partners
+1 Harbinger of the Tides
+1 Hare Apparent
+1 Harmless Offering
+1 Healer's Hawk
+1 Heartfire Immolator
+1 Hedron Archive
+1 Helpful Hunter
+1 Herald of Eternal Dawn
+1 Herald of Faith
+1 Heraldic Banner
+1 Hero's Downfall
+1 Heroes' Bane
+1 Heroic Reinforcements
+1 Hidetsugu's Second Rite
+1 High Fae Trickster
+1 High-Society Hunter
+1 Highborn Vampire
+1 Hinterland Sanctifier
+1 Hoarding Dragon
+1 Homunculus Horde
+1 Hungry Ghoul
+1 Icewind Elemental
+1 Immersturm Predator
+1 Impact Tremors
+1 Imperious Perfect
+1 Imprisoned in the Moon
+1 Incinerating Blast
+1 Infernal Vessel
+1 Infestation Sage
+1 Ingenious Leonin
+1 Inspiration from Beyond
+1 Inspiring Call
+1 Inspiring Overseer
+1 Inspiring Paladin
+1 Into the Roil
+1 Involuntary Employment
+1 Island
+1 Izzet Guildgate
+1 Jazal Goldmane
+1 Joraga Invocation
+1 Joust Through
+1 Juggernaut
+1 Jungle Hollow
+1 Kaito, Cunning Infiltrator
+1 Kalastria Highborn
+1 Kargan Dragonrider
+1 Kellan, Planar Trailblazer
+1 Kindled Fury
+1 Kiora, the Rising Tide
+1 Kitesail Corsair
+1 Knight of Grace
+1 Knight of Malice
+1 Koma, World-Eater
+1 Krenko, Mob Boss
+1 Kykar, Zephyr Awakener
+1 Lathliss, Dragon Queen
+1 Lathril, Blade of the Elves
+1 Leonin Skyhunter
+1 Leonin Vanguard
+1 Leyline Axe
+1 Lightshell Duo
+1 Liliana, Dreadhorde General
+1 Linden, the Steadfast Queen
+1 Llanowar Elves
+1 Loot, Exuberant Explorer
+1 Luminous Rebuke
+1 Lunar Insight
+1 Lyra Dawnbringer
+1 Maalfeld Twins
+1 Macabre Waltz
+1 Maelstrom Pulse
+1 Magnigoth Sentry
+1 Make Your Move
+1 Make a Stand
+1 Marauding Blight-Priest
+1 Massacre Wurm
+1 Maze's End
+1 Mazemind Tome
+1 Mentor of the Meek
+1 Meteor Golem
+1 Micromancer
+1 Midnight Reaper
+1 Midnight Snack
+1 Mild-Mannered Librarian
+1 Mindsparker
+1 Mischievous Mystic
+1 Mischievous Pup
+1 Mocking Sprite
+1 Mold Adder
+1 Moment of Craving
+1 Moment of Triumph
+1 Mortify
+1 Mossborn Hydra
+1 Mountain
+1 Muldrotha, the Gravetide
+1 Myojin of Night's Reach
+1 Mystic Archaeologist
+1 Mystical Teachings
+1 Needletooth Pack
+1 Negate
+1 Nessian Hornbeetle
+1 New Horizons
+1 Nine-Lives Familiar
+1 Niv-Mizzet, Visionary
+1 Nullpriest of Oblivion
+1 Obliterating Bolt
+1 Offer Immortality
+1 Omniscience
+1 Opt
+1 Ordeal of Nylea
+1 Orzhov Guildgate
+1 Overrun
+1 Ovika, Enigma Goliath
+1 Pacifism
+1 Painful Quandary
+1 Pelakka Wurm
+1 Perforating Artist
+1 Phyrexian Arena
+1 Pilfer
+1 Pirate's Cutlass
+1 Plains
+1 Prayer of Binding
+1 Predator Ooze
+1 Preposterous Proportions
+1 Prideful Parent
+1 Primal Might
+1 Prime Speaker Zegana
+1 Primeval Bounty
+1 Progenitus
+1 Pulse Tracker
+1 Pyromancer's Goggles
+1 Quakestrider Ceratops
+1 Quick Study
+1 Quick-Draw Katana
+1 Quilled Greatwurm
+1 Raging Redcap
+1 Raise the Past
+1 Rakdos Guildgate
+1 Ramos, Dragon Engine
+1 Rampaging Baloths
+1 Rapacious Dragon
+1 Ravenous Amulet
+1 Ravenous Giant
+1 Reassembling Skeleton
+1 Reclamation Sage
+1 Redcap Gutter-Dweller
+1 Refute
+1 Regal Caracal
+1 Release the Dogs
+1 Resolute Reinforcements
+1 Revenge of the Rats
+1 Rise of the Dark Realms
+1 Rite of Replication
+1 Rite of the Dragoncaller
+1 River's Rebuke
+1 Rogue's Passage
+1 Ruby, Daring Tracker
+1 Rugged Highlands
+1 Run Away Together
+1 Rune-Scarred Demon
+1 Rune-Sealed Wall
+1 Sanguine Indulgence
+1 Sanguine Syphoner
+1 Savage Ventmaw
+1 Savannah Lions
+1 Scavenging Ooze
+1 Scorching Dragonfire
+1 Scoured Barrens
+1 Scrawling Crawler
+1 Searslicer Goblin
+1 Secluded Courtyard
+1 Seeker's Folly
+1 Seismic Rupture
+1 Seize the Spoils
+1 Selesnya Guildgate
+1 Self-Reflection
+1 Serra Angel
+1 Shipwreck Dowser
+1 Shivan Dragon
+1 Simic Guildgate
+1 Sire of Seven Deaths
+1 Skeleton Archer
+1 Skyknight Squire
+1 Skyraker Giant
+1 Skyship Buccaneer
+1 Slagstorm
+1 Slumbering Cerberus
+1 Snakeskin Veil
+1 Solemn Simulacrum
+1 Sorcerous Spyglass
+1 Soul-Guide Lantern
+1 Soul-Shackled Zombie
+1 Soulstone Sanctuary
+1 Sower of Chaos
+1 Spectral Sailor
+1 Sphinx of Forgotten Lore
+1 Sphinx of the Final Word
+1 Spinner of Souls
+1 Spitfire Lagac
+1 Springbloom Druid
+1 Squad Rallier
+1 Stab
+1 Starlight Snare
+1 Stasis Snare
+1 Steel Hellkite
+1 Storm Fleet Spy
+1 Strix Lookout
+1 Stroke of Midnight
+1 Stromkirk Bloodthief
+1 Stromkirk Noble
+1 Strongbox Raider
+1 Sun-Blessed Healer
+1 Sure Strike
+1 Surrak, the Hunt Caller
+1 Suspicious Shambler
+1 Swab Goblin
+1 Swamp
+1 Swiftblade Vindicator
+1 Swiftfoot Boots
+1 Swiftwater Cliffs
+1 Sylvan Scavenging
+1 Syr Alin, the Lion's Claw
+1 Tajuru Pathwarden
+1 Tatyova, Benthic Druid
+1 Taurean Mauler
+1 Teach by Example
+1 Tempest Djinn
+1 Temple of Abandon
+1 Temple of Deceit
+1 Temple of Enlightenment
+1 Temple of Epiphany
+1 Temple of Malady
+1 Temple of Malice
+1 Temple of Mystery
+1 Temple of Plenty
+1 Temple of Silence
+1 Temple of Triumph
+1 Terror of Mount Velus
+1 Think Twice
+1 Thornweald Archer
+1 Thornwood Falls
+1 Thousand-Year Storm
+1 Thrashing Brontodon
+1 Three Tree Mascot
+1 Thrill of Possibility
+1 Time Stop
+1 Tinybones, Bauble Burglar
+1 Tolarian Terror
+1 Tragic Banshee
+1 Tranquil Cove
+1 Treetop Snarespinner
+1 Tribute to Hunger
+1 Trygon Predator
+1 Twinblade Blessing
+1 Twinblade Paladin
+1 Twinflame Tyrant
+1 Uncharted Haven
+1 Uncharted Voyage
+1 Undying Malice
+1 Unflinching Courage
+1 Unsummon
+1 Untamed Hunger
+1 Valkyrie's Call
+1 Valorous Stance
+1 Vampire Gourmand
+1 Vampire Interloper
+1 Vampire Neonate
+1 Vampire Nighthawk
+1 Vampire Soulcaller
+1 Vampire Spawn
+1 Vampiric Rites
+1 Vanguard Seraph
+1 Vengeful Bloodwitch
+1 Venom Connoisseur
+1 Viashino Pyromancer
+1 Vile Entomber
+1 Vivien Reid
+1 Vizier of the Menagerie
+1 Volley Veteran
+1 Voracious Greatshark
+1 Wardens of the Cycle
+1 Wary Thespian
+1 Wildborn Preserver
+1 Wildheart Invoker
+1 Wildwood Scourge
+1 Wilt-Leaf Liege
+1 Wind-Scarred Crag
+1 Wishclaw Talisman
+1 Witness Protection
+1 Youthful Valkyrie
+1 Zetalpa, Primal Dawn
+1 Zimone, Paradox Sculptor
+1 Zombify
+1 Zul Ashur, Lich Lord

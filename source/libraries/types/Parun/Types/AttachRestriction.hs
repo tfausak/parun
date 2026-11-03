@@ -8,7 +8,7 @@ import qualified Parun.Types.Keyword as Keyword
 -- enchanted by" -- and CR 301.5's equivalent for an Equipment, as one printed
 -- prohibition: a permanent saying what may not become attached TO IT. Consecrate
 -- Land's "enchanted land ... can't be enchanted by other Auras" and Goblin
--- Brawler's "this creature can't be equipped" are the pool's printings.
+-- Brawler's "this creature can't be equipped" are printings.
 --
 -- The DESTINATION's half of CR 701.3a. The other half is the moving permanent's
 -- own text -- an Aura's enchant ability (CR 702.5a), an Equipment's "attached to

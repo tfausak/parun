@@ -1,0 +1,249 @@
+{
+  "description": "Dwarven Soldier: gets +0/+2 once when it blocks or becomes blocked by one or more Orcs, and not against anything else",
+  "board": {
+    "active": "bob",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Orcish Spy",
+            "ready": true,
+            "label": "spy"
+          },
+          {
+            "card": "Grizzly Bears",
+            "ready": true,
+            "label": "bears"
+          },
+          {
+            "card": "Orcish Artillery",
+            "ready": true,
+            "label": "a1"
+          },
+          {
+            "card": "Orcish Spy",
+            "ready": true,
+            "label": "a2"
+          }
+        ]
+      },
+      {
+        "name": "alice",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Dwarven Soldier",
+            "ready": true,
+            "label": "s1"
+          },
+          {
+            "card": "Dwarven Soldier",
+            "ready": true,
+            "label": "s2"
+          },
+          {
+            "card": "Dwarven Soldier",
+            "ready": true,
+            "label": "s3"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "do": {
+        "Attack": [
+          "$bears"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "do": {
+        "Block": {
+          "$s2": [
+            "$bears"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "bob",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Dwarven Soldier",
+          "count": 2
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$s1"
+        ]
+      }
+    },
+    {
+      "turn": 2,
+      "step": "DeclareBlockers",
+      "player": "bob",
+      "do": {
+        "Block": {
+          "$a1": [
+            "$s1"
+          ],
+          "$a2": [
+            "$s1"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 2,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$s1",
+          "power": 2,
+          "toughness": 3
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "CombatDamage",
+      "player": "alice",
+      "source": "$s1",
+      "do": {
+        "AssignDamage": {
+          "$a1": 2
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "Damage": {
+          "object": "$s1",
+          "damage": 2
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "do": {
+        "Attack": [
+          "$spy"
+        ]
+      }
+    },
+    {
+      "turn": 3,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "do": {
+        "Block": {
+          "$s3": [
+            "$spy"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "DeclareBlockers",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 3,
+      "step": "DeclareBlockers",
+      "player": "bob",
+      "check": {
+        "PowerToughness": {
+          "object": "$s3",
+          "power": 2,
+          "toughness": 3
+        }
+      }
+    }
+  ],
+  "note": "The Bears are no Orc, so the 2/1 blocker dies. Two blocking Orcs fire the trigger once: 2/3, not 2/5."
+}

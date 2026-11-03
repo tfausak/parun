@@ -767,8 +767,9 @@ data Prompt r where
   -- where there is one; the AnyNumberOf says what they are and what is done to
   -- them. Asked at one candidate, where declining is a second answer, and
   -- skipped at zero. Parun.Engine.Replay answers each AnyNumberOf with its own
-  -- Response constructor.
-  ChooseAnyNumber :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> AnyNumberOf.AnyNumberOf -> [ObjectId.ObjectId] -> Maybe Natural.Natural -> Prompt (Set.Set ObjectId.ObjectId)
+  -- Response constructor. The Seq is what the loop this is asked in has picked
+  -- so far, beside who picked it (CR 101.4b, GameState.loopPicks).
+  ChooseAnyNumber :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> AnyNumberOf.AnyNumberOf -> [ObjectId.ObjectId] -> Maybe Natural.Natural -> Seq.Seq (PlayerId.PlayerId, Set.Set ObjectId.ObjectId) -> Prompt (Set.Set ObjectId.ObjectId)
   -- | CR 700.3: which of the piles an effect separated objects into the player
   -- takes, any of them possibly empty (CR 700.3d). Elided where the piles are
   -- alike. Answers as Response.ChosePile.
@@ -780,8 +781,9 @@ data Prompt r where
   -- 509.4: which attacker a creature entering blocking blocks, the ObjectId
   -- then being that creature. Also CR 701.3a: the one destination a group of
   -- attachments moves to (Parun.Types.Effect's AttachAll). Also CR 616.1:
-  -- which Opposition Agent's exile applies to a search's finds.
-  ChoosePermanent :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
+  -- which Opposition Agent's exile applies to a search's finds. The Seq is
+  -- ChooseAnyNumber's.
+  ChoosePermanent :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Seq.Seq (PlayerId.PlayerId, Set.Set ObjectId.ObjectId) -> Prompt ObjectId.ObjectId
   -- | CR 702.122a: which untapped permanents are tapped to crew, the Natural a
   -- power threshold rather than a size (Parun.Engine.Cost validates the sum).
   -- Never elided, forcedness being a question about subsets. Answers as

@@ -239,6 +239,7 @@ import qualified Parun.Codec.CounteringSpec
 import qualified Parun.Codec.CountersAreSpec
 import qualified Parun.Codec.CountersFromPermanentsSpec
 import qualified Parun.Codec.CountersOnThisSpec
+import qualified Parun.Codec.CountersPlacedSpec
 import qualified Parun.Codec.CraftSpec
 import qualified Parun.Codec.CreateCopySpec
 import qualified Parun.Codec.CreateEmblemSpec
@@ -423,8 +424,8 @@ import qualified Parun.Codec.LifeLossPatternSpec
 import qualified Parun.Codec.LifeLossRSpec
 import qualified Parun.Codec.LifeLossRewriteSpec
 import qualified Parun.Codec.LifeLossSpec
-import qualified Parun.Codec.LifeLostSpec
 import qualified Parun.Codec.LifeTallySpec
+import qualified Parun.Codec.LifeTriggerSpec
 import qualified Parun.Codec.LimitUnlessSpec
 import qualified Parun.Codec.LoggedEventSpec
 import qualified Parun.Codec.LookAtSpec
@@ -563,7 +564,6 @@ import qualified Parun.Codec.PlayerEffectSpec
 import qualified Parun.Codec.PlayerIdSpec
 import qualified Parun.Codec.PlayerInstructionSpec
 import qualified Parun.Codec.PlayerIsDealtDamageSpec
-import qualified Parun.Codec.PlayerLosesLifeSpec
 import qualified Parun.Codec.PlayerQuantitySpec
 import qualified Parun.Codec.PlayerRefSpec
 import qualified Parun.Codec.PlayerRelationSpec
@@ -1185,6 +1185,7 @@ spec s registry corpus = do
   Parun.Codec.CounterNameSpec.spec s
   Parun.Codec.CounterPatternSpec.spec s
   Parun.Codec.CounterPlacementSpec.spec s
+  Parun.Codec.CountersPlacedSpec.spec s
   Parun.Codec.CounterProhibitionSpec.spec s
   Parun.Codec.CounterRestrictionSpec.spec s
   Parun.Codec.CounterRSpec.spec s
@@ -1518,8 +1519,7 @@ spec s registry corpus = do
   Parun.Codec.PlayerDesignationSpec.spec s
   Parun.Codec.PlayerDesignationTallySpec.spec s
   Parun.Codec.PlayerDrawsNthCardSpec.spec s
-  Parun.Codec.PlayerLosesLifeSpec.spec s
-  Parun.Codec.LifeLostSpec.spec s
+  Parun.Codec.LifeTriggerSpec.spec s
   Parun.Codec.PlayerEffectSpec.spec s
   Parun.Codec.PlayerIdSpec.spec s
   Parun.Codec.PlayerQuantitySpec.spec s

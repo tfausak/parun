@@ -5,6 +5,7 @@
 -- constructor's fields.
 module Parun.Engine.Resolve.Arms.Damage where
 
+import Control.Applicative ((<|>))
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Containers.ListUtils as ListUtils
@@ -56,6 +57,7 @@ import qualified Parun.Types.ChangeWord as ChangeWord
 import qualified Parun.Types.ChoosePermanents as ChoosePermanents
 import qualified Parun.Types.ChoosePlayer as ChoosePlayer
 import qualified Parun.Types.ChoosePlayerAtRandom as ChoosePlayerAtRandom
+import qualified Parun.Types.ChosenPermanents as ChosenPermanents
 import qualified Parun.Types.CoinFace as CoinFace
 import qualified Parun.Types.CoinReading as CoinReading
 import qualified Parun.Types.ContinuousEffect as ContinuousEffect
@@ -120,7 +122,7 @@ import qualified Parun.Types.TurnFaceDown as TurnFaceDown
 import qualified Parun.Types.Zone as Zone
 
 dealDamage :: (Game Result -> Game ()) -> (Game Result -> Game ()) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> DealDamage.DealDamage -> Game ()
-dealDamage runPreventionRiders runReplacementEffects runSubgame resolving source controller legal (DealDamage.MkDealDamage parts dealer excess mTally mDamaged) = do
+dealDamage runPreventionRiders runReplacementEffects runSubgame resolving source controller legal (DealDamage.MkDealDamage parts dealer excess mTally mDamaged mExcessTally) = do
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
@@ -136,9 +138,9 @@ dealDamage runPreventionRiders runReplacementEffects runSubgame resolving source
       dealerId = case dealer of
         Nothing -> Just source
         Just slot -> Maybe.listToMaybe (objectRefObjects legal resolving controller source gs (ObjectRef.InSlot slot))
-  dealtEvents <- case dealerId of
+  (dealtEvents, excessDealt) <- case dealerId of
     -- No source, no damage: CR 608.2b's illegal dealer, above.
-    Nothing -> pure []
+    Nothing -> pure ([], 0)
     Just dealt -> do
       -- HOW MUCH, read ONCE PER RECIPIENT off the clause that named it: Acidic
       -- Soil's "damage to each player equal to the number of lands they
@@ -183,7 +185,7 @@ dealDamage runPreventionRiders runReplacementEffects runSubgame resolving source
           -- pre-effect state every amount was read against.
           rewritten = Damage.redirectExcess gs excess events
       if null rewritten
-        then pure []
+        then pure ([], 0)
         else do
           -- ONE batch, not one call per recipient: CR 608.2f's "each such
           -- action is processed simultaneously".
@@ -194,11 +196,14 @@ dealDamage runPreventionRiders runReplacementEffects runSubgame resolving source
           -- CR 615.5's "immediately afterward": a shield this damage spent runs
           -- its additional effect inside this resolution.
           runPreventionRiders runSubgame
-          pure settled
+          pure (settled, Damage.excessDealt gs dealt (fmap DamageEvent.target events) settled)
   -- Syphon Soul's "the damage dealt this way": the SETTLED total, after CR
   -- 615's prevention had its say, so a shielded player contributes only what
   -- got through. Bound even at 0, LoseLife's tally's posture.
   Monad.forM_ mTally $ \slot -> State.modify' (Common.bindAmountSlot resolving source slot (sum (fmap DamageEvent.amount dealtEvents)))
+  -- Goblin Negotiation's "excess damage dealt to that creature this way", the
+  -- same posture.
+  Monad.forM_ mExcessTally $ \slot -> State.modify' (Common.bindAmountSlot resolving source slot excessDealt)
   -- Incinerate's "a creature dealt damage this way" and Chandra, Roaring
   -- Flame's "each player dealt damage this way": the recipients the settled
   -- events reached (CR 120.3), so one whose damage was all prevented (CR
@@ -761,7 +766,7 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
           -- whoever decides for them -- and elided at one.
           exiler <-
             if ownLibrary
-              then State.gets (PlayerEffect.exilersWhileSearching searcher) >>= Game.chooseAmong (\decider who -> Prompt.ChoosePermanent decider who source) searcher
+              then State.gets (PlayerEffect.exilersWhileSearching searcher) >>= Game.chooseAmong (\decider who pool -> Prompt.ChoosePermanent decider who source pool Seq.empty) searcher
               else pure Nothing
           outsideAvailable <-
             if lookOutside
@@ -811,7 +816,7 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
                 -- one instruction with one count, and asking per zone would cap
                 -- per zone. The zone is kept alongside its candidates because
                 -- CR 701.23b's permission is a property of the ZONE.
-                let byZone = fmap (\zone -> (zone, filter (matches1 searcher gs) (Game.zoneMembers zone owner gs))) (Set.toAscList searchedZones)
+                let byZone = fmap (\zone -> (zone, filter (matches1 searcher gs) (Game.cardsIn zone owner gs))) (Set.toAscList searchedZones)
                     matches = concatMap snd byZone
                     outsideCopies = sum (Map.elems outsideAvailable)
                     -- CR 701.23a bounds an unbounded search by the places: every
@@ -1016,7 +1021,7 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
 exileAllGraveyards :: ObjectId -> PlayerId -> Game ()
 exileAllGraveyards source controller = do
   gs <- State.get
-  let gyCards = concatMap (\pid -> Game.zoneMembers Zone.Graveyard pid gs) (Players.table (Plane.rangePerspective source controller gs) gs)
+  let gyCards = concatMap (\pid -> Game.cardsIn Zone.Graveyard pid gs) (Players.table (Plane.rangePerspective source controller gs) gs)
   Monad.void (Event.changeZonesTogether (fmap (\c -> (c, Zone.Exile)) gyCards))
 
 -- CR 103.5b (Serum Powder): the count is the hand size BEFORE the exile, which
@@ -1159,18 +1164,34 @@ choosePlayerAtRandom resolving source controller choice = do
 -- scenarios "CR 700.3 / 509.1b Stand or Fall" and "CR 700.3 / 802.2 Stand or
 -- Fall at three seats".
 --
--- Not implemented: telling a later player in a loop over players what the earlier
--- ones chose (CR 101.4b, gap #5959).
+-- CR 101.4b: inside a loop, the pick joins GameState.loopPicks beside its
+-- chooser -- the seat asked, or where nobody was, the one seat the chooser ref
+-- names -- so a later pick's prompt carries it. Proved by
+-- Parun.BoardEffectSpec's "CR 101.4b each player is told the earlier players'
+-- picks" (Covetous Elegy) and "CR 101.4b the later opponent is told the earlier
+-- one's pick, asked or not" (Summon: Valefor).
+--
+-- Not implemented: recording a pile chooser's take, whose Prompt.ChoosePile
+-- carries no earlier picks (#5968).
 choosePermanents :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ChoosePermanents.ChoosePermanents -> Game ()
 choosePermanents resolving source controller legal (ChoosePermanents.MkChoosePermanents choice slot pileChooser) = do
   picked <- case pileChooser of
-    Nothing -> Common.chosenPermanents AnyNumberOf.Permanents legal resolving controller source choice
+    Nothing -> do
+      (asked, picked) <- Common.chosenPermanents AnyNumberOf.Permanents legal resolving controller source choice
+      gs <- State.get
+      let named = case Common.decidersOf legal resolving source controller gs (ChosenPermanents.chooser choice) of
+            [seat] -> Just seat
+            _ -> Nothing
+          record seat loop = loop Seq.|> (seat, Set.fromList picked)
+      Monad.forM_ (asked <|> named) $ \seat ->
+        Monad.unless (null picked) (State.modify' (\g -> g {GameState.loopPicks = fmap (record seat) (GameState.loopPicks g)}))
+      pure picked
     Just chooserRef -> do
       gs <- State.get
       let matching = chosenCandidates legal resolving controller source gs choice
       split <- case matching of
         [_] -> pure matching
-        _ -> Common.chosenPermanents AnyNumberOf.IntoPile legal resolving controller source choice
+        _ -> snd <$> Common.chosenPermanents AnyNumberOf.IntoPile legal resolving controller source choice
       Common.takePile resolving source controller legal chooserRef matching split
   Monad.unless (null picked) (State.modify' (Common.bindObjectsSlot resolving slot (Seq.fromList picked)))
 

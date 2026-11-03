@@ -135,6 +135,7 @@ codec keywordCodec =
       -- Recursive for Controls' reason: the payload describes the
       -- HOST, and a card author writes it exactly as they write any other filter.
       Arm.payload "AttachedTo" (codec keywordCodec) Filter.AttachedTo (\x -> case x of Filter.AttachedTo y -> Just y; _ -> Nothing),
+      Arm.payload "BeforeMove" (codec keywordCodec) Filter.BeforeMove (\x -> case x of Filter.BeforeMove y -> Just y; _ -> Nothing),
       -- Recursive for the arm above's reason, the payload describing the ATTACHER
       -- rather than the host.
       Arm.payload "HasAttached" (codec keywordCodec) Filter.HasAttached (\x -> case x of Filter.HasAttached y -> Just y; _ -> Nothing),
@@ -298,6 +299,7 @@ tagOf x = case x of
   Filter.EnteredThisTurn {} -> "EnteredThisTurn"
   Filter.ControlledSinceTurnBegan {} -> "ControlledSinceTurnBegan"
   Filter.AttachedTo {} -> "AttachedTo"
+  Filter.BeforeMove {} -> "BeforeMove"
   Filter.HasAttached {} -> "HasAttached"
   Filter.IsAttachedTo {} -> "IsAttachedTo"
   Filter.IsEvaluated {} -> "IsEvaluated"

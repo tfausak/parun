@@ -1731,6 +1731,7 @@ oneMountainState mountain ph =
           GameState.drawsThisTurn = mempty,
           GameState.keptFaceDown = Nothing,
           GameState.announcedTops = Nothing,
+          GameState.loopPicks = Nothing,
           GameState.revealedTops = mempty,
           GameState.departedThisTurn = mempty,
           GameState.couldAttackThisTurn = mempty,
@@ -1964,6 +1965,7 @@ stubView table oid =
                 -- False against this stub.
                 Filter.controlledSinceTurnBegan = False,
                 Filter.attachedToView = Nothing,
+                Filter.beforeMoveView = Nothing,
                 Filter.attachedViews = [],
                 Filter.attachedTo = Nothing,
                 Filter.canHostSubject = False,

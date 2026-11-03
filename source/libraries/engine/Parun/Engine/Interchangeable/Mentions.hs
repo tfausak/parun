@@ -273,6 +273,7 @@ import qualified Parun.Types.LifeLoss as LifeLoss
 import qualified Parun.Types.LifeLossPattern as LifeLossPattern
 import qualified Parun.Types.LifeLossR as LifeLossR
 import qualified Parun.Types.LifeTally as LifeTally
+import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.LimitUnless as LimitUnless
 import qualified Parun.Types.LookAt as LookAt
 import qualified Parun.Types.LoyaltyClause as LoyaltyClause
@@ -333,7 +334,6 @@ import qualified Parun.Types.PlayerCounterTally as PlayerCounterTally
 import qualified Parun.Types.PlayerCounters as PlayerCounters
 import qualified Parun.Types.PlayerDesignationTally as PlayerDesignationTally
 import qualified Parun.Types.PlayerEffect as PlayerEffect
-import qualified Parun.Types.PlayerLosesLife as PlayerLosesLife
 import qualified Parun.Types.PlayerQuantity as PlayerQuantity
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerSacrifices as PlayerSacrifices
@@ -573,6 +573,7 @@ filterNames asking criterion = case criterion of
   Filter.EnteredThisTurn (EnteredZone.MkEnteredZone to _from) -> keyed asking <> history asking (if to == Zone.Battlefield then HistoryRead.Entries else HistoryRead.Moves)
   Filter.ControlledSinceTurnBegan -> mempty
   Filter.AttachedTo nested -> filterNames asking nested
+  Filter.BeforeMove nested -> keyed asking <> history asking HistoryRead.Moves <> filterNames asking nested
   Filter.HasAttached nested -> filterNames asking nested
   Filter.IsAttachedTo anchor -> anchorNames asking anchor
   Filter.IsEvaluated -> mempty
@@ -1166,7 +1167,7 @@ counterPatternNames asking x = case x of
 
 counterPlacementNames :: (Monoid r) => Asking r -> CounterPlacement.CounterPlacement -> r
 counterPlacementNames asking x = case x of
-  CounterPlacement.MkCounterPlacement kind permanents -> counterKindNames asking (keywordNames asking) kind <> filterNames asking permanents
+  CounterPlacement.MkCounterPlacement kind permanents _ -> counterKindNames asking (keywordNames asking) kind <> filterNames asking permanents
 
 counterRNames :: (Monoid r) => Asking r -> CounterR.CounterR -> r
 counterRNames asking x = case x of
@@ -1255,7 +1256,7 @@ damageRewriteNames asking onEffect x = case x of
 
 dealDamageNames :: (Monoid r) => Asking r -> DealDamage.DealDamage -> r
 dealDamageNames asking x = case x of
-  DealDamage.MkDealDamage parts dealer _excess tally damaged -> foldMap (damagePartNames asking) parts <> foldMap (slotNames asking) dealer <> foldMap (slotNames asking) tally <> foldMap (slotNames asking) damaged
+  DealDamage.MkDealDamage parts dealer _excess tally damaged excessTally -> foldMap (damagePartNames asking) parts <> foldMap (slotNames asking) dealer <> foldMap (slotNames asking) tally <> foldMap (slotNames asking) damaged <> foldMap (slotNames asking) excessTally
 
 delayedTriggerNames :: (Monoid r) => Asking r -> DelayedTrigger.DelayedTrigger -> r
 delayedTriggerNames asking x = case x of
@@ -3052,9 +3053,9 @@ triggerConditionNames asking x = case x of
   TriggerCondition.AbilityIsCountered -> mempty
   TriggerCondition.DamageToPlayerPrevented _playerRelation -> mempty
   TriggerCondition.SelfPreventsDamage filter_ -> filterNames asking filter_
-  TriggerCondition.PlayerGainsLife _playerRelation -> mempty
+  TriggerCondition.PlayerGainsLife lifeTrigger -> triggerFrequencyNames asking HistoryRead.LifeGains (LifeTrigger.frequency lifeTrigger)
   TriggerCondition.PlayersGainLife _playerRelation -> mempty
-  TriggerCondition.PlayerLosesLife playerLosesLife -> triggerFrequencyNames asking HistoryRead.LifeLosses (PlayerLosesLife.frequency playerLosesLife)
+  TriggerCondition.PlayerLosesLife lifeTrigger -> triggerFrequencyNames asking HistoryRead.LifeLosses (LifeTrigger.frequency lifeTrigger)
   TriggerCondition.SelfCountersReached selfCountersReached -> selfCountersReachedNames asking selfCountersReached
   TriggerCondition.SelfBecomesClassLevel _classLevel -> mempty
   TriggerCondition.SelfLastCounterRemoved selfCountersRemoved -> selfCountersRemovedNames asking selfCountersRemoved

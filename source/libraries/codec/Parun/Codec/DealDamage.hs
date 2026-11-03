@@ -22,11 +22,13 @@ codec = Fields.object $ do
   excess <- Fields.defaulted "excess" Nothing (Common.maybe ExcessDestination.codec) DealDamage.excess
   tally <- Fields.defaulted "tally" Nothing (Common.maybe SlotName.codec) DealDamage.tally
   damaged <- Fields.defaulted "damaged" Nothing (Common.maybe SlotName.codec) DealDamage.damaged
+  excessTally <- Fields.defaulted "excessTally" Nothing (Common.maybe SlotName.codec) DealDamage.excessTally
   pure
     DealDamage.MkDealDamage
       { DealDamage.parts = parts,
         DealDamage.dealer = dealer,
         DealDamage.excess = excess,
         DealDamage.tally = tally,
-        DealDamage.damaged = damaged
+        DealDamage.damaged = damaged,
+        DealDamage.excessTally = excessTally
       }

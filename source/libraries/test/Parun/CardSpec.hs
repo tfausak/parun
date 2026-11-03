@@ -691,7 +691,7 @@ objectRefPositions :: [(String, Effect.Effect () (), [ObjectRef.ObjectRef])]
 objectRefPositions =
   let plainRiders = EntryRiders.defaultValue
       handChoice = ChosenCardInHand.MkChosenCardInHand (plantedPlayer "xh") (Filter.Type.And []) HowMany.one
-   in [ ("deal-damage", Effect.DealDamage (DealDamage.MkDealDamage (Seq.fromList [DamagePart.MkDamagePart (plantedRef "dd1") (Quantity.Type.Literal 1), DamagePart.MkDamagePart (plantedRef "dd2") (Quantity.Type.Literal 1)]) Nothing Nothing Nothing Nothing), [plantedRef "dd1", plantedRef "dd2"]),
+   in [ ("deal-damage", Effect.DealDamage (DealDamage.MkDealDamage (Seq.fromList [DamagePart.MkDamagePart (plantedRef "dd1") (Quantity.Type.Literal 1), DamagePart.MkDamagePart (plantedRef "dd2") (Quantity.Type.Literal 1)]) Nothing Nothing Nothing Nothing Nothing), [plantedRef "dd1", plantedRef "dd2"]),
         ("modify-target", Effect.ModifyTarget (ModifyTarget.MkModifyTarget Duration.UntilEndOfTurn (Modification.GainKeyword Keyword.Flying) (plantedRef "mt") Nothing), [plantedRef "mt"]),
         ("restart-game", Effect.RestartGame (Just (plantedRef "rg")), [plantedRef "rg"]),
         ("destroy", Effect.Destroy (Destroy.MkDestroy (plantedRef "de") Regenerability.Regenerable Nothing Nothing Nothing), [plantedRef "de"]),
@@ -1345,7 +1345,7 @@ effectCounts effect = concatMap refCounts (Resolve.effectObjectRefs effect) <> o
 -- effectCounts.
 ownCounts :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> [Count.Type.Count Quantity.Type.Quantity]
 ownCounts effect = case effect of
-  Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _ _) -> concatMap (quantityCounts . DamagePart.quantity) parts
+  Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _ _ _) -> concatMap (quantityCounts . DamagePart.quantity) parts
   Effect.ModifyTarget (ModifyTarget.MkModifyTarget duration modification _ _) -> durationCounts duration <> modificationCounts modification
   Effect.ChangeText x -> durationCounts (ChangeText.duration x)
   Effect.AddMana _ -> []
@@ -4881,10 +4881,10 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- landed on -- swept like PermanentsDie's, so a card's "one or more creatures"
   -- is not exempt from the corpus filter lints. And its KIND beside it, for the
   -- three arms above's reason.
-  TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind f) -> unframed [f] <> counterKindFilters kind
+  TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind f _) -> unframed [f] <> counterKindFilters kind
   -- And its per-permanent scope, whose Filter is read against ONE permanent --
   -- swept all the same, the lints being about the Filter and not the scope.
-  TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind f) -> unframed [f] <> counterKindFilters kind
+  TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind f _) -> unframed [f] <> counterKindFilters kind
   -- CR 601.2i's "whenever you cast a [type] spell" carries one directly, over
   -- the spell rather than over a permanent.
   TriggerCondition.SpellCast (SpellCast.MkSpellCast f _ _ _ _ _) -> unframed [f]
@@ -6130,7 +6130,7 @@ effectFilters effect = case effect of
   -- AttachTarget's; CR 303.4d only moves whose choice it is.
   Effect.AttachTargetToEach (AttachTarget.MkAttachTarget _ f) -> [(AttachDestination, f)]
   -- The dealer is a SlotName and carries no Filter.
-  Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _ _) -> foldMap (\part -> frame SourceHostFramed (objectRefFilters (DamagePart.ref part)) <> frame Unframed (quantityFilters (DamagePart.quantity part))) parts
+  Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _ _ _) -> foldMap (\part -> frame SourceHostFramed (objectRefFilters (DamagePart.ref part)) <> frame Unframed (quantityFilters (DamagePart.quantity part))) parts
   Effect.ModifyTarget (ModifyTarget.MkModifyTarget duration modification ref _) ->
     frame Unframed (durationFilters duration) <> frame Unframed (modificationFilters modification) <> frame SourceHostFramed (objectRefFilters ref)
   Effect.ChangeText x -> frame Unframed (durationFilters (ChangeText.duration x))
@@ -7653,7 +7653,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
       (Resolve.slotsAreExhaustive (destroying (Quantity.Type.Literal 3)), Resolve.readsX [destroying (Quantity.Type.Literal 3)], effectCounts (destroying (Quantity.Type.Literal 3)))
       (True, False, [])
   Spec.it s "the lint itself catches a dangling reference" $
-    let bad = Map.keysSet (Resolve.slotsOf (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "ghost"))) (Quantity.Type.Literal 3))) Nothing Nothing Nothing Nothing)))
+    let bad = Map.keysSet (Resolve.slotsOf (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "ghost"))) (Quantity.Type.Literal 3))) Nothing Nothing Nothing Nothing Nothing)))
      in Spec.assertBool s (bad /= Map.keysSet (Map.empty :: Map.Map SlotName.SlotName TargetSlot.TargetSlot)) "misauthored card detected"
   -- CR 120.2b's dealer is a slot READ like any other, so the same lint has to
   -- reach it. The effect below references no other slot, so the answer is the
@@ -7663,7 +7663,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
      in Spec.assertEqWith
           s
           "the dealer slot is read"
-          (Map.keysSet (Resolve.slotsOf (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart ObjectRef.EachPlayer (Quantity.Type.Literal 3))) (Just ghost) Nothing Nothing Nothing))))
+          (Map.keysSet (Resolve.slotsOf (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart ObjectRef.EachPlayer (Quantity.Type.Literal 3))) (Just ghost) Nothing Nothing Nothing Nothing))))
           (Set.singleton ghost)
   -- The SPELL half of CR 601.2b's contract: what a card's own modes read is
   -- announced against the card's own cost -- mana cost, additional costs and

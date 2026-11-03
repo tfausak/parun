@@ -379,8 +379,15 @@ player context ref = case ref of
     | s == youSlot -> [(MkReference (Text.pack "you") [] Filter.Singular, Second)]
     | Just word <- Map.lookup s (bound context) -> [(MkReference word [] Filter.Singular, Third)]
     | otherwise -> fmap (\r -> (r, Third)) (target context s)
-  PlayerRef.HolderOfBound holder Hop.Itself s -> (MkReference (possessor <> Text.pack (holderWord holder)) [] Filter.Singular, Third) : thatPlayer
+  PlayerRef.HolderOfBound holder Hop.Itself s -> (MkReference (possessor <> Text.pack (holderWord holder)) [] Filter.Singular, Third) : thatNoun <> thatPlayer
     where
+      -- "that artifact's controller" (Crumble), once the slot's announcement
+      -- has said "target artifact".
+      thatNoun =
+        [ (MkReference (Text.pack "that " <> noun <> Text.pack "'s " <> Text.pack (holderWord holder)) [] Filter.Singular, Third)
+        | announced <- target context s,
+          Just noun <- [Text.stripPrefix (Text.pack "target ") (wording announced)]
+        ]
       -- Free for a controller: "its controller" or "that player" (Massacre
       -- Wurm).
       thatPlayer = [(MkReference (Text.pack "that player") [] Filter.Singular, Third) | holder == Holder.Controller]

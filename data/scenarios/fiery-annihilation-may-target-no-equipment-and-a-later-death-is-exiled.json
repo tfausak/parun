@@ -1,0 +1,52 @@
+{
+  "description": "\"Up to one\": no Equipment named, the attached one stays, and a creature surviving the 5 is exiled when a later Shock kills it this turn.",
+  "note": "A second target is optional, and a creature with no Equipment can still be targeted (a ruling); the Morningstar's +2/+2 keeps it alive through the 5 so the replacement is what is read.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Mountain", "label": "m2" },
+          { "card": "Mountain", "label": "m3" },
+          { "card": "Mountain", "label": "m4" },
+          { "card": "Mountain", "label": "m5" },
+          { "card": "Mountain", "label": "m6" },
+          { "card": "Mountain", "label": "m7" }
+        ],
+        "hand": [
+          { "card": "Fiery Annihilation", "label": "fa" },
+          { "card": "Fiery Annihilation", "label": "fa2" },
+          { "card": "Shock", "label": "sh" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Air Elemental", "label": "v" },
+          { "card": "Vulshok Morningstar", "label": "eq", "attached": "v" },
+          { "card": "Goblin Piker", "label": "bare" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$fa2", "targetsBySlot": { "creature": ["$bare"], "equipment": [] }, "mana": ["$m1", "$m2", "$m3", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Exile", "card": "Goblin Piker", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$fa", "targetsBySlot": { "creature": ["$v"], "equipment": [] }, "mana": ["$m4", "$m5", "$m6", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$v", "damage": 5 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "AttachedTo", "object": "$eq", "is": "$v" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$sh", "targets": ["$v"], "mana": ["$m7"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Exile", "card": "Air Elemental", "count": 1 } } }
+  ]
+}

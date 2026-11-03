@@ -397,6 +397,11 @@ data Filter keyword
     -- False for a candidate attached to a player, and for one whose host has left
     -- the battlefield (CR 704.5m).
     AttachedTo (Filter keyword)
+  | -- | CR 400.7 / 608.2h: the nest admits the object the candidate was before the
+    -- move that made it, read off that object's last known information against the
+    -- outer context. Deadly Brew's "another permanent card". False for a candidate
+    -- no move made this turn, and for a departure no record was filed for.
+    BeforeMove (Filter keyword)
   | -- | CR 303.4b's "enchanted" and CR 301.5a's "equipped", asked of the HOST:
     -- something the nested Filter admits is attached TO the candidate -- A Tale
     -- for the Ages' "enchanted creatures you control". The mirror of AttachedTo
@@ -410,13 +415,12 @@ data Filter keyword
     HasAttached (Filter keyword)
   | -- | CR 701.3a / 301.5a: the candidate is attached to the anchored object --
     -- Kemba's Legion's "for each Equipment attached to this creature" at Source,
-    -- Bruenor Battlehammer's "for each Equipment attached to it" at Evaluated.
+    -- Bruenor Battlehammer's "for each Equipment attached to it" at Evaluated,
+    -- Fiery Annihilation's "target Equipment attached to that creature" at Bound.
     -- Host IDENTITY and not a host quality, so it reads an ObjectId off the
     -- candidate's own view; vacuously False where the candidate is attached to
-    -- nothing or to a player, and where nothing fills the anchor.
-    --
-    -- Not implemented: the Bound anchor, which answers False and
-    -- Parun.FilterPositionLintSpec keeps out of card data (#5636).
+    -- nothing or to a player, and where nothing fills the anchor, but for Bound's
+    -- unanswered slot (Parun.Engine.Filter.attachedAnchored).
     IsAttachedTo (Anchor.Anchor (Filter keyword))
   | -- | CR 613.4c: the candidate IS the object the surrounding QUANTITY is
     -- evaluated against -- Coat of Arms' "each other creature" is @Not

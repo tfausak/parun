@@ -593,7 +593,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
     -- ability's own earlier effects bound (Parun.ManaSpec's Valleymaker group).
     let named = ManaAddition.MkManaAddition (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "thatPlayer"))) ManaProduction.AnyColor (Quantity.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing
     Spec.assertEqWith s "a named recipient does not disqualify" (ManaAbility.manaProduced (Effect.AddMana named)) (Just named)
-    Spec.assertEqWith s "damage produces no mana" (ManaAbility.manaProduced (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "x"))) (Quantity.Literal 1))) Nothing Nothing Nothing Nothing))) Nothing
+    Spec.assertEqWith s "damage produces no mana" (ManaAbility.manaProduced (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "x"))) (Quantity.Literal 1))) Nothing Nothing Nothing Nothing Nothing))) Nothing
   Spec.it s "CR 612.1 a text change reaches a Filter carried by an effect" $ do
     -- Boil ("Destroy all Islands") is the first card whose effect selects by
     -- a BASIC LAND TYPE, so it is the first that can tell whether CR 612.1's
@@ -2540,7 +2540,7 @@ crabSpec s registry =
       picking byCarol byOthers p = case p of
         Prompt.ChooseOpponent _ _ _ _ seats
           | List.elem S.carol (NonEmpty.toList seats) -> S.carol
-        Prompt.ChoosePermanent _ asked _ offered ->
+        Prompt.ChoosePermanent _ asked _ offered _ ->
           let wanted = if asked == S.carol then byCarol else byOthers
            in if List.elem wanted (NonEmpty.toList offered) then wanted else NonEmpty.head offered
         _ -> S.identityAnswer p
@@ -2875,7 +2875,7 @@ tariffSpec s registry =
         onStack = S.runPure S.identityAnswer gs (S.cast S.alice tariffId)
         logging :: Prompt.Prompt r -> State.State [(PlayerId.PlayerId, Either [ObjectId.ObjectId] (Maybe ManaCost.ManaCost))] r
         logging p = case p of
-          Prompt.ChoosePermanent _ who _ candidates -> do
+          Prompt.ChoosePermanent _ who _ candidates _ -> do
             State.modify' (<> [(who, Left (NonEmpty.toList candidates))])
             pure (NonEmpty.last candidates)
           Prompt.ChooseToPay _ who _ _ cost _ -> do

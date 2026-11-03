@@ -1478,7 +1478,7 @@ turningOver mkEffect oids gs =
 -- than being repaired. Every other prompt is S.identityAnswer's.
 choosingPermanent :: ObjectId.ObjectId -> Prompt.Prompt r -> r
 choosingPermanent chosen p = case p of
-  Prompt.ChoosePermanent _ _ _ offered -> if chosen `elem` offered then chosen else NonEmpty.head offered
+  Prompt.ChoosePermanent _ _ _ offered _ -> if chosen `elem` offered then chosen else NonEmpty.head offered
   _ -> S.identityAnswer p
 
 -- alice's Hanweir Battlements and Hanweir Garrison added to `base`, her five

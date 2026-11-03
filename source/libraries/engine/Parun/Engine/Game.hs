@@ -67,7 +67,6 @@ import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LifeChange as LifeChange
 import qualified Parun.Types.LifeDirection as LifeDirection
-import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import Parun.Types.Mana (Mana)
@@ -645,7 +644,7 @@ zoneMembers zone pid gs =
 -- Parun.Types.ObjectRef.TopOfGraveyard and Parun.Types.Scope.TopOf go
 -- through, so the card a Condition tests is the card the effect then moves.
 topOfGraveyard :: PlayerId -> GameState -> Maybe ObjectId
-topOfGraveyard pid gs = Maybe.listToMaybe (reverse (zoneMembers Zone.Graveyard pid gs))
+topOfGraveyard pid gs = Maybe.listToMaybe (reverse (cardsIn Zone.Graveyard pid gs))
 
 -- CR 401.2 / 404.1: the top card of a player's library, its FIRST member, or of
 -- their graveyard (topOfGraveyard). Nothing for every other zone: no rule orders
@@ -2700,6 +2699,14 @@ isToken oid gs = maybe False (sourceIsToken . Object.source) (lookupObject oid g
 isCardObject :: ObjectId -> GameState -> Bool
 isCardObject oid gs = maybe False (sourceIsCard . Object.source) (lookupObject oid gs)
 
+-- CR 108.2: the cards among a player's zone's members, where "card" is what the
+-- text says: a token awaiting CR 704.5d sits in the zone without being one.
+-- data/scenarios' deadly-brew-offers-no-token-a-thief-sacrificed,
+-- sutured-ghoul-exiles-no-token-polymorph-destroyed and
+-- superior-spider-man-copies-no-token-polymorph-destroyed prove it.
+cardsIn :: Zone.Zone -> PlayerId -> GameState -> [ObjectId]
+cardsIn zone pid gs = filter (`isCardObject` gs) (zoneMembers zone pid gs)
+
 -- isCardObject's question of a bare Source.
 sourceIsCard :: Source.Source -> Bool
 sourceIsCard source = case source of
@@ -3912,7 +3919,7 @@ lifeChangeOf direction event = case event of
   -- CR 119.3's other sign. A loss is not a negative gain: "the amount of life you
   -- gained this turn" is not reduced by life lost since, and a loss stays a loss
   -- whatever is gained after it (First Response's ruling, 2020-11-10).
-  GameEvent.LifeLost (LifeLost.MkLifeLost pid amount _) -> toward LifeDirection.Lost (LifeChange.MkLifeChange pid amount)
+  GameEvent.LifeLost change -> toward LifeDirection.Lost change
   GameEvent.Moved {} -> Nothing
   GameEvent.Discarded {} -> Nothing
   GameEvent.Drew {} -> Nothing
@@ -3981,7 +3988,7 @@ lifeChangeOf direction event = case event of
   GameEvent.TriggeredAbilityResolved _ -> Nothing
   GameEvent.CardArrived _ -> Nothing
   where
-    toward side (LifeChange.MkLifeChange pid amount) = if side == direction then Just (pid, amount) else Nothing
+    toward side (LifeChange.MkLifeChange pid amount _) = if side == direction then Just (pid, amount) else Nothing
 
 -- CR 119.3 / 608.2i: how much life this player gained or lost during the turn
 -- this log holds (turnLog). The log fold lifeChangeOf exists for.
@@ -4111,6 +4118,8 @@ declaredBy pid event = case event of
 -- naming an object never offered is dropped, and one naming more than the
 -- ceiling keeps its first that many in the offer's order, which carries CR
 -- 608.2f's APNAP order where a Set does not.
+--
+-- Beside the picks, the seat that was asked: Nothing where nobody was.
 pickCounted ::
   Bool ->
   Game (Maybe PlayerId) ->
@@ -4119,14 +4128,14 @@ pickCounted ::
   (Quantity.Quantity -> Natural) ->
   HowMany.HowMany ->
   [ObjectId] ->
-  Game [ObjectId]
+  Game (Maybe PlayerId, [ObjectId])
 pickCounted named chooser one_ several amount count candidates = case count of
   HowMany.Exactly q
-    | not named -> pure []
-    | Natural.length candidates <= amount q -> pure candidates
+    | not named -> pure (Nothing, [])
+    | Natural.length candidates <= amount q -> pure (Nothing, candidates)
     | otherwise -> asking (\who -> pick who (amount q) candidates)
   HowMany.UpTo q
-    | null candidates || ceiling_ == Just 0 -> pure []
+    | null candidates || ceiling_ == Just 0 -> pure (Nothing, [])
     | otherwise -> asking $ \who -> do
         gs <- State.get
         answer <- choose (several (Decide.deciderFor who gs) who candidates ceiling_)
@@ -4134,7 +4143,7 @@ pickCounted named chooser one_ several amount count candidates = case count of
     where
       ceiling_ = fmap amount q
   where
-    asking body = chooser >>= maybe (pure []) body
+    asking body = chooser >>= maybe (pure (Nothing, [])) (\who -> (,) (Just who) <$> body who)
     pick who n available
       | n <= (0 :: Natural) = pure []
       | otherwise = do

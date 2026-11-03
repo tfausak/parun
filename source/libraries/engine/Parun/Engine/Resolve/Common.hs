@@ -611,7 +611,10 @@ oneSeat legal resolving source controller gs ref = case playerRefPlayers legal r
 --
 -- The count is pickCounted's, read here -- Teferi, Hero of Dominaria's "up to
 -- two lands".
-chosenPermanents :: AnyNumberOf.AnyNumberOf -> Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> ChosenPermanents.ChosenPermanents -> Game [ObjectId]
+--
+-- Each prompt carries GameState.loopPicks (CR 101.4b). Beside the picks, the
+-- seat that was asked, pickCounted's.
+chosenPermanents :: AnyNumberOf.AnyNumberOf -> Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> ChosenPermanents.ChosenPermanents -> Game (Maybe PlayerId, [ObjectId])
 chosenPermanents purpose legal resolving controller source choice = do
   gs <- State.get
   let candidates = chosenCandidates legal resolving controller source gs choice
@@ -619,14 +622,15 @@ chosenPermanents purpose legal resolving controller source choice = do
       count = ChosenPermanents.count choice
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       amount = maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor (effectViewOf resolving source legal gs) context gs resolving source
+      earlier = Maybe.fromMaybe Seq.empty (GameState.loopPicks gs)
   pickByChooser
     resolving
     source
     controller
     legal
     chooser
-    (\decider who -> Prompt.ChoosePermanent decider who source)
-    (\decider who pool ceiling_ -> Prompt.ChooseAnyNumber decider who source purpose pool ceiling_)
+    (\decider who pool -> Prompt.ChoosePermanent decider who source pool earlier)
+    (\decider who pool ceiling_ -> Prompt.ChooseAnyNumber decider who source purpose pool ceiling_ earlier)
     amount
     count
     candidates
@@ -650,7 +654,7 @@ pickByChooser ::
   (Quantity.Type.Quantity -> Natural) ->
   HowMany.HowMany ->
   [ObjectId] ->
-  Game [ObjectId]
+  Game (Maybe PlayerId, [ObjectId])
 pickByChooser resolving source controller legal chooser one_ several amount count candidates = do
   gs <- State.get
   let named = namesChooser legal resolving source controller gs chooser
@@ -663,7 +667,7 @@ pickByChooser resolving source controller legal chooser one_ several amount coun
       let grants = Projection.controlGrants now
           reachable who oid = not (Set.member oid (GameState.battlefield now)) || Projection.objectInRangeGiven grants who oid now
       case seat of
-        Nothing -> pure []
+        Nothing -> pure (Nothing, [])
         Just who -> Game.pickCounted True (pure (Just who)) one_ several amount count (filter (reachable who) candidates)
 
 -- Whether a chooser ref names a seat to ask, askedChooser's test without its ask.
@@ -741,7 +745,7 @@ askingObjects resolving source controller legal chosen ref = case ref of
     Maybe.maybeToList <$> Game.drawAmong Prompt.RandomObject pool
   -- Tovolar's "any number of Human Werewolves you control", read off a board CR
   -- 702.145c has already turned him over on.
-  ObjectRef.ChosenPermanents choice -> chosenPermanents AnyNumberOf.Permanents legal resolving controller source choice
+  ObjectRef.ChosenPermanents choice -> snd <$> chosenPermanents AnyNumberOf.Permanents legal resolving controller source choice
   -- Each ref asked or read in the order written, before anything moves; an
   -- object two refs name is named once.
   ObjectRef.AllOf refs -> fmap (ListUtils.nubOrd . concat) (traverse (askingObjects resolving source controller legal chosen) (NonEmpty.toList refs))
@@ -977,12 +981,12 @@ chosenCardsInGraveyard legal resolving controller source (ChosenCardInGraveyard.
       pick made asked candidates = case count of
         HowMany.Exactly q -> pickExactly made asked (amount q) candidates
         HowMany.UpTo _ ->
-          (\taken -> made <> Seq.fromList (fmap ((,) asked) taken))
+          (\(_, taken) -> made <> Seq.fromList (fmap ((,) asked) taken))
             <$> Game.pickCounted
               True
               (pure (Just asked))
               (\decider who pool -> Prompt.ChooseCardInGraveyard decider who source pool made)
-              (\decider who pool ceiling_ -> Prompt.ChooseAnyNumber decider who source AnyNumberOf.CardsInGraveyards pool ceiling_)
+              (\decider who pool ceiling_ -> Prompt.ChooseAnyNumber decider who source AnyNumberOf.CardsInGraveyards pool ceiling_ Seq.empty)
               amount
               count
               candidates
@@ -2056,14 +2060,15 @@ chooseCardsInHand resolving source controller legal (ChosenCardInHand.MkChosenCa
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       amount = maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor viewOf context gs resolving source
       pick pid =
-        Game.pickCounted
-          True
-          (pure (Just pid))
-          (\decider who -> Prompt.ChooseCardInHand decider who source)
-          (\decider who pool ceiling_ -> Prompt.ChooseAnyNumber decider who source AnyNumberOf.CardsInHand pool ceiling_)
-          amount
-          count
-          (handCardsOf context gs pid filter_)
+        snd
+          <$> Game.pickCounted
+            True
+            (pure (Just pid))
+            (\decider who -> Prompt.ChooseCardInHand decider who source)
+            (\decider who pool ceiling_ -> Prompt.ChooseAnyNumber decider who source AnyNumberOf.CardsInHand pool ceiling_ Seq.empty)
+            amount
+            count
+            (handCardsOf context gs pid filter_)
   fmap concat . Monad.mapM pick $ handChoosers legal resolving source controller gs player
 
 -- The printed "from among them", a CR 608.2d choice: the candidates are the
@@ -2113,16 +2118,17 @@ chooseCardFromAmong resolving source controller legal chosen (ChosenCardFromAmon
       amount = maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor viewOf context gs resolving source
       matching = matchingFromAmong legal resolving controller source gs filter_ (stillPresent gs members)
       pick purpose =
-        pickByChooser
-          resolving
-          source
-          controller
-          legal
-          chooser
-          (\decider who -> Prompt.ChooseCardFromAmong decider who source)
-          (\decider who pool ceiling_ -> Prompt.ChooseAnyNumber decider who source purpose pool ceiling_)
-          amount
-          count
+        fmap snd
+          . pickByChooser
+            resolving
+            source
+            controller
+            legal
+            chooser
+            (\decider who -> Prompt.ChooseCardFromAmong decider who source)
+            (\decider who pool ceiling_ -> Prompt.ChooseAnyNumber decider who source purpose pool ceiling_ Seq.empty)
+            amount
+            count
   case pileChooser of
     Nothing -> pick AnyNumberOf.CardsFromAmong matching
     -- CR 700.3: the chooser separates and the pile chooser takes a pile --

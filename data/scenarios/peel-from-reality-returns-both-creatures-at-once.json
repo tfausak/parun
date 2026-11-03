@@ -1,0 +1,102 @@
+{
+  "description": "CR 603.10a: Peel from Reality moves both creatures at once, so a leaves-the-battlefield trigger of one sees the other leave",
+  "note": "Super Shredder is the mine slot's and moves no earlier than the Bears.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "manaPool": "UU",
+        "battlefield": [
+          {
+            "card": "Super Shredder",
+            "label": "shredder"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Peel from Reality",
+            "label": "spell"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$spell",
+          "targetsBySlot": {
+            "mine": [
+              "$shredder"
+            ],
+            "theirs": [
+              "$bears"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Stack",
+          "is": [
+            "trigger of $shredder"
+          ]
+        }
+      }
+    }
+  ]
+}

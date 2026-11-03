@@ -158,7 +158,14 @@ objects pcs gs a b =
       -- Quantity.DamageDealtThisTurn's totals, which no View field carries: two
       -- objects that dealt damage to the same recipients but in different amounts.
       dealtAmounts oid = fmap (\direction -> Game.damageDealtThisTurn direction gs oid) [minBound .. maxBound :: DamageDirection.DamageDirection]
-      sameView = lookBack (viewOf a) == lookBack (viewOf b) && dealtAmounts a == dealtAmounts b && actedOnBy a gs == actedOnBy b gs
+      -- What Filter.BeforeMove's nest reads: the record of what each was before
+      -- its move, and any slot naming that earlier id, which no search for the
+      -- two ids below would find.
+      before = Count.departedAs gs
+      beforeRecord oid = before oid >>= \gone -> Map.lookup gone (GameState.lastKnown gs)
+      beforeNamed oid = maybe False (\gone -> namedByAnother gone gs) (before oid)
+      sameBefore = beforeRecord a == beforeRecord b && not (beforeNamed a) && not (beforeNamed b)
+      sameView = lookBack (viewOf a) == lookBack (viewOf b) && dealtAmounts a == dealtAmounts b && actedOnBy a gs == actedOnBy b gs && sameBefore
       -- Keyed by every permanent alike, so compared rather than searched.
       sameSample m = Map.lookup a m == Map.lookup b m
       sameSamples =
@@ -498,7 +505,8 @@ affectedNames oid source gs affected = case affected of
 --     602.5b), castPermissionsUsedThisTurn (CR 601.3), rollModifiersUsedThisTurn
 --     (CR 706.2), namedCopyChoices (CR 707.13), notedCards (CR 707.14),
 --     notedMana (CR 607.2e), keptFaceDown (CR 121.8), announcedTops (CR 401.5),
---     revealedTops (CR 401.6) and outsideCopies (CR 400.11), each keyed by the object it is about; and the logs
+--     loopPicks (CR 101.4b), revealedTops (CR 401.6) and outsideCopies (CR
+--     400.11), each keyed by the object it is about; and the logs
 --     triggeredThisGame (a "triggers only once" rider's spent triggerings),
 --     activationsThisTurn (CR 602.2) and attacksInOwnLastTurn (CR 508.1a), by
 --     the object each entry names.
@@ -554,6 +562,7 @@ namedByRelation oid gs =
         || keyed (GameState.notedMana gs)
         || maybe False keyed (GameState.keptFaceDown gs)
         || maybe False (elem oid) (GameState.announcedTops gs)
+        || maybe False (any (Set.member oid . snd)) (GameState.loopPicks gs)
         || elem oid (GameState.revealedTops gs)
         || Set.member oid (GameState.outsideCopies gs)
         || any (triggeredNames oid) (GameState.triggeredThisGame gs)

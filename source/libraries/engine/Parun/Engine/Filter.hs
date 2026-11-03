@@ -453,6 +453,10 @@ data View = MkView
     -- them -- no type embeds a View, so no derived instance depended on them
     -- either.
     attachedToView :: Maybe View,
+    -- CR 400.7 / 608.2h: the object this candidate was before the move that made
+    -- it, as its last known information shows it (Count.departedAs). The same log
+    -- `milledThisTurn` reads, and LAZY for that field's reason.
+    beforeMoveView :: Maybe View,
     -- CR 303.4b / 301.5a read the other way: the permanents attached TO this
     -- candidate, each viewed as a candidate in its own right, so that
     -- HasAttached's nested Filter has something to be evaluated against. The
@@ -971,6 +975,7 @@ playerView pid =
       -- no host to evaluate AttachedTo's nest against, and the atom is vacuously
       -- False for a player candidate however the nest is written.
       attachedToView = Nothing,
+      beforeMoveView = Nothing,
       -- CR 303.4b lets an Aura enchant a PLAYER, so unlike the field above this
       -- one asks a question a player candidate really can answer -- but not here:
       -- this view is built from a PlayerId alone and holds no board to sweep for
@@ -1872,16 +1877,25 @@ sharesAnchored trait anchor = case anchor of
   where
     meets a b = not (Set.disjoint a b)
 
--- CR 701.3a / 301.5a: the object Filter.IsAttachedTo compares a candidate's host
--- with -- the match's source, or under CR 613.4c the object the surrounding
+-- CR 701.3a / 301.5a: does a candidate attached to this object relate to the
+-- anchor -- the match's source, or under CR 613.4c the object the surrounding
 -- quantity is aimed at, which need not be the source.
 --
--- Not implemented: the Bound anchor, answered Nothing (#5636).
-attachedAnchored :: Anchor.Anchor nested -> Maybe (Context -> Maybe ObjectId.ObjectId)
+-- At Bound, the objects the slot holds, and VACUOUSLY TRUE for a slot with no
+-- key in slotControllers, ControllerRelatesToBound's posture and for its reason:
+-- CR 601.2c's offer is made before the sibling target is chosen, and
+-- Parun.Engine.Target.selectionLegal's joint check narrows it. The scenarios
+-- named for Fiery Annihilation prove it.
+attachedAnchored :: Anchor.Anchor nested -> Maybe (Context -> ObjectId.ObjectId -> Bool)
 attachedAnchored anchor = case anchor of
-  Anchor.Source -> Just source
-  Anchor.Evaluated -> Just evaluated
-  Anchor.Bound _ -> Nothing
+  Anchor.Source -> Just (\context host -> source context == Just host)
+  Anchor.Evaluated -> Just (\context host -> evaluated context == Just host)
+  Anchor.Bound slot ->
+    Just
+      ( \context host ->
+          Map.notMember slot (slotControllers context)
+            || Set.member host (Map.findWithDefault Set.empty slot (slotObjects context))
+      )
   -- A group names no one host: Filter.AttachedTo is that reading.
   Anchor.AnyPermanent _ -> Nothing
 
@@ -2347,6 +2361,7 @@ matches context view predicate = case predicate of
   -- (Miracle Worker). `And []` nests to "attached to a permanent" (CR 110.1),
   -- because the field is Just only for a host on the battlefield.
   Filter.AttachedTo f -> maybe False (\host -> matches context host f) (attachedToView view)
+  Filter.BeforeMove f -> maybe False (\before -> matches context before f) (beforeMoveView view)
   -- CR 303.4b / 301.5a with the arrow turned round: a live read of which
   -- permanents name this candidate in their Object.attachedTo, and of each of
   -- their own projections. EXISTENTIAL, which is rule 303.4b's own shape -- one
@@ -2361,8 +2376,8 @@ matches context view predicate = case predicate of
   -- itself. A live read of Object.attachedTo, so an Equipment unequipped by CR
   -- 704.5n stops matching at once. Vacuously False where the candidate is
   -- attached to nothing or to a player, and where nothing fills the anchor.
-  Filter.IsAttachedTo anchor -> case (attachedTo view, attachedAnchored anchor >>= \anchored -> anchored context) of
-    (Just host, Just aimed) -> host == aimed
+  Filter.IsAttachedTo anchor -> case (attachedTo view, attachedAnchored anchor) of
+    (Just host, Just anchored) -> anchored context host
     _ -> False
   -- CR 613.4c: IsSource's identity test against the object the surrounding
   -- quantity is aimed at. Vacuously False where no quantity aims the match.
@@ -2657,6 +2672,7 @@ rewrite pairs predicate = case predicate of
   -- the HOST ("attached to a Swamp"), so CR 612.1's word swap reaches it exactly
   -- as it reaches the same description written at the top level.
   Filter.AttachedTo f -> Filter.AttachedTo (rewrite pairs f)
+  Filter.BeforeMove f -> Filter.BeforeMove (rewrite pairs f)
   -- DESCENT, for the atom above's reason: the nest is a description a card
   -- author wrote ("if it's a Forest card"), so CR 612.1's word swap reaches it
   -- exactly as it reaches the same description written at the top level. The
@@ -3429,6 +3445,7 @@ bakeBound players objects controllers predicate = case predicate of
   -- top level would be. Parun.Engine.Filter.boundSlots descends to match, which is
   -- the pairing that function's comment insists on.
   Filter.AttachedTo f -> Filter.AttachedTo (bakeBound players objects controllers f)
+  Filter.BeforeMove f -> Filter.BeforeMove (bakeBound players objects controllers f)
   -- DESCENT, for the atom above's reason: a HeldByBound written into the
   -- represented card's description is baked exactly as the same atom at the top
   -- level would be, and Parun.Engine.Filter.boundSlots descends to match.
@@ -3599,6 +3616,7 @@ manaValueThresholds predicate = case predicate of
   -- literals inside bound the HOST's mana value and never the candidate's. Only
   -- widening CR 601.3a's sample is the safe direction.
   Filter.AttachedTo f -> manaValueThresholds f
+  Filter.BeforeMove f -> manaValueThresholds f
   -- Descended into, and OVER-reporting for the atom above's reason: the literals
   -- inside bound the represented CARD's mana value and never the candidate's.
   -- Only widening CR 601.3a's sample is the safe direction.
@@ -3767,6 +3785,9 @@ statesAQuality predicate = case predicate of
   -- something" is itself a stated quality under CR 701.23b, so even the trivial
   -- nest `And []` leaves this atom stating one and no descent could change it.
   Filter.AttachedTo _ -> True
+  -- True whatever the nest says, for the atom above's reason: what a card was
+  -- before it moved is a stated quality under CR 701.23b.
+  Filter.BeforeMove _ -> True
   -- True whatever the nest says, for the atom above's reason: CR 303.4b's
   -- "enchanted" is a stated quality under CR 701.23b, and the trivial nest states
   -- one too ("has something attached to it").
@@ -3923,6 +3944,7 @@ readsSourceValues predicate = case predicate of
   Filter.SaddledSourceThisTurn -> False
   Filter.ControlledSinceTurnBegan -> False
   Filter.AttachedTo f -> readsSourceValues f
+  Filter.BeforeMove f -> readsSourceValues f
   Filter.HasAttached f -> readsSourceValues f
   Filter.IsAttachedTo anchor -> any readsSourceValues (anchorFilter anchor)
   Filter.IsEvaluated -> False
@@ -4095,6 +4117,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.ControlledSinceTurnBegan -> pure predicate
   -- DESCENT, for Controls' reason.
   Filter.AttachedTo g -> fmap Filter.AttachedTo (overBoundSlotsWith f g)
+  Filter.BeforeMove g -> fmap Filter.BeforeMove (overBoundSlotsWith f g)
   -- DESCENT, for the atom above's reason.
   Filter.HasAttached g -> fmap Filter.HasAttached (overBoundSlotsWith f g)
   Filter.IsAttachedTo anchor -> fmap Filter.IsAttachedTo (overAnchorSlot f anchor)

@@ -2094,7 +2094,7 @@ alteredManifest s registry top land n = do
       answer :: Prompt.Prompt r -> r
       answer p = case p of
         Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter ((==) entered . Recipient.objectOf) . snd) sets
-        Prompt.ChoosePermanent _ _ _ candidates -> if elem bearsId candidates then bearsId else NonEmpty.head candidates
+        Prompt.ChoosePermanent _ _ _ candidates _ -> if elem bearsId candidates then bearsId else NonEmpty.head candidates
         _ -> S.identityAnswer p
       resolved = S.runPure answer g2 (S.cast S.alice auraId >> Stack.resolveTop)
   pure (S.landsFor land S.alice n resolved, entered)

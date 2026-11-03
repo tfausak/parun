@@ -1350,8 +1350,8 @@ festivalAfter s registry top = do
       (_, gs) = S.addPermanent forest S.alice board1
       answer :: Prompt.Prompt r -> State.State Int r
       answer p = case p of
-        Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.CardsFromAmong offered _ -> pure (Set.fromList (filter (`List.elem` topIds) offered))
-        Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToSacrifice candidates _ -> do
+        Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.CardsFromAmong offered _ _ -> pure (Set.fromList (filter (`List.elem` topIds) offered))
+        Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToSacrifice candidates _ _ -> do
           asked <- State.get
           State.put (asked + 1)
           pure (Set.fromList (if asked == 0 then candidates else filter (== firstForest) candidates))
