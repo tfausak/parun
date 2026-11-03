@@ -387,9 +387,9 @@ player context ref = case ref of
         | announced <- target context s,
           Just noun <- [Text.stripPrefix (Text.pack "target ") (wording announced)]
         ]
-      -- Free for a controller: "its controller" or "that player" (Massacre
-      -- Wurm).
-      thatPlayer = [(MkReference (Text.pack "that player") [] Filter.Singular, Third) | holder == Holder.Controller]
+      -- Free: "its controller" or "that player" (Massacre Wurm), "its owner"
+      -- or "that player" (Recoil).
+      thatPlayer = [(MkReference (Text.pack "that player") [] Filter.Singular, Third)]
       possessor = case Map.lookup s (bound context) of
         Just word | word /= Text.pack "it" -> word <> Text.pack "'s "
         _ -> Text.pack "its "

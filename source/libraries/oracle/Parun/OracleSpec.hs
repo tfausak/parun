@@ -655,6 +655,9 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s [[Text.pack "Draw cards equal to the power of target creature you control."]] (Oracle.abilities majesty)
     let plowshares = spell [clause [Effect.MoveToZone (move (ObjectRef.InSlot target) Zone.Exile), Effect.GainLife (PlayerQuantity.MkPlayerQuantity (PlayerRef.HolderOfBound Holder.Controller Hop.Itself target) (powerOf target))]] [(target, TargetSlot.required Pool.Creatures Nothing)]
     Spec.assertBool s (elem (Text.pack "Exile target creature. Its controller gains life equal to its power.") (concat (Oracle.abilities plowshares))) "no \"its power\""
+    -- An owner is "that player" too (Recoil).
+    let recoil = spell [clause [Effect.MoveToZone (move (ObjectRef.InSlot target) Zone.Hand), discard (PlayerRef.HolderOfBound Holder.Owner Hop.Itself target) 1]] [(target, TargetSlot.required Pool.Permanents Nothing)]
+    Spec.assertBool s (elem (Text.pack "Return target permanent to its owner's hand. Then that player discards a card.") (concat (Oracle.abilities recoil))) "no \"that player\" for an owner"
 
   -- CR 107.3: a change that counts reads "for each" (Empyrial Armor) or "+X"
   -- with what X is (Inner Calm, Outer Strength), "for each" first; a change by

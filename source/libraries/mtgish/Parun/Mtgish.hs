@@ -1444,10 +1444,10 @@ player context value = do
   case Node.tag n of
     "You" -> Right (PlayerRef.Relative PlayerRelation.You)
     "ActionPlayer" | Just p <- actor context -> Right p
-    "ControllerOfPermanent" -> do
+    t | Just holder <- lookup t [("ControllerOfPermanent", Holder.Controller), ("OwnerOfPermanent", Holder.Owner)] -> do
       ref <- Node.argument n >>= permanent context
       case ref of
-        ObjectRef.InSlot s | s /= Oracle.Target.selfSlot -> Right (PlayerRef.HolderOfBound Holder.Controller Hop.Itself s)
+        ObjectRef.InSlot s | s /= Oracle.Target.selfSlot -> Right (PlayerRef.HolderOfBound holder Hop.Itself s)
         _ -> Node.untranslated n
     t
       | Just s <- Map.lookup t (references context) -> Right (PlayerRef.InSlot s)
