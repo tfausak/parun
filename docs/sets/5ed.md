@@ -10,26 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Flare: `_Action:CreateFutureTrigger`
-- Foxfire: `_Action:CreatePreventDamageUntil`
-- Gloom: `_Rule:ActivatedAbilityEffect`
-- Greater Realm of Preservation: `_Action:ChooseADamageSource`
-- Greater Werewolf: `_Trigger:AtTheEndOfCombat`
-- Heal: `_Action:CreateFuturePreventDamage`
-- Homarid Warrior: `_Action:PermanentDoesntUntapDuringControllersNextUntap`
-- Hungry Mist: `_Action:MayCost`
-- Hydroblast: `_Action:If`
-- Ice Floe: `_PermanentRule:MayChooseNotToUntapDuringUntap`
-- Infinite Hourglass: `_CounterType:TimeCounter`
-- Initiates of the Ebon Hand: `_Action:If`
-- Island Sanctuary: `_Rule:ReplaceWouldDraw`
-- Ivory Guardians: `_Permanents:IsNamed`
-- Johtull Wurm: `_LayerEffect:AdjustPTForEach`
-- Joven's Tools: renders differently
-- Justice: `_Action:MayCost`
-- Krovikan Fetish: `_Action:CreateFutureTrigger`
-- Krovikan Sorcerer: `_Cost:DiscardACardOfType`
-- Labyrinth Minotaur: `_Action:PermanentDoesntUntapDuringControllersNextUntap`
 - Leviathan: `_PermanentRule:DoesntUntapDuringControllersUntap`
 - Lifetap: `_Trigger:WhenAPermanentBecomesTapped`
 - Living Artifact: `_Trigger:WhenAPlayerIsDealtDamage`
@@ -98,6 +78,8 @@ first.
   lets the damage through and copies it (CR 614).
 - #5990: Clockwork Beast; Clockwork Steed. A counter effect can't put up to X
   on, capped by a total, as `ChooseNumber.upTo` is fixed.
+- #6002: Island Sanctuary. No draw replacement offers skipping the draw for an
+  effect, or reads "during your draw step" (CR 614.10).
 - #5999: Errantry. Nothing lets a creature attack only with no other attacker
   beside it; `CantAttackAlone` is the opposite direction.
 - #5177: Gauntlets of Chaos. No filter reads a shared card type with a sibling
