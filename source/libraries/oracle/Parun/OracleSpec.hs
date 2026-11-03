@@ -701,6 +701,11 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let ghoul = Effect.PutCounters (PutCounters.MkPutCounters CounterKind.PlusOnePlusOne hand (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "self"))) Nothing)
     Spec.assertEq s [[Text.pack "Put a +1/+1 counter on Spark for each card in your hand.", Text.pack "Put a number of +1/+1 counters on Spark equal to the number of cards in your hand."]] (Oracle.abilities (spell [clause [ghoul]] []))
 
+  -- A limit on the total has no wording, so a limited placement can't pass as a plain one.
+  Spec.it s "render prints no placement limited by a total" $ do
+    let limited = Effect.PutCounters (PutCounters.MkPutCounters CounterKind.PlusOnePlusOne (Quantity.Literal 1) (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "self"))) (Just 7))
+    Spec.assertEq s Nothing (Oracle.render (spell [clause [limited]] []))
+
   -- CR 118.12: a cost paid on resolution. "Unless" makes the instructions
   -- the branch where it wasn't paid (CR 118.12a), whoever is offered it: the
   -- controller of a spell a slot names, you, or any player. A cost may be
