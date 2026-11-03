@@ -3798,6 +3798,8 @@ measureReads measure = case measure of
   Measure.Toughness -> Set.singleton PowerA
   Measure.ManaValue -> Set.empty
   Measure.ColorCount -> Set.singleton Colors
+  -- CR 306.5c's counters are no layer's; being a planeswalker is layer 4's.
+  Measure.Loyalty -> Set.singleton Types
 
 -- Which aspects a Trait's values read, for Filter.Shares and
 -- Aggregation.MostSharing alike.
@@ -4519,6 +4521,7 @@ quantityReads q = case q of
   -- PowerA exactly as either Measure does above.
   Quantity.Type.StationMeasure -> Set.singleton PowerA
   Quantity.Type.Arithmetic arithmetic -> foldMap quantityReads arithmetic
+  Quantity.Type.AtMost atMost -> foldMap quantityReads atMost
   Quantity.Type.AgainstSlot (AgainstSlot.MkAgainstSlot _ a) -> quantityReads a
   -- AgainstSlot's answer: the payload is what reads an aspect, off CR 607.2a's
   -- linked cards rather than off a slot. Over-declaring is the safe direction

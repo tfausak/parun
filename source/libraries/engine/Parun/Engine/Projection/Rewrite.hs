@@ -2370,6 +2370,7 @@ rewriteQuantity pairs quantity = case quantity of
           Count.Type.aggregation = rewriteAggregation pairs (Count.Type.aggregation c)
         }
   Quantity.Type.Arithmetic arithmetic -> Quantity.Type.Arithmetic (fmap (rewriteQuantity pairs) arithmetic)
+  Quantity.Type.AtMost atMost -> Quantity.Type.AtMost (fmap (rewriteQuantity pairs) atMost)
   Quantity.Type.Literal _ -> quantity
   Quantity.Type.Measure _ -> quantity
   Quantity.Type.Intensity -> quantity

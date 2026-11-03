@@ -8,6 +8,7 @@ import qualified Parun.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Parun.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Parun.Types.AgainstSlot as AgainstSlot
 import qualified Parun.Types.Arithmetic as Arithmetic
+import qualified Parun.Types.AtMost as AtMost
 import qualified Parun.Types.CastFrom as CastFrom
 import qualified Parun.Types.CompletedDungeon as CompletedDungeon
 import qualified Parun.Types.Count as Count
@@ -101,6 +102,9 @@ data Quantity
     Star
   | -- | CR 107.1: a calculation over inner quantities; see Parun.Types.Arithmetic.
     Arithmetic (Arithmetic.Arithmetic Quantity)
+  | -- | CR 107.1: the value, lowered to each limit that names a number; see
+    -- Parun.Types.AtMost.
+    AtMost (AtMost.AtMost Quantity)
   | -- | A quantity that counts game state (CR 208.2a, CR 608.2h); see
     -- Parun.Types.Count. The payload is `Count Quantity` so Aggregation.Greatest
     -- recurses through the data rather than a module cycle.

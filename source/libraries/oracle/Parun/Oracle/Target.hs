@@ -197,6 +197,7 @@ measure m = case m of
   Measure.Toughness -> [Text.pack "toughness"]
   Measure.ManaValue -> [Text.pack "mana value"]
   Measure.ColorCount -> []
+  Measure.Loyalty -> [Text.pack "loyalty"]
 
 -- | What a name or pronoun owns: "its", "Spark's".
 possessive :: Text.Text -> Text.Text

@@ -25,6 +25,7 @@ import qualified Parun.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Parun.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Parun.Types.AgainstSlot as AgainstSlot
 import qualified Parun.Types.Arithmetic as Arithmetic
+import qualified Parun.Types.AtMost as AtMost
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardType as CardType
@@ -394,6 +395,12 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- CR 107.1: Nothing propagates from any operand -- a calculation over a
         -- number nobody could determine is not a number either.
         Quantity.Arithmetic arithmetic -> fmap calculate (traverse recur arithmetic)
+        -- CR 107.1: Nothing propagates from the value as from any operand, but NOT
+        -- from a limit: "not more than the creature's toughness" says nothing
+        -- when there is no creature (Parun.Types.AtMost), so a limit naming no
+        -- number is skipped. Drain Life at a battle gains all the damage dealt
+        -- (docs/decisions.md, "Drain Life's limits at a target they don't name").
+        Quantity.AtMost (AtMost.MkAtMost inner limits) -> fmap (\n -> minimum (n : Maybe.mapMaybe recur (Foldable.toList limits))) (recur inner)
         -- CR 208.2a / 608.2h: delegate to the general Count fold (Parun.Engine.Count),
         -- which reads the CR 613 projection through the injected ViewOf. The second
         -- injection is this function itself, aimed at whichever CANDIDATE the fold is
@@ -1306,6 +1313,7 @@ substituteAnnouncedX :: Natural -> Quantity -> Quantity
 substituteAnnouncedX n quantity = case quantity of
   Quantity.InSlot slot | slot == Binding.variableX -> Quantity.Literal (toInteger n)
   Quantity.Arithmetic arithmetic -> Quantity.Arithmetic (fmap (substituteAnnouncedX n) arithmetic)
+  Quantity.AtMost atMost -> Quantity.AtMost (fmap (substituteAnnouncedX n) atMost)
   _ -> quantity
 
 -- QuantitySlot.slots split by WHICH HALF of the binding the read is of: the
@@ -1347,6 +1355,7 @@ objectSlots quantity = case quantity of
   -- DESCENT: a calculation's operands are card text like any other, and
   -- QuantitySlot.slots descends into them the same way.
   Quantity.Arithmetic arithmetic -> foldMap objectSlots arithmetic
+  Quantity.AtMost atMost -> foldMap objectSlots atMost
   -- DESCENT into a Greatest's or a Total's per-member number, which may aim at a
   -- slot of its own; the other aggregations carry no number to ask.
   Quantity.Count c -> QuantitySlot.foldCount objectSlots c
@@ -1622,6 +1631,7 @@ readsX quantity = case quantity of
   -- Plus X (Literal 3), and Toxic Deluge's "-X" is Negate X, each reading X
   -- without being equal to it.
   Quantity.Arithmetic arithmetic -> any readsX arithmetic
+  Quantity.AtMost atMost -> any readsX atMost
   -- Terminating for the reason QuantitySlot.overSlots' Count arm is: a Greatest's
   -- payload is a strictly smaller subterm.
   Quantity.Count c -> QuantitySlot.anyCount readsX c

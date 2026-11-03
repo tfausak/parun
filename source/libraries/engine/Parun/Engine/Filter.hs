@@ -1769,6 +1769,11 @@ measureOf measure = case measure of
   Measure.Toughness -> toughness
   Measure.ManaValue -> manaValue
   Measure.ColorCount -> Just . toInteger . Set.size . colors
+  -- CR 306.5: only a planeswalker has loyalty. CR 306.5c's counters are its
+  -- loyalty on the battlefield, where every reader asks (Drain Life's target);
+  -- a planeswalker card elsewhere carries none, so its printed loyalty
+  -- (CR 306.5a) is not implemented (gap #5972).
+  Measure.Loyalty -> \view -> if Set.member CardType.Planeswalker (cardTypes view) then Just (toInteger (Map.findWithDefault 0 CounterKind.Loyalty (counters view))) else Nothing
 
 -- What a Measures atom's operand reads: a literal, the candidate's own view, or
 -- a number the Context carries, Nothing where the Context carries none.
@@ -3490,6 +3495,7 @@ manaValueThresholds predicate = case predicate of
     Operand.Literal n -> case Measures.measure m of
       Measure.ManaValue -> [n]
       Measure.ColorCount -> []
+      Measure.Loyalty -> []
       -- Reads power or toughness against the literal, so it bounds nothing.
       Measure.Power -> []
       Measure.Toughness -> []

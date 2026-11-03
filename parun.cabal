@@ -194,6 +194,8 @@ library codec
     Parun.Codec.ArrivalSpec
     Parun.Codec.AsCopy
     Parun.Codec.AsCopySpec
+    Parun.Codec.AtMost
+    Parun.Codec.AtMostSpec
     Parun.Codec.AttachAll
     Parun.Codec.AttachAllSpec
     Parun.Codec.AttachBound
@@ -2402,6 +2404,7 @@ library types
     Parun.Types.ArrivalEnd
     Parun.Types.AsCopy
     Parun.Types.Asked
+    Parun.Types.AtMost
     Parun.Types.AttachAll
     Parun.Types.AttachBound
     Parun.Types.AttachedToBound

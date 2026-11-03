@@ -4376,6 +4376,7 @@ quantityKindFilters quantity = case quantity of
   Quantity.Type.VotesReceived _ -> []
   Quantity.Type.Star -> []
   Quantity.Type.Arithmetic arithmetic -> foldMap quantityKindFilters arithmetic
+  Quantity.Type.AtMost atMost -> foldMap quantityKindFilters atMost
   -- The Count's own Filter is countFilters' half above; what this half adds is
   -- the CounterKind a Greatest's per-member Quantity may hide, which is
   -- QuantitySlot.nestedCounts' descent.

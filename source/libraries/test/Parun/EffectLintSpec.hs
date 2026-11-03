@@ -486,6 +486,7 @@ printedBoxQuantity quantity = case quantity of
     Arithmetic.Quotient {} -> False
     Arithmetic.Times {} -> False
     Arithmetic.Negate {} -> False
+  Quantity.Type.AtMost {} -> False
   Quantity.Type.Measure _ -> False
   Quantity.Type.Intensity -> False
   Quantity.Type.InSlot _ -> False

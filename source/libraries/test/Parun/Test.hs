@@ -80,6 +80,7 @@ import qualified Parun.Codec.ArmDelayedTriggerSpec
 import qualified Parun.Codec.ArrangeInLibrarySpec
 import qualified Parun.Codec.ArrivalSpec
 import qualified Parun.Codec.AsCopySpec
+import qualified Parun.Codec.AtMostSpec
 import qualified Parun.Codec.AttachAllSpec
 import qualified Parun.Codec.AttachBoundSpec
 import qualified Parun.Codec.AttachRSpec
@@ -1020,6 +1021,7 @@ spec s registry corpus = do
   Parun.Codec.AfterObjectTurnSpec.spec s
   Parun.Codec.AfterTurnSpec.spec s
   Parun.Codec.AgainstExiledPileSpec.spec s
+  Parun.Codec.AtMostSpec.spec s
   Parun.Codec.AgainstLastCardExiledWithSpec.spec s
   Parun.Codec.AgainstSlotSpec.spec s
   Parun.Codec.AggregationSpec.spec s
