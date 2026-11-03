@@ -10,26 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Leviathan: `_PermanentRule:DoesntUntapDuringControllersUntap`
-- Lifetap: `_Trigger:WhenAPermanentBecomesTapped`
-- Living Artifact: `_Trigger:WhenAPlayerIsDealtDamage`
-- Magus of the Unseen: `_Action:GainControlOfPermanentUntil`
-- Mana Vault: `_PermanentRule:DoesntUntapDuringControllersUntap`
-- Marsh Viper: `_PutCountersAction:NumberCountersOfTypeOnPlayer`
-- Mind Ravel: `_Action:CreateFutureTrigger`
-- Mole Worms: `_PermanentRule:MayChooseNotToUntapDuringUntap`
-- Murk Dwellers: `_Expiration:UntilEndOfCombat`
-- Necropotence: `_Rule:PlayerEffect`
-- Obelisk of Undoing: `_Permanents:OwnedByAPlayer`
-- Orcish Captain: `_Action:FlipACoin_OnWinAndLose`
-- Paralyze: `_PermanentRule:DoesntUntapDuringControllersUntap`
-- Phantasmal Forces: `_Action:MayCost`
-- Pirate Ship: `_PermanentRule:CantAttackUnlessDefendingPlayer`
-- Pit Scorpion: `_PutCountersAction:ACounterOfTypeOnPlayer`
-- Plague Rats: `_Permanents:IsNamed`
-- Pox: `_GameNumber:ThirdRoundedUp`
-- Primal Order: `_Player:Trigger_ThatPlayer`
-- Primordial Ooze: `_PermanentRule:MustAttack`
 - Prismatic Ward: `_ReplacementActionWouldEnter:ChooseAColor`
 - Pyroblast: `_Action:If`
 - Rabid Wombat: `_StaticLayerEffect:AdjustPTForEach`

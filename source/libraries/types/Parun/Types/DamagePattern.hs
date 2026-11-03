@@ -41,7 +41,7 @@ import qualified Parun.Types.SlotName as SlotName
 -- none.
 --
 -- That Recipient is BAKED by the engine, never authored, exactly as
--- Parun.Types.PhasePattern.whosePhase is: card data cannot name an ObjectId or a
+-- Parun.Types.PhasePattern's Among is: card data cannot name an ObjectId or a
 -- PlayerId. Resolve's four arms that bake one (PreventNextDamage,
 -- PreventAllDamage, PreventNextDamageInstance and RedirectDamage) share one
 -- `installDamageRow`, and all but the CR 615.8 shield thread a printed KIND
