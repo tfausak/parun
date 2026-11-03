@@ -3253,3 +3253,16 @@ blood-lust
 brainstorm
 brainwash
 broken-visage
+caribou-range
+circle-of-protection-artifacts
+cockatrice
+dandan
+dark-maze
+detonate
+disintegrate
+dwarven-soldier
+dwarven-warriors
+energy-flux
+enervate
+erg-raiders
+evil-presence

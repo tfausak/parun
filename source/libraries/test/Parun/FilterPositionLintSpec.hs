@@ -1937,7 +1937,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- abilities, whose X CR 602.2b announces.
     --
     -- Exactly, against the mana value: Chthonian Nightmare, Tamiyo, Compleated
-    -- Sage, Synthetic Counted Verdict and Spell Blast in a slot, and Fear of
+    -- Sage, Synthetic Counted Verdict, Spell Blast and Detonate in a slot, and Fear of
     -- Change and Ornate Imitations in a reference pick, at the top level and
     -- inside a ForEachNumber body; Isareth the Awakener in a reflexive delayed
     -- ability's slot, whose amount the arming resolution's chosen X binds.
@@ -1969,6 +1969,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Liliana, Heretical Healer", 1),
         ("Synthetic Counted Verdict", 1),
         ("Spell Blast", 1),
+        ("Detonate", 1),
         ("Fear of Change", 1),
         ("Ornate Imitations", 1),
         ("Spawnbroker", 1),

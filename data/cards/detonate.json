@@ -1,0 +1,119 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Variable"
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Detonate",
+      "oracleText": "Destroy target artifact with mana value X. It can't be regenerated. Detonate deals X damage to that artifact's controller.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "Destroy",
+                    "value": {
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "target"
+                      },
+                      "regenerability": {
+                        "type": "CantBeRegenerated"
+                      }
+                    }
+                  },
+                  {
+                    "type": "DealDamage",
+                    "value": {
+                      "parts": [
+                        {
+                          "quantity": {
+                            "type": "InSlot",
+                            "value": "X"
+                          },
+                          "ref": {
+                            "type": "Players",
+                            "value": {
+                              "players": {
+                                "type": "HolderOfBound",
+                                "value": {
+                                  "holder": {
+                                    "type": "Controller"
+                                  },
+                                  "hop": {
+                                    "type": "Itself"
+                                  },
+                                  "slot": "target"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "target": {
+                "amount": {
+                  "type": "InSlot",
+                  "value": "X"
+                },
+                "filter": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Artifact"
+                      }
+                    },
+                    {
+                      "type": "Measures",
+                      "value": {
+                        "comparison": {
+                          "type": "Exactly"
+                        },
+                        "measure": {
+                          "type": "ManaValue"
+                        },
+                        "operand": {
+                          "type": "EnclosingAmount"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "pool": {
+                  "type": "Permanents"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

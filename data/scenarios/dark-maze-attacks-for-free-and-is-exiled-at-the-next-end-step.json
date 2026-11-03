@@ -1,0 +1,189 @@
+{
+  "description": "Dark Maze: {0} lets it attack this turn though it has defender, and exiles it at the next end step",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Dark Maze",
+            "ready": true,
+            "label": "maze"
+          },
+          {
+            "card": "Grizzly Bears",
+            "ready": true,
+            "label": "bears"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "refuse": {
+        "Attack": [
+          "$maze"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$bears"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 18
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Dark Maze",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "BeginningOfCombat",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$maze"
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "BeginningOfCombat",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 3,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$maze"
+        ]
+      }
+    },
+    {
+      "turn": 3,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 14
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Dark Maze",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 4,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Exile",
+          "card": "Dark Maze",
+          "count": 1
+        }
+      }
+    }
+  ],
+  "note": "Turn 1 is the board without the ability's activation. Exile waits for the end step: it is still there postcombat."
+}
