@@ -1715,7 +1715,8 @@ effectObjectRefs effect =
         -- Word of Command's "choose a card from it", out of the hand it looked at.
         Effect.OfferCast offer -> [([CardFromAmong], OfferCast.ref offer)]
         Effect.GrantPlayFromExile grant -> read_ [GrantPlayFromExile.ref grant]
-        -- Shimian Specter's "You choose a nonland card from it", asked by
+        -- Shimian Specter's "You choose a nonland card from it" and Sylvan Library's
+        -- "choose two cards in your hand", asked by
         -- Resolve.Common.loopMembers.
         Effect.ForEach (ForEach.MkForEach ref _ _ _ _ _ _) -> [([CardFromAmong, CardInHand], ref)]
         Effect.ForEachNumber {} -> []
