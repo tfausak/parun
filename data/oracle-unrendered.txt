@@ -3328,4 +3328,6 @@ energy-flux
 enervate
 erg-raiders
 evil-presence
+cosmogoyf
+go-ninja-go
 nether-shadow

@@ -119,10 +119,11 @@ evaluate viewOf quantityOf context gs count =
    in case Count.Type.scope count of
         Scope.InZone (InZone.MkInZone zone ref) -> do
           pids <- playersFor viewOf context gs ref
-          -- CR 108.2b: a token awaiting CR 704.5d in a hand or graveyard is no
-          -- card there. A library's members stay whole: Warp World's "that many"
-          -- counts a token shuffled in (warp-world-counts-a-token-but-reveals-only-cards).
-          let members = if List.elem zone [Zone.Graveyard, Zone.Hand] then Game.cardsIn else Game.zoneMembers
+          -- CR 108.2b: a token awaiting CR 704.5d in a hand, graveyard or exile
+          -- is no card there (go-ninja-go-exiles-a-token-cosmogoyf-does-not-count).
+          -- A library's members stay whole: Warp World's "that many" counts a
+          -- token shuffled in (warp-world-counts-a-token-but-reveals-only-cards).
+          let members = if List.elem zone [Zone.Graveyard, Zone.Hand, Zone.Exile] then Game.cardsIn else Game.zoneMembers
               ids = concatMap (\pid -> members zone pid gs) pids
               kept = Maybe.mapMaybe (\oid -> fmap ((,) (Just oid)) (keep predicate context (viewOf oid))) ids
           aggregate quantityOf aggregation kept

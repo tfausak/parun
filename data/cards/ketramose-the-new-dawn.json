@@ -24,10 +24,8 @@
                       "type": "Members"
                     },
                     "filter": {
-                      "type": "Not",
-                      "value": {
-                        "type": "IsToken"
-                      }
+                      "type": "And",
+                      "value": []
                     },
                     "scope": {
                       "type": "InZone",
@@ -75,10 +73,8 @@
                       "type": "Members"
                     },
                     "filter": {
-                      "type": "Not",
-                      "value": {
-                        "type": "IsToken"
-                      }
+                      "type": "And",
+                      "value": []
                     },
                     "scope": {
                       "type": "InZone",
