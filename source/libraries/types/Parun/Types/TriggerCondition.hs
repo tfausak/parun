@@ -21,6 +21,7 @@ import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
@@ -35,7 +36,6 @@ import qualified Parun.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
-import qualified Parun.Types.PlayerLosesLife as PlayerLosesLife
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.RevealedThisWay as RevealedThisWay
@@ -400,15 +400,16 @@ data TriggerCondition
     -- the bearer as its source; the Filter is over CR 120.1's damage source.
     SelfPreventsDamage (Filter.Filter Keyword.Keyword)
   | -- | CR 119.9: "whenever [a player] gains life" (Ajani's Pridemate), once per
-    -- gain a source caused.
-    PlayerGainsLife PlayerRelation.PlayerRelation
+    -- gain a source caused; its frequency is Vanguard Seraph's "for the first time
+    -- each turn".
+    PlayerGainsLife LifeTrigger.LifeTrigger
   | -- | CR 603.2c's batch reading of the arm above: "whenever one or more
     -- players gain life", once for the whole CR 608.2f event.
     PlayersGainLife PlayerRelation.PlayerRelation
   | -- | "Whenever [a player] loses life" (Exquisite Blood), against
     -- GameEvent.LifeLost; its frequency is Vengeful Warchief's "for the first time
     -- each turn".
-    PlayerLosesLife PlayerLosesLife.PlayerLosesLife
+    PlayerLosesLife LifeTrigger.LifeTrigger
   | -- | CR 714.2b generalized over the counter kind: a threshold crossing whose
     -- before/after pair straddles N, intervening "if" included.
     SelfCountersReached SelfCountersReached.SelfCountersReached

@@ -35,6 +35,7 @@ import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.ManaSpecification as ManaSpecification
 import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.Measures as Measures
@@ -56,7 +57,6 @@ import qualified Parun.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
-import qualified Parun.Types.PlayerLosesLife as PlayerLosesLife
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.Quantity as Quantity
@@ -814,13 +814,13 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PlayerGainsLife PlayerRelation.You)
-      " {\"type\":\"PlayerGainsLife\",\"value\":{\"type\":\"You\"}} "
+      (TriggerCondition.PlayerGainsLife (LifeTrigger.MkLifeTrigger PlayerRelation.You TriggerFrequency.EveryTime))
+      " {\"type\":\"PlayerGainsLife\",\"value\":{\"player\":{\"type\":\"You\"}}} "
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PlayerGainsLife PlayerRelation.Opponent)
-      " {\"type\":\"PlayerGainsLife\",\"value\":{\"type\":\"Opponent\"}} "
+      (TriggerCondition.PlayerGainsLife (LifeTrigger.MkLifeTrigger PlayerRelation.Opponent TriggerFrequency.EveryTime))
+      " {\"type\":\"PlayerGainsLife\",\"value\":{\"player\":{\"type\":\"Opponent\"}}} "
   -- CR 603.2c's batch reading of the arm above. A DIFFERENT tag carrying the SAME
   -- payload, which is the whole hazard: a codec that folded the two would make
   -- "each player gains 4 life" fire a per-seat card once and a batch card three
@@ -831,6 +831,13 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.PlayersGainLife PlayerRelation.AnyPlayer)
       " {\"type\":\"PlayersGainLife\",\"value\":{\"type\":\"AnyPlayer\"}} "
+  -- Vanguard Seraph.
+  Spec.it s "PlayerGainsLife carries a frequency" $
+    Common.assertCodec
+      s
+      TriggerCondition.codec
+      (TriggerCondition.PlayerGainsLife (LifeTrigger.MkLifeTrigger PlayerRelation.You TriggerFrequency.FirstTimeEachTurn))
+      " {\"type\":\"PlayerGainsLife\",\"value\":{\"player\":{\"type\":\"You\"},\"frequency\":{\"type\":\"FirstTimeEachTurn\"}}} "
   -- The life-LOSS trigger. A DIFFERENT tag from PlayerGainsLife above and the
   -- same payload shape, so the two must never decode to each other -- the same
   -- hazard GameEvent's LifeLost/LifeGained pair carries.
@@ -838,12 +845,12 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PlayerLosesLife (PlayerLosesLife.MkPlayerLosesLife PlayerRelation.You TriggerFrequency.EveryTime))
+      (TriggerCondition.PlayerLosesLife (LifeTrigger.MkLifeTrigger PlayerRelation.You TriggerFrequency.EveryTime))
       " {\"type\":\"PlayerLosesLife\",\"value\":{\"player\":{\"type\":\"You\"}}} "
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PlayerLosesLife (PlayerLosesLife.MkPlayerLosesLife PlayerRelation.Opponent TriggerFrequency.EveryTime))
+      (TriggerCondition.PlayerLosesLife (LifeTrigger.MkLifeTrigger PlayerRelation.Opponent TriggerFrequency.EveryTime))
       " {\"type\":\"PlayerLosesLife\",\"value\":{\"player\":{\"type\":\"Opponent\"}}} "
   -- CR 714.2b. The payload is the counter KIND then the chapter number, in that
   -- order, since a Saga's chapters are told apart by the number alone.

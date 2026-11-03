@@ -6,7 +6,9 @@
           "condition": {
             "type": "PlayerGainsLife",
             "value": {
-              "type": "AnyPlayer"
+              "player": {
+                "type": "AnyPlayer"
+              }
             }
           },
           "modal": {

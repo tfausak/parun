@@ -273,6 +273,7 @@ import qualified Parun.Types.LifeLoss as LifeLoss
 import qualified Parun.Types.LifeLossPattern as LifeLossPattern
 import qualified Parun.Types.LifeLossR as LifeLossR
 import qualified Parun.Types.LifeTally as LifeTally
+import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.LimitUnless as LimitUnless
 import qualified Parun.Types.LookAt as LookAt
 import qualified Parun.Types.LoyaltyClause as LoyaltyClause
@@ -333,7 +334,6 @@ import qualified Parun.Types.PlayerCounterTally as PlayerCounterTally
 import qualified Parun.Types.PlayerCounters as PlayerCounters
 import qualified Parun.Types.PlayerDesignationTally as PlayerDesignationTally
 import qualified Parun.Types.PlayerEffect as PlayerEffect
-import qualified Parun.Types.PlayerLosesLife as PlayerLosesLife
 import qualified Parun.Types.PlayerQuantity as PlayerQuantity
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerSacrifices as PlayerSacrifices
@@ -3051,9 +3051,9 @@ triggerConditionNames asking x = case x of
   TriggerCondition.AbilityIsCountered -> mempty
   TriggerCondition.DamageToPlayerPrevented _playerRelation -> mempty
   TriggerCondition.SelfPreventsDamage filter_ -> filterNames asking filter_
-  TriggerCondition.PlayerGainsLife _playerRelation -> mempty
+  TriggerCondition.PlayerGainsLife lifeTrigger -> triggerFrequencyNames asking HistoryRead.LifeGains (LifeTrigger.frequency lifeTrigger)
   TriggerCondition.PlayersGainLife _playerRelation -> mempty
-  TriggerCondition.PlayerLosesLife playerLosesLife -> triggerFrequencyNames asking HistoryRead.LifeLosses (PlayerLosesLife.frequency playerLosesLife)
+  TriggerCondition.PlayerLosesLife lifeTrigger -> triggerFrequencyNames asking HistoryRead.LifeLosses (LifeTrigger.frequency lifeTrigger)
   TriggerCondition.SelfCountersReached selfCountersReached -> selfCountersReachedNames asking selfCountersReached
   TriggerCondition.SelfBecomesClassLevel _classLevel -> mempty
   TriggerCondition.SelfLastCounterRemoved selfCountersRemoved -> selfCountersRemovedNames asking selfCountersRemoved

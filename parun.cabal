@@ -903,10 +903,10 @@ library codec
     Parun.Codec.LifeLossRewriteSpec
     Parun.Codec.LifeLossRSpec
     Parun.Codec.LifeLossSpec
-    Parun.Codec.LifeLost
-    Parun.Codec.LifeLostSpec
     Parun.Codec.LifeTally
     Parun.Codec.LifeTallySpec
+    Parun.Codec.LifeTrigger
+    Parun.Codec.LifeTriggerSpec
     Parun.Codec.LimitUnless
     Parun.Codec.LimitUnlessSpec
     Parun.Codec.LoggedEvent
@@ -1185,8 +1185,6 @@ library codec
     Parun.Codec.PlayerInstructionSpec
     Parun.Codec.PlayerIsDealtDamage
     Parun.Codec.PlayerIsDealtDamageSpec
-    Parun.Codec.PlayerLosesLife
-    Parun.Codec.PlayerLosesLifeSpec
     Parun.Codec.PlayerMeasure
     Parun.Codec.PlayerQuantity
     Parun.Codec.PlayerQuantitySpec
@@ -2805,8 +2803,8 @@ library types
     Parun.Types.LifeLossPattern
     Parun.Types.LifeLossR
     Parun.Types.LifeLossRewrite
-    Parun.Types.LifeLost
     Parun.Types.LifeTally
+    Parun.Types.LifeTrigger
     Parun.Types.LimitUnless
     Parun.Types.LoggedEvent
     Parun.Types.LookAt
@@ -2968,7 +2966,6 @@ library types
     Parun.Types.PlayerId
     Parun.Types.PlayerInstruction
     Parun.Types.PlayerIsDealtDamage
-    Parun.Types.PlayerLosesLife
     Parun.Types.PlayerMeasure
     Parun.Types.PlayerQuantity
     Parun.Types.PlayerRef
