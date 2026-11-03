@@ -940,6 +940,7 @@ fields-of-summer
 fiendish-panda
 fiendslayer-paladin
 fierce-retribution
+fiery-annihilation
 fiery-conclusion
 fiery-encore
 fiery-impulse

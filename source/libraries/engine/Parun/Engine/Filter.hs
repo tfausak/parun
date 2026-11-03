@@ -1864,16 +1864,25 @@ sharesAnchored trait anchor = case anchor of
   where
     meets a b = not (Set.disjoint a b)
 
--- CR 701.3a / 301.5a: the object Filter.IsAttachedTo compares a candidate's host
--- with -- the match's source, or under CR 613.4c the object the surrounding
+-- CR 701.3a / 301.5a: does a candidate attached to this object relate to the
+-- anchor -- the match's source, or under CR 613.4c the object the surrounding
 -- quantity is aimed at, which need not be the source.
 --
--- Not implemented: the Bound anchor, answered Nothing (#5636).
-attachedAnchored :: Anchor.Anchor nested -> Maybe (Context -> Maybe ObjectId.ObjectId)
+-- At Bound, the objects the slot holds, and VACUOUSLY TRUE for a slot with no
+-- key in slotControllers, ControllerRelatesToBound's posture and for its reason:
+-- CR 601.2c's offer is made before the sibling target is chosen, and
+-- Parun.Engine.Target.selectionLegal's joint check narrows it. The scenarios
+-- named for Fiery Annihilation prove it.
+attachedAnchored :: Anchor.Anchor nested -> Maybe (Context -> ObjectId.ObjectId -> Bool)
 attachedAnchored anchor = case anchor of
-  Anchor.Source -> Just source
-  Anchor.Evaluated -> Just evaluated
-  Anchor.Bound _ -> Nothing
+  Anchor.Source -> Just (\context host -> source context == Just host)
+  Anchor.Evaluated -> Just (\context host -> evaluated context == Just host)
+  Anchor.Bound slot ->
+    Just
+      ( \context host ->
+          Map.notMember slot (slotControllers context)
+            || Set.member host (Map.findWithDefault Set.empty slot (slotObjects context))
+      )
   -- A group names no one host: Filter.AttachedTo is that reading.
   Anchor.AnyPermanent _ -> Nothing
 
@@ -2354,8 +2363,8 @@ matches context view predicate = case predicate of
   -- itself. A live read of Object.attachedTo, so an Equipment unequipped by CR
   -- 704.5n stops matching at once. Vacuously False where the candidate is
   -- attached to nothing or to a player, and where nothing fills the anchor.
-  Filter.IsAttachedTo anchor -> case (attachedTo view, attachedAnchored anchor >>= \anchored -> anchored context) of
-    (Just host, Just aimed) -> host == aimed
+  Filter.IsAttachedTo anchor -> case (attachedTo view, attachedAnchored anchor) of
+    (Just host, Just anchored) -> anchored context host
     _ -> False
   -- CR 613.4c: IsSource's identity test against the object the surrounding
   -- quantity is aimed at. Vacuously False where no quantity aims the match.
