@@ -3111,7 +3111,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- CR 400.1's per-player zone again, but only the RESOLVING CONTROLLER's, so no
   -- scope to fold over and no APNAP order to impose. In the zone's own order,
   -- which no rule reads: CR 402.3 leaves a hand's arrangement to its owner.
-  ObjectRef.EachCardInYourHand -> Game.zoneMembers Zone.Hand controller gs
+  ObjectRef.EachCardInYourHand -> Game.cardsIn Zone.Hand controller gs
   -- The arm above's zone under EachCardInGraveyard's scope and filter: CR
   -- 109.2a's reading again, over the hands Target.zoneScopePlayers names rather
   -- than the resolving controller's alone. In APNAP order (CR 608.2f) across
@@ -3127,7 +3127,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   ObjectRef.EachCardInHand (EachCardInHand.MkEachCardInHand scope mFilter) ->
     let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
         held pid = case mFilter of
-          Nothing -> Game.zoneMembers Zone.Hand pid gs
+          Nothing -> Game.cardsIn Zone.Hand pid gs
           Just filter_ -> handCardsOf context gs pid filter_
      in concatMap held (Target.zoneScopePlayers (Plane.rangePerspective source controller gs) (Just controller) legal scope gs)
   -- CR 400.1's other hidden per-player zone, and only the RESOLVING
@@ -3363,7 +3363,7 @@ handCardsOf context gs pid filter_ =
   let viewOf = Projection.viewsOf gs
    in filter
         (\oid -> Filter.matches context (viewOf oid) filter_)
-        (Game.zoneMembers Zone.Hand pid gs)
+        (Game.cardsIn Zone.Hand pid gs)
 
 -- The cards in ONE player's library matching the filter: handCardsOf one
 -- hidden zone over, and SORTED, graveyardCardsOf's order: CR 401.2 keeps the
@@ -3374,7 +3374,7 @@ libraryCardsOf context gs pid filter_ =
    in List.sort
         ( filter
             (\oid -> Filter.matches context (viewOf oid) filter_)
-            (Game.zoneMembers Zone.Library pid gs)
+            (Game.cardsIn Zone.Library pid gs)
         )
 
 -- The objects a Create bound into `slot` as a GROUP, read off the RESOLVING

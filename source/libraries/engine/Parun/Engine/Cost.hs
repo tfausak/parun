@@ -2344,7 +2344,7 @@ discardCandidates slots pid oid criterion gs =
   let context = Projection.framedBy oid gs (Projection.contextWithSlots gs (Just pid) (Just oid) slots)
       viewOf = Projection.viewsOf gs
       matches candidate = Filter.matches context (viewOf candidate) criterion
-   in filter (\candidate -> candidate /= oid && not (Game.beingCast gs candidate) && matches candidate) (Game.zoneMembers Zone.Hand pid gs)
+   in filter (\candidate -> candidate /= oid && not (Game.beingCast gs candidate) && matches candidate) (Game.cardsIn Zone.Hand pid gs)
 
 -- The cards this player may put onto the battlefield to pay a CR 118.12
 -- PutCardFromHandOntoBattlefield component on `oid`: discardCandidates' pool,

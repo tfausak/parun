@@ -4518,7 +4518,7 @@ apply batch applied candidate event =
         let asEffect = payingOnResolution False . causedBy (ReplacementCandidate.controller candidate)
         Replacement.consume (ReplacementCandidate.identity candidate)
         gs <- State.get
-        let held = Game.zoneMembers Zone.Hand pid gs
+        let held = Game.cardsIn Zone.Hand pid gs
         picked <- case held of
           [] -> pure Nothing
           [only] -> pure (Just only)

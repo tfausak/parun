@@ -2702,8 +2702,9 @@ isCardObject oid gs = maybe False (sourceIsCard . Object.source) (lookupObject o
 -- CR 108.2: the cards among a player's zone's members, where "card" is what the
 -- text says: a token awaiting CR 704.5d sits in the zone without being one.
 -- data/scenarios' deadly-brew-offers-no-token-a-thief-sacrificed,
--- sutured-ghoul-exiles-no-token-polymorph-destroyed and
--- superior-spider-man-copies-no-token-polymorph-destroyed prove it.
+-- sutured-ghoul-exiles-no-token-polymorph-destroyed,
+-- superior-spider-man-copies-no-token-polymorph-destroyed and
+-- recoil-discards-no-token-it-returned prove it.
 cardsIn :: Zone.Zone -> PlayerId -> GameState -> [ObjectId]
 cardsIn zone pid gs = filter (`isCardObject` gs) (zoneMembers zone pid gs)
 
