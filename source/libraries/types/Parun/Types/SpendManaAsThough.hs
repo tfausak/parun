@@ -1,6 +1,8 @@
 module Parun.Types.SpendManaAsThough where
 
 import qualified Data.Set as Set
+import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.ManaFilter as ManaFilter
 import qualified Parun.Types.ManaType as ManaType
 
@@ -50,6 +52,11 @@ data SpendManaAsThough = MkSpendManaAsThough
     -- Sunglasses of Urza's clause names red and not white, so it is the card that
     -- tells adding from replacing: Parun.ManaSymbolSpec's "Sunglasses of Urza"
     -- cases prove white mana still pays {W} under it.
-    only :: Bool
+    only :: Bool,
+    -- | The spells this clause speaks about, Nothing for every payment: Vizier of
+    -- the Menagerie's "to cast creature spells" (CR 118.14). Read against the spell
+    -- at the cost position only (Parun.Engine.PlayerEffect.spendManaAsThoughFor), so
+    -- it reaches neither an activation nor a mana ability's own cost.
+    casting :: Maybe (Filter.Filter Keyword.Keyword)
   }
   deriving (Eq, Ord, Show)

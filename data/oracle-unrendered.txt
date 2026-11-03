@@ -2924,6 +2924,7 @@ viviens-jaguar
 viviens-stampede
 vizier-of-many-faces
 vizier-of-remedies
+vizier-of-the-menagerie
 voda-sea-scavenger
 vodalian-arcanist
 voice-of-all

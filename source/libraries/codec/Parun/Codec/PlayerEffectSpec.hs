@@ -188,7 +188,8 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
           SpendManaAsThough.MkSpendManaAsThough
             { SpendManaAsThough.which = ManaFilter.OfType (ManaType.Colored Color.White),
               SpendManaAsThough.asThough = Set.singleton (ManaType.Colored Color.Blue),
-              SpendManaAsThough.only = False
+              SpendManaAsThough.only = False,
+              SpendManaAsThough.casting = Nothing
             }
       )
       " {\"type\":\"SpendManaAsThough\",\"value\":{\"which\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"White\"}}},\"asThough\":[{\"type\":\"Colored\",\"value\":{\"type\":\"Blue\"}}],\"only\":false}} "
@@ -200,7 +201,8 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
           SpendManaAsThough.MkSpendManaAsThough
             { SpendManaAsThough.which = ManaFilter.NotOfType (ManaType.Colored Color.White),
               SpendManaAsThough.asThough = Set.singleton ManaType.Colorless,
-              SpendManaAsThough.only = True
+              SpendManaAsThough.only = True,
+              SpendManaAsThough.casting = Nothing
             }
       )
       " {\"type\":\"SpendManaAsThough\",\"value\":{\"which\":{\"type\":\"NotOfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"White\"}}},\"asThough\":[{\"type\":\"Colorless\"}],\"only\":true}} "

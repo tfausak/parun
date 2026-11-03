@@ -3943,8 +3943,8 @@ precludes outcome pid gs =
 -- No ordering. CR 613.11 sorts continuous effects by timestamp, and there is
 -- nothing here to sort: `spendableAs` unions what the applicable clauses permit,
 -- and union does not care which ran first.
-spendManaAsThough :: PlayerId -> GameState -> [SpendManaAsThough.SpendManaAsThough]
-spendManaAsThough pid gs =
+spendManaAsThoughRows :: PlayerId -> GameState -> [(RowSource.RowSource, SpendManaAsThough.SpendManaAsThough)]
+spendManaAsThoughRows pid gs =
   let spends effect = case effect of
         PlayerEffect.SpendManaAsThough clause -> Just clause
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
@@ -3998,24 +3998,34 @@ spendManaAsThough pid gs =
         PlayerEffect.RevealsDraw _ -> Nothing
         PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
-   in Maybe.mapMaybe (spends . snd) (applying pid gs)
+   in Maybe.mapMaybe (\(source, effect) -> fmap ((,) source) (spends effect)) (applying pid gs)
+
+-- CR 609.4b's clauses that speak about every payment this player makes, whatever
+-- it is for.
+spendManaAsThough :: PlayerId -> GameState -> [SpendManaAsThough.SpendManaAsThough]
+spendManaAsThough pid gs = filter (Maybe.isNothing . SpendManaAsThough.casting) (fmap snd (spendManaAsThoughRows pid gs))
 
 -- CR 609.4b / 113.6d: spendManaAsThough plus, for a payment casting a spell,
--- the clauses that spell's own abilities state about the mana spent to cast it
--- (Tome of the Infinite's perpetual grant), read off its live projection. CR
--- 601.2a has the spell on the stack under `pid` by the time it is paid for, and
--- a perpetual grant reaches it in the hand too, which is where the castability
+-- the clauses naming that spell (Vizier of the Menagerie's "to cast creature
+-- spells", read as CR 601.2b's announcement left it, so a bestowed spell is no
+-- creature spell) and the clauses its own abilities state about the mana spent to
+-- cast it (Tome of the Infinite's perpetual grant), read off its live projection.
+-- CR 601.2a has the spell on the stack under `pid` by the time it is paid for,
+-- and a perpetual grant reaches it in the hand too, which is where the castability
 -- gate asks. The scenario
 -- a-printed-spellbook-is-offered-whole-and-the-card-randomness-named-is-the-one
 -- proves it.
 spendManaAsThoughFor :: PlayerId -> PaymentSubject.PaymentSubject -> GameState -> [SpendManaAsThough.SpendManaAsThough]
-spendManaAsThoughFor pid subject gs =
-  spendManaAsThough pid gs <> case subject of
-    PaymentSubject.Casting oid -> PC.grantedSpendManaAsThough (Projection.project oid gs)
-    PaymentSubject.Activating {} -> []
-    PaymentSubject.Unlocking {} -> []
-    PaymentSubject.TurningFaceUp {} -> []
-    PaymentSubject.ForNeither -> []
+spendManaAsThoughFor pid subject gs = case subject of
+  PaymentSubject.Casting oid ->
+    let view = Projection.viewOfObject oid gs
+        namesSpell context = maybe True (Filter.matches context view) . SpendManaAsThough.casting
+     in [clause | (source, clause) <- spendManaAsThoughRows pid gs, namesSpell (contextFor (Just pid) source gs) clause]
+          <> filter (namesSpell (Filter.contextIn gs (Just pid) Nothing)) (PC.grantedSpendManaAsThough (Projection.project oid gs))
+  PaymentSubject.Activating {} -> spendManaAsThough pid gs
+  PaymentSubject.Unlocking {} -> spendManaAsThough pid gs
+  PaymentSubject.TurningFaceUp {} -> spendManaAsThough pid gs
+  PaymentSubject.ForNeither -> spendManaAsThough pid gs
 
 -- CR 701.6a / 613.11: can this spell or ability on the stack be countered
 -- (Spider-Punk, Prowling Serpopard)? The typed question

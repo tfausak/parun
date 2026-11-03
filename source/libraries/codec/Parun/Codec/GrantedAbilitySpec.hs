@@ -154,6 +154,6 @@ spec s = Spec.describe s "Parun.Codec.GrantedAbility" $ do
     Common.assertCodec
       s
       codec
-      (GrantedAbility.SelfSpendManaAsThough (SpendManaAsThough.MkSpendManaAsThough ManaFilter.Any (Set.singleton (ManaType.Colored Color.Red)) False))
+      (GrantedAbility.SelfSpendManaAsThough (SpendManaAsThough.MkSpendManaAsThough ManaFilter.Any (Set.singleton (ManaType.Colored Color.Red)) False Nothing))
       " {\"type\":\"SelfSpendManaAsThough\",\"value\":{\"which\":{\"type\":\"Any\"},\"asThough\":[{\"type\":\"Colored\",\"value\":{\"type\":\"Red\"}}],\"only\":false}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

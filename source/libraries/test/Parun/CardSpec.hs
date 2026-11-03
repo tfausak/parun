@@ -390,6 +390,7 @@ import qualified Parun.Types.SlotPerPlayer as SlotPerPlayer
 import qualified Parun.Types.SpecialAction as SpecialAction
 import qualified Parun.Types.SpeedDecrease as SpeedDecrease
 import qualified Parun.Types.SpellCast as SpellCast
+import qualified Parun.Types.SpendManaAsThough as SpendManaAsThough
 import qualified Parun.Types.Splice as Splice
 import qualified Parun.Types.StaticAbility as StaticAbility
 import qualified Parun.Types.StickerKind as StickerKind
@@ -1033,7 +1034,7 @@ modificationCounts modification = case modification of
       quantityCounts (CostReduction.perEach reduction)
         <> concatMap conditionCounts (Maybe.maybeToList (CostReduction.condition reduction))
     GrantedAbility.SelfAlternativeCost alternative -> concatMap conditionCounts (Maybe.maybeToList (AlternativeCost.condition alternative))
-    -- Carries neither a Count nor a Filter.
+    -- Carries no Count.
     GrantedAbility.SelfSpendManaAsThough _ -> []
   -- Rule 702.165a's grant names the source, and the keywords it carries are
   -- minted from the card's Backup keyword, swept there.
@@ -5151,9 +5152,9 @@ playerEffectFilters playerEffect = case playerEffect of
   -- this traversal is about the spells a player effect names.
   PlayerEffect.DontLoseUnspentMana _ -> []
   PlayerEffect.LoseLifeForUnspentMana -> []
-  -- CR 609.4b carries a ManaFilter and a set of mana types, for the same reason:
-  -- what it names is MANA.
-  PlayerEffect.SpendManaAsThough _ -> []
+  -- CR 609.4b's ManaFilter and set of types name MANA, for the same reason; its
+  -- `casting` names spells.
+  PlayerEffect.SpendManaAsThough clause -> Maybe.maybeToList (SpendManaAsThough.casting clause)
   -- CR 702.18a / 702.11c's scope is a PlayerScope, not a Filter: the set it names
   -- is players. CR 702.11d's quality is a Filter over the aiming object.
   PlayerEffect.CantBeTargetedBy _ quality -> Maybe.maybeToList quality

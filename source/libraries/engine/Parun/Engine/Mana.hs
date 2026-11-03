@@ -2834,7 +2834,17 @@ payableResolutionsGiven subject capacity spending sources pcs pid committed comm
       -- sources (or the other way round) would make this disagree with `spend`
       -- about what is payable, and the symptom is an action the engine offers and
       -- then cannot pay.
-      clauses = PlayerEffect.spendManaAsThoughFor pid subject gs
+      clauses = PlayerEffect.spendManaAsThough pid gs
+      -- The clauses speaking about the cost being paid and no other (Vizier of the
+      -- Menagerie's creature spells, Tome of the Infinite's own): CR 602.2b's
+      -- activation of a mana ability in this payment's window is a payment of its
+      -- own (`Parun.Engine.Cost.pay`'s subject there), so they serve the cost's
+      -- position alone. data/scenarios'
+      -- vizier-of-the-menagerie-does-not-pay-a-mana-ability-s-own-cost is the proof.
+      costClauses = PlayerEffect.spendManaAsThoughFor pid subject gs
+      servesCost
+        | costClauses == clauses = serves
+        | otherwise = serves . rewriteSupply costClauses
       pooled = fmap (rewriteSupply clauses . supplyOf admitting) (unitsOf (Game.poolOf pid gs))
       borrowed = PlayerEffect.tapForManaGrants pid gs
       suppliesPer = fmap (\oid -> manaSuppliesGiven capacity pcs pid (borrowed oid) oid gs) sources
@@ -2961,7 +2971,7 @@ payableResolutionsGiven subject capacity spending sources pcs pid committed comm
                   -- seven cannot pay a mana ability's own {1}" and its two Omen
                   -- Hawker siblings are the pair that proves both directions.
                   admits (from, supply) (wantedAt, demand) =
-                    serves supply demand
+                    (if wantedAt == costPosition then servesCost else serves) supply demand
                       && from < wantedAt
                       && maybe False (`Set.member` supplyAdmits supply) (Map.lookup wantedAt subjectAt)
                   -- "The supplies that could serve this set of demands" and "the
@@ -3005,7 +3015,7 @@ payableResolutionsGiven subject capacity spending sources pcs pid committed comm
                      in if Map.null reached then Nothing else Just (maximum (Map.elems reached))
                   count :: [a] -> Integer
                   count = toInteger . length
-                  admits supply subset = Set.member subject (supplyAdmits supply) && any (serves supply) subset
+                  admits supply subset = Set.member subject (supplyAdmits supply) && any (servesCost supply) subset
                   servedBy subset = count . filter (`admits` subset)
                   demandedIn subset = count (filter (`elem` subset) wanted_)
                   hallBound subset = maybe False (\most -> demandedIn subset <= servedBy subset pooled + most) (best (servedBy subset . optionSupplies))
@@ -3050,7 +3060,7 @@ payableResolutionsGiven subject capacity spending sources pcs pid committed comm
                           ]
                   start = Set.singleton (List.sort [supply | (0, supply) <- supplies])
                   left = List.foldl' step start [1 .. costPosition - 1]
-                  hallHolds pool subset = length (filter (`elem` subset) wanted_) <= length (filter (\supply -> admitsAt costPosition supply && any (serves supply) subset) pool)
+                  hallHolds pool subset = length (filter (`elem` subset) wanted_) <= length (filter (\supply -> admitsAt costPosition supply && any (servesCost supply) subset) pool)
                in any (\pool -> all (hallHolds pool) (List.subsequences (Set.toList (Set.fromList wanted_)))) left
          in (not searching || doubles || bounded) && any fits boards
    in filter payable costResolutions

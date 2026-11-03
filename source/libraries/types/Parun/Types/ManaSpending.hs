@@ -28,7 +28,8 @@ module Parun.Types.ManaSpending where
 -- cannot be one type. This one is applied to a COST's demands, so no constructor
 -- of it can depend on which unit is being spent; Celestial Dawn's sentence says
 -- different things about two manas of one pool and so is applied to the SUPPLY
--- each unit offers.
+-- each unit offers. A static "mana of any type" with no cast permission of its own
+-- (Vizier of the Menagerie) is that type's `casting`, re-read live (CR 604.2).
 data ManaSpending
   = -- | The default, and every cost in the game that no effect has spoken about:
     -- a demand for red mana is served by red mana.
