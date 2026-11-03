@@ -11,6 +11,7 @@ import qualified Parun.Types.Arithmetic as Arithmetic
 import qualified Parun.Types.AtMost as AtMost
 import qualified Parun.Types.CastFrom as CastFrom
 import qualified Parun.Types.CompletedDungeon as CompletedDungeon
+import qualified Parun.Types.ControlWindow as ControlWindow
 import qualified Parun.Types.Count as Count
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.DamageDirection as DamageDirection
@@ -224,10 +225,10 @@ data Quantity
     -- last sentence here: the blocker leaving combat before the death does not
     -- take the answer away.
     WasBlockedThisTurn
-  | -- | CR 702.30a / 608.2h: 1 if the player that reference names came to
-    -- control the object this quantity is evaluated against since the beginning
-    -- of that player's last upkeep, else 0.
-    ControlGainedSinceLastUpkeep PlayerRef.PlayerRef
+  | -- | CR 702.30a / 110.2 / 608.2h: 1 if the player that reference names came
+    -- to control the object this quantity is evaluated against within that
+    -- window, else 0.
+    ControlGained ControlWindow.ControlWindow PlayerRef.PlayerRef
   | -- | CR 305.1 / 601.2a: 1 if the player that reference names played the
     -- object this quantity is evaluated against, else 0, read off
     -- GameState.cardsPlayed.

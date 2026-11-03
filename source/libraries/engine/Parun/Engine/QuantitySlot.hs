@@ -229,7 +229,7 @@ overSlots f quantity =
         -- And another PlayerRef in ManaCount's position, CR 702.30a's echo window
         -- having nothing beside it: the OBJECT it asks about is the one the
         -- evaluation is aimed at, as ObjectCounters' is.
-        Quantity.ControlGainedSinceLastUpkeep _ -> pure quantity
+        Quantity.ControlGained _ _ -> pure quantity
         Quantity.PlayedBy _ -> pure quantity
         -- The one arm that names a TARGET slot and is visited here anyway. Every other
         -- nested target slot is a PlayerRef this function leaves to nestedRefs below;
@@ -335,7 +335,7 @@ nestedRefs quantity = case quantity of
   Quantity.HasPlayerDesignation (PlayerDesignationTally.MkPlayerDesignationTally ref _) -> Set.singleton (Left ref)
   Quantity.IsStartingPlayer ref -> Set.singleton (Left ref)
   Quantity.IsActivePlayer ref -> Set.singleton (Left ref)
-  Quantity.ControlGainedSinceLastUpkeep ref -> Set.singleton (Left ref)
+  Quantity.ControlGained _ ref -> Set.singleton (Left ref)
   Quantity.PlayedBy ref -> Set.singleton (Left ref)
   Quantity.PlayerCounters (PlayerCounterTally.MkPlayerCounterTally ref _) -> Set.singleton (Left ref)
   Quantity.Devotion d -> Set.singleton (Left (Devotion.player d))
@@ -453,7 +453,7 @@ nestedCounts quantity = case quantity of
   Quantity.HasPlayerDesignation {} -> []
   Quantity.IsStartingPlayer _ -> []
   Quantity.IsActivePlayer _ -> []
-  Quantity.ControlGainedSinceLastUpkeep _ -> []
+  Quantity.ControlGained _ _ -> []
   Quantity.PlayedBy _ -> []
   Quantity.HasDesignation _ -> []
   Quantity.DesignationValue _ -> []
@@ -632,7 +632,7 @@ mapPlayerRefs f intoCount quantity =
         Quantity.HasPlayerDesignation (PlayerDesignationTally.MkPlayerDesignationTally ref mark) -> Quantity.HasPlayerDesignation (PlayerDesignationTally.MkPlayerDesignationTally (f ref) mark)
         Quantity.IsStartingPlayer ref -> Quantity.IsStartingPlayer (f ref)
         Quantity.IsActivePlayer ref -> Quantity.IsActivePlayer (f ref)
-        Quantity.ControlGainedSinceLastUpkeep ref -> Quantity.ControlGainedSinceLastUpkeep (f ref)
+        Quantity.ControlGained window ref -> Quantity.ControlGained window (f ref)
         Quantity.PlayedBy ref -> Quantity.PlayedBy (f ref)
         Quantity.PlayerCounters (PlayerCounterTally.MkPlayerCounterTally ref kind) -> Quantity.PlayerCounters (PlayerCounterTally.MkPlayerCounterTally (f ref) kind)
         Quantity.Devotion d -> Quantity.Devotion d {Devotion.player = f (Devotion.player d)}

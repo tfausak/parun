@@ -4405,7 +4405,7 @@ quantityKindFilters quantity = case quantity of
   Quantity.Type.WasAttacking -> []
   Quantity.Type.WasBlocking -> []
   Quantity.Type.WasBlockedThisTurn -> []
-  Quantity.Type.ControlGainedSinceLastUpkeep _ -> []
+  Quantity.Type.ControlGained _ _ -> []
   Quantity.Type.PlayedBy _ -> []
   Quantity.Type.DamageDealtThisTurn _ -> []
   -- CR 122.1's PER-PLAYER tally, whose kind is a Parun.Types.PlayerCounterKind --

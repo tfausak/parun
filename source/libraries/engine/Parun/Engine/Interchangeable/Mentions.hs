@@ -2638,7 +2638,7 @@ quantityNames asking x = case x of
   Quantity.WasAttacking -> mempty
   Quantity.WasBlocking -> mempty
   Quantity.WasBlockedThisTurn -> history asking HistoryRead.Blocks
-  Quantity.ControlGainedSinceLastUpkeep playerRef -> playerRefNames asking playerRef
+  Quantity.ControlGained _ playerRef -> playerRefNames asking playerRef
   Quantity.PlayedBy playerRef -> playerRefNames asking playerRef
   Quantity.OpponentsAttacked playerRef -> playerRefNames asking playerRef
   Quantity.AttackersDeclaredThisTurn playerRef -> history asking HistoryRead.Attacks <> playerRefNames asking playerRef

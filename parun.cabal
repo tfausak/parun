@@ -2545,6 +2545,7 @@ library types
     Parun.Types.ControlPlayer
     Parun.Types.ControlSides
     Parun.Types.ControlSlots
+    Parun.Types.ControlWindow
     Parun.Types.Convoking
     Parun.Types.CopyClause
     Parun.Types.CopyCoverage
