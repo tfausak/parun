@@ -36,9 +36,7 @@
       "do": {
         "Activate": {
           "ability": 0,
-          "mana": [
-            null
-          ],
+          "mana": [],
           "object": "$wargear",
           "targets": [
             "$piker"
@@ -51,6 +49,17 @@
     },
     {
       "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "OrderTriggers": [
+          "$wargear",
+          "$wargear"
+        ]
+      },
       "player": "alice",
       "step": "PrecombatMain",
       "turn": 1

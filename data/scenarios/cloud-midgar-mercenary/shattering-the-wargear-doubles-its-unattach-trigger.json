@@ -66,6 +66,20 @@
       "turn": 1
     },
     {
+      "do": {
+        "Answer": {
+          "prompt": "OrderTriggers",
+          "with": [
+            0,
+            1
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
       "check": {
         "View": {
           "is": [

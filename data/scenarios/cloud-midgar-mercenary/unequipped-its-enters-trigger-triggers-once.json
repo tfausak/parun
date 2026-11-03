@@ -27,7 +27,8 @@
             "label": "wargear"
           },
           {
-            "card": "Plains"
+            "card": "Plains",
+            "label": "lib-plains"
           }
         ],
         "name": "alice"
@@ -65,7 +66,7 @@
       "check": {
         "View": {
           "is": [
-            "trigger of $cloud"
+            "trigger of Cloud, Midgar Mercenary"
           ],
           "of": "Stack"
         }
@@ -76,6 +77,32 @@
     },
     {
       "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$wargear"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "$lib-plains"
+          ]
+        }
+      },
       "player": "alice",
       "step": "PrecombatMain",
       "turn": 1
