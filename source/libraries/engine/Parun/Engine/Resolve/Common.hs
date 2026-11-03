@@ -788,6 +788,7 @@ askingObjects resolving source controller legal chosen ref = case ref of
 loopMembers :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> ObjectRef.ObjectRef -> Game [Recipient]
 loopMembers resolving source controller legal chosen ref = case ref of
   ObjectRef.ChosenCardFromAmong _ -> fmap Recipient.ToObject <$> askingObjects resolving source controller legal chosen ref
+  ObjectRef.ChosenCardInHand _ -> fmap Recipient.ToObject <$> askingObjects resolving source controller legal chosen ref
   _ -> State.gets (\gs -> objectRefRecipients legal resolving controller source gs ref)
 
 -- CR 701.9a's move for every Effect.Discard arm, once the cards are named:

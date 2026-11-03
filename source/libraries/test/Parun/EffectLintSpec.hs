@@ -1717,7 +1717,7 @@ effectObjectRefs effect =
         Effect.GrantPlayFromExile grant -> read_ [GrantPlayFromExile.ref grant]
         -- Shimian Specter's "You choose a nonland card from it", asked by
         -- Resolve.Common.loopMembers.
-        Effect.ForEach (ForEach.MkForEach ref _ _ _ _ _ _) -> [([CardFromAmong], ref)]
+        Effect.ForEach (ForEach.MkForEach ref _ _ _ _ _ _) -> [([CardFromAmong, CardInHand], ref)]
         Effect.ForEachNumber {} -> []
         Effect.Repeat {} -> []
         Effect.RepeatIf {} -> []

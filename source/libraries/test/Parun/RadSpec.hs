@@ -19,7 +19,7 @@
 -- that was milled this turn onto the battlefield under your control. It's a
 -- green Mutant with base power and toughness 3/3." -- has the last group, since
 -- rule 728.1's own mill is what stocks the graveyard it reads (CR 701.17a,
--- Filter.MilledThisTurn).
+-- Filter.LeftLibraryThisTurn).
 --
 -- The groups after the first arrange the counters directly (S.addPlayerCounter),
 -- because what they vary is the LIBRARY -- how many nonland cards the mill turned

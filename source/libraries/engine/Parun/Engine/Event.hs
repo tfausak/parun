@@ -10252,8 +10252,8 @@ performDraw pid = do
         Seq.EmptyL -> pure Nothing
         drawn Seq.:< _ -> do
           nth <- State.state $ \g ->
-            let tally = Map.insertWith (+) pid 1 (GameState.drawsThisTurn g)
-             in (Map.findWithDefault 1 pid tally, g {GameState.drawsThisTurn = tally})
+            let tally = Map.insertWith (flip (<>)) pid (Seq.singleton drawn) (GameState.drawsThisTurn g)
+             in (Natural.length (Map.findWithDefault Seq.empty pid tally), g {GameState.drawsThisTurn = tally})
           State.modify' (recordEvent (GameEvent.Drew (Drew.MkDrew pid nth)))
           -- CR 121.8: drawn while a spell is being cast or an ability
           -- activated, the card is kept face down and any reveal waits for

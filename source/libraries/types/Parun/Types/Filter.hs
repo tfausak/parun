@@ -18,6 +18,7 @@ import qualified Parun.Types.Expansion as Expansion
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
+import qualified Parun.Types.LibraryDeparture as LibraryDeparture
 import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import qualified Parun.Types.Measures as Measures
 import qualified Parun.Types.NameChooser as NameChooser
@@ -325,13 +326,11 @@ data Filter keyword
     -- "creatures that couldn't attack", negated. Read off
     -- GameState.couldAttackThisTurn.
     CouldAttackThisTurn
-  | -- | CR 701.17a: the candidate is a card that was MILLED earlier this turn --
-    -- The Master, Transcendent's "creature card in a graveyard that was milled
-    -- this turn". DeclaredThisTurn's look-back read one event arm over
-    -- (GameEvent.Milled), and not "moved from a library to a graveyard", which
-    -- surveil (CR 701.25a) and explore (CR 701.44a) also do. Matches the
-    -- incarnation the mill left the card as (CR 400.7).
-    MilledThisTurn
+  | -- | The candidate is a card that left a library this way earlier this turn
+    -- (CR 121.1, 701.17a). Matches the incarnation that left (CR 400.7), so a card
+    -- that has moved again does not answer. Proved by the scenarios under
+    -- sylvan-library and Parun.CostSpec's "CR 701.17a a card milled to pay a cost".
+    LeftLibraryThisTurn LibraryDeparture.LibraryDeparture
   | -- | CR 702.122d: an effect in force says this candidate "can't crew
     -- Vehicles". Read off the surrounding evaluation's context rather than off
     -- the candidate, since a prohibition is another permanent's static ability

@@ -2674,6 +2674,7 @@ switcheroo
 swooping-protector
 sword-of-the-animist
 sword-swallowing-seraph
+sylvan-library
 sylvan-messenger
 sylvan-scavenging
 synchronized-eviction

@@ -393,10 +393,11 @@ data GameState = MkGameState
     -- 400.7i), naming who played it. Never cleared: a delayed trigger may ask on
     -- a later turn (CR 724.1e), and CR 400.7 never reuses an id.
     cardsPlayed :: Map.Map ObjectId.ObjectId PlayerId.PlayerId,
-    -- | CR 121.1: how many cards each player has drawn this turn, stamped as the
-    -- ordinal onto GameEvent.Drew; cleared for every player at turn handoff,
-    -- and after CR 103.3's opening hands.
-    drawsThisTurn :: Map.Map PlayerId.PlayerId Natural.Natural,
+    -- | CR 121.1: the cards each player has drawn this turn, in order, each as the
+    -- incarnation that reached the hand; its length is the ordinal stamped onto
+    -- GameEvent.Drew. Cleared for every player at turn handoff, and after CR
+    -- 103.3's opening hands.
+    drawsThisTurn :: Map.Map PlayerId.PlayerId (Seq.Seq ObjectId.ObjectId),
     -- | CR 121.8: Nothing unless a spell is being cast or an ability activated
     -- (Parun.Engine.Event.announcing); then the cards drawn since it began, each
     -- kept face down in its hand with no characteristics, keyed to the ordinal

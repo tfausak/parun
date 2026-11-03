@@ -515,7 +515,7 @@ single spec-local helper, and the `other-*` tail, are left out: grep for them.
 - CR 601.2h the payer divides the two counters among creatures, one off each of two | `check:prompt-payload`
 - CR 608.2h the ability reads the power of the creature its own cost tapped | `check:helper-isTapped`
 - CR 609.7a the evidence the Inspector collected is not a source it refers to | `move:ChooseCost:unmatchable`
-- CR 701.17a a card milled to pay a cost was milled this turn | `check:other-Filter.MilledThisTurn`
+- CR 701.17a a card milled to pay a cost was milled this turn | `check:other-Filter.LeftLibraryThisTurn`
 - CR 701.4a a Dragon card in hand pays the cost | `check:events`
 - CR 701.4a a Dragon on the battlefield pays the cost | `check:events`
 - CR 701.4b beholding a Dragon card in hand gains the 2 life too | `move:ChooseCost:unmatchable`

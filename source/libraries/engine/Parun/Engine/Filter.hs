@@ -61,6 +61,7 @@ import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.KeywordCount as KeywordCount
 import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.KeywordTally as KeywordTally
+import qualified Parun.Types.LibraryDeparture as LibraryDeparture
 import qualified Parun.Types.Lookback as Lookback
 import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import qualified Parun.Types.MadnessCost as MadnessCost
@@ -363,10 +364,10 @@ data View = MkView
     -- to `blocking` that the field above has to `attacking` -- with CR 509.1g in
     -- place of CR 508.1k.
     declaredBlockerThisCombat :: Bool,
-    -- CR 701.17a: was this candidate MILLED earlier this turn? A look-back read
-    -- of the same log `declaredThisTurn` above reads, and LAZY for that field's
-    -- reason -- nothing forces it unless a Filter contains MilledThisTurn.
-    milledThisTurn :: Bool,
+    -- CR 121.1, 701.17a: how this candidate left a library earlier this turn.
+    -- LAZY for `declaredThisTurn`'s reason -- nothing forces it unless a Filter
+    -- contains LeftLibraryThisTurn.
+    leftLibraryThisTurn :: Set.Set LibraryDeparture.LibraryDeparture,
     -- CR 120.1 / 608.2i: was this candidate DEALT DAMAGE earlier this turn? The
     -- same log the two fields above read, and LAZY for their reason -- nothing
     -- forces it unless a Filter contains DealtDamageThisTurn.
@@ -455,7 +456,7 @@ data View = MkView
     attachedToView :: Maybe View,
     -- CR 400.7 / 608.2h: the object this candidate was before the move that made
     -- it, as its last known information shows it (Count.departedAs). The same log
-    -- `milledThisTurn` reads, and LAZY for that field's reason.
+    -- `leftLibraryThisTurn` reads, and LAZY for that field's reason.
     beforeMoveView :: Maybe View,
     -- CR 303.4b / 301.5a read the other way: the permanents attached TO this
     -- candidate, each viewed as a candidate in its own right, so that
@@ -945,7 +946,7 @@ playerView pid =
       declaredAttackerThisCombat = False,
       declaredBlockerThisCombat = False,
       -- CR 701.17a mills CARDS, and a player is not one.
-      milledThisTurn = False,
+      leftLibraryThisTurn = Set.empty,
       -- CR 120.1 lets a player BE dealt damage, so unlike the two fields above
       -- this one asks a question a player candidate really can answer -- just not
       -- from here, this view being built from a PlayerId alone and holding no
@@ -2269,11 +2270,11 @@ matches context view predicate = case predicate of
   Filter.DeclaredAttackedThisCombat -> declaredAttackedThisCombat view
   -- CR 509.1a: the same read off the blocking half of that record.
   Filter.DeclaredBlockerThisCombat -> declaredBlockerThisCombat view
-  -- CR 701.17a: the same look-back, over the mills rather than the attacks. Like
-  -- the atom above it cannot stop being true within a turn, and unlike it the
-  -- candidate can stop EXISTING -- CR 400.7 mints a new object the moment the
-  -- milled card moves again, and the new one was not milled.
-  Filter.MilledThisTurn -> milledThisTurn view
+  -- CR 121.1, 701.17a: the same look-back, over how cards left a library. Like the
+  -- atom above it cannot stop being true within a turn, and unlike it the
+  -- candidate can stop EXISTING -- CR 400.7 mints a new object the moment the card
+  -- moves again, and the new one did not leave a library.
+  Filter.LeftLibraryThisTurn how -> Set.member how (leftLibraryThisTurn view)
   -- CR 702.122d with CR 101.2: membership of the set the CALLER gathered, the
   -- reading IsBound takes and for its reason -- a prohibition is another
   -- permanent's static ability, so no field of the candidate's own view could
@@ -2283,7 +2284,7 @@ matches context view predicate = case predicate of
     Just oid -> Set.member oid (cantCrewVehicles context)
     Nothing -> False
   -- CR 120.1 / 608.2i: the same look-back again, over the damage events. Like
-  -- DeclaredThisTurn and MilledThisTurn it cannot stop being true within a turn,
+  -- DeclaredThisTurn and LeftLibraryThisTurn it cannot stop being true within a turn,
   -- and unlike either it is not the reading CR 120.3e's marked damage would give
   -- -- CR 120.6's regeneration and CR 120.3d's wither both leave a creature that
   -- was dealt damage carrying nothing marked. Named rather than counted, since
@@ -2353,7 +2354,7 @@ matches context view predicate = case predicate of
     Just src -> Set.member src (saddledThisTurn view)
     Nothing -> False
   -- CR 302.6: not a look-back over the log at all, unlike DeclaredThisTurn,
-  -- MilledThisTurn and DealtDamageThisTurn -- the engine keeps the answer as
+  -- LeftLibraryThisTurn and DealtDamageThisTurn -- the engine keeps the answer as
   -- Object.sickness, written at the untap step and cleared whenever control
   -- moves.
   Filter.ControlledSinceTurnBegan -> controlledSinceTurnBegan view
@@ -2663,7 +2664,7 @@ rewrite pairs predicate = case predicate of
   Filter.DeclaredAttackerThisCombat -> predicate
   Filter.DeclaredAttackedThisCombat -> predicate
   Filter.DeclaredBlockerThisCombat -> predicate
-  Filter.MilledThisTurn -> predicate
+  Filter.LeftLibraryThisTurn _ -> predicate
   Filter.CantCrewVehicles -> predicate
   Filter.DealtDamageThisTurn -> predicate
   Filter.DealtDamageTo _ -> predicate
@@ -3435,7 +3436,7 @@ bakeBound players objects controllers predicate = case predicate of
   Filter.DeclaredAttackerThisCombat -> predicate
   Filter.DeclaredAttackedThisCombat -> predicate
   Filter.DeclaredBlockerThisCombat -> predicate
-  Filter.MilledThisTurn -> predicate
+  Filter.LeftLibraryThisTurn _ -> predicate
   Filter.CantCrewVehicles -> predicate
   Filter.DealtDamageThisTurn -> predicate
   Filter.DealtDamageTo _ -> predicate
@@ -3608,7 +3609,7 @@ manaValueThresholds predicate = case predicate of
   Filter.DeclaredAttackerThisCombat -> []
   Filter.DeclaredAttackedThisCombat -> []
   Filter.DeclaredBlockerThisCombat -> []
-  Filter.MilledThisTurn -> []
+  Filter.LeftLibraryThisTurn _ -> []
   Filter.CantCrewVehicles -> []
   Filter.DealtDamageThisTurn -> []
   Filter.DealtDamageTo _ -> []
@@ -3777,7 +3778,7 @@ statesAQuality predicate = case predicate of
   Filter.DeclaredAttackerThisCombat -> True
   Filter.DeclaredAttackedThisCombat -> True
   Filter.DeclaredBlockerThisCombat -> True
-  Filter.MilledThisTurn -> True
+  Filter.LeftLibraryThisTurn _ -> True
   Filter.CantCrewVehicles -> True
   Filter.DealtDamageThisTurn -> True
   Filter.DealtDamageTo _ -> True
@@ -3940,7 +3941,7 @@ readsSourceValues predicate = case predicate of
   Filter.DeclaredAttackerThisCombat -> False
   Filter.DeclaredAttackedThisCombat -> False
   Filter.DeclaredBlockerThisCombat -> False
-  Filter.MilledThisTurn -> False
+  Filter.LeftLibraryThisTurn _ -> False
   Filter.CantCrewVehicles -> False
   Filter.DealtDamageThisTurn -> False
   Filter.DealtDamageTo _ -> False
@@ -4106,7 +4107,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.DeclaredBlockerThisCombat -> pure predicate
   Filter.DeclaredThisTurn _ -> pure predicate
   Filter.CouldAttackThisTurn -> pure predicate
-  Filter.MilledThisTurn -> pure predicate
+  Filter.LeftLibraryThisTurn _ -> pure predicate
   Filter.CantCrewVehicles -> pure predicate
   Filter.DealtDamageThisTurn -> pure predicate
   -- MANY: a slot party is membership, IsBound's reading.
