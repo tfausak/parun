@@ -2938,6 +2938,7 @@ reservedSlots =
       Binding.craftMaterials,
       Binding.discardedCard,
       Binding.tappedPermanent,
+      Binding.grantingPermanent,
       Binding.untappedPermanent,
       Binding.copiedObject,
       Binding.tappedForTotalPower,

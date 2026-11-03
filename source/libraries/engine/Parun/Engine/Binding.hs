@@ -668,6 +668,14 @@ discardedCard = SlotName.MkSlotName (Text.pack "thatDiscardedCard")
 tappedPermanent :: SlotName
 tappedPermanent = SlotName.MkSlotName (Text.pack "thatTappedPermanent")
 
+-- CR 113.7 / 602.2: in the cost of an ability a static ability grants, the
+-- permanent granting it, where IsSource is the receiver -- Fishing Pole's "Tap
+-- Fishing Pole". Parun.Engine.Projection's GainAbility arm bakes it into the
+-- granter's id, so two Poles grant two abilities, each naming its own. Never
+-- bound at runtime, and unpayable anywhere else.
+grantingPermanent :: SlotName
+grantingPermanent = SlotName.MkSlotName (Text.pack "thatGrantingPermanent")
+
 -- CR 701.26b: the permanent that became untapped, stamped for a
 -- TriggerCondition.BecomesTapState watching that direction -- Mesmeric Orb's
 -- "that permanent's controller". tappedPermanent's posture.
