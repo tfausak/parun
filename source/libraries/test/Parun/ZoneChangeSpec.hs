@@ -2388,7 +2388,7 @@ anyNumberDiscardSpec s registry =
       discarding :: ([ObjectId.ObjectId] -> [ObjectId.ObjectId]) -> (forall q. Prompt.Prompt q -> q) -> Prompt.Prompt r -> r
       discarding pick fallback p = case p of
         Prompt.ChooseOptional {} -> OptionalDecision.Exercises
-        Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToDiscard offered _ -> Set.fromList (pick offered)
+        Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToDiscard offered _ _ -> Set.fromList (pick offered)
         _ -> fallback p
       -- The rest of alice's hand, added AFTER S.handOne, which replaces it.
       withHand fill (gs, spell) = (fill gs, spell)
@@ -2492,7 +2492,7 @@ anyNumberDiscardSpec s registry =
               staged = withHand (handCards rats S.carol 2 . handCards sentry S.bob 4 . handCards piker S.alice 2) (S.handOne flux stocked)
               perSeat :: Prompt.Prompt r -> r
               perSeat p = case p of
-                Prompt.ChooseAnyNumber _ victim _ AnyNumberOf.ToDiscard offered _
+                Prompt.ChooseAnyNumber _ victim _ AnyNumberOf.ToDiscard offered _ _
                   | victim == S.alice -> Set.fromList (take 1 offered)
                   | victim == S.bob -> Set.fromList (take 3 offered)
                   | otherwise -> Set.empty
@@ -2525,7 +2525,7 @@ anyNumberDiscardSpec s registry =
               bothAtBob p = case p of
                 Prompt.ChooseModes _ _ _ offered _ -> Seq.fromList (Set.toList offered)
                 Prompt.ChooseTargets _ _ _ sets -> fmap (\(_, offered) -> Set.filter (\r -> Recipient.playerOf r == Just S.bob || Recipient.objectOf r == Just wallId) offered) sets
-                Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToDiscard offered _ -> Set.fromList (take 2 offered)
+                Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToDiscard offered _ _ -> Set.fromList (take 2 offered)
                 _ -> S.identityAnswer p
               (after, _) = runCast bothAtBob staged
           Spec.assertEqWith s "the wall took three" (fmap Object.damage (Game.lookupObject wallId after)) (Just 3)

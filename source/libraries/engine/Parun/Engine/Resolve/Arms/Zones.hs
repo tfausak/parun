@@ -917,6 +917,11 @@ forEach applyEffectWith loopOffers runSubgame resolving source controller legal 
   ordered <- Common.forEachOrder resolving (startingWith >>= Common.oneSeat legal resolving source controller gs0) (const (Just controller)) picked
   -- CR 118.12a per member: every offer is made before the first body runs.
   members <- maybe (pure ordered) (loopOffers runSubgame resolving source controller slot legal ordered) gate
+  -- CR 101.4b: the body's picks are recorded for its later prompts
+  -- (Damage.choosePermanents). An outer loop's record is the one a nested
+  -- loop adds to, and only the loop that opened a record closes it.
+  opened <- State.gets (Maybe.isNothing . GameState.loopPicks)
+  Monad.when opened (State.modify' (\gs -> gs {GameState.loopPicks = Just Seq.empty}))
   let -- The slots the BODY defines, computed off the instruction rather than the
       -- board: a body effect binds into the resolving object's live bindings and
       -- the next body effect must see it. Restricted to those names so a target
@@ -1028,6 +1033,7 @@ forEach applyEffectWith loopOffers runSubgame resolving source controller legal 
         Map.empty
         members
   State.modify' (bindAcross accumulated . rescope)
+  Monad.when opened (State.modify' (\gs -> gs {GameState.loopPicks = Nothing}))
 
 -- CR 608.2f over numbers: the bound read once off the pre-loop board, and each
 -- number bound on the source (bindAmountSlot) for its iteration's body to
@@ -1608,7 +1614,7 @@ discard resolving source controller legal _ (Discard.AnyNumber (AnyNumberDiscard
         if null candidates || ceiling_ == Just 0
           then pure (victim, [])
           else do
-            answer <- Game.choose (Prompt.ChooseAnyNumber (Decide.deciderFor victim gs) victim source AnyNumberOf.ToDiscard candidates ceiling_)
+            answer <- Game.choose (Prompt.ChooseAnyNumber (Decide.deciderFor victim gs) victim source AnyNumberOf.ToDiscard candidates ceiling_ Seq.empty)
             pure (victim, capped (filter (`Set.member` answer) candidates))
   doomed <- traverse pickFor victims
   Common.buryDiscards resolving mDiscarded doomed

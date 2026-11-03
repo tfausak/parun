@@ -1807,7 +1807,7 @@ exploit resolving source controller legal = do
           source
           gs
           (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.HeldBy Holder.Controller PlayerRelation.You])
-  victims <- Maybe.maybeToList <$> Game.chooseAmong (\decider who -> Prompt.ChoosePermanent decider who source) controller candidates
+  victims <- Maybe.maybeToList <$> Game.chooseAmong (\decider who pool -> Prompt.ChoosePermanent decider who source pool Seq.empty) controller candidates
   Monad.forM_ victims $ \victim -> Event.simultaneously $ do
     Event.sacrifice controller victim
     State.modify' (Event.recordEvent (GameEvent.Exploited (Exploited.MkExploited source victim)))
@@ -1941,7 +1941,7 @@ attachAll resolving source controller legal chosen (AttachAll.MkAttachAll ref fi
   gs <- State.get
   let grants = Projection.controlGrants gs
       inReach oid = all (\you -> Projection.objectInRangeGiven grants you oid gs) (Plane.rangePerspective source controller gs)
-  destination <- Game.chooseAmong (\decider who -> Prompt.ChoosePermanent decider who source) controller (filter inReach (Attach.groupHostsFor (effectContext gs resolving controller source legal (slotBindings resolving gs)) movers filter_ gs))
+  destination <- Game.chooseAmong (\decider who pool -> Prompt.ChoosePermanent decider who source pool Seq.empty) controller (filter inReach (Attach.groupHostsFor (effectContext gs resolving controller source legal (slotBindings resolving gs)) movers filter_ gs))
   -- Proposed as a bare ToObject; Event.attach re-tags it per mover, as
   -- AttachTarget's arm says.
   Foldable.for_ destination (Common.attachTogether movers . Recipient.ToObject)

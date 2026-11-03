@@ -13,6 +13,7 @@ import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
+import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Parun.Engine.Attraction as Attraction
 import qualified Parun.Engine.Decide as Decide
@@ -112,6 +113,6 @@ crank pid = do
       -- The prompt's object is the first Contraption offered: a turn-based
       -- action has no source of its own to name.
       first : _ -> do
-        chosen <- Game.choose (Prompt.ChooseAnyNumber (Decide.deciderFor pid moved) pid first AnyNumberOf.ToCrank candidates Nothing)
+        chosen <- Game.choose (Prompt.ChooseAnyNumber (Decide.deciderFor pid moved) pid first AnyNumberOf.ToCrank candidates Nothing Seq.empty)
         Monad.forM_ (filter (`Set.member` chosen) candidates) $ \oid ->
           State.modify' (Event.recordEvent (GameEvent.PermanentActed (PermanentActed.MkPermanentActed PermanentAction.Crank oid)))

@@ -88,7 +88,7 @@ driving sprockets crank target gs game =
           case pending of
             pick : rest -> State.put (rest, recorded) >> pure pick
             [] -> State.put ([], recorded) >> pure Designation.Sprocket3
-        Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToCrank offered _ -> do
+        Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToCrank offered _ _ -> do
           State.modify' (\(pending, asked) -> (pending, asked {cranksOffered = cranksOffered asked <> [offered]}))
           pure (Set.fromList (crank offered))
         -- FILTERED, NOT BUILT: the offered recipient that is `target`.

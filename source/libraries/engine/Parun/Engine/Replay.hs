@@ -151,7 +151,7 @@ encode p answer = case p of
   Prompt.ChooseCardInGraveyard {} -> Response.ChoseCardInGraveyard answer
   Prompt.ChooseCardInHand {} -> Response.ChoseCardInHand answer
   Prompt.ChooseCardFromAmong {} -> Response.ChoseCardFromAmong answer
-  Prompt.ChooseAnyNumber _ _ _ purpose _ _ -> anyNumberResponse purpose answer
+  Prompt.ChooseAnyNumber _ _ _ purpose _ _ _ -> anyNumberResponse purpose answer
   Prompt.ChooseDungeon {} -> Response.ChoseDungeon answer
   Prompt.ChooseSticker {} -> Response.ChoseSticker answer
   Prompt.ChooseStickerOrNone {} -> Response.ChoseStickerOrNone answer
@@ -452,7 +452,7 @@ decode p response = case p of
   Prompt.ChooseCardFromAmong {} -> case response of
     Response.ChoseCardFromAmong oid -> Just oid
     _ -> Nothing
-  Prompt.ChooseAnyNumber _ _ _ purpose _ _ -> case (purpose, response) of
+  Prompt.ChooseAnyNumber _ _ _ purpose _ _ _ -> case (purpose, response) of
     (AnyNumberOf.Permanents, Response.ChoseAnyNumberOfPermanents ids) -> Just ids
     (AnyNumberOf.CardsFromAmong, Response.ChoseCardsFromAmong ids) -> Just ids
     (AnyNumberOf.CardsInHand, Response.ChoseCardsInHand ids) -> Just ids
@@ -1023,8 +1023,8 @@ defaultAnswer p = case p of
   -- fallback has no reason to give up. Otherwise the first candidates up to the
   -- ceiling, the maximal subset: every subset no larger is legal (CR 608.2d,
   -- 614.1c, 702.38a). A deterministic fallback, not a recommendation.
-  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToDiscard _ _ -> Set.empty
-  Prompt.ChooseAnyNumber _ _ _ _ candidates atMost -> Set.fromList (maybe id (take . Natural.toIntSaturating) atMost candidates)
+  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToDiscard _ _ _ -> Set.empty
+  Prompt.ChooseAnyNumber _ _ _ _ candidates atMost _ -> Set.fromList (maybe id (take . Natural.toIntSaturating) atMost candidates)
   -- CR 309.2a: the prompt is only raised where the player owns two or more
   -- dungeon cards, and every one of them is a dungeon they may bring in.
   Prompt.ChooseDungeon _ _ candidates -> NonEmpty.head candidates
@@ -1271,7 +1271,7 @@ defaultAnswer p = case p of
   -- CR 608.2d: the head of the offer, ChooseCardInGraveyard's fallback. Every
   -- candidate was pre-filtered by the engine, so the head is a legal answer. A
   -- deterministic fallback, not a recommendation.
-  Prompt.ChoosePermanent _ _ _ candidates -> NonEmpty.head candidates
+  Prompt.ChoosePermanent _ _ _ candidates _ -> NonEmpty.head candidates
   -- CR 702.122a: every candidate, the arm above's maximal subset. Legal whenever
   -- the cost is payable at all, save for a board where some candidate has
   -- NEGATIVE power and dragging it in drops the total back under the threshold

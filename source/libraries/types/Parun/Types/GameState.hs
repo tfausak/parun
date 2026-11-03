@@ -406,6 +406,11 @@ data GameState = MkGameState
     -- (Parun.Engine.Event.announcing); then each library's top card as it
     -- began, the only one that stays shown until it ends (Game.shownTop).
     announcedTops :: Maybe (Map.Map PlayerId.PlayerId ObjectId.ObjectId),
+    -- | CR 101.4b: Nothing outside a Parun.Types.ForEach loop; inside one, the
+    -- permanents each ChoosePermanents of it has picked so far, beside who
+    -- picked them, which a later pick's prompt carries
+    -- (Parun.Engine.Resolve.Arms.Zones.forEach).
+    loopPicks :: Maybe (Seq.Seq (PlayerId.PlayerId, Set.Set ObjectId.ObjectId)),
     -- | CR 401.6: each library's top card as the last settle found it revealed
     -- to every player by a player effect (Event.settleRevealedTops).
     revealedTops :: Map.Map PlayerId.PlayerId ObjectId.ObjectId,

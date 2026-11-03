@@ -20,6 +20,7 @@ import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
+import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Game as Game
@@ -67,7 +68,7 @@ candidates pid gs =
 populate :: PlayerId -> ObjectId -> Game ()
 populate pid resolving = do
   gs <- State.get
-  chosen <- Game.chooseAmong (\decider asked -> Prompt.ChoosePermanent decider asked resolving) pid (candidates pid gs)
+  chosen <- Game.chooseAmong (\decider asked pool -> Prompt.ChoosePermanent decider asked resolving pool Seq.empty) pid (candidates pid gs)
   Monad.forM_ chosen $ \token -> do
     -- Against the LIVE state and not `gs`, Parun.Engine.Event.bringInto's care:
     -- the choice above wrote the answer into the transcript, and minting off

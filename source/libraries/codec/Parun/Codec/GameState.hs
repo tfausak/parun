@@ -201,6 +201,7 @@ codec resolve = Fields.object $ do
   drawsThisTurn <- Fields.defaulted "drawsThisTurn" Map.empty (Common.naturalMap PlayerId.codec Common.natural) GameState.drawsThisTurn
   keptFaceDown <- Fields.defaulted "keptFaceDown" Nothing (Common.maybe (Common.naturalMap ObjectId.codec Common.natural)) GameState.keptFaceDown
   announcedTops <- Fields.defaulted "announcedTops" Nothing (Common.maybe (Common.naturalMap PlayerId.codec ObjectId.codec)) GameState.announcedTops
+  loopPicks <- Fields.defaulted "loopPicks" Nothing (Common.maybe (Common.seq (Common.tuple PlayerId.codec (Common.set ObjectId.codec)))) GameState.loopPicks
   revealedTops <- Fields.defaulted "revealedTops" Map.empty (Common.naturalMap PlayerId.codec ObjectId.codec) GameState.revealedTops
   departedThisTurn <- Fields.defaulted "departedThisTurn" Set.empty (Common.set PlayerId.codec) GameState.departedThisTurn
   couldAttackThisTurn <- Fields.defaulted "couldAttackThisTurn" Set.empty (Common.set ObjectId.codec) GameState.couldAttackThisTurn
@@ -323,6 +324,7 @@ codec resolve = Fields.object $ do
         GameState.drawsThisTurn = drawsThisTurn,
         GameState.keptFaceDown = keptFaceDown,
         GameState.announcedTops = announcedTops,
+        GameState.loopPicks = loopPicks,
         GameState.revealedTops = revealedTops,
         GameState.departedThisTurn = departedThisTurn,
         GameState.couldAttackThisTurn = couldAttackThisTurn,

@@ -877,7 +877,7 @@ doctorsCompanionSpec s registry = Spec.describe s "Doctor's companion" $ do
 answering :: PlayerId.PlayerId -> Prompt.Prompt r -> r
 answering who p = case p of
   Prompt.ReturnCommander _ pid _ -> if pid == who then CommandZoneDecision.Returns else CommandZoneDecision.Leaves
-  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToSacrifice candidates _ -> Set.fromList (take 1 candidates)
+  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToSacrifice candidates _ _ -> Set.fromList (take 1 candidates)
   _ -> S.identityAnswer p
 
 -- alice's commander cast from the command zone and resolved, so it is a 1/1 on the

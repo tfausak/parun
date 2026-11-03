@@ -471,19 +471,19 @@ afterOneCast gs =
 -- CHOOSER said, so the fixture has to say it.
 namingAll :: Prompt.Prompt r -> r
 namingAll p = case p of
-  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.Permanents candidates _ -> Set.fromList candidates
+  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.Permanents candidates _ _ -> Set.fromList candidates
   _ -> S.identityAnswer p
 
 -- Names nothing, the empty answer CR 608.2d admits.
 namingNone :: Prompt.Prompt r -> r
 namingNone p = case p of
-  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.Permanents _ _ -> Set.empty
+  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.Permanents _ _ _ -> Set.empty
   _ -> S.identityAnswer p
 
 -- Names exactly this set, whether or not it was offered.
 namingExactly :: Set.Set ObjectId.ObjectId -> Prompt.Prompt r -> r
 namingExactly wanted p = case p of
-  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.Permanents _ _ -> wanted
+  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.Permanents _ _ _ -> wanted
   _ -> S.identityAnswer p
 
 untapCheckSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()

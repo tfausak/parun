@@ -5,6 +5,7 @@
 -- constructor's fields.
 module Parun.Engine.Resolve.Arms.Damage where
 
+import Control.Applicative ((<|>))
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Containers.ListUtils as ListUtils
@@ -56,6 +57,7 @@ import qualified Parun.Types.ChangeWord as ChangeWord
 import qualified Parun.Types.ChoosePermanents as ChoosePermanents
 import qualified Parun.Types.ChoosePlayer as ChoosePlayer
 import qualified Parun.Types.ChoosePlayerAtRandom as ChoosePlayerAtRandom
+import qualified Parun.Types.ChosenPermanents as ChosenPermanents
 import qualified Parun.Types.CoinFace as CoinFace
 import qualified Parun.Types.CoinReading as CoinReading
 import qualified Parun.Types.ContinuousEffect as ContinuousEffect
@@ -764,7 +766,7 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
           -- whoever decides for them -- and elided at one.
           exiler <-
             if ownLibrary
-              then State.gets (PlayerEffect.exilersWhileSearching searcher) >>= Game.chooseAmong (\decider who -> Prompt.ChoosePermanent decider who source) searcher
+              then State.gets (PlayerEffect.exilersWhileSearching searcher) >>= Game.chooseAmong (\decider who pool -> Prompt.ChoosePermanent decider who source pool Seq.empty) searcher
               else pure Nothing
           outsideAvailable <-
             if lookOutside
@@ -1162,18 +1164,34 @@ choosePlayerAtRandom resolving source controller choice = do
 -- scenarios "CR 700.3 / 509.1b Stand or Fall" and "CR 700.3 / 802.2 Stand or
 -- Fall at three seats".
 --
--- Not implemented: telling a later player in a loop over players what the earlier
--- ones chose (CR 101.4b, gap #5959).
+-- CR 101.4b: inside a loop, the pick joins GameState.loopPicks beside its
+-- chooser -- the seat asked, or where nobody was, the one seat the chooser ref
+-- names -- so a later pick's prompt carries it. Proved by
+-- Parun.BoardEffectSpec's "CR 101.4b each player is told the earlier players'
+-- picks" (Covetous Elegy) and "CR 101.4b the later opponent is told the earlier
+-- one's pick, asked or not" (Summon: Valefor).
+--
+-- Not implemented: recording a pile chooser's take, whose Prompt.ChoosePile
+-- carries no earlier picks (#5968).
 choosePermanents :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ChoosePermanents.ChoosePermanents -> Game ()
 choosePermanents resolving source controller legal (ChoosePermanents.MkChoosePermanents choice slot pileChooser) = do
   picked <- case pileChooser of
-    Nothing -> Common.chosenPermanents AnyNumberOf.Permanents legal resolving controller source choice
+    Nothing -> do
+      (asked, picked) <- Common.chosenPermanents AnyNumberOf.Permanents legal resolving controller source choice
+      gs <- State.get
+      let named = case Common.decidersOf legal resolving source controller gs (ChosenPermanents.chooser choice) of
+            [seat] -> Just seat
+            _ -> Nothing
+          record seat loop = loop Seq.|> (seat, Set.fromList picked)
+      Monad.forM_ (asked <|> named) $ \seat ->
+        Monad.unless (null picked) (State.modify' (\g -> g {GameState.loopPicks = fmap (record seat) (GameState.loopPicks g)}))
+      pure picked
     Just chooserRef -> do
       gs <- State.get
       let matching = chosenCandidates legal resolving controller source gs choice
       split <- case matching of
         [_] -> pure matching
-        _ -> Common.chosenPermanents AnyNumberOf.IntoPile legal resolving controller source choice
+        _ -> snd <$> Common.chosenPermanents AnyNumberOf.IntoPile legal resolving controller source choice
       Common.takePile resolving source controller legal chooserRef matching split
   Monad.unless (null picked) (State.modify' (Common.bindObjectsSlot resolving slot (Seq.fromList picked)))
 
