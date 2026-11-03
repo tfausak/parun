@@ -822,7 +822,7 @@ playerRefPositions =
         ("flip-coin", Effect.FlipCoin FlipCoin.MkFlipCoin {FlipCoin.count = one, FlipCoin.reading = CoinReading.Heads, FlipCoin.slot = SlotName.MkSlotName (Text.pack "fc"), FlipCoin.misses = Nothing, FlipCoin.flipper = plantedPlayer "fc"}, [plantedPlayer "fc"]),
         ("choose-card-name", Effect.ChooseCardName (ChooseCardName.MkChooseCardName (plantedPlayer "cn") (Filter.Type.And []) Nothing), [plantedPlayer "cn"]),
         ("for-each-starting-with", Effect.ForEach (ForEach.MkForEach ObjectRef.EachPlayer LoopMembers.Every (SlotName.MkSlotName (Text.pack "each")) Seq.empty False Nothing (Just (plantedPlayer "fe-start"))), [plantedPlayer "fe-start"]),
-        ("repeat", Effect.Repeat (Repeat.MkRepeat (plantedPlayer "rp-chooser") Seq.empty Nothing), [plantedPlayer "rp-chooser"]),
+        ("repeat", Effect.Repeat (Repeat.MkRepeat (plantedPlayer "rp-chooser") Seq.empty Nothing (Just (plantedPlayer "rp-other")) Seq.empty), [plantedPlayer "rp-chooser", plantedPlayer "rp-other"]),
         ("choose-number", Effect.ChooseNumber (ChooseNumber.MkChooseNumber (SlotName.MkSlotName (Text.pack "number")) Nothing (plantedPlayer "cn-chooser")), [plantedPlayer "cn-chooser"]),
         ("offer-cast", Effect.OfferCast (OfferCast.MkOfferCast (plantedRef "oc-ref") (plantedPlayer "oc-caster") CastObligation.Optional PermissionVerb.Cast CastOffer.defaultValue CastRepetition.Once False False Nothing), [plantedPlayer "oc-caster"]),
         ("grant-play-from-exile", Effect.GrantPlayFromExile (GrantPlayFromExile.MkGrantPlayFromExile Duration.UntilEndOfTurn (plantedPlayer "gp-player") (plantedRef "gp-ref") ManaSpending.AsProduced Nothing Nothing PermissionVerb.Play 0 TapState.Untapped Nothing Zone.Exile), [plantedPlayer "gp-player"]),
@@ -1573,7 +1573,7 @@ ownCounts effect = case effect of
   -- card's -- the rider's recursion one opcode over.
   Effect.ForEach (ForEach.MkForEach _ _ _ body _ _ _) -> concatMap effectCounts body
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber upTo _ body) -> quantityCounts upTo <> concatMap effectCounts body
-  Effect.Repeat (Repeat.MkRepeat _ body gate) -> foldMap conditionCounts gate <> concatMap effectCounts body
+  Effect.Repeat (Repeat.MkRepeat _ body gate _ ifAgain) -> foldMap conditionCounts gate <> concatMap effectCounts (body <> ifAgain)
   Effect.RepeatIf (RepeatIf.MkRepeatIf process condition ifHolds) -> conditionCounts condition <> concatMap effectCounts (process <> ifHolds)
   Effect.Heal _ -> []
   Effect.ChooseNewTargets _ -> []
@@ -1896,7 +1896,7 @@ effectNestedEffects effect = case effect of
   -- CR 608.2f's body, run once per member of the fold.
   Effect.ForEach (ForEach.MkForEach _ _ _ body _ _ _) -> Foldable.toList body
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber _ _ body) -> Foldable.toList body
-  Effect.Repeat (Repeat.MkRepeat _ body _) -> Foldable.toList body
+  Effect.Repeat (Repeat.MkRepeat _ body _ _ ifAgain) -> Foldable.toList (body <> ifAgain)
   Effect.RepeatIf (RepeatIf.MkRepeatIf process _ ifHolds) -> Foldable.toList (process <> ifHolds)
   Effect.Heal _ -> []
   Effect.ChooseNewTargets _ -> []
@@ -2555,7 +2555,7 @@ effectReplacements effect = case effect of
   -- CR 608.2f's body can too, for the same reason.
   Effect.ForEach (ForEach.MkForEach _ _ _ body _ _ _) -> concatMap effectReplacements body
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber _ _ body) -> concatMap effectReplacements body
-  Effect.Repeat (Repeat.MkRepeat _ body _) -> concatMap effectReplacements body
+  Effect.Repeat (Repeat.MkRepeat _ body _ _ ifAgain) -> concatMap effectReplacements (body <> ifAgain)
   Effect.RepeatIf (RepeatIf.MkRepeatIf process _ ifHolds) -> concatMap effectReplacements (process <> ifHolds)
   Effect.Heal _ -> []
   Effect.ChooseNewTargets _ -> []
@@ -3131,7 +3131,7 @@ effectMintedFaces effect = case effect of
   -- CR 608.2f's body can too, for the same reason.
   Effect.ForEach (ForEach.MkForEach _ _ _ body _ _ _) -> concatMap effectMintedFaces body
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber _ _ body) -> concatMap effectMintedFaces body
-  Effect.Repeat (Repeat.MkRepeat _ body _) -> concatMap effectMintedFaces body
+  Effect.Repeat (Repeat.MkRepeat _ body _ _ ifAgain) -> concatMap effectMintedFaces (body <> ifAgain)
   Effect.RepeatIf (RepeatIf.MkRepeatIf process _ ifHolds) -> concatMap effectMintedFaces (process <> ifHolds)
   Effect.Heal _ -> []
   Effect.ChooseNewTargets _ -> []
@@ -4405,7 +4405,7 @@ quantityKindFilters quantity = case quantity of
   Quantity.Type.WasAttacking -> []
   Quantity.Type.WasBlocking -> []
   Quantity.Type.WasBlockedThisTurn -> []
-  Quantity.Type.ControlGainedSinceLastUpkeep _ -> []
+  Quantity.Type.ControlGained _ _ -> []
   Quantity.Type.PlayedBy _ -> []
   Quantity.Type.DamageDealtThisTurn _ -> []
   -- CR 122.1's PER-PLAYER tally, whose kind is a Parun.Types.PlayerCounterKind --
@@ -6486,7 +6486,7 @@ effectFilters effect = case effect of
   -- list is exactly what this traversal must not stop at.
   Effect.ForEach (ForEach.MkForEach ref _ _ body _ gate _) -> frame SourceHostFramed (objectRefFilters ref) <> concatMap effectFilters body <> concatMap payGateFilters (Maybe.maybeToList gate)
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber _ _ body) -> concatMap effectFilters body
-  Effect.Repeat (Repeat.MkRepeat _ body gate) -> foldMap (frame Unframed . conditionFilters) gate <> concatMap effectFilters body
+  Effect.Repeat (Repeat.MkRepeat _ body gate _ ifAgain) -> foldMap (frame Unframed . conditionFilters) gate <> concatMap effectFilters (body <> ifAgain)
   Effect.RepeatIf (RepeatIf.MkRepeatIf process condition ifHolds) -> frame Unframed (conditionFilters condition) <> concatMap effectFilters (process <> ifHolds)
   Effect.Heal ref -> frame SourceHostFramed (objectRefFilters ref)
   Effect.ChooseNewTargets ref -> frame SourceHostFramed (objectRefFilters ref)

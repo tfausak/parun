@@ -338,10 +338,14 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let raiders = on (TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.Opponent) [discard (PlayerRef.InSlot thatPlayer) 1]
     Spec.assertEq s (Just (Text.pack "Whenever Spark deals combat damage to an opponent, that player discards a card.")) (Oracle.render raiders)
     Spec.assertBool s (Oracle.says raiders spark (Text.pack "Whenever this creature deals combat damage to an opponent, that opponent discards a card.")) "that opponent unsaid"
-    let sentry = on (TriggerCondition.SelfBlocksCreature (Filter.HasCardType CardType.Creature)) [destroy (ObjectRef.InSlot thatAttacker) Regenerability.Regenerable, destroy (ObjectRef.InSlot self) Regenerability.Regenerable]
+    let sentry = on (TriggerCondition.SelfBlocksCreature (Filter.HasCardType CardType.Creature)) [destroy (ObjectRef.AllOf (ObjectRef.InSlot thatAttacker NonEmpty.:| [ObjectRef.InSlot self])) Regenerability.Regenerable]
     Spec.assertEq s (Just (Text.pack "Whenever Spark blocks a creature, destroy that creature and it.")) (Oracle.render sentry)
     Spec.assertBool s (Oracle.says sentry spark (Text.pack "When this creature blocks a creature, destroy that creature and this creature.")) "Loyal Sentry's wording unsaid"
     Spec.assertBool s (Oracle.says sentry spark (Text.pack "When this creature blocks a creature, destroy both creatures.")) "Alaborn Zealot's wording unsaid"
+    -- Two instructions destroy one after the other (CR 608.2c), not as the
+    -- one action the sentence names (CR 608.2f).
+    let staggered = on (TriggerCondition.SelfBlocksCreature (Filter.HasCardType CardType.Creature)) [destroy (ObjectRef.InSlot thatAttacker) Regenerability.Regenerable, destroy (ObjectRef.InSlot self) Regenerability.Regenerable]
+    Spec.assertBool s (not (Oracle.says staggered spark (Text.pack "When this creature blocks a creature, destroy that creature and this creature."))) "two destructions said as one"
     let roc = on (TriggerCondition.SelfBlocksCreature (Filter.And [Filter.HasCardType CardType.Creature, Filter.Not (Filter.HasKeyword Keyword.Flying)])) [modify (ObjectRef.InSlot self) Duration.UntilEndOfTurn (pt 1 0)]
     Spec.assertEq s (Just (Text.pack "Whenever Spark blocks a creature without flying, it gets +1/+0 until end of turn.")) (Oracle.render roc)
     Spec.assertBool s (Oracle.says roc spark (Text.pack "Whenever this creature blocks a creature without flying, this creature gets +1/+0 until end of turn.")) "the name after the event unsaid"

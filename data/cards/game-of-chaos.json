@@ -1,0 +1,241 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Game of Chaos",
+      "oracleText": "Flip a coin. If you win the flip, you gain 1 life and target opponent loses 1 life, and you decide whether to flip again. If you lose the flip, you lose 1 life and that opponent gains 1 life, and that player decides whether to flip again. Double the life stakes with each flip.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "BindAmount",
+                    "value": {
+                      "quantity": {
+                        "type": "Literal",
+                        "value": 1
+                      },
+                      "slot": "stake"
+                    }
+                  },
+                  {
+                    "type": "Repeat",
+                    "value": {
+                      "body": [
+                        {
+                          "type": "FlipCoin",
+                          "value": {
+                            "misses": "lost",
+                            "slot": "won"
+                          }
+                        },
+                        {
+                          "type": "ForEachNumber",
+                          "value": {
+                            "body": [
+                              {
+                                "type": "GainLife",
+                                "value": {
+                                  "player": {
+                                    "type": "Relative",
+                                    "value": {
+                                      "type": "You"
+                                    }
+                                  },
+                                  "quantity": {
+                                    "type": "InSlot",
+                                    "value": "stake"
+                                  }
+                                }
+                              }
+                            ],
+                            "slot": "flip",
+                            "upTo": {
+                              "type": "InSlot",
+                              "value": "won"
+                            }
+                          }
+                        },
+                        {
+                          "type": "ForEachNumber",
+                          "value": {
+                            "body": [
+                              {
+                                "type": "LoseLife",
+                                "value": {
+                                  "player": {
+                                    "type": "InSlot",
+                                    "value": "target"
+                                  },
+                                  "quantity": {
+                                    "type": "InSlot",
+                                    "value": "stake"
+                                  }
+                                }
+                              }
+                            ],
+                            "slot": "flip",
+                            "upTo": {
+                              "type": "InSlot",
+                              "value": "won"
+                            }
+                          }
+                        },
+                        {
+                          "type": "ForEachNumber",
+                          "value": {
+                            "body": [
+                              {
+                                "type": "LoseLife",
+                                "value": {
+                                  "player": {
+                                    "type": "Relative",
+                                    "value": {
+                                      "type": "You"
+                                    }
+                                  },
+                                  "quantity": {
+                                    "type": "InSlot",
+                                    "value": "stake"
+                                  }
+                                }
+                              }
+                            ],
+                            "slot": "flip",
+                            "upTo": {
+                              "type": "InSlot",
+                              "value": "lost"
+                            }
+                          }
+                        },
+                        {
+                          "type": "ForEachNumber",
+                          "value": {
+                            "body": [
+                              {
+                                "type": "GainLife",
+                                "value": {
+                                  "player": {
+                                    "type": "InSlot",
+                                    "value": "target"
+                                  },
+                                  "quantity": {
+                                    "type": "InSlot",
+                                    "value": "stake"
+                                  }
+                                }
+                              }
+                            ],
+                            "slot": "flip",
+                            "upTo": {
+                              "type": "InSlot",
+                              "value": "lost"
+                            }
+                          }
+                        }
+                      ],
+                      "chooser": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "You"
+                        }
+                      },
+                      "gate": {
+                        "type": "Compares",
+                        "value": {
+                          "comparison": {
+                            "type": "AtLeast"
+                          },
+                          "measured": {
+                            "type": "InSlot",
+                            "value": "won"
+                          },
+                          "threshold": {
+                            "type": "Literal",
+                            "value": 1
+                          }
+                        }
+                      },
+                      "ifAgain": [
+                        {
+                          "type": "BindAmount",
+                          "value": {
+                            "quantity": {
+                              "type": "Times",
+                              "value": {
+                                "factor": 2,
+                                "quantity": {
+                                  "type": "InSlot",
+                                  "value": "stake"
+                                }
+                              }
+                            },
+                            "slot": "stake"
+                          }
+                        }
+                      ],
+                      "otherChooser": {
+                        "type": "InSlot",
+                        "value": "target"
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "target": {
+                "filter": {
+                  "type": "IsPlayer",
+                  "value": {
+                    "type": "Opponent"
+                  }
+                },
+                "pool": {
+                  "type": "Players"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

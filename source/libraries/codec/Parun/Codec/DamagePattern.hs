@@ -27,7 +27,7 @@ defaultWhatSource = Filter.And []
 -- arms, never authored on a card -- but
 -- this codec is structural over the record and so accepts one from card JSON.
 -- A corpus lint keeps the pool honest instead, as for PhasePattern's
--- `whosePhase`. `whichSource` is runtime-only for the same reason and swept by
+-- Among. `whichSource` is runtime-only for the same reason and swept by
 -- the same lint -- the source a shield watches is chosen (CR 609.7a) or targeted
 -- (CR 601.2c) when the shield is created.
 -- `whatRecipient` and `whoRecipient` beside them are the authored halves and

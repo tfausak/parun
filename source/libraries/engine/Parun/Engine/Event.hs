@@ -3100,7 +3100,7 @@ apply batch applied candidate event =
             let viewOf = Projection.viewWithLastKnown oid gs3
                 context = Replacement.candidateContext gs3 candidate
                 scale = maybe 0 Integer.toNaturalSaturating (Quantity.evaluate viewOf context (Projection.boardAsEntering gs3) oid each)
-            Monad.mapM_ (\k -> addEnteringCounters oid k (scale * many)) kind
+            Monad.mapM_ (\k -> addEnteringCounters Nothing oid k (scale * many)) kind
             pure (Just event)
       -- CR 614.1a / 614.12: "if this land would enter, sacrifice a Forest
       -- instead. If you do, put this land onto the battlefield. If you don't, put
@@ -3214,7 +3214,7 @@ apply batch applied candidate event =
             Monad.mapM_ (reveal RevealCause.Ordinary controller) (Set.toAscList chosen)
             -- "N +1/+1 counters for each card revealed this way": the multiplier
             -- scales the counters, devour's arithmetic above.
-            addEnteringCounters oid CounterKind.PlusOnePlusOne (n * Natural.length chosen)
+            addEnteringCounters Nothing oid CounterKind.PlusOnePlusOne (n * Natural.length chosen)
             pure (Just event)
       -- CR 614.1c: "as this creature enters, exile an instant or sorcery card from
       -- your graveyard" (Living Lore), "exile any number of creature cards from
@@ -3314,7 +3314,7 @@ apply batch applied candidate event =
                           answer <- Game.choose (Prompt.ChooseCounterKind (Decide.deciderFor controller gs2) controller (CounterKindFor.EnteringWith oid) offeredKinds)
                           -- FILTERED, NOT TRUSTED (#222).
                           pure (if answer `elem` offeredKinds then answer else NonEmpty.head offeredKinds)
-                    addEnteringCounters oid kind (amount each)
+                    addEnteringCounters Nothing oid kind (amount each)
                 pure (Just event)
       -- CR 614.1c with CR 301.5e: "as this Equipment enters, choose a creature
       -- you control it could be attached to. If you do, it enters attached to
@@ -3425,7 +3425,7 @@ apply batch applied candidate event =
                 -- chapter outside it would put the Saga past its final chapter
                 -- (CR 704.5s) or leave it on none.
                 pure (max 1 (min bound answer))
-        addEnteringCounters oid CounterKind.Lore picked
+        addEnteringCounters Nothing oid CounterKind.Lore picked
         pure (Just event)
       -- CR 702.136a: riot. "You may have this permanent enter with an additional
       -- +1/+1 counter on it. If you don't, it gains haste."
@@ -3467,7 +3467,7 @@ apply batch applied candidate event =
             let decider = Decide.deciderFor controller gs
             answer <- Game.choose (Prompt.ChooseRiot decider controller oid)
             case answer of
-              OptionalDecision.Exercises -> addEnteringCounters oid CounterKind.PlusOnePlusOne 1
+              OptionalDecision.Exercises -> addEnteringCounters Nothing oid CounterKind.PlusOnePlusOne 1
               OptionalDecision.Declines ->
                 State.modify' $ \gs2 ->
                   -- CR 611.2a: "gains haste" with no stated end lasts until the
@@ -3515,7 +3515,7 @@ apply batch applied candidate event =
             let decider = Decide.deciderFor controller gs
             answer <- Game.choose (Prompt.ChooseUnleash decider controller oid)
             case answer of
-              OptionalDecision.Exercises -> addEnteringCounters oid CounterKind.PlusOnePlusOne 1
+              OptionalDecision.Exercises -> addEnteringCounters Nothing oid CounterKind.PlusOnePlusOne 1
               OptionalDecision.Declines -> pure ()
             pure (Just event)
       -- CR 702.104a / 614.1c: tribute N on Snake of the Golden Grove. The arm
@@ -3535,7 +3535,10 @@ apply batch applied candidate event =
       --
       -- Through addEnteringCounters for riot's reason: the pending map is what puts
       -- these counters in the entry's own CR 616.1 pool, so CR 614.16's multipliers
-      -- reach them.
+      -- reach them. Under the opponent's name, the player CR 702.104a has put
+      -- them (CR 122.6a); the scenario
+      -- cr-702-104a-bob-pays-tribute-so-his-vorinclex-doubles-the-counters-he-puts
+      -- proves it.
       EntryRewrite.Tribute n -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
         gs <- State.get
@@ -3556,7 +3559,7 @@ apply batch applied candidate event =
                 case answer of
                   OptionalDecision.Declines -> pure ()
                   OptionalDecision.Exercises -> do
-                    addEnteringCounters oid CounterKind.PlusOnePlusOne n
+                    addEnteringCounters (Just opponent) oid CounterKind.PlusOnePlusOne n
                     State.modify' $ \g ->
                       let stamp o = o {Object.tributePaid = True}
                        in g {GameState.objects = Map.adjust stamp oid (GameState.objects g)}
@@ -3598,7 +3601,7 @@ apply batch applied candidate event =
                     quantity = Quantity.Type.DamageDealtToPlayersThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Nothing}
                  in maybe 0 Integer.toNaturalSaturating (Quantity.evaluate (Projection.fullView gs) context gs oid quantity)
         Replacement.consume (ReplacementCandidate.identity candidate)
-        addEnteringCounters oid CounterKind.PlusOnePlusOne count
+        addEnteringCounters Nothing oid CounterKind.PlusOnePlusOne count
         pure (Just event)
       -- CR 702.44a via CR 614.1c: sunburst on Suntouched Myr and Clearwater
       -- Goblet. Riot's arm with no prompt in it -- rule 702.44a states a choice
@@ -3628,7 +3631,7 @@ apply batch applied candidate event =
               if Set.member CardType.Creature (PC.cardTypes (Projection.copiableCharacteristics oid gs))
                 then CounterKind.PlusOnePlusOne
                 else CounterKind.Named Keyword.chargeCounter
-        addEnteringCounters oid kind (Natural.length (Projection.colorsSpentOf oid gs))
+        addEnteringCounters Nothing oid kind (Natural.length (Projection.colorsSpentOf oid gs))
         pure (Just event)
       -- CR 702.43a / 702.44c: Arcbound Wanderer's Modular--Sunburst. The arm
       -- above's count, but modular's counter kind: rule 702.44c makes the
@@ -3640,7 +3643,7 @@ apply batch applied candidate event =
       EntryRewrite.ModularSunburst -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
         gs <- State.get
-        addEnteringCounters oid CounterKind.PlusOnePlusOne (Natural.length (Projection.colorsSpentOf oid gs))
+        addEnteringCounters Nothing oid CounterKind.PlusOnePlusOne (Natural.length (Projection.colorsSpentOf oid gs))
         pure (Just event)
       -- CR 702.150a via CR 614.1c: compleated on Tamiyo, Compleated Sage. "It
       -- instead enters the battlefield with that many loyalty counters MINUS TWO
@@ -3656,6 +3659,8 @@ apply batch applied candidate event =
       --
       -- Map.adjust rather than insert, for the CounterR arm's reason: an absent
       -- id means nothing is entering, which `admitsEntry` has already ruled out.
+      -- The default putter's share alone: no effect naming a putter places
+      -- loyalty.
       --
       -- Saturating, because a counter count is a Natural and CR 122.1 knows no
       -- negative number of them. Rule 702.150a's own "would enter with one or more
@@ -3672,7 +3677,7 @@ apply batch applied candidate event =
         State.modify' $ \gs ->
           gs
             { GameState.enteringCounters =
-                Map.adjust (Map.adjust (\n -> Natural.minusSaturating n (2 * symbols)) CounterKind.Loyalty) oid (GameState.enteringCounters gs)
+                Map.adjust (Map.adjust (Map.adjust (\n -> Natural.minusSaturating n (2 * symbols)) CounterKind.Loyalty) Nothing) oid (GameState.enteringCounters gs)
             }
         pure (Just event)
       -- CR 614.1d / 110.5b: "This permanent enters tapped" (Zof Bloodbog's land,
@@ -4745,8 +4750,8 @@ apply batch applied candidate event =
     -- places them. The same rewrite as the arm above, one level up, which is what
     -- puts this row in the entry's own CR 616.1 pool.
     --
-    -- Map.union is left-biased, so the scaled kinds win and a kind the pattern did
-    -- not match is left as it was. Map.adjust rather than insert: an absent id
+    -- Map.union is left-biased, so the scaled kinds win and a kind or a putter's
+    -- share the pattern did not match is left as it was. Map.adjust rather than insert: an absent id
     -- means nothing is entering, which `applies` has already ruled out.
     --
     -- One entry is ONE event -- CR 122.6 covers a permanent given counters as it
@@ -4769,9 +4774,9 @@ apply batch applied candidate event =
     (ReplacementEffect.CounterR (CounterR.MkCounterR pat scaling), ProposedEvent.WouldEnter oid) -> do
       Replacement.consume (ReplacementCandidate.identity candidate)
       gs <- State.get
-      let scaled = fmap (Replacement.scale scaling) (Replacement.matchingEnteringCounters gs pat oid)
+      let scaled = fmap (fmap (Replacement.scale scaling)) (Replacement.matchingEnteringCounters gs candidate pat oid)
       State.modify' $ \gs2 ->
-        gs2 {GameState.enteringCounters = Map.adjust (Map.union scaled) oid (GameState.enteringCounters gs2)}
+        gs2 {GameState.enteringCounters = Map.adjust (Map.unionWith Map.union scaled) oid (GameState.enteringCounters gs2)}
       pure (Just event)
     -- Unreachable: `applies` admits CounterR only against the three counter events
     -- above.
@@ -5430,9 +5435,10 @@ showsInstantBackFace oid gs = Maybe.fromMaybe False $ do
 -- of `apply`. Going back through the door would offer every counter-scaling row a
 -- second opportunity CR 614.5 has already spent.
 --
--- Ascending by kind so the CountersPut events are ordered deterministically; no
--- rule fixes the order, and nothing between them can observe it, since a trigger
--- scan runs only once this whole entry finishes.
+-- Each share by its own putter (Replacement.enteringPutter). Ascending by putter,
+-- then kind, so the CountersPut events are ordered deterministically; no rule
+-- fixes the order, and nothing between them can observe it, since a trigger scan
+-- runs only once this whole entry finishes.
 --
 -- The id is deleted whether or not anything was pending, so a nested entry cannot
 -- inherit an outer subject's leftovers.
@@ -5440,14 +5446,13 @@ flushEnteringCounters :: ObjectId -> Game ()
 flushEnteringCounters oid = do
   pending <- takeEnteringCounters oid
   gs <- State.get
-  -- CR 122.6a's default putter, the object's controller. Not implemented: CR
-  -- 702.104a's opponent as the player putting tribute's counters (#5976).
-  Monad.unless (Map.null pending) . Monad.forM_ (Projection.controllerOf oid gs) $ \putter ->
-    Monad.mapM_ (\(kind, n) -> Monad.void (settleCounters putter oid kind n)) (Map.toAscList pending)
+  Monad.forM_ (Map.toAscList pending) $ \(named, counters) ->
+    Monad.forM_ (Replacement.enteringPutter gs oid named) $ \putter ->
+      Monad.mapM_ (\(kind, n) -> Monad.void (settleCounters putter oid kind n)) (Map.toAscList counters)
 
 -- The counters pending for an entering object, cleared; a diverted one drops
 -- them, since it never entered (CR 614.6).
-takeEnteringCounters :: ObjectId -> Game (Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural)
+takeEnteringCounters :: ObjectId -> Game (Map.Map (Maybe PlayerId) (Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural))
 takeEnteringCounters oid = do
   pending <- State.gets (Map.findWithDefault Map.empty oid . GameState.enteringCounters)
   State.modify' (\gs -> gs {GameState.enteringCounters = Map.delete oid (GameState.enteringCounters gs), GameState.copyExceptionCounters = Map.delete oid (GameState.copyExceptionCounters gs)})
@@ -5778,9 +5783,9 @@ settleCounters putter target settledKind settledCount
 -- placement onto the RECEIVING object's own account goes through here. One caller
 -- is left: CR 702.37b's megamorph counter, at `apply`'s TurnUpR arm. The entry
 -- roads -- CR 614.1c-d's rewrites and a spell's entry riders -- accumulate through
--- addEnteringCounters below and reach this module's tail by the other route, and
--- rule 122.6a's default putter is what the flush places under either way.
--- Not implemented: tribute naming its opponent as the putter (#5976).
+-- addEnteringCounters below and reach this module's tail by the other route,
+-- where the flush places each share under this default unless the effect named
+-- a player (CR 702.104a's opponent).
 --
 -- An object with no controller is one that is not on the battlefield, and
 -- putCounters places nothing on such an object anyway -- so answering 0 without
@@ -5832,10 +5837,11 @@ placeEntryCounters candidate oid counters = do
   Foldable.for_ (Map.toList counters) $ \(kind, quantity) ->
     case Quantity.evaluate viewOf context (Projection.boardAsEntering gs) oid (Quantity.substituteAnnouncedX announcedX quantity) of
       Nothing -> pure () -- unevaluable quantity: no counters (Resolve's PutCounters posture)
-      Just n -> addEnteringCounters oid kind (Integer.toNaturalSaturating n)
+      Just n -> addEnteringCounters Nothing oid kind (Integer.toNaturalSaturating n)
 
 -- CR 614.1c: this permanent is going to enter with n more counters of a kind than
--- it was a moment ago. Written to the pending map rather than to the object; see
+-- it was a moment ago, put by `putter` -- Nothing for CR 122.6a's default, the
+-- object's controller. Written to the pending map rather than to the object; see
 -- GameState.enteringCounters and flushEnteringCounters, which places them once the
 -- entry's own CR 616.1 loop has finished saying how many that is.
 --
@@ -5843,12 +5849,12 @@ placeEntryCounters candidate oid counters = do
 -- siblings is passed and none is owed: CR 614.12's same-batch exclusion is the
 -- entry loop's own `notSibling`, and it now covers these counters too, since the
 -- row that would scale them is offered inside that loop.
-addEnteringCounters :: ObjectId -> CounterKind.CounterKind Keyword.Type.Keyword -> Natural -> Game ()
-addEnteringCounters oid kind n =
+addEnteringCounters :: Maybe PlayerId -> ObjectId -> CounterKind.CounterKind Keyword.Type.Keyword -> Natural -> Game ()
+addEnteringCounters putter oid kind n =
   Monad.when (n > 0) . State.modify' $ \gs ->
     gs
       { GameState.enteringCounters =
-          Map.insertWith (Map.unionWith (+)) oid (Map.singleton kind n) (GameState.enteringCounters gs)
+          Map.insertWith (Map.unionWith (Map.unionWith (+))) oid (Map.singleton putter (Map.singleton kind n)) (GameState.enteringCounters gs)
       }
 
 -- CR 707.9e: addEnteringCounters for a copy effect's additional-counters
@@ -5856,7 +5862,7 @@ addEnteringCounters oid kind n =
 -- copy effect applied to the same entry afterwards can take it back.
 addCopyExceptionCounters :: ObjectId -> CounterKind.CounterKind Keyword.Type.Keyword -> Natural -> Game ()
 addCopyExceptionCounters oid kind n = do
-  addEnteringCounters oid kind n
+  addEnteringCounters Nothing oid kind n
   Monad.when (n > 0) . State.modify' $ \gs ->
     gs
       { GameState.copyExceptionCounters =
@@ -5872,7 +5878,7 @@ takeBackCopyException oid = State.modify' $ \gs ->
   let placed = Map.findWithDefault Map.empty oid (GameState.copyExceptionCounters gs)
       takeBack pending = Map.differenceWith (\n m -> Monad.mfilter (> 0) (Just (Natural.minusSaturating n m))) pending placed
    in gs
-        { GameState.enteringCounters = Map.adjust takeBack oid (GameState.enteringCounters gs),
+        { GameState.enteringCounters = Map.adjust (Map.adjust takeBack Nothing) oid (GameState.enteringCounters gs),
           GameState.copyExceptionCounters = Map.delete oid (GameState.copyExceptionCounters gs)
         }
 
@@ -7987,7 +7993,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                     -- rolls them back with the move. The Bronzehide Lion scenarios
                     -- under data/scenarios/aura prove it.
                     State.modify' (\g -> List.foldl' (storeEntryEffect newId) g defining)
-                    Monad.mapM_ (uncurry (addEnteringCounters newId)) (Map.toAscList entering)
+                    Monad.mapM_ (uncurry (addEnteringCounters Nothing newId)) (Map.toAscList entering)
                     refusal <- runEntry False (Game.entryOriginOf oid unentered) batch newId
                     fallen <- case refusal of
                       Nothing -> pure Seq.empty
@@ -9382,7 +9388,7 @@ createTokens controller card copy n tapped entering attached marks = do
               -- `placeObject` above having materialized every token first, which is what
               -- `siblingsOf` then hands each entry loop.
               let siblingsOf oid = Set.delete oid (Set.fromList ids)
-              Monad.mapM_ (\oid -> Monad.mapM_ (uncurry (addEnteringCounters oid)) (Map.toAscList entering)) ids
+              Monad.mapM_ (\oid -> Monad.mapM_ (uncurry (addEnteringCounters Nothing oid)) (Map.toAscList entering)) ids
               refusals <- traverse (\oid -> (,) oid <$> runEntry True Nothing (siblingsOf oid) oid) ids
               let entered = [oid | (oid, Nothing) <- refusals]
               Monad.mapM_ unmake [oid | (oid, Just refusal) <- refusals, refusal /= EntryRefusal.Diverted]

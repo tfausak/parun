@@ -1,0 +1,216 @@
+{
+  "description": "Marsh Viper: whenever it deals damage to a player, that player gets two poison counters",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Marsh Viper",
+            "ready": true,
+            "label": "viper"
+          }
+        ]
+      },
+      {
+        "name": "carol",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Llanowar Elves",
+            "ready": true,
+            "label": "elves"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$viper"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "ChooseAttackTarget": "$bob"
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "bob",
+      "do": {
+        "Block": {
+          "$elves": [
+            "$viper"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "PlayerCounters": {
+          "player": "bob",
+          "kind": {
+            "type": "Poison"
+          },
+          "count": 0
+        }
+      }
+    },
+    {
+      "turn": 4,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$viper"
+        ]
+      }
+    },
+    {
+      "turn": 4,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "ChooseAttackTarget": "$carol"
+      }
+    },
+    {
+      "turn": 4,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "PlayerCounters": {
+          "player": "carol",
+          "kind": {
+            "type": "Poison"
+          },
+          "count": 2
+        }
+      }
+    },
+    {
+      "turn": 4,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "PlayerCounters": {
+          "player": "bob",
+          "kind": {
+            "type": "Poison"
+          },
+          "count": 0
+        }
+      }
+    },
+    {
+      "turn": 4,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "PlayerCounters": {
+          "player": "alice",
+          "kind": {
+            "type": "Poison"
+          },
+          "count": 0
+        }
+      }
+    }
+  ]
+}

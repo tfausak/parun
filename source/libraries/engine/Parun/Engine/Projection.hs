@@ -3811,6 +3811,7 @@ traitReads trait = case trait of
   -- An OWNER, which CR 108.3 fixes when the game starts and no Modification
   -- writes.
   Trait.Owner -> Set.empty
+  Trait.Controller -> Set.singleton Controller
   Trait.Sector -> Set.empty
   Trait.CreatureType -> Set.singleton Subtypes
   Trait.CardType -> Set.singleton Types
@@ -4583,7 +4584,7 @@ quantityReads q = case q of
   Quantity.Type.WasAttacking -> Set.empty
   Quantity.Type.WasBlocking -> Set.empty
   Quantity.Type.WasBlockedThisTurn -> Set.empty
-  Quantity.Type.ControlGainedSinceLastUpkeep _ -> Set.empty
+  Quantity.Type.ControlGained _ _ -> Set.empty
   Quantity.Type.PlayedBy _ -> Set.empty
   Quantity.Type.DamageDealtThisTurn _ -> Set.empty
   Quantity.Type.OpponentsAttacked _ -> Set.empty

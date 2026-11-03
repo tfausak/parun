@@ -533,7 +533,7 @@ printedBoxQuantity quantity = case quantity of
   Quantity.Type.WasAttacking -> False
   Quantity.Type.WasBlocking -> False
   Quantity.Type.WasBlockedThisTurn -> False
-  Quantity.Type.ControlGainedSinceLastUpkeep {} -> False
+  Quantity.Type.ControlGained {} -> False
   Quantity.Type.PlayedBy {} -> False
   Quantity.Type.DamageDealtThisTurn _ -> False
   Quantity.Type.OpponentsAttacked {} -> False
@@ -633,16 +633,17 @@ isTokenR replacement = case replacement of
 
 -- #437: does this replacement carry a PhasePattern with a BAKED player in it?
 --
--- PhasePattern.whosePhase is meant to be runtime-only. Nothing is the value card
--- data writes -- Eon Hub's "players skip their upkeep steps" is symmetric and
--- names nobody -- and Just is baked by the engine out of a player a resolution
--- named (Resolve.applyEffect's SkipPhase arm, Fatigue's target) or out of a
--- pending extra turn (Replacement.installTurnSkips). Card data cannot name a
--- player at all.
+-- Card data writes a PhasePattern.whosePhase relative to the row's "you" -- Eon
+-- Hub's "players skip their upkeep steps" names nobody, Necropotence's "skip your
+-- draw step" its controller -- and Among is baked by the engine out of a player a
+-- resolution named (Resolve.applyEffect's SkipPhase arm, Fatigue's target) or out
+-- of a pending extra turn (Replacement.installTurnSkips). Card data cannot name a
+-- player at all, and no card's skip names a slot, so InSlot is fenced until one
+-- does.
 --
 -- Nothing enforced that split. Codec.PhasePattern is structural over the record,
--- so it accepts a Just from card JSON -- and a card file could write
--- `"whosePhase": 1`, which is meaningless. Player 1 is a seat in some game, not
+-- so it accepts an Among from card JSON -- and a card file could write
+-- `"whosePhase": {"type": "Among", "value": [1]}`, which is meaningless. Player 1 is a seat in some game, not
 -- a fact about a printed card, and the skip would land on whoever happened to
 -- hold that id.
 --
@@ -665,7 +666,11 @@ isTokenR replacement = case replacement of
 -- pattern-carrying replacement must break this build rather than silently pass.
 phasePatternOffends :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Bool
 phasePatternOffends replacement = case replacement of
-  ReplacementEffect.PhaseR phasePattern -> Maybe.isJust (PhasePattern.whosePhase phasePattern)
+  ReplacementEffect.PhaseR phasePattern -> case PhasePattern.whosePhase phasePattern of
+    ControllerRelation.Among _ -> True
+    ControllerRelation.InSlot _ -> True
+    ControllerRelation.Related _ -> False
+    ControllerRelation.EnchantedPlayers -> False
   ReplacementEffect.CounterR {} -> False
   ReplacementEffect.ZoneChangeR {} -> False
   ReplacementEffect.EntryR {} -> False
@@ -752,7 +757,7 @@ isInstructionR replacement = case replacement of
 -- printing either half would be claiming an ability no rule gives it.
 --
 -- ControllerRelation.Among is the same prohibition on every arm's pattern at once:
--- the players an InSlot named, which only the Effect.Replace install bakes.
+-- the players a resolution named, which only an install bakes.
 --
 -- Exhaustive rather than a wildcard, this file's discipline for a sum.
 engineOnlyOffends :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Bool
@@ -1548,7 +1553,8 @@ effectObjectRefs effect =
         -- Blackmail's "target player reveals three cards from their hand" asks
         -- the hand's owner.
         Effect.Reveal (Reveal.MkReveal ref _) -> [(AnyCardsFromAmong : CardInHand : shownQuestions, ref)]
-        Effect.LookAt (LookAt.MkLookAt ref _ _) -> read_ [ref]
+        -- Urza's Bauble's "a card at random in target player's hand" asks here.
+        Effect.LookAt (LookAt.MkLookAt ref _ _) -> [([RandomInHand], ref)]
         -- Master of Predicaments' "choose a card in your hand" asks here.
         Effect.Guess (Guess.MkGuess subject _ _ _ _) -> [([CardInHand], subject)]
         Effect.Scry {} -> []
@@ -1728,8 +1734,9 @@ inertChoosers effect =
   [ref | (allowed, ref) <- effectObjectRefs effect, Just question <- [questionOf ref], question `notElem` allowed]
 
 -- An ObjectRef.AllOf written anywhere but a move's ref, a play grant's, a
--- loop's or a damage instruction's. MoveToZone gathers it member by member
--- (Parun.Engine.Resolve.Arms.Zones's gather), and GrantPlayFromExile reads its ref
+-- loop's, a damage instruction's or a destruction's. MoveToZone gathers it
+-- member by member (Parun.Engine.Resolve.Arms.Zones's gather), and
+-- GrantPlayFromExile reads its ref
 -- through
 -- Resolve.Slots.objectRefObjects, whose AllOf arm is the union -- the scenario
 -- cr-601-3-flameskull-played-land-closes-flameskull-s-own-cast proves it.
@@ -1740,6 +1747,9 @@ inertChoosers effect =
 -- Inferno Elemental's "that creature", whichever of its two block slots is
 -- bound, proved by the scenarios inferno-elemental-burns-the-creature-it-blocks
 -- and inferno-elemental-burns-the-creature-blocking-it.
+-- Destroy reads its ref through askingObjects, whose AllOf arm is the union
+-- too -- Loyal Sentry's "that creature and this creature" in one batch, proved
+-- by the scenario loyal-sentry-destroys-both-creatures-at-once.
 -- The other opcodes' one-ref reads (a sticker's candidates, a copy's archived
 -- source, a reveal's shower) would read the union as a single arm.
 strayAllOf :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
@@ -1748,6 +1758,7 @@ strayAllOf effect = case effect of
   Effect.GrantPlayFromExile {} -> False
   Effect.ForEach {} -> False
   Effect.DealDamage {} -> False
+  Effect.Destroy {} -> False
   _ -> any (holdsAllOf . snd) (effectObjectRefs effect)
   where
     holdsAllOf ref = case ref of
@@ -2730,7 +2741,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- Exhume, Elvish Piper, Commune with the Gods and Merfolk Spy print them.
     Spec.assertBool s asks "the pool has a card asking a player to pick a card"
     Spec.assertEqWith s "a chosen card under an opcode that cannot ask (CR 608.2d)" (fmap (S.nameOf . Printing.card) offenders) []
-  Spec.it s "no AllOf outside a move, a play grant, a loop or a damage instruction" $ do
+  Spec.it s "no AllOf outside a move, a play grant, a loop, a damage instruction or a destruction" $ do
     ps <- S.allPrintings s corpus
     let offenders = filter (anyFace (any strayAllOf . cardAuthoredEffects) . Printing.card) ps
         moved = any (anyFace (any (any (isAllOf . snd) . effectObjectRefs) . cardAuthoredEffects) . Printing.card) ps
@@ -2947,6 +2958,19 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- prints one.
     Spec.assertBool s (any (anyFace (any hides . cardResolutionEffects) . Printing.card) ps) "the pool has a card exiling face down"
     Spec.assertEqWith s "only exile keeps a card face down (CR 406.3)" (fmap (S.nameOf . Printing.card) offenders) []
+  -- Parun.Types.Repeat's otherChooser is read only when a gate fails, so without
+  -- a gate it is inert card data. Game of Chaos keeps the sweep from being vacuous.
+  Spec.it s "no Repeat names another chooser without a gate" $ do
+    ps <- S.allPrintings s corpus
+    let names effect = case effect of
+          Effect.Repeat loop -> Maybe.isJust (Repeat.otherChooser loop)
+          _ -> False
+        offends effect = case effect of
+          Effect.Repeat loop -> Maybe.isJust (Repeat.otherChooser loop) && Maybe.isNothing (Repeat.gate loop)
+          _ -> False
+        offenders = filter (anyFace (any offends . cardResolutionEffects) . Printing.card) ps
+    Spec.assertBool s (any (anyFace (any names . cardResolutionEffects) . Printing.card) ps) "the pool has a Repeat naming another chooser"
+    Spec.assertEqWith s "otherChooser is read only when the gate fails" (fmap (S.nameOf . Printing.card) offenders) []
   -- CR 509.4's rider is a rule about entering the BATTLEFIELD, so on any other
   -- destination it is inert card data. Both opcodes read it and both apply it --
   -- Parun.Engine.Resolve's Create arm hands its tokens to
@@ -3144,7 +3168,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
   --
   -- A card's own CR 614.1e clause states no procedure -- it applies down every
   -- road the rule reaches -- so a printing writing one would be claiming a rule it
-  -- has not got. Parun.Types.PhasePattern's whosePhase is the same shape of field
+  -- has not got. Parun.Types.PhasePattern's Among is the same shape of field
   -- and the lint below it the same shape of sweep.
   --
   -- Guarded against a vacuous sweep by the rows themselves: Gift of Doom and
@@ -3244,11 +3268,12 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     let card = S.combinedFace eonHub
         bake replacement = case replacement of
           ReplacementEffect.PhaseR phasePattern ->
-            ReplacementEffect.PhaseR phasePattern {PhasePattern.whosePhase = Just (PlayerId.MkPlayerId 1)}
+            ReplacementEffect.PhaseR phasePattern {PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton (PlayerId.MkPlayerId 1))}
           other -> other
         baked = card {Face.replacementEffects = fmap (\pr -> pr {PrintedReplacement.effect = bake (PrintedReplacement.effect pr)}) (Face.replacementEffects card)}
     Spec.assertBool s (not (any phasePatternOffends (cardReplacementEffects card))) "the real Eon Hub is symmetric and accepted"
     Spec.assertBool s (any phasePatternOffends (cardReplacementEffects baked)) "and the same card naming a seat is rejected"
+    Spec.assertBool s (any engineOnlyOffends (cardReplacementEffects baked)) "and whosePhase is among the relations Resolve.overRelations reaches"
   -- The same lint one event class over, for the OTHER fields the codec accepts and
   -- only the engine writes: CR 615.7's shielded recipient and its remaining amount,
   -- plus CR 122.1c's minted pair. See engineOnlyOffends.

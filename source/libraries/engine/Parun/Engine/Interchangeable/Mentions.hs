@@ -324,6 +324,7 @@ import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDeal
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
+import qualified Parun.Types.PhasePattern as PhasePattern
 import qualified Parun.Types.PlacesSticker as PlacesSticker
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
 import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
@@ -2637,7 +2638,7 @@ quantityNames asking x = case x of
   Quantity.WasAttacking -> mempty
   Quantity.WasBlocking -> mempty
   Quantity.WasBlockedThisTurn -> history asking HistoryRead.Blocks
-  Quantity.ControlGainedSinceLastUpkeep playerRef -> playerRefNames asking playerRef
+  Quantity.ControlGained _ playerRef -> playerRefNames asking playerRef
   Quantity.PlayedBy playerRef -> playerRefNames asking playerRef
   Quantity.OpponentsAttacked playerRef -> playerRefNames asking playerRef
   Quantity.AttackersDeclaredThisTurn playerRef -> history asking HistoryRead.Attacks <> playerRefNames asking playerRef
@@ -2721,7 +2722,7 @@ removeCountersAmongNames asking x = case x of
 
 repeatNames :: (Monoid r) => Asking r -> (effect -> r) -> Repeat.Repeat effect -> r
 repeatNames asking onEffect x = case x of
-  Repeat.MkRepeat chooser body gate -> playerRefNames asking chooser <> foldMap onEffect body <> foldMap (conditionNames asking) gate
+  Repeat.MkRepeat chooser body gate otherChooser ifAgain -> playerRefNames asking chooser <> foldMap onEffect body <> foldMap (conditionNames asking) gate <> foldMap (playerRefNames asking) otherChooser <> foldMap onEffect ifAgain
 
 repeatIfNames :: (Monoid r) => Asking r -> (effect -> r) -> RepeatIf.RepeatIf effect -> r
 repeatIfNames asking onEffect x = case x of
@@ -2755,7 +2756,7 @@ replacementEffectNames asking onCard onAbility onEffect x = case x of
     controllerRelationNames asking whose <> case rewrite of
       PlaneswalkRewrite.ArrangeTopTwo -> mempty
       PlaneswalkRewrite.RunEffects effects -> foldMap onEffect effects
-  ReplacementEffect.PhaseR _phasePattern -> mempty
+  ReplacementEffect.PhaseR (PhasePattern.MkPhasePattern _whichPhase whose) -> controllerRelationNames asking whose
 
 requireAttackNames :: (Monoid r) => Asking r -> RequireAttack.RequireAttack -> r
 requireAttackNames asking x = case x of

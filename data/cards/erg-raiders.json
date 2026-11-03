@@ -43,111 +43,79 @@
             }
           },
           "intervening": {
-            "type": "All",
-            "value": [
-              {
-                "type": "Compares",
+            "type": "Compares",
+            "value": {
+              "comparison": {
+                "type": "Exactly"
+              },
+              "measured": {
+                "type": "Count",
                 "value": {
-                  "comparison": {
-                    "type": "Exactly"
+                  "aggregation": {
+                    "type": "Members"
                   },
-                  "measured": {
-                    "type": "Count",
-                    "value": {
-                      "aggregation": {
-                        "type": "Members"
+                  "filter": {
+                    "type": "And",
+                    "value": [
+                      {
+                        "type": "IsSource"
                       },
-                      "filter": {
-                        "type": "And",
-                        "value": [
-                          {
-                            "type": "IsSource"
-                          },
-                          {
-                            "type": "DeclaredThisTurn",
-                            "value": {
-                              "type": "Attacker"
-                            }
-                          }
-                        ]
-                      },
-                      "scope": {
-                        "type": "InZone",
+                      {
+                        "type": "DeclaredThisTurn",
                         "value": {
-                          "player": {
-                            "type": "Relative",
-                            "value": {
-                              "type": "AnyPlayer"
-                            }
-                          },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
+                          "type": "Attacker"
                         }
                       }
-                    }
+                    ]
                   },
-                  "threshold": {
-                    "type": "Literal",
-                    "value": 0
+                  "scope": {
+                    "type": "InZone",
+                    "value": {
+                      "player": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "AnyPlayer"
+                        }
+                      },
+                      "zone": {
+                        "type": "Battlefield"
+                      }
+                    }
                   }
                 }
               },
-              {
-                "type": "Compares",
-                "value": {
-                  "comparison": {
-                    "type": "Exactly"
-                  },
-                  "measured": {
-                    "type": "Count",
-                    "value": {
-                      "aggregation": {
-                        "type": "Members"
-                      },
-                      "filter": {
-                        "type": "And",
-                        "value": [
-                          {
-                            "type": "IsSource"
-                          },
-                          {
-                            "type": "Not",
-                            "value": {
-                              "type": "ControlledSinceTurnBegan"
-                            }
-                          }
-                        ]
-                      },
-                      "scope": {
-                        "type": "InZone",
-                        "value": {
-                          "player": {
-                            "type": "Relative",
-                            "value": {
-                              "type": "AnyPlayer"
-                            }
-                          },
-                          "zone": {
-                            "type": "Battlefield"
-                          }
-                        }
-                      }
-                    }
-                  },
-                  "threshold": {
-                    "type": "Literal",
-                    "value": 0
-                  }
-                }
+              "threshold": {
+                "type": "Literal",
+                "value": 0
               }
-            ]
+            }
           },
           "modal": {
             "modes": [
               {
                 "clauses": [
                   {
+                    "condition": {
+                      "type": "Compares",
+                      "value": {
+                        "comparison": {
+                          "type": "AtMost"
+                        },
+                        "measured": {
+                          "type": "ControlGainedThisTurn",
+                          "value": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          }
+                        },
+                        "threshold": {
+                          "type": "Literal",
+                          "value": 0
+                        }
+                      }
+                    },
                     "effects": [
                       {
                         "type": "DealDamage",

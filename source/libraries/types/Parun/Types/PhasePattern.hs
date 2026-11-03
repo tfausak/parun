@@ -1,7 +1,7 @@
 module Parun.Types.PhasePattern where
 
+import qualified Parun.Types.ControllerRelation as ControllerRelation
 import qualified Parun.Types.PhaseSelector as PhaseSelector
-import qualified Parun.Types.PlayerId as PlayerId
 
 -- | CR 614.1b / 500.11: which step-or-phase beginnings a SKIP intercepts. Eon Hub
 -- is (Step (Beginning Upkeep)) for everybody; Stonehorn Dignitary is CombatPhase
@@ -9,18 +9,17 @@ import qualified Parun.Types.PlayerId as PlayerId
 -- individually.
 --
 -- `whosePhase` is CR 614.1's "does this instance apply" question asked about a
--- PLAYER, and Nothing means EVERY player (Stasis, Eon Hub), not a missing
--- answer. Just is Fatigue's "target player skips their next draw step", which
--- for a step of the turn means it applies only on that player's own turn.
+-- PLAYER, and for a step of the turn it applies only on that player's own turn.
+-- Related AnyPlayer is every player (Stasis, Eon Hub), Related You the row's
+-- controller (Necropotence's "skip your draw step"), and Among the player a
+-- resolution named (Fatigue).
 --
--- The PlayerId is BAKED by the engine, never authored: card data cannot name a
--- player, exactly as it cannot name Modification.SetController's. The TYPE does
--- not enforce that, since ReplacementEffect.PhaseR carries both the authored and
--- the baked halves; Parun.CardSpec's "no card authors a player-scoped phase skip"
--- rejects a Just in card JSON instead, the same treatment SetController's baked
--- PlayerId gets (#199).
+-- Among is BAKED by the engine, never authored: card data cannot name a player,
+-- exactly as it cannot name Modification.SetController's. Parun.EffectLintSpec's "no
+-- card authors a player-scoped phase skip" rejects one in card JSON, the same
+-- treatment SetController's baked PlayerId gets (#199).
 data PhasePattern = MkPhasePattern
   { whichPhase :: PhaseSelector.PhaseSelector,
-    whosePhase :: Maybe PlayerId.PlayerId
+    whosePhase :: ControllerRelation.ControllerRelation
   }
   deriving (Eq, Ord, Show)
