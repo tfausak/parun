@@ -400,6 +400,7 @@ objectWith before entry closed = do
   chosenSubtype <- field Object.chosenSubtype
   chosenNames <- field Object.chosenNames
   chosenPlayers <- field Object.chosenPlayers
+  chosenNumber <- field Object.chosenNumber
   timestamp <- field Object.timestamp
   face <- field Object.face
   turnedOverAt <- field Object.turnedOverAt
@@ -468,6 +469,7 @@ objectWith before entry closed = do
         Object.chosenSubtype = chosenSubtype,
         Object.chosenNames = chosenNames,
         Object.chosenPlayers = chosenPlayers,
+        Object.chosenNumber = chosenNumber,
         Object.timestamp = timestamp,
         Object.face = face,
         Object.turnedOverAt = turnedOverAt,

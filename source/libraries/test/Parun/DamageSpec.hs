@@ -325,7 +325,7 @@ damageSpec s registry =
                 ActiveReplacement.condition = Nothing,
                 ActiveReplacement.rider = Nothing,
                 ActiveReplacement.slots = Map.empty,
-                ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing Acquisition.Own
+                ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing Nothing Acquisition.Own
               }
           withShield = S.addReplacement shield gs0
           combat = S.runPure S.identityAnswer withShield (Damage.applyDamage [DamageEvent.MkDamageEvent victim (Recipient.ToCreature victim) 2 False False False 0 Nothing Nothing mempty False DamageKind.Combat])
@@ -348,7 +348,7 @@ damageSpec s registry =
                 ActiveReplacement.condition = Nothing,
                 ActiveReplacement.rider = Nothing,
                 ActiveReplacement.slots = Map.empty,
-                ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing Acquisition.Own
+                ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing Nothing Acquisition.Own
               }
           dropped = Expiry.dropAtCleanup (S.addReplacement shield base)
        in Spec.assertEqWith s "no replacements remain" (GameState.replacements dropped) []
@@ -510,7 +510,7 @@ toxicSpec s registry =
                 ActiveReplacement.condition = Nothing,
                 ActiveReplacement.rider = Nothing,
                 ActiveReplacement.slots = Map.empty,
-                ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing Acquisition.Own
+                ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing Nothing Acquisition.Own
               }
           ev = DamageEvent.MkDamageEvent oid (Recipient.ToPlayer S.bob) 3 False False False 2 Nothing Nothing mempty False DamageKind.Combat
           after = S.runPure S.identityAnswer (S.addReplacement shield gs0) (Damage.applyDamage [ev])
@@ -641,7 +641,7 @@ lifelinkSpec s registry =
                 ActiveReplacement.condition = Nothing,
                 ActiveReplacement.rider = Nothing,
                 ActiveReplacement.slots = Map.empty,
-                ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing Acquisition.Own
+                ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing Nothing Acquisition.Own
               }
           ev = DamageEvent.MkDamageEvent oid (Recipient.ToPlayer S.bob) 2 False False False 0 (Just S.alice) Nothing mempty False DamageKind.Combat
           after = S.runPure S.identityAnswer (S.addReplacement shield gs0) (Damage.applyDamage [ev])
@@ -774,6 +774,7 @@ lastKnownRiderSpec s registry =
                     -- CR 614.1c: nor a colour or a subtype.
                     LastKnown.chosenColors = Map.empty,
                     LastKnown.chosenSubtype = Map.empty,
+                    LastKnown.chosenNumber = Map.empty,
                     LastKnown.acquisition = Acquisition.Own,
                     -- CR 508.1k / 509.1g: this board declares no combat at all.
                     LastKnown.attacking = False,

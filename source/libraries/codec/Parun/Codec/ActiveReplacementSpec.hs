@@ -79,7 +79,7 @@ spec s = Spec.describe s "Parun.Codec.ActiveReplacement" $ do
           ActiveReplacement.condition = Nothing,
           ActiveReplacement.rider = Nothing,
           ActiveReplacement.slots = Map.empty,
-          ActiveReplacement.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Map.empty, SourceChoices.colors = Set.empty, SourceChoices.subtype = Nothing, SourceChoices.acquisition = Acquisition.Own}
+          ActiveReplacement.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Map.empty, SourceChoices.colors = Set.empty, SourceChoices.subtype = Nothing, SourceChoices.number = Nothing, SourceChoices.acquisition = Acquisition.Own}
         }
       ( " {\"effect\":"
           <> effectJson
@@ -117,7 +117,7 @@ spec s = Spec.describe s "Parun.Codec.ActiveReplacement" $ do
             Map.singleton
               (SlotName.MkSlotName (Text.pack "that spell"))
               (Set.fromList [ObjectId.MkObjectId 8, ObjectId.MkObjectId 9]),
-          ActiveReplacement.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Map.empty, SourceChoices.colors = Set.singleton Color.White, SourceChoices.subtype = Nothing, SourceChoices.acquisition = Acquisition.Own}
+          ActiveReplacement.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Map.empty, SourceChoices.colors = Set.singleton Color.White, SourceChoices.subtype = Nothing, SourceChoices.number = Nothing, SourceChoices.acquisition = Acquisition.Own}
         }
       ( " {\"effect\":"
           <> effectJson

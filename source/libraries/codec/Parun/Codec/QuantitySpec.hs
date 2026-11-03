@@ -412,6 +412,12 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       (Quantity.TagWasSpent ProductionTag.Treasure)
       " {\"type\":\"TagWasSpent\",\"value\":{\"type\":\"Treasure\"}} "
   -- CR 107.4h with CR 202.2, the arm above's tag on a different wire word.
+  Spec.it s "ChosenNumber" $
+    Common.assertCodec
+      s
+      Quantity.codec
+      Quantity.ChosenNumber
+      " {\"type\":\"ChosenNumber\"} "
   Spec.it s "ChosenColorsItIs" $
     Common.assertCodec
       s

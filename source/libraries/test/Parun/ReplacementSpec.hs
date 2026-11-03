@@ -603,7 +603,7 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
               ActiveReplacement.condition = Nothing,
               ActiveReplacement.rider = Nothing,
               ActiveReplacement.slots = Map.empty,
-              ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing Acquisition.Own
+              ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing Nothing Acquisition.Own
             }
         g3 = S.addReplacement active g2
         asked = answersFor S.identityAnswer g3 (Event.runEntry False Nothing Set.empty piker)
@@ -1214,7 +1214,7 @@ blastShape src ts =
       ActiveReplacement.condition = Nothing,
       ActiveReplacement.rider = Nothing,
       ActiveReplacement.slots = Map.empty,
-      ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing Acquisition.Own
+      ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing Nothing Acquisition.Own
     }
 
 -- alice controls four untapped Forests and holds an Undergrowth Scavenger. Her

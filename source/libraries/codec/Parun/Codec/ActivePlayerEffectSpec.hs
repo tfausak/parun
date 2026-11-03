@@ -34,7 +34,7 @@ spec s = Spec.describe s "Parun.Codec.ActivePlayerEffect" $ do
       ActivePlayerEffect.MkActivePlayerEffect
         { ActivePlayerEffect.source = ObjectId.MkObjectId 1,
           ActivePlayerEffect.controller = PlayerId.MkPlayerId 2,
-          ActivePlayerEffect.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Map.empty, SourceChoices.colors = Set.empty, SourceChoices.subtype = Nothing, SourceChoices.acquisition = Acquisition.Own},
+          ActivePlayerEffect.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Map.empty, SourceChoices.colors = Set.empty, SourceChoices.subtype = Nothing, SourceChoices.number = Nothing, SourceChoices.acquisition = Acquisition.Own},
           ActivePlayerEffect.timestamp = Timestamp.MkTimestamp 3,
           ActivePlayerEffect.expiry = Expiry.AtCleanup,
           ActivePlayerEffect.scope = AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.Opponent),
@@ -53,7 +53,7 @@ spec s = Spec.describe s "Parun.Codec.ActivePlayerEffect" $ do
       ActivePlayerEffect.MkActivePlayerEffect
         { ActivePlayerEffect.source = ObjectId.MkObjectId 5,
           ActivePlayerEffect.controller = PlayerId.MkPlayerId 6,
-          ActivePlayerEffect.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Map.empty, SourceChoices.colors = Set.empty, SourceChoices.subtype = Nothing, SourceChoices.acquisition = Acquisition.Own},
+          ActivePlayerEffect.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Map.empty, SourceChoices.colors = Set.empty, SourceChoices.subtype = Nothing, SourceChoices.number = Nothing, SourceChoices.acquisition = Acquisition.Own},
           ActivePlayerEffect.timestamp = Timestamp.MkTimestamp 7,
           ActivePlayerEffect.expiry = Expiry.Never,
           ActivePlayerEffect.scope = AffectedPlayers.Named (PlayerId.MkPlayerId 8),
@@ -71,7 +71,7 @@ spec s = Spec.describe s "Parun.Codec.ActivePlayerEffect" $ do
       ActivePlayerEffect.MkActivePlayerEffect
         { ActivePlayerEffect.source = ObjectId.MkObjectId 9,
           ActivePlayerEffect.controller = PlayerId.MkPlayerId 10,
-          ActivePlayerEffect.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Map.singleton (PlayerId.MkPlayerId 12) (CardName.MkCardName (Text.pack "Shock")), SourceChoices.colors = Set.empty, SourceChoices.subtype = Nothing, SourceChoices.acquisition = Acquisition.Own},
+          ActivePlayerEffect.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Map.singleton (PlayerId.MkPlayerId 12) (CardName.MkCardName (Text.pack "Shock")), SourceChoices.colors = Set.empty, SourceChoices.subtype = Nothing, SourceChoices.number = Nothing, SourceChoices.acquisition = Acquisition.Own},
           ActivePlayerEffect.timestamp = Timestamp.MkTimestamp 11,
           ActivePlayerEffect.expiry = Expiry.AtCleanup,
           ActivePlayerEffect.scope = AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.AnyPlayer),
@@ -89,7 +89,7 @@ spec s = Spec.describe s "Parun.Codec.ActivePlayerEffect" $ do
       ActivePlayerEffect.MkActivePlayerEffect
         { ActivePlayerEffect.source = ObjectId.MkObjectId 14,
           ActivePlayerEffect.controller = PlayerId.MkPlayerId 15,
-          ActivePlayerEffect.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Map.empty, SourceChoices.colors = Set.empty, SourceChoices.subtype = Nothing, SourceChoices.acquisition = Acquisition.Own},
+          ActivePlayerEffect.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Map.empty, SourceChoices.colors = Set.empty, SourceChoices.subtype = Nothing, SourceChoices.number = Nothing, SourceChoices.acquisition = Acquisition.Own},
           ActivePlayerEffect.timestamp = Timestamp.MkTimestamp 16,
           ActivePlayerEffect.expiry = Expiry.AtCleanup,
           ActivePlayerEffect.scope = AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.AnyPlayer),

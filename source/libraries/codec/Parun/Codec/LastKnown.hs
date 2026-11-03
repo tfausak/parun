@@ -43,6 +43,7 @@ codec = Fields.object $ do
   chosenPlayers <- Fields.defaulted "chosenPlayers" Map.empty (Common.keyedList (Common.keyValue Acquisition.codec (Common.keyedList (Common.keyValue PlayerChoice.codec PlayerId.codec)))) LastKnown.chosenPlayers
   chosenColors <- Fields.defaulted "chosenColors" Map.empty (Common.keyedList (Common.keyValue Acquisition.codec (Common.set Color.codec))) LastKnown.chosenColors
   chosenSubtype <- Fields.defaulted "chosenSubtype" Map.empty (Common.keyedList (Common.keyValue Acquisition.codec Subtype.codec)) LastKnown.chosenSubtype
+  chosenNumber <- Fields.defaulted "chosenNumber" Map.empty (Common.keyedList (Common.keyValue Acquisition.codec Common.natural)) LastKnown.chosenNumber
   acquisition <- Fields.defaulted "acquisition" Acquisition.Own Acquisition.codec LastKnown.acquisition
   attacking <- Fields.required "attacking" Common.boolean LastKnown.attacking
   attackTarget <- Fields.required "attackTarget" (Common.maybe AttackTarget.codec) LastKnown.attackTarget
@@ -70,6 +71,7 @@ codec = Fields.object $ do
         LastKnown.chosenPlayers = chosenPlayers,
         LastKnown.chosenColors = chosenColors,
         LastKnown.chosenSubtype = chosenSubtype,
+        LastKnown.chosenNumber = chosenNumber,
         LastKnown.acquisition = acquisition,
         LastKnown.attacking = attacking,
         LastKnown.attackTarget = attackTarget,

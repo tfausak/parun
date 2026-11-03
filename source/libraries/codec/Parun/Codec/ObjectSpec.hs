@@ -135,6 +135,7 @@ spec s = Spec.describe s "Parun.Codec.Object" $ do
           Object.attachedTo = Just (Recipient.ToCreature (ObjectId.MkObjectId 8)),
           Object.chosenColors = Map.singleton Acquisition.Own (Set.singleton Color.Red),
           Object.chosenSubtype = Map.singleton (Acquisition.Copied (Timestamp.MkTimestamp 43)) Subtype.Goblin,
+          Object.chosenNumber = Map.singleton Acquisition.Own 5,
           Object.chosenNames = Map.singleton Acquisition.Own (Map.singleton (PlayerId.MkPlayerId 29) (CardName.MkCardName (Text.pack "Mountain"))),
           Object.chosenPlayers = Map.singleton Acquisition.Own (Map.fromList [(PlayerChoice.AsEnters, PlayerId.MkPlayerId 9), (PlayerChoice.Promised Gift.Card (KeywordInstance.Granted (ObjectId.MkObjectId 4) (Timestamp.MkTimestamp 6) 2), PlayerId.MkPlayerId 10)]),
           Object.timestamp = Timestamp.MkTimestamp 10,
@@ -224,7 +225,7 @@ spec s = Spec.describe s "Parun.Codec.Object" $ do
           <> ",{\"key\":{\"type\":\"Loyalty\"},\"value\":0}]"
           <> ",\"counterTimestamps\":[{\"kind\":{\"type\":\"PlusOnePlusOne\"},\"timestamp\":7}]"
           <> ",\"attachedTo\":{\"type\":\"ToCreature\",\"value\":8}"
-          <> ",\"chosenColors\":[{\"key\":{\"type\":\"Own\"},\"value\":[{\"type\":\"Red\"}]}],\"chosenSubtype\":[{\"key\":{\"type\":\"Copied\",\"value\":43},\"value\":{\"type\":\"Goblin\"}}]"
+          <> ",\"chosenColors\":[{\"key\":{\"type\":\"Own\"},\"value\":[{\"type\":\"Red\"}]}],\"chosenSubtype\":[{\"key\":{\"type\":\"Copied\",\"value\":43},\"value\":{\"type\":\"Goblin\"}}],\"chosenNumber\":[{\"key\":{\"type\":\"Own\"},\"value\":5}]"
           <> ",\"chosenNames\":[{\"key\":{\"type\":\"Own\"},\"value\":{\"29\":\"Mountain\"}}],\"chosenPlayers\":[{\"key\":{\"type\":\"Own\"},\"value\":[{\"key\":{\"type\":\"AsEnters\"},\"value\":9},{\"key\":{\"type\":\"Promised\",\"value\":[{\"type\":\"Card\"},{\"type\":\"Granted\",\"value\":[[4,6],2]}]},\"value\":10}]}]"
           <> ",\"timestamp\":10,\"face\":\"Delver of Secrets\",\"turnedOverAt\":11"
           <> ",\"worldSince\":12"

@@ -115,6 +115,7 @@ codec = Fields.object $ do
   attachedTo <- Fields.defaulted "attachedTo" (Object.attachedTo defaults) (Common.maybe Recipient.codec) Object.attachedTo
   chosenColors <- Fields.defaulted "chosenColors" (Object.chosenColors defaults) (Common.keyedList (Common.keyValue Acquisition.codec (Common.set Color.codec))) Object.chosenColors
   chosenSubtype <- Fields.defaulted "chosenSubtype" (Object.chosenSubtype defaults) (Common.keyedList (Common.keyValue Acquisition.codec Subtype.codec)) Object.chosenSubtype
+  chosenNumber <- Fields.defaulted "chosenNumber" (Object.chosenNumber defaults) (Common.keyedList (Common.keyValue Acquisition.codec Common.natural)) Object.chosenNumber
   chosenNames <- Fields.defaulted "chosenNames" (Object.chosenNames defaults) (Common.keyedList (Common.keyValue Acquisition.codec (Common.naturalMap PlayerId.codec CardName.codec))) Object.chosenNames
   chosenPlayers <- Fields.defaulted "chosenPlayers" (Object.chosenPlayers defaults) (Common.keyedList (Common.keyValue Acquisition.codec (Common.keyedList (Common.keyValue PlayerChoice.codec PlayerId.codec)))) Object.chosenPlayers
   timestamp <- Fields.required "timestamp" Timestamp.codec Object.timestamp
@@ -185,6 +186,7 @@ codec = Fields.object $ do
         Object.attachedTo = attachedTo,
         Object.chosenColors = chosenColors,
         Object.chosenSubtype = chosenSubtype,
+        Object.chosenNumber = chosenNumber,
         Object.chosenNames = chosenNames,
         Object.chosenPlayers = chosenPlayers,
         Object.timestamp = timestamp,

@@ -1,0 +1,90 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Volrath's Shapeshifter",
+            "label": "volrath"
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Shapeshifter"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "Untap"
+  },
+  "description": "CR 612.6 / 607.5a Volrath's Shapeshifter with Shapeshifter's text reads no number until its own upkeep trigger chooses one",
+  "note": "A number was never chosen for it, so 0/7. The upkeep trigger it now has chooses 4, under the text it has, so 4/3.",
+  "timeline": [
+    {
+      "check": {
+        "PowerToughness": {
+          "object": "$volrath",
+          "power": 0,
+          "toughness": 7
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseOptional": {
+          "type": "Exercises"
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseNumber",
+          "with": 4
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 1
+    },
+    {
+      "check": {
+        "PowerToughness": {
+          "object": "$volrath",
+          "power": 4,
+          "toughness": 3
+        }
+      },
+      "player": "alice",
+      "step": "DrawStep",
+      "turn": 1
+    }
+  ]
+}

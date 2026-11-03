@@ -24,10 +24,11 @@ spec s = Spec.describe s "Parun.Codec.SourceChoices" $ do
         { SourceChoices.names = Map.empty,
           SourceChoices.colors = Set.empty,
           SourceChoices.subtype = Nothing,
+          SourceChoices.number = Nothing,
           SourceChoices.acquisition = Acquisition.Own
         }
       " {} "
-  Spec.it s "a name, a colour and a subtype" $
+  Spec.it s "a name, a colour, a subtype and a number" $
     Common.assertCodec
       s
       SourceChoices.codec
@@ -35,8 +36,9 @@ spec s = Spec.describe s "Parun.Codec.SourceChoices" $ do
         { SourceChoices.names = Map.singleton (PlayerId.MkPlayerId 4) (CardName.MkCardName (Text.pack "Shock")),
           SourceChoices.colors = Set.singleton Color.Red,
           SourceChoices.subtype = Just Subtype.Goblin,
+          SourceChoices.number = Just 5,
           SourceChoices.acquisition = Acquisition.Copied (Timestamp.MkTimestamp 3)
         }
-      " {\"names\":{\"4\":\"Shock\"},\"colors\":[{\"type\":\"Red\"}],\"subtype\":{\"type\":\"Goblin\"},\"acquisition\":{\"type\":\"Copied\",\"value\":3}} "
+      " {\"names\":{\"4\":\"Shock\"},\"colors\":[{\"type\":\"Red\"}],\"subtype\":{\"type\":\"Goblin\"},\"number\":5,\"acquisition\":{\"type\":\"Copied\",\"value\":3}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s SourceChoices.codec
