@@ -29,6 +29,7 @@ import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.Dice as Dice
 import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Event.Trigger as Trigger
+import qualified Parun.Engine.Expiry as Expiry
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Loyalty as Loyalty
@@ -489,6 +490,10 @@ applyEffectWith runSubgame resolving source controller legal chosen effect = Eve
   -- no test loses a player the game mid-resolution and reads the board after,
   -- so Engine.performSettle's drain answers every test the same without it.
   runReplacementEffects runSubgame
+  -- CR 611.2b: a "for as long as" duration this instruction ended, ended
+  -- before the next one reads the board, and before the sample below, so the
+  -- control it handed back is observed.
+  Monad.void Expiry.sweepConditional
   -- CR 603.2 / 603.10d: a control change this instruction made, observed before
   -- the next one can make another.
   Monad.void Event.sampleControl
