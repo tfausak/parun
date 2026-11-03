@@ -1,0 +1,147 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Vizier of the Menagerie",
+            "label": "vizier"
+          },
+          {
+            "card": "Doubling Cube",
+            "label": "cube",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "f1"
+          },
+          {
+            "card": "Forest",
+            "label": "f2"
+          },
+          {
+            "card": "Forest",
+            "label": "f3"
+          },
+          {
+            "card": "Forest",
+            "label": "f4"
+          },
+          {
+            "card": "Forest",
+            "label": "f5"
+          },
+          {
+            "card": "Forest",
+            "label": "f6"
+          },
+          {
+            "card": "Forest",
+            "label": "f7"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Zetalpa, Primal Dawn",
+            "label": "zetalpa"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 701.10f / 118.14: on Vizier of the Menagerie, Doubling Cube's green mana pays a white creature spell",
+  "note": "Seven Forests make eight mana only through Doubling Cube: four float, three pay the Cube, four more come of the doubling. Zetalpa's {W}{W} are paid under the permission, which the gate's walk over a doubling board has to see.",
+  "timeline": [
+    {
+      "check": {
+        "View": {
+          "is": [
+            "Pass",
+            "Cast $zetalpa",
+            "ActivateManaAbility $cube",
+            "ActivateManaAbility $f1",
+            "ActivateManaAbility $f2",
+            "ActivateManaAbility $f3",
+            "ActivateManaAbility $f4",
+            "ActivateManaAbility $f5",
+            "ActivateManaAbility $f6",
+            "ActivateManaAbility $f7"
+          ],
+          "of": "Offered",
+          "player": "alice"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$f1",
+            "$f2",
+            "$f3",
+            "$f4",
+            "$cube",
+            "$f5",
+            "$f6",
+            "$f7"
+          ],
+          "object": "$zetalpa"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "Zetalpa, Primal Dawn"
+          ],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

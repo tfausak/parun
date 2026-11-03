@@ -1186,7 +1186,8 @@ rewriteSpendManaAsThough pairs clause =
       anyColor = all (\c -> Set.member (ManaType.Colored c) asThough) [minBound ..]
    in clause
         { SpendManaAsThough.which = rewriteManaFilter pairs (SpendManaAsThough.which clause),
-          SpendManaAsThough.asThough = if anyColor then asThough else Set.map (rewriteWrittenManaType pairs) asThough
+          SpendManaAsThough.asThough = if anyColor then asThough else Set.map (rewriteWrittenManaType pairs) asThough,
+          SpendManaAsThough.casting = fmap (Filter.rewrite pairs) (SpendManaAsThough.casting clause)
         }
 
 -- CR 612.1 through a damage pattern's two criteria.

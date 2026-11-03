@@ -402,6 +402,7 @@ import qualified Parun.Types.SpecialAction as SpecialAction
 import qualified Parun.Types.SpeedDecrease as SpeedDecrease
 import qualified Parun.Types.SpellCast as SpellCast
 import qualified Parun.Types.SpellTally as SpellTally
+import qualified Parun.Types.SpendManaAsThough as SpendManaAsThough
 import qualified Parun.Types.Splice as Splice
 import qualified Parun.Types.StatedFlip as StatedFlip
 import qualified Parun.Types.StaticAbility as StaticAbility
@@ -861,6 +862,10 @@ cardsPutIntoZoneNames asking x = case x of
 castFromNames :: (Monoid r) => Asking r -> CastFrom.CastFrom -> r
 castFromNames asking x = case x of
   CastFrom.MkCastFrom caster from -> playerRefNames asking caster <> inZoneNames asking from
+
+spendManaAsThoughNames :: (Monoid r) => Asking r -> SpendManaAsThough.SpendManaAsThough -> r
+spendManaAsThoughNames asking x = case x of
+  SpendManaAsThough.MkSpendManaAsThough _which _asThough _only casting -> foldMap (filterNames asking) casting
 
 castFromZoneNames :: (Monoid r) => Asking r -> CastFromZone.CastFromZone -> r
 castFromZoneNames asking x = case x of
@@ -1814,7 +1819,7 @@ grantedAbilityNames asking onCard x =
         GrantedAbility.Player playerStaticAbility -> playerStaticAbilityNames own playerStaticAbility
         GrantedAbility.SelfCostReduction costReduction -> costReductionNames own costReduction
         GrantedAbility.SelfAlternativeCost alternativeCost -> alternativeCostNames own alternativeCost
-        GrantedAbility.SelfSpendManaAsThough _spendManaAsThough -> mempty
+        GrantedAbility.SelfSpendManaAsThough clause -> spendManaAsThoughNames own clause
 
 quotientNames :: (Monoid r) => Asking r -> (quantity -> r) -> Quotient.Quotient quantity -> r
 quotientNames _asking onQuantity x = case x of
@@ -2422,7 +2427,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.ReduceMaximumHandSize _natural -> mempty
   PlayerEffect.DontLoseUnspentMana _manaFilter -> mempty
   PlayerEffect.LoseLifeForUnspentMana -> mempty
-  PlayerEffect.SpendManaAsThough _spendManaAsThough -> mempty
+  PlayerEffect.SpendManaAsThough clause -> spendManaAsThoughNames asking clause
   PlayerEffect.CantBeTargetedBy _playerScope quality -> foldMap (filterNames asking) quality
   PlayerEffect.HasProtectionFrom filter_ -> filterNames asking filter_
   PlayerEffect.CastAsThoughItHadFlash filter_ -> filterNames asking filter_

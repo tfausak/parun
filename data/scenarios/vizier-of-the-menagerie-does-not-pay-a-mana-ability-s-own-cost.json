@@ -1,0 +1,83 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Vizier of the Menagerie",
+            "label": "vizier",
+            "ready": true
+          },
+          {
+            "card": "Loot, the Pathfinder",
+            "label": "loot"
+          },
+          {
+            "card": "Island",
+            "label": "land"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Benalish Knight",
+            "label": "knight"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 602.2b: Vizier of the Menagerie's permission does not pay Loot's own {G}, so an Island cannot buy the three mana",
+  "note": "The pair is vizier-of-the-menagerie-pays-a-white-spell-through-loot, which swaps the Island for a Forest. Here the Island makes one mana for Benalish Knight's three, and spending it on Loot's {G} is an activation's payment, which no creature spell covers.",
+  "timeline": [
+    {
+      "check": {
+        "View": {
+          "is": [
+            "Pass",
+            "Activate $loot",
+            "ActivateManaAbility $land"
+          ],
+          "of": "Offered",
+          "player": "alice"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

@@ -2,6 +2,8 @@
 
 module Parun.Codec.SpendManaAsThough where
 
+import qualified Parun.Codec.Filter as Filter
+import qualified Parun.Codec.Keyword as Keyword
 import qualified Parun.Codec.ManaFilter as ManaFilter
 import qualified Parun.Codec.ManaType as ManaType
 import qualified Parun.JsonCodec.Codec as Codec
@@ -16,9 +18,11 @@ codec = Fields.object $ do
   which <- Fields.required "which" ManaFilter.codec SpendManaAsThough.which
   asThough <- Fields.required "asThough" (Common.set ManaType.codec) SpendManaAsThough.asThough
   only <- Fields.required "only" Common.boolean SpendManaAsThough.only
+  casting <- Fields.defaulted "casting" Nothing (Common.maybe (Filter.codec Keyword.codec)) SpendManaAsThough.casting
   pure
     SpendManaAsThough.MkSpendManaAsThough
       { SpendManaAsThough.which = which,
         SpendManaAsThough.asThough = asThough,
-        SpendManaAsThough.only = only
+        SpendManaAsThough.only = only,
+        SpendManaAsThough.casting = casting
       }

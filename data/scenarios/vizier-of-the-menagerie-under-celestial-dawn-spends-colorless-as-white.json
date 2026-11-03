@@ -1,0 +1,113 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Vizier of the Menagerie",
+            "label": "vizier"
+          },
+          {
+            "card": "Celestial Dawn",
+            "label": "dawn"
+          },
+          {
+            "card": "Sol Ring",
+            "label": "ring",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Knight of Meadowgrain",
+            "label": "knight"
+          },
+          {
+            "card": "Lightning Bolt",
+            "label": "bolt"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "docs/decisions.md, \"How a mana of any type rider combines with an only-clause\": under Celestial Dawn, Vizier of the Menagerie's permission still spends colorless mana as white on a creature spell",
+  "note": "Celestial Dawn lets Sol Ring's mana be spent only as colorless, and Vizier's clause widens it for a creature spell, a union (Parun.Engine.Mana.spendableAs). Lightning Bolt's {R} stays unoffered, no creature spell being paid for.",
+  "timeline": [
+    {
+      "check": {
+        "View": {
+          "is": [
+            "Pass",
+            "Cast $knight",
+            "ActivateManaAbility $ring"
+          ],
+          "of": "Offered",
+          "player": "alice"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$ring"
+          ],
+          "object": "$knight"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "Knight of Meadowgrain"
+          ],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Vizier of the Menagerie",
+            "label": "vizier",
+            "ready": true
+          },
+          {
+            "card": "Aether Storm",
+            "label": "storm"
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bear",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "f1"
+          },
+          {
+            "card": "Forest",
+            "label": "f2"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Nyxborn Rollicker",
+            "label": "rollicker"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 702.103b: a bestowed spell is no creature spell, so Vizier of the Menagerie's permission does not pay its bestow cost",
+  "note": "Aether Storm stops the printed cast, so only Nyxborn Rollicker's {1}{R} is left, and two Forests cannot pay its {R}: the announcement made the spell an Aura (CR 601.2b). The pair is vizier-of-the-menagerie-leaves-a-bestow-cost-to-its-own-mana, swapping one Forest for a Mountain.",
+  "timeline": [
+    {
+      "check": {
+        "View": {
+          "is": [
+            "Pass",
+            "Activate $storm",
+            "ActivateManaAbility $f1",
+            "ActivateManaAbility $f2"
+          ],
+          "of": "Offered",
+          "player": "alice"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}
