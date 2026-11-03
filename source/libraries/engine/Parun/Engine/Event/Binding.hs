@@ -110,8 +110,8 @@ import qualified Parun.Types.ZoneChange as ZoneChange
 -- permanent became in its owner's graveyard", a fact about the BEARER's own zone
 -- change, which the event that fired the trigger says nothing about.
 --
--- The THIRD is the batch's whole battlefield-to-graveyard arrival table, keyed by
--- the id that departed. CR 603.10a's look-back is what makes it necessary: a
+-- The THIRD is the batch's whole battlefield-to-public-zone arrival table, keyed
+-- by the id that departed. CR 603.10a's look-back is what makes it necessary: a
 -- sacrifice is recorded BEFORE the move, so GameEvent.PermanentSacrificed names
 -- the pre-move id and CR 400.7e's new object is nowhere on the event. The
 -- PermanentSacrificed arm below is the one reader, and the reason it is a MAP
@@ -1046,23 +1046,24 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- Unconditional given a match: GameEvent.PermanentSacrificed carries a PlayerId
   -- outright, CR 701.21a's sacrifice having exactly one performer.
   --
-  -- CR 400.7e's new object BESIDE it -- the graveyard card Prowling
-  -- Geistcatcher's "exile it" has to move -- and it is the reason this arm is
+  -- CR 400.7e's new object BESIDE it -- the card Prowling Geistcatcher's "exile
+  -- it" has to move -- and it is the reason this arm is
   -- handed the batch's arrival table at all: CR 603.10a records the sacrifice
   -- BEFORE the move (Event.sacrificeIn), so the id the event carries is the
   -- battlefield permanent CR 400.7 went on to delete and nothing on the event
   -- names what it became. `becameInGraveyard` is keyed by exactly that departed
   -- id.
   --
+  -- In whichever public zone it reached: a CR 614.1 replacement sending it to
+  -- exile (Rest in Peace) leaves the sacrifice recorded, and CR 400.7e's "the
+  -- zone it moved to" is the exile, proved by Parun.TriggerSpec's "CR 400.7e a
+  -- sacrifice redirected to exile is found there".
+  --
   -- CONDITIONAL, so the slot is claimed by eventBindingSlotsSometimes rather than
-  -- by the floor: a CR 614.1 replacement can send the sacrificed permanent
-  -- somewhere other than a graveyard -- the sacrifice still happened and is still
-  -- recorded -- which leaves the table without the row, and delayedPending scans
+  -- by the floor: a replacement can send the permanent to a HIDDEN zone (a
+  -- library), which leaves the table without the row, and delayedPending scans
   -- no batch at all. A payload that then finds nothing is what CR 400.7e
   -- prescribes rather than the silent no-op the card lint exists to catch.
-  --
-  -- Not implemented: finding a card a replacement sent to another public zone
-  -- (#5958).
   --
   -- The BEARER's own arrival is not consulted, unlike the AttachedCreatureDies arm
   -- above: this is a bystander condition and the permanent the event names is

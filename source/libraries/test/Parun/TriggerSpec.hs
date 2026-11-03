@@ -637,24 +637,22 @@ prowlingGeistcatcherSpec s registry =
           Spec.assertBool s (Set.null (GameState.exile after)) "CR 701.21a: nothing was exiled"
           Spec.assertBool s (not (S.onBattlefield geist after)) "though the Geistcatcher really was sacrificed"
           Spec.assertBool s (S.onBattlefield bystander after) "and the other creature stayed put"
-        -- CR 614.1's redirect, and what keeps CR 400.7e's slot out of
-        -- eventBindingSlots' floor: Rest in Peace sends the sacrificed Piker to
-        -- exile instead of to a graveyard, so the sacrifice is still recorded
-        -- and there is no new object for "exile it" to name. The Piker's card is
-        -- in exile either way, but CR 607.2a's link needs it put there "as a
-        -- result of an instruction to exile them in the first ability" and
-        -- nothing here was, so the Geistcatcher's departure returns nothing --
-        -- which a stale slot naming the redirected card would not.
-        Spec.it s "CR 614.1 a redirected sacrifice leaves the trigger nothing to exile" $ do
+        -- CR 614.1's redirect: Rest in Peace sends the sacrificed Piker to exile
+        -- instead of a graveyard. The sacrifice still happened, and CR 400.7e's
+        -- "the zone it moved to" is the exile, so "exile it" exiles that card
+        -- again (CR 400.8), which files it against the Geistcatcher (CR 607.2a)
+        -- and its departure returns it. A slot bound from graveyard arrivals
+        -- alone exiles nothing and returns nothing.
+        Spec.it s "CR 400.7e a sacrifice redirected to exile is found there" $ do
           geistcatcher <- S.printingOf s registry "Prowling Geistcatcher"
           piker <- S.printingOf s registry "Goblin Piker"
           restInPeace <- S.printingOf s registry "Rest in Peace"
           let (geist, victim, _, buried, gs) = geistBoard geistcatcher piker [restInPeace]
               exiled = S.runPure S.identityAnswer gs (sacrificeThen S.alice victim)
               after = S.runPure S.identityAnswer exiled (Event.destroy Regenerability.Regenerable [geist] >> Engine.priorityLoop)
-          Spec.assertEqWith s "CR 607.2a: no Piker came back to the battlefield" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Goblin Piker")) S.alice after) 1
-          Spec.assertBool s (not (S.onBattlefield victim exiled)) "the sacrificed Piker really left the battlefield"
-          Spec.assertEqWith s "and nothing reached a graveyard for CR 400.7e to name" (departedInto Zone.Graveyard exiled) []
+          Spec.assertEqWith s "CR 607.2a: the Geistcatcher leaving returned the redirected Piker" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Goblin Piker")) S.alice after) 2
+          Spec.assertEqWith s "CR 400.8: the trigger exiled the card the sacrificed Piker became in exile" (departedInto Zone.Exile exiled) (victim : arrivalOf Zone.Battlefield victim exiled)
+          Spec.assertEqWith s "nothing reached a graveyard" (departedInto Zone.Graveyard exiled) []
           Spec.assertEqWith s "leaving the graveyard as it was" (Game.zoneMembers Zone.Graveyard S.alice exiled) [buried]
         -- THE CASE THIS UNIT EXISTS FOR. CR 603.10a's look-back: the id the
         -- sacrifice event carries is the battlefield permanent, and CR 608.2h's
