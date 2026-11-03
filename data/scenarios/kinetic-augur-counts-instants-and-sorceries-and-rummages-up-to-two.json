@@ -3,45 +3,6 @@
     "active": "alice",
     "seats": [
       {
-        "name": "alice",
-        "library": [
-          {
-            "card": "Island"
-          },
-          {
-            "card": "Island"
-          },
-          {
-            "card": "Island"
-          },
-          {
-            "card": "Island"
-          },
-          {
-            "card": "Island"
-          },
-          {
-            "card": "Island"
-          },
-          {
-            "card": "Island"
-          },
-          {
-            "card": "Island"
-          },
-          {
-            "card": "Island"
-          },
-          {
-            "card": "Island"
-          },
-          {
-            "card": "Island"
-          },
-          {
-            "card": "Island"
-          }
-        ],
         "battlefield": [
           {
             "card": "Mountain",
@@ -76,6 +37,18 @@
             "label": "m8"
           }
         ],
+        "graveyard": [
+          {
+            "card": "Lightning Bolt"
+          },
+          {
+            "card": "Divination"
+          },
+          {
+            "card": "Forest",
+            "label": "gf"
+          }
+        ],
         "hand": [
           {
             "card": "Kinetic Augur",
@@ -98,21 +71,6 @@
             "label": "bolt"
           }
         ],
-        "graveyard": [
-          {
-            "card": "Lightning Bolt"
-          },
-          {
-            "card": "Divination"
-          },
-          {
-            "card": "Forest",
-            "label": "gf"
-          }
-        ]
-      },
-      {
-        "name": "bob",
         "library": [
           {
             "card": "Island"
@@ -150,24 +108,67 @@
           {
             "card": "Island"
           }
-        ]
+        ],
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
       }
     ],
     "step": "PrecombatMain"
   },
   "description": "Kinetic Augur's power counts instant and sorcery cards in your graveyard, and it discards up to two then draws that many.",
+  "note": "The land in the graveyard doesn't count; the discarded Bolt does, so power goes 2 -> 3. The second Augur discards one and draws one.",
   "timeline": [
     {
       "do": {
         "Cast": {
-          "object": "$ka",
           "mana": [
             "$m1",
             "$m2",
             "$m3",
             "$m4",
             null
-          ]
+          ],
+          "object": "$ka"
         }
       },
       "player": "alice",
@@ -183,6 +184,21 @@
     {
       "do": "Pass",
       "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "Answer": {
+          "prompt": "ChooseAnyNumberToDiscard",
+          "with": [
+            "$a",
+            "$b",
+            "$bolt"
+          ]
+        }
+      },
       "step": "PrecombatMain",
       "turn": 1
     },
@@ -281,13 +297,13 @@
     {
       "do": {
         "Cast": {
-          "object": "$ka2",
           "mana": [
             "$m5",
             "$m6",
             "$m7",
             "$m8"
-          ]
+          ],
+          "object": "$ka2"
         }
       },
       "player": "alice",
@@ -345,6 +361,5 @@
       "step": "PrecombatMain",
       "turn": 1
     }
-  ],
-  "note": "The land in the graveyard doesn't count; the discarded Bolt does, so power goes 2 -> 3. The second Augur discards one and draws one."
+  ]
 }

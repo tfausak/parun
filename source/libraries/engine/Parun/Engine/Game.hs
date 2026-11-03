@@ -4113,6 +4113,24 @@ declaredBy pid event = case event of
   GameEvent.AttackerDeclared x -> AttackerDeclared.attackingPlayer x == pid
   _ -> False
 
+-- | One ask for up to `ceiling_` of `candidates`. FILTERED, not trusted: an
+-- answer naming an object never offered is dropped. One naming more than the
+-- ceiling is CR 608.2d's illegal option, so it is asked again rather than
+-- trimmed; a repeat of a refused answer is taken, keeping its first that many
+-- in the offer's order, Parun.Engine.Resolve.Arms.Damage's search shape, since
+-- a pure decider repeats itself. Keyed on the answer narrowed to the offer, so
+-- the recursion terminates. The list carries the offer's order, CR 608.2f's
+-- APNAP order where a Set does not.
+chooseUpTo :: Maybe Natural -> [ObjectId] -> Prompt.Prompt (Set.Set ObjectId) -> Game [ObjectId]
+chooseUpTo ceiling_ candidates prompt = again Set.empty
+  where
+    again rejected = do
+      answer <- choose prompt
+      let given = filter (`Set.member` answer) candidates
+      if maybe True (Natural.length given <=) ceiling_ || Set.member given rejected
+        then pure (maybe id (take . Natural.toIntSaturating) ceiling_ given)
+        else again (Set.insert given rejected)
+
 -- | CR 608.2d's choice of objects out of candidates, at a count read through
 -- `amount`: the one place a HowMany is asked, shared by
 -- Parun.Engine.Resolve.Common's chosenPermanents and chooseCardFromAmong and by
@@ -4131,10 +4149,7 @@ declaredBy pid event = case event of
 --
 -- UpTo: ONE ask over every candidate, skipped at none and at a ceiling of zero,
 -- where the empty set is the only answer (CR 101.3, CR 609.3), and asked at
--- one, where declining is a second answer. FILTERED, not trusted: an answer
--- naming an object never offered is dropped, and one naming more than the
--- ceiling keeps its first that many in the offer's order, which carries CR
--- 608.2f's APNAP order where a Set does not.
+-- one, where declining is a second answer, through chooseUpTo.
 --
 -- Beside the picks, the seat that was asked: Nothing where nobody was.
 pickCounted ::
@@ -4155,8 +4170,7 @@ pickCounted named chooser one_ several amount count candidates = case count of
     | null candidates || ceiling_ == Just 0 -> pure (Nothing, [])
     | otherwise -> asking $ \who -> do
         gs <- State.get
-        answer <- choose (several (Decide.deciderFor who gs) who candidates ceiling_)
-        pure (maybe id (take . Natural.toIntSaturating) ceiling_ (filter (`Set.member` answer) candidates))
+        chooseUpTo ceiling_ candidates (several (Decide.deciderFor who gs) who candidates ceiling_)
     where
       ceiling_ = fmap amount q
   where
