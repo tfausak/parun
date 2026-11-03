@@ -132,12 +132,14 @@ summary, and its title carries no CR numbers.
   scratchpad. Briefs and PR bodies are files there, relayed by path, never
   retyped.
 - **Merging.** When a PR has cleared any audit, `gh pr ready` it and arm
-  auto-merge (squash) in the same step; a later fix undoes ready first
+  auto-merge (`gh pr merge --auto`; the merge queue sets the method) in the
+  same step; a later fix undoes ready first
   (`gh pr ready --undo`). Re-check `autoMergeRequest` after arming and after
   every push. On a conflict, brief a fresh agent on the branch to merge
   `origin/main` (`docs/agents/set-by-set.md`, "Git and the PR").
 - **Shepherd** each PR with `script/shepherd.sh PR` in the background: it
-  updates a `BEHIND` branch and exits on merge, conflict or a failed check.
+  exits on merge, conflict or a failed check. Don't update a `BEHIND` branch:
+  the queue tests each PR against main.
   Read a failed job's log first: one that died in `Set up job` is not a real
   failure.
 - **Reap after every merge**, from the primary checkout: `git worktree remove
