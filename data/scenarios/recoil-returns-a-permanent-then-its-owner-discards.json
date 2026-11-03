@@ -1,0 +1,12 @@
+{
+  "description": "Recoil, CR 608.2c: the permanent goes to its owner's hand, then that player chooses a card to discard, the returned one included",
+  "note": "Alice controls the Hill Giant bob owns, so bob, not alice, discards, and picks the Giant over his Island.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Island", "label": "i1"}, {"card": "Swamp", "label": "s1"}, {"card": "Island", "label": "i2"}], "hand": [{"card": "Recoil", "label": "recoil"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Hill Giant", "label": "giant", "controller": "alice"}], "hand": [{"card": "Island", "label": "kept"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$recoil", "targets": ["$giant"], "mana": ["$i1", "$s1", "$i2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Answer": {"prompt": "ChooseDiscard", "with": ["$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Island", "count": 1}}}
+  ]
+}

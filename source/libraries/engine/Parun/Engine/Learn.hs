@@ -81,7 +81,7 @@ lessonFromOutside =
 learn :: PlayerId -> ObjectId -> ObjectId -> Game ()
 learn pid resolving source = do
   gs <- State.get
-  let hand = Game.zoneMembers Zone.Hand pid gs
+  let hand = Game.cardsIn Zone.Hand pid gs
       lessons = Event.eligible (FromOutsideTheGame.filter lessonFromOutside) source pid gs
       offered =
         [LearnMode.DiscardAndDraw | not (null hand)]

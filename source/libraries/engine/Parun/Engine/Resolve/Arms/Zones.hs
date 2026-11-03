@@ -1553,7 +1553,7 @@ discard resolving source controller legal _ (Discard.Counted (CountedDiscard.MkC
         case Common.evaluateForRecipient viewOf context gs resolving source victim quantity of
           Just n
             | n > 0 -> do
-                let held = Game.zoneMembers Zone.Hand victim gs
+                let held = Game.cardsIn Zone.Hand victim gs
                     -- `n > 0` above, so the clamp never decides anything here.
                     count = Integer.toNaturalSaturating n
                 if count >= Natural.length held

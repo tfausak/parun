@@ -160,7 +160,7 @@ recruit pid = do
   Monad.forM_ (outcome >>= Replacement.asPerformed PlayerInstruction.DrawCards) $ \(drawer, settled) ->
     Monad.replicateM_ (Natural.toIntSaturating settled) (Event.drawCard drawer)
   drawn <- State.get
-  let held = Game.zoneMembers Zone.Hand pid drawn
+  let held = Game.cardsIn Zone.Hand pid drawn
   chosen <- case held of
     -- CR 609.3: an empty hand discards nothing, doing as much as possible. A
     -- one-card hand discards that card. Neither leaves a choice, so neither

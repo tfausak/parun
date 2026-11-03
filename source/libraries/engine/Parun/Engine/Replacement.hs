@@ -2955,7 +2955,7 @@ revealableFromHand :: PlayerId -> Filter.Type.Filter Keyword.Type.Keyword -> Gam
 revealableFromHand pid filter_ gs =
   let viewOf = Projection.viewsOf gs
       matching oid = Filter.matches (Filter.contextIn gs Nothing Nothing) (viewOf oid) filter_
-   in filter matching (Game.zoneMembers Zone.Hand pid gs)
+   in filter matching (Game.cardsIn Zone.Hand pid gs)
 
 -- CR 702.38a: the cards a player may reveal from their hand for an amplify
 -- ability -- the ones sharing a creature type with the entering object.
@@ -2978,7 +2978,7 @@ amplifiableFromHand :: PlayerId -> Set Subtype.Subtype -> GameState -> [ObjectId
 amplifiableFromHand pid types gs =
   let viewOf = Projection.viewsOf gs
       sharing oid = not (Set.disjoint types (Filter.subtypes (viewOf oid)))
-   in filter sharing (Game.zoneMembers Zone.Hand pid gs)
+   in filter sharing (Game.cardsIn Zone.Hand pid gs)
 
 -- CR 614.3: a floating replacement whose `uses` is Once is spent by being
 -- applied. A permanent's STATIC replacement ability has no use count at all --
