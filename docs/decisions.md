@@ -524,6 +524,26 @@ Entries are ordered by the first rule each cites.
   while there is nothing it can enchant stays exiled".
 - **Issue**: none.
 
+## What a mandatory blight puts its counters on when no creature can take them
+
+- **Question**: An effect says "blight N" and every creature the player
+  controls can't have -1/-1 counters put on it (Solemnity, Melira, Sylvok
+  Outcast). Does the player still choose one, so the blight happens, or is it
+  CR 101.3's no-op? Where some creature can take them, CR 608.2d forbids
+  choosing one that can't; no ruling covers the case where none can.
+- **Rules**: CR 608.2d, 609.3, 701.68a, 701.68c, 701.68d; CR of 2026-08-07.
+- **Decision**: The player chooses among every creature they control, nothing
+  is put, and they have blighted: the chosen creature is CR 701.68c's
+  "blighted creature" and "whenever a player blights" triggers.
+- **Rejected**: No choice and no blight, which reads CR 608.2d's impossible
+  option as emptying the pool. CR 609.3 has the effect do as much as it can,
+  and choosing the creature can be done; CR 701.68d's "regardless of what
+  events actually occurred" says a blight putting nothing still counts.
+- **Site**: `Parun.Engine.Blight.instructed`, proved by
+  `Parun.EventTriggerSpec`'s "CR 701.68d Solemnity keeps every counter off
+  and the Chronicler still triggers".
+- **Issue**: #5830.
+
 ## Which board an entry inside a batch collects replacement effects from
 
 - **Question**: When an entry is contained in a CR 608.2f batch, does its CR
