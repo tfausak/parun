@@ -14,8 +14,6 @@ Every expressible Foundations card has been added to `data/cards/`.
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #5923: Divine Resilience. A kicked spell can't take a different number of targets
-  (CR 601.2c).
 - #5924: Deadly Brew. Nothing excludes the card a sacrificed permanent became (CR
   400.7).
 - #5636: Fiery Annihilation. A target slot can't be narrowed to what's attached to
