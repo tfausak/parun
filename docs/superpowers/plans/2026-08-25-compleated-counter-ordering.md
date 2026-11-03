@@ -575,7 +575,7 @@ Line 43 of #877's body reads `702.150 Compleated (Tamiyo, Compleated Sage; CR 61
 - [ ] **Step 5: Check for dependents**
 
 ```bash
-gh api repos/tfausak/parun/issues/1996/dependencies/blocking
+gh api repos/parun-mtg/parun/issues/1996/dependencies/blocking
 ```
 
 Say in the PR body which issues this unblocked, if any.

@@ -25,7 +25,7 @@ extra-doc-files:
   README.md
 
 source-repository head
-  location: https://github.com/tfausak/parun
+  location: https://github.com/parun-mtg/parun
   type: git
 
 flag pedantic

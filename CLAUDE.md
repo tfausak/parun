@@ -224,12 +224,12 @@ to agents as written. What it doesn't say:
   with no issue gets one filed first:
 
   ```
-  gh api -X POST repos/tfausak/parun/issues/<N>/dependencies/blocked_by \
-    -F issue_id="$(gh api repos/tfausak/parun/issues/<BLOCKER> --jq .id)"
+  gh api -X POST repos/parun-mtg/parun/issues/<N>/dependencies/blocked_by \
+    -F issue_id="$(gh api repos/parun-mtg/parun/issues/<BLOCKER> --jq .id)"
   ```
 
   When a capability lands, read its dependents (`gh api
-  repos/tfausak/parun/issues/N/dependencies/blocking`) and name in the PR body
+  repos/parun-mtg/parun/issues/N/dependencies/blocking`) and name in the PR body
   the issues it unblocked.
 
 - A spec or plan is optional; commit one in the same PR when the unit

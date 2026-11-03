@@ -234,7 +234,7 @@ Above the library arm, add this elision paragraph: "Not implemented: CR 401.5's 
   - **Deferred:**
     - the CR 401.5 mid-cast elision (the new issue);
     - CR 401.6;
-    - unblocked issues: what `gh api repos/tfausak/parun/issues/3237/dependencies/blocking` and the same for 3035 list.
+    - unblocked issues: what `gh api repos/parun-mtg/parun/issues/3237/dependencies/blocking` and the same for 3035 list.
   - End with `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
 
   Leave it a draft. The controller marks it ready after the final review.

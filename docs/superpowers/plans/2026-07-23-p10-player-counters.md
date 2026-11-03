@@ -8,7 +8,7 @@
 
 **Tech Stack:** Haskell 2010 (GHC 9.14.1), no extensions beyond `GADTs`/`RankNTypes`/`NamedFieldPuns`; `tasty` (`tasty-hunit` + `tasty-quickcheck`); cards as JSON data under `data/cards/`.
 
-**Spec:** `docs/superpowers/specs/2026-07-23-p10-player-counters-design.md`. Issue `tfausak/parun#6`.
+**Spec:** `docs/superpowers/specs/2026-07-23-p10-player-counters-design.md`. Issue `parun-mtg/parun#6`.
 
 ## Global Constraints
 
@@ -1064,12 +1064,12 @@ EOF
 
 **Interfaces:** none (bookkeeping).
 
-- [ ] **Step 1: File the deferral issues on `tfausak/parun`**
+- [ ] **Step 1: File the deferral issues on `parun-mtg/parun`**
 
 For each spec §8 deferral, `gh issue create` carrying status, rationale, and expiry trigger label (mostly `expires:card-driven`, plus `gap`/`rules-correctness` as fitting). File: counter→layer-6 ability-granting path; toxic (CR 702.164); poisonous (CR 702.70); proliferate (CR 701.27); targeted/variable player counters; variable energy cost; CR 614 player-counter replacement funnel; experience/rad counters; mana of any color. (Two-Headed Giant poison sharing is out of scope, not an issue.) Example:
 
 ```bash
-gh issue create --repo tfausak/parun \
+gh issue create --repo parun-mtg/parun \
   --title "CR 614 player-counter replacement funnel (energy/poison doubling)" \
   --label gap --label expires:card-driven \
   --body "Deferred by M4.5 P10. Energy gain and infect poison are added directly today (no CR 614 opportunity for a doubler). Fires when a card in the pool doubles or replaces player-counter gains. See docs/superpowers/specs/2026-07-23-p10-player-counters-design.md §8."
@@ -1090,7 +1090,7 @@ One distilled entry: gate cards (Glistener Elf, Longtusk Cub), the decision prov
 
 - [ ] **Step 5: Replace (do not append) the status bullet in `CLAUDE.md`**
 
-Update the "Current work and tracking" status bullet so it records P10 as closed (GAP-C player-counter substrate + poison/energy customers of GAP-S), and note P11 (Command zone) as the remaining M4.5 phase. Close issue #6: `gh issue close 6 --repo tfausak/parun --comment "Landed by M4.5 P10."`.
+Update the "Current work and tracking" status bullet so it records P10 as closed (GAP-C player-counter substrate + poison/energy customers of GAP-S), and note P11 (Command zone) as the remaining M4.5 phase. Close issue #6: `gh issue close 6 --repo parun-mtg/parun --comment "Landed by M4.5 P10."`.
 
 - [ ] **Step 6: Final full verification**
 

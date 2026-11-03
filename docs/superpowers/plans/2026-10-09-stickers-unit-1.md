@@ -1938,7 +1938,7 @@ N1, title "Sticker decks are not checked for ten unique sheets", labels `gap,exp
 - Related to #4458, which is the deck-legality check this would join.
 ```
 
-Then record the dependency: `gh api -X POST repos/tfausak/parun/issues/<N1>/dependencies/blocked_by -F issue_id="$(gh api repos/tfausak/parun/issues/4458 --jq .id)"`.
+Then record the dependency: `gh api -X POST repos/parun-mtg/parun/issues/<N1>/dependencies/blocked_by -F issue_id="$(gh api repos/parun-mtg/parun/issues/4458 --jq .id)"`.
 
 N2, title "Unclear whether a Shahrazad subgame uses sticker sheets", labels `question,area:variants`:
 
@@ -1987,7 +1987,7 @@ Synthetic Sticker Swap {1} Artifact: "{1}, {T}: Move a sticker from a permanent 
   - Capability-widening sweep (`docs/agents/implementing.md`): `grep -rn -i 'sticker\|ticket' source --include='*.hs'` and read every comment; `grep -rn 'Energy, Poison\|player counters are' source --include='*.hs'` for prose listing the player counter kinds.
   - Counting absolutes: `grep -rn 'ChosenPermanent' source --include='*.hs'` comments that count its producers (Wormfang Crab, Mirkwood Trapper) are now falsified by Pyrodancer; fix them. Same for `GainPlayerCounters` producer counts.
   - CR citations: for each rule in `git diff origin/main -U0 | grep -o 'CR [0-9][0-9.a-z/-]*' | sort -u`, read it in `docs/rules.txt`.
-- [ ] **Step 2: Self-review.** `git fetch`, `git merge origin/main`, run the full suite, re-run m4, m5a, m5c, m6, m7b, m7d, m8a. Re-read every comment the diff touched against the one-line haddock rule. Read `gh api repos/tfausak/parun/issues/872/dependencies/blocking` and name what this unblocked.
+- [ ] **Step 2: Self-review.** `git fetch`, `git merge origin/main`, run the full suite, re-run m4, m5a, m5c, m6, m7b, m7d, m8a. Re-read every comment the diff touched against the one-line haddock rule. Read `gh api repos/parun-mtg/parun/issues/872/dependencies/blocking` and name what this unblocked.
 - [ ] **Step 3: Open the PR.** `gh pr create --draft --title "Stickers unit 1: tickets, sheets and art stickers" --body-file $SCRATCH/pr.md`, the body:
 
 ```

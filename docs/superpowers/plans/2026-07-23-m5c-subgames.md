@@ -78,7 +78,7 @@ Exact shapes the tasks build on (paths/line numbers from this planning pass — 
 | `data/cards/synthetic-subgame.json` | Create | Task 5: the labeled-synthetic gate card. |
 | `source/test-suite/Parun/Cards.hs` | Modify | Task 5: register `syntheticSubgamePrinting` (4 sites). |
 | `source/test-suite/Parun/GameSpec.hs` | Modify | Tasks 4, 6–8: `playSubgame` end-to-end; the three gameplay gates (729.1b/729.3, 729.5/729.4b, 729.6). |
-| GitHub issues (`tfausak/parun`) | Create | Task 9: deferrals (first-player RNG; ability-path subgames; Result-widening; full Shahrazad; subsystem-blocked slices). |
+| GitHub issues (`parun-mtg/parun`) | Create | Task 9: deferrals (first-player RNG; ability-path subgames; Result-widening; full Shahrazad; subsystem-blocked slices). |
 | `docs/progress.md`, `CLAUDE.md`, umbrella spec | Modify | Task 10: completion entry, status replacement, phase tick (M5 exit). |
 
 ---
@@ -1152,13 +1152,13 @@ git commit -m "test(m5c): gameplay gate — arbitrary subgame nesting terminates
 Per `CLAUDE.md` ("file the issue, cite it inline"), every M5c elision gets a GitHub issue carrying status, rationale, and expiry trigger, with a code-site comment stating only what is *not* implemented plus `(#N)`.
 
 **Files:**
-- Create: GitHub issues in `tfausak/parun`.
+- Create: GitHub issues in `parun-mtg/parun`.
 - Modify: `source/library/Parun/Setup.hs` (first-player elision comment), `source/library/Parun/Resolve.hs` (ability-path + Result-widening + full-Shahrazad citations at the `PlaySubgame` arm).
 
 - [x] **Step 1: Check for duplicates, then file the issues**
 
 ```bash
-gh issue list --repo tfausak/parun --search "subgame"
+gh issue list --repo parun-mtg/parun --search "subgame"
 ```
 
 File these (adjust wording if a duplicate exists). Record each returned number.
@@ -1166,7 +1166,7 @@ File these (adjust wording if a duplicate exists). Record each returned number.
 1. First-player RNG elision (CR 729.2 / CR 103.4):
 
 ```bash
-gh issue create --repo tfausak/parun \
+gh issue create --repo parun-mtg/parun \
   --title "Subgame first player is deterministic (CR 729.2 'randomly determine which player goes first')" \
   --label elision --label rules-correctness \
   --body "Status: elided in M5c. Setup.subgameStateFrom sets the subgame's active player to the head of the turn order, matching the existing Setup.emptyGame posture -- parun has no first-player randomness prompt (the Prompt GADT has no such constructor; only Shuffle carries randomness). CR 729.2 (and CR 103.4) call for randomly determining the starting player. Expiry: fires when a first-player randomness prompt lands (a shared need with CR 103.4 for main games). Cited at Setup.subgameStateFrom."
@@ -1175,7 +1175,7 @@ gh issue create --repo tfausak/parun \
 2. Ability-path subgames:
 
 ```bash
-gh issue create --repo tfausak/parun \
+gh issue create --repo parun-mtg/parun \
   --title "Subgame from an activated/triggered ability (PlaySubgame on the ability path)" \
   --label gap --label expires:card-driven \
   --body "Status: deferred. M5c injects the subgame runner only down the SPELL path (Stack.resolveTopWith -> Resolve.resolveSpellWith -> applyEffectWith); the ability path (resolveEffects/resolveAbility) folds the bare applyEffect, whose PlaySubgame arm uses noSubgame (resolves as a draw, binds nothing). No real card plays a subgame from an ability (Shahrazad is a sorcery). Expiry: card-driven. Cited at the PlaySubgame arm in Parun.Resolve."
@@ -1184,7 +1184,7 @@ gh issue create --repo tfausak/parun \
 3. Result widening for multi-player "each non-winner":
 
 ```bash
-gh issue create --repo tfausak/parun \
+gh issue create --repo parun-mtg/parun \
   --title "Subgame outcome is a 2-player loser derivation (Result not widened for 'each player who doesn't win')" \
   --label gap --label rules-correctness \
   --body "Status: deferred. PlaySubgame derives the single loser as listToMaybe (filter (/= winner) turnOrder) and a Drawn subgame binds nothing. CR 729.1b's real customer (Shahrazad: 'each player who doesn't win ... loses half their life') needs the full non-winner SET and a per-player half-life-rounded-up quantity. Parun.Type.Result stays Won PlayerId | Drawn. Expiry: card-driven (full Shahrazad). Cited at the PlaySubgame arm in Parun.Resolve."
@@ -1193,7 +1193,7 @@ gh issue create --repo tfausak/parun \
 4. Full Shahrazad (retires the synthetic gate):
 
 ```bash
-gh issue create --repo tfausak/parun \
+gh issue create --repo parun-mtg/parun \
   --title "Full Shahrazad (CR 729): the half-life-rounded-up rider retires the synthetic-subgame gate" \
   --label gap --label rules-correctness --label expires:card-driven \
   --body "Status: deferred; M5c's gate is a labeled synthetic ('Synthetic Subgame', data/cards/synthetic-subgame.json), the Landform crutch. Shahrazad is the only real CR 729 card; its rider -- 'each player who doesn't win the subgame loses half their life, rounded up' -- needs a life-loss opcode, a half-current-life-rounded-up Quantity, and the multi-player non-winner scope (see the Result-widening issue). The subgame MACHINERY (PlaySubgame, funnelBack, nesting) is real and faithful; only the fixed-3 DealDamage rider stands in for the half-life rider. When built, this retires syntheticSubgamePrinting in favor of a real Shahrazad card + test. Also parked: CR 727.6 (restarting a subgame) rides this machinery. Expiry: card-driven (Shahrazad). Cited at the PlaySubgame arm in Parun.Resolve."
@@ -1202,7 +1202,7 @@ gh issue create --repo tfausak/parun \
 5. Subsystem-blocked slices:
 
 ```bash
-gh issue create --repo tfausak/parun \
+gh issue create --repo parun-mtg/parun \
   --title "Subgame subsystem-blocked slices (CR 729.2a-c / 729.4a / 729.5 second sentence / 729.5a-c)" \
   --label gap \
   --body "Status: deferred, subsystem-blocked (not scheduled). Nontraditional/supplementary decks (729.2a/729.5a), Vanguard (729.2b/729.5b), Commander (729.2c/729.5c), and cards brought INTO a subgame from a main game plus the main-game leave-the-zone triggers they queue until the main game resumes (729.4a, 729.5 second sentence) all ride subsystems M5 does not build (nontraditional cards, Vanguard, Commander, outside-the-game). CR 723.4 subgame prompt tagging / game-context is an M7/interpreter concern (subgame prompts are untagged today). Cited at Setup.funnelBack / Engine.playSubgame."

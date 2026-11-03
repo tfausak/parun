@@ -55,7 +55,7 @@ These already exist and are correct. Tasks assert against them; do not modify th
 | `source/test-suite/Parun/GameSpec.hs` | Modify | Tasks 1, 2, 4: gameplay-level control tests in `ruleTests`; new answerers `gateAnswer`, `controlCombatAnswer`, helper `isActivateAction`; add `import qualified Parun.Decide as Decide`. |
 | `source/test-suite/Parun/ResolveSpec.hs` | Modify | Task 3: 723.1a overwrite falsifier next to the existing installation test; helper `installControlBy`. |
 | `source/library/Parun/Engine.hs` | Modify (comment only) | Task 5: inline concede guard note at the `ChooseAction` site. |
-| GitHub issue (`tfausak/parun`) | Create | Task 5: concede-subsystem deferral. |
+| GitHub issue (`parun-mtg/parun`) | Create | Task 5: concede-subsystem deferral. |
 | `docs/progress.md`, `CLAUDE.md`, umbrella spec | Modify | Task 6: completion entry, status bullet replacement, phase tick. |
 
 No library `Parun.Type.*` modules are added or changed. M5a introduces **zero** new opcodes, prompts, or types.
@@ -457,7 +457,7 @@ git commit -m "test(m5a): controller spends only the controlled player's resourc
 CR 723.6: "The controller of another player can't make that player concede." Concede is **unimplemented** — `Departure.Conceded` exists but is never constructed; there is no `Concede` action, prompt, or handler. Concede-at-any-time is a new player-action axis outside M5a's close-out scope (decided: *defer concede, ship guard*). This task files the deferral and leaves the durable guard: an inline note at the priority `ChooseAction` site stating what is not implemented and the CR 723.6 constraint that concede must read the true player, never the `Decider`. Per `CLAUDE.md`: file the issue, cite it inline; the comment states only what is *not* implemented, plus `(#N)`.
 
 **Files:**
-- Create: GitHub issue in `tfausak/parun`.
+- Create: GitHub issue in `parun-mtg/parun`.
 - Modify: `source/library/Parun/Engine.hs` — one comment above line 405 (`let decider = Decide.deciderFor p gs`).
 
 **Interfaces:** none (comment + issue only).
@@ -468,7 +468,7 @@ Run (adjust wording only if a near-duplicate already exists — check `gh issue 
 
 ```bash
 gh issue create \
-  --repo tfausak/parun \
+  --repo parun-mtg/parun \
   --title "Concede special action (CR 104.3a / 405.6g): a player may concede at any time; must bypass the Decider (CR 723.6)" \
   --label gap --label rules-correctness \
   --body "Status: deferred; not implemented in M5a.

@@ -1274,7 +1274,7 @@ N6, title "A Good Day to Pie can't return itself when you put a name sticker on 
   - `grep -rn -i 'name sticker\|sticker' source --include='*.hs'` and read every comment this unit touched; `grep -rn 'Spy Kit' source --include='*.hs'` for prose that says Spy Kit is layer 3's only name writer (`PC.names`' haddock, `AddNamesMatching`'s) and fix it.
   - Counting absolutes: `grep -rn 'HasSticker\|PlacesSticker\|PutSticker' source --include='*.hs'` comments naming their producers ("the one producer", Pyrodancer alone) are now falsified; fix them, including `Resolve.Effect`'s "the one producer's own filter".
   - CR citations: for each rule in `git diff origin/main -U0 | grep -o 'CR [0-9][0-9.a-z/-]*' | sort -u`, read it in `docs/rules.txt`.
-- [ ] **Step 3: Self-review.** `git fetch`, `git merge origin/main` (once, now), the full suite, then re-run m2a, m3b, m4a, m5d, m5f, m6b. Re-read every comment the diff touched against the one-line haddock rule. Read `gh api repos/tfausak/parun/issues/872/dependencies/blocking` and name what this unblocked.
+- [ ] **Step 3: Self-review.** `git fetch`, `git merge origin/main` (once, now), the full suite, then re-run m2a, m3b, m4a, m5d, m5f, m6b. Re-read every comment the diff touched against the one-line haddock rule. Read `gh api repos/parun-mtg/parun/issues/872/dependencies/blocking` and name what this unblocked.
 - [ ] **Step 4: Open the PR.** `gh pr create --draft --title "Stickers unit 2: name stickers" --body-file $SCRATCH/pr.md`, the body:
 
 ```

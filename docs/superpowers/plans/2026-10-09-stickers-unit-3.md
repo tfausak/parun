@@ -1104,7 +1104,7 @@ N3, title "Clandestine Chameleon can't have the abilities of stickers on other p
   - `grep -rn -i 'sticker\|ticket' source --include='*.hs'` and read every comment this unit touched; counting absolutes ("the one producer", "art stickers carry no data", "Game.stickerWords answers Nothing for every other kind") are now false: fix them.
   - `grep -rn '{ *PutSticker\.\|PutSticker\.[a-z]* = ' source --include='*.hs'` for a record update that keeps an old `ticketCap` or `free`; `Rewrite.rewriteEffect` is the one rebuilding it.
   - CR citations: for each rule in `git diff origin/main -U0 | grep -o 'CR [0-9][0-9.a-z/-]*' | sort -u`, read it in `docs/rules.txt`.
-- [ ] **Step 3: Self-review.** `git fetch`, `git merge origin/main` (once, now), the full suite, then re-run m2b, m3a, m4a, m5a, m6, m7a. Re-read every comment the diff touched against the one-line haddock rule. Read `gh api repos/tfausak/parun/issues/872/dependencies/blocking` and name what this unblocked.
+- [ ] **Step 3: Self-review.** `git fetch`, `git merge origin/main` (once, now), the full suite, then re-run m2b, m3a, m4a, m5a, m6, m7a. Re-read every comment the diff touched against the one-line haddock rule. Read `gh api repos/parun-mtg/parun/issues/872/dependencies/blocking` and name what this unblocked.
 - [ ] **Step 4: Open the PR.** `gh pr create --draft --title "Stickers unit 3: ability and P/T stickers, ticket costs" --body-file $SCRATCH/pr.md`, the body:
 
 ```

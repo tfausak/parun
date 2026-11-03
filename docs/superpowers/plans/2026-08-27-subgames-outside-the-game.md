@@ -461,7 +461,7 @@ only after. Read both out of `GameState.events`.
       this PR.
 
 - [ ] **Step 5: check what #152 unblocks** ---
-      `gh api repos/tfausak/parun/issues/152/dependencies/blocking` --- and say so
+      `gh api repos/parun-mtg/parun/issues/152/dependencies/blocking` --- and say so
       in the PR body.
 
 - [ ] **Step 6: self-review the branch.** Re-check every CR citation against
