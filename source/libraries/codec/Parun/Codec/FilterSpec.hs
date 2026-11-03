@@ -463,6 +463,12 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
       codec
       (Filter.HasAttached (Filter.HasSubtype Subtype.Aura))
       " {\"type\":\"HasAttached\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Aura\"}}} "
+  Spec.it s "BeforeMove" $
+    Common.assertCodec
+      s
+      codec
+      (Filter.BeforeMove Filter.IsSource)
+      " {\"type\":\"BeforeMove\",\"value\":{\"type\":\"IsSource\"}} "
   -- CR 303.4b's atom is not CR 701.3a's, and the two tags are what says so: a
   -- codec that spelled both "AttachedTo" would read an enchanted creature as an
   -- Aura.

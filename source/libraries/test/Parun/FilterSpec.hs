@@ -117,6 +117,7 @@ blackCreature =
       Filter.dealtDamageEarlier = Set.empty,
       Filter.controlledSinceTurnBegan = False,
       Filter.attachedToView = Nothing,
+      Filter.beforeMoveView = Nothing,
       Filter.attachedViews = [],
       Filter.attachedTo = Nothing,
       Filter.canHostSubject = False,
@@ -202,6 +203,7 @@ devoidBigCreature =
       Filter.dealtDamageEarlier = Set.empty,
       Filter.controlledSinceTurnBegan = False,
       Filter.attachedToView = Nothing,
+      Filter.beforeMoveView = Nothing,
       Filter.attachedViews = [],
       Filter.attachedTo = Nothing,
       Filter.canHostSubject = False,
@@ -1660,6 +1662,23 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
     -- CR 506.3 again, for CR 509.1a's half.
     Spec.it s "a player candidate is vacuously false" $ do
       Spec.assertBool s (not (Filter.matches self aPlayer Filter.Type.DeclaredBlockerThisCombat)) "player"
+
+  Spec.describe s "BeforeMove" $ do
+    let before = ObjectId.MkObjectId 1
+        now = ObjectId.MkObjectId 2
+        moved = blackCreature {Filter.identity = Just now, Filter.beforeMoveView = Just blackCreature {Filter.identity = Just before}}
+    Spec.it s "asks the nest of what the candidate was, not of the candidate" $ do
+      Spec.assertBool s (Filter.matches self moved (Filter.Type.BeforeMove (Filter.Type.IsObject before))) "the earlier object"
+      Spec.assertBool s (not (Filter.matches self moved (Filter.Type.BeforeMove (Filter.Type.IsObject now)))) "not the object it is now"
+    Spec.it s "is false of a candidate no move made" $ do
+      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.BeforeMove (Filter.Type.And [])))) "no earlier object"
+    Spec.it s "reaches a slot and a word inside the nest" $ do
+      let slot = SlotName.MkSlotName (Text.pack "sacrificed")
+          nested = Filter.Type.BeforeMove (Filter.Type.IsBound slot)
+          swapped = Filter.rewrite [(TextWord.SubtypeWord Subtype.Aura, TextWord.SubtypeWord Subtype.Equipment)] (Filter.Type.BeforeMove (Filter.Type.HasSubtype Subtype.Aura))
+      Spec.assertEqWith s "the slot the nest names" (Filter.boundSlots nested) (Set.singleton slot)
+      Spec.assertEqWith s "baked in place" (Filter.bakeBound Map.empty (Map.singleton slot (Set.singleton before)) Map.empty nested) (Filter.Type.BeforeMove (Filter.Type.Or [Filter.Type.IsObject before]))
+      Spec.assertEqWith s "the subtype word is swapped" swapped (Filter.Type.BeforeMove (Filter.Type.HasSubtype Subtype.Equipment))
 
   Spec.describe s "MilledThisTurn" $ do
     Spec.it s "matches a view whose history says so" $ do

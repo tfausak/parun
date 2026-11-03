@@ -21,6 +21,7 @@ import qualified Parun.Types.ControlChanged as ControlChanged
 import qualified Parun.Types.Convoking as Convoking
 import qualified Parun.Types.CounterChange as CounterChange
 import qualified Parun.Types.Countering as Countering
+import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamagePrevented as DamagePrevented
@@ -32,7 +33,6 @@ import qualified Parun.Types.HalfUnlocked as HalfUnlocked
 import qualified Parun.Types.LandPlayed as LandPlayed
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
-import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.Looked as Looked
 import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
 import qualified Parun.Types.ManaAdded as ManaAdded
@@ -264,7 +264,7 @@ data GameEvent
     -- player pay. A reader asking "did this player lose life" must find all three.
     -- LifeGained below is the sibling rather than one "life total changed" arm,
     -- the two being distinct events for triggers.
-    LifeLost LifeLost.LifeLost
+    LifeLost LifeChange.LifeChange
   | -- | CR 119.3's other direction: a player GAINED life, and how much. Greater
     -- than 0, which CR 119.9 states outright. Recorded at both places a source
     -- causes a life total to go up: CR 119.3's instructed gain, and CR 120.3f's
@@ -285,14 +285,15 @@ data GameEvent
     -- mana ability, or one activated inside a die roll's window (Goblin Bookie)
     -- -- records none (#5733).
     AbilityActivated AbilityWasActivated.AbilityWasActivated
-  | -- | CR 122.6: one or more counters were PUT onto an object -- the object, the
-    -- kind, and the counts of that kind on it BEFORE and AFTER. The pair rather
+  | -- | CR 122.6: one or more counters were PUT onto an object -- who put them (CR
+    -- 122.6a), the object, the kind, and the counts of that kind on it BEFORE and
+    -- AFTER. The pair rather
     -- than one amount because CR 714.2b's chapter ability asks whether the number
     -- "was less than N and became at least N", a threshold crossing neither the
     -- amount nor the total alone can answer. Before is strictly less than after,
     -- a placement that landed nothing recording no event; removal is
     -- CountersRemoved below rather than the pair reversed.
-    CountersPut CounterChange.CounterChange
+    CountersPut CountersPlaced.CountersPlaced
   | -- | Counters were REMOVED from an object -- CountersPut's mirror, shaped the
     -- same way because CR 310.12b's Siege ability asks whether the LAST counter
     -- came off. Recorded by three paths: CR 120.3h's and CR 120.3c's damage to a

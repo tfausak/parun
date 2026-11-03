@@ -127,8 +127,8 @@ import qualified Parun.Types.TapState as TapState
 -- than a context built where there is none to build.
 --
 -- CR 122.6a's "may specify which player puts those counters on it" is not
--- carried. No effect in the pool names one, and the rule's own default -- the
--- object's controller -- is what putCounters already uses.
+-- carried: a rider's counters are always put by the rule's default, the object's
+-- controller.
 --
 -- `under` is CR 110.2a: the player the effect INSTRUCTS to put the object
 -- onto the battlefield, which by default is the resolving controller and for a

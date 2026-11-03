@@ -398,6 +398,7 @@ carth-the-lion
 case-of-the-gorgons-kiss
 case-of-the-pilfered-proof
 case-of-the-ransacked-lab
+cat-collector
 cathartic-reunion
 caustic-exhale
 caustic-tar
@@ -547,6 +548,7 @@ corsair-captain
 council-guardian
 councils-judgment
 count-on-luck
+courageous-goblin
 courtly-provocateur
 covetous-elegy
 cowardice
@@ -624,6 +626,7 @@ deadbeat-attendant
 deadeye-tracker
 deadlock-trap
 deadly-allure
+deadly-brew
 deadly-complication
 death-pit-offering
 death-wish
@@ -700,6 +703,7 @@ distress
 disturbed-slumber
 divine-deflection
 divine-intervention
+divine-resilience
 diviners-lockbox
 diviners-portent
 djinn-of-wishes
@@ -869,6 +873,7 @@ exalted-dragon
 excavating-anurid
 exchange-of-words
 excruciator
+exemplar-of-light
 exhaustion
 exhume
 exotic-disease
@@ -933,8 +938,10 @@ fevered-suspicion
 feywild-trickster
 field-of-the-dead
 fields-of-summer
+fiendish-panda
 fiendslayer-paladin
 fierce-retribution
+fiery-annihilation
 fiery-conclusion
 fiery-encore
 fiery-impulse
@@ -1125,6 +1132,7 @@ goblin-glory-chaser
 goblin-grenade
 goblin-kaboomist
 goblin-mutant
+goblin-negotiation
 goblin-rabblemaster
 goblin-recruiter
 goblin-ringleader
@@ -1940,6 +1948,7 @@ persuasion
 pest-infestation
 pestilent-cauldron-restorative-burst
 pestilent-haze
+pestilent-spirit
 petra-sphinx
 petrified-wood-kin
 phage-the-untouchable
@@ -2226,12 +2235,14 @@ rout
 rowdy-crew
 rowen
 ruhan-of-the-fomori
+ruby-daring-tracker
 ruinous-waterbending
 rukh-egg
 rule-of-law
 rumbling-crescendo
 rumor-gatherer
 run-afoul
+run-away-together
 rune-brand-juggler
 rune-of-flight
 rune-of-might
@@ -2882,6 +2893,7 @@ valley-rally
 valleymaker
 valorous-stance
 vampire-nocturnus
+vanguard-seraph
 vanish-into-eternity
 varolz-the-scar-striped
 varragoth-bloodsky-sire

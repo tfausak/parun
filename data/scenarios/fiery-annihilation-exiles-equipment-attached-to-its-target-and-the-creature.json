@@ -1,0 +1,44 @@
+{
+  "description": "Only an Equipment on the target creature can be targeted; the target goes to exile, not the graveyard, and the creature's other Equipment stays.",
+  "note": "The Scimitar leaves the 5/5 with toughness 4 when exiled first; the 5 damage is lethal either way, so the check is the exile. The refusals pair one attached to another creature with one attached to nothing.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Mountain", "label": "m2" },
+          { "card": "Mountain", "label": "m3" }
+        ],
+        "hand": [{ "card": "Fiery Annihilation", "label": "fa" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Air Elemental", "label": "v" },
+          { "card": "Leonin Scimitar", "label": "eq", "attached": "v" },
+          { "card": "Short Sword", "label": "other", "attached": "v" },
+          { "card": "Goblin Piker", "label": "p" },
+          { "card": "Bonesplitter", "label": "b", "attached": "p" },
+          { "card": "Vulshok Morningstar", "label": "loose" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Cast": { "object": "$fa", "targetsBySlot": { "creature": ["$v"], "equipment": ["$b"] }, "mana": ["$m1", "$m2", "$m3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Cast": { "object": "$fa", "targetsBySlot": { "creature": ["$v"], "equipment": ["$loose"] }, "mana": ["$m1", "$m2", "$m3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$fa", "targetsBySlot": { "creature": ["$v"], "equipment": ["$eq"] }, "mana": ["$m1", "$m2", "$m3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Exile", "card": "Leonin Scimitar", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Exile", "card": "Air Elemental", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Air Elemental", "count": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Short Sword", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "AttachedTo", "object": "$b", "is": "$p" } } }
+  ]
+}

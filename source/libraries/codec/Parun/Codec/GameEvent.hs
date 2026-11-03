@@ -26,6 +26,7 @@ import qualified Parun.Codec.ControlChanged as ControlChanged
 import qualified Parun.Codec.Convoking as Convoking
 import qualified Parun.Codec.CounterChange as CounterChange
 import qualified Parun.Codec.Countering as Countering
+import qualified Parun.Codec.CountersPlaced as CountersPlaced
 import qualified Parun.Codec.Crewing as Crewing
 import qualified Parun.Codec.DamageEvent as DamageEvent
 import qualified Parun.Codec.DamagePrevented as DamagePrevented
@@ -37,7 +38,6 @@ import qualified Parun.Codec.HalfUnlocked as HalfUnlocked
 import qualified Parun.Codec.LandPlayed as LandPlayed
 import qualified Parun.Codec.LeftTheGame as LeftTheGame
 import qualified Parun.Codec.LifeChange as LifeChange
-import qualified Parun.Codec.LifeLost as LifeLost
 import qualified Parun.Codec.Looked as Looked
 import qualified Parun.Codec.ManaAbilityResolved as ManaAbilityResolved
 import qualified Parun.Codec.ManaAdded as ManaAdded
@@ -102,10 +102,10 @@ codec =
       Arm.payload "VotesRevealed" (Common.seq Ballot.codec) GameEvent.VotesRevealed (\x -> case x of GameEvent.VotesRevealed y -> Just y; _ -> Nothing),
       Arm.payload "SpellCountered" Countering.codec GameEvent.SpellCountered (\x -> case x of GameEvent.SpellCountered y -> Just y; _ -> Nothing),
       Arm.payload "AbilityCountered" Countering.codec GameEvent.AbilityCountered (\x -> case x of GameEvent.AbilityCountered y -> Just y; _ -> Nothing),
-      Arm.payload "LifeLost" LifeLost.codec GameEvent.LifeLost (\x -> case x of GameEvent.LifeLost y -> Just y; _ -> Nothing),
+      Arm.payload "LifeLost" LifeChange.codec GameEvent.LifeLost (\x -> case x of GameEvent.LifeLost y -> Just y; _ -> Nothing),
       Arm.payload "LifeGained" LifeChange.codec GameEvent.LifeGained (\x -> case x of GameEvent.LifeGained y -> Just y; _ -> Nothing),
       Arm.payload "AbilityActivated" AbilityWasActivated.codec GameEvent.AbilityActivated (\x -> case x of GameEvent.AbilityActivated y -> Just y; _ -> Nothing),
-      Arm.payload "CountersPut" CounterChange.codec GameEvent.CountersPut (\x -> case x of GameEvent.CountersPut y -> Just y; _ -> Nothing),
+      Arm.payload "CountersPut" CountersPlaced.codec GameEvent.CountersPut (\x -> case x of GameEvent.CountersPut y -> Just y; _ -> Nothing),
       Arm.payload "CountersRemoved" CounterChange.codec GameEvent.CountersRemoved (\x -> case x of GameEvent.CountersRemoved y -> Just y; _ -> Nothing),
       Arm.payload "HalfUnlocked" HalfUnlocked.codec GameEvent.HalfUnlocked (\x -> case x of GameEvent.HalfUnlocked y -> Just y; _ -> Nothing),
       Arm.payload "TurnedFaceUp" TurnedFaceUp.codec GameEvent.TurnedFaceUp (\x -> case x of GameEvent.TurnedFaceUp y -> Just y; _ -> Nothing),

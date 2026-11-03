@@ -1,0 +1,96 @@
+{
+  "description": "Pestilent Spirit gives an instant deathtouch",
+  "note": "Flame Spill under alice's Spirit: 1 is lethal to a 0/8 (CR 120.4a), so 3 of the 4 go to bob and the 1 destroys the Wall.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Mountain",
+            "label": "m1"
+          },
+          {
+            "card": "Mountain",
+            "label": "m2"
+          },
+          {
+            "card": "Mountain",
+            "label": "m3"
+          },
+          {
+            "card": "Pestilent Spirit",
+            "label": "spirit"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Flame Spill",
+            "label": "spill"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Wall of Stone",
+            "label": "wall"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$spill",
+          "targets": [
+            "$wall"
+          ],
+          "mana": [
+            "$m1",
+            "$m2",
+            "$m3"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 17
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Graveyard",
+          "card": "Wall of Stone",
+          "count": 1
+        }
+      }
+    }
+  ]
+}

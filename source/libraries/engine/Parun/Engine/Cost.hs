@@ -2452,7 +2452,7 @@ exileCandidates slots pid oid criterion gs =
   let context = Projection.framedBy oid gs (Projection.contextWithSlots gs (Just pid) (Just oid) slots)
       viewOf = Projection.viewsOf gs
       matches candidate = Filter.matches context (viewOf candidate) criterion
-   in filter (\candidate -> not (Game.beingCast gs candidate) && matches candidate) (Game.zoneMembers Zone.Graveyard pid gs)
+   in filter (\candidate -> not (Game.beingCast gs candidate) && matches candidate) (Game.cardsIn Zone.Graveyard pid gs)
 
 -- The objects this player may exile to pay an ExileMaterials component on `oid`:
 -- CR 702.167a's "from among permanents you control and\/or cards in your

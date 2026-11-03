@@ -67,7 +67,6 @@ import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LifeChange as LifeChange
 import qualified Parun.Types.LifeDirection as LifeDirection
-import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import Parun.Types.Mana (Mana)
@@ -645,7 +644,7 @@ zoneMembers zone pid gs =
 -- Parun.Types.ObjectRef.TopOfGraveyard and Parun.Types.Scope.TopOf go
 -- through, so the card a Condition tests is the card the effect then moves.
 topOfGraveyard :: PlayerId -> GameState -> Maybe ObjectId
-topOfGraveyard pid gs = Maybe.listToMaybe (reverse (zoneMembers Zone.Graveyard pid gs))
+topOfGraveyard pid gs = Maybe.listToMaybe (reverse (cardsIn Zone.Graveyard pid gs))
 
 -- CR 401.2 / 404.1: the top card of a player's library, its FIRST member, or of
 -- their graveyard (topOfGraveyard). Nothing for every other zone: no rule orders
@@ -2700,6 +2699,14 @@ isToken oid gs = maybe False (sourceIsToken . Object.source) (lookupObject oid g
 isCardObject :: ObjectId -> GameState -> Bool
 isCardObject oid gs = maybe False (sourceIsCard . Object.source) (lookupObject oid gs)
 
+-- CR 108.2: the cards among a player's zone's members, where "card" is what the
+-- text says: a token awaiting CR 704.5d sits in the zone without being one.
+-- data/scenarios' deadly-brew-offers-no-token-a-thief-sacrificed,
+-- sutured-ghoul-exiles-no-token-polymorph-destroyed and
+-- superior-spider-man-copies-no-token-polymorph-destroyed prove it.
+cardsIn :: Zone.Zone -> PlayerId -> GameState -> [ObjectId]
+cardsIn zone pid gs = filter (`isCardObject` gs) (zoneMembers zone pid gs)
+
 -- isCardObject's question of a bare Source.
 sourceIsCard :: Source.Source -> Bool
 sourceIsCard source = case source of
@@ -3912,7 +3919,7 @@ lifeChangeOf direction event = case event of
   -- CR 119.3's other sign. A loss is not a negative gain: "the amount of life you
   -- gained this turn" is not reduced by life lost since, and a loss stays a loss
   -- whatever is gained after it (First Response's ruling, 2020-11-10).
-  GameEvent.LifeLost (LifeLost.MkLifeLost pid amount _) -> toward LifeDirection.Lost (LifeChange.MkLifeChange pid amount)
+  GameEvent.LifeLost change -> toward LifeDirection.Lost change
   GameEvent.Moved {} -> Nothing
   GameEvent.Discarded {} -> Nothing
   GameEvent.Drew {} -> Nothing
@@ -3981,7 +3988,7 @@ lifeChangeOf direction event = case event of
   GameEvent.TriggeredAbilityResolved _ -> Nothing
   GameEvent.CardArrived _ -> Nothing
   where
-    toward side (LifeChange.MkLifeChange pid amount) = if side == direction then Just (pid, amount) else Nothing
+    toward side (LifeChange.MkLifeChange pid amount _) = if side == direction then Just (pid, amount) else Nothing
 
 -- CR 119.3 / 608.2i: how much life this player gained or lost during the turn
 -- this log holds (turnLog). The log fold lifeChangeOf exists for.
