@@ -10,26 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Caribou Range: `_Permanent:HostPermanent`
-- Chub Toad: renders differently
-- Circle of Protection: Artifacts: `_Action:ChooseADamageSource`
-- Cockatrice: `_Action:CreateFutureTrigger`
-- Crumble: `_GameNumber:ManaValueOfPermanent`
-- Cursed Land: renders differently
-- Dandân: `_PermanentRule:CantAttackUnlessDefendingPlayer`
-- Dark Maze: `_PermanentRule:CanAttackAsThoughItDidntHaveDefender`
-- Detonate: `_Permanents:ManaValueIs`
-- Disintegrate: `_Action:If`
-- Divine Offering: `_GameNumber:ManaValueOfPermanent`
-- Dust to Dust: `_Action:Exile`
-- Dwarven Soldier: `_Trigger:Or`
-- Dwarven Warriors: `_Permanents:PowerIs`
-- Energy Flux: `_Rule:TriggerA`
-- Enervate: `_Action:CreateFutureTrigger`
-- Erg Raiders: `_Permanents:DidntAttackThisTurn`
-- Errantry: `_PermanentRule:CanOnlyAttackAlone`
-- Evil Presence: `_StaticLayerEffect:SetLandType`
-- Feedback: renders differently
 - Flare: `_Action:CreateFutureTrigger`
 - Foxfire: `_Action:CreatePreventDamageUntil`
 - Gloom: `_Rule:ActivatedAbilityEffect`
@@ -118,6 +98,8 @@ first.
   lets the damage through and copies it (CR 614).
 - #5990: Clockwork Beast; Clockwork Steed. A counter effect can't put up to X
   on, capped by a total, as `ChooseNumber.upTo` is fixed.
+- #5999: Errantry. Nothing lets a creature attack only with no other attacker
+  beside it; `CantAttackAlone` is the opposite direction.
 - #5177: Gauntlets of Chaos. No filter reads a shared card type with a sibling
   target.
 - #5462: Cloak of Confusion; Orcish Squatters. Nothing makes a creature assign

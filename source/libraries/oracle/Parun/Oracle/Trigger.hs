@@ -288,10 +288,11 @@ step s = case (StepBegins.phase s, StepBegins.ordinal s, StepBegins.scope s) of
   _ -> []
 
 -- | A step of a named player's turn: Soul Bleed's "the upkeep of enchanted
--- creature's controller", over the source slot.
+-- creature's controller", Cursed Land's of a land and Feedback's of an
+-- enchantment, over the source slot.
 namedPlayers :: String -> PlayerRef.PlayerRef -> [String]
 namedPlayers name ref = case ref of
-  PlayerRef.HolderOfBound Holder.Controller Hop.Host slot | slot == Target.selfSlot -> ["the " <> name <> " of enchanted creature's controller"]
+  PlayerRef.HolderOfBound Holder.Controller Hop.Host slot | slot == Target.selfSlot -> ["the " <> name <> " of enchanted " <> noun <> "'s controller" | noun <- ["creature", "land", "enchantment"]]
   _ -> []
 
 -- | The slots Parun.Engine.Binding binds a trigger event's objects and players
