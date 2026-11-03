@@ -569,7 +569,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.Draw payload -> Zones.draw resolving source controller legal payload
   Effect.Mill payload -> Zones.mill resolving source controller legal payload
   Effect.Reveal payload -> Zones.reveal resolving source controller legal chosen payload
-  Effect.LookAt payload -> Zones.lookAt resolving source controller legal payload
+  Effect.LookAt payload -> Zones.lookAt resolving source controller legal chosen payload
   Effect.ArrangeInLibrary payload -> Zones.arrangeInLibrary resolving source controller legal payload
   Effect.Scry payload -> Zones.scry resolving source controller legal payload
   Effect.Surveil payload -> Zones.surveil resolving source controller legal payload

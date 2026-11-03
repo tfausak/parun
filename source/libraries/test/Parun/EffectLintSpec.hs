@@ -1553,7 +1553,8 @@ effectObjectRefs effect =
         -- Blackmail's "target player reveals three cards from their hand" asks
         -- the hand's owner.
         Effect.Reveal (Reveal.MkReveal ref _) -> [(AnyCardsFromAmong : CardInHand : shownQuestions, ref)]
-        Effect.LookAt (LookAt.MkLookAt ref _ _) -> read_ [ref]
+        -- Urza's Bauble's "a card at random in target player's hand" asks here.
+        Effect.LookAt (LookAt.MkLookAt ref _ _) -> [([RandomInHand], ref)]
         -- Master of Predicaments' "choose a card in your hand" asks here.
         Effect.Guess (Guess.MkGuess subject _ _ _ _) -> [([CardInHand], subject)]
         Effect.Scry {} -> []
