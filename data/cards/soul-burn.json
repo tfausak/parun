@@ -1,0 +1,187 @@
+{
+  "faces": [
+    {
+      "castingRestrictions": [
+        {
+          "type": "SpendOnlyOnX",
+          "value": {
+            "type": "Hybrid",
+            "value": {
+              "left": {
+                "type": "Colored",
+                "value": {
+                  "type": "Black"
+                }
+              },
+              "right": {
+                "type": "Colored",
+                "value": {
+                  "type": "Red"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Variable"
+        },
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Soul Burn",
+      "oracleText": "Spend only black and/or red mana on X.\nSoul Burn deals X damage to any target. You gain life equal to the damage dealt, but not more than the amount of {B} spent on X, the player's life total before the damage was dealt, the planeswalker's loyalty before the damage was dealt, or the creature's toughness.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "BindAmount",
+                    "value": {
+                      "quantity": {
+                        "type": "LifeTotal",
+                        "value": {
+                          "type": "InSlot",
+                          "value": "target"
+                        }
+                      },
+                      "slot": "life"
+                    }
+                  },
+                  {
+                    "type": "BindAmount",
+                    "value": {
+                      "quantity": {
+                        "type": "AgainstSlot",
+                        "value": {
+                          "quantity": {
+                            "type": "Measure",
+                            "value": {
+                              "type": "Loyalty"
+                            }
+                          },
+                          "slot": "target"
+                        }
+                      },
+                      "slot": "loyalty"
+                    }
+                  },
+                  {
+                    "type": "BindAmount",
+                    "value": {
+                      "quantity": {
+                        "type": "AgainstSlot",
+                        "value": {
+                          "quantity": {
+                            "type": "Measure",
+                            "value": {
+                              "type": "Toughness"
+                            }
+                          },
+                          "slot": "target"
+                        }
+                      },
+                      "slot": "toughness"
+                    }
+                  },
+                  {
+                    "type": "DealDamage",
+                    "value": {
+                      "parts": [
+                        {
+                          "quantity": {
+                            "type": "InSlot",
+                            "value": "X"
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "target"
+                          }
+                        }
+                      ],
+                      "tally": "dealt"
+                    }
+                  },
+                  {
+                    "type": "GainLife",
+                    "value": {
+                      "player": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "You"
+                        }
+                      },
+                      "quantity": {
+                        "type": "AtMost",
+                        "value": {
+                          "limits": [
+                            {
+                              "type": "ManaSpent",
+                              "value": {
+                                "type": "OfTypeOnX",
+                                "value": {
+                                  "type": "Colored",
+                                  "value": {
+                                    "type": "Black"
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "type": "InSlot",
+                              "value": "life"
+                            },
+                            {
+                              "type": "InSlot",
+                              "value": "loyalty"
+                            },
+                            {
+                              "type": "InSlot",
+                              "value": "toughness"
+                            }
+                          ],
+                          "quantity": {
+                            "type": "InSlot",
+                            "value": "dealt"
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "target": {
+                "pool": {
+                  "type": "AnyTarget"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

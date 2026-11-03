@@ -90,7 +90,6 @@ import qualified Parun.Types.Claim as Claim.Type
 import qualified Parun.Types.ClaimAxis as ClaimAxis
 import qualified Parun.Types.Clause as Clause
 import qualified Parun.Types.ClauseIndex as ClauseIndex
-import qualified Parun.Types.Color as Color
 import Parun.Types.Cost (Cost)
 import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.CostAdjustments as CostAdjustments
@@ -1423,9 +1422,10 @@ totalManas adjustments =
 
 -- CR 601.2h: Consume Spirit's "Spend only black mana on X", laid onto a cost
 -- `totalled` from `untotalled` (X substituted, CR 601.2f not yet applied): as much
--- of its generic mana as X still accounts for becomes one symbol of that colour
--- per mana. Only a TOTALLED cost is changed, so nothing upstream -- the mana
--- value, a reduction, an added component -- reads the symbols.
+-- of its generic mana as X still accounts for becomes one confinement symbol per
+-- mana -- {B} for Consume Spirit, {B/R} for Soul Burn's "black and/or red".
+-- Only a TOTALLED cost is changed, so nothing upstream -- the mana value, a
+-- reduction, an added component -- reads the symbols.
 --
 -- A reduction comes off the X first, since Drain Life's ruling lets it reduce
 -- the X part and every payment the other split allows this one allows too, so
@@ -1439,15 +1439,36 @@ totalManas adjustments =
 -- "an ability that can only be activated by spending another color of mana".
 -- data/scenarios/cost's "Chromatic Orrery lets green mana pay Consume Spirit's
 -- black-only X" proves it.
-confineX :: Maybe Color.Color -> Natural -> CostAdjustments.CostAdjustments -> ManaCost.ManaCost -> ManaCost.ManaCost -> ManaCost.ManaCost
+confineX :: Maybe ManaSymbol.ManaSymbol -> Natural -> CostAdjustments.CostAdjustments -> ManaCost.ManaCost -> ManaCost.ManaCost -> ManaCost.ManaCost
 confineX confinement x adjustments untotalled totalled = case confinement of
   Nothing -> totalled
-  Just color ->
-    let generic = sum . fmap genericOf . ManaCost.unwrap
-        increased = applyAdjustments adjustments {CostAdjustments.reductions = []} untotalled
-        reduced = Natural.minusSaturating (generic increased) (generic totalled)
-        confined = min (generic totalled) (Natural.minusSaturating x reduced)
-     in ManaCost.MkManaCost (ManaCost.unwrap (withoutMana (ManaSymbol.Generic 0) confined totalled) <> List.genericReplicate confined (ManaSymbol.OfType (ManaType.Colored color)))
+  Just _ -> let (rest, onX) = splitX confinement x adjustments untotalled totalled in ManaCost.MkManaCost (ManaCost.unwrap rest <> ManaCost.unwrap onX)
+
+-- confineX's two halves: the rest of the total, and the part X still accounts
+-- for -- one confinement symbol per mana, or that much generic mana where
+-- nothing confines X. What Mana.xShares splits the spent mana by.
+splitX :: Maybe ManaSymbol.ManaSymbol -> Natural -> CostAdjustments.CostAdjustments -> ManaCost.ManaCost -> ManaCost.ManaCost -> (ManaCost.ManaCost, ManaCost.ManaCost)
+splitX confinement x adjustments untotalled totalled =
+  let generic = sum . fmap genericOf . ManaCost.unwrap
+      increased = applyAdjustments adjustments {CostAdjustments.reductions = []} untotalled
+      reduced = Natural.minusSaturating (generic increased) (generic totalled)
+      onX = min (generic totalled) (Natural.minusSaturating x reduced)
+   in ( withoutMana (ManaSymbol.Generic 0) onX totalled,
+        ManaCost.MkManaCost (maybe [ManaSymbol.Generic onX] (List.genericReplicate onX) confinement)
+      )
+
+-- CR 107.3 / 601.2h: Object.manaSpentOnX for `oid`, once its payment has
+-- settled -- the shares of what it records as spent that could have paid the
+-- `onX` half of a total split by `splitX`. Under the clauses that payment was
+-- made under (CR 609.4b), read off the board it settled on. Nothing to write
+-- for a cost with no X.
+recordXShares :: PaymentSubject.PaymentSubject -> PlayerId -> ObjectId -> Maybe (ManaCost.ManaCost, ManaCost.ManaCost) -> GameState -> GameState
+recordXShares subject pid oid split gs = case split of
+  Nothing -> gs
+  Just (rest, onX) ->
+    let clauses = PlayerEffect.spendManaAsThoughFor pid subject gs
+        record o = o {Object.manaSpentOnX = Just (Mana.xShares clauses rest onX (Object.manaSpent o))}
+     in gs {GameState.objects = Map.adjust record oid (GameState.objects gs)}
 
 -- CR 702.51b / 702.66b / 702.126b: the ways a keyword on this object lets part of
 -- an already TOTALLED mana cost be paid by spending something else -- tapping a

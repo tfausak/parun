@@ -1,9 +1,9 @@
 module Parun.Types.CastingRestriction where
 
 import Numeric.Natural (Natural)
-import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.DuringPhase as DuringPhase
+import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.TurnScope as TurnScope
 
@@ -111,8 +111,9 @@ data CastingRestriction
     NotDuringFirstTurns Natural
   | -- | CR 601.3: castable only if this condition holds (Illusory Angel).
     OnlyIf Condition.Condition
-  | -- | CR 601.2h: only mana of this colour may pay for the spell's X -- Consume
-    -- Spirit's "Spend only black mana on X". A payment rule, not a gate:
-    -- Parun.Engine.Cost.confineX reads it.
-    SpendOnlyOnX Color.Color
+  | -- | CR 601.2h: each mana spent on the spell's X pays as this symbol -- {B}
+    -- for Consume Spirit's "Spend only black mana on X", {B/R} for Soul Burn's
+    -- "black and/or red". A payment rule, not a gate: Parun.Engine.Cost.confineX
+    -- reads it.
+    SpendOnlyOnX ManaSymbol.ManaSymbol
   deriving (Eq, Ord, Show)

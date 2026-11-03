@@ -20,6 +20,7 @@ import qualified Parun.Codec.KeywordDesignator as KeywordDesignator
 import qualified Parun.Codec.KeywordFamily as KeywordFamily
 import qualified Parun.Codec.LifeTally as LifeTally
 import qualified Parun.Codec.ManaCount as ManaCount
+import qualified Parun.Codec.ManaSpent as ManaSpent
 import qualified Parun.Codec.Measure as Measure
 import qualified Parun.Codec.PlayerCounterTally as PlayerCounterTally
 import qualified Parun.Codec.PlayerDesignationTally as PlayerDesignationTally
@@ -132,7 +133,7 @@ codec =
       Arm.nullary "ChosenColorsItIs" Quantity.ChosenColorsItIs,
       -- CR 202.1a's amount, nothing on the wire for the same reason: the object is
       -- whichever one the quantity is evaluated against.
-      Arm.nullary "ManaSpent" Quantity.ManaSpent,
+      Arm.payload "ManaSpent" ManaSpent.codec Quantity.ManaSpent (\x -> case x of Quantity.ManaSpent y -> Just y; _ -> Nothing),
       -- CR 111.6's status and CR 508.1k / 509.1g's two combat facts, all with
       -- nothing on the wire for WasForetold's reason: the object is whichever one the
       -- quantity is evaluated against.

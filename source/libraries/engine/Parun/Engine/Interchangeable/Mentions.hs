@@ -2631,7 +2631,7 @@ quantityNames asking x = case x of
   Quantity.TagWasSpent _productionTag -> mempty
   Quantity.TagWasSpentOfOwnColor _productionTag -> mempty
   Quantity.ChosenColorsItIs -> mempty
-  Quantity.ManaSpent -> mempty
+  Quantity.ManaSpent _ -> mempty
   Quantity.WasToken -> mempty
   Quantity.WasAttacking -> mempty
   Quantity.WasBlocking -> mempty

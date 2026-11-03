@@ -37,6 +37,7 @@ import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeTally as LifeTally
 import qualified Parun.Types.LoyaltyKind as LoyaltyKind
 import qualified Parun.Types.ManaCost as ManaCost
+import qualified Parun.Types.ManaSpent as ManaSpent
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
@@ -420,13 +421,13 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       Quantity.codec
       (Quantity.TagWasSpentOfOwnColor ProductionTag.Snow)
       " {\"type\":\"TagWasSpentOfOwnColor\",\"value\":{\"type\":\"Snow\"}} "
-  -- CR 202.1a's amount, nothing on the wire for WasForetold's reason.
+  -- CR 202.1a's amount.
   Spec.it s "ManaSpent" $
     Common.assertCodec
       s
       Quantity.codec
-      Quantity.ManaSpent
-      " {\"type\":\"ManaSpent\"} "
+      (Quantity.ManaSpent ManaSpent.Total)
+      " {\"type\":\"ManaSpent\",\"value\":{\"type\":\"Total\"}} "
   -- CR 111.6 and CR 509.1g, with nothing on the wire for WasForetold's reason: the
   -- object is whichever one the quantity is evaluated against.
   Spec.it s "WasToken" $

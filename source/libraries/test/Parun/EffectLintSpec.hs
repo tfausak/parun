@@ -528,7 +528,7 @@ printedBoxQuantity quantity = case quantity of
   Quantity.Type.TagWasSpent {} -> False
   Quantity.Type.TagWasSpentOfOwnColor {} -> False
   Quantity.Type.ChosenColorsItIs -> False
-  Quantity.Type.ManaSpent -> False
+  Quantity.Type.ManaSpent _ -> False
   Quantity.Type.WasToken -> False
   Quantity.Type.WasAttacking -> False
   Quantity.Type.WasBlocking -> False

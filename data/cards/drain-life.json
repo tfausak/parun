@@ -5,7 +5,13 @@
         {
           "type": "SpendOnlyOnX",
           "value": {
-            "type": "Black"
+            "type": "OfType",
+            "value": {
+              "type": "Colored",
+              "value": {
+                "type": "Black"
+              }
+            }
           }
         }
       ],

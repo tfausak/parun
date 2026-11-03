@@ -23,6 +23,7 @@ import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
 import qualified Parun.Types.LifeTally as LifeTally
 import qualified Parun.Types.ManaCount as ManaCount
+import qualified Parun.Types.ManaSpent as ManaSpent
 import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.PlayerCounterTally as PlayerCounterTally
 import qualified Parun.Types.PlayerDesignationTally as PlayerDesignationTally
@@ -203,8 +204,9 @@ data Quantity
     --
     -- The COUNT of units where TagWasSpent above asks after one unit's
     -- classification; both read Parun.Types.Object.manaSpent through
-    -- Parun.Engine.Filter's view.
-    ManaSpent
+    -- Parun.Engine.Filter's view. The payload narrows it to the mana spent on
+    -- X (Parun.Types.ManaSpent).
+    ManaSpent ManaSpent.ManaSpent
   | -- | CR 111.6 / 608.2h: 1 if the object this quantity is evaluated against
     -- was a token, else 0.
     WasToken

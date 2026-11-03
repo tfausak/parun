@@ -732,6 +732,7 @@ dragons-hoard
 dragons-prey
 dragonskull-summit
 dragonstorm-globe
+drain-life
 drain-power
 drake-hatcher
 drakuseth-maw-of-flames
@@ -2447,6 +2448,7 @@ sorcerous-sight
 sorcerous-spyglass
 sorin-markov
 sorrows-path
+soul-burn
 soul-conduit
 soul-diviner
 soul-foundry

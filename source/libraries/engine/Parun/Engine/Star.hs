@@ -63,7 +63,7 @@ substituteStar star quantity = case quantity of
   Quantity.TagWasSpent {} -> quantity
   Quantity.TagWasSpentOfOwnColor {} -> quantity
   Quantity.ChosenColorsItIs -> quantity
-  Quantity.ManaSpent -> quantity
+  Quantity.ManaSpent _ -> quantity
   Quantity.WasToken -> quantity
   Quantity.WasAttacking -> quantity
   Quantity.WasBlocking -> quantity
