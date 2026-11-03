@@ -22,6 +22,7 @@ substituteStar star quantity = case quantity of
   -- No card prints one under anything but a Plus -- Malignus' star is the whole
   -- P/T box and its CDA carries the halving.
   Quantity.Arithmetic arithmetic -> Quantity.Arithmetic (fmap (substituteStar star) arithmetic)
+  Quantity.AtMost atMost -> Quantity.AtMost (fmap (substituteStar star) atMost)
   Quantity.Literal _ -> quantity
   Quantity.Measure _ -> quantity
   Quantity.Intensity -> quantity
@@ -62,12 +63,12 @@ substituteStar star quantity = case quantity of
   Quantity.TagWasSpent {} -> quantity
   Quantity.TagWasSpentOfOwnColor {} -> quantity
   Quantity.ChosenColorsItIs -> quantity
-  Quantity.ManaSpent -> quantity
+  Quantity.ManaSpent _ -> quantity
   Quantity.WasToken -> quantity
   Quantity.WasAttacking -> quantity
   Quantity.WasBlocking -> quantity
   Quantity.WasBlockedThisTurn -> quantity
-  Quantity.ControlGainedSinceLastUpkeep _ -> quantity
+  Quantity.ControlGained _ _ -> quantity
   Quantity.PlayedBy _ -> quantity
   Quantity.DamageDealtThisTurn _ -> quantity
   Quantity.OpponentsAttacked _ -> quantity
@@ -121,6 +122,7 @@ containsStar :: Quantity -> Bool
 containsStar quantity = case quantity of
   Quantity.Star -> True
   Quantity.Arithmetic arithmetic -> any containsStar arithmetic
+  Quantity.AtMost atMost -> any containsStar atMost
   -- No descent into a Count, nor into AgainstSlot or AgainstExiledPile:
   -- CR 208.2a's star is a printed box's own symbol, and each of those three
   -- reads its payload against ANOTHER object, where a star would be that

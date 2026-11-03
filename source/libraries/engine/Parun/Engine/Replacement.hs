@@ -836,12 +836,12 @@ matchesPrinted viewOf gs event candidate =
         -- every other row modifying the same entry. What it scales is the PENDING
         -- count; see GameState.enteringCounters.
         --
-        -- The cause is synthesized as the one the entry counters WOULD have been
-        -- placed under -- CR 122.6a's default putter, the object's controller --
-        -- so matchesPutter still parts Vorinclex's "if you would put" from CR
-        -- 614.16's "if an effect would put" (#847). Reading it off the flush
-        -- rather than off the event is what keeps the two levels answering alike.
-        -- Not implemented: tribute naming its opponent as the putter (#5976).
+        -- The cause is synthesized per share as the one the flush will place it
+        -- under (enteringPutter), so matchesPutter still parts Vorinclex's "if
+        -- you would put" from CR 614.16's "if an effect would put" (#847), and a
+        -- share CR 702.104a's opponent puts answers to that opponent's "you".
+        -- Reading it off the flush rather than off the event is what keeps the
+        -- two levels answering alike.
         --
         -- CR 614.12, as in the entry arm below: a row naming a general subset
         -- does not apply to its own source entering (Conclave Mentor's, Pir's and
@@ -850,14 +850,10 @@ matchesPrinted viewOf gs event candidate =
         -- proves it. `confinedToSource` is the rule's other half: no pool row
         -- confines itself, so nothing observes it.
         (ReplacementEffect.CounterR (CounterR.MkCounterR pat _), ProposedEvent.WouldEnter oid) ->
-          case Projection.controllerOf oid gs of
-            Nothing -> False
-            Just putter ->
-              not (Map.null (matchingEnteringCounters gs pat oid))
-                && matchesPutter gs candidate (CounterPattern.subject pat) (CounterCause.ByEffect putter)
-                && matchesController gs candidate (CounterPattern.whose pat) oid
-                && matchesPermanent viewOf gs Nothing Map.empty Nothing (CounterPattern.onWhat pat) oid
-                && (src /= oid || confinedToSource (CounterPattern.onWhat pat))
+          not (Map.null (matchingEnteringCounters gs candidate pat oid))
+            && matchesController gs candidate (CounterPattern.whose pat) oid
+            && matchesPermanent viewOf gs Nothing Map.empty Nothing (CounterPattern.onWhat pat) oid
+            && (src /= oid || confinedToSource (CounterPattern.onWhat pat))
         -- CR 109.5: "under YOUR control" -- the tokens' controller against the
         -- candidate's "you". No producer today names an opponent here.
         --
@@ -878,17 +874,17 @@ matchesPrinted viewOf gs event candidate =
         --
         -- The event's PlayerId is the ACTIVE player, which is also whose step
         -- this is: every step and phase in a turn belongs to the player whose
-        -- turn it is, or to their team (CR 805.4). So Fatigue is `whosePhase ==
-        -- Just that player`, widened to the team by the paragraph below, and
-        -- Nothing is Eon Hub's symmetric skip, which reads no PlayerId at all.
-        -- The SOURCE's controller is not consulted: unlike matchesController's
-        -- CR 109.5 "you", the player here was named by the effect, not derived.
+        -- turn it is, or to their team (CR 805.4). So Fatigue is `whosePhase`
+        -- Among that player, Necropotence is Related You (CR 109.5, the row's
+        -- controller), and Eon Hub is Related AnyPlayer.
         --
         -- CR 805.8: under the shared team turns option a skip naming any player
         -- on the active team is that team's, so a teammate's row matches too.
         (ReplacementEffect.PhaseR pat, ProposedEvent.WouldBeginPhase selector pid) ->
           PhasePattern.whichPhase pat == selector
-            && maybe True (Turn.sharesTurn gs pid) (PhasePattern.whosePhase pat)
+            && any
+              (\other -> Turn.sharesTurn gs pid other && matchesPlayer gs candidate (PhasePattern.whosePhase pat) other)
+              (GameState.turnOrder gs)
         -- CR 614.1c-d: which entering permanents this replacement watches, as a
         -- Filter over the entering object (see Parun.Types.ReplacementEffect).
         -- 614.1c's self-scope is Filter.IsSource; 614.1d's is a characteristic
@@ -1329,7 +1325,7 @@ admitsEntry gs oid rewrite = case rewrite of
   -- (Parun.Engine.Projection.intrinsicReplacementsOf), since CR 118.13a's
   -- announcement is recorded on the SPELL and this function is handed the
   -- permanent.
-  EntryRewrite.Compleated _ -> Map.findWithDefault 0 CounterKind.Loyalty (enteringCountersOf gs oid) > 0
+  EntryRewrite.Compleated _ -> any ((> 0) . Map.findWithDefault 0 CounterKind.Loyalty) (enteringCountersOf gs oid)
   -- CR 702.104a states no condition at all: the ability functions as the creature
   -- enters, and both of the questions it asks are players'.
   EntryRewrite.Tribute _ -> True
@@ -1889,20 +1885,30 @@ matchesTokenLot gs context filter_ pid lot =
            in (Projection.viewOfCardLapsed (clausesOf (Projection.printedAbilitiesOf face)) face) {Filter.controller = Just pid, Filter.token = True}
    in Filter.matches context view filter_
 
--- The counters `oid` is so far entering with, empty outside an entry (see
--- GameState.enteringCounters).
-enteringCountersOf :: GameState -> ObjectId -> Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural
+-- The counters `oid` is so far entering with, by putter, empty outside an entry
+-- (see GameState.enteringCounters).
+enteringCountersOf :: GameState -> ObjectId -> Map.Map (Maybe PlayerId) (Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural)
 enteringCountersOf gs oid = Map.findWithDefault Map.empty oid (GameState.enteringCounters gs)
 
--- Those of them a pattern's kind admits. CR 614.16's rows name no kind (Doubling
+-- CR 122.6a: the player putting one share of them -- the one the effect named,
+-- else the object's controller.
+enteringPutter :: GameState -> ObjectId -> Maybe PlayerId -> Maybe PlayerId
+enteringPutter gs oid named = named Applicative.<|> Projection.controllerOf oid gs
+
+-- Those of them a row's pattern admits: the shares whose putter its subject
+-- admits, each cut to the kind it names. CR 614.16's rows name no kind (Doubling
 -- Season doubles any counter), and `whichKind = Nothing` is this module's "any
--- kind" for the reason the WouldPutCounters arm gives.
-matchingEnteringCounters :: GameState -> CounterPattern.CounterPattern -> ObjectId -> Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural
-matchingEnteringCounters gs pat oid =
-  let pending = enteringCountersOf gs oid
-   in case CounterPattern.whichKind pat of
-        Nothing -> pending
-        Just kind -> Map.filterWithKey (\k _ -> k == kind) pending
+-- kind" for the reason the WouldPutCounters arm gives. No empty share is kept.
+matchingEnteringCounters :: GameState -> ReplacementCandidate -> CounterPattern.CounterPattern -> ObjectId -> Map.Map (Maybe PlayerId) (Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural)
+matchingEnteringCounters gs candidate pat oid =
+  Map.filter (not . Map.null) (Map.mapWithKey admitted (enteringCountersOf gs oid))
+  where
+    admitted named pending
+      | maybe False (matchesPutter gs candidate (CounterPattern.subject pat) . CounterCause.ByEffect) (enteringPutter gs oid named) =
+          case CounterPattern.whichKind pat of
+            Nothing -> pending
+            Just kind -> Map.filterWithKey (\k _ -> k == kind) pending
+      | otherwise = Map.empty
 
 -- CR 614.1a: apply a scaling to a number. "Plus one" and "twice that many" are
 -- the same operation with different data, and so is Furnace of Rath's doubling
@@ -2396,9 +2402,8 @@ readsApplier re = case re of
   ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _ _ PlaneswalkRewrite.ArrangeTopTwo) -> False
   -- GameLossR's answer, and for its reason.
   ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _ _ (PlaneswalkRewrite.RunEffects _)) -> True
-  -- CR 614.10: a skip replaces the step or phase with nothing. The player it is
-  -- ABOUT is baked into PhasePattern.whosePhase, on the EFFECT, where this
-  -- comparison already sees it.
+  -- CR 614.10: a skip replaces the step or phase with nothing, whoever applies it;
+  -- whether a row's "you" is the player it is ABOUT was settled by `applies`.
   ReplacementEffect.PhaseR _ -> False
 
 -- CR 614.6: does applying this effect replace a coin flip with a die roll or a
@@ -4377,13 +4382,13 @@ installTurnSkips entry gs =
                         { PhasePattern.whichPhase = selector,
                           -- The turn's taker, which for a step or phase OF that
                           -- turn is also whose step it is (see PhasePattern).
-                          PhasePattern.whosePhase = Just (ExtraTurn.taker entry)
+                          PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton (ExtraTurn.taker entry))
                         },
                   -- CR 113.7: the source of the effect that created the turn.
                   ActiveReplacement.source = ExtraTurn.source entry,
-                  -- CR 109.5's "you" for this row. Nothing reads it: a PhaseR
-                  -- names its player outright and has no ControllerRelation to
-                  -- resolve. The TAKER rather than the effect's controller,
+                  -- CR 109.5's "you" for this row. Nothing reads it: Among
+                  -- names its player outright, relationHolds asking the "you"
+                  -- only of Related. The TAKER rather than the effect's controller,
                   -- because these skips ride the turn (see Parun.Types.ExtraTurn)
                   -- and the effect that created it is long gone by the time the
                   -- turn begins.

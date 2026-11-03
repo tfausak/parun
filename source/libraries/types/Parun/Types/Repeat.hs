@@ -14,9 +14,17 @@ data Repeat effect = MkRepeat
     chooser :: PlayerRef.PlayerRef,
     -- | The process, run in written order (CR 608.2c) before each ask.
     body :: Seq.Seq effect,
-    -- | CR 706.3c: what must hold, after a run, for the ask to be made at all
-    -- -- Delina, Wild Mage's "15--20 | ... You may roll again". Absent asks
-    -- every time.
-    gate :: Maybe Condition.Condition
+    -- | CR 706.3c: what must hold, after a run, for the chooser to be asked --
+    -- Delina, Wild Mage's "15--20 | ... You may roll again". Absent asks every
+    -- time.
+    gate :: Maybe Condition.Condition,
+    -- | Who is asked instead when the gate fails -- Game of Chaos's "that
+    -- player decides". Absent ends the loop unasked. Read only beside a gate;
+    -- Parun.EffectLintSpec rejects one without.
+    otherChooser :: Maybe PlayerRef.PlayerRef,
+    -- | What going again does before the next run, in written order -- Game of
+    -- Chaos's "double the life stakes". A slot only this binds survives the
+    -- per-run rescope.
+    ifAgain :: Seq.Seq effect
   }
   deriving (Eq, Ord, Show)

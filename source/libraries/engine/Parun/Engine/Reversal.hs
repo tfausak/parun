@@ -108,7 +108,7 @@ withoutAnnouncement before entry closed = do
   enteredFrom <- mapOf GameState.enteredFrom
   enteringPending <- mapOf GameState.enteringPending
   refusedEntries <- one GameState.refusedEntries
-  enteringCounters <- mapOfMaps GameState.enteringCounters
+  enteringCounters <- mapOfMapsOfMaps GameState.enteringCounters
   copyExceptionCounters <- mapOfMaps GameState.copyExceptionCounters
   playerEffects <- listOf GameState.playerEffects
   blockRequirements <- listOf GameState.blockRequirements
@@ -329,6 +329,8 @@ withoutAnnouncement before entry closed = do
     mapOf field = mapWith leaf (field before) (field entry) (field closed)
     mapOfMaps :: (Ord k, Ord j, Eq v) => (GameState -> Map.Map k (Map.Map j v)) -> Maybe (Map.Map k (Map.Map j v))
     mapOfMaps field = mapWith (mapWith leaf) (field before) (field entry) (field closed)
+    mapOfMapsOfMaps :: (Ord k, Ord j, Ord i, Eq v) => (GameState -> Map.Map k (Map.Map j (Map.Map i v))) -> Maybe (Map.Map k (Map.Map j (Map.Map i v)))
+    mapOfMapsOfMaps field = mapWith (mapWith (mapWith leaf)) (field before) (field entry) (field closed)
     mapOfSets :: (Ord k, Ord v) => (GameState -> Map.Map k (Set.Set v)) -> Maybe (Map.Map k (Set.Set v))
     mapOfSets field = mapWith members (field before) (field entry) (field closed)
     setOf :: (Ord a) => (GameState -> Set.Set a) -> Maybe (Set.Set a)
@@ -428,7 +430,7 @@ objectWith before entry closed = do
   phyrexianLifePaid <- field Object.phyrexianLifePaid
   manaSpent <- field Object.manaSpent
   announcedX <- field Object.announcedX
-  manaCostPaid <- field Object.manaCostPaid
+  manaSpentOnX <- field Object.manaSpentOnX
   castFrom <- field Object.castFrom
   castBy <- field Object.castBy
   castUsing <- field Object.castUsing
@@ -496,7 +498,7 @@ objectWith before entry closed = do
         Object.phyrexianLifePaid = phyrexianLifePaid,
         Object.manaSpent = manaSpent,
         Object.announcedX = announcedX,
-        Object.manaCostPaid = manaCostPaid,
+        Object.manaSpentOnX = manaSpentOnX,
         Object.castFrom = castFrom,
         Object.castBy = castBy,
         Object.castUsing = castUsing,

@@ -8,8 +8,10 @@ import qualified Parun.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Parun.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Parun.Types.AgainstSlot as AgainstSlot
 import qualified Parun.Types.Arithmetic as Arithmetic
+import qualified Parun.Types.AtMost as AtMost
 import qualified Parun.Types.CastFrom as CastFrom
 import qualified Parun.Types.CompletedDungeon as CompletedDungeon
+import qualified Parun.Types.ControlWindow as ControlWindow
 import qualified Parun.Types.Count as Count
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.DamageDirection as DamageDirection
@@ -22,6 +24,7 @@ import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
 import qualified Parun.Types.LifeTally as LifeTally
 import qualified Parun.Types.ManaCount as ManaCount
+import qualified Parun.Types.ManaSpent as ManaSpent
 import qualified Parun.Types.Measure as Measure
 import qualified Parun.Types.PlayerCounterTally as PlayerCounterTally
 import qualified Parun.Types.PlayerDesignationTally as PlayerDesignationTally
@@ -101,6 +104,9 @@ data Quantity
     Star
   | -- | CR 107.1: a calculation over inner quantities; see Parun.Types.Arithmetic.
     Arithmetic (Arithmetic.Arithmetic Quantity)
+  | -- | CR 107.1: the value, lowered to each limit that names a number; see
+    -- Parun.Types.AtMost.
+    AtMost (AtMost.AtMost Quantity)
   | -- | A quantity that counts game state (CR 208.2a, CR 608.2h); see
     -- Parun.Types.Count. The payload is `Count Quantity` so Aggregation.Greatest
     -- recurses through the data rather than a module cycle.
@@ -199,8 +205,9 @@ data Quantity
     --
     -- The COUNT of units where TagWasSpent above asks after one unit's
     -- classification; both read Parun.Types.Object.manaSpent through
-    -- Parun.Engine.Filter's view.
-    ManaSpent
+    -- Parun.Engine.Filter's view. The payload narrows it to the mana spent on
+    -- X (Parun.Types.ManaSpent).
+    ManaSpent ManaSpent.ManaSpent
   | -- | CR 111.6 / 608.2h: 1 if the object this quantity is evaluated against
     -- was a token, else 0.
     WasToken
@@ -218,10 +225,10 @@ data Quantity
     -- last sentence here: the blocker leaving combat before the death does not
     -- take the answer away.
     WasBlockedThisTurn
-  | -- | CR 702.30a / 608.2h: 1 if the player that reference names came to
-    -- control the object this quantity is evaluated against since the beginning
-    -- of that player's last upkeep, else 0.
-    ControlGainedSinceLastUpkeep PlayerRef.PlayerRef
+  | -- | CR 702.30a / 110.2 / 608.2h: 1 if the player that reference names came
+    -- to control the object this quantity is evaluated against within that
+    -- window, else 0.
+    ControlGained ControlWindow.ControlWindow PlayerRef.PlayerRef
   | -- | CR 305.1 / 601.2a: 1 if the player that reference names played the
     -- object this quantity is evaluated against, else 0, read off
     -- GameState.cardsPlayed.

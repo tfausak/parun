@@ -150,7 +150,7 @@ codec = Fields.object $ do
   phyrexianLifePaid <- Fields.defaulted "phyrexianLifePaid" (Object.phyrexianLifePaid defaults) Common.natural Object.phyrexianLifePaid
   manaSpent <- Fields.defaulted "manaSpent" (Object.manaSpent defaults) Mana.codec Object.manaSpent
   announcedX <- Fields.defaulted "announcedX" (Object.announcedX defaults) (Common.maybe Common.natural) Object.announcedX
-  manaCostPaid <- Fields.defaulted "manaCostPaid" (Object.manaCostPaid defaults) (Common.maybe ManaCost.codec) Object.manaCostPaid
+  manaSpentOnX <- Fields.defaulted "manaSpentOnX" (Object.manaSpentOnX defaults) (Common.maybe (Common.list Mana.codec)) Object.manaSpentOnX
   castFrom <- Fields.defaulted "castFrom" (Object.castFrom defaults) (Common.maybe Zone.codec) Object.castFrom
   castBy <- Fields.defaulted "castBy" (Object.castBy defaults) (Common.maybe PlayerId.codec) Object.castBy
   castUsing <- Fields.defaulted "castUsing" (Object.castUsing defaults) (Common.maybe Keyword.codec) Object.castUsing
@@ -220,7 +220,7 @@ codec = Fields.object $ do
         Object.phyrexianLifePaid = phyrexianLifePaid,
         Object.manaSpent = manaSpent,
         Object.announcedX = announcedX,
-        Object.manaCostPaid = manaCostPaid,
+        Object.manaSpentOnX = manaSpentOnX,
         Object.castFrom = castFrom,
         Object.castBy = castBy,
         Object.castUsing = castUsing,

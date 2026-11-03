@@ -3798,6 +3798,8 @@ measureReads measure = case measure of
   Measure.Toughness -> Set.singleton PowerA
   Measure.ManaValue -> Set.empty
   Measure.ColorCount -> Set.singleton Colors
+  -- CR 306.5c's counters are no layer's; being a planeswalker is layer 4's.
+  Measure.Loyalty -> Set.singleton Types
 
 -- Which aspects a Trait's values read, for Filter.Shares and
 -- Aggregation.MostSharing alike.
@@ -3809,6 +3811,7 @@ traitReads trait = case trait of
   -- An OWNER, which CR 108.3 fixes when the game starts and no Modification
   -- writes.
   Trait.Owner -> Set.empty
+  Trait.Controller -> Set.singleton Controller
   Trait.Sector -> Set.empty
   Trait.CreatureType -> Set.singleton Subtypes
   Trait.CardType -> Set.singleton Types
@@ -4523,6 +4526,7 @@ quantityReads q = case q of
   -- PowerA exactly as either Measure does above.
   Quantity.Type.StationMeasure -> Set.singleton PowerA
   Quantity.Type.Arithmetic arithmetic -> foldMap quantityReads arithmetic
+  Quantity.Type.AtMost atMost -> foldMap quantityReads atMost
   Quantity.Type.AgainstSlot (AgainstSlot.MkAgainstSlot _ a) -> quantityReads a
   -- AgainstSlot's answer: the payload is what reads an aspect, off CR 607.2a's
   -- linked cards rather than off a slot. Over-declaring is the safe direction
@@ -4575,12 +4579,12 @@ quantityReads q = case q of
   Quantity.Type.TagWasSpent {} -> Set.empty
   Quantity.Type.TagWasSpentOfOwnColor {} -> Set.empty
   Quantity.Type.ChosenColorsItIs -> Set.empty
-  Quantity.Type.ManaSpent -> Set.empty
+  Quantity.Type.ManaSpent _ -> Set.empty
   Quantity.Type.WasToken -> Set.empty
   Quantity.Type.WasAttacking -> Set.empty
   Quantity.Type.WasBlocking -> Set.empty
   Quantity.Type.WasBlockedThisTurn -> Set.empty
-  Quantity.Type.ControlGainedSinceLastUpkeep _ -> Set.empty
+  Quantity.Type.ControlGained _ _ -> Set.empty
   Quantity.Type.PlayedBy _ -> Set.empty
   Quantity.Type.DamageDealtThisTurn _ -> Set.empty
   Quantity.Type.OpponentsAttacked _ -> Set.empty

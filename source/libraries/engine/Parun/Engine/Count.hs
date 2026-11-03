@@ -631,6 +631,7 @@ aggregate quantityOf aggregation members = case aggregation of
     Trait.Color -> largestGroup Filter.colors
     Trait.Name -> largestGroup Filter.names
     Trait.Owner -> largestGroup (foldMap Set.singleton . Filter.owner)
+    Trait.Controller -> largestGroup (foldMap Set.singleton . Filter.controller)
     Trait.Sector -> largestGroup (Sector.sectorsIn . Filter.designations)
   -- CR 201.2b: the largest group in which every member has a name and no two
   -- share one. Single-named members contribute one per distinct name; a
@@ -1538,6 +1539,7 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       Filter.manaSpentTagColors = Map.empty,
       -- The same field one question over -- `manaSpentTagColors` above, same sentence.
       Filter.manaSpentAmount = 0,
+      Filter.manaSpentOnX = [],
       -- CR 602.1 / 605.1a off the snapshot, which is what it reads for `keywords`
       -- and `power` too -- so this answers what the object HAD at the event,
       -- through abilitiesOf, the roster every view builder reads, less what CR

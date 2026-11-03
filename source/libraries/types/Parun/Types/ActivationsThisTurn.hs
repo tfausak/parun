@@ -7,9 +7,10 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 
 -- | Which of the turn's activations (CR 602.2) a Parun.Types.Quantity's
 -- ActivationsThisTurn counts: The Chain Veil's "you activate a loyalty ability
--- of a planeswalker".
+-- of a planeswalker", Initiates of the Ebon Hand's "this ability has been
+-- activated".
 data ActivationsThisTurn = MkActivationsThisTurn
-  { -- | CR 602.2a: the player who activated it.
+  { -- | CR 602.2a: the players whose activations count.
     activator :: PlayerRef.PlayerRef,
     -- | Asked of the ability's source as the activation began (CR 608.2i).
     source :: Filter.Filter Keyword.Keyword,

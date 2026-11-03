@@ -736,6 +736,7 @@ dragons-hoard
 dragons-prey
 dragonskull-summit
 dragonstorm-globe
+drain-life
 drain-power
 drake-hatcher
 drakuseth-maw-of-flames
@@ -970,6 +971,7 @@ flamerush-rider
 flameshadow-conjuring
 flameskull
 flamewake-phoenix
+flare
 flare-of-malice
 flash
 flash-foliage
@@ -1012,6 +1014,7 @@ fortifying-draught
 fortress-kin-guard
 foul-spirit
 foundry-groundbreaker
+foxfire
 frankensteins-monster
 fraying-omnipotence
 frenetic-sliver
@@ -1045,6 +1048,7 @@ galactus-devourer-of-worlds
 galloping-lizrog
 galvanic-blast
 galvanic-relay
+game-of-chaos
 gang-of-elk
 gargos-vicious-watcher
 garland-royal-kidnapper
@@ -1109,6 +1113,7 @@ gliding-licid
 glimpse-the-future
 glint-horn-buccaneer
 glittering-lion
+gloom
 gloom-stalker
 glorfindel-dauntless-rescuer
 glorious-protector
@@ -1173,6 +1178,8 @@ graxiplon
 great-intelligences-plan
 great-sable-stag
 greater-good
+greater-realm-of-preservation
+greater-werewolf
 green-mana-battery
 green-slime
 green-ward
@@ -1242,6 +1249,7 @@ hawkeye-avenging-archer
 head-banger
 head-games
 headless-skaab
+heal
 healing-grace
 heart-of-light
 heart-of-yavimaya
@@ -1283,6 +1291,7 @@ hoarding-dragon
 hollow-trees
 hollow-warrior
 holy-day
+homarid-warrior
 homunculus-horde
 honored-hierarch
 hopeful-initiate
@@ -1310,6 +1319,7 @@ hydraulic-helper
 icatian-store
 ice-cage
 ice-cauldron
+ice-floe
 ichor-rats
 icon-of-ancestry
 icy-prison
@@ -1347,10 +1357,12 @@ infernal-reckoning
 infernal-scarring
 infernal-vessel
 infestation-expert-infested-werewolf
+infinite-hourglass
 infinite-obliteration
 infinite-reflection
 ingenious-leonin
 ingenious-thief
+initiates-of-the-ebon-hand
 inkshield
 innocent-traveler-malicious-invader
 inquisitor-eisenhorn
@@ -1389,6 +1401,7 @@ isolate
 it-that-betrays
 itzquinth-firstborn-of-gishath
 ivory-gargoyle
+ivory-guardians
 ivory-mask
 ivy-gleeful-spellthief
 ixidron
@@ -1415,6 +1428,7 @@ jet-medallion
 jeweled-bird
 jinxed-idol
 johann-apprentice-sorcerer
+johtull-wurm
 joiner-adept
 jolly-gerbils
 jolrael-mwonvuli-recluse
@@ -1423,6 +1437,7 @@ judgment-of-alexander
 juggernaut
 jungle-wayfinder
 just-fate
+justice
 justice-vance-astrovik
 juxtapose
 kaalia-zenith-seeker
@@ -1482,9 +1497,12 @@ kothophed-soul-hoarder
 krarks-thumb
 krav-the-unredeemed
 krosan-vorine
+krovikan-fetish
+krovikan-sorcerer
 kurkesh-onakke-ancient
 kykar-zephyr-awakener
 kytheon-hero-of-akros-gideon-battle-forged
+labyrinth-minotaur
 labyrinth-of-skophos
 lady-sun
 lairwatch-giant
@@ -1511,6 +1529,7 @@ leonin-shikari
 leonin-warleader
 lesser-gargadon
 leveler
+leviathan
 leyline-axe
 leyline-of-abundance
 leyline-of-anticipation
@@ -1531,6 +1550,7 @@ life-and-limb
 lifebane-zombie
 life-goes-on
 lifes-legacy
+lifetap
 lightmine-field
 lightning-mare
 light-of-promise
@@ -1561,6 +1581,7 @@ lithoform-engine
 littjara-kinseekers
 littjara-mirrorlake
 liu-bei-lord-of-shu
+living-artifact
 living-destiny
 living-lands
 living-lore
@@ -1626,6 +1647,7 @@ magmatic-insight
 magnetic-theft
 magnivore
 magnus-the-red
+magus-of-the-unseen
 mairsil-the-pretender
 make-a-_-splash
 make-a-wish
@@ -1639,6 +1661,7 @@ mana-clash
 mana-severance
 mana-short
 mana-vapors
+mana-vault
 manabarbs
 manaweft-sliver
 mandate-of-peace
@@ -1657,6 +1680,7 @@ march-of-wretched-sorrow
 marchesas-decree
 mark-for-death
 mark-of-mutiny
+marsh-viper
 marshaling-the-troops
 mask-of-immolation
 mask-of-intolerance
@@ -1708,6 +1732,7 @@ mind-bomb
 mind-control
 mind-grind
 mind-maggots
+mind-ravel
 mind-slash
 mind-sludge
 mind-unbound
@@ -1741,6 +1766,7 @@ mob-verdict
 mobilizer-mech
 mogg-flunkies
 mogiss-marauder
+mole-worms
 molecule-man
 molten-birth
 molten-disaster
@@ -1768,6 +1794,7 @@ multiversal-recruitment
 muraganda-raceway
 murder-investigation
 murderous-betrayal
+murk-dwellers
 mutagen-connoisseur
 mutalith-vortex-beast
 mutavault
@@ -1798,6 +1825,7 @@ necrologia
 necromancers-stockpile
 necromantic-summons
 necromentia
+necropotence
 necrosynthesis
 necrotic-plague
 needle-drop
@@ -1841,6 +1869,7 @@ novijen-sages
 null-chamber
 oath-of-the-ancient-wood
 ob-nixilis-unshackled
+obelisk-of-undoing
 obelisk-of-urd
 obliterate
 oblivion-ring
@@ -1877,6 +1906,7 @@ oracles-attendants
 orbs-of-warding
 orchard-spirit
 orcish-artillery
+orcish-captain
 orcish-spy
 orcish-veteran
 oreskos-explorer
@@ -1914,6 +1944,7 @@ palladia-mors-the-ruiner
 panglacial-wurm
 panic-attack
 panopticon
+paralyze
 paranormal-analyst
 parasitic-grasp
 pariah
@@ -1977,10 +2008,13 @@ pin-collection
 pine-walker
 pir-imaginative-rascal
 piracy
+pirate-ship
 pirates-cutlass
+pit-scorpion
 pithing-needle
 pixie-guide
 plagiarize
+plague-rats
 planar-void
 planeswalkers-mischief
 platinum-angel
@@ -1999,6 +2033,7 @@ portent
 possessed-skaab
 power-play
 power-sink
+pox
 prayer-of-binding
 precursor-golem
 predator-ooze
@@ -2024,8 +2059,10 @@ prime-speaker-zegana
 primeval-titan
 primitive-etchings
 primordial-hydra
+primordial-ooze
 printlifter-ooze
 prism-ring
+prismatic-ward
 prison-barricade
 prized-amalgam
 prized-unicorn
@@ -2058,6 +2095,7 @@ pulmonic-sliver
 purging-scythe
 pursued-whale
 pyramids
+pyroblast
 pyromancers-gauntlet
 pyromancers-goggles
 qarsi-sadist
@@ -2076,6 +2114,7 @@ quillspike
 quina-qu-gourmet
 qutrub-forayer
 rabid-elephant
+rabid-wombat
 radha-coalition-warlord
 radha-heart-of-keld
 radiant-performer
@@ -2326,8 +2365,10 @@ scuttlemutt
 scuttling-doom-engine
 sea-gate-restoration-sea-gate-reborn
 sea-monster
+sea-serpent
 sealed-fate
 seas-claim
+seasinger
 season-of-the-witch
 secluded-courtyard
 second-sight
@@ -2355,9 +2396,11 @@ sensational-spider-man
 sentinel-dispatch
 sentinel-of-the-eternal-watch
 sepulchral-primordial
+seraph
 seraph-of-the-sword
 serene-master
 serene-remembrance
+serpent-generator
 serpent-of-the-endless-sea
 serra-avatar
 serra-avenger
@@ -2441,6 +2484,7 @@ slumbering-dragon
 smallpox
 smash-to-smithereens
 smog-smasher
+smoke
 smoke-teller
 snake-basket
 snake-of-the-golden-grove
@@ -2454,10 +2498,12 @@ song-of-the-dryads
 sonorous-howlbonder
 sorcerer-class
 sorcerers-strongbox
+sorceress-queen
 sorcerous-sight
 sorcerous-spyglass
 sorin-markov
 sorrows-path
+soul-burn
 soul-conduit
 soul-diviner
 soul-foundry
@@ -2542,6 +2588,7 @@ star-crowned-stag
 starfield-of-nyx
 starforged-sword
 starlight-snare
+stasis
 stasis-snare
 static-discharge
 static-orb
@@ -2652,6 +2699,7 @@ taunt
 taunting-challenge
 tavern-scoundrel
 tavern-swindler
+tawnoss-weaponry
 tayam-luminous-enigma
 tazeem
 tazri-beacon-of-unity
@@ -2728,6 +2776,7 @@ the-valeyard
 the-very-soil-shall-shake
 the-wandering-emperor
 the-weatherseed-treaty
+the-wretched
 thelonite-hermit
 thicket-basilisk
 thieves-auction
@@ -2769,6 +2818,8 @@ tide-skimmer
 tidebinder-mage
 tidewalker
 timberpack-wolf
+time-bomb
+time-elemental
 time-reversal
 time-stop
 time-stretch
@@ -2801,6 +2852,7 @@ tormods-crypt
 tornado-elemental
 torpor-orb
 total-war
+touch-of-death
 touch-of-moonglove
 touch-of-the-eternal
 tovolar-dire-overlord-tovolar-the-midnight-scourge
@@ -2876,12 +2928,15 @@ unlucky-witness
 unsettled-mariner
 unstable-shapeshifter
 unsubstantiate
+updraft
 upwelling
 urborg-tomb-of-yawgmoth
 urgent-necropsy
 urianger-augurelt
 ursine-champion
 urzas-armor
+urzas-avenger
+urzas-bauble
 urzas-mine
 urzas-power-plant
 urzas-tower
@@ -3038,6 +3093,7 @@ windreader-sphinx
 winds-of-change
 winged-portent
 wings-of-velis-vel
+winter-blast
 winter-orb
 winter-sky
 wire-surgeons
@@ -3056,6 +3112,7 @@ wolfir-silverheart
 wolfriders-saddle
 wood-elemental
 woodland-bellower
+word-of-blasting
 word-of-command
 word-of-seizing
 words-of-worship
@@ -3074,6 +3131,7 @@ wu-warship
 xathrid-demon
 xathrid-gorgon
 xathrid-necromancer
+xenic-poltergeist
 yare
 yasmin-khan
 yawgmoth-demon
@@ -3216,6 +3274,7 @@ chandras-incinerator
 chandras-pyreling
 curator-of-destinies
 hooded-blightfang
+hydroblast
 mazes-end
 midnight-snack
 mild-mannered-librarian

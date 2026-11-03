@@ -76,6 +76,7 @@ import qualified Parun.Types.ConjureCards as ConjureCards
 import qualified Parun.Types.ConjureDestination as ConjureDestination
 import qualified Parun.Types.ConjureEntry as ConjureEntry
 import qualified Parun.Types.ConjureSelection as ConjureSelection
+import qualified Parun.Types.ControllerRelation as ControllerRelation
 import qualified Parun.Types.CopyCoverage as CopyCoverage
 import qualified Parun.Types.CopyOriginal as CopyOriginal
 import qualified Parun.Types.CopyStackObject as CopyStackObject
@@ -1239,12 +1240,12 @@ skipPhase resolving source controller legal (SkipPhase.MkSkipPhase ref selector 
                             -- The player the resolution named, baked now. Card
                             -- data cannot name one (see
                             -- Parun.Types.PhasePattern).
-                            PhasePattern.whosePhase = Just pid
+                            PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton pid)
                           },
                     ActiveReplacement.source = source,
                     -- CR 109.5: the resolution's controller, not `pid` above,
-                    -- which the effect NAMED; nothing reads this, a PhaseR
-                    -- resolving no ControllerRelation.
+                    -- which the effect NAMED; nothing reads this, Among
+                    -- resolving against no "you".
                     ActiveReplacement.controller = controller,
                     ActiveReplacement.timestamp = ts,
                     ActiveReplacement.expiry = expiry,

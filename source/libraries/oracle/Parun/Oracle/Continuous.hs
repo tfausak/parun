@@ -88,7 +88,7 @@ modifications origin number each context ms = do
         [(verb "gets " (if each then "each get " else "get ") <> change, trailing)]
       [Modification.GainAbility a] | Just blockers <- unblockable a -> do
         by <- blockedBy context blockers
-        [(Text.pack "can't be blocked" <> by, MkTrailing Text.empty Text.empty)]
+        [(Text.pack "can't be blocked", MkTrailing by Text.empty)]
       m : _ | Just (gained, _) <- keywordOf m -> do
         keywords <- fmap protectionsJoined (traverse (foldMap (either (Target.keyword context) Keyword.Oracle.family . snd) . keywordOf) group)
         let change = case (gained, origin) of

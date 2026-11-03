@@ -73,7 +73,8 @@ to agents as written. What it doesn't say:
   run -v0 parun -- test -p PATTERN`, never the built test binary. Kill a
   wedged run by its own PID, never `pkill -f`. Never pipe `cabal` into `head`
   or anything that closes the pipe early (it deadlocks holding a lock slot);
-  redirect to a file and read the file.
+  redirect to a file and read the file. While `script/mutate.sh` runs, run no
+  other build in that checkout and edit no source: both read the mutated tree.
 
 - Derive against `origin/main`, not the working checkout: `git fetch`, then
   `git show origin/main:<path>` or a worktree cut from it. Grep for
