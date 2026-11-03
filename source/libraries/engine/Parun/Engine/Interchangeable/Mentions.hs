@@ -324,6 +324,7 @@ import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDeal
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
+import qualified Parun.Types.PhasePattern as PhasePattern
 import qualified Parun.Types.PlacesSticker as PlacesSticker
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
 import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
@@ -2755,7 +2756,7 @@ replacementEffectNames asking onCard onAbility onEffect x = case x of
     controllerRelationNames asking whose <> case rewrite of
       PlaneswalkRewrite.ArrangeTopTwo -> mempty
       PlaneswalkRewrite.RunEffects effects -> foldMap onEffect effects
-  ReplacementEffect.PhaseR _phasePattern -> mempty
+  ReplacementEffect.PhaseR (PhasePattern.MkPhasePattern _whichPhase whose) -> controllerRelationNames asking whose
 
 requireAttackNames :: (Monoid r) => Asking r -> RequireAttack.RequireAttack -> r
 requireAttackNames asking x = case x of

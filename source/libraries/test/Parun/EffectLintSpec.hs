@@ -638,7 +638,8 @@ isTokenR replacement = case replacement of
 -- draw step" its controller -- and Among is baked by the engine out of a player a
 -- resolution named (Resolve.applyEffect's SkipPhase arm, Fatigue's target) or out
 -- of a pending extra turn (Replacement.installTurnSkips). Card data cannot name a
--- player at all, and no install bakes an authored InSlot here.
+-- player at all, and no card's skip names a slot, so InSlot is fenced until one
+-- does.
 --
 -- Nothing enforced that split. Codec.PhasePattern is structural over the record,
 -- so it accepts an Among from card JSON -- and a card file could write
@@ -756,7 +757,7 @@ isInstructionR replacement = case replacement of
 -- printing either half would be claiming an ability no rule gives it.
 --
 -- ControllerRelation.Among is the same prohibition on every arm's pattern at once:
--- the players an InSlot named, which only the Effect.Replace install bakes.
+-- the players a resolution named, which only an install bakes.
 --
 -- Exhaustive rather than a wildcard, this file's discipline for a sum.
 engineOnlyOffends :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Bool
@@ -3253,6 +3254,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
         baked = card {Face.replacementEffects = fmap (\pr -> pr {PrintedReplacement.effect = bake (PrintedReplacement.effect pr)}) (Face.replacementEffects card)}
     Spec.assertBool s (not (any phasePatternOffends (cardReplacementEffects card))) "the real Eon Hub is symmetric and accepted"
     Spec.assertBool s (any phasePatternOffends (cardReplacementEffects baked)) "and the same card naming a seat is rejected"
+    Spec.assertBool s (any engineOnlyOffends (cardReplacementEffects baked)) "and whosePhase is among the relations Resolve.overRelations reaches"
   -- The same lint one event class over, for the OTHER fields the codec accepts and
   -- only the engine writes: CR 615.7's shielded recipient and its remaining amount,
   -- plus CR 122.1c's minted pair. See engineOnlyOffends.

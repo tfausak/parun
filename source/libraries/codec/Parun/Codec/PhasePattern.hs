@@ -12,9 +12,8 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 
 -- | `whosePhase`'s Among is runtime-only -- a player-scoped skip is baked by
 -- Resolve's SkipPhase arm, not authored on a card -- but this codec is structural
--- over the record and so accepts one from card JSON. Nothing needs a baked
--- pattern to survive a round trip: neither Parun.Types.ActiveReplacement nor
--- GameState has a codec at all (#126). A corpus lint is what keeps the pool
+-- over the record and so accepts one from card JSON: Parun.Codec.ActiveReplacement
+-- round-trips a baked pattern through it. A corpus lint is what keeps the pool
 -- honest instead, the same treatment SetController's PlayerId gets.
 codec :: Codec.Codec PhasePattern.PhasePattern
 codec = Fields.object $ do

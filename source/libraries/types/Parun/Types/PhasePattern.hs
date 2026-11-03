@@ -15,7 +15,7 @@ import qualified Parun.Types.PhaseSelector as PhaseSelector
 -- resolution named (Fatigue).
 --
 -- Among is BAKED by the engine, never authored: card data cannot name a player,
--- exactly as it cannot name Modification.SetController's. Parun.CardSpec's "no
+-- exactly as it cannot name Modification.SetController's. Parun.EffectLintSpec's "no
 -- card authors a player-scoped phase skip" rejects one in card JSON, the same
 -- treatment SetController's baked PlayerId gets (#199).
 data PhasePattern = MkPhasePattern

@@ -1244,8 +1244,8 @@ skipPhase resolving source controller legal (SkipPhase.MkSkipPhase ref selector 
                           },
                     ActiveReplacement.source = source,
                     -- CR 109.5: the resolution's controller, not `pid` above,
-                    -- which the effect NAMED; nothing reads this, a PhaseR
-                    -- resolving no ControllerRelation.
+                    -- which the effect NAMED; nothing reads this, Among
+                    -- resolving against no "you".
                     ActiveReplacement.controller = controller,
                     ActiveReplacement.timestamp = ts,
                     ActiveReplacement.expiry = expiry,

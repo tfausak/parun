@@ -4380,9 +4380,9 @@ installTurnSkips entry gs =
                         },
                   -- CR 113.7: the source of the effect that created the turn.
                   ActiveReplacement.source = ExtraTurn.source entry,
-                  -- CR 109.5's "you" for this row. Nothing reads it: a PhaseR
-                  -- names its player outright and has no ControllerRelation to
-                  -- resolve. The TAKER rather than the effect's controller,
+                  -- CR 109.5's "you" for this row. Nothing reads it: Among
+                  -- names its player outright, relationHolds asking the "you"
+                  -- only of Related. The TAKER rather than the effect's controller,
                   -- because these skips ride the turn (see Parun.Types.ExtraTurn)
                   -- and the effect that created it is long gone by the time the
                   -- turn begins.
