@@ -3766,7 +3766,8 @@ ivoryGargoyleSpec s registry =
 -- owner's control at the beginning of the next end step"
 -- (data/cards/biolume-egg-biolume-serpent.json, checked against Scryfall),
 -- written as PermanentSacrificed narrowed by Filter.IsSource. Its delayed
--- payload names the graveyard it moves `became` out of, Ivory Gargoyle's shape.
+-- payload names no zone it moves `became` out of, so CR 400.7e's card is found
+-- in exile under Rest in Peace as in a graveyard.
 -- `Event.conditionPutsSelfInto` answers False for the bystander constructor, so
 -- `selfNamingSlots` leaves `became` out and nothing pins the ability to the
 -- graveyard; a mutation adding `became` to that set without the exemption
@@ -3809,6 +3810,16 @@ biolumeEggSpec s registry =
           Spec.assertEqWith s "the Egg really left first" (Game.lookupObject eggId placed) Nothing
           Spec.assertEqWith s "and no Egg card is left in the graveyard" (length (named eggName Zone.Graveyard after)) 0
           Spec.assertEqWith s "the delayed entry fired and was spent" (Seq.length (GameState.delayedTriggers after)) 0
+        Spec.it s "CR 400.7e the Egg sacrificed under Rest in Peace returns from exile" $ do
+          (eggId, _, g) <- board
+          restInPeace <- S.printingOf s registry "Rest in Peace"
+          let (_, g') = S.addPermanent restInPeace S.alice g
+              placed = settle (S.runPure S.identityAnswer g' (Event.sacrifice S.alice eggId))
+              after = throughEndStep (resolveTop placed)
+          Spec.assertEqWith s "CR 712.14a the Serpent is on the battlefield" (length (named serpentName Zone.Battlefield after)) 1
+          Spec.assertEqWith s "the sacrifice trigger reached the stack" (length (GameState.stack placed)) 1
+          Spec.assertEqWith s "CR 614.1 the Egg went to exile, not the graveyard" (length (named eggName Zone.Exile placed), length (named eggName Zone.Graveyard placed)) (1, 0)
+          Spec.assertEqWith s "and no Egg card is left in exile" (length (named eggName Zone.Exile after)) 0
         Spec.it s "CR 700.4 the Egg dying without a sacrifice does not trigger it" $ do
           (eggId, _, g) <- board
           let placed = settle (S.runPure S.identityAnswer g (Event.destroy Regenerability.Regenerable [eggId]))
