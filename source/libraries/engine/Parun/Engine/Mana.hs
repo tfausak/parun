@@ -2002,24 +2002,27 @@ couldPayFrom mana cost = case cost of
   Nothing -> False
   Just printed -> Maybe.isJust (spend [] ManaSpending.AsProduced 0 (substituteX 0 printed) mana)
 
--- The pools that could have been the mana spent on an announced {X} of `x`,
--- out of `spent`, the mana paid against the total `paid` (CR 601.2f, X as
--- announced): whatever is left, `x` units of it, once the rest of the total --
--- `paid` less `x` generic -- is paid out of `spent`. Several when the payment
--- does not say which unit went where, as a cost increase's generic mana does
--- not (Illusionary Mask's ruling: "you must keep track of the amount and types
--- of mana you spent on {X}").
-xShares :: Natural -> ManaCost -> Mana -> [Mana]
-xShares x paid (Mana.MkMana units) =
-  let ManaCost.MkManaCost symbols = paid
-      generic = sum [n | ManaSymbol.Generic n <- symbols]
-      rest = ManaCost.MkManaCost (ManaSymbol.Generic (Natural.minusSaturating generic x) : filter (not . isGeneric) symbols)
-      isGeneric symbol = case symbol of
-        ManaSymbol.Generic _ -> True
-        _ -> False
-   in fmap Mana.MkMana . Set.toList . Set.unions $ do
+-- The pools that could have been the mana spent on {X}, out of `spent`, the
+-- mana paid against a total split into `rest` and `onX` (CR 601.2f, X as
+-- announced, and CR 601.2h's confinement of it, Cost.splitX): whatever is
+-- left once `rest` is paid out of `spent`, provided it pays `onX` exactly. Both
+-- payments under the payer's CR 609.4b clauses, so green mana Chromatic Orrery
+-- let pay Soul Burn's X is a share of it. Several when the payment does not
+-- say which unit went where, as a cost increase's generic mana does not
+-- (Illusionary Mask's ruling: "you must keep track of the amount and types of
+-- mana you spent on {X}").
+xShares :: [SpendManaAsThough.SpendManaAsThough] -> ManaCost -> ManaCost -> Mana -> [Mana]
+xShares clauses rest onX (Mana.MkMana units) =
+  let paysExactly cost pool = or $ do
+        (demands, owed, _) <- resolutions ManaSpending.AsProduced cost
+        pure (Set.member [] (leftovers clauses (paymentSteps demands owed) pool))
+      size = sum (fmap symbolSize (ManaCost.unwrap onX))
+      symbolSize symbol = case symbol of
+        ManaSymbol.Generic n -> n
+        _ -> 1
+   in fmap Mana.MkMana . Set.toList . Set.filter (paysExactly onX) . Set.unions $ do
         (demands, owed, _) <- resolutions ManaSpending.AsProduced rest
-        pure (Set.filter ((== Natural.toIntSaturating x) . length) (leftovers [] (paymentSteps demands owed) units))
+        pure (Set.filter ((== Natural.toIntSaturating size) . length) (leftovers clauses (paymentSteps demands owed) units))
 
 -- CR 107.4f's 2 life. The one place that number is written.
 phyrexianLife :: Natural

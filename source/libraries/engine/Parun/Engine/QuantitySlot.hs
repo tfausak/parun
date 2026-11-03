@@ -111,6 +111,7 @@ overSlots f quantity =
         -- Whatever the operands name: a calculation's own payload (a rounding, a
         -- factor) names no slot.
         Quantity.Arithmetic arithmetic -> fmap Quantity.Arithmetic (traverse recur arithmetic)
+        Quantity.AtMost atMost -> fmap Quantity.AtMost (traverse recur atMost)
         -- Terminating for the reason evaluate's Count arm is: a Greatest's payload is
         -- a strictly smaller subterm.
         Quantity.Count c -> fmap Quantity.Count (overCount recur c)
@@ -168,7 +169,7 @@ overSlots f quantity =
         Quantity.TagWasSpent {} -> pure quantity
         Quantity.TagWasSpentOfOwnColor {} -> pure quantity
         Quantity.ChosenColorsItIs -> pure quantity
-        Quantity.ManaSpent -> pure quantity
+        Quantity.ManaSpent _ -> pure quantity
         Quantity.WasToken -> pure quantity
         Quantity.WasAttacking -> pure quantity
         Quantity.WasBlocking -> pure quantity
@@ -322,6 +323,7 @@ nestedRefs quantity = case quantity of
   -- What the operands hide is the whole question: a rounding or a factor hides
   -- no reference.
   Quantity.Arithmetic arithmetic -> foldMap nestedRefs arithmetic
+  Quantity.AtMost atMost -> foldMap nestedRefs atMost
   -- Both halves `slots` skips: the Scope's own read, and the per-member quantity
   -- of a Greatest, which may hide a reference of its own.
   Quantity.Count c -> Set.union (scopeRefs (Count.Type.scope c)) (foldCount nestedRefs c)
@@ -357,7 +359,7 @@ nestedRefs quantity = case quantity of
   Quantity.TagWasSpent {} -> Set.empty
   Quantity.TagWasSpentOfOwnColor {} -> Set.empty
   Quantity.ChosenColorsItIs -> Set.empty
-  Quantity.ManaSpent -> Set.empty
+  Quantity.ManaSpent _ -> Set.empty
   Quantity.WasToken -> Set.empty
   Quantity.WasAttacking -> Set.empty
   Quantity.WasBlocking -> Set.empty
@@ -435,6 +437,7 @@ nestedCounts quantity = case quantity of
   -- An operand may be a Count -- Malignus halves a fold over players, Blessed
   -- Reversal multiplies one over the battlefield.
   Quantity.Arithmetic arithmetic -> foldMap nestedCounts arithmetic
+  Quantity.AtMost atMost -> foldMap nestedCounts atMost
   -- The leaf itself, and DESCENT into a Greatest's per-member number, which may
   -- be a Count of its own.
   Quantity.Count c -> c : foldCount nestedCounts c
@@ -467,7 +470,7 @@ nestedCounts quantity = case quantity of
   Quantity.TagWasSpent {} -> []
   Quantity.TagWasSpentOfOwnColor {} -> []
   Quantity.ChosenColorsItIs -> []
-  Quantity.ManaSpent -> []
+  Quantity.ManaSpent _ -> []
   Quantity.WasToken -> []
   Quantity.WasAttacking -> []
   Quantity.WasBlocking -> []
@@ -664,6 +667,7 @@ mapPlayerRefs f intoCount quantity =
         Quantity.ManaCount c -> Quantity.ManaCount c {ManaCount.Type.player = f (ManaCount.Type.player c)}
         Quantity.Count c -> Quantity.Count (intoCount c)
         Quantity.Arithmetic arithmetic -> Quantity.Arithmetic (fmap recur arithmetic)
+        Quantity.AtMost atMost -> Quantity.AtMost (fmap recur atMost)
         Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot slot inner) -> Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot slot (recur inner))
         Quantity.AgainstExiledPile a -> Quantity.AgainstExiledPile a {AgainstExiledPile.quantity = recur (AgainstExiledPile.quantity a)}
         Quantity.AgainstLastCardExiledWith l -> Quantity.AgainstLastCardExiledWith l {AgainstLastCardExiledWith.quantity = recur (AgainstLastCardExiledWith.quantity l)}
@@ -699,7 +703,7 @@ mapPlayerRefs f intoCount quantity =
         Quantity.TagWasSpent {} -> quantity
         Quantity.TagWasSpentOfOwnColor {} -> quantity
         Quantity.ChosenColorsItIs -> quantity
-        Quantity.ManaSpent -> quantity
+        Quantity.ManaSpent _ -> quantity
         Quantity.WasToken -> quantity
         Quantity.WasAttacking -> quantity
         Quantity.WasBlocking -> quantity

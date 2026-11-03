@@ -5,6 +5,7 @@ import qualified Parun.Codec.ActivationsThisTurn as ActivationsThisTurn
 import qualified Parun.Codec.AgainstExiledPile as AgainstExiledPile
 import qualified Parun.Codec.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Parun.Codec.AgainstSlot as AgainstSlot
+import qualified Parun.Codec.AtMost as AtMost
 import qualified Parun.Codec.CastFrom as CastFrom
 import qualified Parun.Codec.CompletedDungeon as CompletedDungeon
 import qualified Parun.Codec.Count as Count
@@ -19,6 +20,7 @@ import qualified Parun.Codec.KeywordDesignator as KeywordDesignator
 import qualified Parun.Codec.KeywordFamily as KeywordFamily
 import qualified Parun.Codec.LifeTally as LifeTally
 import qualified Parun.Codec.ManaCount as ManaCount
+import qualified Parun.Codec.ManaSpent as ManaSpent
 import qualified Parun.Codec.Measure as Measure
 import qualified Parun.Codec.PlayerCounterTally as PlayerCounterTally
 import qualified Parun.Codec.PlayerDesignationTally as PlayerDesignationTally
@@ -79,6 +81,7 @@ codec =
       -- CR 107.1b's negative game value: one whole Quantity on the wire, since a
       -- minus sign carries nothing of its own.
       Arm.payload "Negate" codec (Quantity.Arithmetic . Arithmetic.Negate) (\x -> case x of Quantity.Arithmetic (Arithmetic.Negate y) -> Just y; _ -> Nothing),
+      Arm.payload "AtMost" (AtMost.codec codec) Quantity.AtMost (\x -> case x of Quantity.AtMost y -> Just y; _ -> Nothing),
       Arm.payload "Count" (Count.codec codec) Quantity.Count (\x -> case x of Quantity.Count y -> Just y; _ -> Nothing),
       Arm.payload "ManaCount" ManaCount.codec Quantity.ManaCount (\x -> case x of Quantity.ManaCount y -> Just y; _ -> Nothing),
       Arm.payload "LifeTotal" PlayerRef.codec Quantity.LifeTotal (\x -> case x of Quantity.LifeTotal y -> Just y; _ -> Nothing),
@@ -131,7 +134,7 @@ codec =
       Arm.nullary "ChosenColorsItIs" Quantity.ChosenColorsItIs,
       -- CR 202.1a's amount, nothing on the wire for the same reason: the object is
       -- whichever one the quantity is evaluated against.
-      Arm.nullary "ManaSpent" Quantity.ManaSpent,
+      Arm.payload "ManaSpent" ManaSpent.codec Quantity.ManaSpent (\x -> case x of Quantity.ManaSpent y -> Just y; _ -> Nothing),
       -- CR 111.6's status and CR 508.1k / 509.1g's two combat facts, all with
       -- nothing on the wire for WasForetold's reason: the object is whichever one the
       -- quantity is evaluated against.
@@ -259,6 +262,7 @@ tagOf x = case x of
     Arithmetic.Quotient {} -> "Quotient"
     Arithmetic.Times {} -> "Times"
     Arithmetic.Negate {} -> "Negate"
+  Quantity.AtMost {} -> "AtMost"
   Quantity.Count {} -> "Count"
   Quantity.ManaCount {} -> "ManaCount"
   Quantity.LifeTotal {} -> "LifeTotal"

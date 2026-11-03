@@ -18,7 +18,7 @@ import qualified Parun.Types.TurnUpR as TurnUpR
 --
 -- `requiring` and `paying` are engine-baked -- Parun.Types.TurnUpR says why -- so
 -- each defaults to Nothing and no card file writes either, the posture
--- Parun.Codec.PhasePattern's whosePhase takes.
+-- Parun.Codec.PhasePattern's Among takes.
 codec ::
   (Typeable.Typeable ability, Eq ability, Typeable.Typeable effect, Eq effect) =>
   Codec.Codec ability ->

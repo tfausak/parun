@@ -10,46 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Flare: `_Action:CreateFutureTrigger`
-- Foxfire: `_Action:CreatePreventDamageUntil`
-- Gloom: `_Rule:ActivatedAbilityEffect`
-- Greater Realm of Preservation: `_Action:ChooseADamageSource`
-- Greater Werewolf: `_Trigger:AtTheEndOfCombat`
-- Heal: `_Action:CreateFuturePreventDamage`
-- Homarid Warrior: `_Action:PermanentDoesntUntapDuringControllersNextUntap`
-- Hungry Mist: `_Action:MayCost`
-- Hydroblast: `_Action:If`
-- Ice Floe: `_PermanentRule:MayChooseNotToUntapDuringUntap`
-- Infinite Hourglass: `_CounterType:TimeCounter`
-- Initiates of the Ebon Hand: `_Action:If`
-- Island Sanctuary: `_Rule:ReplaceWouldDraw`
-- Ivory Guardians: `_Permanents:IsNamed`
-- Johtull Wurm: `_LayerEffect:AdjustPTForEach`
-- Joven's Tools: renders differently
-- Justice: `_Action:MayCost`
-- Krovikan Fetish: `_Action:CreateFutureTrigger`
-- Krovikan Sorcerer: `_Cost:DiscardACardOfType`
-- Labyrinth Minotaur: `_Action:PermanentDoesntUntapDuringControllersNextUntap`
-- Leviathan: `_PermanentRule:DoesntUntapDuringControllersUntap`
-- Lifetap: `_Trigger:WhenAPermanentBecomesTapped`
-- Living Artifact: `_Trigger:WhenAPlayerIsDealtDamage`
-- Magus of the Unseen: `_Action:GainControlOfPermanentUntil`
-- Mana Vault: `_PermanentRule:DoesntUntapDuringControllersUntap`
-- Marsh Viper: `_PutCountersAction:NumberCountersOfTypeOnPlayer`
-- Mind Ravel: `_Action:CreateFutureTrigger`
-- Mole Worms: `_PermanentRule:MayChooseNotToUntapDuringUntap`
-- Murk Dwellers: `_Expiration:UntilEndOfCombat`
-- Necropotence: `_Rule:PlayerEffect`
-- Obelisk of Undoing: `_Permanents:OwnedByAPlayer`
-- Orcish Captain: `_Action:FlipACoin_OnWinAndLose`
-- Paralyze: `_PermanentRule:DoesntUntapDuringControllersUntap`
-- Phantasmal Forces: `_Action:MayCost`
-- Pirate Ship: `_PermanentRule:CantAttackUnlessDefendingPlayer`
-- Pit Scorpion: `_PutCountersAction:ACounterOfTypeOnPlayer`
-- Plague Rats: `_Permanents:IsNamed`
-- Pox: `_GameNumber:ThirdRoundedUp`
-- Primal Order: `_Player:Trigger_ThatPlayer`
-- Primordial Ooze: `_PermanentRule:MustAttack`
 - Prismatic Ward: `_ReplacementActionWouldEnter:ChooseAColor`
 - Pyroblast: `_Action:If`
 - Rabid Wombat: `_StaticLayerEffect:AdjustPTForEach`
@@ -98,6 +58,8 @@ first.
   lets the damage through and copies it (CR 614).
 - #5990: Clockwork Beast; Clockwork Steed. A counter effect can't put up to X
   on, capped by a total, as `ChooseNumber.upTo` is fixed.
+- #6002: Island Sanctuary. No draw replacement offers skipping the draw for an
+  effect, or reads "during your draw step" (CR 614.10).
 - #5999: Errantry. Nothing lets a creature attack only with no other attacker
   beside it; `CantAttackAlone` is the opposite direction.
 - #5177: Gauntlets of Chaos. No filter reads a shared card type with a sibling
@@ -113,8 +75,6 @@ first.
   any player, not its owner.
 - #5686: Panic. No casting restriction spans combat before blockers are
   declared.
-- #5571: Drain Life. Life gain can't be capped by what its target had; PR #5975
-  is open for it.
 - #5992: Serra Bestiary. A prohibition can't name activated abilities with {T}
   in their cost (CR 602.5).
 - #5993: Instill Energy. Nothing lifts only the attack half of summoning

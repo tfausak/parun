@@ -174,7 +174,10 @@
                 "type": "AgainstSlot",
                 "value": {
                   "quantity": {
-                    "type": "ManaSpent"
+                    "type": "ManaSpent",
+                    "value": {
+                      "type": "Total"
+                    }
                   },
                   "slot": "thatSpell"
                 }

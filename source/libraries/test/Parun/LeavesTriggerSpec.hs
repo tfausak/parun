@@ -49,6 +49,7 @@ import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Clause as Clause
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.ControllerRelation as ControllerRelation
 import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.DamageEvent as DamageEvent
@@ -3732,7 +3733,7 @@ ivoryGargoyleSpec s registry =
             [ ReplacementEffect.PhaseR
                 PhasePattern.MkPhasePattern
                   { PhasePattern.whichPhase = PhaseSelector.Step (Phase.Beginning BeginningStep.DrawStep),
-                    PhasePattern.whosePhase = Just S.alice
+                    PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton S.alice)
                   }
             ]
         -- The negative, and the same board differing in ONE thing: the graveyard

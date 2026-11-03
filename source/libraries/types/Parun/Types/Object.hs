@@ -751,12 +751,15 @@ data Object = MkObject
     -- placeBorne reads it on CR 107.3m's own condition rather than for every
     -- ability the permanent triggers.
     announcedX :: Maybe Natural.Natural,
-    -- | CR 601.2f / 602.2b: the total mana cost an ACTIVATION was paid against,
-    -- its {X} as announced; Nothing for every object no activation paid for.
-    -- What separates the mana spent on {X} from the rest of `manaSpent` --
-    -- Illusionary Mask's "the mana you spent on {X}" under a cost increase
-    -- (Mana.xShares). Written by Parun.Engine.Activate once the payment settles.
-    manaCostPaid :: Maybe ManaCost.ManaCost,
+    -- | CR 107.3 / 601.2h: the pools of `manaSpent` that could have paid the
+    -- spell's or ability's {X}, each what is left once the rest of the total
+    -- cost is paid (Mana.xShares); Nothing for every object nothing paid for.
+    -- Several where the payment does not say which unit went where. Illusionary
+    -- Mask's "the mana you spent on {X}" and Soul Burn's "the amount of {B}
+    -- spent on X" are the readers. Written by Parun.Engine.Activate and
+    -- Parun.Engine.Cast once the payment settles, under the spend-as-though
+    -- clauses the payment was made under (CR 609.4b).
+    manaSpentOnX :: Maybe [Mana.Mana],
     -- | CR 601.2a: the zone this spell was moved to the stack FROM, which is what
     -- Aven Interrupter's "spells your opponents cast from graveyards or from
     -- exile" names. Read by Parun.Engine.Filter's WasCastFrom atom.
@@ -1039,7 +1042,7 @@ new o s z t =
       -- Parun.Engine.Event.changeZoneAttaching's mkObj.
       announcedX = Nothing,
       -- An ability object never changes zones, so nothing writes it back.
-      manaCostPaid = Nothing,
+      manaSpentOnX = Nothing,
       -- Nothing writes it back: no permanent reads it.
       castFrom = Nothing,
       castBy = Nothing,

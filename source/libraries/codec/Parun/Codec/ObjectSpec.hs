@@ -199,7 +199,7 @@ spec s = Spec.describe s "Parun.Codec.Object" $ do
                   }
               ],
           Object.announcedX = Just 20,
-          Object.manaCostPaid = Nothing,
+          Object.manaSpentOnX = Nothing,
           Object.castFrom = Just Zone.Graveyard,
           Object.castBy = Just (PlayerId.MkPlayerId 2),
           Object.castUsing = Just Keyword.JumpStart,

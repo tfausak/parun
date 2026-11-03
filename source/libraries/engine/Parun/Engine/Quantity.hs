@@ -25,6 +25,7 @@ import qualified Parun.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Parun.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Parun.Types.AgainstSlot as AgainstSlot
 import qualified Parun.Types.Arithmetic as Arithmetic
+import qualified Parun.Types.AtMost as AtMost
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardType as CardType
@@ -53,9 +54,12 @@ import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LifeTally as LifeTally
 import qualified Parun.Types.LoggedEvent as LoggedEvent
+import qualified Parun.Types.Mana as Mana
 import qualified Parun.Types.ManaCost as ManaCost
+import qualified Parun.Types.ManaSpent as ManaSpent
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
+import qualified Parun.Types.ManaUnit as ManaUnit
 import qualified Parun.Types.Moved as Moved
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
@@ -396,6 +400,12 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- CR 107.1: Nothing propagates from any operand -- a calculation over a
         -- number nobody could determine is not a number either.
         Quantity.Arithmetic arithmetic -> fmap calculate (traverse recur arithmetic)
+        -- CR 107.1: Nothing propagates from the value as from any operand, but NOT
+        -- from a limit: "not more than the creature's toughness" says nothing
+        -- when there is no creature (Parun.Types.AtMost), so a limit naming no
+        -- number is skipped. Drain Life at a battle gains all the damage dealt
+        -- (docs/decisions.md, "Drain Life's limits at a target they don't name").
+        Quantity.AtMost (AtMost.MkAtMost inner limits) -> fmap (\n -> minimum (n : Maybe.mapMaybe recur (Foldable.toList limits))) (recur inner)
         -- CR 208.2a / 608.2h: delegate to the general Count fold (Parun.Engine.Count),
         -- which reads the CR 613 projection through the injected ViewOf. The second
         -- injection is this function itself, aimed at whichever CANDIDATE the fold is
@@ -657,7 +667,18 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- CR 202.1a's amount, the arm above's read one field over and a COUNT
         -- rather than a 0/1: rule 702.191a's "the amount of mana spent to cast that
         -- spell". Zero for a spell cast for no mana, which is an ordinary answer.
-        Quantity.ManaSpent -> fmap (toInteger . Filter.manaSpentAmount) mView
+        Quantity.ManaSpent part -> case part of
+          ManaSpent.Total -> fmap (toInteger . Filter.manaSpentAmount) mView
+          -- CR 107.3 / 601.2h: Soul Burn's "the amount of {B} spent on X", off
+          -- the shares the payment could have spent on X (Object.manaSpentOnX),
+          -- 0 where none was. A unit counts by the type it IS, not one a
+          -- spend-as-though clause let it pay as (CR 609.4b).
+          --
+          -- Asking the payer which share they spent is not implemented: the
+          -- most of that type any share holds is counted (#5973).
+          ManaSpent.OfTypeOnX manaType ->
+            let ofType = toInteger . length . filter ((== manaType) . ManaUnit.manaType) . Mana.unwrap
+             in fmap (\view -> maximum (0 : fmap ofType (Filter.manaSpentOnX view))) mView
         -- CR 111.6's status as a 0/1, WasForetold's arm in every respect. Filter.token
         -- rather than Game.isToken: reading the object directly answers False for an
         -- id naming nothing, which is the whole case this arm exists for; see #1102.
@@ -947,17 +968,17 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
                         && PastActivation.ability past == Just (ActivatedAbilitySource.ability activated)
                  in length (filter this (Foldable.toList (GameState.activationsThisTurn gs)))
               _ -> 0
-        -- CR 602.2 / 608.2i: the turn's activations by that player, off the same
+        -- CR 602.2 / 608.2i: the turn's activations by those players, off the same
         -- log, each asked of its source as the activation began (Count.pastView)
         -- and of the ability (Count.activationMeets). The snapshot is what answers
         -- The Chain Veil's ruling that a planeswalker gone from the battlefield
         -- still counts. Absent activations are 0, an answered question; only the
         -- reference can go unanswered, SpellsCast's posture.
         -- data/scenarios/the-chain-veil proves the count.
-        Quantity.ActivationsThisTurn tally -> case playersOf (ActivationsThisTurn.activator tally) of
-          Just [pid] ->
+        Quantity.ActivationsThisTurn tally -> case historyPlayersOf (ActivationsThisTurn.activator tally) of
+          Just pids@(_ : _) ->
             let counts past =
-                  PastActivation.activator past == pid
+                  elem (PastActivation.activator past) pids
                     && Filter.matches context (Count.pastView (PastActivation.source past)) (ActivationsThisTurn.source tally)
                     && Count.activationMeets (ActivationsThisTurn.criteria tally) past
              in Just (toInteger (length (filter counts (Foldable.toList (GameState.activationsThisTurn gs)))))
@@ -1316,6 +1337,7 @@ substituteAnnouncedX :: Natural -> Quantity -> Quantity
 substituteAnnouncedX n quantity = case quantity of
   Quantity.InSlot slot | slot == Binding.variableX -> Quantity.Literal (toInteger n)
   Quantity.Arithmetic arithmetic -> Quantity.Arithmetic (fmap (substituteAnnouncedX n) arithmetic)
+  Quantity.AtMost atMost -> Quantity.AtMost (fmap (substituteAnnouncedX n) atMost)
   _ -> quantity
 
 -- QuantitySlot.slots split by WHICH HALF of the binding the read is of: the
@@ -1357,6 +1379,7 @@ objectSlots quantity = case quantity of
   -- DESCENT: a calculation's operands are card text like any other, and
   -- QuantitySlot.slots descends into them the same way.
   Quantity.Arithmetic arithmetic -> foldMap objectSlots arithmetic
+  Quantity.AtMost atMost -> foldMap objectSlots atMost
   -- DESCENT into a Greatest's or a Total's per-member number, which may aim at a
   -- slot of its own; the other aggregations carry no number to ask.
   Quantity.Count c -> QuantitySlot.foldCount objectSlots c
@@ -1394,7 +1417,7 @@ objectSlots quantity = case quantity of
   Quantity.TagWasSpent {} -> Set.empty
   Quantity.TagWasSpentOfOwnColor {} -> Set.empty
   Quantity.ChosenColorsItIs -> Set.empty
-  Quantity.ManaSpent -> Set.empty
+  Quantity.ManaSpent _ -> Set.empty
   Quantity.WasToken -> Set.empty
   Quantity.WasAttacking -> Set.empty
   Quantity.WasBlocking -> Set.empty
@@ -1632,6 +1655,7 @@ readsX quantity = case quantity of
   -- Plus X (Literal 3), and Toxic Deluge's "-X" is Negate X, each reading X
   -- without being equal to it.
   Quantity.Arithmetic arithmetic -> any readsX arithmetic
+  Quantity.AtMost atMost -> any readsX atMost
   -- Terminating for the reason QuantitySlot.overSlots' Count arm is: a Greatest's
   -- payload is a strictly smaller subterm.
   Quantity.Count c -> QuantitySlot.anyCount readsX c
@@ -1674,7 +1698,7 @@ readsX quantity = case quantity of
   Quantity.TagWasSpent {} -> False
   Quantity.TagWasSpentOfOwnColor {} -> False
   Quantity.ChosenColorsItIs -> False
-  Quantity.ManaSpent -> False
+  Quantity.ManaSpent _ -> False
   Quantity.WasToken -> False
   Quantity.WasAttacking -> False
   Quantity.WasBlocking -> False

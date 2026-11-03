@@ -486,6 +486,7 @@ printedBoxQuantity quantity = case quantity of
     Arithmetic.Quotient {} -> False
     Arithmetic.Times {} -> False
     Arithmetic.Negate {} -> False
+  Quantity.Type.AtMost {} -> False
   Quantity.Type.Measure _ -> False
   Quantity.Type.Intensity -> False
   Quantity.Type.InSlot _ -> False
@@ -527,7 +528,7 @@ printedBoxQuantity quantity = case quantity of
   Quantity.Type.TagWasSpent {} -> False
   Quantity.Type.TagWasSpentOfOwnColor {} -> False
   Quantity.Type.ChosenColorsItIs -> False
-  Quantity.Type.ManaSpent -> False
+  Quantity.Type.ManaSpent _ -> False
   Quantity.Type.WasToken -> False
   Quantity.Type.WasAttacking -> False
   Quantity.Type.WasBlocking -> False
@@ -632,16 +633,17 @@ isTokenR replacement = case replacement of
 
 -- #437: does this replacement carry a PhasePattern with a BAKED player in it?
 --
--- PhasePattern.whosePhase is meant to be runtime-only. Nothing is the value card
--- data writes -- Eon Hub's "players skip their upkeep steps" is symmetric and
--- names nobody -- and Just is baked by the engine out of a player a resolution
--- named (Resolve.applyEffect's SkipPhase arm, Fatigue's target) or out of a
--- pending extra turn (Replacement.installTurnSkips). Card data cannot name a
--- player at all.
+-- Card data writes a PhasePattern.whosePhase relative to the row's "you" -- Eon
+-- Hub's "players skip their upkeep steps" names nobody, Necropotence's "skip your
+-- draw step" its controller -- and Among is baked by the engine out of a player a
+-- resolution named (Resolve.applyEffect's SkipPhase arm, Fatigue's target) or out
+-- of a pending extra turn (Replacement.installTurnSkips). Card data cannot name a
+-- player at all, and no card's skip names a slot, so InSlot is fenced until one
+-- does.
 --
 -- Nothing enforced that split. Codec.PhasePattern is structural over the record,
--- so it accepts a Just from card JSON -- and a card file could write
--- `"whosePhase": 1`, which is meaningless. Player 1 is a seat in some game, not
+-- so it accepts an Among from card JSON -- and a card file could write
+-- `"whosePhase": {"type": "Among", "value": [1]}`, which is meaningless. Player 1 is a seat in some game, not
 -- a fact about a printed card, and the skip would land on whoever happened to
 -- hold that id.
 --
@@ -664,7 +666,11 @@ isTokenR replacement = case replacement of
 -- pattern-carrying replacement must break this build rather than silently pass.
 phasePatternOffends :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Bool
 phasePatternOffends replacement = case replacement of
-  ReplacementEffect.PhaseR phasePattern -> Maybe.isJust (PhasePattern.whosePhase phasePattern)
+  ReplacementEffect.PhaseR phasePattern -> case PhasePattern.whosePhase phasePattern of
+    ControllerRelation.Among _ -> True
+    ControllerRelation.InSlot _ -> True
+    ControllerRelation.Related _ -> False
+    ControllerRelation.EnchantedPlayers -> False
   ReplacementEffect.CounterR {} -> False
   ReplacementEffect.ZoneChangeR {} -> False
   ReplacementEffect.EntryR {} -> False
@@ -751,7 +757,7 @@ isInstructionR replacement = case replacement of
 -- printing either half would be claiming an ability no rule gives it.
 --
 -- ControllerRelation.Among is the same prohibition on every arm's pattern at once:
--- the players an InSlot named, which only the Effect.Replace install bakes.
+-- the players a resolution named, which only an install bakes.
 --
 -- Exhaustive rather than a wildcard, this file's discipline for a sum.
 engineOnlyOffends :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Bool
@@ -3143,7 +3149,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
   --
   -- A card's own CR 614.1e clause states no procedure -- it applies down every
   -- road the rule reaches -- so a printing writing one would be claiming a rule it
-  -- has not got. Parun.Types.PhasePattern's whosePhase is the same shape of field
+  -- has not got. Parun.Types.PhasePattern's Among is the same shape of field
   -- and the lint below it the same shape of sweep.
   --
   -- Guarded against a vacuous sweep by the rows themselves: Gift of Doom and
@@ -3243,11 +3249,12 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     let card = S.combinedFace eonHub
         bake replacement = case replacement of
           ReplacementEffect.PhaseR phasePattern ->
-            ReplacementEffect.PhaseR phasePattern {PhasePattern.whosePhase = Just (PlayerId.MkPlayerId 1)}
+            ReplacementEffect.PhaseR phasePattern {PhasePattern.whosePhase = ControllerRelation.Among (Set.singleton (PlayerId.MkPlayerId 1))}
           other -> other
         baked = card {Face.replacementEffects = fmap (\pr -> pr {PrintedReplacement.effect = bake (PrintedReplacement.effect pr)}) (Face.replacementEffects card)}
     Spec.assertBool s (not (any phasePatternOffends (cardReplacementEffects card))) "the real Eon Hub is symmetric and accepted"
     Spec.assertBool s (any phasePatternOffends (cardReplacementEffects baked)) "and the same card naming a seat is rejected"
+    Spec.assertBool s (any engineOnlyOffends (cardReplacementEffects baked)) "and whosePhase is among the relations Resolve.overRelations reaches"
   -- The same lint one event class over, for the OTHER fields the codec accepts and
   -- only the engine writes: CR 615.7's shielded recipient and its remaining amount,
   -- plus CR 122.1c's minted pair. See engineOnlyOffends.

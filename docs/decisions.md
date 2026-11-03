@@ -1137,3 +1137,50 @@ Entries are ordered by the first rule each cites.
   Harmonic Prodigy and Khârn the Betrayer scenarios for a control change, its
   Harmonic Prodigy and Teferi's Imp scenario for a phasing, and its "Harmonic
   Prodigy stolen by a conceding player" scenario for a loss.
+
+## Drain Life's limits at a target they don't name
+
+- **Question**: Drain Life gains "not more life than the player's life total
+  ..., the planeswalker's loyalty ..., or the creature's toughness", but "any
+  target" includes a battle (CR 115.4), which none of the three names. Is the
+  gain uncapped, or nothing?
+- **Rules**: CR 115.4, 120.3h, 107.1; CR of 2026-08-07. No ruling on Drain Life
+  or Soul Burn at a battle.
+- **Decision**: Uncapped. Each limit is read alone, and one naming nothing that
+  exists imposes nothing, so Drain Life at a battle gains the damage dealt.
+- **Rejected**: Reading a missing limit as 0 (CR 208.2a's undeterminable
+  number), which gains nothing; the sentence names its limits by what the target
+  is, so a target it never names is not limited by them.
+- **Site**: `Parun.Engine.Quantity`'s AtMost arm, proved by the scenario
+  "Drain Life at a battle gains all the damage dealt".
+- **Issue**: #5571.
+
+## Drain Life at a planeswalker that is also a creature
+
+- **Question**: A target that is both a creature and a planeswalker matches
+  two of Drain Life's limits. Which bounds the gain?
+- **Rules**: CR 306.5c, 208.1, 107.1; CR of 2026-08-07. No ruling.
+- **Decision**: Both: the gain is no more than the lower of its loyalty and its
+  toughness, each limit applying wherever it names something.
+- **Rejected**: Picking one by the target's "kind" in the printed order, which
+  the list's "or" does not rank.
+- **Site**: `Parun.Engine.Quantity`'s AtMost arm, proved by the scenario
+  "Drain Life at a planeswalker that is also a creature".
+- **Issue**: #5571.
+
+## When Drain Life reads the creature's toughness
+
+- **Question**: Drain Life reads the player's life and the planeswalker's
+  loyalty "before the damage was dealt", but says only "the creature's
+  toughness". Damage from a source with wither or infect lowers toughness
+  (CR 120.3d). Before the damage, or after?
+- **Rules**: CR 120.3d, 608.2c; CR of 2026-08-07. The card's ruling: "You may
+  gain up to the total toughness of the creature even if it was already
+  damaged".
+- **Decision**: Before, beside the other two limits.
+- **Rejected**: After, which the ruling's "total toughness" leans against and
+  which would read one limit at a different moment from the others.
+- **Site**: data/cards/drain-life.json and soul-burn.json bind every limit
+  before the damage. Unproven by a scenario: no card in the pool gives Drain
+  Life wither or infect.
+- **Issue**: #5571.
