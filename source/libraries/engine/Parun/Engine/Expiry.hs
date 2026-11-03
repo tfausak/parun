@@ -507,12 +507,14 @@ dropAtCleanup gs =
 -- that has ended stays ended even if the condition becomes true again. Reports
 -- whether it changed anything, so Engine.settleForPriority knows to run again.
 --
--- CR 704.3 fixes the coarsest moment anything can OBSERVE the condition, and
--- settleForPriority runs at exactly the points where the board can change, so
--- checking here is indistinguishable from checking continuously.
+-- Run at every settle and after every instruction of a resolution
+-- (Parun.Engine.Resolve.Effect.applyEffectWith), so a later instruction reads
+-- the board the ended effect leaves.
+-- data/scenarios/aerial-assault-counts-a-flyer-willbreaker-s-death-hands-back.json
+-- proves it.
 --
--- Not implemented: ending inside a resolution, as a mana ability's sacrifice
--- while paying one can make it (#5891).
+-- Not implemented: sparing until the resolution ends a duration the resolving
+-- spell or ability began, which CR 611.2b lets begin again before then (#6027).
 --
 -- `changed` is a scan over sourcedExpiries rather than a compare of rebuilt
 -- carriers, and `State.put` is skipped when nothing changed, so a no-op sweep

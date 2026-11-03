@@ -1221,7 +1221,8 @@ settleForPriority = Monad.void performSettle
 -- Ring.endOnControlChange for CR 701.54a.
 --
 -- CR 704.3 makes "whenever a player would get priority" the coarsest moment
--- anything could observe CR 611.2b's condition, so settling here is
+-- anything outside a resolution could observe CR 611.2b's condition, so
+-- settling here (and after each instruction, Resolve.Effect.applyEffectWith) is
 -- indistinguishable from checking continuously. The sweep runs FIRST, before the
 -- SBA check: a "for as long as you control this" effect ending (Master Thief)
 -- returns a permanent to another player's control, and CR 704.5j's legend rule
