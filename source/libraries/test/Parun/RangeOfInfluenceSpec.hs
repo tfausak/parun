@@ -705,7 +705,7 @@ spec s registry = Spec.describe s "Range of influence" $ do
         (spell, board) = S.addHandCard fumble S.alice (S.attach auraId pikerId g3)
         moving :: Prompt.Prompt r -> r
         moving p = case p of
-          Prompt.ChoosePermanent _ _ _ offered -> Maybe.fromMaybe (NonEmpty.head offered) (List.find (`elem` offered) [giantId, ratsId])
+          Prompt.ChoosePermanent _ _ _ offered _ -> Maybe.fromMaybe (NonEmpty.head offered) (List.find (`elem` offered) [giantId, ratsId])
           _ -> aimingFirst [(S.alice, [(== Just pikerId) . Recipient.objectOf])] p
         hosts gs =
           let after = S.runPure moving (onMain gs) (S.cast S.alice spell >> Stack.resolveTop)

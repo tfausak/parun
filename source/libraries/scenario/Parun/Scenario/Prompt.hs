@@ -78,7 +78,7 @@ kindOf prompt = Text.pack $ case prompt of
   Prompt.ChooseCardInHand {} -> "ChooseCardInHand"
   Prompt.ChooseCardFromAmong {} -> "ChooseCardFromAmong"
   -- The names scenario files answer these by, one per AnyNumberOf.
-  Prompt.ChooseAnyNumber _ _ _ purpose _ _ -> case purpose of
+  Prompt.ChooseAnyNumber _ _ _ purpose _ _ _ -> case purpose of
     AnyNumberOf.Permanents -> "ChooseAnyNumberOfPermanents"
     AnyNumberOf.CardsFromAmong -> "ChooseCardsFromAmong"
     AnyNumberOf.CardsInHand -> "ChooseCardsInHand"

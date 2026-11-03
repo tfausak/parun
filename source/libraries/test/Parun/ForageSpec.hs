@@ -107,7 +107,7 @@ takingFood p = case p of
 -- set's front sacrifices the other Food.
 takingLastFood :: Prompt.Prompt r -> r
 takingLastFood p = case p of
-  Prompt.ChoosePermanent _ _ _ candidates -> NonEmpty.last candidates
+  Prompt.ChoosePermanent _ _ _ candidates _ -> NonEmpty.last candidates
   _ -> takingFood p
 
 -- alice's Golden Eggs on the battlefield, ascending.

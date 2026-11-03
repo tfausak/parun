@@ -8,6 +8,7 @@
 module Parun.BoardEffectSpec where
 
 import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
@@ -1401,7 +1402,7 @@ gloriousProtectorSpec s registry =
       -- to agree would prove nothing.
       namingExactly :: Set.Set ObjectId.ObjectId -> Prompt.Prompt r -> r
       namingExactly wanted p = case p of
-        Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.Permanents _ _ -> wanted
+        Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.Permanents _ _ _ -> wanted
         _ -> accepting p
       -- Was the subset actually put to a player? Read off the recorded responses
       -- rather than off the board, so "nobody was asked" and "asked and answered
@@ -2682,7 +2683,7 @@ teferiUntapSpec s registry =
       -- engine that trusted the answer would act on it.
       answering :: ([ObjectId.ObjectId] -> [ObjectId.ObjectId]) -> Prompt.Prompt r -> State.State [([ObjectId.ObjectId], Maybe Natural)] r
       answering pick p = case p of
-        Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.Permanents candidates atMost -> do
+        Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.Permanents candidates atMost _ -> do
           State.modify (<> [(candidates, atMost)])
           pure (Set.fromList (pick candidates))
         _ -> pure (S.identityAnswer p)
@@ -2740,7 +2741,7 @@ archfiendOfDepravitySpec s registry =
       -- ceiling) and answers with the first and third candidates.
       answering :: Prompt.Prompt r -> State.State [(PlayerId.PlayerId, [ObjectId.ObjectId], Maybe Natural)] r
       answering p = case p of
-        Prompt.ChooseAnyNumber decider _ _ AnyNumberOf.Permanents candidates atMost -> do
+        Prompt.ChooseAnyNumber decider _ _ AnyNumberOf.Permanents candidates atMost _ -> do
           State.modify (<> [(Decider.unwrap decider, candidates, atMost)])
           pure (Set.fromList [c | (i, c) <- zip [0 :: Int ..] candidates, i /= 1])
         _ -> pure (S.identityAnswer p)
@@ -2772,35 +2773,89 @@ archfiendOfDepravitySpec s registry =
 --
 -- Three seats, each answering with every candidate but the second: alice's lone
 -- creature is kept, bob and carol each lose their second of three.
-covetousElegySpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+covetousElegySpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 covetousElegySpec s registry =
-  let answering :: Prompt.Prompt r -> State.State [(PlayerId.PlayerId, [ObjectId.ObjectId])] r
+  let -- Records each seat's candidates and what its prompt says the earlier
+      -- seats picked, and answers with every candidate but the second.
+      answering :: Prompt.Prompt r -> State.State [(PlayerId.PlayerId, [ObjectId.ObjectId], [(PlayerId.PlayerId, Set.Set ObjectId.ObjectId)])] r
       answering p = case p of
-        Prompt.ChooseAnyNumber decider _ _ AnyNumberOf.Permanents candidates _ -> do
-          State.modify (<> [(Decider.unwrap decider, candidates)])
-          pure (Set.fromList [c | (i, c) <- zip [0 :: Int ..] candidates, i /= 1])
+        Prompt.ChooseAnyNumber decider _ _ AnyNumberOf.Permanents candidates _ earlier -> do
+          State.modify (<> [(Decider.unwrap decider, candidates, Foldable.toList earlier)])
+          pure (Set.fromList (kept candidates))
         _ -> pure (S.identityAnswer p)
+      kept ids = [c | (i, c) <- zip [0 :: Int ..] ids, i /= 1]
       tappedTokens gs = length [t | t <- S.tokensOf gs, fmap Object.tapped (Game.lookupObject t gs) == Just TapState.Tapped]
-   in Spec.describe s "CovetousElegy"
-        . Spec.it s "CR 101.4 each player keeps the two they chose; alice gets a Treasure per opposing survivor"
-        $ do
-          elegy <- S.printingOf s registry "Covetous Elegy"
-          piker <- S.printingOf s registry "Goblin Piker"
-          plains <- S.printingOf s registry "Plains"
-          swamp <- S.printingOf s registry "Swamp"
-          let addCreature (ids, g) pid = let (oid, g') = S.addPermanent piker pid g in (ids <> [oid], g')
-              lands = S.landsFor swamp S.alice 3 (S.landsFor plains S.alice 3 S.threePlayerGame)
-              (alices, g0) = addCreature ([], lands) S.alice
-              (bobs, g1) = List.foldl' addCreature ([], g0) [S.bob, S.bob, S.bob]
-              (carols, g2) = List.foldl' addCreature ([], g1) [S.carol, S.carol, S.carol]
-              (withSpell, spell) = S.handOne elegy g2
-              gs = withSpell {GameState.priority = Just S.alice}
-              (after, asked) = State.runState (fmap snd (Engine.runGame answering gs (S.cast S.alice spell >> Stack.resolveTop))) []
+      -- alice's lone Goblin Piker, three each for bob and carol, and the Elegy
+      -- in alice's hand with six lands to cast it.
+      run = do
+        elegy <- S.printingOf s registry "Covetous Elegy"
+        piker <- S.printingOf s registry "Goblin Piker"
+        plains <- S.printingOf s registry "Plains"
+        swamp <- S.printingOf s registry "Swamp"
+        let addCreature (ids, g) pid = let (oid, g') = S.addPermanent piker pid g in (ids <> [oid], g')
+            lands = S.landsFor swamp S.alice 3 (S.landsFor plains S.alice 3 S.threePlayerGame)
+            (alices, g0) = addCreature ([], lands) S.alice
+            (bobs, g1) = List.foldl' addCreature ([], g0) [S.bob, S.bob, S.bob]
+            (carols, g2) = List.foldl' addCreature ([], g1) [S.carol, S.carol, S.carol]
+            (withSpell, spell) = S.handOne elegy g2
+            gs = withSpell {GameState.priority = Just S.alice}
+            (after, asked) = State.runState (fmap snd (Engine.runGame answering gs (S.cast S.alice spell >> Stack.resolveTop))) []
+        pure (alices, bobs, carols, after, asked)
+   in Spec.describe s "CovetousElegy" $ do
+        Spec.it s "CR 101.4 each player keeps the two they chose; alice gets a Treasure per opposing survivor" $ do
+          (alices, bobs, carols, after, asked) <- run
           Spec.assertEqWith
             s
             "survivors, then who was asked over what, then alice's tapped Treasures"
-            (fmap (`S.onBattlefield` after) (alices <> bobs <> carols), asked, tappedTokens after)
+            (fmap (`S.onBattlefield` after) (alices <> bobs <> carols), fmap (\(who, offered, _) -> (who, offered)) asked, tappedTokens after)
             ([True, True, False, True, True, False, True], [(S.alice, alices), (S.bob, bobs), (S.carol, carols)], 4)
+        Spec.it s "CR 101.4b each player is told the earlier players' picks" $ do
+          (alices, bobs, _, _, asked) <- run
+          let picked ids = Set.fromList (kept ids)
+          Spec.assertEqWith
+            s
+            "alice is told nothing, bob alice's pick, carol alice's and bob's"
+            (fmap (\(who, _, earlier) -> (who, earlier)) asked)
+            [(S.alice, []), (S.bob, [(S.alice, picked alices)]), (S.carol, [(S.alice, picked alices), (S.bob, picked bobs)])]
+
+-- Summon: Valefor {4}{U} Enchantment Creature -- Saga Drake 5/4, chapter I:
+-- "Each opponent chooses a creature with the greatest mana value among creatures
+-- they control. Return those creatures to their owners' hands." (Oracle text
+-- checked against api.scryfall.com 2026-11-03.) Effect.ChoosePermanents asking
+-- Prompt.ChoosePermanent in an Effect.ForEach over the opponents.
+--
+-- bob's Air Elemental is his lone greatest over a Grizzly Bears, so he is not
+-- asked; carol's Air Elemental and Serra Angel tie at mana value 5, so she is,
+-- and answers with the second offered.
+summonValeforSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+summonValeforSpec s registry =
+  let told :: Prompt.Prompt r -> State.State [(PlayerId.PlayerId, [ObjectId.ObjectId], [(PlayerId.PlayerId, Set.Set ObjectId.ObjectId)])] r
+      told p = case p of
+        Prompt.ChoosePermanent decider _ _ offered earlier -> do
+          State.modify (<> [(Decider.unwrap decider, NonEmpty.toList offered, Foldable.toList earlier)])
+          pure (NonEmpty.last offered)
+        _ -> pure (S.identityAnswer p)
+   in Spec.describe s "SummonValefor"
+        . Spec.it s "CR 101.4b the later opponent is told the earlier one's pick, asked or not"
+        $ do
+          valefor <- S.printingOf s registry "Summon: Valefor"
+          air <- S.printingOf s registry "Air Elemental"
+          angel <- S.printingOf s registry "Serra Angel"
+          bears <- S.printingOf s registry "Grizzly Bears"
+          island <- S.printingOf s registry "Island"
+          let addCreature (ids, g) (p, pid) = let (oid, g') = S.addPermanent p pid g in (ids <> [oid], g')
+              lands = S.landsFor island S.alice 5 S.threePlayerGame
+              (bobs, g0) = List.foldl' addCreature ([], lands) [(air, S.bob), (bears, S.bob)]
+              (carols, g1) = List.foldl' addCreature ([], g0) [(air, S.carol), (angel, S.carol)]
+              (withSpell, spell) = S.handOne valefor g1
+              gs = withSpell {GameState.priority = Just S.alice}
+              (after, asked) = State.runState (fmap snd (Engine.runGame told gs (S.cast S.alice spell >> Engine.priorityLoop))) []
+          Spec.assertEqWith
+            s
+            "carol alone is asked, over her two, and told bob's unasked Air Elemental"
+            asked
+            [(S.carol, carols, [(S.bob, Set.fromList (take 1 bobs))])]
+          Spec.assertEqWith s "and bob's Air Elemental and carol's Angel went back to hand" (fmap (`S.onBattlefield` after) (bobs <> carols)) [False, True, True, False]
 
 -- Come Back Wrong {2}{B} Sorcery (DSK 86): "Destroy target creature. If a
 -- creature card is put into a graveyard this way, return it to the battlefield
@@ -3108,7 +3163,7 @@ godEternalBontuSpec s registry =
       -- exactly `wanted`, so the offer is read off the engine.
       answering :: Set.Set ObjectId.ObjectId -> Prompt.Prompt r -> State.State [[ObjectId.ObjectId]] r
       answering wanted p = case p of
-        Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.Permanents candidates _ -> do
+        Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.Permanents candidates _ _ -> do
           State.modify (<> [candidates])
           pure wanted
         _ -> pure (S.identityAnswer p)
@@ -3162,6 +3217,7 @@ spec s registry = Spec.describe s "Parun.Engine.Resolve" $ do
   teferiUntapSpec s registry
   archfiendOfDepravitySpec s registry
   covetousElegySpec s registry
+  summonValeforSpec s registry
   banisherPriestSpec s registry
   levelerSpec s registry
   calderaBreakerSpec s registry

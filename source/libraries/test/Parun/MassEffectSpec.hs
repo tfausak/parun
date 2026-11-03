@@ -1448,7 +1448,7 @@ uncoveredCluesSpec s registry =
             nameOfId gs oid = fmap S.nameOf (Game.cardOf oid gs)
             answer :: Prompt.Prompt r -> r
             answer p = case p of
-              Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.CardsFromAmong offered _ -> Set.fromList (filter (\oid -> List.elem (nameOfId withSpell oid) (fmap named wanted)) offered)
+              Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.CardsFromAmong offered _ _ -> Set.fromList (filter (\oid -> List.elem (nameOfId withSpell oid) (fmap named wanted)) offered)
               _ -> S.identityAnswer p
             after = S.runPure answer withSpell (S.cast S.alice spell >> Stack.resolveTop)
             revealed =
@@ -1503,7 +1503,7 @@ leadTheStampedeSpec s registry =
         answer :: Prompt.Prompt r -> r
         answer p = case p of
           -- Every card offered: the answer an uncapped count must honour whole.
-          Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.CardsFromAmong offered _ -> Set.fromList offered
+          Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.CardsFromAmong offered _ _ -> Set.fromList offered
           _ -> S.identityAnswer p
         after = S.runPure answer withSpell (S.cast S.alice spell >> Stack.resolveTop)
     Spec.assertEqWith s "alice's hand holds all three creature cards" (List.sort (namesIn Zone.Hand S.alice after)) [named "Bird Maiden", named "Grizzly Bears", named "Hill Giant"]
@@ -1531,7 +1531,7 @@ followTheLumaretsSpec s registry =
         answer :: Prompt.Prompt r -> r
         answer p = case p of
           -- The declining answer.
-          Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.CardsFromAmong _ _ -> Set.empty
+          Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.CardsFromAmong _ _ _ -> Set.empty
           _ -> S.identityAnswer p
         after = S.runPure answer withSpell (S.cast S.alice spell >> Stack.resolveTop)
     Spec.assertEqWith s "alice's hand is empty" (namesIn Zone.Hand S.alice after) []
@@ -1561,7 +1561,7 @@ zimonesExperimentSpec s registry =
               wanted = [named "Forest", named "Goblin Piker"]
               answer :: Prompt.Prompt r -> r
               answer p = case p of
-                Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.CardsFromAmong offered _ -> Set.fromList (filter (\oid -> List.elem (fmap S.nameOf (Game.cardOf oid withSpell)) wanted) offered)
+                Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.CardsFromAmong offered _ _ -> Set.fromList (filter (\oid -> List.elem (fmap S.nameOf (Game.cardOf oid withSpell)) wanted) offered)
                 _ -> S.identityAnswer p
               after = S.runPure answer withSpell (S.cast S.alice spell >> Stack.resolveTop)
           Spec.assertEqWith s "the revealed creature card is in alice's hand" (namesIn Zone.Hand S.alice after) [named "Goblin Piker"]
