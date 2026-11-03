@@ -251,7 +251,7 @@
     },
     {
       "turn": 1,
-      "step": "DrawStep",
+      "step": "PrecombatMain",
       "player": "bob",
       "do": {
         "Cast": {
@@ -268,13 +268,13 @@
     },
     {
       "turn": 1,
-      "step": "DrawStep",
+      "step": "PrecombatMain",
       "player": "bob",
       "do": "Pass"
     },
     {
       "turn": 1,
-      "step": "DrawStep",
+      "step": "PrecombatMain",
       "player": "bob",
       "do": {
         "Cast": {
@@ -291,13 +291,13 @@
     },
     {
       "turn": 1,
-      "step": "DrawStep",
+      "step": "PrecombatMain",
       "player": "bob",
       "do": "Pass"
     },
     {
       "turn": 1,
-      "step": "DrawStep",
+      "step": "PrecombatMain",
       "player": "bob",
       "check": {
         "Life": {

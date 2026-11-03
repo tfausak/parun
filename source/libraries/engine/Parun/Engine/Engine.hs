@@ -483,10 +483,8 @@ discardToHandSize pid = do
 -- 805.4a); CR 103.8c and CR 800.7, in other multiplayer games nobody does. CR
 -- 800.1 makes a multiplayer game one that BEGINS with more than two players, and
 -- turnOrder is the permanent roster, so a three-player game down to two
--- survivors still does not skip.
---
--- Not implemented: skipping the step itself (CR 500.11) -- it still begins
--- and gives priority; only its draw is suppressed (#5788).
+-- survivors still does not skip. The whole step is skipped (CR 500.11), not just
+-- its draw: runStep asks this ahead of the replacement system.
 skipsDraw :: GameState -> Bool
 skipsDraw gs =
   GameState.turnNumber gs == 1
@@ -547,9 +545,7 @@ runTurnBasedActions phase = do
     -- crank (CR 701.45a leaving it out of the rules), the active player's, so
     -- it takes the CR 800.4j guard.
     Phase.Beginning BeginningStep.Upkeep -> Monad.mapM_ Contraption.crank live
-    Phase.Beginning BeginningStep.DrawStep -> do
-      skip <- State.gets skipsDraw
-      Monad.unless skip (Monad.mapM_ Event.drawForTurn live)
+    Phase.Beginning BeginningStep.DrawStep -> Monad.mapM_ Event.drawForTurn live
     -- CR 703.4h: choose the defending player. The active player's action (CR
     -- 507.1), and the one item on the list CR 800.4h hands to another seat rather
     -- than dropping, so it is NOT guarded here -- designateDefenders asks
@@ -1927,7 +1923,11 @@ runStep = do
   if not phaseBegins
     then skipWholePhase phase
     else do
-      begins <- Event.beginsPhase (PhaseSelector.Step phase) active
+      -- CR 103.8a's skip is the rules', not an effect's, so it is asked FIRST: a
+      -- "skip your next draw step" waits for the first occurrence that isn't
+      -- skipped (CR 614.10a) instead of being spent here.
+      ruleSkips <- State.gets (\gs -> phase == Phase.Beginning BeginningStep.DrawStep && skipsDraw gs)
+      begins <- if ruleSkips then pure False else Event.beginsPhase (PhaseSelector.Step phase) active
       if not begins
         then skipStep phase
         else runStepThatBegan phase

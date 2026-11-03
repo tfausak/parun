@@ -347,8 +347,8 @@ fatigueSpec s registry = Spec.describe s "Fatigue" $ do
       -- scheduled after it. Not an empty schedule: that hands the turn off, which
       -- would clear the event log these cases count and move the active player.
       --
-      -- CR 103.8a's first-turn skip is a TURN-BASED action (Engine.skipsDraw),
-      -- not a replacement effect, and it would swallow the control case's draw;
+      -- CR 103.8a's first-turn skip is the rules' (Engine.skipsDraw), not a
+      -- replacement effect, and it would skip the control case's draw step;
       -- turn 2 puts it out of the way, which is also what makes this the SECOND
       -- turn's draw step -- exactly the "next" one Fatigue named.
       atDraw gs =

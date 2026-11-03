@@ -83,7 +83,7 @@
         }
       },
       "player": "alice",
-      "step": "DrawStep",
+      "step": "PrecombatMain",
       "turn": 1
     }
   ]
