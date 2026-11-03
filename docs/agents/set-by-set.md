@@ -161,9 +161,10 @@ one is your judgement.
   red into a build failure: `const Map.empty . f`, `filter (const False)`.
 - **Use the narrowest path that shows the behaviour**; a whole priority loop
   can answer for the wrong reason.
-- **Mutate towards LESS permissive.** `mutate.sh` caps the heap but passes no
-  `--timeout`; if a mutation loops the engine, kill your own PID and mutate the
-  other way. A trigger arm answering `True` for every event is such a loop.
+- **Mutate towards LESS permissive.** `mutate.sh` caps the heap but does not end
+  a run that loops the engine (a trigger arm answering `True` for every event
+  does). `kill -9` your own PID, since it ignored a plain `kill`, and mutate the
+  other way. Wrapping the run in `timeout` orphans the test binary.
 - **Report a mutation you could not run** (holds by construction, or
   `-Werror` rejects it) at the site and in the PR: the assertion is a fence,
   not a proof.
