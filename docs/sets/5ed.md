@@ -10,26 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Akron Legionnaire: `_Permanents:ExceptFor`
-- Alabaster Potion: `_Action:CreateFuturePreventDamage`
-- Amulet of Kroog: `_Action:CreateFuturePreventDamage`
-- An-Havva Constable: `_GameNumber:Plus`
-- Angry Mob: `_Rule:IfElse`
-- Anti-Magic Aura: `_PermanentRule:CantBeTheTargetOfSpells`
-- Ashes to Ashes: `_Action:Exile`
-- Ashnod's Transmogrant: `_Action:CreatePermanentLayerEffect`
-- Aurochs: `_LayerEffect:AdjustPTForEach`
-- Aysen Bureaucrats: `_Permanents:PowerIs`
-- Barbed Sextant: `_Action:CreateFutureTrigger`
-- Barl's Cage: `_Action:PermanentDoesntUntapDuringControllersNextUntap`
-- Battering Ram: `_Expiration:UntilEndOfCombat`
-- Binding Grasp: `_Action:MayCost`
-- Blessed Wine: `_Action:CreateFutureTrigger`
-- Blood Lust: `_Action:IfElse`
-- Brainstorm: `_Action:PutNumCardsFromHandOnTopOfLibraryAnyOrder`
-- Brainwash: `_PermanentRule:CantAttackUnlessCost`
-- Breeding Pit: `_Action:MayCost`
-- Broken Visage: token size: `_GameNumber:PowerOfPermanent`
 - Caribou Range: `_Permanent:HostPermanent`
 - Chub Toad: renders differently
 - Circle of Protection: Artifacts: `_Action:ChooseADamageSource`

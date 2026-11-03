@@ -1,0 +1,93 @@
+{
+  "faces": [
+    {
+      "attachRestrictions": [
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                },
+                {
+                  "type": "HasAttached",
+                  "value": {
+                    "type": "IsSource"
+                  }
+                }
+              ]
+            }
+          },
+          "attachers": {
+            "type": "And",
+            "value": [
+              {
+                "type": "HasSubtype",
+                "value": {
+                  "type": "Aura"
+                }
+              },
+              {
+                "type": "Not",
+                "value": {
+                  "type": "IsSource"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "enchant": [
+        {
+          "pool": {
+            "type": "Creatures"
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Anti-Magic Aura",
+      "oracleText": "Enchant creature\nEnchanted creature can't be the target of spells and can't be enchanted by other Auras.",
+      "targetRestrictions": [
+        {
+          "affected": {
+            "type": "Attached"
+          },
+          "kind": {
+            "type": "Spell"
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Aura"
+          }
+        ],
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}
