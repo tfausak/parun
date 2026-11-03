@@ -1033,7 +1033,7 @@ checkOnce instead boards = do
   -- the host is read off. `gs` and not the live board: this pass may already have
   -- buried the host, and the Recipient wanted is the one the permanent was
   -- attached to when the pass began.
-  Monad.forM_ detaching (\oid -> Monad.forM_ (Game.lookupObject oid gs >>= Object.attachedTo) (Event.unattach oid))
+  Monad.forM_ detaching (\oid -> Monad.forM_ (Game.lookupObject oid gs >>= Object.attachedTo) (Event.unattach gs oid))
   State.modify' (\g -> g {GameState.objects = List.foldl' (flip (Map.adjust (\o -> o {Object.attachedTo = Nothing}))) (GameState.objects g) detaching})
   -- CR 702.103f: the two halves of "it becomes unattached and ceases to be
   -- bestowed", in one write for the reason the detach above is one -- neither is
@@ -1047,7 +1047,7 @@ checkOnce instead boards = do
   --
   -- Rule 702.103f says "becomes unattached" in as many words, so it is a CR
   -- 701.3d event like the detach above and is recorded the same way.
-  Monad.forM_ unbestowing (\oid -> Monad.forM_ (Game.lookupObject oid gs >>= Object.attachedTo) (Event.unattach oid))
+  Monad.forM_ unbestowing (\oid -> Monad.forM_ (Game.lookupObject oid gs >>= Object.attachedTo) (Event.unattach gs oid))
   State.modify' (\g -> g {GameState.objects = List.foldl' (flip (Map.adjust (\o -> o {Object.attachedTo = Nothing, Object.bestowed = False}))) (GameState.objects g) unbestowing})
   -- CR 704.5g/h: the destructions settled above go to their graveyards, with
   -- the put-into-graveyard batch's board for CR 704.3's reason. A member Lich's

@@ -1,0 +1,82 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Cloud, Midgar Mercenary",
+            "label": "cloud",
+            "ready": true
+          },
+          {
+            "attached": "cloud",
+            "card": "Grafted Wargear",
+            "label": "wargear"
+          },
+          {
+            "card": "Goblin Piker",
+            "label": "piker",
+            "ready": true
+          }
+        ],
+        "hand": [],
+        "name": "alice"
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "Cloud, Midgar Mercenary: equipping the Wargear to another creature doubles its unattach trigger",
+  "note": "CR 603.10c: the trigger looks back to the Wargear on Cloud; on the board after the move it is attached to the Piker and Cloud is unequipped, which would trigger it once.",
+  "timeline": [
+    {
+      "do": {
+        "Activate": {
+          "ability": 0,
+          "mana": [],
+          "object": "$wargear",
+          "targets": [
+            "$piker"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "OrderTriggers": [
+          "$wargear",
+          "$wargear"
+        ]
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "trigger of $wargear",
+            "trigger of $wargear"
+          ],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

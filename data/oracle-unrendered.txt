@@ -492,6 +492,7 @@ clock-of-omens
 clone
 cloud-dragon
 cloud-elemental
+cloud-midgar-mercenary
 cloud-pirates
 cloud-spirit
 cloud-sprite

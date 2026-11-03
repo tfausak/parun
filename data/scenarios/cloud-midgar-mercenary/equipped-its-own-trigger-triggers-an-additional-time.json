@@ -1,0 +1,100 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Cloud, Midgar Mercenary",
+            "label": "cloud",
+            "ready": true
+          },
+          {
+            "attached": "cloud",
+            "card": "Infantry Shield",
+            "label": "shield"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "step": "DeclareAttackers"
+  },
+  "description": "Cloud, Midgar Mercenary: equipped, its own granted mobilize triggers an additional time",
+  "note": "The Cloud half of its doubling: Infantry Shield grants Cloud mobilize, a triggered ability of Cloud's own, and Cloud is equipped.",
+  "timeline": [
+    {
+      "do": {
+        "Attack": [
+          "$cloud"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "OrderTriggers": [
+          "$cloud",
+          "$cloud"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "trigger of $cloud",
+            "trigger of $cloud"
+          ],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "OrderTimestamps": [
+          "Warrior Token",
+          "Warrior Token#2"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "OrderTimestamps": [
+          "Warrior Token#3",
+          "Warrior Token#4"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Warrior Token",
+          "count": 4,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "DeclareBlockers",
+      "turn": 1
+    }
+  ]
+}
