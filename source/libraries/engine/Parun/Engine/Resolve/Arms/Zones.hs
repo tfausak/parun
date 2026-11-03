@@ -1603,7 +1603,7 @@ discard resolving source controller legal _ (Discard.Counted (CountedDiscard.MkC
 -- Skipped at no candidate and at a ceiling of zero, where the empty set is the
 -- only answer, and asked at ONE, chosenPermanents' posture: "any number"
 -- leaves two distinguishable answers there. FILTERED, not trusted (#222), and
--- capped at the ceiling.
+-- asked again over the ceiling, through Game.chooseUpTo.
 discard resolving source controller legal _ (Discard.AnyNumber (AnyNumberDiscard.MkAnyNumberDiscard ref (AnyNumberMatching.MkAnyNumberMatching filter_ atMost) mDiscarded)) = do
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
@@ -1614,14 +1614,9 @@ discard resolving source controller legal _ (Discard.AnyNumber (AnyNumberDiscard
         let candidates = handCardsOf context gs victim filter_
             -- Read against the VICTIM, the Counted arm's count's reason.
             ceiling_ = fmap (maybe 0 Integer.toNaturalSaturating . Common.evaluateForRecipient viewOf context gs resolving source victim) atMost
-            -- Not implemented: asking again for an answer over the limit, which is trimmed (#5889).
-            capped :: [a] -> [a]
-            capped = maybe id (take . Natural.toIntSaturating) ceiling_
         if null candidates || ceiling_ == Just 0
           then pure (victim, [])
-          else do
-            answer <- Game.choose (Prompt.ChooseAnyNumber (Decide.deciderFor victim gs) victim source AnyNumberOf.ToDiscard candidates ceiling_ Seq.empty)
-            pure (victim, capped (filter (`Set.member` answer) candidates))
+          else (,) victim <$> Game.chooseUpTo ceiling_ candidates (Prompt.ChooseAnyNumber (Decide.deciderFor victim gs) victim source AnyNumberOf.ToDiscard candidates ceiling_ Seq.empty)
   doomed <- traverse pickFor victims
   Common.buryDiscards resolving mDiscarded doomed
 
