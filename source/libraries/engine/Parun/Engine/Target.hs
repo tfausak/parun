@@ -1150,7 +1150,7 @@ graveyardsOf :: [PlayerId] -> GameState -> Set Recipient
 graveyardsOf pids gs =
   Set.fromList
     . fmap Recipient.ToObject
-    $ concatMap (\pid -> Game.zoneMembers Zone.Graveyard pid gs) pids
+    $ concatMap (\pid -> Game.cardsIn Zone.Graveyard pid gs) pids
 
 -- CR 406.1: the cards in the exile zone, tagged ToObject -- Riftsweeper's
 -- "choose target face-up exiled card". CR 115.2's clause (a) again, the same

@@ -118,7 +118,8 @@ evaluate viewOf quantityOf context gs count =
    in case Count.Type.scope count of
         Scope.InZone (InZone.MkInZone zone ref) -> do
           pids <- playersFor viewOf context gs ref
-          let ids = concatMap (\pid -> Game.zoneMembers zone pid gs) pids
+          let members = if zone == Zone.Graveyard then Game.cardsIn else Game.zoneMembers
+              ids = concatMap (\pid -> members zone pid gs) pids
               kept = Maybe.mapMaybe (\oid -> fmap ((,) (Just oid)) (keep predicate context (viewOf oid))) ids
           aggregate quantityOf aggregation kept
         -- CR 608.2i: the event log. Views of the object that MOVED come from each
@@ -411,7 +412,7 @@ bakePerspective viewOf context gs candidate predicate =
         -- graveyard. CR 608.2h fixes the moment: the answer is determined once, as the
         -- effect is applied, which is when this fold runs.
         Filter.Type.CardsInGraveyardAtLeast n ->
-          truth (toInteger (length (Game.zoneMembers Zone.Graveyard candidate gs)) >= toInteger n)
+          truth (toInteger (length (Game.cardsIn Zone.Graveyard candidate gs)) >= toInteger n)
         Filter.Type.And fs -> Filter.Type.And (fmap recur fs)
         Filter.Type.Or fs -> Filter.Type.Or (fmap recur fs)
         Filter.Type.Not f -> Filter.Type.Not (recur f)

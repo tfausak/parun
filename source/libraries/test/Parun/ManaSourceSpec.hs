@@ -1572,7 +1572,7 @@ interchangeableSourcesSpec s registry = Spec.describe s "Interchangeable mana so
 
   -- Filter.BeforeMove's nest reads the record of what a card was and any slot
   -- naming that earlier id, so both tell two graveyard cards apart.
-  Spec.it s "CR 400.7 cards that were different permanents are different options" $ do
+  Spec.it s "CR 400.7 Interchangeable.objects does not call cards alike whose earlier records differ or whose earlier id a slot names" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (plain, g1) = S.addPermanent piker S.alice (Setup.emptyGame S.bothPlayers)
         (twin, g2) = S.addPermanent piker S.alice g1

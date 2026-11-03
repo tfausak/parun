@@ -4433,7 +4433,7 @@ apply batch applied candidate event =
       DrawRewrite.FromGraveyardOrLose -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
         gs <- State.get
-        let cards = filter (`Game.isCardObject` gs) (Game.zoneMembers Zone.Graveyard pid gs)
+        let cards = Game.cardsIn Zone.Graveyard pid gs
         picked <- Game.chooseAmong (\decider who pool -> Prompt.ChooseCardInGraveyard decider who (ReplacementCandidate.source candidate) pool Seq.empty) pid cards
         arrived <- maybe (pure Seq.empty) (`changeZoneReturning` Zone.Hand) picked
         after <- State.get
@@ -10237,7 +10237,7 @@ performDraw pid = do
   -- The top CARD (CR 121.1): a token shuffled in waits there for CR 704.5d (CR
   -- 111.7) and is no card. Proved by
   -- data/scenarios/game-outcome/cr-111-7-lich-s-mirror-draws-seven-cards-past-a-token-it-shuffled-in.json.
-  case filter (`Game.isCardObject` gs) (Game.zoneMembers Zone.Library pid gs) of
+  case Game.cardsIn Zone.Library pid gs of
     [] -> do
       State.put gs {GameState.drewFromEmpty = Set.insert pid (GameState.drewFromEmpty gs)}
       pure Nothing

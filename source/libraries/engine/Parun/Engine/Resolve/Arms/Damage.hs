@@ -814,7 +814,7 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
                 -- one instruction with one count, and asking per zone would cap
                 -- per zone. The zone is kept alongside its candidates because
                 -- CR 701.23b's permission is a property of the ZONE.
-                let byZone = fmap (\zone -> (zone, filter (matches1 searcher gs) (Game.zoneMembers zone owner gs))) (Set.toAscList searchedZones)
+                let byZone = fmap (\zone -> (zone, filter (matches1 searcher gs) (Game.cardsIn zone owner gs))) (Set.toAscList searchedZones)
                     matches = concatMap snd byZone
                     outsideCopies = sum (Map.elems outsideAvailable)
                     -- CR 701.23a bounds an unbounded search by the places: every
@@ -1019,7 +1019,7 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
 exileAllGraveyards :: ObjectId -> PlayerId -> Game ()
 exileAllGraveyards source controller = do
   gs <- State.get
-  let gyCards = concatMap (\pid -> Game.zoneMembers Zone.Graveyard pid gs) (Players.table (Plane.rangePerspective source controller gs) gs)
+  let gyCards = concatMap (\pid -> Game.cardsIn Zone.Graveyard pid gs) (Players.table (Plane.rangePerspective source controller gs) gs)
   Monad.void (Event.changeZonesTogether (fmap (\c -> (c, Zone.Exile)) gyCards))
 
 -- CR 103.5b (Serum Powder): the count is the hand size BEFORE the exile, which
