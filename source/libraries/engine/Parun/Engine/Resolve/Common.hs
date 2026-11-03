@@ -3174,7 +3174,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
     -- offered over a one-card hand".
     let victims = playerRefPlayers legal resolving source controller gs ref
         shortHanded victim = case evaluateForRecipient viewOf context gs resolving source victim quantity of
-          Just n | n > 0 -> n > List.genericLength (Game.zoneMembers Zone.Hand victim gs)
+          Just n | n > 0 -> n > List.genericLength (Game.cardsIn Zone.Hand victim gs)
           _ -> False
      in not (null victims) && all shortHanded victims
   Effect.LoseLife {} -> False
@@ -4532,7 +4532,7 @@ conniveOne n oid = Monad.when (n > 0) $ do
     Monad.forM_ (outcome >>= Replacement.asPerformed PlayerInstruction.DrawCards) $ \(drawer, settled) ->
       Monad.replicateM_ (Natural.toIntSaturating settled) (Event.drawCard drawer)
     drawn <- State.get
-    let held = Game.zoneMembers Zone.Hand pid drawn
+    let held = Game.cardsIn Zone.Hand pid drawn
     -- The discard is N however many cards the draw actually delivered (CR
     -- 701.50d), and CR 609.3 clamps it to the hand.
     chosen <-
