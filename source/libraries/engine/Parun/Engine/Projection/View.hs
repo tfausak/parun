@@ -304,6 +304,7 @@ viewOfCardLapsed lapsed face =
           -- CR 202.1a's mana cost is paid for a SPELL -- `manaSpentTagColors` above,
           -- same sentence.
           Filter.manaSpentAmount = 0,
+          Filter.manaSpentOnX = [],
           -- CR 602.1 / 605.1a off the PRINTED face, through the roster every view
           -- builder reads (Keyword.activatedAbilitiesOf): the printed abilities
           -- and rule 702's, battlefield ones included -- a Vehicle card HAS crew
@@ -850,6 +851,8 @@ viewOfCharacteristics peers oid pc controller counters gs =
       -- CR 202.1a off the same record one field over: how many units were spent,
       -- for rule 702.191a's increment.
       Filter.manaSpentAmount = maybe 0 (Natural.length . Mana.unwrap . Object.manaSpent) (Game.lookupObject oid gs),
+      -- CR 107.3 / 601.2h off the record the payment wrote beside it.
+      Filter.manaSpentOnX = Maybe.fromMaybe [] (Game.lookupObject oid gs >>= Object.manaSpentOnX),
       -- CR 602.1 / 605.1a off the PROJECTION like `keywords`: abilities are
       -- characteristics (CR 109.3) written by layer 6. The whole list the object
       -- HAS, not the list it can activate here. LAZY -- see the field's own comment

@@ -486,6 +486,7 @@ printedBoxQuantity quantity = case quantity of
     Arithmetic.Quotient {} -> False
     Arithmetic.Times {} -> False
     Arithmetic.Negate {} -> False
+  Quantity.Type.AtMost {} -> False
   Quantity.Type.Measure _ -> False
   Quantity.Type.Intensity -> False
   Quantity.Type.InSlot _ -> False
@@ -527,7 +528,7 @@ printedBoxQuantity quantity = case quantity of
   Quantity.Type.TagWasSpent {} -> False
   Quantity.Type.TagWasSpentOfOwnColor {} -> False
   Quantity.Type.ChosenColorsItIs -> False
-  Quantity.Type.ManaSpent -> False
+  Quantity.Type.ManaSpent _ -> False
   Quantity.Type.WasToken -> False
   Quantity.Type.WasAttacking -> False
   Quantity.Type.WasBlocking -> False
