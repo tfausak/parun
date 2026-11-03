@@ -14,8 +14,6 @@ Every expressible Foundations card has been added to `data/cards/`.
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #5636: Fiery Annihilation. A target slot can't be narrowed to what's attached to
-  another target of the spell: no filter reads the sibling slot as a host.
 - #5917: Run Away Together. A target slot judges each object alone, with no
   relation among its targets (CR 115.1).
 - #5918: Courageous Goblin; Ruby, Daring Tracker. An intervening "if" checks

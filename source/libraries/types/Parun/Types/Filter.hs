@@ -415,13 +415,12 @@ data Filter keyword
     HasAttached (Filter keyword)
   | -- | CR 701.3a / 301.5a: the candidate is attached to the anchored object --
     -- Kemba's Legion's "for each Equipment attached to this creature" at Source,
-    -- Bruenor Battlehammer's "for each Equipment attached to it" at Evaluated.
+    -- Bruenor Battlehammer's "for each Equipment attached to it" at Evaluated,
+    -- Fiery Annihilation's "target Equipment attached to that creature" at Bound.
     -- Host IDENTITY and not a host quality, so it reads an ObjectId off the
     -- candidate's own view; vacuously False where the candidate is attached to
-    -- nothing or to a player, and where nothing fills the anchor.
-    --
-    -- Not implemented: the Bound anchor, which answers False and
-    -- Parun.FilterPositionLintSpec keeps out of card data (#5636).
+    -- nothing or to a player, and where nothing fills the anchor, but for Bound's
+    -- unanswered slot (Parun.Engine.Filter.attachedAnchored).
     IsAttachedTo (Anchor.Anchor (Filter keyword))
   | -- | CR 613.4c: the candidate IS the object the surrounding QUANTITY is
     -- evaluated against -- Coat of Arms' "each other creature" is @Not

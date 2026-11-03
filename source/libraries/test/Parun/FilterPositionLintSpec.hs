@@ -1177,6 +1177,25 @@ sameControllerAsHostOfBoundOffends card =
   let (framed, elsewhere) = sameControllerAsHostOfBoundCounts card
    in elsewhere /= 0 || framed + elsewhere /= jsonAtoms sameControllerAsHostOfBoundTag (Codec.encode (Face.Codec.codec Card.codec) card)
 
+-- How many CR 301.5a "attached to that creature" atoms this card carries in a
+-- mode's target slot, the position a joint check stands behind, and how many
+-- anywhere else. The second number is the offence: elsewhere the atom's
+-- unanswered slot is a silent True (Parun.Engine.Filter.attachedAnchored). An
+-- effect's object says it with ObjectRef.AttachedToBound.
+attachedToBoundCounts :: Face.Face Card.Type.Card -> (Int, Int)
+attachedToBoundCounts card =
+  let total wanted = sum (fmap (\(_, f) -> attachedToBoundAtoms (atomJson f)) (filter (\(framing, _) -> (framing == InTargetSlot) == wanted) (cardFilters card)))
+   in (total True, total False)
+
+attachedToBoundAtoms :: Value.Value -> Int
+attachedToBoundAtoms = decodedAtoms "IsAttachedTo" (\atom -> case atom of Filter.Type.IsAttachedTo (Anchor.Bound _) -> True; _ -> False)
+
+-- Two offences, controllerRelatesToBoundOffends' two.
+attachedToBoundOffends :: Face.Face Card.Type.Card -> Bool
+attachedToBoundOffends card =
+  let (admitted, elsewhere) = attachedToBoundCounts card
+   in elsewhere /= 0 || admitted + elsewhere /= attachedToBoundAtoms (Codec.encode (Face.Codec.codec Card.codec) card)
+
 -- The CR 110.2 tag, spelled once.
 controllerRelatesToBoundTag :: Text.Text
 controllerRelatesToBoundTag = Text.pack "ControllerRelatesToBound"
@@ -1264,7 +1283,7 @@ evaluatedAtoms value =
 
 -- How many Filter.Shares and Filter.IsAttachedTo atoms in an encoding pair an
 -- anchor with a reading Parun.Engine.Filter has none for -- sharesAnchored's
--- and attachedAnchored's Nothing, which Filter.matches answers False (#5636) --
+-- Nothing (#5636) and attachedAnchored's, which Filter.matches answers False --
 -- and how many it carries in all.
 unreadAnchorCounts :: Value.Value -> (Int, Int)
 unreadAnchorCounts value =
@@ -1838,6 +1857,38 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     Spec.assertEqWith s "the same atom in a static ability's affected set is an offence" (controllerRelatesToBoundCounts planted) (0, 1)
     Spec.assertBool s (controllerRelatesToBoundOffends planted) "and the lint says so"
     Spec.assertBool s (not (controllerRelatesToBoundOffends (S.combinedFace piker))) "where the ungrafted card is accepted"
+  -- CR 301.5a's Filter.IsAttachedTo at Bound, vacuously TRUE at an unanswered
+  -- slot for ControllerRelatesToBound's reason above. See attachedToBoundOffends.
+  Spec.it s "CR 301.5a no card asks IsAttachedTo at a bound slot outside a mode's target slot" $ do
+    ps <- S.allPrintings s corpus
+    let offenders = filter (anyFace attachedToBoundOffends . Printing.card) ps
+    Spec.assertEqWith s "the atom sits only in an admitted position" (fmap (S.nameOf . Printing.card) offenders) []
+    assertAuthors
+      s
+      registry
+      ps
+      "each author's atom is in an admitted position"
+      attachedToBoundCounts
+      [ ("Fiery Annihilation", 1) -- its second target slot
+      ]
+    piker <- S.printingOf s registry "Goblin Piker"
+    let atom = Filter.Type.IsAttachedTo (Anchor.Bound (SlotName.MkSlotName (Text.pack "from")))
+        buried = Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not atom]]
+        planted =
+          (S.combinedFace piker)
+            { Face.staticAbilities =
+                [ StaticAbility.MkStaticAbility
+                    (Affected.Matching buried)
+                    Nothing
+                    Set.empty
+                    Nothing
+                    Nothing
+                    (NonEmpty.singleton Modification.LoseAllAbilities)
+                ]
+            }
+    Spec.assertEqWith s "the same atom in a static ability's affected set is an offence" (attachedToBoundCounts planted) (0, 1)
+    Spec.assertBool s (attachedToBoundOffends planted) "and the lint says so"
+    Spec.assertBool s (not (attachedToBoundOffends (S.combinedFace piker))) "where the ungrafted card is accepted"
   -- CR 601.3a's lookahead (Parun.Engine.Filter.manaValueThresholds) bounds its
   -- sample by the mana value LITERALS a prohibition compares against, so a
   -- player effect comparing a mana value against any other operand would leave
@@ -2112,8 +2163,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- NOT vacuous: the pool writes the atoms the sweep is about.
     Spec.assertBool s (sum (fmap (snd . unreadAnchorCounts . encodedFace . S.combinedFace) ps) > 10) "the pool writes anchored atoms"
     -- The rejected side: radiance's "each other creature that shares a color
-    -- with it" and Street Sweeper's "Auras attached to target land", planted in
-    -- a target slot, beside a read pair that is not counted.
+    -- with it" and a group anchor, planted in a target slot, beside a read pair
+    -- that is not counted.
     piker <- S.printingOf s registry "Goblin Piker"
     let slot = SlotName.MkSlotName (Text.pack "target")
         plantedWith atom =
@@ -2122,7 +2173,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
                 Mint.oneModeTargeting (Map.singleton slot (TargetSlot.required Pool.Creatures (Just (Filter.Type.And [Filter.Type.Not atom])))) Seq.empty
             }
     Spec.assertEqWith s "a planted Shares Color Bound is unread" (unreadAnchorCounts (encodedFace (plantedWith (Filter.Type.Shares Trait.Color (Anchor.Bound slot))))) (1, 1)
-    Spec.assertEqWith s "a planted IsAttachedTo Bound is unread" (unreadAnchorCounts (encodedFace (plantedWith (Filter.Type.IsAttachedTo (Anchor.Bound slot))))) (1, 1)
+    Spec.assertEqWith s "a planted IsAttachedTo AnyPermanent is unread" (unreadAnchorCounts (encodedFace (plantedWith (Filter.Type.IsAttachedTo (Anchor.AnyPermanent (Filter.Type.And [])))))) (1, 1)
+    Spec.assertEqWith s "a planted IsAttachedTo Bound is read" (unreadAnchorCounts (encodedFace (plantedWith (Filter.Type.IsAttachedTo (Anchor.Bound slot))))) (0, 1)
     Spec.assertEqWith s "a planted Shares Name Bound is read" (unreadAnchorCounts (encodedFace (plantedWith (Filter.Type.Shares Trait.Name (Anchor.Bound slot))))) (0, 1)
   -- CR 702.33d: a kicker tally names one of the face's OWN kicker keywords,
   -- joined to Parun.Engine.Cast's per-keyword map by structural equality. See
