@@ -50,17 +50,12 @@
       {
         "battlefield": [
           {
-            "card": "Mountain",
-            "label": "m"
+            "card": "Dragon-Style Twins",
+            "label": "src",
+            "ready": true
           },
           {
             "card": "Leyline of Punishment"
-          }
-        ],
-        "hand": [
-          {
-            "card": "Lightning Bolt",
-            "label": "bolt"
           }
         ],
         "library": [
@@ -92,30 +87,18 @@
         "name": "bob"
       }
     ],
-    "step": "PrecombatMain"
+    "step": "BeginningOfCombat"
   },
-  "description": "Leyline of Punishment: damage can't be prevented, and Eye for an Eye, not preventing, still applies",
+  "description": "Leyline of Punishment: damage can't be prevented, and Eye for an Eye, not preventing, still applies and is used up by the first hit",
   "timeline": [
     {
       "do": {
-        "Cast": {
-          "mana": [
-            "$m"
-          ],
-          "object": "$bolt",
-          "targets": [
-            "$alice"
-          ]
-        }
+        "Attack": [
+          "$src"
+        ]
       },
       "player": "bob",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
-      "do": "Pass",
-      "player": "bob",
-      "step": "PrecombatMain",
+      "step": "DeclareAttackers",
       "turn": 1
     },
     {
@@ -129,47 +112,35 @@
         }
       },
       "player": "alice",
-      "step": "PrecombatMain",
+      "step": "DeclareBlockers",
       "turn": 1
     },
     {
       "do": "Pass",
       "player": "alice",
-      "step": "PrecombatMain",
+      "step": "DeclareBlockers",
       "turn": 1
     },
     {
       "do": {
         "Answer": {
           "prompt": "ChooseDamageSource",
-          "with": "Lightning Bolt"
+          "with": "$src"
         }
       },
       "player": "alice",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
-      "do": "Pass",
-      "player": "bob",
-      "step": "PrecombatMain",
-      "turn": 1
-    },
-    {
-      "do": "Pass",
-      "player": "bob",
-      "step": "PrecombatMain",
+      "step": "DeclareBlockers",
       "turn": 1
     },
     {
       "check": {
         "Life": {
-          "life": 17,
+          "life": 14,
           "player": "alice"
         }
       },
       "player": "bob",
-      "step": "PrecombatMain",
+      "step": "EndOfCombat",
       "turn": 1
     },
     {
@@ -180,7 +151,7 @@
         }
       },
       "player": "bob",
-      "step": "PrecombatMain",
+      "step": "EndOfCombat",
       "turn": 1
     }
   ]

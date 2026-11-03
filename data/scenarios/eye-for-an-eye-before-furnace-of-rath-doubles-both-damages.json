@@ -165,7 +165,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseReplacement",
-          "with": 0
+          "with": 1
         }
       },
       "player": "alice",

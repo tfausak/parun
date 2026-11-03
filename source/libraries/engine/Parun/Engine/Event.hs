@@ -2358,8 +2358,9 @@ chooseAndApply asOf batch diverting allowances applied prevented exiledBy shuffl
 -- CR 614.1a: the noncombat damage a DamageRewrite.AlsoToSourceController row adds
 -- beside the event it replaces, from the row's source, sized as the event is now,
 -- to the damage source's controller as the damage is dealt (CR 108.4a: its owner
--- if it has none). redirectDestination is CR 801.13a's range check and leaves out
--- a player no longer in the game.
+-- if it has none; kept because the CR states it, no scenario reaches a source with
+-- no controller). redirectDestination is CR 801.13a's range check and leaves out a
+-- player no longer in the game.
 alsoDealt :: GameState -> ReplacementCandidate -> ProposedEvent -> Maybe ProposedEvent
 alsoDealt gs candidate event = case (ReplacementCandidate.effect candidate, event) of
   (ReplacementEffect.DamageR (DamageR.MkDamageR _ DamageRewrite.AlsoToSourceController _), ProposedEvent.WouldDealDamage de) -> do
