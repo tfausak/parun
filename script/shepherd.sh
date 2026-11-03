@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Shepherd one pull request in the background: update its branch while it is
-# BEHIND, and exit when it merges, closes, conflicts or fails a check. Usage:
+# Shepherd one pull request in the background: exit when it merges, closes,
+# conflicts or fails a check. Usage:
 #   script/shepherd.sh PR
 # REST only (`gh api`), so it works where gh's GraphQL is blocked. Prints the
 # outcome and exits 0 for MERGED or CLOSED, 1 for CONFLICT (dirty on a third
@@ -14,7 +14,6 @@ while :; do
   case "$1 $2 $3" in
     "closed true"*) echo "$pr MERGED"; exit 0 ;;
     "closed false"*) echo "$pr CLOSED"; exit 0 ;;
-    "open false behind") gh api -X PUT "repos/tfausak/parun/pulls/$pr/update-branch" >/dev/null 2>&1 ;;
     "open false dirty")
       dirty=$((dirty + 1))
       [ "$dirty" -ge 3 ] && { echo "$pr CONFLICT"; exit 1; } ;;
