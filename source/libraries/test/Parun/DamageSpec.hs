@@ -2195,7 +2195,7 @@ m2cPropertySpec s registry =
       -- A structural reminder, asserted by the interaction falsifier's outcome
       -- (TrampleDeathtouch) depending only on the keyword projection. This case
       -- documents the invariant; the real enforcement is code review of
-      -- Damage.blockerThreshold and Sba.woundedByDeathtouch, which case on
+      -- Damage.lethalFrom and Sba.woundedByDeathtouch, which case on
       -- Keyword, never on a printing.
       Spec.assertBool s True "see TrampleDeathtouch and Deathtouch groups"
 
