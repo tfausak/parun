@@ -3,7 +3,7 @@
 *Design written 2026-07-23. Closes **GAP-C** (the player-counter substrate) and
 the first two customers of **GAP-S** (poison and energy). Umbrella:
 `docs/superpowers/specs/2026-07-20-m4.5-closed-half-gaps-design.md` §3, row P10.
-Issue: `tfausak/parun#6`. Census: `docs/mtgish-gap-census.md` §3.4/§3.6.*
+Issue: `parun-mtg/parun#6`. Census: `docs/mtgish-gap-census.md` §3.4/§3.6.*
 
 ## 0. Why this phase, and what it proves
 

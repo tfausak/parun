@@ -8,7 +8,7 @@
 
 **Tech Stack:** Haskell 2010 (GHC 9.14.1), no extensions beyond `GADTs`/`RankNTypes`/`NamedFieldPuns`; `tasty` (`tasty-hunit` + `tasty-quickcheck`); cards as JSON data under `data/cards/`.
 
-**Spec:** `docs/superpowers/specs/2026-07-23-p11-command-zone-emblems-monarch-design.md`. Umbrella issue `tfausak/parun#7`.
+**Spec:** `docs/superpowers/specs/2026-07-23-p11-command-zone-emblems-monarch-design.md`. Umbrella issue `parun-mtg/parun#7`.
 
 ## Global Constraints
 
@@ -1221,7 +1221,7 @@ EOF
 
 **Interfaces:** none (bookkeeping).
 
-- [ ] **Step 1: File the deferral issues on `tfausak/parun`**
+- [ ] **Step 1: File the deferral issues on `parun-mtg/parun`**
 
 `gh issue create` for each, carrying status, rationale, and expiry label:
 - **Synthetic emblem source** (`S.anthemEmblemCard`) — `expires:card-driven`; retired when planeswalkers or the Ring land and a real card can mint an emblem. Cite `Support.hs`'s fixture site.
@@ -1245,7 +1245,7 @@ One distilled entry: gate cards (Palace Jailer; the labeled synthetic emblem sou
 
 - [ ] **Step 4: Replace (do not append) the status bullet in `CLAUDE.md`**
 
-Update the "Current work and tracking" status bullet so it records P11 as closed (GAP-Z command zone + emblems; the monarch customer of GAP-S) and states **M4.5 is complete** — every closed-half axis the census flagged now has a type-system axis and a real (or sanctioned labeled-synthetic) gate card with a passing gameplay test. Remove "P11 is the one remaining M4.5 phase." Close the umbrella issue: `gh issue close 7 --repo tfausak/parun --comment "Landed by M4.5 P11; M4.5 complete."`.
+Update the "Current work and tracking" status bullet so it records P11 as closed (GAP-Z command zone + emblems; the monarch customer of GAP-S) and states **M4.5 is complete** — every closed-half axis the census flagged now has a type-system axis and a real (or sanctioned labeled-synthetic) gate card with a passing gameplay test. Remove "P11 is the one remaining M4.5 phase." Close the umbrella issue: `gh issue close 7 --repo parun-mtg/parun --comment "Landed by M4.5 P11; M4.5 complete."`.
 
 - [ ] **Step 5: Final full verification**
 

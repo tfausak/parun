@@ -4,7 +4,7 @@
 its first resident) and the **monarch** customer of **GAP-S**. This is the last
 remaining M4.5 phase. Umbrella:
 `docs/superpowers/specs/2026-07-20-m4.5-closed-half-gaps-design.md` §3, row P11.
-Issue: `tfausak/parun#7`. Census: `docs/mtgish-gap-census.md` §3.4/§3.5.*
+Issue: `parun-mtg/parun#7`. Census: `docs/mtgish-gap-census.md` §3.4/§3.5.*
 
 ## 0. Why this phase, and what it proves
 
@@ -423,7 +423,7 @@ expiry trigger (CLAUDE.md "File the issue, cite it inline"):
 
 ## 9. Tracking
 
-Umbrella issue `tfausak/parun#7`. On completion, replace the CLAUDE.md status
+Umbrella issue `parun-mtg/parun#7`. On completion, replace the CLAUDE.md status
 bullet (never append) and add the milestone-completion-log entry to
 `docs/progress.md`. The deferral issues above are filed at kickoff and cited at
 their code sites.

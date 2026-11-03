@@ -59,7 +59,7 @@ Exact shapes the tasks build on (paths/line numbers from this planning pass — 
 | `data/cards/synthetic-restart.json` | Create | Task 4: the labeled-synthetic gate card. |
 | `source/test-suite/Parun/Cards.hs` | Modify | Task 4: register `syntheticRestartPrinting` (4 sites). |
 | `source/test-suite/Parun/GameSpec.hs` | Modify | Task 5: gameplay-level headline gate through `priorityLoop`. |
-| GitHub issues (`tfausak/parun`) | Create | Task 6: deferrals (live-loop re-entry; full Karn 727.5/727.5a). |
+| GitHub issues (`parun-mtg/parun`) | Create | Task 6: deferrals (live-loop re-entry; full Karn 727.5/727.5a). |
 | `docs/progress.md`, `CLAUDE.md`, umbrella spec | Modify | Task 7: completion entry, status replacement, phase tick. |
 
 ---
@@ -740,7 +740,7 @@ git commit -m "test(m5b): gameplay gate — activating a restart rebuilds the ga
 Per `CLAUDE.md` ("file the issue, cite it inline"), each thing M5b elides gets a GitHub issue carrying status, rationale, and expiry trigger, with a code-site comment stating only what is *not* implemented plus `(#N)`. Two deferrals have M5b code sites: (a) **live `playGame` re-entry** after an in-play restart (the rebuild-only decision), and (b) **full Karn Liberated** (CR 727.5/727.5a exemption + put-onto-battlefield rider), which retires the synthetic gate.
 
 **Files:**
-- Create: two GitHub issues in `tfausak/parun`.
+- Create: two GitHub issues in `parun-mtg/parun`.
 - Modify: `source/library/Parun/Resolve.hs` — one comment at the `RestartGame` arm citing both issues.
 
 **Interfaces:** none (comments + issues only).
@@ -748,14 +748,14 @@ Per `CLAUDE.md` ("file the issue, cite it inline"), each thing M5b elides gets a
 - [x] **Step 1: Check for duplicates, then file the live-loop-reentry issue**
 
 ```bash
-gh issue list --repo tfausak/parun --search "restart"
+gh issue list --repo parun-mtg/parun --search "restart"
 ```
 
 If nothing covers it, file:
 
 ```bash
 gh issue create \
-  --repo tfausak/parun \
+  --repo parun-mtg/parun \
   --title "Live playGame re-entry after an in-game restart (CR 727.4): abandon the current turn, resume into the new turn 1" \
   --label gap --label rules-correctness \
   --body "Status: deferred; not implemented in M5b.
@@ -773,7 +773,7 @@ Record the number `N1`.
 
 ```bash
 gh issue create \
-  --repo tfausak/parun \
+  --repo parun-mtg/parun \
   --title "Full Karn Liberated (CR 727.5/727.5a): the restart exemption + put-onto-battlefield rider retires the synthetic-restart gate" \
   --label gap --label rules-correctness --label expires:card-driven \
   --body "Status: deferred; M5b's gate is a labeled synthetic ('Restart', data/cards/synthetic-restart.json), the Landform crutch pattern.

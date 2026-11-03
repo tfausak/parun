@@ -298,7 +298,7 @@ so in the PR.
 You are read-only: no build, test, compiler, branch, checkout, edit or PR, and
 no issue comments or labels unless the brief says those are the deliverable.
 Read other refs with `git show <ref>:<path>`. If `gh issue view` returns
-nothing, use `gh api repos/tfausak/parun/issues/N` and `.../comments`. Prior
+nothing, use `gh api repos/parun-mtg/parun/issues/N` and `.../comments`. Prior
 art is a lead, never a citation.
 
 ### What a finding is

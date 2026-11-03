@@ -283,7 +283,7 @@ The `_` arm in `begun` is over `GameEvent`, which is legitimate here: only `Step
     - CR 603.10a's reader (the new issue);
     - #2568's inverse;
     - unproven paths (the activation cost reveal, if Task 2 found no card);
-    - unblocked: what `gh api repos/tfausak/parun/issues/1408/dependencies/blocking` and the same for #3045 list.
+    - unblocked: what `gh api repos/parun-mtg/parun/issues/1408/dependencies/blocking` and the same for #3045 list.
   - End with `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
 
   Leave it a draft; the controller marks it ready after the final review.

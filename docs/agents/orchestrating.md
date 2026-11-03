@@ -225,7 +225,7 @@ than duplicating them.
 
 > Fix the findings of PR #P's audit. You are on branch BRANCH (PR #P) in
 > your own worktree; read the PR body (`gh api
-> repos/tfausak/parun/pulls/P --jq .body`) and its diff (`git diff
+> repos/parun-mtg/parun/pulls/P --jq .body`) and its diff (`git diff
 > BASESHA HEAD`) before anything else, and read only the code the findings
 > name. Each finding below is a claim to verify: fix what holds, push back
 > with evidence where it doesn't. FINDINGS. Update the PR body file

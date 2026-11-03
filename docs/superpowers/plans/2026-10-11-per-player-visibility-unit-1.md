@@ -332,11 +332,11 @@ A library lists its top card first, so `$b-top` is the card under the top. The c
 - [ ] **Step 3: Re-point the dependents.** For each of 1408, 3045, 3237, 3035, 4391, 4452, 3497, 559:
 
 ```
-gh api -X POST repos/tfausak/parun/issues/<N>/dependencies/blocked_by -F issue_id="$(gh api repos/tfausak/parun/issues/<U> --jq .id)"
-gh api -X DELETE repos/tfausak/parun/issues/<N>/dependencies/blocked_by/"$(gh api repos/tfausak/parun/issues/1412 --jq .id)"
+gh api -X POST repos/parun-mtg/parun/issues/<N>/dependencies/blocked_by -F issue_id="$(gh api repos/parun-mtg/parun/issues/<U> --jq .id)"
+gh api -X DELETE repos/parun-mtg/parun/issues/<N>/dependencies/blocked_by/"$(gh api repos/parun-mtg/parun/issues/1412 --jq .id)"
 ```
 
-Run the DELETE only where `gh api repos/tfausak/parun/issues/<N>/dependencies/blocked_by` lists #1412. Then add a dated comment to each of #1408, #3045, #3237, #3035, #4391 and #4452 copying its unit's section from the spec (units 2–5). Add a dated comment to #1412 narrowing it to unit 7 (redaction: an allowlist `PlayerView`, a per-player log, handles reissued per incarnation and per shuffle, redacted prompts, `Asked` carrying the view), citing the spec path. Its #10 link stays.
+Run the DELETE only where `gh api repos/parun-mtg/parun/issues/<N>/dependencies/blocked_by` lists #1412. Then add a dated comment to each of #1408, #3045, #3237, #3035, #4391 and #4452 copying its unit's section from the spec (units 2–5). Add a dated comment to #1412 narrowing it to unit 7 (redaction: an allowlist `PlayerView`, a per-player log, handles reissued per incarnation and per shuffle, redacted prompts, `Asked` carrying the view), citing the spec path. Its #10 link stays.
 
 - [ ] **Step 4: Elision upkeep.** `grep -rn '1412' . --include='*.hs'` and read every hit. Rewrite each note unit 1 makes untrue. Expected:
   - `Parun.Types.Object`'s `facing` note and `Parun.Engine.Game.faceOf`'s CR 708.5 note: the relation exists (`Parun.Engine.Visibility.sees`); what stays unimplemented is that an answerer is still handed the printing (#1412).

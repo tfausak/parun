@@ -208,7 +208,7 @@
   - **Deferred:**
     - the scry/fateseal/search issue;
     - other events' payloads unredacted until unit 7 (#1412);
-    - unblocked: what `gh api repos/tfausak/parun/issues/4391/dependencies/blocking` lists.
+    - unblocked: what `gh api repos/parun-mtg/parun/issues/4391/dependencies/blocking` lists.
   - End with `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
 
   Leave it a draft; the controller marks it ready after the final review.
