@@ -1529,6 +1529,7 @@ lightshell-duo
 lightstall-inquisitor
 lightwielder-paladin
 liliana-death-mage
+liliana-dreadhorde-general
 liliana-heretical-healer-liliana-defiant-necromancer
 liliana-of-the-dark-realms
 liliana-of-the-veil

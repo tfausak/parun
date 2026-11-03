@@ -1158,6 +1158,9 @@ choosePlayerAtRandom resolving source controller choice = do
 -- bound -- Stand or Fall, through Common.takePile. Proved by the combat-effect
 -- scenarios "CR 700.3 / 509.1b Stand or Fall" and "CR 700.3 / 802.2 Stand or
 -- Fall at three seats".
+--
+-- Not implemented: telling a later player in a loop over players what the earlier
+-- ones chose (CR 101.4b, gap #5959).
 choosePermanents :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ChoosePermanents.ChoosePermanents -> Game ()
 choosePermanents resolving source controller legal (ChoosePermanents.MkChoosePermanents choice slot pileChooser) = do
   picked <- case pileChooser of
