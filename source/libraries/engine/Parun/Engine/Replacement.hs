@@ -770,6 +770,21 @@ confinedToSource pat = case pat of
   Filter.Type.And fs -> any confinedToSource fs
   _ -> False
 
+-- CR 614.12: the board on which a card bound for the battlefield is judged "as
+-- it would exist on the battlefield" -- this one with the card on it under a
+-- fresh timestamp (CR 613.7d), as runEntry's subject, so its own static
+-- abilities and the effects already in force apply to it. Not
+-- Object.newIncarnation: the move has not happened, so the card keeps
+-- Object.castFrom, which "wasn't cast" reads.
+arrivingBoard :: ObjectId -> GameState -> GameState
+arrivingBoard oid gs = case Game.lookupObject oid gs of
+  Nothing -> gs
+  Just obj ->
+    let (ts, g1) = Game.freshTimestamp (Game.removeFromZones oid gs)
+        arrived = obj {Object.zone = Zone.Battlefield, Object.timestamp = ts}
+        placed = Game.insertIntoZone Zone.Battlefield LibraryPosition.defaultValue (Object.owner obj) oid g1 {GameState.objects = Map.insert oid arrived (GameState.objects g1)}
+     in placed {GameState.enteringSubjects = Map.insert oid (Game.entryOriginOf oid gs) (GameState.enteringSubjects gs)}
+
 -- CR 614.1: does this replacement's printed pattern match this event?
 matchesPrinted :: (ObjectId -> Filter.View) -> GameState -> ProposedEvent -> ReplacementCandidate -> Bool
 matchesPrinted viewOf gs event candidate =
@@ -788,15 +803,31 @@ matchesPrinted viewOf gs event candidate =
         -- spell or ability, its controller read live (Game.causeNow) since the
         -- move has not happened yet -- the one Moved.causedBy will record.
         --
-        -- Not implemented: reading a card bound for the battlefield as it would
-        -- exist there (CR 614.12); a minted object already is (#5796).
+        -- CR 614.12: a card bound for the battlefield is judged on `arrivingBoard`,
+        -- as it would exist there; a minted object, already on it, is not.
+        -- Proved by the scenarios
+        -- hallowed-moonlight-exiles-a-noncreature-artifact-entering-as-a-creature
+        -- and hallowed-moonlight-lets-heliod-enter-as-a-noncreature.
+        --
+        -- Not implemented: applying a CR 616.1c-d entry rewrite (a copy) to a
+        -- card before the redirect reads it (gap #6041); reading it under a
+        -- controller other than the one it has now (gap #6042).
         (ReplacementEffect.ZoneChangeR (ZoneChangeR.MkZoneChangeR pat _ _ _ _ _), ProposedEvent.WouldChangeZone zc discarded _ resolving) ->
-          maybe True (== ZoneChange.to zc) (ZoneChangePattern.whenDestination pat)
-            && maybe True ((== discarded) . Just) (ZoneChangePattern.whenDiscarded pat)
-            && all (\relation -> maybe False (PlayerRelation.holdsFor (Game.teams gs) relation (ReplacementCandidate.controller candidate) . Just) (Game.causeNow gs)) (ZoneChangePattern.causedBy pat)
-            && (resolving || not (ZoneChangePattern.duringResolution pat))
-            && matchesZoneOwner gs candidate (ZoneChangePattern.whoseObject pat) (ZoneChange.object zc)
-            && matchesFiltered viewOf gs candidate (ZoneChangePattern.whatObject pat) (ZoneChange.object zc)
+          let oid = ZoneChange.object zc
+              arriving = ZoneChange.to zc == Zone.Battlefield && ZoneChange.from zc /= Zone.Battlefield
+              board = arrivingBoard oid gs
+              onBoard = Projection.viewsOf board
+              -- The zone it leaves is the event's, not a characteristic, so
+              -- IsInZone still reads it there; the scenario
+              -- cr-400-7a-a-spell-that-became-no-permanent-carries-no-text proves it.
+              arrived o = if o == oid then (onBoard o) {Filter.zone = Filter.zone (viewOf o)} else onBoard o
+              (judgedView, judgedBoard) = if arriving then (arrived, board) else (viewOf, gs)
+           in maybe True (== ZoneChange.to zc) (ZoneChangePattern.whenDestination pat)
+                && maybe True ((== discarded) . Just) (ZoneChangePattern.whenDiscarded pat)
+                && all (\relation -> maybe False (PlayerRelation.holdsFor (Game.teams gs) relation (ReplacementCandidate.controller candidate) . Just) (Game.causeNow gs)) (ZoneChangePattern.causedBy pat)
+                && (resolving || not (ZoneChangePattern.duringResolution pat))
+                && matchesZoneOwner gs candidate (ZoneChangePattern.whoseObject pat) oid
+                && matchesFiltered judgedView judgedBoard candidate (ZoneChangePattern.whatObject pat) oid
         -- CR 615.1: which events the pattern admits (see matchesDamagePattern),
         -- plus the one fact about the ROW rather than the event -- a shield
         -- spent to nothing is no longer a prevention effect.

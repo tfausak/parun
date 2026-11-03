@@ -1262,6 +1262,7 @@ heavy-fog
 hecatomb
 hei-bai-forest-guardian
 heirloom-blade
+heliod-sun-crowned
 hellion-crucible
 henry-wu-ingen-geneticist
 henzie-toolbox-torre
