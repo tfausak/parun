@@ -174,7 +174,13 @@ leaveAll departing = do
   -- crowning shares the departure's event group and CR 610.3d returns the
   -- prisoners both free as one event. data/scenarios/simultaneous-moves'
   -- concession board proves it.
+  --
+  -- CR 603.10a / 603.10f: the group looks back to `before`, whichever clause
+  -- changed the board, a departing owner's permanent or an ended control
+  -- effect. data/scenarios's "Harmonic Prodigy stolen by a conceding player"
+  -- scenario proves it.
   Event.simultaneously $ do
+    State.modify' (Event.fileBoardBefore before)
     Monad.forM_ departing (\(why, pid) -> State.modify' (leave why pid . clauses pid))
     -- CR 603.9: a player who leaves loses, whatever the reason, unless the game
     -- was a draw for them. Inside the bracket, so CR 603.10f's look-back finds
@@ -331,9 +337,8 @@ objectsLeaveWith pid gs =
       -- the move. Parun.FaceDownSpec's "CR 708.9 the Witness draws when a
       -- face-down permanent's owner leaves the game" proves it.
       revealed = concatMap (Event.leavingReveals gs) owned
-      filed = if null permanents then id else Event.fileBoardBefore gs
    in Event.simultaneouslyPure
-        (\g -> List.foldl' (\g1 oid -> Event.recordEvent (GameEvent.LeftTheGame (LeftTheGame.MkLeftTheGame oid Zone.Battlefield)) g1) (List.foldl' (flip Event.recordEvent) (filed g) revealed) permanents)
+        (\g -> List.foldl' (\g1 oid -> Event.recordEvent (GameEvent.LeftTheGame (LeftTheGame.MkLeftTheGame oid Zone.Battlefield)) g1) (List.foldl' (flip Event.recordEvent) g revealed) permanents)
         removed
 
 -- CR 800.4a, second clause: any effects which give that player control of

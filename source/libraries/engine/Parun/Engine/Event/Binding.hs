@@ -39,6 +39,7 @@ import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CausedBy as CausedBy
 import qualified Parun.Types.Combat as Combat
 import qualified Parun.Types.CounterChange as CounterChange
+import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
@@ -55,7 +56,6 @@ import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
-import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
 import qualified Parun.Types.ManifestedDread as ManifestedDread
 import qualified Parun.Types.Mentored as Mentored
@@ -490,7 +490,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   --
   -- Unconditional given a match, which is what eventBindingSlots' per-condition
   -- promise needs: every GameEvent.CountersPut carries exactly one
-  -- CounterChange.object. Bound whatever the Filter admitted, for the
+  -- CountersPlaced.object. Bound whatever the Filter admitted, for the
   -- PermanentEnters arm's reason.
   --
   -- A DEAD ID IS POSSIBLE and is the payload's problem, `became`'s standing
@@ -504,7 +504,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- PermanentsGetCounters trigger for placements across several permanents, and
   -- one slot cannot name them all.
   (TriggerCondition.PermanentGetsCounters _, GameEvent.CountersPut change) ->
-    Binding.setBecame (CounterChange.object change) Map.empty
+    Binding.setBecame (CountersPlaced.object change) Map.empty
   -- CR 123.3's "that creature": the object the sticker went on, which the event
   -- carries (Tusk and Whiskers). No zone change, so CR 400.7e's slot is the
   -- printed word, PermanentGetsCounters' reason.
@@ -722,7 +722,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- the reason the loss arm spells out -- under You the slot is a second name for
   -- CR 109.5's "you", a redundancy rather than a wrong answer, and
   -- eventBindingSlots answers per condition with no relation in hand.
-  (TriggerCondition.PlayerGainsLife _, GameEvent.LifeGained (LifeChange.MkLifeChange pid amount)) ->
+  (TriggerCondition.PlayerGainsLife _, GameEvent.LifeGained (LifeChange.MkLifeChange pid amount _)) ->
     Binding.setTriggerPlayer pid (Binding.setEventAmount amount Map.empty)
   -- The other direction's "that much" -- Exquisite Blood's "you gain that much
   -- life". The same slot and the same reading as the gain arm above, off an
@@ -744,7 +744,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- "you", so the slot is a second name for one player there; that is a
   -- redundancy, not a wrong answer, and the alternative -- binding it only under
   -- Opponent -- would make the promise depend on the relation.
-  (TriggerCondition.PlayerLosesLife _, GameEvent.LifeLost (LifeLost.MkLifeLost pid amount _)) ->
+  (TriggerCondition.PlayerLosesLife _, GameEvent.LifeLost (LifeChange.MkLifeChange pid amount _)) ->
     Binding.setTriggerPlayer pid (Binding.setEventAmount amount Map.empty)
   -- CR 601.2i's "it": the spell that became cast, which the event names and
   -- which nothing else on the ability does. Presence of the Master's "whenever a

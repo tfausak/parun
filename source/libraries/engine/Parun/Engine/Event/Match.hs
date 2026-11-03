@@ -63,6 +63,7 @@ import qualified Parun.Types.CounterChange as CounterChange
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CounterPlacement as CounterPlacement
 import qualified Parun.Types.Countering as Countering
+import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.Crewing as Crewing
@@ -92,7 +93,7 @@ import qualified Parun.Types.LandPlayed as LandPlayed
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
-import qualified Parun.Types.LifeLost as LifeLost
+import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
 import qualified Parun.Types.ManaAdded as ManaAdded
@@ -123,7 +124,6 @@ import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
-import qualified Parun.Types.PlayerLosesLife as PlayerLosesLife
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.ProjectedCharacteristics as PC
@@ -498,13 +498,12 @@ additionalEntryTriggers gs you zc
 -- in a graveyard or an emblem has no such abilities. Read off the board the
 -- ability itself reads: CR 603.10's after the event (GameState.boardAfterEvent),
 -- or for `looksBack` the board before it (GameState.boardBeforeEvent; CR
--- 603.10a, 603.10b, 603.10d, docs/decisions.md, "A look-back ability's
--- additional triggers look back"). A look-back ability's event with no such
--- board took nothing off the battlefield, changed no controller and phased
--- nothing out, so the after board answers.
+-- 603.10a, 603.10b, 603.10d, 603.10f, docs/decisions.md, "A look-back
+-- ability's additional triggers look back"). A look-back ability's event with
+-- no such board left the battlefield as it was: CR 701.6a's countering and CR
+-- 701.31's planeswalking move no permanent, so the after board answers.
 --
--- Not implemented: the board before any other look-back event, CR 603.10c's
--- unattaching or 603.10e's countering, say (#5950).
+-- Not implemented: the board before CR 603.10c's unattaching (#5965).
 additionalTriggers :: GameState -> PlayerId -> ObjectId -> EventGroup.EventGroup -> Bool -> Natural
 additionalTriggers gs you bearer group looksBack =
   let after = Map.findWithDefault gs group (GameState.boardAfterEvent gs)
@@ -1592,7 +1591,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- CR 702.179d: an opponent still in the game (CR 102.3) lost life during
   -- "your" turn -- each active player's, under CR 805.4's shared team turns.
   TriggerCondition.OpponentLostLifeDuringYourTurn -> case event of
-    GameEvent.LifeLost (LifeLost.MkLifeLost lost _ _) -> Turn.isActive gs you && List.elem lost (Game.opponentsOf you gs)
+    GameEvent.LifeLost (LifeChange.MkLifeChange lost _ _) -> Turn.isActive gs you && List.elem lost (Game.opponentsOf you gs)
     GameEvent.DamageDealt _ -> False
     GameEvent.StepBegan {} -> False
     GameEvent.SpellCast {} -> False
@@ -6700,7 +6699,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- which gains the condition admits is the same question either way, and what
   -- separates the two is `batchScoped` plus eventTriggers' dedup, never this
   -- matcher.
-  TriggerCondition.PlayersGainLife relation -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.PlayerGainsLife relation) event
+  TriggerCondition.PlayersGainLife relation -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.PlayerGainsLife (LifeTrigger.MkLifeTrigger relation TriggerFrequency.EveryTime)) event
   -- CR 119.9: a source caused a player the relation admits to gain life. The
   -- gaining player comes from the event; CR 109.5 / 603.3a fix "you" as the
   -- ability's controller, exactly as PlayerDiscards, SpellOrAbilityCounters and
@@ -6719,8 +6718,13 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- LOSING life is not a near miss but a different event, and the LifeLost arm
   -- below is where that shows: one damage event can record both, and only the
   -- gain fires this.
-  TriggerCondition.PlayerGainsLife relation -> case event of
-    GameEvent.LifeGained (LifeChange.MkLifeChange pid _) -> PlayerRelation.holds (Game.teams gs) relation you pid
+  --
+  -- The first-time reading comes off the event, as the loss arm's does.
+  TriggerCondition.PlayerGainsLife (LifeTrigger.MkLifeTrigger relation frequency) -> case event of
+    GameEvent.LifeGained (LifeChange.MkLifeChange pid _ first) ->
+      PlayerRelation.holds (Game.teams gs) relation you pid && case frequency of
+        TriggerFrequency.EveryTime -> True
+        TriggerFrequency.FirstTimeEachTurn -> first
     GameEvent.Moved {} -> False
     GameEvent.DamageDealt _ -> False
     GameEvent.DamagePrevented {} -> False
@@ -6814,10 +6818,10 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- loss fires this.
   --
   -- The first-time reading comes off the event, stamped as the loss happened
-  -- (Event.lifeLost): the log can hold a later loss by the time the scan reaches
+  -- (Event.lifeChanged): the log can hold a later loss by the time the scan reaches
   -- this one.
-  TriggerCondition.PlayerLosesLife (PlayerLosesLife.MkPlayerLosesLife relation frequency) -> case event of
-    GameEvent.LifeLost (LifeLost.MkLifeLost pid _ first) ->
+  TriggerCondition.PlayerLosesLife (LifeTrigger.MkLifeTrigger relation frequency) -> case event of
+    GameEvent.LifeLost (LifeChange.MkLifeChange pid _ first) ->
       PlayerRelation.holds (Game.teams gs) relation you pid && case frequency of
         TriggerFrequency.EveryTime -> True
         TriggerFrequency.FirstTimeEachTurn -> first
@@ -6914,7 +6918,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- Projected LAZILY, and Saga.chapterTriggers asks `after == n` first, so the
   -- whole-board projection is forced only where the two readings could differ.
   TriggerCondition.SelfCountersReached (SelfCountersReached.MkSelfCountersReached wanted n) -> case event of
-    GameEvent.CountersPut (CounterChange.MkCounterChange oid kind before after) ->
+    GameEvent.CountersPut (CountersPlaced.MkCountersPlaced _ oid kind before after) ->
       oid == bearer && kind == wanted && Saga.chapterTriggers (Saga.readAheadRestricted (Projection.project bearer gs) gs bearer) before after n
     -- Rule 714.2b says "are PUT onto", so a removal crosses nothing: a Saga whose
     -- lore counters were taken off and put back fires its chapters again.
@@ -7126,9 +7130,9 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- separates the two is `batchScoped` below plus eventTriggers' dedup, never
   -- this matcher.
   TriggerCondition.PermanentsGetCounters p -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.PermanentGetsCounters p) event
-  TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement wanted f) -> case event of
-    GameEvent.CountersPut (CounterChange.MkCounterChange oid kind _ _)
-      | kind == wanted -> case Projection.viewWithLastKnown oid gs oid of
+  TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement wanted f relation) -> case event of
+    GameEvent.CountersPut (CountersPlaced.MkCountersPlaced putter oid kind _ _)
+      | kind == wanted && PlayerRelation.holds (Game.teams gs) relation you putter -> case Projection.viewWithLastKnown oid gs oid of
           Nothing -> False
           Just view -> Filter.matches bearerContext view f
     GameEvent.CountersPut {} -> False

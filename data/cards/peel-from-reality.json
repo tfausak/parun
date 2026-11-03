@@ -28,20 +28,17 @@
                     "type": "MoveToZone",
                     "value": {
                       "ref": {
-                        "type": "InSlot",
-                        "value": "mine"
-                      },
-                      "zone": {
-                        "type": "Hand"
-                      }
-                    }
-                  },
-                  {
-                    "type": "MoveToZone",
-                    "value": {
-                      "ref": {
-                        "type": "InSlot",
-                        "value": "theirs"
+                        "type": "AllOf",
+                        "value": [
+                          {
+                            "type": "InSlot",
+                            "value": "mine"
+                          },
+                          {
+                            "type": "InSlot",
+                            "value": "theirs"
+                          }
+                        ]
                       },
                       "zone": {
                         "type": "Hand"

@@ -120,7 +120,7 @@ import qualified Parun.Types.TurnFaceDown as TurnFaceDown
 import qualified Parun.Types.Zone as Zone
 
 dealDamage :: (Game Result -> Game ()) -> (Game Result -> Game ()) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> DealDamage.DealDamage -> Game ()
-dealDamage runPreventionRiders runReplacementEffects runSubgame resolving source controller legal (DealDamage.MkDealDamage parts dealer excess mTally mDamaged) = do
+dealDamage runPreventionRiders runReplacementEffects runSubgame resolving source controller legal (DealDamage.MkDealDamage parts dealer excess mTally mDamaged mExcessTally) = do
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
@@ -136,9 +136,9 @@ dealDamage runPreventionRiders runReplacementEffects runSubgame resolving source
       dealerId = case dealer of
         Nothing -> Just source
         Just slot -> Maybe.listToMaybe (objectRefObjects legal resolving controller source gs (ObjectRef.InSlot slot))
-  dealtEvents <- case dealerId of
+  (dealtEvents, excessDealt) <- case dealerId of
     -- No source, no damage: CR 608.2b's illegal dealer, above.
-    Nothing -> pure []
+    Nothing -> pure ([], 0)
     Just dealt -> do
       -- HOW MUCH, read ONCE PER RECIPIENT off the clause that named it: Acidic
       -- Soil's "damage to each player equal to the number of lands they
@@ -183,7 +183,7 @@ dealDamage runPreventionRiders runReplacementEffects runSubgame resolving source
           -- pre-effect state every amount was read against.
           rewritten = Damage.redirectExcess gs excess events
       if null rewritten
-        then pure []
+        then pure ([], 0)
         else do
           -- ONE batch, not one call per recipient: CR 608.2f's "each such
           -- action is processed simultaneously".
@@ -194,11 +194,14 @@ dealDamage runPreventionRiders runReplacementEffects runSubgame resolving source
           -- CR 615.5's "immediately afterward": a shield this damage spent runs
           -- its additional effect inside this resolution.
           runPreventionRiders runSubgame
-          pure settled
+          pure (settled, Damage.excessDealt gs dealt (fmap DamageEvent.target events) settled)
   -- Syphon Soul's "the damage dealt this way": the SETTLED total, after CR
   -- 615's prevention had its say, so a shielded player contributes only what
   -- got through. Bound even at 0, LoseLife's tally's posture.
   Monad.forM_ mTally $ \slot -> State.modify' (Common.bindAmountSlot resolving source slot (sum (fmap DamageEvent.amount dealtEvents)))
+  -- Goblin Negotiation's "excess damage dealt to that creature this way", the
+  -- same posture.
+  Monad.forM_ mExcessTally $ \slot -> State.modify' (Common.bindAmountSlot resolving source slot excessDealt)
   -- Incinerate's "a creature dealt damage this way" and Chandra, Roaring
   -- Flame's "each player dealt damage this way": the recipients the settled
   -- events reached (CR 120.3), so one whose damage was all prevented (CR
@@ -811,7 +814,7 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
                 -- one instruction with one count, and asking per zone would cap
                 -- per zone. The zone is kept alongside its candidates because
                 -- CR 701.23b's permission is a property of the ZONE.
-                let byZone = fmap (\zone -> (zone, filter (matches1 searcher gs) (Game.zoneMembers zone owner gs))) (Set.toAscList searchedZones)
+                let byZone = fmap (\zone -> (zone, filter (matches1 searcher gs) (Game.cardsIn zone owner gs))) (Set.toAscList searchedZones)
                     matches = concatMap snd byZone
                     outsideCopies = sum (Map.elems outsideAvailable)
                     -- CR 701.23a bounds an unbounded search by the places: every
@@ -1016,7 +1019,7 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
 exileAllGraveyards :: ObjectId -> PlayerId -> Game ()
 exileAllGraveyards source controller = do
   gs <- State.get
-  let gyCards = concatMap (\pid -> Game.zoneMembers Zone.Graveyard pid gs) (Players.table (Plane.rangePerspective source controller gs) gs)
+  let gyCards = concatMap (\pid -> Game.cardsIn Zone.Graveyard pid gs) (Players.table (Plane.rangePerspective source controller gs) gs)
   Monad.void (Event.changeZonesTogether (fmap (\c -> (c, Zone.Exile)) gyCards))
 
 -- CR 103.5b (Serum Powder): the count is the hand size BEFORE the exile, which

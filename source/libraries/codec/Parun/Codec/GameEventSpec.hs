@@ -41,6 +41,7 @@ import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.CounterChange as CounterChange
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.Countering as Countering
+import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
@@ -58,7 +59,6 @@ import qualified Parun.Types.HalfUnlocked as HalfUnlocked
 import qualified Parun.Types.LandPlayed as LandPlayed
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
-import qualified Parun.Types.LifeLost as LifeLost
 import qualified Parun.Types.Looked as Looked
 import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
 import qualified Parun.Types.ManaAdded as ManaAdded
@@ -311,7 +311,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
     Common.assertCodec
       s
       GameEvent.codec
-      (GameEvent.LifeLost (LifeLost.MkLifeLost (PlayerId.MkPlayerId 1) 2 True))
+      (GameEvent.LifeLost (LifeChange.MkLifeChange (PlayerId.MkPlayerId 1) 2 True))
       " {\"type\":\"LifeLost\",\"value\":{\"player\":1,\"amount\":2,\"first\":true}} "
   -- CR 119.3's other direction. A DIFFERENT tag from LifeLost above and the same
   -- payload shape, so the two must never decode to each other.
@@ -319,16 +319,16 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
     Common.assertCodec
       s
       GameEvent.codec
-      (GameEvent.LifeGained (LifeChange.MkLifeChange (PlayerId.MkPlayerId 1) 2))
-      " {\"type\":\"LifeGained\",\"value\":{\"player\":1,\"amount\":2}} "
+      (GameEvent.LifeGained (LifeChange.MkLifeChange (PlayerId.MkPlayerId 1) 2 True))
+      " {\"type\":\"LifeGained\",\"value\":{\"player\":1,\"amount\":2,\"first\":true}} "
   -- CR 122.6. The two counts are BEFORE then AFTER, in that order, which CR
   -- 714.2b's threshold crossing needs to be able to tell apart.
   Spec.it s "CountersPut" $
     Common.assertCodec
       s
       GameEvent.codec
-      (GameEvent.CountersPut (CounterChange.MkCounterChange (ObjectId.MkObjectId 3) CounterKind.Lore 1 2))
-      " {\"type\":\"CountersPut\",\"value\":{\"object\":3,\"kind\":{\"type\":\"Lore\"},\"before\":1,\"after\":2}} "
+      (GameEvent.CountersPut (CountersPlaced.MkCountersPlaced (PlayerId.MkPlayerId 1) (ObjectId.MkObjectId 3) CounterKind.Lore 1 2))
+      " {\"type\":\"CountersPut\",\"value\":{\"putter\":1,\"object\":3,\"kind\":{\"type\":\"Lore\"},\"before\":1,\"after\":2}} "
   -- CR 310.12b's record, and the pair runs the other way: before > after.
   Spec.it s "CountersRemoved" $
     Common.assertCodec

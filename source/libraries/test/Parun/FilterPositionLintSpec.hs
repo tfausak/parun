@@ -84,6 +84,9 @@ import qualified Parun.Types.CounterRestriction as CounterRestriction
 import qualified Parun.Types.CounterSubject as CounterSubject
 import qualified Parun.Types.Create as Create
 import qualified Parun.Types.Cycling as Cycling
+import qualified Parun.Types.DamageDealer as DamageDealer
+import qualified Parun.Types.DamagedParty as DamagedParty
+import qualified Parun.Types.DealtDamageTo as DealtDamageTo
 import qualified Parun.Types.Destroy as Destroy
 import qualified Parun.Types.DestructionR as DestructionR
 import qualified Parun.Types.DestructionRewrite as DestructionRewrite
@@ -113,6 +116,7 @@ import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeTally as LifeTally
+import qualified Parun.Types.Lookback as Lookback
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.Measure as Measure
@@ -340,6 +344,7 @@ filterAtomsOf leaf predicate = case predicate of
   -- write any other filter. A leaf would under-count against jsonAtoms, which counts
   -- the tag at any depth, and turn a legitimate card into a reported offence.
   Filter.Type.AttachedTo f -> filterAtomsOf leaf f
+  Filter.Type.BeforeMove f -> filterAtomsOf leaf f
   -- A DESCENT for the atom above's reason, the nest describing the ATTACHER: CR
   -- 303.4b's atom is a Filter position a card author writes into like any other.
   Filter.Type.HasAttached f -> filterAtomsOf leaf f
@@ -1172,6 +1177,25 @@ sameControllerAsHostOfBoundOffends card =
   let (framed, elsewhere) = sameControllerAsHostOfBoundCounts card
    in elsewhere /= 0 || framed + elsewhere /= jsonAtoms sameControllerAsHostOfBoundTag (Codec.encode (Face.Codec.codec Card.codec) card)
 
+-- How many CR 301.5a "attached to that creature" atoms this card carries in a
+-- mode's target slot, the position a joint check stands behind, and how many
+-- anywhere else. The second number is the offence: elsewhere the atom's
+-- unanswered slot is a silent True (Parun.Engine.Filter.attachedAnchored). An
+-- effect's object says it with ObjectRef.AttachedToBound.
+attachedToBoundCounts :: Face.Face Card.Type.Card -> (Int, Int)
+attachedToBoundCounts card =
+  let total wanted = sum (fmap (\(_, f) -> attachedToBoundAtoms (atomJson f)) (filter (\(framing, _) -> (framing == InTargetSlot) == wanted) (cardFilters card)))
+   in (total True, total False)
+
+attachedToBoundAtoms :: Value.Value -> Int
+attachedToBoundAtoms = decodedAtoms "IsAttachedTo" (\atom -> case atom of Filter.Type.IsAttachedTo (Anchor.Bound _) -> True; _ -> False)
+
+-- Two offences, controllerRelatesToBoundOffends' two.
+attachedToBoundOffends :: Face.Face Card.Type.Card -> Bool
+attachedToBoundOffends card =
+  let (admitted, elsewhere) = attachedToBoundCounts card
+   in elsewhere /= 0 || admitted + elsewhere /= attachedToBoundAtoms (Codec.encode (Face.Codec.codec Card.codec) card)
+
 -- The CR 110.2 tag, spelled once.
 controllerRelatesToBoundTag :: Text.Text
 controllerRelatesToBoundTag = Text.pack "ControllerRelatesToBound"
@@ -1259,7 +1283,7 @@ evaluatedAtoms value =
 
 -- How many Filter.Shares and Filter.IsAttachedTo atoms in an encoding pair an
 -- anchor with a reading Parun.Engine.Filter has none for -- sharesAnchored's
--- and attachedAnchored's Nothing, which Filter.matches answers False (#5636) --
+-- Nothing (#5636) and attachedAnchored's, which Filter.matches answers False --
 -- and how many it carries in all.
 unreadAnchorCounts :: Value.Value -> (Int, Int)
 unreadAnchorCounts value =
@@ -1809,7 +1833,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Necrotic Plague", 1), -- its trigger's target slot, relative to the dead creature's controller
         ("Chandra, Pyromaster", 1), -- its +1's second target slot, Flame Wave's sentence
         ("Soul of Shandalar", 2), -- both abilities' second target slots, Flame Wave's sentence
-        ("Legion's End", 1) -- its exile's object, relative to the target's controller
+        ("Legion's End", 1), -- its exile's object, relative to the target's controller
+        ("Run Away Together", 2) -- both target slots, each relative to the other
       ]
     -- The REJECTING direction, hand-built for the reason every sibling lint's is:
     -- a card that offends must not be loadable, so no file can carry one. Buried
@@ -1833,6 +1858,38 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     Spec.assertEqWith s "the same atom in a static ability's affected set is an offence" (controllerRelatesToBoundCounts planted) (0, 1)
     Spec.assertBool s (controllerRelatesToBoundOffends planted) "and the lint says so"
     Spec.assertBool s (not (controllerRelatesToBoundOffends (S.combinedFace piker))) "where the ungrafted card is accepted"
+  -- CR 301.5a's Filter.IsAttachedTo at Bound, vacuously TRUE at an unanswered
+  -- slot for ControllerRelatesToBound's reason above. See attachedToBoundOffends.
+  Spec.it s "CR 301.5a no card asks IsAttachedTo at a bound slot outside a mode's target slot" $ do
+    ps <- S.allPrintings s corpus
+    let offenders = filter (anyFace attachedToBoundOffends . Printing.card) ps
+    Spec.assertEqWith s "the atom sits only in an admitted position" (fmap (S.nameOf . Printing.card) offenders) []
+    assertAuthors
+      s
+      registry
+      ps
+      "each author's atom is in an admitted position"
+      attachedToBoundCounts
+      [ ("Fiery Annihilation", 1) -- its second target slot
+      ]
+    piker <- S.printingOf s registry "Goblin Piker"
+    let atom = Filter.Type.IsAttachedTo (Anchor.Bound (SlotName.MkSlotName (Text.pack "from")))
+        buried = Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not atom]]
+        planted =
+          (S.combinedFace piker)
+            { Face.staticAbilities =
+                [ StaticAbility.MkStaticAbility
+                    (Affected.Matching buried)
+                    Nothing
+                    Set.empty
+                    Nothing
+                    Nothing
+                    (NonEmpty.singleton Modification.LoseAllAbilities)
+                ]
+            }
+    Spec.assertEqWith s "the same atom in a static ability's affected set is an offence" (attachedToBoundCounts planted) (0, 1)
+    Spec.assertBool s (attachedToBoundOffends planted) "and the lint says so"
+    Spec.assertBool s (not (attachedToBoundOffends (S.combinedFace piker))) "where the ungrafted card is accepted"
   -- CR 601.3a's lookahead (Parun.Engine.Filter.manaValueThresholds) bounds its
   -- sample by the mana value LITERALS a prohibition compares against, so a
   -- player effect comparing a mana value against any other operand would leave
@@ -2107,8 +2164,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- NOT vacuous: the pool writes the atoms the sweep is about.
     Spec.assertBool s (sum (fmap (snd . unreadAnchorCounts . encodedFace . S.combinedFace) ps) > 10) "the pool writes anchored atoms"
     -- The rejected side: radiance's "each other creature that shares a color
-    -- with it" and Street Sweeper's "Auras attached to target land", planted in
-    -- a target slot, beside a read pair that is not counted.
+    -- with it" and a group anchor, planted in a target slot, beside a read pair
+    -- that is not counted.
     piker <- S.printingOf s registry "Goblin Piker"
     let slot = SlotName.MkSlotName (Text.pack "target")
         plantedWith atom =
@@ -2117,7 +2174,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
                 Mint.oneModeTargeting (Map.singleton slot (TargetSlot.required Pool.Creatures (Just (Filter.Type.And [Filter.Type.Not atom])))) Seq.empty
             }
     Spec.assertEqWith s "a planted Shares Color Bound is unread" (unreadAnchorCounts (encodedFace (plantedWith (Filter.Type.Shares Trait.Color (Anchor.Bound slot))))) (1, 1)
-    Spec.assertEqWith s "a planted IsAttachedTo Bound is unread" (unreadAnchorCounts (encodedFace (plantedWith (Filter.Type.IsAttachedTo (Anchor.Bound slot))))) (1, 1)
+    Spec.assertEqWith s "a planted IsAttachedTo AnyPermanent is unread" (unreadAnchorCounts (encodedFace (plantedWith (Filter.Type.IsAttachedTo (Anchor.AnyPermanent (Filter.Type.And [])))))) (1, 1)
+    Spec.assertEqWith s "a planted IsAttachedTo Bound is read" (unreadAnchorCounts (encodedFace (plantedWith (Filter.Type.IsAttachedTo (Anchor.Bound slot))))) (0, 1)
     Spec.assertEqWith s "a planted Shares Name Bound is read" (unreadAnchorCounts (encodedFace (plantedWith (Filter.Type.Shares Trait.Name (Anchor.Bound slot))))) (0, 1)
   -- CR 702.33d: a kicker tally names one of the face's OWN kicker keywords,
   -- joined to Parun.Engine.Cast's per-keyword map by structural equality. See
@@ -2488,8 +2546,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
             ("CR 310.12b's last removal", holds (triggerConditionFilters (TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved kind)))),
             ("its any-amount mirror", holds (triggerConditionFilters (TriggerCondition.SelfCountersRemoved (SelfCountersRemoved.MkSelfCountersRemoved kind)))),
             ("its per-counter reading", holds (triggerConditionFilters (TriggerCondition.SelfCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved kind)))),
-            ("CR 603.2c's per-permanent placement", holds (triggerConditionFilters (TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind (Filter.Type.HasCardType CardType.Creature))))),
-            ("CR 603.2c's batch placement", holds (triggerConditionFilters (TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind (Filter.Type.HasCardType CardType.Creature))))),
+            ("CR 603.2c's per-permanent placement", holds (triggerConditionFilters (TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind (Filter.Type.HasCardType CardType.Creature) PlayerRelation.AnyPlayer)))),
+            ("CR 603.2c's batch placement", holds (triggerConditionFilters (TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind (Filter.Type.HasCardType CardType.Creature) PlayerRelation.AnyPlayer)))),
             ("CR 614.1's scaling pattern", holds (replacementEffectFilters (ReplacementEffect.CounterR (CounterR.MkCounterR (CounterPattern.MkCounterPattern (Just kind) CounterSubject.ByAnything (ControllerRelation.Related PlayerRelation.You) (Filter.Type.HasCardType CardType.Creature) Nothing) (Scaling.AddMore 1))))),
             ("CR 614.1c's as-enters sacrifice", holds (entryRewriteFilters (EntryRewrite.SacrificeAnyNumber (SacrificeAnyNumber.MkSacrificeAnyNumber (Filter.Type.HasCardType CardType.Creature) (Just kind) one)))),
             -- Its MULTIPLIER, a road of its own: the field is a Quantity, so the
@@ -2711,6 +2769,37 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
                 ]
             }
     Spec.assertEqWith s "a planted atom is seen" (zipWith (\needle atom -> outside needle (planted atom)) needles atoms) [1, 1, 1, 1]
+  -- CR 120.1: what the SOURCE dealt is answerable only where
+  -- Parun.Engine.Projection.withCharacteristicsOf fills it; empty inside the CR
+  -- 613 layer fold and a bare Filter.contextFor, so a card's affected set would
+  -- be a silent False. Admits the two positions a resolving or targeting ability
+  -- frames through Projection.framedWith.
+  Spec.it s "CR 120.1 no card asks what its source dealt outside the positions that fill it" $ do
+    ps <- S.allPrintings s corpus
+    let bySource atom = case atom of
+          Filter.Type.DealtDamageTo asked -> DealtDamageTo.dealer asked == DamageDealer.Source
+          _ -> False
+        atoms = decodedAtoms "DealtDamageTo" bySource
+        admitted c = sum [atoms (atomJson f) | (framing, f) <- cardFilters c, elem framing [SourceHostFramed, InTargetSlot]]
+        outside c = atoms (Codec.encode (Face.Codec.codec Card.codec) c) - admitted c
+        offenders = filter (anyFace (\c -> outside c /= 0) . Printing.card) ps
+    Spec.assertEqWith s "the atom sits only where the source's damage is filled" (fmap (S.nameOf . Printing.card) offenders) []
+    hellkite <- S.printingOf s registry "Steel Hellkite"
+    Spec.assertEqWith s "NOT vacuous: Steel Hellkite's is accepted" (admitted (S.combinedFace hellkite), outside (S.combinedFace hellkite)) (1, 0)
+    let atom = Filter.Type.DealtDamageTo DealtDamageTo.MkDealtDamageTo {DealtDamageTo.party = DamagedParty.Anyone, DealtDamageTo.kind = Nothing, DealtDamageTo.window = Lookback.ThisTurn, DealtDamageTo.dealer = DamageDealer.Source}
+        planted =
+          (S.combinedFace hellkite)
+            { Face.staticAbilities =
+                [ StaticAbility.MkStaticAbility
+                    (Affected.Matching (Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not atom]]))
+                    Nothing
+                    Set.empty
+                    Nothing
+                    Nothing
+                    (NonEmpty.singleton Modification.LoseAllAbilities)
+                ]
+            }
+    Spec.assertEqWith s "a planted atom in an affected set is seen" (outside planted) 1
   -- CR 702.140a's comparison is the source-comparison atom's owner trait, and
   -- its one filler is Parun.Engine.Target.slotContext -- so it is answerable
   -- only inside a TARGET SLOT's own filter and would be a silent False in an

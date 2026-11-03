@@ -7,6 +7,7 @@ import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CounterPlacement as CounterPlacement
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.CounterPlacement" $ do
@@ -19,8 +20,21 @@ spec s = Spec.describe s "Parun.Codec.CounterPlacement" $ do
       CounterPlacement.codec
       ( CounterPlacement.MkCounterPlacement
           { CounterPlacement.kind = CounterKind.MinusOneMinusOne,
-            CounterPlacement.permanents = Filter.HasCardType CardType.Creature
+            CounterPlacement.permanents = Filter.HasCardType CardType.Creature,
+            CounterPlacement.putter = PlayerRelation.AnyPlayer
           }
       )
       " {\"kind\":{\"type\":\"MinusOneMinusOne\"},\"permanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+  -- "Whenever you put": the relation narrows, so it writes its key.
+  Spec.it s "MkCounterPlacement, a putter" $
+    Common.assertCodec
+      s
+      CounterPlacement.codec
+      ( CounterPlacement.MkCounterPlacement
+          { CounterPlacement.kind = CounterKind.PlusOnePlusOne,
+            CounterPlacement.permanents = Filter.IsSource,
+            CounterPlacement.putter = PlayerRelation.You
+          }
+      )
+      " {\"kind\":{\"type\":\"PlusOnePlusOne\"},\"permanents\":{\"type\":\"IsSource\"},\"putter\":{\"type\":\"You\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CounterPlacement.codec

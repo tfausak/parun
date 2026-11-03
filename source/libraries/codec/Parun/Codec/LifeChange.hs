@@ -15,8 +15,10 @@ codec :: Codec.Codec LifeChange.LifeChange
 codec = Fields.object $ do
   player <- Fields.required "player" PlayerId.codec LifeChange.player
   amount <- Fields.required "amount" Common.natural LifeChange.amount
+  first <- Fields.required "first" Common.boolean LifeChange.first
   pure
     LifeChange.MkLifeChange
       { LifeChange.player = player,
-        LifeChange.amount = amount
+        LifeChange.amount = amount,
+        LifeChange.first = first
       }

@@ -1,5 +1,6 @@
 module Parun.Codec.DamagedParty where
 
+import qualified Parun.Codec.Holder as Holder
 import qualified Parun.Codec.PlayerRelation as PlayerRelation
 import qualified Parun.Codec.SlotName as SlotName
 import qualified Parun.JsonCodec.Arm as Arm
@@ -13,7 +14,8 @@ codec =
     [ Arm.payload "Related" PlayerRelation.codec DamagedParty.Related (\x -> case x of DamagedParty.Related y -> Just y; _ -> Nothing),
       Arm.nullary "Source" DamagedParty.Source,
       Arm.payload "InSlot" SlotName.codec DamagedParty.InSlot (\x -> case x of DamagedParty.InSlot y -> Just y; _ -> Nothing),
-      Arm.nullary "Anyone" DamagedParty.Anyone
+      Arm.nullary "Anyone" DamagedParty.Anyone,
+      Arm.payload "HolderOfCandidate" Holder.codec DamagedParty.HolderOfCandidate (\x -> case x of DamagedParty.HolderOfCandidate y -> Just y; _ -> Nothing)
     ]
 
 tagOf :: DamagedParty.DamagedParty -> String
@@ -22,3 +24,4 @@ tagOf x = case x of
   DamagedParty.Source -> "Source"
   DamagedParty.InSlot {} -> "InSlot"
   DamagedParty.Anyone -> "Anyone"
+  DamagedParty.HolderOfCandidate {} -> "HolderOfCandidate"

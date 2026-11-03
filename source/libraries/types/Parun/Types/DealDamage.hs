@@ -85,6 +85,10 @@ data DealDamage = MkDealDamage
     -- Incinerate's "a creature dealt damage this way", Chandra, Roaring Flame's
     -- "each player dealt damage this way". Settled like `tally`: a recipient
     -- whose damage was all prevented (CR 615) was dealt none and is not bound.
-    damaged :: Maybe SlotName.SlotName
+    damaged :: Maybe SlotName.SlotName,
+    -- | Where to record how much of `tally`'s settled damage was EXCESS (CR
+    -- 120.10), summed over the instruction's own recipients: Goblin Negotiation's
+    -- "excess damage dealt to that creature this way".
+    excessTally :: Maybe SlotName.SlotName
   }
   deriving (Eq, Ord, Show)
