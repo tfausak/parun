@@ -5,20 +5,6 @@ Derived 2026-11-03 from MTGJSON's set list against `data/cards/`. Re-derive the
 missing list by writing the set list as a deck (`1 Name` per line) and running
 `parun deck` on it: every unresolved name is reported.
 
-## Expressible today
-
-These need no new capability, but `parun translate` does not translate them yet.
-Each names the mtgish node the translator stops at.
-
-- Updraft: `_Action:CreateFutureTrigger`
-- Urza's Avenger: `_Action:ChooseAnAbility`
-- Urza's Bauble: `_Action:LookAtARandomCardInPlayersHand`
-- Venom: `_Trigger:Or`
-- Warp Artifact: renders differently
-- Winter Blast: `_GameNumber:ValueX`
-- Word of Blasting: `_GameNumber:ManaValueOfPermanent`
-- Xenic Poltergeist: `_Expiration:UntilNextUpkeep`
-
 ## Needs a capability
 
 Each card is tracked by its issue and is added when that issue lands. Hardest
@@ -42,6 +28,8 @@ first.
   stopped; a rider arming one misplays (CR 615.5, 615.7).
 - #6002: Island Sanctuary. No draw replacement offers skipping the draw for an
   effect, or reads "during your draw step" (CR 614.10).
+- #6012: Venom. An Aura can't watch its host block or be blocked by a creature
+  it filters, naming the other creature.
 - #5999: Errantry. Nothing lets a creature attack only with no other attacker
   beside it; `CantAttackAlone` is the opposite direction.
 - #5177: Gauntlets of Chaos. No filter reads a shared card type with a sibling

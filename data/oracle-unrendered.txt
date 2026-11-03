@@ -2927,12 +2927,15 @@ unlucky-witness
 unsettled-mariner
 unstable-shapeshifter
 unsubstantiate
+updraft
 upwelling
 urborg-tomb-of-yawgmoth
 urgent-necropsy
 urianger-augurelt
 ursine-champion
 urzas-armor
+urzas-avenger
+urzas-bauble
 urzas-mine
 urzas-power-plant
 urzas-tower
@@ -3089,6 +3092,7 @@ windreader-sphinx
 winds-of-change
 winged-portent
 wings-of-velis-vel
+winter-blast
 winter-orb
 winter-sky
 wire-surgeons
@@ -3107,6 +3111,7 @@ wolfir-silverheart
 wolfriders-saddle
 wood-elemental
 woodland-bellower
+word-of-blasting
 word-of-command
 word-of-seizing
 words-of-worship
@@ -3125,6 +3130,7 @@ wu-warship
 xathrid-demon
 xathrid-gorgon
 xathrid-necromancer
+xenic-poltergeist
 yare
 yasmin-khan
 yawgmoth-demon
