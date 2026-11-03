@@ -65,8 +65,8 @@ import qualified Parun.Types.CardIdentity as CardIdentity
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.ComponentCard as ComponentCard
-import qualified Parun.Types.CounterChange as CounterChange
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.Deck as Deck
 import qualified Parun.Types.DrawR as DrawR
 import qualified Parun.Types.DrawRewrite as DrawRewrite
@@ -781,7 +781,7 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
           GameEvent.LifeLost change -> LifeChange.player change == S.bob
           _ -> False
         isShredderCounter e = case e of
-          GameEvent.CountersPut change -> CounterChange.object change == shredderId
+          GameEvent.CountersPut change -> CountersPlaced.object change == shredderId
           _ -> False
         -- CR 608.2n: "as the final part of an instant or sorcery spell's
         -- resolution, the spell is put into its owner's graveyard" -- so this is

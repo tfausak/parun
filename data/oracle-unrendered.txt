@@ -870,6 +870,7 @@ exalted-dragon
 excavating-anurid
 exchange-of-words
 excruciator
+exemplar-of-light
 exhaustion
 exhume
 exotic-disease

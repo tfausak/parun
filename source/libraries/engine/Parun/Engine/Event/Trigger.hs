@@ -66,6 +66,7 @@ import qualified Parun.Types.ControlChanged as ControlChanged
 import qualified Parun.Types.Convoking as Convoking
 import qualified Parun.Types.CounterChange as CounterChange
 import qualified Parun.Types.Countering as Countering
+import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamagePrevented as DamagePrevented
@@ -419,7 +420,7 @@ participants event =
         GameEvent.LifeLost c -> player (LifeChange.player c)
         GameEvent.LifeGained c -> player (LifeChange.player c)
         GameEvent.AbilityActivated a -> ([AbilityWasActivated.ability a, AbilityWasActivated.source a], [AbilityWasActivated.player a])
-        GameEvent.CountersPut c -> one (CounterChange.object c)
+        GameEvent.CountersPut c -> one (CountersPlaced.object c)
         GameEvent.CountersRemoved c -> one (CounterChange.object c)
         GameEvent.HalfUnlocked h -> ([HalfUnlocked.object h], [HalfUnlocked.actor h])
         GameEvent.TurnedFaceUp t -> one (TurnedFaceUp.object t)

@@ -841,6 +841,7 @@ matchesPrinted viewOf gs event candidate =
         -- so matchesPutter still parts Vorinclex's "if you would put" from CR
         -- 614.16's "if an effect would put" (#847). Reading it off the flush
         -- rather than off the event is what keeps the two levels answering alike.
+        -- Not implemented: tribute naming its opponent as the putter (#5976).
         --
         -- CR 614.12, as in the entry arm below: a row naming a general subset
         -- does not apply to its own source entering (Conclave Mentor's, Pir's and

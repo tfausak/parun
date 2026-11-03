@@ -238,6 +238,7 @@ import qualified Parun.Codec.CounteringSpec
 import qualified Parun.Codec.CountersAreSpec
 import qualified Parun.Codec.CountersFromPermanentsSpec
 import qualified Parun.Codec.CountersOnThisSpec
+import qualified Parun.Codec.CountersPlacedSpec
 import qualified Parun.Codec.CraftSpec
 import qualified Parun.Codec.CreateCopySpec
 import qualified Parun.Codec.CreateEmblemSpec
@@ -1180,6 +1181,7 @@ spec s registry corpus = do
   Parun.Codec.CounterNameSpec.spec s
   Parun.Codec.CounterPatternSpec.spec s
   Parun.Codec.CounterPlacementSpec.spec s
+  Parun.Codec.CountersPlacedSpec.spec s
   Parun.Codec.CounterProhibitionSpec.spec s
   Parun.Codec.CounterRestrictionSpec.spec s
   Parun.Codec.CounterRSpec.spec s

@@ -123,6 +123,7 @@ import qualified Parun.Types.CounterKindFor as CounterKindFor
 import qualified Parun.Types.CounterR as CounterR
 import qualified Parun.Types.Counterability as Counterability
 import qualified Parun.Types.Countering as Countering
+import qualified Parun.Types.CountersPlaced as CountersPlaced
 import Parun.Types.DamageEvent (DamageEvent)
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
@@ -5438,7 +5439,11 @@ showsInstantBackFace oid gs = Maybe.fromMaybe False $ do
 flushEnteringCounters :: ObjectId -> Game ()
 flushEnteringCounters oid = do
   pending <- takeEnteringCounters oid
-  Monad.mapM_ (\(kind, n) -> Monad.void (settleCounters oid kind n)) (Map.toAscList pending)
+  gs <- State.get
+  -- CR 122.6a's default putter, the object's controller. Not implemented: CR
+  -- 702.104a's opponent as the player putting tribute's counters (#5976).
+  Monad.unless (Map.null pending) . Monad.forM_ (Projection.controllerOf oid gs) $ \putter ->
+    Monad.mapM_ (\(kind, n) -> Monad.void (settleCounters putter oid kind n)) (Map.toAscList pending)
 
 -- The counters pending for an entering object, cleared; a diverted one drops
 -- them, since it never entered (CR 614.6).
@@ -5708,7 +5713,7 @@ putCounters cause oid kind n = do
   resolved <- resolveCounters cause oid kind n
   case resolved of
     Nothing -> pure 0
-    Just (target, settledKind, settledCount) -> settleCounters target settledKind settledCount
+    Just (target, settledKind, settledCount) -> settleCounters (CounterCause.putter cause) target settledKind settledCount
 
 -- The WRITE-AND-EMIT half of putCounters, with no CR 616.1 loop in front of it:
 -- the counters have already been settled and this records them. Its second caller
@@ -5717,8 +5722,8 @@ putCounters cause oid kind n = do
 --
 -- Not a second funnel. putCounters is still the only door that both settles and
 -- writes; this is that door's tail, shared rather than copied.
-settleCounters :: ObjectId -> CounterKind.CounterKind Keyword.Type.Keyword -> Natural -> Game Natural
-settleCounters target settledKind settledCount
+settleCounters :: PlayerId -> ObjectId -> CounterKind.CounterKind Keyword.Type.Keyword -> Natural -> Game Natural
+settleCounters putter target settledKind settledCount
   | settledCount == 0 = pure 0
   | otherwise = do
       gs <- State.get
@@ -5765,7 +5770,7 @@ settleCounters target settledKind settledCount
           -- Guarded by the same `settledCount > 0` the write is: an event
           -- recorded for a placement that did not happen would fire a chapter
           -- ability off nothing.
-          State.modify' (recordEvent (GameEvent.CountersPut (CounterChange.MkCounterChange target settledKind before (before + settledCount))) . bumped)
+          State.modify' (recordEvent (GameEvent.CountersPut (CountersPlaced.MkCountersPlaced putter target settledKind before (before + settledCount))) . bumped)
           pure settledCount
 
 -- CR 122.6a: putCounters with the rule's DEFAULT putter -- "if the effect doesn't
@@ -5774,9 +5779,8 @@ settleCounters target settledKind settledCount
 -- is left: CR 702.37b's megamorph counter, at `apply`'s TurnUpR arm. The entry
 -- roads -- CR 614.1c-d's rewrites and a spell's entry riders -- accumulate through
 -- addEnteringCounters below and reach this module's tail by the other route, and
--- rule 122.6a's default putter is what the flush places under either way. No
--- printing in the pool exercises the rule's exception by naming a player, so
--- nothing needs to pass one.
+-- rule 122.6a's default putter is what the flush places under either way.
+-- Not implemented: tribute naming its opponent as the putter (#5976).
 --
 -- An object with no controller is one that is not on the battlefield, and
 -- putCounters places nothing on such an object anyway -- so answering 0 without

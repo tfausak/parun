@@ -21,6 +21,7 @@ import qualified Parun.Types.ControlChanged as ControlChanged
 import qualified Parun.Types.Convoking as Convoking
 import qualified Parun.Types.CounterChange as CounterChange
 import qualified Parun.Types.Countering as Countering
+import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamagePrevented as DamagePrevented
@@ -284,14 +285,15 @@ data GameEvent
     -- mana ability, or one activated inside a die roll's window (Goblin Bookie)
     -- -- records none (#5733).
     AbilityActivated AbilityWasActivated.AbilityWasActivated
-  | -- | CR 122.6: one or more counters were PUT onto an object -- the object, the
-    -- kind, and the counts of that kind on it BEFORE and AFTER. The pair rather
+  | -- | CR 122.6: one or more counters were PUT onto an object -- who put them (CR
+    -- 122.6a), the object, the kind, and the counts of that kind on it BEFORE and
+    -- AFTER. The pair rather
     -- than one amount because CR 714.2b's chapter ability asks whether the number
     -- "was less than N and became at least N", a threshold crossing neither the
     -- amount nor the total alone can answer. Before is strictly less than after,
     -- a placement that landed nothing recording no event; removal is
     -- CountersRemoved below rather than the pair reversed.
-    CountersPut CounterChange.CounterChange
+    CountersPut CountersPlaced.CountersPlaced
   | -- | Counters were REMOVED from an object -- CountersPut's mirror, shaped the
     -- same way because CR 310.12b's Siege ability asks whether the LAST counter
     -- came off. Recorded by three paths: CR 120.3h's and CR 120.3c's damage to a

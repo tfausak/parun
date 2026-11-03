@@ -39,6 +39,7 @@ import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CausedBy as CausedBy
 import qualified Parun.Types.Combat as Combat
 import qualified Parun.Types.CounterChange as CounterChange
+import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
@@ -489,7 +490,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   --
   -- Unconditional given a match, which is what eventBindingSlots' per-condition
   -- promise needs: every GameEvent.CountersPut carries exactly one
-  -- CounterChange.object. Bound whatever the Filter admitted, for the
+  -- CountersPlaced.object. Bound whatever the Filter admitted, for the
   -- PermanentEnters arm's reason.
   --
   -- A DEAD ID IS POSSIBLE and is the payload's problem, `became`'s standing
@@ -503,7 +504,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- PermanentsGetCounters trigger for placements across several permanents, and
   -- one slot cannot name them all.
   (TriggerCondition.PermanentGetsCounters _, GameEvent.CountersPut change) ->
-    Binding.setBecame (CounterChange.object change) Map.empty
+    Binding.setBecame (CountersPlaced.object change) Map.empty
   -- CR 123.3's "that creature": the object the sticker went on, which the event
   -- carries (Tusk and Whiskers). No zone change, so CR 400.7e's slot is the
   -- printed word, PermanentGetsCounters' reason.

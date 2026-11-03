@@ -4880,10 +4880,10 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- landed on -- swept like PermanentsDie's, so a card's "one or more creatures"
   -- is not exempt from the corpus filter lints. And its KIND beside it, for the
   -- three arms above's reason.
-  TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind f) -> unframed [f] <> counterKindFilters kind
+  TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind f _) -> unframed [f] <> counterKindFilters kind
   -- And its per-permanent scope, whose Filter is read against ONE permanent --
   -- swept all the same, the lints being about the Filter and not the scope.
-  TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind f) -> unframed [f] <> counterKindFilters kind
+  TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind f _) -> unframed [f] <> counterKindFilters kind
   -- CR 601.2i's "whenever you cast a [type] spell" carries one directly, over
   -- the spell rather than over a permanent.
   TriggerCondition.SpellCast (SpellCast.MkSpellCast f _ _ _ _ _) -> unframed [f]

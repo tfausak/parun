@@ -30,9 +30,9 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CombatStep as CombatStep
-import qualified Parun.Types.CounterChange as CounterChange
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CounterName as CounterName
+import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.GameEvent as GameEvent
@@ -690,7 +690,7 @@ blightSimultaneitySpec s registry =
           ( Maybe.mapMaybe
               ( \logged -> case LoggedEvent.event logged of
                   GameEvent.CountersPut change
-                    | CounterChange.kind change == CounterKind.MinusOneMinusOne -> Just (LoggedEvent.group logged)
+                    | CountersPlaced.kind change == CounterKind.MinusOneMinusOne -> Just (LoggedEvent.group logged)
                   _ -> Nothing
               )
               (Foldable.toList (GameState.events gs))
@@ -806,7 +806,7 @@ perCreatureCountersSpec s registry =
           ( Maybe.mapMaybe
               ( \logged -> case LoggedEvent.event logged of
                   GameEvent.CountersPut change
-                    | CounterChange.kind change == CounterKind.MinusOneMinusOne -> Just (LoggedEvent.group logged)
+                    | CountersPlaced.kind change == CounterKind.MinusOneMinusOne -> Just (LoggedEvent.group logged)
                   _ -> Nothing
               )
               (Foldable.toList (GameState.events gs))
@@ -933,7 +933,7 @@ sweptCountersSpec s registry =
           ( Maybe.mapMaybe
               ( \logged -> case LoggedEvent.event logged of
                   GameEvent.CountersPut change
-                    | CounterChange.kind change == CounterKind.MinusOneMinusOne -> Just (LoggedEvent.group logged)
+                    | CountersPlaced.kind change == CounterKind.MinusOneMinusOne -> Just (LoggedEvent.group logged)
                   _ -> Nothing
               )
               (Foldable.toList (GameState.events gs))

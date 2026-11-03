@@ -63,6 +63,7 @@ import qualified Parun.Types.CounterChange as CounterChange
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CounterPlacement as CounterPlacement
 import qualified Parun.Types.Countering as Countering
+import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.Crewing as Crewing
@@ -6918,7 +6919,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- Projected LAZILY, and Saga.chapterTriggers asks `after == n` first, so the
   -- whole-board projection is forced only where the two readings could differ.
   TriggerCondition.SelfCountersReached (SelfCountersReached.MkSelfCountersReached wanted n) -> case event of
-    GameEvent.CountersPut (CounterChange.MkCounterChange oid kind before after) ->
+    GameEvent.CountersPut (CountersPlaced.MkCountersPlaced _ oid kind before after) ->
       oid == bearer && kind == wanted && Saga.chapterTriggers (Saga.readAheadRestricted (Projection.project bearer gs) gs bearer) before after n
     -- Rule 714.2b says "are PUT onto", so a removal crosses nothing: a Saga whose
     -- lore counters were taken off and put back fires its chapters again.
@@ -7130,9 +7131,9 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- separates the two is `batchScoped` below plus eventTriggers' dedup, never
   -- this matcher.
   TriggerCondition.PermanentsGetCounters p -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.PermanentGetsCounters p) event
-  TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement wanted f) -> case event of
-    GameEvent.CountersPut (CounterChange.MkCounterChange oid kind _ _)
-      | kind == wanted -> case Projection.viewWithLastKnown oid gs oid of
+  TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement wanted f relation) -> case event of
+    GameEvent.CountersPut (CountersPlaced.MkCountersPlaced putter oid kind _ _)
+      | kind == wanted && PlayerRelation.holds (Game.teams gs) relation you putter -> case Projection.viewWithLastKnown oid gs oid of
           Nothing -> False
           Just view -> Filter.matches bearerContext view f
     GameEvent.CountersPut {} -> False

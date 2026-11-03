@@ -2076,10 +2076,10 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.SelfLeavesGraveyard -> condition
   -- The Filter is rewritten and the counter kind is not: CR 612.1's pairs swap
   -- SUBTYPE words, and a counter kind names none.
-  TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind f) -> TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind (Filter.rewrite pairs f))
+  TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind f putter) -> TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind (Filter.rewrite pairs f) putter)
   -- The arm above's per-permanent scope, rewritten the same way and for the same
   -- reason: same payload, and CR 612.1 knows nothing about the scope.
-  TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind f) -> TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind (Filter.rewrite pairs f))
+  TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind f putter) -> TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind (Filter.rewrite pairs f) putter)
   -- The TurnScope is carried through untouched, not dropped: a rebuild that
   -- forgot the field would reset a text-changed trigger to firing every turn.
   TriggerCondition.SpellCast (SpellCast.MkSpellCast f scope fromZone ordinal window copies) -> TriggerCondition.SpellCast (SpellCast.MkSpellCast (Filter.rewrite pairs f) scope fromZone ordinal window copies)
