@@ -5,6 +5,7 @@ import qualified Parun.Codec.DamagedParty as DamagedParty
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.DamagedParty as DamagedParty
+import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.SlotName as SlotName
 
@@ -18,4 +19,6 @@ spec s = Spec.describe s "Parun.Codec.DamagedParty" $ do
     Common.assertCodec s DamagedParty.codec (DamagedParty.InSlot (SlotName.MkSlotName (Text.pack "thatDepartedPermanent"))) " {\"type\":\"InSlot\",\"value\":\"thatDepartedPermanent\"} "
   Spec.it s "Anyone" $
     Common.assertCodec s DamagedParty.codec DamagedParty.Anyone " {\"type\":\"Anyone\"} "
+  Spec.it s "HolderOfCandidate" $
+    Common.assertCodec s DamagedParty.codec (DamagedParty.HolderOfCandidate Holder.Controller) " {\"type\":\"HolderOfCandidate\",\"value\":{\"type\":\"Controller\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s DamagedParty.codec

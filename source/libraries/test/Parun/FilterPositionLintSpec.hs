@@ -84,6 +84,9 @@ import qualified Parun.Types.CounterRestriction as CounterRestriction
 import qualified Parun.Types.CounterSubject as CounterSubject
 import qualified Parun.Types.Create as Create
 import qualified Parun.Types.Cycling as Cycling
+import qualified Parun.Types.DamageDealer as DamageDealer
+import qualified Parun.Types.DamagedParty as DamagedParty
+import qualified Parun.Types.DealtDamageTo as DealtDamageTo
 import qualified Parun.Types.Destroy as Destroy
 import qualified Parun.Types.DestructionR as DestructionR
 import qualified Parun.Types.DestructionRewrite as DestructionRewrite
@@ -113,6 +116,7 @@ import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeTally as LifeTally
+import qualified Parun.Types.Lookback as Lookback
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.Measure as Measure
@@ -2711,6 +2715,37 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
                 ]
             }
     Spec.assertEqWith s "a planted atom is seen" (zipWith (\needle atom -> outside needle (planted atom)) needles atoms) [1, 1, 1, 1]
+  -- CR 120.1: what the SOURCE dealt is answerable only where
+  -- Parun.Engine.Projection.withCharacteristicsOf fills it; empty inside the CR
+  -- 613 layer fold and a bare Filter.contextFor, so a card's affected set would
+  -- be a silent False. Admits the two positions a resolving or targeting ability
+  -- frames through Projection.framedWith.
+  Spec.it s "CR 120.1 no card asks what its source dealt outside the positions that fill it" $ do
+    ps <- S.allPrintings s corpus
+    let bySource atom = case atom of
+          Filter.Type.DealtDamageTo asked -> DealtDamageTo.dealer asked == DamageDealer.Source
+          _ -> False
+        atoms = decodedAtoms "DealtDamageTo" bySource
+        admitted c = sum [atoms (atomJson f) | (framing, f) <- cardFilters c, elem framing [SourceHostFramed, InTargetSlot]]
+        outside c = atoms (Codec.encode (Face.Codec.codec Card.codec) c) - admitted c
+        offenders = filter (anyFace (\c -> outside c /= 0) . Printing.card) ps
+    Spec.assertEqWith s "the atom sits only where the source's damage is filled" (fmap (S.nameOf . Printing.card) offenders) []
+    hellkite <- S.printingOf s registry "Steel Hellkite"
+    Spec.assertEqWith s "NOT vacuous: Steel Hellkite's is accepted" (admitted (S.combinedFace hellkite), outside (S.combinedFace hellkite)) (1, 0)
+    let atom = Filter.Type.DealtDamageTo DealtDamageTo.MkDealtDamageTo {DealtDamageTo.party = DamagedParty.Anyone, DealtDamageTo.kind = Nothing, DealtDamageTo.window = Lookback.ThisTurn, DealtDamageTo.dealer = DamageDealer.Source}
+        planted =
+          (S.combinedFace hellkite)
+            { Face.staticAbilities =
+                [ StaticAbility.MkStaticAbility
+                    (Affected.Matching (Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not atom]]))
+                    Nothing
+                    Set.empty
+                    Nothing
+                    Nothing
+                    (NonEmpty.singleton Modification.LoseAllAbilities)
+                ]
+            }
+    Spec.assertEqWith s "a planted atom in an affected set is seen" (outside planted) 1
   -- CR 702.140a's comparison is the source-comparison atom's owner trait, and
   -- its one filler is Parun.Engine.Target.slotContext -- so it is answerable
   -- only inside a TARGET SLOT's own filter and would be a silent False in an

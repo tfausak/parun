@@ -18,6 +18,7 @@ import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.ControlMargin as ControlMargin
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.DamageDealer as DamageDealer
 import qualified Parun.Types.DamagedParty as DamagedParty
 import qualified Parun.Types.DealtDamageTo as DealtDamageTo
 import qualified Parun.Types.Designation as Designation
@@ -427,7 +428,7 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
     Common.assertCodec
       s
       codec
-      (Filter.DealtDamageTo DealtDamageTo.MkDealtDamageTo {DealtDamageTo.party = DamagedParty.Source, DealtDamageTo.kind = Nothing, DealtDamageTo.window = Lookback.ThisTurn})
+      (Filter.DealtDamageTo DealtDamageTo.MkDealtDamageTo {DealtDamageTo.party = DamagedParty.Source, DealtDamageTo.kind = Nothing, DealtDamageTo.window = Lookback.ThisTurn, DealtDamageTo.dealer = DamageDealer.Candidate})
       " {\"type\":\"DealtDamageTo\",\"value\":{\"party\":{\"type\":\"Source\"}}} "
   Spec.it s "EnteredThisTurn" $
     Common.assertCodec

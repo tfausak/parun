@@ -247,6 +247,7 @@ import qualified Parun.Codec.CreatureExploitsSpec
 import qualified Parun.Codec.CrewRestrictionSpec
 import qualified Parun.Codec.CrewingSpec
 import qualified Parun.Codec.CyclingSpec
+import qualified Parun.Codec.DamageDealerSpec
 import qualified Parun.Codec.DamageDirectionSpec
 import qualified Parun.Codec.DamageEventSpec
 import qualified Parun.Codec.DamageIsSpec
@@ -1203,6 +1204,7 @@ spec s registry corpus = do
   Parun.Codec.DamageDirectionSpec.spec s
   Parun.Codec.DamageEventSpec.spec s
   Parun.Codec.DamageIsSpec.spec s
+  Parun.Codec.DamageDealerSpec.spec s
   Parun.Codec.DamageKindSpec.spec s
   Parun.Codec.DamagePartSpec.spec s
   Parun.Codec.DamagePatternSpec.spec s
