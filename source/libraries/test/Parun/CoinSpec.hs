@@ -72,6 +72,7 @@
 module Parun.CoinSpec where
 
 import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.Foldable as Foldable
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
@@ -87,8 +88,11 @@ import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CoinFace as CoinFace
 import qualified Parun.Types.Facing as Facing
 import qualified Parun.Types.Game as Game.Type
+import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.Player as Player
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.Prompt as Prompt
@@ -99,6 +103,7 @@ spec s registry = Spec.describe s "Parun.Engine.Coin" $ do
   flipCoinSpec s registry
   faceReadingSpec s registry
   missesSpec s registry
+  chaosSpec s registry
 
 -- Set a seat's life directly, so the two seats start on different numbers and
 -- neither can be read for the other.
@@ -366,3 +371,28 @@ missesSpec s registry = Spec.describe s "FlipCoin tallies the flips lost (CR 705
       "CR 705.2: no flip lost, so no damage and two cards drawn"
       (let settled = afterMutalith [CoinFace.Heads, CoinFace.Heads] board in (S.lifeOf S.bob settled, S.lifeOf S.carol settled, S.handSize S.alice settled))
       (Just 20, Just 16, 2)
+
+-- CR 608.2c: each branch of Game of Chaos is two instructions in written order,
+-- so two events, and CR 603.4's board for the first does not hold the second.
+-- The log is the read: life totals can't show it and no pool trigger's "if" does.
+chaosSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+chaosSpec s registry = Spec.describe s "Game of Chaos's life changes (CR 608.2c)" $ do
+  let declining :: CoinFace.CoinFace -> Prompt.Prompt r -> r
+      declining face p = case p of
+        Prompt.ChooseRepeat {} -> OptionalDecision.Declines
+        _ -> flipAnswer face CoinFace.Heads p
+      groupsAfter face = do
+        chaos <- S.printingOf s registry "Game of Chaos"
+        mountain <- S.printingOf s registry "Mountain"
+        let (board, chaosId) = S.handOne chaos (S.landsFor mountain S.alice 3 (Setup.emptyGame S.bothPlayers))
+            after = S.runPure (declining face) board (S.cast S.alice chaosId >> Stack.resolveTop)
+            lifeChange logged = case LoggedEvent.event logged of
+              GameEvent.LifeGained _ -> Just (LoggedEvent.group logged)
+              GameEvent.LifeLost _ -> Just (LoggedEvent.group logged)
+              _ -> Nothing
+        pure (Maybe.mapMaybe lifeChange (Foldable.toList (GameState.events after)))
+      twoEvents face = do
+        groups <- groupsAfter face
+        Spec.assertEqWith s "one life change each, in groups of their own" (length groups, Set.size (Set.fromList groups)) (2, 2)
+  Spec.it s "CR 608.2c / 603.4 a won flip's gain and loss are two events" (twoEvents CoinFace.Heads)
+  Spec.it s "CR 608.2c / 603.4 a lost flip's loss and gain are two events" (twoEvents CoinFace.Tails)

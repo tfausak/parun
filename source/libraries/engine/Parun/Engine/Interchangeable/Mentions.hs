@@ -2722,7 +2722,7 @@ removeCountersAmongNames asking x = case x of
 
 repeatNames :: (Monoid r) => Asking r -> (effect -> r) -> Repeat.Repeat effect -> r
 repeatNames asking onEffect x = case x of
-  Repeat.MkRepeat chooser body gate -> playerRefNames asking chooser <> foldMap onEffect body <> foldMap (conditionNames asking) gate
+  Repeat.MkRepeat chooser body gate otherChooser ifAgain -> playerRefNames asking chooser <> foldMap onEffect body <> foldMap (conditionNames asking) gate <> foldMap (playerRefNames asking) otherChooser <> foldMap onEffect ifAgain
 
 repeatIfNames :: (Monoid r) => Asking r -> (effect -> r) -> RepeatIf.RepeatIf effect -> r
 repeatIfNames asking onEffect x = case x of
