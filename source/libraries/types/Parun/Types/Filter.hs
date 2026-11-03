@@ -397,6 +397,11 @@ data Filter keyword
     -- False for a candidate attached to a player, and for one whose host has left
     -- the battlefield (CR 704.5m).
     AttachedTo (Filter keyword)
+  | -- | CR 400.7 / 608.2h: the nest admits the object the candidate was before the
+    -- move that made it, read off that object's last known information against the
+    -- outer context. Deadly Brew's "another permanent card". False for a candidate
+    -- no move made this turn, and for a departure no record was filed for.
+    BeforeMove (Filter keyword)
   | -- | CR 303.4b's "enchanted" and CR 301.5a's "equipped", asked of the HOST:
     -- something the nested Filter admits is attached TO the candidate -- A Tale
     -- for the Ages' "enchanted creatures you control". The mirror of AttachedTo

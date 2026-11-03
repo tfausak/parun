@@ -625,6 +625,7 @@ deadbeat-attendant
 deadeye-tracker
 deadlock-trap
 deadly-allure
+deadly-brew
 deadly-complication
 death-pit-offering
 death-wish
@@ -936,6 +937,7 @@ fevered-suspicion
 feywild-trickster
 field-of-the-dead
 fields-of-summer
+fiendish-panda
 fiendslayer-paladin
 fierce-retribution
 fiery-conclusion

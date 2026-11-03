@@ -3334,7 +3334,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
 -- The CARDS in one player's library, top first (CR 401.2): a token shuffled in
 -- is there until CR 704.5d removes it (CR 111.7), and is not a card.
 libraryCards :: PlayerId -> GameState -> [ObjectId]
-libraryCards pid gs = filter (`Game.isCardObject` gs) (Game.zoneMembers Zone.Library pid gs)
+libraryCards = Game.cardsIn Zone.Library
 
 -- The cards in ONE player's graveyard matching the filter, in ascending
 -- ObjectId. The filter is matched in THIS EFFECT's context -- the caller's, so
@@ -3348,7 +3348,7 @@ graveyardCardsOf context gs pid filter_ =
    in List.sort
         ( filter
             (\oid -> Filter.matches context (viewOf oid) filter_)
-            (Game.zoneMembers Zone.Graveyard pid gs)
+            (Game.cardsIn Zone.Graveyard pid gs)
         )
 
 -- The cards in ONE player's hand matching the filter: graveyardCardsOf one zone
