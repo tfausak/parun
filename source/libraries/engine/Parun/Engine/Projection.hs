@@ -3811,6 +3811,7 @@ traitReads trait = case trait of
   -- An OWNER, which CR 108.3 fixes when the game starts and no Modification
   -- writes.
   Trait.Owner -> Set.empty
+  Trait.Controller -> Set.singleton Controller
   Trait.Sector -> Set.empty
   Trait.CreatureType -> Set.singleton Subtypes
   Trait.CardType -> Set.singleton Types

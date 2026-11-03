@@ -1837,6 +1837,7 @@ sharesAnchored trait anchor = case anchor of
     Trait.Color -> Just (\context view -> meets (colors view) (sourceColors context))
     Trait.Name -> Just (\context view -> meets (names view) (sourceNames context))
     Trait.Owner -> Just (\context view -> meets (foldMap Set.singleton (owner view)) (foldMap Set.singleton (sourceOwner context)))
+    Trait.Controller -> Nothing
     Trait.Sector -> Just (\context view -> meets (Sector.sectorsIn (designations view)) (sourceSectors context))
     Trait.CreatureType -> Nothing
     Trait.CardType -> Nothing
@@ -1852,6 +1853,7 @@ sharesAnchored trait anchor = case anchor of
     Trait.CreatureType -> Just (\context view -> maybe True (meets (subtypes view)) (Map.lookup slot (slotCreatureTypes context)))
     Trait.Color -> Nothing
     Trait.Owner -> Nothing
+    Trait.Controller -> Nothing
     Trait.Sector -> Nothing
     Trait.CardType -> Nothing
   Anchor.Evaluated -> case trait of
@@ -1862,6 +1864,7 @@ sharesAnchored trait anchor = case anchor of
     Trait.Color -> Nothing
     Trait.Name -> Nothing
     Trait.Owner -> Nothing
+    Trait.Controller -> Nothing
     Trait.Sector -> Nothing
     Trait.CardType -> Nothing
   -- Some permanent the nest admits, matched in the OUTER context, so its "you"
@@ -1869,6 +1872,7 @@ sharesAnchored trait anchor = case anchor of
   -- you control"). Vacuously False where nothing fills battlefieldViews.
   Anchor.AnyPermanent group -> case trait of
     Trait.Name -> Just (\context view -> any (\permanent -> matches context permanent group && meets (names view) (names permanent)) (battlefieldViews context))
+    Trait.Controller -> Just (\context view -> any (\permanent -> matches context permanent group && meets (held view) (held permanent)) (battlefieldViews context))
     Trait.Color -> Nothing
     Trait.Owner -> Nothing
     Trait.Sector -> Nothing
@@ -1876,6 +1880,7 @@ sharesAnchored trait anchor = case anchor of
     Trait.CardType -> Nothing
   where
     meets a b = not (Set.disjoint a b)
+    held = foldMap Set.singleton . controller
 
 -- CR 701.3a / 301.5a: does a candidate attached to this object relate to the
 -- anchor -- the match's source, or under CR 613.4c the object the surrounding
@@ -3882,6 +3887,7 @@ readsSourceValues predicate = case predicate of
       Trait.Color -> True
       Trait.Name -> True
       Trait.Owner -> False
+      Trait.Controller -> False
       Trait.Sector -> False
       Trait.CreatureType -> False
       Trait.CardType -> False

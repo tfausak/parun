@@ -54,8 +54,9 @@ data Filter keyword
     -- 205.3m / 709.4a), as Parun.Engine.Filter.sharesAnchored reads each pair.
     --
     -- Not implemented: a pair the Context carries no anchored values for (Color,
-    -- Owner or Sector at Bound, anything but CreatureType at Evaluated,
-    -- CreatureType at Source, anything but Name at AnyPermanent), which answers False and
+    -- Owner, Controller or Sector at Bound, anything but CreatureType at Evaluated,
+    -- CreatureType or Controller at Source, anything but Name or Controller at
+    -- AnyPermanent), which answers False and
     -- Parun.FilterPositionLintSpec keeps out of card data (#5636).
     Shares Trait.Trait (Anchor.Anchor (Filter keyword))
   | HasSubtype Subtype.Subtype -- CR 205.3: the object's subtypes include this one.

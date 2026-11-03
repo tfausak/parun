@@ -1054,9 +1054,9 @@ decodedAtoms tag wanted value =
 
 -- The CR 709.4a atoms Parun.Engine.Projection.framedBySlots answers, in an
 -- encoding: Filter.Shares Name at a Bound anchor (Filter.Context.slotNames) or
--- at AnyPermanent (Filter.Context.battlefieldViews).
+-- Name or Controller at AnyPermanent (Filter.Context.battlefieldViews).
 framedNameAtoms :: Value.Value -> Int
-framedNameAtoms = decodedAtoms "Shares" (\atom -> case atom of Filter.Type.Shares Trait.Name (Anchor.Bound _) -> True; Filter.Type.Shares Trait.Name (Anchor.AnyPermanent _) -> True; _ -> False)
+framedNameAtoms = decodedAtoms "Shares" (\atom -> case atom of Filter.Type.Shares Trait.Name (Anchor.Bound _) -> True; Filter.Type.Shares Trait.Name (Anchor.AnyPermanent _) -> True; Filter.Type.Shares Trait.Controller (Anchor.AnyPermanent _) -> True; _ -> False)
 
 -- How many CR 709.4a atoms this card carries in one of the ADMITTED positions
 -- -- a MODE's target slot filter (Harness the Storm), a CR 701.23 search filter
@@ -1716,7 +1716,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Shimian Specter", 1), -- its search's filter, against its loop's member
         ("Legion's End", 3), -- its battlefield and graveyard exiles' objects and its hand sweep's filter
         ("Maelstrom Pulse", 1), -- its destroy's object
-        ("Pattern Matcher", 1) -- its search's filter, at AnyPermanent
+        ("Pattern Matcher", 1), -- its search's filter, at AnyPermanent
+        ("Seasinger", 1) -- its ability's target slot, Controller at AnyPermanent
       ]
     -- Both sides of the split, with room to spare under the pool's real figures:
     -- a traversal that had stopped walking, or a Framing that had stopped marking
@@ -2109,7 +2110,9 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Torture", 1), -- an activated ability putting a counter on it
         ("The Brute", 1), -- an activated ability regenerating it
         ("Carapace", 1), -- the same, with the Aura sacrificed as the cost (CR 113.7a)
-        ("Thrull Retainer", 1) -- the same as Carapace
+        ("Thrull Retainer", 1), -- the same as Carapace
+        ("Prismatic Ward", 1), -- a CR 614.1 replacement row's own Filter, as Pariah's
+        ("Unstable Mutation", 1) -- a trigger putting a counter on it
       ]
     -- The rejected side, which the sweep above cannot show while the pool has no
     -- offender: the same atom planted in a SPELL's target slot -- the position a
