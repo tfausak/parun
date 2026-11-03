@@ -408,12 +408,6 @@ instructions context es = case es of
             (run, others) = span (maybe False alike . modifyTarget) rest
         p <- modified context m (Maybe.mapMaybe (fmap ModifyTarget.modification . modifyTarget) run)
         fmap (p :) (instructions (noting context (e : run)) others)
-  e@(Effect.Destroy d) : rest
-    | Just _ <- destroyOf e -> do
-        let alike n = Destroy.regenerability n == Destroy.regenerability d
-            (run, others) = span (maybe False alike . destroyOf) rest
-        p <- destroyed context (d : Maybe.mapMaybe destroyOf run)
-        fmap (p :) (instructions (noting context (e : run)) others)
   e : rest
     | Just refs <- returnOf context e -> do
         p <- returned context refs
@@ -459,21 +453,22 @@ destroyOf e = case e of
         Just d
   _ -> Nothing
 
--- | "Destroy [objects]" (CR 701.8a), the objects of consecutive instructions
--- listed in one sentence: "destroy that creature and this creature" (Loyal
--- Sentry). Free for two single objects, one of them the source: listed, or
--- "both creatures" (Alaborn Zealot).
-destroyed :: Target.Context -> [Destroy.Destroy] -> [Predicate]
-destroyed context ds = do
-  refs <- traverse (Target.object context Target.All . Destroy.ref) ds
-  first <- take 1 ds
+-- | "Destroy [objects]" (CR 701.8a), the objects one instruction destroys at
+-- once (CR 608.2f) listed in one sentence: "destroy that creature and this
+-- creature" (Loyal Sentry). Free for two single objects, one of them the
+-- source: listed, or "both creatures" (Alaborn Zealot).
+destroyed :: Target.Context -> Destroy.Destroy -> [Predicate]
+destroyed context d = do
+  refs <- case Target.object context Target.All (Destroy.ref d) of
+    [] | ObjectRef.AllOf members <- Destroy.ref d -> traverse (Target.object context Target.All) (NonEmpty.toList members)
+    whole -> fmap pure whole
   let many = length refs > 1 || any ((== Filter.Plural) . Target.number) refs
       -- Free for one object named again: "It" (Terror) or "That creature"
       -- (Nekrataal).
-      again = case Target.object context {Target.earlier = fmap Destroy.ref ds} Target.All (Destroy.ref first) of
+      again = case Target.object context {Target.earlier = [Destroy.ref d]} Target.All (Destroy.ref d) of
         [] -> [Text.pack "it"]
         anaphors -> fmap Target.wording anaphors
-  regenerate <- case Destroy.regenerability first of
+  regenerate <- case Destroy.regenerability d of
     Regenerability.Regenerable -> [[]]
     Regenerability.CantBeRegenerated
       | many -> [[Text.pack "They can't be regenerated."]]
@@ -737,7 +732,7 @@ effect context e = case e of
         n <- life a
         naming (Target.names a) (declarative context (LifeLoss.player l) (Text.pack "lose " <> n) (Text.pack "loses " <> n))
   Effect.Destroy d
-    | Just _ <- destroyOf e -> destroyed context [d]
+    | Just _ <- destroyOf e -> destroyed context d
   Effect.Counter c
     | Maybe.isNothing (Counter.slot c),
       Maybe.isNothing (Counter.sources c),

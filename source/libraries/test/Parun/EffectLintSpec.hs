@@ -1727,8 +1727,9 @@ inertChoosers effect =
   [ref | (allowed, ref) <- effectObjectRefs effect, Just question <- [questionOf ref], question `notElem` allowed]
 
 -- An ObjectRef.AllOf written anywhere but a move's ref, a play grant's, a
--- loop's or a damage instruction's. MoveToZone gathers it member by member
--- (Parun.Engine.Resolve.Arms.Zones's gather), and GrantPlayFromExile reads its ref
+-- loop's, a damage instruction's or a destruction's. MoveToZone gathers it
+-- member by member (Parun.Engine.Resolve.Arms.Zones's gather), and
+-- GrantPlayFromExile reads its ref
 -- through
 -- Resolve.Slots.objectRefObjects, whose AllOf arm is the union -- the scenario
 -- cr-601-3-flameskull-played-land-closes-flameskull-s-own-cast proves it.
@@ -1739,6 +1740,9 @@ inertChoosers effect =
 -- Inferno Elemental's "that creature", whichever of its two block slots is
 -- bound, proved by the scenarios inferno-elemental-burns-the-creature-it-blocks
 -- and inferno-elemental-burns-the-creature-blocking-it.
+-- Destroy reads its ref through askingObjects, whose AllOf arm is the union
+-- too -- Loyal Sentry's "that creature and this creature" in one batch, proved
+-- by the scenario loyal-sentry-destroys-both-creatures-at-once.
 -- The other opcodes' one-ref reads (a sticker's candidates, a copy's archived
 -- source, a reveal's shower) would read the union as a single arm.
 strayAllOf :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
@@ -1747,6 +1751,7 @@ strayAllOf effect = case effect of
   Effect.GrantPlayFromExile {} -> False
   Effect.ForEach {} -> False
   Effect.DealDamage {} -> False
+  Effect.Destroy {} -> False
   _ -> any (holdsAllOf . snd) (effectObjectRefs effect)
   where
     holdsAllOf ref = case ref of
@@ -2729,7 +2734,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- Exhume, Elvish Piper, Commune with the Gods and Merfolk Spy print them.
     Spec.assertBool s asks "the pool has a card asking a player to pick a card"
     Spec.assertEqWith s "a chosen card under an opcode that cannot ask (CR 608.2d)" (fmap (S.nameOf . Printing.card) offenders) []
-  Spec.it s "no AllOf outside a move, a play grant, a loop or a damage instruction" $ do
+  Spec.it s "no AllOf outside a move, a play grant, a loop, a damage instruction or a destruction" $ do
     ps <- S.allPrintings s corpus
     let offenders = filter (anyFace (any strayAllOf . cardAuthoredEffects) . Printing.card) ps
         moved = any (anyFace (any (any (isAllOf . snd) . effectObjectRefs) . cardAuthoredEffects) . Printing.card) ps
