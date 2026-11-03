@@ -453,11 +453,13 @@ withOffering pid oid gs candidate =
 -- harbinger-of-the-tides-cast-in-a-main-phase-may-pay-two-more proves. The
 -- scenarios harbinger-of-the-tides-* and swift-reckoning-* prove both shapes.
 --
--- Not implemented: the condition is asked before CR 601.2a's move, so a card
--- cast from a graveyard counts itself there (#5792).
+-- The condition is asked of the board after CR 601.2a's move
+-- (Game.withoutBeingCast), so a card cast from a graveyard does not count
+-- itself there (Swift Reckoning's ruling); the scenarios
+-- swift-reckoning-from-a-graveyard-* prove it.
 withFlashPermission :: PlayerId -> ObjectId -> Face.Face Card.Type.Card -> GameState -> CandidateCost.CandidateCost -> [CandidateCost.CandidateCost]
 withFlashPermission pid oid face gs =
-  let holds = Condition.holds (Projection.fullView gs) (Projection.sourceContext gs (Just pid) oid) gs oid
+  let holds = ActivationRestriction.onlyIfHolds pid oid (Game.withoutBeingCast gs)
       permitted = [additional | CastingPermission.CastAsThoughItHadFlash condition additional <- permissionsOf oid face gs, all holds condition]
       free = any Maybe.isNothing permitted
       additionals = Maybe.catMaybes permitted
