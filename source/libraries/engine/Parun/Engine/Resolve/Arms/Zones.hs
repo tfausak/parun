@@ -1065,22 +1065,27 @@ forEachNumber applyLoopBody runSubgame resolving source controller legal chosen 
 -- through a resolution.
 --
 -- The gate (CR 706.3c's "Roll again" on one row of a results table) is read
--- live after each run, as RepeatIf's condition is; one that fails ends the
--- loop unasked. Parun.DiceSpec's Delina, Wild Mage group proves it.
+-- live after each run, as RepeatIf's condition is; one that fails asks the
+-- other chooser, or with none ends the loop unasked. Parun.DiceSpec's Delina,
+-- Wild Mage group proves the ending, Game of Chaos's scenarios
+-- the other chooser and the instructions run before each further run.
 repeatArm :: (Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Set SlotName -> Seq.Seq (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Game ()) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Repeat.Repeat (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Game ()
-repeatArm applyLoopBody runSubgame resolving source controller legal chosen (Repeat.MkRepeat chooser body gate) = do
+repeatArm applyLoopBody runSubgame resolving source controller legal chosen (Repeat.MkRepeat chooser body gate otherChooser ifAgain) = do
   rescope <- State.gets (Common.rescopeRun resolving (foldMap boundSlots body))
-  let run runs = do
+  let apply = applyLoopBody runSubgame resolving source controller legal chosen (foldMap boundSlots (body <> ifAgain))
+      run runs = do
         State.modify' rescope
-        applyLoopBody runSubgame resolving source controller legal chosen (foldMap boundSlots body) body
+        apply body
         gs0 <- State.get
         let context = effectContext gs0 resolving controller source legal (slotBindings resolving gs0)
             open = all (Condition.holds (effectViewOf resolving source legal gs0) context gs0 source) gate
-        asked <- if open then Common.askedChooser resolving source controller legal chooser else pure Nothing
+        asked <- maybe (pure Nothing) (Common.askedChooser resolving source controller legal) (if open then Just chooser else otherChooser)
         Monad.forM_ asked $ \who -> do
           gs <- State.get
           again <- Game.choose (Prompt.ChooseRepeat (Decide.deciderFor who gs) who resolving runs)
-          Monad.when (again == OptionalDecision.Exercises) (run (runs + 1))
+          Monad.when (again == OptionalDecision.Exercises) $ do
+            apply ifAgain
+            run (runs + 1)
   run 1
 
 -- CR 608.2c: the process in written order, then its printed "if" asked of the

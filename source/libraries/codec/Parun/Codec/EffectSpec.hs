@@ -1133,7 +1133,7 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.Repeat (Repeat.MkRepeat (PlayerRef.Relative PlayerRelation.You) (Seq.singleton (Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 1) Nothing))) Nothing))
+      (Effect.Repeat (Repeat.MkRepeat (PlayerRef.Relative PlayerRelation.You) (Seq.singleton (Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 1) Nothing))) Nothing Nothing Seq.empty))
       " {\"type\":\"Repeat\",\"value\":{\"chooser\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"body\":[{\"type\":\"Draw\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"quantity\":{\"type\":\"Literal\",\"value\":1}}}]}} "
   -- Grist, the Hunger Tide's +1: go again only while the process's tally says so.
   Spec.it s "RepeatIf" $
