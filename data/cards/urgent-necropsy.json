@@ -42,44 +42,25 @@
                     "type": "Destroy",
                     "value": {
                       "ref": {
-                        "type": "InSlot",
-                        "value": "artifact"
-                      },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
-                    }
-                  },
-                  {
-                    "type": "Destroy",
-                    "value": {
-                      "ref": {
-                        "type": "InSlot",
-                        "value": "creature"
-                      },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
-                    }
-                  },
-                  {
-                    "type": "Destroy",
-                    "value": {
-                      "ref": {
-                        "type": "InSlot",
-                        "value": "enchantment"
-                      },
-                      "regenerability": {
-                        "type": "Regenerable"
-                      }
-                    }
-                  },
-                  {
-                    "type": "Destroy",
-                    "value": {
-                      "ref": {
-                        "type": "InSlot",
-                        "value": "planeswalker"
+                        "type": "AllOf",
+                        "value": [
+                          {
+                            "type": "InSlot",
+                            "value": "artifact"
+                          },
+                          {
+                            "type": "InSlot",
+                            "value": "creature"
+                          },
+                          {
+                            "type": "InSlot",
+                            "value": "enchantment"
+                          },
+                          {
+                            "type": "InSlot",
+                            "value": "planeswalker"
+                          }
+                        ]
                       },
                       "regenerability": {
                         "type": "Regenerable"
