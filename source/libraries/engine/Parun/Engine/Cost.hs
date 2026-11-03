@@ -6224,6 +6224,13 @@ tapForManaWith perform window inFlight refused activator oid = do
                         State.modify' (\g -> List.foldl' (\acc (recipient, units) -> Mana.addMana recipient units acc) g activated)
                         bound2 <- ManaAbilityPerformer.effects perform oid controller bound1 (filter (Maybe.isNothing . ManaAbility.manaProduced) trailing)
                         pure (answers2, bound2, filled <> shares, made <> produced)
+              -- CR 602.2's history, off `gs`, the board the activation began on:
+              -- a Treasure its own cost sacrificed is still logged as what it was.
+              -- The intrinsic route is logged too; CR 305.6 makes it an activated
+              -- ability all the same. Ahead of the clauses, which resolve after it is
+              -- activated (CR 605.3b): Initiates of the Ebon Hand's
+              -- "has been activated four or more times" counts this one.
+              State.modify' (ActivationRestriction.logActivation gs controller oid (ManaOption.ability chosen) AbilityKind.ManaAbility Set.empty)
               (_, _, shares, producedUnits) <- Monad.foldM step (Map.empty, Map.empty, [], []) (zip (fmap ClauseIndex.MkClauseIndex [0 ..]) (zip [0 :: Int ..] (ManaOption.steps pricedChosen)))
               -- CR 605.1b's "mana being added to a player's mana pool", one event
               -- per player whose pool this activation filled, and CR 106.12a's
@@ -6243,11 +6250,6 @@ tapForManaWith perform window inFlight refused activator oid = do
               case ManaOption.ability chosen of
                 Just spent -> State.modify' (ActivationRestriction.recordActivation oid spent)
                 Nothing -> pure ()
-              -- CR 602.2's history, off `gs`, the board the activation began on:
-              -- a Treasure its own cost sacrificed is still logged as what it was.
-              -- The intrinsic route is logged too; CR 305.6 makes it an activated
-              -- ability all the same.
-              State.modify' (ActivationRestriction.logActivation gs controller oid (ManaOption.ability chosen) AbilityKind.ManaAbility Set.empty)
               -- CR 106.12: this activation "tapped [the permanent] for mana"
               -- exactly when {T} was in its cost and it produced mana, which is
               -- what CR 106.12a's condition watches. Recorded LAST, after CR

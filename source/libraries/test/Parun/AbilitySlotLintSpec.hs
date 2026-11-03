@@ -30,7 +30,7 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
-import Parun.CardSpec (anyFace, anyFaceOrMinted, cardAuthoredEffects, cardCounts, cardFilters, cardResolutionEffects, collectsEvidenceAsCost, createToken, declaresVariable, delayedDeclarations, effectCounts, effectWithNested, grantedActivatedAbilities, grantedTriggeredAbilities, instantLine, lintMode, mintingSpell, modalActivated, modalSlotsOffend, oneEffectActivated, oneEffectTrigger, payGateBound, removesCountersAsCost, sacrificesAsCost, spellCostsOf, triggerConditionSlots, vanillaFace, waterbendsAsCost, withMinted)
+import Parun.CardSpec (anyFace, anyFaceOrMinted, cardAuthoredEffects, cardCounts, cardFilters, cardResolutionEffects, collectsEvidenceAsCost, createToken, declaresVariable, delayedDeclarations, effectCounts, effectWithNested, grantedActivatedAbilities, grantedTriggeredAbilities, instantLine, lintMode, mintingSpell, modalActivated, modalClauseConditions, modalSlotsOffend, oneEffectActivated, oneEffectTrigger, payGateBound, removesCountersAsCost, sacrificesAsCost, spellCostsOf, triggerConditionSlots, vanillaFace, waterbendsAsCost, withMinted)
 import qualified Parun.Engine.Binding as Binding
 import qualified Parun.Engine.Card as Card
 import qualified Parun.Engine.Engine as Engine
@@ -51,6 +51,7 @@ import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.ActivationCriteria as ActivationCriteria
 import qualified Parun.Types.ActivationProhibition as ActivationProhibition
+import qualified Parun.Types.ActivationsThisTurn as ActivationsThisTurn
 import qualified Parun.Types.AffectPlayers as AffectPlayers
 import qualified Parun.Types.AffectedPlayers as AffectedPlayers
 import qualified Parun.Types.AgainstExiledPile as AgainstExiledPile
@@ -707,9 +708,9 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- It must name an ACTIVATED ability, the one carrier
   -- Parun.Engine.Resolve.Slots.resolvingAbilityName files a name for.
   --
-  -- CR 601.2f's ActivationCriteria.whichAbility is the fourth
-  -- (namedCostAbilities), and must name an ACTIVATED ability too: a cost
-  -- reduction naming anything else reduces nothing.
+  -- ActivationCriteria.whichAbility is the fourth (namedActivationCriteria),
+  -- and must name an ACTIVATED ability too: a CR 601.2f cost reduction or a CR
+  -- 602.2 count naming anything else finds nothing.
   --
   -- A removal may name any carrier, the rule and player abilities CR 116.2d's
   -- ignore names included (Synthetic Grounded Sentry, Synthetic Hushed Warden),
@@ -1606,24 +1607,31 @@ namedRemovals face =
 abilityNameOffends :: Face.Face Card.Type.Card -> Bool
 abilityNameOffends face =
   let declared = Set.union (declaredAbilityNames face) (declaredIgnorableAbilityNames face)
-      activatedOnly = Set.union (namedExileReferences face) (namedCostAbilities face)
+      activatedOnly = Set.union (namedExileReferences face) (namedActivationCriteria face)
       readNames = Set.unions [namedRemovals face, activatedOnly, ignoredAbilityNames face]
    in not (Set.isSubsetOf (Set.union (namedRemovals face) activatedOnly) declared)
         || declared /= readNames
         || not (Set.isSubsetOf activatedOnly (Set.fromList (Maybe.mapMaybe ActivatedAbility.name (Face.activatedAbilities face))))
 
--- Every AbilityName a face's printed cost modifiers narrow to
--- (ActivationCriteria.whichAbility): Sanctum of Tranquil Light's "this
--- ability costs {1} less". Printed player abilities only, the one place "this
--- ability" is written.
-namedCostAbilities :: Face.Face Card.Type.Card -> Set.Set AbilityName.AbilityName
-namedCostAbilities face =
+-- Every AbilityName a face narrows to through ActivationCriteria.whichAbility:
+-- a printed cost modifier's, Sanctum of Tranquil Light's "this ability costs {1}
+-- less", and an activated ability's clause condition's count, Initiates of the
+-- Ebon Hand's "this ability has been activated four or more times".
+namedActivationCriteria :: Face.Face Card.Type.Card -> Set.Set AbilityName.AbilityName
+namedActivationCriteria face =
   Set.fromList
-    [ name
-    | PlayerEffect.ModifyCost modifier <- fmap PlayerStaticAbility.effect (Face.playerAbilities face),
-      CostSubject.Activations criteria <- [CostModifier.subject modifier],
-      Just name <- [ActivationCriteria.whichAbility criteria]
-    ]
+    ( [ name
+      | PlayerEffect.ModifyCost modifier <- fmap PlayerStaticAbility.effect (Face.playerAbilities face),
+        CostSubject.Activations criteria <- [CostModifier.subject modifier],
+        Just name <- [ActivationCriteria.whichAbility criteria]
+      ]
+        <> [ name
+           | ability <- Face.activatedAbilities face,
+             Condition.Type.Compares compares <- modalClauseConditions (ActivatedAbility.modal ability),
+             Quantity.Type.ActivationsThisTurn tally <- [Compares.measured compares],
+             Just name <- [ActivationCriteria.whichAbility (ActivationsThisTurn.criteria tally)]
+           ]
+    )
 
 -- Every AbilityName a face's CR 607.2a references name: the exiling ability
 -- each OfAbility pile reads, wherever one is written. Parun.CardSpec.cardFilters

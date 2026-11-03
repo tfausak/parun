@@ -958,17 +958,17 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
                         && PastActivation.ability past == Just (ActivatedAbilitySource.ability activated)
                  in length (filter this (Foldable.toList (GameState.activationsThisTurn gs)))
               _ -> 0
-        -- CR 602.2 / 608.2i: the turn's activations by that player, off the same
+        -- CR 602.2 / 608.2i: the turn's activations by those players, off the same
         -- log, each asked of its source as the activation began (Count.pastView)
         -- and of the ability (Count.activationMeets). The snapshot is what answers
         -- The Chain Veil's ruling that a planeswalker gone from the battlefield
         -- still counts. Absent activations are 0, an answered question; only the
         -- reference can go unanswered, SpellsCast's posture.
         -- data/scenarios/the-chain-veil proves the count.
-        Quantity.ActivationsThisTurn tally -> case playersOf (ActivationsThisTurn.activator tally) of
-          Just [pid] ->
+        Quantity.ActivationsThisTurn tally -> case historyPlayersOf (ActivationsThisTurn.activator tally) of
+          Just pids@(_ : _) ->
             let counts past =
-                  PastActivation.activator past == pid
+                  elem (PastActivation.activator past) pids
                     && Filter.matches context (Count.pastView (PastActivation.source past)) (ActivationsThisTurn.source tally)
                     && Count.activationMeets (ActivationsThisTurn.criteria tally) past
              in Just (toInteger (length (filter counts (Foldable.toList (GameState.activationsThisTurn gs)))))
