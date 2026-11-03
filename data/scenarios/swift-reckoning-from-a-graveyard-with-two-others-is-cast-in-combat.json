@@ -5,10 +5,12 @@
       {
         "battlefield": [
           {
-            "card": "Plains"
+            "card": "Plains",
+            "label": "plains-a"
           },
           {
-            "card": "Plains"
+            "card": "Plains",
+            "label": "plains-b"
           }
         ],
         "graveyard": [
@@ -73,6 +75,9 @@
     {
       "do": {
         "Cast": {
+          "mana": [
+            null
+          ],
           "object": "$will"
         }
       },
@@ -89,6 +94,10 @@
     {
       "do": {
         "Cast": {
+          "mana": [
+            "$plains-a",
+            "$plains-b"
+          ],
           "object": "$reckoning",
           "targets": [
             "$bears"
