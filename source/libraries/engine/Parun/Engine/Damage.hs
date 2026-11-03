@@ -965,6 +965,19 @@ splitExcess gs event =
       (if bar > 0 then [event {DamageEvent.amount = bar}] else [])
         <> [Event.damageEvent gs (DamageEvent.kind event) (DamageEvent.source event) (Recipient.ToPlayer player) excess]
 
+-- CR 120.10: how much excess damage an instruction dealt its own recipients, from
+-- what it settled (CR 120.4b), so prevention shrinks it and a replacement grows it,
+-- against the bars of the board it was dealt on. A recipient is the one the
+-- instruction aimed at: damage a replacement dealt elsewhere (CR 614.9) is not
+-- dealt "to that creature", and a player has no bar.
+excessDealt :: GameState -> ObjectId -> [Recipient.Recipient] -> [DamageEvent.DamageEvent] -> Natural
+excessDealt before source aimed settled =
+  sum (Maybe.mapMaybe excessOn (ListUtils.nubOrd aimed))
+  where
+    excessOn recipient = do
+      bar <- excessThreshold before source recipient
+      pure (Natural.minusSaturating (sum (fmap DamageEvent.amount (filter ((== recipient) . DamageEvent.target) settled))) bar)
+
 -- CR 120.3: carry out a batch of damage events' results -- mark damage on
 -- creatures (CR 120.3e), drain life from players (CR 120.3a), take loyalty and
 -- defense counters off (CR 120.3c, CR 120.3h), place the counters infect, wither

@@ -32,7 +32,8 @@ spec s = Spec.describe s "Parun.Codec.DealDamage" $ do
             DealDamage.dealer = Nothing,
             DealDamage.excess = Nothing,
             DealDamage.tally = Nothing,
-            DealDamage.damaged = Nothing
+            DealDamage.damaged = Nothing,
+            DealDamage.excessTally = Nothing
           }
       )
       " {\"parts\":[{\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"},\"quantity\":{\"type\":\"Literal\",\"value\":3}}]} "
@@ -59,8 +60,9 @@ spec s = Spec.describe s "Parun.Codec.DealDamage" $ do
             DealDamage.dealer = Just (SlotName.MkSlotName (Text.pack "dealer")),
             DealDamage.excess = Just ExcessDestination.ToRecipientController,
             DealDamage.tally = Just (SlotName.MkSlotName (Text.pack "dealt")),
-            DealDamage.damaged = Just (SlotName.MkSlotName (Text.pack "hit"))
+            DealDamage.damaged = Just (SlotName.MkSlotName (Text.pack "hit")),
+            DealDamage.excessTally = Just (SlotName.MkSlotName (Text.pack "over"))
           }
       )
-      " {\"parts\":[{\"ref\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"HasKeyword\",\"value\":{\"type\":\"Flying\"}}},\"quantity\":{\"type\":\"Literal\",\"value\":3}},{\"ref\":{\"type\":\"EachPlayer\"},\"quantity\":{\"type\":\"Literal\",\"value\":2}}],\"dealer\":\"dealer\",\"excess\":{\"type\":\"ToRecipientController\"},\"tally\":\"dealt\",\"damaged\":\"hit\"} "
+      " {\"parts\":[{\"ref\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"HasKeyword\",\"value\":{\"type\":\"Flying\"}}},\"quantity\":{\"type\":\"Literal\",\"value\":3}},{\"ref\":{\"type\":\"EachPlayer\"},\"quantity\":{\"type\":\"Literal\",\"value\":2}}],\"dealer\":\"dealer\",\"excess\":{\"type\":\"ToRecipientController\"},\"tally\":\"dealt\",\"damaged\":\"hit\",\"excessTally\":\"over\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s DealDamage.codec

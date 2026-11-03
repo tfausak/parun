@@ -1125,6 +1125,7 @@ goblin-glory-chaser
 goblin-grenade
 goblin-kaboomist
 goblin-mutant
+goblin-negotiation
 goblin-rabblemaster
 goblin-recruiter
 goblin-ringleader
@@ -1940,6 +1941,7 @@ persuasion
 pest-infestation
 pestilent-cauldron-restorative-burst
 pestilent-haze
+pestilent-spirit
 petra-sphinx
 petrified-wood-kin
 phage-the-untouchable
