@@ -1223,7 +1223,7 @@ admitsEntry gs oid rewrite = case rewrite of
   -- already been asked before this row was collected -- RunEffects' answer below,
   -- and for its reason.
   EntryRewrite.EntersWith _ -> True
-  EntryRewrite.UnderSourceControl -> True
+  EntryRewrite.UnderControlOf _ -> True
   EntryRewrite.SacrificeAnyNumber {} -> True
   -- CR 614.1a states no condition: too few candidates is the card's "if you
   -- don't" branch, settled in Parun.Engine.Event's arm rather than here.
@@ -1392,7 +1392,7 @@ entryCostOf rewrite = case rewrite of
   EntryRewrite.ChooseCardName _ -> Nothing
   EntryRewrite.WithCounters _ -> Nothing
   EntryRewrite.EntersWith _ -> Nothing
-  EntryRewrite.UnderSourceControl -> Nothing
+  EntryRewrite.UnderControlOf _ -> Nothing
   EntryRewrite.SacrificeAnyNumber _ -> Nothing
   EntryRewrite.ExileFromGraveyard _ -> Nothing
   EntryRewrite.EntersAttachedTo _ -> Nothing
@@ -2032,7 +2032,7 @@ bucketOfEffect re = case re of
   -- disagree: taking the control rewrite first hands Clone's own CR 109.5 copy
   -- choice to the NEW controller, and taking the copy first hands it to the old
   -- one.
-  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.UnderSourceControl) -> ReplacementBucket.ControlOnEntry
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.UnderControlOf _)) -> ReplacementBucket.ControlOnEntry
   -- CR 616.1d, and the only arm that is: "replacement and/or prevention effects
   -- that would cause a card to enter the battlefield with its back face up".
   -- That is the whole of what daybound's rewrite does (CR 702.145b), so it ranks
@@ -2233,7 +2233,7 @@ readsApplier re = case re of
   -- installed. Two Gather Specimens are one card, so their `effect` values are
   -- identical while their controllers are not, and applying one puts the
   -- permanent somewhere applying the other does not.
-  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.UnderSourceControl) -> True
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.UnderControlOf _)) -> True
   -- CR 702.145b: no chooser at all, and no payload -- the rewrite shows
   -- the back face of the card the event already named, and which face that is
   -- comes from the card. Two such rows are the same write twice, Tapped's answer.
@@ -2302,7 +2302,7 @@ readsApplier re = case re of
   -- library, so two rows alike in `effect` and unlike in `you` empty different
   -- libraries -- and `breaches` asks that same seat's count, so one may apply
   -- where the other does not. The other arm that answers True,
-  -- EntryRewrite.UnderSourceControl, answers it under a different rule; what the
+  -- EntryRewrite.UnderControlOf, answers it under a different rule; what the
   -- two share is reading the candidate's own `controller` to apply.
   --
   -- A FENCE rather than a proved behaviour, and provably so: the only printing
@@ -2655,7 +2655,7 @@ recordsAChoice effect = case effect of
     EntryRewrite.ChoiceByCoinFlip _ -> False
     EntryRewrite.WithCounters {} -> False
     EntryRewrite.EntersWith _ -> False
-    EntryRewrite.UnderSourceControl -> False
+    EntryRewrite.UnderControlOf _ -> False
     EntryRewrite.SacrificeAnyNumber {} -> False
     EntryRewrite.SacrificeToEnter {} -> False
     EntryRewrite.ExileFromGraveyard _ -> False

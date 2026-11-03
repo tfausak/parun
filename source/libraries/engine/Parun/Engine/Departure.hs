@@ -446,10 +446,11 @@ controlEffectsEnd pid gs =
 -- bucket check and a Mending Hands shield dies with its caster).
 --
 -- ActiveReplacement.controller is CR 109.5's "you" as of installation, which is
--- also the only player any current control-on-entry rewrite can name
--- (EntryRewrite.UnderSourceControl hands the permanent to the candidate's own
--- controller). A future rewrite in this bucket that named somebody else would
--- need the recipient re-derived here rather than this field read.
+-- also the only player any floating control-on-entry row can name
+-- (Gather Specimens' EntryRewrite.UnderControlOf You). Captive Audience's
+-- Opponent rides its own static ability, never a floating row; a floating row
+-- naming somebody else would need the recipient re-derived here rather than
+-- this field read.
 givesControlOnEntryTo :: PlayerId -> ActiveReplacement.ActiveReplacement -> Bool
 givesControlOnEntryTo pid active =
   ActiveReplacement.controller active == pid

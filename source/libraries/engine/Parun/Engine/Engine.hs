@@ -962,7 +962,9 @@ placeBorne srcId pending = do
       -- battlefield after triggering (#5784).
       remembered = case Modal.Type.memory modal of
         ModeMemory.NoMemory -> Set.empty
-        ModeMemory.ObjectLifetime -> maybe Set.empty (Map.findWithDefault Set.empty ability . Object.chosenModes) (Game.lookupObject srcId gs)
+        ModeMemory.ObjectLifetime -> maybe Set.empty (Map.findWithDefault Set.empty memoryKey . Object.chosenModes) (Game.lookupObject srcId gs)
+      -- CR 612.1: a text change rewrites the ability, not which ability it is.
+      memoryKey = Projection.printedTriggeredAbility srcId gs ability
       legal = Set.difference (Target.fillableModes StackObjectKind.TriggeredAbility Nothing (Just controller) bound srcId Map.empty modal gs) remembered
       selection = Modal.Type.selection modal
       obj =
@@ -1006,7 +1008,7 @@ placeBorne srcId pending = do
       -- data/scenarios' demonic-pact-counts-a-mode-chosen-for-a-countered-trigger
       -- proves.
       Monad.when (Modal.Type.memory modal /= ModeMemory.NoMemory) $
-        State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.chosenModes = Map.insertWith Set.union ability (Set.fromList (Foldable.toList chosenModes)) (Object.chosenModes o)}) srcId (GameState.objects g)})
+        State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.chosenModes = Map.insertWith Set.union memoryKey (Set.fromList (Foldable.toList chosenModes)) (Object.chosenModes o)}) srcId (GameState.objects g)})
       -- CR 603.3d: targets for the chosen mode(s) only, chosen as the ability is
       -- placed. A mode with no target slots asks nothing.
       let slots = Target.announcedSlots controller srcId gs (Modal.modesTargetSlots chosenModes modal)

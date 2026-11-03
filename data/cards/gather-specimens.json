@@ -74,7 +74,10 @@
                             ]
                           },
                           "rewrite": {
-                            "type": "UnderSourceControl"
+                            "type": "UnderControlOf",
+                            "value": {
+                              "type": "You"
+                            }
                           }
                         }
                       },

@@ -43,7 +43,7 @@ codec abilityCodec effectCodec =
       Arm.payload "ChooseCardNames" (Filter.codec Keyword.codec) EntryRewrite.ChooseCardNames (\x -> case x of EntryRewrite.ChooseCardNames y -> Just y; _ -> Nothing),
       Arm.payload "ChooseCardName" (Filter.codec Keyword.codec) EntryRewrite.ChooseCardName (\x -> case x of EntryRewrite.ChooseCardName y -> Just y; _ -> Nothing),
       Arm.payload "EntersWith" (EntersWith.codec abilityCodec) EntryRewrite.EntersWith (\x -> case x of EntryRewrite.EntersWith y -> Just y; _ -> Nothing),
-      Arm.nullary "UnderSourceControl" EntryRewrite.UnderSourceControl,
+      Arm.payload "UnderControlOf" PlayerRelation.codec EntryRewrite.UnderControlOf (\x -> case x of EntryRewrite.UnderControlOf y -> Just y; _ -> Nothing),
       Arm.nullary "ReadAhead" EntryRewrite.ReadAhead,
       Arm.nullary "Riot" EntryRewrite.Riot,
       Arm.nullary "Unleash" EntryRewrite.Unleash,
@@ -76,7 +76,7 @@ tagOf x = case x of
   EntryRewrite.ChooseCardNames {} -> "ChooseCardNames"
   EntryRewrite.ChooseCardName {} -> "ChooseCardName"
   EntryRewrite.EntersWith {} -> "EntersWith"
-  EntryRewrite.UnderSourceControl {} -> "UnderSourceControl"
+  EntryRewrite.UnderControlOf {} -> "UnderControlOf"
   EntryRewrite.ReadAhead {} -> "ReadAhead"
   EntryRewrite.Riot {} -> "Riot"
   EntryRewrite.Unleash {} -> "Unleash"
