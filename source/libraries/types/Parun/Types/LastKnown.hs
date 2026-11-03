@@ -220,7 +220,7 @@ data LastKnown = MkLastKnown
     -- the moment the permanent goes.
     --
     -- CR 608.2a's re-check of echo's intervening "if" is the reader
-    -- (Parun.Engine.Quantity's ControlGainedSinceLastUpkeep arm): rule 702.30a
+    -- (Parun.Engine.Quantity's ControlGained SinceLastUpkeep arm): rule 702.30a
     -- prints no "if this permanent is on the battlefield", so a permanent that
     -- left in response still owes its controller the choice, and this is the
     -- only place the answer still is.

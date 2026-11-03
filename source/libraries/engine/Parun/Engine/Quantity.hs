@@ -33,7 +33,9 @@ import qualified Parun.Types.ClassLevel as ClassLevel
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Combat as Combat
 import qualified Parun.Types.CompletedDungeon as CompletedDungeon
+import qualified Parun.Types.ControlChanged as ControlChanged
 import qualified Parun.Types.ControlClock as ControlClock
+import qualified Parun.Types.ControlWindow as ControlWindow
 import qualified Parun.Types.Count as Count.Type
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Devotion as Devotion
@@ -690,13 +692,21 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- controlClockOf is what makes the question answerable for a permanent that
         -- left in response: CR 400.7 deletes the incarnation the clock lived on, and
         -- CR 608.2h's record is where it still is.
-        Quantity.ControlGainedSinceLastUpkeep ref -> case (playersOf ref, mOid) of
+        Quantity.ControlGained ControlWindow.SinceLastUpkeep ref -> case (playersOf ref, mOid) of
           (Just [pid], Just oid) -> Just (if Map.lookup pid (controlClockOf gs oid) == Just ControlClock.SinceLastUpkeep then 1 else 0)
+          _ -> Nothing
+        -- The same question over the turn, Erg Raiders' "unless it came under
+        -- your control this turn": off the turn's LOG rather than the clock, which
+        -- an upkeep advances, and keyed by id, so it answers for a source that
+        -- left in response (CR 608.2i). The view supplies only the controller an
+        -- entrant that never changed hands entered under.
+        Quantity.ControlGained ControlWindow.ThisTurn ref -> case (playersOf ref, mOid) of
+          (Just [pid], Just oid) -> Just (if controlGainedThisTurn gs pid oid (mView >>= Filter.controller) then 1 else 0)
           _ -> Nothing
         -- CR 305.1 / 601.2a as a 0/1. CR 400.7 gives the played card a new id,
         -- and a slot captured before the play still names the old one, which
         -- GameState.cardsPlayed keys too. Off the BOARD for
-        -- ControlGainedSinceLastUpkeep's reason: it relates an object to a
+        -- ControlGained's reason: it relates an object to a
         -- player.
         Quantity.PlayedBy ref -> case (playersOf ref, mOid) of
           (Just [pid], Just oid) -> Just (if Map.lookup oid (GameState.cardsPlayed gs) == Just pid then 1 else 0)
@@ -1389,7 +1399,7 @@ objectSlots quantity = case quantity of
   Quantity.WasAttacking -> Set.empty
   Quantity.WasBlocking -> Set.empty
   Quantity.WasBlockedThisTurn -> Set.empty
-  Quantity.ControlGainedSinceLastUpkeep _ -> Set.empty
+  Quantity.ControlGained _ _ -> Set.empty
   Quantity.PlayedBy _ -> Set.empty
   Quantity.DamageDealtThisTurn _ -> Set.empty
   Quantity.OpponentsAttacked _ -> Set.empty
@@ -1669,7 +1679,7 @@ readsX quantity = case quantity of
   Quantity.WasAttacking -> False
   Quantity.WasBlocking -> False
   Quantity.WasBlockedThisTurn -> False
-  Quantity.ControlGainedSinceLastUpkeep _ -> False
+  Quantity.ControlGained _ _ -> False
   Quantity.PlayedBy _ -> False
   Quantity.DamageDealtThisTurn _ -> False
   Quantity.OpponentsAttacked _ -> False
@@ -1840,6 +1850,18 @@ colorOfManaType manaType = case manaType of
 -- The live read FIRST, Parun.Engine.Target.lastKnownAdmits' ordering turned round:
 -- a permanent still on the battlefield has a clock that is still moving, and its
 -- record would be a stale one from an earlier incarnation of the same id.
+
+-- | CR 110.2 / 608.2i: did this player come to control this object this turn?
+-- A GameEvent.ControlChanged to them, or an entry this turn under them, the
+-- ruling's other way to come under control. An entrant's first controller is
+-- the `before` of its first change (the entry mints none, Event.sampleControl),
+-- else `current`, the controller it has or last had.
+controlGainedThisTurn :: GameState -> PlayerId.PlayerId -> ObjectId -> Maybe PlayerId.PlayerId -> Bool
+controlGainedThisTurn gs pid oid current =
+  let changes = [change | GameEvent.ControlChanged change <- fmap LoggedEvent.event (Foldable.toList (GameState.events gs)), ControlChanged.object change == oid]
+      enteredUnder = maybe current (Just . ControlChanged.before) (Maybe.listToMaybe changes)
+   in any ((== pid) . ControlChanged.after) changes || (Game.enteredThisTurn oid gs && enteredUnder == Just pid)
+
 controlClockOf :: GameState -> ObjectId -> Map.Map PlayerId.PlayerId ControlClock.ControlClock
 controlClockOf gs oid = Maybe.fromMaybe Map.empty (Game.liveOrLastKnown Object.controlClock LastKnown.controlClock oid gs)
 

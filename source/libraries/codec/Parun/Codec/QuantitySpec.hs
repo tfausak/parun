@@ -18,6 +18,7 @@ import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CastFrom as CastFrom
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.CompletedDungeon as CompletedDungeon
+import qualified Parun.Types.ControlWindow as ControlWindow
 import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.Count as Count
 import qualified Parun.Types.CounterKind as CounterKind
@@ -453,8 +454,15 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.ControlGainedSinceLastUpkeep (PlayerRef.Relative PlayerRelation.You))
+      (Quantity.ControlGained ControlWindow.SinceLastUpkeep (PlayerRef.Relative PlayerRelation.You))
       " {\"type\":\"ControlGainedSinceLastUpkeep\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+  -- Erg Raiders' window, the same constructor under its other tag.
+  Spec.it s "ControlGainedThisTurn" $
+    Common.assertCodec
+      s
+      Quantity.codec
+      (Quantity.ControlGained ControlWindow.ThisTurn (PlayerRef.Relative PlayerRelation.You))
+      " {\"type\":\"ControlGainedThisTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
   -- CR 305.1 / 601.2a's play, the same shape.
   Spec.it s "PlayedBy" $
     Common.assertCodec
