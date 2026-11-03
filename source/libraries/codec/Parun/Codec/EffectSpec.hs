@@ -149,6 +149,8 @@ import qualified Parun.Types.MoveCounters as MoveCounters
 import qualified Parun.Types.MoveMana as MoveMana
 import qualified Parun.Types.MoveToZone as MoveToZone
 import qualified Parun.Types.MovedKinds as MovedKinds
+import qualified Parun.Types.NextDamageInstance as NextDamageInstance
+import qualified Parun.Types.NextDamageOutcome as NextDamageOutcome
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.OfferCast as OfferCast
 import qualified Parun.Types.Onset as Onset
@@ -168,7 +170,6 @@ import qualified Parun.Types.PlayerSacrifices as PlayerSacrifices
 import qualified Parun.Types.PlayerScope as PlayerScope
 import qualified Parun.Types.PreventAllDamage as PreventAllDamage
 import qualified Parun.Types.PreventNextDamage as PreventNextDamage
-import qualified Parun.Types.PreventNextDamageInstance as PreventNextDamageInstance
 import qualified Parun.Types.Prohibit as Prohibit
 import qualified Parun.Types.Prohibition as Prohibition
 import qualified Parun.Types.PutCounters as PutCounters
@@ -1065,31 +1066,31 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       " {\"type\":\"PreventNextDamage\",\"value\":{\"duration\":{\"type\":\"UntilEndOfTurn\"},\"kind\":{\"type\":\"Combat\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"},\"quantity\":{\"type\":\"Literal\",\"value\":3},\"riders\":[{\"type\":\"PutCounters\",\"value\":{\"kind\":{\"type\":\"PlusOnePlusOne\"},\"quantity\":{\"type\":\"InSlot\",\"value\":\"thatMuch\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"}}}]}} "
   -- CR 615.8: the third shield, whose chosenSource is defaulted to the trivial
   -- predicate here (Deflecting Palm's "a source of your choice") and so elided.
-  Spec.it s "PreventNextDamageInstance" $
+  Spec.it s "NextDamageInstance" $
     Common.assertJsonCodec
       s
       toJson
       fromJson
-      (Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance Duration.UntilEndOfTurn (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "you"))) (Filter.And []) Seq.empty))
-      " {\"type\":\"PreventNextDamageInstance\",\"value\":{\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"you\"}}} "
+      (Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance Duration.UntilEndOfTurn (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "you"))) (Filter.And []) Seq.empty NextDamageOutcome.Prevented))
+      " {\"type\":\"NextDamageInstance\",\"value\":{\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"you\"}}} "
   -- The same shield with a NARROWED chosen source written out, which is what
   -- proves the defaulted key decodes: CR 609.7a's choice held to a property.
-  Spec.it s "PreventNextDamageInstance with a narrowed chosen source" $
+  Spec.it s "NextDamageInstance with a narrowed chosen source" $
     Common.assertJsonCodec
       s
       toJson
       fromJson
-      (Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance Duration.UntilEndOfTurn (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) (Filter.HasCardType CardType.Creature) Seq.empty))
-      " {\"type\":\"PreventNextDamageInstance\",\"value\":{\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"},\"chosenSource\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      (Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance Duration.UntilEndOfTurn (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) (Filter.HasCardType CardType.Creature) Seq.empty NextDamageOutcome.Prevented))
+      " {\"type\":\"NextDamageInstance\",\"value\":{\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"},\"chosenSource\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
   -- CR 615.5's additional effect on the same shield: Reverse Damage's "you gain
   -- life equal to the damage prevented this way".
-  Spec.it s "PreventNextDamageInstance with a rider" $
+  Spec.it s "NextDamageInstance with a rider" $
     Common.assertJsonCodec
       s
       toJson
       fromJson
-      (Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance Duration.UntilEndOfTurn (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "you"))) (Filter.And []) (Seq.singleton (Effect.GainLife (PlayerQuantity.MkPlayerQuantity (PlayerRef.Relative PlayerRelation.You) (Quantity.InSlot (SlotName.MkSlotName (Text.pack "thatMuch"))))))))
-      " {\"type\":\"PreventNextDamageInstance\",\"value\":{\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"you\"},\"riders\":[{\"type\":\"GainLife\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"quantity\":{\"type\":\"InSlot\",\"value\":\"thatMuch\"}}}]}} "
+      (Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance Duration.UntilEndOfTurn (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "you"))) (Filter.And []) (Seq.singleton (Effect.GainLife (PlayerQuantity.MkPlayerQuantity (PlayerRef.Relative PlayerRelation.You) (Quantity.InSlot (SlotName.MkSlotName (Text.pack "thatMuch")))))) NextDamageOutcome.Prevented))
+      " {\"type\":\"NextDamageInstance\",\"value\":{\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"you\"},\"riders\":[{\"type\":\"GainLife\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"quantity\":{\"type\":\"InSlot\",\"value\":\"thatMuch\"}}}]}} "
   -- CR 608.2f: Soulfire Eruption's per-object body, the other nesting of an
   -- effect inside an effect -- a DealDamage reading the mana value of the card
   -- an earlier body instruction exiled for THIS member.

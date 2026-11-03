@@ -115,6 +115,8 @@ import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.Mana as Mana.Type
 import qualified Parun.Types.Mentored as Mentored
 import qualified Parun.Types.MonarchTarget as MonarchTarget
+import qualified Parun.Types.NextDamageInstance as NextDamageInstance
+import qualified Parun.Types.NextDamageOutcome as NextDamageOutcome
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
 import Parun.Types.ObjectRef (ObjectRef)
@@ -128,7 +130,6 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PreventAllDamage as PreventAllDamage
 import qualified Parun.Types.PreventNextDamage as PreventNextDamage
-import qualified Parun.Types.PreventNextDamageInstance as PreventNextDamageInstance
 import qualified Parun.Types.Prohibit as Prohibit
 import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Prompt as Prompt
@@ -1112,10 +1113,10 @@ preventAllDamage resolving source controller legal chosen (PreventAllDamage.MkPr
           (Just _, Nothing) -> pure ()
           _ -> State.modify' $ \g0 -> List.foldl' (Common.installDamageRow resolving legal (Filter.slotObjects context) controller source duration kind DamageRewrite.PreventAll Uses.Unlimited rider printedSource (whatRecipient, whoRecipient)) g0 (fmap (\recipient -> (recipient, sourceChoice)) rows)
 
-preventNextDamageInstance :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> PreventNextDamageInstance.PreventNextDamageInstance (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Game ()
-preventNextDamageInstance resolving source controller legal chosen (PreventNextDamageInstance.MkPreventNextDamageInstance duration ref sourceFilter riderEffects) = do
-  -- CR 615.8: install a shield that prevents ONE instance of damage from the
-  -- chosen source. The rewrite is PreventAll -- "regardless of how much damage
+nextDamageInstance :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> NextDamageInstance.NextDamageInstance (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Game ()
+nextDamageInstance resolving source controller legal chosen (NextDamageInstance.MkNextDamageInstance duration ref sourceFilter riderEffects outcome) = do
+  -- CR 615.8: install a shield over ONE instance of damage from the chosen
+  -- source. Preventing it, the rewrite is PreventAll -- "regardless of how much damage
   -- that is", which is the whole event and never CR 615.7's arithmetic -- and
   -- what makes it the NEXT instance rather than every one is Uses.Once, CR
   -- 614.3's use count, the same spelling CR 701.19a's "the next time this
@@ -1137,6 +1138,9 @@ preventNextDamageInstance resolving source controller legal chosen (PreventNextD
       -- than put on the stack: Reverse Damage's life, Deflecting Palm's damage
       -- back.
       rider = Common.preventionRider chosen controller source riderEffects
+      rewrite = case outcome of
+        NextDamageOutcome.Prevented -> DamageRewrite.PreventAll
+        NextDamageOutcome.AlsoToSourceController -> DamageRewrite.AlsoToSourceController
   -- No recipient is CR 608.2b's gone target, so there is nothing to shield and
   -- CR 609.7a's choice -- a choice existing only to be baked into a row -- is
   -- not raised either. The sibling shields' posture.
@@ -1149,7 +1153,7 @@ preventNextDamageInstance resolving source controller legal chosen (PreventNextD
       -- installed -- stricter than printed rather than weaker, which a row
       -- watching every source would be.
       Nothing -> pure ()
-      Just _ -> State.modify' $ \g0 -> List.foldl' (Common.installDamageRow resolving legal (Filter.slotObjects context) controller source duration Nothing DamageRewrite.PreventAll Uses.Once rider (Filter.Type.And []) (Nothing, Nothing)) g0 (fmap (\recipient -> (Just recipient, sourceChoice)) recipients)
+      Just _ -> State.modify' $ \g0 -> List.foldl' (Common.installDamageRow resolving legal (Filter.slotObjects context) controller source duration Nothing rewrite Uses.Once rider (Filter.Type.And []) (Nothing, Nothing)) g0 (fmap (\recipient -> (Just recipient, sourceChoice)) recipients)
 
 redirectDamage :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> RedirectDamage.RedirectDamage -> Game ()
 redirectDamage resolving source controller legal (RedirectDamage.MkRedirectDamage duration kind amount srcRef whatRecipient whoRecipient destRef sourceFilter uses whatSource) = do

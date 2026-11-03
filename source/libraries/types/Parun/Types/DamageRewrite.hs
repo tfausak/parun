@@ -13,7 +13,7 @@ import qualified Parun.Types.Scaling as Scaling
 -- happens. Its producers differ only in what the pattern and the use count
 -- beside this rewrite say: Fog authors one on the card and shields nobody in
 -- particular, Effect.PreventAllDamage bakes one over a named recipient
--- (Selfless Squire), and Effect.PreventNextDamageInstance bakes the same rewrite
+-- (Selfless Squire), and Effect.NextDamageInstance bakes the same rewrite
 -- with Uses.Once beside it, which is the whole of CR 615.8's "the next time"
 -- (Deflecting Palm).
 --
@@ -171,4 +171,7 @@ data DamageRewrite effect
     -- face up first, and the damage then happens to or from it all the same.
     -- Minted from Parun.Types.FaceDownState's `turnsUpBefore`, never printed.
     TurnFaceUp
+  | -- | CR 614.1a: the event still happens, and the row's source also deals that
+    -- much to the damage source's controller (Eye for an Eye). Engine-baked.
+    AlsoToSourceController
   deriving (Eq, Ord, Show)

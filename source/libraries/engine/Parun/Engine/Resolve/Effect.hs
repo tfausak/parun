@@ -609,7 +609,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.Replace payload -> Objects.replace resolving source controller legal payload
   Effect.PreventNextDamage payload -> Objects.preventNextDamage resolving source controller legal chosen payload
   Effect.PreventAllDamage payload -> Objects.preventAllDamage resolving source controller legal chosen payload
-  Effect.PreventNextDamageInstance payload -> Objects.preventNextDamageInstance resolving source controller legal chosen payload
+  Effect.NextDamageInstance payload -> Objects.nextDamageInstance resolving source controller legal chosen payload
   Effect.RedirectDamage payload -> Objects.redirectDamage resolving source controller legal payload
   Effect.SkipPhase payload -> Objects.skipPhase resolving source controller legal payload
   Effect.AffectPlayers payload -> Objects.affectPlayers resolving source controller legal payload

@@ -690,6 +690,7 @@ unspent rewrite = case rewrite of
   -- Illusionary Mask's row stores nothing either: turning the permanent face up
   -- ends the status it is minted from, which is what takes the row away.
   DamageRewrite.TurnFaceUp -> True
+  DamageRewrite.AlsoToSourceController -> True
 
 -- CR 122.1c: does this damage rewrite admit the event's RECIPIENT? The shield's
 -- prevention says "if damage would be dealt to THIS permanent", and that
@@ -718,6 +719,7 @@ admitsRecipient src rewrite de = case rewrite of
   -- Illusionary Mask's two rows scope themselves by pattern, one naming the
   -- source and one the recipient (Projection.turnUpOf).
   DamageRewrite.TurnFaceUp -> True
+  DamageRewrite.AlsoToSourceController -> True
 
 -- CR 614.1: does this replacement apply to this event -- its printed pattern
 -- matches (`matchesPrinted`), and CR 801.13a lets it reach (`reaches`)?
@@ -2503,6 +2505,7 @@ countedCeiling rewrite = case rewrite of
   DamageRewrite.RedirectMatching _ -> False
   DamageRewrite.RunEffects _ -> False
   DamageRewrite.TurnFaceUp -> False
+  DamageRewrite.AlsoToSourceController -> False
 
 -- Does applying this effect read the candidate's SOURCE -- the object the row
 -- was minted onto -- so that two rows alike in `effect` leave different boards?
@@ -3114,6 +3117,7 @@ remainingOf rewrite = case rewrite of
   DamageRewrite.RedirectMatching _ -> Nothing
   DamageRewrite.RunEffects _ -> Nothing
   DamageRewrite.TurnFaceUp -> Nothing
+  DamageRewrite.AlsoToSourceController -> Nothing
 
 -- CR 614.9 over the counted shape CR 615.7 states for preventions -- the
 -- redirect's own countdown rests on Harm's Way's rulings: how much of this
@@ -3169,6 +3173,7 @@ partialCoverage gs allowances candidate event = case (ReplacementCandidate.effec
     -- Illusionary Mask's rewrite leaves the event whole: the damage it lets
     -- through is all of it.
     DamageRewrite.TurnFaceUp -> Nothing
+    DamageRewrite.AlsoToSourceController -> Nothing
   _ -> Nothing
 
 -- The two halves of a damage event `partialCoverage` split: the covered part,
@@ -3210,18 +3215,16 @@ splitDamage covered event = case event of
 -- the order its events are offered in when CR 615.7 asks which of them a shield
 -- prevents.
 --
--- TWO callers, each over one moment with one dealer -- which is why the key's
--- source component is a fence rather than an observable: neither hands this a
--- list with two dealers in it. A CR 510.2 batch does hold several, and it never
--- comes here as a batch; two blockers striking one creature stay two events and
--- fire enrage twice (Parun.LifeTriggerSpec).
+-- TWO callers. A CR 510.2 batch holds several dealers, and the key's source
+-- component is what keeps them apart: two blockers striking one creature stay
+-- two events and fire enrage twice (Parun.LifeTriggerSpec).
 --
 --   * Parun.Engine.Resolve's DealDamage arm, over ONE instruction, which has
 --     exactly one dealer (CR 120.1) and one moment (CR 608.2f). Combat must NOT
 --     come through there -- two attacking creatures hitting one player are two
 --     sources, so CR 615.10's floor applies to each -- and neither must a fight,
 --     whose two blows have different dealers (CR 701.14a).
---   * Event.resolveDamage, over what ONE proposal's CR 616.1 loop came out with:
+--   * Event.resolveDamageBatch, over what the batch's CR 616.1 loops came out with:
 --     `splitDamage`'s inverse, rejoining the halves a counted redirect split off
 --     when both ended up on the same recipient. Without it that recipient is
 --     recorded as taking two events, and its "whenever this creature is dealt
@@ -3285,6 +3288,7 @@ prevents rewrite = case rewrite of
   -- Illusionary Mask says "instead it's turned face up and ... is dealt damage":
   -- the damage is dealt, so CR 615.1a has nothing to call a prevention.
   DamageRewrite.TurnFaceUp -> False
+  DamageRewrite.AlsoToSourceController -> False
 
 -- CR 615.12: applied to damage that CAN'T be prevented, does this rewrite still
 -- spend what `contestedResource` counts? The rule's middle and last sentences
@@ -3325,6 +3329,7 @@ spentInertly rewrite = case rewrite of
   DamageRewrite.RedirectMatching _ -> False
   DamageRewrite.RunEffects _ -> False
   DamageRewrite.TurnFaceUp -> False
+  DamageRewrite.AlsoToSourceController -> False
 
 -- CR 801.13b: does this prevention reach this damage from its controller's
 -- range? One naming the source reaches only an in-range source, one naming the
@@ -3529,6 +3534,7 @@ redirects rewrite = case rewrite of
   DamageRewrite.RunEffects _ -> False
   -- The damage reaches the recipient it was proposed for.
   DamageRewrite.TurnFaceUp -> False
+  DamageRewrite.AlsoToSourceController -> False
 
 -- CR 614.9: may a redirection effect move this damage event, or does a card
 -- forbid it (Lava Burst)?
@@ -3754,22 +3760,39 @@ groupPreventions ps =
 -- and `askAllocation` divides, only within that player's own positions. CR
 -- 101.4c is the rule that licenses it: a player making several simultaneous
 -- choices makes them in the order specified, or chooses the order themselves.
-orderBatch :: [DamageEvent.DamageEvent] -> Game ([DamageEvent.DamageEvent], [Map.Map CandidateId Natural])
-orderBatch events = do
+--
+-- `asked` narrows the questions to those touching a thread it admits
+-- (Event.settleThreads). Answers each thread with its division, in batch order.
+orderBatch :: (DamageThread -> Bool) -> [DamageThread] -> Game [(DamageThread, Map.Map CandidateId Natural)]
+orderBatch asked threads = do
   gs <- State.get
   -- Sorted FIRST: `contested` and `allocations` both report batch positions, so
   -- they have to see the list `askOne` will splice into.
-  let sorted = byApnap gs events
+  let sorted = byApnap gs threads
+      (orders, divisions) = batchQuestions asked gs sorted
       seats =
         List.sortOn
           (seatOf gs)
           ( Set.toList
               ( Set.fromList
-                  (fmap fst (contested gs sorted) <> fmap (\(_, _, pid, _) -> pid) (allocations gs sorted))
+                  (fmap fst orders <> fmap (\(_, _, pid, _) -> pid) divisions)
               )
           )
-  (ordered, allowances) <- Monad.foldM askSeat (sorted, Map.empty) seats
-  pure (ordered, fmap (\i -> Map.findWithDefault Map.empty i allowances) (zipWith const [0 ..] ordered))
+  (ordered, allowances) <- Monad.foldM (askSeat asked) (sorted, Map.empty) seats
+  pure (zipWith (\i thread -> (thread, Map.findWithDefault Map.empty i allowances)) [0 ..] ordered)
+
+-- A damage event settling in a batch, with the rows CR 614.5 keeps from applying
+-- to it again. Two equal events can differ in the second, so the pair travels
+-- together.
+type DamageThread = (DamageEvent.DamageEvent, Set.Set CandidateId)
+
+-- The threads some seat's question is about, before any narrowing.
+questioned :: GameState -> [DamageThread] -> [DamageThread]
+questioned gs threads =
+  let sorted = byApnap gs threads
+      (orders, divisions) = batchQuestions (const True) gs sorted
+      positions = Set.fromList (concatMap snd orders <> concatMap (\(_, _, _, ps) -> ps) divisions)
+   in fmap snd (filter (\(i, _) -> Set.member i positions) (zip [0 ..] sorted))
 
 -- Every question one seat is owed about this batch, asked before the next
 -- seat's: CR 616.1's APNAP clause, which is why the two kinds are folded
@@ -3781,15 +3804,26 @@ orderBatch events = do
 -- positions, and both `contested` and `allocations` read the chooser off each
 -- hit's recipient, so no later seat's answer can move an event this seat has
 -- already divided its countdown over.
-askSeat :: ([DamageEvent.DamageEvent], Map.Map Natural (Map.Map CandidateId Natural)) -> PlayerId -> Game ([DamageEvent.DamageEvent], Map.Map Natural (Map.Map CandidateId Natural))
-askSeat (batch, allowances) pid = do
+askSeat :: (DamageThread -> Bool) -> ([DamageThread], Map.Map Natural (Map.Map CandidateId Natural)) -> PlayerId -> Game ([DamageThread], Map.Map Natural (Map.Map CandidateId Natural))
+askSeat asked (batch, allowances) pid = do
   before <- State.get
-  ordered <- case lookup pid (contested before batch) of
+  ordered <- case lookup pid (fst (batchQuestions asked before batch)) of
     Nothing -> pure batch
     Just positions -> askOne batch (pid, positions)
   after <- State.get
-  divided <- Monad.foldM (askAllocation ordered) allowances (filter (\(_, _, chooser, _) -> chooser == pid) (allocations after ordered))
+  divided <- Monad.foldM (askAllocation ordered) allowances (filter (\(_, _, chooser, _) -> chooser == pid) (snd (batchQuestions asked after ordered)))
   pure (ordered, divided)
+
+-- `contested` and `allocations`, narrowed to the questions touching a thread
+-- `asked` admits.
+batchQuestions :: (DamageThread -> Bool) -> GameState -> [DamageThread] -> ([(PlayerId, [Natural])], [(CandidateId, Natural, PlayerId, [Natural])])
+batchQuestions asked gs batch =
+  let byPosition :: Map.Map Natural DamageThread
+      byPosition = Map.fromList (zip [0 ..] batch)
+      touches = any asked . Maybe.mapMaybe (\i -> Map.lookup i byPosition)
+   in ( filter (touches . snd) (contested gs batch),
+        filter (\(_, _, _, positions) -> touches positions) (allocations gs batch)
+      )
 
 -- CR 615.7's own sentence -- "the player or the controller of the permanent
 -- chooses which damage the shield prevents" -- asked as an ALLOCATION: how many
@@ -3809,11 +3843,11 @@ askSeat (batch, allowances) pid = do
 -- Elided on the two readings the rule cannot tell apart: one hit, where the
 -- whole share is forced onto it, and a share large enough for every hit, where
 -- every division covers everything.
-askAllocation :: [DamageEvent.DamageEvent] -> Map.Map Natural (Map.Map CandidateId Natural) -> (CandidateId, Natural, PlayerId, [Natural]) -> Game (Map.Map Natural (Map.Map CandidateId Natural))
+askAllocation :: [DamageThread] -> Map.Map Natural (Map.Map CandidateId Natural) -> (CandidateId, Natural, PlayerId, [Natural]) -> Game (Map.Map Natural (Map.Map CandidateId Natural))
 askAllocation ordered allowances (identity_, left, pid, positions) = do
   gs <- State.get
   let byPosition :: Map.Map Natural DamageEvent.DamageEvent
-      byPosition = Map.fromList (zip [0 ..] ordered)
+      byPosition = Map.fromList (zip [0 ..] (fmap fst ordered))
       group = Maybe.mapMaybe (\i -> Map.lookup i byPosition) positions
       committed = sum (fmap (Map.findWithDefault 0 identity_) (Map.elems allowances))
       share = min (left - min left committed) (sum (fmap DamageEvent.amount group))
@@ -3850,10 +3884,10 @@ spendDown countdown =
 -- the rule's own unit: the pool is exhausted by everything it admits, not by one
 -- seat's share of it. Two seats sharing one row are then asked in APNAP order,
 -- each seeing what is left (`askAllocation`).
-allocations :: GameState -> [DamageEvent.DamageEvent] -> [(CandidateId, Natural, PlayerId, [Natural])]
-allocations gs events =
-  let indexed :: [(Natural, DamageEvent.DamageEvent)]
-      indexed = zip [0 ..] events
+allocations :: GameState -> [DamageThread] -> [(CandidateId, Natural, PlayerId, [Natural])]
+allocations gs threads =
+  let indexed :: [(Natural, DamageThread)]
+      indexed = zip [0 ..] threads
       viewOf = Projection.viewsOf gs
       grants = Projection.controlGrants gs
       allocationsBy candidate = Maybe.fromMaybe [] $ do
@@ -3883,17 +3917,17 @@ damageRewriteOf candidate = case ReplacementCandidate.effect candidate of
 -- CR 615.12's filter is a PREVENTION's: a redirect never prevents, so
 -- unpreventable damage contends for Harm's Way's 2 exactly as any other damage
 -- does, and `applies` alone says whether the row reaches it.
-hitsOf :: (ObjectId -> Filter.View) -> [Projection.ControlGrant] -> GameState -> [(Natural, DamageEvent.DamageEvent)] -> ReplacementCandidate -> [(Natural, DamageEvent.DamageEvent)]
+hitsOf :: (ObjectId -> Filter.View) -> [Projection.ControlGrant] -> GameState -> [(Natural, DamageThread)] -> ReplacementCandidate -> [(Natural, DamageEvent.DamageEvent)]
 hitsOf viewOf grants gs indexed candidate =
   let contends event = case damageRewriteOf candidate of
         Just rewrite -> not (prevents rewrite) || preventable viewOf gs event || spentInertly rewrite
         Nothing -> False
-   in filter
-        ( \entry ->
-            contends (snd entry)
-              && applies viewOf grants gs (ProposedEvent.WouldDealDamage (snd entry)) candidate
-        )
-        indexed
+   in [ (position, event)
+      | (position, (event, spent)) <- indexed,
+        contends event,
+        not (Set.member (ReplacementCandidate.identity candidate) spent),
+        applies viewOf grants gs (ProposedEvent.WouldDealDamage event) candidate
+      ]
 
 -- CR 615.7: a candidate the batch's allocation gave none of its countdown to
 -- covers none of this event, so CR 616.1 never offers it. Event.loop's filter,
@@ -3907,10 +3941,12 @@ allocatedOut allowances candidate = Map.lookup (ReplacementCandidate.identity ca
 --
 -- An event with no chooser -- its affected object has left -- sorts last with
 -- the unseated, since `choose` will not prompt for it either.
-byApnap :: GameState -> [DamageEvent.DamageEvent] -> [DamageEvent.DamageEvent]
-byApnap gs =
-  let rank de = maybe (unseated gs) (seatOf gs) (chooserOf gs (ProposedEvent.WouldDealDamage de))
-   in List.sortOn rank
+byApnap :: GameState -> [DamageThread] -> [DamageThread]
+byApnap gs = List.sortOn (apnapRank gs . fst)
+
+-- How far down APNAP order this event's CR 616.1 chooser sits.
+apnapRank :: GameState -> DamageEvent.DamageEvent -> Int
+apnapRank gs de = maybe (unseated gs) (seatOf gs) (chooserOf gs (ProposedEvent.WouldDealDamage de))
 
 -- CR 101.4: how far down APNAP order a player sits. A player off the seating
 -- roster sorts last, the fallback Resolve.objectRefObjects takes for the same
@@ -3928,10 +3964,10 @@ unseated = length . Game.apnapOrder
 -- The events keep their POSITIONS in the batch and only trade places with each
 -- other, so a second chooser's group -- a different recipient's -- is neither
 -- moved nor renumbered by the first's answer.
-askOne :: [DamageEvent.DamageEvent] -> (PlayerId, [Natural]) -> Game [DamageEvent.DamageEvent]
+askOne :: [DamageThread] -> (PlayerId, [Natural]) -> Game [DamageThread]
 askOne batch (pid, positions) = do
   gs <- State.get
-  let byPosition :: Map.Map Natural DamageEvent.DamageEvent
+  let byPosition :: Map.Map Natural DamageThread
       byPosition = Map.fromList (zip [0 ..] batch)
       group = Maybe.mapMaybe (\i -> Map.lookup i byPosition) positions
   case group of
@@ -3939,7 +3975,7 @@ askOne batch (pid, positions) = do
     [] -> pure batch
     first : _ -> do
       let decider = Decide.deciderFor pid gs
-      answer <- Game.choose (Prompt.OrderDamage decider pid group)
+      answer <- Game.choose (Prompt.OrderDamage decider pid (fmap fst group))
       -- Reject-not-repair, as `choose` and Engine's trigger ordering already do:
       -- an answer that is not a permutation of the offered indices leaves the
       -- canonical order standing rather than dropping or duplicating an event.
@@ -3983,10 +4019,10 @@ askOne batch (pid, positions) = do
 -- shield's own resource is contested over -- which a narrowed clause reaches: an
 -- Excruciator and an ordinary creature hitting one shielded permanent at once is
 -- exactly that batch.
-contested :: GameState -> [DamageEvent.DamageEvent] -> [(PlayerId, [Natural])]
-contested gs events =
-  let indexed :: [(Natural, DamageEvent.DamageEvent)]
-      indexed = zip [0 ..] events
+contested :: GameState -> [DamageThread] -> [(PlayerId, [Natural])]
+contested gs threads =
+  let indexed :: [(Natural, DamageThread)]
+      indexed = zip [0 ..] threads
       viewOf = Projection.viewsOf gs
       grants = Projection.controlGrants gs
       -- CR 615.7's chooser is CR 616.1's, read off each hit's own shielded
@@ -4087,6 +4123,7 @@ contestedResource gs candidate = case ReplacementCandidate.effect candidate of
     -- whichever event comes first turns the permanent up, and every one of them
     -- is dealt.
     DamageRewrite.TurnFaceUp -> Nothing
+    DamageRewrite.AlsoToSourceController -> Nothing
   ReplacementEffect.ZoneChangeR {} -> Nothing
   ReplacementEffect.EntryR {} -> Nothing
   ReplacementEffect.DestructionR _ -> Nothing

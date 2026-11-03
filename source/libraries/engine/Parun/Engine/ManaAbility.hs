@@ -408,7 +408,7 @@ manaProduced effect = case effect of
   -- the pool prints, and CR 605.1a would then want it seen here.
   Effect.PreventNextDamage {} -> Nothing
   Effect.PreventAllDamage {} -> Nothing
-  Effect.PreventNextDamageInstance {} -> Nothing
+  Effect.NextDamageInstance {} -> Nothing
   Effect.RedirectDamage {} -> Nothing
   Effect.Counter {} -> Nothing
   Effect.PutCounters {} -> Nothing
@@ -606,7 +606,7 @@ playerChoice effect = case effect of
   Effect.SkipPhase {} -> Nothing
   Effect.PreventNextDamage {} -> Nothing
   Effect.PreventAllDamage {} -> Nothing
-  Effect.PreventNextDamageInstance {} -> Nothing
+  Effect.NextDamageInstance {} -> Nothing
   Effect.RedirectDamage {} -> Nothing
   Effect.Counter {} -> Nothing
   Effect.PutCounters {} -> Nothing
@@ -888,7 +888,7 @@ movesLibraryCard effect = case effect of
   -- this ability.
   Effect.PreventNextDamage {} -> False
   Effect.PreventAllDamage {} -> False
-  Effect.PreventNextDamageInstance {} -> False
+  Effect.NextDamageInstance {} -> False
   Effect.RedirectDamage {} -> False
   -- CR 701.6: a countered spell goes to its owner's GRAVEYARD.
   Effect.Counter {} -> False

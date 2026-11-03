@@ -297,6 +297,7 @@ import qualified Parun.Types.Morph as Morph
 import qualified Parun.Types.MoveCounters as MoveCounters
 import qualified Parun.Types.MoveToZone as MoveToZone
 import qualified Parun.Types.MovedKinds as MovedKinds
+import qualified Parun.Types.NextDamageInstance as NextDamageInstance
 import qualified Parun.Types.Ninjutsu as Ninjutsu
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.ObjectRef as ObjectRef
@@ -335,7 +336,6 @@ import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.Power as Power
 import qualified Parun.Types.PreventAllDamage as PreventAllDamage
 import qualified Parun.Types.PreventNextDamage as PreventNextDamage
-import qualified Parun.Types.PreventNextDamageInstance as PreventNextDamageInstance
 import qualified Parun.Types.PrintedReplacement as PrintedReplacement
 import qualified Parun.Types.Printing as Printing
 import qualified Parun.Types.Prohibit as Prohibit
@@ -1460,7 +1460,7 @@ ownCounts effect = case effect of
   -- card's Counts -- the same recursion Create takes into a minted token.
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ _ _ _ _ quantity rider) -> durationCounts duration <> quantityCounts quantity <> concatMap effectCounts rider
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration _ _ _ _ _ _ _ rider) -> durationCounts duration <> concatMap effectCounts rider
-  Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance duration _ _ rider) -> durationCounts duration <> concatMap effectCounts rider
+  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance duration _ _ rider _) -> durationCounts duration <> concatMap effectCounts rider
   Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration _ amount _ _ _ _ _ _ _) -> durationCounts duration <> foldMap quantityCounts amount
   -- CR 708.2's listed characteristics are card data, so the listed power and
   -- toughness are walked for the reason Create's minted face is. The listed type
@@ -1892,7 +1892,7 @@ effectNestedEffects effect = case effect of
   -- Faith's counters, Inkshield's Inklings, Reverse Damage's life.
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ _ riders) -> Foldable.toList riders
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ _ _ _ _ _ _ riders) -> Foldable.toList riders
-  Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance _ _ _ riders) -> Foldable.toList riders
+  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ riders _) -> Foldable.toList riders
   -- CR 608.2f's body, run once per member of the fold.
   Effect.ForEach (ForEach.MkForEach _ _ _ body _ _ _) -> Foldable.toList body
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber _ _ body) -> Foldable.toList body
@@ -2401,7 +2401,7 @@ replacementRewriteEffects replacement = case replacement of
 --
 -- Both halves reach cardResolutionEffects: this one as a carrier of its own, and
 -- the rider a SPELL authors on Effect.PreventAllDamage, Effect.PreventNextDamage
--- or Effect.PreventNextDamageInstance through effectNestedEffects, which is what
+-- or Effect.NextDamageInstance through effectNestedEffects, which is what
 -- lets the CR 111.4 naming case below see Inkshield's nested token face.
 replacementEffectRiders :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> [Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)]
 replacementEffectRiders replacement = case replacement of
@@ -2551,7 +2551,7 @@ effectReplacements effect = case effect of
   -- CR 615.5's rider can carry an Effect.Replace, so this descends.
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ _ rider) -> concatMap effectReplacements rider
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ _ _ _ _ _ _ rider) -> concatMap effectReplacements rider
-  Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance _ _ _ rider) -> concatMap effectReplacements rider
+  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ rider _) -> concatMap effectReplacements rider
   -- CR 608.2f's body can too, for the same reason.
   Effect.ForEach (ForEach.MkForEach _ _ _ body _ _ _) -> concatMap effectReplacements body
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber _ _ body) -> concatMap effectReplacements body
@@ -3127,7 +3127,7 @@ effectMintedFaces effect = case effect of
   -- CR 615.5's rider can mint a token or emblem of its own, so this descends.
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ _ rider) -> concatMap effectMintedFaces rider
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ _ _ _ _ _ _ rider) -> concatMap effectMintedFaces rider
-  Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance _ _ _ rider) -> concatMap effectMintedFaces rider
+  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ rider _) -> concatMap effectMintedFaces rider
   -- CR 608.2f's body can too, for the same reason.
   Effect.ForEach (ForEach.MkForEach _ _ _ body _ _ _) -> concatMap effectMintedFaces body
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber _ _ body) -> concatMap effectMintedFaces body
@@ -5511,6 +5511,7 @@ damageRewriteFilters rewrite = case rewrite of
   -- -- EntryRewrite.RunEffects' answer, and for its reason.
   DamageRewrite.RunEffects _ -> []
   DamageRewrite.TurnFaceUp -> []
+  DamageRewrite.AlsoToSourceController -> []
 
 -- A face's printed replacement ability reaches a Filter on a second axis beside
 -- the rewrite's: CR 604.2's "as long as" clause counts objects, exactly as the
@@ -6315,7 +6316,7 @@ effectFilters effect = case effect of
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration _ ref whatRecipient _ _ chosenSource whatSource rider) ->
     frame Unframed (durationFilters duration) <> fmap ((,) ChosenSourceFramed) (Maybe.maybeToList chosenSource) <> unframed (Maybe.maybeToList whatRecipient) <> [(ReplacementRowFramed, whatSource)] <> frame SourceHostFramed (foldMap objectRefFilters ref) <> concatMap effectFilters rider
   -- The two arms above's reads over the fields CR 615.8's shield carries.
-  Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance duration ref chosenSource rider) ->
+  Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance duration ref chosenSource rider _) ->
     frame Unframed (durationFilters duration) <> [(ChosenSourceFramed, chosenSource)] <> frame SourceHostFramed (objectRefFilters ref) <> concatMap effectFilters rider
   -- BOTH refs, or a Filter inside a redirect's destination escapes this lint.
   -- The chosen source, the recipient description and the property-named source

@@ -85,6 +85,7 @@ import qualified Parun.Codec.MonarchTarget as MonarchTarget
 import qualified Parun.Codec.MoveCounters as MoveCounters
 import qualified Parun.Codec.MoveMana as MoveMana
 import qualified Parun.Codec.MoveToZone as MoveToZone
+import qualified Parun.Codec.NextDamageInstance as NextDamageInstance
 import qualified Parun.Codec.ObjectRef as ObjectRef
 import qualified Parun.Codec.OfferCast as OfferCast
 import qualified Parun.Codec.PermanentActed as PermanentActed
@@ -94,7 +95,6 @@ import qualified Parun.Codec.PlayerRef as PlayerRef
 import qualified Parun.Codec.PlayerSacrifices as PlayerSacrifices
 import qualified Parun.Codec.PreventAllDamage as PreventAllDamage
 import qualified Parun.Codec.PreventNextDamage as PreventNextDamage
-import qualified Parun.Codec.PreventNextDamageInstance as PreventNextDamageInstance
 import qualified Parun.Codec.Prohibit as Prohibit
 import qualified Parun.Codec.PutCounters as PutCounters
 import qualified Parun.Codec.PutCountersFrom as PutCountersFrom
@@ -138,7 +138,7 @@ codec cardCodec abilityCodec =
       replaceCodec = Replace.codec cardCodec abilityCodec (codec cardCodec abilityCodec)
       preventCodec = PreventNextDamage.codec (codec cardCodec abilityCodec)
       preventAllCodec = PreventAllDamage.codec (codec cardCodec abilityCodec)
-      preventInstanceCodec = PreventNextDamageInstance.codec (codec cardCodec abilityCodec)
+      preventInstanceCodec = NextDamageInstance.codec (codec cardCodec abilityCodec)
       forEachCodec = ForEach.codec (codec cardCodec abilityCodec)
       forEachNumberCodec = ForEachNumber.codec (codec cardCodec abilityCodec)
       repeatCodec = Repeat.codec (codec cardCodec abilityCodec)
@@ -232,7 +232,7 @@ codec cardCodec abilityCodec =
           Arm.payload "SkipPhase" SkipPhase.codec Effect.SkipPhase (\x -> case x of Effect.SkipPhase y -> Just y; _ -> Nothing),
           Arm.payload "PreventNextDamage" preventCodec Effect.PreventNextDamage (\x -> case x of Effect.PreventNextDamage y -> Just y; _ -> Nothing),
           Arm.payload "PreventAllDamage" preventAllCodec Effect.PreventAllDamage (\x -> case x of Effect.PreventAllDamage y -> Just y; _ -> Nothing),
-          Arm.payload "PreventNextDamageInstance" preventInstanceCodec Effect.PreventNextDamageInstance (\x -> case x of Effect.PreventNextDamageInstance y -> Just y; _ -> Nothing),
+          Arm.payload "NextDamageInstance" preventInstanceCodec Effect.NextDamageInstance (\x -> case x of Effect.NextDamageInstance y -> Just y; _ -> Nothing),
           Arm.payload "RedirectDamage" RedirectDamage.codec Effect.RedirectDamage (\x -> case x of Effect.RedirectDamage y -> Just y; _ -> Nothing),
           Arm.payload "PutCounters" PutCounters.codec Effect.PutCounters (\x -> case x of Effect.PutCounters y -> Just y; _ -> Nothing),
           Arm.payload "Divide" Divide.codec Effect.Divide (\x -> case x of Effect.Divide y -> Just y; _ -> Nothing),
@@ -413,7 +413,7 @@ tagOf x = case x of
   Effect.SkipPhase {} -> "SkipPhase"
   Effect.PreventNextDamage {} -> "PreventNextDamage"
   Effect.PreventAllDamage {} -> "PreventAllDamage"
-  Effect.PreventNextDamageInstance {} -> "PreventNextDamageInstance"
+  Effect.NextDamageInstance {} -> "NextDamageInstance"
   Effect.RedirectDamage {} -> "RedirectDamage"
   Effect.PutCounters {} -> "PutCounters"
   Effect.Divide {} -> "Divide"
