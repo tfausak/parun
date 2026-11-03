@@ -1,0 +1,80 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Tainted Remedy",
+            "ready": true
+          },
+          {
+            "card": "Silverback Ape",
+            "label": "ape",
+            "ready": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears",
+            "ready": true
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Elderscale Wurm",
+            "ready": true
+          },
+          {
+            "card": "Vampire Nighthawk",
+            "label": "hawk",
+            "ready": true
+          }
+        ],
+        "life": 8,
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 120.4c Elderscale Wurm reads the life before Tainted Remedy's loss from the same damage",
+  "note": "Bob at 8 blocks Grizzly Bears with Vampire Nighthawk while Silverback Ape hits him for 5. His lifelink gain becomes alice's Tainted Remedy's 2-life loss, but the Wurm's condition reads the 8 he had before the damage, so its floor keeps the 5 from taking him below 7 and he ends at 6.",
+  "timeline": [
+    {
+      "do": {
+        "Attack": [
+          "$ape",
+          "$bears"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Block": {
+          "$hawk": [
+            "$bears"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 6,
+          "player": "bob"
+        }
+      },
+      "player": "alice",
+      "step": "EndOfCombat",
+      "turn": 1
+    }
+  ]
+}

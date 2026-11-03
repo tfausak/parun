@@ -2085,9 +2085,11 @@ applyReplacements = applyReplacementsIn Nothing Set.empty Set.empty
 -- `Just` the state the batch began in, or `Nothing` for the live board. Only the
 -- destroy funnel passes `Just` (`destroy`, `destroyInBatch` below), along with
 -- the graveyard moves it and Parun.Engine.Sba's put-into-graveyard batch make
--- through `changeZoneInBatch`. Everything else is a lone event and wants the
--- live board. CR 608.2f and CR 704.3 make a batch ONE event, so CR 614.4 asks
--- which effects existed before the BATCH, not before the member being processed
+-- through `changeZoneInBatch`, and Parun.Engine.Damage's CR 120.4c life-loss
+-- pass, whose floor alone reads the running total (Replacement.changesLoss).
+-- Everything else is a lone event and wants the live board. CR 608.2f and CR
+-- 704.3 make a batch ONE event, so CR 614.4 asks which effects existed before
+-- the BATCH, not before the member being processed
 -- -- otherwise Rest in Peace animated by Opalescence and swept by Day of
 -- Judgment answers according to an order CR 608.2f gives nobody the right to
 -- decide.
@@ -4279,7 +4281,7 @@ apply batch applied candidate event =
       -- turns that loss back into a gain.
       LifeGainRewrite.LoseInstead -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        settled <- resolveLifeLossSpent (spentWith candidate applied) LifeLossCause.ByEffect pid n
+        settled <- resolveLifeLossSpent Nothing (spentWith candidate applied) LifeLossCause.ByEffect pid n
         changeLife pid (negate (toInteger settled))
         pure Nothing
     -- Unreachable: `applies` admits LifeGainR only against WouldGainLife.
@@ -6028,12 +6030,16 @@ resolvePlayerCounters cause pid kind n = do
 -- happen, and only the life loss does not -- Parun.PlayerEffectSpec's
 -- PlatinumEmperion group is the proof.
 resolveLifeLoss :: LifeLossCause.LifeLossCause -> PlayerId -> Natural -> Game Natural
-resolveLifeLoss = resolveLifeLossSpent Set.empty
+resolveLifeLoss = resolveLifeLossSpent Nothing Set.empty
 
 -- A loss made in place of another event by a replacement (CR 614.5): `spent`
 -- holds the rows that already had their opportunity, drawCardSpent's reason.
-resolveLifeLossSpent :: Set CandidateId -> LifeLossCause.LifeLossCause -> PlayerId -> Natural -> Game Natural
-resolveLifeLossSpent spent cause pid n =
+--
+-- `asOf` is applyReplacementsIn's: Just the board a damage batch began in, so a
+-- row's condition is judged before the event, never on a result of it already
+-- written (Parun.Engine.Damage.processDamage); Nothing everywhere else.
+resolveLifeLossSpent :: Maybe GameState -> Set CandidateId -> LifeLossCause.LifeLossCause -> PlayerId -> Natural -> Game Natural
+resolveLifeLossSpent asOf spent cause pid n =
   if n == 0
     then pure 0
     else do
@@ -6041,7 +6047,7 @@ resolveLifeLossSpent spent cause pid n =
       if PlayerEffect.prohibitsLosingLife pid gs
         then pure 0
         else do
-          outcome <- applyReplacementsIn Nothing Set.empty spent (ProposedEvent.WouldLoseLife cause pid n)
+          outcome <- applyReplacementsIn asOf Set.empty spent (ProposedEvent.WouldLoseLife cause pid n)
           pure (maybe 0 snd (outcome >>= Replacement.asLifeLoss))
 
 -- CR 119.3 / 119.10 / 120.3f: settle how much life a player actually gains, and

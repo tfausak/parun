@@ -1319,8 +1319,11 @@ processDamage events = do
   -- `lost`). Writing the gain afterwards let a floor row (Worship) fire on a
   -- drain a simultaneous gain covered; see #2563.
   --
-  -- Not implemented: a replacement condition reading the life total (Elderscale
-  -- Wurm's) is judged after this pass, not against the whole event (#5809).
+  -- The loss pass gathers its rows off `board`, so a row's condition reading a
+  -- life total (Elderscale Wurm's) is judged before the event, not on this
+  -- gain; only the floor reads the running total (Replacement.changesLoss). The
+  -- scenarios data/scenarios/life-replacement/cr-120-4c-elderscale-wurm-*.json
+  -- prove both directions.
   --
   -- Ahead of `markOne` and `tallyOne` too, which changes nothing they can see:
   -- those write GameState.objects and Player.commanderDamage, and this writes
@@ -1382,7 +1385,7 @@ processDamage events = do
   lost <-
     Monad.forM survivors $ \ev -> case DamageEvent.target ev of
       Recipient.ToPlayer pid | not (DamageEvent.dealtByInfect ev) -> do
-        n <- Event.resolveLifeLoss LifeLossCause.ByDamage pid (DamageEvent.amount ev)
+        n <- Event.resolveLifeLossSpent (Just board) Set.empty LifeLossCause.ByDamage pid (DamageEvent.amount ev)
         Monad.when (n > 0) (State.modify' (Game.adjustLife pid (negate (toInteger n))))
         pure n
       _ -> pure 0

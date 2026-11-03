@@ -136,6 +136,30 @@ Entries are ordered by the first rule each cites.
   a Chandra Nalaar that Liquimetal Coating and March of the Machines animate.
 - **Issue**: none.
 
+## A life-total condition during damage processing
+
+- **Question**: CR 120.4c processes a damage event into all its results
+  before CR 120.4d's event occurs. A life-loss replacement conditioned on a
+  life total (Elderscale Wurm's "as long as you have 7 or more life") is asked
+  while a lifelink gain from the same event, or the loss Tainted Remedy makes
+  of it, is already a result. Does the condition read the total before the
+  event, or net of those results?
+- **Rules**: CR 120.3f, 120.4c, 120.4d, 611.3a, 702.15e; CR of 2026-08-07.
+- **Decision**: Before the event. The life total has not moved until CR
+  120.4d. The floor itself still judges what the whole event leaves, as CR
+  120.4d's Worship example forces (#2563), and Elderscale Wurm's ruling that it
+  "doesn't affect the loss or payment of life" leaves Tainted Remedy's loss
+  standing: bob at 8 losing 2 to Tainted Remedy and dealt 5 ends at 6; bob at
+  6 gaining 2 by lifelink and dealt 5 ends at 3.
+- **Rejected**: Net of the event's other results, which reads 6 on the first
+  board (bob ends at 1) and 8 on the second (bob ends at 7): a result of the
+  very event would decide whether the event is replaced.
+- **Site**: `Parun.Engine.Damage.processDamage`'s life-loss pass, gathering
+  its rows off the pre-batch board, and
+  `Parun.Engine.Replacement.changesLoss`, judging the floor live. Proved by
+  the scenarios `cr-120-4c-elderscale-wurm-reads-the-life-before-*`.
+- **Issue**: #5809.
+
 ## Where a name sticker's word goes beside a blank
 
 - **Question**: A name with a blank line (Wolf in _____ Clothing). The blank
