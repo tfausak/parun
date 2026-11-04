@@ -34,9 +34,9 @@ data SlotCount
 -- UpToAnnouncedX's runs from zero to X.
 --
 -- Zero is the value to pass where no X has been announced: an ability
--- with no {X} in its cost announces none (CR 601.2b), and a castability gate
--- asked before the announcement exists reads the card in another zone, whose
--- {X} CR 107.3g already treats as zero. A TRIGGERED ability makes no
+-- with no {X} in its cost announces none (CR 601.2b). A castability gate asked
+-- before the announcement exists passes nothing here and reads every count
+-- instead (Parun.Engine.Target.countAt). A TRIGGERED ability makes no
 -- announcement of its own, so its value comes from where a rule gives it one --
 -- CR 107.3m's X of the spell that became the permanent, for that permanent's
 -- enters-the-battlefield ability, and CR 702.37f / 702.168e's X chosen for the
