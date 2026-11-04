@@ -22,8 +22,14 @@ spec s = Spec.describe s "Parun.Codec.TurnWindow" $ do
     Common.assertCodec
       s
       TurnWindow.codec
-      (TurnWindow.NextTurnOf (PlayerId.MkPlayerId 3))
+      (TurnWindow.NextTurnOf (Just (PlayerId.MkPlayerId 3)))
       " {\"type\":\"NextTurnOf\",\"value\":3} "
+  Spec.it s "NextTurnOf naming no player" $
+    Common.assertCodec
+      s
+      TurnWindow.codec
+      (TurnWindow.NextTurnOf Nothing)
+      " {\"type\":\"NextTurnOf\"} "
   Spec.it s "OnTurn carries the settled turn number" $
     Common.assertCodec
       s

@@ -15,7 +15,7 @@ codec =
   Arm.tagged
     tagOf
     [ Arm.nullary "AnyTurn" TurnWindow.AnyTurn,
-      Arm.payload "NextTurnOf" PlayerId.codec TurnWindow.NextTurnOf (\x -> case x of TurnWindow.NextTurnOf y -> Just y; _ -> Nothing),
+      Arm.optionalPayload "NextTurnOf" PlayerId.codec TurnWindow.NextTurnOf (\x -> case x of TurnWindow.NextTurnOf y -> Just y; _ -> Nothing),
       Arm.payload "OnTurn" Common.natural TurnWindow.OnTurn (\x -> case x of TurnWindow.OnTurn y -> Just y; _ -> Nothing),
       Arm.payload "OnExtraTurn" Timestamp.codec TurnWindow.OnExtraTurn (\x -> case x of TurnWindow.OnExtraTurn y -> Just y; _ -> Nothing)
     ]

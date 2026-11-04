@@ -16,9 +16,6 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 -- Throttle both watch for their event from the moment they are created, which is
 -- CR 603.7a's floor and the only gate those two need.
 --
--- Not implemented: an onset for "the next turn's upkeep" on no player's turn in
--- particular, so those cards fire at the next upkeep to begin (gap #6072).
---
 -- FromNextTurnOf is Meandering Towershell's "on your next turn". The gate is
 -- NOT vacuous and not expressible by the trigger condition alone:
 -- TriggerCondition.StepBegins carries a TurnScope, and ControllersTurn admits
@@ -38,7 +35,8 @@ data Onset
   | -- | Duration.DuringNextTurnOf read as a beginning instead of an end: "on
     -- your next turn" (Meandering Towershell) is @Relative You@, "that turn's
     -- end step" after "during that player's next turn" (Oracle en-Vec) the
-    -- player a slot holds.
+    -- player a slot holds, and "the next turn's upkeep" (Portent) Nothing, the
+    -- next turn whoever's it is.
     --
     -- BOTH HALVES of "next turn" are stored, and neither as a number read at
     -- arming: Parun.Engine.Event.armOnset reads the player and turns this into
@@ -52,7 +50,7 @@ data Onset
     -- that armed this onset over an EachTurn condition would have its printed
     -- "each" silently narrowed to the controller's turn. Card data must say what
     -- the card says instead of leaning on the engine to mean it.
-    FromNextTurnOf PlayerRef.PlayerRef
+    FromNextTurnOf (Maybe PlayerRef.PlayerRef)
   | -- | CR 500.7: "that turn", the extra turn the same resolution just created for
     -- the entry's controller (Final Fortune). Not FromNextTurnOf: the most
     -- recently created turn is taken first, so a second extra turn created later

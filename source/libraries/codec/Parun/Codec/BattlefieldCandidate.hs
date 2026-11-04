@@ -3,8 +3,10 @@
 module Parun.Codec.BattlefieldCandidate where
 
 import qualified Data.Typeable as Typeable
+import qualified Parun.Codec.ObjectId as ObjectId
 import qualified Parun.Codec.PlayerId as PlayerId
 import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.BattlefieldCandidate as BattlefieldCandidate
 
@@ -15,8 +17,10 @@ codec :: (Typeable.Typeable a) => Codec.Codec a -> Codec.Codec (BattlefieldCandi
 codec inner = Fields.object $ do
   controller <- Fields.required "controller" PlayerId.codec BattlefieldCandidate.controller
   characteristics <- Fields.required "characteristics" inner BattlefieldCandidate.characteristics
+  attached <- Fields.required "attached" (Common.set ObjectId.codec) BattlefieldCandidate.attached
   pure
     BattlefieldCandidate.MkBattlefieldCandidate
       { BattlefieldCandidate.controller = controller,
-        BattlefieldCandidate.characteristics = characteristics
+        BattlefieldCandidate.characteristics = characteristics,
+        BattlefieldCandidate.attached = attached
       }

@@ -10216,6 +10216,8 @@ lastKnownFrom gs oid obj =
     (Object.prototyped obj)
     -- CR 107.3m's, for the same reason.
     (Object.announcedX obj)
+    -- CR 700.2b's memory, per-incarnation (CR 400.7).
+    (Object.chosenModes obj)
     -- CR 702.30a's echo window: per-incarnation, so this is the last moment it
     -- exists.
     (Object.controlClock obj)
@@ -11020,14 +11022,9 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> False
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> False
   TriggerCondition.PlayerTookInitiative -> False
-  TriggerCondition.SelfCycled -> False
   TriggerCondition.SelfRevealedForMiracle -> False
   TriggerCondition.RevealedThisWay _ -> False
-  TriggerCondition.SelfDiscarded -> False
-  TriggerCondition.SelfExiledForMadness -> False
-  TriggerCondition.PlayerDiscards _ -> False
-  TriggerCondition.PlayerDiscardsCards _ -> False
-  TriggerCondition.PlayerCycles _ -> False
+  TriggerCondition.Discards _ -> False
   TriggerCondition.PlayerDrawsNthCard {} -> False
   -- CR 508.1a makes this the ACTIVE player's turn, which is not the same thing:
   -- CR 109.5's "you" is the ability's controller, and a stolen creature attacks on
@@ -11227,7 +11224,8 @@ armDelayed ability source controller captured armed expiry gs = case armed of
 armOnset :: (PlayerRef.PlayerRef -> Maybe PlayerId) -> ObjectId -> PlayerId -> GameState -> Onset -> Maybe TurnWindow
 armOnset seat source controller gs onset = case onset of
   Onset.Immediately -> Just TurnWindow.AnyTurn
-  Onset.FromNextTurnOf ref -> fmap TurnWindow.NextTurnOf (seat ref)
+  Onset.FromNextTurnOf Nothing -> Just (TurnWindow.NextTurnOf Nothing)
+  Onset.FromNextTurnOf (Just ref) -> fmap (TurnWindow.NextTurnOf . Just) (seat ref)
   Onset.FromThatExtraTurn -> fmap TurnWindow.OnExtraTurn (Turn.thatExtraTurn source controller gs)
 
 -- CR 603.7a: a turn has BEGUN, so settle every delayed entry waiting for one and
@@ -11265,9 +11263,11 @@ settleOnsets :: Maybe Timestamp.Timestamp -> GameState -> GameState
 settleOnsets begun gs =
   let settled entry = case DelayedTrigger.window entry of
         -- The turn that is beginning IS the one the printed phrase named exactly
-        -- when it belongs to the player the onset named.
-        TurnWindow.NextTurnOf pid
-          | Turn.isActive gs pid ->
+        -- when it belongs to the player the onset named, or the onset named none
+        -- ("the next turn's upkeep"). Settled even if that upkeep is then
+        -- skipped: the step is lost, not deferred (CR 614.10a's first sentence).
+        TurnWindow.NextTurnOf named
+          | maybe True (Turn.isActive gs) named ->
               entry {DelayedTrigger.window = TurnWindow.OnTurn (GameState.turnNumber gs)}
         -- Anyone else's turn, including an intervening one: still waiting.
         TurnWindow.NextTurnOf _ -> entry

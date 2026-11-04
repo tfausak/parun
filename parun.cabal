@@ -633,6 +633,12 @@ library codec
     Parun.Codec.Discarded
     Parun.Codec.DiscardedSpec
     Parun.Codec.DiscardSpec
+    Parun.Codec.DiscardSubject
+    Parun.Codec.DiscardSubjectSpec
+    Parun.Codec.DiscardTrigger
+    Parun.Codec.DiscardTriggerSpec
+    Parun.Codec.DiscardWay
+    Parun.Codec.DiscardWaySpec
     Parun.Codec.DistinctOf
     Parun.Codec.DistinctOfSpec
     Parun.Codec.Divide
@@ -2670,6 +2676,9 @@ library types
     Parun.Types.DiscardCards
     Parun.Types.DiscardCause
     Parun.Types.Discarded
+    Parun.Types.DiscardSubject
+    Parun.Types.DiscardTrigger
+    Parun.Types.DiscardWay
     Parun.Types.DistinctOf
     Parun.Types.Divide
     Parun.Types.Dividing

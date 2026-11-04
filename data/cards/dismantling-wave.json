@@ -130,7 +130,15 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfCycled"
+            "type": "Discards",
+            "value": {
+              "subject": {
+                "type": "Self"
+              },
+              "way": {
+                "type": "Cycled"
+              }
+            }
           },
           "modal": {
             "modes": [

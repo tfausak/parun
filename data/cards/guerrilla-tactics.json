@@ -60,7 +60,12 @@
             "type": "CausedBy",
             "value": {
               "condition": {
-                "type": "SelfDiscarded"
+                "type": "Discards",
+                "value": {
+                  "subject": {
+                    "type": "Self"
+                  }
+                }
               },
               "controller": {
                 "type": "Opponent"

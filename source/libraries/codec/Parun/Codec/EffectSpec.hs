@@ -2081,7 +2081,7 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       ( Effect.ArmDelayedTrigger
           ArmDelayedTrigger.MkArmDelayedTrigger
             { ArmDelayedTrigger.name = returnIt,
-              ArmDelayedTrigger.onset = Onset.FromNextTurnOf (PlayerRef.Relative PlayerRelation.You),
+              ArmDelayedTrigger.onset = Onset.FromNextTurnOf (Just (PlayerRef.Relative PlayerRelation.You)),
               ArmDelayedTrigger.duration = Nothing,
               ArmDelayedTrigger.ability = Nothing
             }
@@ -2094,7 +2094,7 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       ( Effect.ArmDelayedTrigger
           ArmDelayedTrigger.MkArmDelayedTrigger
             { ArmDelayedTrigger.name = returnIt,
-              ArmDelayedTrigger.onset = Onset.FromNextTurnOf (PlayerRef.Relative PlayerRelation.You),
+              ArmDelayedTrigger.onset = Onset.FromNextTurnOf (Just (PlayerRef.Relative PlayerRelation.You)),
               ArmDelayedTrigger.duration = Just Duration.UntilEndOfTurn,
               ArmDelayedTrigger.ability = Nothing
             }

@@ -75,6 +75,9 @@ import Parun.Types.DelayedTrigger (DelayedTrigger)
 import qualified Parun.Types.DelayedTrigger as DelayedTrigger
 import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.DiscardCause as DiscardCause
+import qualified Parun.Types.DiscardSubject as DiscardSubject
+import qualified Parun.Types.DiscardTrigger as DiscardTrigger
+import qualified Parun.Types.DiscardWay as DiscardWay
 import qualified Parun.Types.Discarded as Discarded
 import qualified Parun.Types.Drew as Drew
 import qualified Parun.Types.EventGroup as EventGroup
@@ -150,11 +153,11 @@ import Parun.Types.ZoneChange (ZoneChange)
 import qualified Parun.Types.ZoneChange as ZoneChange
 
 -- CR 603.10's "objects that exist immediately after an event", taken of the
--- battlefield: every permanent standing on it, the player controlling it, and the
--- projection its abilities are read out of.
+-- battlefield: every permanent standing on it, the player controlling it, the
+-- projection its abilities are read out of, and what is attached to it.
 --
 -- The whole battlefield rather than a diff or an overrides-only map, because all
--- three of the answers the scan wants can move and only a full reading tells
+-- four of the answers the scan wants can move and only a full reading tells
 -- "unchanged" from "not there". The controller half is the one that used to be
 -- kept alone, as a layer-2 overrides map; folding it in here costs nothing extra,
 -- since the projection this walks is the same one the controller walk needs.
@@ -171,7 +174,7 @@ battlefieldCandidates gs =
                 -- Unreachable: projectAll is keyed on the same battlefield set this
                 -- list walks, so every oid drawn from it has an entry.
                 Nothing -> Nothing
-                Just pc -> fmap (\ctrl -> (oid, BattlefieldCandidate.MkBattlefieldCandidate {BattlefieldCandidate.controller = ctrl, BattlefieldCandidate.characteristics = pc})) (Projection.controllerOfGiven grants oid gs)
+                Just pc -> fmap (\ctrl -> (oid, BattlefieldCandidate.MkBattlefieldCandidate {BattlefieldCandidate.controller = ctrl, BattlefieldCandidate.characteristics = pc, BattlefieldCandidate.attached = Game.attachments oid gs})) (Projection.controllerOfGiven grants oid gs)
             )
             (Set.toAscList (GameState.battlefield gs))
         )
@@ -703,14 +706,9 @@ looksBack condition = case condition of
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> False
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> False
   TriggerCondition.PlayerTookInitiative -> False
-  TriggerCondition.SelfCycled -> False
   TriggerCondition.SelfRevealedForMiracle -> False
   TriggerCondition.RevealedThisWay _ -> False
-  TriggerCondition.SelfDiscarded -> False
-  TriggerCondition.SelfExiledForMadness -> False
-  TriggerCondition.PlayerDiscards _ -> False
-  TriggerCondition.PlayerDiscardsCards _ -> False
-  TriggerCondition.PlayerCycles _ -> False
+  TriggerCondition.Discards _ -> False
   TriggerCondition.PlayerDrawsNthCard {} -> False
   TriggerCondition.SelfAttacks _ -> False
   TriggerCondition.SelfAttacksWithAnother _ -> False
@@ -975,20 +973,15 @@ batchScoped condition = case condition of
   -- taker, so the arm below is False.
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> True
   TriggerCondition.PlayerTookInitiative -> False
-  TriggerCondition.SelfCycled -> False
   TriggerCondition.SelfRevealedForMiracle -> False
   TriggerCondition.RevealedThisWay _ -> False
-  TriggerCondition.SelfDiscarded -> False
-  TriggerCondition.SelfExiledForMadness -> False
-  TriggerCondition.PlayerDiscards _ -> False
-  -- A True beside PermanentsDie: "whenever you discard one or more cards"
+  -- OneOrMore beside PermanentsDie: "whenever you discard one or more cards"
   -- (Magmakin Artillerist) names a whole CR 608.2f / 601.2h discard as one
-  -- trigger event, where the arm above is CR 603.2c's second sentence. Only as
+  -- trigger event, where EachOccurrence is CR 603.2c's second sentence. Only as
   -- good as the brackets around every caller discarding several cards at once
   -- -- a cost, Effect.Discard, connive, the cleanup discard -- since an
   -- unbracketed loop gives each card a group of its own.
-  TriggerCondition.PlayerDiscardsCards _ -> True
-  TriggerCondition.PlayerCycles _ -> False
+  TriggerCondition.Discards discardTrigger -> DiscardTrigger.batching discardTrigger == Batching.OneOrMore
   TriggerCondition.PlayerDrawsNthCard {} -> False
   TriggerCondition.SelfAttacks _ -> False
   TriggerCondition.SelfAttacksWithAnother _ -> False
@@ -2732,7 +2725,7 @@ enchantedObjectLeaves condition = case condition of
 -- in the graveyard, so it answers True for that zone and False for any other a
 -- (card-data-error) effect might have named.
 --
--- The four graveyard-ARRIVAL arms (discarded, cycled, put into a graveyard)
+-- The graveyard-ARRIVAL arms (discarded or cycled, put into a graveyard)
 -- are unobservable today: `zonesTriggeredFrom` already answers the graveyard for
 -- each, so `functionsIn` reads the same either way. They are here so the rule is
 -- stated once, not because a test can redden them.
@@ -2763,10 +2756,11 @@ conditionPutsSelfInto condition zone = case condition of
   TriggerCondition.SelfLeavesTheBattlefield -> False
   -- The narrowing does name one: the object is put in that zone and no other.
   TriggerCondition.SelfPutFromBattlefieldInto destination -> zone == OwnedZone.zone destination
-  -- CR 701.9a: discarding puts the object in the graveyard.
-  TriggerCondition.SelfDiscarded -> zone == Zone.Graveyard
-  -- CR 702.29c: cycling discards the object, same destination.
-  TriggerCondition.SelfCycled -> zone == Zone.Graveyard
+  -- CR 701.9a: discarding puts the object in the graveyard, cycling's included
+  -- (CR 702.29c). ExiledForMadness falls to the `_`: its keyword-minted
+  -- ability is scanned in exile without asking `functionsIn` (`exileCandidate`).
+  TriggerCondition.Discards (DiscardTrigger.MkDiscardTrigger DiscardSubject.Self way _)
+    | way /= DiscardWay.ExiledForMadness -> zone == Zone.Graveyard
   -- CR 603.6's graveyard-arrival forms, either origin.
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> zone == Zone.Graveyard
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> zone == Zone.Graveyard
@@ -3068,10 +3062,6 @@ zonesTriggeredFrom cond =
         TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> battlefield
         TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> battlefield
         TriggerCondition.CreatureAttacksUnblocked _ -> battlefield
-        -- CR 702.29c: a cycling ability triggers from whatever zone the card winds up
-        -- in, the graveyard for every printing in this pool, and a cycled card cannot be
-        -- on the battlefield. eventTriggers' `cycledCard` is what actually serves it.
-        TriggerCondition.SelfCycled -> Set.singleton Zone.Graveyard
         -- CR 113.6k's fourth zone: rule 702.94a's reveal happens FROM a hand and rule
         -- 701.20b leaves the card there, so this condition cannot trigger from the
         -- battlefield at all and the hand is the one zone it can. eventTriggers'
@@ -3080,34 +3070,24 @@ zonesTriggeredFrom cond =
         -- CR 113.6's default: the linked static functions on the battlefield, and
         -- so does its trigger (Rowen).
         TriggerCondition.RevealedThisWay _ -> battlefield
-        -- CR 113.6k's exception again, on SelfCycled's argument: CR 701.9a discards a
-        -- card from a HAND, so this condition can never trigger from the battlefield,
-        -- and the graveyard rule 701.9a moves the card to is the one zone the scan
-        -- meets it in.
+        -- CR 113.6k's exception: CR 701.9a discards a card from a HAND, so a Self
+        -- discard can never trigger from the battlefield, and the zone the card
+        -- winds up in is the one the scan meets it in. That is the graveyard rule
+        -- 701.9a moves it to, cycling's included (rule 702.29c's second sentence;
+        -- eventTriggers' `inGraveyards` and `cycledCard` serve it, and
+        -- Parun.TriggerSpec's Bartered Cow cases go red if this answers the
+        -- battlefield); for ExiledForMadness it is the exile rule 702.35a's
+        -- replacement put it in -- unread in practice, since the exile scan takes
+        -- keyword-minted abilities without asking `functionsIn` (`exileCandidate`).
         --
-        -- eventTriggers' `inGraveyards` is what serves it, gated on exactly this
-        -- answer -- Parun.TriggerSpec's Bartered Cow cases go red if this arm answers
-        -- the battlefield. No candidate source of its own is owed: `cycledCard`
-        -- recovers the card the CYCLING cause named, which rule 702.29c makes narrower
-        -- than this condition rather than a gap under it.
-        TriggerCondition.SelfDiscarded -> Set.singleton Zone.Graveyard
-        -- CR 113.6k again: rule 702.35a's replacement has already put the card
-        -- in EXILE by the time this condition is asked, so exile is the one zone
-        -- it can trigger from. Unread in practice -- eventTriggers' exile scan
-        -- takes a card's keyword-minted abilities without asking `functionsIn`
-        -- at all (see `exileCandidate`) -- and stated here so the rule is
-        -- written down once.
-        TriggerCondition.SelfExiledForMadness -> Set.singleton Zone.Exile
-        -- CR 113.6's default: the bearer watches from the battlefield, so a card in a
-        -- graveyard does not see an opponent discard.
-        TriggerCondition.PlayerDiscards _ -> battlefield
-        TriggerCondition.PlayerDiscardsCards _ -> battlefield
-        -- CR 113.6's default too, and NOT the graveyard SelfCycled answers above: the
-        -- bearer here is a permanent, not the card that was cycled, so the zone the
-        -- cycled card winds up in (rule 702.29c's second sentence) is nothing to do
-        -- with where this ability functions. eventTriggers' `cycledCard` serves the
-        -- self-scoped condition only.
-        TriggerCondition.PlayerCycles _ -> battlefield
+        -- A Discarder is CR 113.6's default: the bearer is a permanent watching a
+        -- hand, not the discarded card, so where that card winds up is nothing to
+        -- do with where the ability functions.
+        TriggerCondition.Discards discardTrigger -> case DiscardTrigger.subject discardTrigger of
+          DiscardSubject.Self
+            | DiscardTrigger.way discardTrigger == DiscardWay.ExiledForMadness -> Set.singleton Zone.Exile
+            | otherwise -> Set.singleton Zone.Graveyard
+          DiscardSubject.Discarder _ -> battlefield
         -- CR 113.6's default again: Erudite Wizard watches its controller's draws from
         -- the battlefield. CR 702.94a's miracle answers a hand below, and it is a
         -- different condition -- it watches the REVEAL, not the draw.
@@ -3413,14 +3393,9 @@ stateTriggersOn gs
             TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> False
             TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> False
             TriggerCondition.CreatureAttacksUnblocked _ -> False
-            TriggerCondition.SelfCycled -> False
             TriggerCondition.SelfRevealedForMiracle -> False
             TriggerCondition.RevealedThisWay _ -> False
-            TriggerCondition.SelfDiscarded -> False
-            TriggerCondition.SelfExiledForMadness -> False
-            TriggerCondition.PlayerDiscards _ -> False
-            TriggerCondition.PlayerDiscardsCards _ -> False
-            TriggerCondition.PlayerCycles _ -> False
+            TriggerCondition.Discards _ -> False
             TriggerCondition.PlayerDrawsNthCard {} -> False
             TriggerCondition.SelfPutIntoGraveyardFromLibrary -> False
             TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> False

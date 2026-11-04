@@ -190,6 +190,8 @@ import qualified Parun.Types.Devour as Devour
 import qualified Parun.Types.DiceReading as DiceReading
 import qualified Parun.Types.Discard as Discard
 import qualified Parun.Types.DiscardCards as DiscardCards
+import qualified Parun.Types.DiscardSubject as DiscardSubject
+import qualified Parun.Types.DiscardTrigger as DiscardTrigger
 import qualified Parun.Types.Divide as Divide
 import qualified Parun.Types.DoesNotUntapNext as DoesNotUntapNext
 import qualified Parun.Types.Draw as Draw
@@ -1233,18 +1235,11 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- names, and its PlayerRelation is no Count either.
   TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> []
   TriggerCondition.CreatureAttacksUnblocked _ -> []
-  TriggerCondition.SelfCycled -> []
   TriggerCondition.SelfRevealedForMiracle -> []
   TriggerCondition.RevealedThisWay _ -> []
-  TriggerCondition.SelfDiscarded -> []
-  TriggerCondition.SelfExiledForMadness -> []
-  -- CR 701.9a's discard condition is a PlayerRelation and a Filter, neither of
-  -- which holds a Count.
-  TriggerCondition.PlayerDiscards _ -> []
-  TriggerCondition.PlayerDiscardsCards _ -> []
-  -- CR 702.29a's cycling read as a discard: a PlayerRelation alone, so no Count
-  -- either.
-  TriggerCondition.PlayerCycles _ -> []
+  -- CR 701.9a's discard condition is a PlayerRelation, a Filter and two enums,
+  -- none of which holds a Count.
+  TriggerCondition.Discards _ -> []
   TriggerCondition.PlayerDrawsNthCard {} -> []
   -- CR 725.1's crowning condition is a PlayerRelation too.
   TriggerCondition.PlayerBecomesMonarch _ -> []
@@ -4800,15 +4795,12 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- there is no Filter here.
   TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> []
   TriggerCondition.CreatureAttacksUnblocked f -> unframed [f]
-  TriggerCondition.SelfCycled -> []
   TriggerCondition.SelfRevealedForMiracle -> []
   TriggerCondition.RevealedThisWay r -> unframed [RevealedThisWay.card r]
-  TriggerCondition.SelfDiscarded -> []
-  TriggerCondition.SelfExiledForMadness -> []
   -- Waste Not's "a creature card", card text swept like PermanentSacrificed's.
-  TriggerCondition.PlayerDiscards payload -> unframed [PlayerActsOn.filter payload]
-  TriggerCondition.PlayerDiscardsCards payload -> unframed [PlayerActsOn.filter payload]
-  TriggerCondition.PlayerCycles _ -> []
+  TriggerCondition.Discards discardTrigger -> case DiscardTrigger.subject discardTrigger of
+    DiscardSubject.Self -> []
+    DiscardSubject.Discarder payload -> unframed [PlayerActsOn.filter payload]
   TriggerCondition.PlayerDrawsNthCard {} -> []
   -- CR 725.1's crowning condition is a PlayerRelation, which holds no Filter.
   TriggerCondition.PlayerBecomesMonarch _ -> []
@@ -4938,14 +4930,9 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> []
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> []
   TriggerCondition.PlayerTookInitiative -> []
-  TriggerCondition.SelfCycled -> []
   TriggerCondition.SelfRevealedForMiracle -> []
   TriggerCondition.RevealedThisWay _ -> []
-  TriggerCondition.SelfDiscarded -> []
-  TriggerCondition.SelfExiledForMadness -> []
-  TriggerCondition.PlayerDiscards _ -> []
-  TriggerCondition.PlayerDiscardsCards _ -> []
-  TriggerCondition.PlayerCycles _ -> []
+  TriggerCondition.Discards _ -> []
   TriggerCondition.PlayerDrawsNthCard _ -> []
   TriggerCondition.SelfAttacks _ -> []
   TriggerCondition.SelfAttacksWithAnother _ -> []

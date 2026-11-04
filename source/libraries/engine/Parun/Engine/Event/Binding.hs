@@ -46,6 +46,8 @@ import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamagePrevented as DamagePrevented
+import qualified Parun.Types.DiscardSubject as DiscardSubject
+import qualified Parun.Types.DiscardTrigger as DiscardTrigger
 import qualified Parun.Types.Discarded as Discarded
 import qualified Parun.Types.Drew as Drew
 import qualified Parun.Types.Exploited as Exploited
@@ -517,9 +519,17 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- same reason -- a player the EVENT names, which CR 109.5's `you` cannot stand
   -- in for. "That card" is CR 400.7e's `became`, the card's new incarnation the
   -- event carries (Bag of Holding's "exile that card from your graveyard").
-  (TriggerCondition.PlayerDiscards _, GameEvent.Discarded (Discarded.MkDiscarded discarder card _ _ _)) ->
-    Binding.setBecame card (Binding.setTriggerPlayer discarder Map.empty)
-  -- The drawing player, PlayerDiscards' player slot for CR 121.1's draw (Underworld
+  --
+  -- CR 603.2c's batch reading instead counts "that much" (Magmakin
+  -- Artillerist): one card per Discarded event, summed across the group by
+  -- batchBindings. A Self discard stamps nothing: its card is the bearer, whom
+  -- CR 113.7a's source slot already names, and its discarder is the owner CR
+  -- 113.8 and CR 108.4a make the controller, whom Binding.setYou names.
+  (TriggerCondition.Discards trigger, GameEvent.Discarded (Discarded.MkDiscarded discarder card _ _ _)) -> case (DiscardTrigger.subject trigger, DiscardTrigger.batching trigger) of
+    (_, Batching.OneOrMore) -> Binding.setEventAmount 1 Map.empty
+    (DiscardSubject.Discarder _, Batching.EachOccurrence) -> Binding.setBecame card (Binding.setTriggerPlayer discarder Map.empty)
+    (DiscardSubject.Self, Batching.EachOccurrence) -> Map.empty
+  -- The drawing player, a discarder's player slot for CR 121.1's draw (Underworld
   -- Dreams' "that player").
   (TriggerCondition.PlayerDrawsNthCard _, GameEvent.Drew (Drew.MkDrew drawer _)) ->
     Binding.setTriggerPlayer drawer Map.empty
@@ -527,10 +537,6 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- Kefnet's "copy that card").
   (TriggerCondition.RevealedThisWay _, GameEvent.Revealed revealed) ->
     Map.singleton Binding.revealedCard (Binding.toObject (Revealed.card revealed))
-  -- CR 603.2c's "that much" (Magmakin Artillerist): one card per Discarded
-  -- event, summed across the group by batchBindings.
-  (TriggerCondition.PlayerDiscardsCards _, GameEvent.Discarded _) ->
-    Binding.setEventAmount 1 Map.empty
   -- CR 701.62a's "a card you put into your graveyard this way" (Paranormal
   -- Analyst): the graveyard incarnations the event carries, under CR 400.7e's
   -- `became` -- one as the single binding, several (a CR 701.40f refusal sends
@@ -811,7 +817,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- Venom's "the other creature" its host. Read outside CR 603.7c's frame, so a
   -- delayed trigger's slot atom in a pair would stamp nothing; none in data/cards, 2026-11-03.
   (TriggerCondition.CreatureBecomesBlockedBy pair, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker, BecameBlocking.blocker = blocker}))
-    | admittedAt (Projection.sourceContext gs (Just you) bearer) gs attacker (BlockPair.attacker pair) ->
+    | admittedAt (Projection.sourceContext gs (Just you) bearer) board gs attacker (BlockPair.attacker pair) ->
         Binding.setBlockingCreature blocker Map.empty
   -- CR 509.3a read by a bystander: Super-Soldier Serum's "it" is the blocker,
   -- never the bearer, under the name the two arms above give it.
@@ -821,7 +827,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- Loyal Sentry's payload destroys. The mirror of the arm above, guarded on the
   -- blocker's end for that arm's reason.
   (TriggerCondition.CreatureBlocksCreature pair, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker, BecameBlocking.blocker = blocker}))
-    | admittedAt (Projection.sourceContext gs (Just you) bearer) gs blocker (BlockPair.blocker pair) ->
+    | admittedAt (Projection.sourceContext gs (Just you) bearer) board gs blocker (BlockPair.blocker pair) ->
         Binding.setBlockedCreature attacker Map.empty
   -- CR 603.6a's "enters attached to a creature": that host, bound as the
   -- trigger is placed, so Infinite Reflection copies it even once the Aura has
@@ -1159,11 +1165,6 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- already names, and Tavern Scoundrel's "create two Treasure tokens" and
   -- Karplusan Minotaur's targeted damage read nothing else off the flip.
   --
-  -- And so do SelfDiscarded and SelfExiledForMadness, for SelfCycled's reason:
-  -- CR 701.9a's discarded card is the bearer, whom CR 113.7a's source slot
-  -- already names, and its owner is the controller CR 113.8 and CR 108.4a name,
-  -- whom Binding.setYou already names.
-  --
   -- CR 603.12's Reflexive reaches it NECESSARILY rather than by choice: it
   -- admits no event at all, so delayedPending never calls this for one and there
   -- is nothing an arm could read. What such an ability knows comes from CR
@@ -1246,9 +1247,10 @@ batchBindings (first NonEmpty.:| rest) = List.foldl' (Map.unionWith join) first 
         }
 
 -- CR 509.3b / 509.3d: whether one end of a block is what the pair's Filter
--- watches, through CR 608.2h's record for a creature already gone.
-admittedAt :: Filter.Context -> GameState -> ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> Bool
-admittedAt context gs oid f = maybe False (\view -> Filter.matches context view f) (Projection.viewWithLastKnown oid gs oid)
+-- watches, as the event's own board sample shows it (`postEventView`, CR
+-- 603.10), so Venom's host is still enchanted after CR 704.5m buried Venom.
+admittedAt :: Filter.Context -> Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> GameState -> ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> Bool
+admittedAt context board gs oid f = maybe False (\view -> Filter.matches context view f) (postEventView board gs oid)
 
 -- CR 603.10's first sentence: `oid` as the event's own board sample shows it
 -- (Projection.sampledView), and CR 608.2h's last known information for an id
@@ -1256,7 +1258,7 @@ admittedAt context gs oid f = maybe False (\view -> Filter.matches context view 
 -- when the caller has no sample (an empty board).
 postEventView :: Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> GameState -> ObjectId -> Maybe Filter.View
 postEventView board gs oid = case Map.lookup oid board of
-  Just candidate -> Just (Projection.sampledView oid candidate gs)
+  Just candidate -> Just (Projection.sampledView board oid candidate gs)
   Nothing -> Projection.viewWithLastKnown oid gs oid
 
 -- CR 725.2 / CR 726.2: the creature that dealt this event's COMBAT damage to
@@ -1546,9 +1548,6 @@ eventBindingSlots cond = case cond of
   -- CR 726.2's taker is the ability's controller, whom Binding.setYou already
   -- names.
   TriggerCondition.PlayerTookInitiative -> Set.empty
-  -- CR 702.29c's cycled card is the bearer itself, already bound as CR 113.7's
-  -- source.
-  TriggerCondition.SelfCycled -> Set.empty
   -- CR 702.94a's revealed card is the bearer itself, already bound as CR 113.7's
   -- source, and the revealing player is its owner -- the same seat CR 113.8 makes
   -- the ability's controller, whom Binding.setYou already names.
@@ -1556,28 +1555,15 @@ eventBindingSlots cond = case cond of
   -- CR 607.2h's "that card": the card the linked static revealed, which is not
   -- the bearer (God-Eternal Kefnet).
   TriggerCondition.RevealedThisWay _ -> Set.singleton Binding.revealedCard
-  -- CR 701.9a's discarded card is the bearer itself, already bound as CR 113.7's
-  -- source, and the discarding player is its owner -- the same seat CR 113.8 makes
-  -- the ability's controller, whom Binding.setYou already names.
-  TriggerCondition.SelfDiscarded -> Set.empty
-  -- CR 702.35a's exiled card is the bearer itself, already bound as CR 113.7's
-  -- source, and its owner is the seat CR 108.4a makes the ability's controller,
-  -- whom Binding.setYou already names.
-  TriggerCondition.SelfExiledForMadness -> Set.empty
-  -- CR 701.9a's discarding player, which is nobody the bearer already names --
-  -- Megrim's "that player" is the opponent whose hand the card left -- and CR
-  -- 400.7e's discarded card, Bag of Holding's "that card".
-  TriggerCondition.PlayerDiscards _ -> Set.fromList [Binding.triggerPlayer, Binding.became]
-  -- The batch's card count, eventBindings' arm summed by batchBindings; no
-  -- "that player" printing under this condition earns the discarder's slot.
-  TriggerCondition.PlayerDiscardsCards _ -> Set.singleton Binding.eventAmount
-  -- NOTHING, where the cause-blind sibling above binds the discarder. Prickly
-  -- Marmoset's payload says "this creature", which is CR 113.7's source slot
-  -- the placement already stamps, and names no player; a printing under this
-  -- condition that said "that player" is what would earn the slot. eventBindings
-  -- has no arm for this condition, and the two must agree.
-  TriggerCondition.PlayerCycles _ -> Set.empty
-  -- CR 121.1's drawing player, PlayerDiscards' player slot: Underworld Dreams' "that
+  -- eventBindings' Discards arm, slot for slot: a Self discard's card is the
+  -- bearer, already bound as CR 113.7's source; a Discarder's is CR 400.7e's
+  -- `became` (Bag of Holding's "that card") beside the discarding player, whom
+  -- the bearer does not name (Megrim's "that player"); a batch counts cards.
+  TriggerCondition.Discards trigger -> case (DiscardTrigger.subject trigger, DiscardTrigger.batching trigger) of
+    (_, Batching.OneOrMore) -> Set.singleton Binding.eventAmount
+    (DiscardSubject.Discarder _, Batching.EachOccurrence) -> Set.fromList [Binding.triggerPlayer, Binding.became]
+    (DiscardSubject.Self, Batching.EachOccurrence) -> Set.empty
+  -- CR 121.1's drawing player, a discarder's player slot: Underworld Dreams' "that
   -- player" is the opponent who drew.
   TriggerCondition.PlayerDrawsNthCard {} -> Set.singleton Binding.triggerPlayer
   -- CR 508.5's defending player, which the declaration event carries -- rule

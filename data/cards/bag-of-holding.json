@@ -120,14 +120,19 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PlayerDiscards",
+            "type": "Discards",
             "value": {
-              "filter": {
-                "type": "And",
-                "value": []
-              },
-              "player": {
-                "type": "You"
+              "subject": {
+                "type": "Discarder",
+                "value": {
+                  "filter": {
+                    "type": "And",
+                    "value": []
+                  },
+                  "player": {
+                    "type": "You"
+                  }
+                }
               }
             }
           },

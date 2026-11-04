@@ -76,6 +76,9 @@ import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.DiscardCause as DiscardCause
+import qualified Parun.Types.DiscardSubject as DiscardSubject
+import qualified Parun.Types.DiscardTrigger as DiscardTrigger
+import qualified Parun.Types.DiscardWay as DiscardWay
 import qualified Parun.Types.Discarded as Discarded
 import qualified Parun.Types.DrawnUnder as DrawnUnder
 import qualified Parun.Types.Drew as Drew
@@ -668,22 +671,10 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- log -- so Event.delayedPending fires it with no event and this answers False
   -- for every one, StateIs' posture.
   TriggerCondition.Reflexive -> False
-  -- CR 702.29c: the bearer IS the card that was cycled. The event carries the CR
-  -- 400.7 incarnation, which is the object the scan offers as the bearer.
-  --
-  -- The CAUSE makes this narrower than the discard condition below, and is the
-  -- whole of rule 702.29c's "to pay an activation cost of a cycling ability": an
-  -- ordinary discard of a card that HAS cycling reaches the same graveyard through
-  -- the same funnel and must fire nothing.
-  TriggerCondition.SelfCycled -> case event of
-    GameEvent.Discarded (Discarded.MkDiscarded _ oid DiscardCause.ToPayCyclingCost _ _) -> oid == bearer
-    GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.Ordinary _ _) -> False
-    GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.ByEffect _ _) -> False
-    _ -> False
   -- CR 702.94a: the bearer IS the card that was revealed, and the reveal was
-  -- miracle's own. SelfCycled's shape one rule over, cause and all -- and for the
-  -- same reason: the same card shown by an ordinary reveal reaches the same log
-  -- through the same funnel and must fire nothing. That is rule 702.94a's "THIS
+  -- miracle's own. A Self Cycled discard's shape one rule over, cause and all
+  -- -- and for the same reason: the same card shown by an ordinary reveal
+  -- reaches the same log through the same funnel and must fire nothing. That is rule 702.94a's "THIS
   -- WAY", and CR 603.11 is what makes the two halves one ability.
   --
   -- The Ordinary arm is a REGRESSION FENCE rather than proven behaviour, and so
@@ -728,90 +719,41 @@ armMatches bindings board gs bearer you cond event = case cond of
     GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.LeavingFaceDownComponent _) -> False
     GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.FaceDownSpell _) -> False
     _ -> False
-  -- CR 701.9a: the bearer IS the card that was discarded. SelfCycled's shape
-  -- above with the CAUSE dropped, which is the whole difference between the two:
-  -- CR 702.29a makes cycling a discard, so "when you discard this card" fires on
-  -- a cycle as well as on an ordinary discard, where rule 702.29c's "to pay an
-  -- activation cost of a cycling ability" admits only the one cause.
+  -- CR 701.9a: a card was discarded, narrowed by the way. CR 702.29a makes
+  -- cycling a discard, so AnyDiscard admits a cycle; it is one Discarded event,
+  -- so CR 702.29d's "only once" holds by construction (TriggerSpec's "CR
+  -- 702.29d cycling a card fires the discard trigger exactly once"). Cycled is
+  -- rule 702.29c's "to pay an activation cost of a cycling ability": an ordinary
+  -- discard of a card with cycling reaches the same funnel and fires nothing.
+  -- ExiledForMadness is rule 702.35a's "this way", read off `Discarded.madness`
+  -- rather than the destination, since Rest in Peace's row chosen over
+  -- madness's under CR 616.1 exiles the card just the same.
   --
-  -- The discarding player is not compared against anything. CR 701.9a moves the
-  -- card from its OWNER's hand, and CR 113.8 makes that owner the controller of
-  -- an ability of a card in a graveyard, so the two seats coincide by
-  -- construction and there is no PlayerRelation to read.
-  TriggerCondition.SelfDiscarded -> case event of
-    GameEvent.Discarded (Discarded.MkDiscarded _ oid _ _ _) -> oid == bearer
-    _ -> False
-  -- CR 702.35a's "when this card is exiled THIS WAY": the same discard the arm
-  -- above reads, narrowed to the one rule 702.35a's own replacement redirected
-  -- into exile. `Discarded.madness` is where the discard funnel records
-  -- which redirect applied (Parun.Engine.Event.discardReturning); the DESTINATION
-  -- cannot answer it, since Rest in Peace's row chosen over madness's under CR
-  -- 616.1 exiles the card just the same and rule 702.35a's trigger must not fire.
-  --
-  -- The bearer is the EXILE incarnation, which is the id the CR 400.7 funnel
-  -- minted and the id the event carries -- see the arm above.
-  TriggerCondition.SelfExiledForMadness -> case event of
-    GameEvent.Discarded (Discarded.MkDiscarded _ oid _ madness _) -> Maybe.isJust madness && oid == bearer
-    _ -> False
-  -- CR 701.9a: a card was discarded, by a player the relation admits. The
-  -- discarding player comes from the event; CR 109.5 fixes "you" as the
-  -- ability's controller (CR 603.3a), and PlayerRelation.holds is what each arm
-  -- MEANS -- Megrim's "an opponent" is CR 102.3's player not on your team, which
-  -- is every other player in a free-for-all (CR 806.1) and at two seats (CR
-  -- 102.2). Every relation-carrying condition below
-  -- reads it, so they cannot drift apart.
-  --
-  -- The bearer is NOT part of the match, unlike every Self- condition here: the
-  -- enchantment watches someone else's hand and has nothing to do with the card
-  -- that left it.
-  --
-  -- CR 702.29d -- "these abilities trigger only once when a card is cycled" --
-  -- needs no clause of its own, and the DiscardCause is ignored for that reason
-  -- rather than by omission. CR 702.29a makes cycling a discard, so a cycled
-  -- card must fire this; the cycle is ONE Discarded event, so it fires it once.
-  -- TriggerSpec's "CR 702.29d cycling a card fires the discard trigger exactly
-  -- once" is the test that proves it.
-  --
-  -- The Filter reads the card the discard named, which is the incarnation in
-  -- the zone it arrived in (Event.discardReturning) and its last known
-  -- information once it has moved on. A madness discard into exile is still a
-  -- discard (CR 702.35a) and arrives on the same event, so it is judged alike.
-  -- Waste Not's three abilities each narrow here rather than in a clause, since
-  -- CR 603.2 asks the event whether the ability triggers at all.
-  TriggerCondition.PlayerDiscards (PlayerActsOn.MkPlayerActsOn relation f) -> case event of
-    GameEvent.Discarded (Discarded.MkDiscarded discarder card _ _ _) ->
-      PlayerRelation.holds (Game.teams gs) relation you discarder
-        && maybe False (\view -> Filter.matches bearerContext view f) (Projection.viewWithLastKnown card gs card)
-    _ -> False
-  -- CR 603.2c's batch reading of the arm above, delegated for CardsLeaveZone's
-  -- reason: firing once per discard event is `batchScoped`, never this arm.
-  TriggerCondition.PlayerDiscardsCards relation -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.PlayerDiscards relation) event
-  -- The discard arm above narrowed by the CAUSE, which is the whole of the
-  -- difference: CR 702.29a makes cycling a discard, so an ordinary discard
-  -- reaches the same log through the same funnel and must fire nothing here.
-  -- That cause is what rule 702.29c calls "to pay an activation cost of a
-  -- cycling ability"; rule 702.29c itself defines only the self-scoped phrase,
-  -- and what fixes the "you" of this watcher-scoped one is CR 603.3a, read
-  -- through PlayerRelation.holds so a new relation is answered once.
-  --
-  -- The bearer is NOT part of the match, on PlayerDiscards' posture: Prickly
-  -- Marmoset watches its controller's hand and has nothing to do with the card
-  -- that left it.
-  --
-  -- CR 702.29d needs no clause: one cycle is one Discarded event, so this fires
-  -- once by construction, exactly as the discard arm above does.
-  TriggerCondition.PlayerCycles relation -> case event of
-    GameEvent.Discarded (Discarded.MkDiscarded discarder _ DiscardCause.ToPayCyclingCost _ _) -> PlayerRelation.holds (Game.teams gs) relation you discarder
-    GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.Ordinary _ _) -> False
-    GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.ByEffect _ _) -> False
+  -- Self compares the bearer with the CR 400.7 incarnation the event carries,
+  -- which is the object the graveyard or exile scan offers. Discarder relates
+  -- the discarding player to CR 109.5's "you" (CR 603.3a) through
+  -- PlayerRelation.holds (an opponent is CR 102.3's player not on your team),
+  -- leaves the bearer out (Megrim watches someone else's hand), and reads the
+  -- Filter off the card with last known information once it has moved on. Batching is `batchScoped`'s, never this arm's.
+  TriggerCondition.Discards (DiscardTrigger.MkDiscardTrigger subject way _) -> case event of
+    GameEvent.Discarded (Discarded.MkDiscarded discarder card cause madness _) ->
+      let admitsWay = case way of
+            DiscardWay.AnyDiscard -> True
+            DiscardWay.Cycled -> cause == DiscardCause.ToPayCyclingCost
+            DiscardWay.ExiledForMadness -> Maybe.isJust madness
+       in admitsWay && case subject of
+            DiscardSubject.Self -> card == bearer
+            DiscardSubject.Discarder (PlayerActsOn.MkPlayerActsOn relation f) ->
+              PlayerRelation.holds (Game.teams gs) relation you discarder
+                && maybe False (\view -> Filter.matches bearerContext view f) (Projection.viewWithLastKnown card gs card)
     _ -> False
   -- CR 121.1: a card was DRAWN, by a player the relation admits, and it was that
   -- player's `nth` draw of the turn. The ordinal comes off the event, which
   -- Event.drawCard stamped from GameState.drawsThisTurn as the draw happened;
   -- CR 109.5 fixes "you" as the ability's controller (CR 603.3a), and an
-  -- opponent is every other player for the reason PlayerDiscards gives.
+  -- opponent is every other player for the reason a Discarder discard gives.
   --
-  -- The bearer is NOT part of the match, exactly as for PlayerDiscards: Erudite
+  -- The bearer is NOT part of the match, exactly as for a Discarder discard: Erudite
   -- Wizard is a creature watching a library, and the card drawn is nothing to do
   -- with it.
   --
@@ -901,10 +843,10 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- CreatureAttacksYou below reads the defending player and cannot tell them
   -- apart.
   --
-  -- The permanent's characteristics come from the game as it stands, which is
-  -- CreatureAttacksAlone's reading of CR 603.10; viewWithLastKnown with the
-  -- BEARER as the source, the attacked permanent being a different object, so CR
-  -- 608.2h's last known information does not stand in for it.
+  -- The permanent's characteristics come from the game as it stands;
+  -- viewWithLastKnown with the BEARER as the source, the attacked permanent
+  -- being a different object, so CR 608.2h's last known information does not
+  -- stand in for it.
   TriggerCondition.SelfAttacksPermanent f -> case event of
     GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared oid _ target _ _)
       | oid == bearer ->
@@ -923,15 +865,14 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- `count == 1` and never a floor, unlike SelfBlocksAtLeast's `>= n`: rule 506.5
   -- says "the ONLY creature declared as an attacker", which is one number.
   --
-  -- The attacker's characteristics come from the game as it stands, which is CR
-  -- 603.10's normal reading -- CR 508.1k has already made the creature attacking,
-  -- and CR 508.2's triggers go on the stack before any player gets priority.
-  -- viewWithLastKnown, so an attacker already gone is still read as it was on
-  -- the battlefield (CR 608.2h).
+  -- The attacker is read off `board`, CR 603.10's sample (`postEventView`) --
+  -- CR 508.1k has already made the creature attacking -- so an Equipment CR
+  -- 704.5n has unattached since still equips it, and CR 608.2h's record answers
+  -- for an attacker the sample does not hold.
   TriggerCondition.CreatureAttacksAlone f -> case event of
     GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared attacker _ _ count _)
       | count == 1 ->
-          case Projection.viewWithLastKnown attacker gs attacker of
+          case postEventView board gs attacker of
             Nothing -> False
             Just view -> Filter.matches bearerContext view f
     _ -> False
@@ -959,10 +900,13 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- attacking records no AttackerDeclared, so it never reaches here.
   --
   -- The Filter's source is the bearer, so "equipped creature" is
-  -- HasAttached IsSource (Conjurer's Mantle).
+  -- HasAttached IsSource (Conjurer's Mantle). The attacker is read off `board`
+  -- for CreatureAttacksAlone's reason: data/scenarios's
+  -- super-soldier-serum-fires-though-the-attack-toll-knocks-it-off-its-host
+  -- proves it.
   TriggerCondition.CreatureAttacks f -> case event of
     GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared attacker _ _ _ _) ->
-      case Projection.viewWithLastKnown attacker gs attacker of
+      case postEventView board gs attacker of
         Nothing -> False
         Just view -> Filter.matches bearerContext view f
     _ -> False
@@ -1188,10 +1132,14 @@ armMatches bindings board gs bearer you cond event = case cond of
     _ -> False
   -- CR 509.3a read by a bystander: SelfBlocks' event, with the Filter over the
   -- blocker. CreatureAttacks' reading of the Filter's source: "enchanted
-  -- creature" is HasAttached IsSource (Super-Soldier Serum).
+  -- creature" is HasAttached IsSource (Super-Soldier Serum). The blocker is read
+  -- off `board` (CR 509.3f, 603.10), so a Serum CR 704.5m buried after the
+  -- declaration still enchants it: data/scenarios's
+  -- super-soldier-serum-fires-though-the-block-toll-knocks-it-off-its-host
+  -- proves it.
   TriggerCondition.CreatureBlocks f -> case event of
     GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared blocker _) ->
-      case Projection.viewWithLastKnown blocker gs blocker of
+      case postEventView board gs blocker of
         Nothing -> False
         Just view -> Filter.matches bearerContext view f
     _ -> False
@@ -1200,14 +1148,12 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- SelfBlocks above, together with the attacker eventBindings stamps under
   -- Binding.blockedCreature.
   --
-  -- The pair's Filters read both creatures from the game as it stands, which is
+  -- The pair's Filters read both creatures off `board` (admittedAt), which is
   -- rule 509.3f's "at the point blockers are declared" for
-  -- CreatureBecomesBlockedBy's reason below. viewWithLastKnown for that arm's reason
-  -- too -- an attacker already gone (CR 608.2h) is still read as it was on the
-  -- battlefield.
+  -- CreatureBecomesBlockedBy's reason below.
   TriggerCondition.CreatureBlocksCreature pair -> case event of
     GameEvent.BecameBlocking b
-      | admittedAt bearerContext gs (BecameBlocking.attacker b) (BlockPair.attacker pair),
+      | admittedAt bearerContext board gs (BecameBlocking.attacker b) (BlockPair.attacker pair),
         -- CR 509.3b's last sentence: "It won't trigger if the creature is put
         -- onto the battlefield blocking." CR 509.3d's arm below is where that
         -- same event does fire, which is the whole reason it is recorded.
@@ -1219,7 +1165,7 @@ armMatches bindings board gs bearer you cond event = case cond of
         -- puts Loyal Sentry out that way and reddens here when this guard is
         -- dropped; its -control twin DECLARES the same Sentry, where it does fire.
         BecameBlocking.producer b /= BlockProducer.PutOntoBattlefield ->
-          admittedAt bearerContext gs (BecameBlocking.blocker b) (BlockPair.blocker pair)
+          admittedAt bearerContext board gs (BecameBlocking.blocker b) (BlockPair.blocker pair)
     -- CR 509.3a's grouped event is the once-per-combat one, and matching it here
     -- would lose a blocker's second attacker.
     GameEvent.BlocksDeclared {} -> False
@@ -1251,12 +1197,11 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- before any player gets priority, so the record still holds the declaration
   -- or the effect (Combat.exchangeBlocks) that made the event.
   --
-  -- viewWithLastKnown, and the Filter context framed by the bearer, exactly as
-  -- CreatureBecomesBlockedBy's arm below does it.
+  -- Each attacker is read off `board` (`postEventView`), framed by the bearer.
   TriggerCondition.SelfBlocksOneOrMore f -> case event of
     GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared blocker _)
       | blocker == bearer ->
-          let admits attacker = maybe False (\view -> Filter.matches bearerContext view f) (Projection.viewWithLastKnown attacker gs attacker)
+          let admits attacker = maybe False (\view -> Filter.matches bearerContext view f) (postEventView board gs attacker)
               blocked =
                 fmap
                   fst
@@ -1276,7 +1221,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- instead; Parun.TriggerSpec's two-blocker case is what tells the two apart.
   TriggerCondition.CreatureBecomesBlocked f -> case event of
     GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked attacker _ _) ->
-      case Projection.viewWithLastKnown attacker gs attacker of
+      case postEventView board gs attacker of
         Nothing -> False
         Just view -> Filter.matches bearerContext view f
     -- The same declaration's other branch, and CR 509.1h makes the two exclusive
@@ -1298,18 +1243,21 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- 509.4's "never blocked" does not silence. CR 509.3b's arm above reads the
   -- producer, and that difference is the rule.
   --
-  -- The blocker's characteristics come from the game as it stands, which is rule
-  -- 509.3f's "at the point it becomes a blocking creature": CR 509.2a puts these
-  -- triggers on the stack before any player gets priority, so nothing has had a
-  -- window to change them. viewWithLastKnown, so a blocker already gone (CR
-  -- 608.2h) is still read as it was on the battlefield.
+  -- Both creatures are read off `board` (admittedAt), CR 603.10's sample, which
+  -- is rule 509.3f's "at the point it becomes a blocking creature": CR 704.5m
+  -- may bury an Aura between the declaration and the scan, and Venom watching
+  -- its host still fires (data/scenarios's
+  -- venom-fires-though-the-block-toll-knocks-it-off-the-attacking-host, and
+  -- venom-fires-though-the-block-toll-knocks-it-off-its-host for the arm
+  -- above). A creature the sample does not hold is read through CR 608.2h's
+  -- record.
   --
   -- A bystander reads it too: CR 701.54c's emblem (Parun.Engine.Ring), which is in
   -- the event at neither end, and Venom, watching its host.
   TriggerCondition.CreatureBecomesBlockedBy pair -> case event of
     GameEvent.BecameBlocking b ->
-      admittedAt bearerContext gs (BecameBlocking.attacker b) (BlockPair.attacker pair)
-        && admittedAt bearerContext gs (BecameBlocking.blocker b) (BlockPair.blocker pair)
+      admittedAt bearerContext board gs (BecameBlocking.attacker b) (BlockPair.attacker pair)
+        && admittedAt bearerContext board gs (BecameBlocking.blocker b) (BlockPair.blocker pair)
     -- The GROUPED event is CR 509.3c's, and matching it here would collapse two
     -- blockers into one trigger.
     GameEvent.AttackerBlocked {} -> False
@@ -1332,7 +1280,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- the same batch -- and a batch is one Resolve.Create's tokens, minted from one
   -- spec, which no Filter can tell apart.
   TriggerCondition.SelfBecomesBlockedByOneOrMore f ->
-    let admits blocker = maybe False (\view -> Filter.matches bearerContext view f) (Projection.viewWithLastKnown blocker gs blocker)
+    let admits blocker = maybe False (\view -> Filter.matches bearerContext view f) (postEventView board gs blocker)
      in case event of
           GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked attacker _ _)
             | attacker == bearer -> any admits (Set.toList (Map.findWithDefault Set.empty bearer (Combat.blockers (GameState.combat gs))))
@@ -1487,9 +1435,12 @@ armMatches bindings board gs bearer you cond event = case cond of
   --
   -- The event alone answers it. Reading Combat.blockers instead would answer for
   -- the board at scan time, and rule 509.1h's last sentence is what that gets
-  -- wrong: an attacker whose blockers all left combat is still blocked.
+  -- wrong: an attacker whose blockers all left combat is still blocked. The
+  -- attacker is read off `board` for that reason too: data/scenarios's
+  -- cloak-of-confusion-fires-though-the-block-toll-knocks-it-off-its-host
+  -- proves it.
   TriggerCondition.CreatureAttacksUnblocked f -> case event of
-    GameEvent.AttackerUnblocked u -> case Projection.viewWithLastKnown (AttackerUnblocked.attacker u) gs (AttackerUnblocked.attacker u) of
+    GameEvent.AttackerUnblocked u -> case postEventView board gs (AttackerUnblocked.attacker u) of
       Nothing -> False
       Just view -> Filter.matches bearerContext view f
     -- CR 509.1i's declaration events are the blocked side of the same action; an
@@ -1762,9 +1713,10 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- a permanent the Filter admits, judged off CR 603.10's board just after the
   -- event (Thoughtleech). Betrayal's "enchanted creature" is
   -- `Matching (HasAttached IsSource)`: the tapped host is still standing, so
-  -- Projection.sampledView reads the attachment link live rather than through
-  -- last known information, where AttachedPermanentLeaves has to look back because
-  -- the SBA batch that kills the host takes the link away (CR 704.5m).
+  -- Projection.sampledView reads the attachment link off the sample rather than
+  -- through last known information, where AttachedPermanentLeaves has to look
+  -- back because the SBA batch that kills the host takes the link away (CR
+  -- 704.5m).
   --
   -- CR 701.26b's untap is the same arm in the other direction: the bearer
   -- itself (Oreskos Sun Guide) or any permanent the Filter admits (Mesmeric
@@ -1781,7 +1733,7 @@ armMatches bindings board gs bearer you cond event = case cond of
           ActingPermanent.Self -> oid == bearer
           ActingPermanent.Matching f -> case Map.lookup oid board of
             Nothing -> False
-            Just candidate -> Filter.matches bearerContext (Projection.sampledView oid candidate gs) f
+            Just candidate -> Filter.matches bearerContext (Projection.sampledView board oid candidate gs) f
      in case event of
           GameEvent.BecameTapped tapped -> BecomesTapState.status watched == TapState.Tapped && watches tapped
           GameEvent.BecameUntapped untapped -> BecomesTapState.status watched == TapState.Untapped && watches untapped
@@ -2051,7 +2003,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- captured as the counter happened, and CR 109.5/603.3a fix "you" as the
   -- ability's controller.
   --
-  -- The bearer is NOT part of the match -- the PlayerDiscards posture rather than
+  -- The bearer is NOT part of the match -- the Discarder discard's posture rather than
   -- any Self- condition's -- since the bearer is a permanent and the countering is
   -- done by a spell somewhere else.
   --
@@ -2083,7 +2035,7 @@ armMatches bindings board gs bearer you cond event = case cond of
     _ -> False
   -- CR 615.13: a prevention effect was applied and prevented some damage, and the
   -- damage it prevented was addressed to a player the relation admits. CR 109.5 /
-  -- 603.3a fix "you" as the ability's controller, exactly as PlayerDiscards and
+  -- 603.3a fix "you" as the ability's controller, exactly as a Discarder discard and
   -- SpellOrAbilityCounters do.
   --
   -- The bearer is NOT part of the match: Selfless Squire is a creature watching
@@ -2454,7 +2406,7 @@ armMatches bindings board gs bearer you cond event = case cond of
           (Nothing, Nothing) -> False
           (Nothing, Just oid) -> case Map.lookup oid board of
             Nothing -> False
-            Just candidate -> Filter.matches bearerContext (Projection.sampledView oid candidate gs) (PermanentsBecomeTargeted.filter c)
+            Just candidate -> Filter.matches bearerContext (Projection.sampledView board oid candidate gs) (PermanentsBecomeTargeted.filter c)
     _ -> False
   -- The same question per targeted permanent; only Event.Trigger.batchScoped
   -- tells the two apart.
@@ -2773,7 +2725,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   TriggerCondition.AnyOf conditions -> any (\c -> matchesTriggerGiven bindings board gs bearer you c event) conditions
   -- CR 609.1: the narrowed condition, on an event a spell or ability's effect
   -- caused, that spell or ability's controller related to CR 109.5's "you" the
-  -- way PlayerDiscards relates the discarder. The controller is the one the
+  -- way a Discarder discard relates the discarder. The controller is the one the
   -- event recorded as it happened (Moved.causedBy), so a later change of
   -- control cannot reach back.
   TriggerCondition.CausedBy narrowed ->

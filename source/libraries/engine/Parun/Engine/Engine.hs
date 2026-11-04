@@ -952,13 +952,13 @@ placeBorne srcId pending = do
         TriggerCondition.SelfCast -> Just inheritedX
         _ -> Nothing
       -- CR 700.2b: a mode an earlier choice bars "can't be chosen", like an
-      -- unfillable one, so CR 603.3c removes an ability left with none.
-      --
-      -- Not implemented: reading the memory of a source that left the
-      -- battlefield after triggering (#5784).
+      -- unfillable one, so CR 603.3c removes an ability left with none. A
+      -- source gone before placement answers from its last known information
+      -- (CR 113.7a), which data/scenarios' demonic-pact-dying-before-its-trigger-is-placed-still-bars-its-chosen-mode
+      -- proves.
       remembered = case Modal.Type.memory modal of
         ModeMemory.NoMemory -> Set.empty
-        ModeMemory.ObjectLifetime -> maybe Set.empty (Map.findWithDefault Set.empty memoryKey . Object.chosenModes) (Game.lookupObject srcId gs)
+        ModeMemory.ObjectLifetime -> maybe Set.empty (Map.findWithDefault Set.empty memoryKey) (Game.liveOrLastKnown Object.chosenModes LastKnown.chosenModes srcId gs)
       -- CR 612.1: a text change rewrites the ability, not which ability it is.
       memoryKey = Projection.printedTriggeredAbility srcId gs ability
       legal = Set.difference (Target.fillableModes StackObjectKind.TriggeredAbility Nothing (Just controller) bound srcId Map.empty modal gs) remembered
