@@ -69,18 +69,18 @@ riders =
 -- The event is recorded unconditionally, CR 701.62b, carrying the cards the
 -- graveyard move left IN a graveyard -- a replacement that sends one elsewhere
 -- (Leyline of the Void) leaves it out, since it was not put there.
-manifestDread :: ObjectId -> PlayerId -> Game ()
-manifestDread source pid = do
+manifestDread :: Game () -> ObjectId -> PlayerId -> Game ()
+manifestDread settle source pid = do
   gs <- State.get
   let looked = take 2 (Game.zoneMembers Zone.Library pid gs)
   Monad.mapM_ (Event.look pid) looked
   chosen <- Game.chooseAmong (\decider asked -> Prompt.ChooseCardFromAmong decider asked source) pid looked
   Monad.forM_ chosen $ \card ->
-    Event.simultaneously (Monad.void (Event.changeZoneEntering card Zone.Battlefield LibraryPosition.defaultValue riders (Just pid)))
+    Event.simultaneously (Monad.void (Event.changeZoneEntering settle card Zone.Battlefield LibraryPosition.defaultValue riders (Just pid)))
   after <- State.get
   let stillInLibrary oid = fmap Object.zone (Game.lookupObject oid after) == Just Zone.Library
       rest = filter stillInLibrary looked
-  arrived <- if null rest then pure [] else Event.changeZonesTogether (fmap (\oid -> (oid, Zone.Graveyard)) rest)
+  arrived <- if null rest then pure [] else Event.changeZonesTogether settle (fmap (\oid -> (oid, Zone.Graveyard)) rest)
   landed <- State.get
   let inGraveyard oid = fmap Object.zone (Game.lookupObject oid landed) == Just Zone.Graveyard
       binned = Seq.fromList (concatMap (filter inGraveyard . Foldable.toList) arrived)

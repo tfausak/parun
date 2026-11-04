@@ -93,8 +93,8 @@ canForage pid gs = length (exileCandidates pid gs) >= 3 || not (null (foodCandid
 -- for the COST caller too, where the alternative would be Parun.Engine.Cost's
 -- reject-not-repair: rule 701.61a states no way to fail once canForage holds, so
 -- a payment lost to a bad answer would be a refusal the rules do not offer.
-forage :: PlayerId -> ObjectId -> Game Bool
-forage pid resolving = do
+forage :: Game () -> PlayerId -> ObjectId -> Game Bool
+forage settle pid resolving = do
   gs <- State.get
   let cards = exileCandidates pid gs
       foods = foodCandidates pid gs
@@ -118,12 +118,12 @@ forage pid resolving = do
       -- CR 406.2's move, through the Event.changeZone funnel, so each card gets a
       -- CR 400.7 incarnation and anything watching a graveyard-to-exile move sees
       -- it.
-      Monad.mapM_ (\oid -> Event.changeZone oid Zone.Exile) (Set.toAscList chosen)
+      Monad.mapM_ (\oid -> Event.changeZone settle oid Zone.Exile) (Set.toAscList chosen)
       pure True
     Just ForageMode.SacrificeFood -> do
       food <- Game.chooseAmong (\chooser asked pool -> Prompt.ChoosePermanent chooser asked resolving pool Seq.empty) pid foods
       -- CR 701.21a, through the one funnel a sacrifice goes through.
-      Monad.forM_ food (Event.sacrifice pid)
+      Monad.forM_ food (Event.sacrifice settle pid)
       pure (Maybe.isJust food)
   -- CR 701.61a's forage itself, for "whenever you forage" (Corpseberry
   -- Cultivator) to watch. HERE and not at a caller, Parun.Engine.Blight's reason:

@@ -1655,7 +1655,7 @@ banisherPriestSpec s registry =
           case mExiled >>= (\exiled -> fmap ((,) exiled) (permanentNamed "Banisher Priest" exiled)) of
             Nothing -> Spec.assertFailure s "the Priest should be on the battlefield with the Giant exiled"
             Just (exiled, priest) -> do
-              let killed = S.runPure S.identityAnswer exiled (Event.destroy Regenerability.Regenerable [priest])
+              let killed = S.runPure S.identityAnswer exiled (Event.destroy (pure ()) Regenerability.Regenerable [priest])
                   after = S.runPure S.identityAnswer killed Engine.priorityLoop
               Spec.assertEqWith s "the Giant is back on the battlefield under bob's control" (controlledNames S.bob after) [Just (named "Hill Giant")]
               Spec.assertEqWith s "and alice, who exiled it, controls only her three Plains" (controlledNames S.alice after) (List.sort (fmap (Just . named) ["Plains", "Plains", "Plains"]))
@@ -1988,7 +1988,7 @@ trumpetBlastSpec s registry = Spec.describe s "TrumpetBlast" $ do
         after = runToStep (Phase.Combat CombatStep.DeclareBlockers) attackAndCast board
     case ours of
       [attacker] -> do
-        let bounced = S.runPure S.identityAnswer after (Event.changeZone attacker Zone.Hand)
+        let bounced = S.runPure S.identityAnswer after (Event.changeZone (pure ()) attacker Zone.Hand)
             (returned, back) = S.addPermanent piker S.alice bounced
         Spec.assertEqWith s "it was a 4/1 before it left" (Projection.powerOf attacker after) (Just 4)
         Spec.assertBool s (returned /= attacker) "what came back is a different object"

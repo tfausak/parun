@@ -2972,7 +2972,7 @@ comeuppanceSpec s registry = Spec.describe s "Comeuppance (CR 615.5 / 615.13)" $
         (croc, g1) = S.addPermanent crocPrinting S.bob base
         (g2, spellId) = S.handOne comeuppance g1
         shielded = castAndResolve S.identityAnswer g2 spellId
-        gone = S.runPure S.identityAnswer shielded (Event.sacrifice S.bob croc)
+        gone = S.runPure S.identityAnswer shielded (Event.sacrifice (pure ()) S.bob croc)
         (after, _) = strikeAndSettleWith S.identityAnswer gone [DamageEvent.MkDamageEvent croc (Recipient.ToPlayer S.alice) 3 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat]
     Spec.assertBool s (not (S.onBattlefield croc gone)) "setup: the Crocodile has left the battlefield"
     Spec.assertEqWith s "bob is not dealt the 3 as if it came from a noncreature source" (S.lifeOf S.bob after) (Just 20)

@@ -224,7 +224,7 @@ spec s registry = Spec.describe s "Preparation" $ do
     aviatorId <- aliasOrFail s built "aviator"
     (_, attacked) <- S.runScriptOrFail s attackScript built S.combatGame
     Spec.assertEqWith s "the copy is there to lose" (length (prepareCopies attacked)) 1
-    let bounced = S.runPure S.identityAnswer attacked (Event.changeZone aviatorId Zone.Hand)
+    let bounced = S.runPure S.identityAnswer attacked (Event.changeZone (pure ()) aviatorId Zone.Hand)
         swept = S.runPure S.identityAnswer bounced (Sba.checkStateBasedActions S.insteadOfLoss)
     Spec.assertEqWith s "CR 704.5e: the copy has ceased to exist" (prepareCopies swept) []
     Spec.assertEqWith s "and exile is empty" (Foldable.toList (GameState.exile swept)) []

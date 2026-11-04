@@ -629,7 +629,7 @@ controlledBy pid gs =
 -- member's CR 608.2h record nor its CR 616.1 candidate list reads a board its
 -- siblings have already left.
 exileAll :: GameState -> [ObjectId] -> Game ()
-exileAll gs victims = Event.simultaneously (Monad.mapM_ (\oid -> Event.changeZoneInBatch gs oid Zone.Exile) victims)
+exileAll gs victims = Event.simultaneously (Monad.mapM_ (\oid -> Event.changeZoneInBatch (pure ()) gs oid Zone.Exile) victims)
 
 -- CR 800.4c: when an effect giving a player still in the game control of an
 -- object ends, no other effect gives control of it to a player in the game, and

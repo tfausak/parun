@@ -225,13 +225,13 @@ visitSpec s registry = Spec.describe s "Roll to visit" $ do
         (_, staged) = S.spellOnStack metamorph S.alice board
         entered = S.runPure copyAnswer staged Stack.resolveTop
         -- The original leaves, so the copy is alice's only Attraction.
-        gs = S.runPure S.identityAnswer entered (Event.changeZone original Zone.Exile)
+        gs = S.runPure S.identityAnswer entered (Event.changeZone (pure ()) original Zone.Exile)
         printedMetamorph oid = fmap Face.name (Game.faceOf oid gs) == Just (CardName.MkCardName (Text.pack "Phyrexian Metamorph"))
         copyId = Maybe.fromMaybe original (List.find printedMetamorph (Set.toList (GameState.battlefield gs)))
     Spec.assertEqWith s "CR 707.2: the copy is a Bumper Cars" (Projection.namesOf copyId gs) (Set.singleton bumperCars)
     Spec.assertEqWith s "CR 717.4: it is an Attraction, so alice rolls" (snd (visitWith [3] mine gs)) [6]
     Spec.assertBool s (bobMayDecline (fst (visitWith [3] mine gs))) "CR 109.3: a 3 visits nothing, the copy's card lighting nothing"
-    let binned = S.runPure S.identityAnswer gs (Event.changeZone copyId Zone.Graveyard)
+    let binned = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) copyId Zone.Graveyard)
     Spec.assertEqWith s "CR 717.6: the Metamorph card goes to the graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice binned)) 1
   Spec.it s "CR 717.4 a player who controls no Attraction does not roll" $ do
     piker <- S.printingOf s registry "Goblin Piker"
@@ -266,9 +266,9 @@ junkyardSpec s registry = Spec.describe s "The junkyard" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     cars <- S.printingOf s registry "Bumper Cars"
     let (gs, mine, _, attraction) = visitBoard piker (carsA cars)
-        binned = S.runPure S.identityAnswer gs (Event.changeZone attraction Zone.Graveyard)
-        exiled = S.runPure S.identityAnswer gs (Event.changeZone attraction Zone.Exile)
-        creature = S.runPure S.identityAnswer gs (Event.changeZone mine Zone.Graveyard)
+        binned = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) attraction Zone.Graveyard)
+        exiled = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) attraction Zone.Exile)
+        creature = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) mine Zone.Graveyard)
         faceUp = Set.toList (GameState.command binned)
     Spec.assertEqWith s "CR 717.6: not in the graveyard" (Game.zoneMembers Zone.Graveyard S.alice binned) []
     Spec.assertEqWith s "CR 717.6a: face up in the command zone, still lit" (fmap (`Game.lightsOf` binned) faceUp) [Set.fromList [2, 3, 6]]
@@ -279,14 +279,14 @@ junkyardSpec s registry = Spec.describe s "The junkyard" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     cars <- S.printingOf s registry "Bumper Cars"
     let (gs, _, _, attraction) = visitBoard piker (carsA cars)
-        bounced = S.runPure S.identityAnswer gs (Event.changeZone attraction Zone.Hand)
+        bounced = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) attraction Zone.Hand)
     Spec.assertEqWith s "not in hand" (Game.zoneMembers Zone.Hand S.alice bounced) []
     Spec.assertEqWith s "but in the command zone" (Set.size (GameState.command bounced)) 1
   Spec.it s "CR 717.6a a junkyard card does not function" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     cars <- S.printingOf s registry "Bumper Cars"
     let (gs, mine, _, attraction) = visitBoard piker (carsA cars)
-        binned = S.runPure S.identityAnswer gs (Event.changeZone attraction Zone.Graveyard)
+        binned = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) attraction Zone.Graveyard)
     Spec.assertEqWith s "no roll: alice controls no Attraction" (snd (visitWith [3] mine binned)) []
 
 -- CR 727.2 / 729.2a / 729.5a: a new game.
@@ -373,7 +373,7 @@ openTriggerSpec s registry = Spec.describe s "Whenever you open an Attraction" $
     cars <- S.printingOf s registry "Bumper Cars"
     let (_, g1) = S.addPermanent gamer S.alice (Setup.emptyGame S.bothPlayers)
         gs = withAttractions S.bob [carsF cars] (withAttractions S.alice [carsA cars] g1)
-        openedBy pid = S.runPure S.identityAnswer gs (Attraction.open pid >> Engine.priorityLoop)
+        openedBy pid = S.runPure S.identityAnswer gs (Attraction.open (pure ()) pid >> Engine.priorityLoop)
     Spec.assertEqWith s "alice opening grows her Gamer" (gamerPower (openedBy S.alice)) [Just 3]
     Spec.assertEqWith s "bob opening does not" (gamerPower (openedBy S.bob)) [Just 2]
     Spec.assertEqWith s "though bob's Attraction entered" (S.countOnBattlefieldByName bumperCars S.bob (openedBy S.bob)) 1

@@ -144,7 +144,7 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
     let (_, g0) = S.addPermanent restInPeace S.alice (Setup.emptyGame S.bothPlayers)
         (_, g1) = S.addPermanent restInPeace S.alice g0
         (piker, g2) = S.addPermanent pikerPrinting S.bob g1
-        after = S.runPure S.identityAnswer g2 (Event.changeZone piker Zone.Graveyard)
+        after = S.runPure S.identityAnswer g2 (Event.changeZone (pure ()) piker Zone.Graveyard)
     Spec.assertEqWith s "not in a graveyard" (length (Game.zoneMembers Zone.Graveyard S.bob after)) 0
     Spec.assertEqWith s "exactly one object in exile" (Set.size (GameState.exile after)) 1
   Spec.it s "CR 616.1 value-equal candidates elide the prompt (nothing to choose)" $ do
@@ -153,7 +153,7 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
     let (_, g0) = S.addPermanent restInPeace S.alice (Setup.emptyGame S.bothPlayers)
         (_, g1) = S.addPermanent restInPeace S.alice g0
         (piker, g2) = S.addPermanent pikerPrinting S.bob g1
-        asked = answersFor S.identityAnswer g2 (Event.changeZone piker Zone.Graveyard)
+        asked = answersFor S.identityAnswer g2 (Event.changeZone (pure ()) piker Zone.Graveyard)
     Spec.assertBool s (not (wasAskedToReplace asked)) "no ChooseReplacement was raised"
   -- The other side of Replacement.readsApplier, and the reason it exists rather
   -- than a blanket "compare the controller too". Rest in Peace's pattern is
@@ -168,8 +168,8 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
     let (_, g0) = S.addPermanent restInPeace S.alice (Setup.emptyGame S.bothPlayers)
         (_, g1) = S.addPermanent restInPeace S.bob g0
         (piker, g2) = S.addPermanent pikerPrinting S.bob g1
-        after = S.runPure S.identityAnswer g2 (Event.changeZone piker Zone.Graveyard)
-        asked = answersFor S.identityAnswer g2 (Event.changeZone piker Zone.Graveyard)
+        after = S.runPure S.identityAnswer g2 (Event.changeZone (pure ()) piker Zone.Graveyard)
+        asked = answersFor S.identityAnswer g2 (Event.changeZone (pure ()) piker Zone.Graveyard)
     Spec.assertEqWith s "the Piker was exiled, not buried" (Set.size (GameState.exile after)) 1
     Spec.assertBool s (not (wasAskedToReplace asked)) "no ChooseReplacement was raised"
   -- CR 704.3: "the game checks for any of the listed conditions for
@@ -288,7 +288,7 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
         (piker, g1) = S.addPermanent pikerPrinting S.bob g0
         -- Rest in Peace watches graveyard-bound moves only; a bounce to hand
         -- is not one, so the loop finds no candidate and the move stands.
-        after = S.runPure S.identityAnswer g1 (Event.changeZone piker Zone.Hand)
+        after = S.runPure S.identityAnswer g1 (Event.changeZone (pure ()) piker Zone.Hand)
     Spec.assertEqWith s "in bob's hand" (length (Game.zoneMembers Zone.Hand S.bob after)) 1
     Spec.assertEqWith s "nothing was exiled" (Set.size (GameState.exile after)) 0
   Spec.it s "CR 615.10 Fog prevents both attackers' damage in one batch" $ do
@@ -330,8 +330,8 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
         -- Skeletons carries CR 701.19a's shield and the Troll carries nothing
         -- but its printed text.
         armed = S.runPure S.identityAnswer g2 (Activate.activateAbility S.alice skel (theAbility drudgeSkeletons) >> Stack.resolveTop)
-        once = S.runPure S.identityAnswer armed (Event.destroy Regenerability.Regenerable [troll, skel])
-        twice = S.runPure S.identityAnswer once (Event.destroy Regenerability.Regenerable [troll, skel])
+        once = S.runPure S.identityAnswer armed (Event.destroy (pure ()) Regenerability.Regenerable [troll, skel])
+        twice = S.runPure S.identityAnswer once (Event.destroy (pure ()) Regenerability.Regenerable [troll, skel])
     Spec.assertBool s (Set.member troll (GameState.battlefield once)) "the Troll survived the first destruction"
     Spec.assertBool s (Set.member troll (GameState.battlefield twice)) "and the second -- CR 701.19b's static ability is not used up"
     Spec.assertBool s (not (Set.member skel (GameState.battlefield twice))) "while CR 701.19a's shield beside it was, so the Skeletons died to the second"
@@ -345,7 +345,7 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
     drudgeSkeletons <- S.printingOf s registry "Drudge Skeletons"
     let (skel, g1) = S.addPermanent drudgeSkeletons S.alice (S.landsInPlay swamp 1)
         shielded = S.addRegenShield skel g1
-        after = S.runPure S.identityAnswer shielded (Event.destroy Regenerability.CantBeRegenerated [skel])
+        after = S.runPure S.identityAnswer shielded (Event.destroy (pure ()) Regenerability.CantBeRegenerated [skel])
     Spec.assertBool s (not (Set.member skel (GameState.battlefield after))) "it died anyway"
     -- CR 701.19c again, and the sharp half: an unapplied shield is not a
     -- spent one. Nothing consumed it, because it was never chosen.
@@ -359,7 +359,7 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
     drudgeSkeletons <- S.printingOf s registry "Drudge Skeletons"
     let (skel, g1) = S.addPermanent drudgeSkeletons S.alice (S.landsInPlay swamp 1)
         shielded = S.addRegenShield skel g1
-        after = S.runPure S.identityAnswer shielded (Event.destroy Regenerability.Regenerable [skel])
+        after = S.runPure S.identityAnswer shielded (Event.destroy (pure ()) Regenerability.Regenerable [skel])
     Spec.assertBool s (Set.member skel (GameState.battlefield after)) "it survived"
     Spec.assertEqWith s "and this time the shield was spent" (GameState.replacements after) []
   -- The twin of the whole-card test: the SAME creature and the SAME shield,
@@ -383,7 +383,7 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
         (_, g1) = S.addPermanent restInPeace S.bob base
         (skel, g2) = S.addPermanent drudgeSkeletons S.alice g1
         shielded = S.addRegenShield skel g2
-        after = S.runPure S.identityAnswer shielded (Event.destroy Regenerability.Regenerable [skel])
+        after = S.runPure S.identityAnswer shielded (Event.destroy (pure ()) Regenerability.Regenerable [skel])
     Spec.assertBool s (Set.member skel (GameState.battlefield after)) "still on the battlefield"
     Spec.assertEqWith s "nothing was exiled -- the put-into-graveyard never happened" (Set.size (GameState.exile after)) 0
     Spec.assertEqWith s "and nothing reached a graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice after)) 0
@@ -392,7 +392,7 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
     let base = Setup.emptyGame S.bothPlayers
         (myr, g1) = S.addPermanent darksteelMyr S.alice base
         shielded = S.addRegenShield myr g1
-        after = S.runPure S.identityAnswer shielded (Event.destroy Regenerability.Regenerable [myr])
+        after = S.runPure S.identityAnswer shielded (Event.destroy (pure ()) Regenerability.Regenerable [myr])
     Spec.assertBool s (Set.member myr (GameState.battlefield after)) "the indestructible creature survives"
     Spec.assertEqWith s "the shield is intact" (length (GameState.replacements after)) 1
   -- CR 305.7: a land whose subtype is set to a basic type "loses all
@@ -566,7 +566,7 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
         (mine, g2) = S.addPermanent pikerPrinting S.alice g1
         (theirs, g3) = S.addPermanent pikerPrinting S.bob g2
         g4 = S.addReplacement (leylineShape src (fst (Game.freshTimestamp g3))) g3
-        after = S.runPure S.identityAnswer g4 (Event.changeZone mine Zone.Graveyard >> Event.changeZone theirs Zone.Graveyard)
+        after = S.runPure S.identityAnswer g4 (Event.changeZone (pure ()) mine Zone.Graveyard >> Event.changeZone (pure ()) theirs Zone.Graveyard)
     Spec.assertEqWith s "alice's own card reaches her graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice after)) 1
     Spec.assertEqWith s "bob's does not" (length (Game.zoneMembers Zone.Graveyard S.bob after)) 0
     Spec.assertEqWith s "it was exiled instead" (length (Game.zoneMembers Zone.Exile S.bob after)) 1
@@ -582,7 +582,7 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
         stolen =
           S.runPure S.identityAnswer g3 $
             Resolve.applyEffect S.noSource S.noSource S.bob (Map.singleton slot (Set.singleton (Recipient.ToObject oid))) (Map.singleton slot (Set.singleton (Recipient.ToObject oid))) (Effect.GainControl (GainControl.MkGainControl Duration.Indefinite (ObjectRef.InSlot slot) (PlayerRef.Relative PlayerRelation.You)))
-        after = S.runPure S.identityAnswer stolen (Event.changeZone oid Zone.Graveyard)
+        after = S.runPure S.identityAnswer stolen (Event.changeZone (pure ()) oid Zone.Graveyard)
     Spec.assertEqWith s "bob really did take control of it" (Projection.controllerOf oid stolen) (Just S.bob)
     Spec.assertEqWith s "it reaches its OWNER's graveyard, unexiled" (length (Game.zoneMembers Zone.Graveyard S.alice after)) 1
     Spec.assertEqWith s "and nothing was exiled" (length (Game.zoneMembers Zone.Exile S.alice after)) 0
@@ -606,8 +606,8 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
               ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing Nothing Acquisition.Own
             }
         g3 = S.addReplacement active g2
-        asked = answersFor S.identityAnswer g3 (Event.runEntry Nothing Nothing Set.empty piker)
-        after = S.runPure S.identityAnswer g3 (Event.runEntry Nothing Nothing Set.empty piker)
+        asked = answersFor S.identityAnswer g3 (Event.runEntry (pure ()) Nothing Nothing Set.empty piker)
+        after = S.runPure S.identityAnswer g3 (Event.runEntry (pure ()) Nothing Nothing Set.empty piker)
     Spec.assertBool s (not (wasAskedForEntryOption asked)) "no ChooseEntryOption was raised"
     Spec.assertEqWith s "the sole option applied anyway" (Projection.powerOf piker after) (Just 3)
   -- #79: resolveDestruction answers with the SETTLED object, not a Bool. The
@@ -705,7 +705,7 @@ degavolverSpec s registry = Spec.describe s "Degavolver" $ do
     case degavolversOut entered of
       [permId] -> do
         let shielded = S.runPure S.identityAnswer entered (Foldable.for_ (activatedOf permId entered) $ \ability -> Activate.activateAbility S.alice permId ability >> Stack.resolveTop)
-            destroyed = S.settleSba (S.runPure S.identityAnswer shielded (Event.destroy Regenerability.Regenerable [permId]))
+            destroyed = S.settleSba (S.runPure S.identityAnswer shielded (Event.destroy (pure ()) Regenerability.Regenerable [permId]))
         Spec.assertBool s (Set.member permId (GameState.battlefield destroyed)) "CR 701.19a the granted ability's shield regenerated it"
         Spec.assertEqWith s "CR 119.4 paying 3 life for it" (S.lifeOf S.alice destroyed) (Just 17)
         Spec.assertEqWith s "and the counter half placed two +1/+1 counters" (S.powerToughnessOf permId entered) (Just (3, 3))
@@ -913,7 +913,7 @@ voltaicSurgeSpec s registry =
         ([first_, second], doomed : _) -> do
           let armed = castAndResolve atBob gs surgeId
               doubled = castAndResolve atBob armed first_
-              shrunk = S.runPure S.identityAnswer doubled (Event.destroy Regenerability.Regenerable [doomed])
+              shrunk = S.runPure S.identityAnswer doubled (Event.destroy (pure ()) Regenerability.Regenerable [doomed])
               after = castAndResolve atBob shrunk second
           Spec.assertEqWith s "the first Firebolt is doubled while alice controls three artifacts" (S.lifeOf S.bob doubled) (Just 16)
           Spec.assertEqWith s "the second lands at its printed 2 once one artifact is gone" (S.lifeOf S.bob after) (Just 14)
@@ -1304,7 +1304,7 @@ fixedEntryCostSpec s registry =
       forest <- S.printingOf s registry "Forest"
       lake <- S.printingOf s registry "Lake of the Dead"
       let (lakeId, gs) = S.addHandCard lake S.alice (S.landsInPlay forest 1)
-          after = S.runPure S.identityAnswer gs {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice} (Cast.playLand False S.alice lakeId Nothing)
+          after = S.runPure S.identityAnswer gs {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice} (Cast.playLand (pure ()) False S.alice lakeId Nothing)
       Spec.assertEqWith s "no Lake of the Dead entered" (onBattlefieldNamed "Lake of the Dead" after) 0
       Spec.assertEqWith s "it is in alice's graveyard" (graveyardNames S.alice after) [CardName.MkCardName (Text.pack "Lake of the Dead")]
       Spec.assertEqWith s "and the Forest is untouched" (onBattlefieldNamed "Forest" after) 1

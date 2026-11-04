@@ -255,7 +255,7 @@ spec s registry = Spec.describe s "Prototype" $ do
     case assemblerOn assembler resolved of
       Nothing -> Spec.assertFailure s "the prototyped spell did not resolve onto the battlefield"
       Just oid -> do
-        let dead = S.settleSba (S.runPure prototyping resolved (Event.destroy Regenerability.Regenerable [oid]))
+        let dead = S.settleSba (S.runPure prototyping resolved (Event.destroy (pure ()) Regenerability.Regenerable [oid]))
             inGraveyard = Game.zoneMembers Zone.Graveyard S.alice dead
         Spec.assertEqWith
           s

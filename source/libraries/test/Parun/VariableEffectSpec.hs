@@ -150,7 +150,7 @@ multiTargetSpec s registry = Spec.describe s "MultiTarget" $ do
         -- The trigger is PLACED (CR 603.3, targets announced) and then one of them
         -- leaves, so CR 608.2b has something to re-validate when it resolves.
         placed = S.runPure answer gs Engine.settleForPriority
-        gone = S.runPure answer placed (Event.changeZone wallId Zone.Graveyard)
+        gone = S.runPure answer placed (Event.changeZone (pure ()) wallId Zone.Graveyard)
         after = S.runPure answer gone Stack.resolveTop
     Spec.assertEqWith s "the surviving target took its counter" (plusCountersOn pikerId after) (Just 1)
     Spec.assertBool s (not (Set.member wallId (GameState.battlefield after))) "and the other one is gone"

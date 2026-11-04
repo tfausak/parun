@@ -1017,13 +1017,13 @@ checkOnce instead boards = do
   -- from the board the pass began in, so an animated Rest in Peace this pass is
   -- itself burying still exiles the cards the rest of the batch would put into
   -- graveyards. See Parun.Engine.Replacement's applyReplacementsIn.
-  Monad.mapM_ (\oid -> Event.changeZoneInBatch gs oid Zone.Graveyard) buried
+  Monad.mapM_ (\oid -> Event.changeZoneInBatch (pure ()) gs oid Zone.Graveyard) buried
   -- CR 903.9a's ACTION half: "its owner may put it into the command zone". A real
   -- zone change (CR 400.7 mints a fresh incarnation), so it goes through the same
   -- batch funnel as the buries above rather than editing the zone sets -- a
   -- commander leaving a graveyard is a zone change like any other, and anything
   -- watching for one must see it.
-  Monad.mapM_ (\oid -> Event.changeZoneInBatch gs oid Zone.Command) returningCommanders
+  Monad.mapM_ (\oid -> Event.changeZoneInBatch (pure ()) gs oid Zone.Command) returningCommanders
   -- CR 704.5n / 704.5p: the Equipment does NOT follow its creature -- it detaches
   -- and stays. Not a zone change, so unlike the Aura above it does not funnel
   -- through Parun.Engine.Event's zone-change road: no Moved event and no
@@ -1052,7 +1052,7 @@ checkOnce instead boards = do
   -- CR 704.5g/h: the destructions settled above go to their graveyards, with
   -- the put-into-graveyard batch's board for CR 704.3's reason. A member Lich's
   -- Mirror's reset took is gone, and the move finds nothing (CR 614.7).
-  Monad.mapM_ (\oid -> Event.changeZoneInBatch gs oid Zone.Graveyard) standing
+  Monad.mapM_ (\oid -> Event.changeZoneInBatch (pure ()) gs oid Zone.Graveyard) standing
   -- CR 704.5s / 714.4: the Saga's controller SACRIFICES it. Neither a
   -- put-into-graveyard nor a destruction, so it joins neither batch above -- CR
   -- 701.21a is its own game action, ungated by indestructible and offering
@@ -1069,7 +1069,7 @@ checkOnce instead boards = do
   -- The funnel's own existence check stays live, which is what drops a Saga some
   -- other action this pass already moved (CR 614.7's shape, destroyInBatch's third
   -- reader).
-  Event.sacrificeInBatch gs told
+  Event.sacrificeInBatch (pure ()) gs told
   -- CR 104.2a/800.4a: the losers whose loss stood leave together (CR 704.3).
   -- Departure.leaveAll is monadic for CR 800.4a's fourth clause, which is why
   -- this is a statement rather than another binding in the `let`.

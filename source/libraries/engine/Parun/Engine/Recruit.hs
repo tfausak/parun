@@ -178,11 +178,11 @@ recruit settle pid = do
           filler = filter (\c -> List.notElem c valid) offered
       pure (take 1 (valid <> filler))
   cause <- State.gets Event.resolvingDiscardCause
-  moved <- fmap (concatMap Foldable.toList) (Monad.mapM (Event.discardReturning cause pid) chosen)
+  moved <- fmap (concatMap Foldable.toList) (Monad.mapM (Event.discardReturning settle cause pid) chosen)
   after <- State.get
   let nonland c = not (Set.member CardType.Land (Filter.cardTypes (Projection.viewOfObject c after)))
   -- CR 701.70a's second sentence: one token, and only where a nonland card was
   -- discarded this way. A hand that held only lands, or no cards at all, creates
   -- nothing.
   Monad.when (any nonland moved) $
-    Monad.void (Event.createTokens pid soldierToken Nothing 1 TapState.Untapped Map.empty Nothing Set.empty)
+    Monad.void (Event.createTokens settle pid soldierToken Nothing 1 TapState.Untapped Map.empty Nothing Set.empty)

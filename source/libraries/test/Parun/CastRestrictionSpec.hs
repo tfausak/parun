@@ -345,7 +345,7 @@ flashSpec s registry = Spec.describe s "Flash" $ do
     forest <- S.printingOf s registry "Forest"
     pouncingCheetah <- S.printingOf s registry "Pouncing Cheetah"
     let (gs, cheetahId) = S.handOne pouncingCheetah (S.landsInPlay forest 4)
-        buried = S.runPure S.identityAnswer gs (Event.changeZone cheetahId Zone.Graveyard)
+        buried = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) cheetahId Zone.Graveyard)
     Spec.assertBool s (S.castable S.alice cheetahId gs) "castable from the hand"
     Spec.assertEqWith s "and nothing castable once it is in the graveyard" (Cast.castableSpells S.alice buried) []
   -- Cast.instantSpeed reads the CR 613 projection, and this is the case that says
@@ -1077,7 +1077,7 @@ victorManchaSpec s registry = Spec.describe s "VictorMancha" $ do
     hero <- S.printingOf s registry "Benalish Hero"
     let (_, victors, placed) = victorTriggered plains victor hero
         after = S.runPure S.identityAnswer placed Stack.resolveTop
-        dead = S.runPure S.identityAnswer after (Event.destroy Regenerability.Regenerable victors)
+        dead = S.runPure S.identityAnswer after (Event.destroy (pure ()) Regenerability.Regenerable victors)
         swept = S.runPure S.identityAnswer dead Engine.settleForPriority
     case Game.zoneMembers Zone.Exile S.alice after of
       [exiledId] -> do
@@ -1104,7 +1104,7 @@ victorManchaSpec s registry = Spec.describe s "VictorMancha" $ do
     victor <- S.printingOf s registry "Victor Mancha, Runaway"
     hero <- S.printingOf s registry "Benalish Hero"
     let (_, victors, placed) = victorTriggered plains victor hero
-        dead = S.runPure S.identityAnswer placed (Event.destroy Regenerability.Regenerable victors)
+        dead = S.runPure S.identityAnswer placed (Event.destroy (pure ()) Regenerability.Regenerable victors)
         after = S.runPure S.identityAnswer dead Stack.resolveTop
     Spec.assertBool s (not (null (GameState.stack placed))) "the trigger really was on the stack"
     Spec.assertEqWith s "Victor died before it resolved" (namedOnBattlefield victorName after) []
@@ -1162,7 +1162,7 @@ victorManchaSpec s registry = Spec.describe s "VictorMancha" $ do
     let (_, victors, placed) = victorTriggered plains victor swamp
         resolved = S.runPure S.identityAnswer placed Stack.resolveTop
         (herMountain, after) = S.addHandCard mountain S.alice (inHerMainPhase resolved)
-        dead = S.runPure S.identityAnswer after (Event.destroy Regenerability.Regenerable victors)
+        dead = S.runPure S.identityAnswer after (Event.destroy (pure ()) Regenerability.Regenerable victors)
         swept = S.runPure S.identityAnswer dead Engine.settleForPriority
     case Game.zoneMembers Zone.Exile S.alice after of
       [exiledId] -> do

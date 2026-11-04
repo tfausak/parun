@@ -1739,7 +1739,7 @@ spec s registry = Spec.describe s "Sticker" $ do
       (Just hostId, melded_) -> do
         let stickered = Sticker.put S.alice hostId (aliceSticker 1 StickerKind.Art 0) Nothing melded_
             idOf card = Map.lookup card (GameState.printingIds stickered)
-            dies keep = State.runState (Engine.runGame (keeping (idOf keep) S.identityAnswer) stickered (Event.destroy Regenerability.Regenerable [hostId])) 0
+            dies keep = State.runState (Engine.runGame (keeping (idOf keep) S.identityAnswer) stickered (Event.destroy (pure ()) Regenerability.Regenerable [hostId])) 0
             ((_, g), askedKeeper) = dies rats
             ((_, g'), _) = dies scavengers
             kindsOf card board = concatMap (\oid -> stickerKindsOn oid board) (namedIn Zone.Graveyard card board)
@@ -1778,7 +1778,7 @@ spec s registry = Spec.describe s "Sticker" $ do
           Prompt.ChooseCost _ _ _ candidates -> mutateKicked candidates
           _ -> MutateSpec.mutatingAt MutateSide.Over bearsId p
         merged = S.runPure answer board (S.cast S.alice card >> drain)
-        ((_, g), askedKeeper) = State.runState (Engine.runGame (keeping (Map.lookup bears (GameState.printingIds merged)) S.identityAnswer) merged (Event.destroy Regenerability.Regenerable [bearsId])) 0
+        ((_, g), askedKeeper) = State.runState (Engine.runGame (keeping (Map.lookup bears (GameState.printingIds merged)) S.identityAnswer) merged (Event.destroy (pure ()) Regenerability.Regenerable [bearsId])) 0
         kindsOf c = concatMap (\oid -> stickerKindsOn oid g) (namedIn Zone.Graveyard c g)
     Spec.assertEqWith s "CR 123.5c the Bears card keeps the P/T sticker, the Cubwarden card has none" (kindsOf bears, kindsOf cubwarden) ([StickerKind.PowerToughness], [])
     Spec.assertEqWith s "alice was asked" (askedKeeper > 0) True

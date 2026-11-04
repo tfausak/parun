@@ -931,7 +931,7 @@ planeswalkSpec s registry = Spec.describe s "CR 901.11" $ do
     board <- planarBoard s registry ["Agyrem", "Tazeem"]
     let (lionsId, b1) = S.addPermanent lions S.bob (inMain S.alice board)
         (bearId, stocked) = S.addPermanent bears S.alice b1
-        died = S.runPure S.identityAnswer stocked (Event.simultaneously (Event.changeZone lionsId Zone.Graveyard >> Event.changeZone bearId Zone.Graveyard) >> Engine.priorityLoop)
+        died = S.runPure S.identityAnswer stocked (Event.simultaneously (Event.changeZone (pure ()) lionsId Zone.Graveyard >> Event.changeZone (pure ()) bearId Zone.Graveyard) >> Engine.priorityLoop)
         ended = endStep S.alice died
     Spec.assertEqWith s "both wait in their owners' graveyards until the end step" (zoneNames Zone.Graveyard S.bob died, zoneNames Zone.Graveyard S.alice died) ([cardName "Savannah Lions"], [cardName "Grizzly Bears"])
     Spec.assertEqWith s "CR 603.7 the white Savannah Lions returns under bob's control" (controllersNamed "Savannah Lions" ended) [Just S.bob]

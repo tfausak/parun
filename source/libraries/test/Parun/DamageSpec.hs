@@ -238,7 +238,7 @@ creatureSbaSpec s registry =
       let base = Setup.emptyGame S.bothPlayers
           goblinCard = Printing.card piker
           (tokId, gs) = S.addToken goblinCard S.alice base
-          inGrave = S.runPure S.identityAnswer gs (Event.changeZone tokId Zone.Graveyard)
+          inGrave = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) tokId Zone.Graveyard)
           -- The changeZone minted a new incarnation; find it in the graveyard.
           settled = S.settleSba inGrave
       Spec.assertEqWith s "before the SBA, a token sits in the graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice inGrave)) 1
@@ -304,7 +304,7 @@ damageSpec s registry =
       piker <- S.printingOf s registry "Goblin Piker"
       let (oid, gs) = S.addPermanent piker S.alice (Setup.emptyGame S.bothPlayers)
           marked = S.markDamage oid 1 gs
-          after = S.runPure S.identityAnswer marked (Event.changeZone oid Zone.Graveyard)
+          after = S.runPure S.identityAnswer marked (Event.changeZone (pure ()) oid Zone.Graveyard)
       case Game.zoneMembers Zone.Graveyard S.alice after of
         [] -> Spec.assertFailure s "expected a card in the graveyard"
         new : _ -> Spec.assertEqWith s "fresh object, no damage" (S.damageOf new after) (Just 0)
@@ -1410,14 +1410,14 @@ worldRuleSpec s registry =
     Spec.it s "CR 400.7 a world permanent that leaves and returns is world only since it returned" $ do
       (crossroads, livingPlane) <- worldPair s registry
       let (first, g0) = S.addPermanent crossroads S.alice (Setup.emptyGame S.bothPlayers)
-          (inHand, g1) = S.runPureWith S.identityAnswer g0 (Engine.settleForPriority >> Event.changeZoneReturning first Zone.Hand)
+          (inHand, g1) = S.runPureWith S.identityAnswer g0 (Engine.settleForPriority >> Event.changeZoneReturning (pure ()) first Zone.Hand)
           (plane, g2) = S.addPermanent livingPlane S.alice g1
       case Foldable.toList inHand of
         [] -> Spec.assertFailure s "the Crossroads should have reached alice's hand"
         held : _ -> do
           -- The Living Plane is stamped on this settle, before the Crossroads is
           -- back on the battlefield to be stamped after it.
-          let (back, g3) = S.runPureWith S.identityAnswer g2 (Engine.settleForPriority >> Event.changeZoneReturning held Zone.Battlefield)
+          let (back, g3) = S.runPureWith S.identityAnswer g2 (Engine.settleForPriority >> Event.changeZoneReturning (pure ()) held Zone.Battlefield)
               after = S.runPure S.identityAnswer g3 Engine.settleForPriority
           case Foldable.toList back of
             [] -> Spec.assertFailure s "the Crossroads should have returned to the battlefield"
@@ -1881,7 +1881,7 @@ killBlockerMidCombat victim answer gs =
   S.runPure answer gs $ do
     Combat.declareAttackers S.manaPerformer S.alice
     Combat.declareBlockers S.manaPerformer
-    Event.destroy Regenerability.Regenerable [victim]
+    Event.destroy (pure ()) Regenerability.Regenerable [victim]
     Monad.void (Damage.dealCombatDamage (pure ()))
 
 -- Every DamageDealt event in the history addressed to `oid`, however much.
@@ -2032,7 +2032,7 @@ killAttackerMidCombat victim gs =
   S.runPure S.aggressiveAnswer gs $ do
     Combat.declareAttackers S.manaPerformer S.alice
     Combat.declareBlockers S.manaPerformer
-    Event.destroy Regenerability.Regenerable [victim]
+    Event.destroy (pure ()) Regenerability.Regenerable [victim]
     Monad.void (Damage.dealCombatDamage (pure ()))
 
 departedAttackerSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()

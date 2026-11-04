@@ -328,7 +328,7 @@ offerFor counts pid gs =
 takeMulligan :: Map.Map PlayerId Numeric.Natural.Natural -> PlayerId -> Game (Map.Map PlayerId Numeric.Natural.Natural)
 takeMulligan counts pid = do
   handIds <- State.gets (Game.zoneMembers Zone.Hand pid)
-  Monad.forM_ handIds (\oid -> Event.changeZone oid Zone.Library)
+  Monad.forM_ handIds (\oid -> Event.changeZone (pure ()) oid Zone.Library)
   Event.shuffleLibrary pid
   handSize <- State.gets (startingHandSize pid)
   Monad.replicateM_ (Natural.toIntSaturating handSize) (Event.drawCard (pure ()) pid)
@@ -358,5 +358,5 @@ takeMulligan counts pid = do
       -- hand of 0 or 1, there is exactly one possible outcome; where the rules
       -- leave nothing to ask, don't prompt -- bottom whatever `n` names.
         pure (List.genericTake n newHand)
-  Monad.forM_ bottomChosen (\oid -> Event.changeZone oid Zone.Library)
+  Monad.forM_ bottomChosen (\oid -> Event.changeZone (pure ()) oid Zone.Library)
   pure (Map.insert pid count counts)

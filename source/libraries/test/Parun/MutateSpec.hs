@@ -797,7 +797,7 @@ spec s registry = Spec.describe s "Mutate" $ do
         let (board, spellId) = S.handOne cubwarden (S.landsFor plains S.alice 4 melded)
             over = merging MutateSide.Over township board spellId
             under = merging MutateSide.Under township board spellId
-            dead = S.runPure S.identityAnswer under (Event.destroy Regenerability.Regenerable [township] >> Engine.settleForPriority)
+            dead = S.runPure S.identityAnswer under (Event.destroy (pure ()) Regenerability.Regenerable [township] >> Engine.settleForPriority)
         Spec.assertEqWith s "CR 730.2a mutating over the melded permanent, the box is Cubwarden's" (S.powerToughnessOf township over) (Just (3, 5))
         Spec.assertBool s (Projection.hasKeyword Keyword.Lifelink township under) "CR 702.140e mutating under, lifelink comes up from the component below"
         Spec.assertEqWith s "CR 712.8g while the box stays the combined back face's, not either meld card's" (S.powerToughnessOf township under) (Just (7, 4))
@@ -866,7 +866,7 @@ spec s registry = Spec.describe s "Mutate" $ do
         -- CR 730.3's departure over the same permanent, which is where the copy
         -- component's KIND is read a second time: the two cards are put into the
         -- graveyard and CR 704.5e removes the copy there.
-        dead = S.runPure S.identityAnswer after (Event.destroy Regenerability.Regenerable [host] >> Engine.settleForPriority)
+        dead = S.runPure S.identityAnswer after (Event.destroy (pure ()) Regenerability.Regenerable [host] >> Engine.settleForPriority)
     Spec.assertEqWith
       s
       "CR 730.2 the copy represents the merged permanent as a copy, between the card that merged after it and the creature underneath"
@@ -1133,7 +1133,7 @@ spec s registry = Spec.describe s "Mutate" $ do
               (asMergeOfEveryKind oid pid base)
                 { GameState.players = Map.adjust (\p -> p {Player.commander = Set.fromList (Maybe.maybeToList (Game.lookupObject oid base >>= Object.identity))}) S.alice (GameState.players (asMergeOfEveryKind oid pid base))
                 }
-            after = snd (S.runPureWith returningCommander board (Event.changeZoneReturning oid Zone.Hand))
+            after = snd (S.runPureWith returningCommander board (Event.changeZoneReturning (pure ()) oid Zone.Hand))
         Spec.assertEqWith
           s
           "CR 903.9c one card goes to the command zone, and the token and copy components interned under the same printing do not follow it"
@@ -1160,7 +1160,7 @@ spec s registry = Spec.describe s "Mutate" $ do
         cat = catId catBoard
         (secondBoard, secondSpell) = S.handOne cubwarden catBoard
         merged = merging MutateSide.Over cat secondBoard secondSpell
-        dead = S.runPure S.identityAnswer merged (Event.destroy Regenerability.Regenerable [cat] >> Engine.settleForPriority)
+        dead = S.runPure S.identityAnswer merged (Event.destroy (pure ()) Regenerability.Regenerable [cat] >> Engine.settleForPriority)
     Spec.assertBool s (notElem (CardName.MkCardName (Text.pack "Cat Token")) (graveyardNames dead)) "CR 111.7 the token component does not stay in the graveyard"
     Spec.assertBool s (elem (CardName.MkCardName (Text.pack "Cubwarden")) (graveyardNames dead)) "CR 730.3 while the card component is put there"
     Spec.assertEqWith s "CR 730.3 and the merged permanent itself is gone" (Game.lookupObject cat dead) Nothing
@@ -1188,7 +1188,7 @@ spec s registry = Spec.describe s "Mutate" $ do
         aimed p = case p of
           Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter (\r -> Recipient.objectOf r == Just victim || r == Recipient.ToPlayer S.bob) . snd) sets
           _ -> S.identityAnswer p
-        dies oid gs = S.runPure aimed gs (Event.destroy Regenerability.Regenerable [oid] >> Engine.settleForPriority >> Stack.resolveTop >> Engine.settleForPriority)
+        dies oid gs = S.runPure aimed gs (Event.destroy (pure ()) Regenerability.Regenerable [oid] >> Engine.settleForPriority >> Stack.resolveTop >> Engine.settleForPriority)
         exiled = dies host merged
         drained = dies victim exiled
         exileNames gs = List.sort (Maybe.mapMaybe (\oid -> fmap S.nameOf (Game.cardOf oid gs)) (Set.toList (GameState.exile gs)))
@@ -1229,7 +1229,7 @@ spec s registry = Spec.describe s "Mutate" $ do
           S.runPure
             (arrangingAt order)
             merged
-            (Event.destroy Regenerability.Regenerable [host] >> Engine.settleForPriority >> Stack.resolveTop >> Engine.settleForPriority)
+            (Event.destroy (pure ()) Regenerability.Regenerable [host] >> Engine.settleForPriority >> Stack.resolveTop >> Engine.settleForPriority)
     Monad.forM_ [[0, 1], [1, 0]] $ \order -> do
       let after = died order
       Spec.assertBool s (elem avatarName (libraryNames after)) "CR 603.6c the Avatar component's own trigger shuffled it into its owner's library"

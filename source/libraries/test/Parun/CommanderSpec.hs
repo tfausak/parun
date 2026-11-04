@@ -217,8 +217,8 @@ designationSpec s registry = Spec.describe s "Designation" $ do
     let deck = Deck.MkDeck {Deck.cards = Map.fromList [(cid, 1), (mountain, 3)], Deck.commander = Set.singleton cid, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.sideDecks = Map.empty, Deck.stickerSheets = Seq.empty}
         built = S.runPure S.identityAnswer (Setup.emptyGame S.bothPlayers) (Setup.createDeck S.alice deck)
         cidsIn ids gs = filter (\oid -> fmap S.nameOf (Game.cardOf oid gs) == Just (S.printingName cid)) ids
-        intoPlay' oid gs = S.runPureWith S.identityAnswer gs (Event.changeZoneReturning oid Zone.Battlefield)
-        killed arrived gs = S.runPure reclaiming gs (Event.destroy Regenerability.Regenerable (Foldable.toList arrived) >> Engine.settleForPriority)
+        intoPlay' oid gs = S.runPureWith S.identityAnswer gs (Event.changeZoneReturning (pure ()) oid Zone.Battlefield)
+        killed arrived gs = S.runPure reclaiming gs (Event.destroy (pure ()) Regenerability.Regenerable (Foldable.toList arrived) >> Engine.settleForPriority)
     case (cidsIn (Game.zoneMembers Zone.Library S.alice built) built, inCommandZoneNamed cid built) of
       ([second], [commander]) -> do
         let (secondArrived, secondInPlay) = intoPlay' second built
@@ -244,7 +244,7 @@ designationSpec s registry = Spec.describe s "Designation" $ do
         built = S.runPure S.identityAnswer (Setup.emptyGame S.bothPlayers) (Setup.createDeck S.alice deck)
         named gs = filter (\oid -> fmap S.nameOf (Game.cardOf oid gs) == Just (S.printingName cid))
         cids = named built (Game.zoneMembers Zone.Library S.alice built <> inCommandZone built)
-        inPlay = List.foldl' (\g oid -> S.runPure S.identityAnswer g (Event.changeZone oid Zone.Graveyard)) built cids
+        inPlay = List.foldl' (\g oid -> S.runPure S.identityAnswer g (Event.changeZone (pure ()) oid Zone.Graveyard)) built cids
         alike = Interchangeable.objects (Projection.projectAll inPlay) inPlay
     case List.partition (`Commander.isCommander` inPlay) (named inPlay (Game.zoneMembers Zone.Graveyard S.alice inPlay)) of
       ([commander], [first, second]) -> do
@@ -399,7 +399,7 @@ designationSpec s registry = Spec.describe s "Designation" $ do
         unstated = S.runPure S.identityAnswer (commanderBoard mountain walls 0) (Setup.createDeck S.bob (deckFor anafenza))
         binned base =
           let (pikerId, board) = S.addPermanent piker S.alice base
-           in S.runPure S.identityAnswer board (Event.changeZone pikerId Zone.Graveyard)
+           in S.runPure S.identityAnswer board (Event.changeZone (pure ()) pikerId Zone.Graveyard)
     Spec.assertEqWith s "CR 113.6b the Warden's row states this zone and functions from it, so alice's creature is in her library" (length (Game.zoneMembers Zone.Library S.alice (binned stating))) 1
     Spec.assertEqWith s "and the graveyard the move aimed at is empty" (length (Game.zoneMembers Zone.Graveyard S.alice (binned stating))) 0
     Spec.assertEqWith s "CR 113.6p is still the other limb: bob's Anafenza states no zone, so alice's creature reaches her graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice (binned unstated))) 1
@@ -523,7 +523,7 @@ castAndReclaim printing oid gs =
   let resolved = S.runPure reclaiming (S.runPure reclaiming gs (S.cast S.alice oid)) Stack.resolveTop
       onBattlefield =
         filter (\o -> fmap S.nameOf (Game.cardOf o resolved) == Just (S.nameOf (Printing.card printing))) (Set.toAscList (GameState.battlefield resolved))
-      binned = List.foldl' (\g o -> S.runPure reclaiming g (Event.changeZone o Zone.Graveyard)) resolved onBattlefield
+      binned = List.foldl' (\g o -> S.runPure reclaiming g (Event.changeZone (pure ()) o Zone.Graveyard)) resolved onBattlefield
    in S.runPure reclaiming binned Engine.settleForPriority
 
 -- CR 903.8: "each previous time the player casting it has cast IT". alice and
@@ -1100,7 +1100,7 @@ ninjaIn s registry name zone = do
   printing <- S.printingOf s registry name
   board <- ninjutsuAttack s registry
   let (inHand, g0) = S.addHandCard printing S.alice board
-      moved = if zone == Zone.Hand then g0 else S.runPure S.identityAnswer g0 (Event.changeZone inHand zone)
+      moved = if zone == Zone.Hand then g0 else S.runPure S.identityAnswer g0 (Event.changeZone (pure ()) inHand zone)
       declared = declaredAttack moved
   case [oid | oid <- Set.toList (Map.keysSet (GameState.objects declared)), fmap Object.zone (Game.lookupObject oid declared) == Just zone, fmap S.nameOf (Game.cardOf oid declared) == Just (S.nameOf (Printing.card printing))] of
     [oid] -> pure (oid, declared)
@@ -1216,7 +1216,7 @@ designating seats gs0 =
 intoPlay :: PlayerId.PlayerId -> GameState.GameState -> GameState.GameState
 intoPlay pid gs =
   let mine = filter (\oid -> fmap Object.owner (Game.lookupObject oid gs) == Just pid) (inCommandZone gs)
-   in List.foldl' (\g oid -> S.runPure S.identityAnswer g (Event.changeZone oid Zone.Battlefield)) gs mine
+   in List.foldl' (\g oid -> S.runPure S.identityAnswer g (Event.changeZone (pure ()) oid Zone.Battlefield)) gs mine
 
 -- alice's commander on the battlefield, bob's still in the command zone.
 commanderDuel :: Printing.Printing -> Printing.Printing -> GameState.GameState
@@ -1461,7 +1461,7 @@ restartSpec s registry = Spec.describe s "Restart" $ do
         -- exiles before it restarts, and because startGameFromCards intersects
         -- the exempt set with GameState.exile -- an exemption naming a card in
         -- the command zone reaches nothing at all.
-        let exiled = S.runPure S.identityAnswer gs (Event.changeZone cmd Zone.Exile)
+        let exiled = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) cmd Zone.Exile)
             -- CR 400.7 mints a fresh id on the way to exile, so the exempt set
             -- has to name the POST-move object, read back out of the zone.
             oid = case Set.toAscList (GameState.exile exiled) of

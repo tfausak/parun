@@ -252,7 +252,7 @@ resourcefulDefenseSpec s registry = Spec.describe s "CR 122.8 putting the counte
     (_, victimId, takerId, _, built) <- board
     let before = stock victimId built
     Spec.assertEqWith s "the Swamp bears the same two kinds" (pairOn victimId before) (Map.fromList [(CounterKind.PlusOnePlusOne, 3), (CounterKind.Keyword Keyword.Flying, 2)])
-    let (settled, after) = settleAnd takerId (S.runPure S.identityAnswer before (Event.changeZone victimId Zone.Hand))
+    let (settled, after) = settleAnd takerId (S.runPure S.identityAnswer before (Event.changeZone (pure ()) victimId Zone.Hand))
     Spec.assertEqWith s "the target Piker is a 5/4 with flying just the same" (bodyOf takerId after) (Just 5, Just 4, True)
     Spec.assertEqWith s "which is the Swamp's whole tally, kind for kind" (pairOn takerId after) (Map.fromList [(CounterKind.PlusOnePlusOne, 3), (CounterKind.Keyword Keyword.Flying, 2)])
     Spec.assertEqWith s "the trigger reached the stack" (length (GameState.stack settled)) 1

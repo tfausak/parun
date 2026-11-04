@@ -328,7 +328,7 @@ damageSpec s registry = Spec.describe s "Damage" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     (gs, battle, _, _, _) <- battleCombat s registry S.carol S.carol [piker] [] []
     let attacked = S.runPure (attackTheBattle battle) gs (Combat.declareAttackers S.manaPerformer S.alice)
-        killed = S.runPure S.identityAnswer attacked (Event.destroy Regenerability.Regenerable [battle])
+        killed = S.runPure S.identityAnswer attacked (Event.destroy (pure ()) Regenerability.Regenerable [battle])
         dealt = S.runPure S.identityAnswer killed (Monad.void (Damage.dealCombatDamage (pure ())))
     Spec.assertEqWith s "no damage was dealt at all" (S.damageEventsOf dealt) []
 

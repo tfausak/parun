@@ -27,6 +27,7 @@ import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Resolve as Resolve
 import qualified Parun.Engine.Resolve.Common as Resolve
+import qualified Parun.Engine.Resolve.Effect as Resolve
 import qualified Parun.Engine.SourceContext as SourceContext
 import qualified Parun.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Parun.Types.Affected as Affected
@@ -479,7 +480,7 @@ resolveCardBacked runSubgame oid rest printingId = do
             -- re-keys it onto the permanent before CR 614.12's entry loop reads
             -- it.
             State.modify' (carryGrants oid)
-            arrivals <- Event.changeZoneAttaching Nothing Set.empty oid Zone.Battlefield LibraryPosition.defaultValue seed (maybe TapState.Untapped EntryRiders.tapped sneak) Map.empty (Just controller) entering facing False CarryOver.Carried False Seq.empty
+            arrivals <- Event.changeZoneAttaching (Resolve.runReplacementEffects runSubgame) Nothing Set.empty oid Zone.Battlefield LibraryPosition.defaultValue seed (maybe TapState.Untapped EntryRiders.tapped sneak) Map.empty (Just controller) entering facing False CarryOver.Carried False Seq.empty
             -- After the move, against the instances the permanent has.
             State.modify' (\g -> foldr settlePromises g arrivals)
             -- AFTER the move, ninjutsu's ordering one opcode over
@@ -576,7 +577,7 @@ resolveCardBacked runSubgame oid rest printingId = do
                     -- no longer calls it an Aura and it took the branch
                     -- above.
                       if Resolve.targetsAllIllegal oid gs1
-                        then Event.changeZone oid Zone.Graveyard
+                        then Event.changeZone (Resolve.runReplacementEffects runSubgame) oid Zone.Graveyard
                         else
                           -- CR 303.4: an Aura ENTERS attached, so the target is
                           -- seeded into the new incarnation rather than written

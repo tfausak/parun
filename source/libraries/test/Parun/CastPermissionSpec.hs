@@ -113,7 +113,7 @@ extraLandDropsSpec s registry =
           add g _ = snd (S.addHandCard mountain S.alice g)
           withHand = List.foldl' add board [1 .. 5 :: Int]
           ready = withHand {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
-          gone = S.runPure S.identityAnswer (playEveryLand ready) (Event.destroy Regenerability.Regenerable [explorationId])
+          gone = S.runPure S.identityAnswer (playEveryLand ready) (Event.destroy (pure ()) Regenerability.Regenerable [explorationId])
       Spec.assertEqWith s "two lands were played while it stood" (GameState.landsPlayed gone) (Map.singleton S.alice 2)
       Spec.assertEqWith s "the allowance is back to one" (PlayerEffect.landPlaysAllowed S.alice gone) (Just 1)
       Spec.assertEqWith s "and CR 305.2b refuses a third" (filter isPlay (Action.legalActions S.alice gone)) []
@@ -1523,7 +1523,7 @@ arrivedBetween before after = Set.toList (Set.difference (GameState.battlefield 
 -- resolves.
 diesAndResolves :: ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
 diesAndResolves oid gs =
-  let killed = S.runPure S.identityAnswer gs (Event.destroy Regenerability.Regenerable [oid])
+  let killed = S.runPure S.identityAnswer gs (Event.destroy (pure ()) Regenerability.Regenerable [oid])
       placed = S.runPure S.identityAnswer killed Engine.settleForPriority
    in S.runPure S.identityAnswer placed Stack.resolveTop
 
@@ -1818,7 +1818,7 @@ uriangerSpec s registry =
     Spec.it s "CR 305.1 playing a land from exile with Urianger gains 2 life, and playing one from hand does not" $ do
       (exiledIsland, handIsland, gs) <- uriangerPlayBoard s registry "Island" 0
       let landPlayFrom oid =
-            let played = S.runPure exilingAnswer gs (Cast.playLand False S.alice oid Nothing)
+            let played = S.runPure exilingAnswer gs (Cast.playLand (pure ()) False S.alice oid Nothing)
              in S.runPure exilingAnswer played (Engine.settleForPriority >> Monad.void Stack.resolveTop)
           offered oid = any (isPlayOf oid) (Action.legalActions S.alice gs)
       -- The gameplay-level claims, first.

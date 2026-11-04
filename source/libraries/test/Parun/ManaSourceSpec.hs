@@ -1590,7 +1590,7 @@ interchangeableSourcesSpec s registry = Spec.describe s "Interchangeable mana so
         (twin, g2) = S.addPermanent piker S.alice g1
         (grown, board) = S.addPermanent piker S.alice g2
         counted = board {GameState.objects = Map.adjust (\o -> o {Object.counters = Map.singleton CounterKind.PlusOnePlusOne 1}) grown (GameState.objects board)}
-        moved = List.foldl' (\g oid -> S.runPure S.identityAnswer g (Event.changeZone oid Zone.Graveyard)) counted [plain, twin, grown]
+        moved = List.foldl' (\g oid -> S.runPure S.identityAnswer g (Event.changeZone (pure ()) oid Zone.Graveyard)) counted [plain, twin, grown]
         cardOf gs oid = List.find (\card -> Count.Engine.departedAs gs card == Just oid) (Game.zoneMembers Zone.Graveyard S.alice gs)
         alike gs x y = Interchangeable.objects (Projection.projectAll gs) gs <$> cardOf gs x <*> cardOf gs y
         (holder, bound) = S.addPermanent piker S.alice moved

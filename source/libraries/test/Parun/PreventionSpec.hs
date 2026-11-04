@@ -1627,7 +1627,7 @@ whippoorwillSpec s registry = Spec.describe s "Whippoorwill (CR 615.12)" $ do
     pikerPrinting <- S.printingOf s registry "Goblin Piker"
     whippoorwill <- S.printingOf s registry "Whippoorwill"
     let (aimed, named, _) = deathBoard plains forest pikerPrinting whippoorwill
-        banished = settle (S.runPure S.identityAnswer aimed (Event.changeZone named Zone.Exile))
+        banished = settle (S.runPure S.identityAnswer aimed (Event.changeZone (pure ()) named Zone.Exile))
         died = settle (S.markDamage named 1 aimed)
     Spec.assertEqWith s "CR 700.4 an exile is not a death, so no trigger reached the stack" (length (GameState.stack banished)) 0
     Spec.assertEqWith s "control: the same creature dying instead puts one there" (length (GameState.stack died)) 1
