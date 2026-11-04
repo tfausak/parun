@@ -23,8 +23,11 @@ import qualified Parun.Types.Compares as Compares
 import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.ControllerBecomesTarget as ControllerBecomesTarget
+import qualified Parun.Types.CounterGrouping as CounterGrouping
+import qualified Parun.Types.CounterHolder as CounterHolder
 import qualified Parun.Types.CounterKind as CounterKind
-import qualified Parun.Types.CounterPlacement as CounterPlacement
+import qualified Parun.Types.CounterMotion as CounterMotion
+import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.DamageKind as DamageKind
@@ -68,8 +71,6 @@ import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.RevealedThisWay as RevealedThisWay
 import qualified Parun.Types.RoomIndex as RoomIndex
-import qualified Parun.Types.SelfCountersReached as SelfCountersReached
-import qualified Parun.Types.SelfCountersRemoved as SelfCountersRemoved
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpellCast as SpellCast
 import qualified Parun.Types.StackObjectKind as StackObjectKind
@@ -782,14 +783,14 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Lost PlayerRelation.Opponent TurnScope.ControllersTurn Batching.OneOrMore TriggerFrequency.EveryTime))
       " {\"type\":\"LifeChanges\",\"value\":{\"direction\":{\"type\":\"Lost\"},\"player\":{\"type\":\"Opponent\"},\"scope\":{\"type\":\"ControllersTurn\"},\"batching\":{\"type\":\"OneOrMore\"}}} "
-  -- CR 714.2b. The payload is the counter KIND then the chapter number, in that
-  -- order, since a Saga's chapters are told apart by the number alone.
-  Spec.it s "SelfCountersReached round-trips its kind and its chapter number" $
+  -- CR 714.2b's chapter III; Parun.Codec.CounterTriggerSpec covers the
+  -- payload's other keys.
+  Spec.it s "CountersChange round-trips its payload" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfCountersReached (SelfCountersReached.MkSelfCountersReached CounterKind.Lore 3))
-      " {\"type\":\"SelfCountersReached\",\"value\":{\"kind\":{\"type\":\"Lore\"},\"amount\":3}} "
+      (TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger CounterKind.Lore (CounterMotion.Put PlayerRelation.AnyPlayer) CounterHolder.Self (Just 3) CounterGrouping.EachPermanent))
+      " {\"type\":\"CountersChange\",\"value\":{\"kind\":{\"type\":\"Lore\"},\"motion\":{\"type\":\"Put\",\"value\":{\"type\":\"AnyPlayer\"}},\"threshold\":3}} "
   -- CR 716.2a. The payload is the bar's printed level number and nothing else:
   -- the ability is printed on the Class whose level changes, so there is nothing
   -- to select among.
@@ -799,62 +800,6 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.SelfBecomesClassLevel (ClassLevel.MkClassLevel 2))
       " {\"type\":\"SelfBecomesClassLevel\",\"value\":2} "
-  -- CR 310.12b. The payload is the counter kind: "the last" needs no number.
-  Spec.it s "SelfLastCounterRemoved round-trips its kind" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Time))
-      " {\"type\":\"SelfLastCounterRemoved\",\"value\":{\"kind\":{\"type\":\"Time\"}}} "
-  -- Its any-amount mirror, sharing the payload and differing only in the tag --
-  -- a DIFFERENT kind here, so a codec that crossed the two arms could not pass
-  -- both cases.
-  Spec.it s "SelfCountersRemoved round-trips its kind" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.SelfCountersRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Loyalty))
-      " {\"type\":\"SelfCountersRemoved\",\"value\":{\"kind\":{\"type\":\"Loyalty\"}}} "
-  -- Its per-counter reading (CR 603.2c), the same payload under its own tag,
-  -- on a fourth kind.
-  Spec.it s "SelfCounterRemoved round-trips its kind" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.SelfCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.PlusOnePlusOne))
-      " {\"type\":\"SelfCounterRemoved\",\"value\":{\"kind\":{\"type\":\"PlusOnePlusOne\"}}} "
-  -- CR 603.2c's batch placement, whose payload is an OBJECT rather than a bare
-  -- kind: a third counter kind and a Filter, so a codec that crossed this arm
-  -- with either mirror above could not pass all three cases.
-  Spec.it s "PermanentsGetCounters round-trips its kind and its Filter" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      ( TriggerCondition.PermanentsGetCounters
-          ( CounterPlacement.MkCounterPlacement
-              { CounterPlacement.kind = CounterKind.MinusOneMinusOne,
-                CounterPlacement.permanents = Filter.HasCardType CardType.Creature,
-                CounterPlacement.putter = PlayerRelation.AnyPlayer
-              }
-          )
-      )
-      " {\"type\":\"PermanentsGetCounters\",\"value\":{\"kind\":{\"type\":\"MinusOneMinusOne\"},\"permanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
-  -- The same payload under CR 603.2c's OTHER scope, whose tag differs from the
-  -- arm above by one letter: a codec that crossed the two would round-trip the
-  -- value and hand back the wrong reading, which only a pair of cases can catch.
-  Spec.it s "PermanentGetsCounters round-trips under its own tag" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      ( TriggerCondition.PermanentGetsCounters
-          ( CounterPlacement.MkCounterPlacement
-              { CounterPlacement.kind = CounterKind.MinusOneMinusOne,
-                CounterPlacement.permanents = Filter.HasCardType CardType.Creature,
-                CounterPlacement.putter = PlayerRelation.AnyPlayer
-              }
-          )
-      )
-      " {\"type\":\"PermanentGetsCounters\",\"value\":{\"kind\":{\"type\":\"MinusOneMinusOne\"},\"permanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
   -- CR 601.2i. A PAIR: a Filter over the SPELL, holding Young Pyromancer's two
   -- printed narrowings -- who cast it and what it was -- plus the TurnScope,
   -- which is the axis the Filter cannot carry. Young Pyromancer prints no turn,

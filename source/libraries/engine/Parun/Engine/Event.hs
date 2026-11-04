@@ -11120,13 +11120,8 @@ controllerTurnScoped cond = case cond of
   -- which a flash effect or an opponent's Sneak Attack could make happen. Only CR
   -- 714.3c's turn-based action is the controller's own turn, and that is the
   -- action's restriction rather than this condition's.
-  TriggerCondition.SelfCountersReached {} -> False
+  TriggerCondition.CountersChange _ -> False
   TriggerCondition.SelfBecomesClassLevel _ -> False
-  TriggerCondition.SelfLastCounterRemoved _ -> False
-  TriggerCondition.SelfCountersRemoved _ -> False
-  TriggerCondition.SelfCounterRemoved _ -> False
-  TriggerCondition.PermanentsGetCounters {} -> False
-  TriggerCondition.PermanentGetsCounters {} -> False
   -- CR 601.2i says nothing about whose turn it is and CR 117.1a lets an instant
   -- be cast on anybody's, so the answer is the condition's own TurnScope --
   -- StepBegins' arms one more time, and for its reason (CR 603.3a, CR 109.5).

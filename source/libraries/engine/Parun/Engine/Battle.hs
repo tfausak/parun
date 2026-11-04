@@ -58,7 +58,11 @@ import qualified Parun.Types.CastObligation as CastObligation
 import qualified Parun.Types.CastOffer as CastOffer
 import qualified Parun.Types.CastRepetition as CastRepetition
 import qualified Parun.Types.Combat as Combat
+import qualified Parun.Types.CounterGrouping as CounterGrouping
+import qualified Parun.Types.CounterHolder as CounterHolder
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CounterMotion as CounterMotion
+import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EntryRiders as EntryRiders
 import Parun.Types.Game (Game)
@@ -79,7 +83,6 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Prompt as Prompt
-import qualified Parun.Types.SelfCountersRemoved as SelfCountersRemoved
 import qualified Parun.Types.Source as Source
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.Teams as Teams
@@ -317,7 +320,7 @@ siegeDefeat =
               OfferCast.controlWhileResolving = False,
               OfferCast.slot = Nothing
             }
-   in Mint.trigger (TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved {SelfCountersRemoved.kind = CounterKind.Defense})) (Seq.fromList [exile, offer])
+   in Mint.trigger (TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger CounterKind.Defense CounterMotion.Removed CounterHolder.Self (Just 0) CounterGrouping.EachPermanent)) (Seq.fromList [exile, offer])
 
 -- The intrinsic triggered abilities rule 310 gives a permanent, read off the
 -- finished projection. Parun.Engine.Keyword.triggeredAbilitiesOf's sibling, and

@@ -256,8 +256,8 @@ putCounters resolving source controller legal chosen (PutCounters.MkPutCounters 
   -- bracket: CR 608.2f processes an action taken on multiple objects
   -- simultaneously, and one written instruction is one such action however
   -- many permanents the ref swept. CR 603.2c's batch conditions are what a
-  -- board can read that with -- TriggerCondition.PermanentsGetCounters fires
-  -- once for the sweep where its per-permanent twin fires once per recipient,
+  -- board can read that with -- an EachBatch TriggerCondition.CountersChange
+  -- fires once for the sweep where EachPermanent fires once per recipient,
   -- and Parun.Engine.Event.Trigger.batchScoped is that fork.
   --
   -- The per-recipient CR 122.6 funnel below is no argument for N groups: CR

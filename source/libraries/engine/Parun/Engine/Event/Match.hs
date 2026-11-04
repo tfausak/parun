@@ -60,8 +60,9 @@ import qualified Parun.Types.Combat as Combat
 import qualified Parun.Types.ControlChanged as ControlChanged
 import qualified Parun.Types.ControllerBecomesTarget as ControllerBecomesTarget
 import qualified Parun.Types.CounterChange as CounterChange
-import qualified Parun.Types.CounterKind as CounterKind
-import qualified Parun.Types.CounterPlacement as CounterPlacement
+import qualified Parun.Types.CounterHolder as CounterHolder
+import qualified Parun.Types.CounterMotion as CounterMotion
+import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.Countering as Countering
 import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
@@ -135,8 +136,6 @@ import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.RevealCause as RevealCause
 import qualified Parun.Types.Revealed as Revealed
 import qualified Parun.Types.RevealedThisWay as RevealedThisWay
-import qualified Parun.Types.SelfCountersReached as SelfCountersReached
-import qualified Parun.Types.SelfCountersRemoved as SelfCountersRemoved
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpellCast as SpellCast
 import qualified Parun.Types.SpellWasCast as SpellWasCast
@@ -276,20 +275,18 @@ isMainPhase phase = case phase of
   Phase.Combat _ -> False
   Phase.Ending _ -> False
 
--- CR 122's removal as the three bearer-scoped counter-removal conditions read it:
--- the before/after pair of a GameEvent.CountersRemoved that took counters of
--- `wanted` off `bearer`, and Nothing for every other event.
---
--- ONE case shared by TriggerCondition.SelfLastCounterRemoved,
--- SelfCountersRemoved and SelfCounterRemoved rather than a copy each, because
--- they ask the identical question of the identical constructor and differ only in what
--- they then do with the pair.
-countersRemovedFrom :: ObjectId -> CounterKind.CounterKind Keyword.Type.Keyword -> GameEvent -> Maybe (Natural, Natural)
-countersRemovedFrom bearer wanted event = case event of
-  GameEvent.CountersRemoved (CounterChange.MkCounterChange oid kind before after)
-    | oid == bearer && kind == wanted ->
-        Just (before, after)
+-- CR 122: the object, count before and count after of a counter event moving
+-- the trigger's kind its way, CR 122.6a's putter read against `you`; Nothing
+-- for every other event.
+countersMoved :: GameState -> PlayerId -> CounterTrigger.CounterTrigger -> GameEvent -> Maybe (ObjectId, Natural, Natural)
+countersMoved gs you counterTrigger event = case (CounterTrigger.motion counterTrigger, event) of
+  (CounterMotion.Put relation, GameEvent.CountersPut (CountersPlaced.MkCountersPlaced putter oid kind before after))
+    | kind == wanted && PlayerRelation.holds (Game.teams gs) relation you putter -> Just (oid, before, after)
+  (CounterMotion.Removed, GameEvent.CountersRemoved (CounterChange.MkCounterChange oid kind before after))
+    | kind == wanted -> Just (oid, before, after)
   _ -> Nothing
+  where
+    wanted = CounterTrigger.kind counterTrigger
 
 -- CR 603.7c's captured object leaving the battlefield for one of `destinations`,
 -- the shape TriggerCondition.BoundDies and TriggerCondition.BoundDiesOrIsExiled
@@ -2123,37 +2120,37 @@ armMatches bindings board gs bearer you cond event = case cond of
           (LifeDirection.Gained, GameEvent.LifeGained change) -> admits change
           (LifeDirection.Lost, GameEvent.LifeLost change) -> admits change
           _ -> False
-  -- CR 714.2b: counters of this kind were put onto the BEARER, and the count
-  -- crossed N going up. Both halves of the rule's sentence are here -- see
-  -- Parun.Types.TriggerCondition.SelfCountersReached for why the intervening "if"
-  -- is not split off into TriggeredAbility.intervening.
+  -- CR 603.2 / 122.6: counters of the kind moved the trigger's way on the
+  -- holder. The bearer by id, or a permanent the Filter admits, read through
+  -- viewWithLastKnown (CR 608.2h) so the CR 704.5f victim a -1/-1 counter made
+  -- still matches; the bearer frames that match as the Filter.Context's source.
   --
-  -- `before < n` is what stops a chapter re-firing: History of Benalia going from
-  -- two lore counters to three crosses III and nothing else, and a later counter
-  -- taking it from three to four crosses none of its chapters again.
+  -- No "one or more" conjunct: each counter record exists only where its count
+  -- changed, and settleCounters records one per settled placement. How many
+  -- triggers one match makes is the grouping's, read by
+  -- Parun.Engine.Event.Trigger's `batchScoped` and `counterOccurrences`, never
+  -- by this matcher (CR 603.2c).
   --
-  -- `n <= after` rather than `n == after`, because one placement can cross several
-  -- thresholds at once (CR 714.2b says "at least N", not "exactly N"): a Saga
-  -- given two lore counters while it has none fires chapters I and II together.
-  -- Read ahead (CR 702.155a) is the mechanic that wants the equality instead, and
-  -- then only on the turn the Saga entered -- Saga.chapterTriggers, which asks
-  -- Saga.readAheadRestricted of the bearer.
-  --
-  -- The narrowing does NOT leak past Sagas even though this arm is generic over
-  -- counter kind: readAheadRestricted gates on Keyword.ReadAhead, which rule
-  -- 702.155a puts only on Saga cards, so the extra conjunct is inert for every
-  -- other counter this condition watches. A CounterKind.Lore test here would
-  -- restate that gate rather than add to it.
-  --
-  -- Projected LAZILY, and Saga.chapterTriggers asks `after == n` first, so the
-  -- whole-board projection is forced only where the two readings could differ.
-  TriggerCondition.SelfCountersReached (SelfCountersReached.MkSelfCountersReached wanted n) -> case event of
-    GameEvent.CountersPut (CountersPlaced.MkCountersPlaced _ oid kind before after) ->
-      oid == bearer && kind == wanted && Saga.chapterTriggers (Saga.readAheadRestricted (Projection.project bearer gs) gs bearer) before after n
-    -- Rule 714.2b says "are PUT onto", so a removal crosses nothing: a Saga whose
-    -- lore counters were taken off and put back fires its chapters again.
-    GameEvent.CountersRemoved {} -> False
-    _ -> False
+  -- A threshold crosses the way the counters moved. Going on it is CR 714.2b's
+  -- "was less than N and became at least N", `n <= after` rather than equality
+  -- because one placement can cross several chapters; read ahead (CR 702.155a)
+  -- narrows it to equality on the turn the Saga entered, through
+  -- Saga.chapterTriggers, which gates on Keyword.ReadAhead and so is inert for
+  -- every other permanent. A removal crosses nothing going up, so a Saga whose
+  -- lore counters were taken off and put back fires its chapters again. Coming
+  -- off it is CR 310.12b's last counter at N = 0. The projection is lazy and
+  -- asked after `after == n`, so it is forced only where the readings differ.
+  TriggerCondition.CountersChange counterTrigger -> case countersMoved gs you counterTrigger event of
+    Nothing -> False
+    Just (oid, before, after) ->
+      ( case CounterTrigger.holder counterTrigger of
+          CounterHolder.Self -> oid == bearer
+          CounterHolder.Permanent f -> maybe False (\view -> Filter.matches bearerContext view f) (Projection.viewWithLastKnown oid gs oid)
+      )
+        && case (CounterTrigger.motion counterTrigger, CounterTrigger.threshold counterTrigger) of
+          (_, Nothing) -> True
+          (CounterMotion.Put _, Just n) -> Saga.chapterTriggers (Saga.readAheadRestricted (Projection.project oid gs) gs oid) before after n
+          (CounterMotion.Removed, Just n) -> after <= n && n < before
   -- CR 716.2a: the BEARER's class level crossed N going up. "When this Class
   -- becomes level N" is printed inside the level-N section, so CR 716.2a's static
   -- half is what grants it, and CR 603.10 is what lets it see its own arrival:
@@ -2163,7 +2160,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- `before < n` is what stops a later bar re-firing an earlier section's
   -- trigger: a Class going from level 2 to level 3 crosses 3 and nothing else.
   --
-  -- `n <= after` rather than `n == after`, SelfCountersReached's reading of the
+  -- `n <= after` rather than `n == after`, CountersChange's reading of the
   -- same shape: one write can cross several thresholds, so a Class set straight
   -- from level 1 to level 3 fires both sections' triggers. No level bar can do
   -- that (CR 716.2a's "only if this Class is level N-1"), which is why the two
@@ -2176,62 +2173,6 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- ClassLevel and has no state-based action to agree with.
   TriggerCondition.SelfBecomesClassLevel n -> case event of
     GameEvent.ClassLevelSet (ClassLevelChange.MkClassLevelChange oid before after) -> oid == bearer && before < n && n <= after
-    _ -> False
-  -- CR 310.12b: the LAST counter of this kind came off the BEARER. The mirror of
-  -- the arm above, and narrower in the way rule 310.12b is narrower than rule
-  -- 714.2b: there is no threshold to cross, only a count that reached none.
-  --
-  -- `after == 0` alone, with no `before > 0` conjunct: GameEvent.CountersRemoved is
-  -- recorded only where something actually came off, so an event that removed
-  -- nothing is not in the log to match. That invariant is the record's, stated on
-  -- the constructor, exactly as CountersPut's "before < after" is.
-  TriggerCondition.SelfLastCounterRemoved removal -> maybe False ((==) 0 . snd) (countersRemovedFrom bearer (SelfCountersRemoved.kind removal) event)
-  -- "Whenever one or more [kind] counters are removed from this permanent"
-  -- (Chandra, Fire Artisan): the arm above's any-amount mirror, dropping every
-  -- read of the AFTER count. Three of four loyalty counters coming off matches
-  -- here and not there, which is what keeps the two from collapsing.
-  --
-  -- No "one or more" conjunct either, and for the arm above's reason: the record
-  -- exists only where something came off.
-  TriggerCondition.SelfCountersRemoved removal -> Maybe.isJust (countersRemovedFrom bearer (SelfCountersRemoved.kind removal) event)
-  -- "Whenever A [kind] counter is removed" (Protean Hydra): the same match.
-  -- How many times it triggers is Parun.Engine.Event.Trigger's
-  -- `occurrencesIn`, one per counter removed (CR 603.2c).
-  TriggerCondition.SelfCounterRemoved removal -> Maybe.isJust (countersRemovedFrom bearer (SelfCountersRemoved.kind removal) event)
-  -- CR 603.2c's PER-PERMANENT placement (Wickersmith's Tools' "whenever one or
-  -- more -1/-1 counters are put on A CREATURE"): counters of this kind landed on
-  -- a permanent the Filter admits. One event at a time, so a batch that touched
-  -- three creatures matches here three times and fires three triggers -- the
-  -- rule's second sentence and its own Example.
-  --
-  -- The Filter is read against the PERMANENT that took the counters, not against
-  -- the batch: there is no batch at this level, and CR 122.6's placement names
-  -- one object.
-  --
-  -- No "one or more" conjunct: GameEvent.CountersPut is recorded only where the
-  -- before/after pair grew, an invariant stated on the constructor, so a placement
-  -- of nothing is not in the log to match. Nor is one needed for the other half of
-  -- that phrase -- settleCounters records ONE event per settled placement, so a
-  -- creature given two counters at once is one match and one trigger.
-  --
-  -- viewWithLastKnown rather than viewOfObject, PermanentTurnedFaceUp's posture: a
-  -- permanent that took counters and was gone before the CR 117.5 boundary is
-  -- still read as it stood (CR 608.2h) instead of dropping out of the match --
-  -- which is exactly the CR 704.5f victim a -1/-1 counter made.
-  --
-  -- The bearer frames the match rather than being it: it is the Filter.Context's
-  -- source, and its controller is the perspective CR 109.5 gives "you".
-  --
-  -- Its batch sibling delegates HERE, PermanentsDie's posture above: which
-  -- placements the condition admits is the same question either way, and what
-  -- separates the two is `batchScoped` below plus eventTriggers' dedup, never
-  -- this matcher.
-  TriggerCondition.PermanentsGetCounters p -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.PermanentGetsCounters p) event
-  TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement wanted f relation) -> case event of
-    GameEvent.CountersPut (CountersPlaced.MkCountersPlaced putter oid kind _ _)
-      | kind == wanted && PlayerRelation.holds (Game.teams gs) relation you putter -> case Projection.viewWithLastKnown oid gs oid of
-          Nothing -> False
-          Just view -> Filter.matches bearerContext view f
     _ -> False
   -- CR 601.2i's "any abilities that trigger when a spell is cast": a spell the
   -- Filter admits became cast. The bearer frames the match rather than being it,
@@ -2739,7 +2680,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- triggered (CR 603.3a) and the ABILITY, and all three are read:
   --
   --   * the ability must be a chapter ability (CR 714.2b, through Saga.chapterOf,
-  --     so this and the SelfCountersReached arm above cannot drift about what a
+  --     so this and the CountersChange arm above cannot drift about what a
   --     chapter symbol is);
   --   * its chapter must be the source's FINAL chapter number (CR 714.2d), which
   --     is why the source's projection is read rather than the event alone;

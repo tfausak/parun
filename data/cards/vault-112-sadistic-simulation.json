@@ -30,12 +30,18 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfCountersReached",
+            "type": "CountersChange",
             "value": {
-              "amount": 1,
               "kind": {
                 "type": "Lore"
-              }
+              },
+              "motion": {
+                "type": "Put",
+                "value": {
+                  "type": "AnyPlayer"
+                }
+              },
+              "threshold": 1
             }
           },
           "modal": {
@@ -110,12 +116,18 @@
         },
         {
           "condition": {
-            "type": "SelfCountersReached",
+            "type": "CountersChange",
             "value": {
-              "amount": 2,
               "kind": {
                 "type": "Lore"
-              }
+              },
+              "motion": {
+                "type": "Put",
+                "value": {
+                  "type": "AnyPlayer"
+                }
+              },
+              "threshold": 2
             }
           },
           "modal": {
@@ -190,12 +202,18 @@
         },
         {
           "condition": {
-            "type": "SelfCountersReached",
+            "type": "CountersChange",
             "value": {
-              "amount": 3,
               "kind": {
                 "type": "Lore"
-              }
+              },
+              "motion": {
+                "type": "Put",
+                "value": {
+                  "type": "AnyPlayer"
+                }
+              },
+              "threshold": 3
             }
           },
           "modal": {

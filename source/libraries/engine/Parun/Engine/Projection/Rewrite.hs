@@ -101,11 +101,12 @@ import qualified Parun.Types.Count as Count.Type
 import qualified Parun.Types.CountedDiscard as CountedDiscard
 import qualified Parun.Types.Counter as Counter
 import qualified Parun.Types.CounterDestination as CounterDestination
+import qualified Parun.Types.CounterHolder as CounterHolder
 import qualified Parun.Types.CounterPattern as CounterPattern
-import qualified Parun.Types.CounterPlacement as CounterPlacement
 import qualified Parun.Types.CounterProhibition as CounterProhibition
 import qualified Parun.Types.CounterR as CounterR
 import qualified Parun.Types.CounterRestriction as CounterRestriction
+import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.Create as Create
 import qualified Parun.Types.CreateCopy as CreateCopy
 import qualified Parun.Types.CreateEmblem as CreateEmblem
@@ -2060,6 +2061,12 @@ rewriteTargetSlot pairs slot =
       TargetSlot.divided = fmap (rewriteQuantity pairs) (TargetSlot.divided slot)
     }
 
+-- CR 612.1 over a counter trigger's holder: the Filter, where there is one.
+rewriteCounterHolder :: [(TextWord.TextWord, TextWord.TextWord)] -> CounterHolder.CounterHolder -> CounterHolder.CounterHolder
+rewriteCounterHolder pairs holder = case holder of
+  CounterHolder.Self -> holder
+  CounterHolder.Permanent f -> CounterHolder.Permanent (Filter.rewrite pairs f)
+
 -- CR 612.1 through a trigger's own condition. Exhaustive rather than a wildcard,
 -- so a later condition carrying a Filter fails to compile here instead of
 -- silently keeping the printed word.
@@ -2081,12 +2088,9 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.CardsLeaveZone p -> TriggerCondition.CardsLeaveZone p {CardLeavesZone.filter = Filter.rewrite pairs (CardLeavesZone.filter p)}
   TriggerCondition.CardsPutIntoZone p -> TriggerCondition.CardsPutIntoZone p {CardsPutIntoZone.filter = Filter.rewrite pairs (CardsPutIntoZone.filter p)}
   TriggerCondition.SelfLeavesGraveyard -> condition
-  -- The Filter is rewritten and the counter kind is not: CR 612.1's pairs swap
-  -- SUBTYPE words, and a counter kind names none.
-  TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind f putter) -> TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind (Filter.rewrite pairs f) putter)
-  -- The arm above's per-permanent scope, rewritten the same way and for the same
-  -- reason: same payload, and CR 612.1 knows nothing about the scope.
-  TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind f putter) -> TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind (Filter.rewrite pairs f) putter)
+  -- The holder's Filter is rewritten and the counter kind is not: CR 612.1's
+  -- pairs swap SUBTYPE words, and a counter kind names none.
+  TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger kind motion holder threshold grouping) -> TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger kind motion (rewriteCounterHolder pairs holder) threshold grouping)
   -- The TurnScope is carried through untouched, not dropped: a rebuild that
   -- forgot the field would reset a text-changed trigger to firing every turn.
   TriggerCondition.SpellCast (SpellCast.MkSpellCast f scope fromZone ordinal window copies) -> TriggerCondition.SpellCast (SpellCast.MkSpellCast (Filter.rewrite pairs f) scope fromZone ordinal window copies)
@@ -2161,11 +2165,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.DamageToPlayerPrevented _ -> condition
   TriggerCondition.SelfPreventsDamage f -> TriggerCondition.SelfPreventsDamage (Filter.rewrite pairs f)
   TriggerCondition.LifeChanges _ -> condition
-  TriggerCondition.SelfCountersReached {} -> condition
   TriggerCondition.SelfBecomesClassLevel _ -> condition
-  TriggerCondition.SelfLastCounterRemoved _ -> condition
-  TriggerCondition.SelfCountersRemoved _ -> condition
-  TriggerCondition.SelfCounterRemoved _ -> condition
   TriggerCondition.SelfHalfUnlocked _ -> condition
   TriggerCondition.RoomFullyUnlocked _ -> condition
   TriggerCondition.AnyOf conditions -> TriggerCondition.AnyOf (fmap (rewriteTriggerCondition pairs) conditions)

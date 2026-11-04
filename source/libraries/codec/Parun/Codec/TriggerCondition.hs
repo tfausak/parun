@@ -12,7 +12,7 @@ import qualified Parun.Codec.CausedBy as CausedBy
 import qualified Parun.Codec.ClassLevel as ClassLevel
 import qualified Parun.Codec.Condition as Condition
 import qualified Parun.Codec.ControllerBecomesTarget as ControllerBecomesTarget
-import qualified Parun.Codec.CounterPlacement as CounterPlacement
+import qualified Parun.Codec.CounterTrigger as CounterTrigger
 import qualified Parun.Codec.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Parun.Codec.CreatureExploits as CreatureExploits
 import qualified Parun.Codec.DealsDamageToPermanent as DealsDamageToPermanent
@@ -41,8 +41,6 @@ import qualified Parun.Codec.PlayerRelation as PlayerRelation
 import qualified Parun.Codec.PlaysLand as PlaysLand
 import qualified Parun.Codec.RevealedThisWay as RevealedThisWay
 import qualified Parun.Codec.RoomIndex as RoomIndex
-import qualified Parun.Codec.SelfCountersReached as SelfCountersReached
-import qualified Parun.Codec.SelfCountersRemoved as SelfCountersRemoved
 import qualified Parun.Codec.SlotName as SlotName
 import qualified Parun.Codec.SpellCast as SpellCast
 import qualified Parun.Codec.StepBegins as StepBegins
@@ -141,13 +139,8 @@ codec =
           Arm.payload "DamageToPlayerPrevented" PlayerRelation.codec TriggerCondition.DamageToPlayerPrevented (\x -> case x of TriggerCondition.DamageToPlayerPrevented y -> Just y; _ -> Nothing),
           Arm.payload "SelfPreventsDamage" filterCodec TriggerCondition.SelfPreventsDamage (\x -> case x of TriggerCondition.SelfPreventsDamage y -> Just y; _ -> Nothing),
           Arm.payload "LifeChanges" LifeTrigger.codec TriggerCondition.LifeChanges (\x -> case x of TriggerCondition.LifeChanges y -> Just y; _ -> Nothing),
-          Arm.payload "SelfCountersReached" SelfCountersReached.codec TriggerCondition.SelfCountersReached (\x -> case x of TriggerCondition.SelfCountersReached y -> Just y; _ -> Nothing),
+          Arm.payload "CountersChange" CounterTrigger.codec TriggerCondition.CountersChange (\x -> case x of TriggerCondition.CountersChange y -> Just y; _ -> Nothing),
           Arm.payload "SelfBecomesClassLevel" ClassLevel.codec TriggerCondition.SelfBecomesClassLevel (\x -> case x of TriggerCondition.SelfBecomesClassLevel y -> Just y; _ -> Nothing),
-          Arm.payload "SelfLastCounterRemoved" SelfCountersRemoved.codec TriggerCondition.SelfLastCounterRemoved (\x -> case x of TriggerCondition.SelfLastCounterRemoved y -> Just y; _ -> Nothing),
-          Arm.payload "SelfCountersRemoved" SelfCountersRemoved.codec TriggerCondition.SelfCountersRemoved (\x -> case x of TriggerCondition.SelfCountersRemoved y -> Just y; _ -> Nothing),
-          Arm.payload "SelfCounterRemoved" SelfCountersRemoved.codec TriggerCondition.SelfCounterRemoved (\x -> case x of TriggerCondition.SelfCounterRemoved y -> Just y; _ -> Nothing),
-          Arm.payload "PermanentsGetCounters" CounterPlacement.codec TriggerCondition.PermanentsGetCounters (\x -> case x of TriggerCondition.PermanentsGetCounters y -> Just y; _ -> Nothing),
-          Arm.payload "PermanentGetsCounters" CounterPlacement.codec TriggerCondition.PermanentGetsCounters (\x -> case x of TriggerCondition.PermanentGetsCounters y -> Just y; _ -> Nothing),
           Arm.payload "SpellCast" SpellCast.codec TriggerCondition.SpellCast (\x -> case x of TriggerCondition.SpellCast y -> Just y; _ -> Nothing),
           Arm.nullary "SelfCast" TriggerCondition.SelfCast,
           Arm.payload "AbilityActivated" filterCodec TriggerCondition.AbilityActivated (\x -> case x of TriggerCondition.AbilityActivated y -> Just y; _ -> Nothing),
@@ -278,13 +271,8 @@ tagOf x = case x of
   TriggerCondition.DamageToPlayerPrevented {} -> "DamageToPlayerPrevented"
   TriggerCondition.SelfPreventsDamage {} -> "SelfPreventsDamage"
   TriggerCondition.LifeChanges {} -> "LifeChanges"
-  TriggerCondition.SelfCountersReached {} -> "SelfCountersReached"
+  TriggerCondition.CountersChange {} -> "CountersChange"
   TriggerCondition.SelfBecomesClassLevel {} -> "SelfBecomesClassLevel"
-  TriggerCondition.SelfLastCounterRemoved {} -> "SelfLastCounterRemoved"
-  TriggerCondition.SelfCountersRemoved {} -> "SelfCountersRemoved"
-  TriggerCondition.SelfCounterRemoved {} -> "SelfCounterRemoved"
-  TriggerCondition.PermanentsGetCounters {} -> "PermanentsGetCounters"
-  TriggerCondition.PermanentGetsCounters {} -> "PermanentGetsCounters"
   TriggerCondition.SpellCast {} -> "SpellCast"
   TriggerCondition.SelfCast {} -> "SelfCast"
   TriggerCondition.AbilityActivated {} -> "AbilityActivated"

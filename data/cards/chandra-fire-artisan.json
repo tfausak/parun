@@ -157,10 +157,13 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfCountersRemoved",
+            "type": "CountersChange",
             "value": {
               "kind": {
                 "type": "Loyalty"
+              },
+              "motion": {
+                "type": "Removed"
               }
             }
           },

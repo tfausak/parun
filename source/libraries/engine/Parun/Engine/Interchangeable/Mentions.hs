@@ -152,13 +152,14 @@ import qualified Parun.Types.Count as Count
 import qualified Parun.Types.CountedDiscard as CountedDiscard
 import qualified Parun.Types.Counter as Counter
 import qualified Parun.Types.CounterDestination as CounterDestination
+import qualified Parun.Types.CounterHolder as CounterHolder
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CounterPattern as CounterPattern
-import qualified Parun.Types.CounterPlacement as CounterPlacement
 import qualified Parun.Types.CounterProhibition as CounterProhibition
 import qualified Parun.Types.CounterR as CounterR
 import qualified Parun.Types.CounterRestriction as CounterRestriction
 import qualified Parun.Types.CounterSubject as CounterSubject
+import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.Counterability as Counterability
 import qualified Parun.Types.CountersFromPermanents as CountersFromPermanents
 import qualified Parun.Types.CountersOnThis as CountersOnThis
@@ -394,8 +395,6 @@ import qualified Parun.Types.SacrificeRestriction as SacrificeRestriction
 import qualified Parun.Types.SacrificeToEnter as SacrificeToEnter
 import qualified Parun.Types.Scope as Scope
 import qualified Parun.Types.Search as Search
-import qualified Parun.Types.SelfCountersReached as SelfCountersReached
-import qualified Parun.Types.SelfCountersRemoved as SelfCountersRemoved
 import qualified Parun.Types.SetBasePowerToughness as SetBasePowerToughness
 import qualified Parun.Types.SetClassLevel as SetClassLevel
 import qualified Parun.Types.SetHalfLocked as SetHalfLocked
@@ -1193,9 +1192,14 @@ counterPatternNames :: (Monoid r) => Asking r -> CounterPattern.CounterPattern -
 counterPatternNames asking x = case x of
   CounterPattern.MkCounterPattern whichKind subject whose onWhat onWho -> foldMap (counterKindNames asking (keywordNames asking)) whichKind <> counterSubjectNames asking subject <> controllerRelationNames asking whose <> filterNames asking onWhat <> foldMap (controllerRelationNames asking) onWho
 
-counterPlacementNames :: (Monoid r) => Asking r -> CounterPlacement.CounterPlacement -> r
-counterPlacementNames asking x = case x of
-  CounterPlacement.MkCounterPlacement kind permanents _ -> counterKindNames asking (keywordNames asking) kind <> filterNames asking permanents
+counterHolderNames :: (Monoid r) => Asking r -> CounterHolder.CounterHolder -> r
+counterHolderNames asking x = case x of
+  CounterHolder.Self -> mempty
+  CounterHolder.Permanent permanents -> filterNames asking permanents
+
+counterTriggerNames :: (Monoid r) => Asking r -> CounterTrigger.CounterTrigger -> r
+counterTriggerNames asking x = case x of
+  CounterTrigger.MkCounterTrigger kind _motion holder _threshold _grouping -> counterKindNames asking (keywordNames asking) kind <> counterHolderNames asking holder
 
 counterRNames :: (Monoid r) => Asking r -> CounterR.CounterR -> r
 counterRNames asking x = case x of
@@ -2859,14 +2863,6 @@ searchNames :: (Monoid r) => Asking r -> Search.Search -> r
 searchNames asking x = case x of
   Search.MkSearch searcher owner _zones _outsideTheGame quantity filter_ descriptions _upTo _destination subject slot handSlot _differentIn _exactly _andOr -> playerRefNames asking searcher <> playerRefNames asking owner <> foldMap (quantityNames asking) quantity <> filterNames asking filter_ <> foldMap (filterNames asking) descriptions <> foldMap (slotNames asking) subject <> foldMap (slotNames asking) slot <> foldMap (slotNames asking) handSlot
 
-selfCountersReachedNames :: (Monoid r) => Asking r -> SelfCountersReached.SelfCountersReached -> r
-selfCountersReachedNames asking x = case x of
-  SelfCountersReached.MkSelfCountersReached kind _amount -> counterKindNames asking (keywordNames asking) kind
-
-selfCountersRemovedNames :: (Monoid r) => Asking r -> SelfCountersRemoved.SelfCountersRemoved -> r
-selfCountersRemovedNames asking x = case x of
-  SelfCountersRemoved.MkSelfCountersRemoved kind -> counterKindNames asking (keywordNames asking) kind
-
 setBasePowerToughnessNames :: (Monoid r) => Asking r -> SetBasePowerToughness.SetBasePowerToughness -> r
 setBasePowerToughnessNames asking x = case x of
   SetBasePowerToughness.MkSetBasePowerToughness power toughness -> foldMap (quantityNames asking) power <> foldMap (quantityNames asking) toughness
@@ -3084,13 +3080,8 @@ triggerConditionNames asking x = case x of
   TriggerCondition.DamageToPlayerPrevented _playerRelation -> mempty
   TriggerCondition.SelfPreventsDamage filter_ -> prevention asking <> filterNames asking filter_
   TriggerCondition.LifeChanges lifeTrigger -> lifeTriggerNames asking lifeTrigger
-  TriggerCondition.SelfCountersReached selfCountersReached -> selfCountersReachedNames asking selfCountersReached
+  TriggerCondition.CountersChange counterTrigger -> counterTriggerNames asking counterTrigger
   TriggerCondition.SelfBecomesClassLevel _classLevel -> mempty
-  TriggerCondition.SelfLastCounterRemoved selfCountersRemoved -> selfCountersRemovedNames asking selfCountersRemoved
-  TriggerCondition.SelfCountersRemoved selfCountersRemoved -> selfCountersRemovedNames asking selfCountersRemoved
-  TriggerCondition.SelfCounterRemoved selfCountersRemoved -> selfCountersRemovedNames asking selfCountersRemoved
-  TriggerCondition.PermanentsGetCounters counterPlacement -> counterPlacementNames asking counterPlacement
-  TriggerCondition.PermanentGetsCounters counterPlacement -> counterPlacementNames asking counterPlacement
   TriggerCondition.SpellCast spellCast -> spellCastNames asking spellCast
   TriggerCondition.SelfCast -> mempty
   TriggerCondition.AbilityActivated filter_ -> filterNames asking filter_

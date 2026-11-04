@@ -90,11 +90,15 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfLastCounterRemoved",
+            "type": "CountersChange",
             "value": {
               "kind": {
                 "type": "Time"
-              }
+              },
+              "motion": {
+                "type": "Removed"
+              },
+              "threshold": 0
             }
           },
           "functionsFrom": [

@@ -165,10 +165,16 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfCounterRemoved",
+            "type": "CountersChange",
             "value": {
+              "grouping": {
+                "type": "EachCounter"
+              },
               "kind": {
                 "type": "Time"
+              },
+              "motion": {
+                "type": "Removed"
               }
             }
           },

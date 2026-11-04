@@ -68,7 +68,11 @@ import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Combat as Combat.Type
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.CounterChange as CounterChange
+import qualified Parun.Types.CounterGrouping as CounterGrouping
+import qualified Parun.Types.CounterHolder as CounterHolder
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CounterMotion as CounterMotion
+import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.Defense as Defense
 import qualified Parun.Types.Departure as Departure.Type
 import qualified Parun.Types.Face as Face
@@ -83,7 +87,6 @@ import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Regenerability as Regenerability
-import qualified Parun.Types.SelfCountersRemoved as SelfCountersRemoved
 import qualified Parun.Types.TeamId as TeamId
 import qualified Parun.Types.Teams as Teams
 import qualified Parun.Types.TriggerCondition as TriggerCondition
@@ -345,7 +348,7 @@ defeatSpec s registry = Spec.describe s "Defeat" $ do
       s
       "one ability, conditioned on the last defense counter"
       (fmap TriggeredAbility.condition (Battle.triggeredAbilitiesOf siege))
-      [TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Defense)]
+      [TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger CounterKind.Defense CounterMotion.Removed CounterHolder.Self (Just 0) CounterGrouping.EachPermanent)]
   Spec.it s "CR 310.12b a battle with no battle types does not" $ do
     -- Rule 310.12b says "Sieges", not "battles", and this is the falsifier for
     -- gating the mint on the card type instead: the same real projection with its

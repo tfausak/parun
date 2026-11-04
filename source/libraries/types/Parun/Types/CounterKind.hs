@@ -49,7 +49,7 @@ data CounterKind keyword
     -- Contributes nothing to the CR 613 layer system, so
     -- Parun.Engine.Projection.counterGathered grants nothing for this kind either.
     -- What reads it is CR 714.2b's chapter trigger
-    -- (TriggerCondition.SelfCountersReached), CR 714.3c's turn-based action and CR
+    -- (TriggerCondition.CountersChange), CR 714.3c's turn-based action and CR
     -- 704.5s's state-based action, all three counting Object.counters directly.
     Lore
   | -- | CR 122.1g / 310.4c: a battle's defense on the battlefield is this count,

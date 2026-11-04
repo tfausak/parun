@@ -130,10 +130,16 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfCounterRemoved",
+            "type": "CountersChange",
             "value": {
+              "grouping": {
+                "type": "EachCounter"
+              },
               "kind": {
                 "type": "PlusOnePlusOne"
+              },
+              "motion": {
+                "type": "Removed"
               }
             }
           },

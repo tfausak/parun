@@ -79,8 +79,12 @@ import qualified Parun.Types.CostKeyword as CostKeyword
 import qualified Parun.Types.CostReduction as CostReduction
 import qualified Parun.Types.Count as Count
 import qualified Parun.Types.Counter as Counter
+import qualified Parun.Types.CounterGrouping as CounterGrouping
+import qualified Parun.Types.CounterHolder as CounterHolder
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CounterMotion as CounterMotion
 import qualified Parun.Types.CounterName as CounterName
+import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.Counterability as Counterability
 import qualified Parun.Types.CountersOnThis as CountersOnThis
 import qualified Parun.Types.Craft as Craft
@@ -224,7 +228,6 @@ import qualified Parun.Types.Sacrificer as Sacrificer
 import qualified Parun.Types.Scope as Scope
 import qualified Parun.Types.Search as Search
 import qualified Parun.Types.SearchDestination as SearchDestination
-import qualified Parun.Types.SelfCountersRemoved as SelfCountersRemoved
 import qualified Parun.Types.SetPowerToughness as SetPowerToughness
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.Splice as Splice
@@ -8837,7 +8840,7 @@ suspendLastCounter keyword =
               OfferCast.slot = Nothing
             }
    in ( Mint.triggerIf
-          (TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved {SelfCountersRemoved.kind = CounterKind.Time}))
+          (TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger CounterKind.Time CounterMotion.Removed CounterHolder.Self (Just 0) CounterGrouping.EachPermanent))
           stillExiled
           (Seq.singleton effect)
       )
@@ -9251,7 +9254,7 @@ timeCounterUpkeep =
 vanishingLastCounter :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 vanishingLastCounter =
   let effect = Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot Binding.triggerSource, SacrificeEffect.sacrificer = Sacrificer.EffectController, SacrificeEffect.sacrificed = Nothing}
-   in Mint.trigger (TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved {SelfCountersRemoved.kind = CounterKind.Time})) (Seq.singleton effect)
+   in Mint.trigger (TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger CounterKind.Time CounterMotion.Removed CounterHolder.Self (Just 0) CounterGrouping.EachPermanent)) (Seq.singleton effect)
 
 -- CR 702.176a's FOURTH ability: "at the beginning of your end step, if this
 -- permanent's impending cost was paid and it has a time counter on it, remove a
