@@ -6,15 +6,18 @@ module Parun.IngestSpec where
 import qualified Control.Monad as Monad
 import qualified Data.Char as Char
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
+import qualified Data.Proxy as Proxy
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Parun.Codec.Keyword as Codec.Keyword
 import qualified Parun.Ingest as Ingest
-import qualified Parun.Json.Value as Value
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonSchema.Define as Define
+import qualified Parun.JsonSchema.Name as Name
+import qualified Parun.JsonSchema.Schema as Schema
 import qualified Parun.Oracle as Oracle
 import qualified Parun.Oracle.Keyword as Keyword
 import qualified Parun.Oracle.Normalise as Normalise
@@ -165,12 +168,11 @@ tagOf = concatMap (filter Char.isAlpha . capitalise . Text.unpack) . Text.split 
       [] -> []
 
 -- Every tag of the Keyword union whose arm requires nothing but the tag.
-bareTags :: Value.Value -> Either Text.Text [String]
-bareTags schema = do
-  defs <- Common.asObject schema >>= Common.field "$defs" >>= Common.asObject
-  arms <- Common.field "Keyword" defs >>= Common.asObject >>= Common.field "oneOf" >>= Common.asArray
-  fmap Maybe.catMaybes . Monad.forM arms $ \arm -> do
-    fields <- Common.asObject arm
-    required <- Common.field "required" fields >>= Common.asArray >>= traverse Common.asText
-    tag <- Common.field "properties" fields >>= Common.asObject >>= Common.field "type" >>= Common.asObject >>= Common.field "const" >>= Common.asText
-    pure (if required == [Text.pack "type"] then Just (Text.unpack tag) else Nothing)
+bareTags :: Define.Document -> Either Text.Text [String]
+bareTags document = case Map.lookup (Name.typeName (Proxy.Proxy :: Proxy.Proxy Keyword.Type.Keyword)) (Define.definitions document) of
+  Just (Schema.OneOf arms) -> fmap Maybe.catMaybes . Monad.forM arms $ \arm -> case arm of
+    Schema.Object properties required -> case Common.lookupPair "type" properties of
+      Just (Schema.Constant tag) -> Right (if required == [Text.pack "type"] then Just (Text.unpack tag) else Nothing)
+      _ -> Left (Text.pack "expected an arm's type to be a constant")
+    _ -> Left (Text.pack "expected an arm to be an object")
+  _ -> Left (Text.pack "expected the Keyword definition to be a oneOf")

@@ -4,6 +4,7 @@ import qualified Data.Text as Text
 import qualified Parun.Json.Value as Value
 import qualified Parun.JsonSchema.Define as Define
 import qualified Parun.JsonSchema.Name as Name
+import qualified Parun.JsonSchema.Pattern as Pattern
 import qualified Parun.JsonSchema.Schema as Schema
 import qualified Parun.JsonSchema.Validate as Validate
 import qualified Parun.Spec as Spec
@@ -53,7 +54,14 @@ spec s = Spec.describe s "Parun.JsonSchema.Validate" $ do
   accepts "nonEmptyArray" (Schema.nonEmptyArray Schema.string) (Value.array [text "a"])
   rejects "an empty array against nonEmptyArray" (Schema.nonEmptyArray Schema.string) (Value.array [])
 
-  let keyed = Schema.mapOfKeys (Schema.matching (Text.pack "^(0|[1-9][0-9]*)$")) Schema.integer
+  let natural =
+        Pattern.MkPattern
+          [ Pattern.Alternation
+              [ [Pattern.Literal '0'],
+                [Pattern.Class [('1', '9')], Pattern.Star (Pattern.Class [('0', '9')])]
+              ]
+          ]
+      keyed = Schema.mapOfKeys (Schema.matching natural) Schema.integer
   accepts "mapOfKeys" keyed (Value.object [Value.pair "0" (Value.integer 1), Value.pair "10" (Value.integer 2)])
   rejects "a non-numeric key against mapOfKeys" keyed (Value.object [Value.pair "abc" (Value.integer 1)])
   -- The alternation's first branch, so a matcher that only ever tried the last
@@ -61,17 +69,11 @@ spec s = Spec.describe s "Parun.JsonSchema.Validate" $ do
   rejects "a leading zero against mapOfKeys" keyed (Value.object [Value.pair "01" (Value.integer 1)])
   rejects "an ill-typed value against mapOfKeys" keyed (Value.object [Value.pair "0" (text "a")])
 
-  -- pattern applies to strings and to nothing else, which is the one place this
-  -- module follows the specification's ignore-what-does-not-apply rule. Schema
-  -- has no combinator for a bare pattern -- matching pins the type too -- so the
-  -- keyword is written by hand here.
-  accepts
-    "a non-string against a bare pattern"
-    (Schema.fromPairs [Value.pair "pattern" (text "^a$")])
-    (Value.integer 1)
-  -- A pattern outside Parun.JsonSchema.Pattern's subset is a schema defect, and
-  -- accepting the value would be the silent direction.
-  rejects "a value against an unsupported pattern" (Schema.matching (Text.pack "a+")) (text "aa")
+  accepts "matching" (Schema.matching natural) (text "10")
+  rejects "a non-string against matching" (Schema.matching natural) (Value.integer 10)
+
+  accepts "an object against anything" Schema.Any (Value.object [])
+  accepts "a null against anything" Schema.Any Value.null
 
   accepts "tupleOf" (Schema.tupleOf [Schema.string, Schema.integer]) (Value.array [text "a", Value.integer 1])
   rejects
@@ -87,7 +89,7 @@ spec s = Spec.describe s "Parun.JsonSchema.Validate" $ do
     (Schema.tupleOf [Schema.string, Schema.integer])
     (Value.array [Value.integer 1, text "a"])
 
-  let object = Schema.object [Value.pair "a" (Schema.unwrap Schema.string)] [Text.pack "a"]
+  let object = Schema.object [Value.pair "a" Schema.string] [Text.pack "a"]
   accepts "object" object (Value.object [Value.pair "a" (text "x")])
   rejects "a missing required property against object" object (Value.object [])
   rejects "an ill-typed property against object" object (Value.object [Value.pair "a" (Value.integer 1)])
@@ -138,7 +140,7 @@ spec s = Spec.describe s "Parun.JsonSchema.Validate" $ do
   let tree =
         Define.define
           (name "Tree")
-          (fmap (\r -> Schema.object [Value.pair "next" (Schema.unwrap r)] []) tree)
+          (fmap (\r -> Schema.object [Value.pair "next" r] []) tree)
       nest v = Value.object [Value.pair "next" v]
       leaf = Value.object []
   Spec.it s "descends a recursive reference as far as the value nests" $ do
@@ -153,25 +155,13 @@ spec s = Spec.describe s "Parun.JsonSchema.Validate" $ do
       (fmap Validate.pointer (Validate.validate (Define.run tree) (nest (nest (Value.integer 1)))))
       [Text.pack "/next/next"]
 
-  -- A conforming validator ignores a keyword it does not know, which would make
-  -- this one accept everything a new Schema combinator was added to constrain.
-  Spec.it s "rejects a keyword it does not implement" $ do
-    Spec.assertNe
-      s
-      (Validate.validate (Define.run (pure (Schema.fromPairs [Value.pair "multipleOf" (Value.integer 2)]))) (Value.integer 2))
-      []
-
-  -- A reference that leads back to itself without ever stepping into the value.
-  -- Define cannot build one -- its body would have to be a bare reference to
-  -- itself -- so the document is written by hand; without the guard this case
-  -- does not terminate, and the suite's timeout is what would say so.
+  -- A reference that leads back to itself without ever stepping into the value:
+  -- the definition's body is the bare reference define hands back. Without the
+  -- guard this case does not terminate, and the suite's timeout is what would
+  -- say so.
   Spec.it s "rejects a reference that cycles without consuming the value" $ do
-    let cyclic =
-          Value.object
-            [ Value.pair "$ref" (text "#/$defs/Loop"),
-              Value.pair "$defs" (Value.object [Value.pair "Loop" (Value.object [Value.pair "$ref" (text "#/$defs/Loop")])])
-            ]
-    Spec.assertNe s (Validate.validate cyclic (text "a")) []
+    let cyclic = Define.define (name "Loop") cyclic
+    Spec.assertNe s (Validate.validate (Define.run cyclic) (text "a")) []
 
   -- An unresolvable reference is a schema defect, and skipping it would let a
   -- broken document validate everything.

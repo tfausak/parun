@@ -1,22 +1,21 @@
--- | Matching a string against a JSON Schema @pattern@.
+-- | A JSON Schema @pattern@, held as a tree rather than as text, so a schema
+-- can carry only a pattern this module can match.
 --
--- Deliberately NOT a regular expression engine, and not the ECMA-262 dialect
--- the specification names. It implements exactly the constructs the patterns
--- this project emits use --- anchors, alternation, grouping, character classes
--- with ranges, literals, and postfix @*@ --- and answers 'Left' for anything
--- else, so a pattern outside that subset is reported as a schema defect rather
--- than silently treated as matching or as not matching. Not implemented:
--- escapes, negated classes, the other repetition operators, the wildcard, and
--- unanchored matching (gap #2108).
---
--- An unanchored pattern is one of the unsupported cases. JSON Schema's
--- @pattern@ is a partial match, this matcher is a whole-string one, and the
--- difference is invisible on the anchored patterns the project writes, so
--- refusing the unanchored ones is what keeps the two readings from diverging.
+-- Deliberately NOT a regular expression engine. 'Node' has exactly the
+-- constructs the patterns this project writes use --- alternation, grouping,
+-- character classes with ranges, literals, and postfix @*@ --- and 'render'
+-- anchors every pattern at both ends, so JSON Schema's partial match and this
+-- module's whole-string match agree.
 module Parun.JsonSchema.Pattern where
 
 import qualified Data.List as List
 import qualified Data.Text as Text
+
+-- | A whole pattern: a sequence, anchored at both ends.
+newtype Pattern = MkPattern
+  { unwrap :: [Node]
+  }
+  deriving (Eq, Ord, Show)
 
 -- | One element of a pattern. A group is an 'Alternation', since a group with
 -- one branch and a group are the same thing.
@@ -28,84 +27,40 @@ data Node
   | Star Node
   deriving (Eq, Ord, Show)
 
--- | Whether the string matches the pattern. 'Left' means the PATTERN is
--- outside the supported subset, which is a defect in the schema rather than a
--- verdict about the string.
-matches :: Text.Text -> Text.Text -> Either Text.Text Bool
-matches source value = do
-  nodes <- parse $ Text.unpack source
-  pure . List.any null . matchNodes nodes $ Text.unpack value
+-- | Whether the whole string matches the pattern.
+matches :: Pattern -> Text.Text -> Bool
+matches pat = List.any null . matchNodes (unwrap pat) . Text.unpack
 
--- Parsing --------------------------------------------------------------------
+-- Rendering ------------------------------------------------------------------
 
--- | Both anchors are required and are stripped here rather than modelled,
--- because the matcher is whole-string anyway.
-parse :: String -> Either Text.Text [Node]
-parse input = case input of
-  '^' : rest | not (null rest) && last rest == '$' -> do
-    (branches, remaining) <- alternation $ init rest
-    if null remaining
-      then Right $ flatten branches
-      else Left $ unsupported remaining
-  _ -> Left . Text.pack $ "expected an anchored pattern but got " <> show input
+-- | The pattern in ECMA-262 syntax, as a schema publishes it. Every group is
+-- parenthesized, so a top-level alternation cannot bind to an anchor.
+render :: Pattern -> Text.Text
+render pat = Text.pack $ "^" <> concatMap renderNode (unwrap pat) <> "$"
 
--- | A single branch stays a bare sequence; only a real choice becomes a node.
-flatten :: [[Node]] -> [Node]
-flatten branches = case branches of
-  [branch] -> branch
-  _ -> [Alternation branches]
+renderNode :: Node -> String
+renderNode node = case node of
+  Literal c -> escape metacharacters c
+  Class ranges -> "[" <> concatMap renderRange ranges <> "]"
+  Alternation branches -> "(" <> List.intercalate "|" (fmap (concatMap renderNode) branches) <> ")"
+  Star inner -> case inner of
+    Star {} -> "(" <> renderNode inner <> ")*"
+    _ -> renderNode inner <> "*"
 
--- | Stops at @)@ or at the end of input, so a group and the whole pattern share
--- it.
-alternation :: String -> Either Text.Text ([[Node]], String)
-alternation =
-  let go acc input = do
-        (branch, rest) <- sequenceOf input
-        case rest of
-          '|' : more -> go (branch : acc) more
-          _ -> Right (reverse $ branch : acc, rest)
-   in go []
+renderRange :: (Char, Char) -> String
+renderRange (a, b) =
+  if a == b
+    then escape classMetacharacters a
+    else escape classMetacharacters a <> "-" <> escape classMetacharacters b
 
-sequenceOf :: String -> Either Text.Text ([Node], String)
-sequenceOf =
-  let go acc input = case input of
-        [] -> Right (reverse acc, input)
-        c : _ | c == '|' || c == ')' -> Right (reverse acc, input)
-        _ -> do
-          (node, rest) <- atom input
-          case rest of
-            '*' : more -> go (Star node : acc) more
-            _ -> go (node : acc) rest
-   in go []
-
-atom :: String -> Either Text.Text (Node, String)
-atom input = case input of
-  '(' : rest -> do
-    (branches, remaining) <- alternation rest
-    case remaining of
-      ')' : more -> Right (Alternation branches, more)
-      _ -> Left $ unsupported input
-  '[' : rest -> characterClass [] rest
-  c : rest | List.notElem c metacharacters -> Right (Literal c, rest)
-  _ -> Left $ unsupported input
-
--- | Positive classes only: a negated class, an escape and a trailing @-@ are
--- all unsupported rather than guessed at.
-characterClass :: [(Char, Char)] -> String -> Either Text.Text (Node, String)
-characterClass acc input = case input of
-  ']' : rest | not (null acc) -> Right (Class $ reverse acc, rest)
-  a : '-' : b : rest | ordinary a && ordinary b -> characterClass ((a, b) : acc) rest
-  a : rest | ordinary a -> characterClass ((a, a) : acc) rest
-  _ -> Left $ unsupported input
-
-ordinary :: Char -> Bool
-ordinary c = List.notElem c "[]-\\^"
+escape :: String -> Char -> String
+escape special c = if List.elem c special then ['\\', c] else [c]
 
 metacharacters :: String
 metacharacters = "\\^$.|?*+()[]{}"
 
-unsupported :: String -> Text.Text
-unsupported input = Text.pack $ "unsupported pattern syntax at " <> show input
+classMetacharacters :: String
+classMetacharacters = "[]-\\^"
 
 -- Matching -------------------------------------------------------------------
 --

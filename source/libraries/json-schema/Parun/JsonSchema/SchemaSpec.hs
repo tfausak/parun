@@ -4,6 +4,7 @@ import qualified Data.Text as Text
 import qualified Parun.Json.Array as Array
 import qualified Parun.Json.Object as Object
 import qualified Parun.Json.Value as Value
+import qualified Parun.JsonSchema.Pattern as Pattern
 import qualified Parun.JsonSchema.Schema as Schema
 import qualified Parun.Spec as Spec
 
@@ -13,68 +14,71 @@ spec s = Spec.describe s "Parun.JsonSchema.Schema" $ do
       obj = Value.Object . Object.MkObject
       arr = Value.Array . Array.MkArray
 
+  Spec.it s "anything is the empty schema" $ do
+    Spec.assertEq s (Schema.toValue Schema.Any) (obj [])
+
   Spec.it s "string is a type keyword" $ do
-    Spec.assertEq s (Schema.unwrap Schema.string) . obj $ [Value.pair "type" (str "string")]
+    Spec.assertEq s (Schema.toValue Schema.string) . obj $ [Value.pair "type" (str "string")]
 
   Spec.it s "natural pins a lower bound" $ do
-    Spec.assertEq s (Schema.unwrap Schema.natural)
+    Spec.assertEq s (Schema.toValue Schema.natural)
       . obj
       $ [Value.pair "type" (str "integer"), Value.pair "minimum" (Value.integer 0)]
 
   Spec.it s "constant writes const" $ do
-    Spec.assertEq s (Schema.unwrap (Schema.constant (Text.pack "Untap")))
+    Spec.assertEq s (Schema.toValue (Schema.constant (Text.pack "Untap")))
       . obj
       $ [Value.pair "const" (str "Untap")]
 
   Spec.it s "object carries properties and required" $ do
     Spec.assertEq
       s
-      (Schema.unwrap (Schema.object [Value.pair "a" (Schema.unwrap Schema.string)] [Text.pack "a"]))
+      (Schema.toValue (Schema.object [Value.pair "a" Schema.string] [Text.pack "a"]))
       . obj
       $ [ Value.pair "type" (str "object"),
-          Value.pair "properties" (obj [Value.pair "a" (Schema.unwrap Schema.string)]),
+          Value.pair "properties" (obj [Value.pair "a" (Schema.toValue Schema.string)]),
           Value.pair "required" (arr [str "a"])
         ]
 
   Spec.it s "nullable admits null beside the schema" $ do
-    Spec.assertEq s (Schema.unwrap (Schema.nullable Schema.string))
+    Spec.assertEq s (Schema.toValue (Schema.nullable Schema.string))
       . obj
-      $ [Value.pair "oneOf" (arr [Schema.unwrap Schema.string, Schema.unwrap Schema.null])]
+      $ [Value.pair "oneOf" (arr [Schema.toValue Schema.string, Schema.toValue Schema.null])]
 
   Spec.it s "withDefault appends to the schema's own keywords" $ do
-    Spec.assertEq s (Schema.unwrap (Schema.withDefault (str "x") Schema.string))
+    Spec.assertEq s (Schema.toValue (Schema.withDefault (str "x") Schema.string))
       . obj
       $ [Value.pair "type" (str "string"), Value.pair "default" (str "x")]
 
   Spec.it s "boolean is a type keyword" $ do
-    Spec.assertEq s (Schema.unwrap Schema.boolean) . obj $ [Value.pair "type" (str "boolean")]
+    Spec.assertEq s (Schema.toValue Schema.boolean) . obj $ [Value.pair "type" (str "boolean")]
 
   Spec.it s "array carries an items schema" $ do
-    Spec.assertEq s (Schema.unwrap (Schema.array Schema.string))
+    Spec.assertEq s (Schema.toValue (Schema.array Schema.string))
       . obj
-      $ [Value.pair "type" (str "array"), Value.pair "items" (Schema.unwrap Schema.string)]
+      $ [Value.pair "type" (str "array"), Value.pair "items" (Schema.toValue Schema.string)]
 
   Spec.it s "uniqueArray adds uniqueItems to array" $ do
-    Spec.assertEq s (Schema.unwrap (Schema.uniqueArray Schema.string))
+    Spec.assertEq s (Schema.toValue (Schema.uniqueArray Schema.string))
       . obj
       $ [ Value.pair "type" (str "array"),
-          Value.pair "items" (Schema.unwrap Schema.string),
+          Value.pair "items" (Schema.toValue Schema.string),
           Value.pair "uniqueItems" (Value.boolean True)
         ]
 
   Spec.it s "nonEmptyArray adds minItems: 1 to array" $ do
-    Spec.assertEq s (Schema.unwrap (Schema.nonEmptyArray Schema.string))
+    Spec.assertEq s (Schema.toValue (Schema.nonEmptyArray Schema.string))
       . obj
       $ [ Value.pair "type" (str "array"),
-          Value.pair "items" (Schema.unwrap Schema.string),
+          Value.pair "items" (Schema.toValue Schema.string),
           Value.pair "minItems" (Value.integer 1)
         ]
 
   Spec.it s "tupleOf pins prefixItems and both bounds" $ do
-    Spec.assertEq s (Schema.unwrap (Schema.tupleOf [Schema.string, Schema.integer]))
+    Spec.assertEq s (Schema.toValue (Schema.tupleOf [Schema.string, Schema.integer]))
       . obj
       $ [ Value.pair "type" (str "array"),
-          Value.pair "prefixItems" (arr [Schema.unwrap Schema.string, Schema.unwrap Schema.integer]),
+          Value.pair "prefixItems" (arr [Schema.toValue Schema.string, Schema.toValue Schema.integer]),
           Value.pair "minItems" (Value.integer 2),
           Value.pair "maxItems" (Value.integer 2)
         ]
@@ -85,25 +89,25 @@ spec s = Spec.describe s "Parun.JsonSchema.Schema" $ do
   -- keyword set is asserted, so this also pins mapOf apart from `object [] []`
   -- -- that emits properties and required, and would fail here.
   Spec.it s "mapOf pins the value shape and leaves keys unconstrained" $ do
-    Spec.assertEq s (Schema.unwrap (Schema.mapOf Schema.integer))
+    Spec.assertEq s (Schema.toValue (Schema.mapOf Schema.integer))
       . obj
       $ [ Value.pair "type" (str "object"),
-          Value.pair "additionalProperties" (Schema.unwrap Schema.integer)
+          Value.pair "additionalProperties" (Schema.toValue Schema.integer)
         ]
 
   -- The counterpart mapOf refuses to be: propertyNames is honest only where the
   -- decoder rejects a key the key schema rejects, which is
   -- Parun.JsonCodec.Common.naturalMap and not textMap.
   Spec.it s "mapOfKeys pins the key shape as well" $ do
-    Spec.assertEq s (Schema.unwrap (Schema.mapOfKeys Schema.string Schema.integer))
+    Spec.assertEq s (Schema.toValue (Schema.mapOfKeys Schema.string Schema.integer))
       . obj
       $ [ Value.pair "type" (str "object"),
-          Value.pair "propertyNames" (Schema.unwrap Schema.string),
-          Value.pair "additionalProperties" (Schema.unwrap Schema.integer)
+          Value.pair "propertyNames" (Schema.toValue Schema.string),
+          Value.pair "additionalProperties" (Schema.toValue Schema.integer)
         ]
 
   Spec.it s "matching is a string with a pattern" $ do
-    Spec.assertEq s (Schema.unwrap (Schema.matching (Text.pack "^a$")))
+    Spec.assertEq s (Schema.toValue (Schema.matching (Pattern.MkPattern [Pattern.Literal 'a'])))
       . obj
       $ [ Value.pair "type" (str "string"),
           Value.pair "pattern" (str "^a$")

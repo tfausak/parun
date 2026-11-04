@@ -11,7 +11,7 @@ import qualified Parun.Types.Reply as Reply
 
 -- | Any JSON, its shape checked only when a prompt reads it.
 codec :: Codec.Codec Reply.Reply
-codec = Common.scalar (Schema.fromPairs []) toValue fromValue
+codec = Common.scalar Schema.Any toValue fromValue
 
 toValue :: Reply.Reply -> Value.Value
 toValue reply = case reply of

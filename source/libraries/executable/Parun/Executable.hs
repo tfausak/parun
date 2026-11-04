@@ -313,14 +313,14 @@ writeCard file = ByteString.writeFile file . Encoding.encodeUtf8 . Common.render
 schema :: IO ()
 schema =
   Builder.hPutBuilder IO.stdout $
-    Value.encode (Define.run (Codec.schema Card.codec)) <> Builder.charUtf8 '\n'
+    Value.encode (Define.toValue (Define.run (Codec.schema Card.codec))) <> Builder.charUtf8 '\n'
 
 -- | The scenario format's JSON Schema, for an editor or a contributor writing
 -- one by hand. Emitted on demand for 'schema''s reason.
 scenarioSchema :: IO ()
 scenarioSchema =
   Builder.hPutBuilder IO.stdout $
-    Value.encode (Define.run (Codec.schema Codec.Scenario.codec)) <> Builder.charUtf8 '\n'
+    Value.encode (Define.toValue (Define.run (Codec.schema Codec.Scenario.codec))) <> Builder.charUtf8 '\n'
 
 -- | Runs each scenario file against the bundled cards and says how it went,
 -- one line each: the first way to drive the engine that is not the test suite.

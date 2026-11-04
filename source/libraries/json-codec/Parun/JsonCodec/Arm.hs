@@ -269,7 +269,7 @@ keyedAnonymous tagOf arms =
 keyedSchema :: Arm a -> Define.SchemaM [Schema.Schema]
 keyedSchema arm =
   let bare = Schema.constant (Text.pack (tag arm))
-      wrapped s = Schema.object [Value.pair (tag arm) (Schema.unwrap s)] [Text.pack (tag arm)]
+      wrapped s = Schema.object [Value.pair (tag arm) s] [Text.pack (tag arm)]
    in case valueSchema arm of
         NoValue -> pure [bare]
         RequiredValue s -> fmap (pure . wrapped) s
@@ -288,12 +288,12 @@ armSchema arm = case valueSchema arm of
 -- shape where it is not.
 armObject :: String -> Maybe Schema.Schema -> Schema.Schema
 armObject t ms =
-  let typePair = Value.pair "type" (Schema.unwrap (Schema.constant (Text.pack t)))
+  let typePair = Value.pair "type" (Schema.constant (Text.pack t))
    in case ms of
         Nothing -> Schema.object [typePair] [Text.pack "type"]
         Just s ->
           Schema.object
-            [typePair, Value.pair "value" (Schema.unwrap s)]
+            [typePair, Value.pair "value" s]
             [Text.pack "type", Text.pack "value"]
 
 -- | 'armObject'\'s payload case with @value@ NOT in @required@, for
@@ -301,7 +301,7 @@ armObject t ms =
 -- required it would reject a document the codec itself writes and reads.
 armObjectOptional :: String -> Schema.Schema -> Schema.Schema
 armObjectOptional t s =
-  let typePair = Value.pair "type" (Schema.unwrap (Schema.constant (Text.pack t)))
+  let typePair = Value.pair "type" (Schema.constant (Text.pack t))
    in Schema.object
-        [typePair, Value.pair "value" (Schema.unwrap s)]
+        [typePair, Value.pair "value" s]
         [Text.pack "type"]

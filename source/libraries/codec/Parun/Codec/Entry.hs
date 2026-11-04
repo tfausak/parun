@@ -8,7 +8,6 @@ import qualified Parun.Json.Value as Value
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
-import qualified Parun.JsonSchema.Schema as Schema
 import qualified Parun.Types.Entry as Entry
 
 codec :: Codec.Codec Entry.Entry
@@ -26,7 +25,7 @@ fields =
       Fields.schema = do
         move <- Codec.schema Move.codec
         check <- Codec.schema Check.codec
-        pure ([Value.pair "do" (Schema.unwrap move), Value.pair "refuse" (Schema.unwrap move), Value.pair "check" (Schema.unwrap check)], [])
+        pure ([Value.pair "do" move, Value.pair "refuse" move, Value.pair "check" check], [])
     }
 
 encodeFields :: Entry.Entry -> [Pair.Pair Value.Value]
