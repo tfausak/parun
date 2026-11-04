@@ -45,8 +45,6 @@ Each names the mtgish node the translator stops at.
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #6081: Balance. Nothing reads the fewest across players, and keeping an exact
-  number and sacrificing or discarding the rest takes only "up to".
 - #6082: Tetravus. Separate abilities can't share the tokens one of them made
   (CR 607.2a), across turns and after it leaves.
 - #6083: Power Surge. Nothing records a player's untapped lands as the turn

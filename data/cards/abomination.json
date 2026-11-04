@@ -95,74 +95,80 @@
             "type": "AnyOf",
             "value": [
               {
-                "type": "CreatureBlocksCreature",
+                "type": "Blocks",
                 "value": {
-                  "attacker": {
-                    "type": "And",
-                    "value": [
-                      {
-                        "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
-                      },
-                      {
-                        "type": "Or",
-                        "value": [
-                          {
-                            "type": "HasColor",
-                            "value": {
-                              "type": "Green"
-                            }
-                          },
-                          {
-                            "type": "HasColor",
-                            "value": {
-                              "type": "White"
-                            }
+                  "count": {
+                    "type": "EachCreature",
+                    "value": {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HasCardType",
+                          "value": {
+                            "type": "Creature"
                           }
-                        ]
-                      }
-                    ]
+                        },
+                        {
+                          "type": "Or",
+                          "value": [
+                            {
+                              "type": "HasColor",
+                              "value": {
+                                "type": "Green"
+                              }
+                            },
+                            {
+                              "type": "HasColor",
+                              "value": {
+                                "type": "White"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
                   },
-                  "blocker": {
-                    "type": "IsSource"
+                  "role": {
+                    "type": "Blocker"
                   }
                 }
               },
               {
-                "type": "CreatureBecomesBlockedBy",
+                "type": "Blocks",
                 "value": {
-                  "attacker": {
-                    "type": "IsSource"
-                  },
-                  "blocker": {
-                    "type": "And",
-                    "value": [
-                      {
-                        "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
-                      },
-                      {
-                        "type": "Or",
-                        "value": [
-                          {
-                            "type": "HasColor",
-                            "value": {
-                              "type": "Green"
-                            }
-                          },
-                          {
-                            "type": "HasColor",
-                            "value": {
-                              "type": "White"
-                            }
+                  "count": {
+                    "type": "EachCreature",
+                    "value": {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HasCardType",
+                          "value": {
+                            "type": "Creature"
                           }
-                        ]
-                      }
-                    ]
+                        },
+                        {
+                          "type": "Or",
+                          "value": [
+                            {
+                              "type": "HasColor",
+                              "value": {
+                                "type": "Green"
+                              }
+                            },
+                            {
+                              "type": "HasColor",
+                              "value": {
+                                "type": "White"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "role": {
+                    "type": "Attacker"
                   }
                 }
               }
