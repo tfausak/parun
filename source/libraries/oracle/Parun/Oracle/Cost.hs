@@ -7,6 +7,7 @@ import qualified Data.Char as Char
 import qualified Data.Text as Text
 import qualified Parun.Oracle.Filter as Filter
 import qualified Parun.Oracle.Prose as Prose
+import qualified Parun.Types.CardSelection as CardSelection
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.CostAmount as CostAmount
@@ -81,8 +82,12 @@ component self named c = case c of
   CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed n)) f) -> do
     p <- Filter.phrase f named
     fmap (Text.pack "Sacrifice " <>) (some (toInteger n) (Filter.MkNoun (Text.pack "permanent") (Just (Text.pack "permanents"))) p)
-  CostComponent.DiscardCards (DiscardCards.MkDiscardCards ObjectCount.Every (Filter.Type.And [])) -> [Text.pack "Discard your hand"]
-  CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed n)) f) -> do
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards ObjectCount.Every (Filter.Type.And []) _) -> [Text.pack "Discard your hand"]
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed n)) f CardSelection.AtRandom) -> do
+    p <- Filter.phrase f named
+    let card = Filter.MkNoun (Text.pack "card") (Just (Text.pack "cards"))
+    fmap (\phrase -> Text.pack "Discard " <> phrase <> Text.pack " at random") (some (toInteger n) card (Filter.merge p (Filter.MkPhrase [] [card] [])))
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed n)) f CardSelection.ByChoice) -> do
     p <- Filter.phrase f named
     let card = Filter.MkNoun (Text.pack "card") (Just (Text.pack "cards"))
     fmap (Text.pack "Discard " <>) (some (toInteger n) card (Filter.merge p (Filter.MkPhrase [] [card] [])))

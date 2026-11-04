@@ -59,6 +59,7 @@ import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.CandidateCost as CandidateCost
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.CardSelection as CardSelection
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CastWindow as CastWindow
 import qualified Parun.Types.Color as Color
@@ -75,6 +76,7 @@ import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CounterSpread as CounterSpread
 import qualified Parun.Types.CountersOnThis as CountersOnThis
 import qualified Parun.Types.Departure as Departure
+import qualified Parun.Types.DiscardCards as DiscardCards
 import qualified Parun.Types.DiscardCause as DiscardCause
 import qualified Parun.Types.EventShape as EventShape
 import qualified Parun.Types.Face as Face
@@ -2698,6 +2700,7 @@ spec s registry = Spec.describe s "Parun.Engine.Cost" $ do
   soulDivinerSpec s registry
   quillspikeSpec s registry
   millikinSpec s registry
+  randomDiscardSpec s registry
   brittleEffigySpec s registry
   trumpetingCarnosaurSpec s registry
   ashnodsAltarSpec s registry
@@ -4598,6 +4601,30 @@ quillspikeBoard s registry onGiant = do
           GameState.priority = Just S.alice
         }
     )
+
+-- CR 601.2h pays a random discard after a chosen one, whatever order they are
+-- printed in, and asks no order. No pool card prints both; Dream Halls with Sonic
+-- Burst would, and Coral Helm's component stands in for it here.
+randomDiscardSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+randomDiscardSpec s registry =
+  Spec.it s "CR 601.2h a random discard is paid after a chosen one" $ do
+    helm <- S.printingOf s registry "Coral Helm"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (helmId, g0) = S.addPermanent helm S.alice (Setup.emptyGame S.bothPlayers)
+        board = foldr (\_ gs -> snd (S.addHandCard piker S.alice gs)) g0 [1 :: Int, 2, 3]
+        discard = CostComponent.DiscardCards . DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.Type.And [])
+        payment = Cost.payComponents S.manaPerformer PaymentMoment.OutsideResolution Nothing Map.empty S.alice helmId [discard CardSelection.AtRandom, discard CardSelection.ByChoice]
+        ((_, after), asked) = State.runState (Engine.runGame recordingDiscards board payment) []
+    Spec.assertEqWith s "CR 601.2h the choice comes first and nothing is ordered" (fmap (fmap length) asked) [("ChooseDiscard", 3), ("RandomObject", 2)]
+    Spec.assertEqWith s "CR 701.9a and both cards were discarded" (length (Game.zoneMembers Zone.Graveyard S.alice after)) 2
+
+-- Each question a discard cost asks, by its candidates, in order.
+recordingDiscards :: Prompt.Prompt r -> State.State [(String, [ObjectId.ObjectId])] r
+recordingDiscards p = case p of
+  Prompt.OrderCostComponents {} -> State.modify' (<> [("OrderCostComponents", [])]) >> pure (Replay.defaultAnswer p)
+  Prompt.ChooseDiscard _ _ held _ -> State.modify' (<> [("ChooseDiscard", held)]) >> pure (Replay.defaultAnswer p)
+  Prompt.RandomObject candidates -> State.modify' (<> [("RandomObject", NonEmpty.toList candidates)]) >> pure (Replay.defaultAnswer p)
+  _ -> pure (S.identityAnswer p)
 
 -- Millikin {2} Artifact Creature -- Construct 0/1, "{T}, Mill a card: Add {C}"
 -- (Oracle text checked against Scryfall): the pool's producer of a cost that

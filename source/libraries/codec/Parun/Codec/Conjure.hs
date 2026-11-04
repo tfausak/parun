@@ -3,9 +3,9 @@
 module Parun.Codec.Conjure where
 
 import qualified Data.Typeable as Typeable
+import qualified Parun.Codec.CardSelection as CardSelection
 import qualified Parun.Codec.ConjureCards as ConjureCards
 import qualified Parun.Codec.ConjureDestination as ConjureDestination
-import qualified Parun.Codec.ConjureSelection as ConjureSelection
 import qualified Parun.Codec.Quantity as Quantity
 import qualified Parun.Codec.SlotName as SlotName
 import qualified Parun.JsonCodec.Codec as Codec
@@ -34,7 +34,7 @@ codec :: (Typeable.Typeable card) => Codec.Codec card -> Codec.Codec (Conjure.Co
 codec cardCodec = Fields.object $ do
   quantity <- Fields.defaulted "quantity" Conjure.defaultQuantity Quantity.codec Conjure.quantity
   cards <- Fields.required "cards" (ConjureCards.codec cardCodec) Conjure.cards
-  selection <- Fields.defaulted "selection" Conjure.defaultSelection ConjureSelection.codec Conjure.selection
+  selection <- Fields.defaulted "selection" Conjure.defaultSelection CardSelection.codec Conjure.selection
   destination <- Fields.required "destination" ConjureDestination.codec Conjure.destination
   slot <- Fields.defaulted "slot" Nothing (Common.maybe SlotName.codec) Conjure.slot
   pure

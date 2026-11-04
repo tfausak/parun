@@ -5,6 +5,7 @@ import qualified Parun.Codec.Keyword as Keyword
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
+import qualified Parun.Types.CardSelection as CardSelection
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CostAmount as CostAmount
 import qualified Parun.Types.DiscardCards as DiscardCards
@@ -27,7 +28,8 @@ spec s = Spec.describe s "Parun.Codec.DiscardCards" $ do
       codec
       ( DiscardCards.MkDiscardCards
           { DiscardCards.count = ObjectCount.Exactly (CostAmount.Fixed 1),
-            DiscardCards.whichCards = Filter.HasCardType CardType.Land
+            DiscardCards.whichCards = Filter.HasCardType CardType.Land,
+            DiscardCards.selection = CardSelection.ByChoice
           }
       )
       " {\"count\":{\"type\":\"Fixed\",\"value\":1},\"whichCards\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}} "
@@ -38,7 +40,8 @@ spec s = Spec.describe s "Parun.Codec.DiscardCards" $ do
       codec
       ( DiscardCards.MkDiscardCards
           { DiscardCards.count = ObjectCount.Exactly (CostAmount.Fixed 2),
-            DiscardCards.whichCards = Filter.And []
+            DiscardCards.whichCards = Filter.And [],
+            DiscardCards.selection = CardSelection.ByChoice
           }
       )
       " {\"count\":{\"type\":\"Fixed\",\"value\":2},\"whichCards\":{\"type\":\"And\",\"value\":[]}} "
@@ -49,8 +52,21 @@ spec s = Spec.describe s "Parun.Codec.DiscardCards" $ do
       codec
       ( DiscardCards.MkDiscardCards
           { DiscardCards.count = ObjectCount.Every,
-            DiscardCards.whichCards = Filter.And []
+            DiscardCards.whichCards = Filter.And [],
+            DiscardCards.selection = CardSelection.ByChoice
           }
       )
       " {\"count\":{\"type\":\"Every\"},\"whichCards\":{\"type\":\"And\",\"value\":[]}} "
+  -- Coral Helm's "discard a card at random".
+  Spec.it s "MkDiscardCards, at random" $
+    Common.assertCodec
+      s
+      codec
+      ( DiscardCards.MkDiscardCards
+          { DiscardCards.count = ObjectCount.Exactly (CostAmount.Fixed 1),
+            DiscardCards.whichCards = Filter.And [],
+            DiscardCards.selection = CardSelection.AtRandom
+          }
+      )
+      " {\"count\":{\"type\":\"Fixed\",\"value\":1},\"selection\":{\"type\":\"AtRandom\"},\"whichCards\":{\"type\":\"And\",\"value\":[]}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

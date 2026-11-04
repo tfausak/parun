@@ -67,6 +67,7 @@ import qualified Parun.Types.BecameDesignated as BecameDesignated
 import qualified Parun.Types.BecomeCopy as BecomeCopy
 import qualified Parun.Types.Binding as Binding.Type
 import qualified Parun.Types.Card as Card.Type
+import qualified Parun.Types.CardSelection as CardSelection
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.ChangeTargets as ChangeTargets
 import qualified Parun.Types.ClassLevel as ClassLevel
@@ -75,7 +76,6 @@ import qualified Parun.Types.Conjure as Conjure
 import qualified Parun.Types.ConjureCards as ConjureCards
 import qualified Parun.Types.ConjureDestination as ConjureDestination
 import qualified Parun.Types.ConjureEntry as ConjureEntry
-import qualified Parun.Types.ConjureSelection as ConjureSelection
 import qualified Parun.Types.ControllerRelation as ControllerRelation
 import qualified Parun.Types.CopyCoverage as CopyCoverage
 import qualified Parun.Types.CopyOriginal as CopyOriginal
@@ -321,8 +321,8 @@ conjure resolving source controller legal (Conjure.MkConjure quantity cards sele
       -- more; a one-name list is taken outright.
       pickName names =
         Maybe.fromMaybe (NonEmpty.head names) <$> case selection of
-          ConjureSelection.AtRandom -> Game.drawAmong Prompt.RandomCard (NonEmpty.toList names)
-          ConjureSelection.ByChoice -> Game.chooseAmong Prompt.ChooseConjuredCard controller (NonEmpty.toList names)
+          CardSelection.AtRandom -> Game.drawAmong Prompt.RandomCard (NonEmpty.toList names)
+          CardSelection.ByChoice -> Game.chooseAmong Prompt.ChooseConjuredCard controller (NonEmpty.toList names)
       pickWritten written = fmap (\answer -> (answered written answer, Nothing)) (pickName (fmap Common.conjuredName written))
       -- A REFERENCE pick (CR 108.1) asks the interpreter which of the
       -- reference's cards the filter admits -- ONCE, off the pre-effect board

@@ -7,6 +7,7 @@ import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.Behold as Behold
+import qualified Parun.Types.CardSelection as CardSelection
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CostAmount as CostAmount
 import qualified Parun.Types.CostComponent as CostComponent
@@ -127,7 +128,7 @@ spec s = Spec.describe s "Parun.Codec.CostComponent" $ do
     Common.assertCodec
       s
       codec
-      (CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed 2)) (Filter.And [])))
+      (CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed 2)) (Filter.And []) CardSelection.ByChoice))
       " {\"type\":\"DiscardCards\",\"value\":{\"count\":{\"type\":\"Fixed\",\"value\":2},\"whichCards\":{\"type\":\"And\",\"value\":[]}}} "
   Spec.it s "DiscardThis" $
     Common.assertCodec

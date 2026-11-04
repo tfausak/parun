@@ -2,7 +2,7 @@
 {-# LANGUAGE RankNTypes #-}
 
 -- Covers: Alchemy's conjure keyword action -- Parun.Types.Conjure,
--- Parun.Types.ConjureDestination and Parun.Types.ConjureSelection,
+-- Parun.Types.ConjureDestination and Parun.Types.CardSelection,
 -- Parun.Engine.Resolve's Effect.Conjure arm, and Parun.Engine.Event's conjure and
 -- mintCard (the mint CR 400.11c's wish shares, which Parun.OutsideTheGameSpec
 -- drives from the other side).
