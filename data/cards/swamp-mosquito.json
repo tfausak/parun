@@ -34,9 +34,12 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "CreatureAttacksUnblocked",
+            "type": "Attacks",
             "value": {
-              "type": "IsSource"
+              "type": "Unblocked",
+              "value": {
+                "type": "IsSource"
+              }
             }
           },
           "modal": {

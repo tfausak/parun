@@ -2400,7 +2400,7 @@ sindbadCombat mountain sindbad subgamesSoFar =
       atLife pid n gs = gs {GameState.players = Map.adjust (\p -> p {Player.life = n}) pid (GameState.players gs)}
       before = (atLife S.carol 9 (atLife S.bob 13 (atLife S.alice 20 stocked))) {GameState.subgamesThisMatch = subgamesSoFar}
       atDamage = S.runToStep (Phase.Combat CombatStep.CombatDamage) sindbadAnswer before
-      fought = S.runPure sindbadAnswer atDamage Damage.dealCombatDamage
+      fought = S.runPure sindbadAnswer atDamage (Damage.dealCombatDamage (pure ()))
       placed = S.runPure sindbadAnswer fought Engine.settleForPriority
       after = S.runPure sindbadAnswer placed Engine.priorityLoop
    in (before, placed, after)

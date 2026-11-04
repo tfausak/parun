@@ -167,7 +167,7 @@ lifeGainTriggerSpec s registry =
                       _ -> Nothing
                   )
                   (S.eventsOf gs)
-              after n = S.runPure S.identityAnswer gs0 (Damage.applyDamage [evOf n])
+              after n = S.runPure S.identityAnswer gs0 (Damage.applyDamage (pure ()) [evOf n])
           Spec.assertEqWith s "two damage records the gain" (gainsIn (after 2)) [S.alice]
           Spec.assertEqWith s "zero damage records nothing" (gainsIn (after 0)) []
 
@@ -1019,7 +1019,7 @@ enrageSpec s registry =
       -- entries, the settle gathers what they triggered and puts it on the stack
       -- (CR 603.3), and the priority loop resolves it. The narrowest path that
       -- shows the behaviour.
-      dealing events gs = resolveAll (settle (S.runPure S.identityAnswer gs (Damage.applyDamage events)))
+      dealing events gs = resolveAll (settle (S.runPure S.identityAnswer gs (Damage.applyDamage (pure ()) events)))
       -- alice's library is stocked, or CR 104.3c decks her before the assertion
       -- runs.
       stock printing pid n gs = List.foldl' (\g _ -> snd (S.addLibraryCard printing pid g)) gs [1 .. (n :: Int)]
@@ -1151,7 +1151,7 @@ belltowerSphinxSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry 
 belltowerSphinxSpec s registry =
   let resolveAll gs = snd (Engine.runGamePure S.identityAnswer gs Engine.priorityLoop)
       settle gs = snd (Engine.runGamePure S.identityAnswer gs Engine.settleForPriority)
-      dealing events gs = resolveAll (settle (S.runPure S.identityAnswer gs (Damage.applyDamage events)))
+      dealing events gs = resolveAll (settle (S.runPure S.identityAnswer gs (Damage.applyDamage (pure ()) events)))
       -- Every library is stocked past the largest mill, or the mill runs out of
       -- cards and both readings of the rule produce the same graveyard.
       stock printing pid n gs = List.foldl' (\g _ -> snd (S.addLibraryCard printing pid g)) gs [1 .. (n :: Int)]

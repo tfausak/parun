@@ -71,11 +71,16 @@ import qualified Parun.Types.AttachRestriction as AttachRestriction
 import qualified Parun.Types.AttachRewrite as AttachRewrite
 import qualified Parun.Types.AttachTarget as AttachTarget
 import qualified Parun.Types.AttachedToBound as AttachedToBound
+import qualified Parun.Types.AttackCompany as AttackCompany
 import qualified Parun.Types.AttackCost as AttackCost
+import qualified Parun.Types.AttackCount as AttackCount
 import qualified Parun.Types.AttackLimitUnless as AttackLimitUnless
 import qualified Parun.Types.AttackPermission as AttackPermission
 import qualified Parun.Types.AttackRequirement as AttackRequirement
 import qualified Parun.Types.AttackTargetRef as AttackTargetRef
+import qualified Parun.Types.AttackTrigger as AttackTrigger
+import qualified Parun.Types.AttackerTarget as AttackerTarget
+import qualified Parun.Types.AttackerTrigger as AttackerTrigger
 import qualified Parun.Types.AttackingPlayers as AttackingPlayers
 import qualified Parun.Types.Backup as Backup
 import qualified Parun.Types.BecomeCopy as BecomeCopy
@@ -178,6 +183,7 @@ import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DealDamage as DealDamage
 import qualified Parun.Types.DealtDamage as DealtDamage
+import qualified Parun.Types.DeclarationTrigger as DeclarationTrigger
 import qualified Parun.Types.DelayedTrigger as DelayedTrigger
 import qualified Parun.Types.Designate as Designate
 import qualified Parun.Types.Destroy as Destroy
@@ -338,7 +344,6 @@ import qualified Parun.Types.PlacesSticker as PlacesSticker
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
 import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Parun.Types.PlayerActsOn as PlayerActsOn
-import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerChoice as PlayerChoice
 import qualified Parun.Types.PlayerCounterTally as PlayerCounterTally
 import qualified Parun.Types.PlayerCounters as PlayerCounters
@@ -2413,10 +2418,6 @@ permanentsDealCombatDamageToPlayerNames :: (Monoid r) => Asking r -> PermanentsD
 permanentsDealCombatDamageToPlayerNames asking x = case x of
   PermanentsDealCombatDamageToPlayer.MkPermanentsDealCombatDamageToPlayer filter_ _recipient _oneOrMorePlayers -> filterNames asking filter_
 
-playerAttacksWithNames :: (Monoid r) => Asking r -> PlayerAttacksWith.PlayerAttacksWith -> r
-playerAttacksWithNames asking x = case x of
-  PlayerAttacksWith.MkPlayerAttacksWith _player filter_ _attackers -> filterNames asking filter_
-
 playerCounterTallyNames :: (Monoid r) => Asking r -> PlayerCounterTally.PlayerCounterTally -> r
 playerCounterTallyNames asking x = case x of
   PlayerCounterTally.MkPlayerCounterTally player _kind -> playerRefNames asking player
@@ -3003,6 +3004,42 @@ toughnessNames :: (Monoid r) => Asking r -> Toughness.Toughness -> r
 toughnessNames asking x = case x of
   Toughness.MkToughness unwrap -> quantityNames asking unwrap
 
+attackTriggerNames :: (Monoid r) => Asking r -> AttackTrigger.AttackTrigger -> r
+attackTriggerNames asking x = case x of
+  AttackTrigger.Attacker attackerTrigger -> attackerTriggerNames asking attackerTrigger
+  -- Relations and a subject, which name nothing.
+  AttackTrigger.Attacked _attackedTrigger -> mempty
+  AttackTrigger.Declaration declarationTrigger -> declarationTriggerNames asking declarationTrigger
+  AttackTrigger.Unblocked filter_ -> filterNames asking filter_
+
+attackerTriggerNames :: (Monoid r) => Asking r -> AttackerTrigger.AttackerTrigger -> r
+attackerTriggerNames asking x = case x of
+  AttackerTrigger.MkAttackerTrigger creature target company frequency while_ ->
+    filterNames asking creature
+      <> attackerTargetNames asking target
+      <> attackCompanyNames asking company
+      <> triggerFrequencyNames asking HistoryRead.Attacks frequency
+      <> foldMap (conditionNames asking) while_
+
+attackerTargetNames :: (Monoid r) => Asking r -> AttackerTarget.AttackerTarget -> r
+attackerTargetNames asking x = case x of
+  AttackerTarget.AnyTarget -> mempty
+  AttackerTarget.Defending _relation -> mempty
+  AttackerTarget.Permanent filter_ -> filterNames asking filter_
+  AttackerTarget.PlayerWithMostLife -> mempty
+
+attackCompanyNames :: (Monoid r) => Asking r -> AttackCompany.AttackCompany -> r
+attackCompanyNames asking x = case x of
+  AttackCompany.AnyCompany -> mempty
+  AttackCompany.Alone -> mempty
+  AttackCompany.WithAnother filter_ -> filterNames asking filter_
+
+declarationTriggerNames :: (Monoid r) => Asking r -> DeclarationTrigger.DeclarationTrigger -> r
+declarationTriggerNames asking x = case x of
+  DeclarationTrigger.MkDeclarationTrigger _player attackers -> case attackers of
+    Nothing -> mempty
+    Just (AttackCount.MkAttackCount _floor filter_) -> filterNames asking filter_
+
 blockTriggerNames :: (Monoid r) => Asking r -> BlockTrigger.BlockTrigger -> r
 blockTriggerNames asking x = case x of
   BlockTrigger.MkBlockTrigger _role creature count -> filterNames asking creature <> blockCountNames asking count
@@ -3031,22 +3068,8 @@ triggerConditionNames asking x = case x of
   TriggerCondition.RevealedThisWay (RevealedThisWay.MkRevealedThisWay filter_ _timing) -> filterNames asking filter_
   TriggerCondition.Discards discardTrigger -> discardTriggerNames asking discardTrigger
   TriggerCondition.PlayerDrawsNthCard _playerDrawsNthCard -> mempty
-  TriggerCondition.SelfAttacks triggerFrequency -> triggerFrequencyNames asking HistoryRead.Attacks triggerFrequency
-  TriggerCondition.SelfAttacksWithAnother filter_ -> filterNames asking filter_
-  TriggerCondition.SelfAttacksPermanent filter_ -> filterNames asking filter_
-  TriggerCondition.CreatureAttacksAlone filter_ -> filterNames asking filter_
-  TriggerCondition.CreatureAttacksYou -> mempty
-  TriggerCondition.CreatureAttacks filter_ -> filterNames asking filter_
-  TriggerCondition.AttachedPlayerIsAttacked -> mempty
-  TriggerCondition.SelfIsAttacked -> mempty
-  TriggerCondition.PlayerAttacks _playerRelation -> mempty
-  TriggerCondition.PlayerAttacksWith playerAttacksWith -> playerAttacksWithNames asking playerAttacksWith
-  TriggerCondition.PlayerAttacksPlayer _playerAttacksPlayer -> mempty
-  TriggerCondition.SelfAttacksPlayerWithMostLife -> mempty
-  TriggerCondition.SelfAttacksWhileSaddled -> mempty
-  TriggerCondition.SelfAttacksWhile condition -> conditionNames asking condition
+  TriggerCondition.Attacks attackTrigger -> attackTriggerNames asking attackTrigger
   TriggerCondition.Blocks blockTrigger -> blockTriggerNames asking blockTrigger
-  TriggerCondition.CreatureAttacksUnblocked filter_ -> filterNames asking filter_
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> mempty
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> mempty
   TriggerCondition.SelfPutIntoGraveyardDuringResolution -> mempty

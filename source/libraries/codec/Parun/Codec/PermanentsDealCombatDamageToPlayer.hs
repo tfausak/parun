@@ -10,8 +10,7 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 
--- | A bare object keyed by the record's field names, as
--- Parun.Codec.PlayerAttacksPlayer is. The first two keys are required: a card
+-- | A bare object keyed by the record's field names. The first two keys are required: a card
 -- that qualifies only the damagers writes AnyPlayer for the recipient, which is
 -- what "deal combat damage to a player" says. `oneOrMorePlayers` defaults to
 -- that same "to a player".

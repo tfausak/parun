@@ -191,7 +191,7 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
         dredging p = case p of
           Prompt.ChooseDredge {} -> OptionalDecision.Exercises
           _ -> S.identityAnswer p
-        librarySize gs = length (Game.zoneMembers Zone.Library S.alice (S.runPure dredging gs (Event.drawCard S.alice)))
+        librarySize gs = length (Game.zoneMembers Zone.Library S.alice (S.runPure dredging gs (Event.drawCard (pure ()) S.alice)))
     Spec.assertEqWith s "CR 613.1f under the Jailer alice draws one card rather than dredging" (librarySize withJailer) 3
     Spec.assertEqWith s "CR 702.52a without it she dredges, milling three" (librarySize without) 1
   -- CR 613.1f in a GRAVEYARD, the other direction: The Necrobloom's "Land cards
@@ -213,7 +213,7 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
           Prompt.ChooseDredge {} -> OptionalDecision.Exercises
           _ -> S.identityAnswer p
         drawn gs =
-          let after = S.runPure dredging gs (Event.drawCard S.alice)
+          let after = S.runPure dredging gs (Event.drawCard (pure ()) S.alice)
            in (buried `elem` Game.zoneMembers Zone.Graveyard S.alice after, length (Game.zoneMembers Zone.Library S.alice after))
     Spec.assertEqWith s "CR 702.52a under The Necrobloom the Forest leaves the graveyard and two cards are milled" (drawn withBloom) (False, 2)
     Spec.assertEqWith s "CR 613.1f without it she draws, and the Forest stays buried" (drawn without) (True, 3)

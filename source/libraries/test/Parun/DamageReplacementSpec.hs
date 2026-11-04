@@ -440,7 +440,7 @@ templeAltisaurSpec s registry = Spec.describe s "Temple Altisaur (CR 615.10)" $ 
       Spec.assertEqWith s "and both events happened, each at 1" (fmap DamageEvent.amount (S.damageEventsOf after)) [1, 1]
       Spec.assertBool
         s
-        (not (wasAskedToAllocateDamage (answersFor S.identityAnswer board (Damage.applyDamage batch))))
+        (not (wasAskedToAllocateDamage (answersFor S.identityAnswer board (Damage.applyDamage (pure ()) batch))))
         "no AllocateDamage was raised: a static shield allocates nothing across a batch"
   -- CR 615.12 / 615.1a: the clause says "prevent", so this IS a prevention
   -- effect, and unpreventable damage is dealt in full. An instead-amount of 1
@@ -551,7 +551,7 @@ absorbSpec s registry = Spec.describe s "Absorb (CR 702.64)" $ do
       Spec.assertEqWith s "and both events happened, cut to 2 and 3" (fmap DamageEvent.amount (S.damageEventsOf after)) [2, 3]
       Spec.assertBool
         s
-        (not (wasAskedToAllocateDamage (answersFor S.identityAnswer board (Damage.applyDamage batch))))
+        (not (wasAskedToAllocateDamage (answersFor S.identityAnswer board (Damage.applyDamage (pure ()) batch))))
         "no AllocateDamage was raised: a per-event ceiling allocates nothing across a batch"
 
 -- Ajani Steadfast {3}{W} Legendary Planeswalker -- Ajani, loyalty 4. "+1: Until
@@ -982,11 +982,11 @@ spiderPunkSpec s registry = Spec.describe s "Spider-Punk (CR 615.12)" $ do
           controlBatch = [hit controlAttacker (Recipient.ToCreature controlVictim) 5, hit controlOther (Recipient.ToCreature controlVictim) 3]
       Spec.assertBool
         s
-        (wasAskedToAllocateDamage (answersFor S.identityAnswer controlShielded (Damage.applyDamage controlBatch)))
+        (wasAskedToAllocateDamage (answersFor S.identityAnswer controlShielded (Damage.applyDamage (pure ()) controlBatch)))
         "setup: without Spider-Punk 4 cannot cover 5 and 3, so alice is asked"
       Spec.assertBool
         s
-        (not (wasAskedToAllocateDamage (answersFor S.identityAnswer shielded (Damage.applyDamage batch))))
+        (not (wasAskedToAllocateDamage (answersFor S.identityAnswer shielded (Damage.applyDamage (pure ()) batch))))
         "no AllocateDamage was raised: no division of unpreventable damage spends the shield"
       let after = settleDamage S.identityAnswer shielded batch
       Spec.assertEqWith s "both events happened in full" (amounts after) [5, 3]
@@ -1130,7 +1130,7 @@ choosersAsked gs batch =
           State.modify' (<> [pid])
           pure (S.allocateInOrder (const ()) events share)
         _ -> pure (S.identityAnswer p)
-   in State.execState (Engine.runGame step gs (Damage.applyDamage batch)) []
+   in State.execState (Engine.runGame step gs (Damage.applyDamage (pure ()) batch)) []
 
 -- A Furnace of Rath under alice, one Goblin Piker each side, and a Mending Hands
 -- shield on both creatures -- so every event addressed to either creature has
@@ -1496,7 +1496,7 @@ luminesceSpec s registry = Spec.describe s "Luminesce (CR 615.1, CR 609.7b)" $ d
   Spec.it s "CR 615.1 the green source's 3 lands and the black and red 4 and 2 are prevented"
     . withBoard
     $ \wraith piker mammoth shielded -> do
-      let after = S.runPure S.identityAnswer shielded (Damage.applyDamage [hit mammoth 3, hit wraith 4, hit piker 2])
+      let after = S.runPure S.identityAnswer shielded (Damage.applyDamage (pure ()) [hit mammoth 3, hit wraith 4, hit piker 2])
       Spec.assertEqWith s "setup: the shield is a floating replacement" (length (GameState.replacements shielded)) 1
       Spec.assertEqWith s "setup: alice starts on 20" (S.lifeOf S.alice shielded) (Just 20)
       Spec.assertEqWith s "only the War Mammoth's event happened" (amounts after) [3]
@@ -1601,7 +1601,7 @@ moonmistSpec s registry = Spec.describe s "Moonmist (CR 615.1, CR 609.7b)" $ do
     . withBoard
     $ \wolf werewolf piker shielded -> do
       let batch = [hit DamageKind.Combat wolf 3, hit DamageKind.Combat werewolf 3, hit DamageKind.Combat piker 2]
-          after = S.runPure S.identityAnswer shielded (Damage.applyDamage batch)
+          after = S.runPure S.identityAnswer shielded (Damage.applyDamage (pure ()) batch)
       -- The behavioural assertion leads, so no proxy below it can absorb a
       -- mutation to the card's filter and report itself instead.
       Spec.assertEqWith s "the Wolf's and the Werewolf's events happened, the Piker's did not" (sources after) [wolf, werewolf]
@@ -1615,7 +1615,7 @@ moonmistSpec s registry = Spec.describe s "Moonmist (CR 615.1, CR 609.7b)" $ do
   Spec.it s "CR 615.1 the same source's NONCOMBAT 2 is not prevented"
     . withBoard
     $ \_ _ piker shielded -> do
-      let after = S.runPure S.identityAnswer shielded (Damage.applyDamage [hit DamageKind.Noncombat piker 2])
+      let after = S.runPure S.identityAnswer shielded (Damage.applyDamage (pure ()) [hit DamageKind.Noncombat piker 2])
       Spec.assertEqWith s "the event happened" (sources after) [piker]
       Spec.assertEqWith s "and alice took it" (S.lifeOf S.alice after) (Just 18)
 
@@ -1649,7 +1649,7 @@ selflessSquireSpec s registry = Spec.describe s "Selfless Squire (CR 615.13)" $ 
       -- Settle one damage batch, then let whatever it triggered go on the stack
       -- and resolve. One trigger per pass, which is all any case here makes.
       strikeAndSettle gs batch =
-        let dealt = S.runPure S.identityAnswer gs (Damage.applyDamage batch >> Engine.settleForPriority)
+        let dealt = S.runPure S.identityAnswer gs (Damage.applyDamage (pure ()) batch >> Engine.settleForPriority)
          in (dealt, S.runPure S.identityAnswer dealt Stack.resolveTop)
       squireOf gs = case Set.toList (Set.filter (\oid -> fmap S.nameOf (Game.cardOf oid gs) == Just (CardName.MkCardName (Text.pack "Selfless Squire"))) (GameState.battlefield gs)) of
         oid : _ -> Just oid
@@ -1829,7 +1829,7 @@ raceShield wantMinted wanted p = case p of
 -- so the first state is the one a player would next be given priority in.
 strikeAndSettleWith :: (forall r. Prompt.Prompt r -> r) -> GameState.GameState -> [DamageEvent.DamageEvent] -> (GameState.GameState, GameState.GameState)
 strikeAndSettleWith answer gs batch =
-  let dealt = S.runPure answer gs (Damage.applyDamage batch >> Resolve.runReplacementEffects Resolve.noSubgame >> Resolve.runPreventionRiders Resolve.noSubgame >> Engine.settleForPriority)
+  let dealt = S.runPure answer gs (Damage.applyDamage (pure ()) batch >> Resolve.runReplacementEffects Resolve.noSubgame >> Resolve.runPreventionRiders Resolve.noSubgame >> Engine.settleForPriority)
    in (dealt, S.runPure answer dealt Stack.resolveTop)
 
 -- CR 615.13 read the OTHER way -- "prevented THIS WAY". Phyrexian Vindicator
@@ -2264,7 +2264,7 @@ caromSpec s registry = Spec.describe s "Carom (CR 614.9, CR 615.7)" $ do
   let hit src recipient n = DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
       amounts gs = List.sort (fmap DamageEvent.amount (S.damageEventsOf gs))
       targets gs = fmap DamageEvent.target (S.damageEventsOf gs)
-      strike src recipient n g = S.runPure S.identityAnswer g (Damage.applyDamage [hit src recipient n])
+      strike src recipient n g = S.runPure S.identityAnswer g (Damage.applyDamage (pure ()) [hit src recipient n])
       board = do
         plains <- S.printingOf s registry "Plains"
         piker <- S.printingOf s registry "Goblin Piker"
@@ -2337,7 +2337,7 @@ caromSpec s registry = Spec.describe s "Carom (CR 614.9, CR 615.7)" $ do
 captainsManeuverSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 captainsManeuverSpec s registry = Spec.describe s "Captain's Maneuver (CR 614.9, CR 615.7)" $ do
   let hit src recipient n = DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
-      strike src recipient n g = S.runPure S.identityAnswer g (Damage.applyDamage [hit src recipient n])
+      strike src recipient n g = S.runPure S.identityAnswer g (Damage.applyDamage (pure ()) [hit src recipient n])
       board = do
         mountain <- S.printingOf s registry "Mountain"
         plains <- S.printingOf s registry "Plains"
@@ -2397,7 +2397,7 @@ harmsWaySpec s registry = Spec.describe s "Harm's Way (CR 614.9, CR 615.7, CR 60
   let hit src recipient n = DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
       amounts gs = fmap DamageEvent.amount (S.damageEventsOf gs)
       targets gs = fmap DamageEvent.target (S.damageEventsOf gs)
-      strike src recipient n g = S.runPure S.identityAnswer g (Damage.applyDamage [hit src recipient n])
+      strike src recipient n g = S.runPure S.identityAnswer g (Damage.applyDamage (pure ()) [hit src recipient n])
       board = do
         plains <- S.printingOf s registry "Plains"
         piker <- S.printingOf s registry "Goblin Piker"
@@ -2470,7 +2470,7 @@ harmsWaySpec s registry = Spec.describe s "Harm's Way (CR 614.9, CR 615.7, CR 60
               GameState.priority = Just S.alice
             }
         redirected = S.runPure (aimAndChoose raptorId omega) ready (S.cast S.alice harmsWayId Monad.>> Stack.resolveTop)
-        struck = S.runPure S.identityAnswer redirected (Damage.applyDamage [hit omega (Recipient.ToCreature raptorId) 3] Monad.>> Engine.settleForPriority)
+        struck = S.runPure S.identityAnswer redirected (Damage.applyDamage (pure ()) [hit omega (Recipient.ToCreature raptorId) 3] Monad.>> Engine.settleForPriority)
         after = snd (Engine.runGamePure S.identityAnswer struck Engine.priorityLoop)
     -- THE gameplay assertion: enrage fired ONCE, so alice drew one card.
     Spec.assertEqWith s "alice drew exactly one card" (S.handSize S.alice after) 1
@@ -2503,8 +2503,8 @@ harmsWaySpec s registry = Spec.describe s "Harm's Way (CR 614.9, CR 615.7, CR 60
   Spec.it s "CR 615.7 a simultaneous batch contends for the 2, and alice divides it" $ do
     (mine, _, omega, _, redirected) <- board
     let batch = [hit omega (Recipient.ToCreature mine) 3, hit omega (Recipient.ToPlayer S.alice) 3]
-        creatureFirst = S.runPure (orderedBy [Recipient.ToCreature mine]) redirected (Damage.applyDamage batch)
-        aliceFirst = S.runPure (orderedBy [Recipient.ToPlayer S.alice]) redirected (Damage.applyDamage batch)
+        creatureFirst = S.runPure (orderedBy [Recipient.ToCreature mine]) redirected (Damage.applyDamage (pure ()) batch)
+        aliceFirst = S.runPure (orderedBy [Recipient.ToPlayer S.alice]) redirected (Damage.applyDamage (pure ()) batch)
     Spec.assertEqWith s "creature first: it keeps 1" (S.damageOf mine creatureFirst) (Just 1)
     Spec.assertEqWith s "and alice keeps her whole 3" (S.lifeOf S.alice creatureFirst) (Just 17)
     Spec.assertEqWith s "alice first: she keeps 1" (S.lifeOf S.alice aliceFirst) (Just 19)
@@ -2518,7 +2518,7 @@ harmsWaySpec s registry = Spec.describe s "Harm's Way (CR 614.9, CR 615.7, CR 60
       (zip (amounts aliceFirst) (targets aliceFirst))
       [(3, Recipient.ToCreature mine), (1, Recipient.ToPlayer S.alice), (2, Recipient.ToPlayer S.bob)]
     Spec.assertEqWith s "either way bob takes exactly the 2" (fmap (`S.lifeOf` creatureFirst) [S.bob] <> fmap (`S.lifeOf` aliceFirst) [S.bob]) [Just 18, Just 18]
-    Spec.assertBool s (wasAskedToAllocateDamage (answersFor (orderedBy [Recipient.ToPlayer S.alice]) redirected (Damage.applyDamage batch))) "alice was asked how to divide the 2"
+    Spec.assertBool s (wasAskedToAllocateDamage (answersFor (orderedBy [Recipient.ToPlayer S.alice]) redirected (Damage.applyDamage (pure ()) batch))) "alice was asked how to divide the 2"
   -- The BASELINE: the same board, the spell never cast.
   Spec.it s "CR 614.9 no redirect, no move: alice takes the whole 5" $ do
     (_, _, omega, ready, _) <- board

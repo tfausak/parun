@@ -41,6 +41,8 @@ import qualified Parun.Types.AbilityTriggered as AbilityTriggered
 import qualified Parun.Types.Action as A
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.AttackTarget as AttackTarget
+import qualified Parun.Types.AttackTrigger as AttackTrigger
+import qualified Parun.Types.AttackedTrigger as AttackedTrigger
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.Board as Board
 import qualified Parun.Types.Card as Card.Type
@@ -101,12 +103,12 @@ import qualified Parun.Types.Zone as Zone
 -- creatures it named and however many things they were sent at.
 --
 -- Two attacking Goblins is what parts it from CR 508.3a's per-attacker form
--- (SelfAttacks, CreatureAttacksYou): both are legal targets, so a per-attacker
+-- (AttackTrigger.Attacker): both are legal targets, so a per-attacker
 -- reading resolves TWO pumps and the Prankster is a 3/3 rather than a 2/3. One
 -- attacker would make the two arities agree, which is the trap.
 --
 -- The same declaration SPLIT across bob and a Jace bob controls is what parts it
--- from CR 508.3b's per-target form (AttachedPlayerIsAttacked): CR 508.1b lists
+-- from CR 508.3b's per-target form (AttackTrigger.Attacked): CR 508.1b lists
 -- player and planeswalker separately, so that reading sees two
 -- GameEvent.BecameAttacked events and pumps twice. Every single-defender board
 -- lets the two agree, which is why this one exists.
@@ -487,7 +489,7 @@ anafenzaAttackSpec s registry =
 -- from it: "Whenever an opponent attacks, if they attacked you and/or a
 -- planeswalker you control, draw a card."
 --
--- The trigger is CR 508.3d's PlayerAttacks, once per declaration; the "if" is a
+-- The trigger is CR 508.3d's AttackTrigger.Declaration, once per declaration; the "if" is a
 -- Parun.Types.Condition whose two disjuncts read Filter.DeclaredAttackedThisCombat
 -- off the two subjects the printed sentence names -- alice herself, through
 -- Scope.OverPlayers, and a planeswalker she controls, through the battlefield.
@@ -584,7 +586,7 @@ everWatchingThresholdSpec s registry =
 -- Rule 508.3d's condition, read off the log entry CR 603.2 writes for a trigger.
 isPlayerAttacks :: TriggerCondition.TriggerCondition -> Bool
 isPlayerAttacks condition = case condition of
-  TriggerCondition.PlayerAttacks _ -> True
+  TriggerCondition.Attacks (AttackTrigger.Declaration _) -> True
   _ -> False
 
 -- CR 508.3e: "whenever [a player] attacks [another player]" -- the last of rule
@@ -726,7 +728,7 @@ seiferSpec s registry =
 -- Rule 508.3e's condition, read off the log entry CR 603.2 writes for a trigger.
 isPlayerAttacksPlayer :: TriggerCondition.TriggerCondition -> Bool
 isPlayerAttacksPlayer condition = case condition of
-  TriggerCondition.PlayerAttacksPlayer {} -> True
+  TriggerCondition.Attacks (AttackTrigger.Attacked (AttackedTrigger.MkAttackedTrigger (Just _) _)) -> True
   _ -> False
 
 -- CR 508.3e's SECOND subject named, with Lulu, Stern Guardian {2}{U} Legendary
@@ -2945,7 +2947,7 @@ leylinePhantomSpec s registry = Spec.describe s "Leyline Phantom" $ do
                 k : rest -> Map.fromList ((k, n - List.genericLength rest) : fmap (\r -> (r, 1)) rest)
                 [] -> thresholds
               _ -> S.identityAnswer p
-            dealt = S.runPure dividing blocked (Monad.void Damage.dealCombatDamage >> Engine.settleForPriority)
+            dealt = S.runPure dividing blocked (Monad.void (Damage.dealCombatDamage (pure ())) >> Engine.settleForPriority)
             resolved = S.runPure S.identityAnswer dealt Stack.resolveTop
         Spec.assertEqWith s "CR 603.2c one trigger for the step, not one per blocker" (length (GameState.stack dealt)) 1
         Spec.assertEqWith s "CR 510.1c both blockers were dealt combat damage" (S.onBattlefield first dealt, S.onBattlefield second dealt) (False, False)

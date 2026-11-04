@@ -98,9 +98,10 @@
                 "type": "SelfEnters"
               },
               {
-                "type": "SelfAttacks",
+                "type": "Attacks",
                 "value": {
-                  "type": "EveryTime"
+                  "type": "Attacker",
+                  "value": {}
                 }
               }
             ]

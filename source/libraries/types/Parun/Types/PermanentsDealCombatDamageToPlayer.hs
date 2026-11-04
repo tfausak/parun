@@ -9,8 +9,7 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 -- "one or more creatures an opponent controls deal combat damage to you", Pia
 -- Nalaar, Chief Mechanic's "... you control deal combat damage to a player".
 --
--- A record for Parun.Types.PlayerAttacksWith's reason: the printed form names
--- two subjects, the damagers and the damaged player, and the two are read from
+-- A record because the printed form names two subjects, the damagers and the damaged player, and the two are read from
 -- the same CR 109.5 perspective.
 data PermanentsDealCombatDamageToPlayer = MkPermanentsDealCombatDamageToPlayer
   { filter :: Filter.Filter Keyword.Keyword,

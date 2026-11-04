@@ -223,11 +223,16 @@
       "delayedAbilities": {
         "counter on an attacker": {
           "condition": {
-            "type": "CreatureAttacks",
+            "type": "Attacks",
             "value": {
-              "type": "HasCardType",
+              "type": "Attacker",
               "value": {
-                "type": "Creature"
+                "creature": {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                }
               }
             }
           },

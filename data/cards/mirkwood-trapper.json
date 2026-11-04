@@ -38,16 +38,19 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PlayerAttacksPlayer",
+            "type": "Attacks",
             "value": {
-              "attacked": {
-                "type": "Related",
-                "value": {
-                  "type": "You"
+              "type": "Attacked",
+              "value": {
+                "attacked": {
+                  "type": "Related",
+                  "value": {
+                    "type": "You"
+                  }
+                },
+                "attacker": {
+                  "type": "AnyPlayer"
                 }
-              },
-              "attacker": {
-                "type": "AnyPlayer"
               }
             }
           },
@@ -101,9 +104,14 @@
         },
         {
           "condition": {
-            "type": "PlayerAttacks",
+            "type": "Attacks",
             "value": {
-              "type": "AnyPlayer"
+              "type": "Declaration",
+              "value": {
+                "player": {
+                  "type": "AnyPlayer"
+                }
+              }
             }
           },
           "intervening": {

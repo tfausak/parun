@@ -28,13 +28,16 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PlayerAttacksPlayer",
+            "type": "Attacks",
             "value": {
-              "attacked": {
-                "type": "Enchanted"
-              },
-              "attacker": {
-                "type": "AnyPlayer"
+              "type": "Attacked",
+              "value": {
+                "attacked": {
+                  "type": "Enchanted"
+                },
+                "attacker": {
+                  "type": "AnyPlayer"
+                }
               }
             }
           },

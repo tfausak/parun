@@ -57,5 +57,8 @@ data ManaAbilityPerformer = MkManaAbilityPerformer
     payGate :: ObjectId.ObjectId -> PlayerId.PlayerId -> ClauseIndex.ClauseIndex -> PayGate.PayGate -> Map.Map ClauseIndex.ClauseIndex (Map.Map PlayerId.PlayerId Bool) -> Game.Game (Bool, Map.Map ClauseIndex.ClauseIndex (Map.Map PlayerId.PlayerId Bool)),
     -- | CR 614.6 / 706.1: throw and record the die roll Pokey, the Scallywagg
     -- makes instead of a cost's coin flip, answering the kept results.
-    throwForCoin :: Throw.Throw -> Game.Game [Natural.Natural]
+    throwForCoin :: Throw.Throw -> Game.Game [Natural.Natural],
+    -- | CR 614.11a: run what a replacement queued in a draw's place, between
+    -- the draws Lich makes in place of a gain made in a life payment's place.
+    settle :: Game.Game ()
   }

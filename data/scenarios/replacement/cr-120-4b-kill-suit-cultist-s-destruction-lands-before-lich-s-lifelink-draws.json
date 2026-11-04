@@ -1,0 +1,204 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Lich"
+          },
+          {
+            "card": "Forbidden Crypt"
+          },
+          {
+            "card": "Lich's Mirror"
+          },
+          {
+            "card": "Vampire Nighthawk",
+            "label": "hawk",
+            "ready": true
+          },
+          {
+            "card": "Kill-Suit Cultist",
+            "label": "cultist",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "life": 0,
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Giant Spider",
+            "label": "spider",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Forest"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 120.4b Kill-Suit Cultist's destruction lands before Lich's draws for a lifelink gain from the same damage",
+  "final": [
+    {
+      "View": {
+        "is": null,
+        "of": "Result"
+      }
+    },
+    {
+      "Life": {
+        "life": 20,
+        "player": "alice"
+      }
+    },
+    {
+      "Count": {
+        "card": "Vampire Nighthawk",
+        "count": 1,
+        "player": "alice",
+        "zone": "Exile"
+      }
+    },
+    {
+      "Count": {
+        "card": "Island",
+        "count": 8,
+        "player": "alice",
+        "zone": "Hand"
+      }
+    },
+    {
+      "View": {
+        "is": [
+          "Island",
+          "Island#2",
+          "Lich",
+          "Forbidden Crypt",
+          "Lich's Mirror",
+          "Swamp"
+        ],
+        "of": "Zone",
+        "player": "alice",
+        "zone": "Library"
+      }
+    }
+  ],
+  "note": "Alice's Cultist shields her Vampire Nighthawk, which Giant Spider blocks. In one batch the Spider's damage to the Nighthawk becomes its destruction (CR 120.4b), and the Nighthawk's 2 lifelink life becomes two Lich draws (CR 120.4c). The Crypt replaces the first; the destruction lands before the loss, so the Crypt exiles the Nighthawk before the Mirror's reset. Run after the reset instead, it would find the Nighthawk shuffled into her library.",
+  "timeline": [
+    {
+      "do": {
+        "Activate": {
+          "mana": [
+            "$swamp"
+          ],
+          "object": "$cultist",
+          "targets": [
+            "$hawk"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Attack": [
+          "$hawk"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Block": {
+          "$spider": [
+            "$hawk"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "Island",
+            "Island#2",
+            "Island#3",
+            "Island#4",
+            "Island#5",
+            "Island#6",
+            "Island#7",
+            "Island#8",
+            "Island#9",
+            "Island#10",
+            "Lich",
+            "Forbidden Crypt",
+            "Lich's Mirror",
+            "Swamp"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "CombatDamage",
+      "turn": 1
+    }
+  ]
+}

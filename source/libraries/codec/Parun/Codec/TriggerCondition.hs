@@ -2,6 +2,7 @@ module Parun.Codec.TriggerCondition where
 
 import qualified Parun.Codec.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Codec.ActingPermanent as ActingPermanent
+import qualified Parun.Codec.AttackTrigger as AttackTrigger
 import qualified Parun.Codec.BecomesTapState as BecomesTapState
 import qualified Parun.Codec.BlockTrigger as BlockTrigger
 import qualified Parun.Codec.CardLeavesZone as CardLeavesZone
@@ -30,8 +31,6 @@ import qualified Parun.Codec.PermanentsDealCombatDamageToPlayer as PermanentsDea
 import qualified Parun.Codec.PlacesSticker as PlacesSticker
 import qualified Parun.Codec.PlayerActed as PlayerActed
 import qualified Parun.Codec.PlayerActsOn as PlayerActsOn
-import qualified Parun.Codec.PlayerAttacksPlayer as PlayerAttacksPlayer
-import qualified Parun.Codec.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Codec.PlayerDrawsNthCard as PlayerDrawsNthCard
 import qualified Parun.Codec.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Codec.PlayerRelation as PlayerRelation
@@ -73,22 +72,8 @@ codec =
           Arm.nullary "CreatureDealtCombatDamageToMonarch" TriggerCondition.CreatureDealtCombatDamageToMonarch,
           Arm.nullary "CreaturesDealtCombatDamageToInitiative" TriggerCondition.CreaturesDealtCombatDamageToInitiative,
           Arm.nullary "PlayerTookInitiative" TriggerCondition.PlayerTookInitiative,
-          Arm.payload "SelfAttacks" TriggerFrequency.codec TriggerCondition.SelfAttacks (\x -> case x of TriggerCondition.SelfAttacks y -> Just y; _ -> Nothing),
-          Arm.payload "SelfAttacksWithAnother" filterCodec TriggerCondition.SelfAttacksWithAnother (\x -> case x of TriggerCondition.SelfAttacksWithAnother y -> Just y; _ -> Nothing),
-          Arm.payload "SelfAttacksPermanent" filterCodec TriggerCondition.SelfAttacksPermanent (\x -> case x of TriggerCondition.SelfAttacksPermanent y -> Just y; _ -> Nothing),
-          Arm.payload "CreatureAttacksAlone" filterCodec TriggerCondition.CreatureAttacksAlone (\x -> case x of TriggerCondition.CreatureAttacksAlone y -> Just y; _ -> Nothing),
-          Arm.nullary "CreatureAttacksYou" TriggerCondition.CreatureAttacksYou,
-          Arm.payload "CreatureAttacks" filterCodec TriggerCondition.CreatureAttacks (\x -> case x of TriggerCondition.CreatureAttacks y -> Just y; _ -> Nothing),
-          Arm.payload "PlayerAttacks" PlayerRelation.codec TriggerCondition.PlayerAttacks (\x -> case x of TriggerCondition.PlayerAttacks y -> Just y; _ -> Nothing),
-          Arm.payload "PlayerAttacksWith" PlayerAttacksWith.codec TriggerCondition.PlayerAttacksWith (\x -> case x of TriggerCondition.PlayerAttacksWith y -> Just y; _ -> Nothing),
-          Arm.payload "PlayerAttacksPlayer" PlayerAttacksPlayer.codec TriggerCondition.PlayerAttacksPlayer (\x -> case x of TriggerCondition.PlayerAttacksPlayer y -> Just y; _ -> Nothing),
-          Arm.nullary "AttachedPlayerIsAttacked" TriggerCondition.AttachedPlayerIsAttacked,
-          Arm.nullary "SelfIsAttacked" TriggerCondition.SelfIsAttacked,
-          Arm.nullary "SelfAttacksPlayerWithMostLife" TriggerCondition.SelfAttacksPlayerWithMostLife,
-          Arm.nullary "SelfAttacksWhileSaddled" TriggerCondition.SelfAttacksWhileSaddled,
-          Arm.payload "SelfAttacksWhile" Condition.codec TriggerCondition.SelfAttacksWhile (\x -> case x of TriggerCondition.SelfAttacksWhile y -> Just y; _ -> Nothing),
+          Arm.payload "Attacks" AttackTrigger.codec TriggerCondition.Attacks (\x -> case x of TriggerCondition.Attacks y -> Just y; _ -> Nothing),
           Arm.payload "Blocks" BlockTrigger.codec TriggerCondition.Blocks (\x -> case x of TriggerCondition.Blocks y -> Just y; _ -> Nothing),
-          Arm.payload "CreatureAttacksUnblocked" filterCodec TriggerCondition.CreatureAttacksUnblocked (\x -> case x of TriggerCondition.CreatureAttacksUnblocked y -> Just y; _ -> Nothing),
           Arm.nullary "SelfRevealedForMiracle" TriggerCondition.SelfRevealedForMiracle,
           Arm.payload "RevealedThisWay" RevealedThisWay.codec TriggerCondition.RevealedThisWay (\x -> case x of TriggerCondition.RevealedThisWay y -> Just y; _ -> Nothing),
           Arm.payload "Discards" DiscardTrigger.codec TriggerCondition.Discards (\x -> case x of TriggerCondition.Discards y -> Just y; _ -> Nothing),
@@ -191,22 +176,8 @@ tagOf x = case x of
   TriggerCondition.CreatureDealtCombatDamageToMonarch {} -> "CreatureDealtCombatDamageToMonarch"
   TriggerCondition.CreaturesDealtCombatDamageToInitiative {} -> "CreaturesDealtCombatDamageToInitiative"
   TriggerCondition.PlayerTookInitiative {} -> "PlayerTookInitiative"
-  TriggerCondition.SelfAttacks {} -> "SelfAttacks"
-  TriggerCondition.SelfAttacksWithAnother {} -> "SelfAttacksWithAnother"
-  TriggerCondition.SelfAttacksPermanent {} -> "SelfAttacksPermanent"
-  TriggerCondition.CreatureAttacksAlone {} -> "CreatureAttacksAlone"
-  TriggerCondition.CreatureAttacksYou {} -> "CreatureAttacksYou"
-  TriggerCondition.CreatureAttacks {} -> "CreatureAttacks"
-  TriggerCondition.PlayerAttacks {} -> "PlayerAttacks"
-  TriggerCondition.PlayerAttacksWith {} -> "PlayerAttacksWith"
-  TriggerCondition.PlayerAttacksPlayer {} -> "PlayerAttacksPlayer"
-  TriggerCondition.AttachedPlayerIsAttacked {} -> "AttachedPlayerIsAttacked"
-  TriggerCondition.SelfIsAttacked {} -> "SelfIsAttacked"
-  TriggerCondition.SelfAttacksPlayerWithMostLife {} -> "SelfAttacksPlayerWithMostLife"
-  TriggerCondition.SelfAttacksWhileSaddled {} -> "SelfAttacksWhileSaddled"
-  TriggerCondition.SelfAttacksWhile {} -> "SelfAttacksWhile"
+  TriggerCondition.Attacks {} -> "Attacks"
   TriggerCondition.Blocks {} -> "Blocks"
-  TriggerCondition.CreatureAttacksUnblocked {} -> "CreatureAttacksUnblocked"
   TriggerCondition.SelfRevealedForMiracle {} -> "SelfRevealedForMiracle"
   TriggerCondition.RevealedThisWay {} -> "RevealedThisWay"
   TriggerCondition.Discards {} -> "Discards"

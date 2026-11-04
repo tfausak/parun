@@ -30,10 +30,16 @@ import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
 import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
 import qualified Parun.Types.ActingPermanent as ActingPermanent
+import qualified Parun.Types.AttackCompany as AttackCompany
+import qualified Parun.Types.AttackCount as AttackCount
 import qualified Parun.Types.AttackTarget as AttackTarget
-import qualified Parun.Types.AttackedPlayer as AttackedPlayer
+import qualified Parun.Types.AttackTrigger as AttackTrigger
+import qualified Parun.Types.AttackedSubject as AttackedSubject
+import qualified Parun.Types.AttackedTrigger as AttackedTrigger
 import qualified Parun.Types.AttackerBlocked as AttackerBlocked
 import qualified Parun.Types.AttackerDeclared as AttackerDeclared
+import qualified Parun.Types.AttackerTarget as AttackerTarget
+import qualified Parun.Types.AttackerTrigger as AttackerTrigger
 import qualified Parun.Types.AttackerUnblocked as AttackerUnblocked
 import qualified Parun.Types.BattlefieldCandidate as BattlefieldCandidate
 import qualified Parun.Types.BecameAttached as BecameAttached
@@ -75,7 +81,7 @@ import qualified Parun.Types.DamagePrevented as DamagePrevented
 import qualified Parun.Types.DamageRecipient as DamageRecipient
 import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DealtDamage as DealtDamage
-import qualified Parun.Types.Designation as Designation
+import qualified Parun.Types.DeclarationTrigger as DeclarationTrigger
 import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.DiscardCause as DiscardCause
 import qualified Parun.Types.DiscardSubject as DiscardSubject
@@ -125,8 +131,6 @@ import qualified Parun.Types.PlanarDieRolled as PlanarDieRolled
 import qualified Parun.Types.Player as Player
 import qualified Parun.Types.PlayerActed as PlayerActed
 import qualified Parun.Types.PlayerActsOn as PlayerActsOn
-import qualified Parun.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
-import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
@@ -171,6 +175,108 @@ declarationsOf bearer gs =
         GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared oid _ _ _ _) -> oid == bearer
         _ -> False
    in length (Seq.filter (declaredIt . LoggedEvent.event) (GameState.events gs))
+
+-- CR 508.3: whether `event` fires a Parun.Types.AttackTrigger. Each arity
+-- matches its own event, the declaration's three appended by
+-- Combat.declareAttackers alone, which is what keeps CR 508.4's creature put onto the battlefield attacking
+-- out of every one (CR 508.3a's, 508.3b's and 508.3e's last sentences).
+--
+-- A declared attacker is read off `board`, CR 603.10's sample (admittedAt):
+-- CR 508.1k has already made it attacking, so an Equipment CR 704.5n has
+-- unattached since still equips it (data/scenarios's
+-- super-soldier-serum-fires-though-the-attack-toll-knocks-it-off-its-host).
+attacks :: Filter.Context -> Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> GameState -> ObjectId -> PlayerId -> AttackTrigger.AttackTrigger -> GameEvent -> Bool
+attacks context board gs bearer you trigger event = case (trigger, event) of
+  (AttackTrigger.Attacker t, GameEvent.AttackerDeclared d) ->
+    let attacker = AttackerDeclared.attacker d
+     in admittedAt context board gs attacker (AttackerTrigger.creature t)
+          && attackerTargetHolds context gs bearer you (AttackerTrigger.target t) d
+          && attackCompanyHolds context gs bearer attacker (AttackerTrigger.company t) d
+          && case AttackerTrigger.frequency t of
+            TriggerFrequency.EveryTime -> True
+            -- "For the first time each turn": the declaration being matched is
+            -- already in the log, so "the first time" is "the only one so far",
+            -- counted per object, so CR 400.7's new object attacks for the
+            -- first time again.
+            TriggerFrequency.FirstTimeEachTurn -> declarationsOf attacker gs <= 1
+          -- Asked of the live board as triggers are collected, never re-checked
+          -- as TriggeredAbility.intervening would be (CR 603.4).
+          && maybe True (Condition.holds (Projection.viewWithLastKnownAnywhere gs) context gs bearer) (AttackerTrigger.while t)
+  -- CR 508.3b's "is attacked" is once per TARGET: Event.Trigger.batchScoped
+  -- collapses the declaration's group. CR 508.3e's "[a player] attacks" is
+  -- once per event, each one attacking player and target. Either way only
+  -- the target CR 508.1b announced answers, so a creature sent at a
+  -- planeswalker leaves a player's trigger silent (CR 508.3e's last sentence).
+  (AttackTrigger.Attacked t, GameEvent.BecameAttacked payload) ->
+    let enchanted = Recipient.playerOf =<< (Object.attachedTo =<< Game.lookupObject bearer gs)
+        attackerHolds = maybe True (\relation -> PlayerRelation.holds (Game.teams gs) relation you (BecameAttacked.attacker payload)) (AttackedTrigger.attacker t)
+        attackedHolds = case (AttackedTrigger.attacked t, BecameAttacked.target payload) of
+          (AttackedSubject.Related relation, AttackTarget.OfPlayer attacked) -> PlayerRelation.holds (Game.teams gs) relation you attacked
+          (AttackedSubject.Enchanted, AttackTarget.OfPlayer attacked) -> enchanted == Just attacked
+          (AttackedSubject.Source, AttackTarget.OfPlaneswalker attacked) -> attacked == bearer
+          (AttackedSubject.Source, AttackTarget.OfBattle attacked) -> attacked == bearer
+          _ -> False
+     in attackerHolds && attackedHolds
+  -- CR 508.3c / 508.3d: once per declaration, the declaring player read off the
+  -- event rather than GameState.activePlayer: under the shared team turns
+  -- option each player on the active team is an attacking player (CR 805.10a).
+  -- A count's creatures are admittedAttackers, the set eventBindings stamps.
+  (AttackTrigger.Declaration t, GameEvent.AttackersDeclared attacker) ->
+    PlayerRelation.holds (Game.teams gs) (DeclarationTrigger.player t) you attacker
+      && case DeclarationTrigger.attackers t of
+        Nothing -> True
+        Just count -> Natural.length (admittedAttackers gs bearer you (AttackCount.filter count) attacker) >= AttackCount.floor count
+  -- CR 508.3f / 509.1h: the event alone answers it. Combat.blockers would
+  -- answer for the board at scan time, and rule 509.1h's last sentence keeps
+  -- an attacker whose blockers all left combat blocked. The attacker is read
+  -- off `board` too: data/scenarios's
+  -- cloak-of-confusion-fires-though-the-block-toll-knocks-it-off-its-host
+  -- proves it.
+  (AttackTrigger.Unblocked f, GameEvent.AttackerUnblocked u) -> admittedAt context board gs (AttackerUnblocked.attacker u) f
+  _ -> False
+
+-- CR 508.3a: whether the declared attacker is attacking what the trigger asks.
+attackerTargetHolds :: Filter.Context -> GameState -> ObjectId -> PlayerId -> AttackerTarget.AttackerTarget -> AttackerDeclared.AttackerDeclared -> Bool
+attackerTargetHolds context gs bearer you target d = case target of
+  AttackerTarget.AnyTarget -> True
+  -- CR 508.5 / 508.5a resolve an attacked planeswalker to its controller, and
+  -- Combat.declareAttackers stamped that player onto the event.
+  AttackerTarget.Defending relation -> PlayerRelation.holds (Game.teams gs) relation you (AttackerDeclared.defender d)
+  -- CR 508.1b's announcement, not CR 508.5's defending player: CR 310.9d makes
+  -- them different things for a battle. The attacked permanent is a different
+  -- object from the bearer, so CR 608.2h's record does not stand in for it.
+  AttackerTarget.Permanent f ->
+    let admits attacked = maybe False (\view -> Filter.matches context view f) (Projection.viewWithLastKnown bearer gs attacked)
+     in case AttackerDeclared.target d of
+          AttackTarget.OfPlayer _ -> False
+          AttackTarget.OfPlaneswalker attacked -> admits attacked
+          AttackTarget.OfBattle attacked -> admits attacked
+  -- CR 702.105a names the PLAYER, so an attacked planeswalker does not count.
+  -- Non-strict, rule 702.105a's "or tied", over Game.stillPlaying: a player
+  -- who has left (CR 800.4a) has no life total left to be beaten.
+  AttackerTarget.PlayerWithMostLife -> case AttackerDeclared.target d of
+    AttackTarget.OfPlayer attacked ->
+      let lifeOf pid = fmap Player.life (Map.lookup pid (GameState.players gs))
+       in case lifeOf attacked of
+            Nothing -> False
+            Just theirs -> all (maybe True (<= theirs) . lifeOf) (Game.stillPlaying gs)
+    _ -> False
+
+-- CR 506.5 / 702.149a: whether the rest of the declaration is what the
+-- trigger asks.
+attackCompanyHolds :: Filter.Context -> GameState -> ObjectId -> ObjectId -> AttackCompany.AttackCompany -> AttackerDeclared.AttackerDeclared -> Bool
+attackCompanyHolds context gs bearer attacker company d = case company of
+  AttackCompany.AnyCompany -> True
+  -- "The ONLY creature declared": one number, never a floor.
+  AttackCompany.Alone -> AttackerDeclared.count d == 1
+  -- Combat.attackers IS the declaration here: CR 508.2b puts these triggers on
+  -- the stack before any player gets priority, so CR 508.4 has had no window to
+  -- add a creature, where the turn's log keeps an earlier combat phase's.
+  -- Each companion reads through the bearer's last known information (CR
+  -- 608.2h), so CR 702.149a's comparison against the source's power holds.
+  AttackCompany.WithAnother f ->
+    let admits other = other /= attacker && maybe False (\view -> Filter.matches context view f) (Projection.viewWithLastKnown bearer gs other)
+     in any admits (Map.keys (Combat.attackers (GameState.combat gs)))
 
 -- CR 509.3e on the effect road (BlockProducer.ByEffect): whether this arrival
 -- is the one that answers the attacker's crossing. One effect records a
@@ -783,355 +889,11 @@ armMatches bindings board gs bearer you cond event = case cond of
   TriggerCondition.PlayerBecomesMonarch relation -> case event of
     GameEvent.BecameMonarch crowned -> PlayerRelation.holds (Game.teams gs) relation you crowned
     _ -> False
-  -- CR 508.3a: the bearer was DECLARED as an attacker. Matched against the
-  -- declaration event rather than Combat.attackers, which keeps that rule's last
-  -- sentence true -- a creature put onto the battlefield attacking is in the
-  -- record and has no event here.
-  TriggerCondition.SelfAttacks frequency -> case event of
-    GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared oid _ _ _ _) ->
-      oid == bearer && case frequency of
-        TriggerFrequency.EveryTime -> True
-        -- "For the first time each turn". The declaration being matched is
-        -- already in the log when the scan reaches here, so "the first time" is
-        -- "the only one so far", and the log's clearing at turn handoff is what
-        -- makes it "each turn". Counted per BEARER, and CR 400.7 mints a new
-        -- object on a zone change, so a creature that left and returned attacks
-        -- for the first time again.
-        TriggerFrequency.FirstTimeEachTurn -> declarationsOf bearer gs <= 1
-    -- The other declaration. CR 509.1a's blocker is not an attacker, and a
-    -- creature can be both this combat.
-    GameEvent.BecameBlocking {} -> False
-    _ -> False
-  -- CR 702.149a: the bearer was declared as an attacker, and at least one OTHER
-  -- attacking creature satisfies the Filter. SelfAttacks' event and its identity
-  -- check, with an existential over the rest of the declaration added.
-  --
-  -- The companions come from Combat.attackers, which at this moment IS the
-  -- declaration: CR 508.2b puts these triggers on the stack before any player gets
-  -- priority, so the only creatures CR 508.4 could add have had no window to
-  -- arrive. The event log would answer the same question one turn too widely: it
-  -- keeps an earlier combat phase's declarations, where the combat record is
-  -- cleared per phase.
-  --
-  -- The source's power comes with Projection.sourceContext, which is what makes
-  -- CR 702.149a's comparison against the source's power evaluable at a trigger
-  -- match at all.
-  -- Both it and each candidate view read through the bearer's last known
-  -- information (CR 608.2h),
-  -- a REGRESSION FENCE rather than a live path: the bearer was declared an
-  -- attacker a moment ago and nothing has had priority since.
-  TriggerCondition.SelfAttacksWithAnother f -> case event of
-    GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared oid _ _ _ _)
-      | oid == bearer ->
-          let viewOf = Projection.viewWithLastKnown bearer gs
-              context = Projection.sourceContext gs (Just you) bearer
-              -- Rule 702.149a's "OTHER". Not independently observable while the
-              -- Filter's comparison is strict -- nothing has power greater than
-              -- its own -- so dropping it leaves the suite green; it is here
-              -- because the rule says it, not because a test proves it.
-              admits other = other /= bearer && maybe False (\view -> Filter.matches context view f) (viewOf other)
-           in any admits (Map.keys (Combat.attackers (GameState.combat gs)))
-    _ -> False
-  -- CR 508.3a's second sentence, self-scoped: the bearer was declared as an
-  -- attacker and CR 508.1b's announcement named a permanent the Filter admits.
-  -- SelfAttacks' event and its identity check, with the target the same event
-  -- carries read beside them.
-  --
-  -- The TARGET and not CR 508.5's defending player, which the event also carries:
-  -- CR 310.9d makes those two different things for a battle, and this sentence
-  -- asks about the announcement. AttackTarget.OfPlayer therefore answers False --
-  -- "attacks a battle" and "attacks a player" are different clauses, where
-  -- CreatureAttacksYou below reads the defending player and cannot tell them
-  -- apart.
-  --
-  -- The permanent's characteristics come from the game as it stands;
-  -- viewWithLastKnown with the BEARER as the source, the attacked permanent
-  -- being a different object, so CR 608.2h's last known information does not
-  -- stand in for it.
-  TriggerCondition.SelfAttacksPermanent f -> case event of
-    GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared oid _ target _ _)
-      | oid == bearer ->
-          let admits attacked = case Projection.viewWithLastKnown bearer gs attacked of
-                Nothing -> False
-                Just view -> Filter.matches bearerContext view f
-           in case target of
-                AttackTarget.OfPlayer _ -> False
-                AttackTarget.OfPlaneswalker attacked -> admits attacked
-                AttackTarget.OfBattle attacked -> admits attacked
-    _ -> False
-  -- CR 506.5: a creature the Filter admits was declared as an attacker, and it
-  -- was the ONLY one the declaration named. The same event SelfAttacks reads,
-  -- with the count taken instead of the bearer's identity.
-  --
-  -- `count == 1` and never a floor, unlike BlockCount.AtLeast's `>= n`: rule 506.5
-  -- says "the ONLY creature declared as an attacker", which is one number.
-  --
-  -- The attacker is read off `board`, CR 603.10's sample (`postEventView`) --
-  -- CR 508.1k has already made the creature attacking -- so an Equipment CR
-  -- 704.5n has unattached since still equips it, and CR 608.2h's record answers
-  -- for an attacker the sample does not hold.
-  TriggerCondition.CreatureAttacksAlone f -> case event of
-    GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared attacker _ _ count _)
-      | count == 1 ->
-          case postEventView board gs attacker of
-            Nothing -> False
-            Just view -> Filter.matches bearerContext view f
-    _ -> False
-  -- CR 508.3a's second sentence: some creature was declared as an attacker, and CR
-  -- 508.5's defending player for it is the bearer's controller. SelfAttacks' event
-  -- with the identity check moved from the ATTACKER to the DEFENDER.
-  --
-  -- "You or a planeswalker you control" needs no second test and no board read: CR
-  -- 508.5/508.5a already resolve an attacked planeswalker to its controller, and
-  -- Combat.declareAttackers stamped that player onto the event. Where
-  -- SelfAttacksPlayerWithMostLife below has to consult Combat.attackers -- rule
-  -- 702.105a says "the player", so an attacked planeswalker must not count -- this
-  -- condition wants exactly the field the event carries.
-  --
-  -- No Filter over the attacker and no count: CR 508.1a admits only creatures, and
-  -- this fires once per declared attacker (CR 508.3a), not once per declaration --
-  -- which is PlayerAttacks (CR 508.3d) and AttachedPlayerIsAttacked (CR 508.3b)
-  -- below, each against its own event.
-  TriggerCondition.CreatureAttacksYou -> case event of
-    GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared _ defending _ _ _) -> defending == you
-    _ -> False
-  -- CR 508.3a read by a bystander: a creature the Filter admits was declared as an
-  -- attacker. CreatureAttacksAlone's event and view without the count, so it fires
-  -- once per declared attacker; CR 508.4's creature put onto the battlefield
-  -- attacking records no AttackerDeclared, so it never reaches here.
-  --
-  -- The Filter's source is the bearer, so "equipped creature" is
-  -- HasAttached IsSource (Conjurer's Mantle). The attacker is read off `board`
-  -- for CreatureAttacksAlone's reason: data/scenarios's
-  -- super-soldier-serum-fires-though-the-attack-toll-knocks-it-off-its-host
-  -- proves it.
-  TriggerCondition.CreatureAttacks f -> case event of
-    GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared attacker _ _ _ _) ->
-      case postEventView board gs attacker of
-        Nothing -> False
-        Just view -> Filter.matches bearerContext view f
-    _ -> False
-  -- CR 508.3d: the player the payload names declared one or more attackers. The
-  -- once-per-DECLARATION arity, matched against the once-per-declaration event --
-  -- CreatureAttacksYou above reads the per-attacker one and
-  -- AttachedPlayerIsAttacked below the per-target one, and no grouping happens
-  -- here for their reason: this function sees one event at a time.
-  --
-  -- Rule 508.3d's "[a player]" as the card printed it, against CR 109.5's `you`.
-  -- Read off the event, which Combat.declareAttackers stamps with CR 508.1's
-  -- declaring player, rather than off GameState.activePlayer: under the shared
-  -- team turns option each player on the active team is an attacking player
-  -- (CR 805.10a), and the event is the record of who declared.
-  --
-  -- No bearer test, where SelfAttacks pins one: rule 508.3d's subject is a
-  -- player, so the bearer only frames whose declaration this is --
-  -- CreatureAttacksAlone's bystanding posture. A Boggart Prankster held out of
-  -- combat still triggers on its controller's attack.
-  --
-  -- Parun.EventTriggerSpec's Avatar Roku, Firebender group proves the relation is
-  -- READ: its two boards -- an opponent declares, then Roku's own controller
-  -- does -- falsify hardcoding You and hardcoding Opponent respectively. Roku's
-  -- payload adds mana rather than targeting, which is why those boards see a
-  -- difference where Boggart Prankster's "target attacking Goblin you control"
-  -- cannot.
-  --
-  -- The You NARROWING is still a regression fence rather than a proven
-  -- behaviour: answering True unconditionally leaves the whole suite green,
-  -- because the corpus's one You producer is Boggart Prankster, and on any board
-  -- where a non-controller declares, its trigger has no legal target and CR
-  -- 603.3d removes it either way. What would observe it is a card printing
-  -- "whenever you attack" whose payload does not need its controller to have an
-  -- attacker.
-  TriggerCondition.PlayerAttacks relation -> case event of
-    GameEvent.AttackersDeclared attacker -> PlayerRelation.holds (Game.teams gs) relation you attacker
-    _ -> False
-  -- CR 508.3c: the player the payload names declared at least the payload's
-  -- number of attackers the Filter admits. The arm above narrowed, against the
-  -- same once-per-DECLARATION event, because that is the arity every printing of
-  -- "attacks with" takes -- the quantifier is in the printed sentence ("one or
-  -- more Birds", "two or more creatures"), so a declaration naming four Birds
-  -- fires it once. CR 508.3a's per-attacker event sits below answering False:
-  -- matching it here would fire once per declared Bird instead.
-  --
-  -- AT LEAST, never exactly, which is how the printed "N or more" reads and how
-  -- Parun.Types.BlockCount.AtLeast reads its own rule.
-  --
-  -- The creatures come from Combat.declaredAttackers rather than from the event,
-  -- which carries only who declared, and NOT from Combat.attackers as
-  -- SelfAttacksWithAnother reads it: CR 508.4 says a creature put onto the
-  -- battlefield attacking never "attacked", and putOntoBattlefieldAttacking
-  -- writes the second map and not this one. A REGRESSION FENCE rather than a
-  -- proved behaviour: reading Combat.attackers here leaves the suite green,
-  -- since no board reaches a declaration with such a creature already in combat.
-  --
-  -- Exact at this moment for SelfAttacksWithAnother's reason -- CR 508.2b puts
-  -- every trigger from this declaration on the stack together, so no player has
-  -- had priority since.
-  --
-  -- Rule 508.3c's "that player CONTROLS" is Combat.joinedUnder, CR 506.4's
-  -- record of who controlled each combatant as it joined. It tells a teammate's
-  -- attackers apart under the shared team turns option (CR 805.10a), which
-  -- Parun.TeamSpec's Military Intelligence case proves.
-  --
-  -- viewWithLastKnown and the Filter context framed by the bearer. Nothing is
-  -- bound, so the context's empty slot map is honest here. The set is
-  -- Event.Binding.admittedAttackers, which eventBindings also stamps under
-  -- Binding.attackingCreatures, so the creatures counted here are the ones the
-  -- payload's "they" names.
-  TriggerCondition.PlayerAttacksWith p@(PlayerAttacksWith.MkPlayerAttacksWith relation _ floor_) -> case event of
-    GameEvent.AttackersDeclared attacker
-      | PlayerRelation.holds (Game.teams gs) relation you attacker ->
-          Natural.length (admittedAttackers gs bearer you p attacker) >= floor_
-    _ -> False
-  -- CR 508.3b: the player this ability's source is attached to was attacked.
-  -- CreatureAttacksYou's question asked once per DECLARATION instead, which is
-  -- the whole of what separates them: this matches the grouped
-  -- GameEvent.BecameAttacked, and Parun.Engine.Event.Trigger.batchScoped collapses
-  -- its group to one trigger per target.
-  --
-  -- The subject comes from Object.attachedTo (CR 303.4m), read live rather than
-  -- through last known information as AttachedPermanentLeaves reads it: that arm
-  -- matches an event that may have taken the bearer with it, and a declaration of
-  -- attackers moves nothing.
-  --
-  -- ONLY AttackTarget.OfPlayer matches. CR 508.1b lists player, planeswalker and
-  -- battle separately and rule 508.3b asks about the one attacked, so a creature
-  -- sent at a planeswalker the enchanted player controls leaves this silent --
-  -- where CreatureAttacksYou, reading CR 508.5's defending player, would fire.
-  TriggerCondition.AttachedPlayerIsAttacked -> case event of
-    GameEvent.BecameAttacked payload ->
-      case Recipient.playerOf =<< (Object.attachedTo =<< Game.lookupObject bearer gs) of
-        Just enchanted -> BecameAttacked.target payload == AttackTarget.OfPlayer enchanted
-        Nothing -> False
-    _ -> False
-  -- CR 508.3b's other two subjects: the ability's own source is the planeswalker
-  -- or the battle that was attacked. The arm above's event and its per-TARGET
-  -- arity, with the subject
-  -- read off the SOURCE rather than off Object.attachedTo, so this arm looks
-  -- nothing up on the board.
-  --
-  -- AttackTarget.OfPlayer answers False and needs no comparison: rule 508.3b's
-  -- player subject is the arm above, and a permanent is never a PlayerId.
-  --
-  -- By identity on the id the event carries, so CR 506.4c taking the permanent
-  -- out of combat afterwards cannot unmake the trigger -- rule 508.3b asks what
-  -- the declaration named.
-  TriggerCondition.SelfIsAttacked -> case event of
-    GameEvent.BecameAttacked payload ->
-      case BecameAttacked.target payload of
-        AttackTarget.OfPlayer _ -> False
-        AttackTarget.OfPlaneswalker attacked -> attacked == bearer
-        AttackTarget.OfBattle attacked -> attacked == bearer
-    _ -> False
-  -- CR 508.3e: the player the payload names declared attackers, and at least one
-  -- of them was sent at a PLAYER. AttachedPlayerIsAttacked's event and its
-  -- per-TARGET arity, with the declaring player qualified too -- so one
-  -- declaration split across two opponents fires
-  -- this TWICE where PlayerAttacks above fires once, which is what parts rule
-  -- 508.3e from rule 508.3d.
-  --
-  -- Both sides come off the EVENT. Combat.declareAttackers stamps CR 508.1's
-  -- declaring player onto it beside the target, which is what lets this arm ask
-  -- rule 508.3e's question at all; GameState.activePlayer is not it, since
-  -- under the shared team turns option each player on the active team is an
-  -- attacking player (CR 805.10a).
-  --
-  -- Both sides are QUALIFIED, each by its own relation: Lulu, Stern Guardian's
-  -- "whenever an opponent attacks you" is Opponent over the declarer and You
-  -- over the target, where Seifer's "whenever you attack a player" is You and
-  -- AnyPlayer. Both are read against CR 109.5's "you" -- the ability's
-  -- controller -- and not against each other, so Opponent on the ATTACKED side
-  -- would say "somebody other than me was attacked" rather than restate CR
-  -- 506.2a's requirement that the defending player be an opponent of the
-  -- attacker. The attacked side may instead be named by attachment (CR 303.4b,
-  -- Archnemesis' "attack enchanted player"), read live off Object.attachedTo as
-  -- AttachedPlayerIsAttacked reads it.
-  --
-  -- ONLY AttackTarget.OfPlayer, which is rule 508.3e's last sentence in as many
-  -- words: "it won't trigger if a creature attacks a planeswalker or a battle".
-  -- The other exclusion in that sentence -- a creature put onto the battlefield
-  -- attacking -- holds by construction instead, CR 508.4 saying such a creature
-  -- was never declared and Combat.putOntoBattlefieldAttacking recording no
-  -- event.
-  --
-  -- No bearer test, PlayerAttacks' bystanding posture above: rule 508.3e's two
-  -- subjects are both players, so a Seifer held out of combat still triggers on
-  -- its controller's attack.
-  TriggerCondition.PlayerAttacksPlayer subjects -> case event of
-    GameEvent.BecameAttacked payload -> case BecameAttacked.target payload of
-      AttackTarget.OfPlayer attacked ->
-        PlayerRelation.holds (Game.teams gs) (PlayerAttacksPlayer.attacker subjects) you (BecameAttacked.attacker payload)
-          && case PlayerAttacksPlayer.attacked subjects of
-            AttackedPlayer.Related relation -> PlayerRelation.holds (Game.teams gs) relation you attacked
-            AttackedPlayer.Enchanted -> (Recipient.playerOf =<< (Object.attachedTo =<< Game.lookupObject bearer gs)) == Just attacked
-      AttackTarget.OfPlaneswalker _ -> False
-      AttackTarget.OfBattle _ -> False
-    _ -> False
-  -- CR 702.105a: the bearer was declared attacking A PLAYER, and no player still in
-  -- the game has more life than that one. SelfAttacks' event and its identity
-  -- check, with the comparison added.
-  --
-  -- Whom the bearer attacked comes from Combat.attackers rather than from the
-  -- event, which carries CR 508.5's DEFENDING player instead -- the same id for an
-  -- attacked planeswalker or battle, where rule 702.105a names the player. Reading
-  -- the record here is exact for SelfAttacksWithAnother's reason.
-  --
-  -- Non-strict, which is rule 702.105a's "or tied for most life", and over
-  -- Game.stillPlaying rather than every seat the game began with: a player who has
-  -- left (CR 800.4a) has no life total left to be beaten.
-  TriggerCondition.SelfAttacksPlayerWithMostLife -> case event of
-    GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared oid _ _ _ _)
-      | oid == bearer ->
-          case Map.lookup bearer (Combat.attackers (GameState.combat gs)) of
-            Just (AttackTarget.OfPlayer attacked) ->
-              let lifeOf pid = fmap Player.life (Map.lookup pid (GameState.players gs))
-               in case lifeOf attacked of
-                    Nothing -> False
-                    Just theirs -> all (maybe True (<= theirs) . lifeOf) (Game.stillPlaying gs)
-            _ -> False
-    _ -> False
-  -- CR 508.3a narrowed by a state, SelfAttacksWhileSaddled's posture: the
-  -- declaration SelfAttacks matches, and the condition asked of the live board
-  -- when triggers are collected, through the view Event.interveningHolds reads.
-  -- Not `board`, CR 603.10's post-event battlefield, so a legendary Monkey lost
-  -- to state-based actions the declaration itself caused reads as absent; no
-  -- card in the pool reaches that.
-  TriggerCondition.SelfAttacksWhile condition ->
-    matchesTriggerGiven bindings board gs bearer you (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime) event
-      && Condition.holds (Projection.viewWithLastKnownAnywhere gs) bearerContext gs bearer condition
-  -- CR 702.171b: SelfAttacks' declaration event, narrowed by the bearer
-  -- carrying the saddled designation AT THAT MOMENT. Read off
-  -- Object.designations rather than through the projection, rule 702.171b
-  -- putting the mark outside the permanent's copiable values.
-  --
-  -- Rule 702.171a is what sets it, and it can only have been set earlier this
-  -- turn: Parun.Engine.Expiry.dropAtCleanup ends it at CR 514.2 and CR 400.7
-  -- drops it on a zone change.
-  TriggerCondition.SelfAttacksWhileSaddled -> case event of
-    GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared oid _ _ _ _) ->
-      oid == bearer && maybe False (Set.member Designation.Saddled . Object.designations) (Game.lookupObject bearer gs)
-    _ -> False
+  -- CR 508.3, as a function of Parun.Types.AttackTrigger's arity and fields:
+  -- attacks.
+  TriggerCondition.Attacks t -> attacks bearerContext board gs bearer you t event
   -- CR 509.3, as a function of Parun.Types.BlockTrigger's fields: blocks.
   TriggerCondition.Blocks t -> blocks bearerContext board gs t event
-  -- CR 509.1h: the bearer became an UNBLOCKED creature, which the glossary's
-  -- "attacks and isn't blocked" entry sends here. CR 509.3c's arm of `blocks`
-  -- is the other branch of the same turn-based action, and no attacker can
-  -- produce both events in one declaration.
-  --
-  -- The event alone answers it. Reading Combat.blockers instead would answer for
-  -- the board at scan time, and rule 509.1h's last sentence is what that gets
-  -- wrong: an attacker whose blockers all left combat is still blocked. The
-  -- attacker is read off `board` for that reason too: data/scenarios's
-  -- cloak-of-confusion-fires-though-the-block-toll-knocks-it-off-its-host
-  -- proves it.
-  TriggerCondition.CreatureAttacksUnblocked f -> case event of
-    GameEvent.AttackerUnblocked u -> case postEventView board gs (AttackerUnblocked.attacker u) of
-      Nothing -> False
-      Just view -> Filter.matches bearerContext view f
-    -- CR 509.1i's declaration events are the blocked side of the same action; an
-    -- attacker this one names got a blocker, so it is not unblocked.
-    GameEvent.AttackerDeclared {} -> False
-    _ -> False
   -- CR 603.10a's third family read off the departing card itself: the bearer
   -- is the graveyard incarnation (`ZoneChange.departed`), which only
   -- eventTriggers' look-back offers. ANY of Moved.departures, CardLeavesZone's
@@ -2258,7 +2020,7 @@ armMatches bindings board gs bearer you cond event = case cond of
       Crewing.vehicle ev == bearer && case frequency of
         TriggerFrequency.EveryTime -> True
         -- Rule 702.122e's "for the first time each turn", counted the way
-        -- SelfAttacks' arm above counts declarations and for its reasons: the
+        -- `attacks` counts declarations and for its reasons: the
         -- crewing being matched is already logged when the scan reaches here, so
         -- "the first time" is "the only one so far", and Engine.handoffTurn
         -- clearing the log is what makes it "each turn".

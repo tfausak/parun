@@ -1140,7 +1140,7 @@ draw settle resolving source controller legal (Draw.MkDraw ref quantity mSlot) =
             -- 616.1g settles it before any of the individual draws below -- so
             -- the count those draws run on is the one this loop leaves standing,
             -- and a row that replaced the instruction outright leaves none.
-            outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.DrawCards Nothing pid (Integer.toNaturalSaturating n))
+            outcome <- Event.applyReplacementsIn settle Nothing Set.empty Set.empty (ProposedEvent.WouldPerform PlayerInstruction.DrawCards Nothing pid (Integer.toNaturalSaturating n))
             got <- case outcome >>= Replacement.asPerformed PlayerInstruction.DrawCards of
               Nothing -> pure []
               -- CR 121.2: draw the settled count one at a time, so each draw
@@ -1619,8 +1619,8 @@ discard resolving source controller legal _ (Discard.AnyNumber (AnyNumberDiscard
   doomed <- traverse pickFor victims
   Common.buryDiscards resolving mDiscarded doomed
 
-loseLife :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> LifeLoss.LifeLoss -> Game ()
-loseLife resolving source controller legal (LifeLoss.MkLifeLoss ref quantity cause mTally) = do
+loseLife :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> LifeLoss.LifeLoss -> Game ()
+loseLife settle resolving source controller legal (LifeLoss.MkLifeLoss ref quantity cause mTally) = do
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
@@ -1658,7 +1658,7 @@ loseLife resolving source controller legal (LifeLoss.MkLifeLoss ref quantity cau
             -- Parun.ReplacementSpec's Worship group proves on a board where the
             -- same player at the same life survives 3 damage and dies to
             -- Stronghold Discipline's 3.
-            settled <- Event.resolveLifeLoss cause pid (Integer.toNaturalSaturating n)
+            settled <- Event.resolveLifeLoss settle cause pid (Integer.toNaturalSaturating n)
             Event.changeLife pid (negate (toInteger settled))
             pure settled
       _ -> pure 0
@@ -1713,8 +1713,8 @@ gainLife settle resolving source controller legal (PlayerQuantity.MkPlayerQuanti
 --
 -- CR 810.9e needs nothing: teammates sharing a total (Game.lifeSharers) hold
 -- the same one, so both deltas are zero and the exchange moves nothing.
-exchangeLifeTotals :: PlayerId -> Map.Map SlotName (Set Recipient) -> ExchangeSides.ExchangeSides -> Game ()
-exchangeLifeTotals controller legal sides = do
+exchangeLifeTotals :: Game () -> PlayerId -> Map.Map SlotName (Set Recipient) -> ExchangeSides.ExchangeSides -> Game ()
+exchangeLifeTotals settle controller legal sides = do
   gs <- State.get
   let twoSides = case sides of
         ExchangeSides.WithController slot -> case legalOne slot legal of
@@ -1743,8 +1743,8 @@ exchangeLifeTotals controller legal sides = do
       Monad.unless (barred this (thatLife - thisLife) || barred that (thisLife - thatLife))
         . Event.simultaneously
         $ do
-          Common.changeLifeByDelta this (thatLife - thisLife)
-          Common.changeLifeByDelta that (thisLife - thatLife)
+          Common.changeLifeByDelta settle this (thatLife - thisLife)
+          Common.changeLifeByDelta settle that (thisLife - thatLife)
     -- CR 701.12a: if the entire exchange can't be completed, no part of it
     -- occurs.
     Nothing -> pure ()
@@ -1758,8 +1758,8 @@ exchangeLifeTotals controller legal sides = do
 -- CR 701.12a's all-or-nothing: a side naming no single player, or no creature
 -- on the battlefield, or a life total CR 119.7-8 forbids reaching, cancels the
 -- whole exchange. Parun.ZoneChangeSpec's ExchangeValues group is the proof.
-exchangeValues :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ExchangeValues.ExchangeValues -> Game ()
-exchangeValues resolving source controller legal (ExchangeValues.MkExchangeValues one other duration) = do
+exchangeValues :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ExchangeValues.ExchangeValues -> Game ()
+exchangeValues settle resolving source controller legal (ExchangeValues.MkExchangeValues one other duration) = do
   gs <- State.get
   let single xs = case xs of
         [x] -> Just x
@@ -1774,7 +1774,7 @@ exchangeValues resolving source controller legal (ExchangeValues.MkExchangeValue
                 | new > life = PlayerEffect.prohibitsGainingLife pid gs
                 | new < life = PlayerEffect.prohibitsLosingLife pid gs
                 | otherwise = False
-          pure (life, \new -> if barred new then Nothing else Just (Common.changeLifeByDelta pid (new - life)))
+          pure (life, \new -> if barred new then Nothing else Just (Common.changeLifeByDelta settle pid (new - life)))
         ExchangedValue.Power ref -> creature ref Projection.powerOf (\new -> SetBasePowerToughness.MkSetBasePowerToughness (Just new) Nothing)
         ExchangedValue.Toughness ref -> creature ref Projection.toughnessOf (SetBasePowerToughness.MkSetBasePowerToughness Nothing . Just)
       creature ref characteristic setting = do
@@ -1820,8 +1820,8 @@ exchangeValues resolving source controller legal (ExchangeValues.MkExchangeValue
 -- Not implemented: CR 810.9d's team choosing the one member a "set each
 -- player's life total" affects, so the team's total takes every named
 -- member's delta (#4493).
-setLifeTotal :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerQuantity.PlayerQuantity -> Game ()
-setLifeTotal resolving source controller legal (PlayerQuantity.MkPlayerQuantity ref quantity) = do
+setLifeTotal :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerQuantity.PlayerQuantity -> Game ()
+setLifeTotal settle resolving source controller legal (PlayerQuantity.MkPlayerQuantity ref quantity) = do
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
@@ -1834,7 +1834,7 @@ setLifeTotal resolving source controller legal (PlayerQuantity.MkPlayerQuantity 
       -- An undeterminable total is no instruction, asked per recipient: one
       -- seat's unanswerable count says nothing about the others.
       Monad.forM_ (Common.evaluateForRecipient viewOf context gs resolving source pid quantity) $ \total ->
-        Common.changeLifeByDelta pid (total - Player.life player)
+        Common.changeLifeByDelta settle pid (total - Player.life player)
 
 -- CR 104.3e: the players the reference names lose the game. IMMEDIATELY, as the
 -- effect applies, which is the whole distinction from CR 104.3b-d -- those are
@@ -1911,8 +1911,8 @@ drawGame source controller = do
 --
 -- Not implemented: CR 810.9f's "not more than one member of each team"
 -- (#4493).
-redistributeLifeTotals :: ObjectId -> PlayerId -> Game ()
-redistributeLifeTotals source controller = do
+redistributeLifeTotals :: Game () -> ObjectId -> PlayerId -> Game ()
+redistributeLifeTotals settle source controller = do
   gs <- State.get
   let candidates = Players.table (Plane.rangePerspective source controller gs) gs
       lifeOf pid = maybe 0 Player.life (Map.lookup pid (GameState.players gs))
@@ -1938,7 +1938,7 @@ redistributeLifeTotals source controller = do
     -- one action taken on every seat it names, so the whole permutation's gains
     -- and losses share one Parun.Types.EventGroup.
     Monad.when (isPermutation && all reachable (Map.toList assignment)) . Event.simultaneously . Monad.forM_ (Map.toList assignment) $ \(taker, giver) ->
-      Common.changeLifeByDelta taker (lifeOf giver - lifeOf taker)
+      Common.changeLifeByDelta settle taker (lifeOf giver - lifeOf taker)
 
 -- CR 702.179c: each named player's speed increases by this much. Its two
 -- readings -- a player who HAS speed goes up, a player with NONE has their

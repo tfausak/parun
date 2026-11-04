@@ -901,7 +901,7 @@ spec s registry = Spec.describe s "Range of influence" $ do
             GameState.phase = Phase.Combat CombatStep.CombatDamage,
             GameState.combat = Combat.emptyCombat {Combat.Type.defenders = [defender], Combat.Type.attackers = Map.fromList (fmap (\oid -> (oid, AttackTarget.OfPlayer defender)) attackers)}
           }
-        (Monad.void Damage.dealCombatDamage)
+        (Monad.void (Damage.dealCombatDamage (pure ())))
     -- CR 503.1: `pid`'s upkeep begins and its triggers resolve.
     upkeepOf pid gs =
       let upkeep = Phase.Beginning BeginningStep.Upkeep

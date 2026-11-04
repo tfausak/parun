@@ -28,16 +28,19 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PlayerAttacksPlayer",
+            "type": "Attacks",
             "value": {
-              "attacked": {
-                "type": "Related",
-                "value": {
-                  "type": "AnyPlayer"
+              "type": "Attacked",
+              "value": {
+                "attacked": {
+                  "type": "Related",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                },
+                "attacker": {
+                  "type": "You"
                 }
-              },
-              "attacker": {
-                "type": "You"
               }
             }
           },

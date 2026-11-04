@@ -78,8 +78,11 @@ lessonFromOutside =
 -- CR 701.48a's "if you do, draw a card" is sequenced rather than conditional
 -- here: the discard below cannot fail once the card was chosen off the hand, so
 -- the draw always follows it.
-learn :: PlayerId -> ObjectId -> ObjectId -> Game ()
-learn pid resolving source = do
+--
+-- `settle` is Event.drawSeries', for a sequence a replacement makes in the
+-- draw's place (CR 614.11a).
+learn :: Game () -> PlayerId -> ObjectId -> ObjectId -> Game ()
+learn settle pid resolving source = do
   gs <- State.get
   let hand = Game.cardsIn Zone.Hand pid gs
       lessons = Event.eligible (FromOutsideTheGame.filter lessonFromOutside) source pid gs
@@ -100,4 +103,4 @@ learn pid resolving source = do
         Event.discard DiscardCause.Ordinary pid discarded
         -- CR 121.1, through the draw funnel, so CR 121.3's empty library and CR
         -- 614's draw replacements both get their opportunity.
-        Event.drawCard pid
+        Event.drawCard settle pid

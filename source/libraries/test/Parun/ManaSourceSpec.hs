@@ -1817,7 +1817,7 @@ interchangeableSourcesSpec s registry = Spec.describe s "Interchangeable mana so
         (elfA, elfB) = case NonEmpty.toList elves of
           a : b : _ -> (a, b)
           _ -> (NonEmpty.head elves, NonEmpty.head elves)
-        hit pairs gs = S.runPure S.identityAnswer gs (Damage.applyDamage [Event.damageEvent gs DamageKind.Combat source (Recipient.ToCreature victim) 1 | (source, victim) <- pairs])
+        hit pairs gs = S.runPure S.identityAnswer gs (Damage.applyDamage (pure ()) [Event.damageEvent gs DamageKind.Combat source (Recipient.ToCreature victim) 1 | (source, victim) <- pairs])
         apart = hit [(first, elfA), (second, elfB)] ready
         together = hit [(first, elfA), (first, elfB)] ready
         (offers, paid, after) = greenWindow apart
@@ -1840,7 +1840,7 @@ interchangeableSourcesSpec s registry = Spec.describe s "Interchangeable mana so
         (elfA, elfB) = case NonEmpty.toList elves of
           a : b : _ -> (a, b)
           _ -> (NonEmpty.head elves, NonEmpty.head elves)
-        hit amounts gs = S.runPure S.identityAnswer gs (Damage.applyDamage [Event.damageEvent gs DamageKind.Noncombat source (Recipient.ToPlayer S.bob) amount | (source, amount) <- amounts])
+        hit amounts gs = S.runPure S.identityAnswer gs (Damage.applyDamage (pure ()) [Event.damageEvent gs DamageKind.Noncombat source (Recipient.ToPlayer S.bob) amount | (source, amount) <- amounts])
         apart = hit [(elfA, 2), (elfB, 1)] ready
         together = hit [(elfA, 1), (elfB, 1)] ready
         (offers, paid, after) = greenWindow apart

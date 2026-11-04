@@ -794,7 +794,7 @@ raidersSpec s registry = Spec.describe s "Raiders' Allegiance" $ do
     let (pikerId, stocked) = S.addPermanent piker S.alice board
         begin phase gs = Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan phase S.alice)) (gs {GameState.activePlayer = S.alice, GameState.phase = phase, GameState.priority = Just S.alice})
         hit target = DamageEvent.MkDamageEvent pikerId (Recipient.ToPlayer target) 1 False False False 0 Nothing Nothing mempty False
-        damaged = S.runPure S.identityAnswer (begin Phase.PrecombatMain stocked) (Damage.applyDamage [hit S.bob DamageKind.Combat, hit S.carol DamageKind.Combat, hit S.dave DamageKind.Noncombat])
+        damaged = S.runPure S.identityAnswer (begin Phase.PrecombatMain stocked) (Damage.applyDamage (pure ()) [hit S.bob DamageKind.Combat, hit S.carol DamageKind.Combat, hit S.dave DamageKind.Noncombat])
         raided = S.runPure S.identityAnswer (begin Phase.PostcombatMain damaged) Engine.priorityLoop
     Spec.assertEqWith s "CR 510.2 two players took combat damage: alice has two point counters" (S.playerCounterOf PlayerCounterKind.Point S.alice raided) 2
     Spec.assertEqWith s "and two Pirates" (controllersNamed "Pirate Token" raided) [Just S.alice, Just S.alice]
@@ -810,7 +810,7 @@ raidersSpec s registry = Spec.describe s "Raiders' Allegiance" $ do
         ranged = S.withRange 1 stocked
         begin phase gs = Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan phase S.alice)) (gs {GameState.activePlayer = S.alice, GameState.phase = phase, GameState.priority = Just S.alice})
         hit source target = DamageEvent.MkDamageEvent source (Recipient.ToPlayer target) 1 False False False 0 Nothing Nothing mempty False DamageKind.Combat
-        damaged = S.runPure S.identityAnswer (begin Phase.PrecombatMain ranged) (Damage.applyDamage [hit alicePiker S.bob, hit davePiker S.carol])
+        damaged = S.runPure S.identityAnswer (begin Phase.PrecombatMain ranged) (Damage.applyDamage (pure ()) [hit alicePiker S.bob, hit davePiker S.carol])
         raided = S.runPure S.identityAnswer (begin Phase.PostcombatMain damaged) Engine.priorityLoop
     Spec.assertEqWith s "CR 801.18 two players took combat damage: alice has two point counters" (S.playerCounterOf PlayerCounterKind.Point S.alice raided) 2
     Spec.assertBool s (not (Game.inRangeOf S.alice S.carol ranged)) "carol is outside alice's range"

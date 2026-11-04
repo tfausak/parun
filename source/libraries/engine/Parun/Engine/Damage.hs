@@ -1012,9 +1012,12 @@ excessDealt before source aimed settled =
 -- Answers the events the batch actually DEALT (CR 120.4b), after prevention and
 -- redirection, for an instruction that records their total or their recipients
 -- (Parun.Types.DealDamage's `tally` and `damaged`).
-applyDamage :: [DamageEvent.DamageEvent] -> Game [DamageEvent.DamageEvent]
-applyDamage events = do
-  (dealt, gains) <- Event.simultaneously (processDamage events)
+--
+-- `settle` is Event.drawSeries', for the draws Lich makes in place of a gain
+-- the batch causes (CR 614.11a).
+applyDamage :: Game () -> [DamageEvent.DamageEvent] -> Game [DamageEvent.DamageEvent]
+applyDamage settle events = do
+  (dealt, gains) <- Event.simultaneously (processDamage settle events)
   recordLifelinkGains gains
   pure dealt
 
@@ -1027,8 +1030,8 @@ applyDamage events = do
 -- CR 614.1's funnel for the class, so a LifeGainR row resizes it -- and the
 -- record has to name what the player actually gained, or a "whenever you gain
 -- life" trigger would read the amount before the replacement.
-processDamage :: [DamageEvent.DamageEvent] -> Game ([DamageEvent.DamageEvent], [(PlayerId, Natural)])
-processDamage events = do
+processDamage :: Game () -> [DamageEvent.DamageEvent] -> Game ([DamageEvent.DamageEvent], [(PlayerId, Natural)])
+processDamage settle events = do
   (survivors, prevented) <- Event.resolveDamageBatch events
   -- The state the whole batch is read against: recipients are classified off it
   -- (Projection.damagedCardTypes), the commander tally is asked of it, and `counterResults`
@@ -1341,11 +1344,15 @@ processDamage events = do
   -- Through Event.resolveLifeGain, CR 614.1's funnel for the class, and the
   -- SETTLED amount is what moves the total and what the record names.
   --
-  -- Not implemented: Lich's draws in a lifelink gain's place land nothing
-  -- they queued before the next draw (#6105).
+  -- `settle` runs between Lich's draws in a gain's place (CR 614.11a), and
+  -- drains the batch's own queued rewrites with the first: CR 120.4b's
+  -- replacements are done before CR 120.4c's gain. data/scenarios/replacement's
+  -- cr-614-11a-forbidden-crypt-s-loss-meets-lich-s-mirror-between-lifelink-draws
+  -- and cr-120-4b-kill-suit-cultist-s-destruction-lands-before-lich-s-lifelink-draws
+  -- prove both.
   gains <-
     Monad.forM (lifelinkGains survivors) $ \(pid, total) -> do
-      settled <- Event.resolveLifeGain (pure ()) pid total
+      settled <- Event.resolveLifeGain settle pid total
       Monad.when (settled > 0) (State.modify' (Game.adjustLife pid (toInteger settled)))
       pure (pid, settled)
   -- CR 120.4c: "damage that's been dealt is processed into its results, as
@@ -1389,7 +1396,7 @@ processDamage events = do
   lost <-
     Monad.forM survivors $ \ev -> case DamageEvent.target ev of
       Recipient.ToPlayer pid | not (DamageEvent.dealtByInfect ev) -> do
-        n <- Event.resolveLifeLossSpent (Just board) Set.empty LifeLossCause.ByDamage pid (DamageEvent.amount ev)
+        n <- Event.resolveLifeLossSpent settle (Just board) Set.empty LifeLossCause.ByDamage pid (DamageEvent.amount ev)
         Monad.when (n > 0) (State.modify' (Game.adjustLife pid (negate (toInteger n))))
         pure n
       _ -> pure 0
@@ -1565,8 +1572,10 @@ lifelinkGains survivors =
 -- first strike or double strike as the first step began" snapshot. Only
 -- creatures still on the battlefield assign, so a striker killed in the first
 -- step is gone for the second.
-dealCombatDamage :: Game Bool
-dealCombatDamage = do
+--
+-- `settle` is applyDamage's.
+dealCombatDamage :: Game () -> Game Bool
+dealCombatDamage settle = do
   gs <- State.get
   let combat = GameState.combat gs
       participants =
@@ -1580,19 +1589,19 @@ dealCombatDamage = do
     Nothing
       -- CR 510.4 does not apply: no striker, so one step and everyone deals.
       | Set.null strikers -> do
-          dealWave alive
+          dealWave settle alive
           pure False
       -- CR 510.4: a striker is present. This is the first of two steps; only
       -- first strikers and double strikers deal, and a second step follows.
       | otherwise -> do
           State.modify' (\g -> g {GameState.combat = (GameState.combat g) {Combat.Type.struckFirst = Just strikers}})
-          dealWave (\oid -> alive oid && Set.member oid strikers)
+          dealWave settle (\oid -> alive oid && Set.member oid strikers)
           pure True
     -- CR 510.4 second step: those that had neither first strike nor double strike
     -- as the first step began (not in the snapshot), plus those that currently
     -- have double strike -- and are still on the battlefield.
     Just snapshot -> do
-      dealWave (\oid -> alive oid && (Set.notMember oid snapshot || Projection.hasKeyword Keyword.DoubleStrike oid gs))
+      dealWave settle (\oid -> alive oid && (Set.notMember oid snapshot || Projection.hasKeyword Keyword.DoubleStrike oid gs))
       pure False
 
 -- Gather this wave's damage under `assigns` and apply it.
@@ -1609,8 +1618,8 @@ dealCombatDamage = do
 -- bracket has closed. Per WAVE and not per combat: CR 510.4's second combat
 -- damage step is a second step, so a double striker that connects in both is
 -- two occurrences.
-dealWave :: (ObjectId -> Bool) -> Game ()
-dealWave assigns = do
+dealWave :: Game () -> (ObjectId -> Bool) -> Game ()
+dealWave settle assigns = do
   assignment <- gatherCombatDamage assigns
-  (_, gains) <- Event.simultaneously (processDamage assignment)
+  (_, gains) <- Event.simultaneously (processDamage settle assignment)
   recordLifelinkGains gains

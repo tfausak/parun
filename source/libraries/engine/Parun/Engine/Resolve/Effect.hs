@@ -523,7 +523,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.ChangeText payload -> Damage.changeText resolving source controller legal payload
   Effect.AddMana payload -> Damage.addMana resolving source controller legal payload
   Effect.ActivateManaAbilities payload -> Damage.activateManaAbilities performManaAbility runSubgame resolving source controller legal payload
-  Effect.MoveMana payload -> Damage.moveMana resolving source controller legal payload
+  Effect.MoveMana payload -> Damage.moveMana (runReplacementEffects runSubgame) resolving source controller legal payload
   Effect.Search payload -> Damage.search performManaAbility runSubgame resolving source controller legal payload
   Effect.ExileAllGraveyards -> Damage.exileAllGraveyards source controller
   Effect.ExileHandThenDraw -> Damage.exileHandThenDraw (runReplacementEffects runSubgame) controller
@@ -584,15 +584,15 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.Explore payload -> Zones.explore resolving source controller legal payload
   Effect.Connive payload -> Zones.connive (runReplacementEffects runSubgame) resolving source controller legal payload
   Effect.Discard payload -> Zones.discard resolving source controller legal chosen payload
-  Effect.LoseLife payload -> Zones.loseLife resolving source controller legal payload
+  Effect.LoseLife payload -> Zones.loseLife (runReplacementEffects runSubgame) resolving source controller legal payload
   Effect.GainLife payload -> Zones.gainLife (runReplacementEffects runSubgame) resolving source controller legal payload
-  Effect.ExchangeLifeTotals payload -> Zones.exchangeLifeTotals controller legal payload
-  Effect.ExchangeValues payload -> Zones.exchangeValues resolving source controller legal payload
-  Effect.SetLifeTotal payload -> Zones.setLifeTotal resolving source controller legal payload
+  Effect.ExchangeLifeTotals payload -> Zones.exchangeLifeTotals (runReplacementEffects runSubgame) controller legal payload
+  Effect.ExchangeValues payload -> Zones.exchangeValues (runReplacementEffects runSubgame) resolving source controller legal payload
+  Effect.SetLifeTotal payload -> Zones.setLifeTotal (runReplacementEffects runSubgame) resolving source controller legal payload
   Effect.LoseGame payload -> Zones.loseGame resolving source controller legal payload
   Effect.WinGame payload -> Zones.winGame resolving source controller legal payload
   Effect.DrawGame -> Zones.drawGame source controller
-  Effect.RedistributeLifeTotals -> Zones.redistributeLifeTotals source controller
+  Effect.RedistributeLifeTotals -> Zones.redistributeLifeTotals (runReplacementEffects runSubgame) source controller
   Effect.IncreaseSpeed payload -> Zones.increaseSpeed resolving source controller legal payload
   Effect.DecreaseSpeed payload -> Zones.decreaseSpeed resolving source controller legal payload
   Effect.PlayerSacrifices payload -> Zones.playerSacrifices resolving source controller legal payload
@@ -667,8 +667,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.Forage -> Counters.forage resolving controller
   Effect.Populate -> Counters.populate resolving controller
   Effect.TimeTravel -> Counters.timeTravel resolving controller
-  Effect.Recruit -> Counters.recruit controller
-  Effect.Learn -> Counters.learn resolving source controller
+  Effect.Recruit -> Counters.recruit (runReplacementEffects runSubgame) controller
+  Effect.Learn -> Counters.learn (runReplacementEffects runSubgame) resolving source controller
   Effect.Cloak payload -> Counters.cloak resolving source controller legal payload
   Effect.ManifestDread payload -> Counters.manifestDread resolving source controller legal payload
   Effect.Venture payload -> Counters.venture controller payload
@@ -1200,7 +1200,8 @@ throwSettled runSubgame roll perDie = do
 -- What Parun.Engine.Cost reaches through the Parun.Types.ManaAbilityPerformer
 -- parameter: CR 405.6c's other effects of the activated mana ability being paid,
 -- CR 605.4a's triggered mana ability, CR 118.12's resolution cost, and the CR
--- 706 roll Pokey, the Scallywagg makes for a cost's coin flip (throwForCoin).
+-- 706 roll Pokey, the Scallywagg makes for a cost's coin flip (throwForCoin),
+-- and CR 614.11a's settle for a life payment's draws.
 --
 -- `runSubgame` is CR 729.1a's runner for a subgame either one starts. Only the
 -- triggered half can: CR 605.1a's library clause (ManaAbility.movesLibraryCard)
@@ -1213,7 +1214,8 @@ performManaAbility runSubgame =
     { ManaAbilityPerformer.effects = performManaAbilityEffects runSubgame,
       ManaAbilityPerformer.triggered = performTriggeredManaAbility runSubgame,
       ManaAbilityPerformer.payGate = performManaPayGate runSubgame,
-      ManaAbilityPerformer.throwForCoin = throwForCoin runSubgame
+      ManaAbilityPerformer.throwForCoin = throwForCoin runSubgame,
+      ManaAbilityPerformer.settle = runReplacementEffects runSubgame
     }
 
 -- CR 118.12 on a mana ability's clause, which CR 605.3b gives no stack object:

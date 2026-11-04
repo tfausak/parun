@@ -1358,7 +1358,7 @@ moonmistShieldChain s registry swap = do
             Stack.resolveTop
       shielded = S.runPure S.identityAnswer evolved Stack.resolveTop
       hit src n = DamageEvent.MkDamageEvent src (Recipient.ToPlayer S.alice) n False False False 0 Nothing Nothing mempty False DamageKind.Combat
-      after = S.runPure S.identityAnswer shielded (Damage.applyDamage [hit wolf 3, hit werewolf 3, hit piker 2])
+      after = S.runPure S.identityAnswer shielded (Damage.applyDamage (pure ()) [hit wolf 3, hit werewolf 3, hit piker 2])
   pure (wolf, werewolf, piker, shielded, after)
 
 -- CR 612.1 through a quoted ability handed over by a RESOLUTION rather than by

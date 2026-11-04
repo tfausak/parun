@@ -85,6 +85,8 @@ import qualified Parun.Types.ArrivalEnd as ArrivalEnd
 import qualified Parun.Types.AsCopy as AsCopy
 import qualified Parun.Types.AttachR as AttachR
 import qualified Parun.Types.AttachRewrite as AttachRewrite
+import qualified Parun.Types.AttackTrigger as AttackTrigger
+import qualified Parun.Types.AttackedTrigger as AttackedTrigger
 import qualified Parun.Types.BecameAttached as BecameAttached
 import qualified Parun.Types.BecameTarget as BecameTarget
 import qualified Parun.Types.BecameUnattached as BecameUnattached
@@ -132,6 +134,7 @@ import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.DealtDamage as DealtDamage
+import qualified Parun.Types.DeclarationTrigger as DeclarationTrigger
 import Parun.Types.DelayedTrigger (DelayedTrigger)
 import qualified Parun.Types.DelayedTrigger as DelayedTrigger
 import qualified Parun.Types.Designation as Designation
@@ -235,8 +238,6 @@ import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Parun.Types.Player as Player
 import qualified Parun.Types.PlayerActed as PlayerActed
 import qualified Parun.Types.PlayerAction as PlayerAction
-import qualified Parun.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
-import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerChoice as PlayerChoice
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Types.PlayerEffect as PlayerEffect.Type
@@ -802,9 +803,12 @@ lifePayable pid gs =
 --
 -- CR 119.4b's always-payable 0 loses nothing: resolveLifeLoss declines a zero
 -- itself, so it records nothing and writes nothing.
-payLife :: PlayerId -> Natural -> Game ()
-payLife pid n = do
-  settled <- resolveLifeLoss LifeLossCause.ByPayment pid n
+--
+-- `settle` is drawSeries', for the draws Lich makes in place of the gain Strong,
+-- the Brutish Thespian makes in the payment's place.
+payLife :: Game () -> PlayerId -> Natural -> Game ()
+payLife settle pid n = do
+  settled <- resolveLifeLoss settle LifeLossCause.ByPayment pid n
   Monad.when (settled /= 0) . State.modify' $
     \gs -> recordEvent (lifeChanged LifeDirection.Lost pid settled gs) (Game.adjustLife pid (negate (toInteger settled)) gs)
 
@@ -2211,9 +2215,8 @@ applyReplacements = applyReplacementsIn (pure ()) Nothing Set.empty Set.empty
 --
 -- `settle` is drawSeries', run between the draws a row makes in the event's
 -- place (CR 614.11a): Resolve.runReplacementEffects from a proposer that holds
--- it, and `pure ()` from one below Resolve. Not implemented: a sequence a row
--- makes in place of an event proposed with `pure ()` lands nothing it queued
--- before its next draw (#6105).
+-- it, and `pure ()` from one whose event no row turns into a draw or a gain,
+-- or from runEntry (#6118).
 applyReplacementsIn :: Game () -> Maybe GameState -> Set ObjectId -> Set CandidateId -> ProposedEvent -> Game (Maybe ProposedEvent)
 applyReplacementsIn settle asOf batch spent event = do
   (outcome, _, _, _, _, _) <- applyReplacementsFully settle asOf batch Map.empty spent event
@@ -3798,13 +3801,17 @@ apply settle batch applied candidate event =
             -- Through payLife, CR 119.4's own door, and NOT a subtraction from the
             -- life total: rule 119.4's last clause makes the payment a life loss
             -- like any other, so a card watching for life loss sees this one.
+            --
+            -- Not implemented: runEntry proposes the entry with `pure ()`, so
+            -- Lich's draws in place of a gain made in this payment's place land
+            -- nothing they queued before the next draw (#6118).
             EntryPrice.PayLife n -> do
               answer <-
                 if canPayLife controller n gs
                   then Game.choose (Prompt.ChoosePayLifeOnEntry (Decide.deciderFor controller gs) controller oid n)
                   else pure OptionalDecision.Declines
               case answer of
-                OptionalDecision.Exercises -> payLife controller n
+                OptionalDecision.Exercises -> payLife settle controller n
                 OptionalDecision.Declines -> enterTapped oid
             -- CR 701.20a: through `reveal`, its own funnel, so the shown card
             -- reaches the public log with the projection a player at the table
@@ -4351,7 +4358,7 @@ apply settle batch applied candidate event =
       -- turns that loss back into a gain.
       LifeGainRewrite.LoseInstead -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        settled <- resolveLifeLossSpent Nothing (spentWith candidate applied) LifeLossCause.ByEffect pid n
+        settled <- resolveLifeLossSpent settle Nothing (spentWith candidate applied) LifeLossCause.ByEffect pid n
         changeLife pid (negate (toInteger settled))
         pure Nothing
     -- Unreachable: `applies` admits LifeGainR only against WouldGainLife.
@@ -4481,7 +4488,7 @@ apply settle batch applied candidate event =
         Monad.mapM_ (reveal RevealCause.Ordinary pid) revealed
         answers <- Monad.foldM ask Seq.empty (filter (/= pid) (Game.apnapOrder gs))
         let payers = [payer | (payer, PaymentDecision.Pays) <- Foldable.toList answers]
-        Monad.mapM_ (`payLife` n) payers
+        Monad.mapM_ (\payer -> payLife settle payer n) payers
         if null payers
           then pure (Just event)
           else do
@@ -6187,8 +6194,11 @@ resolvePlayerCounters cause pid kind n = do
 -- through CR 120.3a: the damage is still dealt and its other results still
 -- happen, and only the life loss does not -- Parun.PlayerEffectSpec's
 -- PlatinumEmperion group is the proof.
-resolveLifeLoss :: LifeLossCause.LifeLossCause -> PlayerId -> Natural -> Game Natural
-resolveLifeLoss = resolveLifeLossSpent Nothing Set.empty
+--
+-- `settle` is drawSeries', for the draws Lich makes in place of the gain
+-- Strong, the Brutish Thespian makes in the loss's place.
+resolveLifeLoss :: Game () -> LifeLossCause.LifeLossCause -> PlayerId -> Natural -> Game Natural
+resolveLifeLoss settle = resolveLifeLossSpent settle Nothing Set.empty
 
 -- A loss made in place of another event by a replacement (CR 614.5): `spent`
 -- holds the rows that already had their opportunity, drawSeries' reason.
@@ -6196,8 +6206,8 @@ resolveLifeLoss = resolveLifeLossSpent Nothing Set.empty
 -- `asOf` is applyReplacementsIn's: Just the board a damage batch began in, so a
 -- row's condition is judged before the event, never on a result of it already
 -- written (Parun.Engine.Damage.processDamage); Nothing everywhere else.
-resolveLifeLossSpent :: Maybe GameState -> Set CandidateId -> LifeLossCause.LifeLossCause -> PlayerId -> Natural -> Game Natural
-resolveLifeLossSpent asOf spent cause pid n =
+resolveLifeLossSpent :: Game () -> Maybe GameState -> Set CandidateId -> LifeLossCause.LifeLossCause -> PlayerId -> Natural -> Game Natural
+resolveLifeLossSpent settle asOf spent cause pid n =
   if n == 0
     then pure 0
     else do
@@ -6205,7 +6215,7 @@ resolveLifeLossSpent asOf spent cause pid n =
       if PlayerEffect.prohibitsLosingLife pid gs
         then pure 0
         else do
-          outcome <- applyReplacementsIn (pure ()) asOf Set.empty spent (ProposedEvent.WouldLoseLife cause pid n)
+          outcome <- applyReplacementsIn settle asOf Set.empty spent (ProposedEvent.WouldLoseLife cause pid n)
           pure (maybe 0 snd (outcome >>= Replacement.asLifeLoss))
 
 -- CR 119.3 / 119.10 / 120.3f: settle how much life a player actually gains, and
@@ -10384,10 +10394,9 @@ changeLife pid delta =
 -- that draws -- the draw step, an opening hand, a Draw effect -- opens the same
 -- window, and none of them learns that it did.
 --
--- Not implemented: a sequence of draws a replacement makes in this draw's place
--- lands nothing it queued before its next draw (#6105).
-drawCard :: PlayerId -> Game ()
-drawCard pid = Monad.void (drawCardSpentReturning DrawKind.Other (pure ()) Set.empty pid)
+-- `settle` is drawSeries', for a sequence a replacement makes in its place.
+drawCard :: Game () -> PlayerId -> Game ()
+drawCard settle pid = Monad.void (drawCardSpentReturning DrawKind.Other settle Set.empty pid)
 
 -- CR 121.2 / 614.11a: `n` individual draws by `pid`, with `settle` run after
 -- each, so what a replacement queued in a draw's place (Forbidden Crypt's loss,
@@ -10927,7 +10936,7 @@ controllerTurnScoped cond = case cond of
   -- No PermanentAction's rule names a turn. Where the act can only happen on the
   -- ACTIVE player's turn -- CR 508.1g's exert, the attack CR 508.1a makes
   -- training fire on -- that is still not CR 109.5's "you": a stolen creature is
-  -- exerted, or trains, on its thief's turn. The SelfAttacks arm below settles it.
+  -- exerted, or trains, on its thief's turn. The Attacks arm below settles it.
   TriggerCondition.PermanentActs _ -> False
   TriggerCondition.PlacesSticker _ -> False
   -- CR 706.2 names no turn either.
@@ -11043,42 +11052,16 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.RevealedThisWay _ -> False
   TriggerCondition.Discards _ -> False
   TriggerCondition.PlayerDrawsNthCard {} -> False
-  -- CR 508.1a makes this the ACTIVE player's turn, which is not the same thing:
-  -- CR 109.5's "you" is the ability's controller, and a stolen creature attacks on
-  -- its thief's turn.
-  TriggerCondition.SelfAttacks _ -> False
-  TriggerCondition.SelfAttacksWithAnother _ -> False
-  TriggerCondition.SelfAttacksPermanent _ -> False
-  TriggerCondition.CreatureAttacksAlone _ -> False
-  -- CR 506.2 makes this one an OPPONENT's turn every time, which is not the
-  -- controller's turn either -- StepBegins' OpponentsTurn arm above answers the
-  -- same way for the same reason.
-  TriggerCondition.CreatureAttacksYou -> False
-  -- The SelfAttacks arm's reason: a stolen creature attacks on its thief's turn.
-  TriggerCondition.CreatureAttacks _ -> False
-  TriggerCondition.AttachedPlayerIsAttacked -> False
-  TriggerCondition.SelfIsAttacked -> False
-  -- The only arm around here that can answer True, and only on one relation: CR
-  -- 508.1 lets only an active player declare attackers (CR 805.10a), so the
-  -- declarer named by the event is always an active player. You therefore pins
-  -- the event to CR 109.5's "you"'s own turn; Opponent pins it to somebody else's; AnyPlayer
-  -- pins nothing. SelfAttacks answers False because it pins the CREATURE and not
-  -- the declarer -- a stolen creature attacks on its thief's turn -- which is
-  -- the comparison this arm does make.
-  TriggerCondition.PlayerAttacks relation -> relation == PlayerRelation.You
-  -- The arm above's comparison, over the same relation: rule 508.3c's Filter
-  -- narrows WHICH creatures were declared and says nothing about whose turn it
-  -- is.
-  TriggerCondition.PlayerAttacksWith payload -> PlayerAttacksWith.player payload == PlayerRelation.You
-  -- The same comparison over the ATTACKING side, which is the field rule
-  -- 508.3e's event pins to the active player; the attacked side says nothing
-  -- about whose turn it is.
-  TriggerCondition.PlayerAttacksPlayer subjects -> PlayerAttacksPlayer.attacker subjects == PlayerRelation.You
-  TriggerCondition.SelfAttacksPlayerWithMostLife -> False
-  TriggerCondition.SelfAttacksWhileSaddled -> False
-  TriggerCondition.SelfAttacksWhile _ -> False
+  -- CR 508.1 lets only an active player declare attackers (CR 805.10a), so a
+  -- declaring player the trigger pins to You pins the event to CR 109.5's
+  -- "you"'s own turn. An attacker trigger pins the CREATURE instead, which
+  -- attacks on its thief's turn when stolen, and "attacks you" (CR 506.2) is an
+  -- opponent's turn; neither is the controller's. The attacked side says
+  -- nothing about whose turn it is.
+  TriggerCondition.Attacks (AttackTrigger.Declaration t) -> DeclarationTrigger.player t == PlayerRelation.You
+  TriggerCondition.Attacks (AttackTrigger.Attacked t) -> AttackedTrigger.attacker t == Just PlayerRelation.You
+  TriggerCondition.Attacks _ -> False
   TriggerCondition.Blocks _ -> False
-  TriggerCondition.CreatureAttacksUnblocked _ -> False
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> False
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> False
   TriggerCondition.SelfPutIntoGraveyardDuringResolution -> False

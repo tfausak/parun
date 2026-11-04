@@ -1747,7 +1747,7 @@ dovinSpec s registry = Spec.describe s "DovinHandOfControl" $ do
         act (dovinBoard plains piker warMammoth dovin)
       hit src recipient n = DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
       amounts gs = fmap DamageEvent.amount (S.damageEventsOf gs)
-      settleDamage gs batch = S.runPure S.identityAnswer gs (Damage.applyDamage batch)
+      settleDamage gs batch = S.runPure S.identityAnswer gs (Damage.applyDamage (pure ()) batch)
   -- TWO rows for the one printed clause: parun installs a shield per relation, so
   -- "dealt to" and "dealt by" are a row each over the same target, and both are
   -- armed to the one duration the clause states.
@@ -1900,7 +1900,7 @@ oldFatSpiderSpec s registry = Spec.describe s "OldFatSpiderCantSeeMe" $ do
         act (spiderBoard island piker warMammoth spider)
       hit src recipient n = DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
       amounts gs = fmap DamageEvent.amount (S.damageEventsOf gs)
-      settleDamage gs events = S.runPure S.identityAnswer gs (Damage.applyDamage events)
+      settleDamage gs events = S.runPure S.identityAnswer gs (Damage.applyDamage (pure ()) events)
       -- The two dealers hit the SAME player for DIFFERENT amounts, so a board
       -- that had the two events backwards could not satisfy both readings.
       batch shielded control = [hit shielded (Recipient.ToPlayer S.alice) 4, hit control (Recipient.ToPlayer S.alice) 3]

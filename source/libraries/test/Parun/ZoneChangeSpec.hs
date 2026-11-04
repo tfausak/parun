@@ -1045,11 +1045,11 @@ drawCardSpec s registry = Spec.describe s "DrawCard" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let base = Setup.emptyGame S.bothPlayers
         (_, withCard) = S.addLibraryCard piker S.alice base
-        after = S.runPure S.identityAnswer withCard (Event.drawCard S.alice)
+        after = S.runPure S.identityAnswer withCard (Event.drawCard (pure ()) S.alice)
     Spec.assertEqWith s "one card in hand" (S.handSize S.alice after) 1
     Spec.assertEqWith s "library empty" (Game.zoneMembers Zone.Library S.alice after) []
   Spec.it s "CR 121.3 drawing from an empty library records the failed draw" $ do
-    let after = S.runPure S.identityAnswer (Setup.emptyGame S.bothPlayers) (Event.drawCard S.alice)
+    let after = S.runPure S.identityAnswer (Setup.emptyGame S.bothPlayers) (Event.drawCard (pure ()) S.alice)
     Spec.assertBool s (Set.member S.alice (GameState.drewFromEmpty after)) "drewFromEmpty marked"
 
 loseLifeSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
