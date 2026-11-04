@@ -1,0 +1,50 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 4
+        }
+      ],
+      "name": "Cursed Rack",
+      "oracleText": "As this artifact enters, choose an opponent.\nThe chosen player's maximum hand size is four.",
+      "playerAbilities": [
+        {
+          "effect": {
+            "type": "SetMaximumHandSize",
+            "value": 4
+          },
+          "scope": {
+            "type": "ChosenPlayer"
+          }
+        }
+      ],
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "EntryR",
+            "value": {
+              "matching": {
+                "type": "IsSource"
+              },
+              "rewrite": {
+                "type": "ChoosePlayer",
+                "value": {
+                  "type": "Opponent"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Artifact"
+          }
+        ]
+      }
+    }
+  ]
+}
