@@ -34,15 +34,20 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PlayerAttacksWith",
+            "type": "Attacks",
             "value": {
-              "attackers": 1,
-              "filter": {
-                "type": "And",
-                "value": []
-              },
-              "player": {
-                "type": "Opponent"
+              "type": "Declaration",
+              "value": {
+                "attackers": {
+                  "filter": {
+                    "type": "And",
+                    "value": []
+                  },
+                  "floor": 1
+                },
+                "player": {
+                  "type": "Opponent"
+                }
               }
             }
           },

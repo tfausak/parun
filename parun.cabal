@@ -210,17 +210,27 @@ library codec
     Parun.Codec.AttachRSpec
     Parun.Codec.AttachTarget
     Parun.Codec.AttachTargetSpec
+    Parun.Codec.AttackCompany
+    Parun.Codec.AttackCompanySpec
     Parun.Codec.AttackCost
     Parun.Codec.AttackCostScope
     Parun.Codec.AttackCostSpec
-    Parun.Codec.AttackedPlayer
-    Parun.Codec.AttackedPlayerSpec
+    Parun.Codec.AttackCount
+    Parun.Codec.AttackCountSpec
+    Parun.Codec.AttackedSubject
+    Parun.Codec.AttackedSubjectSpec
+    Parun.Codec.AttackedTrigger
+    Parun.Codec.AttackedTriggerSpec
     Parun.Codec.AttackerBlocked
     Parun.Codec.AttackerBlockedSpec
     Parun.Codec.AttackerDeclared
     Parun.Codec.AttackerDeclaredSpec
     Parun.Codec.AttackersAre
     Parun.Codec.AttackersAreSpec
+    Parun.Codec.AttackerTarget
+    Parun.Codec.AttackerTargetSpec
+    Parun.Codec.AttackerTrigger
+    Parun.Codec.AttackerTriggerSpec
     Parun.Codec.AttackerUnblocked
     Parun.Codec.AttackerUnblockedSpec
     Parun.Codec.AttackingPlayers
@@ -239,6 +249,8 @@ library codec
     Parun.Codec.AttackTargetRef
     Parun.Codec.AttackTargetRefSpec
     Parun.Codec.AttackTargetSpec
+    Parun.Codec.AttackTrigger
+    Parun.Codec.AttackTriggerSpec
     Parun.Codec.AttackWaiver
     Parun.Codec.AttackWaiverSpec
     Parun.Codec.Audience
@@ -598,6 +610,8 @@ library codec
     Parun.Codec.DealtDamageToSpec
     Parun.Codec.Decider
     Parun.Codec.DeciderSpec
+    Parun.Codec.DeclarationTrigger
+    Parun.Codec.DeclarationTriggerSpec
     Parun.Codec.DefendersAre
     Parun.Codec.DefendersAreSpec
     Parun.Codec.Defense
@@ -1192,10 +1206,6 @@ library codec
     Parun.Codec.PlayerActionSpec
     Parun.Codec.PlayerActsOn
     Parun.Codec.PlayerActsOnSpec
-    Parun.Codec.PlayerAttacksPlayer
-    Parun.Codec.PlayerAttacksPlayerSpec
-    Parun.Codec.PlayerAttacksWith
-    Parun.Codec.PlayerAttacksWithSpec
     Parun.Codec.PlayerChoice
     Parun.Codec.PlayerChoiceSpec
     Parun.Codec.PlayerControl
@@ -2443,12 +2453,17 @@ library types
     Parun.Types.AttachRestriction
     Parun.Types.AttachRewrite
     Parun.Types.AttachTarget
+    Parun.Types.AttackCompany
     Parun.Types.AttackCost
     Parun.Types.AttackCostScope
-    Parun.Types.AttackedPlayer
+    Parun.Types.AttackCount
+    Parun.Types.AttackedSubject
+    Parun.Types.AttackedTrigger
     Parun.Types.AttackerBlocked
     Parun.Types.AttackerDeclared
     Parun.Types.AttackersAre
+    Parun.Types.AttackerTarget
+    Parun.Types.AttackerTrigger
     Parun.Types.AttackerUnblocked
     Parun.Types.AttackingPlayers
     Parun.Types.AttackLimitUnless
@@ -2458,6 +2473,7 @@ library types
     Parun.Types.AttackTarget
     Parun.Types.AttackTargetKind
     Parun.Types.AttackTargetRef
+    Parun.Types.AttackTrigger
     Parun.Types.AttackWaiver
     Parun.Types.Audience
     Parun.Types.Backup
@@ -2660,6 +2676,7 @@ library types
     Parun.Types.DealtDamageTo
     Parun.Types.Decider
     Parun.Types.Deck
+    Parun.Types.DeclarationTrigger
     Parun.Types.DefendersAre
     Parun.Types.Defense
     Parun.Types.DelayedTrigger
@@ -3005,8 +3022,6 @@ library types
     Parun.Types.PlayerActed
     Parun.Types.PlayerAction
     Parun.Types.PlayerActsOn
-    Parun.Types.PlayerAttacksPlayer
-    Parun.Types.PlayerAttacksWith
     Parun.Types.PlayerChoice
     Parun.Types.PlayerControl
     Parun.Types.PlayerCounterKind

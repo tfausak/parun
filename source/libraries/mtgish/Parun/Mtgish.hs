@@ -39,6 +39,8 @@ import qualified Parun.Types.AffectedUnless as AffectedUnless
 import qualified Parun.Types.AgainstSlot as AgainstSlot
 import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.Arithmetic as Arithmetic
+import qualified Parun.Types.AttackTrigger as AttackTrigger
+import qualified Parun.Types.AttackerTrigger as AttackerTrigger
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.BlockCount as BlockCount
 import qualified Parun.Types.BlockRole as BlockRole
@@ -162,7 +164,6 @@ import qualified Parun.Types.TheseDiscard as TheseDiscard
 import qualified Parun.Types.Times as Times
 import qualified Parun.Types.Toughness as Toughness
 import qualified Parun.Types.TriggerCondition as TriggerCondition
-import qualified Parun.Types.TriggerFrequency as TriggerFrequency
 import qualified Parun.Types.TriggerLimit as TriggerLimit
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TurnScope as TurnScope
@@ -716,15 +717,15 @@ trigger n = case Node.tag n of
       Nothing -> do
         f <- permanents outermost who
         Right (TriggerCondition.PermanentDies f, bound [("Trigger_ThatPermanent", Oracle.Target.becameSlot), ("Trigger_ThatCreature", Oracle.Target.becameSlot)])
-  "WhenACreatureAttacks" -> itself (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime)
+  "WhenACreatureAttacks" -> itself (TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue))
   "WhenACreatureAttacksAndIsntBlocked" -> do
     who <- Node.argument n
     case single who of
-      Just "ThisPermanent" -> itself (TriggerCondition.CreatureAttacksUnblocked Filter.IsSource)
+      Just "ThisPermanent" -> itself (TriggerCondition.Attacks (AttackTrigger.Unblocked Filter.IsSource))
       Just _ -> Node.untranslated n
       Nothing -> do
         f <- permanents outermost who
-        Right (TriggerCondition.CreatureAttacksUnblocked f, bound [("Trigger_ThatCreature", Oracle.Trigger.attackingCreature), ("Trigger_DefendingPlayer", Oracle.Trigger.thatPlayer)])
+        Right (TriggerCondition.Attacks (AttackTrigger.Unblocked f), bound [("Trigger_ThatCreature", Oracle.Trigger.attackingCreature), ("Trigger_DefendingPlayer", Oracle.Trigger.thatPlayer)])
   "WhenACreatureBlocks" -> itself (blocks BlockRole.Blocker Filter.IsSource BlockCount.Once)
   "WhenACreatureBecomesBlocked" -> do
     who <- Node.argument n

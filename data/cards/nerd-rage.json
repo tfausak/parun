@@ -68,9 +68,10 @@
                 "type": "Triggered",
                 "value": {
                   "condition": {
-                    "type": "SelfAttacks",
+                    "type": "Attacks",
                     "value": {
-                      "type": "EveryTime"
+                      "type": "Attacker",
+                      "value": {}
                     }
                   },
                   "intervening": {

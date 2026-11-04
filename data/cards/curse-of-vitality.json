@@ -28,7 +28,15 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "AttachedPlayerIsAttacked"
+            "type": "Attacks",
+            "value": {
+              "type": "Attacked",
+              "value": {
+                "attacked": {
+                  "type": "Enchanted"
+                }
+              }
+            }
           },
           "modal": {
             "modes": [

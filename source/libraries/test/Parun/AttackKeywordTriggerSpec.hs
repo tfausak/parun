@@ -26,7 +26,10 @@ import qualified Parun.Engine.Target as Target
 import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
+import qualified Parun.Types.AttackCompany as AttackCompany
 import qualified Parun.Types.AttackTarget as AttackTarget
+import qualified Parun.Types.AttackTrigger as AttackTrigger
+import qualified Parun.Types.AttackerTrigger as AttackerTrigger
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Comparison as Comparison
@@ -57,7 +60,6 @@ import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.StackObjectKind as StackObjectKind
 import qualified Parun.Types.TargetSlot as TargetSlot
 import qualified Parun.Types.TriggerCondition as TriggerCondition
-import qualified Parun.Types.TriggerFrequency as TriggerFrequency
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TurnRole as TurnRole
 
@@ -250,8 +252,13 @@ exaltedSpec s registry =
         Spec.it s "CR 603.2 two instances mint two abilities, both CR 506.5" $ do
           let abilities = Keyword.abilitiesFor Keyword.Type.Exalted 2
               expected =
-                TriggerCondition.CreatureAttacksAlone
-                  (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.HeldBy Holder.Controller PlayerRelation.You])
+                TriggerCondition.Attacks
+                  ( AttackTrigger.Attacker
+                      AttackerTrigger.defaultValue
+                        { AttackerTrigger.creature = Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.HeldBy Holder.Controller PlayerRelation.You],
+                          AttackerTrigger.company = AttackCompany.Alone
+                        }
+                  )
           Spec.assertEqWith s "two abilities" (length abilities) 2
           Spec.assertEqWith s "each watching CR 506.5, filtered on the attacker's controller" (fmap TriggeredAbility.condition abilities) [expected, expected]
 
@@ -353,7 +360,7 @@ mentorSpec s registry =
             s
             "each watching CR 508.3a's declaration"
             (fmap TriggeredAbility.condition abilities)
-            [TriggerCondition.SelfAttacks TriggerFrequency.EveryTime, TriggerCondition.SelfAttacks TriggerFrequency.EveryTime]
+            [TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue), TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue)]
           Spec.assertEqWith s "each with rule 702.134a's one slot" (concatMap slotsOf abilities) [expectedSlot, expectedSlot]
 
 -- CR 702.134c, the OTHER half of rule 702.134: not mentor's own attack trigger but
@@ -484,7 +491,7 @@ mentorsTriggerSpec s registry =
 -- CR 702.149a's training, which rule 702 states as a triggered
 -- ability -- and the first whose trigger CONDITION reads the rest of the
 -- declaration, through a power comparison against the source power
--- TriggerCondition.SelfAttacksWithAnother supplies.
+-- AttackCompany.WithAnother supplies.
 --
 -- Apprentice Sharpshooter {2}{G} Creature -- Human Archer 1/4 is the card: reach
 -- and training, and reach touches nothing here, so every number below is the
@@ -502,8 +509,12 @@ trainingSpec s _ =
     Spec.it s "CR 702.149b two instances mint two abilities" $ do
       let abilities = Keyword.abilitiesFor Keyword.Type.Training 2
           expected =
-            TriggerCondition.SelfAttacksWithAnother
-              (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.Measures (Measures.MkMeasures Measure.Power Comparison.GreaterThan (Operand.OfSource Measure.Power))])
+            TriggerCondition.Attacks
+              ( AttackTrigger.Attacker
+                  AttackerTrigger.defaultValue
+                    { AttackerTrigger.company = AttackCompany.WithAnother (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.Measures (Measures.MkMeasures Measure.Power Comparison.GreaterThan (Operand.OfSource Measure.Power))])
+                    }
+              )
       Spec.assertEqWith s "two abilities" (length abilities) 2
       Spec.assertEqWith
         s
@@ -855,7 +866,7 @@ provokeSpec s registry =
             s
             "each on CR 508.3a's condition"
             (fmap TriggeredAbility.condition abilities)
-            [TriggerCondition.SelfAttacks TriggerFrequency.EveryTime, TriggerCondition.SelfAttacks TriggerFrequency.EveryTime]
+            [TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue), TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue)]
           Spec.assertEqWith s "each with rule 702.39a's one slot" (concatMap slotsOf abilities) [expectedSlot, expectedSlot]
 
 -- CR 702.112a's renown, which rule 702 states as a triggered

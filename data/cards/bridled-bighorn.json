@@ -38,7 +38,26 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfAttacksWhileSaddled"
+            "type": "Attacks",
+            "value": {
+              "type": "Attacker",
+              "value": {
+                "creature": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "IsSource"
+                    },
+                    {
+                      "type": "HasDesignation",
+                      "value": {
+                        "type": "Saddled"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           },
           "modal": {
             "modes": [

@@ -40,9 +40,10 @@
                 "type": "SelfEnters"
               },
               {
-                "type": "SelfAttacks",
+                "type": "Attacks",
                 "value": {
-                  "type": "EveryTime"
+                  "type": "Attacker",
+                  "value": {}
                 }
               }
             ]
@@ -148,9 +149,10 @@
                 "type": "SelfEnters"
               },
               {
-                "type": "SelfAttacks",
+                "type": "Attacks",
                 "value": {
-                  "type": "EveryTime"
+                  "type": "Attacker",
+                  "value": {}
                 }
               }
             ]

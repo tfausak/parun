@@ -87,11 +87,16 @@
             "type": "AnyOf",
             "value": [
               {
-                "type": "CreatureAttacks",
+                "type": "Attacks",
                 "value": {
-                  "type": "HasAttached",
+                  "type": "Attacker",
                   "value": {
-                    "type": "IsSource"
+                    "creature": {
+                      "type": "HasAttached",
+                      "value": {
+                        "type": "IsSource"
+                      }
+                    }
                   }
                 }
               },

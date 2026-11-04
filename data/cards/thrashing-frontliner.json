@@ -34,11 +34,19 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfAttacksPermanent",
+            "type": "Attacks",
             "value": {
-              "type": "HasCardType",
+              "type": "Attacker",
               "value": {
-                "type": "Battle"
+                "target": {
+                  "type": "Permanent",
+                  "value": {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Battle"
+                    }
+                  }
+                }
               }
             }
           },
