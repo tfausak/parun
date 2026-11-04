@@ -10,8 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #5686: Panic. No casting restriction spans combat before blockers are
-  declared.
 - #5992: Serra Bestiary. A prohibition can't name activated abilities with {T}
   in their cost (CR 602.5).
 - #5993: Instill Energy. Nothing lifts only the attack half of summoning

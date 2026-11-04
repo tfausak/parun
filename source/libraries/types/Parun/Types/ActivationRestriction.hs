@@ -1,6 +1,7 @@
 module Parun.Types.ActivationRestriction where
 
 import Numeric.Natural (Natural)
+import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.DuringPhase as DuringPhase
 import qualified Parun.Types.ManaSpecification as ManaSpecification
@@ -114,19 +115,11 @@ data ActivationRestriction
     -- chosen player's, so a second axis here would be strictly narrower than the
     -- card.
     AfterBlockersDeclared
-  | -- | CR 506.7, through CR 506.7g: "Activate only during combat before combat
-    -- damage has been dealt" (Save Point). CR 506.7c is the "during combat" half
-    -- -- a turn with two combat phases admits the ability in either -- and the
-    -- rest of CR 506.7 the "before the combat damage step" half.
-    -- Parun.Engine.Turn.beforeCombatDamage is the reader.
-    --
-    -- NOT DuringPhase over PhaseSelector.CombatPhase, which would be strictly
-    -- more permissive than the card: Turn.inWindow is a containment test, so that
-    -- window also admits the combat damage step (CR 510.3 gives priority only
-    -- after CR 510.2's turn-based action, so damage HAS been dealt there) and the
-    -- end of combat step. Nor the negation of AfterBlockersDeclared above, which
-    -- would exclude the declare blockers step the card admits.
-    BeforeCombatDamage
+  | -- | CR 506.7c, through CR 506.7g: only during a combat phase, short of this
+    -- step: Save Point's "before combat damage has been dealt".
+    -- Parun.Engine.Turn.duringCombatBefore is the reader, shared with
+    -- Parun.Types.CastingRestriction's arm of this name.
+    DuringCombatBefore CombatStep.CombatStep
   | -- | CR 506.7a / 506.7g: only before this step first begins this turn --
     -- Capricious Sorcerer's "before attackers are declared", Mana Cache's
     -- "before the end step". Parun.Engine.Turn.beforeStep is the reader.

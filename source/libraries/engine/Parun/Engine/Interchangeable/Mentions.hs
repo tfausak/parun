@@ -662,7 +662,7 @@ activationRestrictionNames asking x = case x of
   ActivationRestriction.DuringTurn turnScope -> turnScopeNames asking turnScope
   ActivationRestriction.AttackedThisStep -> mempty
   ActivationRestriction.AfterBlockersDeclared -> mempty
-  ActivationRestriction.BeforeCombatDamage -> mempty
+  ActivationRestriction.DuringCombatBefore _step -> mempty
   ActivationRestriction.BeforeStep _phase -> history asking HistoryRead.StepBegins
   ActivationRestriction.OnlyIf condition -> conditionNames asking condition
   ActivationRestriction.OnlyOnce -> mempty
@@ -926,6 +926,7 @@ castingRestrictionNames asking x = case x of
   CastingRestriction.AttackedThisStep -> mempty
   CastingRestriction.AfterBlockersDeclared -> mempty
   CastingRestriction.BeforeStep _phase -> history asking HistoryRead.StepBegins
+  CastingRestriction.DuringCombatBefore _step -> mempty
   CastingRestriction.DuringTurn turnScope -> turnScopeNames asking turnScope
   CastingRestriction.NotDuringFirstTurns _turns -> mempty
   CastingRestriction.OnlyIf condition -> conditionNames asking condition

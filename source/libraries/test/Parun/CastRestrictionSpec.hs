@@ -34,6 +34,7 @@ import qualified Parun.Engine.Quantity as Quantity
 import qualified Parun.Engine.Replay as Replay
 import qualified Parun.Engine.Setup as Setup
 import qualified Parun.Engine.Stack as Stack
+import qualified Parun.Engine.Turn as Turn
 import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
@@ -174,6 +175,7 @@ printedCastingRestrictionSpec s registry = Spec.describe s "PrintedCastingRestri
     Spec.assertBool s (elem (A.Cast boltId (S.printingName bolt) Facing.FaceUp) (Action.legalActions S.alice withBolt)) "and offered as a legal action"
 
   necrologiaSpec s registry
+  duringCombatBeforeSpec s registry
 
 -- Necrologia {3}{B}{B} Instant: "Cast this spell only during your end step. As
 -- an additional cost to cast this spell, pay X life. Draw X cards."
@@ -193,6 +195,28 @@ necrologiaBoard swamp mountain necrologia bolt ph =
       (boltId, withBolt) = S.addHandCard bolt S.alice (snd (S.addPermanent mountain S.alice base))
       stocked = List.foldl' (\gs _ -> snd (S.addLibraryCard swamp S.alice gs)) withBolt [1 :: Int, 2, 3]
    in (necrologiaId, boltId, stocked)
+
+-- Panic's "only during combat before blockers are declared" (CR 506.7b, 506.7c):
+-- the one test asking the window over every step of a turn. The Bolt is the
+-- control, as on necrologiaBoard, and the Bears a legal target on every step.
+duringCombatBeforeSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+duringCombatBeforeSpec s registry = Spec.describe s "DuringCombatBefore" $ do
+  Spec.it s "CR 506.7b/506.7c castable exactly from beginning of combat through declare attackers" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    panic <- S.printingOf s registry "Panic"
+    bolt <- S.printingOf s registry "Lightning Bolt"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    let board ph =
+          let (base, panicId) = S.boltInHand mountain panic 2 ph
+              (boltId, withBolt) = S.addHandCard bolt S.alice base
+           in (panicId, boltId, snd (S.addPermanent bears S.bob withBolt))
+        panicCastable ph = let (panicId, _, gs) = board ph in S.castable S.alice panicId gs
+        boltCastable ph = let (_, boltId, gs) = board ph in S.castable S.alice boltId gs
+    Spec.assertBool s (all boltCastable Turn.allPhases) "the control instant is castable on every step"
+    Spec.assertEq
+      s
+      [Phase.Combat CombatStep.BeginningOfCombat, Phase.Combat CombatStep.DeclareAttackers]
+      (filter panicCastable Turn.allPhases)
 
 necrologiaSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 necrologiaSpec s registry = Spec.describe s "Necrologia" $ do

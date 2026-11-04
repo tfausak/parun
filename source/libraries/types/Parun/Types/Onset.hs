@@ -16,6 +16,9 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 -- Throttle both watch for their event from the moment they are created, which is
 -- CR 603.7a's floor and the only gate those two need.
 --
+-- Not implemented: an onset for "the next turn's upkeep" on no player's turn in
+-- particular, so those cards fire at the next upkeep to begin (gap #6072).
+--
 -- FromNextTurnOf is Meandering Towershell's "on your next turn". The gate is
 -- NOT vacuous and not expressible by the trigger condition alone:
 -- TriggerCondition.StepBegins carries a TurnScope, and ControllersTurn admits

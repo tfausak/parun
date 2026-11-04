@@ -68,7 +68,10 @@
           },
           "restrictions": [
             {
-              "type": "BeforeCombatDamage"
+              "type": "DuringCombatBefore",
+              "value": {
+                "type": "CombatDamage"
+              }
             }
           ]
         }
