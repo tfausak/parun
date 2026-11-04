@@ -3998,16 +3998,15 @@ bindAmountSlot resolving source slot n gs =
 -- Effect.SetLifeTotal, Effect.ExchangeLifeTotals and
 -- Effect.RedistributeLifeTotals.
 --
--- Not implemented: Lich's draws in an upward delta's place land nothing they
--- queued before the next draw (#6105).
-changeLifeByDelta :: PlayerId -> Integer -> Game ()
-changeLifeByDelta pid delta =
+-- `settle` is Event.drawSeries', for the draws Lich makes in a gain's place.
+changeLifeByDelta :: Game () -> PlayerId -> Integer -> Game ()
+changeLifeByDelta settle pid delta =
   if delta < 0
     then do
-      settled <- Event.resolveLifeLoss LifeLossCause.ByEffect pid (Integer.toNaturalSaturating (negate delta))
+      settled <- Event.resolveLifeLoss settle LifeLossCause.ByEffect pid (Integer.toNaturalSaturating (negate delta))
       Event.changeLife pid (negate (toInteger settled))
     else do
-      settled <- Event.resolveLifeGain (pure ()) pid (Integer.toNaturalSaturating delta)
+      settled <- Event.resolveLifeGain settle pid (Integer.toNaturalSaturating delta)
       Event.changeLife pid (toInteger settled)
 
 -- CR 701.23: do to a found card what the search said -- a move, a CR 701.20a
@@ -4585,7 +4584,7 @@ conniveOne settle n oid = Monad.when (n > 0) $ do
     -- CR 121.2a: the N-card draw is one replaceable instruction, settled before
     -- any of CR 121.2's individual draws -- Effect.Draw's arm, line for line,
     -- `settle` included (CR 614.11a).
-    outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.DrawCards Nothing pid n)
+    outcome <- Event.applyReplacementsIn settle Nothing Set.empty Set.empty (ProposedEvent.WouldPerform PlayerInstruction.DrawCards Nothing pid n)
     Monad.forM_ (outcome >>= Replacement.asPerformed PlayerInstruction.DrawCards) (uncurry (Event.drawSeries settle Set.empty))
     drawn <- State.get
     let held = Game.cardsIn Zone.Hand pid drawn

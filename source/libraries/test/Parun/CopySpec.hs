@@ -1416,7 +1416,7 @@ dealTo src victim amount gs =
     ( S.runPure
         S.identityAnswer
         gs
-        (Damage.applyDamage [DamageEvent.MkDamageEvent src (Recipient.ToCreature victim) amount False False False 0 Nothing Nothing mempty False DamageKind.Noncombat])
+        (Damage.applyDamage (pure ()) [DamageEvent.MkDamageEvent src (Recipient.ToCreature victim) amount False False False 0 Nothing Nothing mempty False DamageKind.Noncombat])
     )
 
 cardNamed :: String -> CardName.CardName

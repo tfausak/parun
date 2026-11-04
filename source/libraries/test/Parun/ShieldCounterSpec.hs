@@ -194,7 +194,7 @@ shieldCounterSpec s registry = Spec.describe s "Shield counters (CR 122.1c)" $ d
     Spec.assertEqWith s "setup: one counter, and two events it cannot both cover" (shields giant shielded) 1
     Spec.assertBool
       s
-      (wasAskedToOrderDamage (answersFor S.identityAnswer shielded (Damage.applyDamage batch)))
+      (wasAskedToOrderDamage (answersFor S.identityAnswer shielded (Damage.applyDamage (pure ()) batch)))
       "alice was asked which damage the counter prevents"
     -- CR 615.6: a prevented event never happens, so the board says which of the two
     -- the counter reached twice over -- in what was marked and in what survived.
@@ -224,7 +224,7 @@ shieldCounterSpec s registry = Spec.describe s "Shield counters (CR 122.1c)" $ d
         after = settleDamage S.identityAnswer shielded batch
     Spec.assertBool
       s
-      (not (wasAskedToOrderDamage (answersFor S.identityAnswer shielded (Damage.applyDamage batch))))
+      (not (wasAskedToOrderDamage (answersFor S.identityAnswer shielded (Damage.applyDamage (pure ()) batch))))
       "no OrderDamage was raised: two counters cover both events"
     Spec.assertEqWith s "neither event happened" (amounts after) []
     Spec.assertEqWith s "nothing is marked" (S.damageOf giant after) (Just 0)
@@ -325,7 +325,7 @@ shieldCounterSpec s registry = Spec.describe s "Shield counters (CR 122.1c)" $ d
     Spec.assertEqWith s "setup: one counter, and two events it cannot both reach" (shields guard_ shielded) 1
     Spec.assertBool
       s
-      (wasAskedToOrderDamage (answersFor S.identityAnswer shielded (Damage.applyDamage batch)))
+      (wasAskedToOrderDamage (answersFor S.identityAnswer shielded (Damage.applyDamage (pure ()) batch)))
       "alice was asked which of the two the counter goes to"
     Spec.assertEqWith s "spent on the unpreventable 3, it prevents nothing and both events happen" (amounts tookTheAvatar) [3, 2]
     Spec.assertEqWith s "so the 1/4 takes 5" (S.damageOf guard_ tookTheAvatar) (Just 5)

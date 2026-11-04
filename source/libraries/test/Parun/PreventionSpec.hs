@@ -546,7 +546,7 @@ mendingHandsSpec s registry = Spec.describe s "Mending Hands (CR 615.7)" $ do
         (attacker, g2) = S.addPermanent pikerPrinting S.bob g1
         (g3, spellId) = S.handOne mendingHands g2
         shielded = castAndResolve (aimCreature victim) g3 spellId
-        strike g = S.runPure S.identityAnswer g (Damage.applyDamage [hit attacker (Recipient.ToCreature victim) 3])
+        strike g = S.runPure S.identityAnswer g (Damage.applyDamage (pure ()) [hit attacker (Recipient.ToCreature victim) 3])
         once = strike shielded
         twice = strike once
         thrice = strike twice
@@ -579,7 +579,7 @@ mendingHandsSpec s registry = Spec.describe s "Mending Hands (CR 615.7)" $ do
         (attacker, g3) = S.addPermanent pikerPrinting S.bob g2
         (g4, spellId) = S.handOne mendingHands g3
         shielded = castAndResolve (aimCreature shieldedOne) g4 spellId
-        after = S.runPure S.identityAnswer shielded (Damage.applyDamage [hit attacker (Recipient.ToCreature bystander) 3])
+        after = S.runPure S.identityAnswer shielded (Damage.applyDamage (pure ()) [hit attacker (Recipient.ToCreature bystander) 3])
     Spec.assertEqWith s "the unshielded creature takes all of it" (S.damageOf bystander after) (Just 3)
     Spec.assertEqWith s "and the shield was not spent on damage it does not cover" (length (GameState.replacements after)) 1
   -- CR 615.7 by the POINT rather than by the event: "each 1 damage that would be
@@ -616,10 +616,10 @@ mendingHandsSpec s registry = Spec.describe s "Mending Hands (CR 615.7)" $ do
         (g3, spellId) = S.handOne mendingHands g2
         shielded = castAndResolve (aimPlayer S.bob) g3 spellId
         batch = [hit big (Recipient.ToPlayer S.bob) 1, hit small (Recipient.ToPlayer S.bob) 2]
-        after = S.runPure S.identityAnswer shielded (Damage.applyDamage batch)
+        after = S.runPure S.identityAnswer shielded (Damage.applyDamage (pure ()) batch)
     Spec.assertBool
       s
-      (not (wasAskedToAllocateDamage (answersFor S.identityAnswer shielded (Damage.applyDamage batch))))
+      (not (wasAskedToAllocateDamage (answersFor S.identityAnswer shielded (Damage.applyDamage (pure ()) batch))))
       "no AllocateDamage was raised: 4 covers 1 and 2 together"
     Spec.assertEqWith s "both events were prevented whole" (amounts after) []
     Spec.assertEqWith s "bob's life is untouched" (S.lifeOf S.bob after) (Just 20)
@@ -680,7 +680,7 @@ healingGraceSpec s registry = Spec.describe s "Healing Grace (CR 609.7a)" $ do
         (_, g3) = S.addPermanent pikerPrinting S.bob g2
         (g4, spellId) = S.handOne mendingHands g3
         shielded = castAndResolve (aimCreature victim) g4 spellId
-        strike src n g = S.runPure S.identityAnswer g (Damage.applyDamage [hit src (Recipient.ToCreature victim) n])
+        strike src n g = S.runPure S.identityAnswer g (Damage.applyDamage (pure ()) [hit src (Recipient.ToCreature victim) n])
     Spec.assertEqWith s "the same unchosen source's 2 is prevented here" (S.damageOf victim (strike alpha 2 shielded)) (Just 0)
     Spec.assertEqWith s "and nobody was asked to choose a source" (chosenSourcesIn (answersFor (aimCreature victim) g4 (S.cast S.alice spellId >> Stack.resolveTop))) []
 
@@ -776,7 +776,7 @@ auriokReplicaSpec s registry = Spec.describe s "Auriok Replica (CR 609.7a)" $ do
         became gs = case arrived gs of
           [oid] -> oid
           _ -> spellId
-        strike src n gs = S.runPure S.identityAnswer gs (Damage.applyDamage [hit src (Recipient.ToPlayer S.alice) n])
+        strike src n gs = S.runPure S.identityAnswer gs (Damage.applyDamage (pure ()) [hit src (Recipient.ToPlayer S.alice) n])
     -- THE gameplay assertion: the shield alice aimed at the SPELL prevents the
     -- damage the PERMANENT deals. Before carryOver re-keyed the row this 3 landed
     -- in full, the shield left naming an id nothing on the board carries.
@@ -962,7 +962,7 @@ packLeaderSpec s registry = Spec.describe s "Pack Leader (CR 611.2c)" $ do
         -- ONE source for every case, so each pair below differs in the recipient
         -- alone: the shield says nothing about its source, and a case that
         -- swapped sources would not be a twin of the one beside it.
-        strike src oid n = S.damageOf oid (S.runPure S.identityAnswer board (Damage.applyDamage [hit src (Recipient.ToCreature oid) n]))
+        strike src oid n = S.damageOf oid (S.runPure S.identityAnswer board (Damage.applyDamage (pure ()) [hit src (Recipient.ToCreature oid) n]))
     case (mine, theirs) of
       ([leaderId, ourDog, ourPiker], [theirDog, theirPiker]) -> do
         let strikeFrom = strike theirPiker
@@ -1156,7 +1156,7 @@ healingGraceReferentSpec s registry = Spec.describe s "Healing Grace and Auriok 
             )
         rest = Activate.activateAbility S.alice replicaId (theAbility replica) Monad.>> Stack.resolveTop
         after src = S.runPure (chooseDamageSourceOf src) armed rest
-        strike gs = S.runPure S.identityAnswer gs (Damage.applyDamage [hit fireEater (Recipient.ToPlayer S.alice) 3])
+        strike gs = S.runPure S.identityAnswer gs (Damage.applyDamage (pure ()) [hit fireEater (Recipient.ToPlayer S.alice) 3])
         -- The lands were placed last, so the battlefield's highest id is a Plains.
         plainsId = Set.findMax (GameState.battlefield armed)
     -- THE gameplay assertion: alice named the Fire-Eater, which by now only the
@@ -1319,7 +1319,7 @@ communalBulwarkReferentSpec s registry = Spec.describe s "Synthetic Communal Bul
         armed = S.runPure (aimPlayer S.bob) shielded (Activate.activateAbility S.alice fireEater (theAbility ghitu) Monad.>> Stack.resolveTop)
         rest = S.cast S.alice graceId Monad.>> Stack.resolveTop
         after src = S.runPure (aimAndChoose victim src) armed rest
-        strike gs = S.runPure S.identityAnswer gs (Damage.applyDamage [hit fireEater (Recipient.ToCreature victim) 3])
+        strike gs = S.runPure S.identityAnswer gs (Damage.applyDamage (pure ()) [hit fireEater (Recipient.ToCreature victim) 3])
         -- The lands were placed last, so the battlefield's highest id is a Plains.
         plainsId = Set.findMax (GameState.battlefield armed)
     -- THE gameplay assertion: alice named the Fire-Eater, which by now only the
@@ -1392,7 +1392,7 @@ comeBackWrongSpec s registry = Spec.describe s "Come Back Wrong and Auriok Repli
         armed = S.runPure (targetingOnly departed) ready (S.cast S.alice comeBackId Monad.>> Stack.resolveTop)
         rest = Activate.activateAbility S.alice replicaId (theAbility replica) Monad.>> Stack.resolveTop
         after src = S.runPure (chooseDamageSourceOf src) armed rest
-        strike gs = S.runPure S.identityAnswer gs (Damage.applyDamage [hit departed (Recipient.ToPlayer S.alice) 3])
+        strike gs = S.runPure S.identityAnswer gs (Damage.applyDamage (pure ()) [hit departed (Recipient.ToPlayer S.alice) 3])
     -- THE gameplay assertion: alice named the id only the waiting entry still
     -- refers to, and the Replica's shield watches it.
     Spec.assertEqWith s "the source only the waiting delayed trigger names is offered, and its 3 is prevented" (S.lifeOf S.alice (strike (after departed))) (Just 20)
@@ -1546,7 +1546,7 @@ atLife pid n gs = gs {GameState.players = Map.adjust (\p -> p {Player.life = n})
 -- Apply one damage batch under a given interpreter. Top-level rather than a
 -- `where` binding because the answer is rank-2 and GHC will not infer it.
 settleDamage :: (forall r. Prompt.Prompt r -> r) -> GameState.GameState -> [DamageEvent.DamageEvent] -> GameState.GameState
-settleDamage answer gs batch = S.runPure answer gs (Damage.applyDamage batch)
+settleDamage answer gs batch = S.runPure answer gs (Damage.applyDamage (pure ()) batch)
 
 -- Aim every target slot at one creature. Mending Hands' slot is Pool.AnyTarget
 -- (CR 115.4), whose creature members are tagged ToCreature.

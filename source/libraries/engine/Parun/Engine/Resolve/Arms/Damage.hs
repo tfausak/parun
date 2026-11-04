@@ -189,7 +189,7 @@ dealDamage runPreventionRiders runReplacementEffects runSubgame resolving source
         else do
           -- ONE batch, not one call per recipient: CR 608.2f's "each such
           -- action is processed simultaneously".
-          settled <- Damage.applyDamage rewritten
+          settled <- Damage.applyDamage (runReplacementEffects runSubgame) rewritten
           -- CR 614.1a: what a run-effects rewrite put in a replaced event's
           -- place runs inside this resolution too, and before the riders below.
           runReplacementEffects runSubgame
@@ -277,7 +277,7 @@ fight runPreventionRiders runReplacementEffects runSubgame legal (Fight.MkFight 
       -- action, so the two blows land simultaneously and a creature that dies
       -- to the first still dealt the second.
       Monad.unless (null events) $ do
-        Monad.void (Damage.applyDamage events)
+        Monad.void (Damage.applyDamage (runReplacementEffects runSubgame) events)
         -- The DealDamage arm's two drains, and for its reasons: a fight is an
         -- ordinary damage event, so a rewrite or a shield that applied to it
         -- runs inside this resolution rather than waiting for the next one.
@@ -566,10 +566,10 @@ activateManaAbilities performManaAbility runSubgame resolving source controller 
 -- Mana.moveMana writes in: the pools empty first, so a card naming one player
 -- on both sides nets the mana once. No gainer is CR 106.4's plain loss (Mana
 -- Short).
-moveMana :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> MoveMana.MoveMana -> Game ()
-moveMana resolving source controller legal (MoveMana.MkMoveMana fromRef toRef) = do
+moveMana :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> MoveMana.MoveMana -> Game ()
+moveMana settle resolving source controller legal (MoveMana.MkMoveMana fromRef toRef) = do
   gs <- State.get
-  Mana.moveMana (Common.apnapPlayersOf fromRef legal resolving source controller gs) (foldMap (\ref -> Common.apnapPlayersOf ref legal resolving source controller gs) toRef)
+  Mana.moveMana settle (Common.apnapPlayersOf fromRef legal resolving source controller gs) (foldMap (\ref -> Common.apnapPlayersOf ref legal resolving source controller gs) toRef)
 
 search :: (Game Result -> ManaAbilityPerformer.ManaAbilityPerformer) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Search.Search -> Game ()
 search performManaAbility runSubgame resolving source controller legal (Search.MkSearch searcherRef ownerRef zones outside quantity filter_ descriptions upTo destination subject foundSlot handSlot differentIn exactly andOr) =

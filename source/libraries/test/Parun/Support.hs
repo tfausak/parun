@@ -1196,7 +1196,7 @@ fightWith answer gs =
   snd . Engine.runGamePure answer gs $ do
     Combat.declareAttackers manaPerformer alice
     Combat.declareBlockers manaPerformer
-    Damage.dealCombatDamage
+    Damage.dealCombatDamage (pure ())
 
 -- Build a board, run a script against one engine entry point, and fail the case
 -- on either error: the whole of the common case in one call. A case that wants

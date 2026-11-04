@@ -2945,7 +2945,7 @@ leylinePhantomSpec s registry = Spec.describe s "Leyline Phantom" $ do
                 k : rest -> Map.fromList ((k, n - List.genericLength rest) : fmap (\r -> (r, 1)) rest)
                 [] -> thresholds
               _ -> S.identityAnswer p
-            dealt = S.runPure dividing blocked (Monad.void Damage.dealCombatDamage >> Engine.settleForPriority)
+            dealt = S.runPure dividing blocked (Monad.void (Damage.dealCombatDamage (pure ())) >> Engine.settleForPriority)
             resolved = S.runPure S.identityAnswer dealt Stack.resolveTop
         Spec.assertEqWith s "CR 603.2c one trigger for the step, not one per blocker" (length (GameState.stack dealt)) 1
         Spec.assertEqWith s "CR 510.1c both blockers were dealt combat damage" (S.onBattlefield first dealt, S.onBattlefield second dealt) (False, False)

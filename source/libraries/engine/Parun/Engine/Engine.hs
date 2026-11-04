@@ -559,7 +559,7 @@ runTurnBasedActions phase = do
       -- CR 510.4: deal this step's damage; if it was the first-strike step,
       -- splice a second combat damage step in after it. CR 510.3's between-steps
       -- priority and its SBA check come free from the step machinery.
-      needSecond <- Damage.dealCombatDamage
+      needSecond <- Damage.dealCombatDamage (Resolve.runReplacementEffects playSubgame)
       -- CR 614.1a: what a run-effects rewrite put in a replaced event's place
       -- runs HERE, before the step's SBA check and before the riders below.
       Resolve.runReplacementEffects playSubgame
@@ -2066,7 +2066,7 @@ endPhase ending = do
   -- The ordering against a retention that ENDS at this same boundary is
   -- observable, and both carriers are read live: one swept afterwards would keep
   -- the pool across a boundary it no longer covers.
-  Mana.emptyManaPools
+  Mana.emptyManaPools (Resolve.runReplacementEffects playSubgame)
   -- CR 511.3: as soon as the end of combat step ends, creatures, battles and
   -- planeswalkers are removed from combat -- so this belongs at the END of that
   -- step and not in runTurnBasedActions, CR 511.1 giving the step no turn-based
@@ -2151,7 +2151,7 @@ runStepThatBegan phase = do
         -- carries CR 500.5's pool empty, which is why the DEFAULT is the arm that
         -- runs it here: a step whose phase ends with it empties the pool once, in
         -- the rule's own "Then" position.
-        maybe Mana.emptyManaPools endPhase (Turn.phaseEndingAt phase)
+        maybe (Mana.emptyManaPools (Resolve.runReplacementEffects playSubgame)) endPhase (Turn.phaseEndingAt phase)
         -- CR 508.6 read on CR 500.1's span: the step-scoped half of the attack
         -- record ends with the step, so this runs at EVERY step's end and not
         -- just at combat's. See Parun.Engine.Combat.clearAttackedThisStep for why

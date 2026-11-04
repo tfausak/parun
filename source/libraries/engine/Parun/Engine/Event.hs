@@ -802,9 +802,12 @@ lifePayable pid gs =
 --
 -- CR 119.4b's always-payable 0 loses nothing: resolveLifeLoss declines a zero
 -- itself, so it records nothing and writes nothing.
-payLife :: PlayerId -> Natural -> Game ()
-payLife pid n = do
-  settled <- resolveLifeLoss LifeLossCause.ByPayment pid n
+--
+-- `settle` is drawSeries', for the draws Lich makes in place of the gain Strong,
+-- the Brutish Thespian makes in the payment's place.
+payLife :: Game () -> PlayerId -> Natural -> Game ()
+payLife settle pid n = do
+  settled <- resolveLifeLoss settle LifeLossCause.ByPayment pid n
   Monad.when (settled /= 0) . State.modify' $
     \gs -> recordEvent (lifeChanged LifeDirection.Lost pid settled gs) (Game.adjustLife pid (negate (toInteger settled)) gs)
 
@@ -2211,9 +2214,8 @@ applyReplacements = applyReplacementsIn (pure ()) Nothing Set.empty Set.empty
 --
 -- `settle` is drawSeries', run between the draws a row makes in the event's
 -- place (CR 614.11a): Resolve.runReplacementEffects from a proposer that holds
--- it, and `pure ()` from one below Resolve. Not implemented: a sequence a row
--- makes in place of an event proposed with `pure ()` lands nothing it queued
--- before its next draw (#6105).
+-- it, and `pure ()` from one whose event no row turns into a draw or a gain,
+-- or from runEntry (#6118).
 applyReplacementsIn :: Game () -> Maybe GameState -> Set ObjectId -> Set CandidateId -> ProposedEvent -> Game (Maybe ProposedEvent)
 applyReplacementsIn settle asOf batch spent event = do
   (outcome, _, _, _, _, _) <- applyReplacementsFully settle asOf batch Map.empty spent event
@@ -3798,13 +3800,17 @@ apply settle batch applied candidate event =
             -- Through payLife, CR 119.4's own door, and NOT a subtraction from the
             -- life total: rule 119.4's last clause makes the payment a life loss
             -- like any other, so a card watching for life loss sees this one.
+            --
+            -- Not implemented: runEntry proposes the entry with `pure ()`, so
+            -- Lich's draws in place of a gain made in this payment's place land
+            -- nothing they queued before the next draw (#6118).
             EntryPrice.PayLife n -> do
               answer <-
                 if canPayLife controller n gs
                   then Game.choose (Prompt.ChoosePayLifeOnEntry (Decide.deciderFor controller gs) controller oid n)
                   else pure OptionalDecision.Declines
               case answer of
-                OptionalDecision.Exercises -> payLife controller n
+                OptionalDecision.Exercises -> payLife settle controller n
                 OptionalDecision.Declines -> enterTapped oid
             -- CR 701.20a: through `reveal`, its own funnel, so the shown card
             -- reaches the public log with the projection a player at the table
@@ -4351,7 +4357,7 @@ apply settle batch applied candidate event =
       -- turns that loss back into a gain.
       LifeGainRewrite.LoseInstead -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        settled <- resolveLifeLossSpent Nothing (spentWith candidate applied) LifeLossCause.ByEffect pid n
+        settled <- resolveLifeLossSpent settle Nothing (spentWith candidate applied) LifeLossCause.ByEffect pid n
         changeLife pid (negate (toInteger settled))
         pure Nothing
     -- Unreachable: `applies` admits LifeGainR only against WouldGainLife.
@@ -4481,7 +4487,7 @@ apply settle batch applied candidate event =
         Monad.mapM_ (reveal RevealCause.Ordinary pid) revealed
         answers <- Monad.foldM ask Seq.empty (filter (/= pid) (Game.apnapOrder gs))
         let payers = [payer | (payer, PaymentDecision.Pays) <- Foldable.toList answers]
-        Monad.mapM_ (`payLife` n) payers
+        Monad.mapM_ (\payer -> payLife settle payer n) payers
         if null payers
           then pure (Just event)
           else do
@@ -6187,8 +6193,11 @@ resolvePlayerCounters cause pid kind n = do
 -- through CR 120.3a: the damage is still dealt and its other results still
 -- happen, and only the life loss does not -- Parun.PlayerEffectSpec's
 -- PlatinumEmperion group is the proof.
-resolveLifeLoss :: LifeLossCause.LifeLossCause -> PlayerId -> Natural -> Game Natural
-resolveLifeLoss = resolveLifeLossSpent Nothing Set.empty
+--
+-- `settle` is drawSeries', for the draws Lich makes in place of the gain
+-- Strong, the Brutish Thespian makes in the loss's place.
+resolveLifeLoss :: Game () -> LifeLossCause.LifeLossCause -> PlayerId -> Natural -> Game Natural
+resolveLifeLoss settle = resolveLifeLossSpent settle Nothing Set.empty
 
 -- A loss made in place of another event by a replacement (CR 614.5): `spent`
 -- holds the rows that already had their opportunity, drawSeries' reason.
@@ -6196,8 +6205,8 @@ resolveLifeLoss = resolveLifeLossSpent Nothing Set.empty
 -- `asOf` is applyReplacementsIn's: Just the board a damage batch began in, so a
 -- row's condition is judged before the event, never on a result of it already
 -- written (Parun.Engine.Damage.processDamage); Nothing everywhere else.
-resolveLifeLossSpent :: Maybe GameState -> Set CandidateId -> LifeLossCause.LifeLossCause -> PlayerId -> Natural -> Game Natural
-resolveLifeLossSpent asOf spent cause pid n =
+resolveLifeLossSpent :: Game () -> Maybe GameState -> Set CandidateId -> LifeLossCause.LifeLossCause -> PlayerId -> Natural -> Game Natural
+resolveLifeLossSpent settle asOf spent cause pid n =
   if n == 0
     then pure 0
     else do
@@ -6205,7 +6214,7 @@ resolveLifeLossSpent asOf spent cause pid n =
       if PlayerEffect.prohibitsLosingLife pid gs
         then pure 0
         else do
-          outcome <- applyReplacementsIn (pure ()) asOf Set.empty spent (ProposedEvent.WouldLoseLife cause pid n)
+          outcome <- applyReplacementsIn settle asOf Set.empty spent (ProposedEvent.WouldLoseLife cause pid n)
           pure (maybe 0 snd (outcome >>= Replacement.asLifeLoss))
 
 -- CR 119.3 / 119.10 / 120.3f: settle how much life a player actually gains, and
@@ -10384,10 +10393,9 @@ changeLife pid delta =
 -- that draws -- the draw step, an opening hand, a Draw effect -- opens the same
 -- window, and none of them learns that it did.
 --
--- Not implemented: a sequence of draws a replacement makes in this draw's place
--- lands nothing it queued before its next draw (#6105).
-drawCard :: PlayerId -> Game ()
-drawCard pid = Monad.void (drawCardSpentReturning DrawKind.Other (pure ()) Set.empty pid)
+-- `settle` is drawSeries', for a sequence a replacement makes in its place.
+drawCard :: Game () -> PlayerId -> Game ()
+drawCard settle pid = Monad.void (drawCardSpentReturning DrawKind.Other settle Set.empty pid)
 
 -- CR 121.2 / 614.11a: `n` individual draws by `pid`, with `settle` run after
 -- each, so what a replacement queued in a draw's place (Forbidden Crypt's loss,

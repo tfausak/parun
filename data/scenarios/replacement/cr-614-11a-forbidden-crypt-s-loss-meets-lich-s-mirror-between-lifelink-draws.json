@@ -1,0 +1,151 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Lich"
+          },
+          {
+            "card": "Forbidden Crypt"
+          },
+          {
+            "card": "Lich's Mirror"
+          },
+          {
+            "card": "Vampire Nighthawk",
+            "label": "hawk",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "life": 0,
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Forest"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 614.11a Forbidden Crypt's loss meets Lich's Mirror between Lich's draws for a lifelink gain",
+  "final": [
+    {
+      "View": {
+        "is": null,
+        "of": "Result"
+      }
+    },
+    {
+      "Life": {
+        "life": 18,
+        "player": "bob"
+      }
+    },
+    {
+      "Life": {
+        "life": 20,
+        "player": "alice"
+      }
+    },
+    {
+      "Count": {
+        "card": "Island",
+        "count": 8,
+        "player": "alice",
+        "zone": "Hand"
+      }
+    },
+    {
+      "View": {
+        "is": [
+          "Island",
+          "Island#2",
+          "Lich",
+          "Forbidden Crypt",
+          "Lich's Mirror",
+          "Vampire Nighthawk"
+        ],
+        "of": "Zone",
+        "player": "alice",
+        "zone": "Library"
+      }
+    }
+  ],
+  "note": "Lich turns Vampire Nighthawk's 2 lifelink life into two draws inside the combat damage batch. The Crypt replaces the first; with an empty graveyard alice would lose, and the Mirror resets her (Lich, the Crypt and the Nighthawk shuffle away with it) before Lich's second draw, which is ordinary: seven and one Islands. Without the settle both Crypt losses queue and the second finds no Mirror.",
+  "timeline": [
+    {
+      "do": {
+        "Attack": [
+          "$hawk"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "Island",
+            "Island#2",
+            "Island#3",
+            "Island#4",
+            "Island#5",
+            "Island#6",
+            "Island#7",
+            "Island#8",
+            "Island#9",
+            "Island#10",
+            "Lich",
+            "Forbidden Crypt",
+            "Lich's Mirror",
+            "Vampire Nighthawk"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "CombatDamage",
+      "turn": 1
+    }
+  ]
+}

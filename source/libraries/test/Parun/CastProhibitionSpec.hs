@@ -1316,7 +1316,7 @@ runedHaloCombat plains halo curse piker name defender =
             GameState.phase = Phase.Combat CombatStep.DeclareAttackers,
             GameState.combat = Combat.emptyCombat {Combat.Type.defenders = [defender]}
           }
-      fight = Combat.declareAttackers S.manaPerformer S.bob >> Combat.declareBlockers S.manaPerformer >> Damage.dealCombatDamage
+      fight = Combat.declareAttackers S.manaPerformer S.bob >> Combat.declareBlockers S.manaPerformer >> Damage.dealCombatDamage (pure ())
    in (before, S.settleSba (S.runPure (S.attackTo defender) before fight))
 
 -- Cast the Halo and let it resolve, naming `name`.
@@ -1366,7 +1366,7 @@ spyKitCombat giant kit haloed =
             GameState.phase = Phase.Combat CombatStep.DeclareAttackers,
             GameState.combat = Combat.emptyCombat {Combat.Type.defenders = [S.alice]}
           }
-      fight = Combat.declareAttackers S.manaPerformer S.bob >> Combat.declareBlockers S.manaPerformer >> Damage.dealCombatDamage
+      fight = Combat.declareAttackers S.manaPerformer S.bob >> Combat.declareBlockers S.manaPerformer >> Damage.dealCombatDamage (pure ())
    in (before, S.settleSba (S.runPure (S.attackTo S.alice) before fight))
 
 runedHaloSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()

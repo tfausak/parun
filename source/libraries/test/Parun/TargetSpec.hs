@@ -2705,7 +2705,7 @@ warsingerSpec s registry =
             -- the trigger -- so `placed` is the state with the ability on the
             -- stack and its target already chosen.
             atDamage = S.runToStep (Phase.Combat CombatStep.CombatDamage) (warsingerPlan [tyrantId, wolvesId, boltId]) shrunk
-            fought = S.runPure (warsingerPlan [tyrantId, wolvesId, boltId]) atDamage Damage.dealCombatDamage
+            fought = S.runPure (warsingerPlan [tyrantId, wolvesId, boltId]) atDamage (Damage.dealCombatDamage (pure ()))
             placed = S.runPure (warsingerPlan [tyrantId, wolvesId, boltId]) fought Engine.settleForPriority
         pure (mine, pikerId, shrunk, placed, S.runPure (warsingerPlan [tyrantId, wolvesId, boltId]) placed Engine.priorityLoop)
    in Spec.describe s "EnclosingAmount (CR 202.3)" $ do

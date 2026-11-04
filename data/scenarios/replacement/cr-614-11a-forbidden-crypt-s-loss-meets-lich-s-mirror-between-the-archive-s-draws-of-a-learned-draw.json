@@ -1,0 +1,175 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Alhammarret's Archive"
+          },
+          {
+            "card": "Forbidden Crypt"
+          },
+          {
+            "card": "Lich's Mirror"
+          },
+          {
+            "card": "Swamp",
+            "label": "s1"
+          },
+          {
+            "card": "Swamp",
+            "label": "s2"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Cram Session",
+            "label": "cram"
+          },
+          {
+            "card": "Forest"
+          }
+        ],
+        "library": [
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          }
+        ],
+        "life": 5,
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Forest"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 614.11a Forbidden Crypt's loss meets Lich's Mirror between Alhammarret's Archive's draws in place of a learned draw",
+  "final": [
+    {
+      "View": {
+        "is": null,
+        "of": "Result"
+      }
+    },
+    {
+      "Life": {
+        "life": 20,
+        "player": "alice"
+      }
+    },
+    {
+      "Count": {
+        "card": "Plains",
+        "count": 8,
+        "player": "alice",
+        "zone": "Hand"
+      }
+    }
+  ],
+  "note": "Cram Session's learn discards a Forest, which the Crypt exiles, and draws; the Archive turns that draw into two. The Crypt replaces the first; with an empty graveyard alice would lose, and the Mirror resets her before the Archive's second draw, which is ordinary: seven and one Plains.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$s1",
+            "$s2"
+          ],
+          "object": "$cram"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseLearn",
+          "with": 0
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseReplacement",
+          "with": 0
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "Plains",
+            "Plains#2",
+            "Plains#3",
+            "Plains#4",
+            "Plains#5",
+            "Plains#6",
+            "Plains#7",
+            "Plains#8",
+            "Plains#9",
+            "Plains#10",
+            "Alhammarret's Archive",
+            "Forbidden Crypt",
+            "Lich's Mirror",
+            "Swamp",
+            "Swamp#2"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}
