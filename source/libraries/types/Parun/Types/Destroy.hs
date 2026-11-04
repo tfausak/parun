@@ -34,7 +34,7 @@ import qualified Parun.Types.SlotName as SlotName
 -- permanent is gone by the time the rider runs.
 --
 -- Any of the three is absent for a destruction that is not looked back at in
--- that way, which is every destruction in the pool but the three that are.
+-- that way.
 data Destroy = MkDestroy
   { ref :: ObjectRef.ObjectRef,
     regenerability :: Regenerability.Regenerability,

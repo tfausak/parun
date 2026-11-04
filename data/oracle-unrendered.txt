@@ -4,6 +4,7 @@ _-bird-gets-the-worm
 _-goblin
 _-o-saurus
 a-good-day-to-pie
+abomination
 abyssal-harvester
 affectionate-indrik
 alchemists-gift
@@ -80,6 +81,7 @@ altered-ego
 ambassador-blorpityblorpboop
 amber-prison
 amnesia
+amrou-kithkin
 amulet-of-quoz
 amulet-of-safekeeping
 an-offer-you-cant-refuse
@@ -106,6 +108,7 @@ anger-of-the-gods
 angus-mackenzie
 animal-magnetism
 animar-soul-of-elements
+animate-artifact
 animate-dead
 animate-wall
 animists-awakening
@@ -142,6 +145,7 @@ archons-glory
 archpriest-of-shadows
 arcums-weathervane
 arcums-whistle
+armageddon-clock
 armasaur-guide
 armed-with-proof
 armored-galleon
@@ -157,6 +161,7 @@ ashen-powder
 ashiok-dream-render
 ashiok-wicked-manipulator
 ashling-the-pilgrim
+ashnods-battle-gear
 ashroot-animist
 asmoranomardicadaistinaculdacar
 aspect-of-wolf
@@ -201,6 +206,7 @@ azorius-arrester
 azusa-lost-but-seeking
 baaallerina
 baboon-spirit
+backfire
 backslide
 baithook-angler-hook-haunt-drifter
 bake-into-a-pie
@@ -269,6 +275,7 @@ bjorna-nightfall-alchemist
 black-lotus
 black-mana-battery
 black-panther-wakandan-king
+black-vise
 black-ward
 blackmail
 blasphemous-edict
@@ -325,6 +332,7 @@ bragos-representative
 bramble-elemental
 brash-taunter
 brass-herald
+brass-man
 brassclaw-orcs
 brasss-bounty
 brave-the-elements
@@ -448,6 +456,7 @@ chandras-phoenix
 chandras-regulator
 chandras-spitfire
 chaos-dragon
+chaoslace
 charging-rhino
 charming-prince
 chart-a-course
@@ -491,6 +500,7 @@ clever-impersonator
 clinquant-skymage
 cloak-of-confusion
 clock-of-omens
+clockwork-avian
 clockwork-beast
 clockwork-steed
 clone
@@ -551,6 +561,7 @@ corpseberry-cultivator
 corpsejack-menace
 corrupt
 corsair-captain
+cosmic-horror
 council-guardian
 councils-judgment
 count-on-luck
@@ -566,6 +577,7 @@ cram-session
 crashing-wave
 crawling-barrens
 crawlspace
+creature-bond
 creeping-peeper
 crime-punishment
 crimson-hellkite
@@ -605,6 +617,7 @@ curse-of-shallow-graves
 curse-of-the-nightly-hunt
 curse-of-vitality
 cursecloth-wrappings
+cursed-rack
 cursed-totem
 curtain-of-light
 custodi-lich
@@ -640,6 +653,7 @@ death-wish
 deathcoil-wurm
 deathgazer
 deathknell-berserker
+deathlace
 declaration-of-naught
 deem-inferior
 deem-worthy
@@ -793,6 +807,7 @@ earthbending-lesson
 eaten-alive
 eaten-by-piranhas
 ebon-dragon
+ebony-horse
 eccentric-farmer
 echo-of-eons
 edgar-king-of-figaro

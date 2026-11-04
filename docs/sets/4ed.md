@@ -10,26 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Abomination: `_Action:CreateFutureTrigger`
-- Amrou Kithkin: `_Permanents:PowerIs`
-- Animate Artifact: `_Permanent:HostPermanent`
-- Armageddon Clock: `_CounterType:DoomCounter`
-- Ashnod's Battle Gear: `_PermanentRule:MayChooseNotToUntapDuringUntap`
-- Backfire: `_Trigger:WhenAPermanentDealsDamageToAPlayer`
-- Black Vise: `_ReplacementActionWouldEnter:ChooseAPlayer`
-- Blue Elemental Blast: `_Actions:Modal_ChooseOne`
-- Brass Man: `_PermanentRule:DoesntUntapDuringControllersUntap`
-- Chaoslace: `_Actions:Targeted_Modal`
-- Clockwork Avian: `_ReplacementActionWouldEnter:EntersWithNumberCounters`
-- Conservator: `_Action:CreateFuturePreventDamage`
-- Cosmic Horror: `_Action:MayCost`
-- Creature Bond: `_Trigger:WhenAPermanentDies`
-- Cursed Rack: `_ReplacementActionWouldEnter:ChooseAPlayer`
-- Cyclopean Mummy: `_Action:Exile`
-- Deathlace: `_Actions:Targeted_Modal`
-- Ebony Horse: `_Action:CreatePreventDamageUntil`
-- El-Hajjâj: `_Trigger:WhenAPermanentDealsDamage`
-- Elder Land Wurm: `_Action:CreatePermanentLayerEffect`
 - Energy Tap: `_Action:MustCost`
 - Gaea's Liege: `_Permanents:IsntAttacking`
 - Goblin Rock Sled: `_Permanents:AttackedDuringLastPlayersTurn`
@@ -65,8 +45,6 @@ Each names the mtgish node the translator stops at.
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #6081: Balance. Nothing reads the fewest across players, and keeping an exact
-  number and sacrificing or discarding the rest takes only "up to".
 - #6082: Tetravus. Separate abilities can't share the tokens one of them made
   (CR 607.2a), across turns and after it leaves.
 - #6083: Power Surge. Nothing records a player's untapped lands as the turn
@@ -80,4 +58,3 @@ first.
 - #6087: Aladdin's Lamp. A one-shot draw replacement has no mandatory instruction
   list, nor reads its ability's X.
 - #6088: Erosion. A clause's `payGate` names one cost, not a choice of two.
-- #5995: Coral Helm. A discard cost can't be at random (CR 701.9b).
