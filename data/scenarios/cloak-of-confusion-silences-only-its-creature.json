@@ -43,13 +43,6 @@
         "name": "alice"
       },
       {
-        "battlefield": [
-          {
-            "card": "Aegis Turtle",
-            "label": "wall",
-            "ready": true
-          }
-        ],
         "hand": [
           {
             "card": "Forest"
@@ -84,7 +77,7 @@
     "step": "PrecombatMain"
   },
   "description": "With another attacker beside it, the may silences the enchanted creature alone",
-  "note": "Bob takes the Bears' 2, not the Giant's 3.",
+  "note": "Bob takes the Bears' 2 and not the Giant's 3: 18, where silencing every attacker leaves 20 and silencing none 15.",
   "timeline": [
     {
       "do": {
@@ -95,18 +88,6 @@
       },
       "player": "alice",
       "step": "DeclareAttackers",
-      "turn": 1
-    },
-    {
-      "do": {
-        "Block": {
-          "$wall": [
-            "$bear"
-          ]
-        }
-      },
-      "player": "bob",
-      "step": "DeclareBlockers",
       "turn": 1
     },
     {
@@ -133,7 +114,7 @@
     {
       "check": {
         "Life": {
-          "life": 20,
+          "life": 18,
           "player": "bob"
         }
       },

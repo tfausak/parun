@@ -1282,13 +1282,24 @@ Entries are ordered by the first rule each cites.
 
 - **Question**: Gauntlets of Light's creature assigns combat damage equal to its
   toughness; Cloak of Confusion's may has it assign none this turn. Neither
-  changes a characteristic (CR 613.11). Does the newer win, or does none hold
-  whichever came first?
-- **Rules**: CR 510.1a, 613.11; CR of 2026-08-07. No ruling.
-- **Decision**: None holds. The toughness effect says how much a creature that
-  assigns assigns; the other says it doesn't assign.
-- **Rejected**: Timestamp order, under which a Gauntlets of Light cast after the
-  may would restore the damage the player traded away.
+  changes a characteristic (CR 613.11). Does the newer win, does none hold
+  whichever came first, or does its controller choose?
+- **Rules**: CR 510.1a, 613.11; CR of 2026-08-07. No ruling on either card.
+  Narod, the Beige Flower's, of 2024-11-08 (Mystery Booster 2 playtest): "If
+  there are multiple effects that attempt to modify how a creature assigns
+  combat damage, that creature's controller chooses which effect applies", its
+  example being Narod and Doran, the Siege Tower.
+- **Decision**: None holds. CR 613.11's timestamp order applies both, and either
+  order gives none: the toughness effect changes which number CR 510.1a reads,
+  and the other says no number is assigned.
+- **Rejected**: Last timestamp wins, under which a toughness effect arriving after
+  the may would restore the damage the player traded away. The controller's
+  choice, Narod's ruling: its words reach this pair, so the rejection rests on
+  scope alone. It is a playtest card's note, those notes assuming "basic game
+  rules would be updated", and neither the CR nor a printed card's ruling gives
+  the choice. Under it a player who took the may could force the discard and
+  still deal toughness damage; adopting it means a prompt at CR 510.1, not this
+  order.
 - **Site**: `Parun.Engine.Projection`'s `AssignCombatDamage` arm, by
   `CombatDamageAmount`'s order, proved by the scenarios
   "assigning-no-combat-damage-beats-an-older-toughness-marker" and "...-newer-...".
