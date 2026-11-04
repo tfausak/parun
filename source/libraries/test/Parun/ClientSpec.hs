@@ -197,7 +197,13 @@ spec s registry = Spec.describe s "Client" $ do
         run = Driver.drive [] seats 40 (pure . (> 3) . GameState.turnNumber) board
         (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank
         shown = reverse (written sc)
-    Spec.assertEqWith s "DEBUG" shown []
+        -- Player 1's last look at the subgame, in its turn 4, then its first
+        -- screen in the resumed main game, up to the hand.
+        lastLook = Text.pack "Player 1 passes in Player 2's upkeep (no other actions)."
+        resumed = takeWhile (not . Text.isPrefixOf (Text.pack "Your hand")) (reverse (takeWhile (/= lastLook) (reverse shown)))
+        summary line = any (`Text.isPrefixOf` line) [Text.pack "Turn ", Text.pack "Player 1 (you)", Text.pack "Player 2: ", Text.pack "  "] || Text.null line
+    Spec.assertBool s (elem lastLook shown) "the subgame reached its turn 4"
+    Spec.assertEqWith s "exactly the main game's entries not yet shown, once" (filter (not . summary) resumed) [Text.pack "Player 2 loses 10 life.", Text.pack "Shahrazad is put into a graveyard from the stack."]
     Spec.assertEqWith s "into the main game's next turn" (fmap GameState.turnNumber outcome) (Right 4)
 
   Spec.it s "CR 113.7a Mindslaver's ability is named by its source at its target prompt and on the stack" $ do

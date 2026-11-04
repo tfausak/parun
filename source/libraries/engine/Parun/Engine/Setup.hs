@@ -1820,7 +1820,7 @@ funnelBack finalSub parent =
           -- tally -- nextTimestamp's treatment, and monotone for its reason,
           -- subgameStateFrom having inherited the parent's raised value.
           GameState.subgamesThisMatch = max (GameState.subgamesThisMatch parent) (GameState.subgamesThisMatch finalSub),
-          -- CR 729.5: the main game resumes as itself (its gameNumber), with
+          -- CR 729.1a: the main game resumes as itself (its gameNumber), with
           -- the games the subgame began on the match's books.
           GameState.gamesThisMatch = max (GameState.gamesThisMatch parent) (GameState.gamesThisMatch finalSub)
         }
