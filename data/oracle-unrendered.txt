@@ -2040,6 +2040,7 @@ phantom-beast
 phantom-tiger
 phylactery-lich
 phyrexian-colossus
+phyrexian-fleshgorger
 phyrexian-ingester
 phyrexian-metamorph
 phyrexian-rebirth

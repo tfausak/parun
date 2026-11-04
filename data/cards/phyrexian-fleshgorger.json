@@ -3,9 +3,6 @@
     {
       "keywords": [
         {
-          "type": "Menace"
-        },
-        {
           "type": "Lifelink"
         },
         {
@@ -27,6 +24,9 @@
               "type": "Power"
             }
           }
+        },
+        {
+          "type": "Menace"
         },
         {
           "type": "Prototype",

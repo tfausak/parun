@@ -101,8 +101,7 @@
       "do": {
         "Cast": {
           "mana": [
-            "$mountain",
-            null
+            "$mountain"
           ],
           "object": "$shock",
           "targets": [
@@ -132,8 +131,7 @@
       "do": {
         "Cast": {
           "mana": [
-            "$forest",
-            null
+            "$forest"
           ],
           "object": "$giant-growth",
           "targets": [
@@ -150,10 +148,7 @@
         "ChooseToPay": {
           "decision": {
             "type": "Pays"
-          },
-          "mana": [
-            null
-          ]
+          }
         }
       },
       "player": "bob",

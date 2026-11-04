@@ -71,8 +71,7 @@
       "do": {
         "Cast": {
           "mana": [
-            "$mountain",
-            null
+            "$mountain"
           ],
           "object": "$shock",
           "targets": [
