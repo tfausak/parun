@@ -916,6 +916,10 @@ library codec
     Parun.Codec.LastKnownSpec
     Parun.Codec.Layout
     Parun.Codec.LayoutSpec
+    Parun.Codec.LeavesTrigger
+    Parun.Codec.LeavesTriggerSpec
+    Parun.Codec.LeavingPermanent
+    Parun.Codec.LeavingPermanentSpec
     Parun.Codec.LeftTheGame
     Parun.Codec.LeftTheGameSpec
     Parun.Codec.LentCards
@@ -2854,6 +2858,8 @@ library types
     Parun.Types.Layer
     Parun.Types.Layout
     Parun.Types.LearnMode
+    Parun.Types.LeavesTrigger
+    Parun.Types.LeavingPermanent
     Parun.Types.LeftTheGame
     Parun.Types.LentCards
     Parun.Types.LibraryDeparture

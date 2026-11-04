@@ -1257,7 +1257,7 @@ hostOfSourceCounts = chosenValueCounts hostFramed (const False) hostOfSourceTag
 -- `sourceFramed`, and the four a card in the pool writes it in. A trigger
 -- condition is outside: CR 704.5n leaves an Equipment unattached on the
 -- battlefield before a CR 603.10a look-back is matched, and "when enchanted
--- creature leaves the battlefield" is TriggerCondition.AttachedPermanentLeaves.
+-- creature leaves the battlefield" is TriggerCondition.Leaves of LeavingPermanent.Attached.
 hostFramed :: Framing -> Bool
 hostFramed framing = case framing of
   SourceHostFramed -> True

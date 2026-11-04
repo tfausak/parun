@@ -1991,7 +1991,7 @@ exileHaunting resolving legal (ExileHaunting.MkExileHaunting card slot) =
           --
           -- The link names the object the ability TARGETED, so it goes on
           -- matching after that object has stopped being a creature, and is
-          -- what TriggerCondition.HauntedCreatureDies compares against.
+          -- what LeavingPermanent.Haunted compares against.
           mNew <- Event.changeZoneReturning oid Zone.Exile
           Monad.forM_ mNew $ \newId ->
             State.modify' (\g -> g {GameState.haunting = Map.insert newId haunted (GameState.haunting g)})

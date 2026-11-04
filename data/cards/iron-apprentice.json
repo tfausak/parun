@@ -46,7 +46,16 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfDies"
+            "type": "Leaves",
+            "value": {
+              "destinations": [
+                {
+                  "zone": {
+                    "type": "Graveyard"
+                  }
+                }
+              ]
+            }
           },
           "intervening": {
             "type": "Compares",

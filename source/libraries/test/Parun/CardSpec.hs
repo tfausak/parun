@@ -267,6 +267,8 @@ import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordCount as KeywordCount
 import qualified Parun.Types.KeywordTally as KeywordTally
 import qualified Parun.Types.Layout as Layout
+import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LifeLoss as LifeLoss
@@ -571,7 +573,7 @@ waxFace =
       Face.keywords = Map.singleton Keyword.Flying 1,
       Face.staticAbilities = [grantsItself Keyword.Flying],
       Face.activatedAbilities = [oneEffectActivated (costOf []) (youDraw 1)],
-      Face.triggeredAbilities = [oneEffectTrigger TriggerCondition.SelfDies (youDraw 1)]
+      Face.triggeredAbilities = [oneEffectTrigger (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)) (youDraw 1)]
     }
 
 -- Wax's opposite number, differing on every field Wax prints: a different card
@@ -584,7 +586,7 @@ waneFace =
       Face.keywords = Map.singleton Keyword.Trample 1,
       Face.staticAbilities = [grantsItself Keyword.Trample],
       Face.activatedAbilities = [oneEffectActivated (costOf []) (youDraw 2)],
-      Face.triggeredAbilities = [oneEffectTrigger TriggerCondition.SelfDies (youDraw 2)],
+      Face.triggeredAbilities = [oneEffectTrigger (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)) (youDraw 2)],
       -- One-sided like the supertype above, and for a field with a DEFAULT rather
       -- than a printed box: Wax prints nothing, so a fold that reads the left
       -- half's Counterable as an answer -- or a record update that never looks at
@@ -675,7 +677,7 @@ cardSpec s = Spec.describe s "Card" $ do
       s
       "each triggered ability"
       (Face.triggeredAbilities c)
-      [oneEffectTrigger TriggerCondition.SelfDies (youDraw 1), oneEffectTrigger TriggerCondition.SelfDies (youDraw 2)]
+      [oneEffectTrigger (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)) (youDraw 1), oneEffectTrigger (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)) (youDraw 2)]
 
 -- Every Count reachable from an ObjectRef, through the Quantities it carries.
 -- Delegated to Resolve.objectRefQuantities so this traversal and the engine's two
@@ -1134,8 +1136,6 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.PermanentBecomesDesignated {} -> []
   -- CR 702.134c's is nullary too, so it holds no Quantity.
   TriggerCondition.AttachedCreatureMentors -> []
-  -- CR 603.6c's holds at most a Zone, so no Quantity either.
-  TriggerCondition.AttachedPermanentLeaves _ -> []
   TriggerCondition.BecomesTapState _ -> []
   TriggerCondition.PermanentsBecomeTapped _ -> []
   TriggerCondition.AttachedPermanentTappedForMana -> []
@@ -1161,11 +1161,6 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.PermanentEnters _ -> []
   TriggerCondition.PermanentsEnter _ -> []
   TriggerCondition.CardPutIntoGraveyard _ -> []
-  TriggerCondition.PermanentDies _ -> []
-  TriggerCondition.PermanentsDie _ -> []
-  TriggerCondition.PermanentLeavesTheBattlefield _ -> []
-  TriggerCondition.PermanentReturnedToHand _ -> []
-  TriggerCondition.PermanentsReturnedToHand _ -> []
   -- CR 603.10a's third family carries a Filter and a TurnScope, and neither holds
   -- a Count.
   TriggerCondition.CardLeavesZone {} -> []
@@ -1189,6 +1184,9 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- CR 509.3's Filters are predicates over the creatures of a block, holding no
   -- Count for PermanentEnters' reason, and CR 509.3e's floor is a bare Natural.
   TriggerCondition.Blocks _ -> []
+  -- CR 603.6c's holds a Filter, owned zones, a SlotName and a Batching, none
+  -- of which holds a Count.
+  TriggerCondition.Leaves _ -> []
   TriggerCondition.SelfRevealedForMiracle -> []
   TriggerCondition.RevealedThisWay _ -> []
   -- CR 701.9a's discard condition is a PlayerRelation, a Filter and two enums,
@@ -1199,8 +1197,6 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.PlayerBecomesMonarch _ -> []
   -- CR 603.7's slot-named condition holds a SlotName, which is no Count.
   TriggerCondition.LoseControlOfBound _ -> []
-  TriggerCondition.BoundDiesOrIsExiled _ -> []
-  TriggerCondition.BoundDies _ -> []
   TriggerCondition.RoomEntered _ -> []
   -- CR 603.10d's self condition carries nothing at all.
   TriggerCondition.LoseControlOfSelf -> []
@@ -1233,10 +1229,6 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> []
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> []
   TriggerCondition.SelfPutIntoGraveyardDuringResolution -> []
-  TriggerCondition.SelfDies -> []
-  TriggerCondition.SelfLeavesTheBattlefield -> []
-  TriggerCondition.SelfPutFromBattlefieldInto _ -> []
-  TriggerCondition.HauntedCreatureDies -> []
   -- CR 701.6a's countering condition is a PlayerRelation, which holds no Count,
   -- exactly as the discard condition above.
   TriggerCondition.SpellOrAbilityCounters _ -> []
@@ -4601,11 +4593,8 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- CR 702.134c's carries none either: "equipped creature" is CR 301.5f's one
   -- permanent rather than a class of them, and "a creature" narrows by nothing.
   TriggerCondition.AttachedCreatureMentors -> []
-  -- CR 303.4b's "enchanted creature" is one permanent rather than a class of
-  -- them too, so this condition carries no Filter either.
-  TriggerCondition.AttachedPermanentLeaves _ -> []
   -- Thoughtleech's "an Island an opponent controls" and Deeproot Pilgrimage's
-  -- "nontoken Merfolk you control" are card text, swept like PermanentsDie's.
+  -- "nontoken Merfolk you control" are card text, swept like Leaves'.
   TriggerCondition.BecomesTapState watched -> actingFilters (BecomesTapState.actor watched)
   TriggerCondition.PermanentsBecomeTapped f -> unframed [f]
   TriggerCondition.AttachedPermanentTappedForMana -> []
@@ -4626,31 +4615,16 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.AbilityAddsMana payload -> unframed [AbilityAddsMana.source payload]
   TriggerCondition.SelfManaAbilityResolves -> []
   -- CR 701.21a's Filter narrows the sacrificed permanent -- Vengeful Tracker's
-  -- "an artifact" -- and is swept like PermanentDies' below.
+  -- "an artifact" -- and is swept like Leaves' below.
   TriggerCondition.PermanentSacrificed payload -> unframed [PlayerActsOn.filter payload]
   -- CR 603.3b's names a PlayerRelation; the Saga is found through CR 714.2d's
   -- final chapter number rather than through a Filter.
   TriggerCondition.SagaFinalChapterTriggers _ -> []
   TriggerCondition.CardPutIntoGraveyard p -> unframed [CardPutIntoGraveyard.filter p]
-  TriggerCondition.PermanentDies f -> unframed [f]
-  -- CR 603.2c's batch reading of the same written form carries the same Filter,
-  -- so it is swept the same way -- answering [] here would exempt Vengeful
-  -- Townsfolk's "other creatures you control" from every corpus filter lint.
-  TriggerCondition.PermanentsDie f -> unframed [f]
-  -- CR 603.6c's bystander form carries the same kind of Filter one rule wider.
-  TriggerCondition.PermanentLeavesTheBattlefield f -> unframed [f]
-  -- CR 603.6c's bystander form once more, one destination narrower and with
-  -- the same kind of Filter, so it is swept the same way.
-  TriggerCondition.PermanentReturnedToHand f -> unframed [f]
-  -- CR 603.2c's batch reading of the same form carries the same Filter, swept the
-  -- same way for PermanentsDie's reason: answering [] here would exempt Tameshi,
-  -- Reality Architect's "noncreature permanents" from every corpus filter lint.
-  TriggerCondition.PermanentsReturnedToHand f -> unframed [f]
   -- CR 603.10a's third family carries its Filter inside a record, and it is card
   -- text like any other -- Kishla Skimmer's "your graveyard" is that Filter.
   TriggerCondition.CardLeavesZone payload -> unframed [CardLeavesZone.filter payload]
-  -- The batch reading carries the same record, swept the same way for
-  -- PermanentsReturnedToHand's reason.
+  -- The batch reading carries the same record, swept the same way.
   TriggerCondition.CardsLeaveZone payload -> unframed [CardLeavesZone.filter payload]
   -- The arrival side carries its Filter the same way: Dutiful Knowledge Seeker's
   -- "cards" is that Filter.
@@ -4668,7 +4642,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.IsDealtDamage watched -> actingFilters (DealtDamage.recipient (PermanentIsDealtDamage.dealt watched))
   TriggerCondition.PlayerIsDealtDamage _ -> []
   -- CR 603.2c's batch reading of the same written form carries the same Filter,
-  -- swept the same way for PermanentsDie's reason: answering [] here would exempt
+  -- swept the same way as a OneOrMore Leaves: answering [] here would exempt
   -- Pia Nalaar's "artifact creatures you control" from every corpus filter lint.
   TriggerCondition.PermanentsDealCombatDamageToPlayer p -> unframed [PermanentsDealCombatDamageToPlayer.filter p]
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> []
@@ -4703,6 +4677,12 @@ triggerConditionFilters triggerCondition = case triggerCondition of
           BlockCount.EachCreature others -> [others]
           BlockCount.AtLeast _ others -> [others]
       )
+  -- CR 603.6c names a quality of the departed permanent ("a creature you
+  -- control", Tameshi's "noncreature permanents"), read off last known
+  -- information; the other subjects carry none.
+  TriggerCondition.Leaves t -> case LeavesTrigger.permanent t of
+    LeavingPermanent.Matching f -> unframed [f]
+    _ -> []
   TriggerCondition.SelfRevealedForMiracle -> []
   TriggerCondition.RevealedThisWay r -> unframed [RevealedThisWay.card r]
   -- Waste Not's "a creature card", card text swept like PermanentSacrificed's.
@@ -4715,8 +4695,6 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- CR 603.7's slot-named condition holds a SlotName, which is no Filter -- what
   -- the slot holds was selected by the arming spell's own target slot.
   TriggerCondition.LoseControlOfBound _ -> []
-  TriggerCondition.BoundDiesOrIsExiled _ -> []
-  TriggerCondition.BoundDies _ -> []
   TriggerCondition.RoomEntered _ -> []
   -- CR 603.10d's self condition carries nothing at all.
   TriggerCondition.LoseControlOfSelf -> []
@@ -4749,10 +4727,6 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> []
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> []
   TriggerCondition.SelfPutIntoGraveyardDuringResolution -> []
-  TriggerCondition.SelfDies -> []
-  TriggerCondition.SelfLeavesTheBattlefield -> []
-  TriggerCondition.SelfPutFromBattlefieldInto _ -> []
-  TriggerCondition.HauntedCreatureDies -> []
   TriggerCondition.SpellOrAbilityCounters _ -> []
   TriggerCondition.AbilityIsCountered -> []
   TriggerCondition.DamageToPlayerPrevented _ -> []
@@ -4764,7 +4738,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- A counter trigger names a counter kind, and CR 122.1b's kind may be a whole
   -- Keyword carrying a Filter -- "whenever the second hexproof-from-Goblins
   -- counter is put on this permanent"; see #2728. A Permanent holder carries one
-  -- over the permanents the counters moved on, swept like PermanentsDie's, so a
+  -- over the permanents the counters moved on, swept like Leaves', so a
   -- card's "one or more creatures" is not exempt from the corpus filter lints.
   TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger kind _ holder _ _) ->
     counterKindFilters kind <> case holder of
@@ -4829,32 +4803,24 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.PlayerDrawsNthCard _ -> []
   TriggerCondition.Attacks _ -> []
   TriggerCondition.Blocks _ -> []
+  -- CR 603.7c's captured object, the one subject naming a slot.
+  TriggerCondition.Leaves t -> case LeavesTrigger.permanent t of
+    LeavingPermanent.Bound slot -> [slot]
+    _ -> []
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> []
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> []
   TriggerCondition.SelfPutIntoGraveyardDuringResolution -> []
-  TriggerCondition.SelfDies -> []
   TriggerCondition.CardPutIntoGraveyard _ -> []
-  TriggerCondition.PermanentDies _ -> []
-  TriggerCondition.PermanentsDie _ -> []
-  TriggerCondition.SelfLeavesTheBattlefield -> []
-  TriggerCondition.SelfPutFromBattlefieldInto _ -> []
-  TriggerCondition.PermanentLeavesTheBattlefield _ -> []
-  TriggerCondition.PermanentReturnedToHand _ -> []
-  TriggerCondition.PermanentsReturnedToHand _ -> []
   TriggerCondition.CardLeavesZone {} -> []
   TriggerCondition.CardsLeaveZone {} -> []
   TriggerCondition.CardsPutIntoZone {} -> []
   TriggerCondition.SelfLeavesGraveyard -> []
-  TriggerCondition.AttachedPermanentLeaves _ -> []
   TriggerCondition.BecomesTapState _ -> []
   TriggerCondition.PermanentsBecomeTapped _ -> []
   TriggerCondition.AttachedPermanentTappedForMana -> []
   TriggerCondition.PermanentTappedForMana {} -> []
   TriggerCondition.AbilityAddsMana {} -> []
   TriggerCondition.SelfManaAbilityResolves -> []
-  -- CR 702.55a names the haunted creature through the haunting object's own
-  -- attachment rather than through a slot.
-  TriggerCondition.HauntedCreatureDies -> []
   TriggerCondition.SpellOrAbilityCounters _ -> []
   TriggerCondition.AbilityIsCountered -> []
   TriggerCondition.DamageToPlayerPrevented _ -> []
@@ -4896,14 +4862,6 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.LoseControlOfBound slot -> [slot]
   -- CR 603.10d's self condition names no slot.
   TriggerCondition.LoseControlOfSelf -> []
-  -- Rule 701.66a's slot-named condition. Never reached from card data --
-  -- Parun.Engine.Earthbend mints the only ability that carries it -- but answered
-  -- rather than defaulted, so the singularity above is claimed for it too.
-  TriggerCondition.BoundDiesOrIsExiled slot -> [slot]
-  -- CR 700.4's slot-named condition, the arm above narrowed to a death:
-  -- Whippoorwill's "when the creature dies this turn" watches the creature its
-  -- own ability targeted.
-  TriggerCondition.BoundDies slot -> [slot]
   TriggerCondition.RoomEntered _ -> []
   TriggerCondition.PlayerActs _ -> []
   TriggerCondition.PlayerLosesGame _ -> []
@@ -8139,7 +8097,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
         -- `thatMuch` from the count of what it destroyed.
         offending =
           Mint.triggerOf
-            TriggerCondition.SelfDies
+            (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self))
             Nothing
             (Mint.oneModeTargeting (Map.singleton Binding.you (TargetSlot.required Pool.AnyTarget Nothing)) (Seq.singleton (Effect.Destroy (Destroy.MkDestroy (ObjectRef.InSlot Binding.you) Regenerability.Regenerable (Just Binding.eventAmount) Nothing Nothing))))
         arm face = face {Face.triggeredAbilities = offending : Face.triggeredAbilities face}
@@ -8244,7 +8202,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
           card
             { Face.triggeredAbilities =
                 [ Mint.triggerOf
-                    TriggerCondition.SelfDies
+                    (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self))
                     Nothing
                     (declaring slot)
                 ]

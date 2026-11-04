@@ -162,49 +162,61 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentDies",
+            "type": "Leaves",
             "value": {
-              "type": "And",
-              "value": [
+              "destinations": [
                 {
-                  "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
-                },
-                {
-                  "type": "Measures",
-                  "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
-                    "measure": {
-                      "type": "ColorCount"
-                    },
-                    "operand": {
-                      "type": "Literal",
-                      "value": 2
-                    }
-                  }
-                },
-                {
-                  "type": "HeldBy",
-                  "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
-                  }
-                },
-                {
-                  "type": "Not",
-                  "value": {
-                    "type": "IsSource"
+                  "zone": {
+                    "type": "Graveyard"
                   }
                 }
-              ]
+              ],
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    },
+                    {
+                      "type": "Measures",
+                      "value": {
+                        "comparison": {
+                          "type": "AtLeast"
+                        },
+                        "measure": {
+                          "type": "ColorCount"
+                        },
+                        "operand": {
+                          "type": "Literal",
+                          "value": 2
+                        }
+                      }
+                    },
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
+                      }
+                    },
+                    {
+                      "type": "Not",
+                      "value": {
+                        "type": "IsSource"
+                      }
+                    }
+                  ]
+                }
+              }
             }
           },
           "modal": {

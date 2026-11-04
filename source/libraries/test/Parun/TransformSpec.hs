@@ -932,7 +932,7 @@ zoneNames zone gs =
 -- duplicated.
 --
 -- The printed condition is an "or", so both limbs are exercised: the transform
--- one here, CR 700.4's ordinary SelfDies in the last case. Without that pair a
+-- one here, CR 700.4's ordinary self death in the last case. Without that pair a
 -- condition that fired on the wrong limb would pass.
 --
 -- The CR 702.145c/f road to the same event -- Parun.Engine.Daytime's sweep, which

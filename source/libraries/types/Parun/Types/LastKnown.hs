@@ -109,7 +109,7 @@ data LastKnown = MkLastKnown
     -- example of what is not one), and not recoverable from anything above, so
     -- it sits beside the projection for `controller`'s reason.
     --
-    -- CR 603.10a's look-back for TriggerCondition.AttachedPermanentLeaves, and CR
+    -- CR 603.10a's look-back for LeavingPermanent.Attached, and CR
     -- 608.2h's for Parun.Types.ObjectRef's AttachedToBound, its two readers --
     -- off the HOST rather than the bearer because that is the only
     -- side the answer survives on: the SBA batch that kills the host buries an

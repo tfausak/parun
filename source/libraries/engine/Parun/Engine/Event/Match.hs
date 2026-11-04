@@ -102,6 +102,8 @@ import qualified Parun.Types.HalfUnlocked as HalfUnlocked
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LandPlayed as LandPlayed
 import qualified Parun.Types.LastKnown as LastKnown
+import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
 import qualified Parun.Types.LifeDirection as LifeDirection
@@ -479,26 +481,65 @@ countersMoved gs you counterTrigger event = case (CounterTrigger.motion counterT
   where
     wanted = CounterTrigger.kind counterTrigger
 
--- CR 603.7c's captured object leaving the battlefield for one of `destinations`,
--- the shape TriggerCondition.BoundDies and TriggerCondition.BoundDiesOrIsExiled
--- share: the subject is the object the arming resolution named, read out of
--- `bindings` through Binding.objectSlots, and the two conditions differ only in
--- which destinations they admit -- CR 700.4's graveyard alone, or rule 701.66a's
--- pair.
+-- CR 603.6c: a permanent left the battlefield for a destination the trigger
+-- admits, and it is the permanent the trigger watches. An empty destination set
+-- admits any zone and CR 603.6c's leaving-the-game form too (CR 800.4a, 729.4a);
+-- a named one admits neither, since leaving the game reaches no zone. The `/=
+-- Battlefield` guard is against recordMintedEntry's pseudo-move.
 --
--- Matched on `departed`, PermanentDies' field: CR 400.7 deleted that id on the
--- way out and the captured binding still names it, where ZoneChange.object is
--- the new incarnation the binding never saw.
+-- Matched on ZoneChange.departed, never the CR 400.7 incarnation the card
+-- became: CR 603.10a makes leaves-the-battlefield abilities look back in time,
+-- so every subject is asked about the permanent as it was immediately before the
+-- event.
 --
--- NO Filter and so no CR 603.10a look-back: the rule identifies the object by
--- WHICH OBJECT it is rather than by any characteristic, so nothing here has to
--- be answered off a snapshot of a permanent that is gone.
-boundDeparts :: Map.Map SlotName.SlotName Binding -> Set.Set Zone -> SlotName.SlotName -> GameEvent -> Bool
-boundDeparts bindings destinations slot event = case event of
-  GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)
-    | ZoneChange.from zc == Zone.Battlefield && Set.member (ZoneChange.to zc) destinations ->
-        Map.lookup slot (Binding.objectSlots bindings) == Just (ZoneChange.departed zc)
+-- An owned destination reads CR 400.3's owner off CR 608.2h's record (a stolen
+-- Enigma Sphinx is not put into "your graveyard"), and only where the relation
+-- asks about a player at all.
+--
+-- The subject, by LeavingPermanent:
+--
+-- - Self compares ids and reads no characteristic, so no last known information.
+-- - Matching reads its Filter off CR 608.2h's last known information
+--   (viewWithLastKnown aimed at the departed id twice over, which takes the
+--   last-known branch only once that id is gone). A dead permanent has no live
+--   reading, and the graveyard card would answer "you control" for its OWNER
+--   (CR 108.4a). A permanent that filed no last known information matches
+--   nothing.
+-- - Attached reads the departed host's own record of what was attached to it
+--   (LastKnown.attached), filed from the pre-move board: CR 704.5m buries an
+--   Aura and CR 704.5n unattaches an Equipment in the same SBA batch, so the
+--   bearer no longer says what it was attached to. CR 303.4m makes an
+--   Equipment's link the same as an Aura's.
+-- - Haunted compares against the id GameState.haunting files the bearer under,
+--   which rule 702.55b keeps "regardless of whether or not that object is still
+--   a creature", so no characteristic is read.
+-- - Bound compares against the object CR 603.7c's captured environment named,
+--   read out of `bindings` through Binding.objectSlots.
+--
+-- Batching is not read here: this matcher sees one event at a time, so a
+-- Batching.OneOrMore trigger answers True for every member of its CR 704.3 /
+-- 608.2f batch, and `batchScoped` plus eventTriggers' dedup within each
+-- Parun.Types.EventGroup is what fires it once (CR 603.2c).
+leaves :: Map.Map SlotName.SlotName Binding -> Filter.Context -> GameState -> ObjectId -> PlayerId -> LeavesTrigger.LeavesTrigger -> GameEvent -> Bool
+leaves bindings context gs bearer you t event = case event of
+  GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _) ->
+    ZoneChange.from zc == Zone.Battlefield
+      && ZoneChange.to zc /= Zone.Battlefield
+      && (Set.null destinations || any (reaches (ZoneChange.to zc) (ZoneChange.departed zc)) destinations)
+      && watched (ZoneChange.departed zc)
+  GameEvent.LeftTheGame l -> Set.null destinations && LeftTheGame.from l == Zone.Battlefield && watched (LeftTheGame.object l)
   _ -> False
+  where
+    destinations = LeavesTrigger.destinations t
+    reaches to departed (OwnedZone.MkOwnedZone zone owner) =
+      to == zone
+        && (PlayerRelation.perspectiveFree owner || maybe False (PlayerRelation.holds (Game.teams gs) owner you) (Game.ownerWithLastKnown departed gs))
+    watched departed = case LeavesTrigger.permanent t of
+      LeavingPermanent.Self -> departed == bearer
+      LeavingPermanent.Matching f -> maybe False (\view -> Filter.matches context view f) (Projection.viewWithLastKnown departed gs departed)
+      LeavingPermanent.Attached -> maybe False (Set.member bearer . LastKnown.attached) (Game.lastKnownOf departed gs)
+      LeavingPermanent.Haunted -> Map.lookup bearer (GameState.haunting gs) == Just departed
+      LeavingPermanent.Bound slot -> Map.lookup slot (Binding.objectSlots bindings) == Just departed
 
 -- CR 120.3: was this damage dealt to a player `related` admits, or, with
 -- `orTheirPlaneswalkers`, to a planeswalker such a player controls (CR 120.3c)?
@@ -649,7 +690,7 @@ anyTriggerReads event = case event of
 
 -- The same question against a slot environment, for the conditions whose subject
 -- is an object named EARLIER rather than the bearer or a class of objects
--- (TriggerCondition.LoseControlOfBound, BoundDies and BoundDiesOrIsExiled).
+-- (TriggerCondition.LoseControlOfBound, and Leaves of LeavingPermanent.Bound).
 -- Projection.controllerOf's `-Given` shape: the plain name above defaults the extra
 -- argument, so a caller with nothing to say says nothing.
 --
@@ -894,6 +935,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   TriggerCondition.Attacks t -> attacks bearerContext board gs bearer you t event
   -- CR 509.3, as a function of Parun.Types.BlockTrigger's fields: blocks.
   TriggerCondition.Blocks t -> blocks bearerContext board gs t event
+  TriggerCondition.Leaves t -> leaves bindings bearerContext gs bearer you t event
   -- CR 603.10a's third family read off the departing card itself: the bearer
   -- is the graveyard incarnation (`ZoneChange.departed`), which only
   -- eventTriggers' look-back offers. ANY of Moved.departures, CardLeavesZone's
@@ -991,16 +1033,16 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- TWO EVENTS, which is CR 712.21's own Example: the Moved event names the
   -- first card put into the graveyard and a CardArrived event names each card
   -- after it, so a melded permanent's death fires this condition twice while
-  -- SelfDies and PermanentDies, which read the Moved event alone, fire once.
+  -- a Leaves death, which reads the Moved event alone, fires once.
   --
   -- Matched on `object`, the ARRIVING card, and filtered over it: CR 603.6c's
   -- last sentence keeps this out of the leaves-the-battlefield family, so CR
   -- 603.10a's look-back does not reach it and CR 603.10's normal first sentence
   -- governs -- the objects that exist immediately after the event. That is why
   -- the filter reads the card in the graveyard rather than CR 608.2h last known
-  -- information, PermanentDies' opposite choice.
+  -- information, Leaves' opposite choice.
   --
-  -- viewWithLastKnown aimed at the arriving card twice over, PermanentDies'
+  -- viewWithLastKnown aimed at the arriving card twice over, Leaves'
   -- posture: the live graveyard card for the ordinary case, and CR 608.2h for
   -- the card that has left the graveyard again by the CR 117.5 boundary.
   --
@@ -1027,81 +1069,13 @@ armMatches bindings board gs bearer you cond event = case cond of
           GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _) -> admits zc
           GameEvent.CardArrived zc -> admits zc
           _ -> False
-  -- CR 603.6c narrowed by CR 700.4's definition of "dies": the bearer was put into
-  -- a graveyard from the battlefield. Both ends are load-bearing -- `from` keeps a
-  -- permanent DISCARDED out of a hand silent, and `to` keeps one EXILED off the
-  -- battlefield silent, the latter having left the battlefield without dying.
-  -- SelfLeavesTheBattlefield below is the other condition, and naming this one
-  -- after the printed word is what keeps them apart.
-  --
-  -- Matched on `departed`, NOT `object`: CR 603.10a makes leaves-the-battlefield
-  -- abilities look back in time, so the bearer offered here is the permanent as it
-  -- was immediately before the event, never the CR 400.7 incarnation.
-  TriggerCondition.SelfDies -> maybe False ((== bearer) . ZoneChange.departed) (Game.diedChange event)
-  -- The same rule and zone pair as SelfDies, watched by a BYSTANDER. The bearer
-  -- frames the match rather than being it, as for PermanentEnters: it is the
-  -- Filter.Context's source (so `Not IsSource` is "another"), and its controller
-  -- is CR 109.5's "you".
-  --
-  -- Matched on `departed`, with characteristics from CR 608.2h last known
-  -- information rather than a live read -- both CR 603.10a's look-back. The
-  -- PermanentEnters arm makes the opposite choice, rightly, since CR 603.6b puts an
-  -- entrant's continuous effects on the moment it is on the battlefield. A dead
-  -- permanent has no live reading left, and reading the graveyard card instead
-  -- would answer "you control" wrong rather than not at all: CR 108.4a substitutes
-  -- the OWNER, so a stolen creature would be credited back to the player who no
-  -- longer had it when it died.
-  --
-  -- viewWithLastKnown aimed at the deceased twice over, which is how it is asked
-  -- for the snapshot: it takes the last-known branch only for the id it is
-  -- anchored to, and only once that id is gone.
-  --
-  -- Nothing is a permanent that is gone AND filed no last known information, about
-  -- which no Filter can honestly answer.
-  TriggerCondition.PermanentDies f -> case Game.diedChange event of
-    Nothing -> False
-    Just zc ->
-      let deceased = ZoneChange.departed zc
-       in maybe False (\view -> Filter.matches bearerContext view f) (Projection.viewWithLastKnown deceased gs deceased)
-  -- CR 700.4's "dies" against CR 603.7c's captured object: Whippoorwill's "when
-  -- the creature dies this turn, exile the creature", written on the card rather
-  -- than minted by the engine. The battlefield-to-graveyard half of the arm
-  -- below and no other destination -- an exile fires nothing, which is rule 700.4
-  -- read literally, and Parun.PreventionSpec's whippoorwill group proves both
-  -- halves.
-  --
-  -- CR 400.2 makes the graveyard public, which is what lets eventBindingSlots
-  -- promise Binding.became for this condition unconditionally.
-  TriggerCondition.BoundDies slot -> boundDeparts bindings (Set.singleton Zone.Graveyard) slot event
-  -- CR 701.66a's "when that land dies or is put into exile", the far end of
-  -- earthbend's delayed ability, and the arm above widened by exactly the one
-  -- destination rule 701.66a adds. Minted by Parun.Engine.Earthbend rather than
-  -- written by card data.
-  --
-  -- The two destinations rule 701.66a names and no other. CR 400.2 makes both
-  -- public, which is what lets eventBindingSlots promise Binding.became for this
-  -- condition unconditionally; a bounce to hand fires nothing, which is the rule
-  -- read literally.
-  TriggerCondition.BoundDiesOrIsExiled slot -> boundDeparts bindings (Set.fromList [Zone.Graveyard, Zone.Exile]) slot event
-  -- CR 603.2c's batch reading of the arm above (Vengeful Townsfolk's "whenever ONE
-  -- OR MORE other creatures you control die"). Delegated rather than duplicated
-  -- because the per-EVENT question is the same one: which deaths this condition
-  -- admits is PermanentDies' answer, filter, look-back and all.
-  --
-  -- What makes it fire ONCE for a whole sweep is not here. This matcher's contract
-  -- is that it sees one event at a time, so it cannot count occurrences of a CR
-  -- 704.3 / CR 608.2f batch; `batchScoped` below marks the condition and
-  -- eventTriggers keeps the first pending trigger per (bearer, ability) within each
-  -- Parun.Types.EventGroup. So this arm answering True for every member of the batch
-  -- is deliberate, not a missing dedup: the arm and the dedup are two halves of one
-  -- rule, and matchesTrigger alone is not the whole of it.
-  TriggerCondition.PermanentsDie f -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.PermanentDies f) event
-  -- CR 603.2c's batch reading of PermanentEnters, delegated for PermanentsDie's
-  -- reason: which entries this condition admits is the singular arm's answer.
+  -- CR 603.2c's batch reading of PermanentEnters, delegated because which
+  -- entries this condition admits is the singular arm's answer; firing once for
+  -- the batch is `batchScoped` plus eventTriggers' dedup, never this arm.
   TriggerCondition.PermanentsEnter f -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.PermanentEnters f) event
   -- CR 603.2c's batch reading of DealsDamage's combat damage to a player (Pia Nalaar,
   -- Chief Mechanic's "whenever ONE OR MORE artifact creatures you control deal
-  -- combat damage to a player"), delegated for PermanentsDie's reason: which
+  -- combat damage to a player"), delegated because which
   -- damage events this condition admits is the singular arm's answer, filter,
   -- kind and recipient alike (Norn's Decree's "deal combat damage to YOU"),
   -- and firing once for the CR 510.2 step is `batchScoped` below plus
@@ -1121,47 +1095,12 @@ armMatches bindings board gs bearer you cond event = case cond of
             }
       )
       event
-  -- CR 603.6c asked of the permanent the bearer is attached to: PermanentDies'
-  -- battlefield-to-graveyard pair where the destination is pinned so (CR 700.4),
-  -- PermanentLeavesTheBattlefield's wider test where it isn't, matched on
-  -- ZoneChange.departed for those arms' reason (CR 603.10a).
-  --
-  -- CR 603.10a's look-back, and the ONE reading of the link: the deceased's own
-  -- CR 608.2h record of what was attached to it, filed by the zone-change funnel
-  -- from the pre-move board. Neither reading off the BEARER survives to the CR
-  -- 117.5 boundary -- CR 704.5m buries an Aura in the same SBA batch, and CR
-  -- 704.5n clears an Equipment's Object.attachedTo in it -- so the host is where
-  -- the attachment as of the event still exists, for both bearer shapes at once.
-  -- Parun.Types.LastKnown.attached is the field; CR 303.4m is what makes an
-  -- Equipment's "equipped creature" the same link an Aura's "enchanted creature"
-  -- is.
-  --
-  -- No characteristic of the deceased is read, unlike PermanentDies -- the
-  -- attachment link already says which permanent this is about, so there is
-  -- nothing more for last known information to answer.
-  --
-  -- Empty for a departure the funnel never filed, which no event this arm admits
-  -- can be: a move off the battlefield is the funnel's own, and
-  -- Event.leaveTheGame files its record too.
-  --
-  -- CR 603.6c's leaving-the-game form only with no destination pinned, as
-  -- SelfPutFromBattlefieldInto declines it: that departure reaches no zone.
-  TriggerCondition.AttachedPermanentLeaves destination ->
-    let enchanted departed = maybe False (Set.member bearer . LastKnown.attached) (Game.lastKnownOf departed gs)
-     in case event of
-          GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _) ->
-            ZoneChange.from zc == Zone.Battlefield
-              && ZoneChange.to zc /= Zone.Battlefield
-              && maybe True (== ZoneChange.to zc) destination
-              && enchanted (ZoneChange.departed zc)
-          GameEvent.LeftTheGame l -> Maybe.isNothing destination && LeftTheGame.from l == Zone.Battlefield && enchanted (LeftTheGame.object l)
-          _ -> False
   -- CR 701.26a's tap, once per permanent: the bearer by id (City of Brass), or
   -- a permanent the Filter admits, judged off CR 603.10's board just after the
   -- event (Thoughtleech). Betrayal's "enchanted creature" is
   -- `Matching (HasAttached IsSource)`: the tapped host is still standing, so
   -- Projection.sampledView reads the attachment link off the sample rather than
-  -- through last known information, where AttachedPermanentLeaves has to look
+  -- through last known information, where Leaves' Attached has to look
   -- back because the SBA batch that kills the host takes the link away (CR
   -- 704.5m).
   --
@@ -1250,111 +1189,7 @@ armMatches bindings board gs bearer you cond event = case cond of
             Just view -> Filter.matches bearerContext view f
       | otherwise -> False
     _ -> False
-  -- CR 603.6c taken whole. The `from` half matches SelfDies'; the `to` half is
-  -- where they part company, this one asking only that the destination be ANOTHER
-  -- zone.
-  --
-  -- The `to /= Battlefield` guard is that rule's own word "another", and is
-  -- load-bearing: recordMintedEntry files a battlefield-to-battlefield pseudo-move
-  -- whose `departed` is the arrival's own id, so a permanent minted straight onto
-  -- the battlefield -- a token, a melded permanent, a conjured card -- would fire
-  -- this condition on its own creation without it.
-  --
-  -- Matched on `departed` for SelfDies' reason (CR 603.10a).
-  --
-  -- CR 603.6c's OTHER trigger event is the second arm: a phased-in permanent
-  -- leaving the game because its owner left it (CR 800.4a), or a subgame taking
-  -- it (CR 729.4a). The zone it left is checked because the second road records
-  -- the event for a card in any zone; CR 702.26k's exclusion of a phased-out
-  -- one is applied where the event is emitted.
-  --
-  -- SelfDies deliberately does NOT take the same arm: CR 700.4 makes "dies" a
-  -- move to a graveyard, and leaving the game reaches no zone at all.
-  TriggerCondition.SelfLeavesTheBattlefield -> case event of
-    GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _) ->
-      ZoneChange.departed zc == bearer
-        && ZoneChange.from zc == Zone.Battlefield
-        && ZoneChange.to zc /= Zone.Battlefield
-    GameEvent.LeftTheGame l -> LeftTheGame.object l == bearer && LeftTheGame.from l == Zone.Battlefield
-    _ -> False
-  -- The arm above narrowed to one destination, and so without its leaving-the-game
-  -- event. The owner is read off CR 608.2h's last known information: CR 400.3
-  -- sends the card to its owner's zone, so "your graveyard" is the card's owner
-  -- being the ability's controller, which a stolen Enigma Sphinx fails. The
-  -- `/= Battlefield` guard is the arm above's, against recordMintedEntry's
-  -- pseudo-move.
-  TriggerCondition.SelfPutFromBattlefieldInto destination -> case event of
-    GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _) ->
-      ZoneChange.departed zc == bearer
-        && ZoneChange.from zc == Zone.Battlefield
-        && ZoneChange.to zc /= Zone.Battlefield
-        && ZoneChange.to zc == OwnedZone.zone destination
-        && maybe False (PlayerRelation.holds (Game.teams gs) (OwnedZone.owner destination) you) (Game.ownerWithLastKnown (ZoneChange.departed zc) gs)
-    _ -> False
-  -- The SAME two trigger events read by a BYSTANDER: PermanentDies' Filter over
-  -- CR 608.2h last known information, asked of SelfLeavesTheBattlefield's wider
-  -- destination test and of its CR 800.4a leaving-the-game form alike.
-  --
-  -- viewWithLastKnown aimed at the departed id twice over, PermanentDies'
-  -- posture and its reasons: CR 603.10a's look-back is what makes "you control"
-  -- answerable about a permanent that is a card in a graveyard -- or in a hand,
-  -- or nowhere at all -- by the time the scan runs. A permanent that filed no
-  -- last known information is one no Filter can honestly answer about, so it
-  -- matches nothing.
-  TriggerCondition.PermanentLeavesTheBattlefield f ->
-    let admits departed = case Projection.viewWithLastKnown departed gs departed of
-          Nothing -> False
-          Just view -> Filter.matches bearerContext view f
-     in case event of
-          GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)
-            | ZoneChange.from zc == Zone.Battlefield && ZoneChange.to zc /= Zone.Battlefield ->
-                admits (ZoneChange.departed zc)
-          GameEvent.LeftTheGame l -> LeftTheGame.from l == Zone.Battlefield && admits (LeftTheGame.object l)
-          _ -> False
-  -- CR 603.2c's batch reading of PermanentReturnedToHand (Tameshi, Reality
-  -- Architect's "whenever ONE OR MORE noncreature permanents are returned to
-  -- hand"), delegated for PermanentsDie's reason: which moves this condition
-  -- admits is the arm below's answer, and firing once for the batch is
-  -- `batchScoped` below plus eventTriggers' dedup, never this arm.
-  TriggerCondition.PermanentsReturnedToHand f -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.PermanentReturnedToHand f) event
-  -- CR 603.6c's family with the DESTINATION pinned: PermanentLeavesTheBattlefield's
-  -- match above, narrowed to the one zone this condition names. CR 110.1 is what makes the
-  -- origin implicit -- a permanent is on the battlefield, so "returned to hand"
-  -- is battlefield-to-hand and admits no other pair.
-  --
-  -- The same viewWithLastKnown read on ZoneChange.departed, and CR 603.10a
-  -- cites it twice over here: this is a leaves-the-battlefield ability AND an
-  -- ability that triggers when an object all players can see is put into a
-  -- hand. Without the look-back "you control" would be asked of a card in a
-  -- hand, which CR 108.4 gives no controller.
-  --
-  -- CR 603.6c's leaving-the-game form is declined, unlike PermanentLeavesTheBattlefield's
-  -- arm: a permanent that leaves the game reaches no zone at all, so it is not
-  -- returned to anyone's hand.
-  TriggerCondition.PermanentReturnedToHand f ->
-    let admits departed = case Projection.viewWithLastKnown departed gs departed of
-          Nothing -> False
-          Just view -> Filter.matches bearerContext view f
-     in case event of
-          GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)
-            | ZoneChange.from zc == Zone.Battlefield && ZoneChange.to zc == Zone.Hand ->
-                admits (ZoneChange.departed zc)
-          _ -> False
-  -- CR 702.55b/702.55c: SelfDies' zone pair, asked of the object the BEARER
-  -- HAUNTS rather than of the bearer itself -- so the id compared against
-  -- ZoneChange.departed is the one GameState.haunting files the bearer under, and
-  -- a bearer that haunts nothing matches nothing.
-  --
-  -- Matched on `departed` for PermanentDies' reason (CR 603.10a): the haunt
-  -- ability targeted the permanent as it was on the battlefield, and that is the
-  -- id the link was written with.
-  --
-  -- NO characteristic of the deceased is read, where PermanentDies reads a whole
-  -- Filter: rule 702.55b keeps "the creature it haunts" pointing at the object
-  -- targeted "regardless of whether or not that object is still a creature", so a
-  -- creature that was turned into a Treasure and then destroyed still fires this.
-  TriggerCondition.HauntedCreatureDies -> maybe False (\zc -> Map.lookup bearer (GameState.haunting gs) == Just (ZoneChange.departed zc)) (Game.diedChange event)
-  -- PermanentReturnedToHand's match with the zone pinned on the DEPARTURE side
+  -- Leaves' match with the zone pinned on the DEPARTURE side
   -- instead -- the origin is the zone the condition names, and the destination is
   -- the one it names or, where it names none, wherever the card went. Whose zone
   -- it left is CardLeavesZone.whose, read off the pile CR 608.2h recorded
@@ -1400,10 +1235,9 @@ armMatches bindings board gs bearer you cond event = case cond of
                   && admitsDeparture gs bearer you p (LeftTheGame.object l)
           _ -> False
   -- CR 603.2c's batch reading of the arm above (Spirit Mascot's "whenever ONE OR
-  -- MORE cards leave your graveyard"), delegated for PermanentsReturnedToHand's
-  -- reason: which moves this condition admits is the arm above's answer, and
-  -- firing once for the batch is `batchScoped` plus eventTriggers' dedup, never
-  -- this arm.
+  -- MORE cards leave your graveyard"), delegated because which moves this
+  -- condition admits is the arm above's answer, and firing once for the batch is
+  -- `batchScoped` plus eventTriggers' dedup, never this arm.
   TriggerCondition.CardsLeaveZone p -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.CardLeavesZone p) event
   -- CR 603.2c's batch reading of a card put INTO a zone (Dutiful Knowledge
   -- Seeker's "one or more cards are put into a library from anywhere"), once for
@@ -1640,7 +1474,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- spell is its controller.
   --
   -- The spell is read LIVE off the stack rather than from a snapshot, which is
-  -- what separates this arm from PermanentDies'. CR 601.2i's trigger event is
+  -- what separates this arm from Leaves'. CR 601.2i's trigger event is
   -- the spell BECOMING cast, and CR 601.2a leaves it on the stack "until it
   -- resolves, it's countered, or a rule or effect moves it elsewhere" -- none of
   -- which can have happened before the scan, since the cast is the last thing
@@ -1916,7 +1750,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- subject are two permanents.
   --
   -- Read LIVE off the game as it stands, like PermanentEnters and unlike
-  -- PermanentDies: CR 708.8 leaves the permanent on the battlefield with its
+  -- Leaves: CR 708.8 leaves the permanent on the battlefield with its
   -- normal copiable values restored, so there is nothing for CR 603.10a's
   -- look-back to recover and the live read is what CR 603.10's first sentence
   -- asks for. It is also the only read that can answer a narrowed form correctly
@@ -2087,7 +1921,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- Mayhem Devil's unrestricted wording spells itself out as AnyPlayer over the
   -- trivial Filter rather than as an absent payload.
   --
-  -- viewWithLastKnown aimed at the sacrificed permanent twice over, PermanentDies'
+  -- viewWithLastKnown aimed at the sacrificed permanent twice over, Leaves'
   -- posture and CR 603.10a's own look-back: this event is recorded BEFORE the
   -- move, so by the time the trigger is gathered the permanent has left the
   -- battlefield, and a TOKEN has ceased to exist outright -- CR 111.7's

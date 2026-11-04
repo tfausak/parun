@@ -429,6 +429,8 @@ import qualified Parun.Codec.LandAllowanceSpec
 import qualified Parun.Codec.LandPlayedSpec
 import qualified Parun.Codec.LastKnownSpec
 import qualified Parun.Codec.LayoutSpec
+import qualified Parun.Codec.LeavesTriggerSpec
+import qualified Parun.Codec.LeavingPermanentSpec
 import qualified Parun.Codec.LeftTheGameSpec
 import qualified Parun.Codec.LibraryDepartureSpec
 import qualified Parun.Codec.LibraryDepthSpec
@@ -1065,6 +1067,8 @@ spec s registry corpus = do
   Parun.Codec.AttackCompanySpec.spec s
   Parun.Codec.AttackCountSpec.spec s
   Parun.Codec.AttackTriggerSpec.spec s
+  Parun.Codec.LeavesTriggerSpec.spec s
+  Parun.Codec.LeavingPermanentSpec.spec s
   Parun.Codec.AttackedSubjectSpec.spec s
   Parun.Codec.AttackedTriggerSpec.spec s
   Parun.Codec.AttackerTargetSpec.spec s

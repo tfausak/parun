@@ -20,8 +20,8 @@ import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.DiscardTrigger as DiscardTrigger
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.LeavesTrigger as LeavesTrigger
 import qualified Parun.Types.LifeTrigger as LifeTrigger
-import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
@@ -41,7 +41,6 @@ import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpellCast as SpellCast
 import qualified Parun.Types.StepBegins as StepBegins
 import qualified Parun.Types.TriggerFrequency as TriggerFrequency
-import qualified Parun.Types.Zone as Zone
 
 -- | CR 603.2: the pattern that fires a triggered ability. Only
 -- Parun.Engine.Event may case on it for RULES purposes; Parun.Codec also cases on
@@ -135,34 +134,8 @@ data TriggerCondition
     -- CR 712.21's Example makes this the condition a melded permanent's death
     -- fires TWICE.
     CardPutIntoGraveyard CardPutIntoGraveyard.CardPutIntoGraveyard
-  | -- | CR 603.6c narrowed to CR 700.4's "dies", the battlefield-to-graveyard
-    -- pair (Doomed Traveler). Self-scoped, and a CR 603.10a look-back.
-    SelfDies
-  | -- | The same written form read by a bystander (Meren of Clan Nel Toth),
-    -- filtered over the departed permanent's last known information.
-    PermanentDies (Filter.Filter Keyword.Keyword)
-  | -- | CR 603.2c's batch reading of the same form: "whenever one or more other
-    -- creatures you control die" (Vengeful Townsfolk), once for the batch.
-    PermanentsDie (Filter.Filter Keyword.Keyword)
-  | -- | CR 603.6c's first written form taken whole -- "when [this object] leaves
-    -- the battlefield" (Thragtusk) -- plus that rule's and CR 729.4a's
-    -- leaving-the-game forms. Self-scoped and a look-back.
-    SelfLeavesTheBattlefield
-  | -- | CR 603.6c narrowed to one destination -- "when this creature is put into
-    -- your graveyard from the battlefield" (Enigma Sphinx), "is put into exile
-    -- from the battlefield" (God-Eternal Oketra). Self-scoped and a look-back.
-    SelfPutFromBattlefieldInto OwnedZone.OwnedZone
-  | -- | The same written form read by a bystander (Super Shredder), filtered
-    -- over the departed permanent's last known information.
-    PermanentLeavesTheBattlefield (Filter.Filter Keyword.Keyword)
-  | -- | CR 603.6c's family narrowed to one destination: "whenever another
-    -- nonland permanent you control is returned to its owner's hand" (Justice,
-    -- Vance Astrovik). A look-back, CR 603.10a naming this form too.
-    PermanentReturnedToHand (Filter.Filter Keyword.Keyword)
-  | -- | CR 603.2c's batch reading of the arm above: "whenever one or more
-    -- noncreature permanents are returned to hand" (Tameshi, Reality Architect),
-    -- once however many moved, the way PermanentsDie stands beside PermanentDies.
-    PermanentsReturnedToHand (Filter.Filter Keyword.Keyword)
+  | -- | CR 603.6c: a permanent leaves the battlefield, a CR 603.10a look-back.
+    Leaves LeavesTrigger.LeavesTrigger
   | -- | CR 400.7: a card leaves a named zone, per card -- "whenever a card leaves
     -- your graveyard during your turn" (Kishla Skimmer).
     CardLeavesZone CardLeavesZone.CardLeavesZone
@@ -176,10 +149,6 @@ data TriggerCondition
   | -- | CR 603.10a / 113.6k: "when this card leaves your graveyard" (Oglor,
     -- Devoted Assistant's grant). Self-scoped, and a look-back.
     SelfLeavesGraveyard
-  | -- | CR 603.6c read off the permanent the bearer is attached to, narrowed to one
-    -- destination where given: Screams from Within's CR 700.4 "dies", Funeral
-    -- March's any departure. The one condition CR 113.6m's Aura clause names.
-    AttachedPermanentLeaves (Maybe Zone.Zone)
   | -- | CR 701.26a / 701.26b: a permanent became tapped or untapped, once per
     -- permanent (City of Brass, Oreskos Sun Guide, Mesmeric Orb).
     BecomesTapState BecomesTapState.BecomesTapState
@@ -212,9 +181,6 @@ data TriggerCondition
     -- no hit of the positive shape. A card printing one would want a second arm
     -- here and a second event, not a widening of this one.
     SelfManaAbilityResolves
-  | -- | CR 702.55b / 702.55c: "when the creature this card haunts dies", borne
-    -- by the haunting card in exile.
-    HauntedCreatureDies
   | -- | CR 701.6a: "whenever a spell or ability you control counters a spell"
     -- (Baral, Chief of Compliance); the relation is on the countering side.
     SpellOrAbilityCounters PlayerRelation.PlayerRelation
@@ -339,7 +305,7 @@ data TriggerCondition
     -- Vehicle and this one of a crewer.
     SelfCrewsVehicle
   | -- | CR 603.10a: "whenever an opponent sacrifices an artifact" (Vengeful
-    -- Tracker) -- the CR 701.21a game action, not the zone change SelfDies
+    -- Tracker) -- the CR 701.21a game action, not the zone change Leaves
     -- reads. Mayhem Devil's unrestricted wording is AnyPlayer and the trivial
     -- Filter.
     PermanentSacrificed PlayerActsOn.PlayerActsOn
@@ -351,23 +317,11 @@ data TriggerCondition
     -- however the crown was won.
     PlayerBecomesMonarch PlayerRelation.PlayerRelation
   | -- | CR 603.7: "when you lose control of the creature" (Ray of Command) --
-    -- the first of the three conditions naming a slot, its subject being an
-    -- object CR 603.7c's captured environment chose earlier.
+    -- its subject an object CR 603.7c's captured environment chose earlier.
     LoseControlOfBound SlotName.SlotName
   | -- | CR 603.10d: "when you lose control of [this permanent]" (Khârn the
     -- Betrayer), against GameEvent.ControlChanged.
     LoseControlOfSelf
-  | -- | CR 701.66a: the object bound at this slot is put into a graveyard or
-    -- into exile from the battlefield -- "when that land dies or is put into
-    -- exile", the far end of earthbend's delayed ability. Minted by
-    -- Parun.Engine.Earthbend rather than written by card data, and the second
-    -- condition after LoseControlOfBound above to name a slot, its subject being
-    -- the object CR 603.7c's captured environment chose earlier.
-    BoundDiesOrIsExiled SlotName.SlotName
-  | -- | CR 700.4: the object bound at this slot is put into a graveyard from the
-    -- battlefield -- "when the creature dies this turn" (Whippoorwill), the arm
-    -- above narrowed to the one destination rule 700.4 names.
-    BoundDies SlotName.SlotName
   | -- | CR 309.4c: "when you move your venture marker into this room".
     -- Self-scoped through the bearer and the room index; minted by
     -- Parun.Engine.Dungeon rather than written by card data.

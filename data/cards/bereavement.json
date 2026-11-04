@@ -21,23 +21,35 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentDies",
+            "type": "Leaves",
             "value": {
-              "type": "And",
-              "value": [
+              "destinations": [
                 {
-                  "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
-                },
-                {
-                  "type": "HasColor",
-                  "value": {
-                    "type": "Green"
+                  "zone": {
+                    "type": "Graveyard"
                   }
                 }
-              ]
+              ],
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    },
+                    {
+                      "type": "HasColor",
+                      "value": {
+                        "type": "Green"
+                      }
+                    }
+                  ]
+                }
+              }
             }
           },
           "modal": {

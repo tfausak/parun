@@ -75,28 +75,40 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentDies",
+            "type": "Leaves",
             "value": {
-              "type": "And",
-              "value": [
+              "destinations": [
                 {
-                  "type": "HasSubtype",
-                  "value": {
-                    "type": "Vampire"
-                  }
-                },
-                {
-                  "type": "HeldBy",
-                  "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                  "zone": {
+                    "type": "Graveyard"
                   }
                 }
-              ]
+              ],
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasSubtype",
+                      "value": {
+                        "type": "Vampire"
+                      }
+                    },
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
             }
           },
           "modal": {

@@ -42,7 +42,8 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfLeavesTheBattlefield"
+            "type": "Leaves",
+            "value": {}
           },
           "modal": {
             "modes": [

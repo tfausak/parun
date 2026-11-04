@@ -24,28 +24,40 @@
             "type": "CausedBy",
             "value": {
               "condition": {
-                "type": "PermanentDies",
+                "type": "Leaves",
                 "value": {
-                  "type": "And",
-                  "value": [
+                  "destinations": [
                     {
-                      "type": "HasCardType",
-                      "value": {
-                        "type": "Land"
-                      }
-                    },
-                    {
-                      "type": "HeldBy",
-                      "value": {
-                        "holder": {
-                          "type": "Owner"
-                        },
-                        "relation": {
-                          "type": "You"
-                        }
+                      "zone": {
+                        "type": "Graveyard"
                       }
                     }
-                  ]
+                  ],
+                  "permanent": {
+                    "type": "Matching",
+                    "value": {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HasCardType",
+                          "value": {
+                            "type": "Land"
+                          }
+                        },
+                        {
+                          "type": "HeldBy",
+                          "value": {
+                            "holder": {
+                              "type": "Owner"
+                            },
+                            "relation": {
+                              "type": "You"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
                 }
               },
               "controller": {

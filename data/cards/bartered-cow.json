@@ -32,7 +32,16 @@
             "type": "AnyOf",
             "value": [
               {
-                "type": "SelfDies"
+                "type": "Leaves",
+                "value": {
+                  "destinations": [
+                    {
+                      "zone": {
+                        "type": "Graveyard"
+                      }
+                    }
+                  ]
+                }
               },
               {
                 "type": "Discards",

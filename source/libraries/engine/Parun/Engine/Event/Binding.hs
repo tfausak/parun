@@ -70,6 +70,8 @@ import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LastKnown as LastKnown
+import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
@@ -259,68 +261,6 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   (TriggerCondition.CreaturesDealtCombatDamageToInitiative, GameEvent.DamageDealt ev) ->
     let damager = DamageEvent.source ev
      in maybe id Binding.setDamagersController (Filter.controller =<< postEventView board gs damager) (Binding.setTriggerSource damager Map.empty)
-  -- CR 400.7e: a zone-change trigger can find the new object the card became in
-  -- the zone it moved to, if that zone is public. CR 603.6c and CR 603.6e say it
-  -- from the other side.
-  --
-  -- ZoneChange.object, NOT `departed`, which is the whole point of this arm:
-  -- `departed` is what matchesTrigger matched the bearer against (CR 603.10a's
-  -- look-back) and names an id CR 400.7 has deleted, so an effect handed it would
-  -- move nothing. `object` is the card in the graveyard.
-  --
-  -- Bound ALONGSIDE the source, not instead of it: Engine.placeBorne stamps
-  -- Binding.triggerSource over these and must keep stamping the departed id, that
-  -- slot being CR 113.7a's source. One printed "it", two objects.
-  --
-  -- CR 400.7e's public-zone proviso holds by construction here, matchesTrigger's
-  -- SelfDies arm having required `to == Graveyard`; the arm below is where it
-  -- becomes a real test.
-  (TriggerCondition.SelfDies, GameEvent.Moved m) ->
-    setBecameArrivals m Map.empty
-  -- The same rule and the same field, watched by a BYSTANDER: Promise of
-  -- Tomorrow's "whenever a creature you control dies, exile IT". What differs
-  -- from the arm above is only which object CR 113.7a's source is -- there the
-  -- bearer and the deceased are two incarnations of one card, here the bearer is
-  -- a third object entirely (an enchantment) and the source slot cannot reach
-  -- the dead creature at all.
-  --
-  -- ZoneChange.object, NOT `departed`, and here the two really are two different
-  -- cards' worth of trap: matchesTrigger's PermanentDies arm matches on
-  -- `departed`, because CR 603.10a's look-back is what makes "you control"
-  -- answerable off CR 608.2h last known information -- but CR 400.7 deleted that
-  -- id, so a payload handed it would move nothing. `object` is the graveyard
-  -- card the payload has to act on.
-  --
-  -- CR 400.7e's public-zone proviso holds BY CONSTRUCTION, needing no guard of
-  -- the kind SelfLeavesTheBattlefield below carries: matchesTrigger's
-  -- PermanentDies arm has already required the battlefield-to-graveyard pair, and
-  -- CR 400.2 lists the graveyard among the public zones. That is what makes
-  -- eventBindingSlots' unconditional promise for this condition honest.
-  --
-  -- CR 603.10a's departed permanent BESIDE it, the PermanentLeavesTheBattlefield
-  -- arm below's second slot for that arm's reason: one printed "it" is two
-  -- objects, and which one a card means is the card's business. Cleopatra,
-  -- Exiled Pharaoh's "draw a card for each counter on it" is about the creature
-  -- as it last existed on the battlefield, whose counters ceased to exist on the
-  -- way out (CR 122.2: they are not "removed") and which only CR 608.2h still
-  -- answers for; Promise of Tomorrow's "exile it" is about the graveyard card.
-  -- Unconditional, needing no guard at all: `departed` is on every zone change,
-  -- and this condition admits no other event.
-  (TriggerCondition.PermanentDies _, GameEvent.Moved m) ->
-    Binding.setDepartedPermanent (ZoneChange.departed (Moved.change m)) (setBecameArrivals m Map.empty)
-  -- CR 701.66a's "return it", which is the arm above's problem exactly: the id the
-  -- condition matched is the battlefield permanent CR 400.7 deleted, and `became`
-  -- is the card the return has to move. CR 400.7e's public-zone proviso holds by
-  -- construction, matchesTrigger's arm having required the graveyard or exile.
-  (TriggerCondition.BoundDiesOrIsExiled _, GameEvent.Moved m) ->
-    Binding.setDepartedPermanent (ZoneChange.departed (Moved.change m)) (setBecameArrivals m Map.empty)
-  -- CR 700.4's narrowing of the arm above, and the same two slots for the same
-  -- reason: Whippoorwill's "exile the creature" means the card in the graveyard,
-  -- which is `became`, while CR 603.10a's departed permanent is the creature as it
-  -- last stood on the battlefield. CR 400.7e's public-zone proviso holds by
-  -- construction, matchesTrigger's arm having required the graveyard.
-  (TriggerCondition.BoundDies _, GameEvent.Moved m) ->
-    Binding.setDepartedPermanent (ZoneChange.departed (Moved.change m)) (setBecameArrivals m Map.empty)
   -- CR 400.7e off the CARD rather than off the move: Planar Void's "exile that
   -- card" acts on the one arrival its trigger matched, so this binds
   -- ZoneChange.object alone where the two arms above bind every arrival as a
@@ -333,74 +273,13 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
     Binding.setBecame (ZoneChange.object (Moved.change m)) Map.empty
   (TriggerCondition.CardPutIntoGraveyard _, GameEvent.CardArrived zc) ->
     Binding.setBecame (ZoneChange.object zc) Map.empty
-  -- The same rule, with its proviso doing real work for the first time: CR 603.6c's
-  -- wider condition accepts ANY destination, and CR 400.2 makes two of them hidden.
-  --
-  -- The binding is ABSENT for a hidden destination rather than present-but-useless:
-  -- ZoneChange.object names a real card in that hand, and stamping it would hand
-  -- the ability an object the rule forbids it to find. Absence is what CardSpec's
-  -- slot lint reads and what Resolve's arms treat as "nothing to act on".
-  --
-  -- Classified by the ZONE, never by whether the card is currently visible -- CR
-  -- 400.2 draws exactly that distinction.
-  (TriggerCondition.SelfLeavesTheBattlefield, GameEvent.Moved m)
-    | not (Game.isHiddenZone (ZoneChange.to (Moved.change m))) ->
-        setBecameArrivals m Map.empty
-  -- The same rule and guard for the arm above narrowed to one destination.
-  (TriggerCondition.SelfPutFromBattlefieldInto _, GameEvent.Moved m)
-    | not (Game.isHiddenZone (ZoneChange.to (Moved.change m))) ->
-        setBecameArrivals m Map.empty
-  -- The bystander reading of SelfLeavesTheBattlefield. CR 400.7e's arrival is guarded the
-  -- same way and for the same rule -- and unlike the self-scoped arm this one
-  -- binds a second slot the guard does not reach.
-  (TriggerCondition.PermanentLeavesTheBattlefield _, GameEvent.Moved m) ->
-    -- CR 603.10a's look-back, bound UNCONDITIONALLY where CR 400.7e's arrival is
-    -- bound only for a public destination: Resourceful Defense's "if IT had
-    -- counters on it" is about the permanent as it last existed on the
-    -- battlefield, which ZoneChange.departed names whatever zone the card
-    -- reached. Both slots, since one printed "it" is two objects for the reader
-    -- that wants the arrival instead.
-    Binding.setDepartedPermanent (ZoneChange.departed (Moved.change m)) $
-      if Game.isHiddenZone (ZoneChange.to (Moved.change m))
-        then Map.empty
-        else setBecameArrivals m Map.empty
-  -- CR 603.6c's other trigger event reaches no zone, so it offers CR 400.7e
-  -- nothing to bind -- but the departed id is the whole of what it carries, and
-  -- CR 608.2h is the only way to read a permanent that left the GAME. Which is
-  -- what keeps eventBindingSlots' promise for this condition honest across all
-  -- three of its events.
-  (TriggerCondition.PermanentLeavesTheBattlefield _, GameEvent.LeftTheGame l) ->
-    Binding.setDepartedPermanent (LeftTheGame.object l) Map.empty
-  -- The arm above with the destination pinned to a hand, which CR 400.3 makes
-  -- the OWNER's: Warped Devotion's "whenever a permanent is returned to a
-  -- player's hand, THAT PLAYER discards a card" names the owner, and
-  -- PlayerRef.HolderOfBound would name the wrong seat for a stolen permanent.
-  --
-  -- Read off CR 608.2h's record of the DEPARTED id, not off the arrival, and CR
-  -- 108.3 makes the two the same answer: a zone change carries the owner across,
-  -- and only Game.setOwner (CR 407.3) writes one. The arrival is what CR 111.7
-  -- and CR 704.5d take away -- a token that reached a hand ceases to exist, and
-  -- Engine.performSettle runs that state-based action BEFORE
-  -- placePendingTriggers, so by the time this runs the arriving object is already
-  -- deleted and a live lookup of it would leave the slot unbound for exactly the
-  -- case CR 111.7's parenthetical says must still trigger. The departed id's
-  -- record survives: the zone-change funnel files it in the same write that
-  -- deletes the object, and nothing prunes it. Proved by Parun.ZoneTriggerSpec's
-  -- "CR 111.7 bob's Piker TOKEN under alice's control still makes bob discard".
-  --
-  -- CR 400.7e's `became` is NOT bound: a hand is hidden (CR 400.2), the
-  -- SelfLeavesTheBattlefield arm's guard, here settled by the condition itself.
-  (TriggerCondition.PermanentReturnedToHand _, GameEvent.Moved m) ->
-    let zc = Moved.change m
-        owner = fmap LastKnown.owner (Game.lastKnownOf (ZoneChange.departed zc) gs)
-     in Binding.setDepartedPermanent (ZoneChange.departed zc) (maybe Map.empty (`Binding.setTriggerPlayer` Map.empty) owner)
   -- CR 400.7e again, read in the ENTRY direction: the object that moved is the
   -- entrant, and what it became is the permanent now on the battlefield --
-  -- ZoneChange.object, the field the SelfDies arm reads for the same reason.
+  -- ZoneChange.object, the field leavesBindings reads for the same reason.
   --
-  -- The SAME slot as that arm, CR 400.7e being one rule with two readings. What
+  -- The SAME slot as a death's, CR 400.7e being one rule with two readings. What
   -- differs is which object CR 113.7a's source happens to be, a fact about the
-  -- CONDITION rather than the slot: SelfDies matches the departing incarnation, so
+  -- CONDITION rather than the slot: a self death matches the departing incarnation, so
   -- `triggerSource` and `became` are two incarnations of one card, while here the
   -- bearer is another permanent entirely. Two slots would have to be kept apart by
   -- every reader for a distinction no rule draws -- and Resolve, where the slot is
@@ -497,6 +376,8 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
     every -> Binding.setBecameGroup every Map.empty
   -- CR 508.3: attackSlots' slots, off the event each arity matches.
   (TriggerCondition.Attacks t, _) -> attackBindings gs bearer you t event
+  -- CR 603.6c: leavesSlots' slots, off the departure matched.
+  (TriggerCondition.Leaves t, _) -> leavesBindings gs bearerBecame t event
   -- CR 615.13's "that many": how much this prevention effect prevented, which is
   -- the whole reason the event carries a number. The first reserved slot holding
   -- an AMOUNT rather than a reference, read back by Quantity.InSlot off the stack
@@ -755,56 +636,6 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- count reads 0 -- which is the rider's own answer, not an absent slot.
   (TriggerCondition.SelfBecomesCrewed _, GameEvent.BecameCrewed ev) ->
     Binding.setCrewers (Crewing.crewedBy ev) Map.empty
-  -- CR 400.7f, the sibling of CR 400.7e's `became` arms above: an ability that
-  -- triggers when an enchanted permanent leaves the battlefield "can find the new
-  -- object that each Aura enchanting that permanent became in its owner's
-  -- graveyard". Screams from Within's "return THIS CARD from your graveyard to
-  -- the battlefield" is the reader, and this is the id that answers it -- CR
-  -- 400.7 having already destroyed the battlefield id CR 113.7a's `triggerSource`
-  -- slot carries. Binding.became's own comment draws the line: `triggerSource` is
-  -- everything the ability says ABOUT itself, this slot everything it DOES to
-  -- itself.
-  --
-  -- Both sentences of the rule, and one lookup serves them: the "at the same time
-  -- the enchanted permanent left the battlefield" case is the wrath, where host
-  -- and Aura share an EventGroup, and the CR 704.5m case is the ordinary one,
-  -- where the Aura is buried by a LATER pass of the same CR 117.5 batch. The
-  -- argument is computed over the whole scanned batch, which is exactly those two
-  -- and no wider: an Aura that reached a graveyard at an EARLIER group than the
-  -- host's death is offered by none of eventTriggers' candidate sources, so its
-  -- trigger is never gathered and this is never asked about it.
-  --
-  -- Nothing where the bearer did not reach a graveyard: an Equipment host dying
-  -- under CR 704.5n leaves the bearer standing, and an effect that sent the Aura
-  -- elsewhere in the same batch put it somewhere the rule cannot look. Both are
-  -- CR 400.7f's own answer rather than a hole -- the payload finds nothing and
-  -- moves nothing -- and eventBindingSlots below says why the floor still claims
-  -- `became`.
-  --
-  -- CR 303.4b's ENCHANTED CREATURE beside it, under Binding.departedPermanent:
-  -- Banewasp Affliction's "that creature's controller loses life equal to ITS
-  -- toughness" names the host rather than the Aura, and both halves of that
-  -- sentence are CR 608.2h reads of a permanent CR 400.7 has already replaced.
-  -- Parun.Engine.Resolve.Slots.effectViewOf is what answers the toughness, looking
-  -- back for this slot's object as for every slot's;
-  -- Parun.Engine.Projection.controllerWithLastKnown answers the controller for any
-  -- slot PlayerRef.HolderOfBound names.
-  --
-  -- ZoneChange.departed, not the arrival: the id the card says "that creature"
-  -- about is the permanent as it last existed on the battlefield, which is the
-  -- argument Parun.Engine.Binding.departedPermanent already carries for CR
-  -- 603.10a. The graveyard incarnation has no controller (CR 108.4) and no
-  -- battlefield toughness, so the arrival would answer neither clause.
-  --
-  -- Unconditional given a match, which is what lets eventBindingSlots below claim
-  -- it: matchesTrigger accepts only a GameEvent.Moved off the battlefield or CR
-  -- 603.6c's GameEvent.LeftTheGame whose departed permanent IS the bearer's host,
-  -- so the id is always there. The event is therefore matched rather than
-  -- wildcarded, unlike every other arm's use of the first argument.
-  (TriggerCondition.AttachedPermanentLeaves _, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)) ->
-    Binding.setDepartedPermanent (ZoneChange.departed zc) (maybe Map.empty (`Binding.setBecame` Map.empty) bearerBecame)
-  (TriggerCondition.AttachedPermanentLeaves _, GameEvent.LeftTheGame l) ->
-    Binding.setDepartedPermanent (LeftTheGame.object l) (maybe Map.empty (`Binding.setBecame` Map.empty) bearerBecame)
   -- CR 701.26a's permanent, bound because the attachment link is NOT enough:
   -- Blight's "destroy it" names the land that became tapped, which the Aura
   -- leaving the battlefield before its trigger resolves does not change.
@@ -827,7 +658,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- answer the Aura's controller instead, which an Aura on an opponent's
   -- land makes a different seat.
   --
-  -- Unconditional given a match, AttachedPermanentLeaves' claim and for its
+  -- Unconditional given a match, an Attached Leaves' claim and for its
   -- reason: matchesTrigger accepts only a GameEvent.TappedForMana whose
   -- permanent IS the bearer's host, so the id is always there.
   (TriggerCondition.AttachedPermanentTappedForMana, GameEvent.TappedForMana tapped) ->
@@ -896,12 +727,11 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- no batch at all. A payload that then finds nothing is what CR 400.7e
   -- prescribes rather than the silent no-op the card lint exists to catch.
   --
-  -- The BEARER's own arrival is not consulted, unlike the AttachedPermanentLeaves arm
-  -- above: this is a bystander condition and the permanent the event names is
+  -- The BEARER's own arrival is not consulted, unlike an Attached Leaves': this is a bystander condition and the permanent the event names is
   -- somebody else's -- Prowling Geistcatcher's "another creature".
   --
-  -- CR 603.10a's departed permanent BESIDE both, the PermanentDies arm's second
-  -- slot for that arm's reason: one printed "it" is two objects, and which one a
+  -- CR 603.10a's departed permanent BESIDE both, a bystander Leaves' second
+  -- slot for leavesSlots' reason: one printed "it" is two objects, and which one a
   -- card means is the card's business. Prowling Geistcatcher's "if that creature
   -- was a token" is about the permanent as it last existed on the battlefield --
   -- CR 111.7 has since made the token cease to exist -- while its "exile it" is
@@ -1236,6 +1066,87 @@ attackSlots trigger = case trigger of
     Just _ -> Set.fromList [Binding.attackingPlayer, Binding.attackingCreatures]
   AttackTrigger.Unblocked _ -> Set.fromList [Binding.attackingCreature, Binding.triggerPlayer]
 
+-- CR 603.6c: which slots a leaves-the-battlefield trigger is GUARANTEED to bind
+-- given a match (eventBindingSlots' floor), and which only for some of its
+-- departures (eventBindingSlotsSometimes), by subject and destination.
+--
+-- CR 603.10a's departed permanent (`departedPermanent`) for a bystander or bound
+-- subject: one printed "it" is two objects, and a card names whichever its
+-- sentence means -- Cleopatra, Exiled Pharaoh's counters and Resourceful
+-- Defense's "if it had counters" are the permanent as it last existed, which
+-- only CR 608.2h still answers for. Every zone change carries
+-- ZoneChange.departed, and a departure from the game carries the id itself.
+-- Beside it, CR 400.3's OWNER under `triggerPlayer`, Warped Devotion's "that
+-- player discards a card": the zone-change funnel files CR 608.2h's record of the
+-- departing id in the same write that deletes it, so it survives CR 704.5d
+-- taking a token away. A self subject needs neither: it IS the source.
+--
+-- CR 400.7e's new object (`became`) where the destination is public (CR 400.2):
+-- Promise of Tomorrow's "exile it", Whippoorwill's "exile the creature". The
+-- floor where every named destination is public, and only sometimes where the
+-- trigger admits a hidden one or any departure at all (CR 603.6c's leaving the
+-- game reaches no zone); synthetic-persistent-roaches.json is that reader.
+--
+-- For an Attached subject `became` is instead CR 400.7f's: the AURA's own
+-- incarnation in its owner's graveyard (Screams from Within's "return this
+-- card"), on the floor where a destination is named and sometimes where none
+-- is, since CR 800.4a can take the Aura from the game with its host.
+--
+-- Not implemented: the EQUIPMENT bearer of an Attached subject, which CR 704.5n
+-- leaves standing, so CR 400.7f mints no incarnation for it and the floor
+-- over-claims `became`. The classification is per CONDITION and cannot see the
+-- bearer's subtypes; nothing in the pool reads the slot there (Skullclamp's
+-- payload names none) (#3153).
+--
+-- Nothing for a Haunted subject (rule 702.55b's ability speaks about the
+-- creature it HAUNTS, never the deceased), and nothing for a OneOrMore batch:
+-- batchBindings would join a slot across the batch, and one slot naming one of
+-- several departed permanents is no partial binding but a wrong one. No pool
+-- card's batch payload reads one (Vengeful Townsfolk, Tameshi, Reality
+-- Architect).
+leavesSlots :: LeavesTrigger.LeavesTrigger -> (Set.Set SlotName.SlotName, Set.Set SlotName.SlotName)
+leavesSlots t
+  | LeavesTrigger.batching t == Batching.OneOrMore = (Set.empty, Set.empty)
+  | otherwise = case LeavesTrigger.permanent t of
+      LeavingPermanent.Haunted -> (Set.empty, Set.empty)
+      LeavingPermanent.Attached
+        | Set.null destinations -> (Set.singleton Binding.departedPermanent, Set.singleton Binding.became)
+        | otherwise -> (Set.fromList [Binding.became, Binding.departedPermanent], Set.empty)
+      LeavingPermanent.Self -> arrival
+      LeavingPermanent.Matching _ -> bystander
+      LeavingPermanent.Bound _ -> bystander
+  where
+    destinations = LeavesTrigger.destinations t
+    public = fmap (not . Game.isHiddenZone . OwnedZone.zone) (Set.toList destinations)
+    arrival
+      | not (null public) && and public = (Set.singleton Binding.became, Set.empty)
+      | null public || or public = (Set.empty, Set.singleton Binding.became)
+      | otherwise = (Set.empty, Set.empty)
+    bystander = let (always, sometimes) = arrival in (Set.union (Set.fromList [Binding.departedPermanent, Binding.triggerPlayer]) always, sometimes)
+
+-- CR 603.6c: leavesSlots, stamped. `bearerBecame` is the bearer's own CR 400.7f
+-- arrival, which an Attached subject binds as `became` in place of the event's
+-- arrivals. eventBindings is reached only past a match, so the event is one
+-- the trigger admitted.
+leavesBindings :: GameState -> Maybe ObjectId -> LeavesTrigger.LeavesTrigger -> GameEvent -> Map.Map SlotName.SlotName Binding
+leavesBindings gs bearerBecame t event
+  | LeavesTrigger.batching t == Batching.OneOrMore = Map.empty
+  | otherwise = case (LeavesTrigger.permanent t, event) of
+      (LeavingPermanent.Haunted, _) -> Map.empty
+      (LeavingPermanent.Attached, GameEvent.Moved m) -> Binding.setDepartedPermanent (ZoneChange.departed (Moved.change m)) aura
+      (LeavingPermanent.Attached, GameEvent.LeftTheGame l) -> Binding.setDepartedPermanent (LeftTheGame.object l) aura
+      (LeavingPermanent.Self, GameEvent.Moved m) -> arrival m
+      (LeavingPermanent.Self, _) -> Map.empty
+      (_, GameEvent.Moved m) -> departed (ZoneChange.departed (Moved.change m)) (arrival m)
+      (_, GameEvent.LeftTheGame l) -> departed (LeftTheGame.object l) Map.empty
+      _ -> Map.empty
+  where
+    aura = maybe Map.empty (`Binding.setBecame` Map.empty) bearerBecame
+    arrival m
+      | Game.isHiddenZone (ZoneChange.to (Moved.change m)) = Map.empty
+      | otherwise = setBecameArrivals m Map.empty
+    departed oid = maybe id (Binding.setTriggerPlayer . LastKnown.owner) (Game.lastKnownOf oid gs) . Binding.setDepartedPermanent oid
+
 -- CR 508.3: attackSlots, stamped. A trigger whose subject is a player or a
 -- permanent and not a creature names no creature, so a Source subject binds
 -- nothing a match has not already pinned to the bearer.
@@ -1277,8 +1188,8 @@ attackBindings gs bearer you trigger event = case (trigger, event) of
 -- a battlefield DEPARTURE -- CR 712.21's own scope -- and its readers reach the
 -- whole group: Promise of Tomorrow, Yedora Grave Gardener and Endless
 -- Cockroaches spend the slot as an ObjectRef, and rule 702.55a's haunt
--- (Effect.ExileHaunting under SelfDies) reads it group first. Screams from
--- Within is NOT among these: its `became` comes from AttachedPermanentLeaves, which
+-- (Effect.ExileHaunting under a self death) reads it group first. Screams from
+-- Within is NOT among these: its `became` comes from an Attached Leaves, which
 -- binds the AURA's own incarnation (`bearerBecame`) rather than the event's
 -- arrivals, and no Aura is a meld component.
 --
@@ -1323,7 +1234,8 @@ setBecameArrivals m = case Moved.arrivals m of
 -- per-CONDITION set sound: the answer must hold for every event the condition
 -- admits, the card lint having no event in hand. For most conditions the readings
 -- coincide, matchesTrigger having already pinned the destination or recipient.
--- SelfLeavesTheBattlefield is where they come apart, and gets the floor.
+-- A Leaves admitting a hidden destination is where they come apart, and gets
+-- the floor.
 eventBindingSlots :: TriggerCondition -> Set.Set SlotName.SlotName
 eventBindingSlots cond = case cond of
   -- CR 309.4c names nothing but the room, and the room is in the condition rather
@@ -1459,6 +1371,7 @@ eventBindingSlots cond = case cond of
   -- CR 508.3: what eventBindings stamps, as a function of the arity and
   -- fields, each guaranteed given a match.
   TriggerCondition.Attacks t -> attackSlots t
+  TriggerCondition.Leaves t -> fst (leavesSlots t)
   -- CR 509.3: what eventBindings stamps, as a function of the role and count,
   -- each guaranteed given a match -- every such event carries both ids, and
   -- matchesTrigger has already read the named creature's Filter.
@@ -1485,62 +1398,6 @@ eventBindingSlots cond = case cond of
   -- Guaranteed given a match, matchesTrigger having pinned the destination to
   -- the graveyard, which CR 400.2 makes a public zone.
   TriggerCondition.CardPutIntoGraveyard _ -> Set.singleton Binding.became
-  -- CR 400.7e: the incarnation the card became, which CR 603.10a's look-back
-  -- keeps out of the source slot.
-  TriggerCondition.SelfDies -> Set.singleton Binding.became
-  -- PermanentEnters' `became` pointed at the opposite zone change, the two being
-  -- the same bystander shape: CR 400.7e supplies the name and CR 400.2 makes the
-  -- graveyard public. Guaranteed rather than conditional, unlike
-  -- SelfLeavesTheBattlefield below, because matchesTrigger has already pinned the
-  -- destination to the graveyard. Promise of Tomorrow's "exile it" is the reader.
-  -- CR 400.7e's graveyard card and CR 603.10a's departed permanent, the pair
-  -- AttachedPermanentLeaves binds below and for the same reason: the two are
-  -- different objects, and a card names whichever its sentence means (Promise of
-  -- Tomorrow the arrival, Cleopatra, Exiled Pharaoh the deceased). Both
-  -- guaranteed given a match -- matchesTrigger has pinned the battlefield-to-
-  -- graveyard pair, which CR 400.2 makes public, and every zone change carries
-  -- `departed`.
-  TriggerCondition.PermanentDies _ -> Set.fromList [Binding.became, Binding.departedPermanent]
-  -- Empty where PermanentDies binds two, by decision: the trigger event is a
-  -- whole CR 704.3 batch, and no pool card's payload reads a slot off it
-  -- (Vengeful Townsfolk and Vraan, Executioner Thane act on the bearer and on the
-  -- players). A slot here would be joined across the batch by batchBindings,
-  -- never read off one member: one slot naming one of several buried cards is
-  -- no partial binding but a wrong one, which is why this is no member of
-  -- eventBindingSlotsSometimes.
-  TriggerCondition.PermanentsDie _ -> Set.empty
-  -- The same slot and rule as SelfDies, but bound only for a PUBLIC destination
-  -- (CR 400.7e's proviso over CR 400.2's hidden zones), so the guaranteed floor is
-  -- empty. A card whose leaves-the-battlefield payload names `became` is still
-  -- accepted: the slot is claimed by eventBindingSlotsSometimes below, which the
-  -- card lint unions in, and the rule's own answer for a hidden destination is
-  -- that the ability finds nothing.
-  TriggerCondition.SelfLeavesTheBattlefield -> Set.empty
-  -- SelfDies' guarantee wherever the one destination is public (CR 400.2),
-  -- and nothing for a hidden one, the arm above's reason.
-  TriggerCondition.SelfPutFromBattlefieldInto destination
-    | Game.isHiddenZone (OwnedZone.zone destination) -> Set.empty
-    | otherwise -> Set.singleton Binding.became
-  -- CR 400.7e's `became` is withheld for the arm above's reason and for a second
-  -- one: this condition's other event (CR 603.6c's leaving-the-game form)
-  -- reaches no zone, so even a public destination is not guaranteed by a match.
-  -- CR 603.10a's departed permanent IS guaranteed, and by both events -- a zone
-  -- change carries ZoneChange.departed and a departure from the game carries the
-  -- id itself -- which is what lets Resourceful Defense read "it".
-  TriggerCondition.PermanentLeavesTheBattlefield _ -> Set.singleton Binding.departedPermanent
-  -- CR 603.10a's departed permanent, the arm above's reason, and beside it the
-  -- player whose hand it reached -- CR 400.3's OWNER, which Warped Devotion's
-  -- "that player discards a card" reads. Both guaranteed given a match: the one
-  -- event this condition admits is a zone change out of the battlefield, and the
-  -- funnel files CR 608.2h's record of the departing id in the same write that
-  -- deletes it. NOT off the arrival, which CR 704.5d can have already taken away
-  -- (a token); eventBindings' own arm has the whole of that. CR 400.7e's
-  -- `became` is withheld, the hand being hidden (CR 400.2).
-  TriggerCondition.PermanentReturnedToHand _ -> Set.fromList [Binding.departedPermanent, Binding.triggerPlayer]
-  -- Empty where the arm above binds two, by decision, PermanentsDie's reason one
-  -- event family over: Tameshi, Reality Architect's payload names none of the
-  -- batch.
-  TriggerCondition.PermanentsReturnedToHand _ -> Set.empty
   -- CR 400.7e's `became` is never bound: this condition admits hidden
   -- destinations (CR 400.2), and Kishla Skimmer's payload names no card anyway.
   -- Binding.handArrival is guaranteed when the condition pins the destination to
@@ -1559,13 +1416,6 @@ eventBindingSlots cond = case cond of
   -- Nothing: Dutiful Knowledge Seeker's payload names neither the cards nor a
   -- count, and CR 400.7e withholds the arrival in a hidden zone anyway.
   TriggerCondition.CardsPutIntoZone {} -> Set.empty
-  -- Nothing, where PermanentDies binds CR 400.7e's graveyard card and CR 603.10a's
-  -- departed permanent: rule 702.55b's ability speaks about the creature it
-  -- HAUNTS -- an object GameState.haunting names rather than the event -- and
-  -- never about the deceased or the card it became, so no printing of haunt names
-  -- either. eventBindings has no arm for this condition either, which is what the
-  -- empty floor pins.
-  TriggerCondition.HauntedCreatureDies -> Set.empty
   -- CR 701.6a's countering names two objects and a player and this binds none of
   -- them -- eventBindings has no arm for it. Empty by decision rather than
   -- default: both ids are dead by the time the trigger resolves, and CR 400.7e
@@ -1580,7 +1430,7 @@ eventBindingSlots cond = case cond of
   -- take it off their own resolution's Counter slot, not off a trigger.
   TriggerCondition.AbilityIsCountered -> Set.empty
   -- CR 615.13's amount, guaranteed given a match: the event carries a Natural
-  -- unconditionally, so unlike SelfLeavesTheBattlefield's `became` there is no
+  -- unconditionally, so unlike a departure's `became` there is no
   -- shape of the event that withholds it.
   TriggerCondition.DamageToPlayerPrevented _ -> Set.singleton Binding.eventAmount
   -- The same slot the arm above declares, off the same event: this condition's
@@ -1598,7 +1448,7 @@ eventBindingSlots cond = case cond of
     Batching.OneOrMore -> Set.empty
   -- eventBindings' CountersChange arm, field by field: the amount per permanent,
   -- the object where it is not the bearer and is one permanent. A batch binds
-  -- nothing, PermanentsDie's answer: Cloaked Cadet, the only printing of that
+  -- nothing, a OneOrMore Leaves' answer: Cloaked Cadet, the only printing of that
   -- form (Scryfall o:"counters are put on one or more", 2026-08-25), names none
   -- of the permanents, and a printing whose payload said "it" would refute this.
   TriggerCondition.CountersChange counterTrigger ->
@@ -1676,48 +1526,6 @@ eventBindingSlots cond = case cond of
   -- Legion's "that creature" has no other name to be read under. Guaranteed given a
   -- match, as this classification has to be: every Mentored event carries both ids.
   TriggerCondition.AttachedCreatureMentors -> Set.singleton Binding.mentoredCreature
-  -- CR 400.7f's `became` for the Aura's own new incarnation, which Screams from
-  -- Within's payload returns, and CR 303.4b's `departedPermanent` for the
-  -- enchanted creature, which Banewasp Affliction's "that creature's controller
-  -- loses life equal to its toughness" reads on both clauses. The event names
-  -- exactly those two permanents and each gets one slot.
-  --
-  -- `departedPermanent` is GUARANTEED off the event, the ordinary way: every
-  -- pair matchesTrigger accepts is a GameEvent.Moved off the battlefield or a
-  -- GameEvent.LeftTheGame naming the host itself, so no shape of the event
-  -- withholds it.
-  --
-  -- `became` is guaranteed only where a destination is pinned, and on CR 704.5m
-  -- rather than on the event: an Aura whose host has reached a zone is attached
-  -- to nothing, and that rule puts it into its owner's graveyard as a
-  -- state-based action, which CR 117.5 runs to completion before any trigger is
-  -- placed. matchesTrigger's arm makes the same observation from the other side
-  -- -- by the time the condition is asked, the live attachment is ALWAYS gone.
-  --
-  -- With no destination the floor stops at the host: CR 800.4a can take an Aura
-  -- out of the game with a host its owner also owned (Funeral March), an ordinary
-  -- case with no arrival, so eventBindingSlotsSometimes claims `became` there.
-  --
-  -- A pinned destination has its own escapes: an effect or a loss of the game
-  -- that takes the Aura somewhere other than its owner's graveyard in the same
-  -- batch puts it where CR 400.7f cannot look -- and there the rule's own answer
-  -- is that the ability finds nothing, so the payload moving nothing is correct
-  -- rather than the silent no-op this lint exists to catch. That is what separates
-  -- this arm from SelfLeavesTheBattlefield's floor, where a BOUNCE is an ordinary
-  -- printed destination and the slot's absence is an ordinary printed case that
-  -- eventBindingSlotsSometimes hands to the lint instead.
-  --
-  -- Not implemented: the EQUIPMENT bearer, which CR 704.5n leaves standing, so
-  -- CR 400.7f mints no incarnation for it and this floor over-claims. Its
-  -- condition really is asked from the battlefield (Skullclamp,
-  -- data/cards/skullclamp.json), and the classification is per CONDITION and
-  -- cannot see the bearer's subtypes. Nothing in the pool reads the slot there:
-  -- Skullclamp's payload names none, and an Equipment ability that moved ITSELF
-  -- out of a zone would be pinned to that zone by CR 113.6m, whose exception is
-  -- the Aura's alone (data/cards/synthetic-widowed-blade.json, proved in
-  -- Parun.ZoneTriggerSpec) (#3153).
-  TriggerCondition.AttachedPermanentLeaves Nothing -> Set.singleton Binding.departedPermanent
-  TriggerCondition.AttachedPermanentLeaves (Just _) -> Set.fromList [Binding.became, Binding.departedPermanent]
   -- The permanent that became tapped or untapped, which the arm above stamps
   -- for every match: Blight destroys it and Mesmeric Orb reads its controller.
   TriggerCondition.BecomesTapState watched -> Set.singleton (Binding.tapStatePermanent (BecomesTapState.status watched))
@@ -1768,7 +1576,7 @@ eventBindingSlots cond = case cond of
   -- CR 601.2i's spell, the object the event names and nobody the bearer already
   -- does. Guaranteed given a match for the reason CR 615.13's amount is:
   -- GameEvent.SpellCast carries an ObjectId unconditionally, so no shape of the
-  -- event withholds it, and unlike SelfLeavesTheBattlefield's `became` there is
+  -- event withholds it, and unlike a departure's `became` there is
   -- no CR 400.7e proviso to fail. Presence of the Master's "counter it" is what
   -- reads it.
   --
@@ -1789,7 +1597,7 @@ eventBindingSlots cond = case cond of
   -- its fallthrough answers the same.
   TriggerCondition.SelfCast -> Set.empty
   -- CR 601.2c's targeting object, guaranteed given a match: every
-  -- GameEvent.BecameTarget carries a source, so unlike SelfLeavesTheBattlefield's
+  -- GameEvent.BecameTarget carries a source, so unlike a departure's
   -- `became` there is no shape of the event that withholds it. The CONTROLLER
   -- rule 702.21a offers the cost to takes no slot of its own -- Resolve.payerOf
   -- reads a slot bound to an object as that object's controller, which is what
@@ -1844,15 +1652,6 @@ eventBindingSlots cond = case cond of
   TriggerCondition.LoseControlOfBound _ -> Set.empty
   -- Empty: "it" is the bearer, which the ability already names.
   TriggerCondition.LoseControlOfSelf -> Set.empty
-  -- PermanentDies' two slots, and for its reasons: one printed "it" is two
-  -- objects, and rule 701.66a's return means the card in the graveyard or in
-  -- exile. Unconditional, CR 400.2 making both destinations public where
-  -- SelfLeavesTheBattlefield's wider one needs a guard.
-  TriggerCondition.BoundDiesOrIsExiled _ -> Set.fromList [Binding.became, Binding.departedPermanent]
-  -- The arm above's two slots, narrowed to CR 700.4's one destination and so
-  -- unconditional a fortiori: the graveyard is public (CR 400.2), and
-  -- Whippoorwill's "exile the creature" is what reads `became`.
-  TriggerCondition.BoundDies _ -> Set.fromList [Binding.became, Binding.departedPermanent]
   -- Empty NECESSARILY rather than by choice: this condition admits no event, so
   -- there is none to read a slot out of. What a reflexive knows about the
   -- resolution that made it comes from CR 603.7c's captured environment instead,
@@ -1870,22 +1669,18 @@ eventBindingSlots cond = case cond of
 -- PRESCRIBES, not the silent no-op the lint exists to catch. Every other reader
 -- wants the floor, a slot bound sometimes being no guarantee at all.
 --
--- Eight arms and no more, which is a fact about eventBindings above rather than
--- a convenience. Two of them are CR 400.7e's public-zone proviso, standing on
--- the two conditions CR 603.6c admits every destination for. The third is
--- PermanentSacrificed, where CR 400.7e's new object is not on the event at all
--- and the arrival table may not carry it -- see that arm. The fourth is CR
--- 603.1b's AnyOf, where what parts the ceiling from the floor is the BRANCHES
--- disagreeing rather than any one event's shape. The fifth is CardLeavesZone
--- with no destination, whose Binding.handArrival turns on the event's `to`.
--- The sixth is SelfTurnedFaceUp, whose X only a cost carrying one binds, and
--- the seventh PlayerManifestsDread, whose cards CR 701.62b fires without. The
--- eighth is AttachedPermanentLeaves with no destination, whose Aura CR 800.4a
--- can take from the game with its host.
--- The other two conditional arms turn on GAME STATE instead --
--- AttachedPermanentLeaves with a destination on CR 400.7f's arrival and
--- PermanentReturnedToHand on CR 608.2h's record -- and the floor claims both
--- outright, each for the reasons its own arm gives.
+-- Its arms are a fact about eventBindings above rather than a convenience.
+-- Leaves carries CR 400.7e's public-zone proviso and CR 400.7f's Aura that CR
+-- 800.4a can take from the game with its host (leavesSlots). PermanentSacrificed
+-- is where CR 400.7e's new object is not on the event at all and the arrival
+-- table may not carry it -- see that arm. CR 603.1b's AnyOf is where what parts
+-- the ceiling from the floor is the BRANCHES disagreeing rather than any one
+-- event's shape. CardLeavesZone with no destination has a Binding.handArrival
+-- that turns on the event's `to`. SelfTurnedFaceUp's X only a cost carrying one
+-- binds, and PlayerManifestsDread's cards CR 701.62b fires without. The
+-- conditional slots that turn on GAME STATE instead -- an Attached Leaves with a
+-- destination on CR 400.7f's arrival, a bystander Leaves' owner on CR 608.2h's
+-- record -- the floor claims outright, for the reasons leavesSlots gives.
 --
 -- A WILDCARD here where eventBindingSlots forbids one, the asymmetry being which
 -- way each default fails. Defaulting a new condition to "binds nothing" there
@@ -1899,22 +1694,9 @@ eventBindingSlotsSometimes cond = case cond of
   -- The host an Aura entered attached to, bound only where the entrant is
   -- attached. data/cards/infinite-reflection.json is the reader.
   TriggerCondition.SelfEnters -> Set.singleton Binding.attachedHost
-  -- CR 400.7e's proviso, read against CR 400.2's split: a death binds `became`
-  -- and a bounce does not, and CR 603.6c admits both, so the floor is empty
-  -- while a card naming the slot is correct for every destination -- it acts on
-  -- the card for a public one and does nothing for a hidden one, which is the
-  -- whole of what the rule says. data/cards/synthetic-persistent-roaches.json is
-  -- the reader.
-  TriggerCondition.SelfLeavesTheBattlefield -> Set.singleton Binding.became
-  -- The bystander reading of that same arm, withheld by the same guard for the
-  -- same rule. Its floor holds CR 603.10a's departed permanent instead, so
-  -- unlike the arm above this condition is not silent about the departure --
-  -- nothing in data/cards/ names the arrival under it.
-  TriggerCondition.PermanentLeavesTheBattlefield _ -> Set.singleton Binding.became
-  -- CR 400.7f's arrival for an Aura that reached a graveyard, withheld where CR
-  -- 800.4a took it out of the game with its host. Nothing in data/cards/ names it
-  -- under the bare form.
-  TriggerCondition.AttachedPermanentLeaves Nothing -> Set.singleton Binding.became
+  -- CR 400.7e's and CR 400.7f's proviso where the trigger admits a hidden
+  -- destination or none: leavesSlots has the whole of it.
+  TriggerCondition.Leaves t -> snd (leavesSlots t)
   -- CR 400.7e's new object again, withheld for a different reason: this event is
   -- CR 603.10a's look-back, recorded before the move, so the arrival is not on it
   -- and eventBindings has to be handed the batch's table instead. A CR 614.1

@@ -97,37 +97,49 @@
         },
         {
           "condition": {
-            "type": "PermanentReturnedToHand",
+            "type": "Leaves",
             "value": {
-              "type": "And",
-              "value": [
+              "destinations": [
                 {
-                  "type": "Not",
-                  "value": {
-                    "type": "IsSource"
-                  }
-                },
-                {
-                  "type": "Not",
-                  "value": {
-                    "type": "HasCardType",
-                    "value": {
-                      "type": "Land"
-                    }
-                  }
-                },
-                {
-                  "type": "HeldBy",
-                  "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
+                  "zone": {
+                    "type": "Hand"
                   }
                 }
-              ]
+              ],
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "Not",
+                      "value": {
+                        "type": "IsSource"
+                      }
+                    },
+                    {
+                      "type": "Not",
+                      "value": {
+                        "type": "HasCardType",
+                        "value": {
+                          "type": "Land"
+                        }
+                      }
+                    },
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
             }
           },
           "modal": {

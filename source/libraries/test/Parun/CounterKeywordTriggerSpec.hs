@@ -59,6 +59,8 @@ import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LastKnown as LastKnown
+import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
@@ -823,7 +825,7 @@ modularSpec s registry =
             s
             "modular 2 held twice mints two death triggers"
             (fmap TriggeredAbility.condition (Keyword.triggeredAbilitiesOf (Map.singleton (Keyword.Type.Modular (Just 2)) 2)))
-            [TriggerCondition.SelfDies, TriggerCondition.SelfDies]
+            [TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self), TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)]
           Spec.assertEqWith
             s
             "and two entry rewrites of two counters each, which is what makes them add up"

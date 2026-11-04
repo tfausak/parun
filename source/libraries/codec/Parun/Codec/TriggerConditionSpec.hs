@@ -46,10 +46,10 @@ import qualified Parun.Types.DiscardWay as DiscardWay
 import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.LeavesTrigger as LeavesTrigger
 import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.ManaSpecification as ManaSpecification
-import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentAction as PermanentAction
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
@@ -101,7 +101,7 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.PermanentEnters (Filter.And [Filter.HasCardType CardType.Creature, Filter.Not Filter.IsSource]))
       " {\"type\":\"PermanentEnters\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"Not\",\"value\":{\"type\":\"IsSource\"}}]}} "
-  -- CR 603.2c: the batch reading is its own tag, PermanentsDie's reason.
+  -- CR 603.2c: the batch reading is its own tag.
   Spec.it s "PermanentsEnter round-trips with its Filter" $
     Common.assertCodec
       s
@@ -268,81 +268,21 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       TriggerCondition.SelfPutIntoGraveyardDuringResolution
       " {\"type\":\"SelfPutIntoGraveyardDuringResolution\"} "
-  -- CR 603.6c's second written form, abbreviated by CR 700.4 to "dies".
-  Spec.it s "SelfDies" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      TriggerCondition.SelfDies
-      " {\"type\":\"SelfDies\"} "
   -- CR 712.21's Example condition, which carries a Filter over the ARRIVING card
-  -- where PermanentDies below filters the departed permanent -- a separate tag,
-  -- since the two admit different events.
+  -- where Leaves below filters the departed permanent -- a separate tag, since
+  -- the two admit different events.
   Spec.it s "CardPutIntoGraveyard round-trips with its Filter" $
     Common.assertCodec
       s
       TriggerCondition.codec
       (TriggerCondition.CardPutIntoGraveyard (CardPutIntoGraveyard.MkCardPutIntoGraveyard (Filter.Not Filter.IsSource) Set.empty))
       " {\"type\":\"CardPutIntoGraveyard\",\"value\":{\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"IsSource\"}}}} "
-  -- The same written form read by a bystander, which carries a Filter where
-  -- SelfDies above carries nothing -- so it is a separate tag, and "another"
-  -- lives inside that Filter.
-  Spec.it s "PermanentDies round-trips with its Filter" $
+  Spec.it s "Leaves" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentDies (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You, Filter.Not Filter.IsSource]))
-      " {\"type\":\"PermanentDies\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},{\"type\":\"Not\",\"value\":{\"type\":\"IsSource\"}}]}} "
-  -- CR 603.2c's batch reading of that same form, carrying the same Filter -- so a
-  -- separate tag is the only thing that keeps the once-per-batch card and the
-  -- once-per-death card apart on the wire.
-  Spec.it s "PermanentsDie round-trips with its Filter" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PermanentsDie (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You, Filter.Not Filter.IsSource]))
-      " {\"type\":\"PermanentsDie\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}},{\"type\":\"Not\",\"value\":{\"type\":\"IsSource\"}}]}} "
-  -- CR 603.6c's first written form, a separate tag from SelfDies above: the two
-  -- must never decode to each other.
-  Spec.it s "SelfLeavesTheBattlefield" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      TriggerCondition.SelfLeavesTheBattlefield
-      " {\"type\":\"SelfLeavesTheBattlefield\"} "
-  Spec.it s "SelfPutFromBattlefieldInto" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.SelfPutFromBattlefieldInto (OwnedZone.MkOwnedZone {OwnedZone.zone = Zone.Graveyard, OwnedZone.owner = PlayerRelation.You}))
-      " {\"type\":\"SelfPutFromBattlefieldInto\",\"value\":{\"owner\":{\"type\":\"You\"},\"zone\":{\"type\":\"Graveyard\"}}} "
-  -- The same written form read by a bystander, PermanentDies' relationship to
-  -- SelfDies one rule wider: a separate tag carrying the Filter that holds
-  -- "another".
-  Spec.it s "PermanentLeavesTheBattlefield round-trips with its Filter" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PermanentLeavesTheBattlefield (Filter.Not Filter.IsSource))
-      " {\"type\":\"PermanentLeavesTheBattlefield\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsSource\"}}} "
-  -- The arm above with one destination named, so a separate tag: the Filter is a
-  -- predicate over the object and could not carry where the object went. Justice,
-  -- Vance Astrovik's printed Filter, which is what the corpus spells.
-  Spec.it s "PermanentReturnedToHand round-trips with its Filter" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PermanentReturnedToHand (Filter.And [Filter.Not Filter.IsSource, Filter.HeldBy Holder.Controller PlayerRelation.You]))
-      " {\"type\":\"PermanentReturnedToHand\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"Not\",\"value\":{\"type\":\"IsSource\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}]}} "
-  -- CR 603.2c's batch reading of that same form, carrying the same Filter -- so
-  -- a separate tag is the only thing that keeps Tameshi, Reality Architect's
-  -- once-per-batch card and Justice's once-per-permanent card apart on the wire.
-  Spec.it s "PermanentsReturnedToHand round-trips with its Filter" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PermanentsReturnedToHand (Filter.Not (Filter.HasCardType CardType.Creature)))
-      " {\"type\":\"PermanentsReturnedToHand\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      (TriggerCondition.Leaves LeavesTrigger.defaultValue)
+      " {\"type\":\"Leaves\",\"value\":{}} "
   -- CR 603.10a's third family, whose payload is a record rather than a bare
   -- Filter: Kishla Skimmer's "your graveyard" is `whose` and its "during your
   -- turn" is the TurnScope beside it.
@@ -369,20 +309,6 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.CardsPutIntoZone (CardsPutIntoZone.MkCardsPutIntoZone (Filter.Not Filter.IsToken) TurnScope.EachTurn Set.empty Zone.Library))
       " {\"type\":\"CardsPutIntoZone\",\"value\":{\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}},\"scope\":{\"type\":\"EachTurn\"},\"to\":{\"type\":\"Library\"}}} "
-  -- CR 603.6c read off the enchanted permanent. The link it matches on is board
-  -- state, HauntedCreatureDies' reason; bare means any destination.
-  Spec.it s "AttachedPermanentLeaves" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.AttachedPermanentLeaves Nothing)
-      " {\"type\":\"AttachedPermanentLeaves\"} "
-  Spec.it s "AttachedPermanentLeaves round-trips a destination" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.AttachedPermanentLeaves (Just Zone.Graveyard))
-      " {\"type\":\"AttachedPermanentLeaves\",\"value\":{\"type\":\"Graveyard\"}} "
   -- CR 701.26a's tap, once per permanent, read off the bearer by id.
   Spec.it s "BecomesTapState round-trips the bearer itself" $
     Common.assertCodec
@@ -405,7 +331,7 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       (TriggerCondition.PermanentsBecomeTapped (Filter.Not Filter.IsToken))
       " {\"type\":\"PermanentsBecomeTapped\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}} "
   -- CR 106.12a's tap for mana read off the attachment link. Nullary: that link is
-  -- board state, HauntedCreatureDies' reason.
+  -- board state, so nothing about it rides the condition.
   Spec.it s "AttachedPermanentTappedForMana" $
     Common.assertCodec
       s
@@ -438,14 +364,6 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.AbilityAddsMana (AbilityAddsMana.MkAbilityAddsMana PlayerRelation.You (Filter.HasCardType CardType.Land) ManaSpecification.ChosenColor))
       " {\"type\":\"AbilityAddsMana\",\"value\":{\"player\":{\"type\":\"You\"},\"source\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"mana\":{\"type\":\"ChosenColor\"}}} "
-  -- CR 702.55b/702.55c's exile-zone death watch. Nullary: the link it matches on
-  -- is board state, so nothing about it rides the condition.
-  Spec.it s "HauntedCreatureDies" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      TriggerCondition.HauntedCreatureDies
-      " {\"type\":\"HauntedCreatureDies\"} "
   -- CR 701.6a's countering. Both relations: each is content.
   Spec.it s "SpellOrAbilityCounters round-trips both relations" $ do
     Common.assertCodec
@@ -818,32 +736,6 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
   -- CR 603.10d's self-scoped twin, a bare tag.
   Spec.it s "LoseControlOfSelf round-trips" $
     Common.assertCodec s TriggerCondition.codec TriggerCondition.LoseControlOfSelf " {\"type\":\"LoseControlOfSelf\"} "
-  -- CR 701.66a's slot-named condition, the arm above's wire shape. No card prints
-  -- it -- Parun.Engine.Earthbend mints the only ability that carries it -- and it
-  -- must not collapse into LoseControlOfBound, which shares the payload exactly.
-  Spec.it s "BoundDiesOrIsExiled round-trips its slot, and is not LoseControlOfBound" $ do
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.BoundDiesOrIsExiled (SlotName.MkSlotName (Text.pack "target")))
-      " {\"type\":\"BoundDiesOrIsExiled\",\"value\":\"target\"} "
-    Spec.assertBool
-      s
-      (TriggerCondition.BoundDiesOrIsExiled (SlotName.MkSlotName (Text.pack "target")) /= TriggerCondition.LoseControlOfBound (SlotName.MkSlotName (Text.pack "target")))
-      "BoundDiesOrIsExiled and LoseControlOfBound of the same slot are different conditions"
-  -- CR 700.4's slot-named condition, the arm above narrowed to a death, and the
-  -- one of the three card data writes (Whippoorwill). It shares the payload with
-  -- both of the others, so it must not collapse into either.
-  Spec.it s "BoundDies round-trips its slot, and is not BoundDiesOrIsExiled" $ do
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.BoundDies (SlotName.MkSlotName (Text.pack "target")))
-      " {\"type\":\"BoundDies\",\"value\":\"target\"} "
-    Spec.assertBool
-      s
-      (TriggerCondition.BoundDies (SlotName.MkSlotName (Text.pack "target")) /= TriggerCondition.BoundDiesOrIsExiled (SlotName.MkSlotName (Text.pack "target")))
-      "BoundDies and BoundDiesOrIsExiled of the same slot are different conditions"
   -- CR 309.4c. No dungeon card prints this condition -- Parun.Engine.Dungeon mints
   -- one per room -- but it round-trips like every other arm.
   Spec.it s "RoomEntered round-trips its room" $

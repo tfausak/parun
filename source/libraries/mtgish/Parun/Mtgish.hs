@@ -100,6 +100,8 @@ import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.Layout as Layout
+import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LifeLoss as LifeLoss
@@ -712,11 +714,11 @@ trigger n = case Node.tag n of
   "WhenAPermanentDies" -> do
     who <- Node.argument n
     case single who of
-      Just "ThisPermanent" -> Right (TriggerCondition.SelfDies, bound [])
+      Just "ThisPermanent" -> Right (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self), bound [])
       Just _ -> Node.untranslated n
       Nothing -> do
         f <- permanents outermost who
-        Right (TriggerCondition.PermanentDies f, bound [("Trigger_ThatPermanent", Oracle.Target.becameSlot), ("Trigger_ThatCreature", Oracle.Target.becameSlot)])
+        Right (TriggerCondition.Leaves (LeavesTrigger.dies (LeavingPermanent.Matching f)), bound [("Trigger_ThatPermanent", Oracle.Target.becameSlot), ("Trigger_ThatCreature", Oracle.Target.becameSlot)])
   "WhenACreatureAttacks" -> itself (TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue))
   "WhenACreatureAttacksAndIsntBlocked" -> do
     who <- Node.argument n
