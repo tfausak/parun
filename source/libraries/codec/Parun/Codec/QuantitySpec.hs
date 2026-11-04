@@ -196,6 +196,13 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       Quantity.codec
       (Quantity.Arithmetic (Arithmetic.Negate (Quantity.Literal (-2))))
       " {\"type\":\"Negate\",\"value\":{\"type\":\"Literal\",\"value\":-2}} "
+  -- Rush of Blood's floored X on the wire.
+  Spec.it s "NonNegative, over a measure" $
+    Common.assertCodec
+      s
+      Quantity.codec
+      (Quantity.Arithmetic (Arithmetic.NonNegative (Quantity.Measure Measure.Power)))
+      " {\"type\":\"NonNegative\",\"value\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}}} "
   -- Quantity.Count's arm is tagged here and nowhere else: Parun.Codec.Count
   -- writes a bare object, so a Count payload can never be double-tagged.
   Spec.it s "Count is tagged by Quantity, and the payload is Count's bare object" $

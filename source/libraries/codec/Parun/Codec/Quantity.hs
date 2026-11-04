@@ -81,6 +81,8 @@ codec =
       -- CR 107.1b's negative game value: one whole Quantity on the wire, since a
       -- minus sign carries nothing of its own.
       Arm.payload "Negate" codec (Quantity.Arithmetic . Arithmetic.Negate) (\x -> case x of Quantity.Arithmetic (Arithmetic.Negate y) -> Just y; _ -> Nothing),
+      -- CR 107.1b's floor, Negate's shape: one whole Quantity on the wire.
+      Arm.payload "NonNegative" codec (Quantity.Arithmetic . Arithmetic.NonNegative) (\x -> case x of Quantity.Arithmetic (Arithmetic.NonNegative y) -> Just y; _ -> Nothing),
       Arm.payload "AtMost" (AtMost.codec codec) Quantity.AtMost (\x -> case x of Quantity.AtMost y -> Just y; _ -> Nothing),
       Arm.payload "Count" (Count.codec codec) Quantity.Count (\x -> case x of Quantity.Count y -> Just y; _ -> Nothing),
       Arm.payload "ManaCount" ManaCount.codec Quantity.ManaCount (\x -> case x of Quantity.ManaCount y -> Just y; _ -> Nothing),
@@ -264,6 +266,7 @@ tagOf x = case x of
     Arithmetic.Quotient {} -> "Quotient"
     Arithmetic.Times {} -> "Times"
     Arithmetic.Negate {} -> "Negate"
+    Arithmetic.NonNegative {} -> "NonNegative"
   Quantity.AtMost {} -> "AtMost"
   Quantity.Count {} -> "Count"
   Quantity.ManaCount {} -> "ManaCount"

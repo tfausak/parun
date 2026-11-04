@@ -757,6 +757,7 @@ arithmeticNames asking onQuantity x = case x of
   Arithmetic.Quotient quotient -> quotientNames asking onQuantity quotient
   Arithmetic.Times times -> timesNames asking onQuantity times
   Arithmetic.Negate quantity -> onQuantity quantity
+  Arithmetic.NonNegative quantity -> onQuantity quantity
 
 armDelayedTriggerNames :: (Monoid r) => Asking r -> (ability -> r) -> ArmDelayedTrigger.ArmDelayedTrigger ability -> r
 armDelayedTriggerNames asking onAbility x = case x of

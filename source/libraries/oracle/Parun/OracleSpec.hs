@@ -670,7 +670,8 @@ spec s = Spec.describe s "Parun.Oracle" $ do
 
   -- CR 107.3: a change that counts reads "for each" (Empyrial Armor) or "+X"
   -- with what X is (Inner Calm, Outer Strength), "for each" first; a change by
-  -- the target's own power is written as doubling is (#5486).
+  -- the target's own power reads so floored (CR 107.1b, Rush of Blood) and not
+  -- bare, which is doubling (CR 701.10b-c, Unleash Fury).
   Spec.it s "render prints a change to power and toughness that counts" $ do
     let hand = countOf (Filter.And []) (InZone.MkInZone Zone.Hand (PlayerRef.Relative PlayerRelation.You))
         creature = [(target, TargetSlot.required Pool.Creatures Nothing)]
@@ -679,6 +680,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertBool s (Oracle.says calm (CardName.MkCardName (Text.pack "Spark")) (Text.pack "Target creature gets +X/+X until end of turn, where X is the number of cards in your hand.")) "no \"where X is\""
     let artifacts = countOf (Filter.And [Filter.HasCardType CardType.Artifact, Filter.HeldBy Holder.Controller PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
     Spec.assertEq s (Just (Text.pack "Spark gets +1/+0 for each artifact you control.")) (Oracle.render (withFace (\f -> f {Face.staticAbilities = [static (Affected.Matching Filter.IsSource) [ptBy artifacts (Quantity.Literal 0)]]})))
+    Spec.assertEq s (Just (Text.pack "Target creature gets +X/+0 until end of turn, where X is its power.")) (Oracle.render (spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (ptBy (Quantity.Arithmetic (Arithmetic.NonNegative (powerOf target))) (Quantity.Literal 0))]] creature))
     Spec.assertEq s Nothing (Oracle.render (spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (ptBy (powerOf target) (Quantity.Literal 0))]] creature))
 
   -- CR 604.3 / 208.2: a characteristic-defining ability gives the stars a face

@@ -1590,9 +1590,10 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
     Spec.assertEqWith s "and pumps the Piker to 5/4" (Projection.powerOf pikerId stored, Projection.toughnessOf pikerId stored) (Just 5, Just 4)
   -- The OTHER half of the same freeze: a quantity that IS answerable, but only
   -- against the resolution's own slot bindings. Rush of Blood's X is
-  -- Quantity.AgainstSlot "target", which reads Filter.slotObjects -- so a freeze
-  -- handed a bare Filter.contextFor sees an empty slot map, answers Nothing, and
-  -- the arm above stores no continuous effect at all. The card would resolve, go
+  -- Quantity.AgainstSlot "target" under CR 107.1b's floor, which reads
+  -- Filter.slotObjects -- so a freeze handed a bare Filter.contextFor sees an
+  -- empty slot map, answers Nothing, and the arm above stores no continuous
+  -- effect at all. The card would resolve, go
   -- to the graveyard, and silently do nothing.
   --
   -- Rabid Bite is the existing precedent for the same AgainstSlot/Power pair

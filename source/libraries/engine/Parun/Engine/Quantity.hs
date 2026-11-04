@@ -1275,13 +1275,14 @@ divide rounding n d
 
 -- CR 107.1: a calculation over its operands' values. Times is integral on both
 -- sides, so nothing rounds; Negate has no floor here, CR 107.1b's "zero is used
--- instead" being the readers' to apply.
+-- instead" being NonNegative's or the readers' to apply.
 calculate :: Arithmetic.Arithmetic Integer -> Integer
 calculate arithmetic = case arithmetic of
   Arithmetic.Plus (Plus.MkPlus a b) -> a + b
   Arithmetic.Quotient (Quotient.MkQuotient rounding a d) -> divide rounding a d
   Arithmetic.Times (Times.MkTimes factor a) -> toInteger factor * a
   Arithmetic.Negate a -> negate a
+  Arithmetic.NonNegative a -> max 0 a
 
 -- CR 208.2a, last sentence: an undeterminable number is 0, including inside a
 -- calculation. TOTAL where evaluate is partial -- an Integer, never a Maybe.

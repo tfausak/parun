@@ -119,10 +119,9 @@ data Trailing = MkTrailing Text.Text Text.Text
 -- | A change to power and toughness, "+3/+3", and the clause defining an X it
 -- uses. A change that counts reads "+1/+1 for each card in your hand" or
 -- "+X/+X, where X is the number of cards in your hand" (CR 107.3). Free: "for
--- each" (Empyrial Armor) or "where X is" (Inner Calm, Outer Strength).
---
--- Not implemented: a change by a measure, "+X/+0, where X is its power",
--- which the DSL writes as it writes doubling (#5486).
+-- each" (Empyrial Armor) or "where X is" (Inner Calm, Outer Strength). A
+-- measure reads "where X is" only floored (CR 107.1b, Rush of Blood); bare,
+-- it is doubling (CR 701.10b-c), which no change here reads as.
 powerToughness :: Target.Context -> Quantity.Quantity -> Quantity.Quantity -> [(Text.Text, Trailing)]
 powerToughness context power toughness =
   let plain = do
@@ -142,10 +141,11 @@ powerToughness context power toughness =
         t <- signed (Quantity.Literal pn) (Quantity.Literal tn)
         [(p <> Text.pack "/" <> t, MkTrailing (Text.pack " for each " <> e) Text.empty)]
       variable = do
-        v <- case filter (/= Quantity.Literal 0) [power, toughness] of
-          v@(Quantity.Count _) : vs | all (== v) vs -> [v]
+        (v, measured) <- case filter (/= Quantity.Literal 0) [power, toughness] of
+          v@(Quantity.Count _) : vs | all (== v) vs -> [(v, v)]
+          v@(Quantity.Arithmetic (Arithmetic.NonNegative m)) : vs | all (== v) vs -> [(v, m)]
           _ -> []
-        a <- Target.amounts context v
+        a <- Target.amounts context measured
         Target.EqualTo e <- [Target.reading a]
         Monad.guard (null (Target.names a))
         let x q = Text.pack (if q == v then "+X" else "+0")

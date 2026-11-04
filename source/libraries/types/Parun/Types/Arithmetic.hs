@@ -22,6 +22,8 @@ data Arithmetic quantity
     -- of a value, as in "-X/-X". CR 107.1b: a game value may go negative; a
     -- count reader saturates at 0.
     Negate quantity
+  | -- | CR 107.1b: the inner quantity, or zero in place of a negative one.
+    NonNegative quantity
   deriving (Eq, Ord, Show)
 
 instance Functor Arithmetic where
@@ -36,3 +38,4 @@ instance Traversable Arithmetic where
     Quotient (Quotient.MkQuotient rounding inner divisor) -> fmap Quotient (Quotient.MkQuotient rounding <$> f inner <*> f divisor)
     Times (Times.MkTimes factor inner) -> fmap (Times . Times.MkTimes factor) (f inner)
     Negate inner -> fmap Negate (f inner)
+    NonNegative inner -> fmap NonNegative (f inner)
