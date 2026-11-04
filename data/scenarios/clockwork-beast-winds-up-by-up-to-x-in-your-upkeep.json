@@ -100,7 +100,7 @@
     ],
     "step": "Upkeep"
   },
-  "description": "CR 107.1c / 608.2d: {X}, {T} puts up to X counters on Clockwork Beast, fewer if its controller chooses, and it can be activated only in their own upkeep",
+  "description": "CR 608.2d / 602.5: {X}, {T} puts up to X counters on Clockwork Beast, fewer if its controller chooses, and it can be activated only in their own upkeep",
   "note": "`late` is refused in bob's upkeep and in alice's main phase.",
   "timeline": [
     {

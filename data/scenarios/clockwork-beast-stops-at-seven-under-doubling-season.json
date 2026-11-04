@@ -107,7 +107,7 @@
     ],
     "step": "Upkeep"
   },
-  "description": "CR 614.16 / 101.2: Doubling Season doubles Clockwork Beast's placement, and its ability still can't cause a total past seven; a placement under the limit doubles in full",
+  "description": "CR 614.16 / 101.2 / 609.3: Doubling Season doubles Clockwork Beast's placement, and its ability still can't cause a total past seven; a placement under the limit doubles in full",
   "note": "`low` has two and takes two, doubled to six. `beast` has five and takes two, doubled to four, of which two land.",
   "timeline": [
     {

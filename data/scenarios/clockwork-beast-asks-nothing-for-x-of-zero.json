@@ -71,7 +71,7 @@
     ],
     "step": "Upkeep"
   },
-  "description": "CR 107.1c: with X of zero Clockwork Beast's ability leaves no number to choose and puts no counter on, though the creature taps",
+  "description": "CR 107.3: with X of zero Clockwork Beast's ability leaves no number to choose and puts no counter on, though the creature taps",
   "timeline": [
     {
       "do": {

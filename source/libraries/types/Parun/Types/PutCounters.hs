@@ -26,8 +26,8 @@ import qualified Parun.Types.Quantity as Quantity
 --
 -- TOTALATMOST is Clockwork Beast's "this ability can't cause the total number of
 -- +1/+0 counters on this creature to be greater than seven", asked of the settled
--- placement after CR 614.16, so a Doubling Season can't carry it past the limit
--- (CR 101.2). The scenario clockwork-beast-stops-at-seven-under-doubling-season
+-- placement after CR 616.1's loop, so a Doubling Season can't carry it past the
+-- limit (CR 101.2, CR 609.3). The scenario clockwork-beast-stops-at-seven-under-doubling-season
 -- proves it.
 data PutCounters = MkPutCounters
   { kind :: CounterKind.CounterKind Keyword.Keyword,
