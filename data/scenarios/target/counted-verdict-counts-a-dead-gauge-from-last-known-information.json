@@ -1,6 +1,6 @@
 {
-  "description": "CR 608.2b Synthetic Counted Verdict fails to count a gauge target that died in response",
-  "note": "Synthetic Counted Verdict: \"Tap up to three target creatures you control, then destroy target creature with mana value equal to the number of those creatures.\" alice aims it with two Typhoid Rats at bob's Goblin Piker (mana value 2), and bob Bolts a Rat in response. CR 608.2b's last sentence: the effect fails to determine any information about the dead, now illegal, Rat, so the count is 1, the Piker is an illegal target at mana value 2, and it survives. Counting the Rat from last known information would make the count 2 and destroy the Piker.",
+  "description": "CR 608.2b Synthetic Counted Verdict counts a gauge target that died in response from last known information",
+  "note": "Synthetic Counted Verdict: \"Tap up to three target creatures you control, then destroy target creature with mana value equal to the number of those creatures.\" alice aims it with two Typhoid Rats at bob's Goblin Piker (mana value 2), and bob Bolts a Rat in response. The victim's legality check reads the departed Rat from last known information, as Run Away Together's ruling has it for a controller, so the count is 2 and the Piker is still legal and destroyed. #6113",
   "board": {
     "seats": [
       {
@@ -40,7 +40,7 @@
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Typhoid Rats", "count": 1 } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Goblin Piker", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Goblin Piker", "count": 0 } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$rat-2", "tapped": true } } }
   ]
 }

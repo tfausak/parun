@@ -466,16 +466,12 @@ slotContext reader perspective unannounced bindings acquisition source amount gs
             -- is the proof.
             Filter.reader = reader
           }
-      -- CR 608.2h's last-known reader for an object the bound refers to but no
-      -- slot TARGETS -- Nihiloor's tapped creature, a group its own effect bound
-      -- -- and the live view for a sibling target, since CR 608.2b's last
-      -- sentence has the effect fail to determine any information about an
-      -- illegal target. Nihiloor's scenario "measures a dead tapped creature"
-      -- proves the first half and Synthetic Counted Verdict's "fails to count a
-      -- dead gauge" the second. Whether a number should read differently from
-      -- the names above is #6113.
-      targeted = foldMap (Set.fromList . Maybe.mapMaybe Recipient.objectOf . Set.toList) targets
-      boundView oid = if Set.member oid targeted then Projection.fullView gs oid else Projection.viewWithLastKnownAnywhere gs oid
+      -- Last known information for every object the bound refers to, targeted or
+      -- not (Nihiloor's tapped creature; a departed sibling target): the bound
+      -- is part of this legality check, which reads a departed sibling's
+      -- controller, creature types and name the same way (above), so a number
+      -- does too (counted-verdict-counts-a-dead-gauge-from-last-known-information).
+      boundView = Projection.viewWithLastKnownAnywhere gs
       evaluated = amount >>= Quantity.evaluate boundView base gs source
    in -- CR 202.3 / 601.2c: the slot's own computed bound, evaluated
       -- against the context above and handed to the Measures atom's
