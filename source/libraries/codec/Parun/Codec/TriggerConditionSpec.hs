@@ -691,14 +691,20 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.CardsPutIntoZone (CardsPutIntoZone.MkCardsPutIntoZone (Filter.Not Filter.IsToken) TurnScope.EachTurn Set.empty Zone.Library))
       " {\"type\":\"CardsPutIntoZone\",\"value\":{\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}},\"scope\":{\"type\":\"EachTurn\"},\"to\":{\"type\":\"Library\"}}} "
-  -- CR 700.4's death read off the enchanted permanent. Nullary: the link it
-  -- matches on is board state, HauntedCreatureDies' reason.
-  Spec.it s "AttachedCreatureDies" $
+  -- CR 603.6c read off the enchanted permanent. The link it matches on is board
+  -- state, HauntedCreatureDies' reason; bare means any destination.
+  Spec.it s "AttachedPermanentLeaves" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      TriggerCondition.AttachedCreatureDies
-      " {\"type\":\"AttachedCreatureDies\"} "
+      (TriggerCondition.AttachedPermanentLeaves Nothing)
+      " {\"type\":\"AttachedPermanentLeaves\"} "
+  Spec.it s "AttachedPermanentLeaves round-trips a destination" $
+    Common.assertCodec
+      s
+      TriggerCondition.codec
+      (TriggerCondition.AttachedPermanentLeaves (Just Zone.Graveyard))
+      " {\"type\":\"AttachedPermanentLeaves\",\"value\":{\"type\":\"Graveyard\"}} "
   -- CR 701.26a's tap, once per permanent, read off the bearer by id.
   Spec.it s "BecomesTapState round-trips the bearer itself" $
     Common.assertCodec
@@ -721,7 +727,7 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       (TriggerCondition.PermanentsBecomeTapped (Filter.Not Filter.IsToken))
       " {\"type\":\"PermanentsBecomeTapped\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}} "
   -- CR 106.12a's tap for mana read off the attachment link, nullary for
-  -- AttachedCreatureDies' reason.
+  -- AttachedPermanentLeaves' reason.
   Spec.it s "AttachedPermanentTappedForMana" $
     Common.assertCodec
       s

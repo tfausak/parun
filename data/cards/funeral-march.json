@@ -1,0 +1,97 @@
+{
+  "faces": [
+    {
+      "enchant": [
+        {
+          "pool": {
+            "type": "Creatures"
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Funeral March",
+      "oracleText": "Enchant creature\nWhen enchanted creature leaves the battlefield, its controller sacrifices a creature of their choice.",
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "AttachedPermanentLeaves"
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "PlayerSacrifices",
+                        "value": {
+                          "filter": {
+                            "type": "HasCardType",
+                            "value": {
+                              "type": "Creature"
+                            }
+                          },
+                          "players": {
+                            "type": "HolderOfBound",
+                            "value": {
+                              "holder": {
+                                "type": "Controller"
+                              },
+                              "hop": {
+                                "type": "Itself"
+                              },
+                              "slot": "thatDepartedPermanent"
+                            }
+                          },
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 1
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Aura"
+          }
+        ],
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}

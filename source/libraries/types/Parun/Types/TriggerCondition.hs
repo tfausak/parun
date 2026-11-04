@@ -47,6 +47,7 @@ import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpellCast as SpellCast
 import qualified Parun.Types.StepBegins as StepBegins
 import qualified Parun.Types.TriggerFrequency as TriggerFrequency
+import qualified Parun.Types.Zone as Zone
 
 -- | CR 603.2: the pattern that fires a triggered ability. Only
 -- Parun.Engine.Event may case on it for RULES purposes; Parun.Codec also cases on
@@ -352,9 +353,10 @@ data TriggerCondition
   | -- | CR 603.10a / 113.6k: "when this card leaves your graveyard" (Oglor,
     -- Devoted Assistant's grant). Self-scoped, and a look-back.
     SelfLeavesGraveyard
-  | -- | CR 700.4's "dies" read off the permanent the bearer is attached to
-    -- (Screams from Within); the one condition CR 113.6m's Aura clause names.
-    AttachedCreatureDies
+  | -- | CR 603.6c read off the permanent the bearer is attached to, narrowed to one
+    -- destination where given: Screams from Within's CR 700.4 "dies", Funeral
+    -- March's any departure. The one condition CR 113.6m's Aura clause names.
+    AttachedPermanentLeaves (Maybe Zone.Zone)
   | -- | CR 701.26a / 701.26b: a permanent became tapped or untapped, once per
     -- permanent (City of Brass, Oreskos Sun Guide, Mesmeric Orb).
     BecomesTapState BecomesTapState.BecomesTapState

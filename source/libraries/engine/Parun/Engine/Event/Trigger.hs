@@ -602,7 +602,7 @@ looksBack condition = case condition of
   -- CR 603.10a's first family read off the HOST rather than the bearer: this
   -- triggers when a permanent leaves the battlefield, so the rule reaches the
   -- ability however the bearer is found.
-  TriggerCondition.AttachedCreatureDies -> True
+  TriggerCondition.AttachedPermanentLeaves _ -> True
   -- Not on CR 603.10a's list at all: that rule names leaves-the-battlefield
   -- abilities, sacrifices, cards leaving a graveyard and objects put into a hand
   -- or library, and a permanent becoming tapped is none of them. It stays on the
@@ -885,7 +885,7 @@ batchScoped condition = case condition of
   TriggerCondition.CardsPutIntoZone {} -> True
   -- One card, one departure.
   TriggerCondition.SelfLeavesGraveyard -> False
-  TriggerCondition.AttachedCreatureDies -> False
+  TriggerCondition.AttachedPermanentLeaves _ -> False
   -- Thoughtleech's "whenever an Island ... becomes tapped" has no "one or
   -- more", so each permanent a tapping event taps is its own occurrence. The
   -- untap direction the same way, CR 502.3's simultaneous batch included:
@@ -2698,7 +2698,7 @@ selfNamingSlots condition =
 -- here.
 enchantedObjectLeaves :: TriggerCondition -> Bool
 enchantedObjectLeaves condition = case condition of
-  TriggerCondition.AttachedCreatureDies -> True
+  TriggerCondition.AttachedPermanentLeaves _ -> True
   -- False, stated rather than left to the wildcard: this watches the SAME
   -- attachment link, but for an event that leaves the enchanted permanent right
   -- where it was, so CR 113.6m's Aura clause has nothing to exempt.
@@ -2718,7 +2718,7 @@ enchantedObjectLeaves condition = case condition of
 --
 -- Self-scoped conditions only: the rule's "its trigger condition" is the
 -- ability's OWN watcher, distinct from the Aura disjunct beside it, which is
--- about a DIFFERENT object (the thing enchanted). `AttachedCreatureDies` answers
+-- about a DIFFERENT object (the thing enchanted). `AttachedPermanentLeaves` answers
 -- False here for that reason -- the enchanted creature dying does not put the
 -- Aura itself anywhere.
 --
@@ -2968,7 +2968,7 @@ zonesTriggeredFrom cond =
         -- battlefield at all -- does not apply. What DOES apply is CR 113.6m's Aura
         -- clause, read by zonesFunctionedIn above, which is why this arm is reached
         -- for Screams from Within and Skullclamp but not for Synthetic Widowed Blade.
-        TriggerCondition.AttachedCreatureDies -> battlefield
+        TriggerCondition.AttachedPermanentLeaves _ -> battlefield
         -- The same default for the same reason, and more plainly: an Aura enchanting a
         -- permanent is itself a permanent on the battlefield, and CR 113.6k's exception
         -- is for a condition that cannot trigger from there at all.
@@ -3504,9 +3504,9 @@ stateTriggersOn gs
             -- counter like any other, so the board afterwards says nothing about
             -- which creature mentored which.
             TriggerCondition.AttachedCreatureMentors -> False
-            -- CR 700.4's death is an EVENT, and the board afterwards cannot
+            -- CR 603.6c's departure is an EVENT, and the board afterwards cannot
             -- say which permanent an Aura in a graveyard used to enchant.
-            TriggerCondition.AttachedCreatureDies -> False
+            TriggerCondition.AttachedPermanentLeaves _ -> False
             -- CR 701.26a's tap is an EVENT too. A tapped enchanted permanent is
             -- a state the board can read, which is exactly why this must be
             -- False: CR 603.2e says a "becomes" condition does not retrigger

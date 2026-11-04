@@ -46,6 +46,7 @@ import qualified Parun.Codec.SlotName as SlotName
 import qualified Parun.Codec.SpellCast as SpellCast
 import qualified Parun.Codec.StepBegins as StepBegins
 import qualified Parun.Codec.TriggerFrequency as TriggerFrequency
+import qualified Parun.Codec.Zone as Zone
 import qualified Parun.JsonCodec.Arm as Arm
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
@@ -132,7 +133,7 @@ codec =
           Arm.payload "CardLeavesZone" CardLeavesZone.codec TriggerCondition.CardLeavesZone (\x -> case x of TriggerCondition.CardLeavesZone y -> Just y; _ -> Nothing),
           Arm.payload "CardsLeaveZone" CardLeavesZone.codec TriggerCondition.CardsLeaveZone (\x -> case x of TriggerCondition.CardsLeaveZone y -> Just y; _ -> Nothing),
           Arm.payload "CardsPutIntoZone" CardsPutIntoZone.codec TriggerCondition.CardsPutIntoZone (\x -> case x of TriggerCondition.CardsPutIntoZone y -> Just y; _ -> Nothing),
-          Arm.nullary "AttachedCreatureDies" TriggerCondition.AttachedCreatureDies,
+          Arm.optionalPayload "AttachedPermanentLeaves" Zone.codec TriggerCondition.AttachedPermanentLeaves (\x -> case x of TriggerCondition.AttachedPermanentLeaves y -> Just y; _ -> Nothing),
           Arm.payload "BecomesTapState" BecomesTapState.codec TriggerCondition.BecomesTapState (\x -> case x of TriggerCondition.BecomesTapState y -> Just y; _ -> Nothing),
           Arm.payload "PermanentsBecomeTapped" filterCodec TriggerCondition.PermanentsBecomeTapped (\x -> case x of TriggerCondition.PermanentsBecomeTapped y -> Just y; _ -> Nothing),
           Arm.nullary "AttachedPermanentTappedForMana" TriggerCondition.AttachedPermanentTappedForMana,
@@ -277,7 +278,7 @@ tagOf x = case x of
   TriggerCondition.CardLeavesZone {} -> "CardLeavesZone"
   TriggerCondition.CardsLeaveZone {} -> "CardsLeaveZone"
   TriggerCondition.CardsPutIntoZone {} -> "CardsPutIntoZone"
-  TriggerCondition.AttachedCreatureDies {} -> "AttachedCreatureDies"
+  TriggerCondition.AttachedPermanentLeaves {} -> "AttachedPermanentLeaves"
   TriggerCondition.BecomesTapState {} -> "BecomesTapState"
   TriggerCondition.PermanentsBecomeTapped {} -> "PermanentsBecomeTapped"
   TriggerCondition.AttachedPermanentTappedForMana {} -> "AttachedPermanentTappedForMana"

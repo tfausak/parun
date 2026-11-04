@@ -964,12 +964,14 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- battlefield toughness, so the arrival would answer neither clause.
   --
   -- Unconditional given a match, which is what lets eventBindingSlots below claim
-  -- it: matchesTrigger accepts only a GameEvent.Moved out of the battlefield into
-  -- a graveyard whose `departed` IS the bearer's host, so the id is always there.
-  -- The event is therefore matched rather than wildcarded, unlike every other
-  -- arm's use of the first argument.
-  (TriggerCondition.AttachedCreatureDies, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)) ->
+  -- it: matchesTrigger accepts only a GameEvent.Moved off the battlefield or CR
+  -- 603.6c's GameEvent.LeftTheGame whose departed permanent IS the bearer's host,
+  -- so the id is always there. The event is therefore matched rather than
+  -- wildcarded, unlike every other arm's use of the first argument.
+  (TriggerCondition.AttachedPermanentLeaves _, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)) ->
     Binding.setDepartedPermanent (ZoneChange.departed zc) (maybe Map.empty (`Binding.setBecame` Map.empty) bearerBecame)
+  (TriggerCondition.AttachedPermanentLeaves _, GameEvent.LeftTheGame l) ->
+    Binding.setDepartedPermanent (LeftTheGame.object l) (maybe Map.empty (`Binding.setBecame` Map.empty) bearerBecame)
   -- CR 701.26a's permanent, bound because the attachment link is NOT enough:
   -- Blight's "destroy it" names the land that became tapped, which the Aura
   -- leaving the battlefield before its trigger resolves does not change.
@@ -992,7 +994,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- answer the Aura's controller instead, which an Aura on an opponent's
   -- land makes a different seat.
   --
-  -- Unconditional given a match, AttachedCreatureDies' claim and for its
+  -- Unconditional given a match, AttachedPermanentLeaves' claim and for its
   -- reason: matchesTrigger accepts only a GameEvent.TappedForMana whose
   -- permanent IS the bearer's host, so the id is always there.
   (TriggerCondition.AttachedPermanentTappedForMana, GameEvent.TappedForMana tapped) ->
@@ -1061,7 +1063,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- no batch at all. A payload that then finds nothing is what CR 400.7e
   -- prescribes rather than the silent no-op the card lint exists to catch.
   --
-  -- The BEARER's own arrival is not consulted, unlike the AttachedCreatureDies arm
+  -- The BEARER's own arrival is not consulted, unlike the AttachedPermanentLeaves arm
   -- above: this is a bystander condition and the permanent the event names is
   -- somebody else's -- Prowling Geistcatcher's "another creature".
   --
@@ -1383,7 +1385,7 @@ admittedAttackers gs bearer you p attacker = Seq.fromList (filter admits (Set.to
 -- whole group: Promise of Tomorrow, Yedora Grave Gardener and Endless
 -- Cockroaches spend the slot as an ObjectRef, and rule 702.55a's haunt
 -- (Effect.ExileHaunting under SelfDies) reads it group first. Screams from
--- Within is NOT among these: its `became` comes from AttachedCreatureDies, which
+-- Within is NOT among these: its `became` comes from AttachedPermanentLeaves, which
 -- binds the AURA's own incarnation (`bearerBecame`) rather than the event's
 -- arrivals, and no Aura is a meld component.
 --
@@ -1755,7 +1757,7 @@ eventBindingSlots cond = case cond of
   -- SelfLeavesTheBattlefield below, because matchesTrigger has already pinned the
   -- destination to the graveyard. Promise of Tomorrow's "exile it" is the reader.
   -- CR 400.7e's graveyard card and CR 603.10a's departed permanent, the pair
-  -- AttachedCreatureDies binds below and for the same reason: the two are
+  -- AttachedPermanentLeaves binds below and for the same reason: the two are
   -- different objects, and a card names whichever its sentence means (Promise of
   -- Tomorrow the arrival, Cleopatra, Exiled Pharaoh the deceased). Both
   -- guaranteed given a match -- matchesTrigger has pinned the battlefield-to-
@@ -2007,7 +2009,7 @@ eventBindingSlots cond = case cond of
   -- out of a zone would be pinned to that zone by CR 113.6m, whose exception is
   -- the Aura's alone (data/cards/synthetic-widowed-blade.json, proved in
   -- Parun.ZoneTriggerSpec) (#3153).
-  TriggerCondition.AttachedCreatureDies -> Set.fromList [Binding.became, Binding.departedPermanent]
+  TriggerCondition.AttachedPermanentLeaves _ -> Set.fromList [Binding.became, Binding.departedPermanent]
   -- The permanent that became tapped or untapped, which the arm above stamps
   -- for every match: Blight destroys it and Mesmeric Orb reads its controller.
   TriggerCondition.BecomesTapState watched -> Set.singleton (Binding.tapStatePermanent (BecomesTapState.status watched))
@@ -2171,7 +2173,7 @@ eventBindingSlots cond = case cond of
 -- The sixth is SelfTurnedFaceUp, whose X only a cost carrying one binds, and
 -- the seventh PlayerManifestsDread, whose cards CR 701.62b fires without.
 -- The other two conditional arms turn on GAME STATE instead --
--- AttachedCreatureDies on CR 400.7f's arrival and PermanentReturnedToHand on CR
+-- AttachedPermanentLeaves on CR 400.7f's arrival and PermanentReturnedToHand on CR
 -- 608.2h's record -- and the floor claims both outright, each for the reasons
 -- its own arm gives.
 --
