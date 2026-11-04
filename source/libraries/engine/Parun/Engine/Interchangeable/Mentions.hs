@@ -763,7 +763,7 @@ armDelayedTriggerNames asking onAbility x = case x of
 onsetNames :: (Monoid r) => Asking r -> Onset.Onset -> r
 onsetNames asking x = case x of
   Onset.Immediately -> mempty
-  Onset.FromNextTurnOf playerRef -> playerRefNames asking playerRef
+  Onset.FromNextTurnOf playerRef -> foldMap (playerRefNames asking) playerRef
   Onset.FromThatExtraTurn -> mempty
 
 asCopyNames :: (Monoid r) => Asking r -> (ability -> r) -> (effect -> r) -> AsCopy.AsCopy ability effect -> r

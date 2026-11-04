@@ -19,8 +19,14 @@ spec s = Spec.describe s "Parun.Codec.Onset" $ do
     Common.assertCodec
       s
       Onset.codec
-      (Onset.FromNextTurnOf (PlayerRef.Relative PlayerRelation.You))
+      (Onset.FromNextTurnOf (Just (PlayerRef.Relative PlayerRelation.You)))
       " {\"type\":\"FromNextTurnOf\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+  Spec.it s "FromNextTurnOf naming no player" $
+    Common.assertCodec
+      s
+      Onset.codec
+      (Onset.FromNextTurnOf Nothing)
+      " {\"type\":\"FromNextTurnOf\"} "
   Spec.it s "FromThatExtraTurn" $
     Common.assertCodec
       s

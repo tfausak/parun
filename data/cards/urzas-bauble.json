@@ -38,7 +38,10 @@
                       {
                         "type": "ArmDelayedTrigger",
                         "value": {
-                          "name": "draw a card"
+                          "name": "draw a card",
+                          "onset": {
+                            "type": "FromNextTurnOf"
+                          }
                         }
                       }
                     ]

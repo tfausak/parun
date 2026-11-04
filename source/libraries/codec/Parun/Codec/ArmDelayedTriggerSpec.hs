@@ -50,7 +50,7 @@ spec s = Spec.describe s "Parun.Codec.ArmDelayedTrigger" $ do
       (ArmDelayedTrigger.codec Common.text)
       ( ArmDelayedTrigger.MkArmDelayedTrigger
           { ArmDelayedTrigger.name = AbilityName.MkAbilityName (Text.pack "return it"),
-            ArmDelayedTrigger.onset = Onset.FromNextTurnOf (PlayerRef.Relative PlayerRelation.You),
+            ArmDelayedTrigger.onset = Onset.FromNextTurnOf (Just (PlayerRef.Relative PlayerRelation.You)),
             ArmDelayedTrigger.duration = Nothing,
             ArmDelayedTrigger.ability = Nothing
           }

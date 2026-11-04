@@ -57,7 +57,7 @@ spec s = Spec.describe s "Parun.Codec.DelayedTrigger" $ do
     Common.assertCodec
       s
       DelayedTrigger.codec
-      entry {DelayedTrigger.window = TurnWindow.NextTurnOf (PlayerId.MkPlayerId 2)}
+      entry {DelayedTrigger.window = TurnWindow.NextTurnOf (Just (PlayerId.MkPlayerId 2))}
       ( "{\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}},\"source\":4,\"controller\":0,"
           <> "\"bindings\":{\"token\":{\"amount\":9}},"
           <> "\"window\":{\"type\":\"NextTurnOf\",\"value\":2},\"createdAt\":7}"

@@ -1090,7 +1090,7 @@ effectPlayerRefs effect = case effect of
   Effect.GainControl (GainControl.MkGainControl _ _ to) -> [to]
   Effect.ExchangeControl {} -> []
   Effect.ArmDelayedTrigger arm -> case ArmDelayedTrigger.onset arm of
-    Onset.FromNextTurnOf ref -> [ref]
+    Onset.FromNextTurnOf ref -> Maybe.maybeToList ref
     Onset.Immediately -> []
     Onset.FromThatExtraTurn -> []
   -- CR 400.1's zone reference, which lives inside the permission payloads rather
