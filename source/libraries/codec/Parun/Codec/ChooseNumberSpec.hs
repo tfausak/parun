@@ -7,6 +7,7 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Types.ChooseNumber as ChooseNumber
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
+import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.SlotName as SlotName
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -21,12 +22,12 @@ spec s = Spec.describe s "Parun.Codec.ChooseNumber" $ do
     Common.assertCodec
       s
       ChooseNumber.codec
-      (ChooseNumber.MkChooseNumber (SlotName.MkSlotName (Text.pack "drawn")) (Just 4) (PlayerRef.Relative PlayerRelation.You))
-      " {\"slot\":\"drawn\",\"upTo\":4} "
+      (ChooseNumber.MkChooseNumber (SlotName.MkSlotName (Text.pack "drawn")) (Just (Quantity.Literal 4)) (PlayerRef.Relative PlayerRelation.You))
+      " {\"slot\":\"drawn\",\"upTo\":{\"type\":\"Literal\",\"value\":4}} "
   Spec.it s "a chooser other than you" $
     Common.assertCodec
       s
       ChooseNumber.codec
-      (ChooseNumber.MkChooseNumber (SlotName.MkSlotName (Text.pack "drawn")) (Just 2) (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "player"))))
-      " {\"slot\":\"drawn\",\"upTo\":2,\"chooser\":{\"type\":\"InSlot\",\"value\":\"player\"}} "
+      (ChooseNumber.MkChooseNumber (SlotName.MkSlotName (Text.pack "drawn")) (Just (Quantity.Literal 2)) (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "player"))))
+      " {\"slot\":\"drawn\",\"upTo\":{\"type\":\"Literal\",\"value\":2},\"chooser\":{\"type\":\"InSlot\",\"value\":\"player\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ChooseNumber.codec

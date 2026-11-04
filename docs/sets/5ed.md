@@ -10,8 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #5990: Clockwork Beast; Clockwork Steed. A counter effect can't put up to X
-  on, capped by a total, as `ChooseNumber.upTo` is fixed.
 - #6010: Sacred Boon. A delayed trigger can't read how much damage a shield
   stopped; a rider arming one misplays (CR 615.5, 615.7).
 - #6002: Island Sanctuary. No draw replacement offers skipping the draw for an

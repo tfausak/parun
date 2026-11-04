@@ -115,7 +115,10 @@
                               "value": "player"
                             },
                             "slot": "number",
-                            "upTo": 7
+                            "upTo": {
+                              "type": "Literal",
+                              "value": 7
+                            }
                           }
                         },
                         {

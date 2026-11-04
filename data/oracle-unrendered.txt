@@ -489,6 +489,8 @@ clever-concealment
 clever-impersonator
 clinquant-skymage
 clock-of-omens
+clockwork-beast
+clockwork-steed
 clone
 cloud-dragon
 cloud-elemental

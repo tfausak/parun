@@ -1,0 +1,217 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Doubling Season"
+          },
+          {
+            "card": "Clockwork Beast",
+            "counters": [
+              {
+                "key": {
+                  "type": "PowerToughness",
+                  "value": [
+                    1,
+                    0
+                  ]
+                },
+                "value": 5
+              }
+            ],
+            "label": "beast",
+            "ready": true
+          },
+          {
+            "card": "Clockwork Beast",
+            "counters": [
+              {
+                "key": {
+                  "type": "PowerToughness",
+                  "value": [
+                    1,
+                    0
+                  ]
+                },
+                "value": 2
+              }
+            ],
+            "label": "low",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "l1"
+          },
+          {
+            "card": "Island",
+            "label": "l2"
+          },
+          {
+            "card": "Island",
+            "label": "l3"
+          },
+          {
+            "card": "Island",
+            "label": "l4"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "Upkeep"
+  },
+  "description": "CR 614.16 / 101.2 / 609.3: Doubling Season doubles Clockwork Beast's placement, and its ability still can't cause a total past seven; a placement under the limit doubles in full",
+  "note": "`low` has two and takes two, doubled to six. `beast` has five and takes two, doubled to four, of which two land.",
+  "timeline": [
+    {
+      "do": {
+        "Activate": {
+          "ability": 0,
+          "mana": [
+            "$l1",
+            "$l2",
+            null
+          ],
+          "object": "$beast",
+          "x": 2
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseNumber",
+          "with": 2
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Counters": {
+          "count": 7,
+          "kind": {
+            "type": "PowerToughness",
+            "value": [
+              1,
+              0
+            ]
+          },
+          "object": "$beast"
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Activate": {
+          "ability": 0,
+          "mana": [
+            "$l3",
+            "$l4"
+          ],
+          "object": "$low",
+          "x": 2
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseNumber",
+          "with": 2
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Counters": {
+          "count": 6,
+          "kind": {
+            "type": "PowerToughness",
+            "value": [
+              1,
+              0
+            ]
+          },
+          "object": "$low"
+        }
+      },
+      "player": "alice",
+      "step": "Upkeep",
+      "turn": 1
+    }
+  ]
+}

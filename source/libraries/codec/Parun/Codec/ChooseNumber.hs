@@ -3,6 +3,7 @@
 module Parun.Codec.ChooseNumber where
 
 import qualified Parun.Codec.PlayerRef as PlayerRef
+import qualified Parun.Codec.Quantity as Quantity
 import qualified Parun.Codec.SlotName as SlotName
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
@@ -16,7 +17,7 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 codec :: Codec.Codec ChooseNumber.ChooseNumber
 codec = Fields.object $ do
   slot <- Fields.required "slot" SlotName.codec ChooseNumber.slot
-  upTo <- Fields.defaulted "upTo" Nothing (Common.maybe Common.natural) ChooseNumber.upTo
+  upTo <- Fields.defaulted "upTo" Nothing (Common.maybe Quantity.codec) ChooseNumber.upTo
   chooser <- Fields.defaulted "chooser" (PlayerRef.Relative PlayerRelation.You) PlayerRef.codec ChooseNumber.chooser
   pure
     ChooseNumber.MkChooseNumber

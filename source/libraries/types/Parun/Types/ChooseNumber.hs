@@ -1,12 +1,13 @@
 module Parun.Types.ChooseNumber where
 
-import qualified Numeric.Natural as Natural
 import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.SlotName as SlotName
 
 -- | The payload of Parun.Types.Effect's ChooseNumber arm: where the number is
--- bound, and the most it may be -- Trade Secrets' "draw up to four cards"
--- beside Rites of Initiation's unbounded "any number" (CR 107.1c).
+-- bound, and the most it may be, read as the choice is asked (CR 608.2h) --
+-- Trade Secrets' "draw up to four cards", Clockwork Beast's "up to X" -- beside
+-- Rites of Initiation's unbounded "any number" (CR 107.1c).
 --
 -- The CHOOSER is a PlayerRef naming ONE seat, Parun.Types.ChosenPermanents'
 -- reading: CR 608.2c's default is the resolving controller, @Relative You@, and
@@ -16,7 +17,7 @@ import qualified Parun.Types.SlotName as SlotName
 -- 101.3).
 data ChooseNumber = MkChooseNumber
   { slot :: SlotName.SlotName,
-    upTo :: Maybe Natural.Natural,
+    upTo :: Maybe Quantity.Quantity,
     chooser :: PlayerRef.PlayerRef
   }
   deriving (Eq, Ord, Show)

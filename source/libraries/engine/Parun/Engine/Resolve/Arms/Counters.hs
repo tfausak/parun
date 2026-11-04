@@ -231,7 +231,7 @@ counter resolving source controller legal (Counter.MkCounter ref mSlot mSources 
     Monad.unless (null permanents) (State.modify' (Common.bindObjectsSlot resolving slot (Seq.fromList permanents)))
 
 putCounters :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> PutCounters.PutCounters -> Game ()
-putCounters resolving source controller legal chosen (PutCounters.MkPutCounters kind quantity ref) = do
+putCounters resolving source controller legal chosen (PutCounters.MkPutCounters kind quantity ref totalAtMost) = do
   -- CR 608.2c: the set is swept as this instruction is reached, and an
   -- illegal slot (CR 608.2b) or a player recipient answers with nobody. A
   -- CR 608.2d choice is asked through askingObjects, ModifyTarget's reason:
@@ -271,7 +271,7 @@ putCounters resolving source controller legal chosen (PutCounters.MkPutCounters 
   -- spends no group; and around the FOLD alone, the sweep above it having
   -- taken no action for CR 608.2f to be read over.
   Monad.unless (null placements) . Event.simultaneously . Monad.forM_ placements $ \(target, n) ->
-    Event.putCounters (CounterCause.ByEffect controller) target kind n
+    Event.putCountersWithin totalAtMost (CounterCause.ByEffect controller) target kind n
 
 -- CR 608.2d: the chooser picks which of the objects the ref names get a
 -- part and how much, each chosen one at least one, the whole amount handed
@@ -1491,7 +1491,8 @@ payAnyEnergy resolving source controller slot = do
 -- 609.3 shortfall, not this prompt's. Bound even at zero, PayAnyEnergy's
 -- reason.
 -- CR 608.2d: a player "can't choose an option that's illegal", so an answer
--- past the bound is clamped to it.
+-- past the bound is clamped to it. A bound of zero leaves nothing to ask, and one
+-- that cannot be evaluated binds nothing, Bolster's posture.
 --
 -- The chooser is askedChooser's one seat (CR 608.2c / 800.4g); a reference
 -- naming none binds nothing (CR 101.3).
@@ -1500,8 +1501,17 @@ chooseNumber resolving source controller legal (ChooseNumber.MkChooseNumber slot
   asked <- Common.askedChooser resolving source controller legal chooser
   Monad.forM_ asked $ \pid -> do
     gs <- State.get
-    answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor pid gs) pid resolving 0 upTo)
-    State.modify' (Common.bindAmountSlot resolving source slot (maybe answer (min answer) upTo))
+    let viewOf = effectViewOf resolving source legal gs
+        context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+        ask most = do
+          answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor pid gs) pid resolving 0 most)
+          State.modify' (Common.bindAmountSlot resolving source slot (maybe answer (min answer) most))
+    case upTo of
+      Nothing -> ask Nothing
+      Just quantity -> Monad.forM_ (Quantity.evaluateFor viewOf context gs resolving source quantity) $ \most ->
+        case Integer.toNaturalSaturating most of
+          0 -> State.modify' (Common.bindAmountSlot resolving source slot 0)
+          bound -> ask (Just bound)
 
 -- CR 608.2h: the quantity is read once, here, against the source -- its last
 -- known information when it has left, as Ratchet Bomb has after CR 601.2h's
