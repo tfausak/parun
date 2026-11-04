@@ -20,6 +20,7 @@ import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.LandAllowance as LandAllowance
 import qualified Parun.Types.LoyaltyGrant as LoyaltyGrant
 import qualified Parun.Types.ManaFilter as ManaFilter
+import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.ModifiedRoll as ModifiedRoll
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Types.PlayerScope as PlayerScope
@@ -94,6 +95,9 @@ data PlayerEffect
   | -- | CR 500.5 / 119.3 / Yurlok of Scorch Thrash: as this player loses unspent
     -- mana, they lose that much life.
     LoseLifeForUnspentMana
+  | -- | CR 116.2c / 605.3a / 119.4 / Channel: this player may pay this much life
+    -- to add one mana of this type, wherever CR 605.3a offers a mana ability.
+    MayPayLifeForMana Natural.Natural ManaType.ManaType
   | -- | CR 609.4b / 613.11 / Celestial Dawn: this player may spend the mana the
     -- payload's filter names as though it were mana of the types it names.
     SpendManaAsThough SpendManaAsThough.SpendManaAsThough

@@ -241,13 +241,20 @@ legalActions pid gs =
       -- CR 116.2c: the eighth special action, and the FOURTH ungated by phase and
       -- by an empty stack -- "a player can take such an action any time they have
       -- priority, unless that effect specifies another timing restriction", which
-      -- is CR 116.2b's window plus an escape clause no producer uses.
+      -- is CR 116.2b's window plus the escape clause `lifeForMana` below uses.
       --
       -- ONE ACTION PER SOURCE, not per stored effect: CR 116.2c ends "that
       -- effect", the printed sentence, and Gliding Licid's one sentence stores
       -- four continuous effects that must end together. Nothing is left for the
       -- player to choose once the permanent is chosen.
       endings = fmap Action.EndEffect (EndEffect.endable pid gs)
+      -- CR 116.2c again, with the timing restriction that rule leaves room for:
+      -- Channel's "any time you could activate a mana ability" is CR 605.3a's
+      -- windows, this one and Cost.payManaWindowThen's. A TIMING restriction, so
+      -- the mana abilities this player could actually activate are not asked:
+      -- Action.ActivateManaAbility's gate has no say here, a prohibition on
+      -- activating abilities included (CR 116.2e's window, `discards` above).
+      lifeForMana = fmap (uncurry Action.PayLifeForMana) (Cost.lifeForManaOffers pid gs)
       -- CR 116.2k / 702.170a: the sixth special action, and the second whose
       -- window is CR 116.2a's rather than CR 116.2b's -- "any time you have
       -- priority during your main phase while the stack is empty". That gate is
@@ -369,4 +376,4 @@ legalActions pid gs =
       -- Parun.ManaSpec's "the menu carries one activation per untapped source" is
       -- the proof.
       manaAbilityActivations = fmap Action.ActivateManaAbility manaSources
-   in Action.Pass : lands <> spells <> turnUps <> unlocks <> discards <> ignores <> endings <> plots <> foretells <> suspends <> companions <> planarRolls <> conspiracies <> activations <> manaAbilityActivations
+   in Action.Pass : lands <> spells <> turnUps <> unlocks <> discards <> ignores <> endings <> lifeForMana <> plots <> foretells <> suspends <> companions <> planarRolls <> conspiracies <> activations <> manaAbilityActivations

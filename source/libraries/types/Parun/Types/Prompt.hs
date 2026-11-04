@@ -265,6 +265,11 @@ data Prompt r where
   -- action is reversed too, asked per activation, newest first
   -- (Parun.Engine.Cost.reverseIllegal).
   ReverseManaAbilities :: Decider.Decider -> PlayerId.PlayerId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt OptionalDecision.OptionalDecision
+  -- | CR 116.2c / 605.3a: whether to pay this much life for one mana of this type
+  -- at this point of a mana window, asked on every pass and never elided
+  -- (Parun.Engine.Cost.payManaWindowThen); Channel is no mana ability, so it is
+  -- no ChooseManaSource candidate.
+  PayLifeForMana :: Decider.Decider -> PlayerId.PlayerId -> Natural.Natural -> ManaType.ManaType -> Prompt OptionalDecision.OptionalDecision
   -- | CR 605.3b: which mana the source produces, as the mana ability resolves;
   -- candidates are deduplicated by the whole option (Mana.manaOptionsOf).
   ChooseManaYield :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ManaOption.ManaOption -> Prompt ManaOption.ManaOption

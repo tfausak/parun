@@ -19,6 +19,7 @@ import qualified Parun.Codec.KeywordDesignator as KeywordDesignator
 import qualified Parun.Codec.LandAllowance as LandAllowance
 import qualified Parun.Codec.LoyaltyGrant as LoyaltyGrant
 import qualified Parun.Codec.ManaFilter as ManaFilter
+import qualified Parun.Codec.ManaType as ManaType
 import qualified Parun.Codec.ModifiedRoll as ModifiedRoll
 import qualified Parun.Codec.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Codec.PlayerScope as PlayerScope
@@ -47,6 +48,11 @@ codec =
           (,)
             <$> Fields.defaulted "designator" Nothing (Common.maybe (KeywordDesignator.codec Keyword.codec)) fst
             <*> Fields.defaulted "sources" (Filter.Type.And []) filterCodec snd
+      lifeForMana =
+        Fields.object $
+          (,)
+            <$> Fields.required "life" Common.natural fst
+            <*> Fields.required "mana" ManaType.codec snd
       -- The quality absent is every spell and ability the scope's players control.
       targetingBan =
         Fields.object $
@@ -67,6 +73,7 @@ codec =
           Arm.payload "ReduceMaximumHandSize" Common.natural PlayerEffect.ReduceMaximumHandSize (\x -> case x of PlayerEffect.ReduceMaximumHandSize y -> Just y; _ -> Nothing),
           Arm.payload "DontLoseUnspentMana" ManaFilter.codec PlayerEffect.DontLoseUnspentMana (\x -> case x of PlayerEffect.DontLoseUnspentMana y -> Just y; _ -> Nothing),
           Arm.nullary "LoseLifeForUnspentMana" PlayerEffect.LoseLifeForUnspentMana,
+          Arm.payload "MayPayLifeForMana" lifeForMana (uncurry PlayerEffect.MayPayLifeForMana) (\x -> case x of PlayerEffect.MayPayLifeForMana life mana -> Just (life, mana); _ -> Nothing),
           Arm.payload "SpendManaAsThough" SpendManaAsThough.codec PlayerEffect.SpendManaAsThough (\x -> case x of PlayerEffect.SpendManaAsThough y -> Just y; _ -> Nothing),
           Arm.payload "CantBeTargetedBy" targetingBan (uncurry PlayerEffect.CantBeTargetedBy) (\x -> case x of PlayerEffect.CantBeTargetedBy y z -> Just (y, z); _ -> Nothing),
           Arm.payload "CastAsThoughItHadFlash" filterCodec PlayerEffect.CastAsThoughItHadFlash (\x -> case x of PlayerEffect.CastAsThoughItHadFlash y -> Just y; _ -> Nothing),
@@ -123,6 +130,7 @@ tagOf x = case x of
   PlayerEffect.ReduceMaximumHandSize {} -> "ReduceMaximumHandSize"
   PlayerEffect.DontLoseUnspentMana {} -> "DontLoseUnspentMana"
   PlayerEffect.LoseLifeForUnspentMana {} -> "LoseLifeForUnspentMana"
+  PlayerEffect.MayPayLifeForMana {} -> "MayPayLifeForMana"
   PlayerEffect.SpendManaAsThough {} -> "SpendManaAsThough"
   PlayerEffect.CantBeTargetedBy {} -> "CantBeTargetedBy"
   PlayerEffect.CastAsThoughItHadFlash {} -> "CastAsThoughItHadFlash"

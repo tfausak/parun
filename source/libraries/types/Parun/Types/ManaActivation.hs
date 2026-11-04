@@ -17,5 +17,8 @@ data ManaActivation = MkManaActivation
     spent :: [ManaUnit.ManaUnit],
     -- | The mana it, and the triggered mana abilities it caused, added to the
     -- payer's pool (CR 106.4).
-    added :: [ManaUnit.ManaUnit]
+    added :: [ManaUnit.ManaUnit],
+    -- | Whether CR 733.1 offers it back: False for a CR 116.2c special action
+    -- taken in the window, which is no mana ability and stands.
+    reversible :: Bool
   }

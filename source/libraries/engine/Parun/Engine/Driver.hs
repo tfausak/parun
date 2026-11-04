@@ -97,6 +97,7 @@ deciderOf prompt = case prompt of
   Prompt.ChooseManaSource decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseExtraManaSource decider _ _ -> Just (Decider.unwrap decider)
   Prompt.ReverseManaAbilities decider _ _ -> Just (Decider.unwrap decider)
+  Prompt.PayLifeForMana decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseManaYield decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseManaToSpend decider _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseProliferate decider _ _ _ -> Just (Decider.unwrap decider)

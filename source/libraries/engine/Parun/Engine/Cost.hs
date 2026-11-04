@@ -3502,6 +3502,31 @@ canPaySomeCompletion slots subject spending pid oid total_ substitute cost gs =
   let pcs = Projection.projectAll gs
    in canPaySomeCompletionGiven slots subject spending (supplyManaSourcesGiven (Projection.controlGrants gs) pcs pid gs) pcs pid oid total_ substitute cost gs
 
+-- CR 116.2c / 119.4: the life `pid` may pay for mana right now, off the same list
+-- at priority (Action.legalActions) and in a payment (`payManaWindowThen`).
+lifeForManaOffers :: PlayerId -> GameState -> [(Natural, ManaType.ManaType)]
+lifeForManaOffers pid gs = filter (Event.lifePayable pid gs . fst) (fmap (\(_, life, mana) -> (life, mana)) (PlayerEffect.lifeForMana pid gs))
+
+-- CR 116.2c: Channel's special action. No mana ability (CR 605.1a), so nothing
+-- it adds fires a triggered mana ability (CR 605.5a), and an ordinary trigger
+-- watching the mana reaches the stack through CR 117.5's scan. Answers the
+-- entry CR 733.1 keeps for it where a window took it (ManaActivation.reversible).
+payLifeForMana :: ManaAbilityPerformer.ManaAbilityPerformer -> PlayerId -> Natural -> ManaType.ManaType -> Game ([ManaActivation.ManaActivation], [ManaSegment.ManaSegment])
+payLifeForMana perform pid life manaType = do
+  start <- State.get
+  case [oid | (oid, price, mana) <- PlayerEffect.lifeForMana pid start, price == life, mana == manaType] of
+    [] -> pure noActivations
+    source : _ -> do
+      Event.payLife (ManaAbilityPerformer.settle perform) pid life
+      let unit = Mana.lifeForManaUnit manaType
+          added = ManaAdded.MkManaAdded {ManaAdded.player = pid, ManaAdded.source = source, ManaAdded.mana = Set.singleton manaType, ManaAdded.cause = ManaAddedCause.SpecialAction}
+      State.modify' (Event.recordEvent (GameEvent.ManaAdded added) . Mana.addMana pid [unit])
+      end <- State.get
+      pure
+        ( [ManaActivation.MkManaActivation {ManaActivation.sources = source NonEmpty.:| [], ManaActivation.spent = [], ManaActivation.added = [unit], ManaActivation.reversible = False}],
+          [ManaSegment.MkManaSegment {ManaSegment.activation = 0, ManaSegment.opened = start, ManaSegment.closed = end}]
+        )
+
 -- The mana sources CR 605.3a OFFERS: every permanent this player could tap for
 -- mana right now, whatever that tap itself costs. ONE function pairing
 -- `manaActivations` with the sweep taken under it, so a hoisted list cannot be
@@ -4504,9 +4529,11 @@ reverseIllegal windows before =
       -- tap and its mana included; so does a combat toll's mill or reveal
       -- (ManaWindow.unreversible). The scenario
       -- cost/cr-733-1-the-skyscraper-s-scry-keeps-the-whole-mana-ability is the
-      -- proof.
+      -- proof. CR 733.1 offers back mana abilities alone, so Channel's special
+      -- action stands too (ManaActivation.reversible); the scenario
+      -- channel/channel-stands-when-the-cast-it-paid-for-is-reversed is the proof.
       touchedLibraryAt key = any (\segment -> touchedLibrary (ManaSegment.opened segment) (ManaSegment.closed segment)) (Map.findWithDefault [] key segmentsOf)
-      askers = [entry | entry@(key, window, _) <- indexed, not (touchedLibraryAt key || ManaWindow.unreversible window)]
+      askers = [entry | entry@(key, window, activation) <- indexed, ManaActivation.reversible activation, not (touchedLibraryAt key || ManaWindow.unreversible window)]
       compose reversed = composeReversal before windows (\w i -> Set.notMember (w, i) reversed)
       -- CR 733.1's "unless", per payer, replayed from the pool their first
       -- window opened on.
@@ -4587,7 +4614,8 @@ reverseIllegal windows before =
                       ManaActivation.MkManaActivation
                         { ManaActivation.sources = Semigroup.sconcat (fmap ManaActivation.sources activations),
                           ManaActivation.spent = foldMap ManaActivation.spent activations,
-                          ManaActivation.added = foldMap ManaActivation.added activations
+                          ManaActivation.added = foldMap ManaActivation.added activations,
+                          ManaActivation.reversible = all ManaActivation.reversible activations
                         }
                       (Maybe.fromMaybe before (keepingFirst 0))
                       live
@@ -4614,7 +4642,7 @@ withParent pid oid start end (children, childSegments) spentUnits =
       pooled gs = counted (Mana.Type.unwrap (Game.poolOf pid gs))
       change segment = Map.unionWith (+) (pooled (ManaSegment.closed segment)) (fmap negate (pooled (ManaSegment.opened segment)))
       added = concat [replicate n unit | (unit, n) <- Map.toList (Map.unionsWith (+) (counted spentUnits : fmap change own)), n > 0]
-      activation = ManaActivation.MkManaActivation {ManaActivation.sources = oid NonEmpty.:| [], ManaActivation.spent = spentUnits, ManaActivation.added = added}
+      activation = ManaActivation.MkManaActivation {ManaActivation.sources = oid NonEmpty.:| [], ManaActivation.spent = spentUnits, ManaActivation.added = added, ManaActivation.reversible = True}
    in (children <> [activation], concat (zipWith (\mine theirs -> [mine, theirs]) own childSegments) <> drop (length childSegments) own)
 
 -- One set of CR 733.1's answers composed into the state it leaves: `windows`
@@ -5276,7 +5304,7 @@ unreversibleStretch :: PlayerId -> ObjectId -> GameState -> GameState -> ManaWin
 unreversibleStretch pid oid opened closed =
   ManaWindow.MkManaWindow
     { ManaWindow.payer = pid,
-      ManaWindow.activated = [ManaActivation.MkManaActivation {ManaActivation.sources = oid NonEmpty.:| [], ManaActivation.spent = [], ManaActivation.added = []}],
+      ManaWindow.activated = [ManaActivation.MkManaActivation {ManaActivation.sources = oid NonEmpty.:| [], ManaActivation.spent = [], ManaActivation.added = [], ManaActivation.reversible = True}],
       ManaWindow.segments = [ManaSegment.MkManaSegment {ManaSegment.activation = 0, ManaSegment.opened = opened, ManaSegment.closed = closed}],
       ManaWindow.spent = [],
       ManaWindow.opened = opened,
@@ -5686,7 +5714,19 @@ payManaWindowThen perform inFlight record subject spending pid substituting cost
       -- they finished, with what each wrote -- CR 733.1's "any legal mana
       -- abilities that player activated", gathered because that rule offers
       -- each of them back.
+      --
+      -- CR 116.2c: Channel's life for mana is offered first on every pass, so any
+      -- order of it among the activations is reachable, and never elided, for
+      -- `chooseSource`'s reason.
       window refused activated = do
+        gs <- State.get
+        paying <- firstLifeForMana pid (lifeForManaOffers pid gs) gs
+        case paying of
+          Just (life, mana) -> do
+            taken <- payLifeForMana perform pid life mana
+            window refused (spliceActivations activated taken)
+          Nothing -> sourcesPass refused activated
+      sourcesPass refused activated = do
         gs <- State.get
         let covered = Maybe.isJust (settlement gs)
             -- One projection per pass, shared by the enumeration and the
@@ -5838,6 +5878,16 @@ armSpendTriggers sid spent gs =
 
 payMana :: ManaAbilityPerformer.ManaAbilityPerformer -> PaymentSubject.PaymentSubject -> ManaSpending.ManaSpending -> PlayerId -> ManaCost.ManaCost -> Game Bool
 payMana perform = payManaExcept perform Set.empty Nothing
+
+-- CR 116.2c: the first of these offers the payer takes, each asked in turn.
+firstLifeForMana :: PlayerId -> [(Natural, ManaType.ManaType)] -> GameState -> Game (Maybe (Natural, ManaType.ManaType))
+firstLifeForMana pid offers gs = case offers of
+  [] -> pure Nothing
+  (life, mana) : rest -> do
+    answer <- Game.choose (Prompt.PayLifeForMana (Decide.deciderFor pid gs) pid life mana)
+    case answer of
+      OptionalDecision.Exercises -> pure (Just (life, mana))
+      OptionalDecision.Declines -> firstLifeForMana pid rest gs
 
 -- Which source to tap next, or none. `covered` says whether the pool already
 -- pays `cost`, which picks between CR 118.3c's question and CR 601.2g's; the

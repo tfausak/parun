@@ -2469,6 +2469,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.ReduceMaximumHandSize _natural -> mempty
   PlayerEffect.DontLoseUnspentMana _manaFilter -> mempty
   PlayerEffect.LoseLifeForUnspentMana -> mempty
+  PlayerEffect.MayPayLifeForMana {} -> mempty
   PlayerEffect.SpendManaAsThough clause -> spendManaAsThoughNames asking clause
   PlayerEffect.CantBeTargetedBy _playerScope quality -> foldMap (filterNames asking) quality
   PlayerEffect.HasProtectionFrom filter_ -> filterNames asking filter_

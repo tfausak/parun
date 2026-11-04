@@ -1581,6 +1581,12 @@ priorityLoop = do
                                 State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
                                 settleForPriority
                                 loop trail'
+                              -- CR 116.2c / 116.3: Channel's life for mana.
+                              Action.Type.PayLifeForMana life mana -> do
+                                _ <- Cost.payLifeForMana performManaAbility p life mana
+                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
+                                settleForPriority
+                                loop trail'
                               -- CR 116.2d: a special action too.
                               Action.Type.Ignore oid name -> do
                                 Ignore.ignore performManaAbility p oid name

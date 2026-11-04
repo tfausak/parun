@@ -583,6 +583,7 @@ rewritePlayerEffect pairs effect = case effect of
   PlayerEffect.IncreaseMaximumHandSize _ -> effect
   PlayerEffect.ReduceMaximumHandSize _ -> effect
   PlayerEffect.LoseLifeForUnspentMana -> effect
+  PlayerEffect.MayPayLifeForMana {} -> effect
   -- CR 702.11d's quality is a word on the card, as for protection above.
   PlayerEffect.CantBeTargetedBy scope quality -> PlayerEffect.CantBeTargetedBy scope (fmap (Filter.rewrite pairs) quality)
   PlayerEffect.CantSearchLibraries _ -> effect

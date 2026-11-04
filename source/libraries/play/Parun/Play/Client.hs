@@ -211,6 +211,14 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
       ( [objectName view source <> Text.pack ": use its optional effect?", Text.pack "  1. Yes", Text.pack "  2. No"],
         fmap (\i -> R.Object [(Text.pack "type", R.Text (Text.pack (if i == 1 then "Exercises" else "Declines")))]) . one 2
       )
+  -- CR 116.2c / 605.3a: Channel's life for mana, inside a payment.
+  "PayLifeForMana" -> do
+    life <- field "life" offer >>= naturalOf
+    mana <- field "mana" offer >>= decoded Codec.ManaType.codec
+    pure
+      ( [Text.pack ("Pay " <> show life <> " life to add ") <> Render.manaType mana <> Text.pack "?", Text.pack "  1. Yes", Text.pack "  2. No"],
+        fmap (\i -> R.Object [(Text.pack "type", R.Text (Text.pack (if i == 1 then "Exercises" else "Declines")))]) . one 2
+      )
   -- CR 510.1b-c: whether the creature assigns its damage as its option allows.
   "ChooseCombatDamageOption" -> do
     source <- field "source" offer
@@ -345,7 +353,7 @@ unasked view request = do
       refused = Maybe.isJust (Request.problem request)
   hotseat <- State.get
   let paying = Map.lookup seat (Hotseat.paying hotseat)
-  Monad.when (refused || kind `notElem` ["ChooseManaSource", "ChooseExtraManaSource", "ChooseManaYield", "ChooseManaToSpend"]) (stopPaying seat)
+  Monad.when (refused || kind `notElem` ["ChooseManaSource", "ChooseExtraManaSource", "PayLifeForMana", "ChooseManaYield", "ChooseManaToSpend"]) (stopPaying seat)
   case kind of
     _ | refused -> pure ([], Nothing)
     "ChooseAction"
@@ -365,6 +373,8 @@ unasked view request = do
         Just yields <- field "yields" offer >>= decoded (Common.list (Common.list Codec.ManaType.codec)),
         (i, yield) : _ <- filter (\(_, yield) -> Set.null wanted || not (Set.disjoint wanted (Set.fromList yield))) (zip [0 :: Integer ..] yields) ->
           pure ([Text.pack "Auto takes " <> foldMap Render.manaType yield <> Text.pack "."], Just (R.Number i))
+    -- CR 116.2c: auto taps sources; it never spends the seat's life.
+    "PayLifeForMana" | Maybe.isJust paying -> pure ([], Just (R.Object [(Text.pack "type", R.Text (Text.pack "Declines"))]))
     -- CR 605.3a: auto never floats mana past the cost.
     "ChooseExtraManaSource" | Maybe.isJust paying -> stopPaying seat >> pure ([], Just R.Null)
     _ -> pure ([], Nothing)

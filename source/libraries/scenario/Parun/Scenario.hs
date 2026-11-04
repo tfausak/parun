@@ -1100,6 +1100,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.OfferedExtra {} -> True
   Prompt.Type.RerollDie {} -> True
   Prompt.Type.ReverseManaAbilities {} -> True
+  Prompt.Type.PayLifeForMana {} -> True
   Prompt.Type.ReturnCommander {} -> True
   Prompt.Type.DeclareMulligan {} -> True
   -- Any member of an open class the prompt does not list: a creature type, a

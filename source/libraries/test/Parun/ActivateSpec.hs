@@ -3529,6 +3529,7 @@ activationsIn =
         A.RollPlanarDie -> False
         A.Ignore _ _ -> False
         A.EndEffect _ -> False
+        A.PayLifeForMana _ _ -> False
    in filter isActivation
 
 -- Action.legalActions threads ONE control-grant walk and ONE whole-board

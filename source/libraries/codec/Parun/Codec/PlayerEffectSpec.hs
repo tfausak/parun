@@ -169,6 +169,12 @@ spec s = Spec.describe s "Parun.Codec.PlayerEffect" $ do
       PlayerEffect.codec
       (PlayerEffect.DontLoseUnspentMana (ManaFilter.OfType (ManaType.Colored Color.Green)))
       " {\"type\":\"DontLoseUnspentMana\",\"value\":{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Green\"}}}} "
+  Spec.it s "MayPayLifeForMana, Channel's life for mana" $
+    Common.assertCodec
+      s
+      PlayerEffect.codec
+      (PlayerEffect.MayPayLifeForMana 1 ManaType.Colorless)
+      " {\"type\":\"MayPayLifeForMana\",\"value\":{\"life\":1,\"mana\":{\"type\":\"Colorless\"}}} "
   -- CR 500.5 / 119.3 / Yurlok of Scorch Thrash: nullary, the sentence naming no
   -- mana to narrow by.
   Spec.it s "LoseLifeForUnspentMana, Yurlok's mana burn" $

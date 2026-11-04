@@ -100,6 +100,7 @@ import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaRestriction as ManaRestriction
 import qualified Parun.Types.ManaSpending as ManaSpending
 import qualified Parun.Types.ManaSymbol as ManaSymbol
+import qualified Parun.Types.ManaType as ManaType
 import Parun.Types.ManaUnit (ManaUnit)
 import qualified Parun.Types.ModifiedRoll as ModifiedRoll
 import qualified Parun.Types.Object as Object
@@ -625,6 +626,7 @@ prohibitsCasting pid oid variable gs =
         PlayerEffect.ReduceMaximumHandSize _ -> False
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
+        PlayerEffect.MayPayLifeForMana {} -> False
         PlayerEffect.SpendManaAsThough _ -> False
         -- CR 702.18a / 702.11c restrict TARGETING, not casting: a player with
         -- shroud may cast anything, and Parun.Engine.Target.targetable is where
@@ -818,6 +820,7 @@ prohibitsPlayingLand pid oid gs =
         PlayerEffect.ReduceMaximumHandSize _ -> False
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
+        PlayerEffect.MayPayLifeForMana {} -> False
         PlayerEffect.SpendManaAsThough _ -> False
         PlayerEffect.CantBeTargetedBy {} -> False
         -- CR 305.1 again: a land is never cast, so a permission about the timing
@@ -913,6 +916,7 @@ prohibitsSearching pid owner causeController gs =
         PlayerEffect.ReduceMaximumHandSize _ -> False
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
+        PlayerEffect.MayPayLifeForMana {} -> False
         PlayerEffect.SpendManaAsThough _ -> False
         PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
@@ -1022,6 +1026,7 @@ prohibitsCounters pid kind gs =
         PlayerEffect.ReduceMaximumHandSize _ -> False
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
+        PlayerEffect.MayPayLifeForMana {} -> False
         PlayerEffect.SpendManaAsThough _ -> False
         PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
@@ -1104,6 +1109,7 @@ prohibitsBecomingMonarch pid gs =
         PlayerEffect.ReduceMaximumHandSize _ -> False
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
+        PlayerEffect.MayPayLifeForMana {} -> False
         PlayerEffect.SpendManaAsThough _ -> False
         -- CR 702.18a/702.11c stop a SPELL from choosing this player as a target.
         -- CR 725.1's effect need not target to crown them (Palace Jailer's "you
@@ -1170,6 +1176,7 @@ schemesCantBeSetInMotion gs =
         PlayerEffect.ReduceMaximumHandSize _ -> False
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
+        PlayerEffect.MayPayLifeForMana {} -> False
         PlayerEffect.SpendManaAsThough _ -> False
         PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
@@ -1236,6 +1243,7 @@ entryTriggerings pid entrant gs =
         PlayerEffect.ReduceMaximumHandSize _ -> Nothing
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
+        PlayerEffect.MayPayLifeForMana {} -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
         PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
@@ -1311,6 +1319,7 @@ additionalTriggers pid bearer gs =
         PlayerEffect.ReduceMaximumHandSize _ -> False
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
+        PlayerEffect.MayPayLifeForMana {} -> False
         PlayerEffect.SpendManaAsThough _ -> False
         PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
@@ -1372,6 +1381,7 @@ prohibitsAttackingWithCreatures pid gs =
         PlayerEffect.ReduceMaximumHandSize _ -> False
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
+        PlayerEffect.MayPayLifeForMana {} -> False
         PlayerEffect.SpendManaAsThough _ -> False
         PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
@@ -1961,6 +1971,15 @@ loyaltyGrants clause pid srcId gs =
         _ -> False
    in length (filter grants (applying pid gs))
 
+-- CR 116.2c: the life `pid` may pay for mana now, each beside an object the effect
+-- came from, one per distinct price and mana: two Channels offer one action, since
+-- taking it through either leaves the same board.
+lifeForMana :: PlayerId -> GameState -> [(ObjectId, Natural, ManaType.ManaType)]
+lifeForMana pid gs =
+  ListUtils.nubOrdOn
+    (\(_, life, mana) -> (life, mana))
+    [(oid, life, mana) | (source, PlayerEffect.MayPayLifeForMana life mana) <- applying pid gs, oid <- Maybe.maybeToList (RowSource.object source)]
+
 -- CR 602.2's exception granted by an effect rather than printed on the object
 -- (Piracy): the CR 106.6 restriction of each grant letting `pid` tap `oid` for
 -- mana though they don't control it, empty where none reaches it. Partially
@@ -2002,6 +2021,7 @@ landPlayFlashGrant effect = case effect of
   PlayerEffect.ReduceMaximumHandSize _ -> Nothing
   PlayerEffect.DontLoseUnspentMana _ -> Nothing
   PlayerEffect.LoseLifeForUnspentMana -> Nothing
+  PlayerEffect.MayPayLifeForMana {} -> Nothing
   PlayerEffect.SpendManaAsThough _ -> Nothing
   PlayerEffect.CantBeTargetedBy {} -> Nothing
   PlayerEffect.CantBeCountered _ -> Nothing
@@ -2270,6 +2290,7 @@ castPermissionsFrom pid zone oid gs =
         PlayerEffect.ReduceMaximumHandSize _ -> False
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
+        PlayerEffect.MayPayLifeForMana {} -> False
         PlayerEffect.SpendManaAsThough _ -> False
         PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CantBeCountered _ -> False
@@ -2593,6 +2614,7 @@ mayCastFromHandWithoutPayingManaCost pid oid gs =
         PlayerEffect.ReduceMaximumHandSize _ -> False
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
+        PlayerEffect.MayPayLifeForMana {} -> False
         PlayerEffect.SpendManaAsThough _ -> False
         PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CantBeCountered _ -> False
@@ -2671,6 +2693,7 @@ playLandPiles pid gs =
         PlayerEffect.ReduceMaximumHandSize _ -> []
         PlayerEffect.DontLoseUnspentMana _ -> []
         PlayerEffect.LoseLifeForUnspentMana -> []
+        PlayerEffect.MayPayLifeForMana {} -> []
         PlayerEffect.SpendManaAsThough _ -> []
         PlayerEffect.CantBeTargetedBy {} -> []
         PlayerEffect.CantBeCountered _ -> []
@@ -2778,6 +2801,7 @@ protectedFromTargeting rows pastHexproof caster source sourceView pid gs =
         PlayerEffect.ReduceMaximumHandSize _ -> False
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
+        PlayerEffect.MayPayLifeForMana {} -> False
         PlayerEffect.SpendManaAsThough _ -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
@@ -2892,6 +2916,7 @@ protectedFromGiven rows aimer view gs =
         PlayerEffect.ReduceMaximumHandSize _ -> False
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
+        PlayerEffect.MayPayLifeForMana {} -> False
         PlayerEffect.SpendManaAsThough _ -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
@@ -2985,6 +3010,7 @@ protectionCarriers gs =
         PlayerEffect.ReduceMaximumHandSize _ -> Nothing
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
+        PlayerEffect.MayPayLifeForMana {} -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
         PlayerEffect.MayPlayAsThoughItHadFlash _ -> Nothing
@@ -3073,6 +3099,7 @@ landPlaysAllowed pid gs =
         PlayerEffect.ReduceMaximumHandSize _ -> Nothing
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
+        PlayerEffect.MayPayLifeForMana {} -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
         PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
@@ -3146,6 +3173,7 @@ votesAllowed pid gs =
         PlayerEffect.ReduceMaximumHandSize {} -> Nothing
         PlayerEffect.DontLoseUnspentMana {} -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
+        PlayerEffect.MayPayLifeForMana {} -> Nothing
         PlayerEffect.SpendManaAsThough {} -> Nothing
         PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.HasProtectionFrom {} -> Nothing
@@ -3210,6 +3238,7 @@ offeredExtras pid gs =
         PlayerEffect.ReduceMaximumHandSize {} -> False
         PlayerEffect.DontLoseUnspentMana {} -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
+        PlayerEffect.MayPayLifeForMana {} -> False
         PlayerEffect.SpendManaAsThough {} -> False
         PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.HasProtectionFrom {} -> False
@@ -3275,6 +3304,7 @@ cascadeActions pid gs =
         PlayerEffect.ReduceMaximumHandSize {} -> Nothing
         PlayerEffect.DontLoseUnspentMana {} -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
+        PlayerEffect.MayPayLifeForMana {} -> Nothing
         PlayerEffect.SpendManaAsThough {} -> Nothing
         PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.HasProtectionFrom {} -> Nothing
@@ -3339,6 +3369,7 @@ drawReveals pid nth gs =
         PlayerEffect.ReduceMaximumHandSize {} -> Nothing
         PlayerEffect.DontLoseUnspentMana {} -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
+        PlayerEffect.MayPayLifeForMana {} -> Nothing
         PlayerEffect.SpendManaAsThough {} -> Nothing
         PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.HasProtectionFrom {} -> Nothing
@@ -3402,6 +3433,7 @@ shownGrants pid gs =
         PlayerEffect.ReduceMaximumHandSize {} -> Nothing
         PlayerEffect.DontLoseUnspentMana {} -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
+        PlayerEffect.MayPayLifeForMana {} -> Nothing
         PlayerEffect.SpendManaAsThough {} -> Nothing
         PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.HasProtectionFrom {} -> Nothing
@@ -3500,6 +3532,7 @@ maximumHandSize pid gs =
         PlayerEffect.PlayAdditionalLands _ -> current
         PlayerEffect.DontLoseUnspentMana _ -> current
         PlayerEffect.LoseLifeForUnspentMana -> current
+        PlayerEffect.MayPayLifeForMana {} -> current
         PlayerEffect.SpendManaAsThough _ -> current
         PlayerEffect.CantBeTargetedBy {} -> current
         PlayerEffect.CastAsThoughItHadFlash _ -> current
@@ -3573,6 +3606,7 @@ keepsUnspentMana pid gs =
   let keeps effect = case effect of
         PlayerEffect.DontLoseUnspentMana f -> Just f
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
+        PlayerEffect.MayPayLifeForMana {} -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
         PlayerEffect.CantCastSpells -> Nothing
         PlayerEffect.CantActivateAbilities {} -> Nothing
@@ -3658,6 +3692,7 @@ losesLifeForUnspentMana pid gs =
         PlayerEffect.ReduceMaximumHandSize _ -> False
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> True
+        PlayerEffect.MayPayLifeForMana {} -> False
         PlayerEffect.SpendManaAsThough _ -> False
         PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
@@ -3737,6 +3772,7 @@ prohibitsGainingLife pid gs =
         PlayerEffect.ReduceMaximumHandSize _ -> False
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
+        PlayerEffect.MayPayLifeForMana {} -> False
         PlayerEffect.SpendManaAsThough _ -> False
         PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
@@ -3812,6 +3848,7 @@ prohibitsLosingLife pid gs =
         PlayerEffect.ReduceMaximumHandSize _ -> False
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
+        PlayerEffect.MayPayLifeForMana {} -> False
         PlayerEffect.SpendManaAsThough _ -> False
         PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
@@ -3886,6 +3923,7 @@ precludes outcome pid gs =
         PlayerEffect.ReduceMaximumHandSize _ -> False
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
+        PlayerEffect.MayPayLifeForMana {} -> False
         PlayerEffect.SpendManaAsThough _ -> False
         PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
@@ -3949,6 +3987,7 @@ spendManaAsThoughRows pid gs =
         PlayerEffect.SpendManaAsThough clause -> Just clause
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
+        PlayerEffect.MayPayLifeForMana {} -> Nothing
         PlayerEffect.CantCastSpells -> Nothing
         PlayerEffect.CantActivateAbilities {} -> Nothing
         PlayerEffect.CantCastMoreThan _ -> Nothing
@@ -4082,6 +4121,7 @@ cantBeCountered pid counterer oid gs =
         PlayerEffect.ReduceMaximumHandSize _ -> False
         PlayerEffect.DontLoseUnspentMana _ -> False
         PlayerEffect.LoseLifeForUnspentMana -> False
+        PlayerEffect.MayPayLifeForMana {} -> False
         PlayerEffect.SpendManaAsThough _ -> False
         PlayerEffect.CantBeTargetedBy {} -> False
         PlayerEffect.CastAsThoughItHadFlash _ -> False
@@ -4149,6 +4189,7 @@ targetingRestrictions =
         PlayerEffect.ReduceMaximumHandSize _ -> Nothing
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
+        PlayerEffect.MayPayLifeForMana {} -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
         PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
@@ -4228,6 +4269,7 @@ hexproofExemptions =
         PlayerEffect.ReduceMaximumHandSize _ -> Nothing
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
+        PlayerEffect.MayPayLifeForMana {} -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
         PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
@@ -4372,6 +4414,7 @@ unpreventable gs =
         PlayerEffect.ReduceMaximumHandSize _ -> Nothing
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
+        PlayerEffect.MayPayLifeForMana {} -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
         PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
@@ -4453,6 +4496,7 @@ unredirectable gs =
         PlayerEffect.ReduceMaximumHandSize _ -> Nothing
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
+        PlayerEffect.MayPayLifeForMana {} -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
         PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
@@ -4507,6 +4551,7 @@ statedFlips pid gs =
         PlayerEffect.ReduceMaximumHandSize _ -> Nothing
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
+        PlayerEffect.MayPayLifeForMana {} -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
         PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
@@ -4584,6 +4629,7 @@ rollModifiers pid gs =
         PlayerEffect.ReduceMaximumHandSize _ -> Nothing
         PlayerEffect.DontLoseUnspentMana _ -> Nothing
         PlayerEffect.LoseLifeForUnspentMana -> Nothing
+        PlayerEffect.MayPayLifeForMana {} -> Nothing
         PlayerEffect.SpendManaAsThough _ -> Nothing
         PlayerEffect.CantBeTargetedBy {} -> Nothing
         PlayerEffect.CastAsThoughItHadFlash _ -> Nothing
@@ -4697,6 +4743,7 @@ overPlayerRefs f effect = case effect of
   PlayerEffect.ReduceMaximumHandSize _ -> pure effect
   PlayerEffect.DontLoseUnspentMana _ -> pure effect
   PlayerEffect.LoseLifeForUnspentMana -> pure effect
+  PlayerEffect.MayPayLifeForMana {} -> pure effect
   PlayerEffect.SpendManaAsThough _ -> pure effect
   PlayerEffect.CantBeTargetedBy {} -> pure effect
   PlayerEffect.HasProtectionFrom _ -> pure effect
@@ -4776,6 +4823,7 @@ overDamagePatterns f effect = case effect of
   PlayerEffect.ReduceMaximumHandSize _ -> pure effect
   PlayerEffect.DontLoseUnspentMana _ -> pure effect
   PlayerEffect.LoseLifeForUnspentMana -> pure effect
+  PlayerEffect.MayPayLifeForMana {} -> pure effect
   PlayerEffect.SpendManaAsThough _ -> pure effect
   PlayerEffect.CantBeTargetedBy {} -> pure effect
   PlayerEffect.HasProtectionFrom _ -> pure effect

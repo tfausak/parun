@@ -118,6 +118,7 @@ encode p answer = case p of
   Prompt.ChooseManaSource {} -> Response.ChoseManaSource answer
   Prompt.ChooseExtraManaSource {} -> Response.ChoseExtraManaSource answer
   Prompt.ReverseManaAbilities {} -> Response.ReversedManaAbilities answer
+  Prompt.PayLifeForMana {} -> Response.PaidLifeForMana answer
   Prompt.ChooseManaYield {} -> Response.ChoseManaYield answer
   Prompt.ChooseManaToSpend {} -> Response.ChoseManaToSpend answer
   Prompt.ChooseProliferate {} -> Response.ChoseProliferation answer
@@ -360,6 +361,9 @@ decode p response = case p of
     _ -> Nothing
   Prompt.ReverseManaAbilities {} -> case response of
     Response.ReversedManaAbilities d -> Just d
+    _ -> Nothing
+  Prompt.PayLifeForMana {} -> case response of
+    Response.PaidLifeForMana d -> Just d
     _ -> Nothing
   Prompt.ChooseManaToSpend {} -> case response of
     Response.ChoseManaToSpend unit -> Just unit
@@ -913,6 +917,9 @@ defaultAnswer p = case p of
   -- illegal action found it -- a transcript that ran out cannot float mana into
   -- a game that never made it.
   Prompt.ReverseManaAbilities {} -> OptionalDecision.Exercises
+  -- The quiet answer, as for ChooseExtraManaSource: a player's life is not
+  -- spent for them.
+  Prompt.PayLifeForMana {} -> OptionalDecision.Declines
   -- Every offered yield is producible: tapForMana only offers what the source
   -- can make.
   Prompt.ChooseManaYield _ _ _ candidates -> NonEmpty.head candidates

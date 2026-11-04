@@ -255,6 +255,7 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "blockers" (answering gs "2:1" (Prompt.DeclareBlockers bob S.bob [o5, o9] [o7])) (Right (Map.singleton o9 (Set.singleton o7)))
     Spec.assertEqWith s "targets" (answering gs "1" (Prompt.ChooseTargets alice S.alice o7 (Map.singleton slot (1, Set.fromList [Recipient.ToPlayer S.bob, Recipient.ToCreature o9])))) (Right (Map.singleton slot (Set.singleton (Recipient.ToCreature o9))))
     Spec.assertEqWith s "optional" (answering gs "2" (Prompt.ChooseOptional alice S.alice o7 (ModeIndex.MkModeIndex 0) (ClauseIndex.MkClauseIndex 0) mempty)) (Right OptionalDecision.Declines)
+    Spec.assertEqWith s "life for mana" (answering gs "1" (Prompt.PayLifeForMana alice S.alice 1 ManaType.Colorless)) (Right OptionalDecision.Exercises)
     Spec.assertEqWith s "x" (answering gs "3" (Prompt.ChooseX alice S.alice o7 Binding.variableX 1 5)) (Right 3)
     Spec.assertEqWith s "combat damage" (answering gs "1 2" (Prompt.AssignCombatDamage alice S.alice o7 (Map.fromList [(Recipient.ToCreature o5, 0), (Recipient.ToCreature o9, 0)]) 3)) (Right (Map.fromList [(Recipient.ToCreature o5, 1), (Recipient.ToCreature o9, 2)]))
     Spec.assertEqWith s "division" (answering gs "3 1" (Prompt.ChooseDivision alice S.alice o7 (Dividing.Total 4) (Recipient.ToCreature o9 NonEmpty.:| [Recipient.ToPlayer S.bob]))) (Right (Map.fromList [(Recipient.ToCreature o9, 3), (Recipient.ToPlayer S.bob, 1)]))
@@ -413,6 +414,11 @@ spec s registry = Spec.describe s "Client" $ do
       "floats nothing once covered"
       (asking facing {Hotseat.paying = Map.singleton S.alice Set.empty} [] board {GameState.events = Seq.empty} (Prompt.ChooseExtraManaSource decider S.alice (m NonEmpty.:| [])))
       (Right Nothing, [])
+    Spec.assertEqWith
+      s
+      "spends no life for the seat"
+      (asking facing {Hotseat.paying = Map.singleton S.alice Set.empty} [] board {GameState.events = Seq.empty} (Prompt.PayLifeForMana decider S.alice 1 ManaType.Colorless))
+      (Right OptionalDecision.Declines, [])
 
   Spec.it s "a seat's battlefield is grouped lands, creatures, then the rest, each by mana value and name" $ do
     printings <- mapM (S.printingOf s registry) ["Lizard Warrior", "Hill Giant", "Mountain", "Grizzly Bears", "Bad Moon", "Forest", "Raging Goblin", "Plains"]

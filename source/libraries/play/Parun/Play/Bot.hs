@@ -48,6 +48,7 @@ bot = Answerer.MkAnswerer $ \asked -> case Asked.prompt asked of
   Prompt.ChooseManaToSpend _ _ units -> SplitMix.pick units
   Prompt.ChooseX _ _ _ _ least greatest -> SplitMix.between least greatest
   Prompt.ChooseOptional {} -> SplitMix.pick (OptionalDecision.Exercises NonEmpty.:| [OptionalDecision.Declines])
+  Prompt.PayLifeForMana {} -> SplitMix.pick (OptionalDecision.Exercises NonEmpty.:| [OptionalDecision.Declines])
   Prompt.ChooseManaYield _ _ _ options -> SplitMix.pick options
   Prompt.ChooseCombatDamageOption {} -> SplitMix.pick (OptionalDecision.Exercises NonEmpty.:| [OptionalDecision.Declines])
   Prompt.OrderTriggers _ _ entries -> SplitMix.shuffle (zipWith const [0 ..] entries)
