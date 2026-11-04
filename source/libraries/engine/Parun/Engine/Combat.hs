@@ -866,8 +866,8 @@ ceilingUnder freely required limits alone barred candidates gs =
       -- and draws every companion from itself, so one branch is a subset of it
       -- and the scan completes it; and every branch's declarations are legal,
       -- the scan never making a hard announcement. The cost is a factor per
-      -- creature with a hard announcement and per companion, paid only when
-      -- some restriction wants particular company.
+      -- creature with a hard announcement and per announcement of each companion
+      -- it demands, paid only when some restriction wants particular company.
       hardOptions oid = filter (\target -> hard (oid, target)) (announceable oid)
       choose acc oid = acc <> [Map.insert oid target pinned | pinned <- acc, Map.notMember oid pinned, target <- hardOptions oid]
       unmet pinned = [company | announcement <- Map.toList pinned, hard announcement, company <- needs announcement, CombatRestriction.companyLacking (`Map.member` pinned) company]
