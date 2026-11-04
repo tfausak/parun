@@ -2314,7 +2314,6 @@ rune-sealed-wall
 runed-halo
 runic-armasaur
 runic-repetition
-rush-of-blood
 rust-goliath
 rustic-clachan
 sabertooth-mauler

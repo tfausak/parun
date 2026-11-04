@@ -1533,15 +1533,18 @@ boxesOfNamed name gs = fmap (`S.powerToughnessOf` gs) (Scenario.namedObjects (Ca
 -- ability that doubles its power resolves". So doubling needs no opcode of its
 -- own. It is Effect.ModifyTarget carrying CR 613.4c's layer-7c
 -- Modification.ModifyPowerToughness, with the power leg Quantity.AgainstSlot of
--- Quantity.Measure Power and the toughness leg a literal 0 -- the pair Rush of Blood
--- already writes -- and CR 611.2d's freeze at resolution is exactly what "as the
--- spell resolves" means. CR 701.10a is the same sentence read as a
+-- Quantity.Measure Power and the toughness leg a literal 0 -- Rush of Blood's
+-- pair without its CR 107.1b floor -- and CR 611.2d's freeze at resolution is
+-- exactly what "as the spell resolves" means. CR 701.10a is the same sentence read as a
 -- classification: the effect MODIFIES and does not set, which is what keeps it
 -- out of layer 7b.
 --
 -- CR 701.10c needs no second shape either: X there is the difference between 0
 -- and a negative power, which is that power, and Quantity's Integer already
--- carries the sign (CR 107.1b). The second case below is that branch.
+-- carries the sign (CR 107.1b). The power-toughness scenario
+-- cr-701-10c-107-1b-doubling-a-power-below-zero-modifies-it-downwards is that
+-- branch, and cr-107-1b-plus-x-where-x-is-a-power-below-zero-adds-zero the
+-- floored X beside it.
 unleashFurySpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 unleashFurySpec s registry = Spec.describe s "Unleash Fury" $ do
   -- THE PROVING CASE, and the reason an anthem is on the board: the power
