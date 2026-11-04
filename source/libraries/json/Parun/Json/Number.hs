@@ -1,10 +1,12 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Parun.Json.Number where
 
 import qualified Data.ByteString.Builder as Builder
+import qualified Data.Char as Char
+import qualified Data.Text as Text
 import qualified Parun.Decimal as Decimal
 import qualified Parun.Extra.Integer as Integer
+import qualified Parun.Extra.Ord as Ord
+import qualified Parun.Extra.Parsec as Parsec
 import qualified Text.Parsec as Parsec
 
 newtype Number = MkNumber
@@ -12,27 +14,27 @@ newtype Number = MkNumber
   }
   deriving (Eq, Ord, Show)
 
-decode :: (Parsec.Stream s m Char) => Parsec.ParsecT s u m Number
+decode :: Parsec.Parsec Text.Text u Number
 decode = do
   sign <- Parsec.option id $ negate <$ Parsec.char '-'
   int <- integerPart
-  frac <- Parsec.option [] fractionPart
+  frac <- Parsec.option Text.empty fractionPart
   ex <- Parsec.option 0 exponentPart
   let mantissa = sign . fromDigits $ int <> frac
-      scale = ex - toInteger (length frac)
+      scale = ex - toInteger (Text.length frac)
   pure . MkNumber $ Decimal.mkDecimal mantissa scale
 
-integerPart :: (Parsec.Stream s m Char) => Parsec.ParsecT s u m [Integer]
+integerPart :: Parsec.Parsec Text.Text u Text.Text
 integerPart =
   Parsec.choice
-    [ [0] <$ Parsec.char '0' <* Parsec.notFollowedBy digit,
-      (:) <$> nonZeroDigit <*> Parsec.many digit
+    [ Text.singleton '0' <$ Parsec.char '0' <* Parsec.notFollowedBy Parsec.digit,
+      Text.cons <$> Parsec.satisfy (Ord.between '1' '9') <*> Parsec.takeWhile Char.isDigit
     ]
 
-fractionPart :: (Parsec.Stream s m Char) => Parsec.ParsecT s u m [Integer]
-fractionPart = Parsec.char '.' *> Parsec.many1 digit
+fractionPart :: Parsec.Parsec Text.Text u Text.Text
+fractionPart = Parsec.char '.' *> digits
 
-exponentPart :: (Parsec.Stream s m Char) => Parsec.ParsecT s u m Integer
+exponentPart :: Parsec.Parsec Text.Text u Integer
 exponentPart =
   Parsec.oneOf "eE" *> do
     sign <-
@@ -41,34 +43,15 @@ exponentPart =
           [ negate <$ Parsec.char '-',
             id <$ Parsec.char '+'
           ]
-    ds <- Parsec.many1 digit
+    ds <- digits
     pure . sign $ fromDigits ds
 
-digit :: (Parsec.Stream s m Char) => Parsec.ParsecT s u m Integer
-digit = digitOf digits
+-- | One or more digits.
+digits :: Parsec.Parsec Text.Text u Text.Text
+digits = Text.cons <$> Parsec.digit <*> Parsec.takeWhile Char.isDigit
 
-nonZeroDigit :: (Parsec.Stream s m Char) => Parsec.ParsecT s u m Integer
-nonZeroDigit = digitOf $ drop 1 digits
-
-digitOf :: (Parsec.Stream s m Char) => [(Char, Integer)] -> Parsec.ParsecT s u m Integer
-digitOf = Parsec.choice . fmap (\(c, n) -> n <$ Parsec.char c)
-
-digits :: [(Char, Integer)]
-digits =
-  [ ('0', 0),
-    ('1', 1),
-    ('2', 2),
-    ('3', 3),
-    ('4', 4),
-    ('5', 5),
-    ('6', 6),
-    ('7', 7),
-    ('8', 8),
-    ('9', 9)
-  ]
-
-fromDigits :: [Integer] -> Integer
-fromDigits = foldl' (\n -> ((10 * n) +)) 0
+fromDigits :: Text.Text -> Integer
+fromDigits = Text.foldl' (\n c -> (10 * n) + toInteger (Char.digitToInt c)) 0
 
 -- | An integer is written out in full, as a person writes one (50, not 5e1),
 -- up to six trailing zeros, which reaches the largest number a card prints

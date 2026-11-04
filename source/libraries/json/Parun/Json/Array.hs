@@ -1,9 +1,10 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Parun.Json.Array where
 
+import qualified Control.Monad as Monad
 import qualified Data.ByteString.Builder as Builder
+import qualified Data.Text as Text
 import qualified Parun.Extra.Monoid as Monoid
+import qualified Parun.Extra.Parsec as Parsec
 import qualified Parun.Extra.Semigroup as Semigroup
 import qualified Text.Parsec as Parsec
 
@@ -12,14 +13,14 @@ newtype Array a = MkArray
   }
   deriving (Eq, Ord, Show)
 
-decode :: (Parsec.Stream s m Char) => Parsec.ParsecT s u m a -> Parsec.ParsecT s u m (Array a)
+decode :: Parsec.Parsec Text.Text u a -> Parsec.Parsec Text.Text u (Array a)
 decode p =
   fmap MkArray
-    . Parsec.between (Parsec.char '[' <* Parsec.many decodeBlank) (Parsec.char ']')
-    $ Parsec.sepBy (p <* Parsec.many decodeBlank) (Parsec.char ',' <* Parsec.many decodeBlank)
+    . Parsec.between (Parsec.char '[' <* decodeBlanks) (Parsec.char ']')
+    $ Parsec.sepBy (p <* decodeBlanks) (Parsec.char ',' <* decodeBlanks)
 
-decodeBlank :: (Parsec.Stream s m Char) => Parsec.ParsecT s u m Char
-decodeBlank = Parsec.oneOf " \t\n\r"
+decodeBlanks :: Parsec.Parsec Text.Text u ()
+decodeBlanks = Monad.void . Parsec.takeWhile $ \c -> c == ' ' || c == '\t' || c == '\n' || c == '\r'
 
 encode :: (a -> Builder.Builder) -> Array a -> Builder.Builder
 encode b =

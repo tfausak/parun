@@ -1,8 +1,7 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Parun.Json.Null where
 
 import qualified Data.ByteString.Builder as Builder
+import qualified Data.Text as Text
 import qualified Text.Parsec as Parsec
 
 newtype Null = MkNull
@@ -10,7 +9,7 @@ newtype Null = MkNull
   }
   deriving (Eq, Ord, Show)
 
-decode :: (Parsec.Stream s m Char) => Parsec.ParsecT s u m Null
+decode :: Parsec.Parsec Text.Text u Null
 decode = MkNull () <$ Parsec.string' "null"
 
 encode :: Null -> Builder.Builder

@@ -9,13 +9,13 @@ spec :: (Applicative m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Json.Boolean" $ do
   Spec.describe s "decode" $ do
     Spec.it s "fails with no match" $ do
-      Spec.assertEq s (Parsec.parseString Boolean.decode "invalid") Nothing
+      Spec.assertEq s (Parsec.parseText Boolean.decode "invalid") Nothing
 
     Spec.it s "succeeds with false" $ do
-      Spec.assertEq s (Parsec.parseString Boolean.decode "false") . Just $ Boolean.MkBoolean False
+      Spec.assertEq s (Parsec.parseText Boolean.decode "false") . Just $ Boolean.MkBoolean False
 
     Spec.it s "succeeds with true" $ do
-      Spec.assertEq s (Parsec.parseString Boolean.decode "true") . Just $ Boolean.MkBoolean True
+      Spec.assertEq s (Parsec.parseText Boolean.decode "true") . Just $ Boolean.MkBoolean True
 
   Spec.describe s "encode" $ do
     Spec.it s "encodes false" $ do

@@ -1,9 +1,8 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Parun.Json.Boolean where
 
 import qualified Data.Bool as Bool
 import qualified Data.ByteString.Builder as Builder
+import qualified Data.Text as Text
 import qualified Text.Parsec as Parsec
 
 newtype Boolean = MkBoolean
@@ -11,7 +10,7 @@ newtype Boolean = MkBoolean
   }
   deriving (Eq, Ord, Show)
 
-decode :: (Parsec.Stream s m Char) => Parsec.ParsecT s u m Boolean
+decode :: Parsec.Parsec Text.Text u Boolean
 decode =
   MkBoolean
     <$> Parsec.choice
