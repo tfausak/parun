@@ -1,0 +1,182 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "library": [
+          {
+            "card": "Forest"
+          },
+          {
+            "card": "Plains"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Alhammarret's Archive"
+          },
+          {
+            "card": "Forbidden Crypt"
+          },
+          {
+            "card": "Lich's Mirror"
+          },
+          {
+            "card": "Island",
+            "label": "b1"
+          },
+          {
+            "card": "Island",
+            "label": "b2"
+          },
+          {
+            "card": "Island",
+            "label": "b3"
+          },
+          {
+            "card": "Island",
+            "label": "b4"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Plagiarize",
+            "label": "pb"
+          }
+        ],
+        "library": [
+          {
+            "card": "Swamp"
+          },
+          {
+            "card": "Swamp"
+          },
+          {
+            "card": "Swamp"
+          },
+          {
+            "card": "Swamp"
+          },
+          {
+            "card": "Swamp"
+          },
+          {
+            "card": "Swamp"
+          },
+          {
+            "card": "Swamp"
+          },
+          {
+            "card": "Swamp"
+          },
+          {
+            "card": "Swamp"
+          },
+          {
+            "card": "Swamp"
+          }
+        ],
+        "life": 5,
+        "name": "bob"
+      }
+    ],
+    "step": "Upkeep",
+    "turn": 2
+  },
+  "description": "CR 614.11a / 504.1 Forbidden Crypt's loss meets Lich's Mirror before the second of the draws bob's Alhammarret's Archive makes of alice's normal draw",
+  "final": [
+    {
+      "View": {
+        "is": null,
+        "of": "Result"
+      }
+    },
+    {
+      "Life": {
+        "life": 20,
+        "player": "bob"
+      }
+    },
+    {
+      "Count": {
+        "card": "Swamp",
+        "count": 8,
+        "player": "bob",
+        "zone": "Hand"
+      }
+    },
+    {
+      "Count": {
+        "card": "Forest",
+        "count": 0,
+        "player": "alice",
+        "zone": "Hand"
+      }
+    }
+  ],
+  "note": "Plagiarize hands alice's normal draw to bob, and his Archive turns it into two. The Crypt exiled Plagiarize, so his graveyard is empty and the Crypt's replacement of the first draw would lose him the game; the Mirror resets him (the Archive and the Crypt shuffle away with it) before the Archive's second draw, which is ordinary: seven and one Swamp. Without the settle both Crypt losses queue and the second finds no Mirror.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$b1",
+            "$b2",
+            "$b3",
+            "$b4"
+          ],
+          "object": "$pb",
+          "targets": [
+            "$alice"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "Upkeep",
+      "turn": 2
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseReplacement",
+          "with": 0
+        }
+      },
+      "player": "bob",
+      "step": "DrawStep",
+      "turn": 2
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "Swamp",
+            "Swamp#2",
+            "Swamp#3",
+            "Swamp#4",
+            "Swamp#5",
+            "Swamp#6",
+            "Swamp#7",
+            "Swamp#8",
+            "Swamp#9",
+            "Swamp#10",
+            "Alhammarret's Archive",
+            "Forbidden Crypt",
+            "Lich's Mirror",
+            "Island",
+            "Island#2",
+            "Island#3",
+            "Island#4"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "DrawStep",
+      "turn": 2
+    }
+  ]
+}

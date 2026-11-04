@@ -1,0 +1,158 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Eligeth, Crossroads Augur"
+          },
+          {
+            "card": "Forbidden Crypt"
+          },
+          {
+            "card": "Lich's Mirror"
+          },
+          {
+            "card": "Island",
+            "label": "i1"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Preordain",
+            "label": "preordain"
+          }
+        ],
+        "library": [
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          }
+        ],
+        "life": 5,
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Forest"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 614.11a Forbidden Crypt's loss meets Lich's Mirror before Eligeth, Crossroads Augur's second draw",
+  "final": [
+    {
+      "View": {
+        "is": null,
+        "of": "Result"
+      }
+    },
+    {
+      "Life": {
+        "life": 20,
+        "player": "alice"
+      }
+    },
+    {
+      "Count": {
+        "card": "Plains",
+        "count": 9,
+        "player": "alice",
+        "zone": "Hand"
+      }
+    },
+    {
+      "View": {
+        "is": [
+          "Plains",
+          "Eligeth, Crossroads Augur",
+          "Forbidden Crypt",
+          "Lich's Mirror",
+          "Island"
+        ],
+        "of": "Zone",
+        "player": "alice",
+        "zone": "Library"
+      }
+    }
+  ],
+  "note": "Eligeth turns Preordain's scry 2 into two draws. The Crypt replaces the first; with an empty graveyard alice would lose, and the Mirror resets her (Eligeth and the Crypt shuffle away with it) before Eligeth's second draw, which is ordinary, as is Preordain's own draw: seven and two Plains. Without the settle both Crypt losses queue and the second finds no Mirror.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$i1"
+          ],
+          "object": "$preordain"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "Plains",
+            "Plains#2",
+            "Plains#3",
+            "Plains#4",
+            "Plains#5",
+            "Plains#6",
+            "Plains#7",
+            "Plains#8",
+            "Plains#9",
+            "Plains#10",
+            "Eligeth, Crossroads Augur",
+            "Forbidden Crypt",
+            "Lich's Mirror",
+            "Island"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

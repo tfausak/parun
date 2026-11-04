@@ -1,0 +1,183 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Alhammarret's Archive"
+          },
+          {
+            "card": "Forbidden Crypt"
+          },
+          {
+            "card": "Lich's Mirror"
+          },
+          {
+            "card": "Island",
+            "label": "i1"
+          },
+          {
+            "card": "Island",
+            "label": "i2"
+          },
+          {
+            "card": "Island",
+            "label": "i3"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Divination",
+            "label": "divination"
+          }
+        ],
+        "library": [
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          }
+        ],
+        "life": 5,
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Forest"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 614.11a Forbidden Crypt's loss meets Lich's Mirror before Alhammarret's Archive's second draw",
+  "final": [
+    {
+      "View": {
+        "is": null,
+        "of": "Result"
+      }
+    },
+    {
+      "Life": {
+        "life": 20,
+        "player": "alice"
+      }
+    },
+    {
+      "Count": {
+        "card": "Plains",
+        "count": 9,
+        "player": "alice",
+        "zone": "Hand"
+      }
+    },
+    {
+      "View": {
+        "is": [
+          "Plains",
+          "Alhammarret's Archive",
+          "Forbidden Crypt",
+          "Lich's Mirror",
+          "Island",
+          "Island#2",
+          "Island#3"
+        ],
+        "of": "Zone",
+        "player": "alice",
+        "zone": "Library"
+      }
+    }
+  ],
+  "note": "Archive turns Divination's first draw into two. The Crypt replaces the first of those; with an empty graveyard alice would lose, and the Mirror resets her (the Archive and the Crypt shuffle away with it) before the Archive's second draw, which is then ordinary, as is Divination's second. Without the settle both Crypt losses queue and the second finds no Mirror.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$i1",
+            "$i2",
+            "$i3"
+          ],
+          "object": "$divination"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseReplacement",
+          "with": 0
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "Plains",
+            "Plains#2",
+            "Plains#3",
+            "Plains#4",
+            "Plains#5",
+            "Plains#6",
+            "Plains#7",
+            "Plains#8",
+            "Plains#9",
+            "Plains#10",
+            "Alhammarret's Archive",
+            "Forbidden Crypt",
+            "Lich's Mirror",
+            "Island",
+            "Island#2",
+            "Island#3"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}
