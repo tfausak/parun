@@ -113,8 +113,8 @@ arm acquisition targets controller source duration gs = case duration of
   -- find (Parun.Engine.Event.perpetuate).
   Duration.Perpetual -> Just Expiry.Perpetual
   Duration.UntilYourNextTurn -> Just (Expiry.AtTurnOf controller)
-  -- CR 611.2a: the arm above's seat, ended as the named step of that
-  -- player's turn next begins. A duration armed during that very step outlives
+  -- CR 611.2a: ends as the named step of that player's turn next begins. A
+  -- duration armed during that very step outlives
   -- it: the step has already begun, so only a later beginning ends it.
   --
   -- The controller of a bound object still in the game is NOT sampled, the

@@ -52,8 +52,8 @@ Finished 2026-11-04.
     and two players leaving at once.
 - Cost (`script/session-tokens.sh` over the set's transcripts, the last two
   units' session included whole): cache reads 0.27B, cache writes 10M, output
-  3.1M; 1.5M cache reads per card. Per unit about 11M to 13M at the top; not
-  mapped to PRs. Wall clock ~30h. Unit 10 left no log entry; a session failing
+  3.1M; 1.5M cache reads per card. The costliest units: #6003 (12.9M), #6061
+  (11.4M), #6008 (11.2M). Wall clock ~30h. Unit 10 left no log entry; a session failing
   after #6078's merge left another written up afterwards.
 - Owner review:
   - #6058: decisions.md "Whether assigning no combat damage beats assigning
