@@ -143,7 +143,7 @@ Precedent: WotC ships exactly this as policy. The tournament rules state that in
 |---|---|
 | `GameState` | Internal. Never leaves the process. |
 | `PlayerView` | Projected through layers *and* filtered for hidden information. What the browser client gets. |
-| `DecisionLog` | Seed + list of prompt responses. Tiny. **The canonical replayable artifact.** |
+| Scenario | What `parun play --save` writes: answers pinned to a turn, a step and a seat, checked against what the engine offers. **The one replayable artifact that outlives a run.** |
 
 Snapshots become a derived optimization rather than the source of truth.
 

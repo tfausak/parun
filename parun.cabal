@@ -2659,7 +2659,6 @@ library types
     Parun.Types.DealtDamage
     Parun.Types.DealtDamageTo
     Parun.Types.Decider
-    Parun.Types.DecisionLog
     Parun.Types.Deck
     Parun.Types.DefendersAre
     Parun.Types.Defense
