@@ -290,8 +290,9 @@ data TriggerCondition
     -- group is that proof.
     CreatureBecomesBlockedByAtLeast CreatureBecomesBlockedByAtLeast.CreatureBecomesBlockedByAtLeast
   | -- | CR 509.1h: "whenever this creature attacks and isn't blocked" -- CR
-    -- 702.68a's frenzy, with the status fixed at the declaration.
-    SelfAttacksUnblocked
+    -- 702.68a's frenzy, with the status fixed at the declaration. The Filter's
+    -- source is the bearer, CreatureAttacks' reason.
+    CreatureAttacksUnblocked (Filter.Filter Keyword.Keyword)
   | -- | CR 603.6: "when this card is put into your graveyard from your library"
     -- (Narcomoeba). Self-scoped, and the bearer is CR 400.7's new incarnation.
     SelfPutIntoGraveyardFromLibrary

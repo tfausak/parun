@@ -711,7 +711,14 @@ trigger n = case Node.tag n of
         f <- permanents outermost who
         Right (TriggerCondition.PermanentDies f, bound [("Trigger_ThatPermanent", Oracle.Target.becameSlot), ("Trigger_ThatCreature", Oracle.Target.becameSlot)])
   "WhenACreatureAttacks" -> itself (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime)
-  "WhenACreatureAttacksAndIsntBlocked" -> itself TriggerCondition.SelfAttacksUnblocked
+  "WhenACreatureAttacksAndIsntBlocked" -> do
+    who <- Node.argument n
+    case single who of
+      Just "ThisPermanent" -> itself (TriggerCondition.CreatureAttacksUnblocked Filter.IsSource)
+      Just _ -> Node.untranslated n
+      Nothing -> do
+        f <- permanents outermost who
+        Right (TriggerCondition.CreatureAttacksUnblocked f, bound [("Trigger_ThatCreature", Oracle.Trigger.attackingCreature), ("Trigger_DefendingPlayer", Oracle.Trigger.thatPlayer)])
   "WhenACreatureBlocks" -> itself TriggerCondition.SelfBlocks
   "WhenACreatureBecomesBlocked" -> do
     who <- Node.argument n

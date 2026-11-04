@@ -392,6 +392,8 @@ library codec
     Parun.Codec.Color
     Parun.Codec.ColorSpec
     Parun.Codec.Combat
+    Parun.Codec.CombatDamageAmount
+    Parun.Codec.CombatDamageAmountSpec
     Parun.Codec.CombatDamageOption
     Parun.Codec.CombatDamageOptionSpec
     Parun.Codec.CombatDeclaration
@@ -2528,6 +2530,7 @@ library types
     Parun.Types.CoinReading
     Parun.Types.Color
     Parun.Types.Combat
+    Parun.Types.CombatDamageAmount
     Parun.Types.CombatDamageOption
     Parun.Types.CombatDeclaration
     Parun.Types.CombatRestriction

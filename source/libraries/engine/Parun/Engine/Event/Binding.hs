@@ -650,8 +650,8 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
     Binding.setTriggerPlayer defending (Binding.setAttackingCreature attacker Map.empty)
   -- The same slot off CR 509.1h's other branch, stamped there by its one writer,
   -- Combat.declareBlockers: Abyssal Nightstalker's "defending player".
-  (TriggerCondition.SelfAttacksUnblocked, GameEvent.AttackerUnblocked u) ->
-    Binding.setTriggerPlayer (AttackerUnblocked.defender u) Map.empty
+  (TriggerCondition.CreatureAttacksUnblocked _, GameEvent.AttackerUnblocked u) ->
+    Binding.setTriggerPlayer (AttackerUnblocked.defender u) (Binding.setAttackingCreature (AttackerUnblocked.attacker u) Map.empty)
   -- CR 615.13's "that many": how much this prevention effect prevented, which is
   -- the whole reason the event carries a number. The first reserved slot holding
   -- an AMOUNT rather than a reference, read back by Quantity.InSlot off the stack
@@ -1723,7 +1723,7 @@ eventBindingSlots cond = case cond of
   -- CR 508.5's defending player, which GameEvent.AttackerUnblocked carries for
   -- CreatureBecomesBlocked's reason: Abyssal Nightstalker's "defending player
   -- discards a card". No blocker -- CR 509.1h's unblocked branch has none.
-  TriggerCondition.SelfAttacksUnblocked -> Set.singleton Binding.triggerPlayer
+  TriggerCondition.CreatureAttacksUnblocked _ -> Set.fromList [Binding.attackingCreature, Binding.triggerPlayer]
   -- CR 113.6k: the bearer of a library-to-graveyard trigger IS the arriving
   -- incarnation, so binding it again under `became` would be a second name for
   -- one object. Narcomoeba reads the source slot instead.

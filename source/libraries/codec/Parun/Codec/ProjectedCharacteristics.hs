@@ -13,6 +13,7 @@ import qualified Parun.Codec.CastingPermission as CastingPermission
 import qualified Parun.Codec.ChangeWord as ChangeWord
 import qualified Parun.Codec.CharacteristicPT as CharacteristicPT
 import qualified Parun.Codec.Color as Color
+import qualified Parun.Codec.CombatDamageAmount as CombatDamageAmount
 import qualified Parun.Codec.CombatDamageOption as CombatDamageOption
 import qualified Parun.Codec.CopyException as CopyException
 import qualified Parun.Codec.CostChoice as CostChoice
@@ -80,7 +81,7 @@ codec = Fields.object $ do
   hasFullText <- Fields.defaulted "hasFullText" False Common.boolean PC.hasFullText
   wordChanges <- Fields.defaulted "wordChanges" [] (Common.list ChangeWord.codec) PC.wordChanges
   textChangedKeywords <- Fields.defaulted "textChangedKeywords" Map.empty (Common.multiset Keyword.codec) PC.textChangedKeywords
-  assignsCombatDamageWithToughness <- Fields.defaulted "assignsCombatDamageWithToughness" False Common.boolean PC.assignsCombatDamageWithToughness
+  combatDamageAmount <- Fields.defaulted "combatDamageAmount" Nothing (Common.maybe CombatDamageAmount.codec) PC.combatDamageAmount
   combatDamageOptions <- Fields.defaulted "combatDamageOptions" Set.empty (Common.set CombatDamageOption.codec) PC.combatDamageOptions
   grantsStationToughness <- Fields.defaulted "grantsStationToughness" False Common.boolean PC.grantsStationToughness
   additionalCosts <- Fields.defaulted "additionalCosts" [] (Common.list (CostComponent.codec Keyword.codec)) PC.additionalCosts
@@ -131,7 +132,7 @@ codec = Fields.object $ do
         PC.hasFullText = hasFullText,
         PC.wordChanges = wordChanges,
         PC.textChangedKeywords = textChangedKeywords,
-        PC.assignsCombatDamageWithToughness = assignsCombatDamageWithToughness,
+        PC.combatDamageAmount = combatDamageAmount,
         PC.combatDamageOptions = combatDamageOptions,
         PC.grantsStationToughness = grantsStationToughness,
         PC.additionalCosts = additionalCosts,

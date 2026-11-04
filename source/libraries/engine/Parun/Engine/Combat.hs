@@ -2934,7 +2934,7 @@ declareBlockers perform = do
         theirs -> attemptBlockDeclaration perform pid Nothing theirs Set.empty
     -- CR 509.1h's other half, performed once CR 509.1g has assigned the blockers:
     -- every attacking creature the declaration named no blockers for became an
-    -- UNBLOCKED creature. TriggerCondition.SelfAttacksUnblocked is the reader.
+    -- UNBLOCKED creature. TriggerCondition.CreatureAttacksUnblocked is the reader.
     --
     -- OUTSIDE the loop above, and the placement is the point: that loop is guarded
     -- four times over -- `attacking`, the defending player, the attackers on that

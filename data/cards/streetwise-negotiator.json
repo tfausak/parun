@@ -40,7 +40,10 @@
           },
           "modifications": [
             {
-              "type": "AssignCombatDamageWithToughness"
+              "type": "AssignCombatDamage",
+              "value": {
+                "type": "EqualToToughness"
+              }
             }
           ]
         }

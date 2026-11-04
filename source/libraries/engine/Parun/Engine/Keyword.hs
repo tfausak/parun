@@ -6864,7 +6864,7 @@ enlistReflexive =
 -- modifies power without setting it, so CR 613.4c's layer 7c applies it, and CR
 -- 611.2a is the duration.
 --
--- The condition is TriggerCondition.SelfAttacksUnblocked, which the glossary's
+-- The condition is TriggerCondition.CreatureAttacksUnblocked, which the glossary's
 -- "attacks and isn't blocked" entry sends to CR 509.1h -- so the bonus lands in
 -- the declare blockers step, after the declaration, rather than with CR 508.2's
 -- attack triggers. Rule 509.1h's last sentence keeps a creature whose only blocker
@@ -6879,7 +6879,7 @@ frenzy n =
               (ObjectRef.EachMatching Filter.IsSource)
               Nothing
           )
-   in Mint.trigger TriggerCondition.SelfAttacksUnblocked (Seq.singleton effect)
+   in Mint.trigger (TriggerCondition.CreatureAttacksUnblocked Filter.IsSource) (Seq.singleton effect)
 
 -- CR 702.130a: bushido's CR 509.3c condition and annihilator's CR 508.5 player,
 -- read off GameEvent.AttackerBlocked through Binding.triggerPlayer. NOT the

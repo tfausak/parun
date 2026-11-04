@@ -1277,3 +1277,19 @@ Entries are ordered by the first rule each cites.
   before the damage. Unproven by a scenario: no card in the pool gives Drain
   Life wither or infect.
 - **Issue**: #5571.
+
+## Whether assigning no combat damage beats assigning toughness
+
+- **Question**: Gauntlets of Light's creature assigns combat damage equal to its
+  toughness; Cloak of Confusion's may has it assign none this turn. Neither
+  changes a characteristic (CR 613.11). Does the newer win, or does none hold
+  whichever came first?
+- **Rules**: CR 510.1a, 613.11; CR of 2026-08-07. No ruling.
+- **Decision**: None holds. The toughness effect says how much a creature that
+  assigns assigns; the other says it doesn't assign.
+- **Rejected**: Timestamp order, under which a Gauntlets of Light cast after the
+  may would restore the damage the player traded away.
+- **Site**: `Parun.Engine.Projection`'s `AssignCombatDamage` arm, by
+  `CombatDamageAmount`'s order, proved by the scenarios
+  "assigning-no-combat-damage-beats-an-older-toughness-marker" and "...-newer-...".
+- **Issue**: #5462.

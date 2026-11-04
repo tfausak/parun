@@ -488,6 +488,7 @@ cleric-of-the-forward-order
 clever-concealment
 clever-impersonator
 clinquant-skymage
+cloak-of-confusion
 clock-of-omens
 clockwork-beast
 clockwork-steed
@@ -1920,6 +1921,7 @@ orcish-artillery
 orcish-conscripts
 orcish-captain
 orcish-spy
+orcish-squatters
 orcish-veteran
 oreskos-explorer
 oreskos-sun-guide

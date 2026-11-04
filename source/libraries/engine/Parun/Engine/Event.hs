@@ -11077,7 +11077,7 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.CreatureBecomesBlockedBy _ -> False
   TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> False
   TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> False
-  TriggerCondition.SelfAttacksUnblocked -> False
+  TriggerCondition.CreatureAttacksUnblocked _ -> False
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> False
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> False
   TriggerCondition.SelfPutIntoGraveyardDuringResolution -> False

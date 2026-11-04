@@ -62,7 +62,10 @@
               }
             },
             {
-              "type": "AssignCombatDamageWithToughness"
+              "type": "AssignCombatDamage",
+              "value": {
+                "type": "EqualToToughness"
+              }
             },
             {
               "type": "GainAbility",

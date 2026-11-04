@@ -173,6 +173,7 @@ import qualified Parun.Codec.CoinFaceSpec
 import qualified Parun.Codec.CoinFlippedSpec
 import qualified Parun.Codec.CoinReadingSpec
 import qualified Parun.Codec.ColorSpec
+import qualified Parun.Codec.CombatDamageAmountSpec
 import qualified Parun.Codec.CombatDamageOptionSpec
 import qualified Parun.Codec.CombatDeclarationSpec
 import qualified Parun.Codec.CombatRestrictionSpec
@@ -1467,6 +1468,7 @@ spec s registry corpus = do
   Parun.Codec.OnsetSpec.spec s
   Parun.Codec.OperandSpec.spec s
   Parun.Codec.OptionalDecisionSpec.spec s
+  Parun.Codec.CombatDamageAmountSpec.spec s
   Parun.Codec.CombatDamageOptionSpec.spec s
   Parun.Codec.OptionalitySpec.spec s
   Parun.Codec.OrElseSpec.spec s

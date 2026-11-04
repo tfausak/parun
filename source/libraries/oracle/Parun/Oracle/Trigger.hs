@@ -101,6 +101,11 @@ event context creature c = case c of
     word <- ["it", that]
     subject <- also one
     [other ("Whenever " <> subject <> " becomes blocked") [(attackingCreature, word), (thatPlayer, "defending player")]]
+  TriggerCondition.CreatureAttacksUnblocked f -> do
+    (one, that) <- described context f
+    word <- ["it", that]
+    subject <- also one
+    [other ("Whenever " <> subject <> " attacks and isn't blocked") [(attackingCreature, word), (thatPlayer, "defending player")]]
   TriggerCondition.PermanentDealsCombatDamageToPlayer p -> do
     (one, that) <- described context (PermanentDealsCombatDamageToPlayer.filter p)
     (whom, player') <- player (PermanentDealsCombatDamageToPlayer.recipient p)
@@ -192,7 +197,7 @@ selfEvent context creature c = case c of
   TriggerCondition.SelfAttacks TriggerFrequency.FirstTimeEachTurn -> [(recurring, "attacks for the first time each turn", [(thatPlayer, "defending player")])]
   TriggerCondition.SelfAttacksWhileSaddled -> [(recurring, "attacks while saddled", [])]
   TriggerCondition.CreatureAttacksAlone Filter.Type.IsSource -> [(recurring, "attacks alone", [(attackingCreature, "it")])]
-  TriggerCondition.SelfAttacksUnblocked -> [(recurring, "attacks and isn't blocked", [(thatPlayer, "defending player")])]
+  TriggerCondition.CreatureAttacksUnblocked Filter.Type.IsSource -> [(recurring, "attacks and isn't blocked", [(thatPlayer, "defending player"), (attackingCreature, "it")])]
   TriggerCondition.SelfBlocks -> [(recurring, "blocks", [])]
   TriggerCondition.CreatureBecomesBlocked Filter.Type.IsSource -> [(recurring, "becomes blocked", [(thatPlayer, "defending player"), (attackingCreature, "it")])]
   TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair Filter.Type.IsSource f) -> do

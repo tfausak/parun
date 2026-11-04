@@ -734,7 +734,7 @@ looksBack condition = case condition of
   TriggerCondition.CreatureBecomesBlockedBy _ -> False
   TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> False
   TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> False
-  TriggerCondition.SelfAttacksUnblocked -> False
+  TriggerCondition.CreatureAttacksUnblocked _ -> False
   TriggerCondition.SpellOrAbilityCounters _ -> False
   TriggerCondition.AbilityIsCountered -> False
   TriggerCondition.DamageToPlayerPrevented _ -> False
@@ -1034,7 +1034,7 @@ batchScoped condition = case condition of
   TriggerCondition.CreatureBecomesBlockedBy _ -> False
   TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> False
   TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> False
-  TriggerCondition.SelfAttacksUnblocked -> False
+  TriggerCondition.CreatureAttacksUnblocked _ -> False
   TriggerCondition.SpellOrAbilityCounters _ -> False
   TriggerCondition.AbilityIsCountered -> False
   TriggerCondition.DamageToPlayerPrevented _ -> False
@@ -3063,7 +3063,7 @@ zonesTriggeredFrom cond =
         TriggerCondition.CreatureBecomesBlockedBy _ -> battlefield
         TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> battlefield
         TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> battlefield
-        TriggerCondition.SelfAttacksUnblocked -> battlefield
+        TriggerCondition.CreatureAttacksUnblocked _ -> battlefield
         -- CR 702.29c: a cycling ability triggers from whatever zone the card winds up
         -- in, the graveyard for every printing in this pool, and a cycled card cannot be
         -- on the battlefield. eventTriggers' `cycledCard` is what actually serves it.
@@ -3414,7 +3414,7 @@ stateTriggersOn gs
             TriggerCondition.CreatureBecomesBlockedBy _ -> False
             TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> False
             TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> False
-            TriggerCondition.SelfAttacksUnblocked -> False
+            TriggerCondition.CreatureAttacksUnblocked _ -> False
             TriggerCondition.SelfCycled -> False
             TriggerCondition.SelfRevealedForMiracle -> False
             TriggerCondition.RevealedThisWay _ -> False

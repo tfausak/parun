@@ -1,0 +1,126 @@
+{
+  "faces": [
+    {
+      "enchant": [
+        {
+          "filter": {
+            "type": "HeldBy",
+            "value": {
+              "holder": {
+                "type": "Controller"
+              },
+              "relation": {
+                "type": "You"
+              }
+            }
+          },
+          "pool": {
+            "type": "Creatures"
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Cloak of Confusion",
+      "oracleText": "Enchant creature you control\nWhenever enchanted creature attacks and isn't blocked, you may have it assign no combat damage this turn. If you do, defending player discards a card at random.",
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "CreatureAttacksUnblocked",
+            "value": {
+              "type": "HasAttached",
+              "value": {
+                "type": "IsSource"
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "ModifyTarget",
+                        "value": {
+                          "duration": {
+                            "type": "UntilEndOfTurn"
+                          },
+                          "modification": {
+                            "type": "AssignCombatDamage",
+                            "value": {
+                              "type": "NoCombatDamage"
+                            }
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "thatAttackingCreature"
+                          }
+                        }
+                      }
+                    ],
+                    "optionality": {
+                      "type": "Optional"
+                    }
+                  },
+                  {
+                    "effects": [
+                      {
+                        "type": "Discard",
+                        "value": {
+                          "type": "These",
+                          "value": {
+                            "cards": {
+                              "type": "RandomCardInHand",
+                              "value": {
+                                "player": {
+                                  "type": "InSlot",
+                                  "value": "thatPlayer"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ],
+                    "ifTaken": {
+                      "type": "AnyTaken",
+                      "value": [
+                        0
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Aura"
+          }
+        ],
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}

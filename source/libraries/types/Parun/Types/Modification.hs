@@ -9,6 +9,7 @@ import qualified Parun.Types.CastingPermission as CastingPermission
 import qualified Parun.Types.ChangeMode as ChangeMode
 import qualified Parun.Types.ChangeWord as ChangeWord
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.CombatDamageAmount as CombatDamageAmount
 import qualified Parun.Types.CombatDamageOption as CombatDamageOption
 import qualified Parun.Types.CostKeyword as CostKeyword
 import qualified Parun.Types.Filter as Filter
@@ -438,8 +439,9 @@ data Modification ability
     -- on whatever 7a, 7b and 7c already produced, not on the printed box.
     -- Carries no payload: two applications return the object to normal for free.
     SwitchPowerToughness
-  | -- | CR 510.1a: this creature assigns combat damage equal to its toughness.
-    AssignCombatDamageWithToughness
+  | -- | CR 510.1a: this creature assigns this amount of combat damage rather
+    -- than its power's.
+    AssignCombatDamage CombatDamageAmount.CombatDamageAmount
   | -- | CR 510.1b-c: this creature's controller may have it assign all its
     -- combat damage where the option says instead.
     MayAssignCombatDamage CombatDamageOption.CombatDamageOption

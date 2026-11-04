@@ -555,12 +555,12 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       " {\"type\":\"CreatureBecomesBlockedByAtLeast\",\"value\":{\"attacked\":{\"type\":\"Opponent\"},\"blockers\":2}} "
   -- CR 509.1h's unblocked branch, nullary like the blocked one: "attacks and
   -- isn't blocked" has no per-blocker reading to carry a Filter for.
-  Spec.it s "SelfAttacksUnblocked" $
+  Spec.it s "CreatureAttacksUnblocked" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      TriggerCondition.SelfAttacksUnblocked
-      " {\"type\":\"SelfAttacksUnblocked\"} "
+      (TriggerCondition.CreatureAttacksUnblocked Filter.IsSource)
+      " {\"type\":\"CreatureAttacksUnblocked\",\"value\":{\"type\":\"IsSource\"}} "
   Spec.it s "SelfLeavesGraveyard" $
     Common.assertCodec
       s
