@@ -1653,8 +1653,8 @@ rewriteReplacementEffect pairs effect = case effect of
   -- the resolution road's, so they are swapped here too.
   ReplacementEffect.GameLossR r -> ReplacementEffect.GameLossR r {GameLossR.instead = fmap (rewriteEffect pairs) (GameLossR.instead r)}
   ReplacementEffect.PlaneswalkR r -> ReplacementEffect.PlaneswalkR r {PlaneswalkR.rewrite = case PlaneswalkR.rewrite r of PlaneswalkRewrite.ArrangeTopTwo -> PlaneswalkRewrite.ArrangeTopTwo; PlaneswalkRewrite.RunEffects effects -> PlaneswalkRewrite.RunEffects (fmap (rewriteEffect pairs) effects)}
-  -- A DrawR's pattern is one CR 109.5 relation, but the REWRITE can hold CR 400.11c's
-  -- wish filter, which rewriteEffect's own Effect.FromOutsideTheGame arm swaps on
+  -- A DrawR's pattern is one CR 109.5 relation, but the REWRITE can hold effects
+  -- or CR 400.11c's wish filter, which rewriteEffect's own Effect.FromOutsideTheGame arm swaps on
   -- the resolution road -- so it has to be swapped here too, or the same sentence
   -- would read one way as a spell and another as a floating row.
   ReplacementEffect.DrawR r -> ReplacementEffect.DrawR r {DrawR.rewrite = rewriteDrawRewrite pairs (DrawR.rewrite r)}
@@ -1746,7 +1746,7 @@ rewriteDamageRewrite pairs rewrite = case rewrite of
 -- a draw with "a Goblin card you own from outside the game", under a
 -- text-changing effect, would be what proves it. Exhaustive rather than a
 -- wildcard, rewriteReplacementEffect's posture.
-rewriteDrawRewrite :: [(TextWord.TextWord, TextWord.TextWord)] -> DrawRewrite.DrawRewrite -> DrawRewrite.DrawRewrite
+rewriteDrawRewrite :: [(TextWord.TextWord, TextWord.TextWord)] -> DrawRewrite.DrawRewrite (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> DrawRewrite.DrawRewrite (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card))
 rewriteDrawRewrite pairs rewrite = case rewrite of
   DrawRewrite.GainLife _ -> rewrite
   DrawRewrite.FromOutsideTheGame payload -> DrawRewrite.FromOutsideTheGame payload {FromOutsideTheGame.filter = Filter.rewrite pairs (FromOutsideTheGame.filter payload)}
@@ -1758,6 +1758,7 @@ rewriteDrawRewrite pairs rewrite = case rewrite of
   DrawRewrite.RevealUntilChosenKind -> rewrite
   DrawRewrite.DrawInstead _ -> rewrite
   DrawRewrite.DiscardThenDrawOrMill -> rewrite
+  DrawRewrite.MaySkipFor effects -> DrawRewrite.MaySkipFor (fmap (rewriteEffect pairs) effects)
 
 -- CR 612.1 through CR 707.9's "except ..." clause. Exhaustive for
 -- rewriteReplacementEffect's reason.

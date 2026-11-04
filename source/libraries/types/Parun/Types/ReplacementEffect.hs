@@ -75,7 +75,8 @@ import qualified Parun.Types.ZoneChangeR as ZoneChangeR
 --
 -- Parametric in the EFFECT, which is how the arms that carry effects reach them
 -- without a module cycle: CR 615.5's additional effect on DamageR's riders, CR
--- 614.1a's "instead [do something]" on Parun.Types.DamageRewrite's RunEffects,
+-- 614.1a's "instead [do something]" on Parun.Types.DamageRewrite's RunEffects
+-- and Parun.Types.DrawRewrite's MaySkipFor,
 -- and CR 614.1c's "as [this permanent] enters, [do something]" on
 -- Parun.Types.EntryRewrite's RunEffects. Parun.Types.Effect holds this type and
 -- this type holds effects. See Parun.Types.DamageR. Every other arm ignores the
@@ -166,7 +167,7 @@ data ReplacementEffect card ability effect
     -- Carries no "next", for PhaseR's reason: CR 614.3's used-up count is
     -- Uses.Once on the carrier, which is what lets a one-shot shield and an
     -- unbounded one share this constructor.
-    DrawR DrawR.DrawR
+    DrawR (DrawR.DrawR effect)
   | -- | CR 121.2a / 614.1a: "if an opponent would draw two or more cards, instead
     -- you and that player each draw a card" (Alms Collector). A separate arm from
     -- DrawR because rule 121.2a parts the two event classes: this one watches the

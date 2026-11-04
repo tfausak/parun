@@ -2384,6 +2384,7 @@ replacementRewriteEffects replacement = case replacement of
   ReplacementEffect.UntapR _ -> []
   ReplacementEffect.LifeLossR {} -> []
   ReplacementEffect.LifeGainR {} -> []
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.MaySkipFor effects)) -> Foldable.toList effects
   ReplacementEffect.DrawR {} -> []
   ReplacementEffect.DrawCountR {} -> []
   ReplacementEffect.InstructionR {} -> []
@@ -5479,6 +5480,7 @@ replacementEffectFilters replacementEffect = case replacementEffect of
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.RevealUntilChosenKind) -> []
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.DrawInstead _)) -> []
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.DiscardThenDrawOrMill) -> []
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.MaySkipFor _)) -> []
   ReplacementEffect.DrawCountR {} -> []
   ReplacementEffect.InstructionR {} -> []
   ReplacementEffect.DieRollR {} -> []

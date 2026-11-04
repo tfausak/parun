@@ -1900,7 +1900,7 @@ conditionQuantities condition = case condition of
 -- Event.eligible's own comment says Filter.IsBound answers nothing there -- but a
 -- slot NAME in the row's own data is still an object the row refers to (CR
 -- 609.7a), and declaring it is the safe direction for the capture.
-drawRewriteReads :: DrawRewrite.DrawRewrite -> ([Filter.Type.Filter Keyword.Type.Keyword], [Quantity.Type.Quantity])
+drawRewriteReads :: DrawRewrite.DrawRewrite effect -> ([Filter.Type.Filter Keyword.Type.Keyword], [Quantity.Type.Quantity])
 drawRewriteReads rewrite = case rewrite of
   DrawRewrite.GainLife _ -> ([], [])
   DrawRewrite.FromOutsideTheGame payload -> ([FromOutsideTheGame.filter payload], [])
@@ -1913,6 +1913,7 @@ drawRewriteReads rewrite = case rewrite of
   DrawRewrite.RevealUntilChosenKind -> ([], [])
   DrawRewrite.DrawInstead _ -> ([], [])
   DrawRewrite.DiscardThenDrawOrMill -> ([], [])
+  DrawRewrite.MaySkipFor _ -> ([], [])
 
 -- replacementRowReads as a slot map. Arity One for every FILTER read, a
 -- Filter.IsBound being a membership test rather than a target slot; the QUANTITY
@@ -2018,6 +2019,7 @@ replacementRowEffects re = case re of
   ReplacementEffect.UntapR _ -> []
   ReplacementEffect.LifeLossR _ -> []
   ReplacementEffect.LifeGainR _ -> []
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.MaySkipFor effects)) -> Foldable.toList effects
   ReplacementEffect.DrawR _ -> []
   ReplacementEffect.DrawCountR _ -> []
   ReplacementEffect.InstructionR _ -> []

@@ -4580,6 +4580,31 @@ apply batch applied candidate event =
             Monad.unless (null milled) (State.modify' (recordEvent (GameEvent.Milled (Milled.MkMilled pid (Seq.fromList milled)))))
           else drawCardSpent (spentWith candidate applied) pid
         pure Nothing
+      -- CR 614.10: Island Sanctuary's "instead you may skip that draw. If you do,
+      -- [these effects]". The decider is the drawer, Dredge's posture; declining
+      -- leaves the event STANDING for the same reason, and a draw off an empty
+      -- library is still offered (CR 614.11). Skipped, the effects are queued, the
+      -- PlaneswalkRewrite.RunEffects arm's reason.
+      DrawRewrite.MaySkipFor effects -> do
+        gs <- State.get
+        answer <- Game.choose (Prompt.ChooseSubstitute (Decide.deciderFor pid gs) pid (ReplacementCandidate.source candidate))
+        case answer of
+          OptionalDecision.Declines -> pure (Just event)
+          OptionalDecision.Exercises -> do
+            Replacement.consume (ReplacementCandidate.identity candidate)
+            Monad.forM_ (ReplacementCandidate.controller candidate) $ \controller ->
+              State.modify' $ \g ->
+                g
+                  { GameState.pendingReplacementEffects =
+                      GameState.pendingReplacementEffects g
+                        Seq.|> PendingReplacementEffect.MkPendingReplacementEffect
+                          { PendingReplacementEffect.effects = effects,
+                            PendingReplacementEffect.targets = fmap (Set.map Recipient.ToObject) (ReplacementCandidate.slots candidate),
+                            PendingReplacementEffect.controller = controller,
+                            PendingReplacementEffect.source = ReplacementCandidate.source candidate
+                          }
+                  }
+            pure Nothing
     -- Unreachable: `applies` admits DrawR only against WouldDraw.
     (ReplacementEffect.DrawR {}, _) -> pure (Just event)
     -- CR 121.2a with CR 614.6: Alms Collector's "if an opponent would draw two or

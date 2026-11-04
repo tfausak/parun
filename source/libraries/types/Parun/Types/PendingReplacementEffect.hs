@@ -13,8 +13,9 @@ import qualified Parun.Types.SlotName as SlotName
 
 -- | CR 614.1a: the effects a replacement ran in an event's place and has not
 -- run yet -- Kill-Suit Cultist's "destroy that creature instead"
--- (DamageRewrite.RunEffects), Lich's Mirror's reset (GameLossR) and Forbidden
--- Crypt's loss of the game (DrawRewrite.FromGraveyardOrLose).
+-- (DamageRewrite.RunEffects), Lich's Mirror's reset (GameLossR), Forbidden
+-- Crypt's loss of the game (DrawRewrite.FromGraveyardOrLose) and Island
+-- Sanctuary's restriction (DrawRewrite.MaySkipFor).
 -- Parun.Types.PendingEntryEffect's twin one event class over, and queued for the
 -- same reason: the module that applies a replacement (Parun.Engine.Event) is
 -- below the module that can run a card's effects.

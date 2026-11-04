@@ -732,8 +732,9 @@ data Prompt r where
   -- reason.
   ChooseRedirect :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> ObjectId.ObjectId -> Prompt OptionalDecision.OptionalDecision
   -- | CR 614.1a: whether an optional substitution whose source the ObjectId
-  -- names ("you may instead roll a d20", Pokey, the Scallywagg) replaces the
-  -- player's coin flip or die roll. Never elided, ChooseDredge's reason.
+  -- names replaces the player's coin flip or die roll ("you may instead roll a
+  -- d20", Pokey, the Scallywagg) or draw ("instead you may skip that draw",
+  -- Island Sanctuary). Never elided, ChooseDredge's reason.
   ChooseSubstitute :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Prompt OptionalDecision.OptionalDecision
   -- | CR 701.21a: which of the payer's matching permanents are sacrificed to
   -- pay a cost, the Natural how many; asked only with more candidates than the

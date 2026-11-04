@@ -1,5 +1,6 @@
 module Parun.Types.DrawRewrite where
 
+import qualified Data.Sequence as Seq
 import qualified Numeric.Natural as Natural
 import qualified Parun.Types.FromOutsideTheGame as FromOutsideTheGame
 
@@ -13,11 +14,12 @@ import qualified Parun.Types.FromOutsideTheGame as FromOutsideTheGame
 -- Parun.Types.UntapRewrite's reason: a replacement effect is classified by the
 -- event class it intercepts AND the rewrite shape it applies.
 --
--- A shape per rewrite rather than a general list of effects: the printings
--- replace a draw with different things, and an arm naming which one keeps
+-- A shape per rewrite rather than one general list of effects, MaySkipFor's
+-- aside: the printings replace a draw with different things, and an arm naming
+-- which one keeps
 -- Parun.Engine.Replacement.readsApplier and Parun.Engine.Resolve.Slots.replacementRowReads
 -- able to classify a row without running it.
-data DrawRewrite
+data DrawRewrite effect
   = -- | CR 614.1a: Words of Worship's "you gain 5 life instead".
     --
     -- The gainer is the player the EVENT names -- the one who would have drawn --
@@ -71,4 +73,8 @@ data DrawRewrite
     -- instead. If the player discards a card this way, they draw a card. If the
     -- player doesn't discard a card this way, they mill a card."
     DiscardThenDrawOrMill
+  | -- | CR 614.10 / 614.1a: Island Sanctuary's "instead you may skip that draw.
+    -- If you do, [these effects]", queued for the reason
+    -- Parun.Types.PendingReplacementEffect gives.
+    MaySkipFor (Seq.Seq effect)
   deriving (Eq, Ord, Show)

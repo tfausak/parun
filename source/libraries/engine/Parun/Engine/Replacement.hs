@@ -1036,8 +1036,8 @@ matchesPrinted viewOf gs event candidate =
         -- empty, which is why `stocked` answers True for every rewrite but
         -- dredge.
         --
-        -- Every producer but dredge installs a FLOATING row, whose "you" was baked
-        -- when it resolved and survives the source leaving the battlefield --
+        -- A FLOATING row's "you" was baked when it resolved and survives the
+        -- source leaving the battlefield --
         -- which Ring of Ma'rûf's own cost makes it do; see relationHolds and #2662.
         (ReplacementEffect.DrawR pat, ProposedEvent.WouldDraw pid kind) ->
           matchesPlayer gs candidate (DrawR.whose pat) pid
@@ -1166,7 +1166,7 @@ matchesPrinted viewOf gs event candidate =
 -- ExileFromTopOfYourLibrary arm and for its reason. The player asked is the one
 -- the EVENT named, which is who rule 702.52a mills; the row reaches this only
 -- once ControllerRelation.Related You has made that seat the card's own owner.
-stocked :: GameState -> DrawRewrite.DrawRewrite -> PlayerId -> Bool
+stocked :: GameState -> DrawRewrite.DrawRewrite effect -> PlayerId -> Bool
 stocked gs rewrite pid = case rewrite of
   DrawRewrite.Dredge n -> Natural.length (Game.zoneMembers Zone.Library pid gs) >= n
   DrawRewrite.GainLife _ -> True
@@ -1177,6 +1177,7 @@ stocked gs rewrite pid = case rewrite of
   DrawRewrite.RevealUntilChosenKind -> True
   DrawRewrite.DrawInstead _ -> True
   DrawRewrite.DiscardThenDrawOrMill -> True
+  DrawRewrite.MaySkipFor _ -> True
 
 breaches :: GameState -> Maybe PlayerId -> LifeLossRewrite.LifeLossRewrite -> PlayerId -> Natural -> Bool
 breaches gs you rewrite pid n = case rewrite of
@@ -2416,6 +2417,8 @@ readsApplier re = case re of
   -- CR 609.1: the discard is the row's controller's effect (Event.causedBy), so
   -- two rows under different controllers make different players its cause.
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.DiscardThenDrawOrMill) -> True
+  -- CR 109.5: the effects run under the row's controller, GameLossR's answer.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.MaySkipFor _)) -> True
   -- CR 121.2a: "you and that player each draw a card" -- the "you" is the row's
   -- own controller, so two rows alike in `effect` and unlike in `you` hand the
   -- extra card to different seats. LifeLossRewrite.ExileFromTopOfYourLibrary's
@@ -2544,6 +2547,8 @@ readsSource effect = case effect of
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.RevealUntilChosenKind) -> False
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.DrawInstead _)) -> False
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.DiscardThenDrawOrMill) -> False
+  -- The effects run from the row's source, GameLossR's answer.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.MaySkipFor _)) -> True
   -- CR 616.1: Event.eligible scans the pool under Projection.sourceContext
   -- framed by this candidate's source, so a filter naming any of the source's
   -- characteristics or choices (Filter.readsSourceValues) can offer different
