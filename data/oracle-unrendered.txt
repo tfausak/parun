@@ -1389,6 +1389,7 @@ inspired-idea
 inspiring-call
 inspiring-paladin
 inspiring-statuary
+instill-energy
 intervention-pact
 inti-seneschal-of-the-sun
 into-the-flood-maw

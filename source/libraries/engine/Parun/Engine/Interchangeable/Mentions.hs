@@ -802,7 +802,7 @@ attackLimitUnlessNames asking x = case x of
 
 attackPermissionNames :: (Monoid r) => Asking r -> AttackPermission.AttackPermission -> r
 attackPermissionNames asking x = case x of
-  AttackPermission.MkAttackPermission affected while -> affectedNames asking affected <> foldMap (conditionNames asking) while
+  AttackPermission.MkAttackPermission affected while _waives -> affectedNames asking affected <> foldMap (conditionNames asking) while
 
 attackRequirementNames :: (Monoid r) => Asking r -> AttackRequirement.AttackRequirement -> r
 attackRequirementNames asking x = case x of

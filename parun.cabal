@@ -239,6 +239,8 @@ library codec
     Parun.Codec.AttackTargetRef
     Parun.Codec.AttackTargetRefSpec
     Parun.Codec.AttackTargetSpec
+    Parun.Codec.AttackWaiver
+    Parun.Codec.AttackWaiverSpec
     Parun.Codec.Audience
     Parun.Codec.AudienceSpec
     Parun.Codec.Backup
@@ -2451,6 +2453,7 @@ library types
     Parun.Types.AttackTarget
     Parun.Types.AttackTargetKind
     Parun.Types.AttackTargetRef
+    Parun.Types.AttackWaiver
     Parun.Types.Audience
     Parun.Types.Backup
     Parun.Types.Ballot

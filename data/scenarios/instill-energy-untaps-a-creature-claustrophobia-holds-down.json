@@ -1,0 +1,62 @@
+{
+  "description": "CR 502.3 / 701.26b Instill Energy's {0} untaps a creature whose Aura stops it untapping during the untap step (2005-08-01 ruling)",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Hill Giant",
+            "label": "giant",
+            "tapped": true,
+            "ready": true
+          },
+          {
+            "card": "Instill Energy",
+            "label": "aura",
+            "attached": "giant"
+          },
+          {
+            "card": "Claustrophobia",
+            "label": "hold",
+            "attached": "giant"
+          }
+        ]
+      },
+      {
+        "name": "bob"
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$aura"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$giant",
+          "tapped": false
+        }
+      }
+    }
+  ]
+}

@@ -554,8 +554,8 @@ data Face card = MkFace
     -- spells" (Dense Foliage); read by Parun.Engine.TargetRestriction, rewritten
     -- by no layer, for blockRequirements' CR 613.11 reason.
     targetRestrictions :: [TargetRestriction.TargetRestriction Affected.Affected],
-    -- | CR 604.1/604.2 / 702.3b: this face's printed ATTACKING PERMISSIONS --
-    -- "can attack as though it didn't have defender"; read by
+    -- | CR 604.1/604.2 / 702.3b / 302.6: this face's printed ATTACKING
+    -- PERMISSIONS -- "can attack as though it didn't have defender"; read by
     -- Parun.Engine.AttackPermission, rewritten by no layer, for
     -- blockRequirements' CR 613.11 reason.
     attackPermissions :: [AttackPermission.AttackPermission],

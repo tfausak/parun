@@ -26,6 +26,7 @@ import qualified Parun.Types.AttackCost as AttackCost
 import qualified Parun.Types.AttackCostScope as AttackCostScope
 import qualified Parun.Types.AttackPermission as AttackPermission
 import qualified Parun.Types.AttackRequirement as AttackRequirement
+import qualified Parun.Types.AttackWaiver as AttackWaiver
 import qualified Parun.Types.BlockCost as BlockCost
 import qualified Parun.Types.BlockPermission as BlockPermission
 import qualified Parun.Types.BlockRequirement as BlockRequirement
@@ -595,7 +596,7 @@ spec s = Spec.describe s "Parun.Codec.Face" $ do
         s
         encodeFace
         decodeFace
-        baseFace {Face.attackPermissions = [AttackPermission.MkAttackPermission Affected.Attached Nothing]}
+        baseFace {Face.attackPermissions = [AttackPermission.MkAttackPermission Affected.Attached Nothing AttackWaiver.Defender]}
         (init baseFaceJson <> ",\"attackPermissions\":[{\"affected\":{\"type\":\"Attached\"}}]}")
     Spec.it s "attachRestrictions" $
       Common.assertJsonCodec
