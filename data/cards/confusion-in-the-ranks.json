@@ -1,0 +1,159 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Confusion in the Ranks",
+      "oracleText": "Whenever an artifact, creature, or enchantment enters, its controller chooses target permanent another player controls that shares a card type with it. Exchange control of those permanents.",
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "PermanentEnters",
+            "value": {
+              "type": "Or",
+              "value": [
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Artifact"
+                  }
+                },
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                },
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Enchantment"
+                  }
+                }
+              ]
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "ExchangeControl",
+                        "value": {
+                          "type": "BetweenSlots",
+                          "value": {
+                            "first": "became",
+                            "second": "target"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "target": {
+                    "chooser": {
+                      "type": "HolderOfBound",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "hop": {
+                          "type": "Itself"
+                        },
+                        "slot": "became"
+                      }
+                    },
+                    "filter": {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "ControllerRelatesToBound",
+                            "value": {
+                              "relation": {
+                                "type": "You"
+                              },
+                              "slot": "became"
+                            }
+                          }
+                        },
+                        {
+                          "type": "Shares",
+                          "value": {
+                            "anchor": {
+                              "type": "Bound",
+                              "value": "became"
+                            },
+                            "trait": {
+                              "type": "CardType",
+                              "value": [
+                                {
+                                  "type": "Artifact"
+                                },
+                                {
+                                  "type": "Battle"
+                                },
+                                {
+                                  "type": "Creature"
+                                },
+                                {
+                                  "type": "Enchantment"
+                                },
+                                {
+                                  "type": "Land"
+                                },
+                                {
+                                  "type": "Planeswalker"
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "pool": {
+                      "type": "Permanents"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}

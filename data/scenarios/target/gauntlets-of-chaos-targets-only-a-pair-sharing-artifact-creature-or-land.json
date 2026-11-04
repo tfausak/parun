@@ -1,0 +1,193 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "island-0",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "island-1",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "island-2",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "island-3",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "island-4",
+            "ready": true
+          },
+          {
+            "card": "Gauntlets of Chaos",
+            "label": "gauntlets"
+          },
+          {
+            "card": "Spear of Heliod",
+            "label": "spear"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Nyxborn Brute",
+            "label": "brute"
+          },
+          {
+            "card": "Ornithopter",
+            "label": "thopter"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "Gauntlets of Chaos's ruling: two artifacts, two creatures or two lands, so a shared enchantment alone refuses",
+  "note": "Spear of Heliod and Nyxborn Brute share only enchantment; Spear and Ornithopter share artifact. A land and a creature share nothing.",
+  "timeline": [
+    {
+      "player": "alice",
+      "refuse": {
+        "Activate": {
+          "ability": 0,
+          "mana": [
+            "$island-0",
+            "$island-1",
+            "$island-2",
+            "$island-3",
+            "$island-4"
+          ],
+          "object": "$gauntlets",
+          "targetsBySlot": {
+            "theirs": [
+              "$brute"
+            ],
+            "yours": [
+              "$spear"
+            ]
+          }
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "Activate": {
+          "ability": 0,
+          "mana": [
+            "$island-0",
+            "$island-1",
+            "$island-2",
+            "$island-3",
+            "$island-4"
+          ],
+          "object": "$gauntlets",
+          "targetsBySlot": {
+            "theirs": [
+              "$brute"
+            ],
+            "yours": [
+              "$island-0"
+            ]
+          }
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Activate": {
+          "ability": 0,
+          "mana": [
+            "$island-0",
+            "$island-1",
+            "$island-2",
+            "$island-3",
+            "$island-4"
+          ],
+          "object": "$gauntlets",
+          "targetsBySlot": {
+            "theirs": [
+              "$thopter"
+            ],
+            "yours": [
+              "$spear"
+            ]
+          }
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "bob",
+          "object": "$spear",
+          "of": "Controller"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "alice",
+          "object": "$thopter",
+          "of": "Controller"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

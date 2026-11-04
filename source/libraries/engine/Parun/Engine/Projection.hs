@@ -1298,6 +1298,7 @@ framedBySlots gs recipients context =
           Filter.slotNames = over Filter.names,
           Filter.slotControllers = over (maybe Set.empty Set.singleton . Filter.controller),
           Filter.slotCreatureTypes = over (Set.filter Subtype.isCreatureType . Filter.subtypes),
+          Filter.slotCardTypes = over Filter.cardTypes,
           Filter.slotMeasures = measures,
           Filter.slotHostControllers = fmap (foldMap hostController . objectsOf) recipients,
           -- CR 614.12: less a batch still entering (GameState.enteringBeside),
@@ -3825,7 +3826,7 @@ traitReads trait = case trait of
   Trait.Controller -> Set.singleton Controller
   Trait.Sector -> Set.empty
   Trait.CreatureType -> Set.singleton Subtypes
-  Trait.CardType -> Set.singleton Types
+  Trait.CardType _ -> Set.singleton Types
 
 -- Which aspects a Filter reads. Exhaustive on purpose: a new Filter arm reading
 -- a projected characteristic must be classified here, or CR 613.8a would
