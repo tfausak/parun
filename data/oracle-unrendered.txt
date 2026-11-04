@@ -854,6 +854,7 @@ entourage-of-trest
 eon-hub
 epicure-of-blood
 ereboss-titan
+errantry
 ersatz-gnomes
 ertais-scorn
 erudite-wizard
@@ -1914,6 +1915,7 @@ oracles-attendants
 orbs-of-warding
 orchard-spirit
 orcish-artillery
+orcish-conscripts
 orcish-captain
 orcish-spy
 orcish-veteran

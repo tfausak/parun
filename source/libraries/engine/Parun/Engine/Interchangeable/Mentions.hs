@@ -717,7 +717,7 @@ aggregationNames _asking onQuantity x = case x of
 
 aloneUnlessNames :: (Monoid r) => Asking r -> AloneUnless.AloneUnless -> r
 aloneUnlessNames asking x = case x of
-  AloneUnless.MkAloneUnless affected alongside unless _name -> affectedNames asking affected <> foldMap (filterNames asking) alongside <> foldMap (conditionNames asking) unless
+  AloneUnless.MkAloneUnless affected alongside _others unless _name -> affectedNames asking affected <> foldMap (filterNames asking) alongside <> foldMap (conditionNames asking) unless
 
 aimedAtNames :: (Monoid r) => Asking r -> AimedAt.AimedAt -> r
 aimedAtNames asking x = case x of

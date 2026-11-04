@@ -62,6 +62,7 @@ import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.CantBlockCreatures as CantBlockCreatures
 import qualified Parun.Types.Chosen as Chosen
 import qualified Parun.Types.CombatRestriction as CombatRestriction
+import qualified Parun.Types.CompanyCount as CompanyCount
 import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.Condition as Condition.Type
 import qualified Parun.Types.CounterKind as CounterKind
@@ -261,11 +262,41 @@ blockProhibited = RestrictedCreatures.prohibited Prohibition.Block
 detained :: [ObjectId] -> GameState -> Set ObjectId
 detained candidates gs = Set.fromList (filter (`Detain.detained` gs) candidates)
 
+-- What one "alone" effect demands of the declaration holding its creature:
+-- how many of these OTHER creatures it must, or must not, hold.
+data Company = MkCompany
+  { others :: CompanyCount.CompanyCount,
+    creatures :: Set ObjectId
+  }
+  deriving (Eq, Show)
+
+-- CR 508.1c / CR 509.1b: whether a declaration, given as its membership test,
+-- obeys this demand.
+companyHolds :: (ObjectId -> Bool) -> Company -> Bool
+companyHolds declared company = not (companyLacking declared company) && not (any declared (companyRefused company))
+
+-- Whether a declaration is still short of the company this demand wants.
+companyLacking :: (ObjectId -> Bool) -> Company -> Bool
+companyLacking declared company = case others company of
+  CompanyCount.AtLeastOthers n -> toInteger (Set.size (Set.filter declared (creatures company))) < toInteger n
+  CompanyCount.NoOthers -> False
+
+-- The creatures this demand keeps out of its creature's declaration.
+companyRefused :: Company -> Set ObjectId
+companyRefused company = case others company of
+  CompanyCount.AtLeastOthers _ -> Set.empty
+  CompanyCount.NoOthers -> creatures company
+
+-- Whether the declaration's size settles this demand, given every other creature
+-- the search can declare: the demand is one companion, and any of them would do.
+companyBySize :: Set ObjectId -> Company -> Bool
+companyBySize declarable company = others company == CompanyCount.AtLeastOthers 1 && Set.isSubsetOf declarable (creatures company)
+
 -- CR 508.1c together with CR 506.5: for each (creature, defending player) pair
--- an effect in force right now says can't attack without company when announced
--- at that seat, the company it wants -- one set per such effect, each needing
--- some OTHER creature of it declared beside. Bonded Construct's "alone" wants any
--- other candidate; Okk's wants one with greater power than itself.
+-- an effect in force right now says can't attack without company, or with it,
+-- when announced at that seat, what it demands -- one `Company` per such effect.
+-- Bonded Construct's "alone" wants one other candidate; Okk's wants one with
+-- greater power than itself; Orcish Conscripts' wants two; Errantry's wants none.
 --
 -- The two above are answered ABOUT A CANDIDATE and this one is not: this map is
 -- the input to a whole declaration's check
@@ -276,7 +307,7 @@ detained candidates gs = Set.fromList (filter (`Detain.detained` gs) candidates)
 -- creature, so a gate naming the defending player is read at the seat THAT
 -- creature is announced against, `cantAttackDefender`'s shape and its one
 -- gather. Parun.CombatSpec's PerDefenderWholeRestriction group is the proof.
-cantAttackAlone :: [ObjectId] -> [PlayerId] -> GameState -> Map.Map (ObjectId, PlayerId) [Set ObjectId]
+cantAttackAlone :: [ObjectId] -> [PlayerId] -> GameState -> Map.Map (ObjectId, PlayerId) [Company]
 cantAttackAlone candidates players gs =
   let rows = gathered gs
       forSeat player = Map.mapKeys (\oid -> (oid, player)) (companionsIn (filter (not . lifted (Just player) gs) rows) attackingAlone candidates candidates gs)
@@ -286,7 +317,7 @@ cantAttackAlone candidates players gs =
 -- over the `subjects` the declaring player could block with and the `pool` the
 -- whole block is drawn from (CR 805.10d's team). Mogg Flunkies; Okk. Read at
 -- the declaring seat, `cantBlock`'s reason.
-cantBlockAlone :: Maybe PlayerId -> [ObjectId] -> [ObjectId] -> GameState -> Map.Map ObjectId [Set ObjectId]
+cantBlockAlone :: Maybe PlayerId -> [ObjectId] -> [ObjectId] -> GameState -> Map.Map ObjectId [Company]
 cantBlockAlone defending subjects pool gs = companionsIn (inForce defending gs) blockingAlone subjects pool gs
 
 -- CR 508.1c through CR 802.3a: the bounds in force right now on how many
@@ -576,8 +607,8 @@ gate cr = case cr of
   CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy _ _ c _) -> c
   CombatRestriction.CantBlockCreatures (CantBlockCreatures.MkCantBlockCreatures _ _ c _) -> c
   CombatRestriction.CantAttackPlayer (CantAttackPlayer.MkCantAttackPlayer _ _ _ c _) -> c
-  CombatRestriction.CantAttackAlone (AloneUnless.MkAloneUnless _ _ c _) -> c
-  CombatRestriction.CantBlockAlone (AloneUnless.MkAloneUnless _ _ c _) -> c
+  CombatRestriction.CantAttackAlone (AloneUnless.MkAloneUnless _ _ _ c _) -> c
+  CombatRestriction.CantBlockAlone (AloneUnless.MkAloneUnless _ _ _ c _) -> c
   CombatRestriction.CantAttackMoreThan (AttackLimitUnless.MkAttackLimitUnless _ _ c) -> c
   CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless _ _ _ c) -> c
 
@@ -960,17 +991,20 @@ restrictedIn rows select candidates gs =
 -- pairing: Okk's "a creature with greater power" compares against Okk, which
 -- is the restricted creature and not necessarily the source. Rewritten by the
 -- same `changes` as the subject, both being words on the source's card.
-companionsIn :: [(ObjectId, [(TextWord.TextWord, TextWord.TextWord)], CombatRestriction.CombatRestriction)] -> (CombatRestriction.CombatRestriction -> Maybe AloneUnless.AloneUnless) -> [ObjectId] -> [ObjectId] -> GameState -> Map.Map ObjectId [Set ObjectId]
+companionsIn :: [(ObjectId, [(TextWord.TextWord, TextWord.TextWord)], CombatRestriction.CombatRestriction)] -> (CombatRestriction.CombatRestriction -> Maybe AloneUnless.AloneUnless) -> [ObjectId] -> [ObjectId] -> GameState -> Map.Map ObjectId [Company]
 companionsIn rows select subjects pool gs =
   let fromRow row@(_, changes, restriction) = case select restriction of
         Nothing -> []
         Just aloneUnless ->
           let wanted = fmap (if null changes then id else Filter.rewrite changes) (AloneUnless.alongside aloneUnless)
               company creature =
-                Set.fromList
-                  ( filter
-                      (\other -> other /= creature && Maybe.maybe True (Filter.matches (Projection.pairwiseContext gs creature) (Projection.viewOfObject other gs)) wanted)
-                      pool
+                MkCompany
+                  (AloneUnless.others aloneUnless)
+                  ( Set.fromList
+                      ( filter
+                          (\other -> other /= creature && Maybe.maybe True (Filter.matches (Projection.pairwiseContext gs creature) (Projection.viewOfObject other gs)) wanted)
+                          pool
+                      )
                   )
            in fmap (\creature -> (creature, [company creature])) (Set.toList (restrictedIn [row] (fmap AloneUnless.affected . select) subjects gs))
    in Map.fromListWith (flip (<>)) (concatMap fromRow rows)
@@ -1025,8 +1059,8 @@ subjectOf cr = case cr of
   CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy a _ _ _) -> Just a
   CombatRestriction.CantBlockCreatures (CantBlockCreatures.MkCantBlockCreatures a _ _ _) -> Just a
   CombatRestriction.CantAttackPlayer (CantAttackPlayer.MkCantAttackPlayer a _ _ _ _) -> Just a
-  CombatRestriction.CantAttackAlone (AloneUnless.MkAloneUnless a _ _ _) -> Just a
-  CombatRestriction.CantBlockAlone (AloneUnless.MkAloneUnless a _ _ _) -> Just a
+  CombatRestriction.CantAttackAlone (AloneUnless.MkAloneUnless a _ _ _ _) -> Just a
+  CombatRestriction.CantBlockAlone (AloneUnless.MkAloneUnless a _ _ _ _) -> Just a
   CombatRestriction.CantAttackMoreThan {} -> Nothing
   CombatRestriction.CantBlockMoreThan {} -> Nothing
 

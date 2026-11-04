@@ -10,8 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #5999: Errantry. Nothing lets a creature attack only with no other attacker
-  beside it; `CantAttackAlone` is the opposite direction.
 - #5177: Gauntlets of Chaos. No filter reads a shared card type with a sibling
   target.
 - #5462: Cloak of Confusion; Orcish Squatters. Nothing makes a creature assign
@@ -29,8 +27,6 @@ first.
   in their cost (CR 602.5).
 - #5993: Instill Energy. Nothing lifts only the attack half of summoning
   sickness (CR 302.6).
-- #5994: Orcish Conscripts. `AloneUnless` asks for one companion, not two (CR
-  508.1c, 509.1b).
 - #5995: Coral Helm. A discard cost can't be at random (CR 701.9b).
 - #5996: Orcish Farmer. A duration measured to a step can't name the target's
   controller (CR 611.2a).

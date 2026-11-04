@@ -34,8 +34,8 @@ nameOf cr = case cr of
   CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy _ _ _ n) -> n
   CombatRestriction.CantBlockCreatures (CantBlockCreatures.MkCantBlockCreatures _ _ _ n) -> n
   CombatRestriction.CantAttackPlayer (CantAttackPlayer.MkCantAttackPlayer _ _ _ _ n) -> n
-  CombatRestriction.CantAttackAlone (AloneUnless.MkAloneUnless _ _ _ n) -> n
-  CombatRestriction.CantBlockAlone (AloneUnless.MkAloneUnless _ _ _ n) -> n
+  CombatRestriction.CantAttackAlone (AloneUnless.MkAloneUnless _ _ _ _ n) -> n
+  CombatRestriction.CantBlockAlone (AloneUnless.MkAloneUnless _ _ _ _ n) -> n
   CombatRestriction.CantAttackMoreThan {} -> Nothing
   CombatRestriction.CantBlockMoreThan {} -> Nothing
 

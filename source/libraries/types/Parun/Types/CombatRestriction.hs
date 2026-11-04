@@ -213,10 +213,12 @@ data CombatRestriction
     -- they may be announced against.
     CantAttackPlayer CantAttackPlayer.CantAttackPlayer
   | -- | CR 508.1c together with CR 506.5: these creatures can't be declared as
-    -- attackers unless another creature matching `alongside` is too, unless the
+    -- attackers unless the company AloneUnless.others demands is, unless the
     -- gate holds. Bonded Construct ("This creature can't attack alone") writes
     -- no `alongside`, and CR 508.1c's own Example is a board of two of them;
     -- Okk's "unless a creature with greater power also attacks" writes one.
+    -- Orcish Conscripts' two others and Errantry's "can only attack alone" write
+    -- `others`.
     --
     -- Not CantAttack with a Condition, and the difference is not expressible as
     -- one: CR 506.5's "alone" is a fact about the DECLARATION being written, and

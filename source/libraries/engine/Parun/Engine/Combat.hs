@@ -496,10 +496,10 @@ legalAttackers pid gs =
 -- attacker during the declare attackers step. `alone` maps each announcement a
 -- CR 508.1c restriction forbids without company to the company each such
 -- restriction wants (Parun.Engine.CombatRestriction.cantAttackAlone), so a
--- declaration is disallowed exactly when it makes such an announcement and
--- declares no OTHER creature of one of those sets. Bonded Construct's set is
--- every other candidate, which is CR 506.5's "alone"; Okk's is the candidates
--- with greater power.
+-- declaration is disallowed exactly when it makes such an announcement and fails
+-- one of those demands. Bonded Construct's is one of every other candidate, which
+-- is CR 506.5's "alone"; Okk's one of the candidates with greater power; Orcish
+-- Conscripts' two; Errantry's none.
 --
 -- Read off the DECLARATION and not off Combat.attackers, CR 506.5's own word being
 -- "declared": a creature put onto the battlefield attacking never was declared, so
@@ -510,10 +510,10 @@ legalAttackers pid gs =
 -- Asked of the ANNOUNCEMENT, for CR 508.5a's reason: a gate naming the defending
 -- player is read at the seat the restricted creature is announced against
 -- (`aloneAnnouncements`).
-aloneAllows :: Map (ObjectId, AttackTarget.AttackTarget) [Set ObjectId] -> Map ObjectId AttackTarget.AttackTarget -> Bool
+aloneAllows :: Map (ObjectId, AttackTarget.AttackTarget) [CombatRestriction.Company] -> Map ObjectId AttackTarget.AttackTarget -> Bool
 aloneAllows alone declaration =
   all
-    (\announcement -> all (any (`Map.member` declaration) . Set.toList) (Map.findWithDefault [] announcement alone))
+    (\announcement -> all (CombatRestriction.companyHolds (`Map.member` declaration)) (Map.findWithDefault [] announcement alone))
     (Map.toList declaration)
 
 -- CR 508.1c / CR 506.5 through CR 508.5a: every announcement whose creature
@@ -522,7 +522,7 @@ aloneAllows alone declaration =
 -- the seat-keyed answer CombatRestriction gives is mapped onto CR 508.1b's
 -- announcement list through targetDefender, so a planeswalker's controller
 -- answers for an attack on it.
-aloneAnnouncements :: [ObjectId] -> GameState -> Map (ObjectId, AttackTarget.AttackTarget) [Set ObjectId]
+aloneAnnouncements :: [ObjectId] -> GameState -> Map (ObjectId, AttackTarget.AttackTarget) [CombatRestriction.Company]
 aloneAnnouncements candidates gs =
   let alone = CombatRestriction.cantAttackAlone candidates (Defender.defendingPlayers gs) gs
    in if Map.null alone
@@ -547,7 +547,7 @@ aloneAnnouncements candidates gs =
 -- A FENCE, because nothing else is one: attackCeilingGiven's flow is exact
 -- only while this answer is a family of cardinality caps over announcements plus
 -- the size-one exception, and the one conjunct naming WHICH creatures may attack
--- together (aloneAllows' hard company) is answered there by pinning rather than
+-- together (aloneAllows' hard demands) is answered there by pinning rather than
 -- by the flow. Another such conjunct would make that search answer CR 508.1d
 -- with a number no player can attain, and -Werror would say nothing. Re-derive
 -- the argument there before adding one.
@@ -563,7 +563,7 @@ aloneAnnouncements candidates gs =
 -- here: it forbids (creature, target) pairs independently of every other creature,
 -- so the search stays exact by narrowing each creature's announcements instead
 -- (attackCeilingGiven's `announceable`).
-attackDeclarationAllowed :: CombatRestriction.AttackLimits -> Map (ObjectId, AttackTarget.AttackTarget) [Set ObjectId] -> Map ObjectId AttackTarget.AttackTarget -> GameState -> Bool
+attackDeclarationAllowed :: CombatRestriction.AttackLimits -> Map (ObjectId, AttackTarget.AttackTarget) [CombatRestriction.Company] -> Map ObjectId AttackTarget.AttackTarget -> GameState -> Bool
 attackDeclarationAllowed limits alone declaration gs =
   aloneAllows alone declaration
     && all (\(seats, n) -> withinLimit (Just n) (declaredAt seats declaration gs)) (Map.toList (CombatRestriction.whole limits))
@@ -633,7 +633,7 @@ withinLimit limit size = case limit of
 --      announcements is fixed, and heaviestBySize ranges over the counts the
 --      whole bounds allow. It never asks
 --      WHICH creatures beyond the size-one exception -- only how many, and at
---      which seat. The company a restriction like Okk's wants is the one
+--      which seat. What a restriction like Okk's or Errantry's demands is the one
 --      exception, and is pinned rather than flowed (`accompany` below).
 --   2. attackRequirementsMet's PAIR half is a sum of non-negative weights over
 --      independent (creature, target) pairs: Requirement.pairs is keyed by the
@@ -717,7 +717,7 @@ barredAnnouncements candidates gs =
 -- attackCeiling against the restrictions the caller already gathered: each caller
 -- also asks attackDeclarationAllowed of the player's own declaration, and the two
 -- must be judging the same board.
-attackCeilingGiven :: CombatRestriction.AttackLimits -> Map (ObjectId, AttackTarget.AttackTarget) [Set ObjectId] -> Set (ObjectId, AttackTarget.AttackTarget) -> [ObjectId] -> GameState -> (Requirement.Instances (ObjectId, AttackTarget.AttackTarget), Map ObjectId AttackTarget.AttackTarget)
+attackCeilingGiven :: CombatRestriction.AttackLimits -> Map (ObjectId, AttackTarget.AttackTarget) [CombatRestriction.Company] -> Set (ObjectId, AttackTarget.AttackTarget) -> [ObjectId] -> GameState -> (Requirement.Instances (ObjectId, AttackTarget.AttackTarget), Map ObjectId AttackTarget.AttackTarget)
 attackCeilingGiven limits alone barred candidates gs =
   -- CR 508.1d's cost clause. AttackCost.costsOn is asked of the ANNOUNCEMENT,
   -- which is the question that rule's cards ask.
@@ -733,7 +733,7 @@ attackCeilingGiven limits alone barred candidates gs =
 -- attackCeilingGiven's search over the announcements `freely` admits and the
 -- requirement instances given, so couldAttack can ask it with costs ignored
 -- and a requirement of its own added.
-ceilingUnder :: (ObjectId -> AttackTarget.AttackTarget -> Bool) -> Requirement.Instances (ObjectId, AttackTarget.AttackTarget) -> CombatRestriction.AttackLimits -> Map (ObjectId, AttackTarget.AttackTarget) [Set ObjectId] -> Set (ObjectId, AttackTarget.AttackTarget) -> [ObjectId] -> GameState -> (Requirement.Instances (ObjectId, AttackTarget.AttackTarget), Map ObjectId AttackTarget.AttackTarget)
+ceilingUnder :: (ObjectId -> AttackTarget.AttackTarget -> Bool) -> Requirement.Instances (ObjectId, AttackTarget.AttackTarget) -> CombatRestriction.AttackLimits -> Map (ObjectId, AttackTarget.AttackTarget) [CombatRestriction.Company] -> Set (ObjectId, AttackTarget.AttackTarget) -> [ObjectId] -> GameState -> (Requirement.Instances (ObjectId, AttackTarget.AttackTarget), Map ObjectId AttackTarget.AttackTarget)
 ceilingUnder freely required limits alone barred candidates gs =
   let targets = declarableTargets gs
       -- CR 802.3a's unscoped bounds as the announcements each counts, read once
@@ -763,16 +763,18 @@ ceilingUnder freely required limits alone barred candidates gs =
       -- rule's order, each carrying its weighted announcements.
       eligible = filter (not . null . snd) (fmap (\oid -> (oid, optionsFor oid)) candidates)
       weightOf entry = snd (snd entry)
-      -- CR 508.1c / CR 506.5: the company each announcement wants
-      -- (`aloneAllows`), and which of them are HARD. An announcement whose every
-      -- set holds every OTHER creature the search can declare is broken by the
-      -- declaration's size alone -- CR 506.5's plain "alone", `ceilingOver`'s
-      -- size-one exception. Any other asks WHICH creatures attack beside it
-      -- (Okk), which no flow capacity says, so the scan never makes it: it is
-      -- reached only by pinning it together with its company (`accompany`).
+      -- CR 508.1c / CR 506.5: the company each announcement demands
+      -- (`aloneAllows`), and which of them are HARD. An announcement each of
+      -- whose demands is one of every OTHER creature the search can declare is
+      -- broken by the declaration's size alone -- CR 506.5's plain "alone",
+      -- `ceilingOver`'s size-one exception. Any other asks WHICH creatures attack
+      -- beside it (Okk, Orcish Conscripts, Errantry), which no flow capacity says,
+      -- so the scan never makes it: it is reached only by pinning it together
+      -- with its company (`accompany`), with what it refuses off the scan
+      -- (`refusedBy`).
       eligibleIds = Set.fromList (fmap fst eligible)
       needs announcement = Map.findWithDefault [] announcement alone
-      hard announcement = not (all (Set.isSubsetOf (Set.delete (fst announcement) eligibleIds)) (needs announcement))
+      hard announcement = not (all (CombatRestriction.companyBySize (Set.delete (fst announcement) eligibleIds)) (needs announcement))
       -- `eligible` with every hard announcement struck off, which is what the
       -- scan ranges over; a creature left with none drops out.
       softEligible = filter (not . null . snd) (fmap (\(oid, options) -> (oid, filter (\(target, _) -> not (hard (oid, target))) options)) eligible)
@@ -817,7 +819,7 @@ ceilingUnder freely required limits alone barred candidates gs =
               | held == 1 = fmap (\(oid, (target, weight)) -> ((oid, target), weight)) taken
               | held == 0 = [((oid, target), weight) | (oid, options) <- rest, (target, weight) <- options, fits target]
               | otherwise = []
-            singled = case fmap snd (filter (\(announcement, _) -> null (needs announcement)) solo) of
+            singled = case fmap snd (filter (\(announcement, _) -> all (CombatRestriction.companyHolds (== fst announcement)) (needs announcement)) solo) of
               [] -> []
               ws -> [maximum ws]
          in if overfull
@@ -864,22 +866,25 @@ ceilingUnder freely required limits alone barred candidates gs =
       -- and draws every companion from itself, so one branch is a subset of it
       -- and the scan completes it; and every branch's declarations are legal,
       -- the scan never making a hard announcement. The cost is a factor per
-      -- creature with a hard announcement and per companion, paid only when
-      -- some restriction wants particular company.
+      -- creature with a hard announcement and per announcement of each companion
+      -- it demands, paid only when some restriction wants particular company.
       hardOptions oid = filter (\target -> hard (oid, target)) (announceable oid)
       choose acc oid = acc <> [Map.insert oid target pinned | pinned <- acc, Map.notMember oid pinned, target <- hardOptions oid]
-      unmet pinned = [company | announcement <- Map.toList pinned, hard announcement, company <- needs announcement, not (any (`Map.member` pinned) (Set.toList company))]
+      unmet pinned = [company | announcement <- Map.toList pinned, hard announcement, company <- needs announcement, CombatRestriction.companyLacking (`Map.member` pinned) company]
       accompany pinned = case unmet pinned of
         [] -> [pinned]
-        company : _ -> concat [accompany (Map.insert other target pinned) | other <- Set.toList company, Map.notMember other pinned, target <- announceable other]
+        company : _ -> concat [accompany (Map.insert other target pinned) | other <- Set.toList (CombatRestriction.creatures company), Map.notMember other pinned, target <- announceable other]
       systems = Set.toList (Set.fromList (concatMap accompany (List.foldl' choose pinnings (filter (not . null . hardOptions) (Set.toList eligibleIds)))))
       -- What a system of witnesses obeys, and the two halves of `ceilingOver`'s
       -- arguments it fixes: the pinned creatures are held at THEIR announcement
       -- rather than at their best one, and are off the list the scan ranges over.
       obeyedBy pinned = Requirement.groupsMet required (Set.fromList (Map.toList pinned))
       pinnedEntries pinned = fmap (\(oid, target) -> (oid, (target, Map.findWithDefault 0 (oid, target) weights))) (Map.toList pinned)
-      scanRest pinned = filter (\entry -> Map.notMember (fst entry) pinned) softEligible
-      scoreOf pinned = fmap (obeyedBy pinned +) (ceilingOver (pinnedEntries pinned) (scanRest pinned))
+      refusedBy pinned = Set.unions (fmap CombatRestriction.companyRefused (concatMap needs (Map.toList pinned)))
+      scanRest pinned = filter (\entry -> Map.notMember (fst entry) pinned && Set.notMember (fst entry) (refusedBy pinned)) softEligible
+      scoreOf pinned
+        | any (`Map.member` pinned) (Set.toList (refusedBy pinned)) = Nothing
+        | otherwise = fmap (obeyedBy pinned +) (ceilingOver (pinnedEntries pinned) (scanRest pinned))
       -- The empty system always scores: it pins nothing, and `sized` admits the
       -- empty declaration, which disobeys no restriction (CR 508.1c only ever
       -- forbids attacking). So the maximum is at worst zero and the answer is
@@ -1404,7 +1409,7 @@ pairAllowedGiven board@(Snapshot.MkSnapshot pcs _) barred candidates attackers b
 -- declaration. This is also
 -- the seam bestBlockDeclaration's search judges each leaf through, and it takes
 -- a projected board and a hoisted `limit` because it is asked once per leaf.
-blockDeclarationAllowed :: CombatRestriction.Bounds -> Map ObjectId CombatRestriction.Bounds -> Map ObjectId [Set ObjectId] -> (ObjectId -> Maybe Natural) -> Map ObjectId PC.ProjectedCharacteristics -> (ObjectId -> ObjectId -> Bool) -> Map ObjectId (Set ObjectId) -> GameState -> Bool
+blockDeclarationAllowed :: CombatRestriction.Bounds -> Map ObjectId CombatRestriction.Bounds -> Map ObjectId [CombatRestriction.Company] -> (ObjectId -> Maybe Natural) -> Map ObjectId PC.ProjectedCharacteristics -> (ObjectId -> ObjectId -> Bool) -> Map ObjectId (Set ObjectId) -> GameState -> Bool
 blockDeclarationAllowed limit most alone arity pcs able declaration gs =
   -- CR 509.1b restriction-checks every creature against every creature it is
   -- declared against: a blocker may block a flier and a non-flier only if it could
@@ -1418,9 +1423,9 @@ blockDeclarationAllowed limit most alone arity pcs able declaration gs =
     -- naming two attackers is still one creature. Empty entries are dropped.
     && CombatRestriction.admits limit (Map.size (Map.filter (not . Set.null) declaration))
     -- CR 506.5: a creature that can't block without company (Mogg Flunkies,
-    -- Okk) blocks only beside another creature of each set it wants -- the
+    -- Okk, Orcish Conscripts) blocks only where each demand on it holds -- the
     -- set-shaped restriction aloneAllows is on the attacking side.
-    && all (\(blocker, sets) -> not (blocks blocker) || all (any blocks . Set.toList) sets) (Map.toList alone)
+    && all (\(blocker, demands) -> not (blocks blocker) || all (CombatRestriction.companyHolds blocks) demands) (Map.toList alone)
   where
     blocks blocker = maybe False (not . Set.null) (Map.lookup blocker declaration)
 
@@ -1468,7 +1473,7 @@ declaredPairs declaration =
 -- maximum with a number that is not the maximum. The worst case is still
 -- exponential -- an unbounded arity against wanted menace attackers -- but it
 -- is now the worst case rather than every case.
-bestBlockDeclaration :: Requirement.Instances (ObjectId, ObjectId) -> CombatRestriction.Bounds -> Map ObjectId CombatRestriction.Bounds -> Map ObjectId [Set ObjectId] -> (ObjectId -> Maybe Natural) -> Map ObjectId PC.ProjectedCharacteristics -> (ObjectId -> ObjectId -> Bool) -> [ObjectId] -> [ObjectId] -> GameState -> Map ObjectId (Set ObjectId)
+bestBlockDeclaration :: Requirement.Instances (ObjectId, ObjectId) -> CombatRestriction.Bounds -> Map ObjectId CombatRestriction.Bounds -> Map ObjectId [CombatRestriction.Company] -> (ObjectId -> Maybe Natural) -> Map ObjectId PC.ProjectedCharacteristics -> (ObjectId -> ObjectId -> Bool) -> [ObjectId] -> [ObjectId] -> GameState -> Map ObjectId (Set ObjectId)
 bestBlockDeclaration requirements limit most alone arity pcs able candidates attackers gs =
   let weights = Requirement.pairs requirements
       -- Every pair some requirement names, a GROUP's members included: a block
@@ -1636,7 +1641,7 @@ legalBlockDeclaration pid declaration gs =
 -- per-attacker bound at the seat that attacker is attacking.
 -- One walk for the whole search: CR 509.1b's pairwise restrictions are decided
 -- once here and read by every pair the caller judges.
-blockScopeGiven :: Snapshot.Snapshot -> PlayerId -> GameState -> ([ObjectId], [ObjectId], Set (ObjectId, ObjectId), (CombatRestriction.Bounds, Map ObjectId CombatRestriction.Bounds, Map ObjectId [Set ObjectId]))
+blockScopeGiven :: Snapshot.Snapshot -> PlayerId -> GameState -> ([ObjectId], [ObjectId], Set (ObjectId, ObjectId), (CombatRestriction.Bounds, Map ObjectId CombatRestriction.Bounds, Map ObjectId [CombatRestriction.Company]))
 blockScopeGiven board pid gs =
   let side = sideOf pid gs
       attackers = concatMap (`attackersOn` gs) side
