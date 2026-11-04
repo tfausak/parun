@@ -217,13 +217,13 @@ spec s = Spec.describe s "Parun.Mtgish" $ do
     Spec.assertEq s (Right ()) (accepts bonesplitter)
     Spec.assertEq s [Affected.Matching (Filter.And [Filter.HasCardType CardType.Creature, Filter.HasAttached Filter.IsSource])] (fmap StaticAbility.affected (Face.staticAbilities (translated bonesplitter)))
 
-  -- CR 604.3: Nightmare's two abilities define one star each, and Dakmor
-  -- Sorceress's one is written into both boxes, as the pool writes it; the
-  -- printed 4 in the other box is what the engine reads there.
   -- CR 500.12: a count of the board as the turn began, and the trigger's player it names.
   Spec.it s "translates Power Surge" $ do
     Spec.assertEq s (Right ()) (accepts powerSurge)
 
+  -- CR 604.3: Nightmare's two abilities define one star each, and Dakmor
+  -- Sorceress's one is written into both boxes, as the pool writes it; the
+  -- printed 4 in the other box is what the engine reads there.
   Spec.it s "writes a characteristic-defining ability into both boxes" $ do
     Spec.assertEq s (Right ()) (accepts nightmare)
     Spec.assertEq s (Right ()) (accepts dakmorSorceress)

@@ -1358,10 +1358,13 @@ Entries are ordered by the first rule each cites.
   No ruling on the card.
 - **Decision**: Without it. The turn has begun once its first step is reached, and
   the effect ended as it began.
-- **Rejected**: With it, which counts a land the effect's end took from its
-  controller as that turn began.
+- **Rejected**: With it, which counts Hydro-Man, Fluid Felon as a land, though his
+  "until your next turn, he becomes a land" ended as that turn began.
 - **Site**: `Parun.Engine.Engine`'s `runStep`, filing
   `GameState.permanentsAsTurnBegan` after `Parun.Engine.Expiry.dropAtTurnOf`.
+  Unproven by a scenario: no card in the pool is a land only until its
+  controller's next turn (Hydro-Man; Absorbing Man and Crystalline Resonance as a
+  copy of one).
 
 ## Whether assigning no combat damage beats assigning toughness
 

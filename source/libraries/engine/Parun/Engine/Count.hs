@@ -230,17 +230,17 @@ evaluate viewOf quantityOf talliesWhatHappened context gs count =
                 | otherwise = countsWithoutCharacteristics aggregation predicate && wasDiscarded gs oid
               kept = Maybe.mapMaybe (\oid -> if member oid then fmap ((,) (Just oid)) (keep predicate context (viewOf oid)) else Nothing) ids
            in aggregate quantityOf aggregation kept
-        -- CR 401.2 / 404.1: each named library or graveyard, narrowed by
-        -- POSITION before the Filter is asked -- the zone arm above answers "any
-        -- matching card" instead. Order-insensitive like every Aggregation, so no
-        -- APNAP walk. An empty library has no top card, so Vampire Nocturnus'
-        -- "is black" counts nothing.
         -- CR 500.12: the record of the board before this turn's untap step. Its
         -- members are objectless, as InHistory's are: some have since left.
         Scope.AsTurnBegan ->
           let views = Map.elems (Map.mapWithKey (\oid record -> lastKnownView viewOf oid gs record) (Maybe.fromMaybe Map.empty (GameState.permanentsAsTurnBegan gs)))
               kept = fmap ((,) Nothing) (Maybe.mapMaybe (keep predicate context . Just) views)
            in aggregate quantityOf aggregation kept
+        -- CR 401.2 / 404.1: each named library or graveyard, narrowed by
+        -- POSITION before the Filter is asked -- the zone arm above answers "any
+        -- matching card" instead. Order-insensitive like every Aggregation, so no
+        -- APNAP walk. An empty library has no top card, so Vampire Nocturnus'
+        -- "is black" counts nothing.
         Scope.InPosition position (InZone.MkInZone zone ref) -> do
           pids <- playersFor viewOf context gs ref
           let ids = foldMap (\pid -> Game.atPosition position (Filter.source context) zone pid gs) pids

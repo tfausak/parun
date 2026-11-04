@@ -343,7 +343,8 @@ data GameState = MkGameState
     -- being none (CR 702.26b); Nothing until Parun.Engine.Engine.runStep files
     -- it at the turn's first step, Engine.beginTurn having cleared the last
     -- turn's. An unforced thunk over that board, whose own copy of this field is
-    -- Nothing, so a game nothing reads it in never projects it.
+    -- Nothing, so only a reader projects it, Reversal.withoutAnnouncement's
+    -- comparison among them.
     permanentsAsTurnBegan :: Maybe (Map.Map ObjectId.ObjectId LastKnown.LastKnown),
     result :: Maybe Result.Result,
     -- | CR 727.4: raised while a restart has replaced this game underneath the
