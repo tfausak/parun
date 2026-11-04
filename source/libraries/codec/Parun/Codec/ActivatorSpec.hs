@@ -4,24 +4,33 @@ import qualified Parun.Codec.Activator as Activator
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.Activator as Activator
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.Activator" $ do
-  Spec.it s "Controller" $
+  Spec.it s "the default" $
     Common.assertCodec
       s
       Activator.codec
-      Activator.Controller
-      " {\"type\":\"Controller\"} "
+      (Activator.Related PlayerRelation.You)
+      " {\"type\":\"You\"} "
   Spec.it s "AnyPlayer" $
     Common.assertCodec
       s
       Activator.codec
-      Activator.AnyPlayer
+      (Activator.Related PlayerRelation.AnyPlayer)
       " {\"type\":\"AnyPlayer\"} "
-  -- Exhaustive where the literals above are representative: Arm.enum derives the
-  -- arm list from the type, so this is what would catch a constructor the
-  -- derivation missed or two that encode alike.
-  Spec.it s "round trips every constructor" $ Common.assertEnumCodec s Activator.codec
+  Spec.it s "Opponent" $
+    Common.assertCodec
+      s
+      Activator.codec
+      (Activator.Related PlayerRelation.Opponent)
+      " {\"type\":\"Opponent\"} "
+  Spec.it s "Owner" $
+    Common.assertCodec
+      s
+      Activator.codec
+      Activator.Owner
+      " {\"type\":\"Owner\"} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s Activator.codec

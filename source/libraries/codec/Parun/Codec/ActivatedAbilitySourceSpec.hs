@@ -19,6 +19,7 @@ import qualified Parun.Types.Mode as Mode
 import qualified Parun.Types.ModeMemory as ModeMemory
 import qualified Parun.Types.ModeSelection as ModeSelection
 import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Timestamp as Timestamp
 
 -- | What the ability itself encodes to is Parun.Codec.ActivatedAbility's own
@@ -33,7 +34,7 @@ ability =
     Nothing
     (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory)
     []
-    Activator.Controller
+    (Activator.Related PlayerRelation.You)
     Nothing
     Nothing
     Nothing

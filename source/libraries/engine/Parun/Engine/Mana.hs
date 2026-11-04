@@ -692,11 +692,11 @@ manaSuppliesGiven capacity pcs pid borrowed oid gs =
       -- Lazy, and forced only for a permanent mixing open and closed routes or
       -- reached by a grant: manaSourcesGiven hands this nothing else pid does
       -- not control.
-      controls = (not (any (openToAnyone . ManaOption.ability) options) && null borrowed) || Projection.controllerOf oid gs == Just pid
+      controls = (not (any (namesAnother . ManaOption.ability) options) && null borrowed) || Projection.controllerOf oid gs == Just pid
       -- CR 106.6: a grant's restriction rides on the yield the supply counts,
       -- as it will on the mana Parun.Engine.Cost.tapForManaWith adds.
       restricted extra (activations, yield, manaCost, own) = (activations, maybe yield (\restriction -> MkYield {yieldMana = restrictMana restriction (yieldMana yield), yieldDoubling = fmap (unitsOf . restrictMana restriction . Mana.MkMana) (yieldDoubling yield)}) extra, manaCost, own)
-      counted = concatMap (\option -> foldMap (\extra -> fmap (restricted extra) (perCandidate option)) (routeAccess controls borrowed (ManaOption.cost option) (ManaOption.ability option))) options
+      counted = concatMap (\option -> foldMap (\extra -> fmap (restricted extra) (perCandidate option)) (routeAccess (mayTakeRoute controls pid oid gs) borrowed (ManaOption.cost option) (ManaOption.ability option))) options
       available = filter (\(activations, _, _, _) -> Activations.times activations > 0) counted
       yieldOf (_, yield, _, _) = yield
       -- Ordered so `maximumBy` prefers the larger count, and a mana-free route
@@ -1305,10 +1305,10 @@ manaSourcesGiven inFlight capacity grants pcs pid gs =
       -- the tap and sickness rules reach only such a cost. A Blood Pet is a
       -- black source while tapped and on the turn it arrives, because
       -- "Sacrifice this creature: Add {B}" is neither (#1116).
-      isSource oid = any (\(cost, restrictions, ability, _) -> Maybe.isJust (routeAccess (Set.member oid mine) (borrowed oid) cost ability) && not (inFlightRoute inFlight oid ability) && Activations.times (capacity ForOffer pcs pid oid cost restrictions ability gs) > 0) (manaRoutesOfGiven pcs oid gs)
+      isSource oid = any (\(cost, restrictions, ability, _) -> Maybe.isJust (routeAccess (mayTakeRoute (Set.member oid mine) pid oid gs) (borrowed oid) cost ability) && not (inFlightRoute inFlight oid ability) && Activations.times (capacity ForOffer pcs pid oid cost restrictions ability gs) > 0) (manaRoutesOfGiven pcs oid gs)
       -- CR 602.2's candidates: what this player controls, then its exceptions
       -- -- a permanent someone else controls, which isSource then asks of its
-      -- "any player may activate" routes (CR 602.1b) and of the {T} routes an
+      -- routes open to them (CR 602.1b) and of the {T} routes an
       -- effect lets this player tap for mana (`borrowed`, Piracy).
       borrowed = PlayerEffect.tapForManaGrants pid gs
       -- Activatable.activationSourcesGiven is the same list for the stack.
@@ -1333,13 +1333,12 @@ manaSourcesGiven inFlight capacity grants pcs pid gs =
       isLand oid = maybe False (Set.member CardType.Land . PC.cardTypes) (Map.lookup oid pcs)
    in filter (\oid -> isSource oid && (not landsOnly || (isLand oid && Set.member oid mine))) (own <> others)
 
--- CR 602.2's permission over one mana route: the permanent's controller may
--- take any, and anyone else one whose ability says any player may activate it
--- (CR 602.1b, Mana Cache) or, where an effect lets them tap the permanent for
--- mana (`borrowed`, PlayerEffect.tapForManaGrants), one whose cost includes
--- {T} (CR 106.12, Piracy). CR 305.6's intrinsic route prints no such clause
--- but costs {T}. Whoever takes it controls it (CR 109.4a, CR 113.8), so the
--- mana is theirs. `controls` is asked second, so a caller may pass it lazily.
+-- CR 602.2's permission over one mana route: whoever its ability's activator
+-- admits (`mayTake`, mayTakeRoute; CR 602.1b, Mana Cache) or, where an effect
+-- lets them tap the permanent for mana (`borrowed`,
+-- PlayerEffect.tapForManaGrants), anyone taking one whose cost includes {T} (CR
+-- 106.12, Piracy). CR 305.6's intrinsic route has no ability and costs {T}.
+-- Whoever takes it controls it (CR 109.4a, CR 113.8), so the mana is theirs.
 --
 -- Nothing where the route is refused; otherwise the CR 106.6 restriction the
 -- permission adds to the mana, Nothing for none. Taken under a grant, the mana
@@ -1347,9 +1346,9 @@ manaSourcesGiven inFlight capacity grants pcs pid gs =
 --
 -- Not implemented: a choice between two grants whose restrictions differ; the
 -- first is taken (#5459).
-routeAccess :: Bool -> [Maybe ManaRestriction.ManaRestriction] -> Cost Keyword.Keyword -> Maybe (ActivatedAbility.ActivatedAbility c g) -> Maybe (Maybe ManaRestriction.ManaRestriction)
-routeAccess controls borrowed cost ability
-  | openToAnyone ability || controls = Just Nothing
+routeAccess :: (Activator.Activator -> Bool) -> [Maybe ManaRestriction.ManaRestriction] -> Cost Keyword.Keyword -> Maybe (ActivatedAbility.ActivatedAbility c g) -> Maybe (Maybe ManaRestriction.ManaRestriction)
+routeAccess mayTake borrowed cost ability
+  | mayTake (maybe (Activator.Related PlayerRelation.You) ActivatedAbility.activator ability) = Just Nothing
   | List.elem CostComponent.TapThis (Cost.components cost) = case borrowed of
       grants | any Maybe.isNothing grants -> Just Nothing
       grant : _ -> Just grant
@@ -1422,9 +1421,16 @@ meetRestriction one = maybe one (\other -> if ManaRestriction.prohibits one then
               ManaRestriction.prohibits = True
             }
 
--- Does this route's ability say any player may activate it (CR 602.1b)?
-openToAnyone :: Maybe (ActivatedAbility.ActivatedAbility c g) -> Bool
-openToAnyone = maybe False ((== Activator.AnyPlayer) . ActivatedAbility.activator)
+-- Does this route's ability name someone besides its controller (CR 602.1b)?
+namesAnother :: Maybe (ActivatedAbility.ActivatedAbility c g) -> Bool
+namesAnother = maybe False ((/= Activator.Related PlayerRelation.You) . ActivatedAbility.activator)
+
+-- routeAccess's `mayTake` for `pid`. `controls` is the default's answer, asked
+-- only for it, so a caller may pass it lazily.
+mayTakeRoute :: Bool -> PlayerId -> ObjectId -> GameState -> Activator.Activator -> Bool
+mayTakeRoute controls pid oid gs activator
+  | activator == Activator.Related PlayerRelation.You = controls
+  | otherwise = maybe False (\usual -> Game.activatorPermits activator usual oid pid gs) (Projection.controllerOf oid gs)
 
 -- What ONE mana must be to satisfy one typed symbol of a cost: one of these mana
 -- types, carrying at least these production-time tags.

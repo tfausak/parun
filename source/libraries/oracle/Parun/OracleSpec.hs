@@ -765,7 +765,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s (Just (Text.pack "Choose two \8212\n\8226 Destroy target artifact.\n\8226 Destroy target land.\n\8226 Draw a card.")) (Oracle.render (chosen (ModeSelection.ChooseExactly 2) three))
     Spec.assertEq s (Just (Text.pack "Choose one or more \8212\n\8226 Destroy target artifact.\n\8226 Destroy target land.\n\8226 Draw a card.")) (Oracle.render (chosen (ModeSelection.ChooseBetween (ChooseBetween.MkChooseBetween 1 3)) three))
     let adding c = Mode.MkMode (Seq.singleton (clause [Effect.AddMana (ManaAddition.MkManaAddition (PlayerRef.Relative PlayerRelation.You) (ManaProduction.OfType (ManaType.Colored c)) (Quantity.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing)])) Map.empty
-        elf = ActivatedAbility.MkActivatedAbility (mana [ManaSymbol.Generic 1]) [] 0 Nothing (Modal.MkModal (Seq.fromList [adding Color.Red, adding Color.White]) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory) [] Activator.Controller Nothing Nothing Nothing
+        elf = ActivatedAbility.MkActivatedAbility (mana [ManaSymbol.Generic 1]) [] 0 Nothing (Modal.MkModal (Seq.fromList [adding Color.Red, adding Color.White]) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory) [] (Activator.Related PlayerRelation.You) Nothing Nothing Nothing
     Spec.assertEq s (Just (Text.pack "{1}: Add {R} or {W}.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [elf]})))
 
   -- CR 608.2c: three or more instructions read one or two at a time (Frantic
@@ -1103,7 +1103,7 @@ spell clauses slots = withFace (\f -> f {Face.spell = payload clauses slots, Fac
 
 -- An activated ability of this cost and the one instruction.
 activated :: Cost.Cost Keyword.Keyword -> Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card) -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)
-activated cost e = ActivatedAbility.MkActivatedAbility cost [] 0 Nothing (payload [clause [e]] []) [] Activator.Controller Nothing Nothing Nothing
+activated cost e = ActivatedAbility.MkActivatedAbility cost [] 0 Nothing (payload [clause [e]] []) [] (Activator.Related PlayerRelation.You) Nothing Nothing Nothing
 
 -- A normal card of one face named Spark, changed as given.
 withFace :: (Face.Face Card.Card -> Face.Face Card.Card) -> Card.Card

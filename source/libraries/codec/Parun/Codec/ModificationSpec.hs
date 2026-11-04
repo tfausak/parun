@@ -407,7 +407,7 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
                   Nothing
                   (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory)
                   []
-                  Activator.Controller
+                  (Activator.Related PlayerRelation.You)
                   Nothing
                   Nothing
                   Nothing

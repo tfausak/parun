@@ -16,6 +16,7 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.Activator as Activator.Type
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 
 -- | The wire format is unchanged by the conversion to a bundle; what it adds is
 -- the schema.
@@ -35,7 +36,7 @@ codec cardCodec abilityCodec = Fields.object $ do
   restrictions <- Fields.defaulted "restrictions" [] (Common.list ActivationRestriction.codec) ActivatedAbility.restrictions
   -- CR 602.1b: emitted only for an ability that names its activators, so the
   -- absence of the key is CR 602.2's default -- the controller alone.
-  activator <- Fields.defaulted "activator" Activator.Type.Controller Activator.codec ActivatedAbility.activator
+  activator <- Fields.defaulted "activator" (Activator.Type.Related PlayerRelation.You) Activator.codec ActivatedAbility.activator
   -- CR 702.178a: emitted only for a GRANTED ability, so the absence of the key
   -- means the object simply has this ability.
   condition <- Fields.defaulted "condition" Nothing (Common.maybe Condition.codec) ActivatedAbility.condition

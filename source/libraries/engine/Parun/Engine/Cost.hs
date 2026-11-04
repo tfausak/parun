@@ -6056,7 +6056,7 @@ tapForManaWith perform window inFlight refused activator oid = do
     Just _ -> do
       -- CR 109.4a/113.8: the mana ability's controller is the player
       -- activating it -- the permanent's controller, anyone at all for a
-      -- route printing "any player may activate this ability" (CR 602.1b), or
+      -- route its ability opens to another (CR 602.1b), or
       -- a player an effect lets tap it for mana (Piracy), all through
       -- Mana.routeAccess. That player makes the colour choice and pays the
       -- cost (CR 602.1a).
@@ -6067,7 +6067,7 @@ tapForManaWith perform window inFlight refused activator oid = do
       -- table's. See the Payment.Paid branch below.
       let controller = activator
           borrowed = PlayerEffect.tapForManaGrants controller gs oid
-          access option = Mana.routeAccess (Projection.controllerOf oid gs == Just activator) borrowed (ManaOption.cost option) (ManaOption.ability option)
+          access option = Mana.routeAccess (Mana.mayTakeRoute (Projection.controllerOf oid gs == Just activator) activator oid gs) borrowed (ManaOption.cost option) (ManaOption.ability option)
           permitted = Maybe.isJust . access
           -- ONE gather of the player's effects for every option this permanent
           -- offers, rather than one per option: `manaActivations` would take its
