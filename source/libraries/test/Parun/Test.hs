@@ -104,6 +104,7 @@ import qualified Parun.Codec.AttackersAreSpec
 import qualified Parun.Codec.AttackingPlayersSpec
 import qualified Parun.Codec.AudienceSpec
 import qualified Parun.Codec.BackupSpec
+import qualified Parun.Codec.BatchingSpec
 import qualified Parun.Codec.BattlefieldCandidateSpec
 import qualified Parun.Codec.BecameAttackedSpec
 import qualified Parun.Codec.BecameBlockingSpec
@@ -1064,6 +1065,7 @@ spec s registry corpus = do
   Parun.Codec.AttackTargetSpec.spec s
   Parun.Codec.AudienceSpec.spec s
   Parun.Codec.BackupSpec.spec s
+  Parun.Codec.BatchingSpec.spec s
   Parun.Codec.BattlefieldCandidateSpec.spec s
   Parun.Codec.BecameAttackedSpec.spec s
   Parun.Codec.BecameBlockingSpec.spec s

@@ -1181,7 +1181,6 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> []
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> []
   TriggerCondition.PlayerTookInitiative -> []
-  TriggerCondition.OpponentLostLifeDuringYourTurn -> []
   TriggerCondition.SelfAttacks _ -> []
   -- CR 702.149a's Filter holds no Count for PermanentEnters' reason.
   TriggerCondition.SelfAttacksWithAnother _ -> []
@@ -1296,9 +1295,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.DamageToPlayerPrevented _ -> []
   -- Rule 615.13's other reading carries a Filter, which holds no Count either.
   TriggerCondition.SelfPreventsDamage _ -> []
-  TriggerCondition.PlayerGainsLife _ -> []
-  TriggerCondition.PlayersGainLife _ -> []
-  TriggerCondition.PlayerLosesLife _ -> []
+  TriggerCondition.LifeChanges _ -> []
   -- CR 714.2b carries a counter kind and a Natural, neither of which is a Count.
   TriggerCondition.SelfCountersReached {} -> []
   TriggerCondition.SelfBecomesClassLevel _ -> []
@@ -4742,7 +4739,6 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> []
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> []
   TriggerCondition.PlayerTookInitiative -> []
-  TriggerCondition.OpponentLostLifeDuringYourTurn -> []
   TriggerCondition.SelfAttacks _ -> []
   -- CR 702.149a names a quality the OTHER attackers must have, so this one DOES
   -- carry a Filter -- "power greater than this creature's power".
@@ -4863,9 +4859,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- source -- Samite Ministration's "black or red" -- which this sweep must see
   -- for PermanentActs' reason.
   TriggerCondition.SelfPreventsDamage f -> unframed [f]
-  TriggerCondition.PlayerGainsLife _ -> []
-  TriggerCondition.PlayersGainLife _ -> []
-  TriggerCondition.PlayerLosesLife _ -> []
+  TriggerCondition.LifeChanges _ -> []
   -- CR 714.2b's threshold names a counter kind, and CR 122.1b's kind may be a
   -- whole Keyword carrying a Filter -- "whenever the second hexproof-from-
   -- Goblins counter is put on this permanent"; see #2728. The Natural beside it is
@@ -4943,7 +4937,6 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> []
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> []
   TriggerCondition.PlayerTookInitiative -> []
-  TriggerCondition.OpponentLostLifeDuringYourTurn -> []
   TriggerCondition.SelfCycled -> []
   TriggerCondition.SelfRevealedForMiracle -> []
   TriggerCondition.RevealedThisWay _ -> []
@@ -5007,9 +5000,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.AbilityIsCountered -> []
   TriggerCondition.DamageToPlayerPrevented _ -> []
   TriggerCondition.SelfPreventsDamage _ -> []
-  TriggerCondition.PlayerGainsLife _ -> []
-  TriggerCondition.PlayersGainLife _ -> []
-  TriggerCondition.PlayerLosesLife _ -> []
+  TriggerCondition.LifeChanges _ -> []
   TriggerCondition.SelfCountersReached _ -> []
   TriggerCondition.SelfBecomesClassLevel _ -> []
   TriggerCondition.SelfLastCounterRemoved _ -> []

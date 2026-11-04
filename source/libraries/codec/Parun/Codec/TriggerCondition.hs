@@ -83,7 +83,6 @@ codec =
           Arm.nullary "CreatureDealtCombatDamageToMonarch" TriggerCondition.CreatureDealtCombatDamageToMonarch,
           Arm.nullary "CreaturesDealtCombatDamageToInitiative" TriggerCondition.CreaturesDealtCombatDamageToInitiative,
           Arm.nullary "PlayerTookInitiative" TriggerCondition.PlayerTookInitiative,
-          Arm.nullary "OpponentLostLifeDuringYourTurn" TriggerCondition.OpponentLostLifeDuringYourTurn,
           Arm.payload "SelfAttacks" TriggerFrequency.codec TriggerCondition.SelfAttacks (\x -> case x of TriggerCondition.SelfAttacks y -> Just y; _ -> Nothing),
           Arm.payload "SelfAttacksWithAnother" filterCodec TriggerCondition.SelfAttacksWithAnother (\x -> case x of TriggerCondition.SelfAttacksWithAnother y -> Just y; _ -> Nothing),
           Arm.payload "SelfAttacksPermanent" filterCodec TriggerCondition.SelfAttacksPermanent (\x -> case x of TriggerCondition.SelfAttacksPermanent y -> Just y; _ -> Nothing),
@@ -145,9 +144,7 @@ codec =
           Arm.nullary "AbilityIsCountered" TriggerCondition.AbilityIsCountered,
           Arm.payload "DamageToPlayerPrevented" PlayerRelation.codec TriggerCondition.DamageToPlayerPrevented (\x -> case x of TriggerCondition.DamageToPlayerPrevented y -> Just y; _ -> Nothing),
           Arm.payload "SelfPreventsDamage" filterCodec TriggerCondition.SelfPreventsDamage (\x -> case x of TriggerCondition.SelfPreventsDamage y -> Just y; _ -> Nothing),
-          Arm.payload "PlayerGainsLife" LifeTrigger.codec TriggerCondition.PlayerGainsLife (\x -> case x of TriggerCondition.PlayerGainsLife y -> Just y; _ -> Nothing),
-          Arm.payload "PlayersGainLife" PlayerRelation.codec TriggerCondition.PlayersGainLife (\x -> case x of TriggerCondition.PlayersGainLife y -> Just y; _ -> Nothing),
-          Arm.payload "PlayerLosesLife" LifeTrigger.codec TriggerCondition.PlayerLosesLife (\x -> case x of TriggerCondition.PlayerLosesLife y -> Just y; _ -> Nothing),
+          Arm.payload "LifeChanges" LifeTrigger.codec TriggerCondition.LifeChanges (\x -> case x of TriggerCondition.LifeChanges y -> Just y; _ -> Nothing),
           Arm.payload "SelfCountersReached" SelfCountersReached.codec TriggerCondition.SelfCountersReached (\x -> case x of TriggerCondition.SelfCountersReached y -> Just y; _ -> Nothing),
           Arm.payload "SelfBecomesClassLevel" ClassLevel.codec TriggerCondition.SelfBecomesClassLevel (\x -> case x of TriggerCondition.SelfBecomesClassLevel y -> Just y; _ -> Nothing),
           Arm.payload "SelfLastCounterRemoved" SelfCountersRemoved.codec TriggerCondition.SelfLastCounterRemoved (\x -> case x of TriggerCondition.SelfLastCounterRemoved y -> Just y; _ -> Nothing),
@@ -228,7 +225,6 @@ tagOf x = case x of
   TriggerCondition.CreatureDealtCombatDamageToMonarch {} -> "CreatureDealtCombatDamageToMonarch"
   TriggerCondition.CreaturesDealtCombatDamageToInitiative {} -> "CreaturesDealtCombatDamageToInitiative"
   TriggerCondition.PlayerTookInitiative {} -> "PlayerTookInitiative"
-  TriggerCondition.OpponentLostLifeDuringYourTurn {} -> "OpponentLostLifeDuringYourTurn"
   TriggerCondition.SelfAttacks {} -> "SelfAttacks"
   TriggerCondition.SelfAttacksWithAnother {} -> "SelfAttacksWithAnother"
   TriggerCondition.SelfAttacksPermanent {} -> "SelfAttacksPermanent"
@@ -290,9 +286,7 @@ tagOf x = case x of
   TriggerCondition.AbilityIsCountered {} -> "AbilityIsCountered"
   TriggerCondition.DamageToPlayerPrevented {} -> "DamageToPlayerPrevented"
   TriggerCondition.SelfPreventsDamage {} -> "SelfPreventsDamage"
-  TriggerCondition.PlayerGainsLife {} -> "PlayerGainsLife"
-  TriggerCondition.PlayersGainLife {} -> "PlayersGainLife"
-  TriggerCondition.PlayerLosesLife {} -> "PlayerLosesLife"
+  TriggerCondition.LifeChanges {} -> "LifeChanges"
   TriggerCondition.SelfCountersReached {} -> "SelfCountersReached"
   TriggerCondition.SelfBecomesClassLevel {} -> "SelfBecomesClassLevel"
   TriggerCondition.SelfLastCounterRemoved {} -> "SelfLastCounterRemoved"

@@ -1637,9 +1637,9 @@ loseLife resolving source controller legal (LifeLoss.MkLifeLoss ref quantity cau
   --
   -- A FENCE rather than a proved behaviour, and the same goes for the
   -- SetLifeTotal, ExchangeLifeTotals and RedistributeLifeTotals brackets below:
-  -- only a life GAIN has a CR 603.2c batch condition watching it
-  -- (Parun.Types.TriggerCondition.PlayersGainLife), so dropping this bracket
-  -- leaves the suite green. It is here because the rule says so.
+  -- only a life GAIN has a card's CR 603.2c batch condition watching it
+  -- (Parun.Types.Batching.OneOrMore), and CR 702.179d's loss batch triggers
+  -- once each turn regardless, so dropping this bracket leaves the suite green. It is here because the rule says so.
   lost <- Event.simultaneously . fmap sum . Monad.forM losers $ \pid ->
     case Common.evaluateForRecipient viewOf context gs resolving source pid quantity of
       Just n

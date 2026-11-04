@@ -2103,7 +2103,6 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> condition
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> condition
   TriggerCondition.PlayerTookInitiative -> condition
-  TriggerCondition.OpponentLostLifeDuringYourTurn -> condition
   TriggerCondition.SelfCycled -> condition
   TriggerCondition.SelfRevealedForMiracle -> condition
   TriggerCondition.RevealedThisWay r -> TriggerCondition.RevealedThisWay r {RevealedThisWay.card = Filter.rewrite pairs (RevealedThisWay.card r)}
@@ -2162,9 +2161,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.AbilityIsCountered -> condition
   TriggerCondition.DamageToPlayerPrevented _ -> condition
   TriggerCondition.SelfPreventsDamage f -> TriggerCondition.SelfPreventsDamage (Filter.rewrite pairs f)
-  TriggerCondition.PlayerGainsLife _ -> condition
-  TriggerCondition.PlayersGainLife _ -> condition
-  TriggerCondition.PlayerLosesLife _ -> condition
+  TriggerCondition.LifeChanges _ -> condition
   TriggerCondition.SelfCountersReached {} -> condition
   TriggerCondition.SelfBecomesClassLevel _ -> condition
   TriggerCondition.SelfLastCounterRemoved _ -> condition

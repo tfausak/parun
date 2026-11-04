@@ -42,6 +42,7 @@ import qualified Parun.Types.AttackedPlayer as AttackedPlayer
 import qualified Parun.Types.AttackerBlocked as AttackerBlocked
 import qualified Parun.Types.AttackerDeclared as AttackerDeclared
 import qualified Parun.Types.AttackerUnblocked as AttackerUnblocked
+import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.BecameAttached as BecameAttached
 import qualified Parun.Types.BecameAttacked as BecameAttacked
 import qualified Parun.Types.BecameBlocking as BecameBlocking
@@ -109,6 +110,7 @@ import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LandPlayed as LandPlayed
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.MadnessCost as MadnessCost
@@ -1894,7 +1896,6 @@ representativeEvents cond =
         -- CR 726.2's third ability is controlled by the taker, so alice's take.
         TriggerCondition.PlayerTookInitiative -> one (GameEvent.TookInitiative S.alice)
         -- CR 702.179d's own event, an opponent's loss.
-        TriggerCondition.OpponentLostLifeDuringYourTurn -> one (GameEvent.LifeLost (LifeChange.MkLifeChange S.bob 2 True))
         TriggerCondition.SelfCycled -> one (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.ToPayCyclingCost Nothing Nothing))
         -- CR 702.94a's cause, so the event is one this condition genuinely
         -- admits; an Ordinary reveal would pin nothing.
@@ -2130,15 +2131,11 @@ representativeEvents cond =
         -- condition's own Filter is the trivial one in everyTriggerCondition
         -- below, so the damage's source may be any id.
         TriggerCondition.SelfPreventsDamage _ -> one (GameEvent.DamagePrevented (DamagePrevented.MkDamagePrevented preventedByBearer (Map.singleton arrived (Map.singleton (Recipient.ToCreature departed) 2))))
-        -- CR 119.9's own event, and the only one this condition admits: the
-        -- payload is a player and an amount, and the amount is the floor.
-        TriggerCondition.PlayerGainsLife _ -> one (GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 2 True))
-        -- The same event, the batch reading admitting exactly what the per-seat
-        -- one does: the two differ in Event.batchScoped, never in the matcher.
-        TriggerCondition.PlayersGainLife _ -> one (GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 2 True))
-        -- The loss condition's own event, and the only one it admits, on the
-        -- gain arm's reasoning: same payload shape, same amount floor.
-        TriggerCondition.PlayerLosesLife _ -> one (GameEvent.LifeLost (LifeChange.MkLifeChange S.bob 2 True))
+        -- CR 119.3's own event in the condition's direction, and the only one it
+        -- admits: the payload is a player and an amount, and the amount is the
+        -- floor. A batch admits the same event: the two differ in
+        -- Event.batchScoped, never in the matcher.
+        TriggerCondition.LifeChanges lifeTrigger -> one (Event.lifeChangeEvent (LifeTrigger.direction lifeTrigger) (LifeChange.MkLifeChange S.bob 2 True))
         -- CR 714.2b: a placement on the BEARER that crosses the chapter. The
         -- bearer here is `departed`, the id Event.matchesTrigger is asked about
         -- below, and the counts straddle N so the event really matches.
@@ -2453,7 +2450,6 @@ everyTriggerCondition =
     TriggerCondition.CreatureDealtCombatDamageToMonarch,
     TriggerCondition.CreaturesDealtCombatDamageToInitiative,
     TriggerCondition.PlayerTookInitiative,
-    TriggerCondition.OpponentLostLifeDuringYourTurn,
     TriggerCondition.SelfCycled,
     TriggerCondition.SelfRevealedForMiracle,
     TriggerCondition.RevealedThisWay (RevealedThisWay.MkRevealedThisWay (Filter.Type.And []) Nothing),
@@ -2524,9 +2520,10 @@ everyTriggerCondition =
     TriggerCondition.AbilityIsCountered,
     TriggerCondition.DamageToPlayerPrevented PlayerRelation.You,
     TriggerCondition.SelfPreventsDamage (Filter.Type.And []),
-    TriggerCondition.PlayerGainsLife (LifeTrigger.MkLifeTrigger PlayerRelation.You TriggerFrequency.EveryTime),
-    TriggerCondition.PlayersGainLife PlayerRelation.AnyPlayer,
-    TriggerCondition.PlayerLosesLife (LifeTrigger.MkLifeTrigger PlayerRelation.Opponent TriggerFrequency.EveryTime),
+    TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Gained PlayerRelation.You TurnScope.EachTurn Batching.EachOccurrence TriggerFrequency.EveryTime),
+    TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Gained PlayerRelation.AnyPlayer TurnScope.EachTurn Batching.OneOrMore TriggerFrequency.EveryTime),
+    TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Lost PlayerRelation.Opponent TurnScope.EachTurn Batching.EachOccurrence TriggerFrequency.EveryTime),
+    TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Lost PlayerRelation.Opponent TurnScope.ControllersTurn Batching.OneOrMore TriggerFrequency.EveryTime),
     TriggerCondition.SelfCountersReached (SelfCountersReached.MkSelfCountersReached CounterKind.Lore 1),
     TriggerCondition.SelfBecomesClassLevel (ClassLevel.MkClassLevel 2),
     TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Defense),

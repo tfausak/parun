@@ -4,8 +4,11 @@
       "delayedAbilities": {
         "synthetic singular cure": {
           "condition": {
-            "type": "PlayerGainsLife",
+            "type": "LifeChanges",
             "value": {
+              "direction": {
+                "type": "Gained"
+              },
               "player": {
                 "type": "AnyPlayer"
               }

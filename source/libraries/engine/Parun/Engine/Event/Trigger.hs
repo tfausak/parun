@@ -47,6 +47,7 @@ import qualified Parun.Types.AttackerDeclared as AttackerDeclared
 import qualified Parun.Types.AttackerUnblocked as AttackerUnblocked
 import qualified Parun.Types.Ballot as Ballot
 import qualified Parun.Types.BallotChoice as BallotChoice
+import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.BattlefieldCandidate as BattlefieldCandidate
 import qualified Parun.Types.BecameAttached as BecameAttached
 import qualified Parun.Types.BecameAttacked as BecameAttacked
@@ -91,6 +92,7 @@ import qualified Parun.Types.LandPlayed as LandPlayed
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Looked as Looked
 import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
@@ -701,7 +703,6 @@ looksBack condition = case condition of
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> False
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> False
   TriggerCondition.PlayerTookInitiative -> False
-  TriggerCondition.OpponentLostLifeDuringYourTurn -> False
   TriggerCondition.SelfCycled -> False
   TriggerCondition.SelfRevealedForMiracle -> False
   TriggerCondition.RevealedThisWay _ -> False
@@ -739,11 +740,8 @@ looksBack condition = case condition of
   TriggerCondition.AbilityIsCountered -> False
   TriggerCondition.DamageToPlayerPrevented _ -> False
   TriggerCondition.SelfPreventsDamage _ -> False
-  TriggerCondition.PlayerGainsLife _ -> False
-  -- CR 603.10a's list names no life change under either scope, so the batch
-  -- reading looks back no further than the per-seat one above.
-  TriggerCondition.PlayersGainLife _ -> False
-  TriggerCondition.PlayerLosesLife _ -> False
+  -- CR 603.10a's list names no life change.
+  TriggerCondition.LifeChanges _ -> False
   TriggerCondition.SelfCountersReached {} -> False
   TriggerCondition.SelfBecomesClassLevel _ -> False
   TriggerCondition.SelfLastCounterRemoved _ -> False
@@ -977,10 +975,6 @@ batchScoped condition = case condition of
   -- taker, so the arm below is False.
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> True
   TriggerCondition.PlayerTookInitiative -> False
-  -- CR 702.179d's "one or more opponents lose life": a group of simultaneous
-  -- losses is one trigger event. Its "only once each turn" is a separate
-  -- rider, spent by Event.withinTriggerLimit.
-  TriggerCondition.OpponentLostLifeDuringYourTurn -> True
   TriggerCondition.SelfCycled -> False
   TriggerCondition.SelfRevealedForMiracle -> False
   TriggerCondition.RevealedThisWay _ -> False
@@ -1044,23 +1038,20 @@ batchScoped condition = case condition of
   -- is spent before this is asked; the DamageToPlayerPrevented arm above's
   -- reasoning, one identity over.
   TriggerCondition.SelfPreventsDamage _ -> False
-  TriggerCondition.PlayerGainsLife _ -> False
-  -- The one True that is not about objects: "whenever one or more players gain
-  -- life" names the whole CR 608.2f batch as its trigger event, so "each player
-  -- gains 4 life" is one occurrence of it and not one per seat -- where the
-  -- PlayerGainsLife arm above is CR 603.2c's second sentence and fires once for
-  -- each.
-  TriggerCondition.PlayersGainLife _ -> True
-  TriggerCondition.PlayerLosesLife _ -> False
+  -- "Whenever one or more players gain life" (and CR 702.179d's "one or more
+  -- opponents lose life") names the whole CR 608.2f batch as its trigger event,
+  -- so "each player gains 4 life" is one occurrence; "a player" is CR 603.2c's
+  -- second sentence and fires once for each.
+  TriggerCondition.LifeChanges lifeTrigger -> LifeTrigger.batching lifeTrigger == Batching.OneOrMore
   TriggerCondition.SelfCountersReached {} -> False
   TriggerCondition.SelfBecomesClassLevel _ -> False
   TriggerCondition.SelfLastCounterRemoved _ -> False
   TriggerCondition.SelfCountersRemoved _ -> False
   TriggerCondition.SelfCounterRemoved _ -> False
-  -- A True beside PermanentsDie and PlayersGainLife: CR 603.2c's FIRST sentence
-  -- is what this constructor exists for -- "one or more counters ... on one or
-  -- more permanents" names the whole group as the trigger event, which occurs
-  -- once.
+  -- A True beside PermanentsDie and a OneOrMore LifeChanges: CR 603.2c's FIRST
+  -- sentence is what this constructor exists for -- "one or more counters ... on
+  -- one or more permanents" names the whole group as the trigger event, which
+  -- occurs once.
   TriggerCondition.PermanentsGetCounters {} -> True
   -- And the SECOND sentence, which is the whole of the difference between this
   -- constructor and the one above: "on A creature" names each permanent the
@@ -1072,8 +1063,8 @@ batchScoped condition = case condition of
   TriggerCondition.SelfCast -> False
   TriggerCondition.SelfBecomesTargeted _ -> False
   TriggerCondition.ControllerBecomesTarget {} -> False
-  -- A True beside PermanentsDie and PlayersGainLife, and the whole of what
-  -- separates this constructor from the two singular arms above: CR 603.2c's
+  -- A True beside PermanentsDie and a OneOrMore LifeChanges, and the whole of
+  -- what separates this constructor from the two singular arms above: CR 603.2c's
   -- FIRST sentence, "one or more creatures you control become the target of an
   -- activated ability" naming the whole rule 601.2c announcement as one trigger
   -- event, so an activation that names three of them contains one occurrence.
@@ -3048,7 +3039,6 @@ zonesTriggeredFrom cond =
         TriggerCondition.CreatureDealtCombatDamageToMonarch -> battlefield
         TriggerCondition.CreaturesDealtCombatDamageToInitiative -> battlefield
         TriggerCondition.PlayerTookInitiative -> battlefield
-        TriggerCondition.OpponentLostLifeDuringYourTurn -> battlefield
         -- CR 302.6 / 508.1a: only a permanent on the battlefield can be declared as an
         -- attacker, so CR 113.6k never reaches this.
         TriggerCondition.SelfAttacks _ -> battlefield
@@ -3195,14 +3185,9 @@ zonesTriggeredFrom cond =
         -- battlefield, so the trigger paired with it watches from there too.
         TriggerCondition.SelfPreventsDamage _ -> battlefield
         -- CR 113.6's default once more: Ajani's Pridemate has to be on the battlefield
-        -- to receive the counter its own ability puts on it.
-        TriggerCondition.PlayerGainsLife _ -> battlefield
-        -- CR 113.6's default, the arm above's: Synthetic Communal Vigil is an
-        -- enchantment watching the table from the battlefield.
-        TriggerCondition.PlayersGainLife _ -> battlefield
-        -- And once more: Exquisite Blood is an enchantment, and CR 113.6 leaves its
-        -- ability functioning only where the permanent is.
-        TriggerCondition.PlayerLosesLife _ -> battlefield
+        -- to receive the counter its own ability puts on it, and Exquisite Blood
+        -- functions only where the permanent is.
+        TriggerCondition.LifeChanges _ -> battlefield
         -- CR 122.1's first sentence puts counters on OBJECTS, and CR 714.3 keeps a
         -- Saga's lore counters on the permanent -- so CR 113.6's default holds and a
         -- chapter ability functions from the battlefield alone.
@@ -3404,7 +3389,6 @@ stateTriggersOn gs
             TriggerCondition.CreatureDealtCombatDamageToMonarch -> False
             TriggerCondition.CreaturesDealtCombatDamageToInitiative -> False
             TriggerCondition.PlayerTookInitiative -> False
-            TriggerCondition.OpponentLostLifeDuringYourTurn -> False
             TriggerCondition.SelfAttacks _ -> False
             TriggerCondition.SelfAttacksWithAnother _ -> False
             TriggerCondition.SelfAttacksPermanent _ -> False
@@ -3459,9 +3443,7 @@ stateTriggersOn gs
             TriggerCondition.AbilityIsCountered -> False
             TriggerCondition.DamageToPlayerPrevented _ -> False
             TriggerCondition.SelfPreventsDamage _ -> False
-            TriggerCondition.PlayerGainsLife _ -> False
-            TriggerCondition.PlayersGainLife _ -> False
-            TriggerCondition.PlayerLosesLife _ -> False
+            TriggerCondition.LifeChanges _ -> False
             -- CR 603.3b's condition is an EVENT trigger too, and the event is
             -- another ability triggering: nothing about it is a state a settle
             -- could re-read.

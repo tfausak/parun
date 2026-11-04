@@ -99,8 +99,11 @@
         },
         {
           "condition": {
-            "type": "PlayerLosesLife",
+            "type": "LifeChanges",
             "value": {
+              "direction": {
+                "type": "Lost"
+              },
               "player": {
                 "type": "You"
               }

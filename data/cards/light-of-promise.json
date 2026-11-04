@@ -37,8 +37,11 @@
                 "type": "Triggered",
                 "value": {
                   "condition": {
-                    "type": "PlayerGainsLife",
+                    "type": "LifeChanges",
                     "value": {
+                      "direction": {
+                        "type": "Gained"
+                      },
                       "player": {
                         "type": "You"
                       }

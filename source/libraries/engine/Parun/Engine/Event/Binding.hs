@@ -24,6 +24,7 @@ import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackerBlocked as AttackerBlocked
 import qualified Parun.Types.AttackerDeclared as AttackerDeclared
 import qualified Parun.Types.AttackerUnblocked as AttackerUnblocked
+import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.BattlefieldCandidate as BattlefieldCandidate
 import qualified Parun.Types.BecameAttached as BecameAttached
 import qualified Parun.Types.BecameAttacked as BecameAttacked
@@ -56,7 +57,7 @@ import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LeftTheGame as LeftTheGame
-import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
 import qualified Parun.Types.ManifestedDread as ManifestedDread
 import qualified Parun.Types.Mentored as Mentored
@@ -707,46 +708,15 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   (TriggerCondition.SelfPreventsDamage f, GameEvent.DamagePrevented prevented) ->
     let admitted = admittedPreventedSources (Projection.sourceContext gs (Just you) bearer) gs f prevented
      in Binding.setPreventedDamageSources (Map.keysSet admitted) (Binding.setEventAmount (sum (fmap sum admitted)) Map.empty)
-  -- CR 119.9's "that much": how much life the gain was, which CR 603.2 makes part
-  -- of the event that fired the trigger -- Sanguine Bond's "target opponent loses
-  -- that much life". The SAME slot the prevention arm above stamps, one printed
-  -- phrase and one number (see Binding.eventAmount).
-  --
-  -- The AMOUNT the event recorded, never the gainer's life total: CR 119.3
-  -- adjusts a total by the gain, so the two coincide only on a board that started
-  -- at nothing, and the printed word means the gain.
-  --
-  -- The gaining PLAYER alongside it, under the reserved slot the loss arm below
-  -- and CR 701.9a's discard trigger already stamp: False Cure's "that player loses
-  -- 2 life for each 1 life they gained" reads both halves of one event, and
-  -- CR 603.2 makes both halves part of it. Bound whichever relation matched, for
-  -- the reason the loss arm spells out -- under You the slot is a second name for
-  -- CR 109.5's "you", a redundancy rather than a wrong answer, and
-  -- eventBindingSlots answers per condition with no relation in hand.
-  (TriggerCondition.PlayerGainsLife _, GameEvent.LifeGained (LifeChange.MkLifeChange pid amount _)) ->
-    Binding.setTriggerPlayer pid (Binding.setEventAmount amount Map.empty)
-  -- The other direction's "that much" -- Exquisite Blood's "you gain that much
-  -- life". The same slot and the same reading as the gain arm above, off an
-  -- event CR 603.2 makes the number part of.
-  --
-  -- The AMOUNT the event recorded, never the loser's life total. Under the one
-  -- relation a card in the pool uses the two are not even the same player's
-  -- number: Exquisite Blood's controller is bound as "you" while the loss is an
-  -- opponent's.
-  --
-  -- The LOSING player alongside it, under the reserved slot CR 701.9a's discard
-  -- trigger already stamps: Mindcrank's "that player mills that many cards" reads
-  -- both halves of one event, and CR 603.2 makes both halves part of it.
-  --
-  -- Bound whichever relation matched, and that is a statement about the EVENT
-  -- rather than about the relation -- eventBindingSlots below answers per
-  -- condition with no relation in hand, so a slot it promises has to hold for
-  -- every relation the condition admits. Under You the loser is also CR 109.5's
-  -- "you", so the slot is a second name for one player there; that is a
-  -- redundancy, not a wrong answer, and the alternative -- binding it only under
-  -- Opponent -- would make the promise depend on the relation.
-  (TriggerCondition.PlayerLosesLife _, GameEvent.LifeLost (LifeChange.MkLifeChange pid amount _)) ->
-    Binding.setTriggerPlayer pid (Binding.setEventAmount amount Map.empty)
+  -- CR 603.2's "that much" and "that player": the amount the change recorded,
+  -- never a life total (Sanguine Bond, Exquisite Blood), and the player whose
+  -- life changed (False Cure, Mindcrank). Bound whichever relation matched, since
+  -- eventBindingSlots promises per condition; under You the player slot is a
+  -- second name for CR 109.5's "you". A batch binds neither (eventBindingSlots).
+  (TriggerCondition.LifeChanges lifeTrigger, _)
+    | LifeTrigger.batching lifeTrigger == Batching.EachOccurrence,
+      Just (pid, amount) <- Game.lifeChangeOf (LifeTrigger.direction lifeTrigger) event ->
+        Binding.setTriggerPlayer pid (Binding.setEventAmount amount Map.empty)
   -- CR 601.2i's "it": the spell that became cast, which the event names and
   -- which nothing else on the ability does. Presence of the Master's "whenever a
   -- player casts an enchantment spell, counter it" is the reader.
@@ -769,7 +739,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- spell, and CR 608.2h is the argument: the spell can be GONE by the time this
   -- ability resolves (another trigger counters it first), and a derivation would
   -- then have to fall back to last known information for a fact the event
-  -- carried outright. The PlayerLosesLife arm binds both halves of its event for
+  -- carried outright. The LifeChanges arm binds both halves of its event for
   -- the same reason.
   --
   -- Bound whatever the Filter admitted, which is what eventBindingSlots'
@@ -1022,7 +992,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
     Binding.setEventAmount (ManaAbilityResolved.amount resolved) Map.empty
   -- CR 725.1's newly crowned player: Garland, Royal Kidnapper's "that player",
   -- whose creature the trigger then targets and whose crown its duration watches.
-  -- Bound whichever relation matched, for the reason the PlayerLosesLife arm
+  -- Bound whichever relation matched, for the reason the LifeChanges arm
   -- gives: eventBindingSlots answers per CONDITION with no relation in hand, so
   -- the slot has to hold for every relation this condition admits. Under You the
   -- crowned player is also CR 109.5's "you", which is a redundancy rather than a
@@ -1576,9 +1546,6 @@ eventBindingSlots cond = case cond of
   -- CR 726.2's taker is the ability's controller, whom Binding.setYou already
   -- names.
   TriggerCondition.PlayerTookInitiative -> Set.empty
-  -- CR 702.179d's ability is borne by no card either, and binds nothing at all --
-  -- "your speed" is the controller's, whom Binding.setYou already names.
-  TriggerCondition.OpponentLostLifeDuringYourTurn -> Set.empty
   -- CR 702.29c's cycled card is the bearer itself, already bound as CR 113.7's
   -- source.
   TriggerCondition.SelfCycled -> Set.empty
@@ -1851,36 +1818,14 @@ eventBindingSlots cond = case cond of
   -- for the amount's reason -- Parun.Types.DamagePrevented carries an ObjectId
   -- unconditionally, so no shape of the event withholds it.
   TriggerCondition.SelfPreventsDamage _ -> Set.fromList [Binding.eventAmount, Binding.preventedDamageSource]
-  -- CR 119.9's amount, guaranteed given a match for the prevention arm's reason:
-  -- GameEvent.LifeGained carries a Natural unconditionally, so no shape of the
-  -- event withholds it. Sanguine Bond's "that much" is what reads it.
-  --
-  -- And the GAINING player, for the reason the loss arm below binds the loser:
-  -- under False Cure's AnyPlayer relation that player is not the "you"
-  -- Binding.setYou names, and "that player loses 2 life for each 1 life they
-  -- gained" reads them. Guaranteed for the same reason the amount is --
-  -- GameEvent.LifeGained carries a PlayerId unconditionally, so the promise holds
-  -- under every relation.
-  TriggerCondition.PlayerGainsLife _ -> Set.fromList [Binding.eventAmount, Binding.triggerPlayer]
-  -- Nothing, PermanentsGetCounters' answer and for its reason: the trigger event
-  -- is a whole CR 608.2f batch, which may hold a gain by every seat at the table
-  -- and a different number for each, so neither reserved slot could name one.
-  -- Synthetic Communal Vigil, the card that landed the constructor, draws a card
-  -- and reads no part of the event; a printing whose payload said "that player"
-  -- would refute this, and the lint would reject it -- PermanentsDie's case
-  -- above, and no member of eventBindingSlotsSometimes for its reason.
-  TriggerCondition.PlayersGainLife _ -> Set.empty
-  -- The loss condition's amount, guaranteed for the same reason:
-  -- GameEvent.LifeLost carries a Natural unconditionally. Exquisite Blood's "you
-  -- gain that much life" is what reads it.
-  --
-  -- And the LOSING player, which is what separates this from the gain arm above:
-  -- under Exquisite Blood's Opponent relation that player is NOT the "you"
-  -- Binding.setYou names, and Mindcrank's "that player mills that many cards"
-  -- reads them. Guaranteed for the same reason the amount is -- GameEvent.LifeLost
-  -- carries a PlayerId unconditionally, so the promise holds under either
-  -- relation.
-  TriggerCondition.PlayerLosesLife _ -> Set.fromList [Binding.eventAmount, Binding.triggerPlayer]
+  -- CR 119.3's amount and the changing player, guaranteed given a match: both
+  -- life events carry a Natural and a PlayerId unconditionally, under every
+  -- relation. A batch binds nothing, PermanentsGetCounters' answer: one CR 608.2f
+  -- batch may hold a change for every seat, each its own number (Synthetic
+  -- Communal Vigil draws a card; CR 702.179d's "your speed" is Binding.setYou's).
+  TriggerCondition.LifeChanges lifeTrigger -> case LifeTrigger.batching lifeTrigger of
+    Batching.EachOccurrence -> Set.fromList [Binding.eventAmount, Binding.triggerPlayer]
+    Batching.OneOrMore -> Set.empty
   -- CR 714.2b names one object -- the bearer -- which CR 113.7a's source slot
   -- already names, so `became` would be a second name for it. The counts the
   -- event carries are the CONDITION's, not the payload's: no chapter ability in

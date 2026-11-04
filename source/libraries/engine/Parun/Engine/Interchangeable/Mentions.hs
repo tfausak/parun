@@ -3024,7 +3024,6 @@ triggerConditionNames asking x = case x of
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> mempty
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> mempty
   TriggerCondition.PlayerTookInitiative -> mempty
-  TriggerCondition.OpponentLostLifeDuringYourTurn -> mempty
   TriggerCondition.SelfCycled -> mempty
   TriggerCondition.SelfRevealedForMiracle -> mempty
   TriggerCondition.RevealedThisWay (RevealedThisWay.MkRevealedThisWay filter_ _timing) -> filterNames asking filter_
@@ -3086,9 +3085,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.AbilityIsCountered -> mempty
   TriggerCondition.DamageToPlayerPrevented _playerRelation -> mempty
   TriggerCondition.SelfPreventsDamage filter_ -> prevention asking <> filterNames asking filter_
-  TriggerCondition.PlayerGainsLife lifeTrigger -> triggerFrequencyNames asking HistoryRead.LifeGains (LifeTrigger.frequency lifeTrigger)
-  TriggerCondition.PlayersGainLife _playerRelation -> mempty
-  TriggerCondition.PlayerLosesLife lifeTrigger -> triggerFrequencyNames asking HistoryRead.LifeLosses (LifeTrigger.frequency lifeTrigger)
+  TriggerCondition.LifeChanges lifeTrigger -> lifeTriggerNames asking lifeTrigger
   TriggerCondition.SelfCountersReached selfCountersReached -> selfCountersReachedNames asking selfCountersReached
   TriggerCondition.SelfBecomesClassLevel _classLevel -> mempty
   TriggerCondition.SelfLastCounterRemoved selfCountersRemoved -> selfCountersRemovedNames asking selfCountersRemoved
@@ -3145,6 +3142,18 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SelfBecomesUnattachedFrom filter_ -> filterNames asking filter_
   TriggerCondition.Reflexive -> mempty
   TriggerCondition.PlacesSticker placesSticker -> filterNames asking (PlacesSticker.object placesSticker)
+
+lifeTriggerNames :: (Monoid r) => Asking r -> LifeTrigger.LifeTrigger -> r
+lifeTriggerNames asking x = case x of
+  LifeTrigger.MkLifeTrigger direction _playerRelation scope _batching frequency ->
+    turnScopeNames asking scope
+      <> triggerFrequencyNames
+        asking
+        ( case direction of
+            LifeDirection.Gained -> HistoryRead.LifeGains
+            LifeDirection.Lost -> HistoryRead.LifeLosses
+        )
+        frequency
 
 -- The look-back a first-time-each-turn trigger makes, over the events its
 -- condition names.

@@ -1493,7 +1493,7 @@ tallyPrevention p gs = case Replacement.printedBy (Prevention.by p) of
 -- the same time, they cause separate life gain events". dealWave brackets a
 -- combat damage step as one Parun.Types.EventGroup (CR 510.2), and a gain
 -- recorded inside that bracket shares it, which fused two attackers' gains into
--- one trigger event for TriggerCondition.PlayersGainLife. At depth 0 -- every
+-- one trigger event for a OneOrMore TriggerCondition.LifeChanges. At depth 0 -- every
 -- caller today -- each record is a group of its own; a bracket an outer caller
 -- left open would take them all, as it takes everything. Parun.EventTriggerSpec's
 -- lifelinkGainEventsSpec is the proof, and its damage-group assertion pins that

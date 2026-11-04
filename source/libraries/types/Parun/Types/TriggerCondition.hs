@@ -122,9 +122,6 @@ data TriggerCondition
     CreaturesDealtCombatDamageToInitiative
   | -- | CR 726.2: "you" took the initiative. Borne by no card.
     PlayerTookInitiative
-  | -- | CR 702.179d: "whenever one or more opponents lose life during your
-    -- turn". Borne by no card.
-    OpponentLostLifeDuringYourTurn
   | -- | CR 702.29c: "when you cycle this card". Self-scoped.
     SelfCycled
   | -- | CR 702.94a: "when you reveal this card this way" -- miracle's triggered
@@ -407,17 +404,10 @@ data TriggerCondition
     -- (Phyrexian Vindicator), matching where CR 614.5's applying instance names
     -- the bearer as its source; the Filter is over CR 120.1's damage source.
     SelfPreventsDamage (Filter.Filter Keyword.Keyword)
-  | -- | CR 119.9: "whenever [a player] gains life" (Ajani's Pridemate), once per
-    -- gain a source caused; its frequency is Vanguard Seraph's "for the first time
-    -- each turn".
-    PlayerGainsLife LifeTrigger.LifeTrigger
-  | -- | CR 603.2c's batch reading of the arm above: "whenever one or more
-    -- players gain life", once for the whole CR 608.2f event.
-    PlayersGainLife PlayerRelation.PlayerRelation
-  | -- | "Whenever [a player] loses life" (Exquisite Blood), against
-    -- GameEvent.LifeLost; its frequency is Vengeful Warchief's "for the first time
-    -- each turn".
-    PlayerLosesLife LifeTrigger.LifeTrigger
+  | -- | CR 119.3 / 119.9: "whenever [a player] gains life" (Ajani's Pridemate) or
+    -- "loses life" (Exquisite Blood); CR 702.179d's "one or more opponents lose
+    -- life during your turn" too.
+    LifeChanges LifeTrigger.LifeTrigger
   | -- | CR 714.2b generalized over the counter kind: a threshold crossing whose
     -- before/after pair straddles N, intervening "if" included.
     SelfCountersReached SelfCountersReached.SelfCountersReached

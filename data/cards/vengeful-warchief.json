@@ -29,8 +29,11 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PlayerLosesLife",
+            "type": "LifeChanges",
             "value": {
+              "direction": {
+                "type": "Lost"
+              },
               "frequency": {
                 "type": "FirstTimeEachTurn"
               },

@@ -30,6 +30,7 @@ import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
 import qualified Parun.Types.AttackTarget as AttackTarget
+import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.CounterKind as CounterKind
@@ -40,6 +41,7 @@ import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Moved as Moved
@@ -57,6 +59,7 @@ import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggerEntry as TriggerEntry
 import qualified Parun.Types.TriggerFrequency as TriggerFrequency
 import qualified Parun.Types.TriggerSource as TriggerSource
+import qualified Parun.Types.TurnScope as TurnScope
 import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZoneChange as ZoneChange
 
@@ -100,7 +103,7 @@ lifeGainTriggerSpec s registry =
         Prompt.DeclareAttackers _ _ ids -> filter (== attacker) ids
         Prompt.DeclareBlockers {} -> Map.empty
         _ -> S.aggressiveAnswer p
-   in Spec.describe s "PlayerGainsLife" $ do
+   in Spec.describe s "LifeChanges Gained" $ do
         -- CR 120.3f: "damage dealt by a source with lifelink causes that source's
         -- controller to gain that much life, in addition to the damage's other
         -- results". The second producer, and the one CR 119.9's rewriting is aimed
@@ -306,7 +309,7 @@ lifeGainAmountSpec s registry =
           Spec.assertEqWith
             s
             "thatMuch is the gain and thatPlayer is the gainer"
-            (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.bob (TriggerCondition.PlayerGainsLife (LifeTrigger.MkLifeTrigger PlayerRelation.You TriggerFrequency.EveryTime)) (GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 7 True)))
+            (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.bob (TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Gained PlayerRelation.You TurnScope.EachTurn Batching.EachOccurrence TriggerFrequency.EveryTime)) (GameEvent.LifeGained (LifeChange.MkLifeChange S.bob 7 True)))
             (Binding.setTriggerPlayer S.bob (Map.singleton Binding.eventAmount (Binding.toAmount 7)))
 
 -- CR 101.4: two delayed entries with DIFFERENT controllers matched by one batch
@@ -1224,7 +1227,7 @@ belltowerSphinxSpec s registry =
 lifeLossTriggerSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 lifeLossTriggerSpec s registry =
   let resolveAll gs = snd (Engine.runGamePure S.identityAnswer gs Engine.priorityLoop)
-   in Spec.describe s "PlayerLosesLife" $ do
+   in Spec.describe s "LifeChanges Lost" $ do
         -- CR 119.2 / 120.3a: "damage dealt to a player by a source without infect
         -- causes that player to lose that much life". The second producer, and
         -- the one no effect says the words for -- combat did.
@@ -1255,7 +1258,7 @@ lifeLossTriggerSpec s registry =
           Spec.assertEqWith
             s
             "thatMuch is the loss and thatPlayer is who lost it"
-            (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.PlayerLosesLife (LifeTrigger.MkLifeTrigger PlayerRelation.Opponent TriggerFrequency.EveryTime)) (GameEvent.LifeLost (LifeChange.MkLifeChange S.bob 7 True)))
+            (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Lost PlayerRelation.Opponent TurnScope.EachTurn Batching.EachOccurrence TriggerFrequency.EveryTime)) (GameEvent.LifeLost (LifeChange.MkLifeChange S.bob 7 True)))
             (Map.fromList [(Binding.eventAmount, Binding.toAmount 7), (Binding.triggerPlayer, Binding.toPlayer S.bob)])
         -- The loser is bound under the OTHER relation too, and that is a claim
         -- about the event rather than about the relation: CR 603.2's environment
@@ -1266,7 +1269,7 @@ lifeLossTriggerSpec s registry =
           Spec.assertEqWith
             s
             "thatPlayer names the loser whichever relation matched"
-            (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.PlayerLosesLife (LifeTrigger.MkLifeTrigger PlayerRelation.You TriggerFrequency.EveryTime)) (GameEvent.LifeLost (LifeChange.MkLifeChange S.alice 3 True)))
+            (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Lost PlayerRelation.You TurnScope.EachTurn Batching.EachOccurrence TriggerFrequency.EveryTime)) (GameEvent.LifeLost (LifeChange.MkLifeChange S.alice 3 True)))
             (Map.fromList [(Binding.eventAmount, Binding.toAmount 3), (Binding.triggerPlayer, Binding.toPlayer S.alice)])
 
 -- CR 603.2's other half of a life-loss event: the PLAYER it named, not only the
