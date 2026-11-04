@@ -168,7 +168,7 @@ leaveAll departing = do
       -- next turn begins.
       leave why pid gs = gs {GameState.players = Map.adjust (lose why) pid (GameState.players gs), GameState.departedThisTurn = Set.insert pid (GameState.departedThisTurn gs)}
       -- CR 800.4a's first three clauses, in the rule's order.
-      clauses pid = if continues then nonCardStackObjectsCease pid . controlEffectsEnd pid . objectsLeaveWith pid else id
+      clauses pid = if continues then nonCardStackObjectsCease pid . controlEffectsEnd pid . objectsLeaveWith before pid else id
   -- ONE event: CR 800.4a's leaving is a single instant for every player in
   -- the set, and CR 725.4 crowns "at the same time as that player leaves", so the
   -- crowning shares the departure's event group and CR 610.3d returns the
@@ -303,8 +303,8 @@ continuesAfterDeparture gs = length (GameState.turnOrder gs) > 2
 --
 --   * any other row whose VALUE names a departing object; Event.leaveTheGame
 --     says why each of those stays.
-objectsLeaveWith :: PlayerId -> GameState -> GameState
-objectsLeaveWith pid gs =
+objectsLeaveWith :: GameState -> PlayerId -> GameState -> GameState
+objectsLeaveWith asOf pid gs =
   let -- CR 800.4n: objects the player owns in the ante do not leave the game,
       -- an exception to CR 800.4a.
       -- CR 901.10: nor does an ability from a phenomenon (CR 901.10b).
@@ -324,19 +324,21 @@ objectsLeaveWith pid gs =
       -- ONE event group for the batch (CR 800.4a is a single instant), so a
       -- look-back condition reads them as simultaneous rather than as a
       -- sequence.
-      permanents = filter (\oid -> Set.member oid (GameState.battlefield gs)) owned
-      -- Every one read against `gs`, the board BEFORE any of them left, rather
-      -- than against the fold's running state: rule 800.4a's first clause is one
-      -- event, so a permanent's record must not read a board its siblings have
-      -- already been removed from. Event.changeZoneInBatch's `asOf` is the same
-      -- reading for the same reason.
-      removed = List.foldl' (Event.leaveTheGame gs) gs owned
+      permanents = filter (\oid -> Set.member oid (GameState.battlefield asOf)) owned
+      -- Every one read against `asOf`, the board BEFORE any player in the set
+      -- left, rather than against the running state: rule 800.4a's first clause
+      -- is one event for all of them, so a permanent's record must not read a
+      -- board its siblings have already been removed from. Event.changeZoneInBatch's
+      -- `asOf` is the same reading for the same reason. data/scenarios's two
+      -- "Funeral March triggers when its owner and its creature's owner leave at
+      -- one instant" scenarios, differing in seats, prove it.
+      removed = List.foldl' (Event.leaveTheGame asOf) gs owned
       -- CR 708.9's third sentence: the departing player reveals each face-down
-      -- permanent, face-down component and face-down spell they own, read off `gs` and recorded
+      -- permanent, face-down component and face-down spell they own, read off `asOf` and recorded
       -- ahead of the LeftTheGame events, as the zone-change funnel reveals before
       -- the move. Parun.FaceDownSpec's "CR 708.9 the Witness draws when a
       -- face-down permanent's owner leaves the game" proves it.
-      revealed = concatMap (Event.leavingReveals gs) owned
+      revealed = concatMap (Event.leavingReveals asOf) owned
    in Event.simultaneouslyPure
         (\g -> List.foldl' (\g1 oid -> Event.recordEvent (GameEvent.LeftTheGame (LeftTheGame.MkLeftTheGame oid Zone.Battlefield)) g1) (List.foldl' (flip Event.recordEvent) g revealed) permanents)
         removed

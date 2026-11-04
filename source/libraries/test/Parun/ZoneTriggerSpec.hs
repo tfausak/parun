@@ -2261,7 +2261,10 @@ representativeEvents cond =
         -- if the ids coincided. Whether the departed permanent is really the
         -- bearer's host does not matter, eventBindings reading the event rather
         -- than the attachment.
-        TriggerCondition.AttachedCreatureDies -> one (GameEvent.Moved (Moved.moved (ZoneChange.MkZoneChange departed arrived Zone.Battlefield Zone.Graveyard) S.emptyCharacteristics))
+        TriggerCondition.AttachedPermanentLeaves (Just _) -> one (GameEvent.Moved (Moved.moved (ZoneChange.MkZoneChange departed arrived Zone.Battlefield Zone.Graveyard) S.emptyCharacteristics))
+        -- With no destination pinned, CR 603.6c's other two roads bind the same.
+        TriggerCondition.AttachedPermanentLeaves Nothing ->
+          noTable (GameEvent.Moved (Moved.moved (ZoneChange.MkZoneChange departed arrived Zone.Battlefield Zone.Graveyard) S.emptyCharacteristics)) NonEmpty.:| [noTable (moved Zone.Battlefield Zone.Hand), noTable (leftTheGameFrom Zone.Battlefield)]
         -- CR 701.26's own event for the watched direction, and the only one
         -- this condition admits. Whether the permanent is the bearer's host does
         -- not matter here: eventBindings claims nothing either way, and the
@@ -2596,7 +2599,8 @@ everyTriggerCondition =
     TriggerCondition.FaceDownPermanentLeavesRevealed,
     TriggerCondition.PermanentBecomesDesignated (PermanentBecomesDesignated.MkPermanentBecomesDesignated Designation.Renowned (Filter.Type.And [])),
     TriggerCondition.AttachedCreatureMentors,
-    TriggerCondition.AttachedCreatureDies,
+    TriggerCondition.AttachedPermanentLeaves Nothing,
+    TriggerCondition.AttachedPermanentLeaves (Just Zone.Graveyard),
     TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Tapped ActingPermanent.Self),
     TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Tapped (ActingPermanent.Matching (Filter.Type.HasAttached Filter.Type.IsSource))),
     TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Untapped ActingPermanent.Self),

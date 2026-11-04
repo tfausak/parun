@@ -2186,7 +2186,7 @@ rewriteTriggerCondition pairs condition = case condition of
     TriggerCondition.PermanentActs
       acts {PermanentActed.permanent = acting (PermanentActed.permanent acts)}
   TriggerCondition.AttachedCreatureMentors -> condition
-  TriggerCondition.AttachedCreatureDies -> condition
+  TriggerCondition.AttachedPermanentLeaves _ -> condition
   TriggerCondition.BecomesTapState watched -> TriggerCondition.BecomesTapState watched {BecomesTapState.actor = acting (BecomesTapState.actor watched)}
   TriggerCondition.PermanentsBecomeTapped f -> TriggerCondition.PermanentsBecomeTapped (Filter.rewrite pairs f)
   TriggerCondition.AttachedPermanentTappedForMana -> condition

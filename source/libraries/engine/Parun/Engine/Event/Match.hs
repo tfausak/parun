@@ -1050,7 +1050,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- its group to one trigger per target.
   --
   -- The subject comes from Object.attachedTo (CR 303.4m), read live rather than
-  -- through last known information as AttachedCreatureDies reads it: that arm
+  -- through last known information as AttachedPermanentLeaves reads it: that arm
   -- matches an event that may have taken the bearer with it, and a declaration of
   -- attackers moves nothing.
   --
@@ -1728,9 +1728,10 @@ armMatches bindings board gs bearer you cond event = case cond of
             }
       )
       event
-  -- CR 700.4's "dies" once more, asked of the permanent the bearer is attached
-  -- to: PermanentDies' battlefield-to-graveyard pair, matched on
-  -- ZoneChange.departed for that arm's reason (CR 603.10a).
+  -- CR 603.6c asked of the permanent the bearer is attached to: PermanentDies'
+  -- battlefield-to-graveyard pair where the destination is pinned so (CR 700.4),
+  -- PermanentLeavesTheBattlefield's wider test where it isn't, matched on
+  -- ZoneChange.departed for those arms' reason (CR 603.10a).
   --
   -- CR 603.10a's look-back, and the ONE reading of the link: the deceased's own
   -- CR 608.2h record of what was attached to it, filed by the zone-change funnel
@@ -1747,16 +1748,27 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- nothing more for last known information to answer.
   --
   -- Empty for a departure the funnel never filed, which no event this arm admits
-  -- can be: a battlefield-to-graveyard move is the funnel's own.
-  TriggerCondition.AttachedCreatureDies -> case Game.diedChange event of
-    Nothing -> False
-    Just zc -> maybe False (Set.member bearer . LastKnown.attached) (Game.lastKnownOf (ZoneChange.departed zc) gs)
+  -- can be: a move off the battlefield is the funnel's own, and
+  -- Event.leaveTheGame files its record too.
+  --
+  -- CR 603.6c's leaving-the-game form only with no destination pinned, as
+  -- SelfPutFromBattlefieldInto declines it: that departure reaches no zone.
+  TriggerCondition.AttachedPermanentLeaves destination ->
+    let enchanted departed = maybe False (Set.member bearer . LastKnown.attached) (Game.lastKnownOf departed gs)
+     in case event of
+          GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _) ->
+            ZoneChange.from zc == Zone.Battlefield
+              && ZoneChange.to zc /= Zone.Battlefield
+              && maybe True (== ZoneChange.to zc) destination
+              && enchanted (ZoneChange.departed zc)
+          GameEvent.LeftTheGame l -> Maybe.isNothing destination && LeftTheGame.from l == Zone.Battlefield && enchanted (LeftTheGame.object l)
+          _ -> False
   -- CR 701.26a's tap, once per permanent: the bearer by id (City of Brass), or
   -- a permanent the Filter admits, judged off CR 603.10's board just after the
   -- event (Thoughtleech). Betrayal's "enchanted creature" is
   -- `Matching (HasAttached IsSource)`: the tapped host is still standing, so
   -- Projection.sampledView reads the attachment link live rather than through
-  -- last known information, where AttachedCreatureDies has to look back because
+  -- last known information, where AttachedPermanentLeaves has to look back because
   -- the SBA batch that kills the host takes the link away (CR 704.5m).
   --
   -- CR 701.26b's untap is the same arm in the other direction: the bearer

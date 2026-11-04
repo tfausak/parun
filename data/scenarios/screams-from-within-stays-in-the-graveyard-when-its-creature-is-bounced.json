@@ -1,0 +1,134 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "attached": "bears",
+            "card": "Screams from Within",
+            "label": "screams"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Boomerang",
+            "label": "boomerang"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "manaPool": "UU",
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          },
+          {
+            "card": "Hill Giant"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain",
+    "turn": 3
+  },
+  "description": "CR 700.4 a bounce isn't a death: Screams from Within doesn't return",
+  "note": "The pair of Funeral March's bounce: the same board for a condition pinned to the graveyard. Checked once the stack is empty, and the Giant is what a return would enchant.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "object": "$boomerang",
+          "targets": [
+            "$bears"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 3
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 3
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Grizzly Bears",
+          "count": 1,
+          "player": "bob",
+          "zone": "Hand"
+        }
+      },
+      "player": "alice",
+      "step": "BeginningOfCombat",
+      "turn": 3
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Screams from Within",
+          "count": 1,
+          "player": "alice",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "alice",
+      "step": "BeginningOfCombat",
+      "turn": 3
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Screams from Within",
+          "count": 0,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "BeginningOfCombat",
+      "turn": 3
+    }
+  ]
+}

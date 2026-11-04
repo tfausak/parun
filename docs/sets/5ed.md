@@ -10,8 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #5089: Funeral March. An Aura can't trigger when its creature leaves the
-  battlefield other than by dying.
 - #5208: Mana Flare. No mana ability adds a type the tapped land produced (CR
   106.12a).
 - #5216: Ghazbán Ogre. Nothing names the player with the most life.

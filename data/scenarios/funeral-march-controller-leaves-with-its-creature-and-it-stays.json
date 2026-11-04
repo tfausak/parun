@@ -1,0 +1,144 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "attached": "bears",
+            "card": "Funeral March",
+            "label": "march"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Grizzly Bears",
+            "controller": "carol",
+            "label": "bears"
+          },
+          {
+            "attached": "march",
+            "card": "Confiscate"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Goblin Piker"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "carol"
+      }
+    ],
+    "step": "PrecombatMain",
+    "turn": 3
+  },
+  "description": "CR 603.3a Funeral March stays while its stealer leaves with its creature: the trigger was his and never reaches the stack",
+  "note": "Bob concedes; his Bears, under carol's control, and his Confiscate leave at once, and alice's March stays. The ability looks back (CR 603.10a), so bob controlled its source when it triggered, and CR 800.4d keeps it off the stack: carol keeps the Piker. funeral-march-owner-leaves-the-game is the board with no Confiscate.",
+  "timeline": [
+    {
+      "check": {
+        "View": {
+          "is": "bob",
+          "object": "$march",
+          "of": "Controller"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 3
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 3
+    },
+    {
+      "do": "Concede",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 3
+    },
+    {
+      "check": {
+        "View": {
+          "is": [],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 3
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Goblin Piker",
+          "count": 1,
+          "player": "carol",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 3
+    }
+  ]
+}

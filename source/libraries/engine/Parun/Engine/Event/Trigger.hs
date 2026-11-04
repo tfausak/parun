@@ -602,7 +602,7 @@ looksBack condition = case condition of
   -- CR 603.10a's first family read off the HOST rather than the bearer: this
   -- triggers when a permanent leaves the battlefield, so the rule reaches the
   -- ability however the bearer is found.
-  TriggerCondition.AttachedCreatureDies -> True
+  TriggerCondition.AttachedPermanentLeaves _ -> True
   -- Not on CR 603.10a's list at all: that rule names leaves-the-battlefield
   -- abilities, sacrifices, cards leaving a graveyard and objects put into a hand
   -- or library, and a permanent becoming tapped is none of them. It stays on the
@@ -885,7 +885,7 @@ batchScoped condition = case condition of
   TriggerCondition.CardsPutIntoZone {} -> True
   -- One card, one departure.
   TriggerCondition.SelfLeavesGraveyard -> False
-  TriggerCondition.AttachedCreatureDies -> False
+  TriggerCondition.AttachedPermanentLeaves _ -> False
   -- Thoughtleech's "whenever an Island ... becomes tapped" has no "one or
   -- more", so each permanent a tapping event taps is its own occurrence. The
   -- untap direction the same way, CR 502.3's simultaneous batch included:
@@ -2366,8 +2366,22 @@ eventTriggers events gs =
         GameEvent.ActivatedAbilityResolved _ -> Map.empty
         GameEvent.TriggeredAbilityResolved _ -> Map.empty
         GameEvent.CardArrived _ -> Map.empty
-      forOne board logged (oid, (ctrl, abilities)) =
+      forOne board logged (oid, (sampled, abilities)) =
         let event = LoggedEvent.event logged
+            -- CR 603.3a's "at the time it triggered" is, for a look-back ability
+            -- (CR 603.10), immediately before the event, so a bearer standing
+            -- through it answers to its controller on the board before.
+            -- Zidane, Tantalus Thief's ruling refutes the after board on a bearer
+            -- that stays and changes hands. data/scenarios's "Funeral March stays
+            -- while its stealer leaves" and "Angelic Sleuth stolen by a conceding
+            -- player" scenarios prove it.
+            controllerFor cond = case Map.lookup (LoggedEvent.group logged) (GameState.boardBeforeEvent gs) of
+              Just before
+                | looksBack cond,
+                  Map.member oid board,
+                  Set.member oid (GameState.battlefield before) ->
+                    Maybe.fromMaybe sampled (Projection.controllerOf oid before)
+              _ -> sampled
             -- The bearer's own slot environment, so a condition naming a slot
             -- (TriggerCondition.LoseControlOfBound) is read the same way here as it
             -- is for a CR 603.7 delayed entry. Empty for a bearer that has since
@@ -2379,11 +2393,11 @@ eventTriggers events gs =
             -- pending trigger carries.
             -- CR 801.7: and the event happened within the controller's range,
             -- or anywhere for a planar bearer (CR 801.18).
-            fires (cond, _) = matchesTriggerGiven bindings board gs oid ctrl cond event && eventWithinRange board gs (Plane.rangePerspective oid ctrl gs) event
+            fires (cond, _) = matchesTriggerGiven bindings board gs oid (controllerFor cond) cond event && eventWithinRange board gs (Plane.rangePerspective oid (controllerFor cond) gs) event
             -- CR 400.7d: an ability of a permanent may read what costs were
             -- paid for the spell it was, so the bearer's record rides on every
             -- ability it triggers (Binding.paidCostRecord).
-            pend (cond, ab) = PendingTrigger.MkPendingTrigger (TriggerSource.OfObject oid) ctrl ab (Map.union (Binding.paidCostRecord bindings) (eventBindingsOver board gs (Map.lookup oid becameInGraveyard) becameInPublicZone oid ctrl cond event)) Nothing (Just logged) (copiesIn (fmap snd abilities) ab) (delayedAsTriggered board oid gs)
+            pend (cond, ab) = PendingTrigger.MkPendingTrigger (TriggerSource.OfObject oid) (controllerFor cond) ab (Map.union (Binding.paidCostRecord bindings) (eventBindingsOver board gs (Map.lookup oid becameInGraveyard) becameInPublicZone oid (controllerFor cond) cond event)) Nothing (Just logged) (copiesIn (fmap snd abilities) ab) (delayedAsTriggered board oid gs)
             -- CR 603.2d: a permanent entering may make an ability of a
             -- permanent trigger additional times (Yarok, the Desecrated),
             -- whichever side of the move its condition names (docs/decisions.md,
@@ -2398,13 +2412,13 @@ eventTriggers events gs =
             -- Each effect adds its own, so one that names the bearer (Sanctum
             -- of All) adds to one that names the entry.
             additional cond =
-              additionalTriggers gs ctrl oid (LoggedEvent.group logged) (looksBack cond) + case Game.enteredBattlefieldChange event of
-                Just zc | Map.member oid board -> additionalEntryTriggers gs ctrl zc
+              additionalTriggers gs (controllerFor cond) oid (LoggedEvent.group logged) (looksBack cond) + case Game.enteredBattlefieldChange event of
+                Just zc | Map.member oid board -> additionalEntryTriggers gs (controllerFor cond) zc
                 _ -> 0
             -- CR 805.4d: one trigger per player whose step this is (stepCopies).
             -- Each paired with which of CR 603.2d's instances it is.
             pends (cond, ab) =
-              let perPlayer = stepCopies gs oid ctrl cond event ab (pend (cond, ab))
+              let perPlayer = stepCopies gs oid (controllerFor cond) cond event ab (pend (cond, ab))
                   occurrences = maybe perPlayer (\n -> concat (List.genericReplicate n perPlayer)) (countersRemovedOccurrences oid cond event)
                in [(extra, trigger) | extra <- [0 .. additional cond], trigger <- occurrences]
             -- CR 603.2c's key, for `oncePerBatch` below: which ability of which
@@ -2698,7 +2712,7 @@ selfNamingSlots condition =
 -- here.
 enchantedObjectLeaves :: TriggerCondition -> Bool
 enchantedObjectLeaves condition = case condition of
-  TriggerCondition.AttachedCreatureDies -> True
+  TriggerCondition.AttachedPermanentLeaves _ -> True
   -- False, stated rather than left to the wildcard: this watches the SAME
   -- attachment link, but for an event that leaves the enchanted permanent right
   -- where it was, so CR 113.6m's Aura clause has nothing to exempt.
@@ -2718,7 +2732,7 @@ enchantedObjectLeaves condition = case condition of
 --
 -- Self-scoped conditions only: the rule's "its trigger condition" is the
 -- ability's OWN watcher, distinct from the Aura disjunct beside it, which is
--- about a DIFFERENT object (the thing enchanted). `AttachedCreatureDies` answers
+-- about a DIFFERENT object (the thing enchanted). `AttachedPermanentLeaves` answers
 -- False here for that reason -- the enchanted creature dying does not put the
 -- Aura itself anywhere.
 --
@@ -2968,7 +2982,7 @@ zonesTriggeredFrom cond =
         -- battlefield at all -- does not apply. What DOES apply is CR 113.6m's Aura
         -- clause, read by zonesFunctionedIn above, which is why this arm is reached
         -- for Screams from Within and Skullclamp but not for Synthetic Widowed Blade.
-        TriggerCondition.AttachedCreatureDies -> battlefield
+        TriggerCondition.AttachedPermanentLeaves _ -> battlefield
         -- The same default for the same reason, and more plainly: an Aura enchanting a
         -- permanent is itself a permanent on the battlefield, and CR 113.6k's exception
         -- is for a condition that cannot trigger from there at all.
@@ -3504,9 +3518,9 @@ stateTriggersOn gs
             -- counter like any other, so the board afterwards says nothing about
             -- which creature mentored which.
             TriggerCondition.AttachedCreatureMentors -> False
-            -- CR 700.4's death is an EVENT, and the board afterwards cannot
+            -- CR 603.6c's departure is an EVENT, and the board afterwards cannot
             -- say which permanent an Aura in a graveyard used to enchant.
-            TriggerCondition.AttachedCreatureDies -> False
+            TriggerCondition.AttachedPermanentLeaves _ -> False
             -- CR 701.26a's tap is an EVENT too. A tapped enchanted permanent is
             -- a state the board can read, which is exactly why this must be
             -- False: CR 603.2e says a "becomes" condition does not retrigger

@@ -10980,8 +10980,8 @@ controllerTurnScoped cond = case cond of
   -- watches rather than a narrowing this condition states, and the Equipment's
   -- controller need not be that player.
   TriggerCondition.AttachedCreatureMentors -> False
-  -- CR 303.4 names no turn either: an enchanted creature can die on anyone's.
-  TriggerCondition.AttachedCreatureDies -> False
+  -- CR 303.4 names no turn either: an enchanted permanent can leave on anyone's.
+  TriggerCondition.AttachedPermanentLeaves _ -> False
   -- Nor does CR 701.26a: an enchanted creature can be tapped on anyone's turn,
   -- and Betrayal's whole point is that the Aura's controller is not the tapping
   -- creature's. Nor CR 701.26b: CR 502.3's untap step is the active player's,

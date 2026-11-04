@@ -1127,8 +1127,8 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.PermanentBecomesDesignated {} -> []
   -- CR 702.134c's is nullary too, so it holds no Quantity.
   TriggerCondition.AttachedCreatureMentors -> []
-  -- CR 700.4's is nullary as well, for the same reason.
-  TriggerCondition.AttachedCreatureDies -> []
+  -- CR 603.6c's holds at most a Zone, so no Quantity either.
+  TriggerCondition.AttachedPermanentLeaves _ -> []
   TriggerCondition.BecomesTapState _ -> []
   TriggerCondition.PermanentsBecomeTapped _ -> []
   TriggerCondition.AttachedPermanentTappedForMana -> []
@@ -4664,7 +4664,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.AttachedCreatureMentors -> []
   -- CR 303.4b's "enchanted creature" is one permanent rather than a class of
   -- them too, so this condition carries no Filter either.
-  TriggerCondition.AttachedCreatureDies -> []
+  TriggerCondition.AttachedPermanentLeaves _ -> []
   -- Thoughtleech's "an Island an opponent controls" and Deeproot Pilgrimage's
   -- "nontoken Merfolk you control" are card text, swept like PermanentsDie's.
   TriggerCondition.BecomesTapState watched -> actingFilters (BecomesTapState.actor watched)
@@ -4993,7 +4993,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.CardsLeaveZone {} -> []
   TriggerCondition.CardsPutIntoZone {} -> []
   TriggerCondition.SelfLeavesGraveyard -> []
-  TriggerCondition.AttachedCreatureDies -> []
+  TriggerCondition.AttachedPermanentLeaves _ -> []
   TriggerCondition.BecomesTapState _ -> []
   TriggerCondition.PermanentsBecomeTapped _ -> []
   TriggerCondition.AttachedPermanentTappedForMana -> []

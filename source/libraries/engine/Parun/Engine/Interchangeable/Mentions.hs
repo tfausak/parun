@@ -3073,7 +3073,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.CardsLeaveZone cardLeavesZone -> cardLeavesZoneNames asking cardLeavesZone
   TriggerCondition.CardsPutIntoZone cardsPutIntoZone -> cardsPutIntoZoneNames asking cardsPutIntoZone
   TriggerCondition.SelfLeavesGraveyard -> mempty
-  TriggerCondition.AttachedCreatureDies -> mempty
+  TriggerCondition.AttachedPermanentLeaves _ -> mempty
   TriggerCondition.BecomesTapState becomesTapState -> actingPermanentNames asking (BecomesTapState.actor becomesTapState)
   TriggerCondition.PermanentsBecomeTapped filter_ -> filterNames asking filter_
   TriggerCondition.AttachedPermanentTappedForMana -> mempty

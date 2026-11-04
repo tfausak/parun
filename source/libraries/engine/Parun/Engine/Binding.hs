@@ -904,7 +904,7 @@ manaSource = SlotName.MkSlotName (Text.pack "thatManaSource")
 -- TriggerCondition.PermanentLeavesTheBattlefield, its destination-pinned
 -- PermanentReturnedToHand, its graveyard-pinned PermanentDies, where Cleopatra,
 -- Exiled Pharaoh's "draw a card for each counter on it" reads it, and, for CR
--- 303.4b's enchanted creature, AttachedCreatureDies, where Banewasp Affliction's
+-- 303.4b's enchanted creature, AttachedPermanentLeaves, where Banewasp Affliction's
 -- "that creature's controller loses life equal to its toughness" reads it, and
 -- CR 701.21a's PermanentSacrificed, where Prowling Geistcatcher's "if that
 -- creature was a token" reads it. Under

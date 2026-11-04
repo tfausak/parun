@@ -142,7 +142,10 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "AttachedCreatureDies"
+            "type": "AttachedPermanentLeaves",
+            "value": {
+              "type": "Graveyard"
+            }
           },
           "modal": {
             "modes": [

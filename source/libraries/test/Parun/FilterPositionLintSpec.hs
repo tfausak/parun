@@ -1253,10 +1253,10 @@ hostOfSourceCounts :: Face.Face Card.Type.Card -> (Int, Int)
 hostOfSourceCounts = chosenValueCounts hostFramed (const False) hostOfSourceTag
 
 -- The source-framed positions the host atom is admitted in: narrower than
--- `sourceFramed`, and the four a card in the pool writes it in. Not
--- implemented: CR 603.10a's look-back to the host in a trigger condition
--- ("when enchanted creature leaves the battlefield"), where CR 704.5n leaves an
--- Equipment unattached on the battlefield (gap #5089).
+-- `sourceFramed`, and the four a card in the pool writes it in. A trigger
+-- condition is outside: CR 704.5n leaves an Equipment unattached on the
+-- battlefield before a CR 603.10a look-back is matched, and "when enchanted
+-- creature leaves the battlefield" is TriggerCondition.AttachedPermanentLeaves.
 hostFramed :: Framing -> Bool
 hostFramed framing = case framing of
   SourceHostFramed -> True
@@ -2142,8 +2142,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     Spec.assertEqWith s "a planted atom is an offence" (hostOfSourceCounts planted) (0, 1)
     Spec.assertBool s (hostOfSourceOffends planted) "and the lint says so"
     -- A PERMANENT's trigger condition is source-framed, but CR 704.5n has
-    -- unattached an Equipment before a CR 603.10a look-back is matched (gap
-    -- #5089), so it is refused.
+    -- unattached an Equipment before a CR 603.10a look-back is matched, so it
+    -- is refused.
     let onTrigger = (S.combinedFace piker) {Face.triggeredAbilities = [oneEffectTrigger (TriggerCondition.PermanentEnters buried) (Effect.Draw (Draw.MkDraw (PlayerRef.InSlot Binding.you) (Quantity.Type.Literal 1) Nothing))]}
     Spec.assertEqWith s "a trigger condition asking it is an offence too" (hostOfSourceCounts onTrigger) (0, 1)
     -- CastOffer.payingInstead carries SlotlessCostFramed and is paid framed by

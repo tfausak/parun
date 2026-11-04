@@ -1182,7 +1182,7 @@ becameSlotSpec s registry =
           Spec.assertEqWith
             s
             "became names the Aura's incarnation, not the host's"
-            (Event.eventBindings (Setup.emptyGame S.bothPlayers) (Just bearerArrived) Map.empty (ObjectId.MkObjectId 0) S.alice TriggerCondition.AttachedCreatureDies hostDied)
+            (Event.eventBindings (Setup.emptyGame S.bothPlayers) (Just bearerArrived) Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.AttachedPermanentLeaves (Just Zone.Graveyard)) hostDied)
             (Map.fromList [(Binding.became, Binding.toObject bearerArrived), (Binding.departedPermanent, Binding.toObject departed)])
           -- CR 303.4b's half stands alone where the bearer reached no graveyard:
           -- the host's departure is the EVENT's datum and CR 704.5n's Equipment
@@ -1191,7 +1191,7 @@ becameSlotSpec s registry =
           Spec.assertEqWith
             s
             "and the host alone where the bearer reached no graveyard"
-            (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice TriggerCondition.AttachedCreatureDies hostDied)
+            (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.AttachedPermanentLeaves (Just Zone.Graveyard)) hostDied)
             (Map.singleton Binding.departedPermanent (Binding.toObject departed))
         -- The pin on Event.eventBindingSlots, the per-CONDITION slot set the
         -- card lint asks (CardSpec's "every slot a triggered ability reads is
@@ -1216,14 +1216,16 @@ becameSlotSpec s registry =
         -- nothing at all. For every other the intersection is exactly that
         -- single event's keyset.
         --
-        -- The BEARER ARRIVAL argument is held constant at a present one, and is
-        -- not a second dimension of the intersection: it is CR 400.7f's datum
-        -- rather than a shape the event can take, and eventBindingSlots'
-        -- AttachedCreatureDies arm claims the slot on CR 704.5m's Aura, whose
-        -- arrival is present for every event that condition admits. Holding it
-        -- Nothing instead would pin the OTHER reading, under which no card could
-        -- read `became` there at all -- and CR 704.5n's Equipment bearer, which
-        -- has no arrival, is the over-claim that arm's own comment records.
+        -- The BEARER ARRIVAL argument is a present one, and a second dimension of
+        -- the intersection for AttachedPermanentLeaves with no destination alone:
+        -- it is CR 400.7f's datum rather than a shape the event can take, and
+        -- eventBindingSlots' arm claims the slot with a destination on CR 704.5m's
+        -- Aura, whose arrival is present for every event that form admits, while
+        -- CR 800.4a can take the bare form's Aura from the game with its host.
+        -- Holding it Nothing for every condition would pin the OTHER reading,
+        -- under which no card could read `became` there at all -- and CR 704.5n's
+        -- Equipment bearer, which has no arrival, is the over-claim that arm's own
+        -- comment records.
         Spec.it s "CR 603.2 eventBindingSlots names exactly the keys eventBindings stamps for EVERY event a condition admits" $ do
           piker <- S.printingOf s registry "Goblin Piker"
           let bearerBecame = Just (ObjectId.MkObjectId 3)
@@ -1254,7 +1256,13 @@ becameSlotSpec s registry =
           Spec.assertBool s (not (Map.null (GameState.lastKnown pinState))) "the funnel filed a last-known record for the bounced Piker"
           mapM_
             ( \cond ->
-                let stamped = fmap (\(arrivals, event) -> Map.keysSet (Event.eventBindings pinState bearerBecame arrivals (ObjectId.MkObjectId 0) S.alice cond event)) (representativeEvents cond)
+                let bearerArrivals = case cond of
+                      TriggerCondition.AttachedPermanentLeaves Nothing -> bearerBecame NonEmpty.:| [Nothing]
+                      _ -> bearerBecame NonEmpty.:| []
+                    stamped = do
+                      arrival <- bearerArrivals
+                      (arrivals, event) <- representativeEvents cond
+                      pure (Map.keysSet (Event.eventBindings pinState arrival arrivals (ObjectId.MkObjectId 0) S.alice cond event))
                  in Spec.assertEqWith s ("the slots bound for " <> show cond) (Event.eventBindingSlots cond) (foldr Set.intersection (NonEmpty.head stamped) (NonEmpty.tail stamped))
             )
             everyTriggerCondition
@@ -3261,7 +3269,7 @@ screamsFromWithinSpec s registry =
 -- "an ability of a permanent that refers to the enchanted [object] refers to
 -- whatever object that permanent is attached to, even if the permanent with the
 -- ability isn't an Aura" -- so an Equipment's "equipped creature dies" is the
--- same attachment link and the same TriggerCondition.AttachedCreatureDies.
+-- same attachment link and the same TriggerCondition.AttachedPermanentLeaves.
 --
 -- Synthetic Widowed Blade ({2} Artifact -- Equipment, "Equipped creature gets
 -- +2/+0. / Whenever equipped creature dies, return Synthetic Widowed Blade from
@@ -3282,7 +3290,7 @@ screamsFromWithinSpec s registry =
 -- what leaves an Aura triggering from the battlefield naming a different
 -- incarnation. It is also why this card is the FIRST in the pool to reach
 -- CR 113.6m's Aura clause at all -- `Event.selfNamingSlots` gives an
--- AttachedCreatureDies ability the reserved source slot alone, so every printed
+-- AttachedPermanentLeaves ability the reserved source slot alone, so every printed
 -- Aura with this condition answers Nothing through the fold whether the clause
 -- is read or not, and only a bearer whose ability names its own source can tell
 -- the exception's two sides apart.
@@ -3368,7 +3376,7 @@ heirloomBladeSpec s registry =
 -- type line and oracle text checked against Scryfall.)
 --
 -- CR 303.4m makes "equipped creature" the same attachment link and the same
--- TriggerCondition.AttachedCreatureDies an Aura's "enchanted creature dies"
+-- TriggerCondition.AttachedPermanentLeaves an Aura's "enchanted creature dies"
 -- uses; CR 704.5n makes it a different QUESTION. The Equipment becomes
 -- unattached and REMAINS on the battlefield in the same CR 117.5 batch that
 -- buried its host, so at the moment triggers are placed there is neither a live
