@@ -1,0 +1,17 @@
+{
+  "description": "CR 603.10: Darksteel Garrison triggers when its land taps for mana, though Garrison is sacrificed for mana in the same payment, before triggers are checked",
+  "note": "Alice pays for Centaur Courser by tapping her fortified Forest, then sacrificing Garrison to Krark-Clan Ironworks; both are mana abilities, so no trigger is put on the stack between them (CR 605.3a). Garrison still gives the Grizzly Bears +1/+1, resolving before the Courser. Her other Forest stays untapped, so the {G} could only have come from the fortified one.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [
+    {"name": "alice", "hand": [{"card": "Centaur Courser", "label": "courser"}], "battlefield": [{"card": "Forest", "label": "forest"}, {"card": "Forest", "label": "other"}, {"card": "Darksteel Garrison", "label": "garrison", "attached": "forest"}, {"card": "Krark-Clan Ironworks", "label": "kci"}, {"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+    {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$courser", "mana": ["$forest", "$kci", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseSacrifices", "with": ["$garrison"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseTargets": {"target": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Darksteel Garrison", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$other", "tapped": false}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 3, "toughness": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Stack", "card": "Centaur Courser", "count": 1}}}
+  ]
+}
