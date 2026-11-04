@@ -8,6 +8,7 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.AttackedPlayer as AttackedPlayer
+import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.BlockPair as BlockPair
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
@@ -36,6 +37,7 @@ import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.ManaSpecification as ManaSpecification
 import qualified Parun.Types.Measure as Measure
@@ -254,13 +256,6 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       TriggerCondition.PlayerTookInitiative
       " {\"type\":\"PlayerTookInitiative\"} "
-  -- CR 702.179d: one or more opponents lost life during your turn.
-  Spec.it s "OpponentLostLifeDuringYourTurn" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      TriggerCondition.OpponentLostLifeDuringYourTurn
-      " {\"type\":\"OpponentLostLifeDuringYourTurn\"} "
   -- CR 702.29c.
   Spec.it s "SelfCycled" $
     Common.assertCodec
@@ -816,49 +811,27 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.SelfPreventsDamage (Filter.Or [Filter.HasColor Color.Black, Filter.HasColor Color.Red]))
       " {\"type\":\"SelfPreventsDamage\",\"value\":{\"type\":\"Or\",\"value\":[{\"type\":\"HasColor\",\"value\":{\"type\":\"Black\"}},{\"type\":\"HasColor\",\"value\":{\"type\":\"Red\"}}]}} "
-  -- CR 119.9's life-gain trigger. Both relations, for the same reason.
-  Spec.it s "PlayerGainsLife round-trips both relations" $ do
+  -- CR 119.9's life-gain trigger, every defaulted key elided.
+  Spec.it s "LifeChanges round-trips a bare gain" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PlayerGainsLife (LifeTrigger.MkLifeTrigger PlayerRelation.You TriggerFrequency.EveryTime))
-      " {\"type\":\"PlayerGainsLife\",\"value\":{\"player\":{\"type\":\"You\"}}} "
+      (TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Gained PlayerRelation.You TurnScope.EachTurn Batching.EachOccurrence TriggerFrequency.EveryTime))
+      " {\"type\":\"LifeChanges\",\"value\":{\"direction\":{\"type\":\"Gained\"},\"player\":{\"type\":\"You\"}}} "
+  -- Vengeful Warchief.
+  Spec.it s "LifeChanges carries a frequency" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PlayerGainsLife (LifeTrigger.MkLifeTrigger PlayerRelation.Opponent TriggerFrequency.EveryTime))
-      " {\"type\":\"PlayerGainsLife\",\"value\":{\"player\":{\"type\":\"Opponent\"}}} "
-  -- CR 603.2c's batch reading of the arm above. A DIFFERENT tag carrying the SAME
-  -- payload, which is the whole hazard: a codec that folded the two would make
-  -- "each player gains 4 life" fire a per-seat card once and a batch card three
-  -- times, or the other way about.
-  Spec.it s "PlayersGainLife round-trips under its own tag" $
+      (TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Lost PlayerRelation.You TurnScope.EachTurn Batching.EachOccurrence TriggerFrequency.FirstTimeEachTurn))
+      " {\"type\":\"LifeChanges\",\"value\":{\"direction\":{\"type\":\"Lost\"},\"player\":{\"type\":\"You\"},\"frequency\":{\"type\":\"FirstTimeEachTurn\"}}} "
+  -- CR 702.179d's speed trigger: a batch, on the controller's turn.
+  Spec.it s "LifeChanges carries a scope and a batching" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PlayersGainLife PlayerRelation.AnyPlayer)
-      " {\"type\":\"PlayersGainLife\",\"value\":{\"type\":\"AnyPlayer\"}} "
-  -- Vanguard Seraph.
-  Spec.it s "PlayerGainsLife carries a frequency" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PlayerGainsLife (LifeTrigger.MkLifeTrigger PlayerRelation.You TriggerFrequency.FirstTimeEachTurn))
-      " {\"type\":\"PlayerGainsLife\",\"value\":{\"player\":{\"type\":\"You\"},\"frequency\":{\"type\":\"FirstTimeEachTurn\"}}} "
-  -- The life-LOSS trigger. A DIFFERENT tag from PlayerGainsLife above and the
-  -- same payload shape, so the two must never decode to each other -- the same
-  -- hazard GameEvent's LifeLost/LifeGained pair carries.
-  Spec.it s "PlayerLosesLife round-trips both relations" $ do
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PlayerLosesLife (LifeTrigger.MkLifeTrigger PlayerRelation.You TriggerFrequency.EveryTime))
-      " {\"type\":\"PlayerLosesLife\",\"value\":{\"player\":{\"type\":\"You\"}}} "
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PlayerLosesLife (LifeTrigger.MkLifeTrigger PlayerRelation.Opponent TriggerFrequency.EveryTime))
-      " {\"type\":\"PlayerLosesLife\",\"value\":{\"player\":{\"type\":\"Opponent\"}}} "
+      (TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Lost PlayerRelation.Opponent TurnScope.ControllersTurn Batching.OneOrMore TriggerFrequency.EveryTime))
+      " {\"type\":\"LifeChanges\",\"value\":{\"direction\":{\"type\":\"Lost\"},\"player\":{\"type\":\"Opponent\"},\"scope\":{\"type\":\"ControllersTurn\"},\"batching\":{\"type\":\"OneOrMore\"}}} "
   -- CR 714.2b. The payload is the counter KIND then the chapter number, in that
   -- order, since a Saga's chapters are told apart by the number alone.
   Spec.it s "SelfCountersReached round-trips its kind and its chapter number" $

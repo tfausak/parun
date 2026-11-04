@@ -245,6 +245,8 @@ library codec
     Parun.Codec.BackupSpec
     Parun.Codec.Ballot
     Parun.Codec.BallotChoice
+    Parun.Codec.Batching
+    Parun.Codec.BatchingSpec
     Parun.Codec.BattlefieldCandidate
     Parun.Codec.BattlefieldCandidateSpec
     Parun.Codec.BecameAttached
@@ -2445,6 +2447,7 @@ library types
     Parun.Types.Backup
     Parun.Types.Ballot
     Parun.Types.BallotChoice
+    Parun.Types.Batching
     Parun.Types.BattlefieldCandidate
     Parun.Types.BecameAttached
     Parun.Types.BecameAttacked

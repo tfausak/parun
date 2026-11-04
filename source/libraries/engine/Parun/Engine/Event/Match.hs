@@ -8,7 +8,6 @@ module Parun.Engine.Event.Match where
 
 import qualified Control.Monad as Monad
 import qualified Data.Foldable as Foldable
-import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
@@ -94,6 +93,7 @@ import qualified Parun.Types.LandPlayed as LandPlayed
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
+import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
@@ -661,11 +661,6 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- initiative, so the taker is "you".
   TriggerCondition.PlayerTookInitiative -> case event of
     GameEvent.TookInitiative taker -> taker == you
-    _ -> False
-  -- CR 702.179d: an opponent still in the game (CR 102.3) lost life during
-  -- "your" turn -- each active player's, under CR 805.4's shared team turns.
-  TriggerCondition.OpponentLostLifeDuringYourTurn -> case event of
-    GameEvent.LifeLost (LifeChange.MkLifeChange lost _ _) -> Turn.isActive gs you && List.elem lost (Game.opponentsOf you gs)
     _ -> False
   -- CR 603.12: a reflexive matches no log entry at all. Its trigger event
   -- happened during the resolution that CREATED it, which CR 603.12's own
@@ -2152,70 +2147,30 @@ armMatches bindings board gs bearer you cond event = case cond of
       Replacement.printedBy (DamagePrevented.by prevented) == Just bearer
         && not (Map.null (admittedPreventedSources bearerContext gs f prevented))
     _ -> False
-  -- Its batch sibling delegates to it, PermanentsGetCounters' posture below:
-  -- which gains the condition admits is the same question either way, and what
-  -- separates the two is `batchScoped` plus eventTriggers' dedup, never this
-  -- matcher.
-  TriggerCondition.PlayersGainLife relation -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.PlayerGainsLife (LifeTrigger.MkLifeTrigger relation TriggerFrequency.EveryTime)) event
-  -- CR 119.9: a source caused a player the relation admits to gain life. The
-  -- gaining player comes from the event; CR 109.5 / 603.3a fix "you" as the
-  -- ability's controller, exactly as PlayerDiscards, SpellOrAbilityCounters and
-  -- DamageToPlayerPrevented above do.
+  -- CR 119.3 / 119.9: a player the relation admits gained or lost life, on a
+  -- turn the scope admits. The changing player comes off the event, and CR 109.5
+  -- / 603.3a fix "you" as the ability's controller; the bearer is not part of the
+  -- match. The relation is read as of the event (CR 603.2), so an opponent the
+  -- loss knocked out of the game still counts (Parun.SpeedSpec's "CR 603.2 an
+  -- opponent the loss knocked out still raises your speed").
   --
-  -- The bearer is NOT part of the match: Ajani's Pridemate is a creature watching
-  -- its controller's life total, and CR 119.9 says nothing about which object the
-  -- ability is on.
-  --
-  -- No zero check here. CR 119.9's "if a player gains 0 life, no life gain event
-  -- has occurred" is enforced where the event is RECORDED -- Resolve's GainLife
-  -- arm and Damage's lifelink pass both guard their own zero -- so a
-  -- GameEvent.LifeGained in the log is by construction a gain of more than 0, and
-  -- a second guard here would be a second place for that invariant to live.
-  --
-  -- LOSING life is not a near miss but a different event, and the LifeLost arm
-  -- below is where that shows: one damage event can record both, and only the
-  -- gain fires this.
-  --
-  -- The first-time reading comes off the event, as the loss arm's does.
-  TriggerCondition.PlayerGainsLife (LifeTrigger.MkLifeTrigger relation frequency) -> case event of
-    GameEvent.LifeGained (LifeChange.MkLifeChange pid _ first) ->
-      PlayerRelation.holds (Game.teams gs) relation you pid && case frequency of
-        TriggerFrequency.EveryTime -> True
-        TriggerFrequency.FirstTimeEachTurn -> first
-    _ -> False
-  -- A player the relation admits LOST life -- Exquisite Blood's "whenever an
-  -- opponent loses life". The losing player comes from the event; CR 109.5 /
-  -- 603.3a fix "you" as the ability's controller, exactly as PlayerGainsLife
-  -- above does.
-  --
-  -- The bearer is NOT part of the match: Exquisite Blood is an enchantment
-  -- watching somebody else's life total, and nothing about the condition names
-  -- the object the ability is on.
-  --
-  -- Which life-total movements are a loss is settled at the RECORDING sites and
-  -- not here, since the rules print no CR 119.9 for this direction: CR 119.3's
-  -- instructed loss, CR 119.2 / 120.3a's damage, and CR 119.4's paid life all
-  -- write GameEvent.LifeLost, while CR 120.3b's infect diversion, CR 615.6's
-  -- prevented damage and damage taken by a permanent write none. See
-  -- Parun.Types.TriggerCondition.PlayerLosesLife.
-  --
-  -- No zero check either, for the reason the gain arm gives: every producer
-  -- guards its own zero, so a GameEvent.LifeLost in the log is by construction a
-  -- loss of more than 0.
-  --
-  -- GAINING life is a different event, not a signed version of this one: one
-  -- lifelink source's damage can record a loss and a gain together, and only the
-  -- loss fires this.
-  --
-  -- The first-time reading comes off the event, stamped as the loss happened
-  -- (Event.lifeChanged): the log can hold a later loss by the time the scan reaches
-  -- this one.
-  TriggerCondition.PlayerLosesLife (LifeTrigger.MkLifeTrigger relation frequency) -> case event of
-    GameEvent.LifeLost (LifeChange.MkLifeChange pid _ first) ->
-      PlayerRelation.holds (Game.teams gs) relation you pid && case frequency of
-        TriggerFrequency.EveryTime -> True
-        TriggerFrequency.FirstTimeEachTurn -> first
-    _ -> False
+  -- No zero check: CR 119.9's "no life gain event" is enforced where each event
+  -- is recorded, so a logged change is more than 0. A gain and a loss are
+  -- different events (one lifelink hit records both), never a signed change.
+  -- The first-time reading is stamped on the event as it happened
+  -- (Event.lifeChanged). Batching is not read here: batchScoped and
+  -- eventTriggers' dedup are what separate "a player" from "one or more".
+  TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger direction relation scope _ frequency) ->
+    let admits (LifeChange.MkLifeChange pid _ first) =
+          PlayerRelation.holds (Game.teams gs) relation you pid
+            && Turn.turnScopeAdmits scopeNamed gs scope (GameState.activePlayer gs) you
+            && case frequency of
+              TriggerFrequency.EveryTime -> True
+              TriggerFrequency.FirstTimeEachTurn -> first
+     in case (direction, event) of
+          (LifeDirection.Gained, GameEvent.LifeGained change) -> admits change
+          (LifeDirection.Lost, GameEvent.LifeLost change) -> admits change
+          _ -> False
   -- CR 714.2b: counters of this kind were put onto the BEARER, and the count
   -- crossed N going up. Both halves of the rule's sentence are here -- see
   -- Parun.Types.TriggerCondition.SelfCountersReached for why the intervening "if"

@@ -31,6 +31,7 @@ import qualified Data.Set as Set
 import Numeric.Natural (Natural)
 import qualified Parun.Engine.Mint as Mint
 import qualified Parun.Engine.Projection.View as Projection
+import qualified Parun.Types.Batching as Batching
 import Parun.Types.Card (Card)
 import qualified Parun.Types.Compares as Compares
 import qualified Parun.Types.Comparison as Comparison
@@ -40,6 +41,8 @@ import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.LifeDirection as LifeDirection
+import qualified Parun.Types.LifeTrigger as LifeTrigger
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.Player as Player
 import Parun.Types.PlayerId (PlayerId)
@@ -49,9 +52,11 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.TriggerCondition as TriggerCondition
+import qualified Parun.Types.TriggerFrequency as TriggerFrequency
 import qualified Parun.Types.TriggerLimit as TriggerLimit
 import Parun.Types.TriggeredAbility (TriggeredAbility)
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
+import qualified Parun.Types.TurnScope as TurnScope
 
 -- | CR 702.179e: "a player has max speed if their speed is 4". The one number
 -- rule 702.179 names, and the one CR 702.178a's "as long as your speed is 4"
@@ -133,13 +138,25 @@ startEngines pid gs =
 -- stack unprompted.
 increaseAbility :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 increaseAbility =
-  (Mint.triggerIf TriggerCondition.OpponentLostLifeDuringYourTurn belowMaxSpeed (Seq.singleton (Effect.IncreaseSpeed (PlayerQuantity.MkPlayerQuantity (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 1)))))
+  (Mint.triggerIf opponentsLoseLifeDuringYourTurn belowMaxSpeed (Seq.singleton (Effect.IncreaseSpeed (PlayerQuantity.MkPlayerQuantity (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 1)))))
     { -- CR 702.179d's own "this ability triggers only once each turn", stated in
       -- the data because the rule states it, and enforced from there like every
       -- other rider: Event.withinTriggerLimit reads the CR 603.3b log, which
       -- records a sourceless trigger under its controller.
       TriggeredAbility.limit = TriggerLimit.OncePerTurn
     }
+
+-- | CR 702.179d's "whenever one or more opponents lose life during your turn".
+opponentsLoseLifeDuringYourTurn :: TriggerCondition.TriggerCondition
+opponentsLoseLifeDuringYourTurn =
+  TriggerCondition.LifeChanges
+    LifeTrigger.MkLifeTrigger
+      { LifeTrigger.direction = LifeDirection.Lost,
+        LifeTrigger.player = PlayerRelation.Opponent,
+        LifeTrigger.scope = TurnScope.ControllersTurn,
+        LifeTrigger.batching = Batching.OneOrMore,
+        LifeTrigger.frequency = TriggerFrequency.EveryTime
+      }
 
 -- | CR 702.179d's "if your speed is less than 4", as the Condition both checks
 -- read. AtMost (maxSpeed - 1) rather than a "less than" comparison, because
@@ -159,10 +176,10 @@ belowMaxSpeed =
 -- 1 or more speed" and "controlled by that player", so a player CR 704.5aa has
 -- not yet reached has no such ability.
 --
--- "During your turn" is the condition's own (Event.Match's
--- OpponentLostLifeDuringYourTurn arm), "if your speed is less than 4" is CR
--- 603.4's check (Event.interveningHolds), and "only once each turn" is the
--- rider Event.withinTriggerLimit spends -- each read where a printed ability's
--- would be.
+-- "During your turn" is the condition's own scope (Event.Match's LifeChanges
+-- arm), "if your speed is less than 4" is CR 603.4's check
+-- (Event.interveningHolds), and "only once each turn" is the rider
+-- Event.withinTriggerLimit spends -- each read where a printed ability's would
+-- be.
 abilities :: GameState -> [(PlayerId, TriggeredAbility Card (GrantedAbility.GrantedAbility Card))]
 abilities gs = [(pid, increaseAbility) | (pid, player) <- Map.toList (GameState.players gs), Maybe.maybe False (>= 1) (Player.speed player)]

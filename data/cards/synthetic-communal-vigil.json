@@ -20,9 +20,17 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PlayersGainLife",
+            "type": "LifeChanges",
             "value": {
-              "type": "AnyPlayer"
+              "batching": {
+                "type": "OneOrMore"
+              },
+              "direction": {
+                "type": "Gained"
+              },
+              "player": {
+                "type": "AnyPlayer"
+              }
             }
           },
           "modal": {

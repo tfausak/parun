@@ -445,6 +445,22 @@ increaseSpec s registry = Spec.describe s "Increase" $ do
     -- herself and pass this case for the wrong reason.
     Spec.assertEqWith s "and she is still playing" (GameState.result after) Nothing
     Spec.assertEqWith s "and her speed stayed at 1" (speedOf S.alice after) (Just (Just 1))
+  -- CR 603.2: the ability triggers as the loss happens, when Bob is still an
+  -- opponent in the game; CR 704.5a's departure before the CR 117.5 gather does
+  -- not take it back. Three seats, so the game goes on without him.
+  Spec.it s "CR 603.2 an opponent the loss knocked out still raises your speed" $ do
+    raceway <- S.printingOf s registry "Muraganda Raceway"
+    swamp <- S.printingOf s registry "Swamp"
+    signInBlood <- S.printingOf s registry "Sign in Blood"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (_, withRaceway) = S.addPermanent raceway S.alice (S.landsFor swamp S.alice 2 S.threePlayerGame)
+        stock pid g = foldr (\_ g2 -> snd (S.addLibraryCard piker pid g2)) g [1 .. (4 :: Int)]
+        (gs0, spellId) = S.handOne signInBlood (stock S.carol (stock S.bob (stock S.alice withRaceway)))
+        gs = atSpeed 1 S.alice gs0 {GameState.players = Map.adjust (\p -> p {Player.life = 2}) S.bob (GameState.players gs0)}
+        after = castResolveSettle atBob S.alice spellId gs
+    Spec.assertBool s (S.bob `notElem` Game.stillPlaying after) "bob left the game"
+    Spec.assertEqWith s "and the game goes on" (GameState.result after) Nothing
+    Spec.assertEqWith s "alice's speed rose from 1 to 2" (speedOf S.alice after) (Just (Just 2))
   -- CR 702.179d's "this ability triggers only once each turn". Two separate
   -- castings, two separate life losses, one increase.
   Spec.it s "CR 702.179d the increase happens only once each turn" $ do

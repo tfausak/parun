@@ -200,6 +200,7 @@ import qualified Parun.Types.LifeGainRewrite as LifeGainRewrite
 import qualified Parun.Types.LifeLossCause as LifeLossCause
 import qualified Parun.Types.LifeLossR as LifeLossR
 import qualified Parun.Types.LifeLossRewrite as LifeLossRewrite
+import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Looked as Looked
 import qualified Parun.Types.MadnessCost as MadnessCost
@@ -10933,12 +10934,6 @@ controllerTurnScoped cond = case cond of
   -- A named player's step is not the controller's as such: Soul Bleed on an
   -- opponent's creature fires on that opponent's upkeep.
   TriggerCondition.StepBegins (StepBegins.MkStepBegins _ _ (TurnScope.PlayersTurn _)) -> False
-  -- CR 702.179d's "during YOUR turn" is the same restriction StepBegins spells
-  -- with a TurnScope, written into the condition itself because rule 702.179d
-  -- states it there. No card bears this condition, so the lint this feeds cannot
-  -- reach it; answering False anyway would make the classification wrong for the
-  -- sake of an unreachable case.
-  TriggerCondition.OpponentLostLifeDuringYourTurn -> True
   -- None of the rest is turn-scoped: each names an event that can happen on
   -- anybody's turn.
   TriggerCondition.SelfEnters -> False
@@ -11120,18 +11115,9 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.DamageToPlayerPrevented _ -> False
   -- Damage can be prevented on anybody's turn, the arm above's reason.
   TriggerCondition.SelfPreventsDamage _ -> False
-  -- Life can be gained on anybody's turn. CR 702.179d's loss condition above says
-  -- "during your turn" and this one does not, which is the two rules' own
-  -- difference rather than an omission here.
-  TriggerCondition.PlayerGainsLife _ -> False
-  -- The batch reading names no turn either.
-  TriggerCondition.PlayersGainLife _ -> False
-  -- And life can be LOST on anybody's turn. This is the arm where CR 702.179d's
-  -- condition is closest to being duplicated and is not: that one reads the very
-  -- same GameEvent.LifeLost but only during its controller's turn, which is the
-  -- printed speed rule rather than anything a card's "whenever an opponent loses
-  -- life" says.
-  TriggerCondition.PlayerLosesLife _ -> False
+  -- StepBegins' TurnScope reading: CR 702.179d's "during YOUR turn" is
+  -- ControllersTurn, and no other scope is the controller's turn as such.
+  TriggerCondition.LifeChanges lifeTrigger -> LifeTrigger.scope lifeTrigger == TurnScope.ControllersTurn
   -- CR 122.6 puts counters on at any time, and a Saga can receive one on an
   -- opponent's turn: CR 714.3a's entry replacement fires whenever the Saga enters,
   -- which a flash effect or an opponent's Sneak Attack could make happen. Only CR
