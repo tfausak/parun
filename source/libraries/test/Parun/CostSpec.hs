@@ -4603,8 +4603,8 @@ quillspikeBoard s registry onGiant = do
     )
 
 -- CR 601.2h pays a random discard after a chosen one, whatever order they are
--- printed in, and asks no order. No pool card prints both; Dream Halls with Sonic
--- Burst would, and Coral Helm's component stands in for it here.
+-- printed in, and asks no order. No pool card prints both; Dream Halls (#6094) with
+-- Sonic Burst would, and Coral Helm's component stands in for it here.
 randomDiscardSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 randomDiscardSpec s registry =
   Spec.it s "CR 601.2h a random discard is paid after a chosen one" $ do

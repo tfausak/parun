@@ -4798,7 +4798,9 @@ announceSubstitutionsReading slots substituting pid oid cost = case Cost.mana co
 -- does -- but CR 601.2h pays those in a SECOND pass (paidInSecondPass below),
 -- and `payComponent` refuses a MillCards only short of cards, which the gate
 -- measured and the window cannot change, so no failure can follow one within
--- this payment.
+-- this payment. A random discard shares that pass and a window can empty its
+-- hand, but no printing holds both (AtomicCards' "at random" costs, 2026-11-04;
+-- a cost discarding at random and milling would refute this).
 --
 -- Rule 733.1's SHUFFLE and REVEAL clauses, which CR 605.1a does NOT exclude --
 -- Parun.Engine.ManaAbility.movesLibraryCard answers False of Effect.Shuffle and
@@ -5374,13 +5376,14 @@ orderPass pid oid components =
 paidInSecondPass :: CostComponent.CostComponent Keyword.Type.Keyword -> Bool
 paidInSecondPass component = case component of
   -- CR 701.17a moves cards from a library to a graveyard, and CR 400.2 makes the
-  -- one hidden and the other public. The one True arm in the vocabulary.
+  -- one hidden and the other public.
   CostComponent.MillCards _ -> True
   -- CR 701.20a shows the cards and moves none, so the first pass holds it.
   CostComponent.RevealTopOfLibrary _ -> False
   -- CR 601.2h's RANDOM half reaches a discard only at random; Parun.CostSpec's
   -- "a random discard is paid after a chosen one" proves it.
-  CostComponent.DiscardCards discard -> DiscardCards.selection discard == CardSelection.AtRandom
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly _) _ CardSelection.AtRandom) -> True
+  CostComponent.DiscardCards {} -> False
   -- A HAND is not a library (CR 400.2 makes both hidden, which is not what rule
   -- 601.2h asks), and a graveyard, a battlefield and a stack are not either, so
   -- every other component that moves an object stays in the first pass.
@@ -5557,8 +5560,7 @@ orderSensitive component = case component of
   CostComponent.Forage -> True
   -- False: CR 705.1's flip spends nothing another part of the same cost could
   -- have spent, the per-player scalars' answer. Alone in CR 601.2h's second pass
-  -- on this pool -- `paidInSecondPass` above puts it there and nothing else --
-  -- so `orderObservable` is False either way.
+  -- on this pool, so `orderObservable` is False either way.
   CostComponent.FlipCoin -> False
   -- False: rule 702.174a's choice spends nothing another part of the same cost
   -- could have spent, FlipCoin's answer just above.
