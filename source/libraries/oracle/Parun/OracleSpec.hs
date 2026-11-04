@@ -55,6 +55,8 @@ import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.Create as Create
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamagePart as DamagePart
+import qualified Parun.Types.DamageRecipient as DamageRecipient
+import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DealDamage as DealDamage
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Destroy as Destroy
@@ -339,7 +341,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   Spec.it s "render prints a trigger on attacking, blocking and combat damage" $ do
     let on event effects = withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [triggered event [clause effects] []]})
     Spec.assertEq s [[Text.pack "Whenever Spark attacks, defending player discards a card.", Text.pack "When Spark attacks, defending player discards a card."]] (Oracle.abilities (on (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime) [discard (PlayerRef.InSlot thatPlayer) 1]))
-    let raiders = on (TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.Opponent) [discard (PlayerRef.InSlot thatPlayer) 1]
+    let raiders = on (TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger ActingPermanent.Self (Just DamageKind.Combat) (Set.singleton (DamageRecipient.Player PlayerRelation.Opponent)))) [discard (PlayerRef.InSlot thatPlayer) 1]
     Spec.assertEq s (Just (Text.pack "Whenever Spark deals combat damage to an opponent, that player discards a card.")) (Oracle.render raiders)
     Spec.assertBool s (Oracle.says raiders spark (Text.pack "Whenever this creature deals combat damage to an opponent, that opponent discards a card.")) "that opponent unsaid"
     let sentry = on (TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair Filter.IsSource (Filter.HasCardType CardType.Creature))) [destroy (ObjectRef.AllOf (ObjectRef.InSlot thatAttacker NonEmpty.:| [ObjectRef.InSlot self])) Regenerability.Regenerable]

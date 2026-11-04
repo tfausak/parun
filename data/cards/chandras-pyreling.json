@@ -29,7 +29,7 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "DealsDamageToPlayer",
+            "type": "DealsDamage",
             "value": {
               "actor": {
                 "type": "Matching",
@@ -48,9 +48,14 @@
               "kind": {
                 "type": "Noncombat"
               },
-              "recipient": {
-                "type": "Opponent"
-              }
+              "recipients": [
+                {
+                  "type": "Player",
+                  "value": {
+                    "type": "Opponent"
+                  }
+                }
+              ]
             }
           },
           "modal": {

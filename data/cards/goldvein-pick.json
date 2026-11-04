@@ -67,17 +67,28 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentDealsCombatDamageToPlayer",
+            "type": "DealsDamage",
             "value": {
-              "filter": {
-                "type": "HasAttached",
+              "actor": {
+                "type": "Matching",
                 "value": {
-                  "type": "IsSource"
+                  "type": "HasAttached",
+                  "value": {
+                    "type": "IsSource"
+                  }
                 }
               },
-              "recipient": {
-                "type": "AnyPlayer"
-              }
+              "kind": {
+                "type": "Combat"
+              },
+              "recipients": [
+                {
+                  "type": "Player",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                }
+              ]
             }
           },
           "modal": {

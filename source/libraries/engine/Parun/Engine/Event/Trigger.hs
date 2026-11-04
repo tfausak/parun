@@ -73,6 +73,7 @@ import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamagePrevented as DamagePrevented
+import qualified Parun.Types.DamageTrigger as DamageTrigger
 import Parun.Types.DelayedTrigger (DelayedTrigger)
 import qualified Parun.Types.DelayedTrigger as DelayedTrigger
 import qualified Parun.Types.DieResult as DieResult
@@ -695,15 +696,9 @@ looksBack condition = case condition of
   -- zone change at all, so CR 603.10a's list cannot reach them.
   TriggerCondition.StepBegins {} -> False
   TriggerCondition.StateIs _ -> False
-  TriggerCondition.SelfDealsCombatDamageToPlayer _ -> False
-  TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> False
-  TriggerCondition.DealsCombatDamage _ -> False
-  TriggerCondition.DealsDamageToPlayer _ -> False
-  TriggerCondition.DealsDamageToPermanent _ -> False
   TriggerCondition.DealsDamage _ -> False
   TriggerCondition.IsDealtDamage _ -> False
   TriggerCondition.PlayerIsDealtDamage _ -> False
-  TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> False
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> False
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> False
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> False
@@ -927,22 +922,14 @@ batchScoped condition = case condition of
   TriggerCondition.PermanentsEnter _ -> True
   TriggerCondition.StepBegins {} -> False
   TriggerCondition.StateIs _ -> False
-  TriggerCondition.SelfDealsCombatDamageToPlayer _ -> False
-  -- Per recipient, like the arm above: CR 510.1b sends an unblocked attacker's
-  -- damage to the one player or battle it attacks.
-  TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> False
-  -- A True for the reason PermanentsDealCombatDamageToPlayer's below gives: CR
-  -- 510.2 deals a step's combat damage as one event, so damage to two blockers,
-  -- or to a blocker and a trampled-over player, is one trigger event, not two.
-  -- One per damager, split by batchPartition: Noble Purpose's two creatures
-  -- connecting are two.
-  TriggerCondition.DealsCombatDamage _ -> True
-  TriggerCondition.DealsDamageToPlayer _ -> False
-  TriggerCondition.DealsDamageToPermanent _ -> False
-  -- DealsCombatDamage's True without the combat narrowing: one damage
-  -- event to several recipients -- a CR 510.2 step, or one CR 608.2f
-  -- instruction -- is one trigger event, its amount summed by batchBindings.
-  TriggerCondition.DealsDamage _ -> True
+  -- CR 603.2c: "deals damage" naming no recipient is one occurrence per damage
+  -- event and damager -- a CR 510.2 step, or one CR 608.2f instruction, damaging
+  -- several recipients is one trigger event, its amount summed by
+  -- batchBindings, and batchPartition splits it per damager (Noble Purpose's two
+  -- creatures connecting are two). A named recipient is one occurrence per
+  -- recipient: CR 510.1b sends an unblocked attacker's damage to the one player
+  -- or battle it attacks.
+  TriggerCondition.DealsDamage watched -> Set.null (DamageTrigger.recipients watched)
   -- "Is dealt damage" is one occurrence per damaged permanent however many
   -- sources dealt it at once (Ripjaw Raptor's and Fungusaur's rulings), split
   -- by batchPartition; "a source deals damage to" (Belltower Sphinx) is one per
@@ -952,14 +939,13 @@ batchScoped condition = case condition of
   -- dealt damage -- Lich's ruling sacrifices "for that damage simultaneously".
   -- Split per damaged player, and per damaged planeswalker, by batchPartition.
   TriggerCondition.PlayerIsDealtDamage _ -> True
-  TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> False
   -- A True beside PermanentsDie: CR 510.2 deals every combat damage of a step
   -- simultaneously, Parun.Engine.Damage.dealWave brackets the step as one
   -- Parun.Types.EventGroup, and "one or more artifact creatures ... deal combat
   -- damage" (Pia Nalaar, Chief Mechanic) names that whole group as its trigger
   -- event, which occurs once per damagers' controller and damaged player
-  -- (Event.Binding's batchPartition) -- where the arm above is CR 603.2c's
-  -- second sentence and fires once per damager.
+  -- (Event.Binding's batchPartition) -- where DealsDamage naming a player is
+  -- CR 603.2c's second sentence and fires once per damager.
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> True
   -- CR 725.2 prints "whenever A CREATURE deals combat damage to the monarch",
   -- CR 603.2c's second sentence: one trigger per damaging creature.
@@ -3000,19 +2986,10 @@ zonesTriggeredFrom cond =
         -- reader in any zone; stateTriggers below gathers them from the battlefield
         -- and, for CR 113.6p's objects, the command zone.
         TriggerCondition.StateIs _ -> battlefield
-        TriggerCondition.SelfDealsCombatDamageToPlayer _ -> battlefield
-        TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> battlefield
-        TriggerCondition.DealsCombatDamage _ -> battlefield
-        -- CR 113.6's default once more, and for the arm above's reason: a Self
-        -- bearer is the damage's SOURCE, and a noncombat source on the stack or in
-        -- a graveyard is a different object from this permanent. A bystander
-        -- (Curiosity) watches from the battlefield as every other does.
-        TriggerCondition.DealsDamageToPlayer _ -> battlefield
-        -- CR 113.6's default once more, for the DealsDamageToPlayer arm's
-        -- reason: the bearer is the damage's SOURCE, and a source anywhere but the
-        -- battlefield is a different object from this permanent.
-        TriggerCondition.DealsDamageToPermanent _ -> battlefield
-        -- CR 113.6's default again, for the DealsDamageToPlayer arm's reason.
+        -- CR 113.6's default: a Self bearer is the damage's SOURCE, and a
+        -- noncombat source on the stack or in a graveyard is a different object
+        -- from this permanent. A bystander (Curiosity) watches from the
+        -- battlefield as every other does.
         TriggerCondition.DealsDamage _ -> battlefield
         -- CR 113.6's default again, and the match's own shape on top of it: a Self
         -- reading compares the bearer against the event's RECIPIENT, and CR 120.3's
@@ -3021,8 +2998,7 @@ zonesTriggeredFrom cond =
         -- Rath) watches from the battlefield as every other does.
         TriggerCondition.IsDealtDamage _ -> battlefield
         TriggerCondition.PlayerIsDealtDamage _ -> battlefield
-        TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> battlefield
-        -- The batch reading watches from the battlefield too, and for the arm above's
+        -- The batch reading watches from the battlefield too, for DealsDamage's
         -- reason: its bearer is a bystander.
         TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> battlefield
         TriggerCondition.CreatureDealtCombatDamageToMonarch -> battlefield
@@ -3343,15 +3319,9 @@ stateTriggersOn gs
             TriggerCondition.PermanentEnters _ -> False
             TriggerCondition.PermanentsEnter _ -> False
             TriggerCondition.StepBegins {} -> False
-            TriggerCondition.SelfDealsCombatDamageToPlayer _ -> False
-            TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> False
-            TriggerCondition.DealsCombatDamage _ -> False
-            TriggerCondition.DealsDamageToPlayer _ -> False
-            TriggerCondition.DealsDamageToPermanent _ -> False
             TriggerCondition.DealsDamage _ -> False
             TriggerCondition.IsDealtDamage _ -> False
             TriggerCondition.PlayerIsDealtDamage _ -> False
-            TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> False
             TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> False
             TriggerCondition.CreatureDealtCombatDamageToMonarch -> False
             TriggerCondition.CreaturesDealtCombatDamageToInitiative -> False

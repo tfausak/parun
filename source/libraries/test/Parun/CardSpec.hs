@@ -179,9 +179,8 @@ import qualified Parun.Types.DamagePart as DamagePart
 import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
+import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DealDamage as DealDamage
-import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
-import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Defense as Defense
 import qualified Parun.Types.Designate as Designate
@@ -311,7 +310,6 @@ import qualified Parun.Types.PayGate as PayGate
 import qualified Parun.Types.PerCreature as PerCreature
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
-import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
@@ -1170,16 +1168,10 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.SelfLeavesGraveyard -> []
   TriggerCondition.StepBegins {} -> []
   TriggerCondition.StateIs condition -> conditionCounts condition
-  TriggerCondition.SelfDealsCombatDamageToPlayer _ -> []
-  TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> []
-  TriggerCondition.DealsCombatDamage _ -> []
-  TriggerCondition.DealsDamageToPlayer _ -> []
-  TriggerCondition.DealsDamageToPermanent _ -> []
   TriggerCondition.DealsDamage _ -> []
   TriggerCondition.IsDealtDamage _ -> []
   TriggerCondition.PlayerIsDealtDamage _ -> []
   -- Its watcher-scoped sibling carries a Filter, and a Filter holds no Count.
-  TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> []
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> []
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> []
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> []
@@ -4705,21 +4697,14 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.StateIs condition -> frame Unframed (conditionFilters condition)
   TriggerCondition.SelfEnters -> []
   TriggerCondition.StepBegins {} -> []
-  TriggerCondition.SelfDealsCombatDamageToPlayer _ -> []
-  TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> []
   -- A bystander's damage conditions carry one over the watched permanent, swept
   -- for PermanentActs' reason: Noble Purpose's "a creature you control", Death
   -- Pits of Rath's "a creature", Spirit Link's and Curiosity's "enchanted
-  -- creature". The self-scoped readings carry nothing.
-  TriggerCondition.DealsCombatDamage watched -> actingFilters watched
-  TriggerCondition.DealsDamageToPlayer p -> actingFilters (DealsDamageToPlayer.actor p)
-  TriggerCondition.DealsDamageToPermanent p -> actingFilters (DealsDamageToPermanent.actor p)
-  TriggerCondition.DealsDamage watched -> actingFilters watched
+  -- creature", Tovolar's "a Wolf or Werewolf you control". The self-scoped
+  -- readings carry nothing, and a recipient holds no Filter.
+  TriggerCondition.DealsDamage watched -> actingFilters (DamageTrigger.actor watched)
   TriggerCondition.IsDealtDamage watched -> actingFilters (DealtDamage.recipient (PermanentIsDealtDamage.dealt watched))
   TriggerCondition.PlayerIsDealtDamage _ -> []
-  -- Its watcher-scoped sibling carries one -- Tovolar's "a Wolf or Werewolf you
-  -- control", which the card lint must sweep.
-  TriggerCondition.PermanentDealsCombatDamageToPlayer p -> unframed [PermanentDealsCombatDamageToPlayer.filter p]
   -- CR 603.2c's batch reading of the same written form carries the same Filter,
   -- swept the same way for PermanentsDie's reason: answering [] here would exempt
   -- Pia Nalaar's "artifact creatures you control" from every corpus filter lint.
@@ -4900,15 +4885,9 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   -- CR 603.8's state trigger holds a Condition, which is a pair of Quantities
   -- and Filters -- no SlotName of its own.
   TriggerCondition.StateIs _ -> []
-  TriggerCondition.SelfDealsCombatDamageToPlayer _ -> []
-  TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> []
-  TriggerCondition.DealsCombatDamage _ -> []
-  TriggerCondition.DealsDamageToPlayer _ -> []
-  TriggerCondition.DealsDamageToPermanent _ -> []
   TriggerCondition.DealsDamage _ -> []
   TriggerCondition.IsDealtDamage _ -> []
   TriggerCondition.PlayerIsDealtDamage _ -> []
-  TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> []
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> []
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> []
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> []

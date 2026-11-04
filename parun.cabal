@@ -581,17 +581,17 @@ library codec
     Parun.Codec.DamagePrevented
     Parun.Codec.DamagePreventedSpec
     Parun.Codec.DamageR
+    Parun.Codec.DamageRecipient
+    Parun.Codec.DamageRecipientSpec
     Parun.Codec.DamageRewrite
     Parun.Codec.DamageRewriteSpec
     Parun.Codec.DamageRSpec
+    Parun.Codec.DamageTrigger
+    Parun.Codec.DamageTriggerSpec
     Parun.Codec.Daytime
     Parun.Codec.DaytimeSpec
     Parun.Codec.DealDamage
     Parun.Codec.DealDamageSpec
-    Parun.Codec.DealsDamageToPermanent
-    Parun.Codec.DealsDamageToPermanentSpec
-    Parun.Codec.DealsDamageToPlayer
-    Parun.Codec.DealsDamageToPlayerSpec
     Parun.Codec.DealtDamage
     Parun.Codec.DealtDamageSpec
     Parun.Codec.DealtDamageTo
@@ -1141,8 +1141,6 @@ library codec
     Parun.Codec.PermanentBecomesDesignatedSpec
     Parun.Codec.PermanentCandidate
     Parun.Codec.PermanentCandidateSpec
-    Parun.Codec.PermanentDealsCombatDamageToPlayer
-    Parun.Codec.PermanentDealsCombatDamageToPlayerSpec
     Parun.Codec.PermanentIsDealtDamage
     Parun.Codec.PermanentIsDealtDamageSpec
     Parun.Codec.PermanentsBecomeTargeted
@@ -2653,11 +2651,11 @@ library types
     Parun.Types.DamagePattern
     Parun.Types.DamagePrevented
     Parun.Types.DamageR
+    Parun.Types.DamageRecipient
     Parun.Types.DamageRewrite
+    Parun.Types.DamageTrigger
     Parun.Types.Daytime
     Parun.Types.DealDamage
-    Parun.Types.DealsDamageToPermanent
-    Parun.Types.DealsDamageToPlayer
     Parun.Types.DealtDamage
     Parun.Types.DealtDamageTo
     Parun.Types.Decider
@@ -2980,7 +2978,6 @@ library types
     Parun.Types.PermanentAction
     Parun.Types.PermanentBecomesDesignated
     Parun.Types.PermanentCandidate
-    Parun.Types.PermanentDealsCombatDamageToPlayer
     Parun.Types.PermanentIsDealtDamage
     Parun.Types.PermanentsBecomeTargeted
     Parun.Types.PermanentsDealCombatDamageToPlayer

@@ -6,9 +6,13 @@ module Parun.Engine.Mint where
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
+import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.Clause as Clause
 import Parun.Types.Condition (Condition)
+import qualified Parun.Types.DamageKind as DamageKind
+import qualified Parun.Types.DamageRecipient as DamageRecipient
+import qualified Parun.Types.DamageTrigger as DamageTrigger
 import Parun.Types.Effect (Effect)
 import Parun.Types.Filter (Filter)
 import Parun.Types.Keyword (Keyword)
@@ -119,4 +123,10 @@ spellCast filter_ =
 -- an opponent: rules 702.70a, 702.99a, 702.112a and 702.115a all word it so,
 -- where Akki Lavarunner and Questing Beast print "to an opponent".
 dealsCombatDamageToAPlayer :: TriggerCondition
-dealsCombatDamageToAPlayer = TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.AnyPlayer
+dealsCombatDamageToAPlayer =
+  TriggerCondition.DealsDamage
+    DamageTrigger.MkDamageTrigger
+      { DamageTrigger.actor = ActingPermanent.Self,
+        DamageTrigger.kind = Just DamageKind.Combat,
+        DamageTrigger.recipients = Set.singleton (DamageRecipient.Player PlayerRelation.AnyPlayer)
+      }

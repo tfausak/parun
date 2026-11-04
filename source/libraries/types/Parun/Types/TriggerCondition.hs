@@ -16,8 +16,7 @@ import qualified Parun.Types.ControllerBecomesTarget as ControllerBecomesTarget
 import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Parun.Types.CreatureExploits as CreatureExploits
-import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
-import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
+import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.DiscardTrigger as DiscardTrigger
 import qualified Parun.Types.Filter as Filter
@@ -26,7 +25,6 @@ import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
-import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
@@ -71,31 +69,9 @@ data TriggerCondition
   | -- | CR 603.8: a state trigger, armed again only once the ability has left
     -- the stack.
     StateIs Condition.Condition
-  | -- | CR 603.2 / 509-510: the bearer dealt combat damage to a player the
-    -- PlayerRelation admits. Self-scoped on the SOURCE, which is what "self"
-    -- names; the relation is the RECIPIENT half, read against CR 109.5's "you".
-    --
-    -- The relation is written out rather than defaulted, PermanentSacrificed's
-    -- posture: Longtusk Cub's "deals combat damage to a player" spells itself
-    -- AnyPlayer, where Questing Beast's "to an opponent" is Opponent, and the two
-    -- are different triggers on a board where the damage is redirected to the
-    -- creature's own controller (CR 614.9).
-    SelfDealsCombatDamageToPlayer PlayerRelation.PlayerRelation
-  | -- | CR 510.1b / 310.5: the bearer dealt combat damage to a player or a
-    -- battle (Archpriest of Shadows). Self-scoped, one trigger per recipient.
-    SelfDealsCombatDamageToPlayerOrBattle
-  | -- | CR 510.2 / 603.2c: a permanent dealt combat damage to any recipient,
-    -- once per combat damage step and damager (Leyline Phantom, Noble Purpose).
-    DealsCombatDamage ActingPermanent.ActingPermanent
-  | -- | CR 603.2 / 120.1: a permanent or spell dealt damage of any kind to a
-    -- player the relation admits (Akki Lavarunner, Curiosity, Chandra's Phoenix).
-    DealsDamageToPlayer DealsDamageToPlayer.DealsDamageToPlayer
-  | -- | CR 603.2 / 120.3: a permanent or spell dealt damage to a permanent of a
-    -- card type (Phage the Untouchable, Hooded Blightfang).
-    DealsDamageToPermanent DealsDamageToPermanent.DealsDamageToPermanent
-  | -- | CR 603.2 / 120.1: a permanent dealt damage of any kind to any
-    -- recipient, once per damage event and damager (Horned Cheetah, Spirit Link).
-    DealsDamage ActingPermanent.ActingPermanent
+  | -- | CR 603.2 / 120.1: a permanent or spell dealt damage (Spirit Link,
+    -- Questing Beast, Phage the Untouchable, Teysa, Envoy of Ghosts).
+    DealsDamage DamageTrigger.DamageTrigger
   | -- | CR 120.3 / 603.2c: a permanent was dealt damage of the kind, once per
     -- simultaneous batch or per source (Ripjaw Raptor, Belltower Sphinx).
     IsDealtDamage PermanentIsDealtDamage.PermanentIsDealtDamage
@@ -103,11 +79,7 @@ data TriggerCondition
     -- planeswalkers, was dealt damage of the kind, once per simultaneous batch
     -- and damaged recipient (Lich, Chandra's Spitfire, Vengeful Pharaoh).
     PlayerIsDealtDamage PlayerIsDealtDamage.PlayerIsDealtDamage
-  | -- | CR 603.2 / 509-510 read by a bystander: a permanent the Filter admits
-    -- dealt combat damage to a player the relation admits (Tovolar, Dire
-    -- Overlord; Teysa, Envoy of Ghosts).
-    PermanentDealsCombatDamageToPlayer PermanentDealsCombatDamageToPlayer.PermanentDealsCombatDamageToPlayer
-  | -- | CR 603.2c's batch reading of the arm above, with the damaged player
+  | -- | CR 603.2c's batch reading of DealsDamage's combat damage to a player, with the damaged player
     -- narrowed: "whenever one or more artifact creatures you control deal combat
     -- damage to a player" (Pia Nalaar, Chief Mechanic), once per CR 510.2 step,
     -- damagers' controller and damaged player.

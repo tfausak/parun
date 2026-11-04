@@ -31,8 +31,8 @@ import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.DamageKind as DamageKind
-import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
-import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
+import qualified Parun.Types.DamageRecipient as DamageRecipient
+import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.DieResult as DieResult
@@ -53,7 +53,6 @@ import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentAction as PermanentAction
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
-import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
@@ -125,72 +124,14 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.StateIs (Condition.Compares (Compares.MkCompares (Quantity.Literal 0) Comparison.Exactly (Quantity.Literal 0))))
       " {\"type\":\"StateIs\",\"value\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":0},\"comparison\":{\"type\":\"Exactly\"},\"threshold\":{\"type\":\"Literal\",\"value\":0}}}} "
-  -- CR 603.2 / 509-510: the bearer dealt combat damage to a player the relation
-  -- admits. BOTH relations, since the pool prints one of each: CR 702.70a's
-  -- poisonous and Longtusk Cub say "a player", where Questing Beast says "an
-  -- opponent", and a collapsed encoding would make the two one trigger.
-  Spec.it s "SelfDealsCombatDamageToPlayer round-trips both relations" $ do
+  -- CR 603.2 / 120.1: the damage trigger, its record's own spec covering the
+  -- fields (Parun.Codec.DamageTriggerSpec).
+  Spec.it s "DealsDamage" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.AnyPlayer)
-      " {\"type\":\"SelfDealsCombatDamageToPlayer\",\"value\":{\"type\":\"AnyPlayer\"}} "
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.Opponent)
-      " {\"type\":\"SelfDealsCombatDamageToPlayer\",\"value\":{\"type\":\"Opponent\"}} "
-  -- CR 510.1b / 310.5 and CR 510.2: the two wider recipients, each its own tag.
-  Spec.it s "SelfDealsCombatDamageToPlayerOrBattle" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle
-      " {\"type\":\"SelfDealsCombatDamageToPlayerOrBattle\"} "
-  Spec.it s "DealsCombatDamage round-trips both actors" $ do
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.DealsCombatDamage ActingPermanent.Self)
-      " {\"type\":\"DealsCombatDamage\",\"value\":{\"type\":\"Self\"}} "
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.DealsCombatDamage (ActingPermanent.Matching (Filter.HeldBy Holder.Controller PlayerRelation.You)))
-      " {\"type\":\"DealsCombatDamage\",\"value\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}}} "
-  -- CR 603.2 / 120.1: the player-recipient pair without the combat narrowing --
-  -- Akki Lavarunner's own condition. A separate TAG and not a flag on
-  -- SelfDealsCombatDamageToPlayer, so a card written for one can never decode as
-  -- the other.
-  Spec.it s "DealsDamageToPlayer round-trips its actor and relation" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self PlayerRelation.Opponent Nothing))
-      " {\"type\":\"DealsDamageToPlayer\",\"value\":{\"actor\":{\"type\":\"Self\"},\"recipient\":{\"type\":\"Opponent\"}}} "
-  -- CR 120.3's other recipient; `kind` omitted for damage of any kind.
-  Spec.it s "DealsDamageToPermanent" $ do
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.DealsDamageToPermanent (DealsDamageToPermanent.MkDealsDamageToPermanent ActingPermanent.Self CardType.Creature Nothing))
-      " {\"type\":\"DealsDamageToPermanent\",\"value\":{\"actor\":{\"type\":\"Self\"},\"recipient\":{\"type\":\"Creature\"}}} "
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.DealsDamageToPermanent (DealsDamageToPermanent.MkDealsDamageToPermanent ActingPermanent.Self CardType.Planeswalker (Just DamageKind.Combat)))
-      " {\"type\":\"DealsDamageToPermanent\",\"value\":{\"actor\":{\"type\":\"Self\"},\"recipient\":{\"type\":\"Planeswalker\"},\"kind\":{\"type\":\"Combat\"}}} "
-  Spec.it s "DealsDamage round-trips both actors" $ do
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.DealsDamage ActingPermanent.Self)
-      " {\"type\":\"DealsDamage\",\"value\":{\"type\":\"Self\"}} "
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.DealsDamage (ActingPermanent.Matching (Filter.HasAttached Filter.IsSource)))
-      " {\"type\":\"DealsDamage\",\"value\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasAttached\",\"value\":{\"type\":\"IsSource\"}}}} "
+      (TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger ActingPermanent.Self (Just DamageKind.Combat) (Set.singleton (DamageRecipient.Player PlayerRelation.Opponent))))
+      " {\"type\":\"DealsDamage\",\"value\":{\"actor\":{\"type\":\"Self\"},\"kind\":{\"type\":\"Combat\"},\"recipients\":[{\"type\":\"Player\",\"value\":{\"type\":\"Opponent\"}}]}} "
   -- CR 120.3: the same history read the other way round -- the permanent was
   -- DEALT damage.
   Spec.it s "IsDealtDamage round-trips both actors and a kind" $ do
@@ -223,15 +164,7 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.Opponent (Just DamageKind.Noncombat)) False))
       " {\"type\":\"PlayerIsDealtDamage\",\"value\":{\"dealt\":{\"recipient\":{\"type\":\"Opponent\"},\"kind\":{\"type\":\"Noncombat\"}}}} "
-  -- The same event read by a bystander, carrying Tovolar's "you control" and
-  -- Teysa's "to you": two relations, so a crossed codec would not round-trip.
-  Spec.it s "PermanentDealsCombatDamageToPlayer round-trips with its Filter and recipient" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PermanentDealsCombatDamageToPlayer (PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer (Filter.HeldBy Holder.Controller PlayerRelation.Opponent) PlayerRelation.You False))
-      " {\"type\":\"PermanentDealsCombatDamageToPlayer\",\"value\":{\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"Opponent\"}}},\"recipient\":{\"type\":\"You\"}}} "
-  -- CR 603.2c's batch reading of that same form, carrying the same Filter -- so a
+  -- CR 603.2c's batch reading of DealsDamage's combat damage to a player, so a
   -- separate tag is the only thing that keeps Pia Nalaar's once-per-step card and
   -- Tovolar's once-per-damager card apart on the wire.
   Spec.it s "PermanentsDealCombatDamageToPlayer round-trips with its Filter and recipient" $
