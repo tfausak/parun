@@ -3900,7 +3900,7 @@ printedActivationCombatPointSpec s registry = Spec.describe s "PrintedActivation
   -- step begins -- three steps open, two shut.
   --
   -- The FIVE readings are what make this more than a spot check, and they are
-  -- what tell BeforeCombatDamage apart from the two arms that already exist:
+  -- what tell DuringCombatBefore apart from the two arms that already exist:
   -- ActivationRestriction.DuringPhase over PhaseSelector.CombatPhase would
   -- answer offered in all five (Turn.inWindow is containment), and
   -- AfterBlockersDeclared inverted would shut the declare blockers step.

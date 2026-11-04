@@ -1,5 +1,6 @@
 module Parun.Codec.ActivationRestriction where
 
+import qualified Parun.Codec.CombatStep as CombatStep
 import qualified Parun.Codec.Condition as Condition
 import qualified Parun.Codec.DuringPhase as DuringPhase
 import qualified Parun.Codec.ManaSpecification as ManaSpecification
@@ -26,7 +27,7 @@ codec =
       Arm.payload "DuringTurn" TurnScope.codec ActivationRestriction.DuringTurn (\x -> case x of ActivationRestriction.DuringTurn y -> Just y; _ -> Nothing),
       Arm.nullary "AttackedThisStep" ActivationRestriction.AttackedThisStep,
       Arm.nullary "AfterBlockersDeclared" ActivationRestriction.AfterBlockersDeclared,
-      Arm.nullary "BeforeCombatDamage" ActivationRestriction.BeforeCombatDamage,
+      Arm.payload "DuringCombatBefore" CombatStep.codec ActivationRestriction.DuringCombatBefore (\x -> case x of ActivationRestriction.DuringCombatBefore y -> Just y; _ -> Nothing),
       Arm.payload "BeforeStep" Phase.codec ActivationRestriction.BeforeStep (\x -> case x of ActivationRestriction.BeforeStep y -> Just y; _ -> Nothing),
       Arm.payload "OnlyIf" Condition.codec ActivationRestriction.OnlyIf (\x -> case x of ActivationRestriction.OnlyIf y -> Just y; _ -> Nothing),
       Arm.nullary "OnlyOnce" ActivationRestriction.OnlyOnce,
@@ -43,7 +44,7 @@ tagOf x = case x of
   ActivationRestriction.DuringTurn {} -> "DuringTurn"
   ActivationRestriction.AttackedThisStep {} -> "AttackedThisStep"
   ActivationRestriction.AfterBlockersDeclared {} -> "AfterBlockersDeclared"
-  ActivationRestriction.BeforeCombatDamage {} -> "BeforeCombatDamage"
+  ActivationRestriction.DuringCombatBefore {} -> "DuringCombatBefore"
   ActivationRestriction.BeforeStep {} -> "BeforeStep"
   ActivationRestriction.OnlyIf {} -> "OnlyIf"
   ActivationRestriction.OnlyOnce {} -> "OnlyOnce"

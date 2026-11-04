@@ -139,11 +139,10 @@ restrictionMet pid srcId ability gs restriction = case restriction of
   -- so this is Turn.afterBlockersDeclared verbatim, the reader Parun.Engine.Cast's arm
   -- of this name uses. Trap Runner is the card.
   ActivationRestriction.AfterBlockersDeclared -> Turn.afterBlockersDeclared gs
-  -- CR 506.7 through CR 506.7g, the same extension to abilities that governs
-  -- AfterBlockersDeclared above. Turn.beforeCombatDamage reads the phase rather
-  -- than the combat record, since CR 510.2's damage is a turn-based action of one
-  -- step and CR 506.7c admits every combat phase of the turn. Save Point.
-  ActivationRestriction.BeforeCombatDamage -> Turn.beforeCombatDamage (GameState.phase gs)
+  -- CR 506.7c through CR 506.7g, the same extension to abilities that governs
+  -- AfterBlockersDeclared above. Turn.duringCombatBefore says why it reads the
+  -- phase rather than the combat record. Save Point.
+  ActivationRestriction.DuringCombatBefore target -> Turn.duringCombatBefore target (GameState.phase gs)
   -- CR 506.7a, 506.7d and 506.7e through CR 506.7g; Turn.beforeStep says why it
   -- reads the turn's log. Capricious Sorcerer and Mana Cache.
   ActivationRestriction.BeforeStep target -> Turn.beforeStep target gs
@@ -244,7 +243,7 @@ atInstantSpeed restriction = case restriction of
   ActivationRestriction.DuringTurn _ -> restriction
   ActivationRestriction.AttackedThisStep -> restriction
   ActivationRestriction.AfterBlockersDeclared -> restriction
-  ActivationRestriction.BeforeCombatDamage -> restriction
+  ActivationRestriction.DuringCombatBefore _ -> restriction
   ActivationRestriction.BeforeStep _ -> restriction
   ActivationRestriction.OnlyIf _ -> restriction
   ActivationRestriction.OnlyOnce -> restriction
@@ -358,7 +357,7 @@ needsEmptyStack restriction = case restriction of
   ActivationRestriction.DuringTurn _ -> False
   ActivationRestriction.AttackedThisStep -> False
   ActivationRestriction.AfterBlockersDeclared -> False
-  ActivationRestriction.BeforeCombatDamage -> False
+  ActivationRestriction.DuringCombatBefore _ -> False
   ActivationRestriction.BeforeStep _ -> False
   -- A board condition reads no stack, so the empty-stack question is not its
   -- question. What CR 601.2a's move does to the zone the card leaves,
@@ -395,7 +394,7 @@ refusedMidPayment restriction = case restriction of
   ActivationRestriction.DuringTurn _ -> False
   ActivationRestriction.AttackedThisStep -> False
   ActivationRestriction.AfterBlockersDeclared -> False
-  ActivationRestriction.BeforeCombatDamage -> False
+  ActivationRestriction.DuringCombatBefore _ -> False
   ActivationRestriction.BeforeStep _ -> False
   ActivationRestriction.OnlyIf _ -> False
   ActivationRestriction.OnlyOnce -> False

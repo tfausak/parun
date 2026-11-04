@@ -1,0 +1,126 @@
+{
+  "faces": [
+    {
+      "castingRestrictions": [
+        {
+          "type": "DuringCombatBefore",
+          "value": {
+            "type": "DeclareBlockers"
+          }
+        }
+      ],
+      "delayedAbilities": {
+        "you draw a card": {
+          "condition": {
+            "type": "StepBegins",
+            "value": {
+              "phase": {
+                "type": "Beginning",
+                "value": {
+                  "type": "Upkeep"
+                }
+              },
+              "scope": {
+                "type": "EachTurn"
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Draw",
+                        "value": {
+                          "player": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          },
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 1
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Panic",
+      "oracleText": "Cast this spell only during combat before blockers are declared.\nTarget creature can't block this turn.\nDraw a card at the beginning of the next turn's upkeep.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "Prohibit",
+                    "value": {
+                      "affected": {
+                        "type": "Named",
+                        "value": {
+                          "type": "InSlot",
+                          "value": "target"
+                        }
+                      },
+                      "duration": {
+                        "type": "UntilEndOfTurn"
+                      },
+                      "what": {
+                        "type": "Block"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "effects": [
+                  {
+                    "type": "ArmDelayedTrigger",
+                    "value": {
+                      "name": "you draw a card"
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "target": {
+                "pool": {
+                  "type": "Creatures"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}

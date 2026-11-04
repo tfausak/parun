@@ -99,6 +99,13 @@ spec s = Spec.describe s "Parun.Codec.CastingRestriction" $ do
       CastingRestriction.codec
       (CastingRestriction.BeforeStep (Phase.Combat CombatStep.CombatDamage))
       " {\"type\":\"BeforeStep\",\"value\":{\"type\":\"Combat\",\"value\":{\"type\":\"CombatDamage\"}}} "
+  -- Panic's "during combat before blockers are declared" (CR 506.7b, 506.7c).
+  Spec.it s "DuringCombatBefore" $
+    Common.assertCodec
+      s
+      CastingRestriction.codec
+      (CastingRestriction.DuringCombatBefore CombatStep.DeclareBlockers)
+      " {\"type\":\"DuringCombatBefore\",\"value\":{\"type\":\"DeclareBlockers\"}} "
   -- CR 601.3 over a fact about the game: Illusory Angel's "Cast this spell only
   -- if you've cast another spell this turn".
   Spec.it s "OnlyIf, Illusory Angel's another spell this turn" $

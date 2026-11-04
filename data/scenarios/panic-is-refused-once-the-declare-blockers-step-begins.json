@@ -1,0 +1,221 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Hill Giant",
+            "label": "giant",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "m1"
+          },
+          {
+            "card": "Mountain",
+            "label": "m2"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Panic",
+            "label": "panic"
+          },
+          {
+            "card": "Shock",
+            "label": "shock"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "Panic: the window is shut from the declare blockers step on, in that step's priority, in combat damage and end of combat, and after combat, with an unrestricted Shock castable as the control",
+  "timeline": [
+    {
+      "do": {
+        "Attack": [
+          "$giant"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Block": {}
+      },
+      "player": "bob",
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "player": "bob",
+      "refuse": {
+        "Cast": {
+          "mana": [
+            "$m1",
+            null
+          ],
+          "object": "$panic",
+          "targets": [
+            "$giant"
+          ]
+        }
+      },
+      "step": "DeclareBlockers",
+      "turn": 1
+    },
+    {
+      "player": "bob",
+      "refuse": {
+        "Cast": {
+          "mana": [
+            "$m1",
+            null
+          ],
+          "object": "$panic",
+          "targets": [
+            "$giant"
+          ]
+        }
+      },
+      "step": "CombatDamage",
+      "turn": 1
+    },
+    {
+      "player": "bob",
+      "refuse": {
+        "Cast": {
+          "mana": [
+            "$m1",
+            null
+          ],
+          "object": "$panic",
+          "targets": [
+            "$giant"
+          ]
+        }
+      },
+      "step": "EndOfCombat",
+      "turn": 1
+    },
+    {
+      "player": "bob",
+      "refuse": {
+        "Cast": {
+          "mana": [
+            "$m1",
+            null
+          ],
+          "object": "$panic",
+          "targets": [
+            "$giant"
+          ]
+        }
+      },
+      "step": "PostcombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$m1",
+            null
+          ],
+          "object": "$shock",
+          "targets": [
+            "$giant"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "PostcombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PostcombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Damage": {
+          "damage": 2,
+          "object": "$giant"
+        }
+      },
+      "player": "alice",
+      "step": "EndStep",
+      "turn": 1
+    }
+  ]
+}

@@ -433,29 +433,25 @@ attackedThisStep pid gs =
 afterBlockersDeclared :: GameState -> Bool
 afterBlockersDeclared = Combat.blockersDeclared . GameState.combat
 
--- CR 506.7: is the game inside a combat phase and short of the point "only
--- during combat before combat damage has been dealt" names? Save Point is the
--- card, and CR 506.7g is what lets an activated ability print the clause.
+-- CR 506.7c: is the game inside a combat phase and short of `target`? Panic's
+-- "during combat before blockers are declared" (CR 506.7b) and, through CR
+-- 506.7g, Save Point's "before combat damage has been dealt".
 --
 -- The PHASE and not the combat record, unlike afterBlockersDeclared above. CR
 -- 510.1 and CR 510.2 assign and deal combat damage as turn-based actions at the
--- START of the combat damage step and CR 510.3 gives priority only afterwards,
--- so the three steps below are exactly the priority windows of a combat phase in
--- which no combat damage has been dealt. CR 510.5's first-strike damage step
--- needs no fourth conjunct for the same reason: whichever damage step a player
--- holds priority in, damage was dealt as it began.
+-- START of the combat damage step and CR 510.3 gives priority only afterwards, so
+-- no priority window of the combat damage step precedes the damage; CR 510.5's
+-- first-strike damage step needs nothing further for the same reason. CR 509.1
+-- likewise opens the declare blockers step, so that step is past Panic's point
+-- even before its turn-based action runs (CR 506.7b says "begins").
 --
--- CR 506.7c: "during combat" names every combat phase of the turn, which asking
--- the phase alone gives -- an extra combat phase (CR 500.8) reopens the window,
--- and no CR 506.7d first-phase-only reading applies, since the card prints the
--- "during combat" words.
-beforeCombatDamage :: Phase -> Bool
-beforeCombatDamage phase = case phase of
-  Phase.Combat CombatStep.BeginningOfCombat -> True
-  Phase.Combat CombatStep.DeclareAttackers -> True
-  Phase.Combat CombatStep.DeclareBlockers -> True
-  Phase.Combat CombatStep.CombatDamage -> False
-  Phase.Combat CombatStep.EndOfCombat -> False
+-- CR 506.7c: an extra combat phase (CR 500.8) reopens the window, and no CR 506.7d
+-- first-phase-only reading applies. CR 506.7e: with the declare blockers and
+-- combat damage steps skipped (CR 508.8), the end of combat step is past both
+-- points, which CombatStep's CR 506.1 order gives.
+duringCombatBefore :: CombatStep.CombatStep -> Phase -> Bool
+duringCombatBefore target phase = case phase of
+  Phase.Combat step -> step < target
   Phase.Beginning _ -> False
   Phase.PrecombatMain -> False
   Phase.PostcombatMain -> False

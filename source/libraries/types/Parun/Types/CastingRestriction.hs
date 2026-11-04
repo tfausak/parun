@@ -1,6 +1,7 @@
 module Parun.Types.CastingRestriction where
 
 import Numeric.Natural (Natural)
+import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.DuringPhase as DuringPhase
 import qualified Parun.Types.ManaSymbol as ManaSymbol
@@ -47,10 +48,7 @@ data CastingRestriction
     -- alternative cost that taps another creature (Angelic Favor), an effect
     -- putting a chosen card from a HAND onto the battlefield (Cauldron Dance,
     -- Surprise Deployment), or a delayed ability naming a spell mode's TARGET
-    -- slot, which CardSpec's delayed-ability lint rejects (Spinal Embrace). The
-    -- narrower cards ("only during combat before blockers are declared", Blaze of
-    -- Glory and eight others) do not want this arm at all: their window is not a
-    -- phase.
+    -- slot, which CardSpec's delayed-ability lint rejects (Spinal Embrace).
     DuringPhase DuringPhase.DuringPhase
   | -- | "and only if you've been attacked this step" -- the second clause every
     -- printed instant carrying these words puts on a CAST, Rally the Troops
@@ -87,8 +85,7 @@ data CastingRestriction
     --
     -- NULLARY, rather than an after half beside BeforeStep below: the printed
     -- "during combat" gives it CR 506.7c's every-combat reading, which BeforeStep
-    -- does not have. "Only during combat before blockers are declared" (Blaze of
-    -- Glory) is a third window, and neither arm says it.
+    -- does not have.
     --
     -- Two clauses of CR 506.7 ride along rather than needing gates of their own,
     -- because the reader asks about the combat record instead of about the phase
@@ -102,6 +99,11 @@ data CastingRestriction
     -- Parun.Types.ActivationRestriction's arm of this name (CR 506.7g), sharing
     -- Parun.Engine.Turn.beforeStep as its reader.
     BeforeStep Phase.Phase
+  | -- | CR 506.7b / 506.7c: only during a combat phase, short of this step:
+    -- Panic's "during combat before blockers are declared". Reader:
+    -- Parun.Engine.Turn.duringCombatBefore. Proved by Parun.CastRestrictionSpec's
+    -- "DuringCombatBefore" group.
+    DuringCombatBefore CombatStep.CombatStep
   | -- | CR 102.1: castable only on a turn the scope admits, in any phase or
     -- step of it -- Siren's Call's "during an opponent's turn". The mirror of
     -- Parun.Types.ActivationRestriction's arm of this name.

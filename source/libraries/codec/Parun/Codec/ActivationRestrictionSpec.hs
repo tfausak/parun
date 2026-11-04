@@ -98,12 +98,12 @@ spec s = Spec.describe s "Parun.Codec.ActivationRestriction" $ do
       " {\"type\":\"AfterBlockersDeclared\"} "
   -- Save Point's "activate only during combat before combat damage has been
   -- dealt" (CR 506.7 through CR 506.7g).
-  Spec.it s "BeforeCombatDamage" $
+  Spec.it s "DuringCombatBefore" $
     Common.assertCodec
       s
       ActivationRestriction.codec
-      ActivationRestriction.BeforeCombatDamage
-      " {\"type\":\"BeforeCombatDamage\"} "
+      (ActivationRestriction.DuringCombatBefore CombatStep.CombatDamage)
+      " {\"type\":\"DuringCombatBefore\",\"value\":{\"type\":\"CombatDamage\"}} "
   -- Capricious Sorcerer's "before attackers are declared" (CR 506.7a).
   Spec.it s "BeforeStep" $
     Common.assertCodec
