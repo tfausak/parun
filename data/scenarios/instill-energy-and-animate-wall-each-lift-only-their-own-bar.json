@@ -1,0 +1,99 @@
+{
+  "description": "CR 702.3b / 302.6 each attack permission lifts its own rule: a settled Wall with Instill Energy keeps defender's bar, a new Wall with Animate Wall keeps summoning sickness's, and a new Wall with both attacks",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Wall of Stone",
+            "label": "settled",
+            "ready": true
+          },
+          {
+            "card": "Instill Energy",
+            "label": "e1",
+            "attached": "settled"
+          },
+          {
+            "card": "Wall of Stone",
+            "label": "fresh"
+          },
+          {
+            "card": "Animate Wall",
+            "label": "a1",
+            "attached": "fresh"
+          },
+          {
+            "card": "Wall of Stone",
+            "label": "both"
+          },
+          {
+            "card": "Instill Energy",
+            "label": "e2",
+            "attached": "both"
+          },
+          {
+            "card": "Animate Wall",
+            "label": "a2",
+            "attached": "both"
+          }
+        ]
+      },
+      {
+        "name": "bob"
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "refuse": {
+        "Attack": [
+          "$settled",
+          "$both"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "refuse": {
+        "Attack": [
+          "$fresh",
+          "$both"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$both"
+        ]
+      }
+    }
+  ],
+  "final": [
+    {
+      "Attackers": {
+        "attackers": {
+          "$both": "$bob"
+        }
+      }
+    }
+  ]
+}

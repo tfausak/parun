@@ -2106,6 +2106,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Tamiyo's Compleation", 2), -- its tap and its unattach
         ("Bronzehide Lion", 1), -- the quoted ability its CR 611.2e return grants
         ("Freed from the Real", 2), -- an activated tap and untap
+        ("Instill Energy", 1), -- an activated untap
         ("Infinite Reflection", 1), -- a CR 707.5 copy entry, read as Pariah's is
         ("Firebreathing", 1), -- an activated pump
         ("Adventuring Gear", 1), -- Firebreathing's pump, from a landfall trigger

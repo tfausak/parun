@@ -1,0 +1,95 @@
+{
+  "description": "CR 302.6 / 613.11 the permission is read live: with Instill Energy destroyed first, the new creature it enchanted can't attack",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "WW",
+        "hand": [
+          {
+            "card": "Disenchant",
+            "label": "kill"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          },
+          {
+            "card": "Instill Energy",
+            "label": "aura",
+            "attached": "bears"
+          },
+          {
+            "card": "Hill Giant",
+            "label": "giant",
+            "ready": true
+          }
+        ]
+      },
+      {
+        "name": "bob"
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$kill",
+          "targets": [
+            "$aura"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "refuse": {
+        "Attack": [
+          "$bears",
+          "$giant"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$giant"
+        ]
+      }
+    }
+  ],
+  "final": [
+    {
+      "Attackers": {
+        "attackers": {
+          "$giant": "$bob"
+        }
+      }
+    }
+  ]
+}

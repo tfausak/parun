@@ -1,0 +1,61 @@
+{
+  "description": "CR 508.1d a new Juggernaut with Instill Energy is able to attack, so its requirement binds: declaring no attackers is refused",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Juggernaut",
+            "label": "jug"
+          },
+          {
+            "card": "Instill Energy",
+            "label": "aura",
+            "attached": "jug"
+          }
+        ]
+      },
+      {
+        "name": "bob"
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "refuse": {
+        "Attack": []
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$jug"
+        ]
+      }
+    }
+  ],
+  "final": [
+    {
+      "Attackers": {
+        "attackers": {
+          "$jug": "$bob"
+        }
+      }
+    }
+  ]
+}

@@ -37,8 +37,8 @@ data RuleAbilities = MkRuleAbilities
     attachRestrictions :: [AttachRestriction.AttachRestriction],
     -- | CR 508.1h: Ghostly Prison's {2} per attacking creature.
     attackCosts :: [AttackCost.AttackCost],
-    -- | CR 702.3b: "this creature can attack as though it didn't have defender"
-    -- (Prison Barricade kicked).
+    -- | CR 702.3b / 302.6: "this creature can attack as though it didn't have
+    -- defender" (Prison Barricade kicked).
     attackPermissions :: [AttackPermission.AttackPermission],
     -- | CR 508.1d: "creatures ... attack each combat if able" (Curse of the
     -- Nightly Hunt).

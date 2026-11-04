@@ -12,6 +12,7 @@ import qualified Parun.Types.AttackCost as AttackCost
 import qualified Parun.Types.AttackCostScope as AttackCostScope
 import qualified Parun.Types.AttackPermission as AttackPermission
 import qualified Parun.Types.AttackRequirement as AttackRequirement
+import qualified Parun.Types.AttackWaiver as AttackWaiver
 import qualified Parun.Types.BlockCost as BlockCost
 import qualified Parun.Types.BlockPermission as BlockPermission
 import qualified Parun.Types.BlockRequirement as BlockRequirement
@@ -50,7 +51,7 @@ testRuleAbilities =
     { RuleAbilities.activationProhibitions = [ActivationProhibition.MkActivationProhibition Affected.Attached Nothing ProhibitedCost.EveryCost Nothing],
       RuleAbilities.attachRestrictions = [AttachRestriction.MkAttachRestriction Affected.Attached (Filter.HasSubtype Subtype.Aura)],
       RuleAbilities.attackCosts = [AttackCost.MkAttackCost Affected.Attached (PerCreature.Fixed (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) [])) AttackCostScope.Controller Nothing],
-      RuleAbilities.attackPermissions = [AttackPermission.MkAttackPermission Affected.Attached Nothing],
+      RuleAbilities.attackPermissions = [AttackPermission.MkAttackPermission Affected.Attached Nothing AttackWaiver.Defender],
       RuleAbilities.attackRequirements = [AttackRequirement.MkAttackRequirement Affected.Attached Nothing Nothing RequirementArity.EachSubject],
       RuleAbilities.blockCosts = [BlockCost.MkBlockCost Affected.Attached (PerCreature.Fixed (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 3])) [])) Nothing Nothing],
       RuleAbilities.blockPermissions = [BlockPermission.MkBlockPermission Affected.Attached (Just (Quantity.Literal 1)) Nothing],

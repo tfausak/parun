@@ -44,6 +44,7 @@ import qualified Parun.Types.ActivePlayerEffect as ActivePlayerEffect
 import qualified Parun.Types.AttackOption as AttackOption
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackTargetKind as AttackTargetKind
+import qualified Parun.Types.AttackWaiver as AttackWaiver
 import qualified Parun.Types.AttackerBlocked as AttackerBlocked
 import qualified Parun.Types.AttackerDeclared as AttackerDeclared
 import qualified Parun.Types.AttackerUnblocked as AttackerUnblocked
@@ -443,9 +444,9 @@ isCreatureObjectGiven = Projection.isCreatureGiven
 -- absent projection is a cache miss the projection recovers from, while an absent
 -- restriction set is a wrong answer -- which is why canAttack computes one.
 canAttack :: PlayerId -> ObjectId -> GameState -> Bool
-canAttack pid oid gs = canAttackGiven (Snapshot.onDemand gs) (CombatRestriction.cantAttack [oid] gs) (AttackPermission.waivesDefender [oid] gs) pid oid gs
+canAttack pid oid gs = canAttackGiven (Snapshot.onDemand gs) (CombatRestriction.cantAttack [oid] gs) (AttackPermission.waivers [oid] gs) pid oid gs
 
-canAttackGiven :: Snapshot.Snapshot -> Set ObjectId -> Set ObjectId -> PlayerId -> ObjectId -> GameState -> Bool
+canAttackGiven :: Snapshot.Snapshot -> Set ObjectId -> Set (ObjectId, AttackWaiver.AttackWaiver) -> PlayerId -> ObjectId -> GameState -> Bool
 canAttackGiven (Snapshot.MkSnapshot pcs grants) restricted waived pid oid gs = case Game.lookupObject oid gs of
   Nothing -> False
   Just obj ->
@@ -458,8 +459,10 @@ canAttackGiven (Snapshot.MkSnapshot pcs grants) restricted waived pid oid gs = c
       && Object.tapped obj == TapState.Untapped
       -- CR 302.6, relaxed by CR 702.10b: a creature with haste can attack even if
       -- it hasn't been controlled continuously since its controller's most recent
-      -- turn began.
-      && Summoning.settledOrHastyGiven pcs pid oid gs
+      -- turn began. `waived` lets one attack as though it had haste (Instill
+      -- Energy); it stays out of the shared predicate, whose {T} readers it doesn't
+      -- relax.
+      && (Summoning.settledOrHastyGiven pcs pid oid gs || Set.member (oid, AttackWaiver.SummoningSickness) waived)
       && isCreatureObjectGiven pcs oid gs
       -- CR 508.1a's "they can't also be battles". A separate conjunct from the
       -- creature test above and not a consequence of it: CR 205.1b's "in addition
@@ -468,10 +471,10 @@ canAttackGiven (Snapshot.MkSnapshot pcs grants) restricted waived pid oid gs = c
       -- is the board.
       && not (Projection.isBattleGiven pcs oid gs)
       -- CR 508.1c through CR 702.3b: a creature with defender can't attack. It may
-      -- still block -- 702.3b says nothing about blocking. `waived` is the
+      -- still block -- 702.3b says nothing about blocking. `waived` holds the
       -- creatures an effect lets attack as though they didn't have it (Prison
       -- Barricade kicked).
-      && (not (Projection.hasKeywordGiven pcs Keyword.Defender oid gs) || Set.member oid waived)
+      && (not (Projection.hasKeywordGiven pcs Keyword.Defender oid gs) || Set.member (oid, AttackWaiver.Defender) waived)
       -- CR 508.1c: every per-creature attacking restriction in force -- printed
       -- (Pacifism), CR 701.35a's detain, stored by the resolution that said it
       -- (Netter en-Dal), or on the controller (Angelic Arbiter).
@@ -489,7 +492,7 @@ legalAttackers pid gs =
   let board = Snapshot.whole gs
       controlled = Projection.controlsGiven (Snapshot.grants board) pid gs
       restricted = CombatRestriction.cantAttack controlled gs
-      waived = AttackPermission.waivesDefender controlled gs
+      waived = AttackPermission.waivers controlled gs
    in filter (\oid -> canAttackGiven board restricted waived pid oid gs) controlled
 
 -- CR 506.5: a creature attacks alone if it is the only creature DECLARED as an
