@@ -21,7 +21,7 @@ import qualified Parun.Engine.Binding as Binding
 import qualified Parun.Engine.Condition as Condition
 import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.EffectZone as EffectZone
-import Parun.Engine.Event.Binding (batchBindings, batchPartition, eventBindingsOver)
+import Parun.Engine.Event.Binding (batchBindings, batchPartition, countersMovedOn, eventBindingsOver)
 import Parun.Engine.Event.Match (additionalEntryTriggers, additionalTriggers, matchesTriggerGiven, stepPlayers)
 import qualified Parun.Engine.Expiry as Expiry
 import qualified Parun.Engine.Filter as Filter
@@ -66,6 +66,8 @@ import qualified Parun.Types.ContinuousEffect as ContinuousEffect
 import qualified Parun.Types.ControlChanged as ControlChanged
 import qualified Parun.Types.Convoking as Convoking
 import qualified Parun.Types.CounterChange as CounterChange
+import qualified Parun.Types.CounterGrouping as CounterGrouping
+import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.Countering as Countering
 import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.Crewing as Crewing
@@ -124,7 +126,6 @@ import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.RevealCause as RevealCause
 import qualified Parun.Types.Revealed as Revealed
 import qualified Parun.Types.Saddling as Saddling
-import qualified Parun.Types.SelfCountersRemoved as SelfCountersRemoved
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.Source as Source
 import qualified Parun.Types.SpellWasCast as SpellWasCast
@@ -740,17 +741,11 @@ looksBack condition = case condition of
   TriggerCondition.SelfPreventsDamage _ -> False
   -- CR 603.10a's list names no life change.
   TriggerCondition.LifeChanges _ -> False
-  TriggerCondition.SelfCountersReached {} -> False
+  -- CR 603.10a's list names no counter placement or removal, so the normal
+  -- reading applies: the abilities checked are the ones existing immediately
+  -- after the event.
+  TriggerCondition.CountersChange _ -> False
   TriggerCondition.SelfBecomesClassLevel _ -> False
-  TriggerCondition.SelfLastCounterRemoved _ -> False
-  TriggerCondition.SelfCountersRemoved _ -> False
-  TriggerCondition.SelfCounterRemoved _ -> False
-  -- CR 603.10a's list does not name counter placements, so the normal reading
-  -- applies: the abilities checked are the ones existing immediately after the
-  -- event. Every counter mirror above answers alike, both placement scopes
-  -- included.
-  TriggerCondition.PermanentsGetCounters {} -> False
-  TriggerCondition.PermanentGetsCounters {} -> False
   TriggerCondition.SpellCast {} -> False
   TriggerCondition.AbilityActivated _ -> False
   TriggerCondition.SelfCast -> False
@@ -1036,21 +1031,12 @@ batchScoped condition = case condition of
   -- so "each player gains 4 life" is one occurrence; "a player" is CR 603.2c's
   -- second sentence and fires once for each.
   TriggerCondition.LifeChanges lifeTrigger -> LifeTrigger.batching lifeTrigger == Batching.OneOrMore
-  TriggerCondition.SelfCountersReached {} -> False
+  -- CR 603.2c's FIRST sentence for EachBatch, beside PermanentsDie and a
+  -- OneOrMore LifeChanges: "one or more counters ... on one or more permanents"
+  -- names the whole group as the trigger event, which occurs once. The other
+  -- groupings name each permanent, or each counter (`counterOccurrences`).
+  TriggerCondition.CountersChange counterTrigger -> CounterTrigger.grouping counterTrigger == CounterGrouping.EachBatch
   TriggerCondition.SelfBecomesClassLevel _ -> False
-  TriggerCondition.SelfLastCounterRemoved _ -> False
-  TriggerCondition.SelfCountersRemoved _ -> False
-  TriggerCondition.SelfCounterRemoved _ -> False
-  -- A True beside PermanentsDie and a OneOrMore LifeChanges: CR 603.2c's FIRST
-  -- sentence is what this constructor exists for -- "one or more counters ... on
-  -- one or more permanents" names the whole group as the trigger event, which
-  -- occurs once.
-  TriggerCondition.PermanentsGetCounters {} -> True
-  -- And the SECOND sentence, which is the whole of the difference between this
-  -- constructor and the one above: "on A creature" names each permanent the
-  -- batch touched, so a sweep that counters three of them contains three
-  -- occurrences.
-  TriggerCondition.PermanentGetsCounters {} -> False
   TriggerCondition.SpellCast {} -> False
   TriggerCondition.AbilityActivated _ -> False
   TriggerCondition.SelfCast -> False
@@ -1131,16 +1117,17 @@ stepCopies gs bearer you cond event ability one =
   let for player = one {PendingTrigger.bindings = Binding.setTriggerPlayer player (PendingTrigger.bindings one)}
    in maybe [one] (fmap for) (stepTriggerPlayers gs bearer you cond event ability)
 
--- CR 603.2c's second sentence for a per-counter removal: "whenever a [kind]
--- counter is removed from this" triggers once for each counter one removal took
--- off the bearer (Protean Hydra's ruling). Nothing for every other pair, which
--- keeps its single trigger. Parun.EventSpec's Protean Hydra cases prove it.
-countersRemovedOccurrences :: ObjectId -> TriggerCondition -> GameEvent -> Maybe Natural
-countersRemovedOccurrences bearer cond event = case (cond, event) of
-  (TriggerCondition.SelfCounterRemoved removal, GameEvent.CountersRemoved (CounterChange.MkCounterChange oid kind before after))
-    | oid == bearer && kind == SelfCountersRemoved.kind removal && before > after -> Just (before - after)
-  (TriggerCondition.AnyOf conditions, _) -> Maybe.listToMaybe (Maybe.mapMaybe (\c -> countersRemovedOccurrences bearer c event) conditions)
-  (TriggerCondition.CausedBy narrowed, _) -> countersRemovedOccurrences bearer (CausedBy.condition narrowed) event
+-- CR 603.2c's second sentence for an EachCounter CountersChange: "whenever a
+-- [kind] counter is removed from this" triggers once for each counter one event
+-- moved (Protean Hydra's ruling). `matches` is the matcher over this event, so
+-- an AnyOf counts only a branch that matched. Nothing for every other condition,
+-- which keeps its single trigger. Parun.EventSpec's Protean Hydra cases prove it.
+counterOccurrences :: (TriggerCondition -> Bool) -> TriggerCondition -> GameEvent -> Maybe Natural
+counterOccurrences matches cond event = case cond of
+  TriggerCondition.CountersChange counterTrigger
+    | CounterTrigger.grouping counterTrigger == CounterGrouping.EachCounter && matches cond -> fmap snd (countersMovedOn event)
+  TriggerCondition.AnyOf conditions -> Maybe.listToMaybe (Maybe.mapMaybe (\c -> counterOccurrences matches c event) conditions)
+  TriggerCondition.CausedBy narrowed -> counterOccurrences matches (CausedBy.condition narrowed) event
   _ -> Nothing
 
 -- CR 603.6a: every event is checked against every permanent currently on the
@@ -2403,7 +2390,7 @@ eventTriggers events gs =
             -- Each paired with which of CR 603.2d's instances it is.
             pends (cond, ab) =
               let perPlayer = stepCopies gs oid (controllerFor cond) cond event ab (pend (cond, ab))
-                  occurrences = maybe perPlayer (\n -> concat (List.genericReplicate n perPlayer)) (countersRemovedOccurrences oid cond event)
+                  occurrences = maybe perPlayer (\n -> concat (List.genericReplicate n perPlayer)) (counterOccurrences (\c -> matchesTriggerGiven bindings board gs oid (controllerFor cond) c event) cond event)
                in [(extra, trigger) | extra <- [0 .. additional cond], trigger <- occurrences]
             -- CR 603.2c's key, for `oncePerBatch` below: which ability of which
             -- bearer this pending trigger came from, or Nothing when the condition
@@ -3168,23 +3155,15 @@ zonesTriggeredFrom cond =
         -- to receive the counter its own ability puts on it, and Exquisite Blood
         -- functions only where the permanent is.
         TriggerCondition.LifeChanges _ -> battlefield
-        -- CR 122.1's first sentence puts counters on OBJECTS, and CR 714.3 keeps a
-        -- Saga's lore counters on the permanent -- so CR 113.6's default holds and a
-        -- chapter ability functions from the battlefield alone.
-        TriggerCondition.SelfCountersReached {} -> battlefield
+        -- CR 113.6's default: CR 122.1 puts counters on objects, CR 714.3 keeps a
+        -- Saga's lore counters on the permanent, and a bystander watches from the
+        -- battlefield. Benalish Commander's
+        -- "while it's exiled" is the ability stating its zone
+        -- (TriggeredAbility.functionsFrom, CR 113.6b), which `conditionZones`
+        -- reads ahead of this; Parun.SpecialActionSpec's suspended Benalish
+        -- Commander proves the exile answer.
+        TriggerCondition.CountersChange _ -> battlefield
         TriggerCondition.SelfBecomesClassLevel _ -> battlefield
-        -- CR 113.6's default. Benalish Commander's "while it's exiled" is the
-        -- ability stating its zone (TriggeredAbility.functionsFrom, CR 113.6b),
-        -- which `conditionZones` reads ahead of this; Parun.SpecialActionSpec's
-        -- suspended Benalish Commander proves the exile answer.
-        TriggerCondition.SelfLastCounterRemoved _ -> battlefield
-        TriggerCondition.SelfCountersRemoved _ -> battlefield
-        TriggerCondition.SelfCounterRemoved _ -> battlefield
-        -- The battlefield, every counter mirror's answer: a permanent takes CR 122.6
-        -- counters there, and these conditions' bearers are bystanders watching from
-        -- it.
-        TriggerCondition.PermanentsGetCounters {} -> battlefield
-        TriggerCondition.PermanentGetsCounters {} -> battlefield
         -- CR 113.6's default: Young Pyromancer watches the stack from the battlefield,
         -- and a card in a graveyard sees nothing cast.
         TriggerCondition.SpellCast {} -> battlefield
@@ -3518,13 +3497,8 @@ stateTriggersOn gs
             -- are PUT ON, not on the count standing at or above N -- which is
             -- exactly the difference CR 603.8 draws, and the reason a Saga does
             -- not re-run its final chapter for as long as it sits there.
-            TriggerCondition.SelfCountersReached {} -> False
+            TriggerCondition.CountersChange _ -> False
             TriggerCondition.SelfBecomesClassLevel _ -> False
-            TriggerCondition.SelfLastCounterRemoved _ -> False
-            TriggerCondition.SelfCountersRemoved _ -> False
-            TriggerCondition.SelfCounterRemoved _ -> False
-            TriggerCondition.PermanentsGetCounters {} -> False
-            TriggerCondition.PermanentGetsCounters {} -> False
             TriggerCondition.SpellCast {} -> False
             TriggerCondition.AbilityActivated _ -> False
             TriggerCondition.SelfCast -> False

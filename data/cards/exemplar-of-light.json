@@ -84,16 +84,22 @@
         },
         {
           "condition": {
-            "type": "PermanentGetsCounters",
+            "type": "CountersChange",
             "value": {
+              "holder": {
+                "type": "Permanent",
+                "value": {
+                  "type": "IsSource"
+                }
+              },
               "kind": {
                 "type": "PlusOnePlusOne"
               },
-              "permanents": {
-                "type": "IsSource"
-              },
-              "putter": {
-                "type": "You"
+              "motion": {
+                "type": "Put",
+                "value": {
+                  "type": "You"
+                }
               }
             }
           },

@@ -76,12 +76,15 @@ import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.CostModifier as CostModifier
 import qualified Parun.Types.CostSubject as CostSubject
 import qualified Parun.Types.Count as Count.Type
+import qualified Parun.Types.CounterGrouping as CounterGrouping
+import qualified Parun.Types.CounterHolder as CounterHolder
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CounterMotion as CounterMotion
 import qualified Parun.Types.CounterPattern as CounterPattern
-import qualified Parun.Types.CounterPlacement as CounterPlacement
 import qualified Parun.Types.CounterR as CounterR
 import qualified Parun.Types.CounterRestriction as CounterRestriction
 import qualified Parun.Types.CounterSubject as CounterSubject
+import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.Create as Create
 import qualified Parun.Types.Cycling as Cycling
 import qualified Parun.Types.DamageDealer as DamageDealer
@@ -168,8 +171,6 @@ import qualified Parun.Types.Scaling as Scaling
 import qualified Parun.Types.Scope as Scope
 import qualified Parun.Types.Search as Search
 import qualified Parun.Types.SearchDestination as SearchDestination
-import qualified Parun.Types.SelfCountersReached as SelfCountersReached
-import qualified Parun.Types.SelfCountersRemoved as SelfCountersRemoved
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpecialAction as SpecialAction
 import qualified Parun.Types.StaticAbility as StaticAbility
@@ -2569,12 +2570,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
             ("Effect.MoveCounters' kinds", holds (effectFilters (Effect.MoveCounters (MoveCounters.MkMoveCounters anywhere (MovedKinds.Named kind one) Nothing anywhere)))),
             ("Effect.PutCountersFrom' kind", holds (effectFilters (Effect.PutCountersFrom (PutCountersFrom.MkPutCountersFrom slot (Just kind) anywhere)))),
             ("Quantity.ObjectCounters' kind", holds (quantityFilters (Quantity.Type.ObjectCounters kind))),
-            ("CR 714.2b's threshold", holds (triggerConditionFilters (TriggerCondition.SelfCountersReached (SelfCountersReached.MkSelfCountersReached kind 2)))),
-            ("CR 310.12b's last removal", holds (triggerConditionFilters (TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved kind)))),
-            ("its any-amount mirror", holds (triggerConditionFilters (TriggerCondition.SelfCountersRemoved (SelfCountersRemoved.MkSelfCountersRemoved kind)))),
-            ("its per-counter reading", holds (triggerConditionFilters (TriggerCondition.SelfCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved kind)))),
-            ("CR 603.2c's per-permanent placement", holds (triggerConditionFilters (TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind (Filter.Type.HasCardType CardType.Creature) PlayerRelation.AnyPlayer)))),
-            ("CR 603.2c's batch placement", holds (triggerConditionFilters (TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind (Filter.Type.HasCardType CardType.Creature) PlayerRelation.AnyPlayer)))),
+            ("CR 714.2b's threshold", holds (triggerConditionFilters (TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger kind (CounterMotion.Put PlayerRelation.AnyPlayer) CounterHolder.Self (Just 2) CounterGrouping.EachPermanent)))),
+            ("CR 603.2c's batch placement", holds (triggerConditionFilters (TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger kind (CounterMotion.Put PlayerRelation.AnyPlayer) (CounterHolder.Permanent (Filter.Type.HasCardType CardType.Creature)) Nothing CounterGrouping.EachBatch)))),
             ("CR 614.1's scaling pattern", holds (replacementEffectFilters (ReplacementEffect.CounterR (CounterR.MkCounterR (CounterPattern.MkCounterPattern (Just kind) CounterSubject.ByAnything (ControllerRelation.Related PlayerRelation.You) (Filter.Type.HasCardType CardType.Creature) Nothing) (Scaling.AddMore 1))))),
             ("CR 614.1c's as-enters sacrifice", holds (entryRewriteFilters (EntryRewrite.SacrificeAnyNumber (SacrificeAnyNumber.MkSacrificeAnyNumber (Filter.Type.HasCardType CardType.Creature) (Just kind) one)))),
             -- Its MULTIPLIER, a road of its own: the field is a Quantity, so the
@@ -2615,7 +2612,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
       ( counterKindFilters plain,
         effectFilters (Effect.RemoveCounters (RemoveCounters.MkRemoveCounters plain one slot Nothing)),
         quantityFilters (Quantity.Type.ObjectCounters plain),
-        triggerConditionFilters (TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved plain))
+        triggerConditionFilters (TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger plain CounterMotion.Removed CounterHolder.Self (Just 0) CounterGrouping.EachPermanent))
       )
       ([], [], [], [])
     -- The same pair over the three number-shaped roads: a plain kind inside the

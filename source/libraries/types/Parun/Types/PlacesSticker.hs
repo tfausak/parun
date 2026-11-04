@@ -7,7 +7,7 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.StickerKind as StickerKind
 
 -- | CR 123.3: "whenever [a player] places a sticker", narrowed to these
--- kinds, PermanentGetsCounters' posture for a counter kind.
+-- kinds, CountersChange's posture for a counter kind.
 data PlacesSticker = MkPlacesSticker
   { placer :: PlayerRelation.PlayerRelation,
     kinds :: Set.Set StickerKind.StickerKind,

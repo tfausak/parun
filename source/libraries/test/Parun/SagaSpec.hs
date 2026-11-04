@@ -8,7 +8,7 @@
 --
 -- Also the pieces rule 714 needed underneath it, exercised here because this is
 -- where a card reaches them: CounterKind.Lore, GameEvent.CountersPut (the CR
--- 122.6 record) and TriggerCondition.SelfCountersReached.
+-- 122.6 record) and TriggerCondition.CountersChange's threshold.
 --
 -- History of Benalia carries every group but the last: chapters I and II create a
 -- 2/2 white Knight token with vigilance -- CR 714.2c's "I, II --" shorthand,

@@ -75,8 +75,11 @@ import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.CostAmount as CostAmount
 import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.CounterChange as CounterChange
+import qualified Parun.Types.CounterGrouping as CounterGrouping
+import qualified Parun.Types.CounterHolder as CounterHolder
 import qualified Parun.Types.CounterKind as CounterKind
-import qualified Parun.Types.CounterPlacement as CounterPlacement
+import qualified Parun.Types.CounterMotion as CounterMotion
+import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.Countering as Countering
 import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
@@ -166,8 +169,6 @@ import qualified Parun.Types.RevealTiming as RevealTiming
 import qualified Parun.Types.Revealed as Revealed
 import qualified Parun.Types.RevealedThisWay as RevealedThisWay
 import qualified Parun.Types.RoomIndex as RoomIndex
-import qualified Parun.Types.SelfCountersReached as SelfCountersReached
-import qualified Parun.Types.SelfCountersRemoved as SelfCountersRemoved
 import qualified Parun.Types.SideDeck as SideDeck
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpellCast as SpellCast
@@ -2134,32 +2135,20 @@ representativeEvents cond =
         -- floor. A batch admits the same event: the two differ in
         -- Event.batchScoped, never in the matcher.
         TriggerCondition.LifeChanges lifeTrigger -> one (Event.lifeChangeEvent (LifeTrigger.direction lifeTrigger) (LifeChange.MkLifeChange S.bob 2 True))
-        -- CR 714.2b: a placement on the BEARER that crosses the chapter. The
-        -- bearer here is `departed`, the id Event.matchesTrigger is asked about
-        -- below, and the counts straddle N so the event really matches.
-        TriggerCondition.SelfCountersReached (SelfCountersReached.MkSelfCountersReached kind n) -> one (GameEvent.CountersPut (CountersPlaced.MkCountersPlaced S.alice departed kind 0 n))
+        -- CR 122's own event on `departed`, the id Event.matchesTrigger is asked
+        -- about below as both the bearer and the trivially filtered holder, the
+        -- way the counters moved and with counts crossing any threshold, so the
+        -- event really matches. With no threshold the removal does NOT reach
+        -- zero, so a matcher that had read `after` anyway would find nothing
+        -- and the eventBindingSlots pin below would see nothing stamped.
+        TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger kind motion _ threshold _) -> one $ case (motion, threshold) of
+          (CounterMotion.Put _, Just n) -> GameEvent.CountersPut (CountersPlaced.MkCountersPlaced S.alice departed kind 0 n)
+          (CounterMotion.Put _, Nothing) -> GameEvent.CountersPut (CountersPlaced.MkCountersPlaced S.alice departed kind 0 1)
+          (CounterMotion.Removed, Just n) -> GameEvent.CountersRemoved (CounterChange.MkCounterChange departed kind (n + 2) n)
+          (CounterMotion.Removed, Nothing) -> GameEvent.CountersRemoved (CounterChange.MkCounterChange departed kind 3 1)
         -- CR 716.2a's own event, on `departed` and not the bearer, the arm above's
         -- shape: the pair does not match, which is what pins the floor.
         TriggerCondition.SelfBecomesClassLevel n -> one (GameEvent.ClassLevelSet (ClassLevelChange.MkClassLevelChange departed (ClassLevel.MkClassLevel 1) n))
-        -- CR 310.12b: a removal on the BEARER that took the last counter, so the
-        -- event really matches the condition Event.matchesTrigger is asked about.
-        TriggerCondition.SelfLastCounterRemoved removal -> one (GameEvent.CountersRemoved (CounterChange.MkCounterChange departed (SelfCountersRemoved.kind removal) 1 0))
-        -- Its any-amount mirror, on a pair that does NOT reach zero -- so an
-        -- implementation that had cased on `after` would find no match here and the
-        -- eventBindingSlots pin below would see nothing stamped.
-        TriggerCondition.SelfCountersRemoved removal -> one (GameEvent.CountersRemoved (CounterChange.MkCounterChange departed (SelfCountersRemoved.kind removal) 3 1))
-        TriggerCondition.SelfCounterRemoved removal -> one (GameEvent.CountersRemoved (CounterChange.MkCounterChange departed (SelfCountersRemoved.kind removal) 3 1))
-        -- CR 603.2c's batch placement, on the same event the chapter arm above
-        -- names and read the other way round: the id is the SUBJECT the Filter is
-        -- applied to rather than the bearer. The Filter below is the trivial one,
-        -- so what decides the match is whether the subject can be viewed at all --
-        -- and the floor is empty either way, a batch condition binding nothing.
-        TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind _ _) -> one (GameEvent.CountersPut (CountersPlaced.MkCountersPlaced S.alice departed kind 0 1))
-        -- Its per-permanent scope, on the same event: the two share a payload and a
-        -- matcher, and what parts them here is the floor -- this one names ONE
-        -- permanent, so `became` is stamped and claimed where the batch above
-        -- claims nothing.
-        TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind _ _) -> one (GameEvent.CountersPut (CountersPlaced.MkCountersPlaced S.alice departed kind 0 1))
         -- CR 601.2i's own event, and CR 707.10's copy where the condition
         -- watches copies too. Both halves are bound whichever ids the event
         -- names -- the spell under `thatSpell`, the caster or copier under
@@ -2319,7 +2308,7 @@ representativeEvents cond =
                 AbilityTriggered.MkAbilityTriggered
                   { AbilityTriggered.source = TriggerSource.OfObject departed,
                     AbilityTriggered.controller = S.alice,
-                    AbilityTriggered.ability = bareAbility (TriggerCondition.SelfCountersReached (SelfCountersReached.MkSelfCountersReached CounterKind.Lore 3))
+                    AbilityTriggered.ability = bareAbility (TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger CounterKind.Lore (CounterMotion.Put PlayerRelation.AnyPlayer) CounterHolder.Self (Just 3) CounterGrouping.EachPermanent))
                   }
             )
         -- CR 725.1's own event, and the only one this condition admits. CR 725.3
@@ -2522,13 +2511,16 @@ everyTriggerCondition =
     TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Gained PlayerRelation.AnyPlayer TurnScope.EachTurn Batching.OneOrMore TriggerFrequency.EveryTime),
     TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Lost PlayerRelation.Opponent TurnScope.EachTurn Batching.EachOccurrence TriggerFrequency.EveryTime),
     TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Lost PlayerRelation.Opponent TurnScope.ControllersTurn Batching.OneOrMore TriggerFrequency.EveryTime),
-    TriggerCondition.SelfCountersReached (SelfCountersReached.MkSelfCountersReached CounterKind.Lore 1),
+    -- One per grouping, holder and threshold the pool prints, plus a
+    -- per-counter Permanent holder, whose `became` no printing claims yet.
+    TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger CounterKind.Lore (CounterMotion.Put PlayerRelation.AnyPlayer) CounterHolder.Self (Just 1) CounterGrouping.EachPermanent),
     TriggerCondition.SelfBecomesClassLevel (ClassLevel.MkClassLevel 2),
-    TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Defense),
-    TriggerCondition.SelfCountersRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Loyalty),
-    TriggerCondition.SelfCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.PlusOnePlusOne),
-    TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement CounterKind.MinusOneMinusOne (Filter.Type.And []) PlayerRelation.AnyPlayer),
-    TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement CounterKind.MinusOneMinusOne (Filter.Type.And []) PlayerRelation.AnyPlayer),
+    TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger CounterKind.Defense CounterMotion.Removed CounterHolder.Self (Just 0) CounterGrouping.EachPermanent),
+    TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger CounterKind.Loyalty CounterMotion.Removed CounterHolder.Self Nothing CounterGrouping.EachPermanent),
+    TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger CounterKind.PlusOnePlusOne CounterMotion.Removed CounterHolder.Self Nothing CounterGrouping.EachCounter),
+    TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger CounterKind.MinusOneMinusOne (CounterMotion.Put PlayerRelation.AnyPlayer) (CounterHolder.Permanent (Filter.Type.And [])) Nothing CounterGrouping.EachBatch),
+    TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger CounterKind.MinusOneMinusOne (CounterMotion.Put PlayerRelation.AnyPlayer) (CounterHolder.Permanent (Filter.Type.And [])) Nothing CounterGrouping.EachPermanent),
+    TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger CounterKind.MinusOneMinusOne (CounterMotion.Put PlayerRelation.AnyPlayer) (CounterHolder.Permanent (Filter.Type.And [])) Nothing CounterGrouping.EachCounter),
     -- BOTH scopes, unlike StepBegins' one above: the TurnScope is new on this
     -- condition, and the pin below asserts eventBindingSlots against what
     -- eventBindings stamps for every event -- so an arm that had cased on the

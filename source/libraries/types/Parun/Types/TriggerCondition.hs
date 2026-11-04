@@ -13,7 +13,7 @@ import qualified Parun.Types.CausedBy as CausedBy
 import qualified Parun.Types.ClassLevel as ClassLevel
 import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.ControllerBecomesTarget as ControllerBecomesTarget
-import qualified Parun.Types.CounterPlacement as CounterPlacement
+import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
@@ -42,8 +42,6 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.RevealedThisWay as RevealedThisWay
 import qualified Parun.Types.RoomIndex as RoomIndex
-import qualified Parun.Types.SelfCountersReached as SelfCountersReached
-import qualified Parun.Types.SelfCountersRemoved as SelfCountersRemoved
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpellCast as SpellCast
 import qualified Parun.Types.StepBegins as StepBegins
@@ -393,31 +391,13 @@ data TriggerCondition
     -- "loses life" (Exquisite Blood); CR 702.179d's "one or more opponents lose
     -- life during your turn" too.
     LifeChanges LifeTrigger.LifeTrigger
-  | -- | CR 714.2b generalized over the counter kind: a threshold crossing whose
-    -- before/after pair straddles N, intervening "if" included.
-    SelfCountersReached SelfCountersReached.SelfCountersReached
+  | -- | CR 603.2 / 122.6: counters of a kind were put on or removed from a
+    -- permanent (CR 714.2b's chapters, CR 310.12b's Siege, Chandra, Fire
+    -- Artisan, Protean Hydra, Wickersmith's Tools, Cloaked Cadet).
+    CountersChange CounterTrigger.CounterTrigger
   | -- | CR 716.2a: "when this Class becomes level N" (Stormchaser's Talent), a
     -- crossing rather than an equality.
     SelfBecomesClassLevel ClassLevel.ClassLevel
-  | -- | CR 310.12b generalized over the counter kind: "when the last [kind]
-    -- counter is removed from this permanent".
-    SelfLastCounterRemoved SelfCountersRemoved.SelfCountersRemoved
-  | -- | "Whenever one or more [kind] counters are removed from this permanent"
-    -- (Chandra, Fire Artisan) -- the arm above with no reading of the after
-    -- count.
-    SelfCountersRemoved SelfCountersRemoved.SelfCountersRemoved
-  | -- | CR 603.2c's per-occurrence reading of the arm above: "whenever a
-    -- [kind] counter is removed from this" (Protean Hydra), once per counter.
-    SelfCounterRemoved SelfCountersRemoved.SelfCountersRemoved
-  | -- | CR 603.2c's batch reading of a CR 122.6 placement: "whenever one or more
-    -- [kind] counters are put on one or more [permanents]", once for the batch.
-    PermanentsGetCounters CounterPlacement.CounterPlacement
-  | -- | The arm above read per permanent: "whenever one or more [kind] counters
-    -- are put on a [permanent]" (Wickersmith's Tools). Naming one permanent, it
-    -- binds it -- Auntie Ool, Cursewretch's "that creature", under CR 400.7e's
-    -- `became` (Parun.Engine.Event.Binding.eventBindingSlots) -- where the batch arm above
-    -- cannot.
-    PermanentGetsCounters CounterPlacement.CounterPlacement
   | -- | CR 601.2i: "whenever you cast a [type] spell" (Young Pyromancer), the
     -- Filter read against the spell as it is on the stack.
     SpellCast SpellCast.SpellCast

@@ -99,12 +99,16 @@
         },
         {
           "condition": {
-            "type": "SelfLastCounterRemoved",
+            "type": "CountersChange",
             "value": {
               "kind": {
                 "type": "Named",
                 "value": "intervention"
-              }
+              },
+              "motion": {
+                "type": "Removed"
+              },
+              "threshold": 0
             }
           },
           "modal": {

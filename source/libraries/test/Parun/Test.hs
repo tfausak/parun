@@ -228,16 +228,19 @@ import qualified Parun.Codec.CountSpec
 import qualified Parun.Codec.CountedDiscardSpec
 import qualified Parun.Codec.CounterChangeSpec
 import qualified Parun.Codec.CounterDestinationSpec
+import qualified Parun.Codec.CounterGroupingSpec
+import qualified Parun.Codec.CounterHolderSpec
 import qualified Parun.Codec.CounterKindSpec
+import qualified Parun.Codec.CounterMotionSpec
 import qualified Parun.Codec.CounterNameSpec
 import qualified Parun.Codec.CounterPatternSpec
-import qualified Parun.Codec.CounterPlacementSpec
 import qualified Parun.Codec.CounterProhibitionSpec
 import qualified Parun.Codec.CounterRSpec
 import qualified Parun.Codec.CounterRestrictionSpec
 import qualified Parun.Codec.CounterSpec
 import qualified Parun.Codec.CounterSpreadSpec
 import qualified Parun.Codec.CounterSubjectSpec
+import qualified Parun.Codec.CounterTriggerSpec
 import qualified Parun.Codec.CounterabilitySpec
 import qualified Parun.Codec.CounteredEndSpec
 import qualified Parun.Codec.CounteringSpec
@@ -662,8 +665,6 @@ import qualified Parun.Codec.SearchDestinationSpec
 import qualified Parun.Codec.SearchSpec
 import qualified Parun.Codec.SeatSpec
 import qualified Parun.Codec.SeatViewSpec
-import qualified Parun.Codec.SelfCountersReachedSpec
-import qualified Parun.Codec.SelfCountersRemovedSpec
 import qualified Parun.Codec.SetBasePowerToughnessSpec
 import qualified Parun.Codec.SetClassLevelSpec
 import qualified Parun.Codec.SetHalfLockedSpec
@@ -1199,7 +1200,10 @@ spec s registry corpus = do
   Parun.Codec.CounterKindSpec.spec s
   Parun.Codec.CounterNameSpec.spec s
   Parun.Codec.CounterPatternSpec.spec s
-  Parun.Codec.CounterPlacementSpec.spec s
+  Parun.Codec.CounterGroupingSpec.spec s
+  Parun.Codec.CounterHolderSpec.spec s
+  Parun.Codec.CounterMotionSpec.spec s
+  Parun.Codec.CounterTriggerSpec.spec s
   Parun.Codec.CountersPlacedSpec.spec s
   Parun.Codec.CounterProhibitionSpec.spec s
   Parun.Codec.CounterRestrictionSpec.spec s
@@ -1634,8 +1638,6 @@ spec s registry corpus = do
   Parun.Codec.SearchDestinationSpec.spec s
   Parun.Codec.SearchSpec.spec s
   Parun.Codec.SeatSpec.spec s
-  Parun.Codec.SelfCountersReachedSpec.spec s
-  Parun.Codec.SelfCountersRemovedSpec.spec s
   Parun.Codec.SetBasePowerToughnessSpec.spec s
   Parun.Codec.SetClassLevelSpec.spec s
   Parun.Codec.SetHalfLockedSpec.spec s

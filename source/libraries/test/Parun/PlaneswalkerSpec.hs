@@ -419,13 +419,13 @@ spec s registry = Spec.describe s "Parun.Engine.Planeswalker" $ do
 --
 -- Chandra, Fire Artisan -- {2}{R}{R} Legendary Planeswalker -- Chandra, printed
 -- loyalty 4 -- is the group's card, and the pool's loyalty producer of
--- TriggerCondition.SelfCountersRemoved: "whenever one or more loyalty counters are
+-- an unthresholded TriggerCondition.CountersChange removal: "whenever one or more loyalty counters are
 -- removed from Chandra, she deals that much damage to target opponent or
 -- planeswalker". Her +1 and -7 exile the top of the library and grant CR 601.1a's
 -- permission to play what was exiled; the -7 is what drives the cost half.
 --
 -- Every board here leaves counters BEHIND, which is what separates this condition
--- from TriggerCondition.SelfLastCounterRemoved: an implementation that read the
+-- from CR 310.12b's threshold of 0: an implementation that read the
 -- after-count would match none of them.
 countersRemovedSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 countersRemovedSpec s registry = Spec.describe s "CountersRemoved" $ do

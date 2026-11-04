@@ -121,15 +121,24 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentGetsCounters",
+            "type": "CountersChange",
             "value": {
+              "holder": {
+                "type": "Permanent",
+                "value": {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                }
+              },
               "kind": {
                 "type": "MinusOneMinusOne"
               },
-              "permanents": {
-                "type": "HasCardType",
+              "motion": {
+                "type": "Put",
                 "value": {
-                  "type": "Creature"
+                  "type": "AnyPlayer"
                 }
               }
             }

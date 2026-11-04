@@ -506,16 +506,20 @@ library codec
     Parun.Codec.CounterDestinationSpec
     Parun.Codec.CounteredEnd
     Parun.Codec.CounteredEndSpec
+    Parun.Codec.CounterGrouping
+    Parun.Codec.CounterGroupingSpec
+    Parun.Codec.CounterHolder
+    Parun.Codec.CounterHolderSpec
     Parun.Codec.Countering
     Parun.Codec.CounteringSpec
     Parun.Codec.CounterKind
     Parun.Codec.CounterKindSpec
+    Parun.Codec.CounterMotion
+    Parun.Codec.CounterMotionSpec
     Parun.Codec.CounterName
     Parun.Codec.CounterNameSpec
     Parun.Codec.CounterPattern
     Parun.Codec.CounterPatternSpec
-    Parun.Codec.CounterPlacement
-    Parun.Codec.CounterPlacementSpec
     Parun.Codec.CounterProhibition
     Parun.Codec.CounterProhibitionSpec
     Parun.Codec.CounterR
@@ -535,6 +539,8 @@ library codec
     Parun.Codec.CounterSpreadSpec
     Parun.Codec.CounterSubject
     Parun.Codec.CounterSubjectSpec
+    Parun.Codec.CounterTrigger
+    Parun.Codec.CounterTriggerSpec
     Parun.Codec.CountIs
     Parun.Codec.CountIsSpec
     Parun.Codec.CountSpec
@@ -1398,10 +1404,6 @@ library codec
     Parun.Codec.SeatSpec
     Parun.Codec.SeatView
     Parun.Codec.SeatViewSpec
-    Parun.Codec.SelfCountersReached
-    Parun.Codec.SelfCountersReachedSpec
-    Parun.Codec.SelfCountersRemoved
-    Parun.Codec.SelfCountersRemovedSpec
     Parun.Codec.SetBasePowerToughness
     Parun.Codec.SetBasePowerToughnessSpec
     Parun.Codec.SetClassLevel
@@ -2607,13 +2609,15 @@ library types
     Parun.Types.CounterChange
     Parun.Types.CounterDestination
     Parun.Types.CounteredEnd
+    Parun.Types.CounterGrouping
+    Parun.Types.CounterHolder
     Parun.Types.Countering
     Parun.Types.CounterKind
     Parun.Types.CounterKindFamily
     Parun.Types.CounterKindFor
+    Parun.Types.CounterMotion
     Parun.Types.CounterName
     Parun.Types.CounterPattern
-    Parun.Types.CounterPlacement
     Parun.Types.CounterProhibition
     Parun.Types.CounterR
     Parun.Types.CounterRestriction
@@ -2623,6 +2627,7 @@ library types
     Parun.Types.CountersPlaced
     Parun.Types.CounterSpread
     Parun.Types.CounterSubject
+    Parun.Types.CounterTrigger
     Parun.Types.CountIs
     Parun.Types.Craft
     Parun.Types.Create
@@ -3120,8 +3125,6 @@ library types
     Parun.Types.SearchPlace
     Parun.Types.Seat
     Parun.Types.SeatView
-    Parun.Types.SelfCountersReached
-    Parun.Types.SelfCountersRemoved
     Parun.Types.SetBasePowerToughness
     Parun.Types.SetClassLevel
     Parun.Types.SetHalfLocked

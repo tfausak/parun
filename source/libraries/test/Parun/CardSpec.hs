@@ -158,12 +158,13 @@ import qualified Parun.Types.Count as Count.Type
 import qualified Parun.Types.CountedDiscard as CountedDiscard
 import qualified Parun.Types.Counter as Counter
 import qualified Parun.Types.CounterDestination as CounterDestination
+import qualified Parun.Types.CounterHolder as CounterHolder
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CounterPattern as CounterPattern
-import qualified Parun.Types.CounterPlacement as CounterPlacement
 import qualified Parun.Types.CounterProhibition as CounterProhibition
 import qualified Parun.Types.CounterR as CounterR
 import qualified Parun.Types.CounterRestriction as CounterRestriction
+import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.Counterability as Counterability
 import qualified Parun.Types.CountersFromPermanents as CountersFromPermanents
 import qualified Parun.Types.Craft as Craft
@@ -380,8 +381,6 @@ import qualified Parun.Types.SacrificeToEnter as SacrificeToEnter
 import qualified Parun.Types.Scope as Scope
 import qualified Parun.Types.Search as Search
 import qualified Parun.Types.SearchDestination as SearchDestination
-import qualified Parun.Types.SelfCountersReached as SelfCountersReached
-import qualified Parun.Types.SelfCountersRemoved as SelfCountersRemoved
 import qualified Parun.Types.SetBasePowerToughness as SetBasePowerToughness
 import qualified Parun.Types.SetClassLevel as SetClassLevel
 import qualified Parun.Types.SetOwner as SetOwner
@@ -1292,18 +1291,10 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- Rule 615.13's other reading carries a Filter, which holds no Count either.
   TriggerCondition.SelfPreventsDamage _ -> []
   TriggerCondition.LifeChanges _ -> []
-  -- CR 714.2b carries a counter kind and a Natural, neither of which is a Count.
-  TriggerCondition.SelfCountersReached {} -> []
+  -- A counter trigger carries a kind, a relation, a Filter and a Natural, none of
+  -- which is a Count.
+  TriggerCondition.CountersChange _ -> []
   TriggerCondition.SelfBecomesClassLevel _ -> []
-  -- CR 310.12b carries a counter kind alone.
-  TriggerCondition.SelfLastCounterRemoved _ -> []
-  -- And so does its any-amount mirror.
-  TriggerCondition.SelfCountersRemoved _ -> []
-  TriggerCondition.SelfCounterRemoved _ -> []
-  -- CR 603.2c's batch placement carries a kind and a Filter, and neither holds a
-  -- Count. Its per-permanent scope carries the same payload.
-  TriggerCondition.PermanentsGetCounters {} -> []
-  TriggerCondition.PermanentGetsCounters {} -> []
   -- CR 601.2i's Filter is a predicate over the spell that was cast, and a Filter
   -- holds no Count, exactly as CR 603.6a's does above. Its ordinal is a bare
   -- Natural, as CR 714.2b's is.
@@ -4853,25 +4844,16 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- for PermanentActs' reason.
   TriggerCondition.SelfPreventsDamage f -> unframed [f]
   TriggerCondition.LifeChanges _ -> []
-  -- CR 714.2b's threshold names a counter kind, and CR 122.1b's kind may be a
-  -- whole Keyword carrying a Filter -- "whenever the second hexproof-from-
-  -- Goblins counter is put on this permanent"; see #2728. The Natural beside it is
-  -- no Filter.
-  TriggerCondition.SelfCountersReached (SelfCountersReached.MkSelfCountersReached kind _) -> counterKindFilters kind
+  -- A counter trigger names a counter kind, and CR 122.1b's kind may be a whole
+  -- Keyword carrying a Filter -- "whenever the second hexproof-from-Goblins
+  -- counter is put on this permanent"; see #2728. A Permanent holder carries one
+  -- over the permanents the counters moved on, swept like PermanentsDie's, so a
+  -- card's "one or more creatures" is not exempt from the corpus filter lints.
+  TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger kind _ holder _ _) ->
+    counterKindFilters kind <> case holder of
+      CounterHolder.Self -> []
+      CounterHolder.Permanent f -> unframed [f]
   TriggerCondition.SelfBecomesClassLevel _ -> []
-  -- CR 310.12b names a counter kind alone, swept for the arm above's reason.
-  TriggerCondition.SelfLastCounterRemoved removal -> counterKindFilters (SelfCountersRemoved.kind removal)
-  -- And so does its any-amount mirror.
-  TriggerCondition.SelfCountersRemoved removal -> counterKindFilters (SelfCountersRemoved.kind removal)
-  TriggerCondition.SelfCounterRemoved removal -> counterKindFilters (SelfCountersRemoved.kind removal)
-  -- CR 603.2c's batch placement carries one, over the permanents the counters
-  -- landed on -- swept like PermanentsDie's, so a card's "one or more creatures"
-  -- is not exempt from the corpus filter lints. And its KIND beside it, for the
-  -- three arms above's reason.
-  TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind f _) -> unframed [f] <> counterKindFilters kind
-  -- And its per-permanent scope, whose Filter is read against ONE permanent --
-  -- swept all the same, the lints being about the Filter and not the scope.
-  TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind f _) -> unframed [f] <> counterKindFilters kind
   -- CR 601.2i's "whenever you cast a [type] spell" carries one directly, over
   -- the spell rather than over a permanent.
   TriggerCondition.SpellCast (SpellCast.MkSpellCast f _ _ _ _ _) -> unframed [f]
@@ -4989,13 +4971,8 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.DamageToPlayerPrevented _ -> []
   TriggerCondition.SelfPreventsDamage _ -> []
   TriggerCondition.LifeChanges _ -> []
-  TriggerCondition.SelfCountersReached _ -> []
+  TriggerCondition.CountersChange _ -> []
   TriggerCondition.SelfBecomesClassLevel _ -> []
-  TriggerCondition.SelfLastCounterRemoved _ -> []
-  TriggerCondition.SelfCountersRemoved _ -> []
-  TriggerCondition.SelfCounterRemoved _ -> []
-  TriggerCondition.PermanentsGetCounters _ -> []
-  TriggerCondition.PermanentGetsCounters _ -> []
   TriggerCondition.SpellCast _ -> []
   TriggerCondition.SelfCast -> []
   TriggerCondition.AbilityActivated _ -> []

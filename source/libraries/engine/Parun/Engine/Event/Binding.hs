@@ -41,6 +41,9 @@ import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CausedBy as CausedBy
 import qualified Parun.Types.Combat as Combat
 import qualified Parun.Types.CounterChange as CounterChange
+import qualified Parun.Types.CounterGrouping as CounterGrouping
+import qualified Parun.Types.CounterHolder as CounterHolder
+import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
@@ -133,6 +136,15 @@ import qualified Parun.Types.ZoneChange as ZoneChange
 eventBindings :: GameState -> Maybe ObjectId -> Map.Map ObjectId ObjectId -> ObjectId -> PlayerId -> TriggerCondition -> GameEvent -> Map.Map SlotName.SlotName Binding
 eventBindings = eventBindingsOver Map.empty
 
+-- CR 122: the object a counter event names and how many counters moved, on or
+-- off. Each record exists only where its count changed (GameEvent.CountersPut,
+-- GameEvent.CountersRemoved), so the saturating difference is never 0.
+countersMovedOn :: GameEvent -> Maybe (ObjectId, Numeric.Natural.Natural)
+countersMovedOn event = case event of
+  GameEvent.CountersPut placed -> Just (CountersPlaced.object placed, Natural.minusSaturating (CountersPlaced.after placed) (CountersPlaced.before placed))
+  GameEvent.CountersRemoved change -> Just (CounterChange.object change, Natural.minusSaturating (CounterChange.before change) (CounterChange.after change))
+  _ -> Nothing
+
 -- `eventBindings` given the event's CR 603.10 sample (Event.Trigger.battlefieldAt),
 -- the board matchesTriggerGiven read the same event against; empty answers
 -- every id off the live board (`postEventView`).
@@ -207,21 +219,31 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
     Binding.setEventAmount (DamageEvent.amount ev) Map.empty
   (TriggerCondition.DealsCombatDamage _, GameEvent.DamageDealt ev) ->
     Binding.setCombatDamager (DamageEvent.source ev) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty)
-  -- CR 603.2's "that much": how many counters actually came off, read off the
-  -- event's own before/after pair. Chandra, Fire Artisan's "she deals that much
-  -- damage" counts THAT and not the damage that caused it -- CR 306.8's removal
-  -- saturates, so five damage to a four-loyalty planeswalker removes four -- and
-  -- one CR 510.2 batch is one record, so two attackers taking two counters off
-  -- between them stamp 2 once rather than 1 twice.
+  -- CR 603.2's "that many" and CR 400.7e's "that creature": how many counters
+  -- moved, read off the event's own before/after pair, and on what. Chandra,
+  -- Fire Artisan's "she deals that much damage" counts the loyalty that came off,
+  -- not the damage that caused it (CR 306.8's removal saturates), and one CR
+  -- 510.2 batch is one record. Auntie Ool, Cursewretch reads the creature.
   --
-  -- Unconditional given a match, which is what eventBindingSlots' per-condition
-  -- promise needs: every GameEvent.CountersRemoved carries both counts, and the
-  -- record exists only where `before` exceeds `after`.
+  -- Unconditional given a match, which is what eventBindingSlots' promise needs:
+  -- every counter event carries its object and both counts. The amount needs one
+  -- permanent, the object one permanent the bearer does not name already
+  -- (CR 113.7a's source slot does), so a batch stamps neither (CR 603.2c) and a
+  -- Self holder no object.
   --
-  -- Saturating, and the guard is nominal for that reason; a Natural difference
-  -- has no other honest floor.
-  (TriggerCondition.SelfCountersRemoved _, GameEvent.CountersRemoved change) ->
-    Binding.setEventAmount (Natural.minusSaturating (CounterChange.before change) (CounterChange.after change)) Map.empty
+  -- A DEAD ID IS POSSIBLE and is the payload's problem, `became`'s standing
+  -- posture: matchesTrigger admits the CR 704.5f victim a -1/-1 counter made
+  -- through Projection.viewWithLastKnown.
+  (TriggerCondition.CountersChange counterTrigger, _)
+    | Just (oid, amount) <- countersMovedOn event ->
+        let withObject = case (CounterTrigger.holder counterTrigger, CounterTrigger.grouping counterTrigger) of
+              (CounterHolder.Permanent _, CounterGrouping.EachCounter) -> Binding.setBecame oid
+              (CounterHolder.Permanent _, CounterGrouping.EachPermanent) -> Binding.setBecame oid
+              _ -> id
+            withAmount = case CounterTrigger.grouping counterTrigger of
+              CounterGrouping.EachPermanent -> Binding.setEventAmount amount
+              _ -> id
+         in withObject (withAmount Map.empty)
   -- CR 510.2's "it": the permanent that dealt the combat damage, which Aragorn,
   -- Hornburg Hero's payload doubles the counters on. Read off the event's source,
   -- the same field matchesTrigger applied the Filter to, so the slot names exactly
@@ -479,39 +501,9 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- have taken away (Parun.Types.TurnedFaceUp). Nothing when no X was chosen.
   (TriggerCondition.SelfTurnedFaceUp, GameEvent.TurnedFaceUp t) ->
     maybe Map.empty (\x -> Binding.fromChoices Map.empty (Just x) Seq.empty) (TurnedFaceUp.announcedX t)
-  -- CR 603.2's "that creature": the permanent the counters went on, which Auntie
-  -- Ool, Cursewretch draws off or drains for. The bearer is a bystander, exactly
-  -- as it is under the arm above -- Wickersmith's Tools is an artifact watching
-  -- creatures -- so the subject needs a name of its own.
-  --
-  -- THE SAME SLOT, the arm above's widening rather than a fresh one, and for its
-  -- reasons: putting counters on a permanent is no zone change (CR 122.1 puts a
-  -- marker on the object that is already there, and CR 400.7 mints nothing), so
-  -- what carries the reuse is that CR 400.7e's slot is the printed word "that
-  -- creature" -- the thing the EVENT names, which CR 113.7a's source is not --
-  -- and, as the arm above says, a fresh name would empty CR 603.1b's AnyOf
-  -- intersection forever.
-  --
-  -- Unconditional given a match, which is what eventBindingSlots' per-condition
-  -- promise needs: every GameEvent.CountersPut carries exactly one
-  -- CountersPlaced.object. Bound whatever the Filter admitted, for the
-  -- PermanentEnters arm's reason.
-  --
-  -- A DEAD ID IS POSSIBLE and is the payload's problem, `became`'s standing
-  -- posture: matchesTrigger admits the CR 704.5f victim a -1/-1 counter made
-  -- through Projection.viewWithLastKnown, so a creature that took the counters
-  -- and died before the CR 117.5 boundary still fires the trigger with this slot
-  -- naming an object that no longer exists.
-  --
-  -- Its BATCH sibling reaches the fallthrough instead and stamps nothing, which
-  -- is eventBindingSlots' answer for it: CR 603.2c's batch reading fires one
-  -- PermanentsGetCounters trigger for placements across several permanents, and
-  -- one slot cannot name them all.
-  (TriggerCondition.PermanentGetsCounters _, GameEvent.CountersPut change) ->
-    Binding.setBecame (CountersPlaced.object change) Map.empty
   -- CR 123.3's "that creature": the object the sticker went on, which the event
   -- carries (Tusk and Whiskers). No zone change, so CR 400.7e's slot is the
-  -- printed word, PermanentGetsCounters' reason.
+  -- printed word, CountersChange's reason.
   (TriggerCondition.PlacesSticker _, GameEvent.StickerPut put) ->
     Binding.setBecame (StickerPut.object put) Map.empty
   -- "That player": the discarder, which CR 701.9a makes one player and the event
@@ -1806,40 +1798,27 @@ eventBindingSlots cond = case cond of
   TriggerCondition.SelfPreventsDamage _ -> Set.fromList [Binding.eventAmount, Binding.preventedDamageSource]
   -- CR 119.3's amount and the changing player, guaranteed given a match: both
   -- life events carry a Natural and a PlayerId unconditionally, under every
-  -- relation. A batch binds nothing, PermanentsGetCounters' answer: one CR 608.2f
+  -- relation. A batch binds nothing, CountersChange's answer: one CR 608.2f
   -- batch may hold a change for every seat, each its own number (Synthetic
   -- Communal Vigil draws a card; CR 702.179d's "your speed" is Binding.setYou's).
   TriggerCondition.LifeChanges lifeTrigger -> case LifeTrigger.batching lifeTrigger of
     Batching.EachOccurrence -> Set.fromList [Binding.eventAmount, Binding.triggerPlayer]
     Batching.OneOrMore -> Set.empty
-  -- CR 714.2b names one object -- the bearer -- which CR 113.7a's source slot
-  -- already names, so `became` would be a second name for it. The counts the
-  -- event carries are the CONDITION's, not the payload's: no chapter ability in
-  -- print says "that many", and eventBindings has no arm for this condition.
-  TriggerCondition.SelfCountersReached {} -> Set.empty
+  -- eventBindings' CountersChange arm, field by field: the amount per permanent,
+  -- the object where it is not the bearer and is one permanent. A batch binds
+  -- nothing, PermanentsDie's answer: Cloaked Cadet, the only printing of that
+  -- form (Scryfall o:"counters are put on one or more", 2026-08-25), names none
+  -- of the permanents, and a printing whose payload said "it" would refute this.
+  TriggerCondition.CountersChange counterTrigger ->
+    let object = case (CounterTrigger.holder counterTrigger, CounterTrigger.grouping counterTrigger) of
+          (CounterHolder.Permanent _, CounterGrouping.EachCounter) -> Set.singleton Binding.became
+          (CounterHolder.Permanent _, CounterGrouping.EachPermanent) -> Set.singleton Binding.became
+          _ -> Set.empty
+        amount = case CounterTrigger.grouping counterTrigger of
+          CounterGrouping.EachPermanent -> Set.singleton Binding.eventAmount
+          _ -> Set.empty
+     in object <> amount
   TriggerCondition.SelfBecomesClassLevel _ -> Set.empty
-  TriggerCondition.SelfLastCounterRemoved _ -> Set.empty
-  -- CR 603.2's "that much", the one thing this condition binds that neither
-  -- sibling does: Chandra, Fire Artisan reads the number of counters that came
-  -- off. The bearer needs no slot, CR 113.7a's source slot already naming it.
-  TriggerCondition.SelfCountersRemoved _ -> Set.singleton Binding.eventAmount
-  -- One counter per trigger, so no "that many" to bind; no printing reads one.
-  TriggerCondition.SelfCounterRemoved _ -> Set.empty
-  -- Nothing, PermanentsDie's answer and for its reason: the trigger event is a
-  -- whole CR 704.3 / CR 608.2f batch, which may have put counters on several
-  -- permanents, and one slot cannot name them all. Cloaked Cadet, the only
-  -- printing of this written form (Scryfall o:"counters are put on one or more",
-  -- 2026-08-25), draws a card and names none of them; a printing whose payload
-  -- said "it" would refute this, and the lint would reject it -- PermanentsDie's
-  -- case above, and no member of eventBindingSlotsSometimes for its reason.
-  TriggerCondition.PermanentsGetCounters {} -> Set.empty
-  -- CR 400.7e's slot in its widest reading, and NOT the arm above's answer: this
-  -- condition names one permanent, so the slot is honest. Auntie Ool,
-  -- Cursewretch's "draw a card if you control that creature. If you don't control
-  -- it, its controller loses 1 life" is what reads it; Wickersmith's Tools, the
-  -- printing that landed the constructor, reads nothing off the creature and is
-  -- unaffected by the slot being available.
-  TriggerCondition.PermanentGetsCounters {} -> Set.singleton Binding.became
   -- CR 709.5h names the permanent and the half, and CR 113.7a's source slot
   -- already names the permanent. The HALF is not bound: no printing says "that
   -- door", so there is nothing for a payload to read it as.

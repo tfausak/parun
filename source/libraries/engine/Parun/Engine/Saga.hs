@@ -33,7 +33,10 @@ import qualified Data.Set as Set
 import Numeric.Natural (Natural)
 import qualified Parun.Engine.Game as Game
 import Parun.Types.Card (Card)
+import qualified Parun.Types.CounterHolder as CounterHolder
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CounterMotion as CounterMotion
+import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EntryR as EntryR
@@ -52,7 +55,6 @@ import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Quantity as Quantity
 import Parun.Types.ReplacementEffect (ReplacementEffect)
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
-import qualified Parun.Types.SelfCountersReached as SelfCountersReached
 import qualified Parun.Types.Source as Source
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TriggerCondition as TriggerCondition
@@ -64,7 +66,7 @@ import qualified Parun.Types.WithCounters as WithCounters
 -- | CR 714.2b's threshold crossing: did a count going from `before` to `after`
 -- pass chapter `n`? "Was less than N and became at least N", verbatim.
 --
--- Shared with Parun.Engine.Event.matchesTrigger's SelfCountersReached arm rather
+-- Shared with Parun.Engine.Event.matchesTrigger's CountersChange arm rather
 -- than written twice, since the SBA below has to agree with the trigger matcher
 -- exactly: CR 704.5s exempts a Saga whose chapter ability has triggered, and a
 -- second copy of this comparison drifting from the first would sacrifice a Saga
@@ -131,7 +133,7 @@ chapterTriggers restricted before after n = crossed before after n && (after == 
 -- card prints two entries sharing one modal.
 chapterOf :: TriggeredAbility card ability -> Maybe Natural
 chapterOf ability = case TriggeredAbility.condition ability of
-  TriggerCondition.SelfCountersReached (SelfCountersReached.MkSelfCountersReached CounterKind.Lore n) -> Just n
+  TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger CounterKind.Lore (CounterMotion.Put _) CounterHolder.Self (Just n) _) -> Just n
   _ -> Nothing
 
 -- | CR 714.2a: the chapter numbers a permanent's abilities print, read off the

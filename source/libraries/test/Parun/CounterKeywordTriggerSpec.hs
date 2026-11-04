@@ -39,7 +39,11 @@ import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Combat as Combat.Type
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Cost as Cost.Type
+import qualified Parun.Types.CounterGrouping as CounterGrouping
+import qualified Parun.Types.CounterHolder as CounterHolder
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.CounterMotion as CounterMotion
+import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.Decider as Decider
@@ -68,7 +72,6 @@ import qualified Parun.Types.Quantity as Quantity.Type
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
 import qualified Parun.Types.Response as Response
-import qualified Parun.Types.SelfCountersRemoved as SelfCountersRemoved
 import qualified Parun.Types.StepBegan as StepBegan
 import qualified Parun.Types.StepBegins as StepBegins
 import qualified Parun.Types.TriggerCondition as TriggerCondition
@@ -357,7 +360,7 @@ vanishingSpec s registry =
         -- and a mint that dropped one of the pair would repair it silently.
         Spec.it s "CR 702.63c each instance is its own three abilities" $ do
           let counted = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing TurnScope.ControllersTurn)
-              emptied = TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Time)
+              emptied = TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger CounterKind.Time CounterMotion.Removed CounterHolder.Self (Just 0) CounterGrouping.EachPermanent)
           Spec.assertEqWith
             s
             "vanishing 2 held twice mints four triggers, two of each kind"
@@ -383,7 +386,7 @@ numberlessVanishingSpec s _ =
     -- the absent number changes exactly one of the two lists.
     Spec.it s "CR 702.63b keeps both triggers and mints no entry rewrite" $ do
       let counted = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing TurnScope.ControllersTurn)
-          emptied = TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Time)
+          emptied = TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger CounterKind.Time CounterMotion.Removed CounterHolder.Self (Just 0) CounterGrouping.EachPermanent)
       Spec.assertEqWith
         s
         "both of rule 702.63a's triggers, numberless"

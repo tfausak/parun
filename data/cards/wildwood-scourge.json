@@ -54,47 +54,56 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentGetsCounters",
+            "type": "CountersChange",
             "value": {
+              "holder": {
+                "type": "Permanent",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "Not",
+                      "value": {
+                        "type": "IsSource"
+                      }
+                    },
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    },
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
+                      }
+                    },
+                    {
+                      "type": "Not",
+                      "value": {
+                        "type": "HasSubtype",
+                        "value": {
+                          "type": "Hydra"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
               "kind": {
                 "type": "PlusOnePlusOne"
               },
-              "permanents": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "Not",
-                    "value": {
-                      "type": "IsSource"
-                    }
-                  },
-                  {
-                    "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
-                  },
-                  {
-                    "type": "HeldBy",
-                    "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
-                      }
-                    }
-                  },
-                  {
-                    "type": "Not",
-                    "value": {
-                      "type": "HasSubtype",
-                      "value": {
-                        "type": "Hydra"
-                      }
-                    }
-                  }
-                ]
+              "motion": {
+                "type": "Put",
+                "value": {
+                  "type": "AnyPlayer"
+                }
               }
             }
           },
