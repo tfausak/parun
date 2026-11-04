@@ -119,13 +119,13 @@
         }
       },
       "player": "alice",
-      "step": "DrawStep",
+      "step": "PrecombatMain",
       "turn": 1
     },
     {
       "do": "Pass",
       "player": "alice",
-      "step": "DrawStep",
+      "step": "PrecombatMain",
       "turn": 1
     },
     {
@@ -141,7 +141,7 @@
       },
       "player": "alice",
       "source": "Artificial Evolution",
-      "step": "DrawStep",
+      "step": "PrecombatMain",
       "turn": 1
     },
     {
@@ -152,7 +152,7 @@
         }
       },
       "player": "alice",
-      "step": "DrawStep",
+      "step": "PrecombatMain",
       "turn": 1
     },
     {
