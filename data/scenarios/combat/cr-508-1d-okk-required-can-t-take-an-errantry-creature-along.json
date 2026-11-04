@@ -1,6 +1,6 @@
 {
   "description": "CR 508.1d Okk required to attack can't take Errantry's creature along",
-  "note": "The enchanted Grizzly Bears are the only creature with greater power than Okk, and Errantry forbids them company. No legal declaration holds Okk, so its requirement goes unobeyed and declining stands.",
+  "note": "The enchanted Grizzly Bears are the only creature with greater power than Okk, and Errantry forbids them company. No legal declaration holds Okk, so its requirement goes unobeyed and declining stands. The 3/3 Hill Giant could attack but isn't company, which is what makes the search pin Okk's company rather than count.",
   "board": {
     "active": "alice",
     "step": "Upkeep",
@@ -11,6 +11,11 @@
           {
             "card": "Okk",
             "label": "okk",
+            "ready": true
+          },
+          {
+            "card": "Hill Giant",
+            "label": "giant",
             "ready": true
           },
           {

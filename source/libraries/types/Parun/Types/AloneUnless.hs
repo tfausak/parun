@@ -12,12 +12,12 @@ import qualified Parun.Types.Keyword as Keyword
 -- "unless" gate.
 data AloneUnless = MkAloneUnless
   { affected :: Affected.Affected,
-    -- | The other creature that must also be declared, read in the RESTRICTED
-    -- creature's context, so a source-relative atom compares against it (Okk's
-    -- "a creature with greater power"). Nothing is any other creature: CR
-    -- 506.5's "alone" (Bonded Construct). Elided rather than written null.
+    -- | The other creatures `others` counts, read in the RESTRICTED creature's
+    -- context, so a source-relative atom compares against it (Okk's "a creature
+    -- with greater power"). Nothing is any other creature: CR 506.5's "alone"
+    -- (Bonded Construct). Elided rather than written null.
     alongside :: Maybe (Filter.Filter Keyword.Keyword),
-    -- | How many creatures `alongside` admits the declaration must hold.
+    -- | How many of them the declaration must hold. One other when elided.
     others :: CompanyCount.CompanyCount,
     -- | Nothing is the unconditional restriction. Elided rather than written
     -- null.
