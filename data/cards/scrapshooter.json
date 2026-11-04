@@ -49,7 +49,8 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfEnters"
+            "type": "Enters",
+            "value": {}
           },
           "intervening": {
             "type": "Compares",

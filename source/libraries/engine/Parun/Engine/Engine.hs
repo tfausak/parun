@@ -74,6 +74,7 @@ import qualified Parun.Extra.Int as Int
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
 import qualified Parun.Types.Acquisition as Acquisition
+import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.Action as Action.Type
 import qualified Parun.Types.AnyNumberOf as AnyNumberOf
 import qualified Parun.Types.Asked as Asked
@@ -91,6 +92,7 @@ import qualified Parun.Types.Departure as Departure.Type
 import qualified Parun.Types.DiscardCause as DiscardCause
 import qualified Parun.Types.EndTurnSignal as EndTurnSignal
 import qualified Parun.Types.EndingStep as EndingStep
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EventGroup as EventGroup
 import qualified Parun.Types.ExtraTurn as ExtraTurn
 import Parun.Types.Game (Game)
@@ -936,7 +938,7 @@ placeBorne srcId pending = do
       -- announced (Genesis Hydra), off the spell's own bindings since the
       -- spell is still on the stack as the ability triggers.
       inheritedX = case TriggeredAbility.condition ability of
-        TriggerCondition.SelfEnters -> Game.announcedXOf srcId gs
+        TriggerCondition.Enters (EntersTrigger.MkEntersTrigger ActingPermanent.Self _) -> Game.announcedXOf srcId gs
         TriggerCondition.SelfTurnedFaceUp -> Maybe.fromMaybe 0 (Binding.amountOf Binding.variableX bound)
         TriggerCondition.SelfCast -> Maybe.fromMaybe 0 (Game.lookupObject srcId gs >>= Binding.amountOf Binding.variableX . Object.bindings)
         _ -> 0
@@ -948,7 +950,7 @@ placeBorne srcId pending = do
       -- not overwritten. data/scenarios' Genesis Hydra case proves the cast
       -- trigger's.
       enteredX = case TriggeredAbility.condition ability of
-        TriggerCondition.SelfEnters -> Just inheritedX
+        TriggerCondition.Enters (EntersTrigger.MkEntersTrigger ActingPermanent.Self _) -> Just inheritedX
         TriggerCondition.SelfCast -> Just inheritedX
         _ -> Nothing
       -- CR 700.2b: a mode an earlier choice bars "can't be chosen", like an

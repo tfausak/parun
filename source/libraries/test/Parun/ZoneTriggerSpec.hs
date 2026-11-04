@@ -112,6 +112,7 @@ import qualified Parun.Types.Discarded as Discarded
 import qualified Parun.Types.DrawnUnder as DrawnUnder
 import qualified Parun.Types.Drew as Drew
 import qualified Parun.Types.EndingStep as EndingStep
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.Exploited as Exploited
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter.Type
@@ -1781,7 +1782,7 @@ representativeDeparted :: ObjectId.ObjectId
 representativeDeparted = ObjectId.MkObjectId 1
 
 -- The one arrival the pin DOES stock, attached to `representativeHost`: only
--- SelfEnters' second row arrives as it, for CR 603.6a's host, which that arm
+-- A Self Enters' second row arrives as it, for CR 603.6a's host, which that arm
 -- binds off the live board and so claims only sometimes.
 representativeEntrant :: ObjectId.ObjectId
 representativeEntrant = ObjectId.MkObjectId 7
@@ -1833,11 +1834,11 @@ representativeEvents cond =
         -- CR 603.6a: an entrant with no object on the pinning board, and one
         -- stocked there attached to a host, so the host is bound for some
         -- entries only.
-        TriggerCondition.SelfEnters ->
-          noTable (moved Zone.Stack Zone.Battlefield)
-            NonEmpty.:| [noTable (GameEvent.Moved (Moved.moved (ZoneChange.MkZoneChange departed representativeEntrant Zone.Stack Zone.Battlefield) S.emptyCharacteristics))]
-        TriggerCondition.PermanentEnters _ -> one (moved Zone.Stack Zone.Battlefield)
-        TriggerCondition.PermanentsEnter _ -> one (moved Zone.Stack Zone.Battlefield)
+        TriggerCondition.Enters t -> case EntersTrigger.permanent t of
+          ActingPermanent.Self ->
+            noTable (moved Zone.Stack Zone.Battlefield)
+              NonEmpty.:| [noTable (GameEvent.Moved (Moved.moved (ZoneChange.MkZoneChange departed representativeEntrant Zone.Stack Zone.Battlefield) S.emptyCharacteristics))]
+          ActingPermanent.Matching _ -> one (moved Zone.Stack Zone.Battlefield)
         TriggerCondition.StepBegins (StepBegins.MkStepBegins phase _ _) -> one (GameEvent.StepBegan (StepBegan.MkStepBegan phase S.alice))
         -- CR 603.8: a state trigger matches a game STATE, so no log entry fires
         -- it at all (Event.matchesTrigger's StateIs arm answers False for every
@@ -2274,9 +2275,10 @@ representativeEvents cond =
 -- what the pin asserts.
 everyTriggerCondition :: [TriggerCondition.TriggerCondition]
 everyTriggerCondition =
-  [ TriggerCondition.SelfEnters,
-    TriggerCondition.PermanentEnters Filter.Type.IsSource,
-    TriggerCondition.PermanentsEnter Filter.Type.IsSource,
+  [ TriggerCondition.Enters EntersTrigger.defaultValue,
+    TriggerCondition.Enters EntersTrigger.defaultValue {EntersTrigger.batching = Batching.OneOrMore},
+    TriggerCondition.Enters (EntersTrigger.matching Filter.Type.IsSource),
+    TriggerCondition.Enters (EntersTrigger.matching Filter.Type.IsSource) {EntersTrigger.batching = Batching.OneOrMore},
     TriggerCondition.CardPutIntoGraveyard (CardPutIntoGraveyard.MkCardPutIntoGraveyard Filter.Type.IsSource Set.empty),
     TriggerCondition.Leaves (LeavesTrigger.dies (LeavingPermanent.Matching Filter.Type.IsSource)),
     TriggerCondition.Leaves (LeavesTrigger.dies (LeavingPermanent.Matching Filter.Type.IsSource)) {LeavesTrigger.batching = Batching.OneOrMore},
@@ -2446,17 +2448,17 @@ everyTriggerCondition =
     TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted Filter.Type.IsSource PlayerRelation.Opponent Nothing True),
     TriggerCondition.SelfHalfUnlocked (CardName.MkCardName (Text.pack "Steaming Sauna")),
     TriggerCondition.RoomFullyUnlocked PlayerRelation.You,
-    -- Balemurk Leech's own pair, and not an arbitrary one: PermanentEnters binds
+    -- Balemurk Leech's own pair, and not an arbitrary one: a Matching Enters binds
     -- `became` while RoomFullyUnlocked binds nothing, so the intersection is
     -- EMPTY -- which is the case the union-versus-intersection call in
     -- Event.eventBindingSlots turns on. A union would claim `became` here and the
     -- pin below would catch it.
-    TriggerCondition.AnyOf [TriggerCondition.PermanentEnters Filter.Type.IsSource, TriggerCondition.RoomFullyUnlocked PlayerRelation.You],
+    TriggerCondition.AnyOf [TriggerCondition.Enters (EntersTrigger.matching Filter.Type.IsSource), TriggerCondition.RoomFullyUnlocked PlayerRelation.You],
     -- Case of the Pilfered Proof's own pair, and the other side of that call:
     -- both branches bind `became`, so the intersection is NON-EMPTY and the pin
     -- below is what says eventBindings fills it for each branch's event in turn.
     -- The empty pair alone would leave the AnyOf arm free to stamp nothing.
-    TriggerCondition.AnyOf [TriggerCondition.PermanentEnters (Filter.Type.And []), TriggerCondition.PermanentTurnedFaceUp (Filter.Type.And [])],
+    TriggerCondition.AnyOf [TriggerCondition.Enters (EntersTrigger.matching (Filter.Type.And [])), TriggerCondition.PermanentTurnedFaceUp (Filter.Type.And [])],
     -- Sacred Ground's narrowing, over the condition whose bindings it keeps.
     TriggerCondition.CausedBy CausedBy.MkCausedBy {CausedBy.controller = PlayerRelation.Opponent, CausedBy.condition = TriggerCondition.Leaves (LeavesTrigger.dies (LeavingPermanent.Matching (Filter.Type.And [])))},
     TriggerCondition.SelfTurnedFaceUp,

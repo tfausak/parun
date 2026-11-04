@@ -92,7 +92,7 @@ spec s = Spec.describe s "Parun.Codec.Source" $ do
               TriggeredAbilitySource.acquisition = Acquisition.Own
             }
       )
-      " {\"type\":\"OfTrigger\",\"value\":{\"source\":6,\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}}}} "
+      " {\"type\":\"OfTrigger\",\"value\":{\"source\":6,\"ability\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}}}} "
   -- CR 114.
   Spec.it s "OfEmblem" $
     Common.assertCodec
@@ -131,6 +131,6 @@ spec s = Spec.describe s "Parun.Codec.Source" $ do
               InherentTriggerSource.ability = TriggeredAbilitySourceSpec.ability
             }
       )
-      " {\"type\":\"OfInherentTrigger\",\"value\":{\"controller\":1,\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}}}} "
+      " {\"type\":\"OfInherentTrigger\",\"value\":{\"controller\":1,\"ability\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s Source.codec

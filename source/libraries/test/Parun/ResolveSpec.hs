@@ -73,6 +73,7 @@ import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.Departure as Departure.Type
 import qualified Parun.Types.Duration as Duration
 import qualified Parun.Types.Effect as Effect
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EntryBlock as EntryBlock
 import qualified Parun.Types.EntryRiders as EntryRiders
 import qualified Parun.Types.Face as Face
@@ -1300,7 +1301,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
         -- move the Piker into bob's graveyard
         g3 = S.runPure S.identityAnswer g2 (Event.changeZone deadId Zone.Graveyard)
         ability =
-          Mint.trigger TriggerCondition.SelfEnters (Seq.fromList [Effect.ExileAllGraveyards])
+          Mint.trigger (TriggerCondition.Enters EntersTrigger.defaultValue) (Seq.fromList [Effect.ExileAllGraveyards])
         (abilId, g4) = Game.freshObjectId g3
         (ts, g5) = Game.freshTimestamp g4
         abilObj =

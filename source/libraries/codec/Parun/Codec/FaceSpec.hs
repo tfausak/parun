@@ -50,6 +50,7 @@ import qualified Parun.Types.CounterRestriction as CounterRestriction
 import qualified Parun.Types.Counterability as Counterability
 import qualified Parun.Types.CrewRestriction as CrewRestriction
 import qualified Parun.Types.Effect as Effect
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EntryR as EntryR
 import qualified Parun.Types.EntryRestriction as EntryRestriction
 import qualified Parun.Types.EntryRewrite as EntryRewrite
@@ -129,7 +130,7 @@ minimalModal =
 -- is a well-typed TriggeredAbility Card.
 minimalTriggeredAbility :: TriggeredAbility.TriggeredAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)
 minimalTriggeredAbility =
-  TriggeredAbility.MkTriggeredAbility TriggerCondition.SelfEnters minimalModal Nothing Nothing TriggerLimit.Unlimited Set.empty
+  TriggeredAbility.MkTriggeredAbility (TriggerCondition.Enters EntersTrigger.defaultValue) minimalModal Nothing Nothing TriggerLimit.Unlimited Set.empty
 
 -- | Every required field set to a simple value, 'manaCost', 'power' and
 -- 'toughness' set to non-default values, and every other defaulted field left at
@@ -335,11 +336,11 @@ populatedFaceJson =
     <> "\"activatedAbilities\":[{\"cost\":{\"mana\":[]},"
     <> "\"modal\":{\"modes\":[{}]},\"name\":\"activated\"}],"
     <> "\"replacementEffects\":[{\"effect\":{\"type\":\"EntryR\",\"value\":{\"matching\":{\"type\":\"IsSource\"},\"rewrite\":{\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}}}}}],"
-    <> "\"triggeredAbilities\":[{\"condition\":{\"type\":\"SelfEnters\"},"
+    <> "\"triggeredAbilities\":[{\"condition\":{\"type\":\"Enters\",\"value\":{}},"
     <> "\"modal\":{\"modes\":[{}]}}],"
     <> "\"castingPermissions\":[{\"type\":\"CastFromLibraryWhileSearching\"}],"
     <> "\"loyalty\":{\"type\":\"Literal\",\"value\":3},\"colorIndicator\":[{\"type\":\"White\"}],\"characteristicPT\":{\"power\":{\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}},\"toughness\":{\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}}},"
-    <> "\"delayedAbilities\":{\"trigger\":{\"condition\":{\"type\":\"SelfEnters\"},"
+    <> "\"delayedAbilities\":{\"trigger\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},"
     <> "\"modal\":{\"modes\":[{}]}}},"
     <> "\"playerAbilities\":[{\"scope\":{\"type\":\"You\"},\"effect\":{\"type\":\"CantCastSpells\"}}],"
     <> "\"blockRequirements\":[{\"attacker\":{\"type\":\"Attached\"}}],"
@@ -525,7 +526,7 @@ spec s = Spec.describe s "Parun.Codec.Face" $ do
         decodeFace
         baseFace {Face.delayedAbilities = Map.singleton (AbilityName.MkAbilityName (Text.pack "trigger")) minimalTriggeredAbility}
         ( init baseFaceJson
-            <> ",\"delayedAbilities\":{\"trigger\":{\"condition\":{\"type\":\"SelfEnters\"},"
+            <> ",\"delayedAbilities\":{\"trigger\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},"
             <> "\"modal\":{\"modes\":[{}]}}}}"
         )
     Spec.it s "playerAbilities" $

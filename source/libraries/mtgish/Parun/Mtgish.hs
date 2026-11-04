@@ -85,6 +85,7 @@ import qualified Parun.Types.Duration as Duration
 import qualified Parun.Types.DuringPhase as DuringPhase
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EndingStep as EndingStep
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EntryR as EntryR
 import qualified Parun.Types.EntryRewrite as EntryRewrite
 import qualified Parun.Types.EntryRiders as EntryRiders
@@ -706,11 +707,11 @@ trigger n = case Node.tag n of
   "WhenAPermanentEntersTheBattlefield" -> do
     who <- Node.argument n
     case single who of
-      Just "ThisPermanent" -> Right (TriggerCondition.SelfEnters, bound [("ThatEnteringPermanent", Oracle.Target.selfSlot)])
+      Just "ThisPermanent" -> Right (TriggerCondition.Enters EntersTrigger.defaultValue, bound [("ThatEnteringPermanent", Oracle.Target.selfSlot)])
       Just _ -> Node.untranslated n
       Nothing -> do
         f <- permanents outermost who
-        Right (TriggerCondition.PermanentEnters f, bound [("ThatEnteringPermanent", Oracle.Target.becameSlot)])
+        Right (TriggerCondition.Enters (EntersTrigger.matching f), bound [("ThatEnteringPermanent", Oracle.Target.becameSlot)])
   "WhenAPermanentDies" -> do
     who <- Node.argument n
     case single who of

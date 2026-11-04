@@ -58,7 +58,8 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfEnters"
+            "type": "Enters",
+            "value": {}
           },
           "intervening": {
             "type": "Compares",
@@ -161,43 +162,48 @@
         },
         {
           "condition": {
-            "type": "PermanentEnters",
+            "type": "Enters",
             "value": {
-              "type": "And",
-              "value": [
-                {
-                  "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
-                },
-                {
-                  "type": "HeldBy",
-                  "value": {
-                    "holder": {
-                      "type": "Controller"
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
                     },
-                    "relation": {
-                      "type": "You"
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
+                      }
+                    },
+                    {
+                      "type": "Measures",
+                      "value": {
+                        "comparison": {
+                          "type": "AtLeast"
+                        },
+                        "measure": {
+                          "type": "Power"
+                        },
+                        "operand": {
+                          "type": "Literal",
+                          "value": 4
+                        }
+                      }
                     }
-                  }
-                },
-                {
-                  "type": "Measures",
-                  "value": {
-                    "comparison": {
-                      "type": "AtLeast"
-                    },
-                    "measure": {
-                      "type": "Power"
-                    },
-                    "operand": {
-                      "type": "Literal",
-                      "value": 4
-                    }
-                  }
+                  ]
                 }
-              ]
+              }
             }
           },
           "modal": {

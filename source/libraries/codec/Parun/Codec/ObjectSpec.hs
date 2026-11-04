@@ -264,7 +264,7 @@ spec s = Spec.describe s "Parun.Codec.Object" $ do
           <> ",\"doesNotUntapFor\":2,\"exertedBy\":[23]"
           <> ",\"activatedOnce\":[{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]}"
           <> ",\"modal\":{\"modes\":[{}]}}]"
-          <> ",\"chosenModes\":[{\"key\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}},\"value\":[2]}]} "
+          <> ",\"chosenModes\":[{\"key\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}},\"value\":[2]}]} "
       )
   Spec.it s "has a schema" $
     Common.assertHasSchema s Object.codec

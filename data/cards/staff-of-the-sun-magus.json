@@ -45,28 +45,33 @@
                 }
               },
               {
-                "type": "PermanentEnters",
+                "type": "Enters",
                 "value": {
-                  "type": "And",
-                  "value": [
-                    {
-                      "type": "HasSubtype",
-                      "value": {
-                        "type": "Plains"
-                      }
-                    },
-                    {
-                      "type": "HeldBy",
-                      "value": {
-                        "holder": {
-                          "type": "Controller"
+                  "permanent": {
+                    "type": "Matching",
+                    "value": {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HasSubtype",
+                          "value": {
+                            "type": "Plains"
+                          }
                         },
-                        "relation": {
-                          "type": "You"
+                        {
+                          "type": "HeldBy",
+                          "value": {
+                            "holder": {
+                              "type": "Controller"
+                            },
+                            "relation": {
+                              "type": "You"
+                            }
+                          }
                         }
-                      }
+                      ]
                     }
-                  ]
+                  }
                 }
               }
             ]
