@@ -184,6 +184,22 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertBool s (not (any (Text.isInfixOf (Text.pack "Hill Giant is put into a graveyard")) news)) ("the discard's move, told once: " <> show news)
     Spec.assertBool s (any discarding shown) "Player 1 discarded at cleanup"
 
+  Spec.it s "CR 729.1a a seat back from a Shahrazad subgame played past the main game's turn is shown the main game's news it was not yet shown" $ do
+    plains <- S.printingOf s registry "Plains"
+    mountain <- S.printingOf s registry "Mountain"
+    shahrazad <- S.printingOf s registry "Shahrazad"
+    -- Eight library cards each once Player 1 draws: the subgame's turn 4 draw
+    -- decks its second seat (CR 704.5b), past the main game's turn 3.
+    let stock pid n g = List.foldl' (\g' _ -> snd (S.addLibraryCard mountain pid g')) g (replicate n ())
+        board = (snd (S.addHandCard shahrazad S.alice (S.landsFor plains S.alice 2 (stock S.bob 8 (stock S.alice 9 (Setup.emptyGame (S.alice NonEmpty.:| [S.bob]))))))) {GameState.turnNumber = 3}
+        person = Game.human (screen 400 (castsOnce "Shahrazad")) (const (Right Nothing))
+        seats = Driver.bySeat (Map.fromList [(S.alice, person), (S.bob, person)]) Bot.bot
+        run = Driver.drive [] seats 40 (pure . (> 3) . GameState.turnNumber) board
+        (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank
+        shown = reverse (written sc)
+    Spec.assertEqWith s "DEBUG" shown []
+    Spec.assertEqWith s "into the main game's next turn" (fmap GameState.turnNumber outcome) (Right 4)
+
   Spec.it s "CR 113.7a Mindslaver's ability is named by its source at its target prompt and on the stack" $ do
     gs <- started s registry
     mindslaver <- S.printingOf s registry "Mindslaver"

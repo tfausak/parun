@@ -187,6 +187,9 @@ withoutAnnouncement before entry closed = do
   -- CR 100.6a: a monotone tally, so the closed window's value is the newest --
   -- nextTimestamp's treatment. Nothing a CR 733.1 reversal undoes can reach it.
   subgamesThisMatch <- newest GameState.subgamesThisMatch
+  -- CR 727.1 / 729.1a: the same, and the game the window was in.
+  gamesThisMatch <- newest GameState.gamesThisMatch
+  gameNumber <- one GameState.gameNumber
   turnAnchor <- one GameState.turnAnchor
   extraTurnUnderWay <- one GameState.extraTurnUnderWay
   rollingDie <- one GameState.rollingDie
@@ -312,6 +315,8 @@ withoutAnnouncement before entry closed = do
         GameState.exilePiles = exilePiles,
         GameState.extraTurns = extraTurns,
         GameState.subgamesThisMatch = subgamesThisMatch,
+        GameState.gamesThisMatch = gamesThisMatch,
+        GameState.gameNumber = gameNumber,
         GameState.turnAnchor = turnAnchor,
         GameState.extraTurnUnderWay = extraTurnUnderWay,
         GameState.rollingDie = rollingDie,

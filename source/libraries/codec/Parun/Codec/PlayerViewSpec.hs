@@ -19,6 +19,7 @@ testView :: PlayerView.PlayerView
 testView =
   PlayerView.MkPlayerView
     { PlayerView.viewer = PlayerId.MkPlayerId 0,
+      PlayerView.game = 2,
       PlayerView.turn = 3,
       PlayerView.phase = Phase.PrecombatMain,
       PlayerView.active = PlayerId.MkPlayerId 1,
@@ -33,7 +34,7 @@ testView =
 
 testViewJson :: String
 testViewJson =
-  "{\"viewer\":0,\"turn\":3,\"phase\":{\"type\":\"PrecombatMain\"},\"active\":1,\"priority\":1,\"seats\":["
+  "{\"viewer\":0,\"game\":2,\"turn\":3,\"phase\":{\"type\":\"PrecombatMain\"},\"active\":1,\"priority\":1,\"seats\":["
     <> SeatViewSpec.testSeatJson
     <> "],\"battlefield\":[],\"stack\":[],\"witnessed\":[],\"witnessedLastTurn\":[],\"result\":"
     <> wonJson
