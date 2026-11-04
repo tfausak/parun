@@ -6095,6 +6095,7 @@ manaProductionFilters production = case production of
   ManaProduction.Noted -> []
   ManaProduction.CouldProduce could -> [CouldProduce.among could]
   ManaProduction.Pooled _ -> []
+  ManaProduction.ProducedByTapped -> []
 
 -- AddMana's and Firebend's shared payload: CR 106.7's group, CR 106.6's
 -- restriction, rider and spend trigger.

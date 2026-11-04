@@ -29,6 +29,7 @@ import Numeric.Natural (Natural)
 import qualified Parun.Engine.Action as Action
 import qualified Parun.Engine.Activatable as Activatable
 import qualified Parun.Engine.Activate as Activate
+import qualified Parun.Engine.Binding as Binding
 import qualified Parun.Engine.Cost as Cost
 import qualified Parun.Engine.Engine as Engine
 import qualified Parun.Engine.Event as Event
@@ -39,6 +40,7 @@ import qualified Parun.Engine.Mint as Mint
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Replay as Replay
+import qualified Parun.Engine.Resolve.Slots as Resolve
 import qualified Parun.Engine.Setup as Setup
 import qualified Parun.Engine.Stack as Stack
 import qualified Parun.Engine.Subtype as SubtypeEngine
@@ -99,6 +101,7 @@ import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.Response as Response
 import qualified Parun.Types.Sickness as Sickness
+import qualified Parun.Types.SlotArity as SlotArity
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.Status as Status
 import qualified Parun.Types.StepBegan as StepBegan
@@ -3894,6 +3897,7 @@ spec s registry = Spec.describe s "Parun.Engine.Mana" $ do
   skyshroudElfSpec s registry
   activationAdjustmentSpec s registry
   wildGrowthSpec s registry
+  manaFlareSpec s registry
   autumnWillowSpec s registry
   gauntletOfPowerSpec s registry
   cagedSunSpec s registry
@@ -4198,6 +4202,36 @@ poolUnits gs = case Game.poolOf S.alice gs of
 
 -- What is floating, as types in pool order -- poolSize's discriminating twin,
 -- for a case where the SIZE is the same under either answer.
+-- Mana Flare (5ED, Oracle text checked on Scryfall, 2026-11-04): "Whenever a
+-- player taps a land for mana, that player adds one mana of any type that land
+-- produced." Its other behaviours are scenarios under data/scenarios/mana/.
+manaFlareSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+manaFlareSpec s registry = Spec.describe s "Mana Flare" $ do
+  -- What keeps the production out of an ability whose condition binds no tap:
+  -- the dataflow lint walks this read (every slot a triggered ability reads).
+  Spec.it s "a production of the tapped permanent's types reads the permanent's slot" $
+    Spec.assertEqWith
+      s
+      "the read"
+      (Resolve.slotsOf (Effect.AddMana (ManaAddition.MkManaAddition (PlayerRef.Relative PlayerRelation.You) ManaProduction.ProducedByTapped (Quantity.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing)))
+      (Map.singleton Binding.manaSource SlotArity.One)
+  -- The land produced two types across the turn, and the event read is the tap
+  -- that fired the ability: an earlier one would answer {W} both times.
+  Spec.it s "CR 605.4a a land tapped twice is read off the tap that fired the ability" $ do
+    flare <- S.printingOf s registry "Mana Flare"
+    tundra <- S.printingOf s registry "Tundra"
+    let (_, g1) = S.addPermanent flare S.alice (Setup.emptyGame S.bothPlayers)
+        (tundraId, board) = S.addPermanent tundra S.alice g1
+        making :: Color.Color -> Prompt.Prompt r -> r
+        making color p = case p of
+          Prompt.ChooseManaYield _ _ _ candidates -> Maybe.fromMaybe (NonEmpty.head candidates) (List.find (any ((== ManaType.Colored color) . ManaUnit.manaType) . Mana.yieldUnits) candidates)
+          _ -> S.identityAnswer p
+        first = S.runPure (making Color.White) board (S.tapForMana tundraId)
+        untapped = S.runPure S.identityAnswer first (Event.untap tundraId)
+        second = S.runPure (making Color.Blue) untapped (S.tapForMana tundraId)
+    Spec.assertEqWith s "the first tap's {W} and Mana Flare's" (poolTypes S.alice first) [ManaType.Colored Color.White, ManaType.Colored Color.White]
+    Spec.assertEqWith s "then the second's {U} and Mana Flare's" (poolTypes S.alice second) [ManaType.Colored Color.White, ManaType.Colored Color.White, ManaType.Colored Color.Blue, ManaType.Colored Color.Blue]
+
 poolTypes :: PlayerId.PlayerId -> GameState.GameState -> [ManaType.ManaType]
 poolTypes pid gs = case Game.poolOf pid gs of
   Mana.Type.MkMana units -> fmap ManaUnit.manaType units

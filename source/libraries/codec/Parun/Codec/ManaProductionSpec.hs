@@ -58,5 +58,11 @@ spec s = Spec.describe s "Parun.Codec.ManaProduction" $ do
       ManaProduction.codec
       (ManaProduction.Pooled (ManaCount.MkManaCount (PlayerRef.Relative PlayerRelation.You) ManaFilter.Any))
       " {\"type\":\"Pooled\",\"value\":{\"filter\":{\"type\":\"Any\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}} "
+  Spec.it s "ProducedByTapped" $
+    Common.assertCodec
+      s
+      ManaProduction.codec
+      ManaProduction.ProducedByTapped
+      " {\"type\":\"ProducedByTapped\"} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ManaProduction.codec

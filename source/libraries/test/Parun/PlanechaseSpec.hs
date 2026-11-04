@@ -57,9 +57,11 @@ import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.InherentTriggerSource as InherentTriggerSource
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.Mana as Mana.Type
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
+import qualified Parun.Types.ManaUnit as ManaUnit
 import qualified Parun.Types.ModeIndex as ModeIndex
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
@@ -979,6 +981,58 @@ planeswalkSpec s registry = Spec.describe s "CR 901.11" $ do
     Spec.assertEqWith s "and alice's Forest stays" (length (named "Forest" walked)) 1
     Spec.assertEqWith s "chaos: alice may have her life total become 20" (S.lifeOf S.alice (S.runPure exercising hurt rolled)) (Just 20)
     Spec.assertEqWith s "and may decline" (S.lifeOf S.alice (S.runPure declining hurt rolled)) (Just 7)
+
+  -- Eloren Wilds, Plane -- Shandalar (Oracle text checked on Scryfall,
+  -- 2026-11-04). Bob taps while alice is the planar controller, so "that player"
+  -- is no "you". Sol Ring's mana is an artifact's and the extra {C} is the
+  -- plane's (its ruling, CR 106.3).
+  Spec.it s "CR 106.12a Eloren Wilds adds one more of what a tapped permanent made, to who tapped it" $ do
+    ring <- S.printingOf s registry "Sol Ring"
+    board <- planarBoard s registry ["Eloren Wilds", "Tazeem"]
+    let (ringId, stocked) = S.addPermanent ring S.bob (inMain S.alice board)
+        tapped = S.runPure S.identityAnswer stocked (S.tapForMana ringId)
+        units gs pid = case Game.poolOf pid gs of Mana.Type.MkMana us -> us
+    Spec.assertEqWith s "CR 106.4 bob holds three colorless" (fmap ManaUnit.manaType (units tapped S.bob)) (replicate 3 ManaType.Colorless)
+    Spec.assertEqWith s "the third is the plane's, no artifact's" (fmap (Set.null . ManaUnit.tags) (units tapped S.bob)) [False, False, True]
+    Spec.assertEqWith s "alice, the plane's controller, holds none" (fmap ManaUnit.manaType (units tapped S.alice)) []
+  -- Gyre Engineer makes {G}{U}: one mana of ONE type, and the type is bob's to
+  -- choose (Heartbeat of Spring's ruling, of this wording).
+  Spec.it s "Eloren Wilds offers the tapped permanent's two types and adds the one chosen" $ do
+    engineer <- S.printingOf s registry "Gyre Engineer"
+    board <- planarBoard s registry ["Eloren Wilds", "Tazeem"]
+    let (engineerId, stocked) = S.addPermanent engineer S.bob (inMain S.alice board)
+        typesAfter :: (forall r. Prompt.Prompt r -> r) -> [ManaType.ManaType]
+        typesAfter pick = case Game.poolOf S.bob (S.runPure pick stocked (S.tapForMana engineerId)) of
+          Mana.Type.MkMana us -> fmap ManaUnit.manaType us
+        taking :: (forall a. NonEmpty.NonEmpty a -> a) -> Prompt.Prompt r -> r
+        taking which p = case p of
+          Prompt.ChooseManaType _ _ _ offered -> which offered
+          _ -> S.identityAnswer p
+        green = ManaType.Colored Color.Green
+        blue = ManaType.Colored Color.Blue
+    Spec.assertEqWith s "the first offered is the {U} it made" (typesAfter (taking NonEmpty.head)) [green, blue, blue]
+    Spec.assertEqWith s "the last offered is the {G} it made" (typesAfter (taking NonEmpty.last)) [green, blue, green]
+  -- "Whenever chaos ensues, target player can't cast spells until a player
+  -- planeswalks." The Bears are alice's in each board; only the target differs.
+  Spec.it s "CR 901.11 Eloren Wilds' chaos stops the target casting until a player planeswalks" $ do
+    bears <- S.printingOf s registry "Grizzly Bears"
+    forest <- S.printingOf s registry "Forest"
+    board <- planarBoard s registry ["Eloren Wilds", "Tazeem"]
+    let (_, f1) = S.addPermanent forest S.alice (inMain S.alice board)
+        (_, f2) = S.addPermanent forest S.alice f1
+        (bearId, stocked) = S.addHandCard bears S.alice f2
+        aiming :: PlayerId.PlayerId -> Prompt.Prompt r -> r
+        aiming pid p = case p of
+          Prompt.ChooseTargets _ _ _ sets -> fmap (const (Set.singleton (Recipient.ToPlayer pid))) sets
+          Prompt.RollDie _ -> 5
+          _ -> S.identityAnswer p
+        chaosOn pid = S.runPure (aiming pid) stocked (Planechase.roll S.manaPerformer S.alice >> Engine.priorityLoop)
+        walked = S.runPure (rolling 6) (chaosOn S.alice) (Planechase.roll S.manaPerformer S.alice >> Engine.priorityLoop)
+        mayCast gs = any (S.isCastOf bearId) (Action.legalActions S.alice gs)
+    Spec.assertBool s (mayCast stocked) "alice may cast the Bears before chaos"
+    Spec.assertBool s (mayCast (chaosOn S.bob)) "and after chaos aimed at bob"
+    Spec.assertBool s (not (mayCast (chaosOn S.alice))) "CR 611.2a not after chaos aimed at her"
+    Spec.assertBool s (mayCast walked) "CR 901.11 and again once a player planeswalks"
 
   -- Celestine Reef: "Creatures without flying or islandwalk can't attack." on
   -- bob's turn, against Grizzly Bears, Ornithopter and Meandering Towershell.

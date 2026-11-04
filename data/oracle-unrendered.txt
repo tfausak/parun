@@ -812,6 +812,7 @@ elite-arcanist
 elixir-of-immortality
 elkin-bottle
 elkin-lair
+eloren-wilds
 elspeth-suns-champion
 elspeths-smite
 elven-riders
@@ -1675,6 +1676,7 @@ mana-severance
 mana-short
 mana-vapors
 mana-vault
+mana-flare
 manabarbs
 manaweft-sliver
 mandate-of-peace

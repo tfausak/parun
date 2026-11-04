@@ -17,7 +17,8 @@ codec =
       Arm.nullary "SnowSymbol" ManaProduction.SnowSymbol,
       Arm.nullary "Noted" ManaProduction.Noted,
       Arm.payload "CouldProduce" CouldProduce.codec ManaProduction.CouldProduce (\x -> case x of ManaProduction.CouldProduce y -> Just y; _ -> Nothing),
-      Arm.payload "Pooled" ManaCount.codec ManaProduction.Pooled (\x -> case x of ManaProduction.Pooled y -> Just y; _ -> Nothing)
+      Arm.payload "Pooled" ManaCount.codec ManaProduction.Pooled (\x -> case x of ManaProduction.Pooled y -> Just y; _ -> Nothing),
+      Arm.nullary "ProducedByTapped" ManaProduction.ProducedByTapped
     ]
 
 tagOf :: ManaProduction.ManaProduction -> String
@@ -29,3 +30,4 @@ tagOf x = case x of
   ManaProduction.Noted {} -> "Noted"
   ManaProduction.CouldProduce {} -> "CouldProduce"
   ManaProduction.Pooled {} -> "Pooled"
+  ManaProduction.ProducedByTapped {} -> "ProducedByTapped"

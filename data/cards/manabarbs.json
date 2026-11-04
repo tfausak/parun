@@ -56,16 +56,8 @@
                                 "type": "Players",
                                 "value": {
                                   "players": {
-                                    "type": "HolderOfBound",
-                                    "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "hop": {
-                                        "type": "Itself"
-                                      },
-                                      "slot": "thatManaSource"
-                                    }
+                                    "type": "InSlot",
+                                    "value": "thatPlayer"
                                   }
                                 }
                               }
