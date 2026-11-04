@@ -1049,9 +1049,18 @@ flowBySize classOf counts roomAt creatures =
 -- CR 508.1b's announcement list for the combat in progress, empty when no
 -- defending player has been chosen -- which is a combat no creature may attack
 -- in, so no requirement can be instantiated and none can be disobeyed.
+--
+-- CR 102.1 / 506.3c / 508.4a: a defending player who has left the game since
+-- the beginning of combat step designated them is not one to announce. The
+-- designation itself keeps them: a battle they protect stays attacked by what
+-- already attacks it (CR 704.5x), which stillAttackedBattle reads through it. The
+-- departure scenarios "a player who leaves during beginning of combat cannot be
+-- attacked" and "a player who left is not offered to tokens entering
+-- attacking" prove it.
 declarableTargets :: GameState -> [AttackTarget.AttackTarget]
 declarableTargets gs =
-  concatMap (\defender -> NonEmpty.toList (attackTargets defender gs)) (Defender.defendingPlayers gs)
+  let playing = Game.stillPlaying gs
+   in concatMap (\defender -> NonEmpty.toList (attackTargets defender gs)) (filter (`List.elem` playing) (Defender.defendingPlayers gs))
 
 -- How many of `required` this declaration obeys (CR 508.1d): a requirement
 -- instance is obeyed exactly when the declaration attacks with its creature AND
@@ -2652,15 +2661,7 @@ putOntoBattlefieldAttacking :: AttackChoice -> ObjectId -> Game ()
 putOntoBattlefieldAttacking choice oid = do
   gs <- State.get
   let c = GameState.combat gs
-      -- declarableTargets with CR 506.3c / CR 508.4a's liveness filter applied
-      -- to the defending players first: a player who has left the game is no
-      -- longer one to be put onto the battlefield attacking, and under CR 802.2
-      -- the others still are.
-      playing = Game.stillPlaying gs
-      targets =
-        concatMap
-          (\defender -> NonEmpty.toList (attackTargets defender gs))
-          (filter (\defender -> List.elem defender playing) (Defender.defendingPlayers gs))
+      targets = declarableTargets gs
       -- CR 702.116a's "that player or a planeswalker they control", narrowing the
       -- CR 508.4 candidates above rather than the board: a planeswalker no
       -- defending player controls is not among them to begin with, and a battle
