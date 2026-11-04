@@ -24,4 +24,11 @@ spec s = Spec.describe s "Parun.Codec.Superlative" $ do
       Superlative.codec
       (Superlative.MkSuperlative {Superlative.measure = PlayerMeasure.CountersOf PlayerCounterKind.Point, Superlative.comparison = Comparison.AtLeast})
       " {\"measure\":{\"type\":\"CountersOf\",\"value\":{\"type\":\"Point\"}},\"comparison\":{\"type\":\"AtLeast\"}} "
+  -- Ghazb\225n Ogre's "more life than each other player".
+  Spec.it s "LifeTotal, strict" $
+    Common.assertCodec
+      s
+      Superlative.codec
+      (Superlative.MkSuperlative {Superlative.measure = PlayerMeasure.LifeTotal, Superlative.comparison = Comparison.GreaterThan})
+      " {\"measure\":{\"type\":\"LifeTotal\"},\"comparison\":{\"type\":\"GreaterThan\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Superlative.codec

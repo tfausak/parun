@@ -1090,6 +1090,7 @@ gerrard
 geyser-leaper
 ghalta-primal-hunger
 ghastbark-twins
+ghazban-ogre
 ghirapur-aether-grid
 ghirapur-guide
 ghitu-encampment
@@ -2760,6 +2761,7 @@ tezzeret-cruel-machinist
 tezzerets-gatebreaker
 tezzerets-reckoning
 thatcher-revolt
+the-black-gate
 the-caldaia
 the-chain-veil
 the-dalek-emperor

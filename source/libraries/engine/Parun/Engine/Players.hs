@@ -283,12 +283,13 @@ namedUncut given gs ref =
 -- @controllerOf@ is CR 613.1b's projected controller as the asker sees it, so a
 -- Mind Control counts the permanent for its new controller (CR 110.1 makes every
 -- object on the battlefield a permanent). Counters are read off the player row
--- (CR 122.1).
+-- (CR 122.1), and so is a life total (CR 119.1).
 superlative :: (ObjectId -> Maybe PlayerId) -> [PlayerId] -> GameState -> Superlative.Superlative -> [PlayerId]
 superlative controllerOf' roster' gs leading =
   let measureOf pid = case Superlative.measure leading of
         PlayerMeasure.PermanentsControlled -> toInteger (length (filter ((== Just pid) . controllerOf') (Set.toList (GameState.battlefield gs))))
         PlayerMeasure.CountersOf kind -> maybe 0 (toInteger . Map.findWithDefault 0 kind . Player.counters) (Map.lookup pid (GameState.players gs))
+        PlayerMeasure.LifeTotal -> maybe 0 Player.life (Map.lookup pid (GameState.players gs))
       tallies = fmap (\pid -> (pid, measureOf pid)) roster'
       stands (pid, n) = all (\(other, m) -> other == pid || Filter.compares (Superlative.comparison leading) n m) tallies
    in fmap fst (filter stands tallies)
