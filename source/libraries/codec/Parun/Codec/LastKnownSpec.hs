@@ -91,7 +91,7 @@ spec s = Spec.describe s "Parun.Codec.LastKnown" $ do
           <> ",\"paidCosts\":[{\"key\":{\"type\":\"Offspring\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}},\"value\":[{\"key\":{\"type\":\"Own\",\"value\":1},\"value\":1}]}]"
           <> ",\"prototyped\":true"
           <> ",\"announcedX\":4"
-          <> ",\"chosenModes\":[{\"key\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}},\"value\":[2]}]"
+          <> ",\"chosenModes\":[{\"key\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}},\"value\":[2]}]"
           <> ",\"controlClock\":[{\"player\":1,\"clock\":{\"type\":\"SinceLastUpkeep\"}}]"
           <> ",\"zone\":{\"type\":\"Battlefield\"},\"home\":{\"type\":\"Command\"},\"pile\":6"
           <> ",\"lapsedGrants\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":3},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":5}}}],\"tapped\":true} "

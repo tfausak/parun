@@ -264,7 +264,7 @@ activationModalSpec s registry = Spec.describe s "M4h activation modal (CR 602.2
 -- Cast.castSpell does for a spell. Gated by Aether Channeler (a {2}{U} 2/1 Human
 -- Wizard whose ETB is ChooseExactly 1 over: create a 1/1 flying Bird, return
 -- ANOTHER nonland permanent to hand, or draw a card). Aether Channeler enters
--- via S.addPermanent and the SelfEnters trigger is fed to Engine.placePendingTriggers
+-- via S.addPermanent and the Self Enters trigger is fed to Engine.placePendingTriggers
 -- through S.entersWithTrigger's hand-built enters event (the same shape
 -- EventSpec uses), then the placed ability resolves off the stack.
 triggerModalOf :: Printing.Printing -> Maybe (ModalT.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card))

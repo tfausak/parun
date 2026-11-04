@@ -82,45 +82,50 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentEnters",
+            "type": "Enters",
             "value": {
-              "type": "And",
-              "value": [
-                {
-                  "type": "Or",
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
                   "value": [
                     {
-                      "type": "HasSubtype",
+                      "type": "Or",
+                      "value": [
+                        {
+                          "type": "HasSubtype",
+                          "value": {
+                            "type": "Dwarf"
+                          }
+                        },
+                        {
+                          "type": "HasSubtype",
+                          "value": {
+                            "type": "Equipment"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "HeldBy",
                       "value": {
-                        "type": "Dwarf"
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
                       }
                     },
                     {
-                      "type": "HasSubtype",
+                      "type": "Not",
                       "value": {
-                        "type": "Equipment"
+                        "type": "IsSource"
                       }
                     }
                   ]
-                },
-                {
-                  "type": "HeldBy",
-                  "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
-                  }
-                },
-                {
-                  "type": "Not",
-                  "value": {
-                    "type": "IsSource"
-                  }
                 }
-              ]
+              }
             }
           },
           "limit": {

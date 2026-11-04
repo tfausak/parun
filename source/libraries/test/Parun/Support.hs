@@ -1011,7 +1011,7 @@ addExiledCard printing pid gs =
 
 -- A creature of a printing on the battlefield under `pid`, WITH the CR 603.6a
 -- enters event crafted alongside it, so Engine.placePendingTriggers finds its
--- SelfEnters trigger pending. addPermanent alone puts the permanent there without
+-- Self Enters trigger pending. addPermanent alone puts the permanent there without
 -- an event, and no trigger fires off a board that was simply arranged.
 --
 -- The from-zone is the stack, which is where a resolved creature spell comes

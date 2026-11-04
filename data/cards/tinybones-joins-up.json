@@ -17,7 +17,8 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfEnters"
+            "type": "Enters",
+            "value": {}
           },
           "modal": {
             "modes": [
@@ -63,34 +64,39 @@
         },
         {
           "condition": {
-            "type": "PermanentEnters",
+            "type": "Enters",
             "value": {
-              "type": "And",
-              "value": [
-                {
-                  "type": "HasSupertype",
-                  "value": {
-                    "type": "Legendary"
-                  }
-                },
-                {
-                  "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
-                },
-                {
-                  "type": "HeldBy",
-                  "value": {
-                    "holder": {
-                      "type": "Controller"
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasSupertype",
+                      "value": {
+                        "type": "Legendary"
+                      }
                     },
-                    "relation": {
-                      "type": "You"
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    },
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
+                      }
                     }
-                  }
+                  ]
                 }
-              ]
+              }
             }
           },
           "modal": {

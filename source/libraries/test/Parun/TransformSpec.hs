@@ -1031,7 +1031,7 @@ transformTriggerSpec s registry = Spec.describe s "TransformsInto" $ do
   -- a random order."
   --
   -- The Piper is PLACED rather than cast, so no enters event exists and the
-  -- printed "or" cannot be firing on its SelfEnters limb -- the board proves the
+  -- printed "or" cannot be firing on its Self Enters limb -- the board proves the
   -- transform limb specifically. A later reader who "simplifies" this by casting
   -- the card destroys that.
   --
@@ -1060,7 +1060,7 @@ transformTriggerSpec s registry = Spec.describe s "TransformsInto" $ do
   -- alone -- the pair the Thallid cases above make with CR 700.4's "or dies".
   -- CR 712.13a through CR 702.145b's first static ability gets there on the same
   -- card: the Piper is CAST at night, so it ENTERS as Wildsong Howler and the
-  -- SelfEnters limb fires without the Piper ever transforming.
+  -- Self Enters limb fires without the Piper ever transforming.
   --
   -- Tovolar is what gives the game a designation at all before the Piper is cast
   -- (CR 702.145d wants a daybound permanent on the battlefield, and the Piper is

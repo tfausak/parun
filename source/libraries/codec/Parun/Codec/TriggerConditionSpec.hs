@@ -44,6 +44,7 @@ import qualified Parun.Types.DiscardSubject as DiscardSubject
 import qualified Parun.Types.DiscardTrigger as DiscardTrigger
 import qualified Parun.Types.DiscardWay as DiscardWay
 import qualified Parun.Types.EndingStep as EndingStep
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
@@ -86,28 +87,13 @@ import qualified Parun.Types.Zone as Zone
 -- the whole of that payload.
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
-  -- CR 603.6a.
-  Spec.it s "SelfEnters" $
+  -- CR 603.6a; Parun.Codec.EntersTriggerSpec has the fields.
+  Spec.it s "Enters" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      TriggerCondition.SelfEnters
-      " {\"type\":\"SelfEnters\"} "
-  -- CR 603.6a's "[type]" is a whole Filter, so a nested And/Not has to survive
-  -- the trip.
-  Spec.it s "PermanentEnters round-trips with its Filter" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PermanentEnters (Filter.And [Filter.HasCardType CardType.Creature, Filter.Not Filter.IsSource]))
-      " {\"type\":\"PermanentEnters\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"Not\",\"value\":{\"type\":\"IsSource\"}}]}} "
-  -- CR 603.2c: the batch reading is its own tag.
-  Spec.it s "PermanentsEnter round-trips with its Filter" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PermanentsEnter (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You]))
-      " {\"type\":\"PermanentsEnter\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}]}} "
+      (TriggerCondition.Enters EntersTrigger.defaultValue)
+      " {\"type\":\"Enters\",\"value\":{}} "
   -- CR 603.2b.
   Spec.it s "StepBegins round-trips" $
     Common.assertCodec
@@ -576,8 +562,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.AnyOf [TriggerCondition.PermanentEnters (Filter.HasCardType CardType.Enchantment), TriggerCondition.RoomFullyUnlocked PlayerRelation.You])
-      " {\"type\":\"AnyOf\",\"value\":[{\"type\":\"PermanentEnters\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Enchantment\"}}},{\"type\":\"RoomFullyUnlocked\",\"value\":{\"type\":\"You\"}}]} "
+      (TriggerCondition.AnyOf [TriggerCondition.Enters (EntersTrigger.matching (Filter.HasCardType CardType.Enchantment)), TriggerCondition.RoomFullyUnlocked PlayerRelation.You])
+      " {\"type\":\"AnyOf\",\"value\":[{\"type\":\"Enters\",\"value\":{\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Enchantment\"}}}}},{\"type\":\"RoomFullyUnlocked\",\"value\":{\"type\":\"You\"}}]} "
   -- CR 708.7. Nullary: the bearer is CR 113.7a's source and the rule leaves
   -- nothing else for the condition to name.
   Spec.it s "SelfTurnedFaceUp" $

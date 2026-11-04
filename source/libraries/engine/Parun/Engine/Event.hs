@@ -10979,9 +10979,7 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.StepBegins (StepBegins.MkStepBegins _ _ (TurnScope.PlayersTurn _)) -> False
   -- None of the rest is turn-scoped: each names an event that can happen on
   -- anybody's turn.
-  TriggerCondition.SelfEnters -> False
-  TriggerCondition.PermanentEnters _ -> False
-  TriggerCondition.PermanentsEnter _ -> False
+  TriggerCondition.Enters _ -> False
   -- CR 709.5e restricts the special action to the taker's own turn, but CR
   -- 709.5f's keyword action and CR 709.5d's entry have no such restriction, and
   -- this classification is about the CONDITION rather than about how the

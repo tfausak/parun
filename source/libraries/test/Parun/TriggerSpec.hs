@@ -65,6 +65,7 @@ import qualified Parun.Types.DelayedTrigger as DelayedTrigger
 import qualified Parun.Types.Departure as Departure.Type
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EndingStep as EndingStep
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EventGroup as EventGroup
 import qualified Parun.Types.Expiry as Expiry.Type
 import qualified Parun.Types.Face as Face
@@ -248,7 +249,7 @@ scanSpec s registry =
       Spec.assertBool s (Event.matchesTrigger (Setup.emptyGame S.bothPlayers) bearer S.alice cond (GameEvent.StepBegan (StepBegan.MkStepBegan (Phase.Beginning BeginningStep.Upkeep) S.alice))) "alice's upkeep matches for alice"
       Spec.assertBool s (not (Event.matchesTrigger (Setup.emptyGame S.bothPlayers) bearer S.alice cond (GameEvent.StepBegan (StepBegan.MkStepBegan (Phase.Beginning BeginningStep.Upkeep) S.bob)))) "bob's upkeep does not"
     -- The widening falsifier: the scan now visits every battlefield permanent,
-    -- so SelfEnters must ask whether the event is about THIS permanent. Rest in
+    -- so Self Enters must ask whether the event is about THIS permanent. Rest in
     -- Peace is on the battlefield and a DIFFERENT object entered.
     Spec.it s "CR 603.6a a SelfEnters trigger does not fire on another object's entry" $ do
       restInPeace <- S.printingOf s registry "Rest in Peace"
@@ -277,8 +278,8 @@ scanSpec s registry =
     Spec.it s "SelfEnters matches only a battlefield destination" $ do
       let bearer = ObjectId.MkObjectId 1
           movedTo zone = GameEvent.Moved (Moved.moved (ZoneChange.MkZoneChange bearer bearer Zone.Stack zone) S.emptyCharacteristics)
-      Spec.assertBool s (Event.matchesTrigger (Setup.emptyGame S.bothPlayers) bearer S.alice TriggerCondition.SelfEnters (movedTo Zone.Battlefield)) "enters battlefield matches"
-      Spec.assertBool s (not (Event.matchesTrigger (Setup.emptyGame S.bothPlayers) bearer S.alice TriggerCondition.SelfEnters (movedTo Zone.Graveyard))) "enters graveyard does not"
+      Spec.assertBool s (Event.matchesTrigger (Setup.emptyGame S.bothPlayers) bearer S.alice (TriggerCondition.Enters EntersTrigger.defaultValue) (movedTo Zone.Battlefield)) "enters battlefield matches"
+      Spec.assertBool s (not (Event.matchesTrigger (Setup.emptyGame S.bothPlayers) bearer S.alice (TriggerCondition.Enters EntersTrigger.defaultValue) (movedTo Zone.Graveyard))) "enters graveyard does not"
     -- CR 508.3a plus Aurelia, the Warleader's "for the first time each turn".
     -- The declaration being matched is already in the log when the scan runs,
     -- so "the first time" is "this is the only one so far".
@@ -324,9 +325,9 @@ scanSpec s registry =
       Spec.assertBool s (rip1 < rip2) "rip1 has the lower id"
       Spec.assertEqWith s "both triggers fired" (length triggers) 2
       Spec.assertEqWith s "sources in ascending ObjectId order" (fmap PendingTrigger.source triggers) (fmap TriggerSource.OfObject [rip1, rip2])
-    -- The PERMANENTS-INNER half of that same order guarantee. Every SelfEnters
+    -- The PERMANENTS-INNER half of that same order guarantee. Every Self Enters
     -- test above has exactly one bearer matching each event, so inner order
-    -- can never affect the output -- SelfEnters alone cannot discriminate
+    -- can never affect the output -- Self Enters alone cannot discriminate
     -- events-outer-permanents-inner from any other traversal. A StepBegins
     -- bearer can: ONE StepBegan event matches MANY permanents at once. Two
     -- Khabál Ghouls (CR 603.2b, "at the beginning of each end step") on the
@@ -1260,7 +1261,7 @@ delayedSpec s registry =
         -- direction (`Map.union captured placementTime`) the captured {7} would
         -- win instead, and this assertion would fail.
         Spec.it s "CR 603.7c placement-time's own chosen mode wins a collision with the captured environment" $ do
-          let ability = Mint.triggerOf TriggerCondition.SelfEnters Nothing (Mint.oneModeOf Map.empty Seq.empty)
+          let ability = Mint.triggerOf (TriggerCondition.Enters EntersTrigger.defaultValue) Nothing (Mint.oneModeOf Map.empty Seq.empty)
               -- Stands in for a modal arming spell's own captured chosenModes --
               -- built with the SAME Binding.fromChoices Cast.castSpell uses, so
               -- the collision is the real production shape, not a fabricated one.
@@ -2079,8 +2080,8 @@ permanentEntersSpec s registry =
         Spec.it s "CR 603.6a including the newcomers: a permanent is checked against its own entry" $ do
           soulWarden <- S.printingOf s registry "Soul Warden"
           let (oid, gs) = S.addPermanent soulWarden S.alice (Setup.emptyGame S.bothPlayers)
-          Spec.assertBool s (Event.matchesTrigger gs oid S.alice (TriggerCondition.PermanentEnters anyCreature) (enters oid)) "\"a creature enters\" admits the newcomer itself"
-          Spec.assertBool s (not (Event.matchesTrigger gs oid S.alice (TriggerCondition.PermanentEnters anotherCreature) (enters oid))) "\"another creature enters\" does not"
+          Spec.assertBool s (Event.matchesTrigger gs oid S.alice (TriggerCondition.Enters (EntersTrigger.matching anyCreature)) (enters oid)) "\"a creature enters\" admits the newcomer itself"
+          Spec.assertBool s (not (Event.matchesTrigger gs oid S.alice (TriggerCondition.Enters (EntersTrigger.matching anotherCreature)) (enters oid))) "\"another creature enters\" does not"
         -- The live-reading falsifier. `enters` above hands the event a
         -- deliberately EMPTY ProjectedCharacteristics -- no card types at all
         -- -- because that snapshot is CR 608.2h last known information for the
@@ -2096,7 +2097,7 @@ permanentEntersSpec s registry =
           let (warden, gs0) = S.addPermanent soulWarden S.alice (Setup.emptyGame S.bothPlayers)
               (pikerId, gs1) = S.addPermanent piker S.bob gs0
           Spec.assertEqWith s "no card types in the snapshot" (PC.cardTypes S.emptyCharacteristics) Set.empty
-          Spec.assertBool s (Event.matchesTrigger gs1 warden S.alice (TriggerCondition.PermanentEnters anotherCreature) (enters pikerId)) "and the trigger still fires"
+          Spec.assertBool s (Event.matchesTrigger gs1 warden S.alice (TriggerCondition.Enters (EntersTrigger.matching anotherCreature)) (enters pikerId)) "and the trigger still fires"
         -- CR 608.2h: an entrant that is already gone by the CR 117.5 boundary
         -- -- here moved straight on to the graveyard -- is read from last known
         -- information, which for a permanent that left the battlefield is the
@@ -2134,7 +2135,7 @@ permanentEntersSpec s registry =
           let (warden, gs0) = S.addPermanent soulWarden S.alice (Setup.emptyGame S.bothPlayers)
               (pikerId, gs1) = S.addPermanent piker S.bob gs0
               toGrave = GameEvent.Moved (Moved.moved (ZoneChange.MkZoneChange pikerId pikerId Zone.Battlefield Zone.Graveyard) S.emptyCharacteristics)
-          Spec.assertBool s (not (Event.matchesTrigger gs1 warden S.alice (TriggerCondition.PermanentEnters anotherCreature) toGrave)) "a graveyard-bound move does not match"
+          Spec.assertBool s (not (Event.matchesTrigger gs1 warden S.alice (TriggerCondition.Enters (EntersTrigger.matching anotherCreature)) toGrave)) "a graveyard-bound move does not match"
         -- CR 603.6a: "EACH TIME an event puts one or more permanents onto the
         -- battlefield" -- one bearer, two entering creatures, two triggers. A
         -- count, not a boolean, so "fires once per entrant" is distinguishable

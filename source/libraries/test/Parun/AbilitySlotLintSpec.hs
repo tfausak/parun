@@ -86,6 +86,7 @@ import qualified Parun.Types.Discard as Discard
 import qualified Parun.Types.Draw as Draw
 import qualified Parun.Types.Duration as Duration
 import qualified Parun.Types.Effect as Effect
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EntryRiders as EntryRiders
 import qualified Parun.Types.ExiledPile as ExiledPile
 import qualified Parun.Types.Face as Face
@@ -857,8 +858,8 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- DECLARING one is the mistake.
   Spec.it s "the shadowing lint accepts a delayed ability that only reads the slot" $ do
     let tokens = SlotName.MkSlotName (Text.pack "tokens")
-        reads_ = modalTrigger TriggerCondition.SelfEnters [lintMode [Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot tokens, SacrificeEffect.sacrificer = Sacrificer.EffectController, SacrificeEffect.sacrificed = Nothing}] []]
-        declares = modalTrigger TriggerCondition.SelfEnters [lintMode [Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot tokens, SacrificeEffect.sacrificer = Sacrificer.EffectController, SacrificeEffect.sacrificed = Nothing}] [tokens]]
+        reads_ = modalTrigger (TriggerCondition.Enters EntersTrigger.defaultValue) [lintMode [Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot tokens, SacrificeEffect.sacrificer = Sacrificer.EffectController, SacrificeEffect.sacrificed = Nothing}] []]
+        declares = modalTrigger (TriggerCondition.Enters EntersTrigger.defaultValue) [lintMode [Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot tokens, SacrificeEffect.sacrificer = Sacrificer.EffectController, SacrificeEffect.sacrificed = Nothing}] [tokens]]
     Spec.assertBool s (not (shadowsSlots (Set.singleton tokens) [reads_])) "reading a Create's slot is legal"
     Spec.assertBool s (shadowsSlots (Set.singleton tokens) [declares]) "declaring a target slot under the same name is not"
   -- The pairing Parun.Types.Onset.FromNextTurnOf depends on and cannot enforce
@@ -927,7 +928,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         -- whose spell cost declares X may read it there (Pin Collection);
         -- CR 107.3i's cast trigger likewise (Genesis Hydra).
         enteredX face ability =
-          if TriggeredAbility.condition ability `elem` [TriggerCondition.SelfEnters, TriggerCondition.SelfCast] && any declaresVariable (spellCostsOf face)
+          if TriggeredAbility.condition ability `elem` [TriggerCondition.Enters EntersTrigger.defaultValue, TriggerCondition.SelfCast] && any declaresVariable (spellCostsOf face)
             then Set.singleton Binding.variableX
             else Set.empty
         -- Per face over withMinted, so a minted face inherits only what its OWN
@@ -955,7 +956,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         thatPlayerDraws = Effect.Draw (Draw.MkDraw (PlayerRef.InSlot Binding.triggerPlayer) (Quantity.Type.Literal 1) Nothing)
     Spec.assertBool
       s
-      (triggeredAbilityOffends (oneEffectTrigger TriggerCondition.SelfEnters returnIt))
+      (triggeredAbilityOffends (oneEffectTrigger (TriggerCondition.Enters EntersTrigger.defaultValue) returnIt))
       "CR 400.7e became under an enters trigger is rejected"
     Spec.assertBool
       s
@@ -987,7 +988,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
             (Map.singleton target (TargetSlot.required Pool.Permanents (Just (Filter.Type.HeldByBound Holder.Controller Binding.triggerPlayer))))
     Spec.assertBool
       s
-      (triggeredAbilityOffends (modalTrigger TriggerCondition.SelfEnters [narrowed]))
+      (triggeredAbilityOffends (modalTrigger (TriggerCondition.Enters EntersTrigger.defaultValue) [narrowed]))
       "CR 603.2 thatPlayer in a filter under an enters trigger is rejected"
     Spec.assertBool
       s
@@ -1017,7 +1018,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         you = Quantity.Type.LifeChanged (LifeTally.MkLifeTally (PlayerRef.Relative PlayerRelation.You) LifeDirection.Gained WhichTurn.ThisTurn)
     Spec.assertBool
       s
-      (triggeredAbilityOffends (modalTrigger TriggerCondition.SelfEnters [bounded thatPlayer]))
+      (triggeredAbilityOffends (modalTrigger (TriggerCondition.Enters EntersTrigger.defaultValue) [bounded thatPlayer]))
       "CR 603.2 thatPlayer inside a bound under an enters trigger is rejected"
     Spec.assertBool
       s
@@ -1028,7 +1029,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- the lint reads the reference rather than rejecting every computed bound.
     Spec.assertBool
       s
-      (not (triggeredAbilityOffends (modalTrigger TriggerCondition.SelfEnters [bounded you])))
+      (not (triggeredAbilityOffends (modalTrigger (TriggerCondition.Enters EntersTrigger.defaultValue) [bounded you])))
       "where a bound naming no slot at all is accepted"
     -- And the OTHER read QuantitySlot.slots does not report: CR 400.7j's fold,
     -- which names a slot outright rather than through a reference. Asserted on the map
@@ -1059,7 +1060,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
             (Map.singleton target (TargetSlot.chosenBy (PlayerRef.InSlot Binding.triggerPlayer) (TargetSlot.required Pool.Permanents Nothing)))
     Spec.assertBool
       s
-      (triggeredAbilityOffends (modalTrigger TriggerCondition.SelfEnters [chosen]))
+      (triggeredAbilityOffends (modalTrigger (TriggerCondition.Enters EntersTrigger.defaultValue) [chosen]))
       "CR 603.2 thatPlayer as a chooser under an enters trigger is rejected"
     Spec.assertBool
       s
@@ -1102,7 +1103,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         throughNoSlot = atLeastOne (Quantity.Type.LifeChanged (LifeTally.MkLifeTally (PlayerRef.Relative PlayerRelation.You) LifeDirection.Gained WhichTurn.ThisTurn))
     Spec.assertBool
       s
-      (triggeredAbilityOffends (modalTrigger TriggerCondition.SelfEnters [gated throughRef]))
+      (triggeredAbilityOffends (modalTrigger (TriggerCondition.Enters EntersTrigger.defaultValue) [gated throughRef]))
       "CR 608.2c thatPlayer inside a condition's number under an enters trigger is rejected"
     Spec.assertBool
       s
@@ -1110,7 +1111,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
       "and under a combat-damage trigger it is accepted"
     Spec.assertBool
       s
-      (triggeredAbilityOffends (modalTrigger TriggerCondition.SelfEnters [gated throughCountFilter]))
+      (triggeredAbilityOffends (modalTrigger (TriggerCondition.Enters EntersTrigger.defaultValue) [gated throughCountFilter]))
       "CR 608.2c thatPlayer inside a condition's count filter under an enters trigger is rejected"
     Spec.assertBool
       s
@@ -1118,7 +1119,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
       "and that one too is accepted under a combat-damage trigger"
     Spec.assertBool
       s
-      (not (triggeredAbilityOffends (modalTrigger TriggerCondition.SelfEnters [gated throughNoSlot])))
+      (not (triggeredAbilityOffends (modalTrigger (TriggerCondition.Enters EntersTrigger.defaultValue) [gated throughNoSlot])))
       "where a condition naming no slot at all is accepted"
   -- The same equality on a slot read only from inside an EFFECT's number, which
   -- is the half the condition boards above cannot prove: Resolve.slotsOf inspects
@@ -1134,7 +1135,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
             Map.empty
     Spec.assertBool
       s
-      (triggeredAbilityOffends (modalTrigger TriggerCondition.SelfEnters [drawsTally (PlayerRef.InSlot Binding.triggerPlayer)]))
+      (triggeredAbilityOffends (modalTrigger (TriggerCondition.Enters EntersTrigger.defaultValue) [drawsTally (PlayerRef.InSlot Binding.triggerPlayer)]))
       "CR 608.2h thatPlayer inside an effect's number under an enters trigger is rejected"
     Spec.assertBool
       s
@@ -1145,7 +1146,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- reference rather than rejecting every tally.
     Spec.assertBool
       s
-      (not (triggeredAbilityOffends (modalTrigger TriggerCondition.SelfEnters [drawsTally (PlayerRef.Relative PlayerRelation.You)])))
+      (not (triggeredAbilityOffends (modalTrigger (TriggerCondition.Enters EntersTrigger.defaultValue) [drawsTally (PlayerRef.Relative PlayerRelation.You)])))
       "where a number naming no slot at all is accepted"
   -- The same equality one field further out: CR 118.12's gate multiplier
   -- (Parun.Types.PayGate.perEach), which is a Quantity a clause carries outside
@@ -1208,11 +1209,11 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         -- FilterPositionLintSpec's shape: a carrier the fold stops at names
         -- itself instead of hiding behind whichever assertion runs first.
         rows =
-          [ ("D4: a scope's player, unbound", rejected TriggerCondition.SelfEnters throughScope),
+          [ ("D4: a scope's player, unbound", rejected (TriggerCondition.Enters EntersTrigger.defaultValue) throughScope),
             ("D4: a scope's player, bound", rejected Mint.dealsCombatDamageToAPlayer throughScope),
-            ("D4: a count's filter, unbound", rejected TriggerCondition.SelfEnters throughCountFilter),
+            ("D4: a count's filter, unbound", rejected (TriggerCondition.Enters EntersTrigger.defaultValue) throughCountFilter),
             ("D4: a count's filter, bound", rejected Mint.dealsCombatDamageToAPlayer throughCountFilter),
-            ("D4: no slot at all", rejected TriggerCondition.SelfEnters throughNoSlot),
+            ("D4: no slot at all", rejected (TriggerCondition.Enters EntersTrigger.defaultValue) throughNoSlot),
             ("CR 603.3b: inert scaled per bound object", inert throughScope),
             ("CR 603.3b: inert scaled by a slotless fold", inert throughNoSlot)
           ]
@@ -1481,7 +1482,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
       "the condition's event slots reach a later mode too"
     Spec.assertBool
       s
-      (triggeredAbilityOffends (secondModeReads TriggerCondition.SelfEnters))
+      (triggeredAbilityOffends (secondModeReads (TriggerCondition.Enters EntersTrigger.defaultValue)))
       "and a later mode is still rejected when the condition binds nothing"
   -- The DECLARED-BUT-UNREAD half of the ability lints, which the spell lint has
   -- always had and the three ability ones acquired with #1043. Before that they

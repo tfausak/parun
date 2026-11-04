@@ -21,6 +21,6 @@ spec s = Spec.describe s "Parun.Codec.InherentTriggerSource" $ do
         { InherentTriggerSource.controller = PlayerId.MkPlayerId 1,
           InherentTriggerSource.ability = TriggeredAbilitySourceSpec.ability
         }
-      " {\"controller\":1,\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}}} "
+      " {\"controller\":1,\"ability\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s InherentTriggerSource.codec
