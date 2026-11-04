@@ -205,6 +205,7 @@ backslide
 baithook-angler-hook-haunt-drifter
 bake-into-a-pie
 balan-wandering-knight
+balance
 balance-of-power
 balduvian-shaman
 baleful-stare
