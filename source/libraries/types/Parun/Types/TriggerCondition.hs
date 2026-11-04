@@ -242,7 +242,7 @@ data TriggerCondition
     --
     -- Rule 509.3c's other two producers reach it: Effect.BecomesBlocked (Curtain
     -- of Light) and a creature put onto the battlefield blocking (CR 509.4),
-    -- which Flash Foliage exercises -- Parun.CombatEffectSpec's
+    -- which Flash Foliage exercises -- Parun.CombatCostSpec's
     -- PutOntoBattlefieldBlocking group is the proof.
     CreatureBecomesBlocked (Filter.Filter Keyword.Keyword)
   | -- | CR 509.3d: "whenever [a creature] becomes blocked by a creature" (CR
