@@ -36,20 +36,26 @@
                             "type": "ModifyPowerToughness",
                             "value": {
                               "power": {
-                                "type": "LifeTotal",
+                                "type": "NonNegative",
                                 "value": {
-                                  "type": "Relative",
+                                  "type": "LifeTotal",
                                   "value": {
-                                    "type": "You"
+                                    "type": "Relative",
+                                    "value": {
+                                      "type": "You"
+                                    }
                                   }
                                 }
                               },
                               "toughness": {
-                                "type": "LifeTotal",
+                                "type": "NonNegative",
                                 "value": {
-                                  "type": "Relative",
+                                  "type": "LifeTotal",
                                   "value": {
-                                    "type": "You"
+                                    "type": "Relative",
+                                    "value": {
+                                      "type": "You"
+                                    }
                                   }
                                 }
                               }
