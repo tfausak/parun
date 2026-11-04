@@ -6721,7 +6721,8 @@ payPayable perform moment paidFor slots pid oid component = case component of
   -- proves it. discardsBound binds what arrived.
   --
   -- CR 701.9b's random discard asks nobody: Prompt.RandomObject is the draw, one
-  -- card at a time, and data/scenarios' Coral Helm pair proves it.
+  -- card at a time, and data/scenarios' coral-helm-discards-the-card-randomness-named
+  -- proves it.
   CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly amount) criterion selection) -> paidAnnounced amount $ \n -> do
     gs <- State.get
     let held = discardCandidates slots pid oid criterion gs
