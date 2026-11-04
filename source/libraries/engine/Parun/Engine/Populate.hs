@@ -65,8 +65,8 @@ candidates pid gs =
 -- entry loop and CR 111.5's rollback point are the ones every token gets. CR
 -- 707.2 copies no counters and rule 701.36a states no riders, so the copy enters
 -- untapped and bare.
-populate :: PlayerId -> ObjectId -> Game ()
-populate pid resolving = do
+populate :: Game () -> PlayerId -> ObjectId -> Game ()
+populate settle pid resolving = do
   gs <- State.get
   chosen <- Game.chooseAmong (\decider asked pool -> Prompt.ChoosePermanent decider asked resolving pool Seq.empty) pid (candidates pid gs)
   Monad.forM_ chosen $ \token -> do
@@ -75,4 +75,4 @@ populate pid resolving = do
     -- the state from before the prompt would drop that.
     minting <- State.get
     Monad.forM_ (Game.cardOfWithLastKnown token minting) $ \card ->
-      Monad.void (Event.createTokens pid card (Just (Event.copiedSnapshotWithLastKnown token minting)) 1 TapState.Untapped Map.empty Nothing Set.empty)
+      Monad.void (Event.createTokens settle pid card (Just (Event.copiedSnapshotWithLastKnown token minting)) 1 TapState.Untapped Map.empty Nothing Set.empty)

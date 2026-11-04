@@ -365,7 +365,7 @@ equipmentSpec s registry = Spec.describe s "Equipment" $ do
         (withSpell, spellId) = S.handOne leechcraft g3
         triggered = S.runPure S.identityAnswer (S.runPure S.identityAnswer (S.runPure (aimedAtObject enchanted) withSpell (S.cast S.alice spellId)) Stack.resolveTop) Engine.settleForPriority
         auras = Set.toList (Game.attachments enchanted triggered)
-        destroyed = List.foldl' (\g aura -> S.runPure S.identityAnswer g (Event.changeZone aura Zone.Graveyard)) triggered auras
+        destroyed = List.foldl' (\g aura -> S.runPure S.identityAnswer g (Event.changeZone (pure ()) aura Zone.Graveyard)) triggered auras
         resolved = S.runPure S.identityAnswer destroyed Stack.resolveTop
         tappedOf oid g = fmap Object.tapped (Game.lookupObject oid g)
         alike = Interchangeable.objects (Projection.projectAll destroyed) destroyed
@@ -436,7 +436,7 @@ equipmentSpec s registry = Spec.describe s "Equipment" $ do
         (creature, withCreature) = S.addPermanent piker S.alice base
         (equip, g2) = S.addPermanent bonesplitter S.alice withCreature
         attached = S.attach equip creature g2
-        gone = S.runPure S.identityAnswer attached (Event.changeZone creature Zone.Graveyard)
+        gone = S.runPure S.identityAnswer attached (Event.changeZone (pure ()) creature Zone.Graveyard)
         after = S.settleSba gone
     Spec.assertBool s (Set.member equip (GameState.battlefield after)) "the Equipment survives"
     Spec.assertEqWith s "and is unattached" (fmap Object.attachedTo (Game.lookupObject equip after)) (Just Nothing)
@@ -783,7 +783,7 @@ enchantPlayerSpec s registry = Spec.describe s "EnchantPlayer" $ do
         (aura, withAura) = S.addPermanent yoke S.alice his
         yoked = S.attachTo aura (Recipient.ToPlayer S.bob) withAura
         settled = S.runPure S.identityAnswer yoked (Engine.settleAll S.alice)
-        gone = S.runPure S.identityAnswer settled (Event.changeZone aura Zone.Graveyard)
+        gone = S.runPure S.identityAnswer settled (Event.changeZone (pure ()) aura Zone.Graveyard)
     Spec.assertBool s (Combat.canAttack S.alice creature settled) "alice attacks with the creature the enchanted player owns"
     Spec.assertEqWith s "his Forest is hers too -- permanents, not creatures -- and carol's Piker is nobody's business" (fmap (\oid -> Projection.controllerOf oid settled) [land, hers]) [Just S.alice, Just S.carol]
     Spec.assertEqWith s "CR 604.2: the Yoke leaves and bob has his Piker back" (Projection.controllerOf creature gone) (Just S.bob)
@@ -1767,7 +1767,7 @@ auraGraftSpec s registry = Spec.describe s "AuraGraft" $ do
         (creature, g1) = S.addPermanent piker S.alice base
         (aura, g2) = S.addPermanent unholyStrength S.alice g1
         (gs, graft) = S.handOne auraGraft (S.attach aura creature g2)
-        bounced = S.runPure S.identityAnswer gs (Event.changeZone creature Zone.Hand)
+        bounced = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) creature Zone.Hand)
         offers g = fmap (Set.member (Recipient.ToObject aura) . (\theSlot -> Target.legalRecipients StackObjectKind.Spell (Just S.alice) graft theSlot g)) (S.spellTargetSlot auraGraft)
     Spec.assertEqWith s "while the Piker is there the Aura is a legal target" (offers gs) (Just True)
     -- CR 400.7 minted a new object in the hand, so the recipient the Aura
@@ -1899,7 +1899,7 @@ auraSpec s registry = Spec.describe s "Aura" $ do
         (gs, spellId) = S.handOne unholyStrength withCreature
         cast = snd (Engine.runGamePure S.identityAnswer gs (S.cast S.alice spellId))
         -- The target leaves in response, so no legal target remains at resolution.
-        bounced = S.runPure S.identityAnswer cast (Event.changeZone creature Zone.Hand)
+        bounced = S.runPure S.identityAnswer cast (Event.changeZone (pure ()) creature Zone.Hand)
         after = snd (Engine.runGamePure S.identityAnswer bounced Stack.resolveTop)
     Spec.assertEqWith s "nothing attached on the battlefield" (filter (\o -> Object.zone o == Zone.Battlefield && Maybe.isJust (Object.attachedTo o)) (Map.elems (GameState.objects after))) []
     Spec.assertEqWith s "the Aura is in its owner's graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice after)) 1
@@ -2002,7 +2002,7 @@ auraSpec s registry = Spec.describe s "Aura" $ do
         (creature, withCreature) = S.addPermanent piker S.bob base
         (aura, withAura) = S.addPermanent controlMagic S.alice withCreature
         attached = S.attach aura creature withAura
-        gone = S.runPure S.identityAnswer attached (Event.changeZone aura Zone.Graveyard)
+        gone = S.runPure S.identityAnswer attached (Event.changeZone (pure ()) aura Zone.Graveyard)
     Spec.assertEqWith s "alice controlled it" (Projection.controllerOf creature attached) (Just S.alice)
     Spec.assertEqWith s "bob controls it again" (Projection.controllerOf creature gone) (Just S.bob)
   -- CR 604.2 / 613.1b: a control grant under an "as long as" clause takes the
@@ -3172,7 +3172,7 @@ equipmentTokenSpec s registry = Spec.describe s "EquipmentToken" $ do
     let (equipmentId, staged) = S.entersWithTrigger husk S.alice (Setup.emptyGame S.bothPlayers)
         placed = S.runPure S.identityAnswer staged Engine.settleForPriority
         -- One thing different: the Husk is gone before its own trigger resolves.
-        killed = S.runPure S.identityAnswer placed (Event.destroy Regenerability.Regenerable [equipmentId])
+        killed = S.runPure S.identityAnswer placed (Event.destroy (pure ()) Regenerability.Regenerable [equipmentId])
         run gs =
           let resolved = S.runPure S.identityAnswer gs Stack.resolveTop
            in (S.tokensOf resolved, S.runPure S.identityAnswer resolved Engine.settleForPriority)
@@ -3519,7 +3519,7 @@ animateDeadSpec s registry = Spec.describe s "Animate Dead" $ do
       "the Piker is back under alice's control, Animate Dead on it, at 1 power"
       (fmap (\creature -> (Projection.controllerOf creature returned, enchantedBy creature, Projection.powerOf creature returned)) creatures)
       [(Just S.alice, [Just animateName], Just 1)]
-    let gone = S.settleSba (step (Foldable.traverse_ (`Event.changeZone` Zone.Graveyard) (concatMap (`attachedTo` returned) creatures)) returned)
+    let gone = S.settleSba (step (Foldable.traverse_ (\oid -> Event.changeZone (pure ()) oid Zone.Graveyard) (concatMap (`attachedTo` returned) creatures)) returned)
         sacrificed = S.settleSba (step Stack.resolveTop (step (Engine.placePendingTriggers []) gone))
     Spec.assertEqWith
       s
@@ -3556,7 +3556,7 @@ animateDeadSpec s registry = Spec.describe s "Animate Dead" $ do
       _ -> Spec.assertFailure s "Animate Dead's trigger should be on the stack, and Lithoform Engine should have its {2} ability"
   Spec.it s "CR 608.3b: the Aura spell whose graveyard target left does not resolve" $ do
     (pikerCard, cast) <- setUp
-    let exiled = step (Event.changeZone pikerCard Zone.Exile) cast
+    let exiled = step (Event.changeZone (pure ()) pikerCard Zone.Exile) cast
         resolved = S.settleSba (step Stack.resolveTop exiled)
     Spec.assertEqWith
       s
@@ -3995,7 +3995,7 @@ auraSwapSpec s registry =
           case Projection.abilitiesOf wingsId gs of
             [ability] -> do
               let activated = S.runPure (answer pacifismId wolvesId) gs (Activate.activateAbility S.alice wingsId ability)
-                  gone = S.runPure S.identityAnswer activated (Event.changeZone wingsId Zone.Graveyard)
+                  gone = S.runPure S.identityAnswer activated (Event.changeZone (pure ()) wingsId Zone.Graveyard)
                   ((_, after), responses) = Replay.record (answer pacifismId wolvesId) gone Stack.resolveTop
               Spec.assertEqWith s "nobody was asked anything as the ability resolved" responses []
               Spec.assertEqWith s "Pacifism and Wild Growth are both still in alice's hand" (List.sort (handNames S.alice after)) (sorted ["Pacifism", "Wild Growth"])

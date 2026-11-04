@@ -475,7 +475,7 @@ discardToHandSize pid = do
         -- for a rule 701.9a trigger -- then a trigger waiting during the cleanup
         -- step, CR 514.3a's condition (`cleanupException`).
         -- One event group: rule 514.1's discard is one action.
-        Event.simultaneously (Monad.mapM_ (Event.discard DiscardCause.Ordinary pid) toDiscard)
+        Event.simultaneously (Monad.mapM_ (Event.discard (Resolve.runReplacementEffects playSubgame) DiscardCause.Ordinary pid) toDiscard)
 
 -- CR 103.8a: in a two-player game the player who plays first skips the draw step
 -- of their first turn; CR 103.8b / 810.6, in Two-Headed Giant the team who plays
@@ -1256,7 +1256,7 @@ settlePasses passes boards = do
   swept <- Expiry.sweepConditional
   -- CR 610.3's second one-shot effect, Palace Jailer's and Banisher Priest's
   -- alike: a return zone change is not something an Expiry sweep can perform.
-  returned <- MoveDuration.returnDue
+  returned <- MoveDuration.returnDue (Resolve.runReplacementEffects playSubgame)
   -- CR 800.4c, checked here for CR 704.3's reason and not because it is a
   -- state-based action -- that rule says it is not. AFTER the two above, each
   -- of which can be what ends a control-changing effect: the conditional sweep
@@ -1485,7 +1485,7 @@ priorityLoop = do
                               Action.Type.Play oid mName -> do
                                 -- CR 116.2a: the special action, made under a
                                 -- CR 601.3 permission (Cast.playLand).
-                                Cast.playLand False p oid mName
+                                Cast.playLand (Resolve.runReplacementEffects playSubgame) False p oid mName
                                 State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
                                 settleForPriority
                                 loop trail'
@@ -1524,7 +1524,7 @@ priorityLoop = do
                               -- Ordinary and not ToPayCyclingCost, CR 702.29c's
                               -- cause being a cycling ability's cost.
                               Action.Type.DiscardFromHand oid -> do
-                                Event.discard DiscardCause.Ordinary p oid
+                                Event.discard (Resolve.runReplacementEffects playSubgame) DiscardCause.Ordinary p oid
                                 State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
                                 settleForPriority
                                 loop trail'

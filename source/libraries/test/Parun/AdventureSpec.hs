@@ -370,7 +370,7 @@ spec s registry = Spec.describe s "Adventure" $ do
         cast = snd (Engine.runGamePure S.identityAnswer gs (Cast.castSpell S.manaPerformer S.alice oid battleDisplayName Facing.FaceUp))
         -- The only target leaves the battlefield while the spell is on the
         -- stack, so every filled slot is illegal at CR 608.2b.
-        gone = snd (Engine.runGamePure S.identityAnswer cast (Event.changeZone bonesplitterId Zone.Graveyard))
+        gone = snd (Engine.runGamePure S.identityAnswer cast (Event.changeZone (pure ()) bonesplitterId Zone.Graveyard))
         fizzled = snd (Engine.runGamePure S.identityAnswer gone Stack.resolveTop)
     Spec.assertEqWith s "nothing in exile" (Game.zoneMembers Zone.Exile S.alice fizzled) []
     Spec.assertEqWith s "the card and its target are both in the graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice fizzled)) 2

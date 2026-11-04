@@ -2617,6 +2617,7 @@ spinebiter
 spinner-of-souls
 spirit-link
 spirit-mascot
+spirit-shackle
 spirit-water-revival
 spiritual-focus
 spiteful-hexmage
@@ -2758,6 +2759,7 @@ taunt
 taunting-challenge
 tavern-scoundrel
 tavern-swindler
+tawnoss-wand
 tawnoss-weaponry
 tayam-luminous-enigma
 tazeem
@@ -2825,6 +2827,7 @@ the-mind-stone
 the-moonbase
 the-most-dangerous-gamer
 the-necrobloom
+the-rack
 the-ravens-warning
 the-royal-scions
 the-ruinous-powers
@@ -2849,6 +2852,7 @@ thorn-lieutenant
 thornbow-archer
 thorncaster-sliver
 thornvault-forager
+thoughtlace
 thoughtleech
 thousand-year-storm
 thraben-gargoyle-stonewing-antagonizer
@@ -2969,6 +2973,7 @@ ultima
 unbury
 uncharted-haven
 uncharted-voyage
+uncle-istvan
 uncontrollable-anger
 uncovered-clues
 undead-servant
@@ -3043,6 +3048,7 @@ village-rites
 villainous-ogre
 vine-snare
 viral-spawning
+visions
 visions-of-beyond
 vitalizing-cascade
 vito-thorn-of-the-dusk-rose
@@ -3062,6 +3068,7 @@ void-stalker
 void-winnower
 voidpouncer
 volatile-rift
+volcanic-eruption
 volcanic-salvo
 volraths-curse
 volraths-shapeshifter

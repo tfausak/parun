@@ -153,7 +153,7 @@ logSpec s registry =
       pikerPrinting <- S.printingOf s registry "Goblin Piker"
       let (piker, gs) = S.addPermanent pikerPrinting S.bob (Setup.emptyGame S.bothPlayers)
           expected = Projection.project piker gs
-          after = S.runPure S.identityAnswer gs (Event.changeZone piker Zone.Graveyard)
+          after = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) piker Zone.Graveyard)
       case S.eventsOf after of
         GameEvent.Moved (Moved.MkMoved _ snapshot _ _ _ _ _ _) : _ -> Spec.assertEqWith s "snapshot from the origin zone" snapshot expected
         _ -> Spec.assertFailure s "expected exactly one Moved event"
@@ -172,7 +172,7 @@ logSpec s registry =
       piker <- S.printingOf s registry "Goblin Piker"
       let (_, gs) = S.addPermanent restInPeace S.alice (Setup.emptyGame S.bothPlayers)
           (pikerId, gs1) = S.addPermanent piker S.bob gs
-          moved = S.runPure S.identityAnswer gs1 (Event.changeZone pikerId Zone.Hand)
+          moved = S.runPure S.identityAnswer gs1 (Event.changeZone (pure ()) pikerId Zone.Hand)
           scanned = snd (Engine.runGamePure S.identityAnswer moved (Engine.placePendingTriggers []))
       Spec.assertEqWith s "nothing left unscanned" (Event.unscannedEvents scanned) []
       Spec.assertBool s (not (null (S.zoneChangesOf scanned))) "the zone change is still recorded"
@@ -181,7 +181,7 @@ logSpec s registry =
     Spec.it s "the log and both watermarks are cleared at turn handoff" $ do
       pikerPrinting <- S.printingOf s registry "Goblin Piker"
       let (piker, gs) = S.addPermanent pikerPrinting S.bob (Setup.emptyGame S.bothPlayers)
-          moved = S.runPure S.identityAnswer gs (Event.changeZone piker Zone.Graveyard)
+          moved = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) piker Zone.Graveyard)
           after = snd (Engine.runGamePure S.identityAnswer moved Engine.handoffTurn)
       Spec.assertEqWith s "log empty" (GameState.events after) Seq.empty
       Spec.assertEqWith s "scan watermark reset" (GameState.scannedThrough after) 0
@@ -349,7 +349,7 @@ sacrificeSpec s registry =
     Spec.it s "CR 701.21a a sacrificed permanent goes to its owner's graveyard" $ do
       pikerPrinting <- S.printingOf s registry "Goblin Piker"
       let (piker, gs) = S.addPermanent pikerPrinting S.bob (Setup.emptyGame S.bothPlayers)
-          after = S.runPure S.identityAnswer gs (Event.sacrifice S.bob piker)
+          after = S.runPure S.identityAnswer gs (Event.sacrifice (pure ()) S.bob piker)
       Spec.assertEqWith s "off the battlefield" (S.creaturesInPlay S.bob after) 0
       Spec.assertEqWith s "in bob's graveyard" (length (Game.zoneMembers Zone.Graveyard S.bob after)) 1
     -- The test above sacrifices a permanent the same player owns and
@@ -364,7 +364,7 @@ sacrificeSpec s registry =
           -- ALICE is the sacrificing player, because she controls it (CR
           -- 701.21a); bob merely owns it, which is what the assertions below
           -- separate.
-          after = S.runPure S.identityAnswer gs (Event.sacrifice S.alice piker)
+          after = S.runPure S.identityAnswer gs (Event.sacrifice (pure ()) S.alice piker)
       Spec.assertEqWith s "off bob's battlefield" (S.creaturesInPlay S.bob after) 0
       Spec.assertEqWith s "in bob's (owner's) graveyard" (length (Game.zoneMembers Zone.Graveyard S.bob after)) 1
       Spec.assertEqWith s "not in alice's graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice after)) 0
@@ -373,19 +373,19 @@ sacrificeSpec s registry =
     Spec.it s "CR 701.21a an indestructible permanent can still be sacrificed" $ do
       darksteelMyr <- S.printingOf s registry "Darksteel Myr"
       let (myr, gs) = S.addPermanent darksteelMyr S.bob (Setup.emptyGame S.bothPlayers)
-          after = S.runPure S.identityAnswer gs (Event.sacrifice S.bob myr)
+          after = S.runPure S.identityAnswer gs (Event.sacrifice (pure ()) S.bob myr)
       Spec.assertEqWith s "gone from the battlefield" (S.creaturesInPlay S.bob after) 0
     Spec.it s "CR 701.21a sacrificing neither consults nor consumes a regeneration shield" $ do
       pikerPrinting <- S.printingOf s registry "Goblin Piker"
       let (piker, gs0) = S.addPermanent pikerPrinting S.bob (Setup.emptyGame S.bothPlayers)
           gs = S.addRegenShield piker gs0
-          after = S.runPure S.identityAnswer gs (Event.sacrifice S.bob piker)
+          after = S.runPure S.identityAnswer gs (Event.sacrifice (pure ()) S.bob piker)
       Spec.assertEqWith s "still sacrificed" (S.creaturesInPlay S.bob after) 0
       Spec.assertEqWith s "the shield's source is untouched" (fmap ActiveReplacement.source (GameState.replacements after)) [piker]
     Spec.it s "only a battlefield permanent can be sacrificed (CR 701.21a)" $ do
       piker <- S.printingOf s registry "Goblin Piker"
       let (card, gs) = S.addLibraryCard piker S.bob (Setup.emptyGame S.bothPlayers)
-          after = S.runPure S.identityAnswer gs (Event.sacrifice S.bob card)
+          after = S.runPure S.identityAnswer gs (Event.sacrifice (pure ()) S.bob card)
       -- Against the bracket rather than against `gs`: the funnel is CR
       -- 608.2f-bracketed (Event.sacrificeIn), so a refused sacrifice still spends
       -- an event group. Every other field is still compared.
@@ -396,8 +396,8 @@ sacrificeSpec s registry =
     Spec.it s "CR 701.21a a player cannot sacrifice a permanent they do not control" $ do
       pikerPrinting <- S.printingOf s registry "Goblin Piker"
       let (piker, gs) = S.addPermanent pikerPrinting S.bob (Setup.emptyGame S.bothPlayers)
-          byAlice = S.runPure S.identityAnswer gs (Event.sacrifice S.alice piker)
-          byBob = S.runPure S.identityAnswer gs (Event.sacrifice S.bob piker)
+          byAlice = S.runPure S.identityAnswer gs (Event.sacrifice (pure ()) S.alice piker)
+          byBob = S.runPure S.identityAnswer gs (Event.sacrifice (pure ()) S.bob piker)
       -- Against the bracket, for the reason the library case above states.
       Spec.assertEqWith s "alice's attempt changes nothing at all" byAlice (S.runPure S.identityAnswer gs (Event.simultaneously (pure ())))
       -- The discriminating half: the same call from the controller works, so the
@@ -461,7 +461,7 @@ mayhemDevilSpec s registry =
             )
       -- CR 701.21a's funnel, then the loop that gathers and resolves whatever it
       -- fired. Event.destroy is driven the same way by the case below.
-      sacrificeThen pid oid = Event.sacrifice pid oid >> Engine.priorityLoop
+      sacrificeThen pid oid = Event.sacrifice (pure ()) pid oid >> Engine.priorityLoop
    in Spec.describe s "PermanentSacrificed" $ do
         -- The half that makes the firing half mean something. Same board, same
         -- Devil, a permanent that DIES without being sacrificed: CR 700.4 makes
@@ -471,7 +471,7 @@ mayhemDevilSpec s registry =
           mayhemDevil <- S.printingOf s registry "Mayhem Devil"
           piker <- S.printingOf s registry "Goblin Piker"
           let (pikerId, gs) = board mayhemDevil piker
-              killed = S.runPure S.identityAnswer gs (Event.destroy Regenerability.Regenerable [pikerId])
+              killed = S.runPure S.identityAnswer gs (Event.destroy (pure ()) Regenerability.Regenerable [pikerId])
               after = S.runPure (aimAt S.bob) killed Engine.priorityLoop
           -- Positive control: the Piker really left, so the silence below is the
           -- condition's answer rather than a fixture that destroyed nothing.
@@ -581,7 +581,7 @@ prowlingGeistcatcherSpec s registry =
       countersOn oid gs = maybe Map.empty Object.counters (Game.lookupObject oid gs)
       -- CR 701.21a's funnel, then the loop that gathers and resolves what it
       -- fired -- mayhemDevilSpec's own driver.
-      sacrificeThen pid oid = Event.sacrifice pid oid >> Engine.priorityLoop
+      sacrificeThen pid oid = Event.sacrifice (pure ()) pid oid >> Engine.priorityLoop
       -- The id `departed` became on its way out of `from`, read back off the log
       -- the same batch wrote. CR 400.7 mints it, so no test can name it in
       -- advance, and reading it here is what makes the assertion below an
@@ -628,7 +628,7 @@ prowlingGeistcatcherSpec s registry =
           piker <- S.printingOf s registry "Goblin Piker"
           let (geist, victim, _, _, gs) = geistBoard geistcatcher piker []
               exiled = S.runPure S.identityAnswer gs (sacrificeThen S.alice victim)
-              after = S.runPure S.identityAnswer exiled (Event.destroy Regenerability.Regenerable [geist] >> Engine.priorityLoop)
+              after = S.runPure S.identityAnswer exiled (Event.destroy (pure ()) Regenerability.Regenerable [geist] >> Engine.priorityLoop)
           Spec.assertEqWith s "CR 607.2a: alice controls two Pikers again, the exiled card among them" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Goblin Piker")) S.alice after) 2
           Spec.assertBool s (Set.null (GameState.exile after)) "and nothing is left in exile"
         -- The "ANOTHER creature" half of the condition, one atom from the case
@@ -654,7 +654,7 @@ prowlingGeistcatcherSpec s registry =
           restInPeace <- S.printingOf s registry "Rest in Peace"
           let (geist, victim, _, buried, gs) = geistBoard geistcatcher piker [restInPeace]
               exiled = S.runPure S.identityAnswer gs (sacrificeThen S.alice victim)
-              after = S.runPure S.identityAnswer exiled (Event.destroy Regenerability.Regenerable [geist] >> Engine.priorityLoop)
+              after = S.runPure S.identityAnswer exiled (Event.destroy (pure ()) Regenerability.Regenerable [geist] >> Engine.priorityLoop)
           Spec.assertEqWith s "CR 607.2a: the Geistcatcher leaving returned the redirected Piker" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Goblin Piker")) S.alice after) 2
           Spec.assertEqWith s "CR 400.8: the trigger exiled the card the sacrificed Piker became in exile" (departedInto Zone.Exile exiled) (victim : arrivalOf Zone.Battlefield victim exiled)
           Spec.assertEqWith s "nothing reached a graveyard" (departedInto Zone.Graveyard exiled) []
@@ -738,7 +738,7 @@ stateTriggerSpec s registry =
                 ids -> case filter (\oid -> Set.member Subtype.Swamp (Projection.subtypesOf oid quiet)) ids of
                   swampId : _ -> swampId
                   [] -> ObjectId.MkObjectId 999
-              gone = settle (S.runPure S.identityAnswer quiet (Event.destroy Regenerability.Regenerable [swampOid]))
+              gone = settle (S.runPure S.identityAnswer quiet (Event.destroy (pure ()) Regenerability.Regenerable [swampOid]))
           Spec.assertEqWith s "the Swamp's death arms it" (length (triggerIds gone)) 1
         -- CR 603.8: "doesn't trigger again until the ability has resolved, has
         -- been countered, or has otherwise left the stack" -- all three are
@@ -959,7 +959,7 @@ historySpec s registry =
           let (ghoul, gs0) = S.addPermanent khabalGhoul S.alice (Setup.emptyGame S.bothPlayers)
               (p1, gs1) = S.addPermanent piker S.bob gs0
               (p2, gs2) = S.addPermanent piker S.bob gs1
-              dead = S.runPure S.identityAnswer (S.runPure S.identityAnswer gs2 (Event.destroy Regenerability.Regenerable [p1])) (Event.destroy Regenerability.Regenerable [p2])
+              dead = S.runPure S.identityAnswer (S.runPure S.identityAnswer gs2 (Event.destroy (pure ()) Regenerability.Regenerable [p1])) (Event.destroy (pure ()) Regenerability.Regenerable [p2])
               scanned = settle dead
               atEnd = resolveAll (settle (beginEndStep scanned))
           Spec.assertEqWith s "two +1/+1 counters" (countersOn ghoul atEnd) 2
@@ -972,7 +972,7 @@ historySpec s registry =
           piker <- S.printingOf s registry "Goblin Piker"
           let (ghoul, gs0) = S.addPermanent khabalGhoul S.alice (Setup.emptyGame S.bothPlayers)
               (tok, gs1) = S.addToken (Printing.card piker) S.bob gs0
-              dead = S.settleSba (S.runPure S.identityAnswer gs1 (Event.destroy Regenerability.Regenerable [tok]))
+              dead = S.settleSba (S.runPure S.identityAnswer gs1 (Event.destroy (pure ()) Regenerability.Regenerable [tok]))
               atEnd = resolveAll (settle (beginEndStep dead))
           Spec.assertEqWith s "the token is counted" (countersOn ghoul atEnd) 1
         Spec.it s "a creature that left the battlefield for HAND did not die (CR 700.4)" $ do
@@ -980,7 +980,7 @@ historySpec s registry =
           piker <- S.printingOf s registry "Goblin Piker"
           let (ghoul, gs0) = S.addPermanent khabalGhoul S.alice (Setup.emptyGame S.bothPlayers)
               (p1, gs1) = S.addPermanent piker S.bob gs0
-              bounced = S.runPure S.identityAnswer gs1 (Event.changeZone p1 Zone.Hand)
+              bounced = S.runPure S.identityAnswer gs1 (Event.changeZone (pure ()) p1 Zone.Hand)
               atEnd = resolveAll (settle (beginEndStep bounced))
           Spec.assertEqWith s "a bounce is not a death" (countersOn ghoul atEnd) 0
         -- CR 608.2i: "look back in time" effects don't require the counted
@@ -998,7 +998,7 @@ historySpec s registry =
           piker <- S.printingOf s registry "Goblin Piker"
           khabalGhoul <- S.printingOf s registry "Khabál Ghoul"
           let (p1, gs0) = S.addPermanent piker S.bob (Setup.emptyGame S.bothPlayers)
-              dead = S.runPure S.identityAnswer gs0 (Event.destroy Regenerability.Regenerable [p1])
+              dead = S.runPure S.identityAnswer gs0 (Event.destroy (pure ()) Regenerability.Regenerable [p1])
               (ghoul, gs1) = S.addPermanent khabalGhoul S.alice (settle dead)
               atEnd = resolveAll (settle (beginEndStep gs1))
           Spec.assertEqWith s "one +1/+1 counter" (countersOn ghoul atEnd) 1
@@ -1008,7 +1008,7 @@ historySpec s registry =
           piker <- S.printingOf s registry "Goblin Piker"
           let (ghoul, gs0) = S.addPermanent khabalGhoul S.alice (Setup.emptyGame S.bothPlayers)
               (p1, gs1) = S.addPermanent piker S.bob gs0
-              dead = S.runPure S.identityAnswer gs1 (Event.destroy Regenerability.Regenerable [p1])
+              dead = S.runPure S.identityAnswer gs1 (Event.destroy (pure ()) Regenerability.Regenerable [p1])
               nextTurn = snd (Engine.runGamePure S.identityAnswer dead Engine.handoffTurn)
               atEnd = resolveAll (settle (beginEndStep nextTurn))
           Spec.assertEqWith s "last turn's death does not count" (countersOn ghoul atEnd) 0
@@ -1352,7 +1352,7 @@ tokenSetSpec s registry =
           mountain <- S.printingOf s registry "Mountain"
           let ((_, armed), _) = castRevolt revolt (boardOf mountain)
               killed = case humans armed of
-                token : _ -> S.settleSba (S.runPure S.identityAnswer armed (Event.destroy Regenerability.Regenerable [token]))
+                token : _ -> S.settleSba (S.runPure S.identityAnswer armed (Event.destroy (pure ()) Regenerability.Regenerable [token]))
                 [] -> armed
               after = resolveAll (settle (beginEndStep killed))
           Spec.assertEqWith s "two were left to sacrifice" (length (humans killed)) 2
@@ -1393,7 +1393,7 @@ tokenGroupReadSpec s registry =
               onStack = snd (Engine.runGamePure S.identityAnswer gs (S.cast S.alice oid))
               -- The target leaves before the Skirmish resolves, which is the only
               -- way to make it illegal without a second card.
-              gone = S.settleSba (S.runPure S.identityAnswer onStack (Event.destroy Regenerability.Regenerable [victim]))
+              gone = S.settleSba (S.runPure S.identityAnswer onStack (Event.destroy (pure ()) Regenerability.Regenerable [victim]))
               after = resolveAll gone
           Spec.assertBool s (Set.notMember victim (GameState.battlefield after)) "the target really left"
           Spec.assertEqWith s "no Warriors were minted" (warriors after) []
@@ -1889,7 +1889,7 @@ interveningSpec s registry =
           sarcomancy <- S.printingOf s registry "Sarcomancy"
           let (_, board) = withZombie sarcomancy
               killed = case zombies board of
-                tok : _ -> S.settleSba (S.runPure S.identityAnswer board (Event.destroy Regenerability.Regenerable [tok]))
+                tok : _ -> S.settleSba (S.runPure S.identityAnswer board (Event.destroy (pure ()) Regenerability.Regenerable [tok]))
                 [] -> board
               after = resolveAll (settle (beginUpkeep killed))
           Spec.assertEqWith s "alice took 1" (S.lifeOf S.alice after) (Just 19)
@@ -1901,7 +1901,7 @@ interveningSpec s registry =
           piker <- S.printingOf s registry "Goblin Piker"
           let (_, board) = withZombie sarcomancy
               killed = case zombies board of
-                tok : _ -> S.settleSba (S.runPure S.identityAnswer board (Event.destroy Regenerability.Regenerable [tok]))
+                tok : _ -> S.settleSba (S.runPure S.identityAnswer board (Event.destroy (pure ()) Regenerability.Regenerable [tok]))
                 [] -> board
               onStack = settle (beginUpkeep killed)
               -- The Zombie arrives under BOB's control, which is exactly the
@@ -2107,11 +2107,11 @@ permanentEntersSpec s registry =
           piker <- S.printingOf s registry "Goblin Piker"
           let (warden, gs0) = S.addPermanent soulWarden S.alice (Setup.emptyGame S.bothPlayers)
               (handCard, gs1) = S.addHandCard piker S.bob gs0
-              entered = S.runPure S.identityAnswer gs1 (Event.changeZone handCard Zone.Battlefield)
+              entered = S.runPure S.identityAnswer gs1 (Event.changeZone (pure ()) handCard Zone.Battlefield)
               newIds = fmap ZoneChange.object (filter ((==) Zone.Battlefield . ZoneChange.to) (S.zoneChangesOf entered))
           case newIds of
             [newId] -> do
-              let gone = S.runPure S.identityAnswer entered (Event.changeZone newId Zone.Graveyard)
+              let gone = S.runPure S.identityAnswer entered (Event.changeZone (pure ()) newId Zone.Graveyard)
               Spec.assertEqWith s "the entrant is off the battlefield" (Game.lookupObject newId gone) Nothing
               Spec.assertEqWith s "the Warden still triggered, once" (sourcesOf gone) [TriggerSource.OfObject warden]
             other -> Spec.assertFailure s ("expected exactly one battlefield entry, got " <> show (length other))
@@ -2383,7 +2383,7 @@ matchedClausePassSpec s registry =
                 }
             batch = do
               Engine.runTurnBasedActions Phase.PrecombatMain
-              Event.createTokens S.alice (Printing.card giant) Nothing 1 TapState.Untapped Map.empty Nothing Set.empty
+              Event.createTokens (pure ()) S.alice (Printing.card giant) Nothing 1 TapState.Untapped Map.empty Nothing Set.empty
             advanced = S.runPure S.identityAnswer ready batch
             ((_, settled), asked) = State.runState (Engine.runGame (chronicleFirst chronicleId) advanced Engine.settleForPriority) []
         Spec.assertEqWith s "the Chronicle's chapter trigger on top, then chapter III, then its entering trigger" (triggerSourcesOnStack settled) [chronicleId, sagaId, chronicleId]

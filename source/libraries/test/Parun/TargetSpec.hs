@@ -1812,7 +1812,7 @@ spec s registry = Spec.describe s "Parun.Engine.Target" $ do
         placed = S.runPure (aimAtCardShuffling hisId) board (Engine.placePendingTriggers [])
         resolve g = S.runPure (aimAtCardShuffling hisId) g Stack.resolveTop
         shuffledIn = resolve placed
-        fizzled = resolve (S.runPure S.identityAnswer placed (Event.changeZone hisId Zone.Hand))
+        fizzled = resolve (S.runPure S.identityAnswer placed (Event.changeZone (pure ()) hisId Zone.Hand))
     Spec.assertEqWith s "the enters trigger went on the stack" (length (GameState.stack placed)) 1
     Spec.assertEqWith s "untouched, bob's library grew to three" (length (Game.zoneMembers Zone.Library S.bob shuffledIn)) 3
     Spec.assertEqWith s "taken to his hand in response, his library is the two it started with, in their original order -- not even shuffled" (Game.zoneMembers Zone.Library S.bob fizzled) [hisTopId, hisDeeperId]
@@ -2436,8 +2436,8 @@ spec s registry = Spec.describe s "Parun.Engine.Target" $ do
         (board, dwellId) = S.handOne dwell g10
         cast = S.runPure (aimingDwellShuffling [hisId, hisOtherId]) board (S.cast S.alice dwellId)
         exiled =
-          S.runPure S.identityAnswer (S.runPure S.identityAnswer cast (Event.changeZone hisId Zone.Exile)) $
-            Event.changeZone hisOtherId Zone.Exile
+          S.runPure S.identityAnswer (S.runPure S.identityAnswer cast (Event.changeZone (pure ()) hisId Zone.Exile)) $
+            Event.changeZone (pure ()) hisOtherId Zone.Exile
         resolvedWithCards = S.runPure (aimingDwellShuffling [hisId, hisOtherId]) cast Stack.resolveTop
         resolvedWithout = S.runPure (aimingDwellShuffling [hisId, hisOtherId]) exiled Stack.resolveTop
         arrivalsIn pid seeded gs = filter (`notElem` seeded) (Game.zoneMembers Zone.Library pid gs)
@@ -3159,7 +3159,7 @@ redirectBioshiftSpec s registry =
             (takerId, board) = S.addPermanent piker S.alice g3
             aimed = Map.fromList [(from, Recipient.ToCreature giverId), (to, Recipient.ToCreature takerId)]
             cast = S.runPure (aimingSlots S.alice aimed) board (S.cast S.alice bioshiftId)
-            responded = if killed then S.runPure S.identityAnswer cast (Event.destroy Regenerability.Regenerable [takerId]) else cast
+            responded = if killed then S.runPure S.identityAnswer cast (Event.destroy (pure ()) Regenerability.Regenerable [takerId]) else cast
         case topOfStack cast of
           Nothing -> Spec.assertFailure s "Bioshift never reached the stack"
           Just spell -> do

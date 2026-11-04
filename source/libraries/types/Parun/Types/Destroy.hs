@@ -15,10 +15,11 @@ import qualified Parun.Types.SlotName as SlotName
 -- Bane's "the number of artifacts they controlled that were put into a graveyard
 -- this way".
 --
--- `buried` is where the CARDS the destruction put into a graveyard are written,
--- for a later effect to NAME -- Come Back Wrong's "if a creature card is put
--- into a graveyard this way, return it to the battlefield". Those are the CR
--- 400.7 incarnations minted in the graveyard, never the permanents destroyed:
+-- `buried` is where what the destruction put into a graveyard is written, for a
+-- later effect to NAME -- Come Back Wrong's "if a creature card is put into a
+-- graveyard this way, return it to the battlefield" -- or count, tokens included
+-- (Volcanic Eruption's "the number of Mountains"). Those are the CR 400.7
+-- incarnations minted in the graveyard, never the permanents destroyed:
 -- the permanent is gone by the time the naming clause runs, and CR 400.7 gives
 -- the card in the graveyard a fresh id.
 --

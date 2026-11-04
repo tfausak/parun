@@ -119,7 +119,7 @@ sicknessSpec s registry = Spec.describe s "Sickness" $ do
     mountain <- S.printingOf s registry "Mountain"
     piker <- S.printingOf s registry "Goblin Piker"
     let (gs, oid) = S.pikerInHand mountain piker 3 Phase.PrecombatMain
-        after = S.runPure S.identityAnswer gs (Event.changeZone oid Zone.Battlefield)
+        after = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) oid Zone.Battlefield)
     case Game.zoneMembers Zone.Battlefield S.alice after of
       [] -> Spec.assertFailure s "expected a permanent"
       ids -> case filter (\o -> sicknessOf o after == Just Sickness.Sick) ids of
@@ -305,7 +305,7 @@ castSpec s registry = Spec.describe s "Cast" $ do
     mountain <- S.printingOf s registry "Mountain"
     lightningBolt <- S.printingOf s registry "Lightning Bolt"
     let (gs, oid) = S.boltInHand mountain lightningBolt 1 Phase.PrecombatMain
-        buried = S.runPure S.identityAnswer gs (Event.changeZone oid Zone.Graveyard)
+        buried = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) oid Zone.Graveyard)
     Spec.assertEqWith s "nothing castable" (Cast.castableSpells S.alice buried) []
   Spec.it s "CR 601.2c casting a Bolt stamps the chosen target on the stack object" $ do
     piker <- S.printingOf s registry "Goblin Piker"
@@ -1854,7 +1854,7 @@ spliceSpec s registry = Spec.describe s "Splice" $ do
         answer :: Prompt.Prompt r -> r
         answer = splicing restIds (const (== Recipient.ToCreature pikerId))
         cast = snd (S.runPureWith answer gs (S.cast S.alice spellId))
-        gone = snd (S.runPureWith answer cast (Event.changeZone pikerId Zone.Graveyard))
+        gone = snd (S.runPureWith answer cast (Event.changeZone (pure ()) pikerId Zone.Graveyard))
         after = snd (S.runPureWith answer gone Stack.resolveTop)
     Spec.assertEqWith s "CR 608.2b: no mana was added" (redFloating S.alice after) 0
     Spec.assertEqWith s "the Ritual still left the stack for alice's graveyard" (buybackNamesIn Zone.Graveyard S.alice after) [Just (S.printingName ritual)]
@@ -2077,7 +2077,7 @@ fireboltSpec s registry = Spec.describe s "Firebolt" $ do
     case GameState.stack cast of
       [] -> Spec.assertFailure s "expected the flashback spell on the stack"
       onStack : _ -> do
-        let countered = S.runPure S.identityAnswer cast (Event.counter S.noSource S.bob onStack)
+        let countered = S.runPure S.identityAnswer cast (Event.counter (pure ()) S.noSource S.bob onStack)
         Spec.assertEqWith s "not in the graveyard" (Game.zoneMembers Zone.Graveyard S.alice countered) []
         Spec.assertEqWith s "exiled" (length (Game.zoneMembers Zone.Exile S.alice countered)) 1
   -- The self-scoping in rule 702.34a's "exile THIS card". A flashback spell
@@ -2091,7 +2091,7 @@ fireboltSpec s registry = Spec.describe s "Firebolt" $ do
     let (inGraveyard, gs0) = inGraveyardWith mountain firebolt 5
         (bystander, gs1) = S.addPermanent piker S.alice gs0
         cast = S.runPure S.identityAnswer gs1 (S.cast S.alice inGraveyard)
-        buried = S.runPure S.identityAnswer cast (Event.changeZone bystander Zone.Graveyard)
+        buried = S.runPure S.identityAnswer cast (Event.changeZone (pure ()) bystander Zone.Graveyard)
     Spec.assertEqWith s "the Piker went to the graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice buried)) 1
     Spec.assertEqWith s "and nothing was exiled" (Game.zoneMembers Zone.Exile S.alice buried) []
   -- Crux (a): flashback's cost is available only from the GRAVEYARD. A cost
@@ -4548,7 +4548,7 @@ mayhemSpec s registry = Spec.describe s "Mayhem" $ do
         plays gs = [oid | A.Play oid _ <- Action.legalActions S.alice gs, Game.zoneOf oid gs == Just Zone.Graveyard]
         played = case oscorpIn discarded of
           Just oid ->
-            let entered = S.runPure S.identityAnswer discarded (Cast.playLand False S.alice oid Nothing)
+            let entered = S.runPure S.identityAnswer discarded (Cast.playLand (pure ()) False S.alice oid Nothing)
              in S.runPure S.identityAnswer (S.runPure S.identityAnswer entered (Engine.placePendingTriggers [])) Stack.resolveTop
           Nothing -> discarded
     Spec.assertEqWith s "the discarded Oscorp is the one land play offered from the graveyard" (plays discarded) (Maybe.maybeToList (oscorpIn discarded))
@@ -4572,7 +4572,7 @@ mayhemSpec s registry = Spec.describe s "Mayhem" $ do
     let (discarded, _) = mayhemBoards mountain piker oscorp reunion
         withParagon = snd (S.addPermanent paragon S.alice discarded)
         played = case Scenario.namedObjects (S.printingName oscorp) withParagon of
-          oid : _ -> S.runPure S.identityAnswer withParagon (Cast.playLand False S.alice oid Nothing)
+          oid : _ -> S.runPure S.identityAnswer withParagon (Cast.playLand (pure ()) False S.alice oid Nothing)
           [] -> withParagon
     Spec.assertEqWith s "Oscorp arrived" (S.countOnBattlefieldByName (S.printingName oscorp) S.alice played) 1
     Spec.assertEqWith s "and the Paragon's use is unspent" (GameState.castPermissionsUsedThisTurn played) Map.empty

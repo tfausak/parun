@@ -157,7 +157,7 @@ plot :: ManaAbilityPerformer.ManaAbilityPerformer -> PlayerId -> ObjectId -> Cos
 plot perform pid oid printed = do
   before <- State.get
   Monad.when (canPlot pid oid printed before) $ do
-    exiled <- Event.changeZoneReturning oid Zone.Exile
+    exiled <- Event.changeZoneReturning (ManaAbilityPerformer.settle perform) oid Zone.Exile
     -- The payment names the card by `oid`, as `before` -- the board its X and
     -- its gates are read against -- knows it.
     paid <- Cost.payAction perform before PaymentSubject.ForNeither 0 pid oid printed

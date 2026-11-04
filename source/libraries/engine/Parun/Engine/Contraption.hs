@@ -48,19 +48,19 @@ import qualified Parun.Types.Subtype as Subtype
 -- each Contraption apart ("you choose individually for each one"). Proposed
 -- first as WouldPerform, so a row can change how many. An empty deck
 -- assembles nothing and loses nobody the game.
-assemble :: Maybe ObjectId -> PlayerId -> Game ()
-assemble assembler pid = do
+assemble :: Game () -> Maybe ObjectId -> PlayerId -> Game ()
+assemble settle assembler pid = do
   outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.Assemble assembler pid 1)
   Monad.forM_ (outcome >>= Replacement.asPerformed PlayerInstruction.Assemble) $ \(assembling, times) ->
-    Monad.replicateM_ (Natural.toIntSaturating times) (assembleOne assembling)
+    Monad.replicateM_ (Natural.toIntSaturating times) (assembleOne settle assembling)
 
 -- One Contraption: onto the battlefield first, then onto the sprocket its
 -- controller picks, so the card is face up when the choice is put and an entry
 -- a replacement kept off the battlefield asks nothing. Three sprockets are
 -- always three candidates, so the prompt is never elided.
-assembleOne :: PlayerId -> Game ()
-assembleOne pid = do
-  entered <- Attraction.enterTop SideDeck.Contraption pid
+assembleOne :: Game () -> PlayerId -> Game ()
+assembleOne settle pid = do
+  entered <- Attraction.enterTop settle SideDeck.Contraption pid
   Monad.forM_ entered $ \oid -> do
     picked <- Game.chooseAmong (\decider who -> Prompt.ChooseDesignation decider who oid) pid (NonEmpty.toList Sector.sprockets)
     Monad.forM_ picked (State.modify' . putOnSprocket oid)

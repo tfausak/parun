@@ -284,7 +284,7 @@ wordsOfWorshipSpec s registry = Spec.describe s "Words of Worship (CR 614.11)" $
     wordsOfWorship <- S.printingOf s registry "Words of Worship"
     piker <- S.printingOf s registry "Goblin Piker"
     let (armed, enchantment) = wordsBoard plains wordsOfWorship piker True
-        gone = S.runPure S.identityAnswer armed (Event.destroy Regenerability.Regenerable [enchantment])
+        gone = S.runPure S.identityAnswer armed (Event.destroy (pure ()) Regenerability.Regenerable [enchantment])
         after = S.runPure S.identityAnswer gone (Event.drawCard (pure ()) S.alice)
     Spec.assertBool s (not (Set.member enchantment (GameState.battlefield gone))) "setup: the enchantment really left the battlefield"
     Spec.assertEqWith s "CR 614.3 the row still applied, so alice is at 25" (S.lifeOf S.alice after) (Just 25)

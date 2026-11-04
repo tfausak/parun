@@ -78,7 +78,7 @@ ascendSpec s registry = Spec.describe s "Ascend" $ do
     let (aspirantId, board) = S.addPermanent aspirant S.alice (S.landsInPlay swamp 9)
         blessed = settle board
         victims = take 1 (filter (/= aspirantId) (Set.toAscList (GameState.battlefield blessed)))
-        shrunk = settle (S.runPure S.identityAnswer blessed (Event.destroy Regenerability.Regenerable victims))
+        shrunk = settle (S.runPure S.identityAnswer blessed (Event.destroy (pure ()) Regenerability.Regenerable victims))
     Spec.assertEqWith s "alice now controls nine permanents" (Set.size (GameState.battlefield shrunk)) 9
     Spec.assertBool s (flies aspirantId shrunk) "the Aspirant still flies"
     Spec.assertEqWith s "alice still has the city's blessing" (marksOf S.alice shrunk) (Just (Set.singleton PlayerDesignation.CitysBlessing))

@@ -156,7 +156,7 @@ foretell perform pid oid = do
       -- One stamp per arrival, Parun.Engine.Plot's reason: the funnel answers
       -- with more than one only for a melded permanent leaving the battlefield
       -- (CR 712.21), and this action exiles a card from a hand.
-      exiled <- Event.changeZoneEntering oid Zone.Exile LibraryPosition.defaultValue riders Nothing
+      exiled <- Event.changeZoneEntering (ManaAbilityPerformer.settle perform) oid Zone.Exile LibraryPosition.defaultValue riders Nothing
       Monad.forM_ exiled (State.modify' . becomeForetold (Maybe.listToMaybe (Maybe.mapMaybe reductionOf (foretellCostsOf oid before))))
       -- CR 702.143c: "foretelling a card" is this special action.
       Monad.unless (null exiled) (State.modify' (Event.recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.Foretell pid))))

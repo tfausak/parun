@@ -1024,7 +1024,7 @@ attachedSpec s registry = Spec.describe s "Attached" $ do
     ripple <- S.printingOf s registry "Reality Ripple"
     let ((host, equip), spell, board) = equippedBoard island piker bonesplitter ripple
         gone = rippleAt equip spell board
-        dead = S.runPure S.identityAnswer gone (Event.changeZone host Zone.Graveyard)
+        dead = S.runPure S.identityAnswer gone (Event.changeZone (pure ()) host Zone.Graveyard)
         back = untapStep S.alice dead
     Spec.assertEqWith s "setup: the Equipment phased out DIRECTLY" (Phasing.phasedOutStatus equip gone) (Just (PhasedOut.Directly S.alice))
     -- CR 400.7 mints a new object for the graveyard, so the id the attachment names
@@ -1087,7 +1087,7 @@ attachedSpec s registry = Spec.describe s "Attached" $ do
       Nothing -> Spec.assertFailure s "the bestowed Nyxborn Rollicker should be on the battlefield"
       Just aura -> do
         let gone = concealAll (Set.singleton aura) spell attached
-            dead = S.runPure S.identityAnswer gone (Event.changeZone host Zone.Graveyard)
+            dead = S.runPure S.identityAnswer gone (Event.changeZone (pure ()) host Zone.Graveyard)
             hostless = S.settleSba (untapStep S.alice dead)
             kept = S.settleSba (untapStep S.alice gone)
         -- The premise, first, so nothing below passes for a Rollicker that was

@@ -1,0 +1,131 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        }
+      ],
+      "name": "The Rack",
+      "oracleText": "As this artifact enters, choose an opponent.\nAt the beginning of the chosen player's upkeep, this artifact deals X damage to that player, where X is 3 minus the number of cards in their hand.",
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "EntryR",
+            "value": {
+              "matching": {
+                "type": "IsSource"
+              },
+              "rewrite": {
+                "type": "ChoosePlayer",
+                "value": {
+                  "type": "Opponent"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "StepBegins",
+            "value": {
+              "phase": {
+                "type": "Beginning",
+                "value": {
+                  "type": "Upkeep"
+                }
+              },
+              "scope": {
+                "type": "PlayersTurn",
+                "value": {
+                  "type": "ChosenPlayerOfBound",
+                  "value": [
+                    "self",
+                    {
+                      "type": "AsEnters"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "DealDamage",
+                        "value": {
+                          "parts": [
+                            {
+                              "quantity": {
+                                "type": "Plus",
+                                "value": {
+                                  "left": {
+                                    "type": "Literal",
+                                    "value": 3
+                                  },
+                                  "right": {
+                                    "type": "Negate",
+                                    "value": {
+                                      "type": "Count",
+                                      "value": {
+                                        "aggregation": {
+                                          "type": "Members"
+                                        },
+                                        "filter": {
+                                          "type": "And",
+                                          "value": []
+                                        },
+                                        "scope": {
+                                          "type": "InZone",
+                                          "value": {
+                                            "player": {
+                                              "type": "ChosenPlayerOfBound",
+                                              "value": [
+                                                "self",
+                                                {
+                                                  "type": "AsEnters"
+                                                }
+                                              ]
+                                            },
+                                            "zone": {
+                                              "type": "Hand"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "ref": {
+                                "type": "ChosenPlayer"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Artifact"
+          }
+        ]
+      }
+    }
+  ]
+}

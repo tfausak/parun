@@ -418,13 +418,13 @@ conditionalSpec s registry = Spec.describe s "Conditional" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     warMammoth <- S.printingOf s registry "War Mammoth"
     let (srcId, _, gs) = board piker warMammoth
-        gone = S.runPure S.identityAnswer gs (Event.destroy Regenerability.Regenerable [srcId])
+        gone = S.runPure S.identityAnswer gs (Event.destroy (pure ()) Regenerability.Regenerable [srcId])
     Spec.assertBool s (not (holdsYouControlSource S.alice srcId gone)) "no longer holds"
   Spec.it s "CR 611.2b arm returns Nothing when the condition is already false" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     warMammoth <- S.printingOf s registry "War Mammoth"
     let (srcId, _, gs) = board piker warMammoth
-        gone = S.runPure S.identityAnswer gs (Event.destroy Regenerability.Regenerable [srcId])
+        gone = S.runPure S.identityAnswer gs (Event.destroy (pure ()) Regenerability.Regenerable [srcId])
     Spec.assertEqWith
       s
       "never starts"
@@ -443,7 +443,7 @@ conditionalSpec s registry = Spec.describe s "Conditional" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     warMammoth <- S.printingOf s registry "War Mammoth"
     let (srcId, targetId, gs) = board piker warMammoth
-        gone = S.runPure S.identityAnswer gs (Event.destroy Regenerability.Regenerable [srcId])
+        gone = S.runPure S.identityAnswer gs (Event.destroy (pure ()) Regenerability.Regenerable [srcId])
         (changed, swept) = Engine.runGamePure S.identityAnswer gone Expiry.sweepConditional
     Spec.assertEqWith s "alice held it while the source stood" (Projection.controllerOf targetId gs) (Just S.alice)
     Spec.assertBool s changed "the sweep reports a change"
@@ -464,7 +464,7 @@ conditionalSpec s registry = Spec.describe s "Conditional" $ do
     let (srcId, targetId, gs) = board piker warMammoth
         (ts, gs1) = Game.freshTimestamp gs
         stored = gs1 {GameState.copyEffects = [ActiveCopy.MkActiveCopy srcId ts (Expiry.Type.OnEvent (EventExpiry.MkEventExpiry S.alice DurationEvent.SourceTurnedFaceDown)) (CopyCoverage.These (Set.singleton srcId)) (Projection.project targetId gs) Nothing]}
-        gone = S.runPure S.identityAnswer stored (Event.destroy Regenerability.Regenerable [srcId])
+        gone = S.runPure S.identityAnswer stored (Event.destroy (pure ()) Regenerability.Regenerable [srcId])
         (keptChanged, kept) = Engine.runGamePure S.identityAnswer stored Expiry.sweepConditional
         (goneChanged, swept) = Engine.runGamePure S.identityAnswer gone Expiry.sweepConditional
     Spec.assertEqWith s "the source gone, the row is dropped" (length (GameState.copyEffects swept)) 0
@@ -475,7 +475,7 @@ conditionalSpec s registry = Spec.describe s "Conditional" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     warMammoth <- S.printingOf s registry "War Mammoth"
     let (srcId, targetId, gs) = board piker warMammoth
-        gone = S.runPure S.identityAnswer gs (Event.destroy Regenerability.Regenerable [srcId])
+        gone = S.runPure S.identityAnswer gs (Event.destroy (pure ()) Regenerability.Regenerable [srcId])
         settled = S.runPure S.identityAnswer gone Engine.settleForPriority
     Spec.assertEqWith s "control reverted at the settle" (Projection.controllerOf targetId settled) (Just S.bob)
 
@@ -538,7 +538,7 @@ masterThiefSpec s registry = Spec.describe s "MasterThief" $ do
     masterThief <- S.printingOf s registry "Master Thief"
     let (thief, myr, entering) = masterThiefBoard darksteelMyr masterThief
         stolen = masterThiefResolveAll (masterThiefSettle entering)
-        dead = S.runPure S.identityAnswer stolen (Event.destroy Regenerability.Regenerable [thief])
+        dead = S.runPure S.identityAnswer stolen (Event.destroy (pure ()) Regenerability.Regenerable [thief])
         swept = masterThiefSettle dead
     Spec.assertEqWith s "control reverts at the next settle" (Projection.controllerOf myr swept) (Just S.bob)
     Spec.assertEqWith s "and stays reverted" (Projection.controllerOf myr (masterThiefSettle swept)) (Just S.bob)
@@ -921,7 +921,7 @@ hagSpec s registry = Spec.describe s "HagOfInnerWeakness" $ do
         -- The trigger is on the stack with its target already chosen.
         staged = hagSettle (hagBeginUpkeep gs2)
         -- Bob answers it by killing the Hag before it resolves.
-        hagGone = S.runPure S.identityAnswer staged (Event.destroy Regenerability.Regenerable [hagId])
+        hagGone = S.runPure S.identityAnswer staged (Event.destroy (pure ()) Regenerability.Regenerable [hagId])
         resolved = hagResolveAll hagGone
     Spec.assertBool s (S.creaturesInPlay S.alice hagGone == 0) "the Hag really did leave"
     Spec.assertEqWith s "the trigger still resolved: power" (Projection.powerOf mammoth resolved) (Just 1)
@@ -936,7 +936,7 @@ hagSpec s registry = Spec.describe s "HagOfInnerWeakness" $ do
         (_, gs1) = S.addPermanent hag S.alice gs0
         (mammoth, gs2) = S.addPermanent warMammoth S.bob gs1
         staged = hagSettle (hagBeginUpkeep gs2)
-        targetGone = S.runPure S.identityAnswer staged (Event.destroy Regenerability.Regenerable [mammoth])
+        targetGone = S.runPure S.identityAnswer staged (Event.destroy (pure ()) Regenerability.Regenerable [mammoth])
         resolved = hagResolveAll targetGone
     Spec.assertEqWith s "nothing was stored, because the trigger fizzled" (GameState.continuousEffects resolved) []
   -- CR 603.3a: a triggered ability's controller is whoever controlled its
@@ -2111,7 +2111,7 @@ lifelinkUnder expiry oid gs =
 -- and so two of CR 400.7's new objects. Answers the id of the last one.
 bounce :: ObjectId.ObjectId -> GameState.GameState -> (ObjectId.ObjectId, GameState.GameState)
 bounce oid gs =
-  let move from dest g = case S.runPureWith S.identityAnswer g (Event.changeZoneReturning from dest) of
+  let move from dest g = case S.runPureWith S.identityAnswer g (Event.changeZoneReturning (pure ()) from dest) of
         (ids, g1) -> case Seq.viewl ids of
           Seq.EmptyL -> (from, g1)
           arrived Seq.:< _ -> (arrived, g1)

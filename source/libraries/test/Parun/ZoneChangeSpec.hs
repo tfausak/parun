@@ -318,7 +318,7 @@ pulmonicBoard s registry decision = do
       answer p = case p of
         Prompt.ChooseRedirect _ pid _ _ -> if pid == S.bob then decision else opposite
         _ -> S.identityAnswer p
-      after = S.runPure answer g2 (Event.destroy Regenerability.Regenerable [lymphId])
+      after = S.runPure answer g2 (Event.destroy (pure ()) Regenerability.Regenerable [lymphId])
   pure (after, lymph, piker)
 
 -- atBobAnswer with CR 701.9a's choice pinned by INDEX rather than left to the
@@ -753,7 +753,7 @@ zoneChangeSpec s registry = Spec.describe s "ZoneChange" $ do
     leng <- S.printingOf s registry "Library of Leng"
     let (_, withLeng) = S.addPermanent leng S.bob (S.landsInPlay swamp 3)
         (swampId, gs) = S.addHandCard swamp S.bob withLeng
-        after = S.runPure (lengAnswer OptionalDecision.Exercises) gs (Event.discard DiscardCause.Ordinary S.bob swampId)
+        after = S.runPure (lengAnswer OptionalDecision.Exercises) gs (Event.discard (pure ()) DiscardCause.Ordinary S.bob swampId)
     Spec.assertEqWith s "bob's swamp is in his graveyard" (namesIn Zone.Graveyard S.bob after) [Just (S.printingName swamp)]
     Spec.assertEqWith s "and not in his library" (namesIn Zone.Library S.bob after) []
   -- Pulmonic Sliver's GRANTED "may" row (CR 614.1a), on a stolen Sliver: alice
@@ -791,7 +791,7 @@ zoneChangeSpec s registry = Spec.describe s "ZoneChange" $ do
         (bobs, g1) = S.addHandCard swamp S.bob stocked
         (alices, g2) = S.addHandCard swamp S.alice g1
         (carols, g3) = S.addHandCard swamp S.carol g2
-        after = S.runPure S.identityAnswer g3 (mapM_ (\oid -> Event.changeZone oid Zone.Graveyard) [bobs, alices, carols])
+        after = S.runPure S.identityAnswer g3 (mapM_ (\oid -> Event.changeZone (pure ()) oid Zone.Graveyard) [bobs, alices, carols])
         enchanting = fmap Object.attachedTo (filter (\o -> Object.zone o == Zone.Battlefield && Maybe.isJust (Object.attachedTo o)) (Map.elems (GameState.objects after)))
     Spec.assertEqWith s "bob's card went to the bottom of bob's library" (namesIn Zone.Library S.bob after) [Just (S.printingName piker), Just (S.printingName swamp)]
     Spec.assertEqWith s "and not to bob's graveyard" (namesIn Zone.Graveyard S.bob after) []

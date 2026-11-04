@@ -597,7 +597,7 @@ spec s registry = Spec.describe s "Parun.Engine.Copy" $ do
         (pikerId, board) = S.addPermanent piker S.alice gs0
         (_, staged) = S.spellOnStack clone S.alice board
         resolved = resolveAndSettle copyNewest staged
-        afterKill = S.runPure S.identityAnswer resolved (Event.destroy Regenerability.Regenerable [pikerId])
+        afterKill = S.runPure S.identityAnswer resolved (Event.destroy (pure ()) Regenerability.Regenerable [pikerId])
     case cloneOnBattlefield afterKill of
       Nothing -> Spec.assertFailure s "Clone should survive the source's death"
       Just cloneId -> do
@@ -1405,7 +1405,7 @@ becameCopyBoard shapeshifter evangel spider original =
       -- one permanent that ENTERS, which is what raises CR 707.4's trigger.
       (originalId, entered) = S.entersWithTrigger original S.alice board2
       copied = resolveAndSettle S.identityAnswer (settle S.identityAnswer entered)
-      gone = S.runPure S.identityAnswer copied (Event.changeZone originalId Zone.Graveyard)
+      gone = S.runPure S.identityAnswer copied (Event.changeZone (pure ()) originalId Zone.Graveyard)
    in (shifterId, evangelId, spiderId, gone)
 
 -- Mark `amount` damage on one permanent through the funnel that consults the
@@ -1534,7 +1534,7 @@ copiedAbilitySpec s registry = Spec.describe s "Parun.Engine.Copy" $ do
         (_, staged1) = S.spellOnStack copyEnchantment S.alice board0
         withOriginal = resolveAndSettle (copyNamed benaliaId) staged1
         firstId = newest (printedOnBattlefield "Copy Enchantment" withOriginal)
-        gone oid = S.runPure S.identityAnswer withOriginal (Event.changeZone oid Zone.Graveyard)
+        gone oid = S.runPure S.identityAnswer withOriginal (Event.changeZone (pure ()) oid Zone.Graveyard)
         second oid = resolveAndSettle (copyNamed oid) (snd (S.spellOnStack copyEnchantment S.alice (gone benaliaId)))
     case firstId of
       Nothing -> Spec.assertFailure s "the first Copy Enchantment left the battlefield unexpectedly"
@@ -1575,7 +1575,7 @@ copiedAbilitySpec s registry = Spec.describe s "Parun.Engine.Copy" $ do
         board0 = S.addCounter CounterKind.Loyalty 3 jaceId bare
         (_, staged1) = S.spellOnStack impersonator S.bob board0
         withOriginal = resolveAndSettle (copyNamed jaceId) staged1
-        gone = S.runPure S.identityAnswer withOriginal (Event.changeZone jaceId Zone.Graveyard)
+        gone = S.runPure S.identityAnswer withOriginal (Event.changeZone (pure ()) jaceId Zone.Graveyard)
     case newest (printedOnBattlefield "Clever Impersonator" withOriginal) of
       Nothing -> Spec.assertFailure s "the first Clever Impersonator left the battlefield unexpectedly"
       Just copy1 -> do
@@ -1605,7 +1605,7 @@ copiedAbilitySpec s registry = Spec.describe s "Parun.Engine.Copy" $ do
         board0 = S.addCounter CounterKind.Defense 5 invasionId bare
         (_, staged1) = S.spellOnStack impersonator S.bob board0
         withOriginal = resolveAndSettle (copyNamed invasionId) staged1
-        gone = S.runPure S.identityAnswer withOriginal (Event.changeZone invasionId Zone.Graveyard)
+        gone = S.runPure S.identityAnswer withOriginal (Event.changeZone (pure ()) invasionId Zone.Graveyard)
     case newest (printedOnBattlefield "Clever Impersonator" withOriginal) of
       Nothing -> Spec.assertFailure s "the first Clever Impersonator left the battlefield unexpectedly"
       Just copy1 -> do
@@ -1875,7 +1875,7 @@ copyAbilityOnStackSpec s registry = Spec.describe s "Parun.Engine.Copy" $ do
         (firstPiker, g1) = S.addHandCard piker S.alice stocked
         (secondPiker, g2) = S.addHandCard piker S.alice g1
         (stifleId, board) = S.addHandCard stifle S.bob g2
-        enter oid gs = S.runPure S.identityAnswer gs {GameState.priority = Just S.alice} (Event.changeZone oid Zone.Battlefield >> Engine.settleForPriority)
+        enter oid gs = S.runPure S.identityAnswer gs {GameState.priority = Just S.alice} (Event.changeZone (pure ()) oid Zone.Battlefield >> Engine.settleForPriority)
         once = resolveOne S.identityAnswer (enter firstPiker board)
         triggered = enter secondPiker once
     case (topOfStack triggered, engineAbilityCopyingAbilities engineId triggered) of
@@ -2122,7 +2122,7 @@ faceDownCopyBoard island arbiter clone piker cyber =
       (two, gs3) = S.addPermanent piker S.alice gs2
       (_, staged) = S.spellOnStack clone S.alice gs3
       resolved = resolveAndSettle (copyNamed arbiterId) staged
-      killed = S.runPure S.identityAnswer resolved (Event.destroy Regenerability.Regenerable [arbiterId])
+      killed = S.runPure S.identityAnswer resolved (Event.destroy (pure ()) Regenerability.Regenerable [arbiterId])
       -- CR 304.1: bob casts it, so it is in bob's hand.
       (spell, withSpell) = S.addHandCard cyber S.bob killed
    in fmap (\cloneId -> (withSpell, spell, cloneId, one, two)) (cloneOnBattlefield killed)
@@ -2635,11 +2635,11 @@ metamorphicAlterationSpec s registry = Spec.describe s "Parun.Engine.Copy" $ do
     Spec.assertBool s (Maybe.isJust auraId) "the Aura enchants the Piker"
     -- CR 707.2c: fixed as the effect first applied, so the Mammoth leaving
     -- changes nothing.
-    let mammothGone = S.runPure S.identityAnswer resolved (Event.destroy Regenerability.Regenerable [mammothId])
+    let mammothGone = S.runPure S.identityAnswer resolved (Event.destroy (pure ()) Regenerability.Regenerable [mammothId])
     Spec.assertEqWith s "the Mammoth destroyed, the Piker is still a War Mammoth" (Projection.namesOf pikerId mammothGone) (named "War Mammoth")
     Spec.assertEqWith s "and still 6/5" (S.powerToughnessOf pikerId mammothGone) (Just (6, 5))
     -- CR 611.3b: the Aura gone, the Piker is itself again.
-    let auraGone = S.runPure S.identityAnswer mammothGone (Event.destroy Regenerability.Regenerable (Maybe.maybeToList auraId))
+    let auraGone = S.runPure S.identityAnswer mammothGone (Event.destroy (pure ()) Regenerability.Regenerable (Maybe.maybeToList auraId))
     Spec.assertEqWith s "the Aura destroyed, the Piker is a Goblin Piker again" (Projection.namesOf pikerId auraGone) (named "Goblin Piker")
     Spec.assertEqWith s "2/1 under its counter and Unholy Strength" (S.powerToughnessOf pikerId auraGone) (Just (5, 3))
 
@@ -2661,7 +2661,7 @@ metamorphicAlterationSpec s registry = Spec.describe s "Parun.Engine.Copy" $ do
     let (_, staged) = S.spellOnStack clone S.alice resolved
         cloned = resolveAndSettle (copyNamed pikerId) staged
         cloneId = newest (printedOnBattlefield "Clone" cloned)
-        auraGone = S.runPure S.identityAnswer cloned (Event.destroy Regenerability.Regenerable (Maybe.maybeToList auraId))
+        auraGone = S.runPure S.identityAnswer cloned (Event.destroy (pure ()) Regenerability.Regenerable (Maybe.maybeToList auraId))
     Spec.assertEqWith s "the Clone is named War Mammoth" (fmap (`Projection.namesOf` cloned) cloneId) (Just (named "War Mammoth"))
     Spec.assertEqWith s "and is 3/3, with no counter of the Piker's" (cloneId >>= (`S.powerToughnessOf` cloned)) (Just (3, 3))
     Spec.assertEqWith s "the Aura destroyed, the Clone is still a War Mammoth" (fmap (`Projection.namesOf` auraGone) cloneId) (Just (named "War Mammoth"))

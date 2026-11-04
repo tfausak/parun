@@ -284,10 +284,10 @@ spec s registry = Spec.describe s "Flip" $ do
       Just oid -> do
         (_, flipped) <- S.runScriptOrFail s attackScript built S.combatGame
         Spec.assertEqWith s "flipped first" (halfReadings oid flipped) alternativeHalf
-        let (inHand, bounced) = S.runPureWith S.identityAnswer flipped (Event.changeZoneReturning oid Zone.Hand)
+        let (inHand, bounced) = S.runPureWith S.identityAnswer flipped (Event.changeZoneReturning (pure ()) oid Zone.Hand)
         case Foldable.toList inHand of
           [handId] -> do
-            let (back, returned) = S.runPureWith S.identityAnswer bounced (Event.changeZoneReturning handId Zone.Battlefield)
+            let (back, returned) = S.runPureWith S.identityAnswer bounced (Event.changeZoneReturning (pure ()) handId Zone.Battlefield)
             case Foldable.toList back of
               [returnedId] -> do
                 Spec.assertEqWith s "CR 710.4: the returning permanent is Akki Lavarunner again" (halfReadings returnedId returned) normalHalf

@@ -182,13 +182,13 @@ armiesOf pid gs =
 -- caller binds it under the effect's slot for a later clause of the same
 -- resolution to read (Surrounded by Orcs). Nothing is rule 701.47b's impossible
 -- choice, the empty pool below, and not a failed amass.
-amass :: PlayerId -> ObjectId -> ObjectId -> Subtype.Type.Subtype -> Natural -> Game (Maybe ObjectId)
-amass pid source resolving subtype n = do
+amass :: Game () -> PlayerId -> ObjectId -> ObjectId -> Subtype.Type.Subtype -> Natural -> Game (Maybe ObjectId)
+amass settle pid source resolving subtype n = do
   gs0 <- State.get
   -- CR 701.47a, first: the token, and only if they control no Army creature.
   Monad.when (null (armiesOf pid gs0))
     . Monad.void
-    $ Event.createTokens pid (armyToken subtype) Nothing 1 TapState.Untapped Map.empty Nothing Set.empty
+    $ Event.createTokens settle pid (armyToken subtype) Nothing 1 TapState.Untapped Map.empty Nothing Set.empty
   gs1 <- State.get
   -- CR 701.47b: an impossible choice is not a failed amass. Rule 701.47a is
   -- not a "may".

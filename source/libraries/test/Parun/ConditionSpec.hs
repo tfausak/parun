@@ -733,7 +733,7 @@ necrobloomSpec s registry = Spec.describe s "The Necrobloom (CR 201.2b)"
 -- abilities it triggers are placed at the next settle, and the top one resolves.
 enterFromHand :: ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
 enterFromHand oid gs =
-  S.runPure S.identityAnswer gs {GameState.priority = Just S.alice} (Event.changeZone oid Zone.Battlefield >> Engine.settleForPriority >> Stack.resolveTop >> Engine.settleForPriority)
+  S.runPure S.identityAnswer gs {GameState.priority = Just S.alice} (Event.changeZone (pure ()) oid Zone.Battlefield >> Engine.settleForPriority >> Stack.resolveTop >> Engine.settleForPriority)
 
 -- How many times a player has scried this turn (CR 701.22b's scry event).
 scriesBy :: PlayerId.PlayerId -> GameState.GameState -> Int

@@ -92,7 +92,7 @@ spec s registry = Spec.describe s "SpaceSculptor" $ do
           (_, after) = run picks board $ do
             Engine.settleForPriority
             Activate.activateAbility S.alice beleren minus5
-            Event.changeZone beleren Zone.Graveyard
+            Event.changeZone (pure ()) beleren Zone.Graveyard
             Engine.settleForPriority
             Stack.resolveTop
             Engine.settleForPriority
@@ -107,10 +107,10 @@ spec s registry = Spec.describe s "SpaceSculptor" $ do
     let (mine, g1) = S.addPermanent bears S.alice board0
         (bobs, board) = S.addPermanent bears S.bob g1
     let picks = Map.fromList [(mine, Designation.BetaSector), (bobs, Designation.GammaSector)]
-        (_, destroyed) = run picks board (Engine.settleForPriority >> Event.changeZone beleren Zone.Graveyard >> Engine.settleForPriority)
+        (_, destroyed) = run picks board (Engine.settleForPriority >> Event.changeZone (pure ()) beleren Zone.Graveyard >> Engine.settleForPriority)
         flicker = do
-          returned <- Event.changeZoneReturning beleren Zone.Exile
-          mapM_ (`Event.changeZone` Zone.Battlefield) returned
+          returned <- Event.changeZoneReturning (pure ()) beleren Zone.Exile
+          mapM_ (\oid -> Event.changeZone (pure ()) oid Zone.Battlefield) returned
         (askedFlickered, _) = run picks board (Engine.settleForPriority >> flicker >> Engine.settleForPriority)
         (askedStill, _) = run picks board (Engine.settleForPriority >> Engine.settleForPriority)
     Spec.assertEqWith s "the Beleren gone, nothing is in a sector" (fmap (`sectorsOf` destroyed) [mine, bobs]) [[], []]

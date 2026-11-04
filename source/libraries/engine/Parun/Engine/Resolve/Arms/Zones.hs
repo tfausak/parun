@@ -164,8 +164,8 @@ import qualified Parun.Types.VotePlayers as VotePlayers
 import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZonePair as ZonePair
 
-moveToZone :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> MoveToZone.MoveToZone (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
-moveToZone resolving source controller legal chosen (MoveToZone.MkMoveToZone ref zone entry mSlot origin placement duration) =
+moveToZone :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> MoveToZone.MoveToZone (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
+moveToZone settle resolving source controller legal chosen (MoveToZone.MkMoveToZone ref zone entry mSlot origin placement duration) =
   -- ONE object through CR 400.7's funnel, shared by the two arms below.
   let -- CR 400.7: the funnel mints a new incarnation in `zone`, owner-relative
       -- (CR 400.3). The riders (CR 110.5b), the library position (CR 401.2) and
@@ -211,7 +211,7 @@ moveToZone resolving source controller legal chosen (MoveToZone.MkMoveToZone ref
         mNew <- case hosted of
           -- CR 303.4g: nothing it may enchant, so the Aura stays where it is.
           Nothing -> pure Seq.empty
-          Just seed -> Event.changeZoneEnteringIn (Just before) sofar seed source target zone position frozen (Just mover)
+          Just seed -> Event.changeZoneEnteringIn settle (Just before) sofar seed source target zone position frozen (Just mover)
         -- CR 614.6: the move was cancelled, or the id was already gone (CR
         -- 603.7c). Nothing entered, so there is nothing to bind.
         Monad.forM_ mNew $ \newId -> do
@@ -491,8 +491,8 @@ moveToZone resolving source controller legal chosen (MoveToZone.MkMoveToZone ref
 -- (Scryfall o:"exchange your" -o:"life total" -o:control, 2026-09-26: Harness
 -- Infinity, Morality Shift, Mordenkainen). An exchange into a library with no
 -- shuffle would refute this.
-exchangeZones :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ExchangeZones.ExchangeZones -> Game ()
-exchangeZones resolving source controller legal (ExchangeZones.MkExchangeZones player pair) = do
+exchangeZones :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ExchangeZones.ExchangeZones -> Game ()
+exchangeZones settle resolving source controller legal (ExchangeZones.MkExchangeZones player pair) = do
   before <- State.get
   let (one, other) = ZonePair.zones pair
       named = playerRefPlayers legal resolving source controller before player
@@ -501,7 +501,7 @@ exchangeZones resolving source controller legal (ExchangeZones.MkExchangeZones p
         concatMap
           (\pid -> fmap (\oid -> (oid, other)) (Game.zoneMembers one pid before) <> fmap (\oid -> (oid, one)) (Game.zoneMembers other pid before))
           exchanging
-  Monad.void (Event.changeZonesTogether moves)
+  Monad.void (Event.changeZonesTogether settle moves)
 
 -- CR 701.12d: the one card each ref names exchange zones, each going where
 -- the other was. `other` is asked only once `one` has named a card
@@ -538,8 +538,8 @@ exchangeZones resolving source controller legal (ExchangeZones.MkExchangeZones p
 --
 -- Not implemented: a library card from neither end of its library, which
 -- LibraryPosition cannot name, sends the other card to the bottom (#4974).
-exchangeCardZones :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> ExchangeCardZones.ExchangeCardZones -> Game ()
-exchangeCardZones resolving source controller legal chosen (ExchangeCardZones.MkExchangeCardZones one other) = do
+exchangeCardZones :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> ExchangeCardZones.ExchangeCardZones -> Game ()
+exchangeCardZones settle resolving source controller legal chosen (ExchangeCardZones.MkExchangeCardZones one other) = do
   ones <- Common.askingObjects resolving source controller legal chosen one
   current <- State.get
   case ListUtils.nubOrd ones of
@@ -564,7 +564,7 @@ exchangeCardZones resolving source controller legal chosen (ExchangeCardZones.Mk
             Just pid -> take 1 (Game.zoneMembers Zone.Library pid before) == [oid]
             Nothing -> False
           move card left to seed =
-            Event.changeZoneAttaching (Just before) Set.empty card to (if atTop left then LibraryPosition.Top else LibraryPosition.Bottom) seed TapState.Untapped Map.empty (if to == Zone.Battlefield then Just controller else Nothing) Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
+            Event.changeZoneAttaching settle (Just before) Set.empty card to (if atTop left then LibraryPosition.Top else LibraryPosition.Bottom) seed TapState.Untapped Map.empty (if to == Zone.Battlefield then Just controller else Nothing) Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
           ownerOf oid = fmap Object.owner (Game.lookupObject oid before)
       case ListUtils.nubOrd others of
         [b]
@@ -604,8 +604,8 @@ exchangeCardZones resolving source controller legal chosen (ExchangeCardZones.Mk
 -- Great Aurora's and Warp World's rulings count a melded or merged permanent
 -- once -- proved by the scenario
 -- the-great-aurora-counts-a-melded-permanent-once.
-shuffleIntoLibrary :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ShuffleIntoLibrary.ShuffleIntoLibrary -> Game ()
-shuffleIntoLibrary resolving source controller legal (ShuffleIntoLibrary.MkShuffleIntoLibrary named refs mSlot) = do
+shuffleIntoLibrary :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ShuffleIntoLibrary.ShuffleIntoLibrary -> Game ()
+shuffleIntoLibrary settle resolving source controller legal (ShuffleIntoLibrary.MkShuffleIntoLibrary named refs mSlot) = do
   gs <- State.get
   let targets = ListUtils.nubOrd (foldMap (objectRefObjects legal resolving controller source gs) refs)
       -- The owners are read from the PRE-MOVE objects (CR 701.24c); an id that
@@ -613,7 +613,7 @@ shuffleIntoLibrary resolving source controller legal (ShuffleIntoLibrary.MkShuff
       owners =
         Set.fromList (Maybe.mapMaybe (\target -> fmap Object.owner (Game.lookupObject target gs)) targets)
           <> Set.fromList (foldMap (playerRefPlayers legal resolving source controller gs) named)
-  arrivals <- Event.changeZonesTogether (fmap (\target -> (target, Zone.Library)) targets)
+  arrivals <- Event.changeZonesTogether settle (fmap (\target -> (target, Zone.Library)) targets)
   Common.bindObjects resolving mSlot (concatMap (Foldable.toList . Seq.take 1) arrivals)
   -- APNAP (CR 608.2f), which is what makes the ORDER of the Prompt.Shuffle calls
   -- a fact about the rules rather than about PlayerId's Ord.
@@ -653,8 +653,8 @@ exchangeOwnership resolving source controller legal (ExchangeOwnership.MkExchang
 -- and a move that names nobody writes nothing, so CR 608.2c's "If you do"
 -- reads it as not having happened. The pure sweep, the read effectIsImpossible's
 -- Ante arm makes, so the offer and the instruction name the same objects.
-ante :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Ante.Ante -> Game ()
-ante resolving source controller legal (Ante.MkAnte player ref mSlot) = do
+ante :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Ante.Ante -> Game ()
+ante settle resolving source controller legal (Ante.MkAnte player ref mSlot) = do
   gs <- State.get
   let named = objectRefObjects legal resolving controller source gs ref
   let anteing = playerRefPlayers legal resolving source controller gs player
@@ -663,7 +663,7 @@ ante resolving source controller legal (Ante.MkAnte player ref mSlot) = do
         Nothing -> False
       targets = filter theirs (ListUtils.nubOrd named)
   Monad.unless (null targets) $ do
-    arrivals <- Event.changeZonesTogether (fmap (\target -> (target, Zone.Ante)) targets)
+    arrivals <- Event.changeZonesTogether settle (fmap (\target -> (target, Zone.Ante)) targets)
     Common.bindObjects resolving mSlot (concatMap Foldable.toList arrivals)
 
 -- CR 123.3: each placer puts a sticker of an allowed kind on each named
@@ -1169,8 +1169,8 @@ draw settle resolving source controller legal (Draw.MkDraw ref quantity mSlot) =
   -- several take the group.
   Common.bindObjects resolving mSlot drawn
 
-mill :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Mill.Mill -> Game ()
-mill resolving source controller legal (Mill.MkMill ref quantity mTally mSlot) = do
+mill :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Mill.Mill -> Game ()
+mill settle resolving source controller legal (Mill.MkMill ref quantity mTally mSlot) = do
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
@@ -1199,7 +1199,7 @@ mill resolving source controller legal (Mill.MkMill ref quantity mTally mSlot) =
   -- rule 701.17a mills them at once -- and recorded even for a card a
   -- replacement diverted elsewhere, since it was milled wherever it ended up.
   milledBy <- Monad.forM wanted $ \(pid, n) -> do
-    (taken, arrived) <- Event.millFromReturningTaken pid n
+    (taken, arrived) <- Event.millFromReturningTaken settle pid n
     Monad.unless (null arrived) (State.modify' (Event.recordEvent (GameEvent.Milled (Milled.MkMilled pid (Seq.fromList arrived)))))
     -- CR 701.17b / 603.12: a library too short for the count named, the Draw
     -- arm's shortfall (Wick's Patrol's 2024-07-26 ruling).
@@ -1397,8 +1397,8 @@ scry settle resolving source controller legal (PlayerQuantity.MkPlayerQuantity r
   -- move was impossible too.
   Monad.mapM_ (\(pid, _) -> State.modify' (Event.recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.Scry pid)))) decided
 
-surveil :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerQuantity.PlayerQuantity -> Game ()
-surveil resolving source controller legal (PlayerQuantity.MkPlayerQuantity ref quantity) = do
+surveil :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerQuantity.PlayerQuantity -> Game ()
+surveil settle resolving source controller legal (PlayerQuantity.MkPlayerQuantity ref quantity) = do
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
@@ -1424,7 +1424,7 @@ surveil resolving source controller legal (PlayerQuantity.MkPlayerQuantity ref q
               OptionalDecision.Declines -> pure 0
           fmap Just (Common.decideSurveil (n + toInteger (sum extras)) pid)
         _ -> pure Nothing
-  Monad.mapM_ Common.applySurveil decided
+  Monad.mapM_ (Common.applySurveil settle) decided
   -- CR 701.25d, scry's placement and for its rule.
   Monad.mapM_ (\(pid, _) -> State.modify' (Event.recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.Surveil pid)))) decided
 
@@ -1486,8 +1486,8 @@ asYouCascade applyOneEffect runSubgame resolving source controller legal chosen 
           )
       )
 
-explore :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ObjectRef -> Game ()
-explore resolving source controller legal ref = do
+explore :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ObjectRef -> Game ()
+explore settle resolving source controller legal ref = do
   gs <- State.get
   -- CR 608.2c: the set is swept as this instruction is reached; an illegal slot
   -- (CR 608.2b) or a player recipient answers with nobody -- Recipient.objectOf
@@ -1500,7 +1500,7 @@ explore resolving source controller legal ref = do
   -- Projection.controllerWithLastKnown, so it agrees with exploreOne about a
   -- permanent that has left (CR 701.44c).
   ordered <- Common.forEachOrder resolving Nothing id (Common.objectRefRecipients legal resolving controller source gs ref)
-  Monad.mapM_ (Common.exploreOne resolving) (Maybe.mapMaybe Recipient.objectOf ordered)
+  Monad.mapM_ (Common.exploreOne settle resolving) (Maybe.mapMaybe Recipient.objectOf ordered)
 
 connive :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Connive.Type.Connive -> Game ()
 connive settle resolving source controller legal (Connive.Type.MkConnive quantity ref) = do
@@ -1534,15 +1534,15 @@ connive settle resolving source controller legal (Connive.Type.MkConnive quantit
 -- hand, and a ref over CR 400.1's per-player zone can name several owners'
 -- cards at once. A card whose owner cannot be read is skipped rather than
 -- filed under the controller.
-discard :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Discard.Discard -> Game ()
-discard resolving source controller legal chosen (Discard.These (TheseDiscard.MkTheseDiscard ref mDiscarded)) = do
+discard :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Discard.Discard -> Game ()
+discard settle resolving source controller legal chosen (Discard.These (TheseDiscard.MkTheseDiscard ref mDiscarded)) = do
   named <- Common.askingObjects resolving source controller legal chosen ref
   gs <- State.get
   let owned oid = fmap (\obj -> (Object.owner obj, [oid])) (Game.lookupObject oid gs)
   -- One event group, CR 608.2f, through the other arms' burial, so what
   -- moved is bound the same way.
-  Common.buryDiscards resolving mDiscarded (Maybe.mapMaybe owned named)
-discard resolving source controller legal _ (Discard.Counted (CountedDiscard.MkCountedDiscard ref quantity mDiscarded)) = do
+  Common.buryDiscards settle resolving mDiscarded (Maybe.mapMaybe owned named)
+discard settle resolving source controller legal _ (Discard.Counted (CountedDiscard.MkCountedDiscard ref quantity mDiscarded)) = do
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
@@ -1591,7 +1591,7 @@ discard resolving source controller legal _ (Discard.Counted (CountedDiscard.MkC
   -- another player's hand. The ORDER is proven -- ZoneChangeSpec's "CR 101.4:
   -- asked in turn order from the active player" reads the sequence of prompts.
   doomed <- traverse pickFor victims
-  Common.buryDiscards resolving mDiscarded doomed
+  Common.buryDiscards settle resolving mDiscarded doomed
 
 -- CR 107.1c: each player the reference names picks any number of the matching
 -- cards in their own hand, none included (CR 701.9b's chooser), and the picks
@@ -1603,7 +1603,7 @@ discard resolving source controller legal _ (Discard.Counted (CountedDiscard.MkC
 -- only answer, and asked at ONE, chosenPermanents' posture: "any number"
 -- leaves two distinguishable answers there. FILTERED, not trusted (#222), and
 -- asked again over the ceiling, through Game.chooseUpTo.
-discard resolving source controller legal _ (Discard.AnyNumber (AnyNumberDiscard.MkAnyNumberDiscard ref (AnyNumberMatching.MkAnyNumberMatching filter_ atMost) mDiscarded)) = do
+discard settle resolving source controller legal _ (Discard.AnyNumber (AnyNumberDiscard.MkAnyNumberDiscard ref (AnyNumberMatching.MkAnyNumberMatching filter_ atMost) mDiscarded)) = do
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
@@ -1617,7 +1617,7 @@ discard resolving source controller legal _ (Discard.AnyNumber (AnyNumberDiscard
           then pure (victim, [])
           else (,) victim <$> Game.chooseUpTo ceiling_ candidates (Prompt.ChooseAnyNumber (Decide.deciderFor victim gs) victim source AnyNumberOf.ToDiscard candidates ceiling_ Seq.empty)
   doomed <- traverse pickFor victims
-  Common.buryDiscards resolving mDiscarded doomed
+  Common.buryDiscards settle resolving mDiscarded doomed
 
 loseLife :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> LifeLoss.LifeLoss -> Game ()
 loseLife settle resolving source controller legal (LifeLoss.MkLifeLoss ref quantity cause mTally) = do
@@ -2002,8 +2002,8 @@ decreaseSpeed resolving source controller legal d = do
 -- chosen this way are sacrificed simultaneously" -- so every pick is taken
 -- first, in APNAP order, and only then does anything leave the battlefield.
 -- The candidate lists are read off ONE `gs` for the same reason.
-playerSacrifices :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerSacrifices.PlayerSacrifices -> Game ()
-playerSacrifices resolving source controller legal (PlayerSacrifices.MkPlayerSacrifices players filter_ quantity mPermanents) = do
+playerSacrifices :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerSacrifices.PlayerSacrifices -> Game ()
+playerSacrifices settle resolving source controller legal (PlayerSacrifices.MkPlayerSacrifices players filter_ quantity mPermanents) = do
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
@@ -2053,7 +2053,7 @@ playerSacrifices resolving source controller legal (PlayerSacrifices.MkPlayerSac
   -- funnel as ONE batch against one board. Parun.EventSpec's Rishadan Cutpurse
   -- case is the proof, on three seats: a Rest in Peace sacrificed by one
   -- opponent still exiles what the other's pick would otherwise bury.
-  Event.sacrificeAll (concatMap (\(victim, oids) -> fmap (\oid -> (victim, oid)) oids) doomed)
+  Event.sacrificeAll settle (concatMap (\(victim, oids) -> fmap (\oid -> (victim, oid)) oids) doomed)
   -- The PERMANENTS the funnel sacrificed, under their battlefield ids, for a
   -- later clause to read through CR 608.2h's last known information --
   -- Consume's "its power". Destroy's `permanents` shape and for its reason;

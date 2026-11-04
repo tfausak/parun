@@ -334,9 +334,9 @@ spec s registry = Spec.describe s "Parun.Engine.Activate" $ do
         activated = snd (Engine.runGamePure S.identityAnswer gs0 (Activate.activateAbility S.alice skel ability))
         resolved = snd (Engine.runGamePure S.identityAnswer activated Stack.resolveTop)
         -- First Murder: replaced by the shield.
-        firstKill = S.settleSba (S.runPure S.identityAnswer resolved (Event.destroy Regenerability.Regenerable [skel]))
+        firstKill = S.settleSba (S.runPure S.identityAnswer resolved (Event.destroy (pure ()) Regenerability.Regenerable [skel]))
         -- Second Murder: no shield -> dies.
-        secondKill = S.settleSba (S.runPure S.identityAnswer firstKill (Event.destroy Regenerability.Regenerable [skel]))
+        secondKill = S.settleSba (S.runPure S.identityAnswer firstKill (Event.destroy (pure ()) Regenerability.Regenerable [skel]))
     Spec.assertEqWith
       s
       "the shield's source is the skeleton itself"
@@ -387,7 +387,7 @@ lastKnownSpec s registry = Spec.describe s "LastKnownInformation" $ do
     let (srcId, g0) = S.addPermanent ghituFireEater S.alice (Setup.emptyGame S.bothPlayers)
         pumped = S.withEffect srcId (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.Type.Literal 3) (Quantity.Type.Literal 3))) g0
     Spec.assertEqWith s "nothing filed before it moves" (Map.lookup srcId (GameState.lastKnown pumped)) Nothing
-    let moved = S.runPure S.identityAnswer pumped (Event.changeZone srcId Zone.Graveyard)
+    let moved = S.runPure S.identityAnswer pumped (Event.changeZone (pure ()) srcId Zone.Graveyard)
     Spec.assertEqWith
       s
       "the snapshot is the projected power it had, not the printed one"
@@ -566,7 +566,7 @@ ninjutsuSpec s registry = Spec.describe s "Ninjutsu" $ do
     case Activatable.abilitiesFor ninjaId gs of
       [ability] -> do
         let activated = S.runPure (sendAt (AttackTarget.OfPlayer S.bob)) gs (Activate.activateAbility S.alice ninjaId ability)
-            jaceGone = S.runPure S.identityAnswer activated (Event.changeZone jaceId Zone.Graveyard)
+            jaceGone = S.runPure S.identityAnswer activated (Event.changeZone (pure ()) jaceId Zone.Graveyard)
             resolved = S.runPure (sendAt (AttackTarget.OfPlayer S.bob)) jaceGone Stack.resolveTop
             arrived = arrivedOnBattlefield jaceGone resolved
         Spec.assertEqWith s "CR 508.4a the Ninja entered but is not an attacking creature" (fmap (\oid -> Map.lookup oid (Combat.Type.attackers (GameState.combat resolved))) arrived) [Nothing]
@@ -1002,7 +1002,7 @@ hulkBoard entered hulk forest n =
       (hulkId, placed)
         | entered =
             let (inHand, g1) = S.addHandCard hulk S.alice lands
-                (moved, g2) = S.runPureWith S.identityAnswer g1 (Event.changeZoneReturning inHand Zone.Battlefield)
+                (moved, g2) = S.runPureWith S.identityAnswer g1 (Event.changeZoneReturning (pure ()) inHand Zone.Battlefield)
              in (case moved of b Seq.:<| _ -> b; _ -> S.noSource, g2)
         | otherwise = S.addPermanent hulk S.alice lands
    in (hulkId, placed {GameState.activePlayer = S.alice, GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.alice, GameState.remaining = Seq.empty})

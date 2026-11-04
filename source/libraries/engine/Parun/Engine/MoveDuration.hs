@@ -135,8 +135,8 @@ endingOf duration source controller = case duration of
 -- Parun.Engine.Event.leaveTheGame drops a watch whose KEY (the moved object)
 -- leaves the game, never one whose source or controller does, so either
 -- duration survives its controller's departure.
-returnDue :: Game Bool
-returnDue = do
+returnDue :: Game () -> Game Bool
+returnDue settle = do
   gs <- State.get
   let -- Nothing while the event has not happened; Just the group it happened
       -- in otherwise, which is Nothing for a source with no logged departure.
@@ -158,7 +158,7 @@ returnDue = do
     then pure False
     else do
       Monad.forM_ (Map.elems batches) $ \batch -> do
-        _ <- Event.changeZonesTogether batch
+        _ <- Event.changeZonesTogether settle batch
         State.modify' (\g -> Foldable.foldl' discharge g (fmap fst batch))
       pure True
 

@@ -151,8 +151,8 @@ import qualified Parun.Types.StackObjectKind as StackObjectKind
 import qualified Parun.Types.Uses as Uses
 import qualified Parun.Types.Zone as Zone
 
-create :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Create.Create Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
-create resolving source controller legal chosen (Create.MkCreate quantity card entry mSlot creator linked) = do
+create :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Create.Create Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
+create settle resolving source controller legal chosen (Create.MkCreate quantity card entry mSlot creator linked) = do
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
@@ -216,7 +216,7 @@ create resolving source controller legal chosen (Create.MkCreate quantity card e
             -- CR 122.6's counters ride along through that rule's own door, so a
             -- counter replacement reaches them, in the counts freezeRiders
             -- settled above.
-            made <- Event.createTokens creating (Common.bakeTokenCharacteristics (Quantity.evaluateFor viewOf context gs resolving source) card) Nothing (Integer.toNaturalSaturating n) (EntryRiders.tapped entry) (EntryRiders.counters frozen) mAttached (Common.resolvingMarks resolving gs)
+            made <- Event.createTokens settle creating (Common.bakeTokenCharacteristics (Quantity.evaluateFor viewOf context gs resolving source) card) Nothing (Integer.toNaturalSaturating n) (EntryRiders.tapped entry) (EntryRiders.counters frozen) mAttached (Common.resolvingMarks resolving gs)
             -- CR 508.4: a creature put onto the battlefield attacking has its
             -- defending player chosen in Parun.Engine.Combat, and CR 508.3a's
             -- attack triggers see nothing. After the entry loops rather than
@@ -251,8 +251,8 @@ linkEntrants resolving source minted =
 -- The conjurer is the resolving CONTROLLER (CR 109.5's "you"). Not implemented:
 -- a printing that states one instead, which is a shape rather than one card --
 -- Parun.Types.Conjure lists the two forms (#3970).
-conjure :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Conjure.Conjure Card.Type.Card -> Game ()
-conjure resolving source controller legal (Conjure.MkConjure quantity cards selection destination mSlot) = do
+conjure :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Conjure.Conjure Card.Type.Card -> Game ()
+conjure settle resolving source controller legal (Conjure.MkConjure quantity cards selection destination mSlot) = do
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
@@ -363,7 +363,7 @@ conjure resolving source controller legal (Conjure.MkConjure quantity cards sele
         ConjureCards.Written written -> pure (replicate (Integer.toIntSaturating n) (fmap Just (pickWritten written)))
         ConjureCards.Duplicate ref -> pure (concatMap (replicate (Integer.toIntSaturating n) . pure . Just) (duplicatesOf ref))
         ConjureCards.Reference from -> referencePickers from (Integer.toIntSaturating n)
-      intoZone zone settle n = fmap (concatMap Maybe.catMaybes) (pickers n >>= Monad.mapM (\p -> p >>= Monad.mapM (\(card, copied) -> Event.conjure controller card copied zone LibraryPosition.defaultValue >>= \made -> made <$ Monad.mapM_ settle made) . Maybe.maybeToList))
+      intoZone zone place n = fmap (concatMap Maybe.catMaybes) (pickers n >>= Monad.mapM (\p -> p >>= Monad.mapM (\(card, copied) -> Event.conjure controller card copied zone LibraryPosition.defaultValue >>= \made -> made <$ Monad.mapM_ place made) . Maybe.maybeToList))
       sink depth oid = do
         g <- State.get
         let places = Natural.length (Map.findWithDefault Seq.empty controller (GameState.library g))
@@ -375,7 +375,7 @@ conjure resolving source controller legal (Conjure.MkConjure quantity cards sele
               | otherwise -> fmap (max 1 . min reach) (Game.ask (Prompt.RandomDepth reach))
         State.modify' (Game.sinkInLibrary (Natural.toIntSaturating ordinal - 1) controller oid)
       onto entry n (card, copied) = do
-        made <- Foldable.toList <$> Event.conjureOntoBattlefield controller card copied (Integer.toNaturalSaturating n) (ConjureEntry.tapped entry)
+        made <- Foldable.toList <$> Event.conjureOntoBattlefield settle controller card copied (Integer.toNaturalSaturating n) (ConjureEntry.tapped entry)
         -- CR 508.4, Create's arm's posture and in the same place: after the
         -- entry loops, with the controller choosing what it attacks, and CR
         -- 508.3a's attack triggers seeing nothing.
@@ -416,8 +416,8 @@ conjure resolving source controller legal (Conjure.MkConjure quantity cards sele
     _ -> pure []
   Common.bindObjects resolving mSlot conjured
 
-createCopy :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> CreateCopy.CreateCopy (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
-createCopy resolving source controller legal chosen (CreateCopy.MkCreateCopy quantity ref entry mSlot exceptions linked) = do
+createCopy :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> CreateCopy.CreateCopy (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
+createCopy settle resolving source controller legal chosen (CreateCopy.MkCreateCopy quantity ref entry mSlot exceptions linked) = do
   gs <- State.get
   -- CR 707.2 / 111.3: this many tokens per named permanent, minted through the
   -- same CR 111.2 funnel, carrying the copied permanent's COPIABLE values
@@ -484,7 +484,7 @@ createCopy resolving source controller legal chosen (CreateCopy.MkCreateCopy qua
               -- Nothing for the subject's own copiable values: CR 707.9c's
               -- retained original belongs to an object that already existed,
               -- and a token minted by CR 707.1 did not.
-              made <- Event.createTokens controller card (Just (Replacement.applyCopyExceptions (Common.thisAbilitySource resolving gs) Nothing exceptions (Event.copiedSnapshotWithLastKnown src gs))) (Integer.toNaturalSaturating n) (EntryRiders.tapped entry) (EntryRiders.counters frozen) Nothing (Common.resolvingMarks resolving gs)
+              made <- Event.createTokens settle controller card (Just (Replacement.applyCopyExceptions (Common.thisAbilitySource resolving gs) Nothing exceptions (Event.copiedSnapshotWithLastKnown src gs))) (Integer.toNaturalSaturating n) (EntryRiders.tapped entry) (EntryRiders.counters frozen) Nothing (Common.resolvingMarks resolving gs)
               -- CR 508.4, after the entry loop for Create's reason.
               Monad.forM_ mAttack (\specified -> Monad.mapM_ (Combat.putOntoBattlefieldAttacking specified) made)
               -- CR 509.4, the blocking twin one rule over, in the same place
@@ -1811,8 +1811,8 @@ mentor source controller legal slot = case legalOne slot legal >>= Recipient.obj
 -- The sacrifice and the marker are ONE event (Event.simultaneously): rule
 -- 702.110b makes the sacrifice the exploit, so CR 603.10a's look-back offers
 -- an exploiter that sacrificed itself its own trigger.
-exploit :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Game ()
-exploit resolving source controller legal = do
+exploit :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Game ()
+exploit settle resolving source controller legal = do
   gs <- State.get
   let candidates =
         battlefieldMatching
@@ -1824,7 +1824,7 @@ exploit resolving source controller legal = do
           (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.HeldBy Holder.Controller PlayerRelation.You])
   victims <- Maybe.maybeToList <$> Game.chooseAmong (\decider who pool -> Prompt.ChoosePermanent decider who source pool Seq.empty) controller candidates
   Monad.forM_ victims $ \victim -> Event.simultaneously $ do
-    Event.sacrifice controller victim
+    Event.sacrifice settle controller victim
     State.modify' (Event.recordEvent (GameEvent.Exploited (Exploited.MkExploited source victim)))
 
 -- CR 702.174c's marker, Firebend's reading of who gives it: `controller`
@@ -1972,8 +1972,8 @@ unattach resolving source controller legal chosen ref = do
   movers <- Common.askingObjects resolving source controller legal chosen ref
   Event.simultaneously (Monad.forM_ movers Event.detach)
 
-exileHaunting :: ObjectId -> Map.Map SlotName (Set Recipient) -> ExileHaunting.ExileHaunting -> Game ()
-exileHaunting resolving legal (ExileHaunting.MkExileHaunting card slot) =
+exileHaunting :: Game () -> ObjectId -> Map.Map SlotName (Set Recipient) -> ExileHaunting.ExileHaunting -> Game ()
+exileHaunting settle resolving legal (ExileHaunting.MkExileHaunting card slot) =
   case legalOne slot legal of
     Just recipient -> case Recipient.objectOf recipient of
       Nothing -> pure ()
@@ -1997,7 +1997,7 @@ exileHaunting resolving legal (ExileHaunting.MkExileHaunting card slot) =
           -- The link names the object the ability TARGETED, so it goes on
           -- matching after that object has stopped being a creature, and is
           -- what LeavingPermanent.Haunted compares against.
-          mNew <- Event.changeZoneReturning oid Zone.Exile
+          mNew <- Event.changeZoneReturning settle oid Zone.Exile
           Monad.forM_ mNew $ \newId ->
             State.modify' (\g -> g {GameState.haunting = Map.insert newId haunted (GameState.haunting g)})
     _ -> pure ()

@@ -712,7 +712,7 @@ spec s registry = Spec.describe s "Parun.Engine.Departure" $ do
         (shadowsId, board) = S.addPermanent shadows S.carol withPiker
         triggered gs = fmap (\oid -> fmap Object.source (Game.lookupObject oid gs)) (GameState.stack gs)
         bearer = [Just (Source.OfTrigger TriggeredAbilitySource.MkTriggeredAbilitySource {TriggeredAbilitySource.source = shadowsId, TriggeredAbilitySource.ability = ab, TriggeredAbilitySource.createdAt = Nothing, TriggeredAbilitySource.delayed = Map.empty, TriggeredAbilitySource.acquisition = Acquisition.Own}) | ab <- Face.triggeredAbilities (S.combinedFace shadows)]
-        destroyed = S.runPure S.identityAnswer board (Event.destroy Regenerability.Regenerable [pikerId] >> Engine.settleForPriority)
+        destroyed = S.runPure S.identityAnswer board (Event.destroy (pure ()) Regenerability.Regenerable [pikerId] >> Engine.settleForPriority)
         departed = S.runPure S.identityAnswer board (Departure.leaveGame Departure.Type.Conceded S.alice >> Engine.settleForPriority)
     Spec.assertEqWith s "CR 700.4 the destroyed Piker died: the Shadows trigger is on the stack" (triggered destroyed) bearer
     Spec.assertEqWith s "CR 603.6c the Piker that left the game with alice did not die: nothing triggered" (triggered departed) []
@@ -991,7 +991,7 @@ spec s registry = Spec.describe s "Parun.Engine.Departure" $ do
             State.modify' (<> [pid])
             pure OptionalDecision.Exercises
           _ -> pure (S.identityAnswer p)
-        asked = State.execState (Engine.runGame step board (Event.changeZonesTogether [(lentId, Zone.Library), (keptId, Zone.Library)])) []
+        asked = State.execState (Engine.runGame step board (Event.changeZonesTogether (pure ()) [(lentId, Zone.Library), (keptId, Zone.Library)])) []
     Spec.assertEqWith s "bob controls the lent Bears" (Projection.controllerOf lentId board) (Just S.bob)
     Spec.assertEqWith s "CR 101.4 alice, the active player, chooses before bob" asked [S.alice, S.bob]
 

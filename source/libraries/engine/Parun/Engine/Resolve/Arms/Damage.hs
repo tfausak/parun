@@ -571,8 +571,8 @@ moveMana settle resolving source controller legal (MoveMana.MkMoveMana fromRef t
   gs <- State.get
   Mana.moveMana settle (Common.apnapPlayersOf fromRef legal resolving source controller gs) (foldMap (\ref -> Common.apnapPlayersOf ref legal resolving source controller gs) toRef)
 
-search :: (Game Result -> ManaAbilityPerformer.ManaAbilityPerformer) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Search.Search -> Game ()
-search performManaAbility runSubgame resolving source controller legal (Search.MkSearch searcherRef ownerRef zones outside quantity filter_ descriptions upTo destination subject foundSlot handSlot differentIn exactly andOr) =
+search :: Game () -> (Game Result -> ManaAbilityPerformer.ManaAbilityPerformer) -> Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Search.Search -> Game ()
+search settle performManaAbility runSubgame resolving source controller legal (Search.MkSearch searcherRef ownerRef zones outside quantity filter_ descriptions upTo destination subject foundSlot handSlot differentIn exactly andOr) =
   -- CR 701.23a: match each candidate through its own CR 613 projection --
   -- rule 613.1 names no zone, so a card in any of the searched zones is folded
   -- exactly as a permanent is, and CR 208.2a's characteristic-defining power
@@ -950,8 +950,8 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
             present <- State.gets (`stillThere` oid)
             moved <- case (present, exiler) of
               (False, _) -> pure []
-              (True, Nothing) -> Common.putFound resolving before searcher host destination oid
-              (True, Just agent) -> [] <$ (Common.exileFoundFor agent =<< Event.changeZoneInBatchReturning before oid Zone.Exile)
+              (True, Nothing) -> Common.putFound settle resolving before searcher host destination oid
+              (True, Just agent) -> [] <$ (Common.exileFoundFor agent =<< Event.changeZoneInBatchReturning settle before oid Zone.Exile)
             pure (moved, if List.elem oid (Game.zoneMembers Zone.Hand owner before) then moved else [])
           -- CR 400.11b: a card found outside the game is brought in rather
           -- than moved, the reveal riding along as it arrives (#2450).
@@ -1006,7 +1006,7 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
         placed <-
           if Common.putsOnTop destination
             then do
-              onTop <- concat <$> traverse (\oid -> Foldable.toList <$> Event.changeZoneAttaching Nothing Set.empty oid Zone.Library LibraryPosition.Top Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty) (reverse arrivals)
+              onTop <- concat <$> traverse (\oid -> Foldable.toList <$> Event.changeZoneAttaching settle Nothing Set.empty oid Zone.Library LibraryPosition.Top Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty) (reverse arrivals)
               owners <- State.gets (\gs -> ListUtils.nubOrd (Maybe.mapMaybe (\oid -> fmap Object.owner (Game.lookupObject oid gs)) onTop))
               Monad.forM_ owners (\owner -> Common.arrangeInLibrary owner onTop owner)
               pure onTop
@@ -1022,11 +1022,11 @@ search performManaAbility runSubgame resolving source controller legal (Search.M
 -- GameState.players, which keep a departed seat's row -- and CR 801.10's
 -- within the controller's range, which CR 801.18 lifts for a planar source
 -- (Plane.rangePerspective).
-exileAllGraveyards :: ObjectId -> PlayerId -> Game ()
-exileAllGraveyards source controller = do
+exileAllGraveyards :: Game () -> ObjectId -> PlayerId -> Game ()
+exileAllGraveyards settle source controller = do
   gs <- State.get
   let gyCards = concatMap (\pid -> Game.cardsIn Zone.Graveyard pid gs) (Players.table (Plane.rangePerspective source controller gs) gs)
-  Monad.void (Event.changeZonesTogether (fmap (\c -> (c, Zone.Exile)) gyCards))
+  Monad.void (Event.changeZonesTogether settle (fmap (\c -> (c, Zone.Exile)) gyCards))
 
 -- CR 103.5b (Serum Powder): the count is the hand size BEFORE the exile, which
 -- is why this is one opcode rather than an exile followed by a Draw. Both
@@ -1039,7 +1039,7 @@ exileHandThenDraw :: Game () -> PlayerId -> Game ()
 exileHandThenDraw settle controller = do
   gs <- State.get
   let handIds = Game.zoneMembers Zone.Hand controller gs
-  Monad.void (Event.changeZonesTogether (fmap (\oid -> (oid, Zone.Exile)) handIds))
+  Monad.void (Event.changeZonesTogether settle (fmap (\oid -> (oid, Zone.Exile)) handIds))
   got <- Event.drawSeries settle Set.empty controller (Natural.length handIds)
   -- CR 603.12: the Draw arm's shortfall. A REGRESSION FENCE: nothing arms a
   -- reflexive after it.
@@ -1560,8 +1560,8 @@ controlPlayerThisResolution controller legal (ControlPlayer.MkControlPlayer slot
       -- Not a player recipient or an illegal slot (CR 608.2b): no-op.
       _ -> gs
 
-destroy :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Destroy.Destroy -> Game ()
-destroy resolving source controller legal chosen (Destroy.MkDestroy ref regenerability mSlot mBuried mPermanents) = do
+destroy :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Destroy.Destroy -> Game ()
+destroy settle resolving source controller legal chosen (Destroy.MkDestroy ref regenerability mSlot mBuried mPermanents) = do
   -- CR 701.8: destroy them through the single funnel -- indestructible (CR
   -- 702.12b) and regeneration (CR 701.19a) are Event.destroy's to decide, and
   -- the card's own CR 701.19c rider rides along. ONE batch, not one call per
@@ -1569,7 +1569,7 @@ destroy resolving source controller legal chosen (Destroy.MkDestroy ref regenera
   -- a set that matched nothing all arrive here as the empty list. Through
   -- askingObjects, so Capricious Efreet's "one of them at random" is drawn.
   victims <- Common.askingObjects resolving source controller legal chosen ref
-  destroyed <- Event.destroyReturning regenerability victims
+  destroyed <- Event.destroyReturning settle regenerability victims
   -- CR 701.8b: "destroyed this way" is what the funnel DESTROYED, never what
   -- the sweep named. Bound onto this effect's SOURCE so a later effect of the
   -- same resolution reads it as Quantity.InSlot, through live GameState rather
@@ -1578,28 +1578,26 @@ destroy resolving source controller legal chosen (Destroy.MkDestroy ref regenera
   -- would make the rider's quantity unevaluable instead.
   Monad.forM_ mSlot $ \slot ->
     State.modify' (Common.bindAmountSlot resolving source slot (Natural.length destroyed))
-  -- The other reading of the same printed phrase: the CARDS "put into a
+  -- The other reading of the same printed phrase: what was "put into a
   -- graveyard this way", for Come Back Wrong's "return it to the battlefield"
-  -- to name. Bound onto `resolving` and as a GROUP, which is where and how
+  -- to name and Volcanic Eruption's "the number of Mountains" to count. Bound
+  -- onto `resolving` and as a GROUP, which is where and how
   -- MoveToZone binds its own arrivals (CR 400.7j) and the only shape every
   -- reader of a slot a destruction defines can see: slotGroup reads live
   -- GameState unconditionally, where a single binding would have to survive
   -- `chosen`.
   --
-  -- Two filters, both read off the board AFTER the funnel rather than off the
-  -- funnel's answer, because the answer names the incarnation and not where it
-  -- ended up:
+  -- Read off the board AFTER the funnel rather than off the funnel's answer,
+  -- because the answer names the incarnation and not where it ended up: a CR 614
+  -- replacement may send the destroyed permanent to exile instead (Rest in
+  -- Peace), and then nothing was put into a graveyard this way. A cancelled move
+  -- (CR 616.1) has no incarnation at all and is already Nothing.
   --
-  --   * in a GRAVEYARD. A CR 614 replacement may send the destroyed permanent
-  --     to exile instead (Rest in Peace), and then nothing was put into a
-  --     graveyard this way. A cancelled move (CR 616.1) has no incarnation at
-  --     all and is already Nothing.
-  --   * a CARD. CR 111.6 says a token is not a card, and every printed reader
-  --     of this slot says "card" -- "if a creature CARD is put into a graveyard
-  --     this way", "return each CARD put into a graveyard this way". A second
-  --     rule would refuse the same token one step later -- CR 111.8, which
-  --     Parun.Engine.Event's zone-change funnel states -- so this filter is what
-  --     the CARD says rather than the only thing standing in the way.
+  -- A token counts: CR 701.8a moves it to a graveyard, where only CR 111.7's
+  -- state-based action ends it, so it is one of Volcanic Eruption's Mountains
+  -- (data/scenarios/volcanic-eruption-deals-damage-for-each-mountain-put-into-a-graveyard.json).
+  -- A reader saying "card" is kept from it by CR 111.8, which refuses the token
+  -- the move Come Back Wrong asks (data/scenarios/board-effect's CR 111.6 case).
   --
   -- Nothing is bound when nothing qualifies, MoveToZone's rule: no slot names
   -- an empty set, so the later clause finds an unbound slot and does nothing --
@@ -1612,8 +1610,8 @@ destroy resolving source controller legal chosen (Destroy.MkDestroy ref regenera
   -- the amount slot above counts it as one OBJECT destroyed.
   Monad.forM_ mBuried $ \slot -> do
     after <- State.get
-    let buriedCards = concatMap (filter (\oid -> Common.isCardInAGraveyard oid after) . Foldable.toList . snd) destroyed
-    Monad.unless (null buriedCards) (State.modify' (Common.bindObjectsSlot resolving slot (Seq.fromList buriedCards)))
+    let arrivals = concatMap (filter (\oid -> Common.isInAGraveyard oid after) . Foldable.toList . snd) destroyed
+    Monad.unless (null arrivals) (State.modify' (Common.bindObjectsSlot resolving slot (Seq.fromList arrivals)))
   -- The THIRD reading, and the only one that keeps a controller: the PERMANENTS
   -- CR 701.8 destroyed, under the ids they held on the battlefield, for
   -- Effect.ForEach to walk one at a time -- Rampage of the Clans' "for each
@@ -1637,8 +1635,8 @@ destroy resolving source controller legal chosen (Destroy.MkDestroy ref regenera
   Monad.forM_ mPermanents $ \slot ->
     Monad.unless (null destroyed) (State.modify' (Common.bindObjectsSlot resolving slot (Seq.fromList (fmap fst destroyed))))
 
-sacrifice :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> SacrificeEffect.SacrificeEffect -> Game ()
-sacrifice resolving source controller legal chosen (SacrificeEffect.MkSacrificeEffect ref sacrificer mSacrificed) = do
+sacrifice :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> SacrificeEffect.SacrificeEffect -> Game ()
+sacrifice settle resolving source controller legal chosen (SacrificeEffect.MkSacrificeEffect ref sacrificer mSacrificed) = do
   -- CR 701.21 through the single funnel, which is NOT Event.destroy (CR
   -- 701.21a): a sacrifice is not a destruction, so indestructible (CR 702.12b)
   -- and a regeneration shield leave it alone.
@@ -1660,7 +1658,7 @@ sacrifice resolving source controller legal chosen (SacrificeEffect.MkSacrificeE
   -- Parun.EventSpec's All Is Dust case is the proof.
   victims <- Common.askingObjects resolving source controller legal chosen ref
   gs <- State.get
-  Event.sacrificeAll (Maybe.mapMaybe (Common.sacrificerFor sacrificer controller gs) victims)
+  Event.sacrificeAll settle (Maybe.mapMaybe (Common.sacrificerFor sacrificer controller gs) victims)
   -- "That many" is what the funnel SACRIFICED, never what the sweep named
   -- (Common.sacrificedBetween). Bound even at zero, the Destroy arm's `slot` and
   -- for its reason.
