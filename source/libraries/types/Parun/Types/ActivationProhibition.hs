@@ -3,6 +3,7 @@ module Parun.Types.ActivationProhibition where
 import qualified Parun.Types.AbilityKind as AbilityKind
 import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.Affected as Affected
+import qualified Parun.Types.ProhibitedCost as ProhibitedCost
 
 -- | CR 602.2 / CR 101.2: one printed ACTIVATION PROHIBITION -- an effect saying
 -- an object's "activated abilities can't be activated". Arrest and Volrath's
@@ -65,6 +66,10 @@ data ActivationProhibition = MkActivationProhibition
     -- writes it; the field is a classification either way, so admitting the
     -- other side costs nothing and asserts nothing.
     kind :: Maybe AbilityKind.AbilityKind,
+    -- | Which activation costs the prohibition reaches. Crosses `kind`: Serra
+    -- Bestiary's reaches a mana ability with {T} in its cost and no ability
+    -- without one.
+    costs :: ProhibitedCost.ProhibitedCost,
     -- | CR 116.2d: the name this face gives the ability stating the
     -- prohibition, so that face's own SpecialAction.IgnoreThisUntilEndOfTurn
     -- can say WHICH effect a payment ignores. Parun.Types.AffectedUnless.name on

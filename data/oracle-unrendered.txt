@@ -2426,6 +2426,7 @@ serpent-generator
 serpent-of-the-endless-sea
 serra-avatar
 serra-avenger
+serra-bestiary
 serra-inquisitors
 serra-paragon
 serra-the-benevolent

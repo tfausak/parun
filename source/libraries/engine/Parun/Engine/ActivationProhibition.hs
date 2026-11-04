@@ -35,9 +35,14 @@ import qualified Parun.Engine.RestrictedCreatures as RestrictedCreatures
 import qualified Parun.Types.AbilityKind as AbilityKind
 import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.ActivationProhibition as ActivationProhibition
+import Parun.Types.Cost (Cost)
+import qualified Parun.Types.Cost as Cost
+import qualified Parun.Types.CostComponent as CostComponent
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
+import Parun.Types.Keyword (Keyword)
 import Parun.Types.ObjectId (ObjectId)
+import qualified Parun.Types.ProhibitedCost as ProhibitedCost
 import qualified Parun.Types.Prohibition as Prohibition
 import qualified Parun.Types.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Parun.Types.RuleAbilities as RuleAbilities
@@ -93,7 +98,8 @@ gathered gs =
    in concatMap (\source -> fromPermanent source <> fromGrant source) (Set.toList (GameState.battlefield gs))
 
 -- CR 602.2 with CR 101.2: which of `candidates` an effect in force right now
--- says can't have an activated ability of this CR 605.1a kind activated. Arrest,
+-- says can't have an activated ability of this CR 605.1a kind and this cost
+-- activated. Arrest,
 -- Realmbreaker's Grasp and Volrath's Curse are the pool's printed rows; Deadlock
 -- Trap's is the stored one.
 --
@@ -101,8 +107,8 @@ gathered gs =
 -- Parun.Engine.CombatRestriction.restricted gives: a caller narrowing a whole
 -- battlefield asks this once and tests against the answer, where a predicate
 -- would re-walk the battlefield per candidate.
-cantActivate :: AbilityKind.AbilityKind -> [ObjectId] -> GameState -> Set ObjectId
-cantActivate asked candidates gs =
+cantActivate :: AbilityKind.AbilityKind -> Cost Keyword -> [ObjectId] -> GameState -> Set ObjectId
+cantActivate asked cost candidates gs =
   let -- One whole-board projection and one grant walk for the whole walk, both
       -- unforced until some permanent actually reaches `named`.
       pcs = Projection.projectAll gs
@@ -120,7 +126,7 @@ cantActivate asked candidates gs =
       -- Parun.Engine.CombatRestriction.restrictedIn applies to the other half of
       -- that one sentence.
       fromProhibition (source, changes, prohibition) =
-        if maybe True (== asked) (ActivationProhibition.kind prohibition)
+        if maybe True (== asked) (ActivationProhibition.kind prohibition) && reachesCost (ActivationProhibition.costs prohibition) cost
           then
             filter
               (\candidate -> named pcs grants source changes prohibition candidate gs && not (IgnoredAbility.ignoredForSubject candidate source (ActivationProhibition.name prohibition) gs))
@@ -130,8 +136,9 @@ cantActivate asked candidates gs =
       -- the way Parun.Engine.CombatRestriction unions the stored Block rows into
       -- `cantBlock` -- so neither gate learns which road a prohibition took.
       --
-      -- EVERY CR 605.1a kind, unlike a printed row: Parun.Types.Prohibit carries
-      -- no kind, both printings of the sentence naming every activated ability.
+      -- EVERY CR 605.1a kind and cost, unlike a printed row: Parun.Types.Prohibit
+      -- carries neither, both printings of the sentence naming every activated
+      -- ability.
       -- And no CR 116.2d filter: a stored row carries no name for a payment to
       -- refer to, which Parun.Types.ActiveObjectProhibition argues is exact
       -- rather than a shortcut.
@@ -145,7 +152,7 @@ cantActivate asked candidates gs =
 -- under one name, so either reaching a permanent offers that permanent's
 -- controller the action.
 --
--- EVERY CR 605.1a kind, unlike `cantActivate`: what is offered is the ability
+-- EVERY CR 605.1a kind and cost, unlike `cantActivate`: what is offered is the ability
 -- rather than one activation window, and one payment lifts whatever the ability
 -- states.
 --
@@ -180,10 +187,17 @@ named pcs grants source changes prohibition candidate gs =
         (if null changes then affected else Projection.rewriteAffected changes affected)
         gs
 
+-- CR 107.5: whether a prohibition reaching these costs reaches this one.
+-- {Q} is CR 107.6's own symbol, and tapping OTHER permanents names no symbol.
+reachesCost :: ProhibitedCost.ProhibitedCost -> Cost Keyword -> Bool
+reachesCost reach cost = case reach of
+  ProhibitedCost.EveryCost -> True
+  ProhibitedCost.WithTapSymbol -> elem CostComponent.TapThis (Cost.components cost)
+
 -- The same question about ONE permanent, which is what both gates hold: an
--- activation window is asked about the ability's own source.
+-- activation window is asked about the ability's own source and printed cost.
 --
 -- Not a cheaper computation, just a narrower one -- the walk above is over the
 -- battlefield either way, and the candidate list it filters is the singleton.
-prohibited :: AbilityKind.AbilityKind -> ObjectId -> GameState -> Bool
-prohibited kind oid gs = Set.member oid (cantActivate kind [oid] gs)
+prohibited :: AbilityKind.AbilityKind -> Cost Keyword -> ObjectId -> GameState -> Bool
+prohibited kind cost oid gs = Set.member oid (cantActivate kind cost [oid] gs)

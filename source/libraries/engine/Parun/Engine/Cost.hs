@@ -3120,7 +3120,7 @@ manaActivationsGiven effects measure pcs pid oid printedCost restrictions abilit
         -- reaching this function. A row naming NonManaAbility is therefore no
         -- answer here, which is exactly what Realmbreaker's Grasp's "unless
         -- they're mana abilities" says.
-        && not (ActivationProhibition.prohibited AbilityKind.ManaAbility oid gs)
+        && not (ActivationProhibition.prohibited AbilityKind.ManaAbility printedCost oid gs)
         -- CR 602.5's player-axis prohibition (Sen Triplets), read here for
         -- detain's reason: the sentence carves no mana ability out where CR
         -- 702.61b does, so both of CR 605.3a's windows owe it. The stamp is what

@@ -595,6 +595,7 @@ import qualified Parun.Codec.PrintingIdSpec
 import qualified Parun.Codec.PrintingSpec
 import qualified Parun.Codec.ProductionTagSpec
 import qualified Parun.Codec.ProhibitSpec
+import qualified Parun.Codec.ProhibitedCostSpec
 import qualified Parun.Codec.ProhibitionSpec
 import qualified Parun.Codec.ProjectedCharacteristicsSpec
 import qualified Parun.Codec.ProtectionSpec
@@ -1559,6 +1560,7 @@ spec s registry corpus = do
   Parun.Codec.PrintingIdSpec.spec s
   Parun.Codec.PrintingSpec.spec s
   Parun.Codec.ProductionTagSpec.spec s
+  Parun.Codec.ProhibitedCostSpec.spec s
   Parun.Codec.ProhibitionSpec.spec s
   Parun.Codec.ProhibitSpec.spec s
   Parun.Codec.ProjectedCharacteristicsSpec.spec s

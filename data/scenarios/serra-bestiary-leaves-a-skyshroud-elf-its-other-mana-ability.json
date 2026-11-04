@@ -1,0 +1,146 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Skyshroud Elf",
+            "label": "elf",
+            "ready": true
+          },
+          {
+            "attached": "elf",
+            "card": "Serra Bestiary"
+          },
+          {
+            "card": "Plains",
+            "label": "p1"
+          },
+          {
+            "card": "Plains",
+            "label": "p2"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Kird Ape",
+            "label": "ape"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "Serra Bestiary leaves a mana ability without {T}: the Elf's {1} buys {R} and it stays untapped",
+  "final": [
+    {
+      "Count": {
+        "card": "Kird Ape",
+        "count": 1,
+        "player": "alice",
+        "zone": "Battlefield"
+      }
+    },
+    {
+      "Tapped": {
+        "object": "$elf",
+        "tapped": false
+      }
+    }
+  ],
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$p1",
+            "$elf",
+            "$p2",
+            null
+          ],
+          "object": "$ape",
+          "yields": [
+            [
+              {
+                "manaType": {
+                  "type": "Colored",
+                  "value": {
+                    "type": "Red"
+                  }
+                },
+                "restriction": null,
+                "retention": {
+                  "type": "Ordinary"
+                },
+                "rider": null,
+                "sourceChoices": null,
+                "tags": []
+              }
+            ]
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

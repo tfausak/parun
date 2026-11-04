@@ -712,7 +712,7 @@ activatableGiven pools sources pid srcId ability gs =
         -- Realmbreaker's Grasp's "unless they're mana abilities" an exemption
         -- rather than a second reading: its row names this kind, so the mana
         -- window's question -- ManaAbility -- never matches it.
-        && not (ActivationProhibition.prohibited AbilityKind.NonManaAbility srcId gs)
+        && not (ActivationProhibition.prohibited AbilityKind.NonManaAbility (ActivatedAbility.cost ability) srcId gs)
         -- CR 602.5's player-axis prohibition (Sen Triplets), beside detain for
         -- its reason: rule 701.35a stamps one object and this names a player, and
         -- neither carves a mana ability out -- so Cost.manaActivationsGiven
