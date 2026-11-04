@@ -16,34 +16,34 @@ spec s = Spec.describe s "Parun.Json.Array" $ do
         p = Parsec.many1 Parsec.digit
 
     Spec.it s "succeeds with an empty array" $ do
-      Spec.assertEq s (Parsec.parseString (Array.decode p) "[]") . Just $ Array.MkArray []
+      Spec.assertEq s (Parsec.parseText (Array.decode p) "[]") . Just $ Array.MkArray []
 
     Spec.it s "succeeds with an empty array with blank space" $ do
-      Spec.assertEq s (Parsec.parseString (Array.decode p) "[ ]") . Just $ Array.MkArray []
+      Spec.assertEq s (Parsec.parseText (Array.decode p) "[ ]") . Just $ Array.MkArray []
 
     Spec.it s "succeeds with a single element" $ do
-      Spec.assertEq s (Parsec.parseString (Array.decode p) "[1]") . Just $ Array.MkArray ["1"]
+      Spec.assertEq s (Parsec.parseText (Array.decode p) "[1]") . Just $ Array.MkArray ["1"]
 
     Spec.it s "succeeds with a single element with blank space" $ do
-      Spec.assertEq s (Parsec.parseString (Array.decode p) "[ 1 ]") . Just $ Array.MkArray ["1"]
+      Spec.assertEq s (Parsec.parseText (Array.decode p) "[ 1 ]") . Just $ Array.MkArray ["1"]
 
     Spec.it s "succeeds with multiple elements" $ do
-      Spec.assertEq s (Parsec.parseString (Array.decode p) "[1,2]") . Just $ Array.MkArray ["1", "2"]
+      Spec.assertEq s (Parsec.parseText (Array.decode p) "[1,2]") . Just $ Array.MkArray ["1", "2"]
 
     Spec.it s "succeeds with multiple elements with blank space" $ do
-      Spec.assertEq s (Parsec.parseString (Array.decode p) "[ 1 , 2 ]") . Just $ Array.MkArray ["1", "2"]
+      Spec.assertEq s (Parsec.parseText (Array.decode p) "[ 1 , 2 ]") . Just $ Array.MkArray ["1", "2"]
 
     Spec.it s "fails with leading comma" $ do
-      Spec.assertEq s (Parsec.parseString (Array.decode p) "[,1]") Nothing
+      Spec.assertEq s (Parsec.parseText (Array.decode p) "[,1]") Nothing
 
     Spec.it s "fails with trailing comma" $ do
-      Spec.assertEq s (Parsec.parseString (Array.decode p) "[1,]") Nothing
+      Spec.assertEq s (Parsec.parseText (Array.decode p) "[1,]") Nothing
 
     Spec.it s "fails with extra comma" $ do
-      Spec.assertEq s (Parsec.parseString (Array.decode p) "[1,,2]") Nothing
+      Spec.assertEq s (Parsec.parseText (Array.decode p) "[1,,2]") Nothing
 
     Spec.it s "fails with only comma" $ do
-      Spec.assertEq s (Parsec.parseString (Array.decode p) "[,]") Nothing
+      Spec.assertEq s (Parsec.parseText (Array.decode p) "[,]") Nothing
 
   Spec.describe s "encode" $ do
     let b = Builder.integerDec

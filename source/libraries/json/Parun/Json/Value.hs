@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Parun.Json.Value where
 
 import qualified Data.ByteString.Builder as Builder
@@ -50,17 +48,18 @@ pair = Pair.MkPair . String.MkString . Text.pack
 object :: [Pair.Pair Value] -> Value
 object = Object . Object.MkObject
 
-decode :: (Parsec.Stream s m Char) => Parsec.ParsecT s u m Value
+decode :: Parsec.Parsec Text.Text u Value
 decode =
-  Parsec.between (Parsec.many Array.decodeBlank) (Parsec.many Array.decodeBlank) $
-    Parsec.choice
-      [ Null <$> Null.decode,
-        Boolean <$> Boolean.decode,
-        Number <$> Number.decode,
-        String <$> String.decode,
-        Array <$> Array.decode decode,
-        Object <$> Object.decode decode
-      ]
+  Parsec.between Array.decodeBlanks Array.decodeBlanks $ do
+    c <- Parsec.lookAhead Parsec.anyChar
+    case c of
+      'n' -> Null <$> Null.decode
+      'f' -> Boolean <$> Boolean.decode
+      't' -> Boolean <$> Boolean.decode
+      '"' -> String <$> String.decode
+      '[' -> Array <$> Array.decode decode
+      '{' -> Object <$> Object.decode decode
+      _ -> Number <$> Number.decode
 
 encode :: Value -> Builder.Builder
 encode v = case v of

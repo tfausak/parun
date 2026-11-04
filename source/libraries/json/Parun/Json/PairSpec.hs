@@ -21,25 +21,25 @@ spec s = Spec.describe s "Parun.Json.Pair" $ do
         p = Parsec.many1 Parsec.digit
 
     Spec.it s "succeeds with simple pair" $ do
-      Spec.assertEq s (Parsec.parseString (Pair.decode p) "\"a\":1") . Just $ pair "a" "1"
+      Spec.assertEq s (Parsec.parseText (Pair.decode p) "\"a\":1") . Just $ pair "a" "1"
 
     Spec.it s "succeeds with blank space after name" $ do
-      Spec.assertEq s (Parsec.parseString (Pair.decode p) "\"a\" :1") . Just $ pair "a" "1"
+      Spec.assertEq s (Parsec.parseText (Pair.decode p) "\"a\" :1") . Just $ pair "a" "1"
 
     Spec.it s "succeeds with blank space after separator" $ do
-      Spec.assertEq s (Parsec.parseString (Pair.decode p) "\"a\": 1") . Just $ pair "a" "1"
+      Spec.assertEq s (Parsec.parseText (Pair.decode p) "\"a\": 1") . Just $ pair "a" "1"
 
     Spec.it s "fails with missing name" $ do
-      Spec.assertEq s (Parsec.parseString (Pair.decode p) ":1") Nothing
+      Spec.assertEq s (Parsec.parseText (Pair.decode p) ":1") Nothing
 
     Spec.it s "fails with missing separator" $ do
-      Spec.assertEq s (Parsec.parseString (Pair.decode p) "\"a\" 1") Nothing
+      Spec.assertEq s (Parsec.parseText (Pair.decode p) "\"a\" 1") Nothing
 
     Spec.it s "fails with extra separator" $ do
-      Spec.assertEq s (Parsec.parseString (Pair.decode p) "\"a\"::1") Nothing
+      Spec.assertEq s (Parsec.parseText (Pair.decode p) "\"a\"::1") Nothing
 
     Spec.it s "fails with missing value" $ do
-      Spec.assertEq s (Parsec.parseString (Pair.decode p) ":1") Nothing
+      Spec.assertEq s (Parsec.parseText (Pair.decode p) ":1") Nothing
 
   Spec.describe s "encode" $ do
     let b = Builder.integerDec
