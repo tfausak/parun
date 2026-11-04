@@ -27,6 +27,7 @@ import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.ActivatedAbilitySource as ActivatedAbilitySource
+import qualified Parun.Types.Activator as Activator
 import qualified Parun.Types.ActiveCopy as ActiveCopy
 import qualified Parun.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import qualified Parun.Types.Asked as Asked
@@ -87,6 +88,7 @@ import qualified Parun.Types.PlayerActed as PlayerActed
 import qualified Parun.Types.PlayerAction as PlayerAction
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Printing as Printing
 import qualified Parun.Types.PrintingId as PrintingId
 import qualified Parun.Types.Program as Program
@@ -4186,3 +4188,10 @@ pickCounted named chooser one_ several amount count candidates = case count of
           case picked of
             Nothing -> pure []
             Just taken -> (taken :) <$> pick who (n - 1) (List.delete taken available)
+
+-- CR 602.1b: does this activator admit `pid`? `usual` is CR 602.2's default
+-- activator, the player an ability's relation is judged against (CR 109.5).
+activatorPermits :: Activator.Activator -> PlayerId -> ObjectId -> PlayerId -> GameState -> Bool
+activatorPermits activator usual oid pid gs = case activator of
+  Activator.Related relation -> PlayerRelation.holds (teams gs) relation usual pid
+  Activator.Owner -> fmap Object.owner (lookupObject oid gs) == Just pid

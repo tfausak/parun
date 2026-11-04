@@ -10,8 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #4892: Personal Incarnation. An ability's activator can be its controller or
-  any player, not its owner.
 - #5686: Panic. No casting restriction spans combat before blockers are
   declared.
 - #5992: Serra Bestiary. A prohibition can't name activated abilities with {T}

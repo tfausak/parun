@@ -73,7 +73,7 @@ spec s = Spec.describe s "Parun.Codec.GrantedAbility" $ do
               Nothing
               emptyModal
               []
-              Activator.Controller
+              (Activator.Related PlayerRelation.You)
               Nothing
               Nothing
               Nothing

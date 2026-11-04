@@ -932,7 +932,7 @@ cycling cost searchFor =
           ActivatedAbility.minimumX = 0,
           ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [],
-          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.activator = Activator.Related PlayerRelation.You,
           -- CR 702.29a gives the card this ability outright, with no "as long as".
           ActivatedAbility.condition = Nothing,
           -- Nothing on every keyword-minted ability: no clause of a card refers to
@@ -975,7 +975,7 @@ reinforce n cost =
           ActivatedAbility.minimumX = 0,
           ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [],
-          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.activator = Activator.Related PlayerRelation.You,
           ActivatedAbility.condition = Nothing,
           -- Nothing on every keyword-minted ability: no clause of a card refers to
           -- one, CR 702's own text being what mints it.
@@ -1053,7 +1053,7 @@ craft spec =
           -- CR 602.5d, rule 702.167a's "Activate only as a sorcery" -- scavenge's
           -- restriction.
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
-          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.activator = Activator.Related PlayerRelation.You,
           ActivatedAbility.condition = Nothing,
           -- Nothing on every keyword-minted ability, unearth's reason.
           ActivatedAbility.name = Nothing,
@@ -1117,7 +1117,7 @@ searchForSameManaValue cost filter_ destination =
           ActivatedAbility.minimumX = 0,
           ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
-          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.activator = Activator.Related PlayerRelation.You,
           -- Both rules give the ability outright, with no "as long as".
           ActivatedAbility.condition = Nothing,
           -- Nothing on every keyword-minted ability: no clause of a card refers to
@@ -1212,7 +1212,7 @@ ninjutsu (Ninjutsu.MkNinjutsu cost variant) =
           -- Rule 702.49a states no timing restriction, which leaves CR 117.1b's
           -- default: a ninja may arrive after blockers are declared.
           ActivatedAbility.restrictions = [],
-          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.activator = Activator.Related PlayerRelation.You,
           -- CR 702.49a gives the card this ability outright, with no "as long as".
           ActivatedAbility.condition = Nothing,
           -- Nothing on every keyword-minted ability: no clause of a card refers to
@@ -1551,7 +1551,7 @@ unearth cost =
           -- CR 602.5d, rule 702.84a's "Activate only as a sorcery" -- levelUp's
           -- restriction.
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
-          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.activator = Activator.Related PlayerRelation.You,
           ActivatedAbility.condition = Nothing,
           -- Nothing on every keyword-minted ability: no clause of a card refers to
           -- one, CR 702's own text being what mints it.
@@ -1662,7 +1662,7 @@ graveyardTokenCopy exceptions cost =
           ActivatedAbility.definedX = Nothing,
           -- CR 602.5d, the rules' "Activate only as a sorcery".
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
-          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.activator = Activator.Related PlayerRelation.You,
           ActivatedAbility.condition = Nothing,
           -- Nothing on every keyword-minted ability, unearth's reason.
           ActivatedAbility.name = Nothing,
@@ -1706,7 +1706,7 @@ scavenge cost =
           ActivatedAbility.definedX = Nothing,
           -- CR 602.5d, rule 702.97a's "Activate only as a sorcery".
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
-          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.activator = Activator.Related PlayerRelation.You,
           ActivatedAbility.condition = Nothing,
           -- Nothing on every keyword-minted ability, unearth's reason.
           ActivatedAbility.name = Nothing,
@@ -1813,7 +1813,7 @@ encore cost =
           ActivatedAbility.definedX = Nothing,
           -- CR 602.5d, rule 702.141a's "Activate only as a sorcery".
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
-          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.activator = Activator.Related PlayerRelation.You,
           ActivatedAbility.condition = Nothing,
           -- Nothing on every keyword-minted ability, unearth's reason.
           ActivatedAbility.name = Nothing,
@@ -2165,7 +2165,7 @@ crew n =
           ActivatedAbility.minimumX = 0,
           ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [],
-          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.activator = Activator.Related PlayerRelation.You,
           -- CR 702.122a gives the permanent this ability outright, with no "as long
           -- as", cycling's answer.
           ActivatedAbility.condition = Nothing,
@@ -2220,7 +2220,7 @@ saddle n =
           ActivatedAbility.minimumX = 0,
           ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
-          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.activator = Activator.Related PlayerRelation.You,
           ActivatedAbility.condition = Nothing,
           ActivatedAbility.name = Nothing,
           ActivatedAbility.keyword = Nothing
@@ -2291,7 +2291,7 @@ station =
           ActivatedAbility.minimumX = 0,
           ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
-          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.activator = Activator.Related PlayerRelation.You,
           ActivatedAbility.condition = Nothing,
           -- Nothing on every keyword-minted ability: no clause of a card refers to
           -- one, CR 702's own text being what mints it.
@@ -2336,7 +2336,7 @@ levelUp cost =
           ActivatedAbility.minimumX = 0,
           ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
-          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.activator = Activator.Related PlayerRelation.You,
           ActivatedAbility.condition = Nothing,
           -- Nothing on every keyword-minted ability: no clause of a card refers to
           -- one, CR 702's own text being what mints it.
@@ -2366,7 +2366,7 @@ outlast cost =
           ActivatedAbility.minimumX = 0,
           ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
-          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.activator = Activator.Related PlayerRelation.You,
           ActivatedAbility.condition = Nothing,
           -- Nothing on every keyword-minted ability: no clause of a card refers to
           -- one, CR 702's own text being what mints it.
@@ -2428,7 +2428,7 @@ equip payload =
           ActivatedAbility.minimumX = 0,
           ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
-          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.activator = Activator.Related PlayerRelation.You,
           ActivatedAbility.condition = Nothing,
           -- Nothing on every keyword-minted ability: no clause of a card refers to
           -- one, CR 702's own text being what mints it.
@@ -2476,7 +2476,7 @@ fortify cost =
           ActivatedAbility.minimumX = 0,
           ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
-          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.activator = Activator.Related PlayerRelation.You,
           ActivatedAbility.condition = Nothing,
           ActivatedAbility.name = Nothing,
           -- Nothing here and written by `mintedBy` at the roster, the one place that
@@ -2521,7 +2521,7 @@ reconfigure cost =
           ActivatedAbility.minimumX = 0,
           ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
-          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.activator = Activator.Related PlayerRelation.You,
           ActivatedAbility.condition = Nothing,
           ActivatedAbility.name = Nothing,
           -- Nothing here and written by `mintedBy` at the roster, the one place that
@@ -2567,7 +2567,7 @@ reconfigureOff cost =
             ),
           ActivationRestriction.SorcerySpeed
         ],
-      ActivatedAbility.activator = Activator.Controller,
+      ActivatedAbility.activator = Activator.Related PlayerRelation.You,
       ActivatedAbility.condition = Nothing,
       ActivatedAbility.name = Nothing,
       -- Written by `mintedBy` at the roster, reconfigure's reason.
@@ -2591,7 +2591,7 @@ auraSwap cost =
           ActivatedAbility.minimumX = 0,
           ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [],
-          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.activator = Activator.Related PlayerRelation.You,
           ActivatedAbility.condition = Nothing,
           ActivatedAbility.name = Nothing,
           -- Nothing here and written by `mintedBy` at the roster, the one place that
@@ -7869,7 +7869,7 @@ predefinedArtifactToken name subtype mana effect =
           ActivatedAbility.minimumX = 0,
           ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [],
-          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.activator = Activator.Related PlayerRelation.You,
           ActivatedAbility.condition = Nothing,
           ActivatedAbility.name = Nothing,
           -- Nothing: the token's own printed ability (CR 111.10), not one a

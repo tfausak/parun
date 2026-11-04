@@ -54,6 +54,7 @@ import qualified Parun.Types.ObjectSnapshot as ObjectSnapshot
 import qualified Parun.Types.PastActivation as PastActivation
 import qualified Parun.Types.PaymentSubject as PaymentSubject
 import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Recipient as Recipient
 import Parun.Types.SlotName (SlotName)
@@ -278,29 +279,28 @@ activatorOfGiven grants oid gs = case Game.lookupObject oid gs of
     _ -> Nothing
 
 -- CR 602.2's whole permission conjunct: its default, and the "unless the object
--- specifically says otherwise" that CR 602.1b lets an ability write.
+-- specifically says otherwise" that CR 602.1b lets an ability write
+-- (Game.activatorPermits).
 --
--- The AnyPlayer arm keeps the ZONE gate rather than dropping activatorOfGiven
--- altogether. That function answers Nothing for a zone abilities are not read
--- from at all -- abilitiesForGiven's silence there -- so keeping it means a
--- printed "any player" widens WHO and nothing else. `stillPlaying` is the other
--- half: CR 800.4 takes a departed player out of the game, and "any player" is
--- the players in it.
+-- activatorOfGiven's Nothing is a zone abilities are not read from at all --
+-- abilitiesForGiven's silence there -- so a printed "any player" or "owner"
+-- widens WHO and nothing else. `stillPlaying` is the other half: CR 800.4 takes
+-- a departed player out of the game, and "any player" is the players in it.
 --
--- CR 602.1a is untouched by either arm: the cost is paid by whoever is
--- activating, which is `pid` at every conjunct of activatableGiven and at every
--- payment activateAbility makes.
+-- CR 602.1a is untouched: the cost is paid by whoever is activating, which is
+-- `pid` at every conjunct of activatableGiven and at every payment
+-- activateAbility makes.
 mayActivateGiven :: [Projection.ControlGrant] -> PlayerId -> ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> GameState -> Bool
-mayActivateGiven grants pid srcId ability gs = case ActivatedAbility.activator ability of
-  Activator.Controller -> activatorOfGiven grants srcId gs == Just pid
-  Activator.AnyPlayer -> Maybe.isJust (activatorOfGiven grants srcId gs) && elem pid (Game.stillPlaying gs)
+mayActivateGiven grants pid srcId ability gs = case activatorOfGiven grants srcId gs of
+  Nothing -> False
+  Just usual -> Game.activatorPermits (ActivatedAbility.activator ability) usual srcId pid gs && elem pid (Game.stillPlaying gs)
 
 -- The objects whose activated abilities `pid` may be offered, which is the
 -- candidate half of CR 602.2 as mayActivateGiven above is the permission half:
 -- what this player controls, plus their own hand, graveyard and command zone (CR
 -- 400.3, and CR 902.6 / CR 114.2 for the two objects rule 113.6p names there),
 -- plus CR 602.1b's exception -- a permanent someone else controls whose ability
--- says any player may activate it.
+-- says this player may activate it.
 --
 -- ONE reader for both. Action.legalActions and Parun.ActivateSpec's differential
 -- reference each used to build this list themselves, and the widening is exactly
@@ -309,16 +309,17 @@ mayActivateGiven grants pid srcId ability gs = case ActivatedAbility.activator a
 -- enumeration named the Lion.
 --
 -- The exception arm reads the BATTLEFIELD only. Every printing of the clause is
--- on a permanent (Scryfall o:"any player may activate" game:paper, 2026-09-02,
--- 41 cards), and another player's hand, graveyard or command zone offers nothing
--- any card asks for, so those three arms stay this player's own.
+-- on a permanent (Scryfall o:"any player may activate" game:paper, 2026-09-02;
+-- MTGJSON's "may activate", 2026-11-04), and another player's hand, graveyard or
+-- command zone offers nothing any card asks for, so those three arms stay this
+-- player's own.
 --
 -- That is where the DIVISION OF LABOUR between this list and mayActivateGiven
 -- lies, and it is not symmetric. On the battlefield the two agree by
 -- construction: the `activator` filter drops exactly the objects
 -- mayActivateGiven's Controller arm would refuse, which is why
 -- Parun.ActivateSpec's Withered Wretch negative goes red only when BOTH are
--- neutralized. Off it they do not: mayActivateGiven's AnyPlayer arm asks only
+-- neutralized. Off it they do not: for "any player" mayActivateGiven asks only
 -- that the object HAVE an activator and that `pid` still be playing, and
 -- activatorOfGiven answers the OWNER for a hand, a graveyard and the command
 -- zone -- so an "any player may activate" ability printed on a card in someone
@@ -332,8 +333,8 @@ activationSourcesGiven :: [Projection.ControlGrant] -> Map.Map ObjectId PC.Proje
 activationSourcesGiven grants pcs pid gs =
   let own = Projection.controlsGiven grants pid gs
       mine = Set.fromList own
-      openToAnyone oid = any ((== Activator.AnyPlayer) . ActivatedAbility.activator) (abilitiesForGiven pcs oid gs)
-      others = filter (\oid -> not (Set.member oid mine) && openToAnyone oid) (Set.toList (GameState.battlefield gs))
+      openToThem oid ability = ActivatedAbility.activator ability /= Activator.Related PlayerRelation.You && mayActivateGiven grants pid oid ability gs
+      others = filter (\oid -> not (Set.member oid mine) && any (openToThem oid) (abilitiesForGiven pcs oid gs)) (Set.toList (GameState.battlefield gs))
    in own <> others <> Game.zoneMembers Zone.Hand pid gs <> Game.zoneMembers Zone.Graveyard pid gs <> Game.zoneMembers Zone.Command pid gs
 
 -- CR 606.3 (CR 306.5d says the same for planeswalkers): a loyalty ability may be

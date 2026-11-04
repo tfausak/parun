@@ -675,6 +675,7 @@ despoiler-of-souls
 destined-lead
 destructive-force
 detection-tower
+detention-vortex
 detritivore
 devout-invocation
 diabolic-edict
@@ -1992,6 +1993,7 @@ perennation
 perilous-vault
 persecute
 person-of-interest
+personal-incarnation
 personal-sanctuary
 persuasion
 pest-infestation
