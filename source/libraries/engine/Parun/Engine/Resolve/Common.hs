@@ -4551,15 +4551,15 @@ exploreOne resolving oid = do
 -- projection, exploreOne's reading: the hand incarnation is gone by then, and a
 -- double-faced card in a graveyard has only its front face's characteristics
 -- (CR 712.8a).
-conniveOne :: Natural -> ObjectId -> Game ()
-conniveOne n oid = Monad.when (n > 0) $ do
+conniveOne :: Game () -> Natural -> ObjectId -> Game ()
+conniveOne settle n oid = Monad.when (n > 0) $ do
   gs <- State.get
   Monad.forM_ (Projection.controllerWithLastKnown oid gs) $ \pid -> do
     -- CR 121.2a: the N-card draw is one replaceable instruction, settled before
-    -- any of CR 121.2's individual draws -- Effect.Draw's arm, line for line.
+    -- any of CR 121.2's individual draws -- Effect.Draw's arm, line for line,
+    -- `settle` included (CR 614.11a).
     outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.DrawCards Nothing pid n)
-    Monad.forM_ (outcome >>= Replacement.asPerformed PlayerInstruction.DrawCards) $ \(drawer, settled) ->
-      Monad.replicateM_ (Natural.toIntSaturating settled) (Event.drawCard drawer)
+    Monad.forM_ (outcome >>= Replacement.asPerformed PlayerInstruction.DrawCards) (uncurry (Event.drawSeries settle))
     drawn <- State.get
     let held = Game.cardsIn Zone.Hand pid drawn
     -- The discard is N however many cards the draw actually delivered (CR

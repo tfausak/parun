@@ -4495,12 +4495,16 @@ apply batch applied candidate event =
       -- half is a regression fence, since no test replaces the return.
       --
       -- The loss is QUEUED, GameLossR's reason: this module is below the one
-      -- that takes a player out of the game. It runs before the next
-      -- instruction or state-based action check.
+      -- that takes a player out of the game. It runs before the next draw of
+      -- an instruction's sequence (drawSeries, CR 614.11a), and otherwise
+      -- before the next instruction or state-based action check.
+      -- data/scenarios/replacement's
+      -- cr-614-11a-forbidden-crypt-s-loss-meets-lich-s-mirror-before-the-next-draw
+      -- proves it.
       --
-      -- Not implemented: a later draw of the same sequence is replaced before
-      -- that loss, so a loss replacement (Lich's Mirror) cannot act between the
-      -- two as CR 614.11a asks (#5511).
+      -- Not implemented: a draw this module makes in another's place
+      -- (DrawRewrite.DrawInstead and its kin) is replaced before that loss
+      -- runs (#6096).
       DrawRewrite.FromGraveyardOrLose -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
         gs <- State.get
@@ -10395,6 +10399,21 @@ drawCard pid = Monad.void (drawCardReturning pid)
 -- aimed at its own controller, which its ruling calls no useful effect.
 drawCardReturning :: PlayerId -> Game (Maybe ObjectId)
 drawCardReturning = drawCardSpentReturning DrawKind.Other Set.empty
+
+-- CR 121.2 / 614.11a: `n` individual draws by `pid`, with `settle` run after
+-- each, so what a replacement queued in a draw's place (Forbidden Crypt's loss,
+-- and Lich's Mirror's reset in that loss's place) is done before the sequence
+-- resumes. `settle` is Resolve.runReplacementEffects, which this module is
+-- below. A drawer who has left the game draws no more (CR 800.4a). Answers
+-- drawCardReturning's ids.
+drawSeries :: Game () -> PlayerId -> Natural -> Game [ObjectId]
+drawSeries settle pid n = Maybe.catMaybes <$> Monad.replicateM (Natural.toIntSaturating n) one
+  where
+    one = do
+      playing <- State.gets (List.elem pid . Game.stillPlaying)
+      if playing
+        then drawCardReturning pid <* settle
+        else pure Nothing
 
 -- CR 504.1: the active player's turn-based draw in their draw step.
 drawForTurn :: PlayerId -> Game ()
