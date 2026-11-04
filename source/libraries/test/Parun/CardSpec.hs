@@ -312,6 +312,7 @@ import qualified Parun.Types.PerCreature as PerCreature
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
+import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
@@ -4714,7 +4715,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.DealsDamageToPlayer p -> actingFilters (DealsDamageToPlayer.actor p)
   TriggerCondition.DealsDamageToPermanent p -> actingFilters (DealsDamageToPermanent.actor p)
   TriggerCondition.DealsDamage watched -> actingFilters watched
-  TriggerCondition.IsDealtDamage dealt -> actingFilters (DealtDamage.recipient dealt)
+  TriggerCondition.IsDealtDamage watched -> actingFilters (DealtDamage.recipient (PermanentIsDealtDamage.dealt watched))
   TriggerCondition.PlayerIsDealtDamage _ -> []
   -- Its watcher-scoped sibling carries one -- Tovolar's "a Wolf or Werewolf you
   -- control", which the card lint must sweep.

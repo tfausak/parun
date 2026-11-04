@@ -36,8 +36,13 @@
           "condition": {
             "type": "IsDealtDamage",
             "value": {
-              "recipient": {
-                "type": "Self"
+              "batching": {
+                "type": "EachOccurrence"
+              },
+              "dealt": {
+                "recipient": {
+                  "type": "Self"
+                }
               }
             }
           },

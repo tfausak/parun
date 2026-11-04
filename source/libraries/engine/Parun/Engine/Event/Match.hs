@@ -113,6 +113,7 @@ import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
+import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
@@ -602,7 +603,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- permanent (a planeswalker, a battle), and the ActingPermanent decides the
   -- match either way. Nothing is dealt damage while the id is a player's, which
   -- is what the Nothing arm falls through on.
-  TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage watched kind) -> case event of
+  TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage watched kind) _) -> case event of
     GameEvent.DamageDealt ev ->
       all (== DamageEvent.kind ev) kind
         && maybe False (damageBy watched) (Recipient.objectOf (DamageEvent.target ev))

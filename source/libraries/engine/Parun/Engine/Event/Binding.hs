@@ -70,6 +70,7 @@ import qualified Parun.Types.Moved as Moved
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
+import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
@@ -1078,20 +1079,21 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- trampler split its power across a blocker and a player, and CR 120.3 admits
   -- noncombat damage whose amount its source's power never named at all.
   --
-  -- ONE event's amount, not a batch's: CR 510.2 deals a combat damage step's
-  -- damage simultaneously and Parun.Engine.Damage records a DamageDealt per
-  -- surviving event, so two blockers stamp two triggers with their own numbers
-  -- rather than one with the sum. Pinned by Parun.TriggerSpec's two-blocker board.
+  -- ONE event's amount, which batchBindings sums under Batching.OneOrMore: two
+  -- blockers' simultaneous damage (CR 510.2) is one trigger reading the total.
+  -- data/scenarios/life-trigger/cr-603-2c-coalhauler-swine-reads-a-double-blocks-total-once.json
+  -- proves the sum.
   --
   -- Unconditional given a match, which is what eventBindingSlots' per-condition
   -- promise needs: every GameEvent.DamageDealt carries a DamageEvent.amount,
   -- whichever of CR 120.3's damage kinds it is.
   --
-  -- The DAMAGER takes Binding.combatDamager beside it, which is CR 120.1's "an
-  -- object that deals damage is the source of that damage" -- Belltower Sphinx's
-  -- "that source's controller mills that many cards", read through
-  -- PlayerRef.HolderOfBound. Also unconditional given a match:
-  -- DamageEvent.source is an ObjectId outright, so there is nothing to fail.
+  -- Under Batching.EachOccurrence the DAMAGER takes Binding.combatDamager
+  -- beside it, which is CR 120.1's "an object that deals damage is the source
+  -- of that damage" -- Belltower Sphinx's "that source's controller mills that
+  -- many cards", read through PlayerRef.HolderOfBound. Also unconditional given
+  -- a match: DamageEvent.source is an ObjectId outright, so there is nothing to
+  -- fail. Not under OneOrMore, whose batch may name several sources.
   --
   -- The slot is not combat-scoped here even though its name is: CR 120.1 makes
   -- every damage event name a source, and Belltower Sphinx's trigger admits a
@@ -1101,8 +1103,11 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- The RECIPIENT under `became`, the object the event names: Death Pits of
   -- Rath's "destroy it". For a Self reading it is the bearer again. Also
   -- unconditional given a match, which admits only an object recipient.
-  (TriggerCondition.IsDealtDamage _, GameEvent.DamageDealt ev) ->
-    maybe id Binding.setBecame (Recipient.objectOf (DamageEvent.target ev)) (Binding.setCombatDamager (DamageEvent.source ev) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty))
+  (TriggerCondition.IsDealtDamage watched, GameEvent.DamageDealt ev) ->
+    let damager = case PermanentIsDealtDamage.batching watched of
+          Batching.EachOccurrence -> Binding.setCombatDamager (DamageEvent.source ev)
+          Batching.OneOrMore -> id
+     in maybe id Binding.setBecame (Recipient.objectOf (DamageEvent.target ev)) (damager (Binding.setEventAmount (DamageEvent.amount ev) Map.empty))
   -- CR 120.3's "that many" for a damaged player (Lich), summed across the
   -- batch by batchBindings, and the damaged player under `triggerPlayer`, which
   -- batchPartition splits the batch by. A damaged planeswalker (Vengeful
@@ -1203,6 +1208,10 @@ batchPartition cond bindings = case cond of
   -- data/scenarios/card-trigger/cr-603-2c-vengeful-pharaoh-triggers-once-for-you-and-once-per-planeswalker.json
   -- proves the split.
   TriggerCondition.PlayerIsDealtDamage _ -> seat Binding.triggerPlayer <> object Binding.became
+  -- One occurrence per damaged permanent: Death Pits of Rath's "a creature is
+  -- dealt damage" destroys each creature a batch damaged, and Ripjaw Raptor's
+  -- Self reading has one.
+  TriggerCondition.IsDealtDamage _ -> object Binding.became
   -- CR 601.2c: one occurrence per targeting object, each its own announcement,
   -- even where several land in one group -- Hive Mind's copies, made inside its
   -- ForEach's bracket. data/scenarios/leyline-of-combustion-burns-once-per-hive-mind-copy.json
@@ -1496,11 +1505,13 @@ eventBindingSlots cond = case cond of
   -- event carries an amount, whichever of CR 120.3's two damage kinds this
   -- condition admitted.
   --
-  -- Plus CR 120.1's source, which Belltower Sphinx's "that source's controller"
-  -- reads, and equally guaranteed -- every DamageDealt event carries one.
-  -- And the recipient under `became`, which Death Pits of Rath's "destroy it"
-  -- reads. See the eventBindings arm above.
-  TriggerCondition.IsDealtDamage _ -> Set.fromList [Binding.became, Binding.combatDamager, Binding.eventAmount]
+  -- Plus, per source, CR 120.1's source, which Belltower Sphinx's "that
+  -- source's controller" reads, and equally guaranteed -- every DamageDealt
+  -- event carries one. And the recipient under `became`, which Death Pits of
+  -- Rath's "destroy it" reads. See the eventBindings arm above.
+  TriggerCondition.IsDealtDamage watched -> case PermanentIsDealtDamage.batching watched of
+    Batching.EachOccurrence -> Set.fromList [Binding.became, Binding.combatDamager, Binding.eventAmount]
+    Batching.OneOrMore -> Set.fromList [Binding.became, Binding.eventAmount]
   -- The damaged player only where no planeswalker can stand in for one.
   TriggerCondition.PlayerIsDealtDamage watched
     | PlayerIsDealtDamage.orTheirPlaneswalkers watched -> Set.singleton Binding.eventAmount

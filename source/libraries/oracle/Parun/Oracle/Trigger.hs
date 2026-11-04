@@ -11,6 +11,7 @@ import qualified Parun.Oracle.Prose as Prose
 import qualified Parun.Oracle.Target as Target
 import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.Aggregation as Aggregation
+import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.BlockPair as BlockPair
 import qualified Parun.Types.CombatStep as CombatStep
@@ -31,6 +32,7 @@ import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeTally as LifeTally
 import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
+import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
@@ -110,7 +112,7 @@ event context creature c = case c of
     (one, that) <- described context (PermanentDealsCombatDamageToPlayer.filter p)
     (whom, player') <- player (PermanentDealsCombatDamageToPlayer.recipient p)
     [other ("Whenever " <> one <> " deals combat damage to " <> whom) [(thatPlayer, player'), (combatDamager, that)]]
-  TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage (ActingPermanent.Matching f) Nothing) -> do
+  TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage (ActingPermanent.Matching f) Nothing) Batching.OneOrMore) -> do
     (one, _) <- described context f
     [other ("Whenever " <> one <> " is dealt damage") [(becameSlot, "it")]]
   TriggerCondition.DealsCombatDamage (ActingPermanent.Matching f) -> do
@@ -208,8 +210,8 @@ selfEvent context creature c = case c of
     [(recurring, "becomes blocked by " <> one, [(thatBlocker, that)])]
   -- Free: the ability word enrage (CR 207.2c) printed (Ripjaw Raptor) or
   -- not (Stuffy Doll).
-  TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing) -> [(recurring <> ["Enrage \8212 Whenever"], "is dealt damage", [])]
-  TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self (Just DamageKind.Combat)) -> [(recurring, "is dealt combat damage", [])]
+  TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing) Batching.OneOrMore) -> [(recurring <> ["Enrage \8212 Whenever"], "is dealt damage", [])]
+  TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self (Just DamageKind.Combat)) Batching.OneOrMore) -> [(recurring, "is dealt combat damage", [])]
   TriggerCondition.DealsDamage ActingPermanent.Self -> [(recurring, "deals damage", [])]
   TriggerCondition.DealsCombatDamage ActingPermanent.Self -> [(recurring, "deals combat damage", [])]
   TriggerCondition.SelfDealsCombatDamageToPlayer relation -> do

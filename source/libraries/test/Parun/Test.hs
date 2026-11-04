@@ -539,6 +539,7 @@ import qualified Parun.Codec.PermanentActionSpec
 import qualified Parun.Codec.PermanentBecomesDesignatedSpec
 import qualified Parun.Codec.PermanentCandidateSpec
 import qualified Parun.Codec.PermanentDealsCombatDamageToPlayerSpec
+import qualified Parun.Codec.PermanentIsDealtDamageSpec
 import qualified Parun.Codec.PermanentTappedForManaSpec
 import qualified Parun.Codec.PermanentWasSacrificedSpec
 import qualified Parun.Codec.PermanentsBecomeTargetedSpec
@@ -1539,6 +1540,7 @@ spec s registry corpus = do
   Parun.Codec.LifeTallySpec.spec s
   Parun.Codec.SpellTallySpec.spec s
   Parun.Codec.WhichTurnSpec.spec s
+  Parun.Codec.PermanentIsDealtDamageSpec.spec s
   Parun.Codec.PlayerIsDealtDamageSpec.spec s
   Parun.Codec.PlayersWhoSpec.spec s
   Parun.Codec.SuperlativeSpec.spec s

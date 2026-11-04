@@ -1141,6 +1141,8 @@ library codec
     Parun.Codec.PermanentCandidateSpec
     Parun.Codec.PermanentDealsCombatDamageToPlayer
     Parun.Codec.PermanentDealsCombatDamageToPlayerSpec
+    Parun.Codec.PermanentIsDealtDamage
+    Parun.Codec.PermanentIsDealtDamageSpec
     Parun.Codec.PermanentsBecomeTargeted
     Parun.Codec.PermanentsBecomeTargetedSpec
     Parun.Codec.PermanentsDealCombatDamageToPlayer
@@ -2975,6 +2977,7 @@ library types
     Parun.Types.PermanentBecomesDesignated
     Parun.Types.PermanentCandidate
     Parun.Types.PermanentDealsCombatDamageToPlayer
+    Parun.Types.PermanentIsDealtDamage
     Parun.Types.PermanentsBecomeTargeted
     Parun.Types.PermanentsDealCombatDamageToPlayer
     Parun.Types.PermanentTappedForMana

@@ -22,6 +22,7 @@ import qualified Parun.Types.AffectedUnless as AffectedUnless
 import qualified Parun.Types.AgainstSlot as AgainstSlot
 import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.Arithmetic as Arithmetic
+import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.BlockPair as BlockPair
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
@@ -109,6 +110,7 @@ import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PayBranch as PayBranch
 import qualified Parun.Types.PayGate as PayGate
 import qualified Parun.Types.PayObligation as PayObligation
+import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PhaseSelector as PhaseSelector
 import qualified Parun.Types.PlayerEffect as PlayerEffect
@@ -354,10 +356,10 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let creature = Filter.HasCardType CardType.Creature
         both = ObjectRef.AllOf (ObjectRef.InSlot thatAttacker NonEmpty.:| [ObjectRef.InSlot thatBlocker])
     Spec.assertEq s (Just (Text.pack "Whenever Spark blocks or becomes blocked by a creature, it deals 3 damage to that creature.")) (Oracle.render (on (TriggerCondition.AnyOf [TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair Filter.IsSource creature), TriggerCondition.CreatureBecomesBlockedBy (BlockPair.MkBlockPair creature Filter.IsSource)]) [damageBy [(both, Quantity.Literal 3)]]))
-    let raptor = on (TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing)) [gainLifeBy (Quantity.InSlot (SlotName.MkSlotName (Text.pack "thatMuch")))]
+    let raptor = on (TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing) Batching.OneOrMore)) [gainLifeBy (Quantity.InSlot (SlotName.MkSlotName (Text.pack "thatMuch")))]
     Spec.assertEq s (Just (Text.pack "Whenever Spark is dealt damage, you gain that much life.")) (Oracle.render raptor)
     Spec.assertBool s (Oracle.says raptor spark (Text.pack "Enrage \8212 Whenever this creature is dealt damage, you gain that much life.")) "enrage unsaid"
-    let essence = on (TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self (Just DamageKind.Combat))) [gainLifeBy (Quantity.InSlot (SlotName.MkSlotName (Text.pack "thatMuch")))]
+    let essence = on (TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self (Just DamageKind.Combat)) Batching.OneOrMore)) [gainLifeBy (Quantity.InSlot (SlotName.MkSlotName (Text.pack "thatMuch")))]
     Spec.assertBool s (Oracle.says essence spark (Text.pack "Whenever this creature is dealt combat damage, you gain that much life.")) "Wall of Essence's wording unsaid"
     Spec.assertBool s (not (Oracle.says essence spark (Text.pack "Enrage \8212 Whenever this creature is dealt combat damage, you gain that much life."))) "enrage said of combat damage alone"
 

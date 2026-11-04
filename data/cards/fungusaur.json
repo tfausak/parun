@@ -31,8 +31,10 @@
           "condition": {
             "type": "IsDealtDamage",
             "value": {
-              "recipient": {
-                "type": "Self"
+              "dealt": {
+                "recipient": {
+                  "type": "Self"
+                }
               }
             }
           },
