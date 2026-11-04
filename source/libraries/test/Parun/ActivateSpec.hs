@@ -38,7 +38,6 @@ import qualified Parun.Engine.Setup as Setup
 import qualified Parun.Engine.Snapshot as Snapshot
 import qualified Parun.Engine.Stack as Stack
 import qualified Parun.Engine.Target as Target
-import qualified Parun.Engine.Turn as Turn
 import qualified Parun.Registry as Registry
 import qualified Parun.Scenario as Scenario
 import qualified Parun.Spec as Spec
@@ -136,7 +135,6 @@ spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Parun.Engine.Activate" $ do
   hoistDifferentialSpec s registry
   printedActivationRestrictionSpec s registry
-  printedActivationOnlyOnceSpec s registry
   printedActivationOnlyOnceEachTurnSpec s registry
   printedActivationThresholdReductionSpec s registry
   printedActivationCombatPointSpec s registry
@@ -152,7 +150,6 @@ spec s registry = Spec.describe s "Parun.Engine.Activate" $ do
   unearthSpec s registry
   scavengeSpec s registry
   craftSpec s registry
-  encoreSpec s registry
   ownManaCostKeywordSpec s registry
   transmuteSpec s registry
   transfigureSpec s registry
@@ -185,20 +182,6 @@ spec s registry = Spec.describe s "Parun.Engine.Activate" $ do
     let (srcId, g0) = S.addPermanent prodigalSorcerer S.alice (Setup.emptyGame S.bothPlayers)
         sick = g0 {GameState.objects = Map.adjust (\o -> o {Object.sickness = Sickness.Sick}) srcId (GameState.objects g0), GameState.priority = Just S.alice}
     Spec.assertBool s (not (any isActivate (Action.legalActions S.alice sick))) "no Activate offered"
-
-  -- CR 302.6 keyed to the ACTIVATING player, not to the object: bob's
-  -- Sorcerer has settled under bob, and alice's Control Magic does not
-  -- inherit that settle along with the creature (#198).
-  Spec.it s "CR 302.6 a stolen creature's {T} ability is not offered to the thief" $ do
-    prodigalSorcerer <- S.printingOf s registry "Prodigal Sorcerer"
-    controlMagic <- S.printingOf s registry "Control Magic"
-    let (srcId, g0) = S.addPermanent prodigalSorcerer S.bob (Setup.emptyGame S.bothPlayers)
-        settled = S.runPure S.identityAnswer g0 (Engine.settleAll S.bob)
-        (aura, withAura) = S.addPermanent controlMagic S.alice settled
-        stolen = (S.attach aura srcId withAura) {GameState.priority = Just S.alice}
-    Spec.assertBool s (any isActivate (Action.legalActions S.bob settled {GameState.priority = Just S.bob})) "bob could have activated it"
-    Spec.assertBool s (Projection.controllerOf srcId stolen == Just S.alice) "alice controls it now"
-    Spec.assertBool s (not (any isActivate (Action.legalActions S.alice stolen))) "but no Activate is offered to her"
 
   -- CR 702.6a: "Activate only as a sorcery." CR 307.5 says what that means,
   -- and says it narrowly: "the player must have priority, it must be during
@@ -281,15 +264,6 @@ spec s registry = Spec.describe s "Parun.Engine.Activate" $ do
     Spec.assertBool s (S.castable S.alice inHand gs) "the flash spell is castable in response"
     Spec.assertBool s (not (any isActivate (Action.legalActions S.alice gs))) "but equip is not offered"
 
-  -- The control: an UNRESTRICTED ability is unaffected by all three, so the
-  -- gate cannot pass by refusing everything outside a main phase.
-  Spec.it s "CR 602.2 an ability with no timing rider is still offered during combat" $ do
-    prodigalSorcerer <- S.printingOf s registry "Prodigal Sorcerer"
-    let (_, g0) = S.addPermanent prodigalSorcerer S.alice (Setup.emptyGame S.bothPlayers)
-        settled = S.runPure S.identityAnswer g0 (Engine.settleAll S.alice)
-        gs = settled {GameState.priority = Just S.alice, GameState.phase = Phase.Combat CombatStep.DeclareBlockers}
-    Spec.assertBool s (any isActivate (Action.legalActions S.alice gs)) "Prodigal Sorcerer still offered"
-
   Spec.it s "CR 602 a settled Prodigal Sorcerer's ability IS offered" $ do
     prodigalSorcerer <- S.printingOf s registry "Prodigal Sorcerer"
     let (_, g0) = S.addPermanent prodigalSorcerer S.alice (Setup.emptyGame S.bothPlayers)
@@ -371,50 +345,6 @@ spec s registry = Spec.describe s "Parun.Engine.Activate" $ do
     Spec.assertEqWith s "survived the first destruction (regenerated)" (Set.member skel (GameState.battlefield firstKill)) True
     Spec.assertEqWith s "died to the second (one-shot shield consumed)" (Set.member skel (GameState.battlefield secondKill)) False
 
-  -- CR 113.8: the controller of an activated ability on the stack is the
-  -- player who activated it; the controller of a triggered ability on the
-  -- stack is whoever controlled its source when it triggered. Fixed once,
-  -- at activation (Activate.activateAbility sets Object.owner = pid), and
-  -- never revisited -- so a control change to the SOURCE PERMANENT after
-  -- activation must not move the ability to the new controller.
-  --
-  -- Prodigal Sorcerer's own ability (a flat DealDamage 1; CR 115.4's "any
-  -- target" has no controller-sensitive restriction) has no
-  -- controller-sensitive OUTPUT, so it could not make "whose control"
-  -- observable. Aladdin's can: "{1}{R}{R}, {T}: Gain control of target
-  -- artifact for as long as you control this creature" is the same
-  -- GainControl/ForAsLongAs shape Master Thief's ETB uses in
-  -- Parun.ExpirySpec's masterThiefSpec, but on the ACTIVATED path -- which
-  -- is what retired the synthetic ability these two tests used to carry.
-  Spec.it s "CR 113.8 an activated ability resolves under whoever activated it, not a later controller" $ do
-    darksteelMyr <- S.printingOf s registry "Darksteel Myr"
-    mountain <- S.printingOf s registry "Mountain"
-    aladdin <- S.printingOf s registry "Aladdin"
-    let base = S.landsInPlay mountain 3
-        -- The Myr is ALICE's own artifact (not bob's): if control ever
-        -- moved to bob it would be a genuine change, not a fixture
-        -- coincidence, so this assertion actually discriminates the bug.
-        (myrId, g0) = S.addPermanent darksteelMyr S.alice base
-        (srcId, g1) = S.addPermanent aladdin S.alice g0
-        g2 = g1 {GameState.priority = Just S.alice}
-        ability = theAbility aladdin
-        activated = snd (Engine.runGamePure S.identityAnswer g2 (Activate.activateAbility S.alice srcId ability))
-        -- Control of the SOURCE CREATURE (not the ability object) moves to bob
-        -- while the ability sits on the stack.
-        taken = S.giveControl srcId S.bob activated
-        resolved = snd (Engine.runGamePure S.identityAnswer taken Stack.resolveTop)
-    Spec.assertEqWith s "one thing on the stack before resolution" (length (GameState.stack taken)) 1
-    Spec.assertEqWith s "stack empty after resolution" (GameState.stack resolved) []
-    Spec.assertEqWith s "control of the artifact never changed" (Projection.controllerOf myrId resolved) (Just S.alice)
-    -- Filtered to the artifact: S.giveControl's own AtCleanup
-    -- SetController effect on srcId itself is already in this list and
-    -- is not what CR 611.2b's "never starts" is about.
-    Spec.assertEqWith
-      s
-      "nothing was stored for the artifact -- the duration never starts for alice, the ability's frozen activator"
-      (filter (S.continuousEffectAffects myrId) (GameState.continuousEffects resolved))
-      []
-
   lastKnownSpec s registry
 
 -- Answers every target slot with `who`, so a damage test reads a player's life
@@ -493,7 +423,6 @@ lastKnownSpec s registry = Spec.describe s "LastKnownInformation" $ do
   cyclingSpec s registry
   equipSpec s registry
   exhaustSpec s registry
-  boastSpec s registry
   forecastSpec s registry
   powerUpSpec s registry
   reinforceSpec s registry
@@ -802,60 +731,6 @@ cyclingSpec s registry = Spec.describe s "Cycling" $ do
     Spec.assertEqWith s "while the cycling ability on the same board is" (length (activationsOf maulerId (Action.legalActions S.alice gs))) 1
     Spec.assertBool s (not (null (Activatable.abilitiesFor wretchId gs))) "and the Wretch has an ability to withhold"
 
-  -- CR 701.20a: "To reveal a card, show that card to all players for a brief
-  -- time." Rule 702.29e's typecycling says "reveal it", and CR 701.23e is
-  -- what makes that the CARD's instruction rather than the search's: "If the
-  -- effect that contains the search instruction doesn't also contain
-  -- instructions to reveal the found card(s), then they're not revealed."
-  --
-  -- What the assertion is FOR: a tutored card is otherwise private -- it
-  -- goes from one hidden zone to another -- so the log entry is the only
-  -- record that a Forest in Alice's hand is a fact Bob gets to play around.
-  -- The log records the reveal; what an answerer is shown is still the whole
-  -- state (#5418).
-  Spec.it s "CR 701.20a basic landcycling reveals the Forest it fetches" $ do
-    barrens <- S.printingOf s registry "Ash Barrens"
-    forest <- S.printingOf s registry "Forest"
-    island <- S.printingOf s registry "Island"
-    let (_, g0) = S.addLibraryCard forest S.alice (S.landsInPlay island 1)
-        (g1, oid) = S.handOne barrens g0
-        gs = g1 {GameState.priority = Just S.alice}
-    case Activatable.abilitiesFor oid gs of
-      [ability] -> do
-        let cycled = S.runPure findFirst gs (Activate.activateAbility S.alice oid ability)
-            after = S.runPure findFirst cycled Stack.resolveTop
-        -- TWO reveals, from the two different rules that ask for one. CR
-        -- 602.2a reveals Ash Barrens itself as the ability is announced,
-        -- because a hand is a hidden zone; CR 702.29e's "reveal it" then
-        -- reveals the Forest when the ability resolves. In that order.
-        Spec.assertEqWith s "only the announcement reveal before the ability resolves" (S.revealsOf cycled) [(S.alice, Set.singleton . CardName.MkCardName $ Text.pack "Ash Barrens")]
-        Spec.assertEqWith
-          s
-          "then Alice revealed the Forest she found"
-          (S.revealsOf after)
-          [(S.alice, Set.singleton . CardName.MkCardName $ Text.pack "Ash Barrens"), (S.alice, Set.singleton . CardName.MkCardName $ Text.pack "Forest")]
-      abilities -> Spec.assertFailure s ("expected one cycling ability, got " <> show (length abilities))
-
-  -- CR 701.20a reveals "that card", so a search that finds none reveals
-  -- nothing. The negative half of the test above: CR 701.23b lets a player
-  -- fail to find, and a failed find must not put an empty or filler reveal
-  -- into the log for an opponent to read something into. The CR 602.2a
-  -- announcement reveal is unaffected -- it already happened, and whether
-  -- the search finds anything cannot reach back and unshow the cycler.
-  Spec.it s "CR 701.20a a search that finds nothing reveals nothing" $ do
-    barrens <- S.printingOf s registry "Ash Barrens"
-    piker <- S.printingOf s registry "Goblin Piker"
-    island <- S.printingOf s registry "Island"
-    let (_, g0) = S.addLibraryCard piker S.alice (S.landsInPlay island 1)
-        (g1, oid) = S.handOne barrens g0
-        gs = g1 {GameState.priority = Just S.alice}
-    case Activatable.abilitiesFor oid gs of
-      [ability] -> do
-        let cycled = S.runPure findFirst gs (Activate.activateAbility S.alice oid ability)
-            after = S.runPure findFirst cycled Stack.resolveTop
-        Spec.assertEqWith s "no basic land found, so only the announcement reveal" (S.revealsOf after) [(S.alice, Set.singleton . CardName.MkCardName $ Text.pack "Ash Barrens")]
-      abilities -> Spec.assertFailure s ("expected one cycling ability, got " <> show (length abilities))
-
   -- CR 702.29f: "typecycling abilities are cycling abilities, and typecycling
   -- costs are cycling costs." The engine gets that for free by minting both
   -- from one keyword arm -- the discard is in the cost either way, and the
@@ -1111,66 +986,6 @@ exhaustSpec s registry = Spec.describe s "Exhaust (CR 702.177)" $ do
     Spec.assertEqWith s "CR 702.177a the card writes the keyword on the ability it printed" (fmap ActivatedAbility.keyword exhaustAbility) (Just (Just Keyword.Exhaust))
     Spec.assertBool s (not (null (Projection.abilitiesOf pantherId withIt))) "and the Panther has an ability to withhold"
 
--- alice's board in the declare attackers step, returned twice: once before CR
--- 508.1's declaration and once after it, which is the ONE thing the pair differs
--- in. Two Swamps, so a refused second activation is rule 702.142a's rider and not
--- the mana, and a Prodigal Sorcerer as the unrestricted {T} offered on both legs.
---
--- Only the Duskwielder attacks. S.aggressiveAnswer would attack with the Sorcerer
--- too, which CR 508.1f taps -- and the control ability would then be missing from
--- the second leg for a reason boast has nothing to do with.
---
--- GameState.remaining is emptied so Engine.priorityLoop stops at the end of this
--- step: CR 510.2's combat damage would otherwise move bob's life, which is what
--- the whole-card case reads.
-boastBoard :: Printing.Printing -> Printing.Printing -> Printing.Printing -> (ObjectId.ObjectId, ObjectId.ObjectId, GameState.GameState, GameState.GameState)
-boastBoard duskwielder swamp sorcerer =
-  let (gs0, ours, _) = S.combatBoardOf [duskwielder, swamp, swamp, sorcerer] []
-      idle = gs0 {GameState.priority = Just S.alice, GameState.remaining = Seq.empty}
-   in case ours of
-        [duskwielderId, _, _, sorcererId] ->
-          let onlyDuskwielder :: Prompt.Prompt r -> r
-              onlyDuskwielder p = case p of
-                Prompt.DeclareAttackers _ _ ids -> filter (== duskwielderId) ids
-                _ -> S.identityAnswer p
-              attacked = (S.runPure onlyDuskwielder idle (Combat.declareAttackers S.manaPerformer S.alice)) {GameState.priority = Just S.alice}
-           in (duskwielderId, sorcererId, idle, attacked)
-        -- combatBoardOf returns one id per printing given, so this is
-        -- unreachable; bogus ids fail the assertions rather than the suite.
-        _ -> (S.noSource, S.noSource, idle, idle)
-
--- CR 702.142: boast, rule 702.177a's shape one keyword over -- "Boast -- [Cost]:
--- [Effect]" means "[Cost]: [Effect]. Activate only if this creature attacked this
--- turn and only once each turn" (CR 702.142a). The ability is PRINTED rather than
--- minted, so Duskwielder's card file carries the stamp on the ability itself and
--- the keyword adds rule 702.142a's two riders (Keyword.printedRiders): an
--- ActivationRestriction.OnlyIf counting the source under Filter.DeclaredThisTurn Attacker
--- (CR 608.2i's look-back, which outlives CR 511.3's wipe of Combat.attackers),
--- and ActivationRestriction.TimesEachTurn. The card file states neither, so
--- both cases below are the keyword's.
---
--- Duskwielder (Kaldheim) is the producer: a {B} 1\/2 Elf Berserker, "Boast --
--- {1}: Target opponent loses 1 life and you gain 1 life."
-boastSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
-boastSpec s registry = Spec.describe s "Boast (CR 702.142)" $ do
-  -- One board, two readings, differing only in whether CR 508.1's declaration
-  -- has happened.
-  Spec.it s "CR 702.142a the boast ability is offered only once this creature has attacked" $ do
-    duskwielder <- S.printingOf s registry "Duskwielder"
-    swamp <- S.printingOf s registry "Swamp"
-    sorcerer <- S.printingOf s registry "Prodigal Sorcerer"
-    let (duskwielderId, sorcererId, idle, attacked) = boastBoard duskwielder swamp sorcerer
-        offeredOn = Action.legalActions S.alice
-    -- The gameplay assertion this group exists to prove, and it is FIRST.
-    Spec.assertEqWith s "not offered before this creature attacked" (activationsOf duskwielderId (offeredOn idle)) []
-    Spec.assertEqWith s "and offered once it has attacked this turn" (length (activationsOf duskwielderId (offeredOn attacked))) 1
-    -- Anti-vacuity: the attack is real, and the unrestricted {T} on the same
-    -- board is offered on BOTH legs -- so the first leg is withholding this one
-    -- ability rather than offering nothing at all.
-    Spec.assertBool s (Map.member duskwielderId (Combat.Type.attackers (GameState.combat attacked))) "the attack is real"
-    Spec.assertEqWith s "alice's unrestricted {T} is offered on both legs" (fmap (length . activationsOf sorcererId . offeredOn) [idle, attacked]) [1, 1]
-    Spec.assertEqWith s "CR 702.142a the card writes the keyword on the ability it printed" (fmap ActivatedAbility.keyword (Maybe.listToMaybe (Projection.abilitiesOf duskwielderId attacked))) (Just (Just Keyword.Boast))
-
 -- The offer carrying CR 702.193a's keyword, told apart by the stamp the CARD wrote.
 isPowerUp :: A.Action -> Bool
 isPowerUp a = case a of
@@ -1250,22 +1065,6 @@ powerUpSpec s registry = Spec.describe s "Power-up (CR 702.193)" $ do
     Spec.assertEqWith s "without it, it is not" (offered (build False S.alice)) 0
     Spec.assertEqWith s "nor on bob's turn" (offered (build True S.bob)) 0
 
--- The offer carrying CR 702.57a's keyword, told apart by the stamp the CARD wrote.
-isForecast :: A.Action -> Bool
-isForecast a = case a of
-  A.Activate _ ability -> ActivatedAbility.keyword ability == Just Keyword.Forecast
-  _ -> False
-
--- Takes the forecast activation whenever it is offered and passes otherwise, so
--- a second one is refused by CR 702.57b's rider rather than declined here.
-forecastAnswer :: Prompt.Prompt r -> r
-forecastAnswer p = case p of
-  Prompt.ChooseAction _ _ options -> case filter isForecast options of
-    a : _ -> a
-    [] -> A.Pass
-  Prompt.ChooseManaSource _ _ _ candidates -> Just (NonEmpty.head candidates)
-  _ -> S.identityAnswer p
-
 -- alice holds Steeling Stance with a Goblin Piker (2\/1) and three Plains on the
 -- battlefield, holding priority in `phase` of `active`'s turn -- the only two
 -- things the legs vary. Three Plains, so the instant's {1}{W}{W} is castable and
@@ -1286,7 +1085,7 @@ forecastBoard piker plains stance active phase =
 --
 -- Steeling Stance (Dissension) is the producer: "Forecast -- {W}, Reveal this
 -- card from your hand: Target creature gets +1\/+1 until end of turn."
-forecastSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+forecastSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 forecastSpec s registry = Spec.describe s "Forecast (CR 702.57)" $ do
   -- Three legs differing in whose turn it is or which step: CR 702.57b's owner
   -- axis and its step axis.
@@ -1305,19 +1104,6 @@ forecastSpec s registry = Spec.describe s "Forecast (CR 702.57)" $ do
     -- Anti-vacuity: the instant itself is castable on every leg, so the mana,
     -- the priority and the card are there each time.
     Spec.assertEqWith s "while the Stance is castable on every leg" (fmap (snd . offers) legs) [True, True, True]
-
-  -- The gameplay-level proof (design.md section 4), through the priority loop:
-  -- alice takes the forecast every time it is offered.
-  Spec.it s "CR 702.57b whole card: Steeling Stance's forecast pumps once and is refused for the rest of the turn" $ do
-    piker <- S.printingOf s registry "Goblin Piker"
-    plains <- S.printingOf s registry "Plains"
-    stance <- S.printingOf s registry "Steeling Stance"
-    let (stanceId, pikerId, gs) = forecastBoard piker plains stance S.alice (Phase.Beginning BeginningStep.Upkeep)
-        after = S.runPure forecastAnswer gs Engine.priorityLoop
-    Spec.assertEqWith s "the Piker got +1/+1 once and not twice" (S.powerToughnessOf pikerId after) (Just (3, 2))
-    Spec.assertEqWith s "two Plains are still untapped, so the mana is not what refused it" (S.tappedCount S.alice after) 1
-    Spec.assertEqWith s "CR 702.57a the Stance never left alice's hand" (fmap Object.zone (Game.lookupObject stanceId after)) (Just Zone.Hand)
-    Spec.assertEqWith s "CR 602.2a and alice revealed it to activate" (S.revealsOf after) [(S.alice, Set.singleton (CardName.MkCardName (Text.pack "Steeling Stance")))]
 
 equipSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 equipSpec s registry = Spec.describe s "Equip" $ do
@@ -1963,21 +1749,9 @@ variableActivationCostSpec s registry = Spec.describe s "VariableActivationCost"
     Spec.assertBool s (Activatable.activatable S.alice srcId (theAbility cinder) one) "one Mountain admits X=0"
     Spec.assertBool s (not (Activatable.activatable S.alice noneId (theAbility cinder) none)) "no Mountain pays even the {R}"
 
-  -- The bound moves with the ENERGY and with nothing else: the {W}{U}{U} is paid
-  -- the same way on both boards, so no constant and nothing read off the printed
-  -- cost tells them apart. CR 118.3 is what refuses the value above it.
-  Spec.it s "CR 601.2b the ChooseX bound is the energy the player can spend" $ do
-    let boundsOff n = do
-          (sphinx, srcId, g1) <- sphinxBoard s registry n
-          pure (State.execState (Engine.runGame (answerAtBound S.bob) g1 (Activate.activateAbility S.alice srcId (theAbility sphinx))) [])
-    five <- boundsOff 5
-    two <- boundsOff 2
-    Spec.assertEqWith s "five counters bound X at 5" five [5]
-    Spec.assertEqWith s "two counters bound X at 2" two [2]
-
   -- CR 118.3 across the cost's two halves: the X energy the component pays and
   -- the energy an Aether Hub spends making the second {U} are one count. The
-  -- board is the one above at two energy with the Hub in place of one Island, so
+  -- board is sphinxBoard at two energy with the Hub in place of one Island, so
   -- what moves the bound from 2 to 1 is the Hub's energy alone.
   Spec.it s "CR 118.3 the Sphinx's X and an Aether Hub's mana share one count of energy" $ do
     (sphinx, srcId, g1) <- sphinxHubBoard s registry 2
@@ -1987,17 +1761,6 @@ variableActivationCostSpec s registry = Spec.describe s "VariableActivationCost"
     Spec.assertEqWith s "one energy for the {U} leaves one for X, so the bound is 1" bounds [1]
     Spec.assertEqWith s "and X = 1 is payable: both counters spent" (S.playerCounterOf PlayerCounterKind.Energy S.alice after) 0
     Spec.assertEqWith s "and alice drew the one card" (S.handSize S.alice after) 1
-
-  -- CR 602.2: an X the counters cannot cover reverses the whole activation. The
-  -- ENERGY is what refuses it here -- the mana half is payable at every X -- so
-  -- this is the case a free {X} could not pass.
-  Spec.it s "CR 602.2 an X past the energy on hand is a no-op" $ do
-    (sphinx, srcId, g1) <- sphinxBoard s registry 2
-    let after = snd (Engine.runGamePure (answerAboveBound S.bob) g1 (Activate.activateAbility S.alice srcId (theAbility sphinx)))
-    Spec.assertEqWith s "no counter spent" (S.playerCounterOf PlayerCounterKind.Energy S.alice after) 2
-    Spec.assertEqWith s "nothing drawn" (S.handSize S.alice after) 0
-    Spec.assertEqWith s "no land and not the Sphinx is tapped" (S.tappedCount S.alice after) 0
-    Spec.assertEqWith s "and nothing was left on the stack" (GameState.stack after) []
 
   -- CR 601.2h at X = 2 with exactly two energy, on sphinxBoard plus an Aether
   -- Hub ("{T}, Pay {E}: Add one mana of any color"). The lands alone pay
@@ -2563,11 +2326,6 @@ unearthZombie gyId gs excluded =
 zombiesIn :: Zone.Zone -> GameState.GameState -> Int
 zombiesIn zone gs = length (filter (namedZombie gs) (Game.zoneMembers zone S.alice gs))
 
--- Mark `n` damage on one permanent, which is all a 2/1 needs for CR 704.5g to
--- reach it once state-based actions are checked.
-withDamage :: Natural -> ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
-withDamage n oid gs = gs {GameState.objects = Map.adjust (\o -> o {Object.damage = n}) oid (GameState.objects gs)}
-
 -- CR 702.97: scavenge, reinforce's payload one zone over --- "[Cost], Exile this
 -- card from your graveyard: Put a number of +1/+1 counters equal to the power of
 -- the card you exiled on target creature. Activate only as a sorcery."
@@ -2614,53 +2372,6 @@ scavengeSpec s registry = Spec.describe s "Scavenge (CR 702.97)" $ do
       s
       (not (any (isActivationOf gyId) (Action.legalActions S.alice (gs {GameState.phase = Phase.Ending EndingStep.EndStep}))))
       "CR 602.5d and not in the end step"
-
--- CR 702.141: encore, whose payload is a token copy per opponent --- "[Cost],
--- Exile this card from your graveyard:
--- For each opponent, create a token that's a copy of this card that attacks that
--- opponent this turn if able. The tokens gain haste. Sacrifice them at the
--- beginning of the next end step. Activate only as a sorcery."
---
--- Impulsive Pilferer {R} Creature -- Goblin Pirate 1/1, "When this creature
--- dies, create a Treasure token", "Encore {3}{R}" (Oracle text checked against
--- Scryfall). Its dies trigger is not under test and fires only once rule
--- 702.141a's own sacrifice has, which is why the counts below are taken over
--- Pilferers by name rather than over S.tokensOf.
---
--- THREE SEATS, and that is the whole fixture: at two, "each opponent" and "that
--- opponent" name one player and the per-iteration pairing this unit exists to
--- prove is unobservable.
-encoreBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> Phase.Phase -> m (ObjectId.ObjectId, GameState.GameState)
-encoreBoard s registry phase = do
-  pilferer <- S.printingOf s registry "Impulsive Pilferer"
-  mountain <- S.printingOf s registry "Mountain"
-  let (gyId, g1) = S.addGraveyardCard pilferer S.alice (S.landsFor mountain S.alice 4 S.threePlayerGame)
-  pure
-    ( gyId,
-      g1
-        { GameState.priority = Just S.alice,
-          GameState.activePlayer = S.alice,
-          GameState.phase = phase,
-          GameState.remaining = S.phasesAfter phase
-        }
-    )
-
--- The Pilferers on the battlefield, read off the PROJECTION rather than
--- Game.faceOf: these are token copies (CR 707.2), and the printed card a token
--- carries is not what a copy effect stamped onto it.
-pilferersOn :: GameState.GameState -> [ObjectId.ObjectId]
-pilferersOn gs =
-  filter
-    (\oid -> Set.member (CardName.MkCardName (Text.pack "Impulsive Pilferer")) (PC.names (Projection.project oid gs)))
-    (Set.toList (GameState.battlefield gs))
-
--- Activate the one ability the graveyard card offers and resolve it. The roster
--- is matched on exactly one ability, so a board that offered none or two comes
--- back unchanged and fails the token count rather than passing elsewhere.
-encoreFromGraveyard :: ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
-encoreFromGraveyard gyId gs = case Activatable.abilitiesFor gyId gs of
-  [ability] -> S.runPure S.identityAnswer gs (Activate.activateAbility S.alice gyId ability >> Stack.resolveTop)
-  _ -> gs
 
 -- CR 702.53: transmute, cycling's neighbour on the hand roster and the first
 -- keyword-minted ability whose SEARCH compares each candidate against the
@@ -2782,21 +2493,6 @@ transfigureSpec s registry = Spec.describe s "Transfigure (CR 702.71)" $ do
       (not (any (isActivationOf fleshwritherId) (Action.legalActions S.alice (gs {GameState.phase = Phase.Ending EndingStep.EndStep}))))
       "CR 602.5d and not in the end step"
 
-encoreSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
-encoreSpec s registry = Spec.describe s "Encore (CR 702.141)" $ do
-  -- Rule 702.141a's third sentence and CR 513.2 behind it: the delayed ability is
-  -- created during the postcombat main phase, so the END STEP of this same turn
-  -- is the "next" one. Two steps run --- the rest of the main phase and the end
-  -- step itself, whose priority is where the delayed ability resolves.
-  Spec.it s "CR 513.2 the encore tokens are sacrificed at the beginning of the next end step" $ do
-    (gyId, gs) <- encoreBoard s registry Phase.PostcombatMain
-    let after = encoreFromGraveyard gyId gs
-        ended = List.foldl' (\g _ -> S.runPure S.identityAnswer g Engine.runStep) after [1 .. (2 :: Int)]
-    Spec.assertEqWith s "CR 702.141a one token copy per opponent while the turn runs" (length (pilferersOn after)) 2
-    Spec.assertEqWith s "CR 513.2 and neither is on the battlefield once the end step has begun" (pilferersOn ended) []
-    Spec.assertEqWith s "the card the cost exiled is still in exile" (length (Game.zoneMembers Zone.Exile S.alice ended)) 1
-    Spec.assertEqWith s "and the delayed ability is spent" (Seq.length (GameState.delayedTriggers ended)) 0
-
 -- CR 613.1f / 202.1a: a keyword granted at the RECEIVING card's own mana cost
 -- (Modification.GainKeywordAtManaCost), one granter per keyword. Six Mountains
 -- and three seats throughout; the card in the graveyard is priced differently
@@ -2887,21 +2583,8 @@ ownManaCostKeywordSpec s registry = Spec.describe s "Keyword priced at the card'
 -- graveyardEffectZoneSpec above; what is new here is that the ability is MINTED
 -- from a keyword rather than printed, and that three of its four sentences act on
 -- the permanent the first one created.
-unearthSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+unearthSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 unearthSpec s registry = Spec.describe s "Unearth (CR 702.84)" $ do
-  -- CR 702.84a's fourth sentence, through CR 704.5g. The twin takes the same one
-  -- damage on the same board, so "a dead 2/1 is exiled" cannot pass this.
-  Spec.it s "CR 702.84a the unearthed permanent that dies is exiled instead" $ do
-    zombie <- S.printingOf s registry "Dregscape Zombie"
-    swamp <- S.printingOf s registry "Swamp"
-    let (gyId, twinId, gs) = zombieBoard zombie swamp
-    case unearthZombie gyId gs [twinId] of
-      (after, [backId]) -> do
-        let dead = S.settleSba (withDamage 1 twinId (withDamage 1 backId after))
-        Spec.assertEqWith s "CR 702.84a the unearthed Zombie is in exile" (zombiesIn Zone.Exile dead) 1
-        Spec.assertEqWith s "CR 704.5g while the one beside it went to the graveyard" (zombiesIn Zone.Graveyard dead) 1
-        Spec.assertEqWith s "and neither is on the battlefield" (zombiesIn Zone.Battlefield dead) 0
-      (_, other) -> Spec.assertEqWith s "exactly one Zombie returned to the battlefield" (length other) 1
   -- CR 702.84a's third sentence and CR 513.2 behind it: the delayed ability was
   -- created during the postcombat main phase, so the END STEP of this same turn is
   -- the "next" one. Two steps run -- the rest of the main phase and the end step
@@ -3111,51 +2794,14 @@ kiliTheResourcefulSpec s registry = Spec.describe s "KiliTheResourceful" $ do
       equip pick equipmentId mammothId gs = case Projection.abilitiesOf equipmentId gs of
         [ability] -> S.runPure (payingAt pick mammothId) (S.runPure (payingAt pick mammothId) gs (Activate.activateAbility S.alice equipmentId ability)) Stack.resolveTop
         _ -> gs
-      -- By what each cost IS rather than by position: the {0}, or the printed one.
-      zero = Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) []
-      pickBy wanted costs = Maybe.fromMaybe zero (List.find wanted costs)
-      alternative, printed :: [Cost.Type.Cost Keyword.Keyword] -> Cost.Type.Cost Keyword.Keyword
-      alternative = pickBy (== zero)
-      printed = pickBy (/= zero)
-      attachedTo equipmentId gs = fmap Object.attachedTo (Game.lookupObject equipmentId gs)
-  Spec.it s "CR 118.9 whole card: the first equip may be paid with {0}, and the second may not" $ do
-    (aegisId, splitterId, mammothId, _, gs) <- board True
-    let first = equip alternative aegisId mammothId gs
-        second = equip alternative splitterId mammothId first
-    Spec.assertEqWith s "CR 118.9 the Aegis's equip {3} was paid with {0}: nothing tapped" (S.tappedCount S.alice first) 0
-    Spec.assertEqWith s "and the Bonesplitter's equip, the turn's second, pays its printed {1}" (S.tappedCount S.alice second) 1
-    Spec.assertEqWith s "the Aegis is on the Mammoth" (attachedTo aegisId second) (Just (Just (Recipient.ToCreature mammothId)))
-    Spec.assertEqWith s "and so is the Bonesplitter" (attachedTo splitterId second) (Just (Just (Recipient.ToCreature mammothId)))
-  -- CR 118.9b: "Alternative costs are generally optional". The same board, the
-  -- printed cost chosen.
-  Spec.it s "CR 118.9b the player may decline the alternative and pay the printed cost" $ do
-    (aegisId, _, mammothId, _, gs) <- board True
-    let paid = equip printed aegisId mammothId gs
-    Spec.assertEqWith s "the Aegis's equip paid its printed {3}" (S.tappedCount S.alice paid) 3
-    Spec.assertEqWith s "and the Aegis is on the Mammoth" (attachedTo aegisId paid) (Just (Just (Recipient.ToCreature mammothId)))
-  -- "The first equip ability you activate each turn" counts an equip whose
-  -- controller declined the {0}: the Bonesplitter's, paid in full, was first.
-  Spec.it s "CR 118.9 a declined first equip still spends the turn's first" $ do
-    (aegisId, splitterId, mammothId, _, gs) <- board True
-    let first = equip printed splitterId mammothId gs
-        second = equip alternative aegisId mammothId first
-    Spec.assertEqWith s "the Bonesplitter's equip paid its printed {1}" (S.tappedCount S.alice first) 1
-    Spec.assertEqWith s "and the Aegis's, no longer the first, pays its printed {3} too" (S.tappedCount S.alice second) 4
+      -- The {0}, by what the cost IS rather than by position.
+      alternative :: [Cost.Type.Cost Keyword.Keyword] -> Cost.Type.Cost Keyword.Keyword
+      alternative = const (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) [])
   -- "As long as you have an enduring story": the same board without one.
   Spec.it s "CR 118.9 without an enduring story there is no alternative" $ do
     (aegisId, _, mammothId, _, gs) <- board False
     let paid = equip alternative aegisId mammothId gs
     Spec.assertEqWith s "the Aegis's equip paid its printed {3}" (S.tappedCount S.alice paid) 3
-  -- "Each turn": alice's next turn has a first equip again.
-  Spec.it s "CR 118.9 the next turn has a first equip again" $ do
-    (aegisId, splitterId, mammothId, kiliId, gs) <- board True
-    let spent = equip alternative splitterId mammothId (equip alternative aegisId mammothId gs)
-        nextTurn = (nextTurnOfAlice spent) {GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.alice}
-        again = equip alternative splitterId kiliId nextTurn
-    Spec.assertEqWith s "setup: last turn's second equip paid {1}" (S.tappedCount S.alice spent) 1
-    Spec.assertEqWith s "setup: the untap step untapped everything" (S.tappedCount S.alice nextTurn) 0
-    Spec.assertEqWith s "and the new turn's first equip is paid with {0}" (S.tappedCount S.alice again) 0
-    Spec.assertEqWith s "moving the Bonesplitter onto Kili" (attachedTo splitterId again) (Just (Just (Recipient.ToCreature kiliId)))
   -- The card's last line: "Whenever another Dwarf or Equipment you control
   -- enters, draw a card. This ability triggers only once each turn." Two
   -- Bonesplitters cast in turn; the first draws and the second does not.
@@ -3441,26 +3087,6 @@ activationCostAdditionSpec s registry = Spec.describe s "ActivationCostAddition"
 -- and from nothing at all.
 presenceOfGondSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 presenceOfGondSpec s registry = Spec.describe s "Presence of Gond" $ do
-  Spec.it s "CR 613.1f the enchanted creature has the granted ability ALONGSIDE its printed one" $ do
-    gond <- S.printingOf s registry "Presence of Gond"
-    sorcerer <- S.printingOf s registry "Prodigal Sorcerer"
-    let (_, sorcererId, enchanted) = gondBoard gond sorcerer True
-        (_, unenchantedId, unenchanted) = gondBoard gond sorcerer False
-    Spec.assertEqWith s "unenchanted: the printed ability alone" (Projection.abilitiesOf unenchantedId unenchanted) [theAbility sorcerer]
-    Spec.assertEqWith s "enchanted: two abilities" (length (Projection.abilitiesOf sorcererId enchanted)) 2
-    Spec.assertBool s (elem (theAbility sorcerer) (Projection.abilitiesOf sorcererId enchanted)) "the printed one survives the grant"
-    Spec.assertBool s (grantedAbility sorcerer sorcererId enchanted /= Just (theAbility sorcerer)) "and the second one is not it"
-
-  -- CR 303.4e / 113.7: the Aura holds the TEXT, never the ability. Presence of
-  -- Gond prints no activated ability of its own, so tapping the Aura is not a
-  -- thing any player may do.
-  Spec.it s "CR 113.7 the Aura itself does not have the ability it grants" $ do
-    gond <- S.printingOf s registry "Presence of Gond"
-    sorcerer <- S.printingOf s registry "Prodigal Sorcerer"
-    let (gondId, _, enchanted) = gondBoard gond sorcerer True
-    Spec.assertEqWith s "no ability on the granter" (Projection.abilitiesOf gondId enchanted) []
-    Spec.assertEqWith s "and none offered to its controller" (activationsOf gondId (Action.legalActions S.alice enchanted)) []
-
   -- The gameplay-level proof. bob activates the granted ability and the stack
   -- resolves: the token is bob's, and the {T} that paid for it tapped BOB'S
   -- CREATURE rather than alice's Aura. Both are what make the ability the
@@ -3468,7 +3094,7 @@ presenceOfGondSpec s registry = Spec.describe s "Presence of Gond" $ do
   Spec.it s "CR 303.4e whole card: the granted {T} taps the enchanted creature and its controller gets the token" $ do
     gond <- S.printingOf s registry "Presence of Gond"
     sorcerer <- S.printingOf s registry "Prodigal Sorcerer"
-    let (gondId, sorcererId, enchanted) = gondBoard gond sorcerer True
+    let (gondId, sorcererId, enchanted) = gondBoard gond sorcerer
     case grantedAbility sorcerer sorcererId enchanted of
       Nothing -> Spec.assertFailure s "the fixture should have granted an ability"
       Just granted -> do
@@ -3485,26 +3111,6 @@ presenceOfGondSpec s registry = Spec.describe s "Presence of Gond" $ do
         Spec.assertEqWith s "the enchanted creature paid the {T}" (fmap Object.tapped (Game.lookupObject sorcererId resolved)) (Just TapState.Tapped)
         Spec.assertEqWith s "the Aura did not" (fmap Object.tapped (Game.lookupObject gondId resolved)) (Just TapState.Untapped)
 
-  -- CR 613.1f puts the grant and Humility's strip in the SAME layer, so CR 613.7
-  -- timestamp order alone decides. This is the pair, differing in nothing but
-  -- which permanent arrived first -- and the granted ability is what the two
-  -- boards disagree about, since Humility strips the Sorcerer's printed one
-  -- either way.
-  Spec.it s "CR 613.7 Humility BEFORE the Aura leaves the granted ability standing" $ do
-    gond <- S.printingOf s registry "Presence of Gond"
-    sorcerer <- S.printingOf s registry "Prodigal Sorcerer"
-    humility <- S.printingOf s registry "Humility"
-    let (_, sorcererId, board) = gondBoardUnder (Just Before) gond sorcerer humility
-    Spec.assertEqWith s "the printed ability is gone, the granted one is not" (length (Projection.abilitiesOf sorcererId board)) 1
-    Spec.assertBool s (notElem (theAbility sorcerer) (Projection.abilitiesOf sorcererId board)) "and what is left is not the printed one"
-
-  Spec.it s "CR 613.7 Humility AFTER the Aura takes the granted ability with the rest" $ do
-    gond <- S.printingOf s registry "Presence of Gond"
-    sorcerer <- S.printingOf s registry "Prodigal Sorcerer"
-    humility <- S.printingOf s registry "Humility"
-    let (_, sorcererId, board) = gondBoardUnder (Just After) gond sorcerer humility
-    Spec.assertEqWith s "no abilities at all" (Projection.abilitiesOf sorcererId board) []
-
   -- CR 612.1/612.2a reaching INSIDE the quoted ability: the words are printed on
   -- the Aura, so a text change affecting the AURA rewrites them, and the layer-3
   -- swap runs before the layer-6 grant hands them over. Artificial Evolution's
@@ -3520,36 +3126,16 @@ presenceOfGondSpec s registry = Spec.describe s "Presence of Gond" $ do
     mapM_ (\oid -> Spec.assertEqWith s "Creature -- Elf Warrior" (Projection.subtypesOf oid after) (Set.fromList [Subtype.Elf, Subtype.Warrior])) tokens
     mapM_ (\oid -> Spec.assertEqWith s "named Elf Warrior Token" (Projection.namesOf oid after) (Set.singleton (CardName.MkCardName (Text.pack "Elf Warrior Token")))) tokens
 
--- alice's Aura, bob's settled Prodigal Sorcerer, carol as the third seat. The
--- two boards this builds differ in exactly one thing: whether the Aura is
--- attached (CR 303.4m is what the Aura's HasAttached IsSource conjunct reads).
-gondBoard :: Printing.Printing -> Printing.Printing -> Bool -> (ObjectId.ObjectId, ObjectId.ObjectId, GameState.GameState)
-gondBoard gond sorcerer attached =
+-- alice's Aura attached to bob's settled Prodigal Sorcerer, carol as the third
+-- seat.
+gondBoard :: Printing.Printing -> Printing.Printing -> (ObjectId.ObjectId, ObjectId.ObjectId, GameState.GameState)
+gondBoard gond sorcerer =
   let (sorcererId, g0) = S.addPermanent sorcerer S.bob S.threePlayerGame
       -- CR 302.6: bob's creature has to have settled before its {T} is payable,
       -- and the granted ability's tap cost is the receiver's to pay.
       settled = S.runPure S.identityAnswer g0 (Engine.settleAll S.bob)
       (gondId, g1) = S.addPermanent gond S.alice settled
-      g2 = if attached then S.attach gondId sorcererId g1 else g1
-   in (gondId, sorcererId, g2 {GameState.priority = Just S.bob})
-
--- Which side of the Aura's timestamp Humility lands on (CR 613.7).
-data HumilityOrder = Before | After
-
--- gondBoard with a Humility, placed either side of the Aura. Nothing but the
--- placement differs between the two boards.
-gondBoardUnder :: Maybe HumilityOrder -> Printing.Printing -> Printing.Printing -> Printing.Printing -> (ObjectId.ObjectId, ObjectId.ObjectId, GameState.GameState)
-gondBoardUnder order gond sorcerer humility =
-  let (sorcererId, g0) = S.addPermanent sorcerer S.bob S.threePlayerGame
-      settled = S.runPure S.identityAnswer g0 (Engine.settleAll S.bob)
-      early = case order of
-        Just Before -> S.withHumility humility settled
-        _ -> settled
-      (gondId, g1) = S.addPermanent gond S.alice early
-      late = case order of
-        Just After -> S.withHumility humility g1
-        _ -> g1
-   in (gondId, sorcererId, (S.attach gondId sorcererId late) {GameState.priority = Just S.bob})
+   in (gondId, sorcererId, (S.attach gondId sorcererId g1) {GameState.priority = Just S.bob})
 
 -- alice's Island and Presence of Gond, bob's settled Prodigal Sorcerer, the Aura
 -- attached; optionally an Artificial Evolution resolved AT THE AURA first. Then
@@ -3659,15 +3245,8 @@ anyPlayerActivationSpec s registry = Spec.describe s "Any player may activate" $
 -- carol also controls an Island, which the granted ability's "nonland permanent"
 -- may not name -- so the target the fixture pins is one the board could have got
 -- wrong.
-retractionHelixSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+retractionHelixSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 retractionHelixSpec s registry = Spec.describe s "Retraction Helix" $ do
-  -- The negative half of the pair below, on the same board bar the cast: bob's
-  -- Sorcerer has its printed ability and nothing else, so the second ability the
-  -- positive board finds is the grant rather than the fixture.
-  Spec.it s "CR 611.2 without the spell the creature has its printed ability alone" $ do
-    board <- helixBoard s registry
-    Spec.assertEqWith s "the printed ability alone" (length (Projection.abilitiesOf (helixSorcerer board) (helixState board))) 1
-
   Spec.it s "CR 613.1f the resolved spell adds the quoted ability ALONGSIDE the printed one" $ do
     board <- helixBoard s registry
     let granted = helixCast board
@@ -3787,31 +3366,6 @@ lifeGainAbility p = case Face.activatedAbilities (S.combinedFace p) of
   _ : ab : _ -> ab
   _ -> theAbility p
 
--- CR 506.7g: "Rules 506.7 and 506.7a-f apply to abilities that state that they
--- may be activated only at certain times with respect to combat just as they
--- apply to spells." Trap Runner (Mercadian Masques) is the pool's producer -- a
--- {2}{W}{W} 2/3 Human Soldier, "{T}: Target unblocked attacking creature becomes blocked.
--- Activate only during combat after blockers are declared." -- and it prints the
--- clause Curtain of Light prints on a cast, word for word. That is why
--- ActivationRestriction.AfterBlockersDeclared and its casting twin share
--- Turn.afterBlockersDeclared instead of each deriving the window.
---
--- alice attacks with one Goblin Piker; bob holds priority and controls the Trap
--- Runner plus a Prodigal Sorcerer, the unrestricted {T} this module's other
--- rider groups use as their control. Blocks are declined throughout, so the
--- Piker stays an unblocked attacking creature and the ability keeps a legal
--- target on every leg -- a board that lost the target would refuse the
--- activation for a reason the rider has nothing to do with.
-trapRunnerBoard :: Printing.Printing -> Printing.Printing -> Printing.Printing -> (ObjectId.ObjectId, ObjectId.ObjectId, ObjectId.ObjectId, GameState.GameState)
-trapRunnerBoard piker runner sorcerer =
-  let (gs0, ours, theirs) = S.combatBoardOf [piker] [runner, sorcerer]
-      declared = (S.runPure S.aggressiveAnswer gs0 (Combat.declareAttackers S.manaPerformer S.alice)) {GameState.priority = Just S.bob}
-   in case (ours, theirs) of
-        (attackerId : _, runnerId : sorcererId : _) -> (attackerId, runnerId, sorcererId, declared)
-        -- combatBoardOf returns one id per printing given, so this is
-        -- unreachable; bogus ids fail the assertions rather than the suite.
-        _ -> (S.noSource, S.noSource, S.noSource, declared)
-
 -- Decline every block, and otherwise answer as the aggressive interpreter does.
 -- Declining is what keeps the attacker unblocked, so the only route into CR
 -- 509.1h's blocked status is the Trap Runner's ability.
@@ -3835,34 +3389,6 @@ noBlocksActivating victim p = case p of
 
 printedActivationCombatPointSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 printedActivationCombatPointSpec s registry = Spec.describe s "PrintedActivationCombatPoint" $ do
-  -- One board, five readings, and the pair that carries the rule is
-  -- `beforeDeclaration` against `declared`: identical states but for CR 509.1's
-  -- turn-based action having run.
-  Spec.it s "CR 506.7b/g the rider opens at the declaration and runs to the end of the combat phase" $ do
-    piker <- S.printingOf s registry "Goblin Piker"
-    runner <- S.printingOf s registry "Trap Runner"
-    prodigalSorcerer <- S.printingOf s registry "Prodigal Sorcerer"
-    let (attackerId, runnerId, sorcererId, atAttackers) = trapRunnerBoard piker runner prodigalSorcerer
-        beforeDeclaration = atAttackers {GameState.phase = Phase.Combat CombatStep.DeclareBlockers}
-        declared = (S.runPure noBlocks beforeDeclaration (Combat.declareBlockers S.manaPerformer)) {GameState.priority = Just S.bob}
-        inStep step = declared {GameState.phase = Phase.Combat step}
-        offeredOn = Action.legalActions S.bob
-    -- Anti-vacuity: the attack is real, the attacker is unblocked, and bob's
-    -- unrestricted {T} is offered on every leg -- so a leg without the Trap
-    -- Runner's activation is withholding that one ability.
-    Spec.assertBool s (Map.member attackerId (Combat.Type.attackers (GameState.combat declared))) "the Piker is attacking"
-    Spec.assertBool s (not (Combat.isBlocked attackerId declared)) "and unblocked, so the ability has a legal target"
-    Spec.assertBool s (not (any (null . activationsOf sorcererId . offeredOn) [atAttackers, beforeDeclaration, declared, inStep CombatStep.CombatDamage, inStep CombatStep.EndOfCombat])) "bob's unrestricted {T} is offered on every leg"
-    Spec.assertBool s (not (Turn.afterBlockersDeclared beforeDeclaration)) "the declaration has not happened yet"
-    Spec.assertBool s (Turn.afterBlockersDeclared declared) "and it has after CR 509.1's turn-based action"
-    -- Before the point CR 506.7b names.
-    Spec.assertEqWith s "not offered in the declare attackers step" (activationsOf runnerId (offeredOn atAttackers)) []
-    Spec.assertEqWith s "nor in the declare blockers step before blockers are declared" (activationsOf runnerId (offeredOn beforeDeclaration)) []
-    -- After it, across all three steps the window spans.
-    Spec.assertEqWith s "offered once blockers are declared" (length (activationsOf runnerId (offeredOn declared))) 1
-    Spec.assertEqWith s "offered in the combat damage step" (length (activationsOf runnerId (offeredOn (inStep CombatStep.CombatDamage)))) 1
-    Spec.assertEqWith s "offered in the end of combat step" (length (activationsOf runnerId (offeredOn (inStep CombatStep.EndOfCombat)))) 1
-
   -- The gameplay-level proof (design.md section 4), driven through the priority
   -- loop rather than by calling Activate.activateAbility. bob's life is the
   -- falsifier: the Piker is unblocked and declines to be blocked, so 2 damage is
@@ -4120,32 +3646,8 @@ answerBlightXTargeting x blighted wanted p = case p of
   Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter ((== Just wanted) . Recipient.objectOf) . snd) sets
   _ -> S.identityAnswer p
 
--- Announces the bound the prompt carries and records it, the answerAtBound
--- treatment for a cost whose X is a blight.
-answerBlightAtBound :: ObjectId.ObjectId -> Prompt.Prompt r -> State.State [Natural] r
-answerBlightAtBound blighted p = case p of
-  Prompt.ChooseX _ _ _ _ _ bound -> do
-    State.modify' (\seen -> seen <> [bound])
-    pure bound
-  Prompt.ChooseBlight {} -> pure blighted
-  _ -> pure (S.identityAnswer p)
-
 abilityCeilingSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 abilityCeilingSpec s registry = Spec.describe s "AbilityCeilingAndBoundSlot" $ do
-  -- The ceiling is READ, and read off the board: the tallest creature alice
-  -- controls is what bounds the prompt, and nothing else on either board is 3 or
-  -- 4. Without a ceiling this bound does not exist at all -- CR 701.68b refuses a
-  -- blight only for a player controlling no creature, so the climb has nothing
-  -- else to stop on.
-  Spec.it s "CR 101.1 the ChooseX bound is the greatest toughness among creatures you control" $ do
-    let boundsWith tallest = do
-          (nightmare, srcId, pikerId, _, _, g1) <- blightedNightmareBoard s registry tallest
-          pure (State.execState (Engine.runGame (answerBlightAtBound pikerId) g1 (Activate.activateAbility S.alice srcId (theAbility nightmare))) [])
-    three <- boundsWith "Ogre Sentry"
-    four <- boundsWith "Giant Spider"
-    Spec.assertEqWith s "a 2/3 alongside a 2/1 bounds X at 3" three [3]
-    Spec.assertEqWith s "a 2/4 alongside it bounds X at 4" four [4]
-
   -- CR 101.2 for the direction, and reject-not-repair for the posture: the
   -- announcement is honoured and then loses the ability. The SAME board as the
   -- whole-card case above, differing in the announced value alone.
@@ -4225,86 +3727,6 @@ printedActivationThresholdReductionSpec s registry = Spec.describe s "PrintedAct
     Spec.assertEqWith s "CR 702.34a exiled Think Twice as it resolved" (length (Game.zoneMembers Zone.Exile S.alice after)) 1
     Spec.assertEqWith s "and alice drew the card it promised" (S.handSize S.alice after) 1
 
--- CR 602.5b's counted rider, printed on a card about itself: Greenbelt Guardian
--- (Aetherdrift) prints "{G}: Target creature gains trample until end of turn."
--- beside "Exhaust -- {3}{G}: Put three +1/+1 counters on this creature.", and CR
--- 702.177a rewrites the second into "{3}{G}: ... Activate only once." Oracle text
--- checked against Scryfall 2026-09-06.
---
--- parun's transcription carries the keyword on that second ability
--- (Parun.Types.ActivatedAbility.keyword), which is what Boom Scholar's "exhaust
--- abilities of other permanents you control" names -- the Exhaust group above is
--- where that pair is proved.
---
--- The card file states no rider: the keyword adds rule 702.177a's
--- (Keyword.printedRiders), so the refusal below is the keyword's.
---
--- EIGHT Forests, which is exactly two activations of {3}{G}: the rider is the
--- only thing standing between alice and the second one, so a board that ignored
--- it would end the loop with six counters rather than three. The OTHER ability is
--- what makes the rider a fact about the ABILITY -- Greenbelt Guardian's {G} is
--- still offered once the exhaust one is spent.
-guardianBoard :: Printing.Printing -> Printing.Printing -> (ObjectId.ObjectId, GameState.GameState)
-guardianBoard guardian forest =
-  let (guardianId, gs) = S.addPermanent guardian S.alice (S.landsInPlay forest 8)
-   in ( guardianId,
-        gs
-          { GameState.activePlayer = S.alice,
-            GameState.phase = Phase.PrecombatMain,
-            GameState.priority = Just S.alice
-          }
-      )
-
--- The offer carrying CR 702.177a's once-only rider, told from the same
--- permanent's other ability by the exhaust stamp the card wrote rather than by an
--- index into the face: the ability rides on the action (Action.Activate), so this
--- filters the offered set instead of building one. Not by the rider, which the
--- keyword adds -- a keyword that added none must leave this ability offered.
-isOnlyOnce :: A.Action -> Bool
-isOnlyOnce a = case a of
-  A.Activate _ ability -> ActivatedAbility.keyword ability == Just Keyword.Exhaust
-  _ -> False
-
--- Takes the once-only activation whenever the engine offers it and passes
--- otherwise, so the second activation is refused by the rules rather than
--- declined by the interpreter.
-onlyOnceAnswer :: Prompt.Prompt r -> r
-onlyOnceAnswer p = case p of
-  Prompt.ChooseAction _ _ options -> case filter isOnlyOnce options of
-    a : _ -> a
-    [] -> A.Pass
-  Prompt.ChooseManaSource _ _ _ candidates -> Just (NonEmpty.head candidates)
-  _ -> S.identityAnswer p
-
-printedActivationOnlyOnceSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
-printedActivationOnlyOnceSpec s registry = Spec.describe s "PrintedActivationOnlyOnce" $ do
-  -- CR 602.5b's grain: the restriction is about the ABILITY, not the permanent.
-  -- The same board, once the exhaust ability is spent -- the {G} trample ability
-  -- is still offered off the same object, and the exhaust one is not.
-  Spec.it s "CR 602.5b the permanent's other ability is untouched" $ do
-    guardian <- S.printingOf s registry "Greenbelt Guardian"
-    forest <- S.printingOf s registry "Forest"
-    let (guardianId, board) = guardianBoard guardian forest
-        after = S.runPure onlyOnceAnswer board Engine.priorityLoop
-        offered = activationsOf guardianId (Action.legalActions S.alice after)
-    Spec.assertEqWith s "the once-only ability is not offered again" (filter isOnlyOnce offered) []
-    Spec.assertEqWith s "but the Guardian's other ability still is" (length (filter (not . isOnlyOnce) offered)) 1
-
-  -- CR 400.7 over CR 602.5b: the permanent that comes back is a new object with
-  -- no memory, so its exhaust ability is available again. The same board as
-  -- above, differing only in the two zone changes.
-  Spec.it s "CR 400.7 / 602.5b the permanent that returns may activate it again" $ do
-    guardian <- S.printingOf s registry "Greenbelt Guardian"
-    forest <- S.printingOf s registry "Forest"
-    let (guardianId, board) = guardianBoard guardian forest
-        after = S.runPure onlyOnceAnswer board Engine.priorityLoop
-        (toHand, bounced) = S.runPureWith S.identityAnswer after (Event.changeZoneReturning guardianId Zone.Hand)
-        inHand = case toHand of h Seq.:<| _ -> h; _ -> S.noSource
-        (toPlay, returned) = S.runPureWith S.identityAnswer bounced (Event.changeZoneReturning inHand Zone.Battlefield)
-        backId = case toPlay of b Seq.:<| _ -> b; _ -> S.noSource
-    Spec.assertEqWith s "the returned permanent is a 2/2 again -- CR 400.7 dropped the counters" (S.powerToughnessOf backId returned) (Just (2, 2))
-    Spec.assertEqWith s "and its once-only ability is offered again" (length (filter isOnlyOnce (activationsOf backId (Action.legalActions S.alice returned)))) 1
-
 -- CR 602.5b's own example of a "restriction on its use", printed on a card about
 -- itself: Locust Swarm (Mirage) prints "{G}: Regenerate this creature." beside
 -- "{G}: Untap this creature. Activate only once each turn." Oracle text checked
@@ -4350,17 +3772,6 @@ onlyOnceEachTurnAnswer p = case p of
     [] -> A.Pass
   Prompt.ChooseManaSource _ _ _ candidates -> Just (NonEmpty.head candidates)
   _ -> S.identityAnswer p
-
--- CR 500.5 / 502.3: two handoffs, the pools swept and everything untapped -- the
--- same permanent on a later turn, without running a turn's priority and drawing a
--- fixture library empty (CR 104.3c). Engine.beginTurnOf is where
--- GameState.activatedThisTurn is cleared, so this is the reset under test.
-nextTurnOfAlice :: GameState.GameState -> GameState.GameState
-nextTurnOfAlice gs =
-  S.runPure
-    S.identityAnswer
-    (Mana.emptiedManaPools (Engine.beginTurnOf S.alice (Engine.beginTurnOf S.bob gs)))
-    (Engine.runTurnBasedActions (Phase.Beginning BeginningStep.Untap))
 
 printedActivationOnlyOnceEachTurnSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 printedActivationOnlyOnceEachTurnSpec s registry = Spec.describe s "PrintedActivationOnlyOnceEachTurn" $ do

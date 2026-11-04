@@ -1,0 +1,131 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Blighted Nightmare",
+            "label": "nightmare"
+          },
+          {
+            "card": "Ogre Sentry",
+            "label": "ogre"
+          },
+          {
+            "card": "Goblin Piker",
+            "label": "piker"
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Kalakscion, Hunger Tyrant",
+            "label": "tyrant"
+          },
+          {
+            "card": "Hill Giant",
+            "label": "giant"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 101.1 the X bound is the greatest toughness among creatures you control: a 3/3 admits 3, not 4",
+  "final": [
+    {
+      "Count": {
+        "card": "Kalakscion, Hunger Tyrant",
+        "count": 1,
+        "player": "alice",
+        "zone": "Battlefield"
+      }
+    },
+    {
+      "Count": {
+        "card": "Hill Giant",
+        "count": 1,
+        "player": "alice",
+        "zone": "Graveyard"
+      }
+    },
+    {
+      "Count": {
+        "card": "Ogre Sentry",
+        "count": 1,
+        "player": "alice",
+        "zone": "Graveyard"
+      }
+    },
+    {
+      "Count": {
+        "card": "Blighted Nightmare",
+        "count": 1,
+        "player": "alice",
+        "zone": "Hand"
+      }
+    },
+    {
+      "View": {
+        "is": [],
+        "of": "Stack"
+      }
+    }
+  ],
+  "note": "The ceiling is read off the board: the tallest creature alice controls bounds X, beside a 2/1 Goblin Piker, and nothing else on the board has that toughness. Without a ceiling the bound does not exist at all -- CR 701.68b refuses a blight only for a player controlling no creature. An X one past the Ogre Sentry's toughness is refused, and X at it resolves, the blight killing the Ogre Sentry.",
+  "timeline": [
+    {
+      "player": "alice",
+      "refuse": {
+        "Activate": {
+          "ability": 0,
+          "costOrder": [
+            0,
+            1
+          ],
+          "object": "$nightmare",
+          "targets": [
+            "$giant"
+          ],
+          "x": 4
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Activate": {
+          "ability": 0,
+          "costOrder": [
+            0,
+            1
+          ],
+          "object": "$nightmare",
+          "targets": [
+            "$tyrant"
+          ],
+          "x": 3
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseBlight",
+          "with": "$ogre"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

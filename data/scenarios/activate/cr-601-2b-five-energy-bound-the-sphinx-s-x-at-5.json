@@ -1,0 +1,128 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Plains",
+            "label": "plains"
+          },
+          {
+            "card": "Island",
+            "label": "island-1"
+          },
+          {
+            "card": "Island",
+            "label": "island-2"
+          },
+          {
+            "card": "Sphinx of the Revelation",
+            "label": "sphinx",
+            "ready": true
+          }
+        ],
+        "counters": [
+          {
+            "key": {
+              "type": "Energy"
+            },
+            "value": 5
+          }
+        ],
+        "library": [
+          {
+            "card": "Mountain"
+          },
+          {
+            "card": "Mountain"
+          },
+          {
+            "card": "Mountain"
+          },
+          {
+            "card": "Mountain"
+          },
+          {
+            "card": "Mountain"
+          },
+          {
+            "card": "Mountain"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 601.2b five energy bound the Sphinx's X at 5",
+  "final": [
+    {
+      "PlayerCounters": {
+        "count": 0,
+        "kind": {
+          "type": "Energy"
+        },
+        "player": "alice"
+      }
+    },
+    {
+      "Count": {
+        "card": "Mountain",
+        "count": 5,
+        "player": "alice",
+        "zone": "Hand"
+      }
+    },
+    {
+      "View": {
+        "is": [],
+        "of": "Stack"
+      }
+    }
+  ],
+  "note": "The bound moves with the energy and with nothing else: the {W}{U}{U} is paid the same way at every X, so no constant and nothing read off the printed cost sets it. CR 118.3 refuses the X above it; X at it spends every counter and draws that many.",
+  "timeline": [
+    {
+      "player": "alice",
+      "refuse": {
+        "Activate": {
+          "mana": [
+            "$plains",
+            "$island-1",
+            "$island-2"
+          ],
+          "object": "$sphinx",
+          "x": 6
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Activate": {
+          "mana": [
+            "$plains",
+            "$island-1",
+            "$island-2"
+          ],
+          "object": "$sphinx",
+          "x": 5
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

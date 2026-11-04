@@ -1,0 +1,273 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Kíli the Resourceful",
+            "label": "kili",
+            "ready": true
+          },
+          {
+            "card": "Aegis of the Legion",
+            "label": "aegis"
+          },
+          {
+            "card": "Bonesplitter",
+            "label": "splitter"
+          },
+          {
+            "card": "War Mammoth",
+            "label": "mammoth",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "m1",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "m2",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "m3",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "m4",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Mountain"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 118.9 the next turn has a first equip again",
+  "final": [
+    {
+      "Tapped": {
+        "object": "$m1",
+        "tapped": false
+      }
+    },
+    {
+      "Tapped": {
+        "object": "$m2",
+        "tapped": false
+      }
+    },
+    {
+      "Tapped": {
+        "object": "$m3",
+        "tapped": false
+      }
+    },
+    {
+      "Tapped": {
+        "object": "$m4",
+        "tapped": false
+      }
+    },
+    {
+      "View": {
+        "is": "$kili",
+        "object": "$splitter",
+        "of": "AttachedTo"
+      }
+    },
+    {
+      "View": {
+        "is": "$mammoth",
+        "object": "$aegis",
+        "of": "AttachedTo"
+      }
+    }
+  ],
+  "note": "Kíli the Resourceful is legendary and the Aegis of the Legion and Bonesplitter are artifacts, so storied gives alice an enduring story before she first has priority. Equip {3} and equip {1}, so a {0} paid, a {3} paid and a {1} paid are three different sets of tapped Mountains; four Mountains pay both printed costs, so what discriminates is what was paid. \"Each turn\": after a turn whose second equip paid {1}, alice's next turn has a first equip again, paid with {0}, moving the Bonesplitter onto Kíli.",
+  "timeline": [
+    {
+      "do": {
+        "Activate": {
+          "cost": [],
+          "mana": [
+            null
+          ],
+          "object": "$aegis",
+          "targets": [
+            "$mammoth"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Activate": {
+          "mana": [
+            "$m1",
+            null
+          ],
+          "object": "$splitter",
+          "targets": [
+            "$mammoth"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Tapped": {
+          "object": "$m1",
+          "tapped": true
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Tapped": {
+          "object": "$m2",
+          "tapped": false
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Tapped": {
+          "object": "$m3",
+          "tapped": false
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Tapped": {
+          "object": "$m4",
+          "tapped": false
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Attack": []
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Tapped": {
+          "object": "$m1",
+          "tapped": false
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 3
+    },
+    {
+      "check": {
+        "Tapped": {
+          "object": "$m2",
+          "tapped": false
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 3
+    },
+    {
+      "check": {
+        "Tapped": {
+          "object": "$m3",
+          "tapped": false
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 3
+    },
+    {
+      "check": {
+        "Tapped": {
+          "object": "$m4",
+          "tapped": false
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 3
+    },
+    {
+      "do": {
+        "Activate": {
+          "cost": [],
+          "mana": [
+            null
+          ],
+          "object": "$splitter",
+          "targets": [
+            "$kili"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 3
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 3
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Swamp",
+            "label": "swamp",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "mountain",
+            "ready": true
+          },
+          {
+            "card": "Dregscape Zombie",
+            "label": "twin",
+            "ready": true
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Dregscape Zombie",
+            "label": "gy"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Tremor",
+            "label": "tremor"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "step": "PostcombatMain"
+  },
+  "description": "CR 702.84a the unearthed permanent that dies is exiled instead",
+  "final": [
+    {
+      "Count": {
+        "card": "Dregscape Zombie",
+        "count": 1,
+        "player": "alice",
+        "zone": "Exile"
+      }
+    },
+    {
+      "Count": {
+        "card": "Dregscape Zombie",
+        "count": 1,
+        "player": "alice",
+        "zone": "Graveyard"
+      }
+    },
+    {
+      "Count": {
+        "card": "Dregscape Zombie",
+        "count": 0,
+        "player": "alice",
+        "zone": "Battlefield"
+      }
+    }
+  ],
+  "note": "Unearth's fourth sentence, through CR 704.5g. The twin is the same card under the same controller, reaching the battlefield without unearth, and takes the same one damage from Tremor, so \"a dead 2/1 is exiled\" cannot pass this: the unearthed Zombie goes to exile while the twin goes to the graveyard.",
+  "timeline": [
+    {
+      "do": {
+        "Activate": {
+          "ability": 0,
+          "mana": [
+            "$swamp",
+            null
+          ],
+          "object": "$gy"
+        }
+      },
+      "player": "alice",
+      "step": "PostcombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PostcombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Dregscape Zombie",
+          "count": 2,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "PostcombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$mountain"
+          ],
+          "object": "$tremor"
+        }
+      },
+      "player": "alice",
+      "step": "PostcombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PostcombatMain",
+      "turn": 1
+    }
+  ]
+}
