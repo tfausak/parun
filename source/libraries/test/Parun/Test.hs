@@ -506,6 +506,7 @@ import qualified Parun.Codec.MovedSpec
 import qualified Parun.Codec.NameChooserSpec
 import qualified Parun.Codec.NamesAreSpec
 import qualified Parun.Codec.NextDamageOutcomeSpec
+import qualified Parun.Codec.NextStepOfSpec
 import qualified Parun.Codec.NinjutsuSpec
 import qualified Parun.Codec.NinjutsuVariantSpec
 import qualified Parun.Codec.ObjectCountSpec
@@ -1104,6 +1105,7 @@ spec s registry corpus = do
   Parun.Codec.CardArrivedInSpec.spec s
   Parun.Codec.EntriesTriggerSpec.spec s
   Parun.Codec.EntryTriggeringSpec.spec s
+  Parun.Codec.NextStepOfSpec.spec s
   Parun.Codec.ObjectCountSpec.spec s
   Parun.Codec.CardIdentitySpec.spec s
   Parun.Codec.CardLeavesZoneSpec.spec s

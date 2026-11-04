@@ -311,6 +311,7 @@ import qualified Parun.Types.MoveMana as MoveMana
 import qualified Parun.Types.MoveToZone as MoveToZone
 import qualified Parun.Types.MovedKinds as MovedKinds
 import qualified Parun.Types.NextDamageInstance as NextDamageInstance
+import qualified Parun.Types.NextStepOf as NextStepOf
 import qualified Parun.Types.Ninjutsu as Ninjutsu
 import qualified Parun.Types.ObjectCount as ObjectCount
 import Parun.Types.ObjectId (ObjectId)
@@ -414,6 +415,7 @@ import qualified Parun.Types.Splice as Splice
 import qualified Parun.Types.StatedFlip as StatedFlip
 import qualified Parun.Types.StaticAbility as StaticAbility
 import qualified Parun.Types.StepBegins as StepBegins
+import qualified Parun.Types.StepOfControllerOf as StepOfControllerOf
 import qualified Parun.Types.Suspend as Suspend
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
 import qualified Parun.Types.Tap as Tap
@@ -1388,7 +1390,7 @@ durationNames asking x = case x of
   Duration.Indefinite -> mempty
   Duration.Perpetual -> mempty
   Duration.UntilYourNextTurn -> mempty
-  Duration.UntilYourNextStep _ -> mempty
+  Duration.UntilNextStepOf next -> playerRefNames asking (NextStepOf.player next)
   Duration.UntilEndOfYourNextTurn -> mempty
   Duration.UntilEndOfNextTurnOf playerRef -> playerRefNames asking playerRef
   Duration.DuringNextTurnOf playerRef -> playerRefNames asking playerRef
@@ -1744,6 +1746,7 @@ expiryNames asking x = case x of
   Expiry.While while -> whileNames asking while
   Expiry.AtTurnOf _playerId -> mempty
   Expiry.AtStepOf _stepBegan -> mempty
+  Expiry.AtStepOfControllerOf stepOf -> names asking (== StepOfControllerOf.object stepOf)
   Expiry.AtEndOfTurnOf _afterTurn -> mempty
   Expiry.DuringTurnOf _afterTurn -> mempty
   Expiry.DuringUntapStepOf _playerId -> mempty

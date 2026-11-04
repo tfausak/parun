@@ -188,6 +188,7 @@ import qualified Parun.Types.MoveMana as MoveMana
 import qualified Parun.Types.MoveToZone as MoveToZone
 import qualified Parun.Types.MovedKinds as MovedKinds
 import qualified Parun.Types.NextDamageInstance as NextDamageInstance
+import qualified Parun.Types.NextStepOf as NextStepOf
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
 import Parun.Types.ObjectRef (ObjectRef)
@@ -1667,7 +1668,7 @@ durationPlayerRefs duration = case duration of
   Duration.Indefinite -> []
   Duration.Perpetual -> []
   Duration.UntilYourNextTurn -> []
-  Duration.UntilYourNextStep _ -> []
+  Duration.UntilNextStepOf next -> [NextStepOf.player next]
   Duration.UntilEndOfYourNextTurn -> []
   -- A Condition's own references are Quantity.bakePlayerRef's half, reached
   -- through conditionSlots rather than through a list of references.
@@ -1686,7 +1687,7 @@ durationSlots duration = case duration of
   Duration.Indefinite -> Map.empty
   Duration.Perpetual -> Map.empty
   Duration.UntilYourNextTurn -> Map.empty
-  Duration.UntilYourNextStep _ -> Map.empty
+  Duration.UntilNextStepOf next -> playerRefSlots (NextStepOf.player next)
   Duration.UntilEndOfYourNextTurn -> Map.empty
   -- The seat the window is counted against, read exactly as every other
   -- PlayerRef position is (CR 601.2c).
@@ -2404,7 +2405,7 @@ durationSlotsAreExhaustive duration = case duration of
   Duration.Indefinite -> True
   Duration.Perpetual -> True
   Duration.UntilYourNextTurn -> True
-  Duration.UntilYourNextStep _ -> True
+  Duration.UntilNextStepOf _ -> True
   Duration.UntilEndOfYourNextTurn -> True
   -- playerRefSlots' answer is complete for every arm: a PlayerRef names at
   -- most one slot and nothing nested inside it names another.
