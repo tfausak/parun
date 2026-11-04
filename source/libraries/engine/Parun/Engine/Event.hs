@@ -1552,9 +1552,9 @@ conjureOntoBattlefield controller card copied count tapped = do
       ids <- Monad.replicateM (Natural.toIntSaturating count) (State.state (mintCard controller (Just controller) printingId Zone.Battlefield LibraryPosition.defaultValue tapped))
       Monad.forM_ copied (\snapshot -> Monad.mapM_ (`markDuplicate` snapshot) ids)
       let siblingsOf oid = Set.delete oid (Set.fromList ids)
-      refusals <- traverse (\oid -> (,) oid <$> runEntry True Nothing (siblingsOf oid) oid) ids
+      refusals <- traverse (\oid -> (,) oid <$> runEntry (Just Zone.Battlefield) Nothing (siblingsOf oid) oid) ids
       let entered = [oid | (oid, Nothing) <- refusals]
-      Monad.mapM_ unmake [oid | (oid, Just refusal) <- refusals, refusal /= EntryRefusal.Diverted]
+      Monad.mapM_ unmake [oid | (oid, Just refusal) <- refusals, not (isDiverted refusal)]
       settleMinted (GameState.nextTimestamp gs) entered
       pure (Seq.fromList entered)
 
@@ -2249,12 +2249,12 @@ applyReplacementsReporting asOf batch allowances spent event = do
 -- keeps its row out of CR 616.1's offer entirely. Empty for every caller but
 -- the batch, which is every caller but resolveDamage.
 applyReplacementsFully :: Maybe GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
-applyReplacementsFully asOf batch allowances spent = loop asOf batch False allowances spent [] Nothing False Nothing
+applyReplacementsFully asOf batch allowances spent = loop asOf batch Nothing allowances spent [] Nothing False Nothing
 
 -- The last accumulator is CR 903.9c's split, taken when the owner accepted CR
 -- 903.9b's offer for a melded or merged commander inside the loop -- see
 -- `offerCommandZoneFirst`.
-loop :: Maybe GameState -> Set ObjectId -> Bool -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
+loop :: Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
 loop asOf batch diverting allowances applied prevented exiledBy shuffling split event = do
   gs <- State.get
   -- From scratch each iteration: collect against the CURRENT state (or, for a
@@ -2283,22 +2283,24 @@ loop asOf batch diverting allowances applied prevented exiledBy shuffling split 
       notSibling candidate = not (Set.member (ReplacementCandidate.source candidate) batch)
       fresh = filter (\candidate -> unused candidate && notSibling candidate && not (Replacement.allocatedOut allowances candidate)) (Replacement.applicable asOf gs event)
   case Replacement.highestBucket fresh of
-    -- CR 616.1c / 614.12: a minted object (`diverting`) is offered to the
-    -- battlefield-bound zone-change redirects once CR 616.1a-d's entry
-    -- rewrites have applied, so the redirect reads it as it will enter, a copy
-    -- included. Asked once, so a declined "may" is not asked again. Proved by
-    -- the scenario hallowed-moonlight-exiles-a-token-that-enters-as-a-copy-of-a-creature.
+    -- CR 616.1c / 614.12: an entering object (`diverting`, the zone it leaves)
+    -- is offered to the battlefield-bound zone-change redirects once CR
+    -- 616.1a-d's entry rewrites have applied, so the redirect reads it as it
+    -- will enter, a copy and its controller included. Asked once, so a declined
+    -- "may" is not asked again. Proved by the scenarios
+    -- hallowed-moonlight-exiles-a-token-that-enters-as-a-copy-of-a-creature and
+    -- hallowed-moonlight-exiles-a-card-that-enters-as-a-copy-of-a-creature.
     --
     -- Not implemented: asking whether a CR 616.1e entry rewrite applies before
     -- the redirect; the redirect always goes first (#5798).
     bucket
-      | diverting,
+      | Just from <- diverting,
         ProposedEvent.WouldEnter oid <- event,
         all ((== ReplacementBucket.Other) . Replacement.bucketOf) bucket -> do
-          redirected <- divertEntry batch oid
+          redirected <- divertEntry batch from oid
           case redirected of
             Just (ProposedEvent.WouldChangeZone zc _ _ _)
-              | ZoneChange.to zc == Zone.Battlefield -> loop asOf batch False allowances applied prevented exiledBy shuffling split event
+              | ZoneChange.to zc == Zone.Battlefield -> loop asOf batch Nothing allowances applied prevented exiledBy shuffling split event
             _ -> pure (redirected, [], prevented, exiledBy, shuffling, split)
     -- CR 616.1f / 614.6: no candidate remains, so the surviving event happens.
     [] -> pure (Just event, [], prevented, exiledBy, shuffling, split)
@@ -2311,7 +2313,7 @@ loop asOf batch diverting allowances applied prevented exiledBy shuffling split 
 -- The CR 616.1 choice among the card-borne candidates of one bucket, and its
 -- application. Split out of `loop` so `offerCommandZoneFirst` can stand in front
 -- of it.
-chooseAndApply :: Maybe GameState -> Set ObjectId -> Bool -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> GameState -> ProposedEvent -> [ReplacementCandidate] -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
+chooseAndApply :: Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> GameState -> ProposedEvent -> [ReplacementCandidate] -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
 chooseAndApply asOf batch diverting allowances applied prevented exiledBy shuffling split gs event bucket = do
   picked <- Replacement.choose gs event bucket
   case picked of
@@ -2381,7 +2383,7 @@ alsoDealt gs candidate de = case ReplacementCandidate.effect candidate of
 -- One iteration of `loop`: apply the chosen candidate to the event and continue
 -- with what comes back. Split out so the partial-cover branch above and the
 -- ordinary one apply a candidate the same way.
-applyChosen :: Maybe GameState -> Set ObjectId -> Bool -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
+applyChosen :: Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
 applyChosen asOf batch diverting allowances applied prevented exiledBy shuffling split candidate event = do
   gs <- State.get
   -- CR 615.12: the chosen effect is a prevention effect and this damage
@@ -5347,8 +5349,13 @@ copiedSnapshotWithLastKnown oid gs = case Game.lastKnownOf oid gs of
 -- 614.1a's "instead" from an EntryRewrite.SacrificeToEnter arm that could not be
 -- paid, or CR 614.12's "if you can't" from an EntryRewrite.ExileFromGraveyard
 -- arm carrying `orGraveyard` -- the two EntryR arms that answer `Nothing` -- or
--- CR 303.4g from seatEnteringAura. Each caller unmakes the entry, but for
--- `minted`'s CR 614.6 redirect, which this places (EntryRefusal.Diverted).
+-- CR 303.4g from seatEnteringAura, or CR 614.6's redirect (EntryRefusal.Diverted).
+-- Each caller unmakes the entry, but for a minted object's redirect, which
+-- this places.
+--
+-- `diverting` is the zone the battlefield-bound zone-change redirects read the
+-- object leaving: the battlefield for a minted object, which leaves none, and
+-- Nothing for a meld, which is offered none.
 --
 -- Always the LIVE board (`Nothing`), even when the zone change containing this
 -- entry belongs to a CR 608.2f batch: the entering object is not on the
@@ -5360,8 +5367,8 @@ copiedSnapshotWithLastKnown oid gs = case Game.lastKnownOf oid gs of
 -- engine's reading, resting on CR 614.12; no rule states it outright.
 -- docs/decisions.md, "Which board an entry inside a batch collects replacement
 -- effects from".
-runEntry :: Bool -> Maybe EntryOrigin.EntryOrigin -> Set ObjectId -> ObjectId -> Game (Maybe EntryRefusal.EntryRefusal)
-runEntry minted origin given oid = do
+runEntry :: Maybe Zone -> Maybe EntryOrigin.EntryOrigin -> Set ObjectId -> ObjectId -> Game (Maybe EntryRefusal.EntryRefusal)
+runEntry diverting origin given oid = do
   -- CR 608.2f / 614.12: inside one action (`together`), what an EARLIER call
   -- put onto the battlefield entered at the same moment as this object, so it
   -- is a sibling too -- Ornate Imitations' later numbers and Mirror Match's later
@@ -5384,9 +5391,7 @@ runEntry minted origin given oid = do
   -- below for the reason `before` is.
   beforeSubjects <- State.gets GameState.enteringSubjects
   State.modify' (\gs -> gs {GameState.enteringBeside = batch, GameState.enteringSubjects = Map.insert oid origin beforeSubjects})
-  -- `minted`: a token or conjured card, which `loop` offers to the redirects
-  -- the move funnel offers a moving card (divertEntry).
-  (outcome, _, _, _, _, _) <- loop Nothing batch minted Map.empty Set.empty [] Nothing False Nothing (ProposedEvent.WouldEnter oid)
+  (outcome, _, _, _, _, _) <- loop Nothing batch diverting Map.empty Set.empty [] Nothing False Nothing (ProposedEvent.WouldEnter oid)
   case outcome of
     Just (ProposedEvent.WouldChangeZone zc _ position _) -> do
       Monad.void (takeEnteringCounters oid)
@@ -5395,8 +5400,8 @@ runEntry minted origin given oid = do
       -- scenario hallowed-moonlight-stops-a-diverted-copy-s-when-you-do.
       State.modify' (\gs -> gs {GameState.delayedTriggers = Seq.filter (\entry -> not (DelayedTrigger.source entry == oid && isReflexive entry)) (GameState.delayedTriggers gs)})
       State.modify' (\gs -> gs {GameState.enteringBeside = before, GameState.enteringSubjects = beforeSubjects})
-      placeDiverted oid (ZoneChange.to zc) position
-      pure (Just EntryRefusal.Diverted)
+      Monad.when (diverting == Just Zone.Battlefield) (placeDiverted oid (ZoneChange.to zc) position)
+      pure (Just (EntryRefusal.Diverted (ZoneChange.to zc) position))
     _ -> do
       -- Inside the span, so the host sweep sees the subject and its siblings as
       -- materialized but not entered, exactly as the loop's own arms do.
@@ -7244,7 +7249,10 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
         -- AFTER the CR 616.1 replacement loop and asked of the SETTLED
         -- destination, `unlocking`'s reading and CR 614.6's: a redirect that sends
         -- the object anywhere but the battlefield is the event that happens, and
-        -- an entry prohibition has nothing to say about it.
+        -- an entry prohibition has nothing to say about it. A redirect naming the
+        -- battlefield is asked only by the entry loop, so the prohibition beats it
+        -- (CR 614.17c); the scenario
+        -- hallowed-moonlight-leaves-a-caged-creature-card-in-the-graveyard proves it.
         --
         -- `fromZone` is the "previous zone" both rules name, read off the object
         -- rather than off `settled`: no ZoneChangeR rewrites an event's origin.
@@ -7302,11 +7310,11 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
               --
               -- Gated on the SETTLED destination rather than the requested one,
               -- so a CR 616.1 rewrite that redirects the move decides this too
-              -- (CR 614.6: the modified event is what happens). The two now read
-              -- different zones on a real board: synthetic-entry-interdiction
-              -- sends a battlefield-bound permanent spell to a graveyard, where
-              -- the request-gated reading would write an entry controller onto a
-              -- graveyard card. The other direction is still unreached -- no
+              -- (CR 614.6: the modified event is what happens). No pool board
+              -- makes the two differ: a redirect naming the battlefield
+              -- (synthetic-entry-interdiction's) is asked in the entry loop
+              -- instead, which unmakes the entry and moves the card afresh
+              -- (EntryRefusal.Diverted). The other direction is unreached too -- no
               -- ReplacementEffect.ZoneChangeR in data/cards/ names the
               -- battlefield as its own destination, and the one RULES-based
               -- redirect in this funnel, rule 903.9b's offerCommandZone above,
@@ -8107,7 +8115,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                     -- under data/scenarios/aura prove it.
                     State.modify' (\g -> List.foldl' (storeEntryEffect newId) g defining)
                     Monad.mapM_ (uncurry (addEnteringCounters Nothing newId)) (Map.toAscList entering)
-                    refusal <- runEntry False (Game.entryOriginOf oid unentered) batch newId
+                    refusal <- runEntry (Just fromZone) (Game.entryOriginOf oid unentered) batch newId
                     fallen <- case refusal of
                       Nothing -> pure Seq.empty
                       -- CR 614.1a: EntryRewrite.SacrificeToEnter's "if you don't, put
@@ -8128,10 +8136,17 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                       Just EntryRefusal.Unhosted -> do
                         State.put unentered
                         if fromZone == Zone.Stack then changeZoneReturning oid Zone.Graveyard else pure Seq.empty
-                      -- Unreachable: this road is not minted, so runEntry diverts
-                      -- nothing; the funnel offered the redirects already.
-                      Just EntryRefusal.Diverted -> pure Seq.empty
-                    pure (fmap (\r -> (r, if fromZone == Zone.Stack then fallen else Seq.empty)) refusal)
+                      -- CR 614.6 / 614.12: a battlefield-bound redirect, asked inside
+                      -- the entry loop (Replacement.matchesPrinted), takes the card,
+                      -- so the entry is unmade and the modified event is the move,
+                      -- from where it was, that happens instead; the answer is where
+                      -- it landed, as for a redirect the loop above settled. Proved
+                      -- by the scenario
+                      -- hallowed-moonlight-exiles-a-card-that-enters-as-a-copy-of-a-creature.
+                      Just (EntryRefusal.Diverted zone end) -> do
+                        State.put unentered
+                        changeZoneWithCause discarded asOf batch oid zone end Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried resolving Seq.empty
+                    pure (fmap (\r -> (r, if fromZone == Zone.Stack || isDiverted r then fallen else Seq.empty)) refusal)
               -- Read off the refusal and not off whether `newId` still names an
               -- object: the graveyard move above re-mints from the rolled-back
               -- counter, so the card arriving there can carry that same id.
@@ -9509,23 +9524,30 @@ createTokens controller card copy n tapped entering attached marks = do
               -- `siblingsOf` then hands each entry loop.
               let siblingsOf oid = Set.delete oid (Set.fromList ids)
               Monad.mapM_ (\oid -> Monad.mapM_ (uncurry (addEnteringCounters Nothing oid)) (Map.toAscList entering)) ids
-              refusals <- traverse (\oid -> (,) oid <$> runEntry True Nothing (siblingsOf oid) oid) ids
+              refusals <- traverse (\oid -> (,) oid <$> runEntry (Just Zone.Battlefield) Nothing (siblingsOf oid) oid) ids
               let entered = [oid | (oid, Nothing) <- refusals]
-              Monad.mapM_ unmake [oid | (oid, Just refusal) <- refusals, refusal /= EntryRefusal.Diverted]
+              Monad.mapM_ unmake [oid | (oid, Just refusal) <- refusals, not (isDiverted refusal)]
               settleMinted (GameState.nextTimestamp unminted) entered
               pure entered
 
--- CR 614.1a / 614.12: offer a minted object's arrival on the battlefield to the
--- zone-change redirects bound there (Hallowed Moonlight's "exile it instead",
--- whose ruling of 2015-06-22 reaches a creature token), as the move funnel offers
--- a card's. Asked by `loop` from inside runEntry's span, once CR 616.1a-d's
--- entry rewrites have applied, so the redirect's filter reads the object as it
--- will exist on the battlefield (CR 614.12), a copy included. `batch` is
--- runEntry's; the subject joins it, since a card moving onto the battlefield is
--- likewise not yet there to offer its own rows.
-divertEntry :: Set ObjectId -> ObjectId -> Game (Maybe ProposedEvent)
-divertEntry batch oid =
-  applyReplacementsIn Nothing (Set.insert oid batch) Set.empty (ProposedEvent.WouldChangeZone (ZoneChange.MkZoneChange oid oid Zone.Battlefield Zone.Battlefield) Nothing LibraryPosition.defaultValue False)
+-- CR 614.1a / 614.12: offer an object's arrival on the battlefield from `from`
+-- to the zone-change redirects bound there (Hallowed Moonlight's "exile it
+-- instead", whose ruling of 2015-06-22 reaches a creature token). Asked by
+-- `loop` from inside runEntry's span, once CR 616.1a-d's entry rewrites have
+-- applied, so the redirect's filter reads the object as it will exist on the
+-- battlefield (CR 614.12), a copy and its entry controller included. `batch` is
+-- runEntry's; the subject joins it, since it is not yet there to offer its own
+-- rows (Containment Priest's ruling of 2021-03-19).
+divertEntry :: Set ObjectId -> Zone -> ObjectId -> Game (Maybe ProposedEvent)
+divertEntry batch from oid =
+  applyReplacementsIn Nothing (Set.insert oid batch) Set.empty (ProposedEvent.WouldChangeZone (ZoneChange.MkZoneChange oid oid from Zone.Battlefield) Nothing LibraryPosition.defaultValue False)
+
+-- An entry a CR 614.6 redirect took, which runEntry has placed when minted.
+isDiverted :: EntryRefusal.EntryRefusal -> Bool
+isDiverted refusal = case refusal of
+  EntryRefusal.Diverted _ _ -> True
+  EntryRefusal.Unpaid -> False
+  EntryRefusal.Unhosted -> False
 
 -- A minted object a redirect took is put straight into the redirect's zone, with
 -- no zone change logged, as a conjured card is (docs/decisions.md, "Whether a
@@ -9709,7 +9731,7 @@ meld controller victims resultCard = do
       -- only EntryRewrite.SacrificeToEnter and an ExileFromGraveyard carrying
       -- `orGraveyard` refuse an entry, and a melded permanent's rows are its meld
       -- result's, none of which prints either.
-      Monad.void (runEntry False Nothing Set.empty newId)
+      Monad.void (runEntry Nothing Nothing Set.empty newId)
       -- CR 603.6a's enters-the-battlefield triggers scan this, and it is recorded
       -- after the entry loop so the snapshot describes a settled permanent --
       -- recordMintedEntry's reasons, one zone over. `from` is where the cards were,
