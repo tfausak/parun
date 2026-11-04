@@ -1,0 +1,151 @@
+{
+  "description": "CR 509.3b / 509.3d Venom: a block elsewhere in the combat does not trigger it, and the opponent's Venom names its own creature as the other",
+  "note": "Bob's Venom on alice's attacker: bob's blocker is the other creature and dies. Alice's second attacker is blocked too, and that blocker lives.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Aegis Turtle",
+            "label": "host",
+            "ready": true
+          },
+          {
+            "card": "Venom",
+            "controller": "bob",
+            "attached": "host"
+          },
+          {
+            "card": "Armored Whirl Turtle",
+            "label": "bystander",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Aegis Turtle",
+            "label": "b1"
+          },
+          {
+            "card": "Caelorna, Coral Tyrant",
+            "label": "b2"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$host",
+          "$bystander"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "bob",
+      "do": {
+        "Block": {
+          "$b1": [
+            "$host"
+          ],
+          "$b2": [
+            "$bystander"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Graveyard",
+          "card": "Aegis Turtle",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Battlefield",
+          "card": "Caelorna, Coral Tyrant",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Aegis Turtle",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Armored Whirl Turtle",
+          "count": 1
+        }
+      }
+    }
+  ]
+}

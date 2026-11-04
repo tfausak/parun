@@ -2975,6 +2975,7 @@ vengeful-archon
 vengeful-pharaoh
 vengeful-townsfolk
 vengeful-tracker
+venom
 venom-connoisseur
 verdant-haven
 vernal-bloom

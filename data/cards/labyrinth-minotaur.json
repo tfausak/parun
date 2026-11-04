@@ -29,10 +29,15 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfBlocksCreature",
+            "type": "CreatureBlocksCreature",
             "value": {
-              "type": "And",
-              "value": []
+              "attacker": {
+                "type": "And",
+                "value": []
+              },
+              "blocker": {
+                "type": "IsSource"
+              }
             }
           },
           "modal": {

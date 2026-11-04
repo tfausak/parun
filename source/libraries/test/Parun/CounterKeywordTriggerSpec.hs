@@ -33,6 +33,7 @@ import qualified Parun.Support as S
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
 import qualified Parun.Types.AttackerBlocked as AttackerBlocked
 import qualified Parun.Types.BeginningStep as BeginningStep
+import qualified Parun.Types.BlockPair as BlockPair
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Combat as Combat.Type
@@ -1086,8 +1087,8 @@ flankingSpec s registry =
         Spec.it s "CR 702.25b two instances mint two abilities, both CR 509.3d" $ do
           let abilities = Keyword.abilitiesFor Keyword.Type.Flanking 2
               expected =
-                TriggerCondition.SelfBecomesBlockedBy
-                  (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not (Filter.Type.HasKeyword Keyword.Type.Flanking)])
+                TriggerCondition.CreatureBecomesBlockedBy
+                  (BlockPair.MkBlockPair (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not (Filter.Type.HasKeyword Keyword.Type.Flanking)]) Filter.Type.IsSource)
           Spec.assertEqWith s "two abilities" (length abilities) 2
           Spec.assertEqWith s "each watching CR 509.3d, filtered on the blocker's own flanking" (fmap TriggeredAbility.condition abilities) [expected, expected]
 

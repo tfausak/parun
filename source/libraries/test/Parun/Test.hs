@@ -116,6 +116,7 @@ import qualified Parun.Codec.BidSpec
 import qualified Parun.Codec.BindAmountSpec
 import qualified Parun.Codec.BindingSpec
 import qualified Parun.Codec.BlockCostSpec
+import qualified Parun.Codec.BlockPairSpec
 import qualified Parun.Codec.BlockPermissionSpec
 import qualified Parun.Codec.BlockProducerSpec
 import qualified Parun.Codec.BlockRequirementSpec
@@ -1485,6 +1486,7 @@ spec s registry corpus = do
   Parun.Codec.PermanentActionSpec.spec s
   Parun.Codec.PermanentBecomesDesignatedSpec.spec s
   Parun.Codec.PermanentCandidateSpec.spec s
+  Parun.Codec.BlockPairSpec.spec s
   Parun.Codec.PermanentDealsCombatDamageToPlayerSpec.spec s
   Parun.Codec.PlayerActsOnSpec.spec s
   Parun.Codec.PermanentsBecomeTargetedSpec.spec s

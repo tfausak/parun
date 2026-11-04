@@ -51,6 +51,7 @@ import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.Bid as Bid
 import qualified Parun.Types.BindAmount as BindAmount
 import qualified Parun.Types.Blight as Blight
+import qualified Parun.Types.BlockPair as BlockPair
 import qualified Parun.Types.BlockPermission as BlockPermission
 import qualified Parun.Types.BlockRequirement as BlockRequirement
 import qualified Parun.Types.CantAttackPlayer as CantAttackPlayer
@@ -2141,12 +2142,11 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.SelfAttacksWhile c -> TriggerCondition.SelfAttacksWhile (rewriteCondition pairs c)
   TriggerCondition.SelfBlocks -> condition
   TriggerCondition.CreatureBlocks f -> TriggerCondition.CreatureBlocks (Filter.rewrite pairs f)
-  TriggerCondition.SelfBlocksCreature f -> TriggerCondition.SelfBlocksCreature (Filter.rewrite pairs f)
+  TriggerCondition.CreatureBlocksCreature p -> TriggerCondition.CreatureBlocksCreature (rewriteBlockPair pairs p)
   TriggerCondition.SelfBlocksAtLeast _ -> condition
   TriggerCondition.SelfBlocksOneOrMore f -> TriggerCondition.SelfBlocksOneOrMore (Filter.rewrite pairs f)
   TriggerCondition.CreatureBecomesBlocked f -> TriggerCondition.CreatureBecomesBlocked (Filter.rewrite pairs f)
-  TriggerCondition.SelfBecomesBlockedBy f -> TriggerCondition.SelfBecomesBlockedBy (Filter.rewrite pairs f)
-  TriggerCondition.PermanentBecomesBlockedBy f -> TriggerCondition.PermanentBecomesBlockedBy (Filter.rewrite pairs f)
+  TriggerCondition.CreatureBecomesBlockedBy p -> TriggerCondition.CreatureBecomesBlockedBy (rewriteBlockPair pairs p)
   TriggerCondition.SelfBecomesBlockedByOneOrMore f -> TriggerCondition.SelfBecomesBlockedByOneOrMore (Filter.rewrite pairs f)
   TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> condition
   TriggerCondition.SelfAttacksUnblocked -> condition
@@ -2233,6 +2233,10 @@ rewriteTriggerCondition pairs condition = case condition of
     acting watched = case watched of
       ActingPermanent.Self -> ActingPermanent.Self
       ActingPermanent.Matching f -> ActingPermanent.Matching (Filter.rewrite pairs f)
+
+-- CR 612.1 through both ends of a pairwise block trigger.
+rewriteBlockPair :: [(TextWord.TextWord, TextWord.TextWord)] -> BlockPair.BlockPair -> BlockPair.BlockPair
+rewriteBlockPair pairs p = BlockPair.MkBlockPair {BlockPair.blocker = Filter.rewrite pairs (BlockPair.blocker p), BlockPair.attacker = Filter.rewrite pairs (BlockPair.attacker p)}
 
 -- CR 612.1 through a casting permission's one condition.
 rewriteCastingPermission :: [(TextWord.TextWord, TextWord.TextWord)] -> CastingPermission.CastingPermission -> CastingPermission.CastingPermission

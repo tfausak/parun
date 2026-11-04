@@ -23,6 +23,7 @@ import qualified Parun.Types.AgainstSlot as AgainstSlot
 import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.Arithmetic as Arithmetic
 import qualified Parun.Types.BeginningStep as BeginningStep
+import qualified Parun.Types.BlockPair as BlockPair
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
@@ -338,21 +339,21 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let raiders = on (TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.Opponent) [discard (PlayerRef.InSlot thatPlayer) 1]
     Spec.assertEq s (Just (Text.pack "Whenever Spark deals combat damage to an opponent, that player discards a card.")) (Oracle.render raiders)
     Spec.assertBool s (Oracle.says raiders spark (Text.pack "Whenever this creature deals combat damage to an opponent, that opponent discards a card.")) "that opponent unsaid"
-    let sentry = on (TriggerCondition.SelfBlocksCreature (Filter.HasCardType CardType.Creature)) [destroy (ObjectRef.AllOf (ObjectRef.InSlot thatAttacker NonEmpty.:| [ObjectRef.InSlot self])) Regenerability.Regenerable]
+    let sentry = on (TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair Filter.IsSource (Filter.HasCardType CardType.Creature))) [destroy (ObjectRef.AllOf (ObjectRef.InSlot thatAttacker NonEmpty.:| [ObjectRef.InSlot self])) Regenerability.Regenerable]
     Spec.assertEq s (Just (Text.pack "Whenever Spark blocks a creature, destroy that creature and it.")) (Oracle.render sentry)
     Spec.assertBool s (Oracle.says sentry spark (Text.pack "When this creature blocks a creature, destroy that creature and this creature.")) "Loyal Sentry's wording unsaid"
     Spec.assertBool s (Oracle.says sentry spark (Text.pack "When this creature blocks a creature, destroy both creatures.")) "Alaborn Zealot's wording unsaid"
     -- Two instructions destroy one after the other (CR 608.2c), not as the
     -- one action the sentence names (CR 608.2f).
-    let staggered = on (TriggerCondition.SelfBlocksCreature (Filter.HasCardType CardType.Creature)) [destroy (ObjectRef.InSlot thatAttacker) Regenerability.Regenerable, destroy (ObjectRef.InSlot self) Regenerability.Regenerable]
+    let staggered = on (TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair Filter.IsSource (Filter.HasCardType CardType.Creature))) [destroy (ObjectRef.InSlot thatAttacker) Regenerability.Regenerable, destroy (ObjectRef.InSlot self) Regenerability.Regenerable]
     Spec.assertBool s (not (Oracle.says staggered spark (Text.pack "When this creature blocks a creature, destroy that creature and this creature."))) "two destructions said as one"
-    let roc = on (TriggerCondition.SelfBlocksCreature (Filter.And [Filter.HasCardType CardType.Creature, Filter.Not (Filter.HasKeyword Keyword.Flying)])) [modify (ObjectRef.InSlot self) Duration.UntilEndOfTurn (pt 1 0)]
+    let roc = on (TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair Filter.IsSource (Filter.And [Filter.HasCardType CardType.Creature, Filter.Not (Filter.HasKeyword Keyword.Flying)]))) [modify (ObjectRef.InSlot self) Duration.UntilEndOfTurn (pt 1 0)]
     Spec.assertEq s (Just (Text.pack "Whenever Spark blocks a creature without flying, it gets +1/+0 until end of turn.")) (Oracle.render roc)
     Spec.assertBool s (Oracle.says roc spark (Text.pack "Whenever this creature blocks a creature without flying, this creature gets +1/+0 until end of turn.")) "the name after the event unsaid"
     Spec.assertEq s (Just (Text.pack "Whenever Spark enters or attacks, you gain 1 life.")) (Oracle.render (on (TriggerCondition.AnyOf [TriggerCondition.SelfEnters, TriggerCondition.SelfAttacks TriggerFrequency.EveryTime]) [gainLife 1]))
     let creature = Filter.HasCardType CardType.Creature
         both = ObjectRef.AllOf (ObjectRef.InSlot thatAttacker NonEmpty.:| [ObjectRef.InSlot thatBlocker])
-    Spec.assertEq s (Just (Text.pack "Whenever Spark blocks or becomes blocked by a creature, it deals 3 damage to that creature.")) (Oracle.render (on (TriggerCondition.AnyOf [TriggerCondition.SelfBlocksCreature creature, TriggerCondition.SelfBecomesBlockedBy creature]) [damageBy [(both, Quantity.Literal 3)]]))
+    Spec.assertEq s (Just (Text.pack "Whenever Spark blocks or becomes blocked by a creature, it deals 3 damage to that creature.")) (Oracle.render (on (TriggerCondition.AnyOf [TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair Filter.IsSource creature), TriggerCondition.CreatureBecomesBlockedBy (BlockPair.MkBlockPair creature Filter.IsSource)]) [damageBy [(both, Quantity.Literal 3)]]))
     let raptor = on (TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing)) [gainLifeBy (Quantity.InSlot (SlotName.MkSlotName (Text.pack "thatMuch")))]
     Spec.assertEq s (Just (Text.pack "Whenever Spark is dealt damage, you gain that much life.")) (Oracle.render raptor)
     Spec.assertBool s (Oracle.says raptor spark (Text.pack "Enrage \8212 Whenever this creature is dealt damage, you gain that much life.")) "enrage unsaid"

@@ -86,6 +86,7 @@ import qualified Parun.Types.BindAmount as BindAmount
 import qualified Parun.Types.Binding as Binding
 import qualified Parun.Types.Blight as Blight
 import qualified Parun.Types.BlockCost as BlockCost
+import qualified Parun.Types.BlockPair as BlockPair
 import qualified Parun.Types.BlockPermission as BlockPermission
 import qualified Parun.Types.BlockRequirement as BlockRequirement
 import qualified Parun.Types.BlockRole as BlockRole
@@ -2999,6 +3000,9 @@ toughnessNames :: (Monoid r) => Asking r -> Toughness.Toughness -> r
 toughnessNames asking x = case x of
   Toughness.MkToughness unwrap -> quantityNames asking unwrap
 
+blockPairNames :: (Monoid r) => Asking r -> BlockPair.BlockPair -> r
+blockPairNames asking pair = filterNames asking (BlockPair.blocker pair) <> filterNames asking (BlockPair.attacker pair)
+
 triggerConditionNames :: (Monoid r) => Asking r -> TriggerCondition.TriggerCondition -> r
 triggerConditionNames asking x = case x of
   TriggerCondition.SelfEnters -> mempty
@@ -3045,11 +3049,11 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SelfAttacksWhile condition -> conditionNames asking condition
   TriggerCondition.SelfBlocks -> mempty
   TriggerCondition.CreatureBlocks filter_ -> filterNames asking filter_
-  TriggerCondition.SelfBlocksCreature filter_ -> filterNames asking filter_
+  TriggerCondition.CreatureBlocksCreature pair -> blockPairNames asking pair
   TriggerCondition.SelfBlocksAtLeast _natural -> mempty
   TriggerCondition.SelfBlocksOneOrMore filter_ -> filterNames asking filter_
   TriggerCondition.CreatureBecomesBlocked filter_ -> filterNames asking filter_
-  TriggerCondition.SelfBecomesBlockedBy filter_ -> filterNames asking filter_
+  TriggerCondition.CreatureBecomesBlockedBy pair -> blockPairNames asking pair
   TriggerCondition.SelfBecomesBlockedByOneOrMore filter_ -> filterNames asking filter_
   TriggerCondition.CreatureBecomesBlockedByAtLeast _creatureBecomesBlockedByAtLeast -> mempty
   TriggerCondition.SelfAttacksUnblocked -> mempty
@@ -3139,7 +3143,6 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SelfBecomesAttachedTo filter_ -> filterNames asking filter_
   TriggerCondition.SelfBecomesUnattachedFrom filter_ -> filterNames asking filter_
   TriggerCondition.Reflexive -> mempty
-  TriggerCondition.PermanentBecomesBlockedBy filter_ -> filterNames asking filter_
   TriggerCondition.PlacesSticker placesSticker -> filterNames asking (PlacesSticker.object placesSticker)
 
 -- The look-back a first-time-each-turn trigger makes, over the events its

@@ -9,6 +9,7 @@ import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.AttackedPlayer as AttackedPlayer
 import qualified Parun.Types.BecomesTapState as BecomesTapState
+import qualified Parun.Types.BlockPair as BlockPair
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
@@ -497,12 +498,12 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
   -- CR 509.3b, which carries a Filter over the ATTACKER the bearer blocked --
   -- Netcaster Spider's "a creature with flying". The attacker is also a BINDING,
   -- and that is a separate thing the payload reads rather than an encoding of it.
-  Spec.it s "SelfBlocksCreature" $
+  Spec.it s "CreatureBlocksCreature" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfBlocksCreature (Filter.HasKeyword Keyword.Flying))
-      " {\"type\":\"SelfBlocksCreature\",\"value\":{\"type\":\"HasKeyword\",\"value\":{\"type\":\"Flying\"}}} "
+      (TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair Filter.IsSource (Filter.HasKeyword Keyword.Flying)))
+      " {\"type\":\"CreatureBlocksCreature\",\"value\":{\"blocker\":{\"type\":\"IsSource\"},\"attacker\":{\"type\":\"HasKeyword\",\"value\":{\"type\":\"Flying\"}}}} "
   -- CR 509.3e, and NOT nullary: the floor is the card's own number.
   Spec.it s "SelfBlocksAtLeast" $
     Common.assertCodec
@@ -529,12 +530,12 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       " {\"type\":\"CreatureBecomesBlocked\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}} "
   -- CR 509.3d, which carries a Filter over the BLOCKER where its once-each-combat
   -- sibling above carries nothing -- rule 702.25a's "without flanking".
-  Spec.it s "SelfBecomesBlockedBy" $
+  Spec.it s "CreatureBecomesBlockedBy" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfBecomesBlockedBy (Filter.Not (Filter.HasKeyword Keyword.Flanking)))
-      " {\"type\":\"SelfBecomesBlockedBy\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"HasKeyword\",\"value\":{\"type\":\"Flanking\"}}}} "
+      (TriggerCondition.CreatureBecomesBlockedBy (BlockPair.MkBlockPair (Filter.Not (Filter.HasKeyword Keyword.Flanking)) Filter.IsSource))
+      " {\"type\":\"CreatureBecomesBlockedBy\",\"value\":{\"blocker\":{\"type\":\"Not\",\"value\":{\"type\":\"HasKeyword\",\"value\":{\"type\":\"Flanking\"}}},\"attacker\":{\"type\":\"IsSource\"}}} "
   -- CR 509.3e read from the attacking side. A distinct tag from the per-blocker
   -- form above, which carries the same payload and differs only in arity.
   Spec.it s "SelfBecomesBlockedByOneOrMore" $
@@ -1410,12 +1411,4 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.PlacesSticker (PlacesSticker.MkPlacesSticker PlayerRelation.You (Set.singleton StickerKind.Art) Filter.IsSource))
       " {\"type\":\"PlacesSticker\",\"value\":{\"placer\":{\"type\":\"You\"},\"kinds\":[{\"type\":\"Art\"}],\"object\":{\"type\":\"IsSource\"}}} "
-  -- CR 509.3d's bystander form. A real Filter rather than the trivial `And []`:
-  -- the payload is over the ATTACKER, and CR 701.54c's is a Ring-bearer test.
-  Spec.it s "PermanentBecomesBlockedBy round-trips" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PermanentBecomesBlockedBy Filter.IsRingBearer)
-      " {\"type\":\"PermanentBecomesBlockedBy\",\"value\":{\"type\":\"IsRingBearer\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s TriggerCondition.codec

@@ -727,12 +727,11 @@ looksBack condition = case condition of
   TriggerCondition.SelfAttacksWhile _ -> False
   TriggerCondition.SelfBlocks -> False
   TriggerCondition.CreatureBlocks _ -> False
-  TriggerCondition.SelfBlocksCreature _ -> False
+  TriggerCondition.CreatureBlocksCreature _ -> False
   TriggerCondition.SelfBlocksAtLeast _ -> False
   TriggerCondition.SelfBlocksOneOrMore _ -> False
   TriggerCondition.CreatureBecomesBlocked _ -> False
-  TriggerCondition.SelfBecomesBlockedBy _ -> False
-  TriggerCondition.PermanentBecomesBlockedBy _ -> False
+  TriggerCondition.CreatureBecomesBlockedBy _ -> False
   TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> False
   TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> False
   TriggerCondition.SelfAttacksUnblocked -> False
@@ -1011,7 +1010,7 @@ batchScoped condition = case condition of
   TriggerCondition.SelfAttacksWhile _ -> False
   TriggerCondition.SelfBlocks -> False
   TriggerCondition.CreatureBlocks _ -> False
-  TriggerCondition.SelfBlocksCreature _ -> False
+  TriggerCondition.CreatureBlocksCreature _ -> False
   -- CR 508.3b / 805.10b: one combined declaration attacks a target once, but
   -- Parun.Engine.Combat records one GameEvent.BecameAttacked per (attacking
   -- player, target) pair, CR 508.3e's arity, bracketed as one group. Each of
@@ -1032,8 +1031,7 @@ batchScoped condition = case condition of
   TriggerCondition.SelfBlocksAtLeast _ -> False
   TriggerCondition.SelfBlocksOneOrMore _ -> False
   TriggerCondition.CreatureBecomesBlocked _ -> False
-  TriggerCondition.SelfBecomesBlockedBy _ -> False
-  TriggerCondition.PermanentBecomesBlockedBy _ -> False
+  TriggerCondition.CreatureBecomesBlockedBy _ -> False
   TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> False
   TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> False
   TriggerCondition.SelfAttacksUnblocked -> False
@@ -3058,12 +3056,11 @@ zonesTriggeredFrom cond =
         TriggerCondition.SelfAttacksWhile _ -> battlefield
         TriggerCondition.SelfBlocks -> battlefield
         TriggerCondition.CreatureBlocks _ -> battlefield
-        TriggerCondition.SelfBlocksCreature _ -> battlefield
+        TriggerCondition.CreatureBlocksCreature _ -> battlefield
         TriggerCondition.SelfBlocksAtLeast _ -> battlefield
         TriggerCondition.SelfBlocksOneOrMore _ -> battlefield
         TriggerCondition.CreatureBecomesBlocked _ -> battlefield
-        TriggerCondition.SelfBecomesBlockedBy _ -> battlefield
-        TriggerCondition.PermanentBecomesBlockedBy _ -> battlefield
+        TriggerCondition.CreatureBecomesBlockedBy _ -> battlefield
         TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> battlefield
         TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> battlefield
         TriggerCondition.SelfAttacksUnblocked -> battlefield
@@ -3410,12 +3407,11 @@ stateTriggersOn gs
             TriggerCondition.SelfAttacksWhile _ -> False
             TriggerCondition.SelfBlocks -> False
             TriggerCondition.CreatureBlocks _ -> False
-            TriggerCondition.SelfBlocksCreature _ -> False
+            TriggerCondition.CreatureBlocksCreature _ -> False
             TriggerCondition.SelfBlocksAtLeast _ -> False
             TriggerCondition.SelfBlocksOneOrMore _ -> False
             TriggerCondition.CreatureBecomesBlocked _ -> False
-            TriggerCondition.SelfBecomesBlockedBy _ -> False
-            TriggerCondition.PermanentBecomesBlockedBy _ -> False
+            TriggerCondition.CreatureBecomesBlockedBy _ -> False
             TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> False
             TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> False
             TriggerCondition.SelfAttacksUnblocked -> False

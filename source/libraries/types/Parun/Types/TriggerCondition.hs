@@ -4,6 +4,7 @@ import qualified Numeric.Natural as Natural
 import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.BecomesTapState as BecomesTapState
+import qualified Parun.Types.BlockPair as BlockPair
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
@@ -216,14 +217,14 @@ data TriggerCondition
   | -- | CR 509.3a read by a bystander: "whenever enchanted creature blocks"
     -- (Super-Soldier Serum), once per blocker the Filter admits.
     CreatureBlocks (Filter.Filter Keyword.Keyword)
-  | -- | CR 509.3b: "whenever [a creature] blocks a creature" (Loyal Sentry) --
-    -- SelfBlocks per attacker blocked, with the Filter over that attacker.
+  | -- | CR 509.3b: "whenever [a creature] blocks a creature" (Loyal Sentry, Venom),
+    -- once per pair admitted, binding the attacker.
     --
     -- Rule 509.3b's other producer reaches it: an effect that causes the bearer
     -- to block (Parun.Engine.Combat.switchBlockers, General Jarkeld), which
     -- records the same event with the flag clear. Parun.CombatCostSpec's
     -- SwitchBlockers group is the proof.
-    SelfBlocksCreature (Filter.Filter Keyword.Keyword)
+    CreatureBlocksCreature BlockPair.BlockPair
   | -- | CR 509.3e: "whenever [a creature] blocks two or more creatures"
     -- (Lairwatch Giant); the Natural is a floor, never an exact count.
     SelfBlocksAtLeast Natural.Natural
@@ -241,15 +242,19 @@ data TriggerCondition
     --
     -- Rule 509.3c's other two producers reach it: Effect.BecomesBlocked (Curtain
     -- of Light) and a creature put onto the battlefield blocking (CR 509.4),
-    -- which Flash Foliage exercises -- Parun.CombatEffectSpec's
+    -- which Flash Foliage exercises -- Parun.CombatCostSpec's
     -- PutOntoBattlefieldBlocking group is the proof.
     CreatureBecomesBlocked (Filter.Filter Keyword.Keyword)
-  | -- | CR 509.3d: "whenever [a creature] becomes blocked by a creature" -- rule
-    -- 702.25a's flanking, once for each creature that blocks.
+  | -- | CR 509.3d: "whenever [a creature] becomes blocked by a creature" (CR
+    -- 702.25a's flanking, CR 701.54c's Ring-bearer, Venom), once per pair
+    -- admitted, binding the blocker.
+    --
+    -- Not implemented: Filter.HasAttached reading the attachment as it was at
+    -- the event (CR 603.10), for this and CreatureBlocksCreature (#6055).
     --
     -- A creature put onto the battlefield blocking fires it too, unlike
-    -- SelfBlocksCreature: Flash Foliage blocking Benalish Cavalry is the pooled
-    -- pair, and Parun.CombatEffectSpec's PutOntoBattlefieldBlocking group is the
+    -- CreatureBlocksCreature: Flash Foliage blocking Benalish Cavalry is the pooled
+    -- pair, and Parun.CombatCostSpec's PutOntoBattlefieldBlocking group is the
     -- proof.
     --
     -- Rule 509.3d's remaining producer reaches it too, and through the same arm:
@@ -257,7 +262,7 @@ data TriggerCondition
     -- that rule's own guard, "only if it wasn't already blocking that attacking
     -- creature at that time". Parun.CombatCostSpec's "CR 509.3d: but the Cavalry's
     -- flanking fired on the block the effect made" is the proof.
-    SelfBecomesBlockedBy (Filter.Filter Keyword.Keyword)
+    CreatureBecomesBlockedBy BlockPair.BlockPair
   | -- | CR 509.3e: "whenever [a creature] becomes blocked by one or more [F]
     -- creatures" (Serra Inquisitors' second half) -- SelfBlocksOneOrMore from
     -- the attacking side, so the whole declaration fires it once.
@@ -633,13 +638,6 @@ data TriggerCondition
     -- this way") reaches -- that event is no payment and can occur several times
     -- in one resolution, where this fires once (#2121).
     Reflexive
-  | -- | CR 509.3d read by a bystander: "whenever [a creature] becomes blocked by
-    -- a creature", the Filter over the ATTACKER and the blocker bound under
-    -- Parun.Engine.Binding.blockingCreature (CR 701.54c's three-temptation tier).
-    --
-    -- Rule 509.3d's remaining producer, an effect that causes a creature to
-    -- block (General Jarkeld), reaches it through the same arm as the other two.
-    PermanentBecomesBlockedBy (Filter.Filter Keyword.Keyword)
   | -- | CR 603.2: "whenever [a permanent] <acts>" (Renegade Krasis, Wildgrowth
     -- Walker), the actor being the bearer itself or one the Filter admits.
     --
