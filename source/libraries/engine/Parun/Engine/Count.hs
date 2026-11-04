@@ -106,14 +106,19 @@ type ViewOf = ObjectId -> Maybe Filter.View
 -- candidate the view IS `viewOf` of the id beside it, so the two agree.
 type QuantityOf quantity = Maybe ObjectId -> Filter.View -> quantity -> Maybe Integer
 
+-- CR 800.4i: does a per-member quantity tally what players DID, so that a
+-- player who has left the game still answers it? Injected beside QuantityOf,
+-- for its reason; Parun.Engine.Quantity.talliesWhatHappened is the classifier.
+type TalliesWhatHappened quantity = quantity -> Bool
+
 -- Nothing when the count cannot be determined -- an unresolvable PlayerRef, a
 -- maximum over a set that is empty or holds a member with no value
 -- (Aggregation.Greatest), or a sum over a set holding one (Aggregation.Total).
 -- It propagates, which is what every caller but one wants: CR 208.2a's substituted 0 is a different rule, scoped to a
 -- characteristic-defining ability and applied by
 -- Parun.Engine.Quantity.determine.
-evaluate :: ViewOf -> QuantityOf quantity -> Filter.Context -> GameState -> Count.Type.Count quantity -> Maybe Integer
-evaluate viewOf quantityOf context gs count =
+evaluate :: ViewOf -> QuantityOf quantity -> TalliesWhatHappened quantity -> Filter.Context -> GameState -> Count.Type.Count quantity -> Maybe Integer
+evaluate viewOf quantityOf talliesWhatHappened context gs count =
   let predicate = Count.Type.filter count
       aggregation = Count.Type.aggregation count
    in case Count.Type.scope count of
@@ -154,10 +159,11 @@ evaluate viewOf quantityOf context gs count =
               kept = fmap ((,) Nothing) (Maybe.mapMaybe (keep predicate context . Just) views)
            in aggregate quantityOf aggregation kept
         -- CR 102.1: the players themselves. Candidates come from the same
-        -- playersFor the zone arm indexes by, so CR 800.4a's departed seat is
-        -- uncountable here without a second reading of who is in the game -- and
-        -- unlike there, that IS observable: a departed player's zones were emptied,
-        -- so naming them cost nothing, while naming the player costs one.
+        -- playersFor the zone arm indexes by, so CR 800.4a's departed seat is not
+        -- one -- except where the per-member quantity tallies what players did:
+        -- CR 800.4i finds a departed player's actions, so that fold reads
+        -- historyPlayersFor's roster instead. The departure/cr-800-4i scenarios
+        -- (Daybreak Ranger's casts, Savage Gorger's life lost) are the proof.
         --
         -- Each candidate is seen through playerView below rather than through the
         -- injected ViewOf, which answers about OBJECTS (CR 109.1) and has no id to
@@ -171,7 +177,14 @@ evaluate viewOf quantityOf context gs count =
         -- "the highest life total among your opponents". So nothing here carries the
         -- candidate beside the view: the view already names it.
         Scope.OverPlayers ref -> do
-          pids <- playersFor viewOf context gs ref
+          let tallied = case aggregation of
+                Aggregation.Greatest quantity -> talliesWhatHappened quantity
+                Aggregation.Total quantity -> talliesWhatHappened quantity
+                Aggregation.Members -> False
+                Aggregation.Distinct _ -> False
+                Aggregation.MostSharing _ -> False
+                Aggregation.DistinctNames -> False
+          pids <- (if tallied then historyPlayersFor else playersFor) viewOf context gs ref
           -- The predicate is baked PER CANDIDATE (see bakePerspective): CR 110.2's
           -- comparison is answered here, where the board is, and the match below is the
           -- same pure one every other scope makes.
