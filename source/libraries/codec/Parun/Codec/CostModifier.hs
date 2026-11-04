@@ -22,8 +22,7 @@ import qualified Parun.Types.CostSubject as CostSubject.Type
 -- are DEFAULTED to Nothing, a sentence that names no target, no "for each"
 -- and no "first", so a card file writes only the ones it prints.
 --
--- Refused ('Fields.objectWith''s check): `onlyFirst` on spells, which is not
--- implemented (#4924); `onlyFirst` beside `whichLoyalty`, which no card
+-- Refused ('Fields.objectWith''s check): `onlyFirst` beside `whichLoyalty`, which no card
 -- exercises -- Scryfall o:"first" o:"loyalty abilit" o:"cost", 2026-10-10,
 -- finds no printing combining them; and a target criterion on an
 -- addition to an activation, whose components Parun.Engine.Activate measures
@@ -51,7 +50,7 @@ codec = Fields.objectWith check $ do
   where
     check modifier = case (CostModifier.subject modifier, CostModifier.onlyFirst modifier) of
       (_, Nothing) -> additionCheck modifier
-      (CostSubject.Type.Spells, Just _) -> Left (Text.pack "CostModifier: onlyFirst on spells is not implemented (#4924)")
+      (CostSubject.Type.Spells, Just _) -> additionCheck modifier
       (CostSubject.Type.Activations criteria, Just _)
         | Just _ <- ActivationCriteria.whichLoyalty criteria -> Left (Text.pack "CostModifier: onlyFirst beside whichLoyalty has no printing")
         | otherwise -> additionCheck modifier

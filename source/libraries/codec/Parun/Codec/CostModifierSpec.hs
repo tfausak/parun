@@ -46,11 +46,13 @@ spec s = Spec.describe s "Parun.Codec.CostModifier" $ do
           (CostChange.Reduce (AppliedReduction.MkAppliedReduction (ManaCost.MkManaCost [ManaSymbol.Generic 2]) 1 False))
       )
       " {\"subject\":{\"type\":\"Activations\",\"value\":{\"whichKind\":{\"type\":\"NonManaAbility\"}}},\"matching\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"whichTargets\":{\"type\":\"IsSource\"},\"perTarget\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"perEach\":{\"type\":\"CommanderCasts\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"onlyFirst\":{\"type\":\"ControllersTurn\"},\"change\":{\"type\":\"Reduce\",\"value\":{\"amount\":[{\"type\":\"Generic\",\"value\":2}],\"atLeast\":1}}} "
-  Spec.it s "refuses a spell's onlyFirst (#4924)" $
-    Spec.assertBool
+  -- Shadow in the Warp's first creature spell.
+  Spec.it s "a spell reduction for the first each turn" $
+    Common.assertCodec
       s
-      (Either.isLeft (Codec.decode CostModifier.codec =<< Common.parse (Text.pack "{\"subject\":{\"type\":\"Spells\"},\"matching\":{\"type\":\"IsSource\"},\"onlyFirst\":{\"type\":\"ControllersTurn\"},\"change\":{\"type\":\"Increase\",\"value\":[{\"type\":\"Generic\",\"value\":1}]}}")))
-      "expected a decode failure"
+      CostModifier.codec
+      (CostModifier.Type.MkCostModifier CostSubject.Spells (Filter.HasCardType CardType.Creature) Nothing Nothing Nothing (Just TurnScope.EachTurn) (CostChange.Reduce (AppliedReduction.MkAppliedReduction (ManaCost.MkManaCost [ManaSymbol.Generic 2]) 0 False)))
+      " {\"subject\":{\"type\":\"Spells\"},\"matching\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"onlyFirst\":{\"type\":\"EachTurn\"},\"change\":{\"type\":\"Reduce\",\"value\":{\"amount\":[{\"type\":\"Generic\",\"value\":2}]}}} "
   Spec.it s "refuses onlyFirst beside whichLoyalty" $
     Spec.assertBool
       s
