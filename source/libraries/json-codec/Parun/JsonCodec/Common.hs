@@ -50,6 +50,7 @@ import qualified Parun.Json.Value as Value
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonSchema.Define as Define
 import qualified Parun.JsonSchema.Name as Name
+import qualified Parun.JsonSchema.Pattern as Pattern
 import qualified Parun.JsonSchema.Schema as Schema
 import qualified Parun.JsonSchema.Validate as Validate
 import qualified Parun.Spec as Spec
@@ -414,7 +415,7 @@ keyValue ck cv =
         v <- Codec.decode cv =<< field "value" ps
         pure (k, v),
       Codec.schema =
-        (\ks vs -> Schema.object [Value.pair "key" (Schema.unwrap ks), Value.pair "value" (Schema.unwrap vs)] [Text.pack "key", Text.pack "value"])
+        (\ks vs -> Schema.object [Value.pair "key" ks, Value.pair "value" vs] [Text.pack "key", Text.pack "value"])
           <$> Codec.schema ck
           <*> Codec.schema cv
     }
@@ -542,8 +543,14 @@ naturalMap ck cv =
 
 -- | What a 'naturalMap' key looks like: a decimal natural with no leading zero,
 -- no sign and no exponent.
-naturalKeyPattern :: Text.Text
-naturalKeyPattern = Text.pack "^(0|[1-9][0-9]*)$"
+naturalKeyPattern :: Pattern.Pattern
+naturalKeyPattern =
+  Pattern.MkPattern
+    [ Pattern.Alternation
+        [ [Pattern.Literal '0'],
+          [Pattern.Class [('1', '9')], Pattern.Star (Pattern.Class [('0', '9')])]
+        ]
+    ]
 
 -- | Encodes a key through its own codec and renders the resulting scalar as a
 -- decimal integer. Rendering the scalar as JSON would not do: 'Value.encode'
@@ -629,7 +636,7 @@ assertEnumCodec s c = do
 -- | Forces a codec's schema and checks only that it is an object. It asserts
 -- nothing about the content, so editing a schema never edits a test -- but a
 -- bottom fails here, and a definition that fails to terminate fails on the
--- suite's timeout. 'Define.run' applies 'Value.Object' before its list spine
+-- suite's timeout. 'Define.toValue' applies 'Value.Object' before its list spine
 -- is demanded, so pattern-matching the value (as 'asObject' alone does) forces
 -- only the outer tag, not the @$defs@ bodies inside it; rendering to text and
 -- parsing it back walks the whole tree, which is what actually forces those.
@@ -639,5 +646,5 @@ assertHasSchema :: (Stack.HasCallStack, Applicative m) => Spec.Spec m n -> Codec
 assertHasSchema s c =
   Spec.assertBool
     s
-    (Either.isRight (asObject =<< parse (render (Define.run (Codec.schema c)))))
+    (Either.isRight (asObject =<< parse (render (Define.toValue (Define.run (Codec.schema c))))))
     "expected the schema to be an object"

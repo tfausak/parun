@@ -39,7 +39,7 @@ import qualified Parun.JsonSchema.Schema as Schema
 data Fields o a = MkFields
   { encode :: o -> [Pair.Pair Value.Value],
     decode :: [Pair.Pair Value.Value] -> Either Text.Text a,
-    schema :: Define.SchemaM ([Pair.Pair Value.Value], [Text.Text])
+    schema :: Define.SchemaM ([Pair.Pair Schema.Schema], [Text.Text])
   }
 
 -- | Only the decoding side mentions @a@, so this is a type-changing record
@@ -72,7 +72,7 @@ required key c get =
       decode = Common.field key >=> Codec.decode c,
       schema = do
         s <- Codec.schema c
-        pure ([Value.pair key (Schema.unwrap s)], [Text.pack key])
+        pure ([Value.pair key s], [Text.pack key])
     }
 
 -- | A field written only when it differs from a default, absent from the
@@ -91,7 +91,7 @@ defaulted key d c get =
       decode = Common.defaultedField key d (Codec.decode c),
       schema = do
         s <- Codec.schema c
-        pure ([Value.pair key (Schema.unwrap (Schema.withDefault (Codec.encode c d) s))], [])
+        pure ([Value.pair key (Schema.withDefault (Codec.encode c d) s)], [])
     }
 
 -- | The fields of one record written into another's object, through the getter

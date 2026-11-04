@@ -1,83 +1,115 @@
+-- | A JSON schema, restricted to the shapes this project's codecs write. Each
+-- constructor is what one combinator below builds, and 'keywords' is the one
+-- place that spells it as JSON Schema keywords.
 module Parun.JsonSchema.Schema where
 
 import qualified Data.Text as Text
-import qualified Parun.Json.Object as Object
+import qualified Numeric.Natural as Natural
 import qualified Parun.Json.Pair as Pair
 import qualified Parun.Json.Value as Value
+import qualified Parun.JsonSchema.Name as Name
+import qualified Parun.JsonSchema.Pattern as Pattern
 
--- | A JSON schema, modelled as a plain JSON value.
-newtype Schema = MkSchema
-  { unwrap :: Value.Value
-  }
+data Schema
+  = -- | Any value: the empty schema.
+    Any
+  | -- | @$ref@ to the definition filed under the name.
+    Reference Name.Name
+  | Null
+  | Boolean
+  | -- | An integer, with an optional @minimum@.
+    Integer (Maybe Integer)
+  | -- | A string, with an optional @pattern@.
+    String (Maybe Pattern.Pattern)
+  | -- | @const@: exactly this string.
+    Constant Text.Text
+  | -- | @items@, @minItems@ (omitted at zero) and @uniqueItems@ (omitted unset).
+    Array Schema Natural.Natural Bool
+  | -- | @prefixItems@, with @minItems@ and @maxItems@ both its length.
+    Tuple [Schema]
+  | -- | @properties@ and @required@; an unnamed property is allowed.
+    Object [Pair.Pair Schema] [Text.Text]
+  | -- | A map: the optional @propertyNames@, and @additionalProperties@.
+    Map (Maybe Schema) Schema
+  | -- | Exactly one of the branches.
+    OneOf [Schema]
+  | -- | @default@: an annotation beside the schema, never a constraint.
+    Defaulted Value.Value Schema
   deriving (Eq, Ord, Show)
 
-fromPairs :: [Pair.Pair Value.Value] -> Schema
-fromPairs = MkSchema . Value.object
+toValue :: Schema -> Value.Value
+toValue = Value.object . keywords
 
--- | A schema's keywords, so another can be added to it. Every schema this
--- module builds is a JSON object -- only the @true@ and @false@ schemas are
--- not, and nothing here makes one -- so the other case is unreachable. Wrapping
--- it in @allOf@ keeps the function total without discarding the schema.
+-- | A schema's keywords, so 'Parun.JsonSchema.Define.toValue' can write the
+-- root's beside @$schema@ and @$defs@.
 keywords :: Schema -> [Pair.Pair Value.Value]
-keywords s = case unwrap s of
-  Value.Object o -> Object.unwrap o
-  v -> [Value.pair "allOf" $ Value.array [v]]
+keywords schema = case schema of
+  Any -> []
+  Reference name -> [Value.pair "$ref" . Value.text $ Name.fragment name]
+  Null -> [typeIs "null"]
+  Boolean -> [typeIs "boolean"]
+  Integer bound -> typeIs "integer" : foldMap (pure . Value.pair "minimum" . Value.integer) bound
+  String pat -> typeIs "string" : foldMap (pure . Value.pair "pattern" . Value.text . Pattern.render) pat
+  Constant t -> [Value.pair "const" $ Value.text t]
+  Array s count unique ->
+    [typeIs "array", Value.pair "items" $ toValue s]
+      <> [Value.pair "minItems" . Value.integer $ toInteger count | count > 0]
+      <> [Value.pair "uniqueItems" $ Value.boolean True | unique]
+  Tuple ss ->
+    let count = Value.integer . toInteger $ length ss
+     in [ typeIs "array",
+          Value.pair "prefixItems" . Value.array $ fmap toValue ss,
+          Value.pair "minItems" count,
+          Value.pair "maxItems" count
+        ]
+  Object properties required ->
+    [ typeIs "object",
+      Value.pair "properties" . Value.object $ fmap (\p -> Pair.MkPair (Pair.name p) . toValue $ Pair.value p) properties,
+      Value.pair "required" . Value.array $ fmap Value.text required
+    ]
+  Map k v ->
+    typeIs "object"
+      : foldMap (pure . Value.pair "propertyNames" . toValue) k
+        <> [Value.pair "additionalProperties" $ toValue v]
+  OneOf ss -> [Value.pair "oneOf" . Value.array $ fmap toValue ss]
+  Defaulted d s -> keywords s <> [Value.pair "default" d]
+
+typeIs :: String -> Pair.Pair Value.Value
+typeIs = Value.pair "type" . Value.string
 
 string :: Schema
-string = fromPairs [Value.pair "type" $ Value.string "string"]
+string = String Nothing
 
 integer :: Schema
-integer = fromPairs [Value.pair "type" $ Value.string "integer"]
+integer = Integer Nothing
 
 natural :: Schema
-natural =
-  fromPairs
-    [ Value.pair "type" $ Value.string "integer",
-      Value.pair "minimum" $ Value.integer 0
-    ]
+natural = Integer $ Just 0
 
 null :: Schema
-null = fromPairs [Value.pair "type" $ Value.string "null"]
+null = Null
 
 boolean :: Schema
-boolean = fromPairs [Value.pair "type" $ Value.string "boolean"]
+boolean = Boolean
 
 array :: Schema -> Schema
-array s =
-  fromPairs
-    [ Value.pair "type" $ Value.string "array",
-      Value.pair "items" $ unwrap s
-    ]
+array s = Array s 0 False
 
 uniqueArray :: Schema -> Schema
-uniqueArray s =
-  fromPairs $
-    keywords (array s) <> [Value.pair "uniqueItems" $ Value.boolean True]
+uniqueArray s = Array s 0 True
 
 -- | An array whose decoder rejects an empty one, e.g. 'Parun.JsonCodec.Common.nonEmpty'.
 nonEmptyArray :: Schema -> Schema
-nonEmptyArray s = fromPairs $ keywords (array s) <> [Value.pair "minItems" $ Value.integer 1]
+nonEmptyArray s = Array s 1 False
 
 tupleOf :: [Schema] -> Schema
-tupleOf ss =
-  let count = toInteger $ length ss
-   in fromPairs
-        [ Value.pair "type" $ Value.string "array",
-          Value.pair "prefixItems" . Value.array $ fmap unwrap ss,
-          Value.pair "minItems" $ Value.integer count,
-          Value.pair "maxItems" $ Value.integer count
-        ]
+tupleOf = Tuple
 
 constant :: Text.Text -> Schema
-constant = fromPairs . pure . Value.pair "const" . Value.text
+constant = Constant
 
-object :: [Pair.Pair Value.Value] -> [Text.Text] -> Schema
-object properties required =
-  fromPairs
-    [ Value.pair "type" $ Value.string "object",
-      Value.pair "properties" $ Value.object properties,
-      Value.pair "required" . Value.array $ fmap Value.text required
-    ]
+object :: [Pair.Pair Schema] -> [Text.Text] -> Schema
+object = Object
 
 -- | An object used as a MAP: every value shares one shape and the keys are
 -- unconstrained, e.g. @Parun.JsonCodec.Common.textMap@ -- named rather than
@@ -91,11 +123,7 @@ object properties required =
 -- than the schema loosened to describe the decoder. 'mapOfKeys' is the sibling
 -- for a decoder that does constrain its keys.
 mapOf :: Schema -> Schema
-mapOf s =
-  fromPairs
-    [ Value.pair "type" $ Value.string "object",
-      Value.pair "additionalProperties" $ unwrap s
-    ]
+mapOf = Map Nothing
 
 -- | An object used as a map whose KEYS are constrained too, e.g. a map keyed
 -- by the decimal rendering of a number. Separate from 'mapOf' rather than an
@@ -103,23 +131,17 @@ mapOf s =
 -- schema for a decoder that accepts any string, and this one is honest only
 -- for a decoder that rejects a key the key schema rejects.
 mapOfKeys :: Schema -> Schema -> Schema
-mapOfKeys k v =
-  fromPairs
-    [ Value.pair "type" $ Value.string "object",
-      Value.pair "propertyNames" $ unwrap k,
-      Value.pair "additionalProperties" $ unwrap v
-    ]
+mapOfKeys = Map . Just
 
--- | A string matching a regular expression. 'Parun.JsonSchema.Pattern' says
--- which patterns the validator can actually check.
-matching :: Text.Text -> Schema
-matching p = fromPairs $ keywords string <> [Value.pair "pattern" $ Value.text p]
+-- | A string matching a pattern.
+matching :: Pattern.Pattern -> Schema
+matching = String . Just
 
 oneOf :: [Schema] -> Schema
-oneOf = fromPairs . pure . Value.pair "oneOf" . Value.array . fmap unwrap
+oneOf = OneOf
 
 nullable :: Schema -> Schema
 nullable s = oneOf [s, Parun.JsonSchema.Schema.null]
 
 withDefault :: Value.Value -> Schema -> Schema
-withDefault v s = fromPairs $ keywords s <> [Value.pair "default" v]
+withDefault = Defaulted

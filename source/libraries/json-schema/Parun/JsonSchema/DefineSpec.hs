@@ -22,17 +22,17 @@ spec s = Spec.describe s "Parun.JsonSchema.Define" $ do
   Spec.it s "a definition becomes a reference" $ do
     Spec.assertEq
       s
-      (Schema.unwrap (Define.reference (name "PlayerId")))
+      (Schema.toValue (Define.reference (name "PlayerId")))
       (obj [Value.pair "$ref" (Value.text (Text.pack "#/$defs/PlayerId"))])
 
   Spec.it s "escapes a name's pointer characters in the fragment" $ do
-    Spec.assertEq s (Define.fragment (name ":~/")) (Text.pack "#/$defs/:~0~1")
+    Spec.assertEq s (Name.fragment (name ":~/")) (Text.pack "#/$defs/:~0~1")
 
   Spec.it s "files the name raw in $defs and escaped in $ref" $ do
     Spec.assertEq
       s
-      (Define.run (Define.define (name ":~/") (pure Schema.string)))
-      (document "#/$defs/:~0~1" [Value.pair ":~/" (Schema.unwrap Schema.string)])
+      (Define.toValue (Define.run (Define.define (name ":~/") (pure Schema.string))))
+      (document "#/$defs/:~0~1" [Value.pair ":~/" (Schema.toValue Schema.string)])
 
   -- Without define registering its name BEFORE evaluating its body, this does
   -- not terminate, and the suite's one-second timeout is what says so.
@@ -40,8 +40,8 @@ spec s = Spec.describe s "Parun.JsonSchema.Define" $ do
     let recursive = Define.define (name "Loop") (fmap Schema.nullable recursive)
     Spec.assertEq
       s
-      (Define.run recursive)
+      (Define.toValue (Define.run recursive))
       ( document
           "#/$defs/Loop"
-          [Value.pair "Loop" (Schema.unwrap (Schema.nullable (Define.reference (name "Loop"))))]
+          [Value.pair "Loop" (Schema.toValue (Schema.nullable (Define.reference (name "Loop"))))]
       )

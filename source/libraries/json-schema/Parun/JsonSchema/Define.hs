@@ -2,20 +2,22 @@ module Parun.JsonSchema.Define where
 
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Map.Strict as Map
-import qualified Data.Maybe as Maybe
 import qualified Data.Text as Text
-import qualified Parun.Extra.Builder as Builder
-import qualified Parun.Json.Pair as Pair
 import qualified Parun.Json.Value as Value
-import qualified Parun.JsonPointer.Pointer as Pointer
-import qualified Parun.JsonPointer.Token as Token
 import qualified Parun.JsonSchema.Name as Name
 import qualified Parun.JsonSchema.Schema as Schema
-import qualified Parun.Uri.Fragment as Fragment
 
 -- | 'Nothing' marks a definition currently being built. 'Just' is a finished
 -- one. The distinction is what 'define' reads to break a cycle.
 type SchemaM = State.State (Map.Map Name.Name (Maybe Schema.Schema))
+
+-- | A schema document: the root schema, and the @$defs@ every
+-- 'Schema.Reference' in it resolves against.
+data Document = MkDocument
+  { root :: Schema.Schema,
+    definitions :: Map.Map Name.Name Schema.Schema
+  }
+  deriving (Eq, Show)
 
 -- | Registers a definition and returns a reference to it. The name goes into
 -- the map BEFORE the body is evaluated, so a re-entrant call finds it and
@@ -26,8 +28,8 @@ type SchemaM = State.State (Map.Map Name.Name (Maybe Schema.Schema))
 -- its own body, even if that body differs.
 define :: Name.Name -> SchemaM Schema.Schema -> SchemaM Schema.Schema
 define name body = do
-  definitions <- State.get
-  if Map.member name definitions
+  existing <- State.get
+  if Map.member name existing
     then pure $ reference name
     else do
       State.modify' $ Map.insert name Nothing
@@ -36,25 +38,18 @@ define name body = do
       pure $ reference name
 
 reference :: Name.Name -> Schema.Schema
-reference name = Schema.fromPairs [Value.pair "$ref" . Value.text $ fragment name]
+reference = Schema.Reference
 
-fragment :: Name.Name -> Text.Text
-fragment name =
-  Text.pack
-    . ('#' :)
-    . Builder.toString
-    . Fragment.encode
-    . Pointer.encode
-    . Pointer.MkPointer
-    $ [Token.MkToken $ Text.pack "$defs", Token.MkToken $ Name.unwrap name]
-
-run :: SchemaM Schema.Schema -> Value.Value
+run :: SchemaM Schema.Schema -> Document
 run m =
-  let (root, definitions) = State.runState m Map.empty
-   in Value.object $
-        [Value.pair "$schema" $ Value.string "https://json-schema.org/draft/2020-12/schema"]
-          <> Schema.keywords root
-          <> [Value.pair "$defs" . Value.object . Maybe.mapMaybe definition $ Map.toAscList definitions]
+  let (r, ds) = State.runState m Map.empty
+   in MkDocument {root = r, definitions = Map.mapMaybe id ds}
 
-definition :: (Name.Name, Maybe Schema.Schema) -> Maybe (Pair.Pair Value.Value)
-definition (name, ms) = fmap (Value.pair (Text.unpack $ Name.unwrap name) . Schema.unwrap) ms
+toValue :: Document -> Value.Value
+toValue d =
+  Value.object $
+    [Value.pair "$schema" $ Value.string "https://json-schema.org/draft/2020-12/schema"]
+      <> Schema.keywords (root d)
+      <> [ Value.pair "$defs" . Value.object . fmap (\(n, s) -> Value.pair (Text.unpack $ Name.unwrap n) $ Schema.toValue s) . Map.toAscList $
+             definitions d
+         ]

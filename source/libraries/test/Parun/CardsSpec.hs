@@ -25,17 +25,15 @@ spec s = Spec.describe s "Parun.Cards" $ do
   root <- MonadIO.liftIO Registry.defaultRoot
   paths <- MonadIO.liftIO (Registry.listRoot root)
 
-  -- Rendered AND indexed once for the whole corpus rather than once per file.
-  -- Validate.prepare walks every $defs entry, which is the expensive half of a
-  -- validation and does not depend on the card; doing it per file put this
-  -- case within a fifth of a second of the suite's five-second budget.
-  let schema = Validate.prepare (Define.run (Codec.schema Card.codec))
+  -- Built once for the whole corpus rather than once per file: running the
+  -- schema builds every $defs entry, which does not depend on the card.
+  let schema = Define.run (Codec.schema Card.codec)
 
   Monad.forM_ paths $ \path ->
     Spec.it s (reverse (drop (length ".json") (takeWhile (/= '/') (reverse path)))) $ do
       checkFile s root schema path
 
-checkFile :: Spec.Spec IO n -> FilePath -> Validate.Document -> FilePath -> IO ()
+checkFile :: Spec.Spec IO n -> FilePath -> Define.Document -> FilePath -> IO ()
 checkFile s root schema path = do
   -- Read as bytes and decoded as UTF-8 explicitly, for the reason
   -- Parun.Registry.parseCard is: Data.Text.IO.readFile decodes using the locale
@@ -55,7 +53,7 @@ checkFile s root schema path = do
           -- Card.codec rather than Printing.codec because Registry.parseCard is
           -- what reads these files and it decodes a Card; the two write the
           -- same wire.
-          Spec.assertEqWith s (path <> ": schema") (Validate.validateWith schema value) []
+          Spec.assertEqWith s (path <> ": schema") (Validate.validate schema value) []
           case Registry.parseCard bytes of
             Left err -> Spec.assertFailure s (path <> ": " <> Text.unpack err)
             Right card -> do
