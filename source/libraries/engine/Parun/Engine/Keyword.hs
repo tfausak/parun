@@ -33,6 +33,7 @@ import qualified Parun.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import qualified Parun.Types.AttachRestriction as AttachRestriction
 import qualified Parun.Types.AttackTargetRef as AttackTargetRef
 import qualified Parun.Types.Backup as Backup
+import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.BlockPair as BlockPair
 import qualified Parun.Types.BlockRole as BlockRole
@@ -96,6 +97,9 @@ import qualified Parun.Types.DestructionRewrite as DestructionRewrite
 import qualified Parun.Types.Devour as Devour
 import qualified Parun.Types.DevourCount as DevourCount
 import qualified Parun.Types.DiscardCause as DiscardCause
+import qualified Parun.Types.DiscardSubject as DiscardSubject
+import qualified Parun.Types.DiscardTrigger as DiscardTrigger
+import qualified Parun.Types.DiscardWay as DiscardWay
 import qualified Parun.Types.Draw as Draw
 import qualified Parun.Types.DrawR as DrawR
 import qualified Parun.Types.DrawRewrite as DrawRewrite
@@ -9091,7 +9095,7 @@ paradigmCopy =
 -- since rule 702.35a's replacement has already run. No intervening "if": rule
 -- 702.35a states none.
 --
--- NOT TriggerCondition.SelfDiscarded, which is Bartered Cow's cause-blind read
+-- NOT DiscardWay.AnyDiscard, which is Bartered Cow's cause-blind read
 -- and fires on a discard however it was redirected: an opponent's Rest in Peace
 -- row chosen over madness's under CR 616.1 exiles the card WITHOUT madness
 -- applying, and rule 702.35a's trigger must not fire then. Parun.CastSpec's "CR
@@ -9134,7 +9138,7 @@ madnessCast manaCost payload =
               MoveToZone.placement = LibraryPlacement.defaultValue,
               MoveToZone.duration = Nothing
             }
-   in Mint.trigger TriggerCondition.SelfExiledForMadness (Seq.fromList [offer, toGraveyard])
+   in Mint.trigger (TriggerCondition.Discards (DiscardTrigger.MkDiscardTrigger DiscardSubject.Self DiscardWay.ExiledForMadness Batching.EachOccurrence)) (Seq.fromList [offer, toGraveyard])
 
 -- CR 702.62a's last sentence: "If you cast a creature spell this way, it gains
 -- haste until you lose control of the spell or the permanent it becomes." The

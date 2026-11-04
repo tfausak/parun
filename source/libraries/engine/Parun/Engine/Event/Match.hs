@@ -76,6 +76,9 @@ import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.DiscardCause as DiscardCause
+import qualified Parun.Types.DiscardSubject as DiscardSubject
+import qualified Parun.Types.DiscardTrigger as DiscardTrigger
+import qualified Parun.Types.DiscardWay as DiscardWay
 import qualified Parun.Types.Discarded as Discarded
 import qualified Parun.Types.DrawnUnder as DrawnUnder
 import qualified Parun.Types.Drew as Drew
@@ -668,22 +671,10 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- log -- so Event.delayedPending fires it with no event and this answers False
   -- for every one, StateIs' posture.
   TriggerCondition.Reflexive -> False
-  -- CR 702.29c: the bearer IS the card that was cycled. The event carries the CR
-  -- 400.7 incarnation, which is the object the scan offers as the bearer.
-  --
-  -- The CAUSE makes this narrower than the discard condition below, and is the
-  -- whole of rule 702.29c's "to pay an activation cost of a cycling ability": an
-  -- ordinary discard of a card that HAS cycling reaches the same graveyard through
-  -- the same funnel and must fire nothing.
-  TriggerCondition.SelfCycled -> case event of
-    GameEvent.Discarded (Discarded.MkDiscarded _ oid DiscardCause.ToPayCyclingCost _ _) -> oid == bearer
-    GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.Ordinary _ _) -> False
-    GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.ByEffect _ _) -> False
-    _ -> False
   -- CR 702.94a: the bearer IS the card that was revealed, and the reveal was
-  -- miracle's own. SelfCycled's shape one rule over, cause and all -- and for the
-  -- same reason: the same card shown by an ordinary reveal reaches the same log
-  -- through the same funnel and must fire nothing. That is rule 702.94a's "THIS
+  -- miracle's own. A Self Cycled discard's shape one rule over, cause and all
+  -- -- and for the same reason: the same card shown by an ordinary reveal
+  -- reaches the same log through the same funnel and must fire nothing. That is rule 702.94a's "THIS
   -- WAY", and CR 603.11 is what makes the two halves one ability.
   --
   -- The Ordinary arm is a REGRESSION FENCE rather than proven behaviour, and so
@@ -728,90 +719,41 @@ armMatches bindings board gs bearer you cond event = case cond of
     GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.LeavingFaceDownComponent _) -> False
     GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.FaceDownSpell _) -> False
     _ -> False
-  -- CR 701.9a: the bearer IS the card that was discarded. SelfCycled's shape
-  -- above with the CAUSE dropped, which is the whole difference between the two:
-  -- CR 702.29a makes cycling a discard, so "when you discard this card" fires on
-  -- a cycle as well as on an ordinary discard, where rule 702.29c's "to pay an
-  -- activation cost of a cycling ability" admits only the one cause.
+  -- CR 701.9a: a card was discarded, narrowed by the way. CR 702.29a makes
+  -- cycling a discard, so AnyDiscard admits a cycle; it is one Discarded event,
+  -- so CR 702.29d's "only once" holds by construction (TriggerSpec's "CR
+  -- 702.29d cycling a card fires the discard trigger exactly once"). Cycled is
+  -- rule 702.29c's "to pay an activation cost of a cycling ability": an ordinary
+  -- discard of a card with cycling reaches the same funnel and fires nothing.
+  -- ExiledForMadness is rule 702.35a's "this way", read off `Discarded.madness`
+  -- rather than the destination, since Rest in Peace's row chosen over
+  -- madness's under CR 616.1 exiles the card just the same.
   --
-  -- The discarding player is not compared against anything. CR 701.9a moves the
-  -- card from its OWNER's hand, and CR 113.8 makes that owner the controller of
-  -- an ability of a card in a graveyard, so the two seats coincide by
-  -- construction and there is no PlayerRelation to read.
-  TriggerCondition.SelfDiscarded -> case event of
-    GameEvent.Discarded (Discarded.MkDiscarded _ oid _ _ _) -> oid == bearer
-    _ -> False
-  -- CR 702.35a's "when this card is exiled THIS WAY": the same discard the arm
-  -- above reads, narrowed to the one rule 702.35a's own replacement redirected
-  -- into exile. `Discarded.madness` is where the discard funnel records
-  -- which redirect applied (Parun.Engine.Event.discardReturning); the DESTINATION
-  -- cannot answer it, since Rest in Peace's row chosen over madness's under CR
-  -- 616.1 exiles the card just the same and rule 702.35a's trigger must not fire.
-  --
-  -- The bearer is the EXILE incarnation, which is the id the CR 400.7 funnel
-  -- minted and the id the event carries -- see the arm above.
-  TriggerCondition.SelfExiledForMadness -> case event of
-    GameEvent.Discarded (Discarded.MkDiscarded _ oid _ madness _) -> Maybe.isJust madness && oid == bearer
-    _ -> False
-  -- CR 701.9a: a card was discarded, by a player the relation admits. The
-  -- discarding player comes from the event; CR 109.5 fixes "you" as the
-  -- ability's controller (CR 603.3a), and PlayerRelation.holds is what each arm
-  -- MEANS -- Megrim's "an opponent" is CR 102.3's player not on your team, which
-  -- is every other player in a free-for-all (CR 806.1) and at two seats (CR
-  -- 102.2). Every relation-carrying condition below
-  -- reads it, so they cannot drift apart.
-  --
-  -- The bearer is NOT part of the match, unlike every Self- condition here: the
-  -- enchantment watches someone else's hand and has nothing to do with the card
-  -- that left it.
-  --
-  -- CR 702.29d -- "these abilities trigger only once when a card is cycled" --
-  -- needs no clause of its own, and the DiscardCause is ignored for that reason
-  -- rather than by omission. CR 702.29a makes cycling a discard, so a cycled
-  -- card must fire this; the cycle is ONE Discarded event, so it fires it once.
-  -- TriggerSpec's "CR 702.29d cycling a card fires the discard trigger exactly
-  -- once" is the test that proves it.
-  --
-  -- The Filter reads the card the discard named, which is the incarnation in
-  -- the zone it arrived in (Event.discardReturning) and its last known
-  -- information once it has moved on. A madness discard into exile is still a
-  -- discard (CR 702.35a) and arrives on the same event, so it is judged alike.
-  -- Waste Not's three abilities each narrow here rather than in a clause, since
-  -- CR 603.2 asks the event whether the ability triggers at all.
-  TriggerCondition.PlayerDiscards (PlayerActsOn.MkPlayerActsOn relation f) -> case event of
-    GameEvent.Discarded (Discarded.MkDiscarded discarder card _ _ _) ->
-      PlayerRelation.holds (Game.teams gs) relation you discarder
-        && maybe False (\view -> Filter.matches bearerContext view f) (Projection.viewWithLastKnown card gs card)
-    _ -> False
-  -- CR 603.2c's batch reading of the arm above, delegated for CardsLeaveZone's
-  -- reason: firing once per discard event is `batchScoped`, never this arm.
-  TriggerCondition.PlayerDiscardsCards relation -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.PlayerDiscards relation) event
-  -- The discard arm above narrowed by the CAUSE, which is the whole of the
-  -- difference: CR 702.29a makes cycling a discard, so an ordinary discard
-  -- reaches the same log through the same funnel and must fire nothing here.
-  -- That cause is what rule 702.29c calls "to pay an activation cost of a
-  -- cycling ability"; rule 702.29c itself defines only the self-scoped phrase,
-  -- and what fixes the "you" of this watcher-scoped one is CR 603.3a, read
-  -- through PlayerRelation.holds so a new relation is answered once.
-  --
-  -- The bearer is NOT part of the match, on PlayerDiscards' posture: Prickly
-  -- Marmoset watches its controller's hand and has nothing to do with the card
-  -- that left it.
-  --
-  -- CR 702.29d needs no clause: one cycle is one Discarded event, so this fires
-  -- once by construction, exactly as the discard arm above does.
-  TriggerCondition.PlayerCycles relation -> case event of
-    GameEvent.Discarded (Discarded.MkDiscarded discarder _ DiscardCause.ToPayCyclingCost _ _) -> PlayerRelation.holds (Game.teams gs) relation you discarder
-    GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.Ordinary _ _) -> False
-    GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.ByEffect _ _) -> False
+  -- Self compares the bearer with the CR 400.7 incarnation the event carries,
+  -- which is the object the graveyard or exile scan offers. Discarder relates
+  -- the discarding player to CR 109.5's "you" (CR 603.3a) through
+  -- PlayerRelation.holds (an opponent is CR 102.3's player not on your team),
+  -- leaves the bearer out (Megrim watches someone else's hand), and reads the
+  -- Filter off the card with last known information once it has moved on. Batching is `batchScoped`'s, never this arm's.
+  TriggerCondition.Discards (DiscardTrigger.MkDiscardTrigger subject way _) -> case event of
+    GameEvent.Discarded (Discarded.MkDiscarded discarder card cause madness _) ->
+      let admitsWay = case way of
+            DiscardWay.AnyDiscard -> True
+            DiscardWay.Cycled -> cause == DiscardCause.ToPayCyclingCost
+            DiscardWay.ExiledForMadness -> Maybe.isJust madness
+       in admitsWay && case subject of
+            DiscardSubject.Self -> card == bearer
+            DiscardSubject.Discarder (PlayerActsOn.MkPlayerActsOn relation f) ->
+              PlayerRelation.holds (Game.teams gs) relation you discarder
+                && maybe False (\view -> Filter.matches bearerContext view f) (Projection.viewWithLastKnown card gs card)
     _ -> False
   -- CR 121.1: a card was DRAWN, by a player the relation admits, and it was that
   -- player's `nth` draw of the turn. The ordinal comes off the event, which
   -- Event.drawCard stamped from GameState.drawsThisTurn as the draw happened;
   -- CR 109.5 fixes "you" as the ability's controller (CR 603.3a), and an
-  -- opponent is every other player for the reason PlayerDiscards gives.
+  -- opponent is every other player for the reason a Discarder discard gives.
   --
-  -- The bearer is NOT part of the match, exactly as for PlayerDiscards: Erudite
+  -- The bearer is NOT part of the match, exactly as for a Discarder discard: Erudite
   -- Wizard is a creature watching a library, and the card drawn is nothing to do
   -- with it.
   --
@@ -2051,7 +1993,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- captured as the counter happened, and CR 109.5/603.3a fix "you" as the
   -- ability's controller.
   --
-  -- The bearer is NOT part of the match -- the PlayerDiscards posture rather than
+  -- The bearer is NOT part of the match -- the Discarder discard's posture rather than
   -- any Self- condition's -- since the bearer is a permanent and the countering is
   -- done by a spell somewhere else.
   --
@@ -2083,7 +2025,7 @@ armMatches bindings board gs bearer you cond event = case cond of
     _ -> False
   -- CR 615.13: a prevention effect was applied and prevented some damage, and the
   -- damage it prevented was addressed to a player the relation admits. CR 109.5 /
-  -- 603.3a fix "you" as the ability's controller, exactly as PlayerDiscards and
+  -- 603.3a fix "you" as the ability's controller, exactly as a Discarder discard and
   -- SpellOrAbilityCounters do.
   --
   -- The bearer is NOT part of the match: Selfless Squire is a creature watching
@@ -2773,7 +2715,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   TriggerCondition.AnyOf conditions -> any (\c -> matchesTriggerGiven bindings board gs bearer you c event) conditions
   -- CR 609.1: the narrowed condition, on an event a spell or ability's effect
   -- caused, that spell or ability's controller related to CR 109.5's "you" the
-  -- way PlayerDiscards relates the discarder. The controller is the one the
+  -- way a Discarder discard relates the discarder. The controller is the one the
   -- event recorded as it happened (Moved.causedBy), so a later change of
   -- control cannot reach back.
   TriggerCondition.CausedBy narrowed ->

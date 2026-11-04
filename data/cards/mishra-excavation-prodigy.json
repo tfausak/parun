@@ -91,16 +91,24 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PlayerDiscardsCards",
+            "type": "Discards",
             "value": {
-              "filter": {
-                "type": "HasCardType",
-                "value": {
-                  "type": "Artifact"
-                }
+              "batching": {
+                "type": "OneOrMore"
               },
-              "player": {
-                "type": "You"
+              "subject": {
+                "type": "Discarder",
+                "value": {
+                  "filter": {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Artifact"
+                    }
+                  },
+                  "player": {
+                    "type": "You"
+                  }
+                }
               }
             }
           },

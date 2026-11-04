@@ -34,9 +34,23 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PlayerCycles",
+            "type": "Discards",
             "value": {
-              "type": "You"
+              "subject": {
+                "type": "Discarder",
+                "value": {
+                  "filter": {
+                    "type": "And",
+                    "value": []
+                  },
+                  "player": {
+                    "type": "You"
+                  }
+                }
+              },
+              "way": {
+                "type": "Cycled"
+              }
             }
           },
           "modal": {

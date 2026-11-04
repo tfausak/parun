@@ -38,6 +38,9 @@ import qualified Parun.Types.Condition as Condition.Type
 import qualified Parun.Types.ContinuousEffect as ContinuousEffect
 import qualified Parun.Types.ControlDuration as ControlDuration
 import qualified Parun.Types.Cost as Cost
+import qualified Parun.Types.DiscardSubject as DiscardSubject
+import qualified Parun.Types.DiscardTrigger as DiscardTrigger
+import qualified Parun.Types.DiscardWay as DiscardWay
 import qualified Parun.Types.Duration as Duration
 import qualified Parun.Types.EntryRiders as EntryRiders
 import qualified Parun.Types.Expiry as Expiry.Type
@@ -252,7 +255,7 @@ resolveOneWith runSubgame = do
 -- and fences: a move stating its origin already misses such an arrival.
 afterMadness :: TriggerCondition.TriggerCondition -> ObjectId -> GameState.GameState -> Game ()
 afterMadness condition exiled before = case condition of
-  TriggerCondition.SelfExiledForMadness
+  TriggerCondition.Discards (DiscardTrigger.MkDiscardTrigger DiscardSubject.Self DiscardWay.ExiledForMadness _)
     | Maybe.isJust (Game.lookupObject exiled before) -> do
         now <- State.get
         let found arrival = case fmap Object.zone (Game.lookupObject arrival now) of

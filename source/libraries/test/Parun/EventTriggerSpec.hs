@@ -111,8 +111,8 @@ marmosetBoard marmoset mauler forest piker cycler =
 cyclesTriggerSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 cyclesTriggerSpec s registry =
   Spec.describe s "CyclesTrigger" $ do
-    -- The player axis, which is what makes this condition PlayerCycles rather
-    -- than a nullary one: the same board and the same act, one cycling seat
+    -- The player axis, which is what makes this condition a Discarder one rather
+    -- than a Self one: the same board and the same act, one cycling seat
     -- apart. An arm ignoring the discarder would pump alice's Marmoset on all
     -- three.
     Spec.it s "CR 603.3a 'you' is the Marmoset's controller: only alice's cycling pumps it" $ do
@@ -141,9 +141,10 @@ cyclesTriggerSpec s registry =
           Just (1, 1, Just (2, 3)),
           Just (1, 1, Just (2, 3))
         ]
-    -- The neighbouring cause, and the reason this is not TriggerCondition.PlayerDiscards:
-    -- an ORDINARY discard of the same card by the same player, through the same
-    -- CR 400.7 funnel into the same graveyard, is not cycling and fires nothing.
+    -- The neighbouring cause, and the reason this is DiscardWay.Cycled rather
+    -- than AnyDiscard: an ORDINARY discard of the same card by the same player,
+    -- through the same CR 400.7 funnel into the same graveyard, is not cycling
+    -- and fires nothing.
     Spec.it s "CR 702.29c an ordinary discard by the same player is not cycling" $ do
       forest <- S.printingOf s registry "Forest"
       marmoset <- S.printingOf s registry "Prickly Marmoset"
@@ -186,7 +187,7 @@ discardPick wanted p = case p of
 -- half from the graveyard rule 701.9a has just moved the card to -- and
 -- TriggerCondition.AnyOf in the card file. The payload is one Food token and
 -- nothing else, no target and no "may", so the only new thing any case below can
--- be passing on is TriggerCondition.SelfDiscarded.
+-- be passing on is a Self AnyDiscard TriggerCondition.Discards.
 --
 -- alice owns, holds and discards the Cow throughout, and that is not a two-seat
 -- collapse: CR 701.9a discards a card from its OWNER's hand and CR 113.8 makes
@@ -237,8 +238,8 @@ selfDiscardTriggerSpec s registry =
           Spec.assertEqWith s "both cards are in alice's graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice after)) 2
           Spec.assertEqWith s "and no Food was created" (S.countOnBattlefieldByName foodTokenName S.alice after) 0
         -- CR 702.29a: cycling IS discarding, so the cause the event carries is
-        -- one this condition must not read -- where its sibling
-        -- TriggerCondition.SelfCycled reads nothing else. No printing carries both this
+        -- one this condition must not read -- where DiscardWay.Cycled reads
+        -- nothing else. No printing carries both this
         -- condition and cycling (a Scryfall sweep for "you discard this card"
         -- returns this card, Edgar's Awakening and Titanbones, none of them a
         -- cycler), so the two causes are driven through Event.discard, the one

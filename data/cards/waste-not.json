@@ -21,16 +21,21 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PlayerDiscards",
+            "type": "Discards",
             "value": {
-              "filter": {
-                "type": "HasCardType",
+              "subject": {
+                "type": "Discarder",
                 "value": {
-                  "type": "Creature"
+                  "filter": {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Creature"
+                    }
+                  },
+                  "player": {
+                    "type": "Opponent"
+                  }
                 }
-              },
-              "player": {
-                "type": "Opponent"
               }
             }
           },
@@ -90,16 +95,21 @@
         },
         {
           "condition": {
-            "type": "PlayerDiscards",
+            "type": "Discards",
             "value": {
-              "filter": {
-                "type": "HasCardType",
+              "subject": {
+                "type": "Discarder",
                 "value": {
-                  "type": "Land"
+                  "filter": {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Land"
+                    }
+                  },
+                  "player": {
+                    "type": "Opponent"
+                  }
                 }
-              },
-              "player": {
-                "type": "Opponent"
               }
             }
           },
@@ -146,33 +156,38 @@
         },
         {
           "condition": {
-            "type": "PlayerDiscards",
+            "type": "Discards",
             "value": {
-              "filter": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "Not",
-                    "value": {
-                      "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
+              "subject": {
+                "type": "Discarder",
+                "value": {
+                  "filter": {
+                    "type": "And",
+                    "value": [
+                      {
+                        "type": "Not",
+                        "value": {
+                          "type": "HasCardType",
+                          "value": {
+                            "type": "Creature"
+                          }
+                        }
+                      },
+                      {
+                        "type": "Not",
+                        "value": {
+                          "type": "HasCardType",
+                          "value": {
+                            "type": "Land"
+                          }
+                        }
                       }
-                    }
+                    ]
                   },
-                  {
-                    "type": "Not",
-                    "value": {
-                      "type": "HasCardType",
-                      "value": {
-                        "type": "Land"
-                      }
-                    }
+                  "player": {
+                    "type": "Opponent"
                   }
-                ]
-              },
-              "player": {
-                "type": "Opponent"
+                }
               }
             }
           },
