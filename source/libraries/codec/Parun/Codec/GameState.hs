@@ -147,6 +147,7 @@ codec resolve = Fields.object $ do
   boardBeforeEvent <- Fields.defaulted "boardBeforeEvent" Map.empty (Common.naturalMap EventGroup.codec (codec resolve)) GameState.boardBeforeEvent
   controlSample <- Fields.defaulted "controlSample" Map.empty (Common.naturalMap ObjectId.codec PlayerId.codec) GameState.controlSample
   boardAtControlSample <- Fields.defaulted "boardAtControlSample" Nothing (Common.maybe (codec resolve)) GameState.boardAtControlSample
+  heldBoards <- Fields.defaulted "heldBoards" [] (Common.list (codec resolve)) GameState.heldBoards
   damageScannedThrough <- Fields.defaulted "damageScannedThrough" 0 Common.natural GameState.damageScannedThrough
   delayedTriggers <- Fields.defaulted "delayedTriggers" Seq.empty (Common.seq DelayedTrigger.codec) GameState.delayedTriggers
   continuousEffects <- Fields.defaulted "continuousEffects" [] (Common.list (ContinuousEffect.codec Card.codec)) GameState.continuousEffects
@@ -271,6 +272,7 @@ codec resolve = Fields.object $ do
         GameState.boardBeforeEvent = boardBeforeEvent,
         GameState.controlSample = controlSample,
         GameState.boardAtControlSample = boardAtControlSample,
+        GameState.heldBoards = heldBoards,
         GameState.damageScannedThrough = damageScannedThrough,
         GameState.delayedTriggers = delayedTriggers,
         GameState.continuousEffects = continuousEffects,

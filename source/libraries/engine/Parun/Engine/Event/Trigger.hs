@@ -3570,10 +3570,8 @@ stateTriggersOn gs
 -- later readings already hold: an instance armed on two boards is one waiting
 -- ability, CR 603.8 holding it back until it has left the stack. The live
 -- reading comes first and keeps its order. data/scenarios/trigger's City in a
--- Bottle scenario proves it.
---
--- Not implemented: a state matched only before CR 724.1c's or 724.2c's check,
--- which no settle keeps a board for, has not triggered (#5359).
+-- Bottle scenario proves it, and data/scenarios/turn's Synthetic Final
+-- Raising one the boards CR 724.1c's check hands on (GameState.heldBoards).
 stateTriggers :: [GameState] -> GameState -> [PendingTrigger]
 stateTriggers boards live = List.foldl' widen (armedOn live) (reverse boards)
   where
