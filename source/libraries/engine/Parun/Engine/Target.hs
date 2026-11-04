@@ -37,10 +37,12 @@ import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.AgainstSlot as AgainstSlot
+import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.Binding as Binding.Type
 import Parun.Types.Card (Card)
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Chosen as Chosen
+import qualified Parun.Types.Count as Count.Type
 import qualified Parun.Types.Dividing as Dividing
 import qualified Parun.Types.Filter as Filter.Type
 import Parun.Types.Game (Game)
@@ -70,6 +72,7 @@ import qualified Parun.Types.Quantity as Quantity.Type
 import Parun.Types.Recipient (Recipient)
 import qualified Parun.Types.Recipient as Recipient
 import Parun.Types.RowSource (RowSource)
+import qualified Parun.Types.Scope as Scope
 import qualified Parun.Types.SlotCount as SlotCount
 import Parun.Types.SlotName (SlotName)
 import qualified Parun.Types.SlotName as SlotName
@@ -1397,6 +1400,9 @@ legalSetsGiven kind reader pools perspective unannounced seed source slots gs =
                 else Map.elems (Map.fromListWith (\_ firstSeen -> firstSeen) (fmap (\bindings -> (boundValue bindings, bindings)) bindingsList))
          in case traverse sizesOf (Set.toList siblings) of
               Just ranges -> Set.unions (fmap (`answer` slot) (representatives (assignments ranges)))
+              Nothing
+                | Just values <- membersBoundValues counting announcedX boundValue declared slots independent slot ->
+                    Set.unions (fmap (\k -> answer widened slot {TargetSlot.amount = Just (Quantity.Type.Literal k)}) values)
               Nothing -> legalRecipientsGiven kind reader pools perspective True (Map.delete openSlot widened) (Game.acquisitionOf source gs) source slot {TargetSlot.amount = fmap (const openBound) (TargetSlot.amount slot)} gs
       dependent = fmap rebound (Map.filter (secondPass declared) slots)
    in -- Map.union is left-biased, so the second pass wins wherever it answered.
@@ -1422,6 +1428,36 @@ finiteRange counting announced candidates count =
         let range = SlotCount.at counting x count
         most <- TargetCount.most range
         within (sizes range most)
+
+-- Every value a bare CR 202.3 `Members` bound over ONE sibling slot can take
+-- across the announcements that sibling could make, or Nothing where the slot is
+-- not that shape. Members is additive over the sibling's members, so a gauge of
+-- n candidates of which m satisfy the count's filter yields exactly the integers
+-- from the gauge's least size less its n - m non-matches up to its greatest size
+-- capped at m -- an interval, answered without visiting any subset. Only a slot
+-- whose pool and filter read no sibling qualifies, as does only a gauge that is
+-- itself independent; any other shape is left to the subset search.
+-- Parun.TargetSpec's "CR 601.2c an any-number sibling-count mode with no legal
+-- announcement is not offered" proves it. `valueOf` evaluates the slot's bound under bindings.
+membersBoundValues :: (Quantity -> Natural) -> Maybe Natural -> (Map SlotName Binding.Type.Binding -> Maybe Integer) -> Set SlotName -> Map SlotName TargetSlot -> Map SlotName (Set Recipient) -> TargetSlot -> Maybe [Integer]
+membersBoundValues counting announced valueOf declared slots sets slot = do
+  Quantity.Type.Count count <- TargetSlot.amount slot
+  Scope.OverBound _ gauge <- Just (Count.Type.scope count)
+  Aggregation.Members <- Just (Count.Type.aggregation count)
+  gaugeSlot <- Map.lookup gauge slots
+  Monad.guard
+    ( boundSiblings declared slot == Set.singleton gauge
+        && not (dependsOnSlot (TargetSlot.pool slot))
+        && Set.disjoint declared (foldMap Filter.boundSlots (TargetSlot.filter slot))
+        && not (secondPass declared gaugeSlot)
+        && not (jointlyJudged declared gaugeSlot)
+    )
+  let candidates = Set.toList (Map.findWithDefault Set.empty gauge sets)
+      total = Natural.length (Set.fromList candidates)
+      matches = Natural.length (Set.fromList [c | c <- candidates, valueOf (Map.singleton gauge (Binding.toRecipients (Set.singleton c))) /= Just 0])
+      (lo, hi) = announcedRange counting announced gaugeSlot total
+      floor_ = Natural.minusSaturating lo (total - matches)
+  pure [toInteger floor_ .. toInteger (min hi matches)]
 
 -- How many subsets legalSetsGiven's second pass enumerates for one sibling
 -- before leaving the bound open ("up to three" over seventeen candidates is 834,
@@ -2208,14 +2244,15 @@ zoneHolding gs recipient = do
 -- of them (Parun.TargetSpec's "CR 601.2b a sibling-count bound over X targets
 -- is searched at every X").
 --
--- CAPPED at subsetBudget assignments, past which the mode is judged fillable:
--- a false offer the caster takes back with nothing changed (CR 601.2c, 601.2e,
--- 733.1), a false refusal a legal play denied. selectionLegal judges every
--- announcement exactly. Parun.TargetSpec's "CR 601.2c past the cap a
--- sibling-count mode is offered, and a witness there still resolves" proves it.
+-- CAPPED at subsetBudget assignments, past which the mode is judged fillable
+-- (a false offer the caster takes back with nothing changed, CR 601.2c, 601.2e,
+-- 733.1) unless the lone reader's bound is a bare Members count, which
+-- membersBoundValues answers exactly. selectionLegal judges every announcement
+-- exactly. Parun.TargetSpec's "CR 601.2c past the cap a sibling-count mode is
+-- judged exactly, and a witness there still resolves" proves it.
 --
--- Not implemented: an exact answer past the cap, which CR 700.2e's other
--- chooser and CR 603.3c's modal trigger can observe (#6115).
+-- Not implemented: an exact answer past the cap for any other bound shape, which
+-- CR 700.2e's other chooser and CR 603.3c's modal trigger can observe (#6139).
 jointlyFillableGiven :: StackObjectKind.StackObjectKind -> Maybe AbilityName.AbilityName -> Pools -> Maybe PlayerId -> Map SlotName Binding.Type.Binding -> ObjectId -> Map SlotName TargetSlot -> Map SlotName (Set Recipient) -> GameState -> Bool
 jointlyFillableGiven kind reader pools perspective seed source slots sets gs =
   let declared = Map.keysSet slots
@@ -2256,7 +2293,15 @@ jointlyFillableGiven kind reader pools perspective seed source slots sets gs =
          in and (Map.elems (Map.mapWithKey admits readers))
       -- Lazy, so only the visited prefix and one assignment past it are built.
       (visited, beyond) = List.genericSplitAt subsetBudget assignments
-   in Map.null readers || any coherent visited || not (null beyond)
+      -- Past the cap a lone reader whose bound is a bare Members count is still
+      -- answered exactly (membersBoundValues); any other shape is judged fillable.
+      exactBeyond = case Map.toList readers of
+        [(_, reader_)]
+          | Just values <- membersBoundValues counting announced (boundValueOf reader_) declared slots sets reader_ ->
+              any (\k -> Natural.length (legalRecipientsGiven kind reader pools perspective True seed (Game.acquisitionOf source gs) source reader_ {TargetSlot.amount = Just (Quantity.Type.Literal k)} gs) >= demanded reader_) values
+        _ -> True
+      boundValueOf slot bindings = Filter.slotAmount (slotContext reader perspective True (Map.union bindings seed) (Game.acquisitionOf source gs) source (TargetSlot.amount slot) gs)
+   in Map.null readers || any coherent visited || (not (null beyond) && exactBeyond)
 
 -- The subsets of exactly this size, ascending, which is the shape the search
 -- above enumerates one slot's candidate answers in. Empty when the set is

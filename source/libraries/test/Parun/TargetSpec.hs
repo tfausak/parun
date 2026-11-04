@@ -2278,16 +2278,12 @@ spec s registry = Spec.describe s "Parun.Engine.Target" $ do
   -- Thirty gauges are 2^30 announcements. bob's Hill Giant (mana value 4) needs
   -- four black gauges, which no announcement inside the cap holds, the first
   -- 1024 naming at most three.
-  Spec.it s "CR 601.2c past the cap a sibling-count mode is offered, and a witness there still resolves" $ do
+  Spec.it s "CR 601.2c past the cap a sibling-count mode is judged exactly, and a witness there still resolves" $ do
     countedBoard s registry "Synthetic Wide Verdict" (replicate 26 "Goblin Piker" <> replicate 4 "Typhoid Rats") "Hill Giant" $ \mine giant board verdictId -> do
       let after = castVerdict 0 (drop 26 mine) giant board verdictId
       Spec.assertBool s (notElem giant (Game.zoneMembers Zone.Battlefield S.bob after)) "tapping the four Rats, the Hill Giant is destroyed"
-    countedBoard s registry "Synthetic Wide Verdict" (replicate 30 "Goblin Piker") "Goblin Piker" $ \mine piker board verdictId -> do
-      let after = castVerdict 0 (take 2 mine) piker board verdictId
-      Spec.assertBool s (verdictOffered verdictId board) "with thirty red gauges the cast is offered past the cap"
-      Spec.assertBool s (elem piker (Game.zoneMembers Zone.Battlefield S.bob after)) "and the attempt is reversed: bob's Piker survives"
-      Spec.assertBool s (elem verdictId (Game.zoneMembers Zone.Hand S.alice after)) "the Verdict is back in alice's hand"
-      Spec.assertBool s (all ((/= Just TapState.Tapped) . tapStateIn after) mine) "and no gauge is tapped"
+    countedBoard s registry "Synthetic Wide Verdict" (replicate 30 "Goblin Piker") "Goblin Piker" $ \_ _ board verdictId ->
+      Spec.assertBool s (not (verdictOffered verdictId board)) "with thirty red gauges no announcement is legal, past the cap too, and the cast is not offered (#6115)"
 
   -- CR 601.2c's sibling-slot reading in its POSITIVE form, where Fall of the
   -- Hammer above is the negative one: "another" excludes what a sibling slot
