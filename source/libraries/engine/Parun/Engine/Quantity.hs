@@ -1829,6 +1829,7 @@ talliesWhatHappened quantity = case quantity of
   Quantity.TimesThisTurn _ -> False
   Quantity.ActivationsThisTurn _ -> True
   Quantity.PermanentsDiedThisTurn -> False
+  Quantity.DamagePreventedThisWay -> False
   Quantity.SpellsCastUsingThisTurn _ -> False
   Quantity.SubgamesThisMatch -> False
   Quantity.DungeonsCompleted _ -> False
