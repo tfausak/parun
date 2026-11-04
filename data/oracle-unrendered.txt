@@ -859,6 +859,7 @@ enduring-curiosity
 enduring-innocence
 enduring-tenacity
 enduring-vitality
+energy-tap
 engineered-plague
 enhanced-surveillance
 enigma-thief
@@ -1069,6 +1070,7 @@ fyndhorn-druid
 fynn-the-fangbearer
 gaeas-blessing
 gaeas-herald
+gaeas-liege
 gaeas-protector
 gaeas-revenge
 galactus-devourer-of-worlds
@@ -1170,6 +1172,7 @@ goblin-negotiation
 goblin-rabblemaster
 goblin-recruiter
 goblin-ringleader
+goblin-rock-sled
 goblin-shortcutter
 goblin-smuggler
 goblin-tunneler
@@ -1429,6 +1432,7 @@ ironhoof-ox
 irresistible-prey
 isao-enlightened-bushi
 isareth-the-awakener
+island-fish-jasconius
 island-sanctuary
 isolate
 it-that-betrays
@@ -1436,6 +1440,7 @@ itzquinth-firstborn-of-gishath
 ivory-gargoyle
 ivory-guardians
 ivory-mask
+ivory-tower
 ivy-gleeful-spellthief
 ixidron
 izoni-center-of-the-web
@@ -1541,6 +1546,7 @@ lady-sun
 lairwatch-giant
 lake-of-the-dead
 lam-storm-crane-elder
+land-tax
 lantern-flare
 last-chance
 last-rites
@@ -1582,6 +1588,7 @@ lier-disciple-of-the-drowned
 life-and-limb
 lifebane-zombie
 life-goes-on
+lifelace
 lifes-legacy
 lifetap
 lightmine-field
@@ -1788,7 +1795,9 @@ mirrorweave
 misfortune
 mishra
 mishra-excavation-prodigy
+mishras-factory
 mishras-foundry
+mishras-war-machine
 mishras-workshop
 misinformation
 mist-dragon
@@ -1953,6 +1962,7 @@ ori-keeper-of-songs
 ornate-imitations
 ornery-dilophosaur
 orzhova
+osai-vultures
 oscorp-industries
 osseous-exhale
 ostracize
@@ -2131,6 +2141,7 @@ public-execution
 pull-from-eternity
 pulling-teeth
 pulmonic-sliver
+purelace
 purging-scythe
 pursued-whale
 pyramids
@@ -2220,6 +2231,7 @@ reflecting-pool
 relentless-advance
 relentless-assault
 relentless-rats
+relic-bind
 relic-runner
 relic-seeker
 reliquary-tower
@@ -2383,6 +2395,7 @@ scapeshift
 scarecrow
 scarred-puma
 scavenger-grounds
+scavenging-ghoul
 scavenging-ooze
 scepter-of-empires
 scheming-aspirant
@@ -2417,6 +2430,7 @@ secrets-of-the-golden-city
 sedge-sliver
 see-the-truth
 seedborn-muse
+seeker
 seeker-of-slaanesh
 seifer-balamb-rival
 seismic-elemental
@@ -2491,6 +2505,8 @@ silent-arbiter
 silverquill-the-disputant
 silversmote-ghoul
 simic-guildmage
+simulacrum
+sindbad
 sinister-gnarlbark
 sinister-reflections
 sirens-call
