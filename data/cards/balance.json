@@ -1,0 +1,418 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Balance",
+      "oracleText": "Each player chooses a number of lands they control equal to the number of lands controlled by the player who controls the fewest, then sacrifices the rest. Players discard cards and sacrifice creatures the same way.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "ForEach",
+                    "value": {
+                      "body": [
+                        {
+                          "type": "ChoosePermanents",
+                          "value": {
+                            "permanents": {
+                              "chooser": {
+                                "type": "InSlot",
+                                "value": "player"
+                              },
+                              "count": {
+                                "type": "Exactly",
+                                "value": {
+                                  "type": "Negate",
+                                  "value": {
+                                    "type": "Count",
+                                    "value": {
+                                      "aggregation": {
+                                        "type": "Greatest",
+                                        "value": {
+                                          "type": "Negate",
+                                          "value": {
+                                            "type": "Count",
+                                            "value": {
+                                              "aggregation": {
+                                                "type": "Members"
+                                              },
+                                              "filter": {
+                                                "type": "And",
+                                                "value": [
+                                                  {
+                                                    "type": "HasCardType",
+                                                    "value": {
+                                                      "type": "Land"
+                                                    }
+                                                  },
+                                                  {
+                                                    "type": "HeldByRecipient",
+                                                    "value": {
+                                                      "type": "Controller"
+                                                    }
+                                                  }
+                                                ]
+                                              },
+                                              "scope": {
+                                                "type": "InZone",
+                                                "value": {
+                                                  "player": {
+                                                    "type": "Relative",
+                                                    "value": {
+                                                      "type": "AnyPlayer"
+                                                    }
+                                                  },
+                                                  "zone": {
+                                                    "type": "Battlefield"
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "filter": {
+                                        "type": "And",
+                                        "value": []
+                                      },
+                                      "scope": {
+                                        "type": "OverPlayers",
+                                        "value": {
+                                          "type": "Relative",
+                                          "value": {
+                                            "type": "AnyPlayer"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "filter": {
+                                "type": "And",
+                                "value": [
+                                  {
+                                    "type": "HasCardType",
+                                    "value": {
+                                      "type": "Land"
+                                    }
+                                  },
+                                  {
+                                    "type": "HeldByBound",
+                                    "value": {
+                                      "holder": {
+                                        "type": "Controller"
+                                      },
+                                      "slot": "player"
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "slot": "keptLands"
+                          }
+                        }
+                      ],
+                      "ref": {
+                        "type": "EachPlayer"
+                      },
+                      "slot": "player"
+                    }
+                  },
+                  {
+                    "type": "Sacrifice",
+                    "value": {
+                      "ref": {
+                        "type": "EachMatching",
+                        "value": {
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "HasCardType",
+                              "value": {
+                                "type": "Land"
+                              }
+                            },
+                            {
+                              "type": "Not",
+                              "value": {
+                                "type": "IsBound",
+                                "value": "keptLands"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "sacrificer": {
+                        "type": "PermanentController"
+                      }
+                    }
+                  },
+                  {
+                    "type": "Discard",
+                    "value": {
+                      "type": "Counted",
+                      "value": {
+                        "player": {
+                          "type": "Relative",
+                          "value": {
+                            "type": "AnyPlayer"
+                          }
+                        },
+                        "quantity": {
+                          "type": "Plus",
+                          "value": {
+                            "left": {
+                              "type": "Count",
+                              "value": {
+                                "aggregation": {
+                                  "type": "Members"
+                                },
+                                "filter": {
+                                  "type": "And",
+                                  "value": []
+                                },
+                                "scope": {
+                                  "type": "InZone",
+                                  "value": {
+                                    "player": {
+                                      "type": "Candidate"
+                                    },
+                                    "zone": {
+                                      "type": "Hand"
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "right": {
+                              "type": "Count",
+                              "value": {
+                                "aggregation": {
+                                  "type": "Greatest",
+                                  "value": {
+                                    "type": "Negate",
+                                    "value": {
+                                      "type": "Count",
+                                      "value": {
+                                        "aggregation": {
+                                          "type": "Members"
+                                        },
+                                        "filter": {
+                                          "type": "HeldByRecipient",
+                                          "value": {
+                                            "type": "Owner"
+                                          }
+                                        },
+                                        "scope": {
+                                          "type": "InZone",
+                                          "value": {
+                                            "player": {
+                                              "type": "Relative",
+                                              "value": {
+                                                "type": "AnyPlayer"
+                                              }
+                                            },
+                                            "zone": {
+                                              "type": "Hand"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "filter": {
+                                  "type": "And",
+                                  "value": []
+                                },
+                                "scope": {
+                                  "type": "OverPlayers",
+                                  "value": {
+                                    "type": "Relative",
+                                    "value": {
+                                      "type": "AnyPlayer"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "ForEach",
+                    "value": {
+                      "body": [
+                        {
+                          "type": "ChoosePermanents",
+                          "value": {
+                            "permanents": {
+                              "chooser": {
+                                "type": "InSlot",
+                                "value": "player"
+                              },
+                              "count": {
+                                "type": "Exactly",
+                                "value": {
+                                  "type": "Negate",
+                                  "value": {
+                                    "type": "Count",
+                                    "value": {
+                                      "aggregation": {
+                                        "type": "Greatest",
+                                        "value": {
+                                          "type": "Negate",
+                                          "value": {
+                                            "type": "Count",
+                                            "value": {
+                                              "aggregation": {
+                                                "type": "Members"
+                                              },
+                                              "filter": {
+                                                "type": "And",
+                                                "value": [
+                                                  {
+                                                    "type": "HasCardType",
+                                                    "value": {
+                                                      "type": "Creature"
+                                                    }
+                                                  },
+                                                  {
+                                                    "type": "HeldByRecipient",
+                                                    "value": {
+                                                      "type": "Controller"
+                                                    }
+                                                  }
+                                                ]
+                                              },
+                                              "scope": {
+                                                "type": "InZone",
+                                                "value": {
+                                                  "player": {
+                                                    "type": "Relative",
+                                                    "value": {
+                                                      "type": "AnyPlayer"
+                                                    }
+                                                  },
+                                                  "zone": {
+                                                    "type": "Battlefield"
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "filter": {
+                                        "type": "And",
+                                        "value": []
+                                      },
+                                      "scope": {
+                                        "type": "OverPlayers",
+                                        "value": {
+                                          "type": "Relative",
+                                          "value": {
+                                            "type": "AnyPlayer"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "filter": {
+                                "type": "And",
+                                "value": [
+                                  {
+                                    "type": "HasCardType",
+                                    "value": {
+                                      "type": "Creature"
+                                    }
+                                  },
+                                  {
+                                    "type": "HeldByBound",
+                                    "value": {
+                                      "holder": {
+                                        "type": "Controller"
+                                      },
+                                      "slot": "player"
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "slot": "keptCreatures"
+                          }
+                        }
+                      ],
+                      "ref": {
+                        "type": "EachPlayer"
+                      },
+                      "slot": "player"
+                    }
+                  },
+                  {
+                    "type": "Sacrifice",
+                    "value": {
+                      "ref": {
+                        "type": "EachMatching",
+                        "value": {
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "HasCardType",
+                              "value": {
+                                "type": "Creature"
+                              }
+                            },
+                            {
+                              "type": "Not",
+                              "value": {
+                                "type": "IsBound",
+                                "value": "keptCreatures"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "sacrificer": {
+                        "type": "PermanentController"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -36,7 +36,8 @@ data Aggregation quantity
     -- existing Quantity that Parun.Engine.Quantity.evaluate already reads against
     -- one object rather than a narrower stand-in duplicating its arms.
     --
-    -- Least is not here either, and no card in data/cards asks for it.
+    -- The least is this arm between two Arithmetic.Negate (Balance), so it has
+    -- no arm of its own.
     Greatest quantity
   | -- | The SUM of a per-member quantity -- "the total mana value of cards you
     -- own in exile" (Ashiok, Wicked Manipulator's -7). Greatest's neighbour: the
