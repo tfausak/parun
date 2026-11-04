@@ -35,11 +35,13 @@ codec cardCodec abilityCodec = Fields.object $ do
   slot <- Fields.defaulted "slot" Nothing (Common.maybe SlotName.codec) Create.slot
   -- CR 111.2 under CR 109.5: elided is "you", which is all but one printing.
   creator <- Fields.defaulted "creator" (PlayerRef.Relative PlayerRelation.You) PlayerRef.codec Create.creator
+  linked <- Fields.defaulted "linked" False Common.boolean Create.linked
   pure
     Create.MkCreate
       { Create.quantity = quantity,
         Create.card = card,
         Create.riders = riders,
         Create.slot = slot,
-        Create.creator = creator
+        Create.creator = creator,
+        Create.linked = linked
       }

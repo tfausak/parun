@@ -95,7 +95,8 @@ import qualified Parun.Types.RuleAbilities as RuleAbilities
 --
 -- For a MINTED row that frame is the HOST, which is what makes rule 702.16c and
 -- rule 702.16d expressible in this shape at all: the restricting permanent is
--- the destination itself, where every printed producer is a third permanent.
+-- the destination itself, as it is for Goblin Brawler or a Tetravite, where most
+-- printed producers are a third permanent.
 refuses :: ObjectId -> ObjectId -> GameState -> Bool
 refuses = barredBy Keyword.mintedAttachRestrictionsOf Map.empty
 

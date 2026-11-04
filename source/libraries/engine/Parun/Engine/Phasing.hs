@@ -448,6 +448,13 @@ hostRemains oid gs = case Game.lookupObject oid gs >>= Object.attachedTo of
 isPhasedOut :: ObjectId -> GameState -> Bool
 isPhasedOut oid gs = Map.member oid (GameState.phasedOut gs)
 
+-- | CR 702.26b over a binding no target check re-reads (a reserved slot's): what
+-- it names, less a phased-out permanent. Parun.Types.Recipient's players stay.
+-- The scenarios tetravus-phased-out-in-response-makes-no-tokens and
+-- fishing-pole-phased-out-in-response-keeps-its-bait prove it.
+existing :: GameState -> Set.Set Recipient.Recipient -> Set.Set Recipient.Recipient
+existing gs = Set.filter (maybe True (not . (`isPhasedOut` gs)) . Recipient.objectOf)
+
 -- | The whole CR 702.26b row: who controlled the permanent when it phased out,
 -- and which of rule 702.26's two schedules it is on. Nothing if it is not phased
 -- out. Exposed for specs.

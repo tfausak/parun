@@ -152,7 +152,7 @@ import qualified Parun.Types.Uses as Uses
 import qualified Parun.Types.Zone as Zone
 
 create :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Create.Create Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
-create resolving source controller legal chosen (Create.MkCreate quantity card entry mSlot creator) = do
+create resolving source controller legal chosen (Create.MkCreate quantity card entry mSlot creator linked) = do
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
@@ -229,7 +229,14 @@ create resolving source controller legal chosen (Create.MkCreate quantity card e
             Monad.forM_ mBlocked (\blocked -> Monad.mapM_ (Combat.putOntoBattlefieldBlocking blocked) made)
             pure made
       _ -> pure []
+  Monad.when linked (linkEntrants resolving source minted)
   Common.bindObjects resolving mSlot minted
+
+-- CR 607.2c / 607.5: `minted` were created with `source`, for the abilities that
+-- came with the one making them (Filter.EnteredWithSource).
+linkEntrants :: ObjectId -> ObjectId -> [ObjectId] -> Game ()
+linkEntrants resolving source minted =
+  State.modify' (\g -> g {GameState.enteredWith = foldr (`Map.insert` EntryLink.MkEntryLink source (Game.readingAcquisition resolving source g source)) (GameState.enteredWith g) minted})
 
 -- Alchemy's conjure keyword action. Digital-only, so there is no rule to cite;
 -- what the CR settles is that the result is a CARD and not CR 111.1's token,
@@ -485,10 +492,8 @@ createCopy resolving source controller legal chosen (CreateCopy.MkCreateCopy qua
               Monad.forM_ mBlocked (\blocked -> Monad.mapM_ (Combat.putOntoBattlefieldBlocking blocked) made)
               pure made
     _ -> pure []
-  -- CR 607.1 / 607.5: Dance of Many's later abilities mean this token, those
-  -- that came with the ability making it.
-  Monad.when linked $
-    State.modify' (\g -> g {GameState.enteredWith = foldr (`Map.insert` EntryLink.MkEntryLink source (Game.readingAcquisition resolving source g source)) (GameState.enteredWith g) minted})
+  -- Dance of Many's later abilities mean this token.
+  Monad.when linked (linkEntrants resolving source minted)
   Common.bindObjects resolving mSlot minted
 
 becomeCopy :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> BecomeCopy.BecomeCopy (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
