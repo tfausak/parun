@@ -1073,6 +1073,8 @@ library codec
     Parun.Codec.NextDamageInstance
     Parun.Codec.NextDamageOutcome
     Parun.Codec.NextDamageOutcomeSpec
+    Parun.Codec.NextStepOf
+    Parun.Codec.NextStepOfSpec
     Parun.Codec.Ninjutsu
     Parun.Codec.NinjutsuSpec
     Parun.Codec.NinjutsuVariant
@@ -1469,6 +1471,7 @@ library codec
     Parun.Codec.StepBeganSpec
     Parun.Codec.StepBegins
     Parun.Codec.StepBeginsSpec
+    Parun.Codec.StepOfControllerOf
     Parun.Codec.StickerKind
     Parun.Codec.StickerKindSpec
     Parun.Codec.StickerPlacement
@@ -2935,6 +2938,7 @@ library types
     Parun.Types.NamesAre
     Parun.Types.NextDamageInstance
     Parun.Types.NextDamageOutcome
+    Parun.Types.NextStepOf
     Parun.Types.Ninjutsu
     Parun.Types.NinjutsuVariant
     Parun.Types.Object
@@ -3165,6 +3169,7 @@ library types
     Parun.Types.Status
     Parun.Types.StepBegan
     Parun.Types.StepBegins
+    Parun.Types.StepOfControllerOf
     Parun.Types.StickerContent
     Parun.Types.StickerKind
     Parun.Types.StickerPlacement

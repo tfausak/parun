@@ -4,7 +4,7 @@ import qualified Parun.Codec.Condition as Condition
 import qualified Parun.Codec.Cost as Cost
 import qualified Parun.Codec.DurationEvent as DurationEvent
 import qualified Parun.Codec.Keyword as Keyword
-import qualified Parun.Codec.Phase as Phase
+import qualified Parun.Codec.NextStepOf as NextStepOf
 import qualified Parun.Codec.PlayerRef as PlayerRef
 import qualified Parun.Codec.SlotName as SlotName
 import qualified Parun.JsonCodec.Arm as Arm
@@ -21,7 +21,7 @@ codec =
       Arm.nullary "Indefinite" Duration.Indefinite,
       Arm.nullary "Perpetual" Duration.Perpetual,
       Arm.nullary "UntilYourNextTurn" Duration.UntilYourNextTurn,
-      Arm.payload "UntilYourNextStep" Phase.codec Duration.UntilYourNextStep (\x -> case x of Duration.UntilYourNextStep y -> Just y; _ -> Nothing),
+      Arm.payload "UntilNextStepOf" NextStepOf.codec Duration.UntilNextStepOf (\x -> case x of Duration.UntilNextStepOf y -> Just y; _ -> Nothing),
       Arm.nullary "UntilEndOfYourNextTurn" Duration.UntilEndOfYourNextTurn,
       Arm.payload "UntilEndOfNextTurnOf" PlayerRef.codec Duration.UntilEndOfNextTurnOf (\x -> case x of Duration.UntilEndOfNextTurnOf y -> Just y; _ -> Nothing),
       Arm.payload "DuringNextTurnOf" PlayerRef.codec Duration.DuringNextTurnOf (\x -> case x of Duration.DuringNextTurnOf y -> Just y; _ -> Nothing),
@@ -42,7 +42,7 @@ tagOf x = case x of
   Duration.Indefinite {} -> "Indefinite"
   Duration.Perpetual {} -> "Perpetual"
   Duration.UntilYourNextTurn {} -> "UntilYourNextTurn"
-  Duration.UntilYourNextStep {} -> "UntilYourNextStep"
+  Duration.UntilNextStepOf {} -> "UntilNextStepOf"
   Duration.UntilEndOfYourNextTurn {} -> "UntilEndOfYourNextTurn"
   Duration.UntilEndOfNextTurnOf {} -> "UntilEndOfNextTurnOf"
   Duration.DuringNextTurnOf {} -> "DuringNextTurnOf"

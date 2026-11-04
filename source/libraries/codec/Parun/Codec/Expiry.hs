@@ -8,6 +8,7 @@ import qualified Parun.Codec.PhaseSelector as PhaseSelector
 import qualified Parun.Codec.PlayerId as PlayerId
 import qualified Parun.Codec.SlotName as SlotName
 import qualified Parun.Codec.StepBegan as StepBegan
+import qualified Parun.Codec.StepOfControllerOf as StepOfControllerOf
 import qualified Parun.Codec.Timestamp as Timestamp
 import qualified Parun.Codec.While as While
 import qualified Parun.JsonCodec.Arm as Arm
@@ -28,6 +29,7 @@ codec =
       Arm.payload "While" While.codec Expiry.While (\x -> case x of Expiry.While y -> Just y; _ -> Nothing),
       Arm.payload "AtTurnOf" PlayerId.codec Expiry.AtTurnOf (\x -> case x of Expiry.AtTurnOf y -> Just y; _ -> Nothing),
       Arm.payload "AtStepOf" StepBegan.codec Expiry.AtStepOf (\x -> case x of Expiry.AtStepOf y -> Just y; _ -> Nothing),
+      Arm.payload "AtStepOfControllerOf" StepOfControllerOf.codec Expiry.AtStepOfControllerOf (\x -> case x of Expiry.AtStepOfControllerOf y -> Just y; _ -> Nothing),
       Arm.payload "AtEndOfTurnOf" AfterTurn.codec Expiry.AtEndOfTurnOf (\x -> case x of Expiry.AtEndOfTurnOf y -> Just y; _ -> Nothing),
       Arm.payload "DuringTurnOf" AfterTurn.codec Expiry.DuringTurnOf (\x -> case x of Expiry.DuringTurnOf y -> Just y; _ -> Nothing),
       Arm.payload "DuringUntapStepOf" PlayerId.codec Expiry.DuringUntapStepOf (\x -> case x of Expiry.DuringUntapStepOf y -> Just y; _ -> Nothing),
@@ -51,6 +53,7 @@ tagOf x = case x of
   Expiry.AtEndOfTurnOf {} -> "AtEndOfTurnOf"
   Expiry.DuringTurnOf {} -> "DuringTurnOf"
   Expiry.DuringUntapStepOf {} -> "DuringUntapStepOf"
+  Expiry.AtStepOfControllerOf {} -> "AtStepOfControllerOf"
   Expiry.DuringTurnOfControllerOf {} -> "DuringTurnOfControllerOf"
   Expiry.DuringExtraTurn {} -> "DuringExtraTurn"
   Expiry.AtEndOf {} -> "AtEndOf"

@@ -1926,6 +1926,7 @@ orchard-spirit
 orcish-artillery
 orcish-conscripts
 orcish-captain
+orcish-farmer
 orcish-spy
 orcish-squatters
 orcish-veteran

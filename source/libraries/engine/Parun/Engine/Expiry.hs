@@ -67,6 +67,7 @@ import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.IgnoredAbility as IgnoredAbility
+import qualified Parun.Types.NextStepOf as NextStepOf
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.PaidExpiry as PaidExpiry
@@ -78,6 +79,7 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 import Parun.Types.Recipient (Recipient)
 import Parun.Types.SlotName (SlotName)
 import qualified Parun.Types.StepBegan as StepBegan
+import qualified Parun.Types.StepOfControllerOf as StepOfControllerOf
 import qualified Parun.Types.While as While
 
 -- CR 611.2: the moment a duration BEGINS. `controller` is the effect's
@@ -114,7 +116,17 @@ arm acquisition targets controller source duration gs = case duration of
   -- CR 611.2a: the arm above's seat, ended as the named step of that
   -- player's turn next begins. A duration armed during that very step outlives
   -- it: the step has already begun, so only a later beginning ends it.
-  Duration.UntilYourNextStep step -> Just (Expiry.AtStepOf (StepBegan.MkStepBegan step controller))
+  --
+  -- The controller of a bound object still in the game is NOT sampled, the
+  -- reading docs/decisions.md's "Whose next step a control change leaves" records:
+  -- data/scenarios' orcish-farmer-follows-a-land-annexed-before-its-untap-step
+  -- proves it. A reference naming nobody stores nothing, the arms below' reason.
+  Duration.UntilNextStepOf next -> case NextStepOf.player next of
+    PlayerRef.HolderOfBound Holder.Controller Hop.Itself slot
+      | Just oid <- Map.lookup slot (Binding.objectsIn targets),
+        Maybe.isJust (Game.lookupObject oid gs) ->
+          Just (Expiry.AtStepOfControllerOf (StepOfControllerOf.MkStepOfControllerOf (NextStepOf.step next) oid))
+    ref -> Expiry.AtStepOf . StepBegan.MkStepBegan (NextStepOf.step next) <$> seatOf (acquisition gs) targets controller gs ref
   -- CR 611.2a: "until the end of your next turn". Two samples, both taken here
   -- and neither ever rewritten: the controller (CR 109.5's "you", as above) and
   -- the turn this duration began on. dropAtCleanup ends it at the first turn of
@@ -270,7 +282,9 @@ perSeat duration = case duration of
   Duration.Indefinite -> Nothing
   Duration.Perpetual -> Nothing
   Duration.UntilYourNextTurn -> Nothing
-  Duration.UntilYourNextStep _ -> Nothing
+  Duration.UntilNextStepOf next@NextStepOf.MkNextStepOf {NextStepOf.player = PlayerRef.Candidate} ->
+    Just (\pid -> Duration.UntilNextStepOf next {NextStepOf.player = PlayerRef.Specific pid})
+  Duration.UntilNextStepOf _ -> Nothing
   Duration.UntilEndOfYourNextTurn -> Nothing
   Duration.DuringYourNextTurn -> Nothing
   Duration.DuringThatExtraTurn -> Nothing
@@ -327,6 +341,7 @@ begun gs expiry = case expiry of
   Expiry.While {} -> True
   Expiry.AtTurnOf _ -> True
   Expiry.AtStepOf _ -> True
+  Expiry.AtStepOfControllerOf _ -> True
   Expiry.AtEndOfTurnOf _ -> True
   Expiry.AtEndOf _ -> True
   Expiry.AtEndOfCombatOn _ -> True
@@ -396,6 +411,11 @@ endsAt gs moment source expiry = case expiry of
   -- CR 800.4m's "a specific point in that turn": a departed player's step
   -- never begins, so the duration ends where that turn would have.
   Expiry.AtStepOf began -> moment == StepOf began || departedTurnOf (StepBegan.player began)
+  -- Read live, so the step of the object's controller then. Dropped as hygiene
+  -- once its object is gone, DuringTurnOfControllerOf's reason.
+  Expiry.AtStepOfControllerOf (StepOfControllerOf.MkStepOfControllerOf step oid) ->
+    (moment == Cleanup && Maybe.isNothing (Game.lookupObject oid gs))
+      || any (\pid -> moment == StepOf (StepBegan.MkStepBegan step pid)) (View.controllerOf oid gs)
   -- CR 611.2a: "until the end of your next turn" ends at that turn's cleanup
   -- (CR 514.2), one NAMED turn later (see Parun.Types.AfterTurn), so the turn the
   -- duration began on is not its next turn. CR 800.4m ends it where a departed

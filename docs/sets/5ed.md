@@ -9,6 +9,3 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
-
-- #5996: Orcish Farmer. A duration measured to a step can't name the target's
-  controller (CR 611.2a).
