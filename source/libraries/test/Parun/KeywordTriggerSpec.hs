@@ -37,7 +37,9 @@ import qualified Parun.Support as S
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
 import qualified Parun.Types.Action as A
 import qualified Parun.Types.AttackTarget as AttackTarget
+import qualified Parun.Types.AttackTrigger as AttackTrigger
 import qualified Parun.Types.AttackerDeclared as AttackerDeclared
+import qualified Parun.Types.AttackerTrigger as AttackerTrigger
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.BlockCount as BlockCount
 import qualified Parun.Types.BlockRole as BlockRole
@@ -72,7 +74,6 @@ import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TextWord as TextWord
 import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggerEntry as TriggerEntry
-import qualified Parun.Types.TriggerFrequency as TriggerFrequency
 import qualified Parun.Types.TriggerSource as TriggerSource
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.Zone as Zone
@@ -268,8 +269,8 @@ annihilatorSpec s registry =
         -- "defending player" reads. The falsifier is an arm that binds the
         -- attacking side instead.
         Spec.it s "CR 603.2 the defending player rides the declaration in the reserved slot" $ do
-          let bindings = Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime) (GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared (ObjectId.MkObjectId 7) S.carol (AttackTarget.OfPlayer S.carol) 1 S.alice))
-          Spec.assertEqWith s "carol is bound under thatPlayer" (Binding.targetsOf bindings) (Map.singleton Binding.triggerPlayer (Set.singleton (Recipient.ToPlayer S.carol)))
+          let bindings = Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue)) (GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared (ObjectId.MkObjectId 7) S.carol (AttackTarget.OfPlayer S.carol) 1 S.alice))
+          Spec.assertEqWith s "carol is bound under thatPlayer, beside the attacker" (Binding.targetsOf bindings) (Map.fromList [(Binding.triggerPlayer, Set.singleton (Recipient.ToPlayer S.carol)), (Binding.attackingCreature, Set.singleton (Recipient.ToObject (ObjectId.MkObjectId 7)))])
         -- CR 613.8's dependency, read off the projection before any attack: WHICH
         -- permanents actually carry the granted keyword. Without this the two
         -- board cases below could pass off a keyword nobody has.

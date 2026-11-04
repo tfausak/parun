@@ -37,10 +37,16 @@ import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
 import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
 import qualified Parun.Types.ActingPermanent as ActingPermanent
+import qualified Parun.Types.AttackCompany as AttackCompany
+import qualified Parun.Types.AttackCount as AttackCount
 import qualified Parun.Types.AttackTarget as AttackTarget
-import qualified Parun.Types.AttackedPlayer as AttackedPlayer
+import qualified Parun.Types.AttackTrigger as AttackTrigger
+import qualified Parun.Types.AttackedSubject as AttackedSubject
+import qualified Parun.Types.AttackedTrigger as AttackedTrigger
 import qualified Parun.Types.AttackerBlocked as AttackerBlocked
 import qualified Parun.Types.AttackerDeclared as AttackerDeclared
+import qualified Parun.Types.AttackerTarget as AttackerTarget
+import qualified Parun.Types.AttackerTrigger as AttackerTrigger
 import qualified Parun.Types.AttackerUnblocked as AttackerUnblocked
 import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.BecameAttached as BecameAttached
@@ -94,6 +100,7 @@ import qualified Parun.Types.DamageRecipient as DamageRecipient
 import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Decider as Decider
+import qualified Parun.Types.DeclarationTrigger as DeclarationTrigger
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.DiscardCards as DiscardCards
@@ -153,8 +160,6 @@ import qualified Parun.Types.PlanarDieRolled as PlanarDieRolled
 import qualified Parun.Types.Player as Player
 import qualified Parun.Types.PlayerActed as PlayerActed
 import qualified Parun.Types.PlayerActsOn as PlayerActsOn
-import qualified Parun.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
-import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import qualified Parun.Types.PlayerId as PlayerId
@@ -1907,65 +1912,26 @@ representativeEvents cond =
         -- condition genuinely admits -- an event it rejected would pin nothing,
         -- eventBindings being consulted only for a match.
         TriggerCondition.PlayerDrawsNthCard (PlayerDrawsNthCard.MkPlayerDrawsNthCard _ nth) -> one (GameEvent.Drew (Drew.MkDrew S.alice (Maybe.fromMaybe 1 nth)))
-        -- CR 508.5's defending player, and deliberately NOT the attacker's own
-        -- controller: eventBindings binds this field under `thatPlayer`, so an
-        -- arm that bound the attacking side instead would still agree with
-        -- eventBindingSlots here if the two coincided.
-        TriggerCondition.SelfAttacks _ -> one (GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared departed S.carol (AttackTarget.OfPlayer S.carol) 1 S.alice))
-        -- The same declaration event. This one binds NOTHING off it, which is
-        -- what eventBindingSlots claims and what the pin here checks -- the
-        -- defending player the event carries is not rule 702.149a's to read.
-        TriggerCondition.SelfAttacksWithAnother _ -> one (GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared departed S.carol (AttackTarget.OfPlayer S.carol) 1 S.alice))
-        -- The same declaration event, aimed at a PERMANENT rather than at a
-        -- player: this condition matches nothing else, and it binds NOTHING off
-        -- it, which is what eventBindingSlots claims.
-        TriggerCondition.SelfAttacksPermanent _ -> one (GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared departed S.carol (AttackTarget.OfPlaneswalker departed) 1 S.alice))
-        -- The same declaration event, with the count that makes it CR 506.5's
-        -- alone -- and the ATTACKER is what this one binds, where SelfAttacks
-        -- above binds the defending player off the very same event.
-        TriggerCondition.CreatureAttacksAlone _ -> one (GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared departed S.carol (AttackTarget.OfPlayer S.carol) 1 S.alice))
-        -- The same declaration event again, and the ATTACKER is what this one
-        -- binds too -- CR 508.5's defending player is the thing it MATCHES on, so
-        -- an arm that bound that player instead would disagree with
-        -- eventBindingSlots here.
-        TriggerCondition.CreatureAttacksYou -> one (GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared departed S.carol (AttackTarget.OfPlayer S.carol) 1 S.alice))
-        -- The same declaration event, binding the attacker as the arm above does.
-        TriggerCondition.CreatureAttacks _ -> one (GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared departed S.carol (AttackTarget.OfPlayer S.carol) 2 S.alice))
-        -- The GROUPED declaration event instead, which is CR 508.3b's arity: one
-        -- per target the declaration named. carol again, and it is the PLAYER this
-        -- one binds -- the arm above binds the attacker off its own event, and the
-        -- pin is what keeps the two from drifting together.
-        TriggerCondition.AttachedPlayerIsAttacked -> one (GameEvent.BecameAttacked (BecameAttacked.MkBecameAttacked S.bob (AttackTarget.OfPlayer S.carol)))
-        -- The GROUPED event once more, aimed at the BEARER: rule 508.3b's other
-        -- two subjects are permanents, so an OfPlayer target would match nothing.
-        -- Nothing is bound off it, which is the floor eventBindingSlots claims.
-        TriggerCondition.SelfIsAttacked -> one (GameEvent.BecameAttacked (BecameAttacked.MkBecameAttacked S.bob (AttackTarget.OfPlaneswalker departed)))
-        -- CR 508.3d's third arity: the once-per-DECLARATION event, naming the
-        -- player who declared, which is the ONLY thing it carries -- rule 508.3d
-        -- names a set of creatures rather than one, so the floor this pins is
-        -- Binding.attackingPlayer alone. carol serves every relation, the floor
-        -- being the same either way.
-        TriggerCondition.PlayerAttacks _ -> one (GameEvent.AttackersDeclared S.carol)
-        -- The same declaration event once more, and the same floor: rule 508.3c's
-        -- Filter narrows the creatures rather than naming one, so the declaring
-        -- player is all there is to bind here too.
-        TriggerCondition.PlayerAttacksWith {} -> one (GameEvent.AttackersDeclared S.carol)
-        -- The GROUPED event once more, and the same PLAYER slot the arm three
-        -- above pins -- CR 508.3e's ATTACKED player, which is bob here and not
-        -- the carol who declared, so an arm that bound the attacking side
-        -- instead would disagree with eventBindingSlots on this event.
-        TriggerCondition.PlayerAttacksPlayer {} -> one (GameEvent.BecameAttacked (BecameAttacked.MkBecameAttacked S.carol (AttackTarget.OfPlayer S.bob)))
-        -- The same declaration event once more. Rule 702.105a binds NOTHING off
-        -- it, SelfAttacksWithAnother's case: the player it compares is read from
-        -- Combat.attackers and then never named again.
-        TriggerCondition.SelfAttacksPlayerWithMostLife -> one (GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared departed S.carol (AttackTarget.OfPlayer S.carol) 1 S.alice))
-        -- The same declaration event again, and rule 702.171b binds nothing off
-        -- it either: the designation is read off the bearer's own object and
-        -- never named.
-        TriggerCondition.SelfAttacksWhileSaddled -> one (GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared departed S.carol (AttackTarget.OfPlayer S.carol) 1 S.alice))
-        -- The same declaration event, and the state it is narrowed by is read off
-        -- the board rather than bound.
-        TriggerCondition.SelfAttacksWhile _ -> one (GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared departed S.carol (AttackTarget.OfPlayer S.carol) 1 S.alice))
+        -- CR 508.3: one shape of event per arity, and per field the slots read.
+        TriggerCondition.Attacks trigger -> case trigger of
+          -- CR 508.5's defending player, and deliberately NOT the attacker's
+          -- own controller: eventBindings binds this field under `thatPlayer`,
+          -- so an arm that bound the attacking side instead would still agree
+          -- with eventBindingSlots here if the two coincided.
+          AttackTrigger.Attacker _ -> one (GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared departed S.carol (AttackTarget.OfPlayer S.carol) 1 S.alice))
+          -- CR 508.3e's ATTACKED player is bob here and not the carol who
+          -- declared, so an arm that bound the attacking side under `thatPlayer`
+          -- would disagree with eventBindingSlots on this event. A Source
+          -- subject is the bearer, matched by identity and bound under nothing.
+          AttackTrigger.Attacked t -> case AttackedTrigger.attacked t of
+            AttackedSubject.Source -> one (GameEvent.BecameAttacked (BecameAttacked.MkBecameAttacked S.carol (AttackTarget.OfPlaneswalker departed)))
+            _ -> one (GameEvent.BecameAttacked (BecameAttacked.MkBecameAttacked S.carol (AttackTarget.OfPlayer S.bob)))
+          -- CR 508.3d's once-per-DECLARATION event, naming the player who
+          -- declared, which is the ONLY thing it carries.
+          AttackTrigger.Declaration _ -> one (GameEvent.AttackersDeclared S.carol)
+          -- The declaration's unblocked branch, which carries the attacker and
+          -- CR 508.5's defending player.
+          AttackTrigger.Unblocked _ -> one (GameEvent.AttackerUnblocked (AttackerUnblocked.MkAttackerUnblocked departed S.carol))
         -- CR 509.3: one shape of event per role and count.
         TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger role _ count) -> case (role, count) of
           -- The GROUPED blocking event, which is CR 509.3a's arity and CR
@@ -1978,7 +1944,7 @@ representativeEvents cond =
           -- blocker is the departed id, since eventBindings binds only where the
           -- named end has a view.
           (BlockRole.Blocker, BlockCount.EachCreature _) -> one (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = departed, BecameBlocking.attacker = ObjectId.MkObjectId 41, BecameBlocking.producer = BlockProducer.Declared, BecameBlocking.attackerWasBlocked = False, BecameBlocking.blockersBefore = Set.empty}))
-          -- CR 508.5's defending player, and carol for SelfAttacks' reason above:
+          -- CR 508.5's defending player, and carol for the Attacker arm's reason above:
           -- eventBindings binds this field under `thatPlayer`.
           (BlockRole.Attacker, BlockCount.Once) -> one (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked departed S.carol (Set.singleton (ObjectId.MkObjectId 41))))
           -- The pairwise event with the ids the other way round: the ATTACKER is
@@ -1993,9 +1959,6 @@ representativeEvents cond =
           (BlockRole.Attacker, BlockCount.AtLeast {}) ->
             noTable (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked departed S.carol (Set.singleton (ObjectId.MkObjectId 41))))
               NonEmpty.:| [noTable (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 42, BecameBlocking.attacker = departed, BecameBlocking.producer = BlockProducer.PutOntoBattlefield, BecameBlocking.attackerWasBlocked = True, BecameBlocking.blockersBefore = Set.singleton (ObjectId.MkObjectId 43)}))]
-        -- The same declaration's unblocked branch, which carries the attacker
-        -- and CR 508.5's defending player.
-        TriggerCondition.CreatureAttacksUnblocked _ -> one (GameEvent.AttackerUnblocked (AttackerUnblocked.MkAttackerUnblocked departed S.carol))
         TriggerCondition.SelfPutIntoGraveyardFromLibrary -> one (moved Zone.Library Zone.Graveyard)
         -- Every origin zone is admitted, but the floor is the same for all of
         -- them: the destination is always a graveyard, which CR 400.2 makes
@@ -2273,7 +2236,7 @@ representativeEvents cond =
         -- CR 725.1's own event, and the only one this condition admits. CR 725.3
         -- makes it name exactly one player, so there is no second shape of the
         -- event for the floor to differ on. bob rather than the perspective
-        -- player, on the SelfAttacks arm's reasoning: an arm that stamped CR
+        -- player, on the Attacker arm's reasoning: an arm that stamped CR
         -- 109.5's "you" instead of the crowned player would still agree with
         -- eventBindingSlots here if the two coincided.
         TriggerCondition.PlayerBecomesMonarch _ -> one (GameEvent.BecameMonarch S.bob)
@@ -2408,33 +2371,37 @@ everyTriggerCondition =
     TriggerCondition.Discards (DiscardTrigger.MkDiscardTrigger (DiscardSubject.Discarder (PlayerActsOn.MkPlayerActsOn PlayerRelation.Opponent (Filter.Type.And []))) DiscardWay.Cycled Batching.EachOccurrence),
     TriggerCondition.PlayerDrawsNthCard (PlayerDrawsNthCard.MkPlayerDrawsNthCard PlayerRelation.You (Just 2)),
     TriggerCondition.PlayerDrawsNthCard (PlayerDrawsNthCard.MkPlayerDrawsNthCard PlayerRelation.You Nothing),
-    TriggerCondition.SelfAttacks TriggerFrequency.EveryTime,
-    TriggerCondition.SelfAttacksWithAnother (Filter.Type.And []),
-    TriggerCondition.SelfAttacksPermanent (Filter.Type.And []),
-    TriggerCondition.CreatureAttacksAlone (Filter.Type.And []),
-    TriggerCondition.CreatureAttacksYou,
-    TriggerCondition.CreatureAttacks (Filter.Type.And []),
-    TriggerCondition.AttachedPlayerIsAttacked,
-    TriggerCondition.SelfIsAttacked,
-    TriggerCondition.PlayerAttacks PlayerRelation.You,
-    TriggerCondition.PlayerAttacks PlayerRelation.Opponent,
-    TriggerCondition.PlayerAttacks PlayerRelation.AnyPlayer,
-    TriggerCondition.PlayerAttacksWith (PlayerAttacksWith.MkPlayerAttacksWith PlayerRelation.You (Filter.Type.And []) 1),
-    TriggerCondition.PlayerAttacksWith (PlayerAttacksWith.MkPlayerAttacksWith PlayerRelation.Opponent (Filter.Type.And []) 1),
-    TriggerCondition.PlayerAttacksWith (PlayerAttacksWith.MkPlayerAttacksWith PlayerRelation.AnyPlayer (Filter.Type.And []) 1),
-    -- The floor above one, Military Intelligence's: a fourth row rather than a
-    -- fourth relation, since the count and the relation are independent fields
-    -- and only the count is new.
-    TriggerCondition.PlayerAttacksWith (PlayerAttacksWith.MkPlayerAttacksWith PlayerRelation.You (Filter.Type.And []) 2),
-    TriggerCondition.PlayerAttacksPlayer (PlayerAttacksPlayer.MkPlayerAttacksPlayer PlayerRelation.You (AttackedPlayer.Related PlayerRelation.AnyPlayer)),
-    TriggerCondition.PlayerAttacksPlayer (PlayerAttacksPlayer.MkPlayerAttacksPlayer PlayerRelation.Opponent (AttackedPlayer.Related PlayerRelation.AnyPlayer)),
-    TriggerCondition.PlayerAttacksPlayer (PlayerAttacksPlayer.MkPlayerAttacksPlayer PlayerRelation.AnyPlayer (AttackedPlayer.Related PlayerRelation.AnyPlayer)),
-    TriggerCondition.PlayerAttacksPlayer (PlayerAttacksPlayer.MkPlayerAttacksPlayer PlayerRelation.Opponent (AttackedPlayer.Related PlayerRelation.You)),
-    TriggerCondition.PlayerAttacksPlayer (PlayerAttacksPlayer.MkPlayerAttacksPlayer PlayerRelation.AnyPlayer (AttackedPlayer.Related PlayerRelation.Opponent)),
-    TriggerCondition.PlayerAttacksPlayer (PlayerAttacksPlayer.MkPlayerAttacksPlayer PlayerRelation.You AttackedPlayer.Enchanted),
-    TriggerCondition.SelfAttacksPlayerWithMostLife,
-    TriggerCondition.SelfAttacksWhileSaddled,
-    TriggerCondition.SelfAttacksWhile (Condition.Type.Compares (Compares.MkCompares (Quantity.Type.Literal 0) Comparison.Exactly (Quantity.Type.Literal 0))),
+    TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue),
+    -- Each field away from its default, so an arm that had cased on one and
+    -- stamped nothing under it would go unseen if only the default were listed.
+    TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue {AttackerTrigger.creature = Filter.Type.And []}),
+    TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue {AttackerTrigger.target = AttackerTarget.Defending PlayerRelation.You}),
+    TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue {AttackerTrigger.target = AttackerTarget.Permanent (Filter.Type.And [])}),
+    TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue {AttackerTrigger.target = AttackerTarget.PlayerWithMostLife}),
+    TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue {AttackerTrigger.company = AttackCompany.Alone}),
+    TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue {AttackerTrigger.company = AttackCompany.WithAnother (Filter.Type.And [])}),
+    TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue {AttackerTrigger.frequency = TriggerFrequency.FirstTimeEachTurn}),
+    TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue {AttackerTrigger.while = Just (Condition.Type.Compares (Compares.MkCompares (Quantity.Type.Literal 0) Comparison.Exactly (Quantity.Type.Literal 0)))}),
+    -- Every subject, with and without an attacking player: the slots are a
+    -- function of both.
+    TriggerCondition.Attacks (AttackTrigger.Attacked (AttackedTrigger.MkAttackedTrigger Nothing AttackedSubject.Enchanted)),
+    TriggerCondition.Attacks (AttackTrigger.Attacked (AttackedTrigger.MkAttackedTrigger Nothing AttackedSubject.Source)),
+    TriggerCondition.Attacks (AttackTrigger.Attacked (AttackedTrigger.MkAttackedTrigger Nothing (AttackedSubject.Related PlayerRelation.AnyPlayer))),
+    TriggerCondition.Attacks (AttackTrigger.Attacked (AttackedTrigger.MkAttackedTrigger (Just PlayerRelation.You) (AttackedSubject.Related PlayerRelation.AnyPlayer))),
+    TriggerCondition.Attacks (AttackTrigger.Attacked (AttackedTrigger.MkAttackedTrigger (Just PlayerRelation.Opponent) (AttackedSubject.Related PlayerRelation.You))),
+    TriggerCondition.Attacks (AttackTrigger.Attacked (AttackedTrigger.MkAttackedTrigger (Just PlayerRelation.AnyPlayer) (AttackedSubject.Related PlayerRelation.Opponent))),
+    TriggerCondition.Attacks (AttackTrigger.Attacked (AttackedTrigger.MkAttackedTrigger (Just PlayerRelation.You) AttackedSubject.Enchanted)),
+    TriggerCondition.Attacks (AttackTrigger.Attacked (AttackedTrigger.MkAttackedTrigger (Just PlayerRelation.You) AttackedSubject.Source)),
+    -- ALL THREE relations, each with and without a count: an eventBindings arm
+    -- that had cased on the relation and stamped nothing under one of them
+    -- would go unseen if only one were listed.
+    TriggerCondition.Attacks (AttackTrigger.Declaration (DeclarationTrigger.MkDeclarationTrigger PlayerRelation.You Nothing)),
+    TriggerCondition.Attacks (AttackTrigger.Declaration (DeclarationTrigger.MkDeclarationTrigger PlayerRelation.Opponent Nothing)),
+    TriggerCondition.Attacks (AttackTrigger.Declaration (DeclarationTrigger.MkDeclarationTrigger PlayerRelation.AnyPlayer Nothing)),
+    TriggerCondition.Attacks (AttackTrigger.Declaration (DeclarationTrigger.MkDeclarationTrigger PlayerRelation.You (Just (AttackCount.MkAttackCount 1 (Filter.Type.And []))))),
+    TriggerCondition.Attacks (AttackTrigger.Declaration (DeclarationTrigger.MkDeclarationTrigger PlayerRelation.Opponent (Just (AttackCount.MkAttackCount 1 (Filter.Type.And []))))),
+    TriggerCondition.Attacks (AttackTrigger.Declaration (DeclarationTrigger.MkDeclarationTrigger PlayerRelation.AnyPlayer (Just (AttackCount.MkAttackCount 2 (Filter.Type.And []))))),
+    TriggerCondition.Attacks (AttackTrigger.Unblocked (Filter.Type.And [])),
     TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.Type.IsSource BlockCount.Once),
     TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker (Filter.Type.And []) BlockCount.Once),
     TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.Type.IsSource (BlockCount.AtLeast 2 (Filter.Type.And []))),
@@ -2444,7 +2411,6 @@ everyTriggerCondition =
     TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker (Filter.Type.And []) (BlockCount.EachCreature (Filter.Type.And []))),
     TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker Filter.Type.IsSource (BlockCount.AtLeast 1 (Filter.Type.And []))),
     TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker (Filter.Type.IsAttackingPlayer PlayerRelation.Opponent) (BlockCount.AtLeast 2 (Filter.Type.And []))),
-    TriggerCondition.CreatureAttacksUnblocked (Filter.Type.And []),
     TriggerCondition.SelfPutIntoGraveyardFromLibrary,
     TriggerCondition.SelfPutIntoGraveyardFromAnywhere,
     TriggerCondition.SelfPutIntoGraveyardDuringResolution,
@@ -2577,7 +2543,7 @@ everyTriggerCondition =
     TriggerCondition.CreatureExploits (CreatureExploits.MkCreatureExploits (Filter.Type.And []) (Filter.Type.And [])),
     TriggerCondition.SelfBecomesCrewed TriggerFrequency.EveryTime,
     TriggerCondition.SelfCrewsVehicle,
-    -- ALL THREE relations, on the PlayerAttacksWith rows' reasoning above: an
+    -- ALL THREE relations, on the Declaration rows' reasoning above: an
     -- eventBindings arm that had cased on the relation and stamped nothing under
     -- one of them would go unseen if only one were listed. Vengeful Tracker
     -- prints the Opponent form and Mayhem Devil the AnyPlayer one.

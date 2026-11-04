@@ -67,9 +67,14 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfAttacks",
+            "type": "Attacks",
             "value": {
-              "type": "FirstTimeEachTurn"
+              "type": "Attacker",
+              "value": {
+                "frequency": {
+                  "type": "FirstTimeEachTurn"
+                }
+              }
             }
           },
           "modal": {

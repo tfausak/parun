@@ -43,19 +43,24 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfAttacksWhile",
+            "type": "Attacks",
             "value": {
-              "type": "Compares",
+              "type": "Attacker",
               "value": {
-                "comparison": {
-                  "type": "AtLeast"
-                },
-                "measured": {
-                  "type": "AttackersDeclaredThisCombat"
-                },
-                "threshold": {
-                  "type": "Literal",
-                  "value": 4
+                "while": {
+                  "type": "Compares",
+                  "value": {
+                    "comparison": {
+                      "type": "AtLeast"
+                    },
+                    "measured": {
+                      "type": "AttackersDeclaredThisCombat"
+                    },
+                    "threshold": {
+                      "type": "Literal",
+                      "value": 4
+                    }
+                  }
                 }
               }
             }

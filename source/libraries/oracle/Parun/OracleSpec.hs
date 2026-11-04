@@ -22,6 +22,8 @@ import qualified Parun.Types.AffectedUnless as AffectedUnless
 import qualified Parun.Types.AgainstSlot as AgainstSlot
 import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.Arithmetic as Arithmetic
+import qualified Parun.Types.AttackTrigger as AttackTrigger
+import qualified Parun.Types.AttackerTrigger as AttackerTrigger
 import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.BlockCount as BlockCount
@@ -158,7 +160,6 @@ import qualified Parun.Types.Times as Times
 import qualified Parun.Types.Together as Together
 import qualified Parun.Types.Toughness as Toughness
 import qualified Parun.Types.TriggerCondition as TriggerCondition
-import qualified Parun.Types.TriggerFrequency as TriggerFrequency
 import qualified Parun.Types.TriggerLimit as TriggerLimit
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TurnScope as TurnScope
@@ -342,7 +343,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   -- as the event names them. Once named, the source is "it" or its name.
   Spec.it s "render prints a trigger on attacking, blocking and combat damage" $ do
     let on event effects = withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [triggered event [clause effects] []]})
-    Spec.assertEq s [[Text.pack "Whenever Spark attacks, defending player discards a card.", Text.pack "When Spark attacks, defending player discards a card."]] (Oracle.abilities (on (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime) [discard (PlayerRef.InSlot thatPlayer) 1]))
+    Spec.assertEq s [[Text.pack "Whenever Spark attacks, defending player discards a card.", Text.pack "When Spark attacks, defending player discards a card."]] (Oracle.abilities (on (TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue)) [discard (PlayerRef.InSlot thatPlayer) 1]))
     let raiders = on (TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger ActingPermanent.Self (Just DamageKind.Combat) (Set.singleton (DamageRecipient.Player PlayerRelation.Opponent)))) [discard (PlayerRef.InSlot thatPlayer) 1]
     Spec.assertEq s (Just (Text.pack "Whenever Spark deals combat damage to an opponent, that player discards a card.")) (Oracle.render raiders)
     Spec.assertBool s (Oracle.says raiders spark (Text.pack "Whenever this creature deals combat damage to an opponent, that opponent discards a card.")) "that opponent unsaid"
@@ -357,7 +358,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let roc = on (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.IsSource (BlockCount.EachCreature (Filter.And [Filter.HasCardType CardType.Creature, Filter.Not (Filter.HasKeyword Keyword.Flying)])))) [modify (ObjectRef.InSlot self) Duration.UntilEndOfTurn (pt 1 0)]
     Spec.assertEq s (Just (Text.pack "Whenever Spark blocks a creature without flying, it gets +1/+0 until end of turn.")) (Oracle.render roc)
     Spec.assertBool s (Oracle.says roc spark (Text.pack "Whenever this creature blocks a creature without flying, this creature gets +1/+0 until end of turn.")) "the name after the event unsaid"
-    Spec.assertEq s (Just (Text.pack "Whenever Spark enters or attacks, you gain 1 life.")) (Oracle.render (on (TriggerCondition.AnyOf [TriggerCondition.SelfEnters, TriggerCondition.SelfAttacks TriggerFrequency.EveryTime]) [gainLife 1]))
+    Spec.assertEq s (Just (Text.pack "Whenever Spark enters or attacks, you gain 1 life.")) (Oracle.render (on (TriggerCondition.AnyOf [TriggerCondition.SelfEnters, TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue)]) [gainLife 1]))
     let creature = Filter.HasCardType CardType.Creature
         both = ObjectRef.AllOf (ObjectRef.InSlot thatAttacker NonEmpty.:| [ObjectRef.InSlot thatBlocker])
     Spec.assertEq s (Just (Text.pack "Whenever Spark blocks or becomes blocked by a creature, it deals 3 damage to that creature.")) (Oracle.render (on (TriggerCondition.AnyOf [TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.IsSource (BlockCount.EachCreature creature)), TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker Filter.IsSource (BlockCount.EachCreature creature))]) [damageBy [(both, Quantity.Literal 3)]]))
@@ -383,7 +384,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s [[Text.pack "Whenever a creature you control dies, you gain 1 life."]] (Oracle.abilities (on [CardType.Artifact] (TriggerCondition.PermanentDies mine) [gainLife 1]))
     -- CR 509.3c read by a bystander (Somberwald Alpha).
     Spec.assertEq s [[Text.pack "Whenever a creature you control becomes blocked, you gain 1 life."]] (Oracle.abilities (on [CardType.Artifact] (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker mine BlockCount.Once)) [gainLife 1]))
-    Spec.assertEq s [[Text.pack "Whenever a creature you control attacks and isn't blocked, you gain 1 life."]] (Oracle.abilities (on [CardType.Artifact] (TriggerCondition.CreatureAttacksUnblocked mine) [gainLife 1]))
+    Spec.assertEq s [[Text.pack "Whenever a creature you control attacks and isn't blocked, you gain 1 life."]] (Oracle.abilities (on [CardType.Artifact] (TriggerCondition.Attacks (AttackTrigger.Unblocked mine)) [gainLife 1]))
     let dragon = on [CardType.Creature] (TriggerCondition.SelfPutFromBattlefieldInto (OwnedZone.MkOwnedZone Zone.Graveyard PlayerRelation.You)) [Effect.MoveToZone (move (ObjectRef.InSlot became) Zone.Hand)]
     Spec.assertEq s (Just (Text.pack "When Spark is put into your graveyard from the battlefield, return it to your hand.")) (Oracle.render dragon)
     -- The card the source became is yours to return from your graveyard;
@@ -422,7 +423,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let he = spell [clause [modify (ObjectRef.EachMatching (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You, Filter.Not Filter.IsSource])) Duration.UntilEndOfTurn (pt 1 0)]] []
     Spec.assertEq s (Just (Text.pack "Other creatures you control get +1/+0 until end of turn.")) (Oracle.render he)
     Spec.assertBool s (Oracle.says he spark (Text.pack "Each other creature you control gets +1/+0 until end of turn.")) "each unsaid"
-    let feeder = withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [triggered (TriggerCondition.CreatureAttacksUnblocked Filter.IsSource) [clause [Effect.LoseLife (LifeLoss.MkLifeLoss (PlayerRef.InSlot thatPlayer) (countOf (Filter.And []) (InZone.MkInZone Zone.Graveyard (PlayerRef.InSlot thatPlayer))) LifeLossCause.ByEffect Nothing)]] []]})
+    let feeder = withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [triggered (TriggerCondition.Attacks (AttackTrigger.Unblocked Filter.IsSource)) [clause [Effect.LoseLife (LifeLoss.MkLifeLoss (PlayerRef.InSlot thatPlayer) (countOf (Filter.And []) (InZone.MkInZone Zone.Graveyard (PlayerRef.InSlot thatPlayer))) LifeLossCause.ByEffect Nothing)]] []]})
     Spec.assertEq s (Just (Text.pack "Whenever Spark attacks and isn't blocked, defending player loses 1 life for each card in that player's graveyard.")) (Oracle.render feeder)
     Spec.assertBool s (Oracle.says feeder spark (Text.pack "Whenever this creature attacks and isn't blocked, defending player loses 1 life for each card in their graveyard.")) "their unsaid"
 
@@ -704,10 +705,10 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   Spec.it s "render creates tokens and puts counters by a count" $ do
     let hand = countOf (Filter.And []) (InZone.MkInZone Zone.Hand (PlayerRef.Relative PlayerRelation.You))
         snake = token "Snake Token" [Color.Green] [Subtype.Snake] 1 []
-        swarm = Effect.Create (Create.MkCreate hand snake EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You))
+        swarm = Effect.Create (Create.MkCreate hand snake EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You) False)
     Spec.assertEq s [[Text.pack "Create a 1/1 green Snake creature token for each card in your hand.", Text.pack "Create a number of 1/1 green Snake creature tokens equal to the number of cards in your hand.", Text.pack "Create X 1/1 green Snake creature tokens, where X is the number of cards in your hand."]] (Oracle.abilities (spell [clause [swarm]] []))
     let opponents = Quantity.Count (Count.MkCount (Scope.OverPlayers (PlayerRef.Relative PlayerRelation.Opponent)) (Filter.And []) Aggregation.Members)
-        invasion = Effect.Create (Create.MkCreate opponents snake EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You))
+        invasion = Effect.Create (Create.MkCreate opponents snake EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You) False)
     Spec.assertBool s (Oracle.says (spell [clause [invasion]] []) (CardName.MkCardName (Text.pack "Spark")) (Text.pack "Create a number of 1/1 green Snake creature tokens equal to the number of opponents you have.")) "no \"opponents you have\""
     let ghoul = Effect.PutCounters (PutCounters.MkPutCounters CounterKind.PlusOnePlusOne hand (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "self"))) Nothing)
     Spec.assertEq s [[Text.pack "Put a +1/+1 counter on Spark for each card in your hand.", Text.pack "Put a number of +1/+1 counters on Spark equal to the number of cards in your hand."]] (Oracle.abilities (spell [clause [ghoul]] []))
@@ -1007,7 +1008,7 @@ token name colours subtypes size keywords =
 
 -- An instruction creating this many of the token.
 create :: Integer -> Card.Card -> Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card)
-create n t = Effect.Create (Create.MkCreate (Quantity.Literal n) t EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You))
+create n t = Effect.Create (Create.MkCreate (Quantity.Literal n) t EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You) False)
 
 -- An instruction putting this many counters of the kind on these objects.
 counters :: CounterKind.CounterKind Keyword.Keyword -> Integer -> ObjectRef.ObjectRef -> Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card)

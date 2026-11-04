@@ -5,7 +5,7 @@
 -- Parun.Engine.Keyword.saddle mints from it, CR 702.171b's designation
 -- (Parun.Types.Designation's Saddled and the sweep that ends it,
 -- Parun.Engine.Expiry.clearedSaddles) and the trigger that reads it back,
--- Parun.Types.TriggerCondition's SelfAttacksWhileSaddled.
+-- Filter.HasDesignation Saddled on an AttackTrigger.Attacker's creature.
 --
 -- Gameplay-level throughout. Bridled Bighorn {3}{W} Creature -- Sheep Mount 3/4
 -- is the fixture: vigilance, "Whenever this creature attacks while saddled,

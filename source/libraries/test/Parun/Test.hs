@@ -88,7 +88,9 @@ import qualified Parun.Codec.AttachRestrictionSpec
 import qualified Parun.Codec.AttachRewriteSpec
 import qualified Parun.Codec.AttachTargetSpec
 import qualified Parun.Codec.AttachedToBoundSpec
+import qualified Parun.Codec.AttackCompanySpec
 import qualified Parun.Codec.AttackCostSpec
+import qualified Parun.Codec.AttackCountSpec
 import qualified Parun.Codec.AttackLimitUnlessSpec
 import qualified Parun.Codec.AttackOptionSpec
 import qualified Parun.Codec.AttackPermissionSpec
@@ -96,10 +98,14 @@ import qualified Parun.Codec.AttackRequirementSpec
 import qualified Parun.Codec.AttackTargetKindSpec
 import qualified Parun.Codec.AttackTargetRefSpec
 import qualified Parun.Codec.AttackTargetSpec
+import qualified Parun.Codec.AttackTriggerSpec
 import qualified Parun.Codec.AttackWaiverSpec
-import qualified Parun.Codec.AttackedPlayerSpec
+import qualified Parun.Codec.AttackedSubjectSpec
+import qualified Parun.Codec.AttackedTriggerSpec
 import qualified Parun.Codec.AttackerBlockedSpec
 import qualified Parun.Codec.AttackerDeclaredSpec
+import qualified Parun.Codec.AttackerTargetSpec
+import qualified Parun.Codec.AttackerTriggerSpec
 import qualified Parun.Codec.AttackerUnblockedSpec
 import qualified Parun.Codec.AttackersAreSpec
 import qualified Parun.Codec.AttackingPlayersSpec
@@ -275,6 +281,7 @@ import qualified Parun.Codec.DealDamageSpec
 import qualified Parun.Codec.DealtDamageSpec
 import qualified Parun.Codec.DealtDamageToSpec
 import qualified Parun.Codec.DeciderSpec
+import qualified Parun.Codec.DeclarationTriggerSpec
 import qualified Parun.Codec.DefendersAreSpec
 import qualified Parun.Codec.DefenseSpec
 import qualified Parun.Codec.DelayedTriggerSpec
@@ -564,8 +571,6 @@ import qualified Parun.Codec.PlayBudgetSpec
 import qualified Parun.Codec.PlayPermissionOriginSpec
 import qualified Parun.Codec.PlayerActionSpec
 import qualified Parun.Codec.PlayerActsOnSpec
-import qualified Parun.Codec.PlayerAttacksPlayerSpec
-import qualified Parun.Codec.PlayerAttacksWithSpec
 import qualified Parun.Codec.PlayerChoiceSpec
 import qualified Parun.Codec.PlayerControlSpec
 import qualified Parun.Codec.PlayerCounterKindSpec
@@ -1057,7 +1062,13 @@ spec s registry corpus = do
   Parun.Codec.AttachRestrictionSpec.spec s
   Parun.Codec.AttachTargetSpec.spec s
   Parun.Codec.AttackCostSpec.spec s
-  Parun.Codec.AttackedPlayerSpec.spec s
+  Parun.Codec.AttackCompanySpec.spec s
+  Parun.Codec.AttackCountSpec.spec s
+  Parun.Codec.AttackTriggerSpec.spec s
+  Parun.Codec.AttackedSubjectSpec.spec s
+  Parun.Codec.AttackedTriggerSpec.spec s
+  Parun.Codec.AttackerTargetSpec.spec s
+  Parun.Codec.AttackerTriggerSpec.spec s
   Parun.Codec.AttackerBlockedSpec.spec s
   Parun.Codec.AttackerDeclaredSpec.spec s
   Parun.Codec.AttackerUnblockedSpec.spec s
@@ -1243,6 +1254,7 @@ spec s registry corpus = do
   Parun.Codec.DaytimeSpec.spec s
   Parun.Codec.DealDamageSpec.spec s
   Parun.Codec.DeciderSpec.spec s
+  Parun.Codec.DeclarationTriggerSpec.spec s
   Parun.Codec.DefendersAreSpec.spec s
   Parun.Codec.DefenseSpec.spec s
   Parun.Codec.DelayedTriggerSpec.spec s
@@ -1527,8 +1539,6 @@ spec s registry corpus = do
   Parun.Codec.PlanarDieFaceSpec.spec s
   Parun.Codec.PlanarDieRolledSpec.spec s
   Parun.Codec.PlayerActionSpec.spec s
-  Parun.Codec.PlayerAttacksPlayerSpec.spec s
-  Parun.Codec.PlayerAttacksWithSpec.spec s
   Parun.Codec.PlayerChoiceSpec.spec s
   Parun.Codec.PlayerControlSpec.spec s
   Parun.Codec.PlayerCounterKindSpec.spec s

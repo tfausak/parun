@@ -125,17 +125,22 @@
         },
         {
           "condition": {
-            "type": "PlayerAttacksWith",
+            "type": "Attacks",
             "value": {
-              "attackers": 1,
-              "filter": {
-                "type": "HasSubtype",
-                "value": {
-                  "type": "Bird"
+              "type": "Declaration",
+              "value": {
+                "attackers": {
+                  "filter": {
+                    "type": "HasSubtype",
+                    "value": {
+                      "type": "Bird"
+                    }
+                  },
+                  "floor": 1
+                },
+                "player": {
+                  "type": "You"
                 }
-              },
-              "player": {
-                "type": "You"
               }
             }
           },

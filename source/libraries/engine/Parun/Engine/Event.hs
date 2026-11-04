@@ -85,6 +85,8 @@ import qualified Parun.Types.ArrivalEnd as ArrivalEnd
 import qualified Parun.Types.AsCopy as AsCopy
 import qualified Parun.Types.AttachR as AttachR
 import qualified Parun.Types.AttachRewrite as AttachRewrite
+import qualified Parun.Types.AttackTrigger as AttackTrigger
+import qualified Parun.Types.AttackedTrigger as AttackedTrigger
 import qualified Parun.Types.BecameAttached as BecameAttached
 import qualified Parun.Types.BecameTarget as BecameTarget
 import qualified Parun.Types.BecameUnattached as BecameUnattached
@@ -132,6 +134,7 @@ import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.DealtDamage as DealtDamage
+import qualified Parun.Types.DeclarationTrigger as DeclarationTrigger
 import Parun.Types.DelayedTrigger (DelayedTrigger)
 import qualified Parun.Types.DelayedTrigger as DelayedTrigger
 import qualified Parun.Types.Designation as Designation
@@ -235,8 +238,6 @@ import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Parun.Types.Player as Player
 import qualified Parun.Types.PlayerActed as PlayerActed
 import qualified Parun.Types.PlayerAction as PlayerAction
-import qualified Parun.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
-import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerChoice as PlayerChoice
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Types.PlayerEffect as PlayerEffect.Type
@@ -10943,7 +10944,7 @@ controllerTurnScoped cond = case cond of
   -- No PermanentAction's rule names a turn. Where the act can only happen on the
   -- ACTIVE player's turn -- CR 508.1g's exert, the attack CR 508.1a makes
   -- training fire on -- that is still not CR 109.5's "you": a stolen creature is
-  -- exerted, or trains, on its thief's turn. The SelfAttacks arm below settles it.
+  -- exerted, or trains, on its thief's turn. The Attacks arm below settles it.
   TriggerCondition.PermanentActs _ -> False
   TriggerCondition.PlacesSticker _ -> False
   -- CR 706.2 names no turn either.
@@ -11059,42 +11060,16 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.RevealedThisWay _ -> False
   TriggerCondition.Discards _ -> False
   TriggerCondition.PlayerDrawsNthCard {} -> False
-  -- CR 508.1a makes this the ACTIVE player's turn, which is not the same thing:
-  -- CR 109.5's "you" is the ability's controller, and a stolen creature attacks on
-  -- its thief's turn.
-  TriggerCondition.SelfAttacks _ -> False
-  TriggerCondition.SelfAttacksWithAnother _ -> False
-  TriggerCondition.SelfAttacksPermanent _ -> False
-  TriggerCondition.CreatureAttacksAlone _ -> False
-  -- CR 506.2 makes this one an OPPONENT's turn every time, which is not the
-  -- controller's turn either -- StepBegins' OpponentsTurn arm above answers the
-  -- same way for the same reason.
-  TriggerCondition.CreatureAttacksYou -> False
-  -- The SelfAttacks arm's reason: a stolen creature attacks on its thief's turn.
-  TriggerCondition.CreatureAttacks _ -> False
-  TriggerCondition.AttachedPlayerIsAttacked -> False
-  TriggerCondition.SelfIsAttacked -> False
-  -- The only arm around here that can answer True, and only on one relation: CR
-  -- 508.1 lets only an active player declare attackers (CR 805.10a), so the
-  -- declarer named by the event is always an active player. You therefore pins
-  -- the event to CR 109.5's "you"'s own turn; Opponent pins it to somebody else's; AnyPlayer
-  -- pins nothing. SelfAttacks answers False because it pins the CREATURE and not
-  -- the declarer -- a stolen creature attacks on its thief's turn -- which is
-  -- the comparison this arm does make.
-  TriggerCondition.PlayerAttacks relation -> relation == PlayerRelation.You
-  -- The arm above's comparison, over the same relation: rule 508.3c's Filter
-  -- narrows WHICH creatures were declared and says nothing about whose turn it
-  -- is.
-  TriggerCondition.PlayerAttacksWith payload -> PlayerAttacksWith.player payload == PlayerRelation.You
-  -- The same comparison over the ATTACKING side, which is the field rule
-  -- 508.3e's event pins to the active player; the attacked side says nothing
-  -- about whose turn it is.
-  TriggerCondition.PlayerAttacksPlayer subjects -> PlayerAttacksPlayer.attacker subjects == PlayerRelation.You
-  TriggerCondition.SelfAttacksPlayerWithMostLife -> False
-  TriggerCondition.SelfAttacksWhileSaddled -> False
-  TriggerCondition.SelfAttacksWhile _ -> False
+  -- CR 508.1 lets only an active player declare attackers (CR 805.10a), so a
+  -- declaring player the trigger pins to You pins the event to CR 109.5's
+  -- "you"'s own turn. An attacker trigger pins the CREATURE instead, which
+  -- attacks on its thief's turn when stolen, and "attacks you" (CR 506.2) is an
+  -- opponent's turn; neither is the controller's. The attacked side says
+  -- nothing about whose turn it is.
+  TriggerCondition.Attacks (AttackTrigger.Declaration t) -> DeclarationTrigger.player t == PlayerRelation.You
+  TriggerCondition.Attacks (AttackTrigger.Attacked t) -> AttackedTrigger.attacker t == Just PlayerRelation.You
+  TriggerCondition.Attacks _ -> False
   TriggerCondition.Blocks _ -> False
-  TriggerCondition.CreatureAttacksUnblocked _ -> False
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> False
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> False
   TriggerCondition.SelfPutIntoGraveyardDuringResolution -> False

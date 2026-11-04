@@ -87,11 +87,16 @@ import qualified Parun.Types.AttachRestriction as AttachRestriction
 import qualified Parun.Types.AttachRewrite as AttachRewrite
 import qualified Parun.Types.AttachTarget as AttachTarget
 import qualified Parun.Types.AttachedToBound as AttachedToBound
+import qualified Parun.Types.AttackCompany as AttackCompany
 import qualified Parun.Types.AttackCost as AttackCost
+import qualified Parun.Types.AttackCount as AttackCount
 import qualified Parun.Types.AttackLimitUnless as AttackLimitUnless
 import qualified Parun.Types.AttackPermission as AttackPermission
 import qualified Parun.Types.AttackRequirement as AttackRequirement
 import qualified Parun.Types.AttackTargetRef as AttackTargetRef
+import qualified Parun.Types.AttackTrigger as AttackTrigger
+import qualified Parun.Types.AttackerTarget as AttackerTarget
+import qualified Parun.Types.AttackerTrigger as AttackerTrigger
 import qualified Parun.Types.Backup as Backup
 import qualified Parun.Types.BecomeCopy as BecomeCopy
 import qualified Parun.Types.BecomesTapState as BecomesTapState
@@ -183,6 +188,7 @@ import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DealDamage as DealDamage
 import qualified Parun.Types.DealtDamage as DealtDamage
+import qualified Parun.Types.DeclarationTrigger as DeclarationTrigger
 import qualified Parun.Types.Defense as Defense
 import qualified Parun.Types.Designate as Designate
 import qualified Parun.Types.Destroy as Destroy
@@ -323,7 +329,6 @@ import qualified Parun.Types.PlacesSticker as PlacesSticker
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
 import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Parun.Types.PlayerActsOn as PlayerActsOn
-import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Types.PlayerCounters as PlayerCounters
 import qualified Parun.Types.PlayerEffect as PlayerEffect
@@ -800,7 +805,7 @@ playerRefPositions =
         ("win-game", Effect.WinGame (plantedPlayer "wg"), [plantedPlayer "wg"]),
         ("increase-speed", Effect.IncreaseSpeed (playerQuantity "is"), [plantedPlayer "is"]),
         ("decrease-speed", Effect.DecreaseSpeed (SpeedDecrease.MkSpeedDecrease (plantedPlayer "ds") one 0), [plantedPlayer "ds"]),
-        ("create", Effect.Create (Create.MkCreate one () EntryRiders.defaultValue Nothing (plantedPlayer "cr")), [plantedPlayer "cr"]),
+        ("create", Effect.Create (Create.MkCreate one () EntryRiders.defaultValue Nothing (plantedPlayer "cr") False), [plantedPlayer "cr"]),
         ("create-emblem", Effect.CreateEmblem (CreateEmblem.MkCreateEmblem () (plantedPlayer "ce")), [plantedPlayer "ce"]),
         ("skip-phase", Effect.SkipPhase (SkipPhase.MkSkipPhase (plantedPlayer "sn") PhaseSelector.CombatPhase Uses.Once Duration.Indefinite), [plantedPlayer "sn"]),
         ("gain-player-counters", Effect.GainPlayerCounters (PlayerCounters.MkPlayerCounters (plantedPlayer "gp") PlayerCounterKind.Rad one), [plantedPlayer "gp"]),
@@ -1142,7 +1147,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- Nor does CR 702.110b's, for the same reason.
   TriggerCondition.SelfExploits -> []
   TriggerCondition.CreatureExploits {} -> []
-  -- Nor does CR 702.122e's: its payload is a TriggerFrequency, SelfAttacks' above.
+  -- Nor does CR 702.122e's: its payload is a TriggerFrequency.
   TriggerCondition.SelfBecomesCrewed {} -> []
   -- Nor does CR 702.122b's crewer side, nullary too.
   TriggerCondition.SelfCrewsVehicle -> []
@@ -1177,41 +1182,13 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> []
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> []
   TriggerCondition.PlayerTookInitiative -> []
-  TriggerCondition.SelfAttacks _ -> []
-  -- CR 702.149a's Filter holds no Count for PermanentEnters' reason.
-  TriggerCondition.SelfAttacksWithAnother _ -> []
-  -- Its Filter names the PERMANENT attacked and holds no Count for the arm
-  -- above's reason.
-  TriggerCondition.SelfAttacksPermanent _ -> []
-  TriggerCondition.CreatureAttacksAlone _ -> []
-  -- Nullary, so no Count either.
-  TriggerCondition.CreatureAttacksYou -> []
-  TriggerCondition.CreatureAttacks _ -> []
-  -- Nullary too, and rule 508.3b's "one or more" is the EVENT's grouping rather
-  -- than a number this condition counts.
-  TriggerCondition.AttachedPlayerIsAttacked -> []
-  -- The arm above's answer, over the same event: the subject is one permanent
-  -- and nothing here is counted.
-  TriggerCondition.SelfIsAttacked -> []
-  -- A PlayerRelation holds no Count, and rule 508.3d's "one or more" is the
-  -- EVENT's grouping for the arm above's reason, not a number this condition
-  -- counts.
-  TriggerCondition.PlayerAttacks _ -> []
-  -- The floor this one DOES carry is a bare Natural, BlockCount.AtLeast's shape
-  -- below, rather than a Count over Quantities; its Filter holds no Count for
-  -- PermanentEnters' reason.
-  TriggerCondition.PlayerAttacksWith {} -> []
-  -- Two PlayerRelations hold no Count, and rule 508.3e's "one or more" is the
-  -- EVENT's grouping for AttachedPlayerIsAttacked's reason.
-  TriggerCondition.PlayerAttacksPlayer {} -> []
-  -- CR 702.105a compares life totals rather than counting objects, so no Count.
-  TriggerCondition.SelfAttacksPlayerWithMostLife -> []
-  TriggerCondition.SelfAttacksWhileSaddled -> []
-  TriggerCondition.SelfAttacksWhile condition -> conditionCounts condition
+  -- CR 508.3's Filters hold no Count for PermanentEnters' reason, and CR
+  -- 508.3c's floor is a bare Natural; only the attacker's state can.
+  TriggerCondition.Attacks (AttackTrigger.Attacker t) -> foldMap conditionCounts (AttackerTrigger.while t)
+  TriggerCondition.Attacks _ -> []
   -- CR 509.3's Filters are predicates over the creatures of a block, holding no
   -- Count for PermanentEnters' reason, and CR 509.3e's floor is a bare Natural.
   TriggerCondition.Blocks _ -> []
-  TriggerCondition.CreatureAttacksUnblocked _ -> []
   TriggerCondition.SelfRevealedForMiracle -> []
   TriggerCondition.RevealedThisWay _ -> []
   -- CR 701.9a's discard condition is a PlayerRelation, a Filter and two enums,
@@ -1400,7 +1377,7 @@ ownCounts effect = case effect of
   Effect.IncreaseSpeed (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantityCounts quantity
   -- The floor beside it is a printed literal and holds no Count.
   Effect.DecreaseSpeed d -> quantityCounts (SpeedDecrease.quantity d)
-  Effect.Create (Create.MkCreate quantity card _ _ _) -> quantityCounts quantity <> overFaces cardCounts card
+  Effect.Create (Create.MkCreate quantity card _ _ _ _) -> quantityCounts quantity <> overFaces cardCounts card
   Effect.Conjure (Conjure.MkConjure quantity cards _ _ _) -> quantityCounts quantity <> foldMap quantityCounts (conjureCardsAmount cards) <> foldMap (overFaces cardCounts) (ConjureCards.written cards)
   -- No embedded card -- the copied permanent supplies the text -- but the count
   -- is card data like Create's. The riders are skipped for the reason Create's
@@ -2430,7 +2407,7 @@ replacementMintedCards replacement = case replacement of
 effectReplacements :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> [ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card))]
 effectReplacements effect = case effect of
   Effect.Replace (Replace.MkReplace _ _ _ _ replacement) -> replacement : concatMap effectReplacements (replacementPrintedEffects replacement) <> concatMap (overFaces cardReplacementEffects) (replacementMintedCards replacement)
-  Effect.Create (Create.MkCreate _ token _ _ _) -> overFaces cardReplacementEffects token
+  Effect.Create (Create.MkCreate _ token _ _ _ _) -> overFaces cardReplacementEffects token
   Effect.Conjure (Conjure.MkConjure _ cards _ _ _) -> foldMap (overFaces cardReplacementEffects) (ConjureCards.written cards)
   Effect.CreateCopy {} -> []
   Effect.BecomeCopy {} -> []
@@ -3001,7 +2978,7 @@ data MintedKind
 -- too, and the build breaks until it is.
 effectMintedFaces :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> [(MintedKind, Face.Face Card.Type.Card)]
 effectMintedFaces effect = case effect of
-  Effect.Create (Create.MkCreate _ token _ _ _) -> fmap ((,) MintedToken) (NonEmpty.toList (Card.Type.faces token))
+  Effect.Create (Create.MkCreate _ token _ _ _ _) -> fmap ((,) MintedToken) (NonEmpty.toList (Card.Type.faces token))
   Effect.Conjure (Conjure.MkConjure _ cards _ _ _) -> fmap ((,) MintedCard) (concatMap (NonEmpty.toList . Card.Type.faces) (ConjureCards.written cards))
   -- Mints no face of its own: the token's text is the copied permanent's.
   Effect.CreateCopy {} -> []
@@ -4697,43 +4674,24 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> []
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> []
   TriggerCondition.PlayerTookInitiative -> []
-  TriggerCondition.SelfAttacks _ -> []
-  -- CR 702.149a names a quality the OTHER attackers must have, so this one DOES
-  -- carry a Filter -- "power greater than this creature's power".
-  TriggerCondition.SelfAttacksWithAnother f -> unframed [f]
-  -- CR 508.3a's second sentence names a quality the PERMANENT attacked must
-  -- have, so this one DOES carry a Filter -- Thrashing Frontliner's "a battle".
-  TriggerCondition.SelfAttacksPermanent f -> unframed [f]
-  -- CR 506.5's condition names a quality the ATTACKER must have, so it carries a
-  -- Filter -- rule 702.83a's "a creature you control".
-  TriggerCondition.CreatureAttacksAlone f -> unframed [f]
-  -- CR 508.3a's second sentence names no quality of the attacker -- CR 508.1a has
-  -- already made it a creature -- so this one carries no Filter to traverse.
-  TriggerCondition.CreatureAttacksYou -> []
-  -- Its bystander sibling names a quality of the attacker -- Fervent Charge's "a
-  -- creature you control" -- so it is swept like CreatureAttacksAlone's.
-  TriggerCondition.CreatureAttacks f -> unframed [f]
-  -- CR 508.3b names no quality of anything: its subject is the ability's own
-  -- attachment, so there is no Filter here either.
-  TriggerCondition.AttachedPlayerIsAttacked -> []
-  -- Rule 508.3b's other two subjects name no quality either: the subject is the
-  -- ability's own source, matched by identity.
-  TriggerCondition.SelfIsAttacked -> []
-  -- CR 508.3d names no quality of anything either: its subject is a player, its
-  -- payload is a PlayerRelation and not a Filter, and the creatures it counts
-  -- are the DECLARATION's.
-  TriggerCondition.PlayerAttacks _ -> []
-  -- CR 508.3c names a quality the declared creatures must have, so this one DOES
-  -- carry a Filter -- Hermes, Overseer of Elpis' "Birds".
-  TriggerCondition.PlayerAttacksWith payload -> unframed [PlayerAttacksWith.filter payload]
-  -- CR 508.3e names two players and no quality of anything, so no Filter --
-  -- rule 508.3d's answer, twice over.
-  TriggerCondition.PlayerAttacksPlayer {} -> []
-  -- CR 702.105a names no quality of the attacker, only a fact about whom it
-  -- attacked, so no Filter.
-  TriggerCondition.SelfAttacksPlayerWithMostLife -> []
-  TriggerCondition.SelfAttacksWhileSaddled -> []
-  TriggerCondition.SelfAttacksWhile condition -> frame Unframed (conditionFilters condition)
+  -- CR 508.3 names a quality of the attacker (rule 702.83a's "a creature you
+  -- control"), of the permanent attacked (Thrashing Frontliner's "a battle"), of
+  -- the other attackers (CR 702.149a's "power greater than this creature's
+  -- power") and of the creatures a declaration counts (Hermes, Overseer of
+  -- Elpis' "Birds"); players carry none.
+  TriggerCondition.Attacks trigger -> case trigger of
+    AttackTrigger.Attacker (AttackerTrigger.MkAttackerTrigger creature target company _ while_) ->
+      unframed
+        ( creature
+            : [f | AttackerTarget.Permanent f <- [target]]
+              <> [f | AttackCompany.WithAnother f <- [company]]
+        )
+        <> foldMap (frame Unframed . conditionFilters) while_
+    AttackTrigger.Attacked _ -> []
+    AttackTrigger.Declaration t -> case DeclarationTrigger.attackers t of
+      Nothing -> []
+      Just count -> unframed [AttackCount.filter count]
+    AttackTrigger.Unblocked f -> unframed [f]
   -- CR 509.3 names a quality of the creature that blocks or becomes blocked
   -- (Venom's "enchanted creature", CR 701.54c's "your Ring-bearer") and of the
   -- creatures on the other side (Netcaster Spider's "with flying", rule
@@ -4745,7 +4703,6 @@ triggerConditionFilters triggerCondition = case triggerCondition of
           BlockCount.EachCreature others -> [others]
           BlockCount.AtLeast _ others -> [others]
       )
-  TriggerCondition.CreatureAttacksUnblocked f -> unframed [f]
   TriggerCondition.SelfRevealedForMiracle -> []
   TriggerCondition.RevealedThisWay r -> unframed [RevealedThisWay.card r]
   -- Waste Not's "a creature card", card text swept like PermanentSacrificed's.
@@ -4870,22 +4827,8 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.RevealedThisWay _ -> []
   TriggerCondition.Discards _ -> []
   TriggerCondition.PlayerDrawsNthCard _ -> []
-  TriggerCondition.SelfAttacks _ -> []
-  TriggerCondition.SelfAttacksWithAnother _ -> []
-  TriggerCondition.SelfAttacksPermanent _ -> []
-  TriggerCondition.CreatureAttacksAlone _ -> []
-  TriggerCondition.CreatureAttacksYou -> []
-  TriggerCondition.CreatureAttacks _ -> []
-  TriggerCondition.AttachedPlayerIsAttacked -> []
-  TriggerCondition.SelfIsAttacked -> []
-  TriggerCondition.PlayerAttacks _ -> []
-  TriggerCondition.PlayerAttacksWith _ -> []
-  TriggerCondition.PlayerAttacksPlayer _ -> []
-  TriggerCondition.SelfAttacksPlayerWithMostLife -> []
-  TriggerCondition.SelfAttacksWhileSaddled -> []
-  TriggerCondition.SelfAttacksWhile _ -> []
+  TriggerCondition.Attacks _ -> []
   TriggerCondition.Blocks _ -> []
-  TriggerCondition.CreatureAttacksUnblocked _ -> []
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> []
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> []
   TriggerCondition.SelfPutIntoGraveyardDuringResolution -> []
@@ -6179,7 +6122,7 @@ effectFilters effect = case effect of
   Effect.DecreaseSpeed d -> frame Unframed (quantityFilters (SpeedDecrease.quantity d))
   -- CR 111.1's token is a whole card, and every Filter position it has is one a
   -- card author can write -- the same nesting Parun.Codec's round trip walks.
-  Effect.Create (Create.MkCreate quantity card riders _ _) -> frame Unframed (quantityFilters quantity <> riderFilters riders) <> overFaces cardFilters card
+  Effect.Create (Create.MkCreate quantity card riders _ _ _) -> frame Unframed (quantityFilters quantity <> riderFilters riders) <> overFaces cardFilters card
   -- A DUPLICATE names an object rather than writing a card out, so the Filters
   -- it can carry are the ref's, framed the way CreateCopy's arm below frames its
   -- own.
@@ -6868,7 +6811,7 @@ mintingSpell mint face =
 
 -- CR 111.1: "create a token", the token being `face`.
 createToken :: Face.Face Card.Type.Card -> Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)
-createToken face = Effect.Create (Create.MkCreate (Quantity.Type.Literal 1) (oneFaced face) EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You))
+createToken face = Effect.Create (Create.MkCreate (Quantity.Type.Literal 1) (oneFaced face) EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You) False)
 
 -- "Conjure a card named ... into your hand", the card being `face`.
 conjureCard :: Face.Face Card.Type.Card -> Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)
@@ -7914,7 +7857,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
             { Face.activatedAbilities =
                 [ oneEffectActivated
                     (costOf [])
-                    (Effect.Create (Create.MkCreate (Quantity.Type.Literal 1) tokenLiar EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You)))
+                    (Effect.Create (Create.MkCreate (Quantity.Type.Literal 1) tokenLiar EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You) False))
                 ]
             }
     Spec.assertEqWith s "no printing writes the key" (fmap (S.nameOf . Printing.card) offenders) []
@@ -7942,7 +7885,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
           concatMap
             (NonEmpty.toList . Card.Type.faces)
             ( Maybe.mapMaybe
-                (\effect -> case effect of Effect.Create (Create.MkCreate _ token _ _ _) -> Just token; _ -> Nothing)
+                (\effect -> case effect of Effect.Create (Create.MkCreate _ token _ _ _ _) -> Just token; _ -> Nothing)
                 (cardResolutionEffects face)
             )
         tokens = concatMap (overFaces tokensOf . Printing.card) ps
@@ -7955,7 +7898,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
     case concatMap
       (NonEmpty.toList . Card.Type.faces)
       ( Maybe.mapMaybe
-          (\effect -> case effect of Effect.Create (Create.MkCreate _ token _ _ _) -> Just token; _ -> Nothing)
+          (\effect -> case effect of Effect.Create (Create.MkCreate _ token _ _ _ _) -> Just token; _ -> Nothing)
           (cardResolutionEffects (S.combinedFace doomedTraveler))
       ) of
       [token] -> do
@@ -7975,7 +7918,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
     case concatMap
       (NonEmpty.toList . Card.Type.faces)
       ( Maybe.mapMaybe
-          (\effect -> case effect of Effect.Create (Create.MkCreate _ token _ _ _) -> Just token; _ -> Nothing)
+          (\effect -> case effect of Effect.Create (Create.MkCreate _ token _ _ _ _) -> Just token; _ -> Nothing)
           (cardResolutionEffects (S.combinedFace inkshield))
       ) of
       [token] -> do
@@ -7991,7 +7934,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
     case concatMap
       (NonEmpty.toList . Card.Type.faces)
       ( Maybe.mapMaybe
-          (\effect -> case effect of Effect.Create (Create.MkCreate _ token _ _ _) -> Just token; _ -> Nothing)
+          (\effect -> case effect of Effect.Create (Create.MkCreate _ token _ _ _ _) -> Just token; _ -> Nothing)
           (cardResolutionEffects (S.combinedFace tomb))
       ) of
       [token] -> do
@@ -8217,13 +8160,13 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
         onEveryFace f card = card {Card.Type.faces = fmap f (Card.Type.faces card)}
         -- The graft on the minted TOKEN, on every face of it.
         armToken effect = case effect of
-          Effect.Create (Create.MkCreate quantity token riders slot creator) -> Effect.Create (Create.MkCreate quantity (onEveryFace arm token) riders slot creator)
+          Effect.Create (Create.MkCreate quantity token riders slot creator _) -> Effect.Create (Create.MkCreate quantity (onEveryFace arm token) riders slot creator False)
           other -> other
         -- The same, on the BACK face of a two-faced token whose front is clean.
         armBackFace effect = case effect of
-          Effect.Create (Create.MkCreate quantity token riders slot creator) ->
+          Effect.Create (Create.MkCreate quantity token riders slot creator _) ->
             let front = NonEmpty.head (Card.Type.faces token)
-             in Effect.Create (Create.MkCreate quantity (token {Card.Type.faces = front NonEmpty.:| [arm front]}) riders slot creator)
+             in Effect.Create (Create.MkCreate quantity (token {Card.Type.faces = front NonEmpty.:| [arm front]}) riders slot creator False)
           other -> other
         -- The same, on a minted EMBLEM in place of the token.
         armEmblem effect = case effect of

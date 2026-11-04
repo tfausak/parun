@@ -3288,12 +3288,17 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   -- CR 122.5: every pair the move names fails one of the rule's
   -- impossibilities, so no counter can cross. The pair guard and the movable
   -- kinds are the executing arm's own (movablePair, movableCounters), and
-  -- kindsCanCross mirrors its per-MovedKinds reads.
+  -- kindsCanCross mirrors its per-MovedKinds reads. A slot naming nothing, as a
+  -- phased-out self does (CR 702.26b), leaves no pair; a chooser's ref answers
+  -- nothing here for another reason (objectRefObjects) and stays open.
   Effect.MoveCounters (MoveCounters.MkMoveCounters fromRef kinds _ toRef) ->
     let named = objectRefObjects legal resolving controller source gs
         pairs = [(from, to) | from <- named fromRef, to <- named toRef]
         crosses (from, to) = movablePair gs from to && kindsCanCross gs from to kinds
-     in not (null pairs) && not (any crosses pairs)
+        emptySlot ref = case ref of
+          ObjectRef.InSlot _ -> null (named ref)
+          _ -> False
+     in any emptySlot [fromRef, toRef] || (not (null pairs) && not (any crosses pairs))
   Effect.PutCountersFrom {} -> False
   Effect.GainPlayerCounters {} -> False
   Effect.RemovePlayerCounters {} -> False

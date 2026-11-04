@@ -182,7 +182,7 @@ combatReplaySpec s =
           let p = Prompt.ChooseX decider S.alice oid Binding.variableX 0 2
           Spec.assertEqWith s "round trip" (Replay.decode p (Replay.encode p 4)) (Just (4 :: Natural.Natural))
         -- CR 601.2b / 700.2a: a modal choice (Response.ChoseModes, a Seq
-        -- ModeIndex) round-trips through the DecisionLog exactly like every
+        -- ModeIndex) round-trips through Replay exactly like every
         -- other response -- no JSON codec is involved: Response has never had
         -- one (only Prompt/Response answers get serialized, via Replay's
         -- encode/decode, not Parun.Codec's JSON arms).
@@ -2393,7 +2393,7 @@ replaySpec s registry =
     -- CR 700.2b/603.3d: the mode chosen as Aether Channeler's ETB trigger is
     -- placed (Engine.placeOne prompts ChooseModes) records/replays exactly
     -- like a spell's ChooseModes -- a Response.ChoseModes round-trips through
-    -- the DecisionLog byte-identically.
+    -- Replay byte-identically.
     Spec.it s "Aether Channeler's trigger ChooseModes records and replays a Seq ModeIndex" $ do
       acPrinting <- S.printingOf s registry "Aether Channeler"
       let (acId, gs) = S.addPermanent acPrinting S.alice (Setup.emptyGame S.bothPlayers)

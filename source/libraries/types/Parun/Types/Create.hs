@@ -33,6 +33,9 @@ data Create card ability = MkCreate
     -- A PlayerRef and not a PlayerId: only a resolution knows a seat. A
     -- reference naming SEVERAL players creates the tokens for each of them, in
     -- APNAP order (CR 608.2f); one naming nobody creates none (CR 101.3).
-    creator :: PlayerRef.PlayerRef
+    creator :: PlayerRef.PlayerRef,
+    -- | CR 607.2c: does another ability of the source refer to these tokens?
+    -- Parun.Types.CreateCopy's `linked`. Tetravus' scenarios prove it.
+    linked :: Bool
   }
   deriving (Eq, Ord, Show)

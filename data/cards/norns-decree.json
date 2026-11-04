@@ -81,9 +81,14 @@
         },
         {
           "condition": {
-            "type": "PlayerAttacks",
+            "type": "Attacks",
             "value": {
-              "type": "AnyPlayer"
+              "type": "Declaration",
+              "value": {
+                "player": {
+                  "type": "AnyPlayer"
+                }
+              }
             }
           },
           "intervening": {

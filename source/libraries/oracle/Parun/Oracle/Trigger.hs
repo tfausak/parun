@@ -12,6 +12,10 @@ import qualified Parun.Oracle.Prose as Prose
 import qualified Parun.Oracle.Target as Target
 import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.Aggregation as Aggregation
+import qualified Parun.Types.AttackCompany as AttackCompany
+import qualified Parun.Types.AttackTrigger as AttackTrigger
+import qualified Parun.Types.AttackerTarget as AttackerTarget
+import qualified Parun.Types.AttackerTrigger as AttackerTrigger
 import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.BlockCount as BlockCount
@@ -26,6 +30,8 @@ import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamageRecipient as DamageRecipient
 import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DealtDamage as DealtDamage
+import qualified Parun.Types.DeclarationTrigger as DeclarationTrigger
+import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.Holder as Holder
@@ -106,7 +112,7 @@ event context creature c = case c of
     word <- ["it", that]
     subject <- also one
     [other ("Whenever " <> subject <> " becomes blocked") [(attackingCreature, word), (thatPlayer, "defending player")]]
-  TriggerCondition.CreatureAttacksUnblocked f -> do
+  TriggerCondition.Attacks (AttackTrigger.Unblocked f) -> do
     (one, that) <- described context f
     word <- ["it", that]
     subject <- also one
@@ -122,7 +128,7 @@ event context creature c = case c of
   TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage (ActingPermanent.Matching f) Nothing) Batching.OneOrMore) -> do
     (one, _) <- described context f
     [other ("Whenever " <> one <> " is dealt damage") [(becameSlot, "it")]]
-  TriggerCondition.PlayerAttacks relation -> do
+  TriggerCondition.Attacks (AttackTrigger.Declaration (DeclarationTrigger.MkDeclarationTrigger relation Nothing)) -> do
     who <- case relation of
       PlayerRelation.You -> ["you attack"]
       PlayerRelation.Opponent -> ["an opponent attacks"]
@@ -199,11 +205,12 @@ selfEvent context creature c = case c of
   TriggerCondition.SelfLeavesTheBattlefield -> [(["When"], "leaves the battlefield", [(becameSlot, "it")])]
   TriggerCondition.SelfPutFromBattlefieldInto (OwnedZone.MkOwnedZone Zone.Graveyard PlayerRelation.You) -> [(["When"], "is put into your graveyard from the battlefield", [(becameSlot, "it")])]
   TriggerCondition.SelfPutFromBattlefieldInto (OwnedZone.MkOwnedZone Zone.Exile PlayerRelation.AnyPlayer) -> [(["When"], "is put into exile from the battlefield", [(becameSlot, "it")])]
-  TriggerCondition.SelfAttacks TriggerFrequency.EveryTime -> [(recurring, "attacks", [(thatPlayer, "defending player")])]
-  TriggerCondition.SelfAttacks TriggerFrequency.FirstTimeEachTurn -> [(recurring, "attacks for the first time each turn", [(thatPlayer, "defending player")])]
-  TriggerCondition.SelfAttacksWhileSaddled -> [(recurring, "attacks while saddled", [])]
-  TriggerCondition.CreatureAttacksAlone Filter.Type.IsSource -> [(recurring, "attacks alone", [(attackingCreature, "it")])]
-  TriggerCondition.CreatureAttacksUnblocked Filter.Type.IsSource -> [(recurring, "attacks and isn't blocked", [(thatPlayer, "defending player"), (attackingCreature, "it")])]
+  TriggerCondition.Attacks (AttackTrigger.Attacker (AttackerTrigger.MkAttackerTrigger creature' AttackerTarget.AnyTarget company frequency Nothing))
+    | Filter.Type.IsSource <- creature', AttackCompany.AnyCompany <- company, TriggerFrequency.EveryTime <- frequency -> [(recurring, "attacks", [(thatPlayer, "defending player")])]
+    | Filter.Type.IsSource <- creature', AttackCompany.AnyCompany <- company, TriggerFrequency.FirstTimeEachTurn <- frequency -> [(recurring, "attacks for the first time each turn", [(thatPlayer, "defending player")])]
+    | Filter.Type.And [Filter.Type.IsSource, Filter.Type.HasDesignation Designation.Saddled] <- creature', AttackCompany.AnyCompany <- company, TriggerFrequency.EveryTime <- frequency -> [(recurring, "attacks while saddled", [])]
+    | Filter.Type.IsSource <- creature', AttackCompany.Alone <- company, TriggerFrequency.EveryTime <- frequency -> [(recurring, "attacks alone", [(attackingCreature, "it")])]
+  TriggerCondition.Attacks (AttackTrigger.Unblocked Filter.Type.IsSource) -> [(recurring, "attacks and isn't blocked", [(thatPlayer, "defending player"), (attackingCreature, "it")])]
   TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.Type.IsSource BlockCount.Once) -> [(recurring, "blocks", [])]
   TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker Filter.Type.IsSource BlockCount.Once) -> [(recurring, "becomes blocked", [(thatPlayer, "defending player"), (attackingCreature, "it")])]
   TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.Type.IsSource (BlockCount.EachCreature f)) -> do

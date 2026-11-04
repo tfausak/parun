@@ -59,8 +59,8 @@ import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TextWord as TextWord
 import qualified Parun.Types.TimeTravelChoice as TimeTravelChoice
 
--- | One answer to a prompt, serialized so a DecisionLog replays the game
--- deterministically.
+-- | One answer to a prompt, recorded so Parun.Engine.Replay can give the same
+-- answer to the same prompt again.
 --
 -- Every prompt gets its OWN constructor, even where two share a payload shape:
 -- decode's job is to return Nothing for a response that does not match the

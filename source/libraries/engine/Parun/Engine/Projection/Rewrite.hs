@@ -42,10 +42,15 @@ import qualified Parun.Types.AttachRestriction as AttachRestriction
 import qualified Parun.Types.AttachRewrite as AttachRewrite
 import qualified Parun.Types.AttachTarget as AttachTarget
 import qualified Parun.Types.AttachedToBound as AttachedToBound
+import qualified Parun.Types.AttackCompany as AttackCompany
+import qualified Parun.Types.AttackCount as AttackCount
 import qualified Parun.Types.AttackLimitUnless as AttackLimitUnless
 import qualified Parun.Types.AttackPermission as AttackPermission
 import qualified Parun.Types.AttackRequirement as AttackRequirement
 import qualified Parun.Types.AttackTargetRef as AttackTargetRef
+import qualified Parun.Types.AttackTrigger as AttackTrigger
+import qualified Parun.Types.AttackerTarget as AttackerTarget
+import qualified Parun.Types.AttackerTrigger as AttackerTrigger
 import qualified Parun.Types.BecomeCopy as BecomeCopy
 import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.Bid as Bid
@@ -120,6 +125,7 @@ import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DealDamage as DealDamage
 import qualified Parun.Types.DealtDamage as DealtDamage
+import qualified Parun.Types.DeclarationTrigger as DeclarationTrigger
 import qualified Parun.Types.Designate as Designate
 import qualified Parun.Types.Destroy as Destroy
 import qualified Parun.Types.DestructionR as DestructionR
@@ -215,7 +221,6 @@ import qualified Parun.Types.PlacesSticker as PlacesSticker
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
 import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Parun.Types.PlayerActsOn as PlayerActsOn
-import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerCounters as PlayerCounters
 import qualified Parun.Types.PlayerEffect as PlayerEffect
 import qualified Parun.Types.PlayerQuantity as PlayerQuantity
@@ -815,7 +820,7 @@ rewriteEffect pairs effect = case effect of
   -- their keys rewriteEntryRiders' own. A REGRESSION FENCE on this arm: no card
   -- in data/cards/ mints a token with a keyword counter rider, so the key
   -- rewrite is proven through MoveToZone's arm above and not through this one.
-  Effect.Create (Create.MkCreate quantity card riders slot creator) -> Effect.Create (Create.MkCreate (rewriteQuantity pairs quantity) (rewriteCard pairs card) (rewriteEntryRiders pairs riders) slot creator)
+  Effect.Create (Create.MkCreate quantity card riders slot creator linked) -> Effect.Create (Create.MkCreate (rewriteQuantity pairs quantity) (rewriteCard pairs card) (rewriteEntryRiders pairs riders) slot creator linked)
   Effect.Conjure (Conjure.MkConjure quantity cards selection destination slot) -> Effect.Conjure (Conjure.MkConjure (rewriteQuantity pairs quantity) (rewriteConjureCards pairs cards) selection destination slot)
   -- CR 707.2 excludes text-changing effects from copiable values, so what the
   -- token becomes is not rewritten -- only the ref, the count and the riders'
@@ -2118,29 +2123,8 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted f relation kind includesYou) -> TriggerCondition.PermanentBecomesTargeted (PermanentsBecomeTargeted.MkPermanentsBecomeTargeted (Filter.rewrite pairs f) relation kind includesYou)
   TriggerCondition.PlayerDrawsNthCard {} -> condition
   TriggerCondition.PlayerBecomesMonarch _ -> condition
-  TriggerCondition.SelfAttacks _ -> condition
-  TriggerCondition.SelfAttacksWithAnother f -> TriggerCondition.SelfAttacksWithAnother (Filter.rewrite pairs f)
-  -- DESCENDS for the arm above's reason: rule 508.3a's second sentence names a
-  -- permanent, and a Filter over one can name a creature type CR 612.1 rewrites.
-  TriggerCondition.SelfAttacksPermanent f -> TriggerCondition.SelfAttacksPermanent (Filter.rewrite pairs f)
-  TriggerCondition.CreatureAttacksAlone f -> TriggerCondition.CreatureAttacksAlone (Filter.rewrite pairs f)
-  TriggerCondition.CreatureAttacksYou -> condition
-  TriggerCondition.CreatureAttacks f -> TriggerCondition.CreatureAttacks (Filter.rewrite pairs f)
-  TriggerCondition.AttachedPlayerIsAttacked -> condition
-  TriggerCondition.SelfIsAttacked -> condition
-  TriggerCondition.PlayerAttacks _ -> condition
-  -- DESCENDS, where the arm above does not: rule 508.3c's Filter names a
-  -- creature type, which is exactly what CR 612.1's text-changing effect
-  -- rewrites.
-  TriggerCondition.PlayerAttacksWith payload -> TriggerCondition.PlayerAttacksWith payload {PlayerAttacksWith.filter = Filter.rewrite pairs (PlayerAttacksWith.filter payload)}
-  -- Two PlayerRelations and no Filter, so nothing here names a creature type
-  -- for CR 612.1 to rewrite -- the arm two above's answer.
-  TriggerCondition.PlayerAttacksPlayer {} -> condition
-  TriggerCondition.SelfAttacksPlayerWithMostLife -> condition
-  TriggerCondition.SelfAttacksWhileSaddled -> condition
-  TriggerCondition.SelfAttacksWhile c -> TriggerCondition.SelfAttacksWhile (rewriteCondition pairs c)
+  TriggerCondition.Attacks t -> TriggerCondition.Attacks (rewriteAttackTrigger pairs t)
   TriggerCondition.Blocks t -> TriggerCondition.Blocks (rewriteBlockTrigger pairs t)
-  TriggerCondition.CreatureAttacksUnblocked f -> TriggerCondition.CreatureAttacksUnblocked (Filter.rewrite pairs f)
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> condition
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> condition
   TriggerCondition.SelfPutIntoGraveyardDuringResolution -> condition
@@ -2220,6 +2204,34 @@ rewriteTriggerCondition pairs condition = case condition of
       ActingPermanent.Matching f -> ActingPermanent.Matching (Filter.rewrite pairs f)
 
 -- CR 612.1 through both ends of a pairwise block trigger.
+-- CR 612.1 through an attack trigger's Filters and condition, each of which
+-- can name a creature type (CR 508.3c's "attacks with one or more Birds").
+-- Relations name none.
+rewriteAttackTrigger :: [(TextWord.TextWord, TextWord.TextWord)] -> AttackTrigger.AttackTrigger -> AttackTrigger.AttackTrigger
+rewriteAttackTrigger pairs trigger = case trigger of
+  AttackTrigger.Attacker (AttackerTrigger.MkAttackerTrigger creature target company frequency while_) ->
+    AttackTrigger.Attacker
+      ( AttackerTrigger.MkAttackerTrigger
+          (Filter.rewrite pairs creature)
+          ( case target of
+              AttackerTarget.AnyTarget -> target
+              AttackerTarget.Defending _ -> target
+              AttackerTarget.Permanent f -> AttackerTarget.Permanent (Filter.rewrite pairs f)
+              AttackerTarget.PlayerWithMostLife -> target
+          )
+          ( case company of
+              AttackCompany.AnyCompany -> company
+              AttackCompany.Alone -> company
+              AttackCompany.WithAnother f -> AttackCompany.WithAnother (Filter.rewrite pairs f)
+          )
+          frequency
+          (fmap (rewriteCondition pairs) while_)
+      )
+  AttackTrigger.Attacked _ -> trigger
+  AttackTrigger.Declaration (DeclarationTrigger.MkDeclarationTrigger player attackers) ->
+    AttackTrigger.Declaration (DeclarationTrigger.MkDeclarationTrigger player (fmap (\(AttackCount.MkAttackCount n f) -> AttackCount.MkAttackCount n (Filter.rewrite pairs f)) attackers))
+  AttackTrigger.Unblocked f -> AttackTrigger.Unblocked (Filter.rewrite pairs f)
+
 rewriteBlockTrigger :: [(TextWord.TextWord, TextWord.TextWord)] -> BlockTrigger.BlockTrigger -> BlockTrigger.BlockTrigger
 rewriteBlockTrigger pairs (BlockTrigger.MkBlockTrigger role creature count) =
   BlockTrigger.MkBlockTrigger role (Filter.rewrite pairs creature) $ case count of

@@ -20,7 +20,11 @@ import qualified Parun.Engine.Projection.View as ProjectionView
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
 import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
+import qualified Parun.Types.AttackCount as AttackCount
 import qualified Parun.Types.AttackTarget as AttackTarget
+import qualified Parun.Types.AttackTrigger as AttackTrigger
+import qualified Parun.Types.AttackedSubject as AttackedSubject
+import qualified Parun.Types.AttackedTrigger as AttackedTrigger
 import qualified Parun.Types.AttackerBlocked as AttackerBlocked
 import qualified Parun.Types.AttackerDeclared as AttackerDeclared
 import qualified Parun.Types.AttackerUnblocked as AttackerUnblocked
@@ -53,6 +57,7 @@ import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamagePrevented as DamagePrevented
 import qualified Parun.Types.DamageRecipient as DamageRecipient
 import qualified Parun.Types.DamageTrigger as DamageTrigger
+import qualified Parun.Types.DeclarationTrigger as DeclarationTrigger
 import qualified Parun.Types.DiscardSubject as DiscardSubject
 import qualified Parun.Types.DiscardTrigger as DiscardTrigger
 import qualified Parun.Types.Discarded as Discarded
@@ -78,7 +83,6 @@ import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.PlayerActed as PlayerActed
-import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Types.PlayerRelation as PlayerRelation
@@ -491,83 +495,8 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
     Seq.Empty -> Map.empty
     only Seq.:<| Seq.Empty -> Binding.setBecame only Map.empty
     every -> Binding.setBecameGroup every Map.empty
-  -- CR 702.86a's "defending player": CR 508.5 resolves that phrase through what
-  -- the attacking creature is attacking, and Parun.Engine.Combat.declareAttackers
-  -- stamped the answer onto the event as the declaration was written down. The
-  -- same reserved slot the discard and poisonous arms use, for the same reason --
-  -- a player the EVENT names, whom CR 109.5's `you` cannot stand in for. Here it
-  -- is not even an opponent by construction: the attacking creature's controller
-  -- is `you`, and CR 506.2a picks the defender out of several opponents.
-  --
-  -- Read off the event rather than derived, which is what makes this arm possible
-  -- at all: this function takes no game state, and both the planeswalker and the
-  -- battle forms of CR 508.5 need the board.
-  (TriggerCondition.SelfAttacks _, GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared _ defending _ _ _)) ->
-    Binding.setTriggerPlayer defending Map.empty
-  -- CR 702.83a's "that creature": the creature that attacked alone, which is the
-  -- id the same event names -- and NOT the bearer, since rule 702.83a's condition
-  -- watches every creature its controller has. And CR 508.5's defending player
-  -- the event also carries, for Nefarox, Overlord of Grixis's "defending player
-  -- sacrifices a creature".
-  (TriggerCondition.CreatureAttacksAlone _, GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared attacker defending _ _ _)) ->
-    Binding.setAttackingCreature attacker (Binding.setTriggerPlayer defending Map.empty)
-  -- The same slot off the same event, for Marchesa's Decree's "that creature's
-  -- controller" -- again not the bearer, which is a bystanding enchantment. CR
-  -- 508.5's defending player goes unbound here where the SelfAttacks arm above
-  -- binds it: matchesTrigger has already required that player to be CR 109.5's
-  -- "you", so a slot would be a second name for a seat the ability has.
-  (TriggerCondition.CreatureAttacksYou, GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared attacker _ _ _ _)) ->
-    Binding.setAttackingCreature attacker Map.empty
-  -- The same slot once more: Fervent Charge's "it" and Conjurer's Mantle's "that
-  -- creature" are the attacker, never the bearer. CR 508.5's defending player
-  -- rides along under the reserved "that player" slot, the SelfAttacks arm's
-  -- binding, for Brutal Hordechief's "defending player loses 1 life".
-  (TriggerCondition.CreatureAttacks _, GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared attacker defending _ _ _)) ->
-    Binding.setTriggerPlayer defending (Binding.setAttackingCreature attacker Map.empty)
-  -- CR 508.3b's subject, under the same reserved slot every other "that player"
-  -- takes: whom the Curse enchants, which matchesTrigger has already required the
-  -- event to name. Bound rather than left to the ability's own attachment because
-  -- the payload reads it as a player -- Curse of Vitality's "each opponent
-  -- attacking that player" -- and Object.attachedTo is a Recipient.
-  (TriggerCondition.AttachedPlayerIsAttacked, GameEvent.BecameAttacked (BecameAttacked.MkBecameAttacked _ (AttackTarget.OfPlayer attacked))) ->
-    Binding.setTriggerPlayer attacked Map.empty
-  -- CR 508.3d's subject: the player who declared the attackers, which is the
-  -- only thing the event carries. Bound under Binding.attackingPlayer and not
-  -- under the reserved "that player" slot, for the arm below's reason -- rule
-  -- 508.3e names two players at once, and one name per role is what makes a
-  -- payload that reaches for the wrong one read a dead slot.
-  --
-  -- Unconditional given a match, which is what eventBindingSlots' per-condition
-  -- promise needs: every GameEvent.AttackersDeclared carries a PlayerId, and it
-  -- is the only thing it carries.
-  (TriggerCondition.PlayerAttacks _, GameEvent.AttackersDeclared attacker) ->
-    Binding.setAttackingPlayer attacker Map.empty
-  -- CR 508.3c's subject, the same slot off the same event as the arm above: the
-  -- Filter narrows WHICH attackers made the condition fire and says nothing about
-  -- who declared them, so "that player" still needs the seat. Total War reads it
-  -- twice over, for "that player controls" and for the creatures it spares.
-  --
-  -- The attackers the Filter admitted go under Binding.attackingCreatures,
-  -- Tyvar the Bellicose's "they": admittedAttackers, the set matchesTrigger
-  -- counted against the floor, so the slot is never empty given a match.
-  (TriggerCondition.PlayerAttacksWith p, GameEvent.AttackersDeclared attacker) ->
-    Binding.setAttackingPlayer attacker (Binding.setAttackingCreatures (admittedAttackers gs bearer you p attacker) Map.empty)
-  -- CR 508.3e's TWO subjects, both off the one event. Whom the declaration was
-  -- aimed at goes under the reserved "that player" slot, which is what the
-  -- phrase means in Seifer, Balamb Rival's "goad target creature that player
-  -- controls"; the player who declared goes under Binding.attackingPlayer, the
-  -- arm above's slot, which is what it means in Archnemesis' "you may attach
-  -- this Aura to that player".
-  --
-  -- The narrowing to AttackTarget.OfPlayer is matchesTrigger's, re-stated here
-  -- because this function is not given its answer: an event this condition
-  -- rejected reaches no binding at all.
-  (TriggerCondition.PlayerAttacksPlayer {}, GameEvent.BecameAttacked (BecameAttacked.MkBecameAttacked attacker (AttackTarget.OfPlayer attacked))) ->
-    Binding.setAttackingPlayer attacker (Binding.setTriggerPlayer attacked Map.empty)
-  -- The same slot off CR 509.1h's other branch, stamped there by its one writer,
-  -- Combat.declareBlockers: Abyssal Nightstalker's "defending player".
-  (TriggerCondition.CreatureAttacksUnblocked _, GameEvent.AttackerUnblocked u) ->
-    Binding.setTriggerPlayer (AttackerUnblocked.defender u) (Binding.setAttackingCreature (AttackerUnblocked.attacker u) Map.empty)
+  -- CR 508.3: attackSlots' slots, off the event each arity matches.
+  (TriggerCondition.Attacks t, _) -> attackBindings gs bearer you t event
   -- CR 615.13's "that many": how much this prevention effect prevented, which is
   -- the whole reason the event carries a number. The first reserved slot holding
   -- an AMOUNT rather than a reference, read back by Quantity.InSlot off the stack
@@ -1274,18 +1203,59 @@ admittedPreventedSources context gs f = Map.filterWithKey admits . DamagePrevent
     admits damager share =
       sum share > 0 && maybe False (\view -> Filter.matches context (ProjectionView.lastZoned gs damager view) f) (Projection.viewWithLastKnown damager gs damager)
 
--- The attackers `attacker` declared that the condition's Filter admits, CR
--- 508.3c's "a creature that player controls" read through Combat.joinedUnder
--- (CR 506.4) and each viewed through viewWithLastKnown, framed by the bearer.
--- The relation and the floor are PlayerAttacksWith's match arm's questions, not
--- this one's.
-admittedAttackers :: GameState -> ObjectId -> PlayerId -> PlayerAttacksWith.PlayerAttacksWith -> PlayerId -> Seq.Seq ObjectId
-admittedAttackers gs bearer you p attacker = Seq.fromList (filter admits (Set.toList (Combat.declaredAttackers combat)))
+-- The attackers `attacker` declared that the Filter admits, CR 508.3c's "a
+-- creature that player controls" read through Combat.joinedUnder (CR 506.4)
+-- and each viewed through viewWithLastKnown, framed by the bearer. CR 508.4's
+-- creature put onto the battlefield attacking is not in Combat.declaredAttackers.
+admittedAttackers :: GameState -> ObjectId -> PlayerId -> Filter.Type.Filter Keyword.Type.Keyword -> PlayerId -> Seq.Seq ObjectId
+admittedAttackers gs bearer you f attacker = Seq.fromList (filter admits (Set.toList (Combat.declaredAttackers combat)))
   where
     combat = GameState.combat gs
     admits oid =
       Map.lookup oid (Combat.joinedUnder combat) == Just attacker
-        && maybe False (\view -> Filter.matches (Projection.sourceContext gs (Just you) bearer) view (PlayerAttacksWith.filter p)) (Projection.viewWithLastKnown oid gs oid)
+        && maybe False (\view -> Filter.matches (Projection.sourceContext gs (Just you) bearer) view f) (Projection.viewWithLastKnown oid gs oid)
+
+-- CR 508.3: the slots eventBindings stamps for an attack trigger, each off the
+-- event its arity matches. A declared or unblocked attacker and CR 508.5's
+-- defending player (annihilator's "defending player", exalted's "that
+-- creature"); the attacked player under the reserved "that player" slot
+-- (Seifer, Balamb Rival's "that player controls"), where the attacked is a
+-- player, and CR 508.3e's attacking player beside it (Archnemesis' "attach
+-- this Aura to that player"); and the declaring player, with the creatures a
+-- count admitted (Tyvar the Bellicose's "they").
+attackSlots :: AttackTrigger.AttackTrigger -> Set.Set SlotName.SlotName
+attackSlots trigger = case trigger of
+  AttackTrigger.Attacker _ -> Set.fromList [Binding.attackingCreature, Binding.triggerPlayer]
+  AttackTrigger.Attacked t ->
+    Set.fromList
+      ( [Binding.triggerPlayer | AttackedTrigger.attacked t /= AttackedSubject.Source]
+          <> [Binding.attackingPlayer | Maybe.isJust (AttackedTrigger.attacker t)]
+      )
+  AttackTrigger.Declaration t -> case DeclarationTrigger.attackers t of
+    Nothing -> Set.singleton Binding.attackingPlayer
+    Just _ -> Set.fromList [Binding.attackingPlayer, Binding.attackingCreatures]
+  AttackTrigger.Unblocked _ -> Set.fromList [Binding.attackingCreature, Binding.triggerPlayer]
+
+-- CR 508.3: attackSlots, stamped. A trigger whose subject is a player or a
+-- permanent and not a creature names no creature, so a Source subject binds
+-- nothing a match has not already pinned to the bearer.
+attackBindings :: GameState -> ObjectId -> PlayerId -> AttackTrigger.AttackTrigger -> GameEvent -> Map.Map SlotName.SlotName Binding
+attackBindings gs bearer you trigger event = case (trigger, event) of
+  (AttackTrigger.Attacker _, GameEvent.AttackerDeclared d) ->
+    Binding.setTriggerPlayer (AttackerDeclared.defender d) (Binding.setAttackingCreature (AttackerDeclared.attacker d) Map.empty)
+  (AttackTrigger.Attacked t, GameEvent.BecameAttacked (BecameAttacked.MkBecameAttacked attacker target)) ->
+    let attacked = case (AttackedTrigger.attacked t, target) of
+          (AttackedSubject.Source, _) -> id
+          (_, AttackTarget.OfPlayer player) -> Binding.setTriggerPlayer player
+          _ -> id
+        attacking = maybe id (const (Binding.setAttackingPlayer attacker)) (AttackedTrigger.attacker t)
+     in attacking (attacked Map.empty)
+  (AttackTrigger.Declaration t, GameEvent.AttackersDeclared attacker) -> case DeclarationTrigger.attackers t of
+    Nothing -> Binding.setAttackingPlayer attacker Map.empty
+    Just count -> Binding.setAttackingPlayer attacker (Binding.setAttackingCreatures (admittedAttackers gs bearer you (AttackCount.filter count) attacker) Map.empty)
+  (AttackTrigger.Unblocked _, GameEvent.AttackerUnblocked u) ->
+    Binding.setTriggerPlayer (AttackerUnblocked.defender u) (Binding.setAttackingCreature (AttackerUnblocked.attacker u) Map.empty)
+  _ -> Map.empty
 
 -- CR 400.7e's `became` slot, in the plural CR 712.21c asks for: "if an effect
 -- can find the new object that a melded permanent becomes as it leaves the
@@ -1486,89 +1456,13 @@ eventBindingSlots cond = case cond of
   -- CR 121.1's drawing player, a discarder's player slot: Underworld Dreams' "that
   -- player" is the opponent who drew.
   TriggerCondition.PlayerDrawsNthCard {} -> Set.singleton Binding.triggerPlayer
-  -- CR 508.5's defending player, which the declaration event carries -- rule
-  -- 702.86a's annihilator is the reader. The DECLARED attacker itself is the
-  -- bearer, already bound as CR 113.7a's source, so it needs no slot of its own.
-  --
-  -- Unconditional, as this classification has to be: every AttackerDeclared event
-  -- carries a PlayerId, so no shape of the event withholds it.
-  TriggerCondition.SelfAttacks _ -> Set.singleton Binding.triggerPlayer
-  -- NOTHING, unlike SelfAttacks above: rule 702.149a's payload names only "this
-  -- creature", so neither the companion that qualified nor CR 508.5's defending
-  -- player is pointed at afterwards.
-  TriggerCondition.SelfAttacksWithAnother _ -> Set.empty
-  -- NOTHING either, for the arm above's reason: Thrashing Frontliner's payload
-  -- says "it", which is the bearer, so neither the permanent attacked nor CR
-  -- 508.5's defending player is pointed at afterwards.
-  TriggerCondition.SelfAttacksPermanent _ -> Set.empty
-  -- CR 506.5's lone attacker, which the same event names -- rule 702.83a's
-  -- exalted is the reader -- and CR 508.5's defending player, Nefarox,
-  -- Overlord of Grixis's.
-  --
-  -- Unconditional, as this classification has to be: every AttackerDeclared event
-  -- carries an ObjectId and a PlayerId, and matchesTrigger has already required
-  -- the count to be one.
-  TriggerCondition.CreatureAttacksAlone _ -> Set.fromList [Binding.attackingCreature, Binding.triggerPlayer]
-  -- The attacker, CreatureAttacksAlone's slot above -- Marchesa's Decree's "that
-  -- creature's controller". CR 508.5's defending player is NOT bound alongside it:
-  -- the match has already pinned that player to be CR 109.5's "you".
-  --
-  -- Unconditional, as this classification has to be: every AttackerDeclared event
-  -- carries an ObjectId.
-  TriggerCondition.CreatureAttacksYou -> Set.singleton Binding.attackingCreature
-  -- The attacker again, unconditionally for the arm above's reason, and CR
-  -- 508.5's defending player, which every AttackerDeclared event carries too.
-  TriggerCondition.CreatureAttacks _ -> Set.fromList [Binding.attackingCreature, Binding.triggerPlayer]
-  -- The PLAYER instead, where the arm above binds the attacker: rule 508.3b names
-  -- a set of creatures rather than one, and Curse of Vitality's payload says
-  -- "that player" and nothing about them.
-  TriggerCondition.AttachedPlayerIsAttacked -> Set.singleton Binding.triggerPlayer
-  -- NOTHING, unlike the arm above: rule 508.3b's other two subjects are
-  -- PERMANENTS, and the one attacked here is the ability's own source, already
-  -- bound as CR 113.7a's source. Synthetic Warded Sentinel's payload says "you",
-  -- so the declaring player the same event carries is not pointed at either.
-  TriggerCondition.SelfIsAttacked -> Set.empty
-  -- The DECLARING player, and not the creatures: rule 508.3d names a SET of
-  -- them, so there is no one attacker to point at, where the player the rule
-  -- makes its subject is exactly one seat. Norn's Decree's "the attacking
-  -- player" is the phrase.
-  --
-  -- Unconditional, as this classification has to be: every
-  -- GameEvent.AttackersDeclared carries a PlayerId.
-  TriggerCondition.PlayerAttacks _ -> Set.singleton Binding.attackingPlayer
-  -- The DECLARING player, for the arm above's reason (Total War's "that player
-  -- controls"), and beside it the SET rule 508.3c's Filter admitted, as a group
-  -- (Tyvar the Bellicose's "they").
-  --
-  -- Both unconditional, as this classification has to be: every
-  -- GameEvent.AttackersDeclared carries a PlayerId, and the group is stamped
-  -- even when empty.
-  TriggerCondition.PlayerAttacksWith {} -> Set.fromList [Binding.attackingPlayer, Binding.attackingCreatures]
-  -- BOTH of rule 508.3e's players: the attacked one under the reserved "that
-  -- player" slot, which Seifer, Balamb Rival's "that player controls" reads, and
-  -- the attacking one under the slot the PlayerAttacks arm above uses, which
-  -- Archnemesis' "attach this Aura to that player" reads. The only condition
-  -- that promises two players, rule 508.3e being the only one whose subject is a
-  -- pair.
-  --
-  -- Unconditional, as this classification has to be, although matchesTrigger
-  -- admits only AttackTarget.OfPlayer: every event this condition MATCHES
-  -- carries both players, and eventBindings is consulted for no other.
-  TriggerCondition.PlayerAttacksPlayer {} -> Set.fromList [Binding.triggerPlayer, Binding.attackingPlayer]
-  -- NOTHING, for SelfAttacksWithAnother's reason: rule 702.105a's payload names
-  -- only "this creature", so the attacked player is compared and then never
-  -- pointed at. That is also why this condition needs no arm in eventBindings.
-  TriggerCondition.SelfAttacksPlayerWithMostLife -> Set.empty
-  TriggerCondition.SelfAttacksWhileSaddled -> Set.empty
-  TriggerCondition.SelfAttacksWhile _ -> Set.empty
+  -- CR 508.3: what eventBindings stamps, as a function of the arity and
+  -- fields, each guaranteed given a match.
+  TriggerCondition.Attacks t -> attackSlots t
   -- CR 509.3: what eventBindings stamps, as a function of the role and count,
   -- each guaranteed given a match -- every such event carries both ids, and
   -- matchesTrigger has already read the named creature's Filter.
   TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger role _ count) -> blockSlots role count
-  -- CR 508.5's defending player, which GameEvent.AttackerUnblocked carries for
-  -- CR 509.3c's reason (blockSlots): Abyssal Nightstalker's "defending player
-  -- discards a card". No blocker -- CR 509.1h's unblocked branch has none.
-  TriggerCondition.CreatureAttacksUnblocked _ -> Set.fromList [Binding.attackingCreature, Binding.triggerPlayer]
   -- CR 113.6k: the bearer of a library-to-graveyard trigger IS the arriving
   -- incarnation, so binding it again under `became` would be a second name for
   -- one object. Narcomoeba reads the source slot instead.

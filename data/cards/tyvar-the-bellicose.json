@@ -111,17 +111,22 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PlayerAttacksWith",
+            "type": "Attacks",
             "value": {
-              "attackers": 1,
-              "filter": {
-                "type": "HasSubtype",
-                "value": {
-                  "type": "Elf"
+              "type": "Declaration",
+              "value": {
+                "attackers": {
+                  "filter": {
+                    "type": "HasSubtype",
+                    "value": {
+                      "type": "Elf"
+                    }
+                  },
+                  "floor": 1
+                },
+                "player": {
+                  "type": "You"
                 }
-              },
-              "player": {
-                "type": "You"
               }
             }
           },

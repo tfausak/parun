@@ -46,7 +46,9 @@ import qualified Parun.Support as S
 import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.ActiveReplacement as ActiveReplacement
 import qualified Parun.Types.AttackTarget as AttackTarget
+import qualified Parun.Types.AttackTrigger as AttackTrigger
 import qualified Parun.Types.AttackerDeclared as AttackerDeclared
+import qualified Parun.Types.AttackerTrigger as AttackerTrigger
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardName as CardName
@@ -280,12 +282,15 @@ scanSpec s registry =
     -- CR 508.3a plus Aurelia, the Warleader's "for the first time each turn".
     -- The declaration being matched is already in the log when the scan runs,
     -- so "the first time" is "this is the only one so far".
-    Spec.it s "SelfAttacks FirstTimeEachTurn matches only the first declaration" $ do
-      let bearer = ObjectId.MkObjectId 1
+    Spec.it s "Attacks FirstTimeEachTurn matches only the first declaration" $ do
+      giant <- S.printingOf s registry "Hill Giant"
+      -- On the battlefield, since the condition reads its creature through
+      -- Filter.IsSource on the bearer's view.
+      let (bearer, gs0) = S.addPermanent giant S.alice (Setup.emptyGame S.bothPlayers)
           declared = GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared bearer S.bob (AttackTarget.OfPlayer S.bob) 1 S.alice)
-          gsWith events = S.withEvents events (Setup.emptyGame S.bothPlayers)
+          gsWith events = S.withEvents events gs0
           matches frequency events =
-            Event.matchesTrigger (gsWith events) bearer S.alice (TriggerCondition.SelfAttacks frequency) declared
+            Event.matchesTrigger (gsWith events) bearer S.alice (TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue {AttackerTrigger.frequency = frequency})) declared
       Spec.assertBool s (matches TriggerFrequency.FirstTimeEachTurn [declared]) "the first declaration matches"
       Spec.assertBool s (not (matches TriggerFrequency.FirstTimeEachTurn [declared, declared])) "a second declaration this turn does not"
       -- Hanweir Garrison's shape is untouched by the narrowing.
@@ -293,10 +298,10 @@ scanSpec s registry =
       Spec.assertBool s (matches TriggerFrequency.EveryTime [declared, declared]) "EveryTime matches the second too"
       -- The count is per bearer, not per turn: two creatures declared
       -- together are each attacking for the first time.
-      Spec.assertBool s (matches TriggerFrequency.FirstTimeEachTurn [GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared (ObjectId.MkObjectId 2) S.bob (AttackTarget.OfPlayer S.bob) 1 S.alice), declared]) "another creature's declaration does not spend this one's first time"
+      Spec.assertBool s (matches TriggerFrequency.FirstTimeEachTurn [GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared (ObjectId.MkObjectId 99) S.bob (AttackTarget.OfPlayer S.bob) 1 S.alice), declared]) "another creature's declaration does not spend this one's first time"
       -- CR 508.3a's last sentence, unchanged by the frequency: a
       -- non-declaration event never matches.
-      Spec.assertBool s (not (Event.matchesTrigger (gsWith [declared]) bearer S.alice (TriggerCondition.SelfAttacks TriggerFrequency.FirstTimeEachTurn) (GameEvent.StepBegan (StepBegan.MkStepBegan (Phase.Combat CombatStep.DeclareAttackers) S.alice)))) "a step beginning is not an attack"
+      Spec.assertBool s (not (Event.matchesTrigger (gsWith [declared]) bearer S.alice (TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue {AttackerTrigger.frequency = TriggerFrequency.FirstTimeEachTurn})) (GameEvent.StepBegan (StepBegan.MkStepBegan (Phase.Combat CombatStep.DeclareAttackers) S.alice)))) "a step beginning is not an attack"
     -- Pins the canonical emission order this module's `eventTriggers` comment
     -- documents ("events outer, permanents inner, ascending by id"), which a
     -- later task's CR 603.3b ordering prompt indexes into. Two RiP bearers
@@ -1973,7 +1978,7 @@ enchantedHostTriggerSpec s registry =
 zombieTokenOf :: Printing.Printing -> Printing.Printing -> Card.Type.Card
 zombieTokenOf sarcomancy pikerFallback =
   let created effect = case effect of
-        Effect.Create (Create.MkCreate _ card _ _ _) -> Just card
+        Effect.Create (Create.MkCreate _ card _ _ _ _) -> Just card
         _ -> Nothing
       abilityEffects = concatMap (Modal.allEffects . TriggeredAbility.modal) (Face.triggeredAbilities (S.combinedFace sarcomancy))
    in case Maybe.mapMaybe created abilityEffects of

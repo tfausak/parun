@@ -31,7 +31,11 @@ import qualified Parun.Types.Anchor as Anchor
 import qualified Parun.Types.Arithmetic as Arithmetic
 import qualified Parun.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import qualified Parun.Types.AttachRestriction as AttachRestriction
+import qualified Parun.Types.AttackCompany as AttackCompany
 import qualified Parun.Types.AttackTargetRef as AttackTargetRef
+import qualified Parun.Types.AttackTrigger as AttackTrigger
+import qualified Parun.Types.AttackerTarget as AttackerTarget
+import qualified Parun.Types.AttackerTrigger as AttackerTrigger
 import qualified Parun.Types.Backup as Backup
 import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.BeginningStep as BeginningStep
@@ -246,7 +250,6 @@ import qualified Parun.Types.TopOfLibraryUntil as TopOfLibraryUntil
 import qualified Parun.Types.Toughness as Toughness
 import qualified Parun.Types.Trait as Trait
 import qualified Parun.Types.TriggerCondition as TriggerCondition
-import qualified Parun.Types.TriggerFrequency as TriggerFrequency
 import Parun.Types.TriggeredAbility (TriggeredAbility)
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TurnRole as TurnRole
@@ -6177,7 +6180,7 @@ myriadExile =
             }
    in Mint.trigger (TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Combat CombatStep.EndOfCombat) Nothing TurnScope.EachTurn)) (Seq.singleton effect)
 
--- CR 702.116a. Battle cry's SelfAttacks EveryTime condition (CR 508.3a), over CR
+-- CR 702.116a. Battle cry's AttackerTrigger.defaultValue condition (CR 508.3a), over CR
 -- 608.2f's loop: one iteration per opponent other than the defending player,
 -- which Binding.triggerPlayer names -- PlayerRef.EachOpponentExcept is exactly
 -- that phrase, and CR 102.2 / 102.3's narrowing is what drops the attacking
@@ -6242,7 +6245,7 @@ myriad =
             }
       anyToken = atLeastOneMatching (Scope.OverBound BoundReading.AsBound myriadTokenSlot) (Filter.And [])
    in Mint.triggerOf
-        (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime)
+        (TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue))
         Nothing
         ( Mint.oneModeOf
             Map.empty
@@ -6272,7 +6275,7 @@ mobilizeSacrifice :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 mobilizeSacrifice = atNextEndStep (Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot mobilizeTokenSlot, SacrificeEffect.sacrificer = Sacrificer.EffectController, SacrificeEffect.sacrificed = Nothing})
 
 -- CR 702.181a. CR 508.3a is what "attacks" means, so the condition is battle
--- cry's SelfAttacks EveryTime.
+-- cry's AttackerTrigger.defaultValue.
 --
 -- EntryAttack.Chosen and not myriad's UnderPlayer: rule 702.181a narrows the
 -- tokens' subject not at all, so CR 508.4's choice is offered whole, and elided
@@ -6292,7 +6295,8 @@ mobilize n =
                 EntryRiders.defaultValue {EntryRiders.tapped = TapState.Tapped, EntryRiders.attacking = Just EntryAttack.Chosen},
               Create.slot = Just mobilizeTokenSlot,
               -- CR 111.2 under CR 109.5: the keyword ability's own controller.
-              Create.creator = PlayerRef.Relative PlayerRelation.You
+              Create.creator = PlayerRef.Relative PlayerRelation.You,
+              Create.linked = False
             }
       arm =
         Effect.ArmDelayedTrigger
@@ -6302,7 +6306,7 @@ mobilize n =
               ArmDelayedTrigger.duration = Nothing,
               ArmDelayedTrigger.ability = Nothing
             }
-   in Mint.trigger (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime) (Seq.fromList [spawn, arm])
+   in Mint.trigger (TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue)) (Seq.fromList [spawn, arm])
 
 -- The quantity mobilize's and firebending's N reads as the ability resolves
 -- (CR 608.2h). Power reads the triggered ability's source, the object carrying
@@ -6351,10 +6355,10 @@ firebending n =
               ManaAddition.rider = Nothing,
               ManaAddition.whenSpent = Nothing
             }
-   in Mint.trigger (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime) (Seq.singleton added)
+   in Mint.trigger (TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue)) (Seq.singleton added)
 
 -- CR 702.86a. CR 508.3a is what "attacks" means -- being declared as an attacker
--- -- so the condition is battle cry's SelfAttacks EveryTime.
+-- -- so the condition is battle cry's AttackerTrigger.defaultValue.
 --
 -- "DEFENDING PLAYER" is CR 508.5's, stamped onto GameEvent.AttackerDeclared at the
 -- declaration and read back into Binding.triggerPlayer, poisonous' "that player".
@@ -6373,9 +6377,9 @@ annihilator n =
               (Quantity.Literal (toInteger n))
               Nothing
           )
-   in Mint.trigger (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime) (Seq.singleton effect)
+   in Mint.trigger (TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue)) (Seq.singleton effect)
 
--- CR 702.91a, on annihilator's SelfAttacks EveryTime condition.
+-- CR 702.91a, on battle cry's condition.
 --
 -- "EACH OTHER ATTACKING CREATURE" is a SET, swept at resolution and then frozen
 -- (CR 611.2c), so an ObjectRef.EachMatching. The three conjuncts are the three
@@ -6394,7 +6398,7 @@ battleCry =
               )
               Nothing
           )
-   in Mint.trigger (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime) (Seq.singleton effect)
+   in Mint.trigger (TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue)) (Seq.singleton effect)
 
 -- CR 702.58a's second half: "Whenever another creature enters, if this permanent
 -- has a +1/+1 counter on it, you may move a +1/+1 counter from this permanent
@@ -6697,7 +6701,7 @@ increment =
         (Condition.All [isCreature, Condition.Any (fmap (spentExceeds . Quantity.Measure) [Measure.Power, Measure.Toughness])])
         (Seq.singleton grow)
 
--- CR 702.121a, on battle cry's SelfAttacks condition with prowess' payload.
+-- CR 702.121a, on battle cry's condition with prowess' payload.
 -- Attacking a PLANESWALKER fires it just the same -- CR 508.1a chooses the
 -- attackers and CR 508.1b only then says what each attacks -- so what the
 -- planeswalker changes is the bonus.
@@ -6718,7 +6722,7 @@ melee =
               (ObjectRef.EachMatching Filter.IsSource)
               Nothing
           )
-   in Mint.trigger (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime) (Seq.singleton effect)
+   in Mint.trigger (TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue)) (Seq.singleton effect)
 
 -- CR 702.23a. The condition is bushido's blocked half, CR 509.3c, which fires ONCE
 -- however many creatures blocked, where flanking's CR 509.3d fires once per
@@ -6784,8 +6788,7 @@ flankingEffect =
 -- appears in neither. It supplies only CR 109.5's "you" -- the ability's
 -- controller (CR 603.3a) -- and the Filter context's source.
 --
--- ALONE is TriggerCondition.CreatureAttacksAlone's own, not a Filter conjunct: CR
--- 506.5 makes it a fact about the declaration rather than a characteristic.
+-- ALONE is AttackCompany.Alone, not a Filter conjunct: CR 506.5 makes it a fact about the declaration rather than a characteristic.
 --
 -- "THAT CREATURE" is the creature the event named, read out of
 -- Binding.attackingCreature -- NOT Filter.IsSource, which would pump the wrong
@@ -6801,8 +6804,13 @@ exalted =
               Nothing
           )
    in Mint.trigger
-        ( TriggerCondition.CreatureAttacksAlone
-            (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You])
+        ( TriggerCondition.Attacks
+            ( AttackTrigger.Attacker
+                AttackerTrigger.defaultValue
+                  { AttackerTrigger.creature = Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You],
+                    AttackerTrigger.company = AttackCompany.Alone
+                  }
+            )
         )
         (Seq.singleton effect)
 
@@ -6873,7 +6881,7 @@ enlistReflexive =
 -- modifies power without setting it, so CR 613.4c's layer 7c applies it, and CR
 -- 611.2a is the duration.
 --
--- The condition is TriggerCondition.CreatureAttacksUnblocked, which the glossary's
+-- The condition is AttackTrigger.Unblocked, which the glossary's
 -- "attacks and isn't blocked" entry sends to CR 509.1h -- so the bonus lands in
 -- the declare blockers step, after the declaration, rather than with CR 508.2's
 -- attack triggers. Rule 509.1h's last sentence keeps a creature whose only blocker
@@ -6888,7 +6896,7 @@ frenzy n =
               (ObjectRef.EachMatching Filter.IsSource)
               Nothing
           )
-   in Mint.trigger (TriggerCondition.CreatureAttacksUnblocked Filter.IsSource) (Seq.singleton effect)
+   in Mint.trigger (TriggerCondition.Attacks (AttackTrigger.Unblocked Filter.IsSource)) (Seq.singleton effect)
 
 -- CR 702.130a: bushido's CR 509.3c condition and annihilator's CR 508.5 player,
 -- read off GameEvent.AttackerBlocked through Binding.triggerPlayer. NOT the
@@ -6925,7 +6933,7 @@ mentor =
   let slot = TargetSlot.required Pool.Creatures (Just (Filter.And [Filter.IsAttacking, Filter.Measures (Measures.MkMeasures Measure.Power Comparison.LessThan (Operand.OfSource Measure.Power))]))
       effect = Effect.Mentor mentorTarget
    in Mint.triggerOf
-        (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime)
+        (TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue))
         Nothing
         (Mint.oneModeTargeting (Map.singleton mentorTarget slot) (Seq.singleton effect))
 
@@ -6951,8 +6959,12 @@ training :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 training =
   let effect = Effect.CounterAndMark (PermanentActed.MkPermanentActed PermanentAction.Train Binding.triggerSource)
    in Mint.trigger
-        ( TriggerCondition.SelfAttacksWithAnother
-            (Filter.And [Filter.HasCardType CardType.Creature, Filter.Measures (Measures.MkMeasures Measure.Power Comparison.GreaterThan (Operand.OfSource Measure.Power))])
+        ( TriggerCondition.Attacks
+            ( AttackTrigger.Attacker
+                AttackerTrigger.defaultValue
+                  { AttackerTrigger.company = AttackCompany.WithAnother (Filter.And [Filter.HasCardType CardType.Creature, Filter.Measures (Measures.MkMeasures Measure.Power Comparison.GreaterThan (Operand.OfSource Measure.Power))])
+                  }
+            )
         )
         (Seq.singleton effect)
 
@@ -6998,7 +7010,7 @@ ward w =
         (Mint.oneModeOf Map.empty (Seq.singleton clause))
 
 -- CR 702.147a's TRIGGERED half. CR 508.3a is what "attacks" means, so the
--- condition is mentor's and provoke's SelfAttacks EveryTime.
+-- condition is mentor's and provoke's AttackerTrigger.defaultValue.
 --
 -- The payload is not a sacrifice. "At end of combat" makes the sacrifice a CR
 -- 603.7 DELAYED triggered ability, created as this one resolves, so the effect is
@@ -7017,7 +7029,7 @@ decayed =
               ArmDelayedTrigger.duration = Nothing,
               ArmDelayedTrigger.ability = Nothing
             }
-   in Mint.trigger (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime) (Seq.singleton effect)
+   in Mint.trigger (TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue)) (Seq.singleton effect)
 
 -- CR 603.7: the delayed triggered abilities the RULEBOOK declares, keyed by the
 -- name its own arming opcode names. Parun.Engine.Resolve falls back to this map
@@ -7190,7 +7202,7 @@ provoke =
           )
       untap = Effect.Untap (ObjectRef.InSlot provokeTarget)
    in Mint.triggerOf
-        (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime)
+        (TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue))
         Nothing
         (Mint.oneModeOf (Map.singleton provokeTarget slot) (Seq.singleton (Mint.youMay (Seq.fromList [requirement, untap]))))
 
@@ -7220,7 +7232,7 @@ renown n =
         (Seq.fromList [grow, designate])
 
 -- CR 702.105a. The whole of the keyword is in the CONDITION,
--- TriggerCondition.SelfAttacksPlayerWithMostLife, which is why the payload is
+-- AttackerTarget.PlayerWithMostLife, which is why the payload is
 -- renown's first effect with no second. NOT an intervening "if" (CR 603.4), which
 -- is where renown puts its comparison:
 -- rule 702.105a prints no "if", and CR 608.2a would re-check one on resolution --
@@ -7229,7 +7241,7 @@ renown n =
 dethrone :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 dethrone =
   let grow = Effect.PutCounters (PutCounters.MkPutCounters CounterKind.PlusOnePlusOne (Quantity.Literal 1) (ObjectRef.InSlot Binding.triggerSource) Nothing)
-   in Mint.trigger TriggerCondition.SelfAttacksPlayerWithMostLife (Seq.singleton grow)
+   in Mint.trigger (TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue {AttackerTrigger.target = AttackerTarget.PlayerWithMostLife})) (Seq.singleton grow)
 
 -- CR 702.79a: persist. Its event is CR 700.4's dies, which is why the condition
 -- below is SelfDies.
@@ -7369,7 +7381,8 @@ giftToken chosen tapped token =
         Create.riders =
           EntryRiders.defaultValue {EntryRiders.tapped = tapped},
         Create.slot = Nothing,
-        Create.creator = chosen
+        Create.creator = chosen,
+        Create.linked = False
       }
 
 -- | CR 702.174f's 1\/1 and CR 702.174i's 8\/8 blue creature token of this type,
@@ -7461,7 +7474,8 @@ afterlife n =
                 EntryRiders.defaultValue,
               Create.slot = Nothing,
               -- CR 111.2 under CR 109.5: the keyword ability's own controller.
-              Create.creator = PlayerRef.Relative PlayerRelation.You
+              Create.creator = PlayerRef.Relative PlayerRelation.You,
+              Create.linked = False
             }
    in Mint.trigger TriggerCondition.SelfDies (Seq.singleton spawn)
 
@@ -7608,7 +7622,8 @@ fabricate n =
                 EntryRiders.defaultValue,
               Create.slot = Nothing,
               -- CR 111.2 under CR 109.5: the keyword ability's own controller.
-              Create.creator = PlayerRef.Relative PlayerRelation.You
+              Create.creator = PlayerRef.Relative PlayerRelation.You,
+              Create.linked = False
             }
    in Mint.triggerOf
         TriggerCondition.SelfEnters
@@ -7803,7 +7818,8 @@ attachToOwnToken token =
               -- equips, and the Effect.Attach arm asks it.
               Create.slot = Just attachedTokenSlot,
               -- CR 111.2 under CR 109.5: the keyword ability's own controller.
-              Create.creator = PlayerRef.Relative PlayerRelation.You
+              Create.creator = PlayerRef.Relative PlayerRelation.You,
+              Create.linked = False
             }
    in Mint.trigger TriggerCondition.SelfEnters (Seq.fromList [spawn, Effect.Attach attachedTokenSlot])
 

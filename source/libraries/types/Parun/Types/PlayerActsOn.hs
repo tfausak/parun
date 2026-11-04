@@ -9,8 +9,7 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 -- sacrifices an artifact" (CR 701.21a), Waste Not's "whenever an opponent
 -- discards a creature card" (CR 701.9a).
 --
--- A record for Parun.Types.PlayerAttacksWith's reason: the printed form pairs a
--- subject with a narrowing, and neither half has a default -- Mayhem Devil's
+-- A record because the printed form pairs a subject with a narrowing, and neither half has a default -- Mayhem Devil's
 -- unrestricted "whenever a player sacrifices a permanent" spells both out as
 -- AnyPlayer and the trivial Filter.
 data PlayerActsOn = MkPlayerActsOn

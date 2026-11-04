@@ -126,66 +126,71 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfAttacksWhile",
+            "type": "Attacks",
             "value": {
-              "type": "Compares",
+              "type": "Attacker",
               "value": {
-                "comparison": {
-                  "type": "Exactly"
-                },
-                "measured": {
-                  "type": "Count",
+                "while": {
+                  "type": "Compares",
                   "value": {
-                    "aggregation": {
-                      "type": "Members"
+                    "comparison": {
+                      "type": "Exactly"
                     },
-                    "filter": {
-                      "type": "And",
-                      "value": [
-                        {
-                          "type": "HeldBy",
-                          "value": {
-                            "holder": {
-                              "type": "Controller"
+                    "measured": {
+                      "type": "Count",
+                      "value": {
+                        "aggregation": {
+                          "type": "Members"
+                        },
+                        "filter": {
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "HeldBy",
+                              "value": {
+                                "holder": {
+                                  "type": "Controller"
+                                },
+                                "relation": {
+                                  "type": "You"
+                                }
+                              }
                             },
-                            "relation": {
-                              "type": "You"
+                            {
+                              "type": "HasSupertype",
+                              "value": {
+                                "type": "Legendary"
+                              }
+                            },
+                            {
+                              "type": "HasSubtype",
+                              "value": {
+                                "type": "Monkey"
+                              }
+                            }
+                          ]
+                        },
+                        "scope": {
+                          "type": "InZone",
+                          "value": {
+                            "player": {
+                              "type": "Relative",
+                              "value": {
+                                "type": "AnyPlayer"
+                              }
+                            },
+                            "zone": {
+                              "type": "Battlefield"
                             }
                           }
-                        },
-                        {
-                          "type": "HasSupertype",
-                          "value": {
-                            "type": "Legendary"
-                          }
-                        },
-                        {
-                          "type": "HasSubtype",
-                          "value": {
-                            "type": "Monkey"
-                          }
-                        }
-                      ]
-                    },
-                    "scope": {
-                      "type": "InZone",
-                      "value": {
-                        "player": {
-                          "type": "Relative",
-                          "value": {
-                            "type": "AnyPlayer"
-                          }
-                        },
-                        "zone": {
-                          "type": "Battlefield"
                         }
                       }
+                    },
+                    "threshold": {
+                      "type": "Literal",
+                      "value": 0
                     }
                   }
-                },
-                "threshold": {
-                  "type": "Literal",
-                  "value": 0
                 }
               }
             }

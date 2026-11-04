@@ -43,15 +43,23 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "CreatureAttacksAlone",
+            "type": "Attacks",
             "value": {
-              "type": "HeldBy",
+              "type": "Attacker",
               "value": {
-                "holder": {
-                  "type": "Controller"
+                "company": {
+                  "type": "Alone"
                 },
-                "relation": {
-                  "type": "You"
+                "creature": {
+                  "type": "HeldBy",
+                  "value": {
+                    "holder": {
+                      "type": "Controller"
+                    },
+                    "relation": {
+                      "type": "You"
+                    }
+                  }
                 }
               }
             }
