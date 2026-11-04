@@ -2036,7 +2036,7 @@ representativeEvents cond =
             NonEmpty.:| [noTable (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 42, BecameBlocking.attacker = departed, BecameBlocking.producer = BlockProducer.PutOntoBattlefield, BecameBlocking.attackerWasBlocked = True, BecameBlocking.blockersBefore = Set.singleton (ObjectId.MkObjectId 43)}))]
         -- The same declaration's unblocked branch, which carries the attacker
         -- and CR 508.5's defending player.
-        TriggerCondition.SelfAttacksUnblocked -> one (GameEvent.AttackerUnblocked (AttackerUnblocked.MkAttackerUnblocked departed S.carol))
+        TriggerCondition.CreatureAttacksUnblocked _ -> one (GameEvent.AttackerUnblocked (AttackerUnblocked.MkAttackerUnblocked departed S.carol))
         TriggerCondition.SelfPutIntoGraveyardFromLibrary -> one (moved Zone.Library Zone.Graveyard)
         -- Every origin zone is admitted, but the floor is the same for all of
         -- them: the destination is always a graveyard, which CR 400.2 makes
@@ -2498,7 +2498,7 @@ everyTriggerCondition =
     TriggerCondition.CreatureBecomesBlockedBy (BlockPair.MkBlockPair (Filter.Type.And []) (Filter.Type.And [])),
     TriggerCondition.SelfBecomesBlockedByOneOrMore (Filter.Type.And []),
     TriggerCondition.CreatureBecomesBlockedByAtLeast (CreatureBecomesBlockedByAtLeast.MkCreatureBecomesBlockedByAtLeast PlayerRelation.Opponent 2),
-    TriggerCondition.SelfAttacksUnblocked,
+    TriggerCondition.CreatureAttacksUnblocked (Filter.Type.And []),
     TriggerCondition.SelfPutIntoGraveyardFromLibrary,
     TriggerCondition.SelfPutIntoGraveyardFromAnywhere,
     TriggerCondition.SelfPutIntoGraveyardDuringResolution,

@@ -1082,7 +1082,7 @@ modificationCounts modification = case modification of
   -- The extra text descends as GainAbility's does; a PlayerRef holds no Count.
   Modification.HasFullText ft -> concatMap (modificationCounts . Modification.GainAbility) (FullText.alsoHas ft)
   -- Payload-free, both of them, so there is no Count to sweep.
-  Modification.AssignCombatDamageWithToughness -> []
+  Modification.AssignCombatDamage _ -> []
   Modification.GrantsStationToughness -> []
   -- An enum payload holds neither.
   Modification.MayAssignCombatDamage _ -> []
@@ -1232,7 +1232,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- CR 509.3e's bystander form counts BLOCKERS rather than objects a Count
   -- names, and its PlayerRelation is no Count either.
   TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> []
-  TriggerCondition.SelfAttacksUnblocked -> []
+  TriggerCondition.CreatureAttacksUnblocked _ -> []
   TriggerCondition.SelfCycled -> []
   TriggerCondition.SelfRevealedForMiracle -> []
   TriggerCondition.RevealedThisWay _ -> []
@@ -4606,7 +4606,7 @@ modificationFilters modification = case modification of
   -- text to the outer granted-ability sweeps.
   Modification.HasFullText _ -> []
   -- Payload-free, both of them, so there is no Filter to sweep.
-  Modification.AssignCombatDamageWithToughness -> []
+  Modification.AssignCombatDamage _ -> []
   Modification.GrantsStationToughness -> []
   -- An enum payload holds neither.
   Modification.MayAssignCombatDamage _ -> []
@@ -4802,7 +4802,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- attacker attacked is a PlayerRelation and the blockers are only counted, so
   -- there is no Filter here.
   TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> []
-  TriggerCondition.SelfAttacksUnblocked -> []
+  TriggerCondition.CreatureAttacksUnblocked f -> unframed [f]
   TriggerCondition.SelfCycled -> []
   TriggerCondition.SelfRevealedForMiracle -> []
   TriggerCondition.RevealedThisWay r -> unframed [RevealedThisWay.card r]
@@ -4976,7 +4976,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.CreatureBecomesBlockedBy _ -> []
   TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> []
   TriggerCondition.CreatureBecomesBlockedByAtLeast _ -> []
-  TriggerCondition.SelfAttacksUnblocked -> []
+  TriggerCondition.CreatureAttacksUnblocked _ -> []
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> []
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> []
   TriggerCondition.SelfPutIntoGraveyardDuringResolution -> []

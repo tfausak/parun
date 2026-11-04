@@ -15,6 +15,7 @@ import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.AlternativeCost as AlternativeCost
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.CombatDamageAmount as CombatDamageAmount
 import qualified Parun.Types.CombatRestriction as CombatRestriction
 import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.Cost as Cost
@@ -109,10 +110,10 @@ spec s = Spec.describe s "Parun.Codec.GrantedAbility" $ do
               Set.empty
               Nothing
               Nothing
-              (NonEmpty.singleton Modification.AssignCombatDamageWithToughness)
+              (NonEmpty.singleton (Modification.AssignCombatDamage CombatDamageAmount.EqualToToughness))
           )
       )
-      " {\"type\":\"Static\",\"value\":{\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"modifications\":[{\"type\":\"AssignCombatDamageWithToughness\"}]}} "
+      " {\"type\":\"Static\",\"value\":{\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"modifications\":[{\"type\":\"AssignCombatDamage\",\"value\":{\"type\":\"EqualToToughness\"}}]}} "
   -- Chomping Kavu's "This creature can't be blocked by creatures with power 2
   -- or less", as backup hands it over.
   Spec.it s "Rules" $

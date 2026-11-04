@@ -38,7 +38,10 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfAttacksUnblocked"
+            "type": "CreatureAttacksUnblocked",
+            "value": {
+              "type": "IsSource"
+            }
           },
           "modal": {
             "modes": [

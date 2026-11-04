@@ -411,7 +411,7 @@ rewriteModification pairs m =
               Modification.ExchangeTextBoxes -> acc
               Modification.SwitchPowerToughness -> acc
               -- Nothing to rewrite: two bare markers naming no subtype word.
-              Modification.AssignCombatDamageWithToughness -> acc
+              Modification.AssignCombatDamage _ -> acc
               Modification.GrantsStationToughness -> acc
               -- Nor here: an option names no word either.
               Modification.MayAssignCombatDamage _ -> acc
@@ -2149,7 +2149,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.CreatureBecomesBlockedBy p -> TriggerCondition.CreatureBecomesBlockedBy (rewriteBlockPair pairs p)
   TriggerCondition.SelfBecomesBlockedByOneOrMore f -> TriggerCondition.SelfBecomesBlockedByOneOrMore (Filter.rewrite pairs f)
   TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> condition
-  TriggerCondition.SelfAttacksUnblocked -> condition
+  TriggerCondition.CreatureAttacksUnblocked f -> TriggerCondition.CreatureAttacksUnblocked (Filter.rewrite pairs f)
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> condition
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> condition
   TriggerCondition.SelfPutIntoGraveyardDuringResolution -> condition

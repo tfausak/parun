@@ -114,6 +114,7 @@ import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Facing as Facing
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.FromAnywhere as FromAnywhere
+import qualified Parun.Types.GainControl as GainControl
 import Parun.Types.Game (Game)
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameSettings as GameSettings
@@ -138,6 +139,7 @@ import qualified Parun.Types.Mill as Mill
 import qualified Parun.Types.Modal as Modal.Type
 import qualified Parun.Types.ModeIndex as ModeIndex
 import qualified Parun.Types.Modification as Modification
+import qualified Parun.Types.ModifyTarget as ModifyTarget
 import qualified Parun.Types.MoveCounters as MoveCounters
 import qualified Parun.Types.MoveToZone as MoveToZone
 import qualified Parun.Types.MovedKinds as MovedKinds
@@ -3122,7 +3124,10 @@ effectIsImpossible :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set 
 effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.DealDamage {} -> False
   Effect.Fight {} -> False
-  Effect.ModifyTarget {} -> False
+  -- Cloak of Confusion's "you may have it assign no combat damage" and Orcish
+  -- Squatters' "you may gain control": neither can be had of what has gone, nor
+  -- for a duration that cannot begin (CR 611.2b).
+  Effect.ModifyTarget (ModifyTarget.MkModifyTarget duration _ ref _) -> noneCanBeHeld duration ref
   Effect.ChangeText {} -> False
   Effect.AddMana {} -> False
   Effect.Firebend {} -> False
@@ -3307,7 +3312,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.AddPhases {} -> False
   Effect.EndTurn {} -> False
   Effect.EndCombatPhase {} -> False
-  Effect.GainControl {} -> False
+  Effect.GainControl (GainControl.MkGainControl duration ref _) -> noneCanBeHeld duration ref
   Effect.ExchangeControl {} -> False
   Effect.SetOwner {} -> False
   Effect.ExchangeOwnership {} -> False
@@ -3461,6 +3466,12 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   where
     viewOf = effectViewOf resolving source legal gs
     context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+    -- The two arms' own reads: the sweep names something, and frozenAffected
+    -- leaves none of it still there, or Expiry.arm stores nothing.
+    noneCanBeHeld duration ref =
+      let named = objectRefObjects legal resolving controller source gs ref
+          held = frozenAffected gs (filter (Maybe.isJust . flip Game.lookupObject gs) named)
+       in not (null named) && (null held || Maybe.isNothing (Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs))
     -- The tap-state half of Effect.Tap's and Effect.Untap's arms: the sweep
     -- names at least one permanent and none of them is in the state the
     -- instruction needs to find.

@@ -1493,8 +1493,10 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- The event alone answers it. Reading Combat.blockers instead would answer for
   -- the board at scan time, and rule 509.1h's last sentence is what that gets
   -- wrong: an attacker whose blockers all left combat is still blocked.
-  TriggerCondition.SelfAttacksUnblocked -> case event of
-    GameEvent.AttackerUnblocked u -> AttackerUnblocked.attacker u == bearer
+  TriggerCondition.CreatureAttacksUnblocked f -> case event of
+    GameEvent.AttackerUnblocked u -> case Projection.viewWithLastKnown (AttackerUnblocked.attacker u) gs (AttackerUnblocked.attacker u) of
+      Nothing -> False
+      Just view -> Filter.matches bearerContext view f
     -- CR 509.1i's declaration events are the blocked side of the same action; an
     -- attacker this one names got a blocker, so it is not unblocked.
     GameEvent.AttackerDeclared {} -> False

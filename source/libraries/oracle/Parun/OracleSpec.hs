@@ -376,6 +376,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s [[Text.pack "Whenever a creature you control dies, you gain 1 life."]] (Oracle.abilities (on [CardType.Artifact] (TriggerCondition.PermanentDies mine) [gainLife 1]))
     -- CR 509.3c read by a bystander (Somberwald Alpha).
     Spec.assertEq s [[Text.pack "Whenever a creature you control becomes blocked, you gain 1 life."]] (Oracle.abilities (on [CardType.Artifact] (TriggerCondition.CreatureBecomesBlocked mine) [gainLife 1]))
+    Spec.assertEq s [[Text.pack "Whenever a creature you control attacks and isn't blocked, you gain 1 life."]] (Oracle.abilities (on [CardType.Artifact] (TriggerCondition.CreatureAttacksUnblocked mine) [gainLife 1]))
     let dragon = on [CardType.Creature] (TriggerCondition.SelfPutFromBattlefieldInto (OwnedZone.MkOwnedZone Zone.Graveyard PlayerRelation.You)) [Effect.MoveToZone (move (ObjectRef.InSlot became) Zone.Hand)]
     Spec.assertEq s (Just (Text.pack "When Spark is put into your graveyard from the battlefield, return it to your hand.")) (Oracle.render dragon)
     -- The card the source became is yours to return from your graveyard;
@@ -414,7 +415,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let he = spell [clause [modify (ObjectRef.EachMatching (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You, Filter.Not Filter.IsSource])) Duration.UntilEndOfTurn (pt 1 0)]] []
     Spec.assertEq s (Just (Text.pack "Other creatures you control get +1/+0 until end of turn.")) (Oracle.render he)
     Spec.assertBool s (Oracle.says he spark (Text.pack "Each other creature you control gets +1/+0 until end of turn.")) "each unsaid"
-    let feeder = withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [triggered TriggerCondition.SelfAttacksUnblocked [clause [Effect.LoseLife (LifeLoss.MkLifeLoss (PlayerRef.InSlot thatPlayer) (countOf (Filter.And []) (InZone.MkInZone Zone.Graveyard (PlayerRef.InSlot thatPlayer))) LifeLossCause.ByEffect Nothing)]] []]})
+    let feeder = withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [triggered (TriggerCondition.CreatureAttacksUnblocked Filter.IsSource) [clause [Effect.LoseLife (LifeLoss.MkLifeLoss (PlayerRef.InSlot thatPlayer) (countOf (Filter.And []) (InZone.MkInZone Zone.Graveyard (PlayerRef.InSlot thatPlayer))) LifeLossCause.ByEffect Nothing)]] []]})
     Spec.assertEq s (Just (Text.pack "Whenever Spark attacks and isn't blocked, defending player loses 1 life for each card in that player's graveyard.")) (Oracle.render feeder)
     Spec.assertBool s (Oracle.says feeder spark (Text.pack "Whenever this creature attacks and isn't blocked, defending player loses 1 life for each card in their graveyard.")) "their unsaid"
 

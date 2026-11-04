@@ -106,7 +106,7 @@ codec =
           Arm.payload "CreatureBecomesBlockedBy" BlockPair.codec TriggerCondition.CreatureBecomesBlockedBy (\x -> case x of TriggerCondition.CreatureBecomesBlockedBy y -> Just y; _ -> Nothing),
           Arm.payload "SelfBecomesBlockedByOneOrMore" filterCodec TriggerCondition.SelfBecomesBlockedByOneOrMore (\x -> case x of TriggerCondition.SelfBecomesBlockedByOneOrMore y -> Just y; _ -> Nothing),
           Arm.payload "CreatureBecomesBlockedByAtLeast" CreatureBecomesBlockedByAtLeast.codec TriggerCondition.CreatureBecomesBlockedByAtLeast (\x -> case x of TriggerCondition.CreatureBecomesBlockedByAtLeast y -> Just y; _ -> Nothing),
-          Arm.nullary "SelfAttacksUnblocked" TriggerCondition.SelfAttacksUnblocked,
+          Arm.payload "CreatureAttacksUnblocked" filterCodec TriggerCondition.CreatureAttacksUnblocked (\x -> case x of TriggerCondition.CreatureAttacksUnblocked y -> Just y; _ -> Nothing),
           Arm.nullary "SelfCycled" TriggerCondition.SelfCycled,
           Arm.nullary "SelfRevealedForMiracle" TriggerCondition.SelfRevealedForMiracle,
           Arm.payload "RevealedThisWay" RevealedThisWay.codec TriggerCondition.RevealedThisWay (\x -> case x of TriggerCondition.RevealedThisWay y -> Just y; _ -> Nothing),
@@ -251,7 +251,7 @@ tagOf x = case x of
   TriggerCondition.CreatureBecomesBlockedBy {} -> "CreatureBecomesBlockedBy"
   TriggerCondition.SelfBecomesBlockedByOneOrMore {} -> "SelfBecomesBlockedByOneOrMore"
   TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> "CreatureBecomesBlockedByAtLeast"
-  TriggerCondition.SelfAttacksUnblocked {} -> "SelfAttacksUnblocked"
+  TriggerCondition.CreatureAttacksUnblocked {} -> "CreatureAttacksUnblocked"
   TriggerCondition.SelfCycled {} -> "SelfCycled"
   TriggerCondition.SelfRevealedForMiracle {} -> "SelfRevealedForMiracle"
   TriggerCondition.RevealedThisWay {} -> "RevealedThisWay"

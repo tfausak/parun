@@ -39,6 +39,7 @@ import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackerDeclared as AttackerDeclared
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.CombatDamageAmount as CombatDamageAmount
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.CounterKind as CounterKind
@@ -1140,7 +1141,7 @@ selfAttacksUnblockedSpec s registry =
       -- All three life totals plus alice's hand as one reading, so no mutation
       -- can hide behind the order the assertions happen to be written in.
       state gs = (S.lifeOf S.alice gs, S.lifeOf S.bob gs, S.lifeOf S.carol gs, S.handSize S.alice gs)
-   in Spec.describe s "SelfAttacksUnblocked" $ do
+   in Spec.describe s "CreatureAttacksUnblocked" $ do
         -- The proving test and its control, on ONE board differing only in the
         -- answer to Prompt.DeclareBlockers. Unblocked: alice draws, and bob takes
         -- the Eternal's 1. Blocked: alice draws nothing, and bob loses 2 to
@@ -2655,7 +2656,7 @@ backupSpec s registry =
                   frogged g = S.runPure (targeting pikerId) g (S.cast S.alice frogId >> Stack.resolveTop)
                   frogFirst = entersTargeting pikerId card (frogged armed)
                   frogLast = frogged (entersTargeting pikerId card armed)
-                  toughnessFlag g = PC.assignsCombatDamageWithToughness (Projection.project pikerId g)
+                  toughnessFlag g = PC.combatDamageAmount (Projection.project pikerId g) == Just CombatDamageAmount.EqualToToughness
               Spec.assertBool s (toughnessFlag frogFirst) "CR 613.1f the grant after Turn to Frog left the Piker holding it"
               Spec.assertBool s (not (toughnessFlag frogLast)) "CR 613.1f Turn to Frog after the grant took it away"
               Spec.assertEqWith s "the Frog really resolved first, leaving a 1/1 with the counter" (Projection.powerOf pikerId frogFirst) (Just 2)

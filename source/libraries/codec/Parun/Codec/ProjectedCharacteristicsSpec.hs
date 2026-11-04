@@ -19,6 +19,7 @@ import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CastingPermission as CastingPermission
 import qualified Parun.Types.ChangeWord as ChangeWord
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.CombatDamageAmount as CombatDamageAmount
 import qualified Parun.Types.CombatDamageOption as CombatDamageOption
 import qualified Parun.Types.CopyException as CopyException
 import qualified Parun.Types.Cost as Cost
@@ -105,7 +106,7 @@ testCharacteristics =
       -- A different keyword from `keywords` above, so a codec arm reading the
       -- wrong field would not round trip to the same JSON.
       PC.textChangedKeywords = Map.singleton Keyword.Trample 1,
-      PC.assignsCombatDamageWithToughness = True,
+      PC.combatDamageAmount = Just CombatDamageAmount.EqualToToughness,
       PC.combatDamageOptions = Set.singleton CombatDamageOption.ToDefendingCreature,
       PC.grantsStationToughness = True,
       -- Parun.Codec.FaceSpec's own values for the four cost fields.
@@ -167,7 +168,7 @@ testCharacteristicsJson =
     <> "\"hasFullText\":true,"
     <> "\"wordChanges\":[{\"from\":{\"type\":\"Spirit\"},\"to\":{\"type\":\"Elf\"}}],"
     <> "\"textChangedKeywords\":[{\"key\":{\"type\":\"Trample\"},\"value\":1}],"
-    <> "\"assignsCombatDamageWithToughness\":true,"
+    <> "\"combatDamageAmount\":{\"type\":\"EqualToToughness\"},"
     <> "\"combatDamageOptions\":[{\"type\":\"ToDefendingCreature\"}],"
     <> "\"grantsStationToughness\":true,"
     <> "\"additionalCosts\":[{\"type\":\"TapThis\"}],"
@@ -221,7 +222,7 @@ minimalCharacteristics =
       PC.hasFullText = False,
       PC.wordChanges = [],
       PC.textChangedKeywords = Map.empty,
-      PC.assignsCombatDamageWithToughness = False,
+      PC.combatDamageAmount = Nothing,
       PC.combatDamageOptions = Set.empty,
       PC.grantsStationToughness = False,
       PC.additionalCosts = [],

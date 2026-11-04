@@ -13,6 +13,7 @@ import qualified Parun.Types.CastingPermission as CastingPermission
 import qualified Parun.Types.ChangeWord as ChangeWord
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.CombatDamageAmount as CombatDamageAmount
 import qualified Parun.Types.CombatDamageOption as CombatDamageOption
 import qualified Parun.Types.CopyException as CopyException
 import qualified Parun.Types.CostChoice as CostChoice
@@ -330,8 +331,8 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
     --
     -- Not copiable, for wordChanges' reason and by the same construction.
     textChangedKeywords :: Map.Map Keyword.Keyword Natural.Natural,
-    -- | CR 510.1a: does this creature assign combat damage equal to toughness?
-    assignsCombatDamageWithToughness :: Bool,
+    -- | CR 510.1a: the amount this creature assigns rather than its power's.
+    combatDamageAmount :: Maybe CombatDamageAmount.CombatDamageAmount,
     -- | CR 510.1b-c: where this creature's controller may have it assign all
     -- its combat damage instead.
     combatDamageOptions :: Set.Set CombatDamageOption.CombatDamageOption,

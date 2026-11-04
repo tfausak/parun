@@ -20,6 +20,7 @@ import qualified Parun.Types.CastingPermission as CastingPermission
 import qualified Parun.Types.ChangeMode as ChangeMode
 import qualified Parun.Types.ChangeWord as ChangeWord
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.CombatDamageAmount as CombatDamageAmount
 import qualified Parun.Types.CombatDamageOption as CombatDamageOption
 import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.CostComponent as CostComponent
@@ -364,12 +365,12 @@ spec s = Spec.describe s "Parun.Codec.Modification" $ do
       codec
       Modification.SwitchPowerToughness
       " {\"type\":\"SwitchPowerToughness\"} "
-  Spec.it s "AssignCombatDamageWithToughness" $
+  Spec.it s "AssignCombatDamage" $
     Common.assertCodec
       s
       codec
-      Modification.AssignCombatDamageWithToughness
-      " {\"type\":\"AssignCombatDamageWithToughness\"} "
+      (Modification.AssignCombatDamage CombatDamageAmount.EqualToToughness)
+      " {\"type\":\"AssignCombatDamage\",\"value\":{\"type\":\"EqualToToughness\"}} "
   Spec.it s "MayAssignCombatDamage" $
     Common.assertCodec
       s

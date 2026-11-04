@@ -9,6 +9,7 @@ import qualified Parun.Codec.CastingPermission as CastingPermission
 import qualified Parun.Codec.ChangeMode as ChangeMode
 import qualified Parun.Codec.ChangeWord as ChangeWord
 import qualified Parun.Codec.Color as Color
+import qualified Parun.Codec.CombatDamageAmount as CombatDamageAmount
 import qualified Parun.Codec.CombatDamageOption as CombatDamageOption
 import qualified Parun.Codec.CostKeyword as CostKeyword
 import qualified Parun.Codec.Filter as Filter
@@ -99,7 +100,7 @@ codec abilityCodec =
           Arm.payload "SetName" CardName.codec Modification.SetName (\x -> case x of Modification.SetName y -> Just y; _ -> Nothing),
           Arm.payload "InsertNameWords" NameInsertion.codec Modification.InsertNameWords (\x -> case x of Modification.InsertNameWords y -> Just y; _ -> Nothing),
           Arm.nullary "SwitchPowerToughness" Modification.SwitchPowerToughness,
-          Arm.nullary "AssignCombatDamageWithToughness" Modification.AssignCombatDamageWithToughness,
+          Arm.payload "AssignCombatDamage" CombatDamageAmount.codec Modification.AssignCombatDamage (\x -> case x of Modification.AssignCombatDamage y -> Just y; _ -> Nothing),
           Arm.payload "MayAssignCombatDamage" CombatDamageOption.codec Modification.MayAssignCombatDamage (\x -> case x of Modification.MayAssignCombatDamage y -> Just y; _ -> Nothing),
           Arm.nullary "GrantsStationToughness" Modification.GrantsStationToughness,
           Arm.payload "Intensify" Quantity.codec Modification.Intensify (\x -> case x of Modification.Intensify y -> Just y; _ -> Nothing)
@@ -145,7 +146,7 @@ tagOf x = case x of
   Modification.SetName {} -> "SetName"
   Modification.InsertNameWords {} -> "InsertNameWords"
   Modification.SwitchPowerToughness {} -> "SwitchPowerToughness"
-  Modification.AssignCombatDamageWithToughness {} -> "AssignCombatDamageWithToughness"
+  Modification.AssignCombatDamage {} -> "AssignCombatDamage"
   Modification.MayAssignCombatDamage {} -> "MayAssignCombatDamage"
   Modification.GrantsStationToughness {} -> "GrantsStationToughness"
   Modification.Intensify {} -> "Intensify"
