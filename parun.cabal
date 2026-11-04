@@ -401,6 +401,7 @@ library codec
     Parun.Codec.CombatSpec
     Parun.Codec.CombatStep
     Parun.Codec.CombatStepSpec
+    Parun.Codec.CompanyCount
     Parun.Codec.Compares
     Parun.Codec.ComparesSpec
     Parun.Codec.Comparison
@@ -2531,6 +2532,7 @@ library types
     Parun.Types.CombatRestriction
     Parun.Types.CombatStep
     Parun.Types.CommandZoneDecision
+    Parun.Types.CompanyCount
     Parun.Types.Compares
     Parun.Types.Comparison
     Parun.Types.CompletedDungeon

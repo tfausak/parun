@@ -1,0 +1,78 @@
+{
+  "description": "CR 508.1c two Orcish Conscripts and one other each have two others",
+  "note": "Each Conscripts counts the other as company, the sibling of CR 508.1c's own Example.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Orcish Conscripts",
+            "label": "conscripts",
+            "ready": true
+          },
+          {
+            "card": "Orcish Conscripts",
+            "label": "second",
+            "ready": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$conscripts",
+          "$second",
+          "$bears"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndOfCombat",
+      "player": "alice",
+      "check": {
+        "Attackers": {
+          "attackers": {
+            "$conscripts": "$bob",
+            "$second": "$bob",
+            "$bears": "$bob"
+          }
+        }
+      }
+    }
+  ]
+}

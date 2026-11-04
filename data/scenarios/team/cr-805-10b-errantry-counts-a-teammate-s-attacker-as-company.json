@@ -1,0 +1,119 @@
+{
+  "description": "CR 805.10b Errantry counts a teammate's attacker as company",
+  "note": "Errantry's ruling: the team's one combined attack holds bob's Hill Giant, so alice's enchanted Grizzly Bears can't join it. Refused together; alone they attack.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "team": 1,
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears",
+            "ready": true
+          },
+          {
+            "card": "Errantry",
+            "label": "errantry",
+            "attached": "bears"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "team": 1,
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Hill Giant",
+            "label": "giant",
+            "ready": true
+          }
+        ]
+      },
+      {
+        "name": "carol",
+        "team": 2,
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "sharedTeamTurns": true
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "refuse": {
+        "Attack": [
+          "$bears",
+          "$giant"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$bears"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndOfCombat",
+      "player": "alice",
+      "check": {
+        "Attackers": {
+          "attackers": {
+            "$bears": "$carol"
+          }
+        }
+      }
+    }
+  ]
+}

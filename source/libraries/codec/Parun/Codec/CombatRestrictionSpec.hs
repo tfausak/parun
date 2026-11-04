@@ -15,6 +15,7 @@ import qualified Parun.Types.CantAttackPlayer as CantAttackPlayer
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.CantBlockCreatures as CantBlockCreatures
 import qualified Parun.Types.CombatRestriction as CombatRestriction
+import qualified Parun.Types.CompanyCount as CompanyCount
 import qualified Parun.Types.Compares as Compares
 import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.Condition as Condition
@@ -84,7 +85,7 @@ spec s = Spec.describe s "Parun.Codec.CombatRestriction" $ do
     Common.assertCodec
       s
       CombatRestriction.codec
-      (CombatRestriction.CantAttackAlone (AloneUnless.MkAloneUnless Affected.Attached Nothing Nothing Nothing))
+      (CombatRestriction.CantAttackAlone (AloneUnless.MkAloneUnless Affected.Attached Nothing (CompanyCount.AtLeastOthers 1) Nothing Nothing))
       " {\"type\":\"CantAttackAlone\",\"value\":{\"affected\":{\"type\":\"Attached\"}}} "
   -- CR 509.1b's twin of the arm above. A different Affected, so a codec that
   -- crossed the two arms cannot pass both.
@@ -92,7 +93,7 @@ spec s = Spec.describe s "Parun.Codec.CombatRestriction" $ do
     Common.assertCodec
       s
       CombatRestriction.codec
-      (CombatRestriction.CantBlockAlone (AloneUnless.MkAloneUnless (Affected.Matching Filter.IsSource) Nothing Nothing Nothing))
+      (CombatRestriction.CantBlockAlone (AloneUnless.MkAloneUnless (Affected.Matching Filter.IsSource) Nothing (CompanyCount.AtLeastOthers 1) Nothing Nothing))
       " {\"type\":\"CantBlockAlone\",\"value\":{\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}}}} "
   -- The SIZE-BOUNDING arms, whose payload spells "limit" where the three above
   -- spell "affected". They are here as much for the DECODER as for the shape:
