@@ -434,7 +434,8 @@ data Filter keyword
     IsHostOfSource
   | -- | CR 400.7: the candidate, as this object, was put onto the battlefield by
     -- an effect of the evaluation's SOURCE -- Animate Dead's "creature put onto
-    -- the battlefield with this Aura", Dance of Many's "the token". Read off
+    -- the battlefield with this Aura", Dance of Many's "the token", Tetravus'
+    -- "tokens created with this creature". Read off
     -- GameState.enteredWith.
     EnteredWithSource
   | -- | CR 702.16p / 613.7e: the candidate was attached to what the SOURCE

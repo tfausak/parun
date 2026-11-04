@@ -1232,7 +1232,7 @@ craftNames asking onKeyword x = case x of
 
 createNames :: (Monoid r) => Asking r -> (card -> r) -> (ability -> r) -> Create.Create card ability -> r
 createNames asking onCard onAbility x = case x of
-  Create.MkCreate quantity card riders slot creator -> quantityNames asking quantity <> onCard card <> entryRidersNames asking (quantityNames asking) onAbility riders <> foldMap (slotNames asking) slot <> playerRefNames asking creator
+  Create.MkCreate quantity card riders slot creator _ -> quantityNames asking quantity <> onCard card <> entryRidersNames asking (quantityNames asking) onAbility riders <> foldMap (slotNames asking) slot <> playerRefNames asking creator
 
 createEmblemNames :: (Monoid r) => Asking r -> (card -> r) -> CreateEmblem.CreateEmblem card -> r
 createEmblemNames asking onCard x = case x of

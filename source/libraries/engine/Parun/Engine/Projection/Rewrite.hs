@@ -815,7 +815,7 @@ rewriteEffect pairs effect = case effect of
   -- their keys rewriteEntryRiders' own. A REGRESSION FENCE on this arm: no card
   -- in data/cards/ mints a token with a keyword counter rider, so the key
   -- rewrite is proven through MoveToZone's arm above and not through this one.
-  Effect.Create (Create.MkCreate quantity card riders slot creator) -> Effect.Create (Create.MkCreate (rewriteQuantity pairs quantity) (rewriteCard pairs card) (rewriteEntryRiders pairs riders) slot creator)
+  Effect.Create (Create.MkCreate quantity card riders slot creator linked) -> Effect.Create (Create.MkCreate (rewriteQuantity pairs quantity) (rewriteCard pairs card) (rewriteEntryRiders pairs riders) slot creator linked)
   Effect.Conjure (Conjure.MkConjure quantity cards selection destination slot) -> Effect.Conjure (Conjure.MkConjure (rewriteQuantity pairs quantity) (rewriteConjureCards pairs cards) selection destination slot)
   -- CR 707.2 excludes text-changing effects from copiable values, so what the
   -- token becomes is not rewritten -- only the ref, the count and the riders'

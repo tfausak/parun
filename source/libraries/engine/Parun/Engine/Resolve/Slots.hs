@@ -1044,7 +1044,7 @@ effectPlayerRefs effect = case effect of
   Effect.RedistributeLifeTotals -> []
   Effect.IncreaseSpeed (PlayerQuantity.MkPlayerQuantity ref _) -> [ref]
   Effect.DecreaseSpeed (SpeedDecrease.MkSpeedDecrease ref _ _) -> [ref]
-  Effect.Create (Create.MkCreate _ _ _ _ creator) -> [creator]
+  Effect.Create (Create.MkCreate _ _ _ _ creator _) -> [creator]
   Effect.Conjure {} -> []
   Effect.CreateCopy {} -> []
   Effect.BecomeCopy x -> foldMap durationPlayerRefs (BecomeCopy.duration x)
@@ -1426,7 +1426,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   -- The token's own printed P/T is a read too, and for the same reason the
   -- riders' counts are: CR 111.3 has the CREATING effect define it, in this
   -- resolution's slots (tokenBoxQuantities).
-  Effect.Create (Create.MkCreate quantity card riders _ _) -> joinSlots [quantitySlots quantity, joinSlots (fmap quantitySlots (riderQuantities riders <> tokenBoxQuantities card)), riderSlots riders]
+  Effect.Create (Create.MkCreate quantity card riders _ _ _) -> joinSlots [quantitySlots quantity, joinSlots (fmap quantitySlots (riderQuantities riders <> tokenBoxQuantities card)), riderSlots riders]
   -- The COUNT and a reference pick's bound: the conjure's other candidates are
   -- literal card data, its destination is a constructor, and the conjurer is
   -- the resolving controller.
@@ -2255,7 +2255,7 @@ ownSlotsAreExhaustive effect = case effect of
   -- but for the printed P/T box, which CR 111.3 has the creating effect define.
   -- Its entry riders are not either: CR 122.6's count per kind is the effect
   -- speaking, read in the resolution's own slots.
-  Effect.Create (Create.MkCreate quantity card riders _ _) -> all Quantity.slotsAreExhaustive (quantity : riderQuantities riders <> tokenBoxQuantities card)
+  Effect.Create (Create.MkCreate quantity card riders _ _ _) -> all Quantity.slotsAreExhaustive (quantity : riderQuantities riders <> tokenBoxQuantities card)
   -- Every WRITTEN candidate is literal text THROUGHOUT, unlike Create's token
   -- above: nothing bakes a conjured card's printed box, so
   -- Parun.Engine.Resolve.Effect hands the one it picks to Event.conjure exactly
@@ -2548,7 +2548,7 @@ readsX =
         Effect.DecreaseSpeed d -> Quantity.readsX (SpeedDecrease.quantity d)
         -- The token's printed P/T box reaches CR 601.2b's X too: it is the
         -- creating effect's number (tokenBoxQuantities).
-        Effect.Create (Create.MkCreate quantity card riders _ _) -> any Quantity.readsX (quantity : riderQuantities riders <> tokenBoxQuantities card)
+        Effect.Create (Create.MkCreate quantity card riders _ _ _) -> any Quantity.readsX (quantity : riderQuantities riders <> tokenBoxQuantities card)
         Effect.Conjure conjure -> any Quantity.readsX (conjureQuantities conjure)
         Effect.CopyStackObject (CopyStackObject.MkCopyStackObject _ _ quantity _ _) -> Quantity.readsX quantity
         Effect.CreateCopy (CreateCopy.MkCreateCopy quantity _ riders _ _ _) -> any Quantity.readsX (quantity : riderQuantities riders)
@@ -2677,7 +2677,7 @@ boundSlots effect = case effect of
   Effect.SetOwner {} -> Set.empty
   Effect.ExchangeOwnership {} -> Set.empty
   -- The tokens this Create minted, for CR 603.7c's delayed trigger to name.
-  Effect.Create (Create.MkCreate _ _ _ mSlot _) -> foldMap Set.singleton mSlot
+  Effect.Create (Create.MkCreate _ _ _ mSlot _ _) -> foldMap Set.singleton mSlot
   -- Create's reason: the conjured cards, for CR 603.7c.
   Effect.Conjure (Conjure.MkConjure _ _ _ _ mSlot) -> foldMap Set.singleton mSlot
   -- Create's reason: the copy tokens minted, for CR 603.7c.

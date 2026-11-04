@@ -3155,7 +3155,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
                               Create.card = oneFaced (base {Face.staticAbilities = [StaticAbility.MkStaticAbility (Affected.Matching buried) Nothing Set.empty Nothing Nothing (NonEmpty.singleton Modification.LoseAllAbilities)]}),
                               Create.riders = EntryRiders.defaultValue,
                               Create.slot = Nothing,
-                              Create.creator = PlayerRef.Relative PlayerRelation.You
+                              Create.creator = PlayerRef.Relative PlayerRelation.You,
+                              Create.linked = False
                             }
                       ]
                       Map.empty
@@ -3307,7 +3308,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
                               Create.card = oneFaced (base {Face.staticAbilities = [StaticAbility.MkStaticAbility (Affected.Matching buried) Nothing Set.empty Nothing Nothing (NonEmpty.singleton Modification.LoseAllAbilities)]}),
                               Create.riders = EntryRiders.defaultValue,
                               Create.slot = Nothing,
-                              Create.creator = PlayerRef.Relative PlayerRelation.You
+                              Create.creator = PlayerRef.Relative PlayerRelation.You,
+                              Create.linked = False
                             }
                       ]
                       Map.empty

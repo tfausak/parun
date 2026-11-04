@@ -6292,7 +6292,8 @@ mobilize n =
                 EntryRiders.defaultValue {EntryRiders.tapped = TapState.Tapped, EntryRiders.attacking = Just EntryAttack.Chosen},
               Create.slot = Just mobilizeTokenSlot,
               -- CR 111.2 under CR 109.5: the keyword ability's own controller.
-              Create.creator = PlayerRef.Relative PlayerRelation.You
+              Create.creator = PlayerRef.Relative PlayerRelation.You,
+              Create.linked = False
             }
       arm =
         Effect.ArmDelayedTrigger
@@ -7369,7 +7370,8 @@ giftToken chosen tapped token =
         Create.riders =
           EntryRiders.defaultValue {EntryRiders.tapped = tapped},
         Create.slot = Nothing,
-        Create.creator = chosen
+        Create.creator = chosen,
+        Create.linked = False
       }
 
 -- | CR 702.174f's 1\/1 and CR 702.174i's 8\/8 blue creature token of this type,
@@ -7461,7 +7463,8 @@ afterlife n =
                 EntryRiders.defaultValue,
               Create.slot = Nothing,
               -- CR 111.2 under CR 109.5: the keyword ability's own controller.
-              Create.creator = PlayerRef.Relative PlayerRelation.You
+              Create.creator = PlayerRef.Relative PlayerRelation.You,
+              Create.linked = False
             }
    in Mint.trigger TriggerCondition.SelfDies (Seq.singleton spawn)
 
@@ -7608,7 +7611,8 @@ fabricate n =
                 EntryRiders.defaultValue,
               Create.slot = Nothing,
               -- CR 111.2 under CR 109.5: the keyword ability's own controller.
-              Create.creator = PlayerRef.Relative PlayerRelation.You
+              Create.creator = PlayerRef.Relative PlayerRelation.You,
+              Create.linked = False
             }
    in Mint.triggerOf
         TriggerCondition.SelfEnters
@@ -7803,7 +7807,8 @@ attachToOwnToken token =
               -- equips, and the Effect.Attach arm asks it.
               Create.slot = Just attachedTokenSlot,
               -- CR 111.2 under CR 109.5: the keyword ability's own controller.
-              Create.creator = PlayerRef.Relative PlayerRelation.You
+              Create.creator = PlayerRef.Relative PlayerRelation.You,
+              Create.linked = False
             }
    in Mint.trigger TriggerCondition.SelfEnters (Seq.fromList [spawn, Effect.Attach attachedTokenSlot])
 

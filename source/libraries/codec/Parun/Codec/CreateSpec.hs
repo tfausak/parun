@@ -43,7 +43,8 @@ spec s = Spec.describe s "Parun.Codec.Create" $ do
             Create.card = Text.pack "Spirit Token",
             Create.riders = plain,
             Create.slot = Nothing,
-            Create.creator = you
+            Create.creator = you,
+            Create.linked = False
           }
       )
       " {\"quantity\":{\"type\":\"Literal\",\"value\":2},\"card\":\"Spirit Token\"} "
@@ -59,7 +60,8 @@ spec s = Spec.describe s "Parun.Codec.Create" $ do
             Create.card = Text.pack "Spirit Token",
             Create.riders = plain,
             Create.slot = Just (SlotName.MkSlotName (Text.pack "token")),
-            Create.creator = you
+            Create.creator = you,
+            Create.linked = False
           }
       )
       " {\"quantity\":{\"type\":\"Literal\",\"value\":1},\"card\":\"Spirit Token\",\"slot\":\"token\"} "
@@ -73,7 +75,8 @@ spec s = Spec.describe s "Parun.Codec.Create" $ do
             Create.card = Text.pack "Spirit Token",
             Create.riders = plain {EntryRiders.attacking = Just EntryAttack.Chosen},
             Create.slot = Nothing,
-            Create.creator = you
+            Create.creator = you,
+            Create.linked = False
           }
       )
       " {\"quantity\":{\"type\":\"Literal\",\"value\":2},\"card\":\"Spirit Token\",\"riders\":{\"attacking\":{\"type\":\"Chosen\"}}} "
@@ -88,8 +91,23 @@ spec s = Spec.describe s "Parun.Codec.Create" $ do
             Create.card = Text.pack "Centaur Token",
             Create.riders = plain,
             Create.slot = Nothing,
-            Create.creator = PlayerRef.HolderOfBound Holder.Controller Hop.Itself (SlotName.MkSlotName (Text.pack "victim"))
+            Create.creator = PlayerRef.HolderOfBound Holder.Controller Hop.Itself (SlotName.MkSlotName (Text.pack "victim")),
+            Create.linked = False
           }
       )
       " {\"quantity\":{\"type\":\"Literal\",\"value\":1},\"card\":\"Centaur Token\",\"creator\":{\"type\":\"HolderOfBound\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"victim\"}}} "
+  Spec.it s "MkCreate, linked to its source" $
+    Common.assertCodec
+      s
+      codec
+      ( Create.MkCreate
+          { Create.quantity = Quantity.Literal 1,
+            Create.card = Text.pack "Tetravite Token",
+            Create.riders = plain,
+            Create.slot = Nothing,
+            Create.creator = you,
+            Create.linked = True
+          }
+      )
+      " {\"quantity\":{\"type\":\"Literal\",\"value\":1},\"card\":\"Tetravite Token\",\"linked\":true} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

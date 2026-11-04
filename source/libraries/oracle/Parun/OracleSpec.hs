@@ -704,10 +704,10 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   Spec.it s "render creates tokens and puts counters by a count" $ do
     let hand = countOf (Filter.And []) (InZone.MkInZone Zone.Hand (PlayerRef.Relative PlayerRelation.You))
         snake = token "Snake Token" [Color.Green] [Subtype.Snake] 1 []
-        swarm = Effect.Create (Create.MkCreate hand snake EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You))
+        swarm = Effect.Create (Create.MkCreate hand snake EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You) False)
     Spec.assertEq s [[Text.pack "Create a 1/1 green Snake creature token for each card in your hand.", Text.pack "Create a number of 1/1 green Snake creature tokens equal to the number of cards in your hand.", Text.pack "Create X 1/1 green Snake creature tokens, where X is the number of cards in your hand."]] (Oracle.abilities (spell [clause [swarm]] []))
     let opponents = Quantity.Count (Count.MkCount (Scope.OverPlayers (PlayerRef.Relative PlayerRelation.Opponent)) (Filter.And []) Aggregation.Members)
-        invasion = Effect.Create (Create.MkCreate opponents snake EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You))
+        invasion = Effect.Create (Create.MkCreate opponents snake EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You) False)
     Spec.assertBool s (Oracle.says (spell [clause [invasion]] []) (CardName.MkCardName (Text.pack "Spark")) (Text.pack "Create a number of 1/1 green Snake creature tokens equal to the number of opponents you have.")) "no \"opponents you have\""
     let ghoul = Effect.PutCounters (PutCounters.MkPutCounters CounterKind.PlusOnePlusOne hand (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "self"))) Nothing)
     Spec.assertEq s [[Text.pack "Put a +1/+1 counter on Spark for each card in your hand.", Text.pack "Put a number of +1/+1 counters on Spark equal to the number of cards in your hand."]] (Oracle.abilities (spell [clause [ghoul]] []))
@@ -1007,7 +1007,7 @@ token name colours subtypes size keywords =
 
 -- An instruction creating this many of the token.
 create :: Integer -> Card.Card -> Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card)
-create n t = Effect.Create (Create.MkCreate (Quantity.Literal n) t EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You))
+create n t = Effect.Create (Create.MkCreate (Quantity.Literal n) t EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You) False)
 
 -- An instruction putting this many counters of the kind on these objects.
 counters :: CounterKind.CounterKind Keyword.Keyword -> Integer -> ObjectRef.ObjectRef -> Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card)

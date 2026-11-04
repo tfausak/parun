@@ -563,7 +563,7 @@ data GameState = MkGameState
     -- | CR 400.7 / 607.5: the object whose effect put each permanent onto the
     -- battlefield and the acquisition the ability came with, keyed by the
     -- entered incarnation and written by Parun.Engine.Resolve.Arms.Zones's
-    -- Effect.MoveToZone arm and, for a CreateCopy.linked token,
+    -- Effect.MoveToZone arm and, for a Create.linked or CreateCopy.linked token,
     -- Parun.Engine.Resolve.Arms.Objects's. Read by Filter.EnteredWithSource.
     -- Cleaned up by key only.
     enteredWith :: Map.Map ObjectId.ObjectId EntryLink.EntryLink,
