@@ -1,0 +1,34 @@
+{
+  "description": "CR 603.2c Death Pits of Rath destroys each creature one sweep damaged",
+  "note": "Pyroclasm deals 2 to each of bob's two 3/3 Hill Giants at once, one batch. \"Whenever a creature is dealt damage\" is one occurrence per damaged creature, so two triggers destroy both Giants; one trigger for the whole batch would destroy one.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Death Pits of Rath", "label": "pits" },
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Mountain", "label": "m2" }
+        ],
+        "hand": [{ "card": "Pyroclasm", "label": "pyroclasm" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Hill Giant", "label": "giant1", "ready": true },
+          { "card": "Hill Giant", "label": "giant2", "ready": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Hill Giant", "count": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$pyroclasm", "mana": ["$m1", "$m2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "OrderTriggers": ["$pits", "$pits"] } },
+    { "turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 2 } } }
+  ]
+}

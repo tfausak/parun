@@ -207,6 +207,7 @@ import qualified Parun.Types.PayGate as PayGate
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
+import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
@@ -2098,7 +2099,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.DealsDamageToPlayer p -> TriggerCondition.DealsDamageToPlayer p {DealsDamageToPlayer.actor = acting (DealsDamageToPlayer.actor p)}
   TriggerCondition.DealsDamageToPermanent p -> TriggerCondition.DealsDamageToPermanent p {DealsDamageToPermanent.actor = acting (DealsDamageToPermanent.actor p)}
   TriggerCondition.DealsDamage watched -> TriggerCondition.DealsDamage (acting watched)
-  TriggerCondition.IsDealtDamage dealt -> TriggerCondition.IsDealtDamage dealt {DealtDamage.recipient = acting (DealtDamage.recipient dealt)}
+  TriggerCondition.IsDealtDamage watched -> TriggerCondition.IsDealtDamage watched {PermanentIsDealtDamage.dealt = (PermanentIsDealtDamage.dealt watched) {DealtDamage.recipient = acting (DealtDamage.recipient (PermanentIsDealtDamage.dealt watched))}}
   TriggerCondition.PlayerIsDealtDamage _ -> condition
   TriggerCondition.PermanentDealsCombatDamageToPlayer p -> TriggerCondition.PermanentDealsCombatDamageToPlayer p {PermanentDealsCombatDamageToPlayer.filter = Filter.rewrite pairs (PermanentDealsCombatDamageToPlayer.filter p)}
   TriggerCondition.PermanentsDealCombatDamageToPlayer p -> TriggerCondition.PermanentsDealCombatDamageToPlayer p {PermanentsDealCombatDamageToPlayer.filter = Filter.rewrite pairs (PermanentsDealCombatDamageToPlayer.filter p)}

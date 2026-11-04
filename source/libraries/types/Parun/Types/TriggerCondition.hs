@@ -18,7 +18,6 @@ import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesB
 import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
-import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.DiscardTrigger as DiscardTrigger
 import qualified Parun.Types.Filter as Filter
@@ -28,6 +27,7 @@ import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
+import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
@@ -98,10 +98,9 @@ data TriggerCondition
   | -- | CR 603.2 / 120.1: a permanent dealt damage of any kind to any
     -- recipient, once per damage event and damager (Horned Cheetah, Spirit Link).
     DealsDamage ActingPermanent.ActingPermanent
-  | -- | CR 120.3: a permanent was dealt damage of the kind, or of any kind for
-    -- Nothing (Ripjaw Raptor, Death Pits of Rath; Wall of Essence's combat
-    -- damage).
-    IsDealtDamage (DealtDamage.DealtDamage ActingPermanent.ActingPermanent)
+  | -- | CR 120.3 / 603.2c: a permanent was dealt damage of the kind, once per
+    -- simultaneous batch or per source (Ripjaw Raptor, Belltower Sphinx).
+    IsDealtDamage PermanentIsDealtDamage.PermanentIsDealtDamage
   | -- | CR 120.3 / 603.2c: a player the relation admits, or one of their
     -- planeswalkers, was dealt damage of the kind, once per simultaneous batch
     -- and damaged recipient (Lich, Chandra's Spitfire, Vengeful Pharaoh).

@@ -17,7 +17,6 @@ import qualified Parun.Codec.CreatureBecomesBlockedByAtLeast as CreatureBecomesB
 import qualified Parun.Codec.CreatureExploits as CreatureExploits
 import qualified Parun.Codec.DealsDamageToPermanent as DealsDamageToPermanent
 import qualified Parun.Codec.DealsDamageToPlayer as DealsDamageToPlayer
-import qualified Parun.Codec.DealtDamage as DealtDamage
 import qualified Parun.Codec.DieResult as DieResult
 import qualified Parun.Codec.DiscardTrigger as DiscardTrigger
 import qualified Parun.Codec.Filter as Filter
@@ -27,6 +26,7 @@ import qualified Parun.Codec.OwnedZone as OwnedZone
 import qualified Parun.Codec.PermanentActed as PermanentActed
 import qualified Parun.Codec.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Codec.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
+import qualified Parun.Codec.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Codec.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Codec.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Codec.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
@@ -77,7 +77,7 @@ codec =
           Arm.payload "DealsDamageToPlayer" DealsDamageToPlayer.codec TriggerCondition.DealsDamageToPlayer (\x -> case x of TriggerCondition.DealsDamageToPlayer y -> Just y; _ -> Nothing),
           Arm.payload "DealsDamageToPermanent" DealsDamageToPermanent.codec TriggerCondition.DealsDamageToPermanent (\x -> case x of TriggerCondition.DealsDamageToPermanent y -> Just y; _ -> Nothing),
           Arm.payload "DealsDamage" ActingPermanent.codec TriggerCondition.DealsDamage (\x -> case x of TriggerCondition.DealsDamage y -> Just y; _ -> Nothing),
-          Arm.payload "IsDealtDamage" (DealtDamage.codec ActingPermanent.codec) TriggerCondition.IsDealtDamage (\x -> case x of TriggerCondition.IsDealtDamage y -> Just y; _ -> Nothing),
+          Arm.payload "IsDealtDamage" PermanentIsDealtDamage.codec TriggerCondition.IsDealtDamage (\x -> case x of TriggerCondition.IsDealtDamage y -> Just y; _ -> Nothing),
           Arm.payload "PlayerIsDealtDamage" PlayerIsDealtDamage.codec TriggerCondition.PlayerIsDealtDamage (\x -> case x of TriggerCondition.PlayerIsDealtDamage y -> Just y; _ -> Nothing),
           Arm.payload "PermanentDealsCombatDamageToPlayer" PermanentDealsCombatDamageToPlayer.codec TriggerCondition.PermanentDealsCombatDamageToPlayer (\x -> case x of TriggerCondition.PermanentDealsCombatDamageToPlayer y -> Just y; _ -> Nothing),
           Arm.payload "PermanentsDealCombatDamageToPlayer" PermanentsDealCombatDamageToPlayer.codec TriggerCondition.PermanentsDealCombatDamageToPlayer (\x -> case x of TriggerCondition.PermanentsDealCombatDamageToPlayer y -> Just y; _ -> Nothing),

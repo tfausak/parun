@@ -1003,11 +1003,10 @@ forthEorlingasSpec s registry =
 --     draws nothing.
 --   * the DAMAGE KIND, which this arm does not filter on where its neighbours all
 --     do: a noncombat event and a CR 510.2 combat event each draw one.
---   * CR 510.2's simultaneity, which is the reading a naive once-per-batch arm
---     gets wrong: two blockers deal two events and draw TWO cards.
+--   * CR 510.2's simultaneity, which CR 603.2c and the Ripjaw Raptor rulings
+--     read as one occurrence: two blockers deal two events and draw ONE card.
 --   * the AMOUNT the event carried, which the Swine's payload reads back as CR
---     120.3's "that much": a pair of boards carrying different numbers, and a
---     second pair separating a per-event read from a per-batch one.
+--     120.3's "that much": a pair of boards carrying different numbers.
 --
 -- The observable is asserted BEFORE and AFTER every time -- hand size for the
 -- Raptor, life totals for the Swine. "alice holds one card" alone passes on a
@@ -1064,14 +1063,13 @@ enrageSpec s registry =
               Spec.assertEqWith s "and drew exactly one" (S.handSize S.alice after) 1
               Spec.assertEqWith s "the one blocker's 2 is marked on the Raptor" (damageOn raptorId after) (Just 2)
         -- TWO blockers, so CR 510.2 deals two events simultaneously and
-        -- Parun.Engine.Damage records one DamageDealt each. Two triggers, two cards
-        -- -- which is what the Ripjaw Raptor rulings say and what an arm folding the
-        -- batch into one firing gets wrong.
+        -- Parun.Engine.Damage records one DamageDealt each. One trigger, one card
+        -- (CR 603.2c; the Ripjaw Raptor ruling of 2018-01-19), where an arm
+        -- firing per event draws two.
         --
         -- The blockers are DIFFERENT printings, 2/1 and 1/1, so the 3 marked on the
-        -- Raptor is a number neither event carries alone: a single fabricated event
-        -- of the whole batch's damage would be indistinguishable otherwise.
-        Spec.it s "CR 510.2 two simultaneous events draw two cards, not one" $ do
+        -- Raptor is a number neither event carries alone: both events landed.
+        Spec.it s "CR 603.2c two simultaneous events draw one card, not two" $ do
           raptor <- S.printingOf s registry "Ripjaw Raptor"
           piker <- S.printingOf s registry "Goblin Piker"
           sorcerer <- S.printingOf s registry "Prodigal Sorcerer"
@@ -1082,7 +1080,7 @@ enrageSpec s registry =
             raptorId : _ -> do
               let after = resolveAll (S.fightWith S.aggressiveAnswer gs)
               Spec.assertEqWith s "alice started with an empty hand" (S.handSize S.alice gs) 0
-              Spec.assertEqWith s "one card per event, so two" (S.handSize S.alice after) 2
+              Spec.assertEqWith s "one card for the batch, not one per event" (S.handSize S.alice after) 1
               Spec.assertEqWith s "and both events' damage is marked" (damageOn raptorId after) (Just 3)
         -- CR 603.2's amount, the half of CR 120.3's event no payload could read
         -- before. Coalhauler Swine, {4}{R}{R} Creature -- Boar Beast 4/4, whose
@@ -1196,6 +1194,19 @@ belltowerSphinxSpec s registry =
           Spec.assertEqWith s "bob's Piker deals it, so bob mills" (graves byBob) (0, 3, 0)
           Spec.assertEqWith s "carol's identical Piker deals the same 3, and now it is CAROL who mills" (graves byCarol) (0, 0, 3)
           Spec.assertEqWith s "the same damage landed on the Sphinx either way" (fmap (damageOn sphinxId) [byBob, byCarol]) [Just 3, Just 3]
+        -- CR 603.2c per SOURCE: "a source deals damage to this creature" is one
+        -- occurrence per damage event, where "is dealt damage" (Ripjaw Raptor
+        -- above) is one per batch. Both Pikers' events land in one
+        -- Damage.applyDamage, one simultaneous batch; the batch reading would mill
+        -- one seat 4, the first damager's controller reading the summed amount.
+        Spec.it s "CR 603.2c two sources at once trigger it twice, each source's controller milling its own amount" $ do
+          sphinx <- S.printingOf s registry "Belltower Sphinx"
+          piker <- S.printingOf s registry "Goblin Piker"
+          let (sphinxId, bobsId, carolsId, gs) = board sphinx piker
+              both = dealing [noncombat bobsId sphinxId 3, noncombat carolsId sphinxId 1] gs
+          Spec.assertEqWith s "every graveyard starts empty" (graves gs) (0, 0, 0)
+          Spec.assertEqWith s "both events landed on the Sphinx" (damageOn sphinxId both) (Just 4)
+          Spec.assertEqWith s "bob mills his Piker's 3 and carol her Piker's 1" (graves both) (0, 3, 1)
 
 -- The life-GAIN group's mirror: "whenever an opponent loses life", which the
 -- rules give no CR 119.9 of its own. What counts as a loss is therefore fixed by

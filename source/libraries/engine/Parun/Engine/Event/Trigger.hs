@@ -113,6 +113,7 @@ import Parun.Types.PendingTrigger (PendingTrigger)
 import qualified Parun.Types.PendingTrigger as PendingTrigger
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentAction as PermanentAction
+import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
 import qualified Parun.Types.PlanarDieRolled as PlanarDieRolled
 import qualified Parun.Types.PlayerActed as PlayerActed
@@ -947,10 +948,11 @@ batchScoped condition = case condition of
   -- event to several recipients -- a CR 510.2 step, or one CR 608.2f
   -- instruction -- is one trigger event, its amount summed by batchBindings.
   TriggerCondition.DealsDamage _ -> True
-  -- Not implemented: one occurrence per damaged permanent when several
-  -- sources damage it at once, which Ripjaw Raptor's and Fungusaur's rulings
-  -- give; each source's event triggers it (#5554).
-  TriggerCondition.IsDealtDamage _ -> False
+  -- "Is dealt damage" is one occurrence per damaged permanent however many
+  -- sources dealt it at once (Ripjaw Raptor's and Fungusaur's rulings), split
+  -- by batchPartition; "a source deals damage to" (Belltower Sphinx) is one per
+  -- damage event, so per source.
+  TriggerCondition.IsDealtDamage watched -> PermanentIsDealtDamage.batching watched == Batching.OneOrMore
   -- CR 603.2c: simultaneous damage to the player is one event of their being
   -- dealt damage -- Lich's ruling sacrifices "for that damage simultaneously".
   -- Split per damaged player, and per damaged planeswalker, by batchPartition.
@@ -2481,8 +2483,13 @@ eventTriggers events gs =
 --
 -- `joinOn` names which keys share those bindings: every CR 603.2d instance of
 -- one batch trigger is a trigger of the whole batch, though only the instances
--- an entry added survive past the entry's own match. A fence: no pool card
--- reads a mixed batch's bindings through an additional instance.
+-- an entry added survive past the entry's own match. The join reads the least
+-- key's members alone -- the first instance, which every matching member has --
+-- since each further instance repeats the same events and would count them
+-- again: Harmonic Prodigy's second Coalhauler Swine trigger reads the
+-- Pyroclasm's 2, not 4.
+-- data/scenarios/harmonic-prodigy-killed-by-the-damage-still-doubled-what-it-triggered.json
+-- proves it.
 --
 -- Per GROUP and never per scan: several groups can share one CR 117.5 scan
 -- (GameState.scannedThrough is not bumped until the scan ends), and CR 704.3
@@ -2492,7 +2499,8 @@ eventTriggers events gs =
 -- eventTriggers and inherentTriggers.
 oncePerBatch :: (Ord j, Ord k) => (k -> j) -> [(Maybe k, PendingTrigger)] -> [PendingTrigger]
 oncePerBatch joinOn entries =
-  let joined = Map.fromListWith (flip (<>)) [(joinOn batch, [PendingTrigger.bindings trigger]) | (Just batch, trigger) <- entries]
+  let canonical = Map.fromListWith min [(joinOn batch, batch) | (Just batch, _) <- entries]
+      joined = Map.fromListWith (flip (<>)) [(joinOn batch, [PendingTrigger.bindings trigger]) | (Just batch, trigger) <- entries, Map.lookup (joinOn batch) canonical == Just batch]
       joinedFor batch trigger = case Map.lookup (joinOn batch) joined of
         Just (first : rest) -> trigger {PendingTrigger.bindings = batchBindings (first NonEmpty.:| rest)}
         _ -> trigger
