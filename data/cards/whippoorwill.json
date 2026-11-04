@@ -121,8 +121,20 @@
       "delayedAbilities": {
         "exile the creature": {
           "condition": {
-            "type": "BoundDies",
-            "value": "target"
+            "type": "Leaves",
+            "value": {
+              "destinations": [
+                {
+                  "zone": {
+                    "type": "Graveyard"
+                  }
+                }
+              ],
+              "permanent": {
+                "type": "Bound",
+                "value": "target"
+              }
+            }
           },
           "modal": {
             "modes": [

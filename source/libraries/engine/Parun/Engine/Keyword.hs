@@ -153,6 +153,8 @@ import qualified Parun.Types.KeywordFamily as KeywordFamily
 import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.KeywordTally as KeywordTally
 import qualified Parun.Types.Layout as Layout
+import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LifeLoss as LifeLoss
@@ -4256,7 +4258,7 @@ whilePaid paid modifications =
 blitzDraw :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 blitzDraw =
   let effect = Effect.Draw Draw.MkDraw {Draw.player = PlayerRef.Relative PlayerRelation.You, Draw.quantity = Quantity.Literal 1, Draw.slot = Nothing}
-   in Mint.trigger TriggerCondition.SelfDies (Seq.singleton effect)
+   in Mint.trigger (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)) (Seq.singleton effect)
 
 -- CR 702.161a: "During your turn, this permanent is an artifact creature in
 -- addition to its other types."
@@ -7244,7 +7246,7 @@ dethrone =
    in Mint.trigger (TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue {AttackerTrigger.target = AttackerTarget.PlayerWithMostLife})) (Seq.singleton grow)
 
 -- CR 702.79a: persist. Its event is CR 700.4's dies, which is why the condition
--- below is SelfDies.
+-- below is a self death.
 persist :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 persist = returns CounterKind.MinusOneMinusOne
 
@@ -7285,7 +7287,7 @@ returns kind =
               Nothing
           )
    in Mint.triggerIf
-        TriggerCondition.SelfDies
+        (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self))
         (Condition.Compares (Compares.MkCompares (Quantity.ObjectCounters kind) Comparison.AtMost (Quantity.Literal 0)))
         (Seq.singleton back)
 
@@ -7477,7 +7479,7 @@ afterlife n =
               Create.creator = PlayerRef.Relative PlayerRelation.You,
               Create.linked = False
             }
-   in Mint.trigger TriggerCondition.SelfDies (Seq.singleton spawn)
+   in Mint.trigger (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)) (Seq.singleton spawn)
 
 -- | CR 702.135a's token: 1/1 white and black Spirit creature with flying. Rule
 -- 702.135a names no name, so CR 111.4 supplies one -- "its subtype(s) plus the
@@ -8084,7 +8086,7 @@ soulshift n =
               Nothing
           )
    in Mint.triggerOf
-        TriggerCondition.SelfDies
+        (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self))
         Nothing
         (Mint.oneModeOf (Map.singleton soulshiftTarget slot) (Seq.singleton (Mint.youMay (Seq.singleton back))))
 
@@ -8168,7 +8170,7 @@ haunt =
   let slot = TargetSlot.required Pool.Creatures Nothing
       exile = Effect.ExileHaunting (ExileHaunting.MkExileHaunting Binding.became hauntTarget)
    in Mint.triggerOf
-        TriggerCondition.SelfDies
+        (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self))
         Nothing
         (Mint.oneModeTargeting (Map.singleton hauntTarget slot) (Seq.singleton exile))
 
@@ -8333,7 +8335,7 @@ isSpellCard types = Set.member CardType.Instant types || Set.member CardType.Sor
 -- battlefield, you may pay [cost]. If you do, return this card from your
 -- graveyard to your hand. Otherwise, exile this card."
 --
--- THE CONDITION is the bystander reading (TriggerCondition.PermanentDies), not a
+-- THE CONDITION is the bystander reading (LeavingPermanent.Matching), not a
 -- self-scoped one: rule 702.59a watches A CREATURE, and the card with recover is
 -- a card in a graveyard rather than the permanent that died. "Your graveyard" is
 -- the Filter.HeldBy Holder.Owner conjunct -- CR 404.1 puts a destroyed object in its OWNER's graveyard,
@@ -8380,7 +8382,7 @@ recover cost =
       returned = Mint.mandatoryPaying (gate PayBranch.IfPaid Nothing) (Seq.singleton (moveTo Zone.Hand))
       exiled = Mint.mandatoryPaying (gate PayBranch.IfNotPaid (Just (ClauseIndex.MkClauseIndex 0))) (Seq.singleton (moveTo Zone.Exile))
    in Mint.triggerOf
-        (TriggerCondition.PermanentDies (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Owner PlayerRelation.You]))
+        (TriggerCondition.Leaves (LeavesTrigger.dies (LeavingPermanent.Matching (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Owner PlayerRelation.You]))))
         Nothing
         (Mint.oneModeOf Map.empty (Seq.fromList [returned, exiled]))
 
@@ -9454,7 +9456,7 @@ modular =
               Nothing
           )
    in Mint.triggerOf
-        TriggerCondition.SelfDies
+        (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self))
         Nothing
         (Mint.oneModeOf (Map.singleton modularTarget slot) (Seq.singleton (Mint.youMay (Seq.singleton effect))))
 
@@ -9546,7 +9548,7 @@ championLeaves =
               LibraryPlacement.defaultValue
               Nothing
           )
-   in Mint.trigger TriggerCondition.SelfLeavesTheBattlefield (Seq.singleton effect)
+   in Mint.trigger (TriggerCondition.Leaves LeavesTrigger.defaultValue) (Seq.singleton effect)
 
 -- The riders both halves of rule 702.72a write: nothing stated. The return
 -- overrides `under` with Owner, CR 702.72a's "under its owner's control".

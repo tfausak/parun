@@ -180,6 +180,8 @@ import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Guess as Guess
 import qualified Parun.Types.HexproofExemption as HexproofExemption
 import qualified Parun.Types.HowMany as HowMany
+import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.LifeLoss as LifeLoss
 import qualified Parun.Types.LimitUnless as LimitUnless
@@ -2081,11 +2083,6 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.PermanentEnters f -> TriggerCondition.PermanentEnters (Filter.rewrite pairs f)
   TriggerCondition.PermanentsEnter f -> TriggerCondition.PermanentsEnter (Filter.rewrite pairs f)
   TriggerCondition.CardPutIntoGraveyard p -> TriggerCondition.CardPutIntoGraveyard p {CardPutIntoGraveyard.filter = Filter.rewrite pairs (CardPutIntoGraveyard.filter p)}
-  TriggerCondition.PermanentDies f -> TriggerCondition.PermanentDies (Filter.rewrite pairs f)
-  TriggerCondition.PermanentsDie f -> TriggerCondition.PermanentsDie (Filter.rewrite pairs f)
-  TriggerCondition.PermanentLeavesTheBattlefield f -> TriggerCondition.PermanentLeavesTheBattlefield (Filter.rewrite pairs f)
-  TriggerCondition.PermanentReturnedToHand f -> TriggerCondition.PermanentReturnedToHand (Filter.rewrite pairs f)
-  TriggerCondition.PermanentsReturnedToHand f -> TriggerCondition.PermanentsReturnedToHand (Filter.rewrite pairs f)
   -- The Filter is rewritten and the TurnScope carried through, the SpellCast arm's
   -- reason: a rebuild that dropped the field would reset the trigger to firing on
   -- every turn.
@@ -2125,13 +2122,25 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.PlayerBecomesMonarch _ -> condition
   TriggerCondition.Attacks t -> TriggerCondition.Attacks (rewriteAttackTrigger pairs t)
   TriggerCondition.Blocks t -> TriggerCondition.Blocks (rewriteBlockTrigger pairs t)
+  -- Positional, so a later field fails to compile here rather than riding a
+  -- record update unrewritten. A slot name is card data but not card TEXT, so
+  -- no CR 612.1 swap reaches it.
+  TriggerCondition.Leaves (LeavesTrigger.MkLeavesTrigger permanent destinations batching) ->
+    TriggerCondition.Leaves
+      ( LeavesTrigger.MkLeavesTrigger
+          ( case permanent of
+              LeavingPermanent.Matching f -> LeavingPermanent.Matching (Filter.rewrite pairs f)
+              LeavingPermanent.Self -> permanent
+              LeavingPermanent.Attached -> permanent
+              LeavingPermanent.Haunted -> permanent
+              LeavingPermanent.Bound _ -> permanent
+          )
+          destinations
+          batching
+      )
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> condition
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> condition
   TriggerCondition.SelfPutIntoGraveyardDuringResolution -> condition
-  TriggerCondition.SelfDies -> condition
-  TriggerCondition.SelfLeavesTheBattlefield -> condition
-  TriggerCondition.SelfPutFromBattlefieldInto _ -> condition
-  TriggerCondition.HauntedCreatureDies -> condition
   TriggerCondition.SpellOrAbilityCounters _ -> condition
   TriggerCondition.AbilityIsCountered -> condition
   TriggerCondition.DamageToPlayerPrevented _ -> condition
@@ -2155,7 +2164,6 @@ rewriteTriggerCondition pairs condition = case condition of
     TriggerCondition.PermanentActs
       acts {PermanentActed.permanent = acting (PermanentActed.permanent acts)}
   TriggerCondition.AttachedCreatureMentors -> condition
-  TriggerCondition.AttachedPermanentLeaves _ -> condition
   TriggerCondition.BecomesTapState watched -> TriggerCondition.BecomesTapState watched {BecomesTapState.actor = acting (BecomesTapState.actor watched)}
   TriggerCondition.PermanentsBecomeTapped f -> TriggerCondition.PermanentsBecomeTapped (Filter.rewrite pairs f)
   TriggerCondition.AttachedPermanentTappedForMana -> condition
@@ -2172,12 +2180,6 @@ rewriteTriggerCondition pairs condition = case condition of
   -- reaches it; what the slot holds is read off the projection instead.
   TriggerCondition.LoseControlOfBound _ -> condition
   TriggerCondition.LoseControlOfSelf -> condition
-  -- Rule 701.66a's slot name is engine text, not card text, so no CR 612.1 swap
-  -- reaches it either.
-  TriggerCondition.BoundDiesOrIsExiled _ -> condition
-  -- Whippoorwill's slot name is card data but not card TEXT, LoseControlOfBound's
-  -- reason above, so no CR 612.1 swap reaches it either.
-  TriggerCondition.BoundDies _ -> condition
   TriggerCondition.RoomEntered _ -> condition
   TriggerCondition.PlayerActs _ -> condition
   TriggerCondition.PlayerLosesGame _ -> condition

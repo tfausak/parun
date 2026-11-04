@@ -171,11 +171,15 @@
         },
         {
           "condition": {
-            "type": "SelfPutFromBattlefieldInto",
+            "type": "Leaves",
             "value": {
-              "zone": {
-                "type": "Graveyard"
-              }
+              "destinations": [
+                {
+                  "zone": {
+                    "type": "Graveyard"
+                  }
+                }
+              ]
             }
           },
           "modal": {

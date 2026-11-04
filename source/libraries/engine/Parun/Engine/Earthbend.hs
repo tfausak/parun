@@ -24,6 +24,7 @@
 module Parun.Engine.Earthbend where
 
 import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Parun.Engine.Binding as Binding
 import qualified Parun.Engine.Mint as Mint
@@ -41,12 +42,16 @@ import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EntryRiders as EntryRiders
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.ModifyTarget as ModifyTarget
 import qualified Parun.Types.MoveToZone as MoveToZone
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.Onset as Onset
+import qualified Parun.Types.OwnedZone as OwnedZone
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PutCounters as PutCounters
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.SetBasePowerToughness as SetBasePowerToughness
@@ -143,4 +148,10 @@ returnAbility =
               MoveToZone.placement = LibraryPlacement.defaultValue,
               MoveToZone.duration = Nothing
             }
-   in Mint.trigger (TriggerCondition.BoundDiesOrIsExiled Binding.earthbentLand) (Seq.singleton effect)
+      -- CR 701.66a: "when that land dies or is put into exile".
+      condition =
+        LeavesTrigger.defaultValue
+          { LeavesTrigger.permanent = LeavingPermanent.Bound Binding.earthbentLand,
+            LeavesTrigger.destinations = Set.fromList [OwnedZone.MkOwnedZone Zone.Graveyard PlayerRelation.AnyPlayer, OwnedZone.MkOwnedZone Zone.Exile PlayerRelation.AnyPlayer]
+          }
+   in Mint.trigger (TriggerCondition.Leaves condition) (Seq.singleton effect)

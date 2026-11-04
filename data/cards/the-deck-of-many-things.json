@@ -271,8 +271,20 @@
       "delayedAbilities": {
         "the deck's reanimated creature dies": {
           "condition": {
-            "type": "BoundDies",
-            "value": "reanimated"
+            "type": "Leaves",
+            "value": {
+              "destinations": [
+                {
+                  "zone": {
+                    "type": "Graveyard"
+                  }
+                }
+              ],
+              "permanent": {
+                "type": "Bound",
+                "value": "reanimated"
+              }
+            }
           },
           "modal": {
             "modes": [

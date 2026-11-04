@@ -161,13 +161,28 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentsReturnedToHand",
+            "type": "Leaves",
             "value": {
-              "type": "Not",
-              "value": {
-                "type": "HasCardType",
+              "batching": {
+                "type": "OneOrMore"
+              },
+              "destinations": [
+                {
+                  "zone": {
+                    "type": "Hand"
+                  }
+                }
+              ],
+              "permanent": {
+                "type": "Matching",
                 "value": {
-                  "type": "Creature"
+                  "type": "Not",
+                  "value": {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Creature"
+                    }
+                  }
                 }
               }
             }

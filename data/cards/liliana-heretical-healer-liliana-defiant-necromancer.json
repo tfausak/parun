@@ -43,40 +43,52 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentDies",
+            "type": "Leaves",
             "value": {
-              "type": "And",
-              "value": [
+              "destinations": [
                 {
-                  "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
-                },
-                {
-                  "type": "HeldBy",
-                  "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
-                  }
-                },
-                {
-                  "type": "Not",
-                  "value": {
-                    "type": "IsSource"
-                  }
-                },
-                {
-                  "type": "Not",
-                  "value": {
-                    "type": "IsToken"
+                  "zone": {
+                    "type": "Graveyard"
                   }
                 }
-              ]
+              ],
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    },
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
+                      }
+                    },
+                    {
+                      "type": "Not",
+                      "value": {
+                        "type": "IsSource"
+                      }
+                    },
+                    {
+                      "type": "Not",
+                      "value": {
+                        "type": "IsToken"
+                      }
+                    }
+                  ]
+                }
+              }
             }
           },
           "modal": {
@@ -402,11 +414,23 @@
                                 "triggeredAbilities": [
                                   {
                                     "condition": {
-                                      "type": "PermanentDies",
+                                      "type": "Leaves",
                                       "value": {
-                                        "type": "HasCardType",
-                                        "value": {
-                                          "type": "Creature"
+                                        "destinations": [
+                                          {
+                                            "zone": {
+                                              "type": "Graveyard"
+                                            }
+                                          }
+                                        ],
+                                        "permanent": {
+                                          "type": "Matching",
+                                          "value": {
+                                            "type": "HasCardType",
+                                            "value": {
+                                              "type": "Creature"
+                                            }
+                                          }
                                         }
                                       }
                                     },

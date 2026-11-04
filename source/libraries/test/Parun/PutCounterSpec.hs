@@ -290,7 +290,7 @@ resourcefulDefenseSpec s registry = Spec.describe s "CR 122.8 putting the counte
 -- narrower query that asked only for "those counters" and so found neither; see
 -- #2698.
 --
--- The trigger is TriggerCondition.SelfLeavesTheBattlefield and not SelfDies: CR
+-- The trigger is a Leaves naming no destination and not a death: CR
 -- 603.6c's condition admits every destination. The board below reaches it
 -- through a death all the same, which is the narrowest road -- one trigger, one
 -- prompt, one resolution.

@@ -113,26 +113,38 @@
         },
         {
           "condition": {
-            "type": "PermanentDies",
+            "type": "Leaves",
             "value": {
-              "type": "And",
-              "value": [
+              "destinations": [
                 {
-                  "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
+                  "zone": {
+                    "type": "Graveyard"
                   }
-                },
-                {
-                  "type": "HasSupertype",
-                  "value": {
-                    "type": "Legendary"
-                  }
-                },
-                {
-                  "type": "HasCountersOfAnyKind"
                 }
-              ]
+              ],
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    },
+                    {
+                      "type": "HasSupertype",
+                      "value": {
+                        "type": "Legendary"
+                      }
+                    },
+                    {
+                      "type": "HasCountersOfAnyKind"
+                    }
+                  ]
+                }
+              }
             }
           },
           "modal": {

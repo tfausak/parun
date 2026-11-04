@@ -52,7 +52,19 @@
                 "type": "SelfEnters"
               },
               {
-                "type": "HauntedCreatureDies"
+                "type": "Leaves",
+                "value": {
+                  "destinations": [
+                    {
+                      "zone": {
+                        "type": "Graveyard"
+                      }
+                    }
+                  ],
+                  "permanent": {
+                    "type": "Haunted"
+                  }
+                }
               }
             ]
           },

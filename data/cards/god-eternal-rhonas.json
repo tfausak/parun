@@ -169,14 +169,27 @@
             "type": "AnyOf",
             "value": [
               {
-                "type": "SelfDies"
+                "type": "Leaves",
+                "value": {
+                  "destinations": [
+                    {
+                      "zone": {
+                        "type": "Graveyard"
+                      }
+                    }
+                  ]
+                }
               },
               {
-                "type": "SelfPutFromBattlefieldInto",
+                "type": "Leaves",
                 "value": {
-                  "zone": {
-                    "type": "Exile"
-                  }
+                  "destinations": [
+                    {
+                      "zone": {
+                        "type": "Exile"
+                      }
+                    }
+                  ]
                 }
               }
             ]

@@ -98,6 +98,8 @@ import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.HalfUnlocked as HalfUnlocked
 import qualified Parun.Types.LandPlayed as LandPlayed
 import qualified Parun.Types.LastKnown as LastKnown
+import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
 import qualified Parun.Types.LifeTrigger as LifeTrigger
@@ -559,32 +561,12 @@ looksBack condition = case condition of
   -- the rule states it; nothing in data/cards/ observes it, Withengar Unbound's
   -- payload naming only itself, which has left with its owner.
   TriggerCondition.PlayerLosesGame _ -> True
-  -- CR 603.6c's two written forms, which CR 603.10a names first:
-  -- leaves-the-battlefield abilities. CR 700.4 narrows the second to a
-  -- graveyard, and narrowing the destination does not leave the family.
-  TriggerCondition.SelfDies -> True
-  TriggerCondition.PermanentDies _ -> True
-  -- The batch reading of that same form is in the same family: CR 603.10a names
-  -- leaves-the-battlefield abilities without counting them. Load-bearing rather
-  -- than tidy -- it is what offers a bearer swept up in its own batch the
-  -- group-mates that died beside it (CR 603.10a's own Example).
-  TriggerCondition.PermanentsDie _ -> True
-  TriggerCondition.SelfLeavesTheBattlefield -> True
-  TriggerCondition.SelfPutFromBattlefieldInto _ -> True
-  TriggerCondition.PermanentLeavesTheBattlefield _ -> True
   -- CR 603.6c's family too: CR 708.9's reveal happens only as the permanent
   -- leaves the battlefield, by a move or with its owner, so this triggers on
   -- that departure. A watcher swept
   -- up in the same batch is offered it (Parun.FaceDownSpec's Day of Judgment
   -- case).
   TriggerCondition.FaceDownPermanentLeavesRevealed -> True
-  -- CR 603.10a twice over: this is a leaves-the-battlefield ability, and it is
-  -- also an ability that triggers when an object all players can see is put
-  -- into a hand.
-  TriggerCondition.PermanentReturnedToHand _ -> True
-  -- The batch reading is in the same family, PermanentsDie's reason: a bearer
-  -- swept up in its own batch still sees the group-mates returned beside it.
-  TriggerCondition.PermanentsReturnedToHand _ -> True
   -- CR 603.10a's third family, named in that rule's own list: "abilities that
   -- trigger when a card leaves a graveyard". And its fourth, CardsPutIntoZone's
   -- below, where the condition names a hand or library as the destination
@@ -592,8 +574,8 @@ looksBack condition = case condition of
   -- matchesTriggerGiven's arm asks each move whether all players could see it.
   -- A card leaving any other zone for anywhere else is in neither.
   TriggerCondition.CardLeavesZone p -> leavesLookingBack p
-  -- The batch reading is in the same family, PermanentsDie's reason: CR 603.10a
-  -- names the family without counting its members.
+  -- The batch reading is in the same family: CR 603.10a names the family
+  -- without counting its members.
   TriggerCondition.CardsLeaveZone p -> leavesLookingBack p
   -- CR 603.10a's fourth family, "put into a hand or library", which are CR
   -- 400.2's two hidden zones. The rule narrows it to an object all players could
@@ -609,10 +591,6 @@ looksBack condition = case condition of
   -- load-bearing for: by CR 113.6k the bearer IS the departing card, so only the
   -- look-back finds it at all.
   TriggerCondition.SelfLeavesGraveyard -> True
-  -- CR 603.10a's first family read off the HOST rather than the bearer: this
-  -- triggers when a permanent leaves the battlefield, so the rule reaches the
-  -- ability however the bearer is found.
-  TriggerCondition.AttachedPermanentLeaves _ -> True
   -- Not on CR 603.10a's list at all: that rule names leaves-the-battlefield
   -- abilities, sacrifices, cards leaving a graveyard and objects put into a hand
   -- or library, and a permanent becoming tapped is none of them. It stays on the
@@ -631,11 +609,6 @@ looksBack condition = case condition of
   -- CR 605.3b's resolution is not on that list either: the bearer whose mana
   -- ability resolved is standing on the battlefield as the ability is gathered.
   TriggerCondition.SelfManaAbilityResolves -> False
-  -- CR 603.10a's first family again, read off the event rather than off the
-  -- bearer: this triggers when a permanent leaves the battlefield. Inert today --
-  -- the bearer is a card in exile, which no look-back source can offer -- but a
-  -- classification the rule decides, not the scan.
-  TriggerCondition.HauntedCreatureDies -> True
   -- CR 603.10a's second family in as many words: "abilities that trigger when a
   -- player sacrifices a permanent".
   TriggerCondition.PermanentSacrificed {} -> True
@@ -711,6 +684,18 @@ looksBack condition = case condition of
   TriggerCondition.PlayerDrawsNthCard {} -> False
   TriggerCondition.Attacks _ -> False
   TriggerCondition.Blocks _ -> False
+  -- CR 603.6c's leaves-the-battlefield abilities, which CR 603.10a names first;
+  -- a destination narrows the family without leaving it, and the batch reading
+  -- is in it too (CR 603.10a names the family without counting it), which is
+  -- what offers a bearer swept up in its own batch the group-mates that left
+  -- beside it (the rule's own Example). Haunted is inert -- its bearer is a card
+  -- in exile, which no look-back source offers -- but the rule decides it.
+  -- Bound is the one subject outside: its bearer is a CR 603.7 delayed entry the
+  -- store keeps rather than the log, and its match reads the bound id rather
+  -- than any characteristic, so nothing needs a snapshot to answer from.
+  TriggerCondition.Leaves t -> case LeavesTrigger.permanent t of
+    LeavingPermanent.Bound _ -> False
+    _ -> True
   TriggerCondition.SpellOrAbilityCounters _ -> False
   TriggerCondition.AbilityIsCountered -> False
   TriggerCondition.DamageToPlayerPrevented _ -> False
@@ -748,13 +733,6 @@ looksBack condition = case condition of
   TriggerCondition.LoseControlOfBound _ -> False
   -- CR 603.10d: the bearer stays, but under the controller it had before.
   TriggerCondition.LoseControlOfSelf -> True
-  -- CR 603.10a's look-back IS this condition's subject -- the land is gone by the
-  -- time the ability triggers -- but the match reads the bound id rather than any
-  -- characteristic of it, so nothing here needs a snapshot to answer from.
-  TriggerCondition.BoundDiesOrIsExiled _ -> False
-  -- The arm above narrowed to CR 700.4's one destination, and its answer for its
-  -- reason: the match reads the bound id, never a characteristic of it.
-  TriggerCondition.BoundDies _ -> False
   -- CR 603.10a's look-back is a question about which event fired the ability, and
   -- a reflexive is fired by none. Its bearer is a CR 603.7 delayed entry too.
   TriggerCondition.Reflexive -> False
@@ -822,25 +800,11 @@ batchScoped condition = case condition of
   -- Per-occurrence too: CR 701.3d's routes each unattach one permanent from one
   -- host, and no printing reads a batch of them.
   TriggerCondition.SelfBecomesUnattachedFrom _ -> False
-  TriggerCondition.SelfDies -> False
-  TriggerCondition.PermanentDies _ -> False
-  TriggerCondition.PermanentsDie _ -> True
-  TriggerCondition.SelfLeavesTheBattlefield -> False
-  TriggerCondition.PermanentLeavesTheBattlefield _ -> False
-  TriggerCondition.SelfPutFromBattlefieldInto _ -> False
-  -- Per-permanent too: Justice, Vance Astrovik's "whenever another nonland
-  -- permanent you control is returned" is CR 603.2c's second sentence.
-  TriggerCondition.PermanentReturnedToHand _ -> False
-  -- A True beside PermanentsDie: CR 608.2f's sweep returns every permanent as
-  -- one action, Parun.Engine.Resolve brackets it as one Parun.Types.EventGroup,
-  -- and "one or more noncreature permanents are returned to hand" (Tameshi,
-  -- Reality Architect) names that whole group as its trigger event.
-  TriggerCondition.PermanentsReturnedToHand _ -> True
-  -- Per-card, PermanentReturnedToHand's answer: Kishla Skimmer's "whenever a card
+  -- Per-card, an EachOccurrence Leaves' answer: Kishla Skimmer's "whenever a card
   -- leaves your graveyard" is CR 603.2c's second sentence, so a resolution that
   -- moved two cards out of one graveyard fires it twice.
   TriggerCondition.CardLeavesZone {} -> False
-  -- A True beside the arm above, PermanentsReturnedToHand's reason one zone over:
+  -- A True beside the arm above, a OneOrMore Leaves' reason one zone over:
   -- CR 608.2f's sweep moves the cards as one action, Parun.Engine.Resolve brackets
   -- it as one Parun.Types.EventGroup, and "one or more cards leave your graveyard"
   -- (Spirit Mascot) names that whole group as its trigger event. Proved by
@@ -852,13 +816,12 @@ batchScoped condition = case condition of
   TriggerCondition.CardsPutIntoZone {} -> True
   -- One card, one departure.
   TriggerCondition.SelfLeavesGraveyard -> False
-  TriggerCondition.AttachedPermanentLeaves _ -> False
   -- Thoughtleech's "whenever an Island ... becomes tapped" has no "one or
   -- more", so each permanent a tapping event taps is its own occurrence. The
   -- untap direction the same way, CR 502.3's simultaneous batch included:
   -- Mesmeric Orb triggers once per permanent the step untaps.
   TriggerCondition.BecomesTapState _ -> False
-  -- A True beside PermanentsDie: "one or more nontoken Merfolk
+  -- A True beside a OneOrMore Leaves: "one or more nontoken Merfolk
   -- you control become tapped" (Deeproot Pilgrimage) is one trigger event per
   -- tapping, however many it tapped -- a cost's taps, CR 508.1f's attackers, or
   -- one Effect.Tap -- so long as each of those sites brackets its loop.
@@ -874,7 +837,6 @@ batchScoped condition = case condition of
   -- One resolution, one occurrence -- CR 605.3b resolves one activation at a
   -- time, and Tyvar the Bellicose's rider counts triggerings and not events.
   TriggerCondition.SelfManaAbilityResolves -> False
-  TriggerCondition.HauntedCreatureDies -> False
   TriggerCondition.PermanentSacrificed {} -> False
   TriggerCondition.AnyOf conditions -> any batchScoped conditions
   TriggerCondition.CausedBy narrowed -> batchScoped (CausedBy.condition narrowed)
@@ -919,7 +881,7 @@ batchScoped condition = case condition of
   -- dealt damage -- Lich's ruling sacrifices "for that damage simultaneously".
   -- Split per damaged player, and per damaged planeswalker, by batchPartition.
   TriggerCondition.PlayerIsDealtDamage _ -> True
-  -- A True beside PermanentsDie: CR 510.2 deals every combat damage of a step
+  -- A True beside a OneOrMore Leaves: CR 510.2 deals every combat damage of a step
   -- simultaneously, Parun.Engine.Damage.dealWave brackets the step as one
   -- Parun.Types.EventGroup, and "one or more artifact creatures ... deal combat
   -- damage" (Pia Nalaar, Chief Mechanic) names that whole group as its trigger
@@ -938,7 +900,7 @@ batchScoped condition = case condition of
   TriggerCondition.PlayerTookInitiative -> False
   TriggerCondition.SelfRevealedForMiracle -> False
   TriggerCondition.RevealedThisWay _ -> False
-  -- OneOrMore beside PermanentsDie: "whenever you discard one or more cards"
+  -- OneOrMore beside a OneOrMore Leaves: "whenever you discard one or more cards"
   -- (Magmakin Artillerist) names a whole CR 608.2f / 601.2h discard as one
   -- trigger event, where EachOccurrence is CR 603.2c's second sentence. Only as
   -- good as the brackets around every caller discarding several cards at once
@@ -964,6 +926,13 @@ batchScoped condition = case condition of
   -- other treatment because they reach a graveyard from four places and no event
   -- carries the arity.
   TriggerCondition.Blocks _ -> False
+  -- CR 603.2c: OneOrMore names a whole CR 608.2f / 704.3 batch, which
+  -- Parun.Engine.Resolve brackets as one Parun.Types.EventGroup -- "whenever one
+  -- or more other creatures you control die" (Vengeful Townsfolk), "one or more
+  -- noncreature permanents are returned to hand" (Tameshi, Reality Architect).
+  -- EachOccurrence is CR 603.2c's second sentence: Justice, Vance Astrovik fires
+  -- once per permanent returned.
+  TriggerCondition.Leaves t -> LeavesTrigger.batching t == Batching.OneOrMore
   TriggerCondition.SpellOrAbilityCounters _ -> False
   TriggerCondition.AbilityIsCountered -> False
   TriggerCondition.DamageToPlayerPrevented _ -> False
@@ -978,7 +947,7 @@ batchScoped condition = case condition of
   -- so "each player gains 4 life" is one occurrence; "a player" is CR 603.2c's
   -- second sentence and fires once for each.
   TriggerCondition.LifeChanges lifeTrigger -> LifeTrigger.batching lifeTrigger == Batching.OneOrMore
-  -- CR 603.2c's FIRST sentence for EachBatch, beside PermanentsDie and a
+  -- CR 603.2c's FIRST sentence for EachBatch, beside a OneOrMore Leaves and a
   -- OneOrMore LifeChanges: "one or more counters ... on one or more permanents"
   -- names the whole group as the trigger event, which occurs once. The other
   -- groupings name each permanent, or each counter (`counterOccurrences`).
@@ -989,7 +958,7 @@ batchScoped condition = case condition of
   TriggerCondition.SelfCast -> False
   TriggerCondition.SelfBecomesTargeted _ -> False
   TriggerCondition.ControllerBecomesTarget {} -> False
-  -- A True beside PermanentsDie and a OneOrMore LifeChanges, and the whole of
+  -- A True beside a OneOrMore Leaves and a OneOrMore LifeChanges, and the whole of
   -- what separates this constructor from the two singular arms above: CR 603.2c's
   -- FIRST sentence, "one or more creatures you control become the target of an
   -- activated ability" naming the whole rule 601.2c announcement as one trigger
@@ -1014,9 +983,7 @@ batchScoped condition = case condition of
   TriggerCondition.SagaFinalChapterTriggers _ -> False
   TriggerCondition.PlayerBecomesMonarch _ -> False
   TriggerCondition.LoseControlOfBound _ -> False
-  TriggerCondition.BoundDiesOrIsExiled _ -> False
   TriggerCondition.LoseControlOfSelf -> False
-  TriggerCondition.BoundDies _ -> False
   TriggerCondition.Reflexive -> False
 
 -- The log cut into its CR 704.3 / CR 608.2f events: one block per
@@ -2604,8 +2571,8 @@ conditionZones subtypes delayed ability
 -- card, so answering the source slot alone is what keeps CR 113.6m from pinning
 -- Yedora's ability to a graveyard it does not live in.
 --
--- SelfLeavesTheBattlefield is deliberately outside: it names no destination, so
--- `conditionPutsSelfInto` is False for every zone and this is the source slot
+-- A self Leaves naming no destination is deliberately outside:
+-- `conditionPutsSelfInto` is False for every zone, so this is the source slot
 -- alone. See that function's own note -- no printing writes the shape, and the
 -- rule's main sentence is what stands for it.
 selfNamingSlots :: TriggerCondition -> Set.Set SlotName.SlotName
@@ -2636,7 +2603,7 @@ selfNamingSlots condition =
 -- here.
 enchantedObjectLeaves :: TriggerCondition -> Bool
 enchantedObjectLeaves condition = case condition of
-  TriggerCondition.AttachedPermanentLeaves _ -> True
+  TriggerCondition.Leaves t -> LeavesTrigger.permanent t == LeavingPermanent.Attached
   -- False, stated rather than left to the wildcard: this watches the SAME
   -- attachment link, but for an event that leaves the enchanted permanent right
   -- where it was, so CR 113.6m's Aura clause has nothing to exempt.
@@ -2656,12 +2623,12 @@ enchantedObjectLeaves condition = case condition of
 --
 -- Self-scoped conditions only: the rule's "its trigger condition" is the
 -- ability's OWN watcher, distinct from the Aura disjunct beside it, which is
--- about a DIFFERENT object (the thing enchanted). `AttachedPermanentLeaves` answers
+-- about a DIFFERENT object (the thing enchanted). A Leaves of `Attached` answers
 -- False here for that reason -- the enchanted creature dying does not put the
 -- Aura itself anywhere.
 --
 -- A ZONE argument rather than a bare predicate, because the rule compares the
--- condition against the effect's OWN zone: `SelfDies` only ever puts the object
+-- condition against the effect's OWN zone: a self "dies" only ever puts the object
 -- in the graveyard, so it answers True for that zone and False for any other a
 -- (card-data-error) effect might have named.
 --
@@ -2685,17 +2652,14 @@ enchantedObjectLeaves condition = case condition of
 -- main sentence stands.
 conditionPutsSelfInto :: TriggerCondition -> Zone -> Bool
 conditionPutsSelfInto condition zone = case condition of
-  -- CR 700.4's "dies": the object is put in the graveyard, nowhere else.
-  TriggerCondition.SelfDies -> zone == Zone.Graveyard
-  -- CR 603.6c's unnarrowed departure names NO destination, and the rule's
-  -- exemption is for a condition that "specifies that the object is put into
-  -- that zone" -- so the main sentence stands, and an ability of this shape
-  -- whose effect names its graveyard functions only there, where a
-  -- leaves-the-battlefield condition can never be met. No printing writes it;
-  -- the printed shape is "dies".
-  TriggerCondition.SelfLeavesTheBattlefield -> False
-  -- The narrowing does name one: the object is put in that zone and no other.
-  TriggerCondition.SelfPutFromBattlefieldInto destination -> zone == OwnedZone.zone destination
+  -- CR 700.4's "dies" puts the object in the graveyard and nowhere else, and any
+  -- other named destination likewise. CR 603.6c's unnarrowed departure names NO
+  -- destination, and the rule's exemption is for a condition that "specifies
+  -- that the object is put into that zone" -- so the main sentence stands, and
+  -- an ability of that shape whose effect names its graveyard functions only
+  -- there, where a leaves-the-battlefield condition can never be met. No
+  -- printing writes it; the printed shape is "dies".
+  TriggerCondition.Leaves (LeavesTrigger.MkLeavesTrigger LeavingPermanent.Self destinations _) -> any ((== zone) . OwnedZone.zone) destinations
   -- CR 701.9a: discarding puts the object in the graveyard, cycling's included
   -- (CR 702.29c). ExiledForMadness falls to the `_`: its keyword-minted
   -- ability is scanned in exile without asking `functionsIn` (`exileCandidate`).
@@ -2900,14 +2864,6 @@ zonesTriggeredFrom cond =
         -- battlefield, and Aegis of the Legion watches from there -- CR 113.6k's exception
         -- is for a condition that cannot trigger from the battlefield at all.
         TriggerCondition.AttachedCreatureMentors -> battlefield
-        -- CR 113.6's default from the bearer's side, Aura or Equipment alike (CR
-        -- 303.4m): an Aura is itself a permanent on the battlefield and CR 704.5n
-        -- leaves an Equipment standing on it, so the bearer watches from there, and CR
-        -- 113.6k's exception -- for a condition that cannot trigger from the
-        -- battlefield at all -- does not apply. What DOES apply is CR 113.6m's Aura
-        -- clause, read by zonesFunctionedIn above, which is why this arm is reached
-        -- for Screams from Within and Skullclamp but not for Synthetic Widowed Blade.
-        TriggerCondition.AttachedPermanentLeaves _ -> battlefield
         -- The same default for the same reason, and more plainly: an Aura enchanting a
         -- permanent is itself a permanent on the battlefield, and CR 113.6k's exception
         -- is for a condition that cannot trigger from there at all.
@@ -2969,6 +2925,19 @@ zonesTriggeredFrom cond =
         -- permanents, so CR 113.6k never reaches this.
         TriggerCondition.Attacks _ -> battlefield
         TriggerCondition.Blocks _ -> battlefield
+        -- CR 603.10a's look-back is what makes a leaves-the-battlefield trigger one
+        -- that CAN trigger from the battlefield, a self subject included: the
+        -- bearer is a graveyard card by the time the scan runs, `leftBattlefield`
+        -- serves it from CR 608.2h, and neither graveyard source may, or the
+        -- ability would be read off the graveyard card and credited to its owner.
+        -- A bystander never left at all. Haunted is CR 113.6k's third zone, which
+        -- rule 702.55c states outright: only a card Effect.ExileHaunting put in
+        -- exile is in GameState.haunting, so exile is the one zone it can trigger
+        -- from, and eventTriggers' `inExile` serves it. A Bound subject's bearer
+        -- is a GameState.delayedTriggers entry, so its answer is never consulted.
+        TriggerCondition.Leaves t -> case LeavesTrigger.permanent t of
+          LeavingPermanent.Haunted -> Set.singleton Zone.Exile
+          _ -> battlefield
         -- CR 113.6k's fourth zone: rule 702.94a's reveal happens FROM a hand and rule
         -- 701.20b leaves the card there, so this condition cannot trigger from the
         -- battlefield at all and the hand is the one zone it can. eventTriggers'
@@ -3018,30 +2987,6 @@ zonesTriggeredFrom cond =
         -- permanent on the battlefield (Planar Void), and nothing about the condition
         -- says otherwise.
         TriggerCondition.CardPutIntoGraveyard _ -> battlefield
-        -- The mirror image, defaulting for a reason rather than by omission: a dies trigger CAN
-        -- trigger from the battlefield, which CR 603.10a's look-back is what makes true
-        -- of a permanent that is a graveyard card by the time the scan runs.
-        -- `leftBattlefield` serves it from CR 608.2h; neither graveyard source may, or
-        -- the ability would be read off the graveyard card and credited to its owner.
-        TriggerCondition.SelfDies -> battlefield
-        -- The same answer one step further: this condition's bearer is not the permanent
-        -- that died at all, and watches from the battlefield.
-        TriggerCondition.PermanentDies _ -> battlefield
-        -- The batch reading watches from the battlefield too, and for the arm above's
-        -- reason: its bearer is a bystander.
-        TriggerCondition.PermanentsDie _ -> battlefield
-        -- The same CR 603.10a answer as both dies conditions, and harder to miss here:
-        -- the destination may be a hand or library, and an ability found in a GRAVEYARD
-        -- could not be what fired for a permanent that went somewhere else.
-        TriggerCondition.SelfLeavesTheBattlefield -> battlefield
-        TriggerCondition.SelfPutFromBattlefieldInto _ -> battlefield
-        -- The same answer once more, and here it is the ONLY one CR 113.6k could give:
-        -- the bearer is a bystander that never left the battlefield at all.
-        TriggerCondition.PermanentLeavesTheBattlefield _ -> battlefield
-        -- The same answer for the same reason: the bearer is a bystander that never
-        -- left the battlefield.
-        TriggerCondition.PermanentReturnedToHand _ -> battlefield
-        TriggerCondition.PermanentsReturnedToHand _ -> battlefield
         -- CR 113.6's default once more: Kishla Skimmer is a creature watching its
         -- controller's graveyard from the battlefield, and CR 113.6k's exception is for
         -- a condition that cannot trigger from there at all.
@@ -3055,13 +3000,6 @@ zonesTriggeredFrom cond =
         -- graveyard is the one zone this can trigger from. eventTriggers'
         -- `leftGraveyardSame` is what serves it, the departure being its own event.
         TriggerCondition.SelfLeavesGraveyard -> Set.singleton Zone.Graveyard
-        -- CR 113.6k's third zone, and rule 702.55c states it outright: "triggered
-        -- abilities of cards with haunt that refer to the haunted creature can trigger
-        -- in the exile zone". A permanent on the battlefield haunts nothing -- only a
-        -- card Effect.ExileHaunting put in exile is in GameState.haunting at all -- so
-        -- this condition cannot trigger from the battlefield, and exile is the one zone
-        -- it can trigger from. eventTriggers' `inExile` is what serves it.
-        TriggerCondition.HauntedCreatureDies -> Set.singleton Zone.Exile
         -- CR 113.6's default again: the bearer watches from the battlefield.
         TriggerCondition.SpellOrAbilityCounters _ -> battlefield
         TriggerCondition.AbilityIsCountered -> battlefield
@@ -3118,13 +3056,6 @@ zonesTriggeredFrom cond =
         TriggerCondition.LoseControlOfBound _ -> battlefield
         -- CR 113.6's default: the bearer stays on the battlefield.
         TriggerCondition.LoseControlOfSelf -> battlefield
-        -- Never consulted either, and for LoseControlOfBound's reason: rule 701.66a's
-        -- delayed ability is a GameState.delayedTriggers entry, gathered out of the
-        -- store rather than out of a zone.
-        TriggerCondition.BoundDiesOrIsExiled _ -> battlefield
-        -- Never consulted either, and for the same reason: Whippoorwill's delayed
-        -- ability is a GameState.delayedTriggers entry too.
-        TriggerCondition.BoundDies _ -> battlefield
         -- Never consulted either, and for the same reason: CR 603.12 routes a
         -- reflexive through rule 603.7, so its only carrier is a delayed entry
         -- Event.delayedPending gathers out of GameState.delayedTriggers. EMPTY rather
@@ -3264,6 +3195,10 @@ stateTriggersOn gs
             TriggerCondition.PlayerTookInitiative -> False
             TriggerCondition.Attacks _ -> False
             TriggerCondition.Blocks _ -> False
+            -- CR 603.6c's departure is an EVENT: a card lying in a graveyard says
+            -- nothing about when it got there, nor which permanent an Aura there
+            -- used to enchant.
+            TriggerCondition.Leaves _ -> False
             TriggerCondition.SelfRevealedForMiracle -> False
             TriggerCondition.RevealedThisWay _ -> False
             TriggerCondition.Discards _ -> False
@@ -3272,19 +3207,10 @@ stateTriggersOn gs
             TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> False
             TriggerCondition.SelfPutIntoGraveyardDuringResolution -> False
             TriggerCondition.CardPutIntoGraveyard _ -> False
-            TriggerCondition.SelfDies -> False
-            TriggerCondition.PermanentDies _ -> False
-            TriggerCondition.PermanentsDie _ -> False
-            TriggerCondition.SelfLeavesTheBattlefield -> False
-            TriggerCondition.SelfPutFromBattlefieldInto _ -> False
-            TriggerCondition.PermanentLeavesTheBattlefield _ -> False
-            TriggerCondition.PermanentReturnedToHand _ -> False
-            TriggerCondition.PermanentsReturnedToHand _ -> False
             TriggerCondition.CardLeavesZone {} -> False
             TriggerCondition.CardsLeaveZone {} -> False
             TriggerCondition.CardsPutIntoZone {} -> False
             TriggerCondition.SelfLeavesGraveyard -> False
-            TriggerCondition.HauntedCreatureDies -> False
             TriggerCondition.SpellOrAbilityCounters _ -> False
             TriggerCondition.AbilityIsCountered -> False
             TriggerCondition.DamageToPlayerPrevented _ -> False
@@ -3303,13 +3229,6 @@ stateTriggersOn gs
             -- fire it again on every pass thereafter.
             TriggerCondition.LoseControlOfBound _ -> False
             TriggerCondition.LoseControlOfSelf -> False
-            -- CR 603.2 event trigger too: it fires on the land BEING put into a
-            -- graveyard or into exile, not on its being there.
-            TriggerCondition.BoundDiesOrIsExiled _ -> False
-            -- CR 603.2 event trigger too, and for the arm above's reason: it
-            -- fires on the creature BEING put into a graveyard, not on its
-            -- lying there.
-            TriggerCondition.BoundDies _ -> False
             -- CR 603.12 sends a reflexive through rule 603.7, and CR 603.8's
             -- state triggers are a different family: nothing about "when you
             -- do" is a state that could be standing true.
@@ -3346,9 +3265,6 @@ stateTriggersOn gs
             -- counter like any other, so the board afterwards says nothing about
             -- which creature mentored which.
             TriggerCondition.AttachedCreatureMentors -> False
-            -- CR 603.6c's departure is an EVENT, and the board afterwards cannot
-            -- say which permanent an Aura in a graveyard used to enchant.
-            TriggerCondition.AttachedPermanentLeaves _ -> False
             -- CR 701.26a's tap is an EVENT too. A tapped enchanted permanent is
             -- a state the board can read, which is exactly why this must be
             -- False: CR 603.2e says a "becomes" condition does not retrigger

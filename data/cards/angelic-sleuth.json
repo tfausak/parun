@@ -34,28 +34,33 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentLeavesTheBattlefield",
+            "type": "Leaves",
             "value": {
-              "type": "And",
-              "value": [
-                {
-                  "type": "HeldBy",
-                  "value": {
-                    "holder": {
-                      "type": "Controller"
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
+                      }
                     },
-                    "relation": {
-                      "type": "You"
+                    {
+                      "type": "Not",
+                      "value": {
+                        "type": "IsSource"
+                      }
                     }
-                  }
-                },
-                {
-                  "type": "Not",
-                  "value": {
-                    "type": "IsSource"
-                  }
+                  ]
                 }
-              ]
+              }
             }
           },
           "intervening": {

@@ -66,7 +66,8 @@
         },
         {
           "condition": {
-            "type": "SelfLeavesTheBattlefield"
+            "type": "Leaves",
+            "value": {}
           },
           "modal": {
             "modes": [
@@ -97,9 +98,14 @@
         },
         {
           "condition": {
-            "type": "PermanentLeavesTheBattlefield",
+            "type": "Leaves",
             "value": {
-              "type": "EnteredWithSource"
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "EnteredWithSource"
+                }
+              }
             }
           },
           "modal": {

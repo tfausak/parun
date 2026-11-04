@@ -106,7 +106,16 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfDies"
+            "type": "Leaves",
+            "value": {
+              "destinations": [
+                {
+                  "zone": {
+                    "type": "Graveyard"
+                  }
+                }
+              ]
+            }
           },
           "modal": {
             "modes": [
@@ -138,51 +147,63 @@
         },
         {
           "condition": {
-            "type": "PermanentDies",
+            "type": "Leaves",
             "value": {
-              "type": "And",
-              "value": [
+              "destinations": [
                 {
-                  "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
+                  "zone": {
+                    "type": "Graveyard"
                   }
-                },
-                {
-                  "type": "HeldBy",
-                  "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
-                  }
-                },
-                {
-                  "type": "Not",
-                  "value": {
-                    "type": "IsSource"
-                  }
-                },
-                {
-                  "type": "Or",
+                }
+              ],
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
                   "value": [
                     {
-                      "type": "HasKeyword",
+                      "type": "HasCardType",
                       "value": {
-                        "type": "Flash"
+                        "type": "Creature"
                       }
                     },
                     {
-                      "type": "HasKeyword",
+                      "type": "HeldBy",
                       "value": {
-                        "type": "Haste"
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
                       }
+                    },
+                    {
+                      "type": "Not",
+                      "value": {
+                        "type": "IsSource"
+                      }
+                    },
+                    {
+                      "type": "Or",
+                      "value": [
+                        {
+                          "type": "HasKeyword",
+                          "value": {
+                            "type": "Flash"
+                          }
+                        },
+                        {
+                          "type": "HasKeyword",
+                          "value": {
+                            "type": "Haste"
+                          }
+                        }
+                      ]
                     }
                   ]
                 }
-              ]
+              }
             }
           },
           "modal": {

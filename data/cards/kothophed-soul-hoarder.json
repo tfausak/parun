@@ -43,17 +43,29 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentDies",
+            "type": "Leaves",
             "value": {
-              "type": "Not",
-              "value": {
-                "type": "HeldBy",
+              "destinations": [
+                {
+                  "zone": {
+                    "type": "Graveyard"
+                  }
+                }
+              ],
+              "permanent": {
+                "type": "Matching",
                 "value": {
-                  "holder": {
-                    "type": "Owner"
-                  },
-                  "relation": {
-                    "type": "You"
+                  "type": "Not",
+                  "value": {
+                    "type": "HeldBy",
+                    "value": {
+                      "holder": {
+                        "type": "Owner"
+                      },
+                      "relation": {
+                        "type": "You"
+                      }
+                    }
                   }
                 }
               }

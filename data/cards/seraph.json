@@ -61,10 +61,15 @@
                 "value": "self"
               },
               {
-                "type": "PermanentLeavesTheBattlefield",
+                "type": "Leaves",
                 "value": {
-                  "type": "IsBound",
-                  "value": "self"
+                  "permanent": {
+                    "type": "Matching",
+                    "value": {
+                      "type": "IsBound",
+                      "value": "self"
+                    }
+                  }
                 }
               }
             ]
@@ -125,11 +130,23 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentDies",
+            "type": "Leaves",
             "value": {
-              "type": "HasCardType",
-              "value": {
-                "type": "Creature"
+              "destinations": [
+                {
+                  "zone": {
+                    "type": "Graveyard"
+                  }
+                }
+              ],
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                }
               }
             }
           },

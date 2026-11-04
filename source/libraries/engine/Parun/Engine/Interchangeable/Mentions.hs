@@ -278,6 +278,8 @@ import qualified Parun.Types.KeywordCount as KeywordCount
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.KeywordTally as KeywordTally
+import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LibraryDeparture as LibraryDeparture
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.LifeDirection as LifeDirection
@@ -3011,6 +3013,19 @@ attackTriggerNames asking x = case x of
   AttackTrigger.Declaration declarationTrigger -> declarationTriggerNames asking declarationTrigger
   AttackTrigger.Unblocked filter_ -> filterNames asking filter_
 
+leavesTriggerNames :: (Monoid r) => Asking r -> LeavesTrigger.LeavesTrigger -> r
+leavesTriggerNames asking x = case x of
+  -- Zones and a batching, which name nothing.
+  LeavesTrigger.MkLeavesTrigger permanent _destinations _batching -> leavingPermanentNames asking permanent
+
+leavingPermanentNames :: (Monoid r) => Asking r -> LeavingPermanent.LeavingPermanent -> r
+leavingPermanentNames asking x = case x of
+  LeavingPermanent.Self -> mempty
+  LeavingPermanent.Matching filter_ -> filterNames asking filter_
+  LeavingPermanent.Attached -> mempty
+  LeavingPermanent.Haunted -> mempty
+  LeavingPermanent.Bound slotName -> slotNames asking slotName
+
 attackerTriggerNames :: (Monoid r) => Asking r -> AttackerTrigger.AttackerTrigger -> r
 attackerTriggerNames asking x = case x of
   AttackerTrigger.MkAttackerTrigger creature target company frequency while_ ->
@@ -3069,30 +3084,21 @@ triggerConditionNames asking x = case x of
   TriggerCondition.PlayerDrawsNthCard _playerDrawsNthCard -> mempty
   TriggerCondition.Attacks attackTrigger -> attackTriggerNames asking attackTrigger
   TriggerCondition.Blocks blockTrigger -> blockTriggerNames asking blockTrigger
+  TriggerCondition.Leaves leavesTrigger -> leavesTriggerNames asking leavesTrigger
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> mempty
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> mempty
   TriggerCondition.SelfPutIntoGraveyardDuringResolution -> mempty
   TriggerCondition.CardPutIntoGraveyard cardPutIntoGraveyard -> cardPutIntoGraveyardNames asking cardPutIntoGraveyard
-  TriggerCondition.SelfDies -> mempty
-  TriggerCondition.PermanentDies filter_ -> filterNames asking filter_
-  TriggerCondition.PermanentsDie filter_ -> filterNames asking filter_
-  TriggerCondition.SelfLeavesTheBattlefield -> mempty
-  TriggerCondition.SelfPutFromBattlefieldInto _ownedZone -> mempty
-  TriggerCondition.PermanentLeavesTheBattlefield filter_ -> filterNames asking filter_
-  TriggerCondition.PermanentReturnedToHand filter_ -> filterNames asking filter_
-  TriggerCondition.PermanentsReturnedToHand filter_ -> filterNames asking filter_
   TriggerCondition.CardLeavesZone cardLeavesZone -> cardLeavesZoneNames asking cardLeavesZone
   TriggerCondition.CardsLeaveZone cardLeavesZone -> cardLeavesZoneNames asking cardLeavesZone
   TriggerCondition.CardsPutIntoZone cardsPutIntoZone -> cardsPutIntoZoneNames asking cardsPutIntoZone
   TriggerCondition.SelfLeavesGraveyard -> mempty
-  TriggerCondition.AttachedPermanentLeaves _ -> mempty
   TriggerCondition.BecomesTapState becomesTapState -> actingPermanentNames asking (BecomesTapState.actor becomesTapState)
   TriggerCondition.PermanentsBecomeTapped filter_ -> filterNames asking filter_
   TriggerCondition.AttachedPermanentTappedForMana -> mempty
   TriggerCondition.PermanentTappedForMana permanentTappedForMana -> permanentTappedForManaNames asking permanentTappedForMana
   TriggerCondition.AbilityAddsMana abilityAddsMana -> abilityAddsManaNames asking abilityAddsMana
   TriggerCondition.SelfManaAbilityResolves -> mempty
-  TriggerCondition.HauntedCreatureDies -> mempty
   TriggerCondition.SpellOrAbilityCounters _playerRelation -> mempty
   TriggerCondition.AbilityIsCountered -> mempty
   TriggerCondition.DamageToPlayerPrevented _playerRelation -> mempty
@@ -3128,8 +3134,6 @@ triggerConditionNames asking x = case x of
   TriggerCondition.PlayerBecomesMonarch _playerRelation -> mempty
   TriggerCondition.LoseControlOfBound slotName -> slotNames asking slotName
   TriggerCondition.LoseControlOfSelf -> mempty
-  TriggerCondition.BoundDiesOrIsExiled slotName -> slotNames asking slotName
-  TriggerCondition.BoundDies slotName -> slotNames asking slotName
   TriggerCondition.RoomEntered _roomIndex -> mempty
   TriggerCondition.PlayerActs _playerActs -> mempty
   TriggerCondition.PlayerLosesGame _playerRelation -> mempty
