@@ -53,7 +53,7 @@ codec cardCodec abilityCodec effectCodec =
       Arm.payload "UntapR" UntapR.codec ReplacementEffect.UntapR (\x -> case x of ReplacementEffect.UntapR y -> Just y; _ -> Nothing),
       Arm.payload "LifeLossR" LifeLossR.codec ReplacementEffect.LifeLossR (\x -> case x of ReplacementEffect.LifeLossR y -> Just y; _ -> Nothing),
       Arm.payload "LifeGainR" LifeGainR.codec ReplacementEffect.LifeGainR (\x -> case x of ReplacementEffect.LifeGainR y -> Just y; _ -> Nothing),
-      Arm.payload "DrawR" DrawR.codec ReplacementEffect.DrawR (\x -> case x of ReplacementEffect.DrawR y -> Just y; _ -> Nothing),
+      Arm.payload "DrawR" (DrawR.codec effectCodec) ReplacementEffect.DrawR (\x -> case x of ReplacementEffect.DrawR y -> Just y; _ -> Nothing),
       Arm.payload "DrawCountR" DrawCountR.codec ReplacementEffect.DrawCountR (\x -> case x of ReplacementEffect.DrawCountR y -> Just y; _ -> Nothing),
       Arm.payload "InstructionR" InstructionR.codec ReplacementEffect.InstructionR (\x -> case x of ReplacementEffect.InstructionR y -> Just y; _ -> Nothing),
       Arm.payload "DieRollR" DieRollR.codec ReplacementEffect.DieRollR (\x -> case x of ReplacementEffect.DieRollR y -> Just y; _ -> Nothing),

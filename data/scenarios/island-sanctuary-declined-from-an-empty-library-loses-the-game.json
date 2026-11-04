@@ -1,0 +1,66 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Island Sanctuary",
+            "label": "sanctuary"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "Upkeep",
+    "turn": 3
+  },
+  "description": "Island Sanctuary declined on a draw from an empty library leaves the draw standing, and alice loses",
+  "final": [
+    {
+      "View": {
+        "is": {
+          "won": "bob"
+        },
+        "of": "Result"
+      }
+    }
+  ],
+  "note": "The twin of the skip from an empty library: only the answer differs.",
+  "timeline": [
+    {
+      "do": {
+        "ChooseOptional": {
+          "type": "Declines"
+        }
+      },
+      "player": "alice",
+      "source": "$sanctuary",
+      "step": "DrawStep",
+      "turn": 3
+    }
+  ]
+}

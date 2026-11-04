@@ -1,5 +1,6 @@
 module Parun.Codec.DrawRewriteSpec where
 
+import qualified Data.Sequence as Seq
 import qualified Parun.Codec.DrawRewrite as DrawRewrite
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
@@ -14,7 +15,7 @@ spec s = Spec.describe s "Parun.Codec.DrawRewrite" $ do
   Spec.it s "GainLife" $
     Common.assertCodec
       s
-      DrawRewrite.codec
+      (DrawRewrite.codec Common.natural)
       (DrawRewrite.GainLife 5)
       " {\"type\":\"GainLife\",\"value\":5} "
   -- CR 400.11c: Ring of Ma'rûf, whose sentence states no quality and prints no
@@ -22,7 +23,7 @@ spec s = Spec.describe s "Parun.Codec.DrawRewrite" $ do
   Spec.it s "FromOutsideTheGame" $
     Common.assertCodec
       s
-      DrawRewrite.codec
+      (DrawRewrite.codec Common.natural)
       ( DrawRewrite.FromOutsideTheGame
           FromOutsideTheGame.MkFromOutsideTheGame
             { FromOutsideTheGame.count = 1,
@@ -37,49 +38,56 @@ spec s = Spec.describe s "Parun.Codec.DrawRewrite" $ do
   Spec.it s "Dredge" $
     Common.assertCodec
       s
-      DrawRewrite.codec
+      (DrawRewrite.codec Common.natural)
       (DrawRewrite.Dredge 3)
       " {\"type\":\"Dredge\",\"value\":3} "
   -- CR 614.10: Plagiarize.
   Spec.it s "YouDraw" $
     Common.assertCodec
       s
-      DrawRewrite.codec
+      (DrawRewrite.codec Common.natural)
       DrawRewrite.YouDraw
       " {\"type\":\"YouDraw\"} "
   -- CR 614.6: Zur's Weirding.
   Spec.it s "OthersMayPayLife" $
     Common.assertCodec
       s
-      DrawRewrite.codec
+      (DrawRewrite.codec Common.natural)
       (DrawRewrite.OthersMayPayLife 2)
       " {\"type\":\"OthersMayPayLife\",\"value\":2} "
   -- CR 614.6 / 104.3e: Forbidden Crypt.
   Spec.it s "FromGraveyardOrLose" $
     Common.assertCodec
       s
-      DrawRewrite.codec
+      (DrawRewrite.codec Common.natural)
       DrawRewrite.FromGraveyardOrLose
       " {\"type\":\"FromGraveyardOrLose\"} "
   -- CR 614.1a / 701.20a: Abundance.
   Spec.it s "RevealUntilChosenKind" $
     Common.assertCodec
       s
-      DrawRewrite.codec
+      (DrawRewrite.codec Common.natural)
       DrawRewrite.RevealUntilChosenKind
       " {\"type\":\"RevealUntilChosenKind\"} "
   -- CR 614.1a / 614.5: Alhammarret's Archive.
   Spec.it s "DrawInstead" $
     Common.assertCodec
       s
-      DrawRewrite.codec
+      (DrawRewrite.codec Common.natural)
       (DrawRewrite.DrawInstead 2)
       " {\"type\":\"DrawInstead\",\"value\":2} "
   -- CR 614.1a / 701.9a / 701.17a: Chains of Mephistopheles.
   Spec.it s "DiscardThenDrawOrMill" $
     Common.assertCodec
       s
-      DrawRewrite.codec
+      (DrawRewrite.codec Common.natural)
       DrawRewrite.DiscardThenDrawOrMill
       " {\"type\":\"DiscardThenDrawOrMill\"} "
-  Spec.it s "has a schema" $ Common.assertHasSchema s DrawRewrite.codec
+  -- CR 614.10: Island Sanctuary.
+  Spec.it s "MaySkipFor" $
+    Common.assertCodec
+      s
+      (DrawRewrite.codec Common.natural)
+      (DrawRewrite.MaySkipFor (Seq.fromList [7]))
+      " {\"type\":\"MaySkipFor\",\"value\":[7]} "
+  Spec.it s "has a schema" $ Common.assertHasSchema s (DrawRewrite.codec Common.natural)

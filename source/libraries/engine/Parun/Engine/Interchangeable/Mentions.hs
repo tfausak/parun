@@ -1350,13 +1350,13 @@ drawCountRNames :: (Monoid r) => Asking r -> DrawCountR.DrawCountR -> r
 drawCountRNames asking x = case x of
   DrawCountR.MkDrawCountR whose _atLeast _rewrite -> controllerRelationNames asking whose
 
-drawRNames :: (Monoid r) => Asking r -> DrawR.DrawR -> r
-drawRNames asking x = case x of
+drawRNames :: (Monoid r) => Asking r -> (effect -> r) -> DrawR.DrawR effect -> r
+drawRNames asking onEffect x = case x of
   -- CR 504.1: the exception reads the turn's log back to the step's beginning.
-  DrawR.MkDrawR whose exceptFirst rewrite -> controllerRelationNames asking whose <> (if exceptFirst then history asking HistoryRead.StepBegins else mempty) <> drawRewriteNames asking rewrite
+  DrawR.MkDrawR whose exceptFirst rewrite -> controllerRelationNames asking whose <> (if exceptFirst then history asking HistoryRead.StepBegins else mempty) <> drawRewriteNames asking onEffect rewrite
 
-drawRewriteNames :: (Monoid r) => Asking r -> DrawRewrite.DrawRewrite -> r
-drawRewriteNames asking x = case x of
+drawRewriteNames :: (Monoid r) => Asking r -> (effect -> r) -> DrawRewrite.DrawRewrite effect -> r
+drawRewriteNames asking onEffect x = case x of
   DrawRewrite.GainLife _natural -> mempty
   DrawRewrite.FromOutsideTheGame fromOutsideTheGame -> fromOutsideTheGameNames asking fromOutsideTheGame
   DrawRewrite.Dredge _natural -> mempty
@@ -1366,6 +1366,7 @@ drawRewriteNames asking x = case x of
   DrawRewrite.RevealUntilChosenKind -> mempty
   DrawRewrite.DrawInstead _natural -> mempty
   DrawRewrite.DiscardThenDrawOrMill -> mempty
+  DrawRewrite.MaySkipFor effects -> foldMap onEffect effects
 
 dungeonRoomNames :: (Monoid r) => Asking r -> (card -> r) -> DungeonRoom.DungeonRoom card -> r
 dungeonRoomNames asking onCard x = case x of
@@ -2771,7 +2772,7 @@ replacementEffectNames asking onCard onAbility onEffect x = case x of
   ReplacementEffect.UntapR untapR -> untapRNames asking untapR
   ReplacementEffect.LifeLossR lifeLossR -> lifeLossRNames asking lifeLossR
   ReplacementEffect.LifeGainR lifeGainR -> lifeGainRNames asking lifeGainR
-  ReplacementEffect.DrawR drawR -> drawRNames asking drawR
+  ReplacementEffect.DrawR drawR -> drawRNames asking onEffect drawR
   ReplacementEffect.DrawCountR drawCountR -> drawCountRNames asking drawCountR
   ReplacementEffect.InstructionR instructionR -> instructionRNames asking instructionR
   ReplacementEffect.DieRollR dieRollR -> dieRollRNames asking dieRollR

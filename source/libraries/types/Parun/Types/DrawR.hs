@@ -11,12 +11,12 @@ import qualified Parun.Types.DrawRewrite as DrawRewrite
 -- no amount for a pattern record to narrow by, CR 121.2 having broken every
 -- instruction into individual draws before a replacement sees one. The record
 -- appears when a card needs one.
-data DrawR = MkDrawR
+data DrawR effect = MkDrawR
   { whose :: ControllerRelation.ControllerRelation,
     -- | CR 504.1 / 614.1a: Chains of Mephistopheles' "except the first one they
     -- draw in each of their draw steps" -- the row does not apply to the
     -- drawer's own Parun.Types.DrawKind TurnBased draw.
     exceptFirstInDrawStep :: Bool,
-    rewrite :: DrawRewrite.DrawRewrite
+    rewrite :: DrawRewrite.DrawRewrite effect
   }
   deriving (Eq, Ord, Show)
