@@ -2227,11 +2227,11 @@ spec s registry = Spec.describe s "Parun.Engine.Target" $ do
     verdictBoard s registry 18 $ \_ rats piker _ board verdictId -> do
       let after = castVerdict 0 (take 2 rats) piker board verdictId
       Spec.assertBool s (notElem piker (Game.zoneMembers Zone.Battlefield S.bob after)) "tapping two of eighteen Rats, the Piker is destroyed"
-  -- Past Target.subsetBudget the bound is left open rather than enumerated: forty
-  -- Rats are 10701 announcements of at most three. The offer is wider -- the Hill
-  -- Giant no announcement reaches is in it -- and the joint check still judges
-  -- the cast exactly.
-  Spec.it s "CR 601.2c past the subset budget the sibling-count bound is left open, never narrowed" $ do
+  -- Past Target.subsetBudget the bound is not enumerated: forty Rats are 10701
+  -- announcements of at most three. A bare Members bound is still answered
+  -- exactly (Target.membersBoundValues), so the Hill Giant no announcement reaches
+  -- is not offered, and the joint check agrees (#6115).
+  Spec.it s "CR 601.2c past the subset budget the sibling-count bound is answered exactly" $ do
     verdictBoard s registry 40 $ \verdict rats piker giant board verdictId -> do
       let slots = Modal.allTargetSlots (Face.spell (S.combinedFace verdict))
           offered = Target.legalSets StackObjectKind.Spell Nothing (Just S.alice) False Map.empty S.noSource slots board
@@ -2240,7 +2240,8 @@ spec s registry = Spec.describe s "Parun.Engine.Target" $ do
           refused = castVerdict 0 (take 2 rats) giant board verdictId
       Spec.assertBool s (notElem piker (Game.zoneMembers Zone.Battlefield S.bob after)) "tapping two of forty Rats, the Piker is destroyed"
       Spec.assertBool s (elem giant (Game.zoneMembers Zone.Battlefield S.bob refused)) "naming the Hill Giant against two Rats instead, it survives: the cast is refused"
-      Spec.assertBool s (Set.member (Recipient.ToCreature giant) victims) "the open offer includes the Hill Giant"
+      Spec.assertBool s (not (Set.member (Recipient.ToCreature giant) victims)) "the offer excludes the Hill Giant no announcement reaches"
+      Spec.assertBool s (Set.member (Recipient.ToCreature piker) victims) "and includes the Piker"
 
   -- CR 601.2b: castability searches a gauge counted by X at every size, the X
   -- not yet being announced; the X=0 floor would refuse this cast.
