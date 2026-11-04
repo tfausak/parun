@@ -2340,7 +2340,7 @@ chooseAndApply asOf batch diverting allowances applied prevented exiledBy shuffl
     -- refutes it, and none has a producer.
     --
     -- The two halves may end up on the SAME recipient, which CR 120.4 deals
-    -- as one event; resolveDamage rejoins them once the loop is done
+    -- as one event; resolveDamageBatch rejoins them once the batch is done
     -- (Replacement.oneEventPerRecipient), rather than here, because a later
     -- iteration can still move either half.
     Just candidate

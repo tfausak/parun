@@ -18,6 +18,10 @@
             "card": "Grizzly Bears",
             "label": "bears",
             "ready": true
+          },
+          {
+            "attached": "bears",
+            "card": "Lifelink"
           }
         ],
         "library": [
@@ -108,7 +112,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "Mending Hands on bob is owed a division over the Giant's 3 and the Bears' 2; Harm's Way moves the Viper's 2 onto bob too, and the division spans all three without overdrawing the shield (CR 614.9, 615.7)",
+  "description": "Mending Hands on bob is owed a division over the Giant's 3 and the lifelinking Bears' 2; Harm's Way moves the Viper's 2 onto bob too, and bob divides the 4 over all three (CR 614.9, 615.7)",
   "timeline": [
     {
       "do": {
@@ -231,14 +235,25 @@
         "Answer": {
           "prompt": "AllocateDamage",
           "with": [
-            2,
             0,
+            2,
             2
           ]
         }
       },
       "player": "bob",
       "step": "CombatDamage",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 20,
+          "player": "alice"
+        }
+      },
+      "player": "alice",
+      "step": "EndOfCombat",
       "turn": 1
     },
     {
