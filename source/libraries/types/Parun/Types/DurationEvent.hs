@@ -13,4 +13,6 @@ data DurationEvent
     Planeswalked
   | -- | CR 607.2a: an instruction of the effect's source exiled a card (Furious Rise).
     SourceExiledCard
+  | -- | CR 611.2a / 400.7: the effect's source leaves the battlefield, which phasing out is not (CR 702.26d; Gaea's Liege).
+    SourceLeftBattlefield
   deriving (Eq, Ord, Show)

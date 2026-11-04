@@ -68,10 +68,12 @@ designatedPlayers = Turn.roleHolders TurnRole.Defending
 --
 -- The controller lookup is a PARAMETER because this module sits below
 -- Parun.Engine.Projection -- Projection reads the designation from here -- and CR
--- 508.5's planeswalker arm is a layer-2 question. Every caller passes
--- Projection.controllerWithLastKnown, which is what CR 608.2h's last known
+-- 508.5's planeswalker arm is a layer-2 question. Every caller above Projection
+-- passes Projection.controllerWithLastKnown, which is what CR 608.2h's last known
 -- information asks for once CR 704.5i has buried the planeswalker: reading the
 -- object itself would answer nobody, and reading its owner the wrong seat.
+-- Parun.Engine.SourceContext.framedWith, below Projection, passes no lookup and
+-- reads the seat a declared attack records (playerOfAttacker).
 -- Parun.CombatEffectSpec's LastKnownDefendingPlayer group is those two falsifiers.
 --
 -- CR 506.4 is why the lookup serves CR 802.2a's PRESENT tense on its own: a

@@ -10,26 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 These need no new capability, but `parun translate` does not translate them yet.
 Each names the mtgish node the translator stops at.
 
-- Energy Tap: `_Action:MustCost`
-- Gaea's Liege: `_Permanents:IsntAttacking`
-- Goblin Rock Sled: `_Permanents:AttackedDuringLastPlayersTurn`
-- Island Fish Jasconius: `_PermanentRule:DoesntUntapDuringControllersUntap`
-- Ivory Tower: `_GameNumber:Minus`
-- Junún Efreet: `_Action:MayCost`
-- Land Tax: `_Players:ControlsMorePermanentThanPlayer`
-- Lifelace: `_Actions:Targeted_Modal`
-- Mishra's Factory: `_LayerEffect:SetPT`
-- Mishra's War Machine: `_Action:MayCost`
-- Oasis: `_Action:CreateFuturePreventDamage`
-- Osai Vultures: `_Condition:ACreatureOrPlaneswalkerDiedThisTurn`
-- Power Leak: `_Action:PayAnyAmountOfMana`
-- Psionic Entity: `_Action:PermanentDealsMultipleDamage`
-- Purelace: `_Actions:Targeted_Modal`
-- Relic Bind: `_Trigger:WhenAPermanentBecomesTapped`
-- Scavenging Ghoul: `_GameNumber:NumCreaturesOrPlaneswalkersThatDiedThisTurn`
-- Seeker: renders differently
-- Simulacrum: `_GameNumber:DamageDealtToPlayerThisTurn`
-- Sindbad: `_Action:RevealTheCardDrawnThisWay`
 - Spirit Shackle: `_Trigger:WhenAPermanentBecomesTapped`
 - Sunken City: `_Action:MayCost`
 - Tawnos's Wand: `_Permanents:PowerIs`
@@ -55,6 +35,8 @@ first.
   one wherever CR 605.3a offers it.
 - #6086: Magnetic Mountain. No payment scales with the permanents chosen at
   resolution; asking per creature plays differently.
+- #6128: Power Leak. A shield can stand only for the turn, not one instruction's
+  "prevent X of that damage".
 - #6087: Aladdin's Lamp. A one-shot draw replacement has no mandatory instruction
   list, nor reads its ability's X.
 - #6088: Erosion. A clause's `payGate` names one cost, not a choice of two.

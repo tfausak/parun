@@ -1,0 +1,122 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Kíli the Resourceful",
+            "label": "kili",
+            "ready": true
+          },
+          {
+            "card": "Aegis of the Legion",
+            "label": "aegis"
+          },
+          {
+            "card": "Bonesplitter",
+            "label": "splitter"
+          },
+          {
+            "card": "War Mammoth",
+            "label": "mammoth",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "m1",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "m2",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "m3",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "m4",
+            "ready": true
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 118.9b the player may decline the alternative and pay the printed cost",
+  "final": [
+    {
+      "Tapped": {
+        "object": "$m1",
+        "tapped": true
+      }
+    },
+    {
+      "Tapped": {
+        "object": "$m2",
+        "tapped": true
+      }
+    },
+    {
+      "Tapped": {
+        "object": "$m3",
+        "tapped": true
+      }
+    },
+    {
+      "Tapped": {
+        "object": "$m4",
+        "tapped": false
+      }
+    },
+    {
+      "View": {
+        "is": "$mammoth",
+        "object": "$aegis",
+        "of": "AttachedTo"
+      }
+    }
+  ],
+  "note": "Kíli the Resourceful is legendary and the Aegis of the Legion and Bonesplitter are artifacts, so storied gives alice an enduring story before she first has priority. Equip {3} and equip {1}, so a {0} paid, a {3} paid and a {1} paid are three different sets of tapped Mountains; four Mountains pay both printed costs, so what discriminates is what was paid. CR 118.9b: alternative costs are generally optional, so the Aegis's equip pays its printed {3} when alice picks it.",
+  "timeline": [
+    {
+      "do": {
+        "Activate": {
+          "cost": [
+            {
+              "type": "Generic",
+              "value": 3
+            }
+          ],
+          "mana": [
+            "$m1",
+            "$m2",
+            "$m3",
+            null
+          ],
+          "object": "$aegis",
+          "targets": [
+            "$mammoth"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}
