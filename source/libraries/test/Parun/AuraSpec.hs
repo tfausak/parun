@@ -2972,6 +2972,7 @@ licidSpec s registry = Spec.describe s "Licid" $ do
         -- The OFFER, which no printed permission grants: it rides the stored
         -- effect, so it exists only because the ability resolved.
         Spec.assertBool s (offersEnding lic (Action.legalActions S.alice ready)) "CR 116.2c: alice is offered the pay-to-end while the effect is live"
+        Spec.assertEqWith s "one sentence is one offer, however many effects it stored" (length (EndEffect.endable S.alice ready)) 1
         -- CR 109.5: "you may pay" is the player who ACTIVATED the ability, and
         -- bob is not them. Asked on the SAME board, and bob holds the same three
         -- Islands alice does (licidBoard stocks both seats), so the only
