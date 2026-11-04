@@ -3,7 +3,7 @@ module Parun.Codec.TriggerCondition where
 import qualified Parun.Codec.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Codec.ActingPermanent as ActingPermanent
 import qualified Parun.Codec.BecomesTapState as BecomesTapState
-import qualified Parun.Codec.BlockPair as BlockPair
+import qualified Parun.Codec.BlockTrigger as BlockTrigger
 import qualified Parun.Codec.CardLeavesZone as CardLeavesZone
 import qualified Parun.Codec.CardName as CardName
 import qualified Parun.Codec.CardPutIntoGraveyard as CardPutIntoGraveyard
@@ -13,7 +13,6 @@ import qualified Parun.Codec.ClassLevel as ClassLevel
 import qualified Parun.Codec.Condition as Condition
 import qualified Parun.Codec.ControllerBecomesTarget as ControllerBecomesTarget
 import qualified Parun.Codec.CounterTrigger as CounterTrigger
-import qualified Parun.Codec.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Parun.Codec.CreatureExploits as CreatureExploits
 import qualified Parun.Codec.DamageTrigger as DamageTrigger
 import qualified Parun.Codec.DieResult as DieResult
@@ -88,15 +87,7 @@ codec =
           Arm.nullary "SelfAttacksPlayerWithMostLife" TriggerCondition.SelfAttacksPlayerWithMostLife,
           Arm.nullary "SelfAttacksWhileSaddled" TriggerCondition.SelfAttacksWhileSaddled,
           Arm.payload "SelfAttacksWhile" Condition.codec TriggerCondition.SelfAttacksWhile (\x -> case x of TriggerCondition.SelfAttacksWhile y -> Just y; _ -> Nothing),
-          Arm.nullary "SelfBlocks" TriggerCondition.SelfBlocks,
-          Arm.payload "CreatureBlocks" filterCodec TriggerCondition.CreatureBlocks (\x -> case x of TriggerCondition.CreatureBlocks y -> Just y; _ -> Nothing),
-          Arm.payload "CreatureBlocksCreature" BlockPair.codec TriggerCondition.CreatureBlocksCreature (\x -> case x of TriggerCondition.CreatureBlocksCreature y -> Just y; _ -> Nothing),
-          Arm.payload "SelfBlocksAtLeast" Common.natural TriggerCondition.SelfBlocksAtLeast (\x -> case x of TriggerCondition.SelfBlocksAtLeast y -> Just y; _ -> Nothing),
-          Arm.payload "SelfBlocksOneOrMore" filterCodec TriggerCondition.SelfBlocksOneOrMore (\x -> case x of TriggerCondition.SelfBlocksOneOrMore y -> Just y; _ -> Nothing),
-          Arm.payload "CreatureBecomesBlocked" filterCodec TriggerCondition.CreatureBecomesBlocked (\x -> case x of TriggerCondition.CreatureBecomesBlocked y -> Just y; _ -> Nothing),
-          Arm.payload "CreatureBecomesBlockedBy" BlockPair.codec TriggerCondition.CreatureBecomesBlockedBy (\x -> case x of TriggerCondition.CreatureBecomesBlockedBy y -> Just y; _ -> Nothing),
-          Arm.payload "SelfBecomesBlockedByOneOrMore" filterCodec TriggerCondition.SelfBecomesBlockedByOneOrMore (\x -> case x of TriggerCondition.SelfBecomesBlockedByOneOrMore y -> Just y; _ -> Nothing),
-          Arm.payload "CreatureBecomesBlockedByAtLeast" CreatureBecomesBlockedByAtLeast.codec TriggerCondition.CreatureBecomesBlockedByAtLeast (\x -> case x of TriggerCondition.CreatureBecomesBlockedByAtLeast y -> Just y; _ -> Nothing),
+          Arm.payload "Blocks" BlockTrigger.codec TriggerCondition.Blocks (\x -> case x of TriggerCondition.Blocks y -> Just y; _ -> Nothing),
           Arm.payload "CreatureAttacksUnblocked" filterCodec TriggerCondition.CreatureAttacksUnblocked (\x -> case x of TriggerCondition.CreatureAttacksUnblocked y -> Just y; _ -> Nothing),
           Arm.nullary "SelfRevealedForMiracle" TriggerCondition.SelfRevealedForMiracle,
           Arm.payload "RevealedThisWay" RevealedThisWay.codec TriggerCondition.RevealedThisWay (\x -> case x of TriggerCondition.RevealedThisWay y -> Just y; _ -> Nothing),
@@ -214,15 +205,7 @@ tagOf x = case x of
   TriggerCondition.SelfAttacksPlayerWithMostLife {} -> "SelfAttacksPlayerWithMostLife"
   TriggerCondition.SelfAttacksWhileSaddled {} -> "SelfAttacksWhileSaddled"
   TriggerCondition.SelfAttacksWhile {} -> "SelfAttacksWhile"
-  TriggerCondition.SelfBlocks {} -> "SelfBlocks"
-  TriggerCondition.CreatureBlocks {} -> "CreatureBlocks"
-  TriggerCondition.CreatureBlocksCreature {} -> "CreatureBlocksCreature"
-  TriggerCondition.SelfBlocksAtLeast {} -> "SelfBlocksAtLeast"
-  TriggerCondition.SelfBlocksOneOrMore {} -> "SelfBlocksOneOrMore"
-  TriggerCondition.CreatureBecomesBlocked {} -> "CreatureBecomesBlocked"
-  TriggerCondition.CreatureBecomesBlockedBy {} -> "CreatureBecomesBlockedBy"
-  TriggerCondition.SelfBecomesBlockedByOneOrMore {} -> "SelfBecomesBlockedByOneOrMore"
-  TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> "CreatureBecomesBlockedByAtLeast"
+  TriggerCondition.Blocks {} -> "Blocks"
   TriggerCondition.CreatureAttacksUnblocked {} -> "CreatureAttacksUnblocked"
   TriggerCondition.SelfRevealedForMiracle {} -> "SelfRevealedForMiracle"
   TriggerCondition.RevealedThisWay {} -> "RevealedThisWay"

@@ -14,9 +14,9 @@ import qualified Parun.Types.BlocksDeclared as BlocksDeclared
 codec :: Codec.Codec BlocksDeclared.BlocksDeclared
 codec = Fields.object $ do
   blocker <- Fields.required "blocker" ObjectId.codec BlocksDeclared.blocker
-  count <- Fields.required "count" Common.natural BlocksDeclared.count
+  blocked <- Fields.required "blocked" (Common.set ObjectId.codec) BlocksDeclared.blocked
   pure
     BlocksDeclared.MkBlocksDeclared
       { BlocksDeclared.blocker = blocker,
-        BlocksDeclared.count = count
+        BlocksDeclared.blocked = blocked
       }

@@ -29,9 +29,11 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "CreatureBecomesBlocked",
+            "type": "Blocks",
             "value": {
-              "type": "IsSource"
+              "role": {
+                "type": "Attacker"
+              }
             }
           },
           "modal": {

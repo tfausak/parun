@@ -118,12 +118,13 @@ import qualified Parun.Codec.BidSpec
 import qualified Parun.Codec.BindAmountSpec
 import qualified Parun.Codec.BindingSpec
 import qualified Parun.Codec.BlockCostSpec
-import qualified Parun.Codec.BlockPairSpec
+import qualified Parun.Codec.BlockCountSpec
 import qualified Parun.Codec.BlockPermissionSpec
 import qualified Parun.Codec.BlockProducerSpec
 import qualified Parun.Codec.BlockRequirementSpec
 import qualified Parun.Codec.BlockRoleSpec
 import qualified Parun.Codec.BlockStatusSpec
+import qualified Parun.Codec.BlockTriggerSpec
 import qualified Parun.Codec.BlockersAreSpec
 import qualified Parun.Codec.BlocksDeclaredSpec
 import qualified Parun.Codec.BoardSpec
@@ -252,7 +253,6 @@ import qualified Parun.Codec.CraftSpec
 import qualified Parun.Codec.CreateCopySpec
 import qualified Parun.Codec.CreateEmblemSpec
 import qualified Parun.Codec.CreateSpec
-import qualified Parun.Codec.CreatureBecomesBlockedByAtLeastSpec
 import qualified Parun.Codec.CreatureExploitsSpec
 import qualified Parun.Codec.CrewRestrictionSpec
 import qualified Parun.Codec.CrewingSpec
@@ -1222,7 +1222,6 @@ spec s registry corpus = do
   Parun.Codec.CreateCopySpec.spec s
   Parun.Codec.CreateEmblemSpec.spec s
   Parun.Codec.CreateSpec.spec s
-  Parun.Codec.CreatureBecomesBlockedByAtLeastSpec.spec s
   Parun.Codec.CreatureExploitsSpec.spec s
   Parun.Codec.CrewingSpec.spec s
   Parun.Codec.CrewRestrictionSpec.spec s
@@ -1507,7 +1506,8 @@ spec s registry corpus = do
   Parun.Codec.PermanentActionSpec.spec s
   Parun.Codec.PermanentBecomesDesignatedSpec.spec s
   Parun.Codec.PermanentCandidateSpec.spec s
-  Parun.Codec.BlockPairSpec.spec s
+  Parun.Codec.BlockCountSpec.spec s
+  Parun.Codec.BlockTriggerSpec.spec s
   Parun.Codec.PlayerActsOnSpec.spec s
   Parun.Codec.PermanentsBecomeTargetedSpec.spec s
   Parun.Codec.PermanentsDealCombatDamageToPlayerSpec.spec s

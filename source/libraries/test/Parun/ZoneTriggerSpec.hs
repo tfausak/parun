@@ -51,8 +51,10 @@ import qualified Parun.Types.BecameTarget as BecameTarget
 import qualified Parun.Types.BecameUnattached as BecameUnattached
 import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.BeginningStep as BeginningStep
-import qualified Parun.Types.BlockPair as BlockPair
+import qualified Parun.Types.BlockCount as BlockCount
 import qualified Parun.Types.BlockProducer as BlockProducer
+import qualified Parun.Types.BlockRole as BlockRole
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.BlocksDeclared as BlocksDeclared
 import qualified Parun.Types.CandidateId as CandidateId
 import qualified Parun.Types.Card as Card
@@ -83,7 +85,6 @@ import qualified Parun.Types.CounterMotion as CounterMotion
 import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.Countering as Countering
 import qualified Parun.Types.CountersPlaced as CountersPlaced
-import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
@@ -1965,59 +1966,33 @@ representativeEvents cond =
         -- The same declaration event, and the state it is narrowed by is read off
         -- the board rather than bound.
         TriggerCondition.SelfAttacksWhile _ -> one (GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared departed S.carol (AttackTarget.OfPlayer S.carol) 1 S.alice))
-        -- The GROUPED blocking event, which is CR 509.3a's arity: one per blocking
-        -- creature, whatever it was declared against.
-        TriggerCondition.SelfBlocks -> one (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared departed 1))
-        TriggerCondition.CreatureBlocks _ -> one (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared departed 1))
-        -- The same event with the count read, which is all CR 509.3e adds.
-        TriggerCondition.SelfBlocksAtLeast _ -> one (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared departed 2))
-        -- The same grouped event once more, with the count IGNORED: CR 509.3e's
-        -- filtered form reads the attackers off Combat.blockers instead, and
-        -- binds nothing off the log.
-        TriggerCondition.SelfBlocksOneOrMore _ -> one (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared departed 1))
-        -- The PAIRWISE event instead: CR 509.3b's bearer is the BLOCKER too, and
-        -- the attacker beside it is what this one binds. The blocker is the departed
-        -- id, since eventBindings binds only where the watched end has a view.
-        TriggerCondition.CreatureBlocksCreature _ -> one (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = departed, BecameBlocking.attacker = ObjectId.MkObjectId 41, BecameBlocking.producer = BlockProducer.Declared, BecameBlocking.attackerWasBlocked = False, BecameBlocking.blockersBefore = Set.empty}))
-        -- CR 508.5's defending player again, and carol for SelfAttacks' reason
-        -- above: eventBindings binds this field under `thatPlayer`.
-        TriggerCondition.CreatureBecomesBlocked _ -> one (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked departed S.carol 1))
-        -- The same declaration event SelfBlocks names, with the ids the other way
-        -- round: the ATTACKER is the watched end here, and the blocker is what it
-        -- binds. The attacker is the departed id, as for CreatureBlocksCreature.
-        TriggerCondition.CreatureBecomesBlockedBy _ -> one (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 41, BecameBlocking.attacker = departed, BecameBlocking.producer = BlockProducer.Declared, BecameBlocking.attackerWasBlocked = False, BecameBlocking.blockersBefore = Set.empty}))
-        -- The GROUPED attacking-side event, which is what makes this one fire
-        -- once where the arm above fires per blocker. carol on CreatureBecomesBlocked's
-        -- reasoning -- and this one binds that player nothing, which is the
-        -- difference the pin catches.
-        --
-        -- The SECOND list longer than one, and for the same reason as
-        -- CreatureBecomesBlockedByAtLeast below: rule 509.3e's second producer,
-        -- the arrival of a creature put onto the battlefield blocking an
-        -- attacker that was already blocked, is admitted under a different event
-        -- constructor. This condition names a SET rather than an object, so both
-        -- events bind nothing and the intersection is empty -- which is what an
-        -- eventBindings arm added here without eventBindingSlots being told
-        -- would break.
-        TriggerCondition.SelfBecomesBlockedByOneOrMore _ ->
-          noTable (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked departed S.carol 1))
-            NonEmpty.:| [noTable (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 42, BecameBlocking.attacker = departed, BecameBlocking.producer = BlockProducer.PutOntoBattlefield, BecameBlocking.attackerWasBlocked = True, BecameBlocking.blockersBefore = Set.singleton (ObjectId.MkObjectId 43)}))]
-        -- The same grouped event once more, with the ids read the other way from
-        -- every arm above it: the bearer is a BYSTANDER, so `departed` sits in
-        -- the attacker position and is what this one binds -- an arm that bound
-        -- the bearer instead would pin the empty set here.
-        --
-        -- The LAST list longer than one, and rule 509.3e's second producer is
-        -- why: this condition also admits the arrival of a creature put onto the
-        -- battlefield blocking, which names the attacker in a different payload
-        -- and so needs its own eventBindings arm. An arm added to matchesTrigger
-        -- and forgotten there would bind nothing for this event, Seifer's "that
-        -- attacking creature" would resolve to nothing, and the board would be
-        -- indistinguishable from one where the trigger never fired -- so the
-        -- intersection is the fence for exactly that.
-        TriggerCondition.CreatureBecomesBlockedByAtLeast {} ->
-          noTable (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked departed S.carol 1))
-            NonEmpty.:| [noTable (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 42, BecameBlocking.attacker = departed, BecameBlocking.producer = BlockProducer.PutOntoBattlefield, BecameBlocking.attackerWasBlocked = True, BecameBlocking.blockersBefore = Set.singleton (ObjectId.MkObjectId 43)}))]
+        -- CR 509.3: one shape of event per role and count.
+        TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger role _ count) -> case (role, count) of
+          -- The GROUPED blocking event, which is CR 509.3a's arity and CR
+          -- 509.3e's: one per blocking creature, whatever it was declared
+          -- against. The blocker is what both bind.
+          (BlockRole.Blocker, BlockCount.Once) -> one (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared departed (Set.singleton (ObjectId.MkObjectId 41))))
+          (BlockRole.Blocker, BlockCount.AtLeast {}) -> one (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared departed (Set.fromList [ObjectId.MkObjectId 41, ObjectId.MkObjectId 42])))
+          -- The PAIRWISE event instead: CR 509.3b's named creature is the
+          -- BLOCKER, and the attacker beside it is what this one binds. The
+          -- blocker is the departed id, since eventBindings binds only where the
+          -- named end has a view.
+          (BlockRole.Blocker, BlockCount.EachCreature _) -> one (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = departed, BecameBlocking.attacker = ObjectId.MkObjectId 41, BecameBlocking.producer = BlockProducer.Declared, BecameBlocking.attackerWasBlocked = False, BecameBlocking.blockersBefore = Set.empty}))
+          -- CR 508.5's defending player, and carol for SelfAttacks' reason above:
+          -- eventBindings binds this field under `thatPlayer`.
+          (BlockRole.Attacker, BlockCount.Once) -> one (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked departed S.carol (Set.singleton (ObjectId.MkObjectId 41))))
+          -- The pairwise event with the ids the other way round: the ATTACKER is
+          -- the named end here, and the blocker is what it binds.
+          (BlockRole.Attacker, BlockCount.EachCreature _) -> one (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 41, BecameBlocking.attacker = departed, BecameBlocking.producer = BlockProducer.Declared, BecameBlocking.attackerWasBlocked = False, BecameBlocking.blockersBefore = Set.empty}))
+          -- BOTH of rule 509.3e's attacking-side producers: the becoming, and the
+          -- arrival of a creature put onto the battlefield blocking an attacker
+          -- that was already blocked, under a different event constructor. An
+          -- eventBindings arm forgotten for the second would bind nothing, and
+          -- Seifer's "that attacking creature" would resolve to nothing -- so the
+          -- intersection is the fence for exactly that.
+          (BlockRole.Attacker, BlockCount.AtLeast {}) ->
+            noTable (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked departed S.carol (Set.singleton (ObjectId.MkObjectId 41))))
+              NonEmpty.:| [noTable (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 42, BecameBlocking.attacker = departed, BecameBlocking.producer = BlockProducer.PutOntoBattlefield, BecameBlocking.attackerWasBlocked = True, BecameBlocking.blockersBefore = Set.singleton (ObjectId.MkObjectId 43)}))]
         -- The same declaration's unblocked branch, which carries the attacker
         -- and CR 508.5's defending player.
         TriggerCondition.CreatureAttacksUnblocked _ -> one (GameEvent.AttackerUnblocked (AttackerUnblocked.MkAttackerUnblocked departed S.carol))
@@ -2460,15 +2435,15 @@ everyTriggerCondition =
     TriggerCondition.SelfAttacksPlayerWithMostLife,
     TriggerCondition.SelfAttacksWhileSaddled,
     TriggerCondition.SelfAttacksWhile (Condition.Type.Compares (Compares.MkCompares (Quantity.Type.Literal 0) Comparison.Exactly (Quantity.Type.Literal 0))),
-    TriggerCondition.SelfBlocks,
-    TriggerCondition.CreatureBlocks (Filter.Type.And []),
-    TriggerCondition.SelfBlocksAtLeast 2,
-    TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair (Filter.Type.And []) (Filter.Type.And [])),
-    TriggerCondition.CreatureBecomesBlocked (Filter.Type.And []),
-    TriggerCondition.SelfBlocksOneOrMore (Filter.Type.And []),
-    TriggerCondition.CreatureBecomesBlockedBy (BlockPair.MkBlockPair (Filter.Type.And []) (Filter.Type.And [])),
-    TriggerCondition.SelfBecomesBlockedByOneOrMore (Filter.Type.And []),
-    TriggerCondition.CreatureBecomesBlockedByAtLeast (CreatureBecomesBlockedByAtLeast.MkCreatureBecomesBlockedByAtLeast PlayerRelation.Opponent 2),
+    TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.Type.IsSource BlockCount.Once),
+    TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker (Filter.Type.And []) BlockCount.Once),
+    TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.Type.IsSource (BlockCount.AtLeast 2 (Filter.Type.And []))),
+    TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker (Filter.Type.And []) (BlockCount.EachCreature (Filter.Type.And []))),
+    TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker (Filter.Type.And []) BlockCount.Once),
+    TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.Type.IsSource (BlockCount.AtLeast 1 (Filter.Type.And []))),
+    TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker (Filter.Type.And []) (BlockCount.EachCreature (Filter.Type.And []))),
+    TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker Filter.Type.IsSource (BlockCount.AtLeast 1 (Filter.Type.And []))),
+    TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker (Filter.Type.IsAttackingPlayer PlayerRelation.Opponent) (BlockCount.AtLeast 2 (Filter.Type.And []))),
     TriggerCondition.CreatureAttacksUnblocked (Filter.Type.And []),
     TriggerCondition.SelfPutIntoGraveyardFromLibrary,
     TriggerCondition.SelfPutIntoGraveyardFromAnywhere,

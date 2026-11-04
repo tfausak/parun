@@ -10,7 +10,9 @@ import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.AttackedPlayer as AttackedPlayer
 import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.BecomesTapState as BecomesTapState
-import qualified Parun.Types.BlockPair as BlockPair
+import qualified Parun.Types.BlockCount as BlockCount
+import qualified Parun.Types.BlockRole as BlockRole
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
@@ -28,7 +30,6 @@ import qualified Parun.Types.CounterHolder as CounterHolder
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CounterMotion as CounterMotion
 import qualified Parun.Types.CounterTrigger as CounterTrigger
-import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamageRecipient as DamageRecipient
@@ -42,7 +43,6 @@ import qualified Parun.Types.DiscardWay as DiscardWay
 import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Holder as Holder
-import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.ManaSpecification as ManaSpecification
@@ -361,79 +361,14 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       TriggerCondition.SelfAttacksWhileSaddled
       " {\"type\":\"SelfAttacksWhileSaddled\"} "
-  -- CR 509.3a, and nullary where its mirror is not: rule 509.3a's
-  -- once-each-combat is not a frequency a card chooses.
-  Spec.it s "SelfBlocks" $
+  -- CR 509.3e read by a bystander: Seifer, Balamb Rival's "a creature attacking
+  -- one of your opponents becomes blocked by two or more creatures".
+  Spec.it s "Blocks" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      TriggerCondition.SelfBlocks
-      " {\"type\":\"SelfBlocks\"} "
-  -- CR 509.3a read by a bystander, with a Filter over the blocker.
-  Spec.it s "CreatureBlocks" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.CreatureBlocks (Filter.HasAttached Filter.IsSource))
-      " {\"type\":\"CreatureBlocks\",\"value\":{\"type\":\"HasAttached\",\"value\":{\"type\":\"IsSource\"}}} "
-  -- CR 509.3b, which carries a Filter over the ATTACKER the bearer blocked --
-  -- Netcaster Spider's "a creature with flying". The attacker is also a BINDING,
-  -- and that is a separate thing the payload reads rather than an encoding of it.
-  Spec.it s "CreatureBlocksCreature" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair Filter.IsSource (Filter.HasKeyword Keyword.Flying)))
-      " {\"type\":\"CreatureBlocksCreature\",\"value\":{\"blocker\":{\"type\":\"IsSource\"},\"attacker\":{\"type\":\"HasKeyword\",\"value\":{\"type\":\"Flying\"}}}} "
-  -- CR 509.3e, and NOT nullary: the floor is the card's own number.
-  Spec.it s "SelfBlocksAtLeast" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.SelfBlocksAtLeast 2)
-      " {\"type\":\"SelfBlocksAtLeast\",\"value\":2} "
-  -- CR 509.3e's filtered form, whose tag must stay distinct from the counted one
-  -- above: the two read the same grouped event and differ only in what they ask
-  -- of it.
-  Spec.it s "SelfBlocksOneOrMore" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.SelfBlocksOneOrMore (Filter.HasColor Color.Black))
-      " {\"type\":\"SelfBlocksOneOrMore\",\"value\":{\"type\":\"HasColor\",\"value\":{\"type\":\"Black\"}}} "
-  -- CR 509.3c, the Filter over the ATTACKER: Somberwald Alpha's "a creature
-  -- you control".
-  Spec.it s "CreatureBecomesBlocked" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.CreatureBecomesBlocked (Filter.HeldBy Holder.Controller PlayerRelation.You))
-      " {\"type\":\"CreatureBecomesBlocked\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}} "
-  -- CR 509.3d, which carries a Filter over the BLOCKER where its once-each-combat
-  -- sibling above carries nothing -- rule 702.25a's "without flanking".
-  Spec.it s "CreatureBecomesBlockedBy" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.CreatureBecomesBlockedBy (BlockPair.MkBlockPair (Filter.Not (Filter.HasKeyword Keyword.Flanking)) Filter.IsSource))
-      " {\"type\":\"CreatureBecomesBlockedBy\",\"value\":{\"blocker\":{\"type\":\"Not\",\"value\":{\"type\":\"HasKeyword\",\"value\":{\"type\":\"Flanking\"}}},\"attacker\":{\"type\":\"IsSource\"}}} "
-  -- CR 509.3e read from the attacking side. A distinct tag from the per-blocker
-  -- form above, which carries the same payload and differs only in arity.
-  Spec.it s "SelfBecomesBlockedByOneOrMore" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.SelfBecomesBlockedByOneOrMore (Filter.HasColor Color.Black))
-      " {\"type\":\"SelfBecomesBlockedByOneOrMore\",\"value\":{\"type\":\"HasColor\",\"value\":{\"type\":\"Black\"}}} "
-  -- The same rule read by a bystander: a PAYLOAD OBJECT rather than a bare
-  -- Filter, since this form carries both whom the attacker attacked and the
-  -- floor on the blockers.
-  Spec.it s "CreatureBecomesBlockedByAtLeast" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.CreatureBecomesBlockedByAtLeast (CreatureBecomesBlockedByAtLeast.MkCreatureBecomesBlockedByAtLeast PlayerRelation.Opponent 2))
-      " {\"type\":\"CreatureBecomesBlockedByAtLeast\",\"value\":{\"attacked\":{\"type\":\"Opponent\"},\"blockers\":2}} "
+      (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker (Filter.IsAttackingPlayer PlayerRelation.Opponent) (BlockCount.AtLeast 2 (Filter.And []))))
+      " {\"type\":\"Blocks\",\"value\":{\"role\":{\"type\":\"Attacker\"},\"creature\":{\"type\":\"IsAttackingPlayer\",\"value\":{\"type\":\"Opponent\"}},\"count\":{\"type\":\"AtLeast\",\"value\":{\"floor\":2}}}} "
   -- CR 509.1h's unblocked branch, nullary like the blocked one: "attacks and
   -- isn't blocked" has no per-blocker reading to carry a Filter for.
   Spec.it s "CreatureAttacksUnblocked" $

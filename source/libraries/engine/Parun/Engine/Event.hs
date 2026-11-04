@@ -11077,15 +11077,7 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.SelfAttacksPlayerWithMostLife -> False
   TriggerCondition.SelfAttacksWhileSaddled -> False
   TriggerCondition.SelfAttacksWhile _ -> False
-  TriggerCondition.SelfBlocks -> False
-  TriggerCondition.CreatureBlocks _ -> False
-  TriggerCondition.CreatureBlocksCreature _ -> False
-  TriggerCondition.SelfBlocksAtLeast _ -> False
-  TriggerCondition.SelfBlocksOneOrMore _ -> False
-  TriggerCondition.CreatureBecomesBlocked _ -> False
-  TriggerCondition.CreatureBecomesBlockedBy _ -> False
-  TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> False
-  TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> False
+  TriggerCondition.Blocks _ -> False
   TriggerCondition.CreatureAttacksUnblocked _ -> False
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> False
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> False

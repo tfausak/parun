@@ -35,7 +35,10 @@ import qualified Parun.Types.Action as A
 import qualified Parun.Types.ActiveAttackRequirement as ActiveAttackRequirement
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.BecameBlocking as BecameBlocking
+import qualified Parun.Types.BlockCount as BlockCount
 import qualified Parun.Types.BlockProducer as BlockProducer
+import qualified Parun.Types.BlockRole as BlockRole
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.ClauseIndex as ClauseIndex
 import qualified Parun.Types.Combat as Combat.Type
@@ -2041,7 +2044,7 @@ countFiredBy oid gs = length (filter fired (S.eventsOf gs))
       GameEvent.AbilityTriggered record ->
         AbilityTriggered.source record == TriggerSource.OfObject oid
           && case TriggeredAbility.condition (AbilityTriggered.ability record) of
-            TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> True
+            TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker _ (BlockCount.AtLeast {})) -> True
             _ -> False
       _ -> False
 

@@ -1210,10 +1210,9 @@ becameSlotSpec s registry =
         -- than one -- SelfLeavesTheBattlefield, where the two destinations
         -- disagree about `became`; IsDealtDamage, where CR 120.3's two
         -- damage kinds agree on `thatMuch` and so make the floor a real one;
-        -- CreatureBecomesBlockedByAtLeast, where rule 509.3e's two producers
-        -- agree on `attackingCreature` off two different event constructors; and
-        -- SelfBecomesBlockedByOneOrMore, whose two producers agree on binding
-        -- nothing at all. For every other the intersection is exactly that
+        -- and Blocks' attacking-side AtLeast, where rule 509.3e's two producers
+        -- agree on `attackingCreature` off two different event constructors.
+        -- For every other the intersection is exactly that
         -- single event's keyset.
         --
         -- The BEARER ARRIVAL argument is a present one, and a second dimension of

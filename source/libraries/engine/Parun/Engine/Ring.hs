@@ -39,7 +39,9 @@ import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.ArmDelayedTrigger as ArmDelayedTrigger
-import qualified Parun.Types.BlockPair as BlockPair
+import qualified Parun.Types.BlockCount as BlockCount
+import qualified Parun.Types.BlockRole as BlockRole
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
@@ -310,9 +312,9 @@ theRingBlockerSacrificeName = AbilityName.MkAbilityName (Text.pack "sacrifice th
 -- of combat." Minted here rather than carried in card data for
 -- theRingIsLegendary's reason.
 --
--- TriggerCondition.CreatureBecomesBlockedBy read by a BYSTANDER, as
+-- CR 509.3d's TriggerCondition.Blocks read by a BYSTANDER, as
 -- theRingDrainsOnCombatDamage's is: the emblem is neither the blocked creature nor
--- the blocker, so the attacker's Filter is what "your Ring-bearer" comes to and it
+-- the blocker, so the named attacker's Filter is what "your Ring-bearer" comes to and it
 -- is the shared `yourRingBearer` above, with the trigger's controller as CR
 -- 109.5's perspective. The blocker's Filter admits any: CR 701.54c names no
 -- quality of it.
@@ -343,7 +345,7 @@ theRingSacrificesTheBlocker =
               ArmDelayedTrigger.duration = Nothing,
               ArmDelayedTrigger.ability = Nothing
             }
-   in Mint.trigger (TriggerCondition.CreatureBecomesBlockedBy BlockPair.MkBlockPair {BlockPair.blocker = Filter.And [], BlockPair.attacker = yourRingBearer}) (Seq.singleton effect)
+   in Mint.trigger (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker yourRingBearer (BlockCount.EachCreature (Filter.And [])))) (Seq.singleton effect)
 
 -- | CR 603.7 / 701.54c: the delayed half of the sentence above -- at end of
 -- combat, the blocking creature is sacrificed.

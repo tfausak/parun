@@ -51,9 +51,10 @@ import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.Bid as Bid
 import qualified Parun.Types.BindAmount as BindAmount
 import qualified Parun.Types.Blight as Blight
-import qualified Parun.Types.BlockPair as BlockPair
+import qualified Parun.Types.BlockCount as BlockCount
 import qualified Parun.Types.BlockPermission as BlockPermission
 import qualified Parun.Types.BlockRequirement as BlockRequirement
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.CantAttackPlayer as CantAttackPlayer
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.CantBlockCreatures as CantBlockCreatures
@@ -2138,15 +2139,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.SelfAttacksPlayerWithMostLife -> condition
   TriggerCondition.SelfAttacksWhileSaddled -> condition
   TriggerCondition.SelfAttacksWhile c -> TriggerCondition.SelfAttacksWhile (rewriteCondition pairs c)
-  TriggerCondition.SelfBlocks -> condition
-  TriggerCondition.CreatureBlocks f -> TriggerCondition.CreatureBlocks (Filter.rewrite pairs f)
-  TriggerCondition.CreatureBlocksCreature p -> TriggerCondition.CreatureBlocksCreature (rewriteBlockPair pairs p)
-  TriggerCondition.SelfBlocksAtLeast _ -> condition
-  TriggerCondition.SelfBlocksOneOrMore f -> TriggerCondition.SelfBlocksOneOrMore (Filter.rewrite pairs f)
-  TriggerCondition.CreatureBecomesBlocked f -> TriggerCondition.CreatureBecomesBlocked (Filter.rewrite pairs f)
-  TriggerCondition.CreatureBecomesBlockedBy p -> TriggerCondition.CreatureBecomesBlockedBy (rewriteBlockPair pairs p)
-  TriggerCondition.SelfBecomesBlockedByOneOrMore f -> TriggerCondition.SelfBecomesBlockedByOneOrMore (Filter.rewrite pairs f)
-  TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> condition
+  TriggerCondition.Blocks t -> TriggerCondition.Blocks (rewriteBlockTrigger pairs t)
   TriggerCondition.CreatureAttacksUnblocked f -> TriggerCondition.CreatureAttacksUnblocked (Filter.rewrite pairs f)
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> condition
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> condition
@@ -2227,8 +2220,12 @@ rewriteTriggerCondition pairs condition = case condition of
       ActingPermanent.Matching f -> ActingPermanent.Matching (Filter.rewrite pairs f)
 
 -- CR 612.1 through both ends of a pairwise block trigger.
-rewriteBlockPair :: [(TextWord.TextWord, TextWord.TextWord)] -> BlockPair.BlockPair -> BlockPair.BlockPair
-rewriteBlockPair pairs p = BlockPair.MkBlockPair {BlockPair.blocker = Filter.rewrite pairs (BlockPair.blocker p), BlockPair.attacker = Filter.rewrite pairs (BlockPair.attacker p)}
+rewriteBlockTrigger :: [(TextWord.TextWord, TextWord.TextWord)] -> BlockTrigger.BlockTrigger -> BlockTrigger.BlockTrigger
+rewriteBlockTrigger pairs (BlockTrigger.MkBlockTrigger role creature count) =
+  BlockTrigger.MkBlockTrigger role (Filter.rewrite pairs creature) $ case count of
+    BlockCount.Once -> BlockCount.Once
+    BlockCount.EachCreature others -> BlockCount.EachCreature (Filter.rewrite pairs others)
+    BlockCount.AtLeast n others -> BlockCount.AtLeast n (Filter.rewrite pairs others)
 
 -- CR 612.1 through a casting permission's one condition.
 rewriteCastingPermission :: [(TextWord.TextWord, TextWord.TextWord)] -> CastingPermission.CastingPermission -> CastingPermission.CastingPermission

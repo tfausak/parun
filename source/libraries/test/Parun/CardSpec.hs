@@ -100,9 +100,10 @@ import qualified Parun.Types.Bid as Bid
 import qualified Parun.Types.BindAmount as BindAmount
 import qualified Parun.Types.Blight as Blight
 import qualified Parun.Types.BlockCost as BlockCost
-import qualified Parun.Types.BlockPair as BlockPair
+import qualified Parun.Types.BlockCount as BlockCount
 import qualified Parun.Types.BlockPermission as BlockPermission
 import qualified Parun.Types.BlockRequirement as BlockRequirement
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.CantAttackPlayer as CantAttackPlayer
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.CantBlockCreatures as CantBlockCreatures
@@ -1196,7 +1197,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- EVENT's grouping for the arm above's reason, not a number this condition
   -- counts.
   TriggerCondition.PlayerAttacks _ -> []
-  -- The floor this one DOES carry is a bare Natural, SelfBlocksAtLeast's shape
+  -- The floor this one DOES carry is a bare Natural, BlockCount.AtLeast's shape
   -- below, rather than a Count over Quantities; its Filter holds no Count for
   -- PermanentEnters' reason.
   TriggerCondition.PlayerAttacksWith {} -> []
@@ -1207,25 +1208,9 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.SelfAttacksPlayerWithMostLife -> []
   TriggerCondition.SelfAttacksWhileSaddled -> []
   TriggerCondition.SelfAttacksWhile condition -> conditionCounts condition
-  TriggerCondition.SelfBlocks -> []
-  TriggerCondition.CreatureBlocks _ -> []
-  -- CR 509.3b names the attacker without counting anything, and its Filter holds
-  -- no Count for PermanentEnters' reason.
-  TriggerCondition.CreatureBlocksCreature _ -> []
-  TriggerCondition.SelfBlocksAtLeast _ -> []
-  -- CR 509.3e's filtered form spends the number on a quality instead, so its
-  -- Filter holds no Count either.
-  TriggerCondition.SelfBlocksOneOrMore _ -> []
-  -- CR 509.3c's Filter is over the attacker, holding no Count for
-  -- PermanentEnters' reason.
-  TriggerCondition.CreatureBecomesBlocked _ -> []
-  -- CR 509.3d's Filter is a predicate over the blocker, and holds no Count for
-  -- PermanentEnters' reason.
-  TriggerCondition.CreatureBecomesBlockedBy _ -> []
-  TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> []
-  -- CR 509.3e's bystander form counts BLOCKERS rather than objects a Count
-  -- names, and its PlayerRelation is no Count either.
-  TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> []
+  -- CR 509.3's Filters are predicates over the creatures of a block, holding no
+  -- Count for PermanentEnters' reason, and CR 509.3e's floor is a bare Natural.
+  TriggerCondition.Blocks _ -> []
   TriggerCondition.CreatureAttacksUnblocked _ -> []
   TriggerCondition.SelfRevealedForMiracle -> []
   TriggerCondition.RevealedThisWay _ -> []
@@ -4749,28 +4734,17 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.SelfAttacksPlayerWithMostLife -> []
   TriggerCondition.SelfAttacksWhileSaddled -> []
   TriggerCondition.SelfAttacksWhile condition -> frame Unframed (conditionFilters condition)
-  TriggerCondition.SelfBlocks -> []
-  -- CR 509.3b names a quality of the attacker blocked, Netcaster Spider's "with
-  -- flying", and whose block it watches, Venom's "enchanted creature".
-  TriggerCondition.CreatureBlocksCreature pair -> unframed [BlockPair.blocker pair, BlockPair.attacker pair]
-  TriggerCondition.CreatureBlocks f -> unframed [f]
-  TriggerCondition.SelfBlocksAtLeast _ -> []
-  -- CR 509.3e's filtered form names a quality the attackers blocked must have,
-  -- so this one DOES carry a Filter.
-  TriggerCondition.SelfBlocksOneOrMore f -> unframed [f]
-  -- CR 509.3c's Filter is over the attacker -- Somberwald Alpha's "a creature
-  -- you control".
-  TriggerCondition.CreatureBecomesBlocked f -> unframed [f]
-  -- CR 509.3d names a quality of the blocker, rule 702.25a's "without flanking",
-  -- and the attacker it watches, CR 701.54c's "your Ring-bearer".
-  TriggerCondition.CreatureBecomesBlockedBy pair -> unframed [BlockPair.blocker pair, BlockPair.attacker pair]
-  -- The same rule's attacking-side form, whose Filter is a predicate over the
-  -- blockers -- Serra Inquisitors' "black".
-  TriggerCondition.SelfBecomesBlockedByOneOrMore f -> unframed [f]
-  -- The same rule read by a bystander names a quality of nothing: whom the
-  -- attacker attacked is a PlayerRelation and the blockers are only counted, so
-  -- there is no Filter here.
-  TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> []
+  -- CR 509.3 names a quality of the creature that blocks or becomes blocked
+  -- (Venom's "enchanted creature", CR 701.54c's "your Ring-bearer") and of the
+  -- creatures on the other side (Netcaster Spider's "with flying", rule
+  -- 702.25a's "without flanking", Serra Inquisitors' "black").
+  TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger _ creature count) ->
+    unframed
+      ( creature : case count of
+          BlockCount.Once -> []
+          BlockCount.EachCreature others -> [others]
+          BlockCount.AtLeast _ others -> [others]
+      )
   TriggerCondition.CreatureAttacksUnblocked f -> unframed [f]
   TriggerCondition.SelfRevealedForMiracle -> []
   TriggerCondition.RevealedThisWay r -> unframed [RevealedThisWay.card r]
@@ -4910,15 +4884,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.SelfAttacksPlayerWithMostLife -> []
   TriggerCondition.SelfAttacksWhileSaddled -> []
   TriggerCondition.SelfAttacksWhile _ -> []
-  TriggerCondition.SelfBlocks -> []
-  TriggerCondition.CreatureBlocks _ -> []
-  TriggerCondition.CreatureBlocksCreature _ -> []
-  TriggerCondition.SelfBlocksAtLeast _ -> []
-  TriggerCondition.SelfBlocksOneOrMore _ -> []
-  TriggerCondition.CreatureBecomesBlocked _ -> []
-  TriggerCondition.CreatureBecomesBlockedBy _ -> []
-  TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> []
-  TriggerCondition.CreatureBecomesBlockedByAtLeast _ -> []
+  TriggerCondition.Blocks _ -> []
   TriggerCondition.CreatureAttacksUnblocked _ -> []
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> []
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> []

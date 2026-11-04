@@ -721,15 +721,7 @@ looksBack condition = case condition of
   TriggerCondition.SelfAttacksPlayerWithMostLife -> False
   TriggerCondition.SelfAttacksWhileSaddled -> False
   TriggerCondition.SelfAttacksWhile _ -> False
-  TriggerCondition.SelfBlocks -> False
-  TriggerCondition.CreatureBlocks _ -> False
-  TriggerCondition.CreatureBlocksCreature _ -> False
-  TriggerCondition.SelfBlocksAtLeast _ -> False
-  TriggerCondition.SelfBlocksOneOrMore _ -> False
-  TriggerCondition.CreatureBecomesBlocked _ -> False
-  TriggerCondition.CreatureBecomesBlockedBy _ -> False
-  TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> False
-  TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> False
+  TriggerCondition.Blocks _ -> False
   TriggerCondition.CreatureAttacksUnblocked _ -> False
   TriggerCondition.SpellOrAbilityCounters _ -> False
   TriggerCondition.AbilityIsCountered -> False
@@ -978,9 +970,6 @@ batchScoped condition = case condition of
   TriggerCondition.SelfAttacksPlayerWithMostLife -> False
   TriggerCondition.SelfAttacksWhileSaddled -> False
   TriggerCondition.SelfAttacksWhile _ -> False
-  TriggerCondition.SelfBlocks -> False
-  TriggerCondition.CreatureBlocks _ -> False
-  TriggerCondition.CreatureBlocksCreature _ -> False
   -- CR 508.3b / 805.10b: one combined declaration attacks a target once, but
   -- Parun.Engine.Combat records one GameEvent.BecameAttacked per (attacking
   -- player, target) pair, CR 508.3e's arity, bracketed as one group. Each of
@@ -998,12 +987,7 @@ batchScoped condition = case condition of
   -- True would be a second dedup over an already-unique trigger. Deaths get the
   -- other treatment because they reach a graveyard from four places and no event
   -- carries the arity.
-  TriggerCondition.SelfBlocksAtLeast _ -> False
-  TriggerCondition.SelfBlocksOneOrMore _ -> False
-  TriggerCondition.CreatureBecomesBlocked _ -> False
-  TriggerCondition.CreatureBecomesBlockedBy _ -> False
-  TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> False
-  TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> False
+  TriggerCondition.Blocks _ -> False
   TriggerCondition.CreatureAttacksUnblocked _ -> False
   TriggerCondition.SpellOrAbilityCounters _ -> False
   TriggerCondition.AbilityIsCountered -> False
@@ -3023,15 +3007,7 @@ zonesTriggeredFrom cond =
         TriggerCondition.SelfAttacksPlayerWithMostLife -> battlefield
         TriggerCondition.SelfAttacksWhileSaddled -> battlefield
         TriggerCondition.SelfAttacksWhile _ -> battlefield
-        TriggerCondition.SelfBlocks -> battlefield
-        TriggerCondition.CreatureBlocks _ -> battlefield
-        TriggerCondition.CreatureBlocksCreature _ -> battlefield
-        TriggerCondition.SelfBlocksAtLeast _ -> battlefield
-        TriggerCondition.SelfBlocksOneOrMore _ -> battlefield
-        TriggerCondition.CreatureBecomesBlocked _ -> battlefield
-        TriggerCondition.CreatureBecomesBlockedBy _ -> battlefield
-        TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> battlefield
-        TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> battlefield
+        TriggerCondition.Blocks _ -> battlefield
         TriggerCondition.CreatureAttacksUnblocked _ -> battlefield
         -- CR 113.6k's fourth zone: rule 702.94a's reveal happens FROM a hand and rule
         -- 701.20b leaves the card there, so this condition cannot trigger from the
@@ -3340,15 +3316,7 @@ stateTriggersOn gs
             TriggerCondition.SelfAttacksPlayerWithMostLife -> False
             TriggerCondition.SelfAttacksWhileSaddled -> False
             TriggerCondition.SelfAttacksWhile _ -> False
-            TriggerCondition.SelfBlocks -> False
-            TriggerCondition.CreatureBlocks _ -> False
-            TriggerCondition.CreatureBlocksCreature _ -> False
-            TriggerCondition.SelfBlocksAtLeast _ -> False
-            TriggerCondition.SelfBlocksOneOrMore _ -> False
-            TriggerCondition.CreatureBecomesBlocked _ -> False
-            TriggerCondition.CreatureBecomesBlockedBy _ -> False
-            TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> False
-            TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> False
+            TriggerCondition.Blocks _ -> False
             TriggerCondition.CreatureAttacksUnblocked _ -> False
             TriggerCondition.SelfRevealedForMiracle -> False
             TriggerCondition.RevealedThisWay _ -> False

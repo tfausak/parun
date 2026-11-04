@@ -833,7 +833,7 @@ blockPermissionSpec s registry = Spec.describe s "BlockPermission" $ do
             Combat.blockersOf third after,
             Maybe.mapMaybe
               ( \event -> case event of
-                  GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared b n) | b == guard -> Just n
+                  GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared b n) | b == guard -> Just (Natural.length n)
                   _ -> Nothing
               )
               (S.eventsOf after)
