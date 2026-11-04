@@ -195,9 +195,8 @@ moveToZone resolving source controller legal chosen (MoveToZone.MkMoveToZone ref
       -- anafenza-the-foremost, yawgmoths-will, nexus-of-fate,
       -- dire-fleet-daredevil, synthetic-stack-interdiction),
       -- which no member of a batch moving ONTO THE BATTLEFIELD goes to, or the
-      -- Battlefield under a Filter.IsInZone Stack conjunct
-      -- (synthetic-entry-interdiction), which no batch member arriving from a
-      -- graveyard or a hand satisfies.
+      -- Battlefield, which the entry loop asks on the live board instead
+      -- (Replacement.matchesPrinted).
       -- The engine installs one row naming NO destination -- CR 702.34a's
       -- exile, Parun.Engine.Keyword.castFromGraveyardExile -- which admits the
       -- battlefield too. It separates nothing either: the three rules that
