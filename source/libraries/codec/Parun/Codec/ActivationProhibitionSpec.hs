@@ -10,6 +10,7 @@ import qualified Parun.Types.ActivationProhibition as ActivationProhibition
 import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.ProhibitedCost as ProhibitedCost
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.ActivationProhibition" $ do
@@ -22,6 +23,7 @@ spec s = Spec.describe s "Parun.Codec.ActivationProhibition" $ do
       ( ActivationProhibition.MkActivationProhibition
           (Affected.Matching (Filter.HasCardType CardType.Creature))
           Nothing
+          ProhibitedCost.EveryCost
           Nothing
       )
       " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
@@ -33,6 +35,7 @@ spec s = Spec.describe s "Parun.Codec.ActivationProhibition" $ do
       ( ActivationProhibition.MkActivationProhibition
           Affected.Attached
           (Just AbilityKind.NonManaAbility)
+          ProhibitedCost.EveryCost
           Nothing
       )
       " {\"affected\":{\"type\":\"Attached\"},\"kind\":{\"type\":\"NonManaAbility\"}} "
@@ -45,7 +48,20 @@ spec s = Spec.describe s "Parun.Codec.ActivationProhibition" $ do
       ( ActivationProhibition.MkActivationProhibition
           Affected.Attached
           Nothing
+          ProhibitedCost.EveryCost
           (Just (AbilityName.MkAbilityName (Text.pack "this effect")))
       )
       " {\"affected\":{\"type\":\"Attached\"},\"name\":\"this effect\"} "
+  -- Serra Bestiary's "with {T} in their costs".
+  Spec.it s "MkActivationProhibition, a named cost" $
+    Common.assertCodec
+      s
+      ActivationProhibition.codec
+      ( ActivationProhibition.MkActivationProhibition
+          Affected.Attached
+          Nothing
+          ProhibitedCost.WithTapSymbol
+          Nothing
+      )
+      " {\"affected\":{\"type\":\"Attached\"},\"costs\":{\"type\":\"WithTapSymbol\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ActivationProhibition.codec

@@ -1256,6 +1256,8 @@ library codec
     Parun.Codec.ProductionTag
     Parun.Codec.ProductionTagSpec
     Parun.Codec.Prohibit
+    Parun.Codec.ProhibitedCost
+    Parun.Codec.ProhibitedCostSpec
     Parun.Codec.Prohibition
     Parun.Codec.ProhibitionSpec
     Parun.Codec.ProhibitSpec
@@ -3026,6 +3028,7 @@ library types
     Parun.Types.ProductionTag
     Parun.Types.Program
     Parun.Types.Prohibit
+    Parun.Types.ProhibitedCost
     Parun.Types.Prohibition
     Parun.Types.ProjectedCharacteristics
     Parun.Types.Prompt

@@ -653,7 +653,7 @@ activatedAbilityNames asking onCard onAbility x = case x of
 
 activationProhibitionNames :: (Monoid r) => Asking r -> ActivationProhibition.ActivationProhibition -> r
 activationProhibitionNames asking x = case x of
-  ActivationProhibition.MkActivationProhibition affected _kind _name -> affectedNames asking affected
+  ActivationProhibition.MkActivationProhibition affected _kind _costs _name -> affectedNames asking affected
 
 activationRestrictionNames :: (Monoid r) => Asking r -> ActivationRestriction.ActivationRestriction -> r
 activationRestrictionNames asking x = case x of

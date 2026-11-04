@@ -25,6 +25,7 @@ import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.PerCreature as PerCreature
+import qualified Parun.Types.ProhibitedCost as ProhibitedCost
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.RequirementArity as RequirementArity
 import qualified Parun.Types.RuleAbilities as RuleAbilities
@@ -46,7 +47,7 @@ import qualified Parun.Types.Zone as Zone
 testRuleAbilities :: RuleAbilities.RuleAbilities
 testRuleAbilities =
   RuleAbilities.MkRuleAbilities
-    { RuleAbilities.activationProhibitions = [ActivationProhibition.MkActivationProhibition Affected.Attached Nothing Nothing],
+    { RuleAbilities.activationProhibitions = [ActivationProhibition.MkActivationProhibition Affected.Attached Nothing ProhibitedCost.EveryCost Nothing],
       RuleAbilities.attachRestrictions = [AttachRestriction.MkAttachRestriction Affected.Attached (Filter.HasSubtype Subtype.Aura)],
       RuleAbilities.attackCosts = [AttackCost.MkAttackCost Affected.Attached (PerCreature.Fixed (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) [])) AttackCostScope.Controller Nothing],
       RuleAbilities.attackPermissions = [AttackPermission.MkAttackPermission Affected.Attached Nothing],

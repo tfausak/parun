@@ -75,6 +75,7 @@ import qualified Parun.Types.PlayerStaticAbility as PlayerStaticAbility
 import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.Power as Power
 import qualified Parun.Types.PrintedReplacement as PrintedReplacement
+import qualified Parun.Types.ProhibitedCost as ProhibitedCost
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
 import qualified Parun.Types.RequirementArity as RequirementArity
@@ -303,7 +304,7 @@ populatedFace =
       Face.untapRestrictions = [UntapRestriction.MkUntapRestriction Affected.Attached UntapHold.Forbidden Nothing],
       Face.attachRestrictions = [AttachRestriction.MkAttachRestriction Affected.Attached (Filter.HasSubtype Subtype.Aura)],
       Face.counterRestrictions = [CounterRestriction.MkCounterRestriction Affected.Attached (Just CounterKind.MinusOneMinusOne)],
-      Face.activationProhibitions = [ActivationProhibition.MkActivationProhibition Affected.Attached (Just AbilityKind.NonManaAbility) Nothing],
+      Face.activationProhibitions = [ActivationProhibition.MkActivationProhibition Affected.Attached (Just AbilityKind.NonManaAbility) ProhibitedCost.EveryCost Nothing],
       Face.entryRestrictions = [EntryRestriction.MkEntryRestriction Affected.Attached (Set.singleton Zone.Graveyard)],
       Face.attackCosts = [AttackCost.MkAttackCost Affected.Attached (PerCreature.Fixed (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) [])) AttackCostScope.Controller Nothing],
       Face.blockCosts = [BlockCost.MkBlockCost Affected.Attached (PerCreature.Fixed (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 3])) [])) Nothing Nothing],
@@ -615,7 +616,7 @@ spec s = Spec.describe s "Parun.Codec.Face" $ do
         s
         encodeFace
         decodeFace
-        baseFace {Face.activationProhibitions = [ActivationProhibition.MkActivationProhibition Affected.Attached (Just AbilityKind.NonManaAbility) Nothing]}
+        baseFace {Face.activationProhibitions = [ActivationProhibition.MkActivationProhibition Affected.Attached (Just AbilityKind.NonManaAbility) ProhibitedCost.EveryCost Nothing]}
         (init baseFaceJson <> ",\"activationProhibitions\":[{\"affected\":{\"type\":\"Attached\"},\"kind\":{\"type\":\"NonManaAbility\"}}]}")
     Spec.it s "entryRestrictions" $
       Common.assertJsonCodec

@@ -1,0 +1,102 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Skyshroud Elf",
+            "label": "elf",
+            "ready": true
+          },
+          {
+            "attached": "elf",
+            "card": "Serra Bestiary"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Kird Ape",
+            "label": "ape"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "Serra Bestiary reaches a mana ability with {T} in its cost (2004-10-04 ruling), so the Elf can't feed its own {1}",
+  "note": "skyshroud-elf-green-buys-red is the same board without the Aura, where the Ape is castable.",
+  "timeline": [
+    {
+      "check": {
+        "View": {
+          "is": [
+            "Pass"
+          ],
+          "of": "Offered",
+          "player": "alice"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

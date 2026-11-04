@@ -1,0 +1,194 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Arcanis the Omnipotent",
+            "label": "arcanis",
+            "ready": true
+          },
+          {
+            "card": "Dryad Arbor",
+            "label": "arbor",
+            "ready": true
+          },
+          {
+            "card": "Safehold Sentry",
+            "label": "sentry",
+            "ready": true,
+            "tapped": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears",
+            "ready": true
+          },
+          {
+            "attached": "bears",
+            "card": "Burning Anger"
+          },
+          {
+            "card": "Prodigal Sorcerer",
+            "label": "sorcerer",
+            "ready": true
+          },
+          {
+            "attached": "arcanis",
+            "card": "Serra Bestiary"
+          },
+          {
+            "attached": "arbor",
+            "card": "Serra Bestiary"
+          },
+          {
+            "attached": "sentry",
+            "card": "Serra Bestiary"
+          },
+          {
+            "attached": "bears",
+            "card": "Serra Bestiary"
+          },
+          {
+            "card": "Plains",
+            "label": "p1"
+          },
+          {
+            "card": "Island",
+            "label": "i1"
+          },
+          {
+            "card": "Island",
+            "label": "i2"
+          },
+          {
+            "card": "Island",
+            "label": "i3"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 107.5 / 602.5: Serra Bestiary stops only abilities with {T} in their costs",
+  "final": [
+    {
+      "Count": {
+        "card": "Arcanis the Omnipotent",
+        "count": 1,
+        "player": "alice",
+        "zone": "Hand"
+      }
+    }
+  ],
+  "note": "Arcanis keeps its bounce and loses its draw; Dryad Arbor loses its intrinsic mana ability; Safehold Sentry keeps its {Q} ability; Burning Anger's granted {T} ability is stopped too; the unenchanted Prodigal Sorcerer still pings.",
+  "timeline": [
+    {
+      "check": {
+        "View": {
+          "is": [
+            "Pass",
+            "Activate $arcanis",
+            "Activate $sentry",
+            "Activate $sorcerer",
+            "ActivateManaAbility $p1",
+            "ActivateManaAbility $i1",
+            "ActivateManaAbility $i2",
+            "ActivateManaAbility $i3"
+          ],
+          "of": "Offered",
+          "player": "alice"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "Activate": {
+          "ability": 0,
+          "object": "$arcanis"
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Activate": {
+          "ability": 1,
+          "mana": [
+            "$i1",
+            "$i2",
+            "$i3",
+            "$p1"
+          ],
+          "object": "$arcanis"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}
