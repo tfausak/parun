@@ -2366,8 +2366,22 @@ eventTriggers events gs =
         GameEvent.ActivatedAbilityResolved _ -> Map.empty
         GameEvent.TriggeredAbilityResolved _ -> Map.empty
         GameEvent.CardArrived _ -> Map.empty
-      forOne board logged (oid, (ctrl, abilities)) =
+      forOne board logged (oid, (sampled, abilities)) =
         let event = LoggedEvent.event logged
+            -- CR 603.3a's "at the time it triggered" is, for a look-back ability
+            -- (CR 603.10), immediately before the event, so a bearer standing
+            -- through it answers to its controller on the board before.
+            -- Zidane, Tantalus Thief's ruling refutes the after board on a bearer
+            -- that stays and changes hands. data/scenarios's "Funeral March stays
+            -- while its stealer leaves" and "Angelic Sleuth stolen by a conceding
+            -- player" scenarios prove it.
+            controllerFor cond = case Map.lookup (LoggedEvent.group logged) (GameState.boardBeforeEvent gs) of
+              Just before
+                | looksBack cond,
+                  Map.member oid board,
+                  Set.member oid (GameState.battlefield before) ->
+                    Maybe.fromMaybe sampled (Projection.controllerOf oid before)
+              _ -> sampled
             -- The bearer's own slot environment, so a condition naming a slot
             -- (TriggerCondition.LoseControlOfBound) is read the same way here as it
             -- is for a CR 603.7 delayed entry. Empty for a bearer that has since
@@ -2379,11 +2393,11 @@ eventTriggers events gs =
             -- pending trigger carries.
             -- CR 801.7: and the event happened within the controller's range,
             -- or anywhere for a planar bearer (CR 801.18).
-            fires (cond, _) = matchesTriggerGiven bindings board gs oid ctrl cond event && eventWithinRange board gs (Plane.rangePerspective oid ctrl gs) event
+            fires (cond, _) = matchesTriggerGiven bindings board gs oid (controllerFor cond) cond event && eventWithinRange board gs (Plane.rangePerspective oid (controllerFor cond) gs) event
             -- CR 400.7d: an ability of a permanent may read what costs were
             -- paid for the spell it was, so the bearer's record rides on every
             -- ability it triggers (Binding.paidCostRecord).
-            pend (cond, ab) = PendingTrigger.MkPendingTrigger (TriggerSource.OfObject oid) ctrl ab (Map.union (Binding.paidCostRecord bindings) (eventBindingsOver board gs (Map.lookup oid becameInGraveyard) becameInPublicZone oid ctrl cond event)) Nothing (Just logged) (copiesIn (fmap snd abilities) ab) (delayedAsTriggered board oid gs)
+            pend (cond, ab) = PendingTrigger.MkPendingTrigger (TriggerSource.OfObject oid) (controllerFor cond) ab (Map.union (Binding.paidCostRecord bindings) (eventBindingsOver board gs (Map.lookup oid becameInGraveyard) becameInPublicZone oid (controllerFor cond) cond event)) Nothing (Just logged) (copiesIn (fmap snd abilities) ab) (delayedAsTriggered board oid gs)
             -- CR 603.2d: a permanent entering may make an ability of a
             -- permanent trigger additional times (Yarok, the Desecrated),
             -- whichever side of the move its condition names (docs/decisions.md,
@@ -2398,13 +2412,13 @@ eventTriggers events gs =
             -- Each effect adds its own, so one that names the bearer (Sanctum
             -- of All) adds to one that names the entry.
             additional cond =
-              additionalTriggers gs ctrl oid (LoggedEvent.group logged) (looksBack cond) + case Game.enteredBattlefieldChange event of
-                Just zc | Map.member oid board -> additionalEntryTriggers gs ctrl zc
+              additionalTriggers gs (controllerFor cond) oid (LoggedEvent.group logged) (looksBack cond) + case Game.enteredBattlefieldChange event of
+                Just zc | Map.member oid board -> additionalEntryTriggers gs (controllerFor cond) zc
                 _ -> 0
             -- CR 805.4d: one trigger per player whose step this is (stepCopies).
             -- Each paired with which of CR 603.2d's instances it is.
             pends (cond, ab) =
-              let perPlayer = stepCopies gs oid ctrl cond event ab (pend (cond, ab))
+              let perPlayer = stepCopies gs oid (controllerFor cond) cond event ab (pend (cond, ab))
                   occurrences = maybe perPlayer (\n -> concat (List.genericReplicate n perPlayer)) (countersRemovedOccurrences oid cond event)
                in [(extra, trigger) | extra <- [0 .. additional cond], trigger <- occurrences]
             -- CR 603.2c's key, for `oncePerBatch` below: which ability of which

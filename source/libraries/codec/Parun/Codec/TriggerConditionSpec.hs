@@ -726,8 +726,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.PermanentsBecomeTapped (Filter.Not Filter.IsToken))
       " {\"type\":\"PermanentsBecomeTapped\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}} "
-  -- CR 106.12a's tap for mana read off the attachment link, nullary for
-  -- AttachedPermanentLeaves' reason.
+  -- CR 106.12a's tap for mana read off the attachment link. Nullary: that link is
+  -- board state, HauntedCreatureDies' reason.
   Spec.it s "AttachedPermanentTappedForMana" $
     Common.assertCodec
       s

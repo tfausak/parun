@@ -1127,7 +1127,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.PermanentBecomesDesignated {} -> []
   -- CR 702.134c's is nullary too, so it holds no Quantity.
   TriggerCondition.AttachedCreatureMentors -> []
-  -- CR 700.4's is nullary as well, for the same reason.
+  -- CR 603.6c's holds at most a Zone, so no Quantity either.
   TriggerCondition.AttachedPermanentLeaves _ -> []
   TriggerCondition.BecomesTapState _ -> []
   TriggerCondition.PermanentsBecomeTapped _ -> []

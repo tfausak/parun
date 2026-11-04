@@ -1216,14 +1216,16 @@ becameSlotSpec s registry =
         -- nothing at all. For every other the intersection is exactly that
         -- single event's keyset.
         --
-        -- The BEARER ARRIVAL argument is held constant at a present one, and is
-        -- not a second dimension of the intersection: it is CR 400.7f's datum
-        -- rather than a shape the event can take, and eventBindingSlots'
-        -- AttachedPermanentLeaves arm claims the slot on CR 704.5m's Aura, whose
-        -- arrival is present for every event that condition admits. Holding it
-        -- Nothing instead would pin the OTHER reading, under which no card could
-        -- read `became` there at all -- and CR 704.5n's Equipment bearer, which
-        -- has no arrival, is the over-claim that arm's own comment records.
+        -- The BEARER ARRIVAL argument is a present one, and a second dimension of
+        -- the intersection for AttachedPermanentLeaves with no destination alone:
+        -- it is CR 400.7f's datum rather than a shape the event can take, and
+        -- eventBindingSlots' arm claims the slot with a destination on CR 704.5m's
+        -- Aura, whose arrival is present for every event that form admits, while
+        -- CR 800.4a can take the bare form's Aura from the game with its host.
+        -- Holding it Nothing for every condition would pin the OTHER reading,
+        -- under which no card could read `became` there at all -- and CR 704.5n's
+        -- Equipment bearer, which has no arrival, is the over-claim that arm's own
+        -- comment records.
         Spec.it s "CR 603.2 eventBindingSlots names exactly the keys eventBindings stamps for EVERY event a condition admits" $ do
           piker <- S.printingOf s registry "Goblin Piker"
           let bearerBecame = Just (ObjectId.MkObjectId 3)
@@ -1254,7 +1256,13 @@ becameSlotSpec s registry =
           Spec.assertBool s (not (Map.null (GameState.lastKnown pinState))) "the funnel filed a last-known record for the bounced Piker"
           mapM_
             ( \cond ->
-                let stamped = fmap (\(arrivals, event) -> Map.keysSet (Event.eventBindings pinState bearerBecame arrivals (ObjectId.MkObjectId 0) S.alice cond event)) (representativeEvents cond)
+                let bearerArrivals = case cond of
+                      TriggerCondition.AttachedPermanentLeaves Nothing -> bearerBecame NonEmpty.:| [Nothing]
+                      _ -> bearerBecame NonEmpty.:| []
+                    stamped = do
+                      arrival <- bearerArrivals
+                      (arrivals, event) <- representativeEvents cond
+                      pure (Map.keysSet (Event.eventBindings pinState arrival arrivals (ObjectId.MkObjectId 0) S.alice cond event))
                  in Spec.assertEqWith s ("the slots bound for " <> show cond) (Event.eventBindingSlots cond) (foldr Set.intersection (NonEmpty.head stamped) (NonEmpty.tail stamped))
             )
             everyTriggerCondition
