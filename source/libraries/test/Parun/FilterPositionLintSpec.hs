@@ -2851,21 +2851,23 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- Parun.Engine.Target.admittedGiven for a target slot (CR 702.39a's provoke,
   -- Sensational Spider-Man, Yare), Parun.Engine.CombatRestriction.inForce for a
   -- CR 508.1c gate (Armored Galleon) and Parun.Engine.SourceContext.framedWith,
-  -- which a static ability's modification reads (Gaea's Liege). Any OTHER position
-  -- -- a search filter, a triggered ability's condition -- goes unproved and may
-  -- be a silent False. This is the lint that keeps that true: what it sweeps is
-  -- the atom outside a combat restriction and a static ability, by re-encoding
-  -- each face with those dropped, and outside a mode's target slot, by subtracting
-  -- what cardFilters finds there.
-  Spec.it s "CR 508.5 no card writes ControlledByRole Defending outside a combat restriction, static ability or target slot" $ do
+  -- which answers only for a source that is itself attacking or was removed from
+  -- combat, so a static ability affecting just its source (Gaea's Liege). Any OTHER
+  -- position -- an Aura's or anthem's static, a search filter, a triggered
+  -- ability's condition -- goes unproved and may be a silent False. This is the lint
+  -- that keeps that true: what it sweeps is the atom outside a combat restriction
+  -- and such a static, by re-encoding each face with those dropped, and outside a
+  -- mode's target slot, by subtracting what cardFilters finds there.
+  Spec.it s "CR 508.5 no card writes ControlledByRole Defending outside a combat restriction, a static ability on its own source or a target slot" $ do
     ps <- S.allPrintings s corpus
     let needle = atomJson (Filter.Type.ControlledByRole TurnRole.Defending)
         atoms c = occurrences needle (Codec.encode (Face.Codec.codec Card.codec) c)
         inSlots c = sum [occurrences needle (atomJson f) | (InTargetSlot, f) <- cardFilters c]
-        elsewhere c = let bare = c {Face.combatRestrictions = [], Face.staticAbilities = []} in atoms bare - inSlots bare
+        onItsSource ability = StaticAbility.affected ability == Affected.Matching Filter.Type.IsSource
+        elsewhere c = let bare = c {Face.combatRestrictions = [], Face.staticAbilities = filter (not . onItsSource) (Face.staticAbilities c)} in atoms bare - inSlots bare
         offenders = filter (anyFace ((/= 0) . elsewhere) . Printing.card) ps
     Spec.assertEqWith s "the atom is the engine's alone outside a gate" (fmap (S.nameOf . Printing.card) offenders) []
-    -- Three legs of anti-vacuity, because the narrowing above could hide a real
+    -- Four legs of anti-vacuity, because the narrowing above could hide a real
     -- offender by blinding the counter rather than by being true.
     --
     -- One: the pool DOES write the atom, in the position the narrowing accepts.
@@ -2891,6 +2893,14 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- offence, which is what says neither subtraction drops the rest of the face.
     let affected = (S.combinedFace piker) {Face.counterRestrictions = [CounterRestriction.MkCounterRestriction (Affected.Matching buried) Nothing]}
     Spec.assertEqWith s "and outside both positions it is still seen" (elsewhere affected) 1
+    -- Four: Gaea's Liege's statics carry the atom and are accepted, and the same
+    -- abilities affecting anything but their source, an anthem's shape, are not.
+    liege <- S.printingOf s registry "Gaea's Liege"
+    let liegeFace = S.combinedFace liege
+        anthem = liegeFace {Face.staticAbilities = fmap (\ability -> ability {StaticAbility.affected = Affected.Matching (Filter.Type.HasCardType CardType.Creature)}) (Face.staticAbilities liegeFace)}
+    Spec.assertBool s (atoms liegeFace /= 0) "the Liege's statics carry the atom"
+    Spec.assertEqWith s "and on their source they are accepted" (elsewhere liegeFace) 0
+    Spec.assertEqWith s "and as an anthem they are not" (elsewhere anthem) (atoms liegeFace)
   -- CR 603.2's baked half is in Modification.SetController's position rather
   -- than CR 702.39a's: a PlayerId that only a resolution can know, round-tripped
   -- by a total codec, so nothing but this keeps card JSON from naming a seat

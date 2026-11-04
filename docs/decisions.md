@@ -1374,17 +1374,3 @@ Entries are ordered by the first rule each cites.
   `CombatDamageAmount`'s order, proved by the scenarios
   "assigning-no-combat-damage-beats-an-older-toughness-marker" and "...-newer-...".
 - **Issue**: #5462.
-
-## A continuous effect "until" its source leaves, with the source already gone
-
-- **Question**: Gaea's Liege's ability resolves after the Liege has left the
-  battlefield. "Until this creature leaves the battlefield" has no future event
-  to end at. Does the land become a Forest for good, or not at all?
-- **Rules**: CR 610.3a, 611.2a, 611.2b; CR of 2026-08-07. CR 610.3a says it of a
-  one-shot "until" zone change and CR 611.2b of "for as long as"; neither of a
-  continuous "until". No ruling on the card.
-- **Decision**: Not at all, as those two rules read their own cases.
-- **Rejected**: Forever, which would turn removing the Liege in response into a
-  permanent type change no resolving Liege could leave.
-- **Site**: `Parun.Engine.Expiry`'s `SourceLeftBattlefield` arm, proved by the
-  scenario "gaeas-liege-gone-before-its-ability-resolves-changes-nothing".
