@@ -14,6 +14,7 @@ module Parun.Engine.SourceContext where
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
+import qualified Parun.Engine.Defender as Defender
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Types.Acquisition as Acquisition
@@ -55,7 +56,11 @@ framedWith choices source gs context =
       -- CR 607.5: only those the abilities doing the reading put there.
       Filter.sourceEntrants = Map.keysSet (Map.filter (== EntryLink.MkEntryLink source (SourceChoices.acquisition choices)) (GameState.enteredWith gs)),
       -- CR 607.2a: the cards in exile now (CR 400.7) linked to the source.
-      Filter.sourceExiled = Map.filter ((== source) . ExileLink.source) (Map.restrictKeys (GameState.exiledWith gs) (GameState.exile gs))
+      Filter.sourceExiled = Map.filter ((== source) . ExileLink.source) (Map.restrictKeys (GameState.exiledWith gs) (GameState.exile gs)),
+      -- CR 508.5, for a source that is attacking or was removed from combat
+      -- (Gaea's Liege). No control read: a declared attack records its seat
+      -- (Combat.attackedUnder), so `playerOf`'s live arm is never reached.
+      Filter.defendingPlayers = Maybe.maybeToList (Defender.defendingPlayerOf (\_ _ -> Nothing) source gs)
     }
 
 -- | The choices `source`'s abilities acquired as `acquisition` have made so

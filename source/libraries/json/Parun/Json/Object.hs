@@ -1,8 +1,7 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Parun.Json.Object where
 
 import qualified Data.ByteString.Builder as Builder
+import qualified Data.Text as Text
 import qualified Parun.Extra.Monoid as Monoid
 import qualified Parun.Extra.Semigroup as Semigroup
 import qualified Parun.Json.Array as Array
@@ -14,11 +13,11 @@ newtype Object a = MkObject
   }
   deriving (Eq, Ord, Show)
 
-decode :: (Parsec.Stream s m Char) => Parsec.ParsecT s u m a -> Parsec.ParsecT s u m (Object a)
+decode :: Parsec.Parsec Text.Text u a -> Parsec.Parsec Text.Text u (Object a)
 decode p =
   fmap MkObject
-    . Parsec.between (Parsec.char '{' <* Parsec.many Array.decodeBlank) (Parsec.char '}')
-    $ Parsec.sepBy (Pair.decode p <* Parsec.many Array.decodeBlank) (Parsec.char ',' <* Parsec.many Array.decodeBlank)
+    . Parsec.between (Parsec.char '{' <* Array.decodeBlanks) (Parsec.char '}')
+    $ Parsec.sepBy (Pair.decode p <* Array.decodeBlanks) (Parsec.char ',' <* Array.decodeBlanks)
 
 encode :: (a -> Builder.Builder) -> Object a -> Builder.Builder
 encode b =

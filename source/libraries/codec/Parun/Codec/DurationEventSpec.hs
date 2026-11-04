@@ -37,4 +37,11 @@ spec s = Spec.describe s "Parun.Codec.DurationEvent" $ do
       Codec.codec
       DurationEvent.SourceExiledCard
       " {\"type\":\"SourceExiledCard\"} "
+  -- CR 611.2a / 702.26d (Gaea's Liege).
+  Spec.it s "SourceLeftBattlefield" $
+    Common.assertCodec
+      s
+      Codec.codec
+      DurationEvent.SourceLeftBattlefield
+      " {\"type\":\"SourceLeftBattlefield\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Codec.codec
