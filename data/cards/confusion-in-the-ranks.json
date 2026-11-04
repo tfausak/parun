@@ -111,27 +111,7 @@
                               "value": "became"
                             },
                             "trait": {
-                              "type": "CardType",
-                              "value": [
-                                {
-                                  "type": "Artifact"
-                                },
-                                {
-                                  "type": "Battle"
-                                },
-                                {
-                                  "type": "Creature"
-                                },
-                                {
-                                  "type": "Enchantment"
-                                },
-                                {
-                                  "type": "Land"
-                                },
-                                {
-                                  "type": "Planeswalker"
-                                }
-                              ]
+                              "type": "CardType"
                             }
                           }
                         }

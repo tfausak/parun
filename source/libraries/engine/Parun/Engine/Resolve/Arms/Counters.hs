@@ -1921,7 +1921,7 @@ exchangeControl resolving source controller legal sides =
               (Just this, Just that) -> [this, that]
               _ -> []
      in case twoSides of
-          [one, two] -> case (Projection.controllerOf one gs, Projection.controllerOf two gs) of
+          [one, two] -> case (sideController one gs, sideController two gs) of
             -- CR 701.12b: controlled by the same player, the exchange effect
             -- does nothing. Parun.BoardEffectSpec's Switcheroo group is the
             -- proof.
@@ -1952,6 +1952,15 @@ exchangeControl resolving source controller legal sides =
           -- it occurs -- so a slot CR 608.2b has emptied to fewer than two
           -- objects, or one holding a player, changes nothing.
           _ -> gs
+  where
+    -- CR 702.26b / 701.12a: a side off the battlefield is none, whichever arm
+    -- named it. A slot that is no target gets no CR 608.2b re-check, and
+    -- Projection.controllerOf still answers for a phased-out permanent. Proved by
+    -- the confusion-in-the-ranks-exchanges-nothing-when-the-entering-permanent-phases-out
+    -- scenario.
+    sideController oid gs
+      | Set.member oid (GameState.battlefield gs) = Projection.controllerOf oid gs
+      | otherwise = Nothing
 
 takeExtraTurnArm :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> TakeExtraTurn.TakeExtraTurn -> Game ()
 takeExtraTurnArm resolving source controller legal takeExtraTurn = do
