@@ -4604,6 +4604,7 @@ quantityReads q = case q of
   -- Its Filter asks a past activation's snapshot, never a projection.
   Quantity.Type.ActivationsThisTurn _ -> Set.empty
   Quantity.Type.PermanentsDiedThisTurn -> Set.empty
+  Quantity.Type.DamagePreventedThisWay -> Set.empty
   Quantity.Type.SpellsCastUsingThisTurn _ -> Set.empty
   Quantity.Type.SubgamesThisMatch -> Set.empty
   Quantity.Type.DungeonsCompleted _ -> Set.empty

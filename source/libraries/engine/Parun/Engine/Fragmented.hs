@@ -91,6 +91,8 @@ digest gs =
             gs
               { GameState.events = Seq.empty,
                 GameState.activationsThisTurn = Seq.empty,
+                -- Grows only as a countdown shield's row, compared here, shrinks.
+                GameState.damagePreventedBy = Map.empty,
                 GameState.nextObjectId = ObjectId.MkObjectId 0,
                 GameState.nextTimestamp = Timestamp.MkTimestamp 0,
                 GameState.nextPrintingId = PrintingId.MkPrintingId 0,

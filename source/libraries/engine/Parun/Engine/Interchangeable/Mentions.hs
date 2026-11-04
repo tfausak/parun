@@ -2661,6 +2661,7 @@ quantityNames asking x = case x of
     AbilityAct.Resolved -> HistoryRead.Resolutions
   Quantity.ActivationsThisTurn tally -> history asking HistoryRead.Activations <> playerRefNames asking (ActivationsThisTurn.activator tally) <> filterNames asking (ActivationsThisTurn.source tally) <> activationCriteriaNames asking (ActivationsThisTurn.criteria tally)
   Quantity.PermanentsDiedThisTurn -> history asking HistoryRead.Deaths
+  Quantity.DamagePreventedThisWay -> mempty
   Quantity.SpellsCastUsingThisTurn _keywordFamily -> history asking HistoryRead.Casts
   Quantity.SubgamesThisMatch -> mempty
   Quantity.DungeonsCompleted playerRef -> playerRefNames asking playerRef

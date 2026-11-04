@@ -4445,6 +4445,7 @@ quantityKindFilters quantity = case quantity of
   -- Its own Filter, which no Count holds and countFilters cannot see.
   Quantity.Type.ActivationsThisTurn tally -> [(Unframed, ActivationsThisTurn.source tally)]
   Quantity.Type.PermanentsDiedThisTurn -> []
+  Quantity.Type.DamagePreventedThisWay -> []
   Quantity.Type.SpellsCastUsingThisTurn {} -> []
   Quantity.Type.SubgamesThisMatch -> []
   Quantity.Type.DungeonsCompleted _ -> []

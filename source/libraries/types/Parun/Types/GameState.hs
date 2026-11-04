@@ -516,6 +516,11 @@ data GameState = MkGameState
     -- clears, as castsBeforeThisTurn is. Lookback.AsThisObject's
     -- Filter.DealtDamageTo joins it to the live log.
     damageBeforeThisTurn :: Seq.Seq DamageEvent.DamageEvent,
+    -- | CR 615.5 / 615.13: how much damage each object's printed prevention
+    -- effect has stopped this game, keyed by the DamagePrevented.by's printer.
+    -- Never cleared: a next end step can come on a later turn, and CR 400.7
+    -- never reuses an id.
+    damagePreventedBy :: Map.Map ObjectId.ObjectId Natural.Natural,
     -- | CR 508.1a / 608.2i: the attackers declared during each player's OWN most
     -- recent turn, keyed by that player and replaced as their next turn ends
     -- (Engine.beginTurn). A departed player's row stands until their next turn
