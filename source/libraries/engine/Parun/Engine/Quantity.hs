@@ -1001,6 +1001,10 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- at no object at all, nothing here being read off one.
         Quantity.PermanentsDiedThisTurn ->
           Just (toInteger (length (Maybe.mapMaybe (Game.diedChange . LoggedEvent.event) (Foldable.toList (GameState.events gs)))))
+        -- CR 615.5: off the game-long tally, the log being cleared before a next
+        -- end step on a later turn can read it. Nothing aimed at no source.
+        Quantity.DamagePreventedThisWay ->
+          fmap (\printer -> toInteger (Map.findWithDefault 0 printer (GameState.damagePreventedBy gs))) (Filter.source context)
         -- CR 702.185c: how many spells, by any player, were cast this turn for the
         -- cost that keyword family offers. PermanentsDiedThisTurn's log fold,
         -- reading the tag the cast event copied off Object.castUsing: by now the
@@ -1445,6 +1449,7 @@ objectSlots quantity = case quantity of
   Quantity.TimesThisTurn _ -> Set.empty
   Quantity.ActivationsThisTurn _ -> Set.empty
   Quantity.PermanentsDiedThisTurn -> Set.empty
+  Quantity.DamagePreventedThisWay -> Set.empty
   Quantity.SpellsCastUsingThisTurn _ -> Set.empty
   Quantity.SubgamesThisMatch -> Set.empty
   Quantity.DungeonsCompleted _ -> Set.empty
@@ -1727,6 +1732,7 @@ readsX quantity = case quantity of
   Quantity.TimesThisTurn _ -> False
   Quantity.ActivationsThisTurn _ -> False
   Quantity.PermanentsDiedThisTurn -> False
+  Quantity.DamagePreventedThisWay -> False
   Quantity.SpellsCastUsingThisTurn _ -> False
   Quantity.SubgamesThisMatch -> False
   Quantity.DungeonsCompleted _ -> False

@@ -724,6 +724,13 @@ spec s = Spec.describe s "Parun.Codec.Quantity" $ do
       Quantity.codec
       Quantity.PermanentsDiedThisTurn
       " {\"type\":\"PermanentsDiedThisTurn\"} "
+  -- CR 615.5: read off the source's own tally, so it names nothing either.
+  Spec.it s "DamagePreventedThisWay is nullary" $
+    Common.assertCodec
+      s
+      Quantity.codec
+      Quantity.DamagePreventedThisWay
+      " {\"type\":\"DamagePreventedThisWay\"} "
   -- CR 508.1a: the combat's record, naming no player.
   Spec.it s "AttackersDeclaredThisCombat is nullary" $
     Common.assertCodec

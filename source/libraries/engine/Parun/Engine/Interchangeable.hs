@@ -246,6 +246,8 @@ representatives pcs gs candidates =
 --     its bindings are read only on behalf of a stack object or a delayed
 --     trigger (CR 608.2h), which namedByAnother and namedByStored already
 --     cover.
+--   * GameState.damagePreventedBy is read only for the source of the ability
+--     resolving, a spell already gone from the stack, never for a candidate.
 --   * GameState.drawsThisTurn names cards, and is read here through the same two
 --     views (Filter.LeftLibraryThisTurn), where a draw shows as a look-back.
 --   * GameState.events is read here through the two Filter views objects
@@ -356,7 +358,8 @@ unread oid =
     { Mentions.names = \named -> Monoid.Any (named oid),
       Mentions.context = Monoid.Any True,
       Mentions.keyed = Monoid.Any True,
-      Mentions.history = mempty
+      Mentions.history = mempty,
+      Mentions.prevention = mempty
     }
 
 -- CR 613.7a: an object's static abilities apply at its own timestamp, so a

@@ -91,6 +91,8 @@ digest gs =
             gs
               { GameState.events = Seq.empty,
                 GameState.activationsThisTurn = Seq.empty,
+                -- Only a countdown shield's key is read, and its row, compared here, shrinks as it grows.
+                GameState.damagePreventedBy = Map.empty,
                 GameState.nextObjectId = ObjectId.MkObjectId 0,
                 GameState.nextTimestamp = Timestamp.MkTimestamp 0,
                 GameState.nextPrintingId = PrintingId.MkPrintingId 0,
@@ -289,7 +291,8 @@ historyReads =
     { Mentions.names = const Set.empty,
       Mentions.context = Set.empty,
       Mentions.keyed = Set.empty,
-      Mentions.history = Set.singleton
+      Mentions.history = Set.singleton,
+      Mentions.prevention = Set.empty
     }
 
 -- | Does this logged event record part of what `reading` reads? Through the read

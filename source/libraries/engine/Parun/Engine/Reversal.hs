@@ -173,6 +173,7 @@ withoutAnnouncement before entry closed = do
   castsBeforeThisTurn <- one GameState.castsBeforeThisTurn
   -- Written only at the turn handoff, which no announcement spans.
   damageBeforeThisTurn <- one GameState.damageBeforeThisTurn
+  damagePreventedBy <- mapOf GameState.damagePreventedBy
   attacksInOwnLastTurn <- one GameState.attacksInOwnLastTurn
   resolvedNames <- mapOf GameState.resolvedNames
   movedUntil <- mapOf GameState.movedUntil
@@ -298,6 +299,7 @@ withoutAnnouncement before entry closed = do
         GameState.eventsLastTurn = eventsLastTurn,
         GameState.castsBeforeThisTurn = castsBeforeThisTurn,
         GameState.damageBeforeThisTurn = damageBeforeThisTurn,
+        GameState.damagePreventedBy = damagePreventedBy,
         GameState.attacksInOwnLastTurn = attacksInOwnLastTurn,
         GameState.resolvedNames = resolvedNames,
         GameState.movedUntil = movedUntil,
