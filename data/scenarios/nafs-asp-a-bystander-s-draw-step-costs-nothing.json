@@ -1,0 +1,21 @@
+{
+  "description": "CR 603.7b whole card: \"their next draw step\" is the hit player's own, so bob's draw step comes and goes and carol, the player hit, loses the life at hers",
+  "note": "The turn between the hit and carol's draw step belongs to bob, and his draw step is the next one anybody has. Nothing fires there: carol is still at 19 in bob's main phase.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Nafs Asp", "label": "asp", "ready": true}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "carol", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$asp"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"ChooseAttackTarget": "$carol"}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "carol", "life": 19}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "bob", "life": 20}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "carol", "check": {"Life": {"player": "carol", "life": 18}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "carol", "check": {"Life": {"player": "bob", "life": 20}}}
+  ]
+}

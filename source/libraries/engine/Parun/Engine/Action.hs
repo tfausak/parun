@@ -243,10 +243,10 @@ legalActions pid gs =
       -- priority, unless that effect specifies another timing restriction", which
       -- is CR 116.2b's window plus an escape clause no producer uses.
       --
-      -- ONE ACTION PER SOURCE, not per stored effect: CR 116.2c ends "that
-      -- effect", the printed sentence, and Gliding Licid's one sentence stores
-      -- four continuous effects that must end together. Nothing is left for the
-      -- player to choose once the permanent is chosen.
+      -- ONE ACTION PER RESOLUTION, not per stored effect or per source: CR 116.2c
+      -- ends "that effect", the printed sentence, so Gliding Licid's one sentence
+      -- is one action over its four stored effects, and each of Nafs Asp's hits on
+      -- one player is an action of its own.
       endings = fmap (uncurry Action.EndEffect) (EndEffect.endable pid gs)
       -- CR 116.2k / 702.170a: the sixth special action, and the second whose
       -- window is CR 116.2a's rather than CR 116.2b's -- "any time you have

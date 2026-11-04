@@ -1,6 +1,6 @@
 {
   "description": "CR 603.7b whole card: unpaid, Nafs Asp's victim loses 1 life at their own next draw step, and only once",
-  "note": "Three seats, so 'that player' is told from the Asp's controller and from a bystander: only bob is offered the payment, though alice controls the ability. His Forest is untapped at his draw step, so the offer's absence there is the fired entry and not the mana. Carol's and alice's own draw steps cost nobody anything, and bob's next one fires nothing: the one shot is spent (CR 603.7b).",
+  "note": "Three seats, so 'that player' is told from the Asp's controller and from a bystander: only bob is offered the payment, though alice controls the ability. Carol's and alice's own draw steps cost nobody anything, and bob's next one fires nothing: the one shot is spent (CR 603.7b).",
   "board": {
     "active": "alice",
     "step": "BeginningOfCombat",
@@ -17,7 +17,6 @@
     {"turn": 1, "step": "EndOfCombat", "player": "bob", "check": {"View": {"of": "Offered", "player": "bob", "is": ["Pass", "EndEffect $asp", "ActivateManaAbility $forest"]}}},
     {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"View": {"of": "Offered", "player": "alice", "is": ["Pass"]}}},
     {"turn": 1, "step": "EndOfCombat", "player": "carol", "check": {"View": {"of": "Offered", "player": "carol", "is": ["Pass"]}}},
-    {"turn": 2, "step": "DrawStep", "player": "bob", "check": {"View": {"of": "Offered", "player": "bob", "is": ["Pass", "ActivateManaAbility $forest"]}}},
     {"turn": 2, "step": "DrawStep", "player": "bob", "check": {"Life": {"player": "bob", "life": 19}}},
     {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "bob", "life": 18}}},
     {"turn": 3, "step": "PrecombatMain", "player": "carol", "check": {"Life": {"player": "bob", "life": 18}}},

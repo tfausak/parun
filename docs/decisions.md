@@ -1374,3 +1374,18 @@ Entries are ordered by the first rule each cites.
   `CombatDamageAmount`'s order, proved by the scenarios
   "assigning-no-combat-damage-beats-an-older-toughness-marker" and "...-newer-...".
 - **Issue**: #5462.
+
+## Who pays Quenchable Fire's price once the planeswalker changes hands
+
+- **Question**: Quenchable Fire's target is a planeswalker, which changes
+  controllers before the caster's next upkeep. "That planeswalker's controller
+  pays {U}": the player who controlled it as the spell resolved, or whoever
+  controls it when they pay? The card's rulings speak only of a targeted player.
+- **Rules**: CR 116.2c, 608.2c (CR of 2026-08-07).
+- **Decision**: The controller as the spell resolves. The offer's seat is sampled
+  once, as for every CR 116.2c offer.
+- **Rejected**: Whoever controls it at payment, under which the offer moves with
+  the planeswalker. The sentence names no later moment to ask again.
+- **Site**: `Parun.Types.UntilPaid`'s `payer`, sampled by `Parun.Engine.Expiry.arm`.
+  No test changes the planeswalker's controller.
+- **Issue**: #6084.
