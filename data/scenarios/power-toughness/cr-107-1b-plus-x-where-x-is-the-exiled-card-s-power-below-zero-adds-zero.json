@@ -1,0 +1,69 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Bioplasm",
+            "label": "bioplasm",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Char-Rumbler"
+          },
+          {
+            "card": "Forest"
+          },
+          {
+            "card": "Forest"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "step": "DeclareAttackers"
+  },
+  "description": "CR 107.1b plus X where X is the exiled card's power below zero adds zero",
+  "note": "Bioplasm exiles Char-Rumbler (-1/3): it gets +0/+3, so it is 4/7 and deals 4, where an unfloored X makes it 3/7.",
+  "timeline": [
+    {
+      "do": {
+        "Attack": [
+          "$bioplasm"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "PowerToughness": {
+          "object": "$bioplasm",
+          "power": 4,
+          "toughness": 7
+        }
+      },
+      "player": "alice",
+      "step": "PostcombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 16,
+          "player": "bob"
+        }
+      },
+      "player": "alice",
+      "step": "PostcombatMain",
+      "turn": 1
+    }
+  ]
+}

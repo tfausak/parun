@@ -82,100 +82,106 @@
                         "type": "ModifyPowerToughness",
                         "value": {
                           "power": {
-                            "type": "Count",
+                            "type": "NonNegative",
                             "value": {
-                              "aggregation": {
-                                "type": "Greatest",
-                                "value": {
-                                  "type": "Measure",
+                              "type": "Count",
+                              "value": {
+                                "aggregation": {
+                                  "type": "Greatest",
                                   "value": {
-                                    "type": "Power"
-                                  }
-                                }
-                              },
-                              "filter": {
-                                "type": "And",
-                                "value": [
-                                  {
-                                    "type": "HasCardType",
+                                    "type": "Measure",
                                     "value": {
-                                      "type": "Creature"
+                                      "type": "Power"
                                     }
-                                  },
-                                  {
-                                    "type": "HeldBy",
-                                    "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "relation": {
-                                        "type": "You"
+                                  }
+                                },
+                                "filter": {
+                                  "type": "And",
+                                  "value": [
+                                    {
+                                      "type": "HasCardType",
+                                      "value": {
+                                        "type": "Creature"
+                                      }
+                                    },
+                                    {
+                                      "type": "HeldBy",
+                                      "value": {
+                                        "holder": {
+                                          "type": "Controller"
+                                        },
+                                        "relation": {
+                                          "type": "You"
+                                        }
                                       }
                                     }
-                                  }
-                                ]
-                              },
-                              "scope": {
-                                "type": "InZone",
-                                "value": {
-                                  "player": {
-                                    "type": "Relative",
-                                    "value": {
-                                      "type": "AnyPlayer"
+                                  ]
+                                },
+                                "scope": {
+                                  "type": "InZone",
+                                  "value": {
+                                    "player": {
+                                      "type": "Relative",
+                                      "value": {
+                                        "type": "AnyPlayer"
+                                      }
+                                    },
+                                    "zone": {
+                                      "type": "Battlefield"
                                     }
-                                  },
-                                  "zone": {
-                                    "type": "Battlefield"
                                   }
                                 }
                               }
                             }
                           },
                           "toughness": {
-                            "type": "Count",
+                            "type": "NonNegative",
                             "value": {
-                              "aggregation": {
-                                "type": "Greatest",
-                                "value": {
-                                  "type": "Measure",
+                              "type": "Count",
+                              "value": {
+                                "aggregation": {
+                                  "type": "Greatest",
                                   "value": {
-                                    "type": "Power"
-                                  }
-                                }
-                              },
-                              "filter": {
-                                "type": "And",
-                                "value": [
-                                  {
-                                    "type": "HasCardType",
+                                    "type": "Measure",
                                     "value": {
-                                      "type": "Creature"
+                                      "type": "Power"
                                     }
-                                  },
-                                  {
-                                    "type": "HeldBy",
-                                    "value": {
-                                      "holder": {
-                                        "type": "Controller"
-                                      },
-                                      "relation": {
-                                        "type": "You"
+                                  }
+                                },
+                                "filter": {
+                                  "type": "And",
+                                  "value": [
+                                    {
+                                      "type": "HasCardType",
+                                      "value": {
+                                        "type": "Creature"
+                                      }
+                                    },
+                                    {
+                                      "type": "HeldBy",
+                                      "value": {
+                                        "holder": {
+                                          "type": "Controller"
+                                        },
+                                        "relation": {
+                                          "type": "You"
+                                        }
                                       }
                                     }
-                                  }
-                                ]
-                              },
-                              "scope": {
-                                "type": "InZone",
-                                "value": {
-                                  "player": {
-                                    "type": "Relative",
-                                    "value": {
-                                      "type": "AnyPlayer"
+                                  ]
+                                },
+                                "scope": {
+                                  "type": "InZone",
+                                  "value": {
+                                    "player": {
+                                      "type": "Relative",
+                                      "value": {
+                                        "type": "AnyPlayer"
+                                      }
+                                    },
+                                    "zone": {
+                                      "type": "Battlefield"
                                     }
-                                  },
-                                  "zone": {
-                                    "type": "Battlefield"
                                   }
                                 }
                               }

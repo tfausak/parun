@@ -35,29 +35,35 @@
               "type": "ModifyPowerToughness",
               "value": {
                 "power": {
-                  "type": "AgainstExiledPile",
+                  "type": "NonNegative",
                   "value": {
-                    "pile": {
-                      "type": "OwnAbilities"
-                    },
-                    "quantity": {
-                      "type": "Measure",
-                      "value": {
-                        "type": "Power"
+                    "type": "AgainstExiledPile",
+                    "value": {
+                      "pile": {
+                        "type": "OwnAbilities"
+                      },
+                      "quantity": {
+                        "type": "Measure",
+                        "value": {
+                          "type": "Power"
+                        }
                       }
                     }
                   }
                 },
                 "toughness": {
-                  "type": "AgainstExiledPile",
+                  "type": "NonNegative",
                   "value": {
-                    "pile": {
-                      "type": "OwnAbilities"
-                    },
-                    "quantity": {
-                      "type": "Measure",
-                      "value": {
-                        "type": "Toughness"
+                    "type": "AgainstExiledPile",
+                    "value": {
+                      "pile": {
+                        "type": "OwnAbilities"
+                      },
+                      "quantity": {
+                        "type": "Measure",
+                        "value": {
+                          "type": "Toughness"
+                        }
                       }
                     }
                   }
