@@ -29,7 +29,6 @@ import qualified Parun.Engine.Contraption as Contraption
 import qualified Parun.Engine.Cost as Cost
 import qualified Parun.Engine.CounterRestriction as CounterRestriction
 import qualified Parun.Engine.Decide as Decide
-import qualified Parun.Engine.Departure as Departure
 import qualified Parun.Engine.Detain as Detain
 import qualified Parun.Engine.Dungeon as Dungeon
 import qualified Parun.Engine.Earthbend as Earthbend
@@ -53,7 +52,6 @@ import qualified Parun.Engine.Replacement as Replacement
 import qualified Parun.Engine.Resolve.Common as Common
 import Parun.Engine.Resolve.Slots (battlefieldMatching, effectContext, effectViewOf, legalOne, objectRefObjects, playerRefPlayers, slotBindings)
 import qualified Parun.Engine.Ring as Ring
-import qualified Parun.Engine.Sba as Sba
 import qualified Parun.Engine.Soulbond as Soulbond
 import qualified Parun.Engine.TimeTravel as TimeTravel
 import qualified Parun.Engine.Turn as Turn
@@ -1710,7 +1708,8 @@ endTurn runDamageRewriteEffect runReplacementEffects runSubgame = do
       { GameState.scannedThrough = Natural.length (GameState.events gs),
         GameState.boardAfterEvent = Map.empty,
         GameState.boardBeforeEvent = Map.empty,
-        GameState.battlefieldWhenTriggered = Map.empty
+        GameState.battlefieldWhenTriggered = Map.empty,
+        GameState.heldBoards = []
       }
   -- CR 724.1b: exile every object on the stack, INCLUDING the one that is
   -- resolving -- which is still on GameState.stack, Stack.resolveTopWith
@@ -1745,18 +1744,7 @@ endTurn runDamageRewriteEffect runReplacementEffects runSubgame = do
   -- A loss the pass replaced runs its effects inside the pass
   -- (runDamageRewriteEffect), and a pass that replaces it forever is CR
   -- 104.4b's draw (Departure.checkMandatoryLoop).
-  --
-  -- Not implemented: keeping the board before each pass, which CR 603.8
-  -- reads, for the next settle, here and in the EndCombatPhase arm (#5359).
-  let checkToFixpoint passes = do
-        begun <- State.gets GameState.lastChoice
-        performed <- Sba.performStateBasedActions (runDamageRewriteEffect runSubgame) []
-        runReplacementEffects runSubgame
-        passed <- Departure.passesSince begun passes
-        Departure.checkMandatoryLoop passed
-        ended <- State.gets (Maybe.isJust . GameState.result)
-        Monad.when (performed && not ended) (checkToFixpoint passed)
-  checkToFixpoint 0
+  Common.checkWithoutPriority runDamageRewriteEffect runReplacementEffects runSubgame
   -- CR 724.1d: the current phase and/or step ends; creatures and planeswalkers
   -- leave combat if this happened during one; the game skips straight to the
   -- cleanup step, or to a NEW cleanup step if this IS one.
@@ -1823,7 +1811,8 @@ endCombatPhase runDamageRewriteEffect runReplacementEffects runSubgame = do
           { GameState.scannedThrough = Natural.length (GameState.events gs),
             GameState.boardAfterEvent = Map.empty,
             GameState.boardBeforeEvent = Map.empty,
-            GameState.battlefieldWhenTriggered = Map.empty
+            GameState.battlefieldWhenTriggered = Map.empty,
+            GameState.heldBoards = []
           }
       -- CR 724.2b: exile every object on the stack, the resolving one included.
       -- Shared with the arm above down to the CR 400.7 detail that leaves
@@ -1833,15 +1822,7 @@ endCombatPhase runDamageRewriteEffect runReplacementEffects runSubgame = do
       -- CR 724.2c: check state-based actions, granting no priority and putting
       -- no triggered ability on the stack. To a fixpoint on CR 704.3's
       -- authority, as above.
-      let checkToFixpoint passes = do
-            begun <- State.gets GameState.lastChoice
-            performed <- Sba.performStateBasedActions (runDamageRewriteEffect runSubgame) []
-            runReplacementEffects runSubgame
-            passed <- Departure.passesSince begun passes
-            Departure.checkMandatoryLoop passed
-            ended <- State.gets (Maybe.isJust . GameState.result)
-            Monad.when (performed && not ended) (checkToFixpoint passed)
-      checkToFixpoint 0
+      Common.checkWithoutPriority runDamageRewriteEffect runReplacementEffects runSubgame
       -- CR 724.2d, in the rule's own sentence order: the phase ends, creatures
       -- and planeswalkers leave combat, "until end of combat" effects expire,
       -- and the game skips the steps between here and the next phase.

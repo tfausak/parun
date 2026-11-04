@@ -109,6 +109,7 @@ digest gs =
                 GameState.battlefieldWhenTriggered = Map.empty,
                 GameState.controlSample = Map.empty,
                 GameState.boardAtControlSample = Nothing,
+                GameState.heldBoards = [],
                 GameState.lastKnown = Map.empty,
                 GameState.stackArchive = Map.empty,
                 GameState.stackedIn = Map.empty,

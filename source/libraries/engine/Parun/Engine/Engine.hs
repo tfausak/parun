@@ -1231,7 +1231,11 @@ settleForPriority = Monad.void performSettle
 -- put on the stack: a player would receive priority now.
 performSettle :: Game Bool
 performSettle = do
-  acted <- settlePasses 0 []
+  -- CR 724.1f / 724.2f: the boards CR 724.1c's or 724.2c's check left behind
+  -- (Resolve.Common.checkWithoutPriority) open this settle's.
+  held <- State.gets GameState.heldBoards
+  State.modify' (\gs -> gs {GameState.heldBoards = []})
+  acted <- settlePasses 0 held
   State.modify' (Event.closeReveal RevealWindow.UntilPriority)
   pure acted
 

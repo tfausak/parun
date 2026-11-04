@@ -198,6 +198,11 @@ data GameState = MkGameState
     -- (`boardBeforeEvent`). Its own copy of this field and of the filed boards is
     -- empty.
     boardAtControlSample :: Maybe GameState,
+    -- | CR 603.8 across CR 724.1c's or 724.2c's check: the board before each
+    -- pass of it that performed a state-based action, oldest first, which the
+    -- next settle opens with (Parun.Engine.Engine.performSettle). Each entry's
+    -- own copy of this field is empty.
+    heldBoards :: [GameState],
     -- | How far the state-based action check has consumed the event log --
     -- CR 704.5h's and CR 903.9a's "since the last state-based action check".
     damageScannedThrough :: Natural.Natural,

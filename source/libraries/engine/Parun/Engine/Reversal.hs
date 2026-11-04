@@ -92,6 +92,7 @@ withoutAnnouncement before entry closed = do
   controlSample <- mapOf GameState.controlSample
   -- A sample, retaken at every check either side ran.
   boardAtControlSample <- newest GameState.boardAtControlSample
+  heldBoards <- one GameState.heldBoards
   damageScannedThrough <- one GameState.damageScannedThrough
   delayedTriggers <- seqOf GameState.delayedTriggers
   continuousEffects <- listOf GameState.continuousEffects
@@ -225,6 +226,7 @@ withoutAnnouncement before entry closed = do
         GameState.boardBeforeEvent = boardBeforeEvent,
         GameState.controlSample = controlSample,
         GameState.boardAtControlSample = boardAtControlSample,
+        GameState.heldBoards = heldBoards,
         GameState.damageScannedThrough = damageScannedThrough,
         GameState.delayedTriggers = delayedTriggers,
         GameState.continuousEffects = continuousEffects,

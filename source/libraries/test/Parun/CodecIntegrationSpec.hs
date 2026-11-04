@@ -404,6 +404,12 @@ gameStateRoundTripSpec s registry corpus = do
     let board = S.oneMountainState mountain Phase.PrecombatMain
     roundTrips "a board at a control sample" board {GameState.boardAtControlSample = Just board}
 
+  -- GameState.heldBoards, CR 603.8's boards across CR 724.1c's check, likewise.
+  Spec.it s "a held board round trips" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    let board = S.oneMountainState mountain Phase.PrecombatMain
+    roundTrips "a held board" board {GameState.heldBoards = [board]}
+
   Spec.it s "a non-empty stack round trips" $ do
     mountain <- S.printingOf s registry "Mountain"
     bolt <- S.printingOf s registry "Lightning Bolt"
