@@ -16,10 +16,6 @@
           {
             "card": "Plains",
             "label": "p1"
-          },
-          {
-            "card": "Plains",
-            "label": "p2"
           }
         ],
         "hand": [
@@ -113,7 +109,6 @@
           "mana": [
             "$p1",
             "$elf",
-            "$p2",
             null
           ],
           "object": "$ape",
