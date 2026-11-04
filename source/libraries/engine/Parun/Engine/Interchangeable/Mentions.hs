@@ -187,6 +187,8 @@ import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.DieRollR as DieRollR
 import qualified Parun.Types.Discard as Discard
 import qualified Parun.Types.DiscardCards as DiscardCards
+import qualified Parun.Types.DiscardSubject as DiscardSubject
+import qualified Parun.Types.DiscardTrigger as DiscardTrigger
 import qualified Parun.Types.Divide as Divide
 import qualified Parun.Types.DoesNotUntapNext as DoesNotUntapNext
 import qualified Parun.Types.Draw as Draw
@@ -3025,14 +3027,9 @@ triggerConditionNames asking x = case x of
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> mempty
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> mempty
   TriggerCondition.PlayerTookInitiative -> mempty
-  TriggerCondition.SelfCycled -> mempty
   TriggerCondition.SelfRevealedForMiracle -> mempty
   TriggerCondition.RevealedThisWay (RevealedThisWay.MkRevealedThisWay filter_ _timing) -> filterNames asking filter_
-  TriggerCondition.SelfDiscarded -> mempty
-  TriggerCondition.SelfExiledForMadness -> mempty
-  TriggerCondition.PlayerDiscards playerActsOn -> playerActsOnNames asking playerActsOn
-  TriggerCondition.PlayerDiscardsCards playerActsOn -> playerActsOnNames asking playerActsOn
-  TriggerCondition.PlayerCycles _playerRelation -> mempty
+  TriggerCondition.Discards discardTrigger -> discardTriggerNames asking discardTrigger
   TriggerCondition.PlayerDrawsNthCard _playerDrawsNthCard -> mempty
   TriggerCondition.SelfAttacks triggerFrequency -> triggerFrequencyNames asking HistoryRead.Attacks triggerFrequency
   TriggerCondition.SelfAttacksWithAnother filter_ -> filterNames asking filter_
@@ -3143,6 +3140,12 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SelfBecomesUnattachedFrom filter_ -> filterNames asking filter_
   TriggerCondition.Reflexive -> mempty
   TriggerCondition.PlacesSticker placesSticker -> filterNames asking (PlacesSticker.object placesSticker)
+
+discardTriggerNames :: (Monoid r) => Asking r -> DiscardTrigger.DiscardTrigger -> r
+discardTriggerNames asking x = case x of
+  DiscardTrigger.MkDiscardTrigger subject _way _batching -> case subject of
+    DiscardSubject.Self -> mempty
+    DiscardSubject.Discarder playerActsOn -> playerActsOnNames asking playerActsOn
 
 lifeTriggerNames :: (Monoid r) => Asking r -> LifeTrigger.LifeTrigger -> r
 lifeTriggerNames asking x = case x of

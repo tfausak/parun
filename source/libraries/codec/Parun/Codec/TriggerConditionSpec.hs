@@ -33,6 +33,9 @@ import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.DieResult as DieResult
+import qualified Parun.Types.DiscardSubject as DiscardSubject
+import qualified Parun.Types.DiscardTrigger as DiscardTrigger
+import qualified Parun.Types.DiscardWay as DiscardWay
 import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Holder as Holder
@@ -256,13 +259,14 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       TriggerCondition.PlayerTookInitiative
       " {\"type\":\"PlayerTookInitiative\"} "
-  -- CR 702.29c.
-  Spec.it s "SelfCycled" $
+  -- CR 702.29c's "when you cycle this card"; the payload's own cases are
+  -- Parun.Codec.DiscardTriggerSpec's.
+  Spec.it s "Discards" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      TriggerCondition.SelfCycled
-      " {\"type\":\"SelfCycled\"} "
+      (TriggerCondition.Discards (DiscardTrigger.MkDiscardTrigger DiscardSubject.Self DiscardWay.Cycled Batching.EachOccurrence))
+      " {\"type\":\"Discards\",\"value\":{\"subject\":{\"type\":\"Self\"},\"way\":{\"type\":\"Cycled\"}}} "
   -- CR 702.94a's linked half.
   Spec.it s "SelfRevealedForMiracle" $
     Common.assertCodec
@@ -277,59 +281,6 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.RevealedThisWay (RevealedThisWay.MkRevealedThisWay (Filter.HasCardType CardType.Land) Nothing))
       " {\"type\":\"RevealedThisWay\",\"value\":{\"card\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}} "
-  -- CR 701.9a's discard, self-scoped: Bartered Cow's "when you discard this
-  -- card". Nullary, SelfCycled's shape -- the ability is printed on the card that
-  -- is discarded, so there is nothing left to say.
-  Spec.it s "SelfDiscarded" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      TriggerCondition.SelfDiscarded
-      " {\"type\":\"SelfDiscarded\"} "
-  -- CR 702.35a's linked half, which is NOT SelfDiscarded: the card is exiled by
-  -- madness's own replacement rather than by whatever else redirected the discard.
-  Spec.it s "SelfExiledForMadness" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      TriggerCondition.SelfExiledForMadness
-      " {\"type\":\"SelfExiledForMadness\"} "
-  -- CR 701.9a's discard. Both relations and a non-trivial Filter, since each is
-  -- content: Megrim's "an opponent" against Waste Not's "a creature card".
-  Spec.it s "PlayerDiscards round-trips both relations and a Filter" $ do
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PlayerDiscards (PlayerActsOn.MkPlayerActsOn PlayerRelation.Opponent (Filter.HasCardType CardType.Creature)))
-      " {\"type\":\"PlayerDiscards\",\"value\":{\"player\":{\"type\":\"Opponent\"},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PlayerDiscards (PlayerActsOn.MkPlayerActsOn PlayerRelation.You (Filter.And [])))
-      " {\"type\":\"PlayerDiscards\",\"value\":{\"player\":{\"type\":\"You\"},\"filter\":{\"type\":\"And\",\"value\":[]}}} "
-  -- CR 702.29a's cycling read as a discard, watched by a bystander: Prickly
-  -- Marmoset's "whenever you cycle a card". Both relations, for PlayerDiscards'
-  -- reason, and the tag is what keeps it distinct on the wire from that
-  -- cause-blind sibling.
-  Spec.it s "PlayerCycles round-trips both relations" $ do
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PlayerCycles PlayerRelation.You)
-      " {\"type\":\"PlayerCycles\",\"value\":{\"type\":\"You\"}} "
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PlayerCycles PlayerRelation.Opponent)
-      " {\"type\":\"PlayerCycles\",\"value\":{\"type\":\"Opponent\"}} "
-  -- CR 603.2c's batch reading of PlayerDiscards, carrying the same payload, so
-  -- the tag is all that keeps the two readings apart on the wire.
-  Spec.it s "PlayerDiscardsCards round-trips under its own tag" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PlayerDiscardsCards (PlayerActsOn.MkPlayerActsOn PlayerRelation.You (Filter.And [])))
-      " {\"type\":\"PlayerDiscardsCards\",\"value\":{\"player\":{\"type\":\"You\"},\"filter\":{\"type\":\"And\",\"value\":[]}}} "
   -- CR 121.1's Nth draw of a turn. The relation and the ordinal are both content,
   -- and the ordinal is not 1, so a codec dropping it would fail rather than
   -- round-trip the default.
@@ -393,7 +344,7 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.CreatureAttacks (Filter.HeldBy Holder.Controller PlayerRelation.You))
       " {\"type\":\"CreatureAttacks\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}} "
-  -- CR 508.3d. All THREE relations, unlike PlayerCycles' two: rule 508.3d's
+  -- CR 508.3d. All THREE relations: rule 508.3d's
   -- "[a player]" is printed as "you" (Boggart Prankster), as "a player" (Avatar
   -- Roku, Firebender) and as "an opponent" (Ever-Watching Threshold).
   Spec.it s "PlayerAttacks round-trips all three relations" $ do
@@ -763,8 +714,7 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       TriggerCondition.HauntedCreatureDies
       " {\"type\":\"HauntedCreatureDies\"} "
-  -- CR 701.6a's countering. Both relations, for the same reason
-  -- PlayerDiscards has both.
+  -- CR 701.6a's countering. Both relations: each is content.
   Spec.it s "SpellOrAbilityCounters round-trips both relations" $ do
     Common.assertCodec
       s
@@ -1026,8 +976,8 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.CausedBy CausedBy.MkCausedBy {CausedBy.controller = PlayerRelation.Opponent, CausedBy.condition = TriggerCondition.PlayerDiscards (PlayerActsOn.MkPlayerActsOn PlayerRelation.You (Filter.And []))})
-      " {\"type\":\"CausedBy\",\"value\":{\"controller\":{\"type\":\"Opponent\"},\"condition\":{\"type\":\"PlayerDiscards\",\"value\":{\"player\":{\"type\":\"You\"},\"filter\":{\"type\":\"And\",\"value\":[]}}}}} "
+      (TriggerCondition.CausedBy CausedBy.MkCausedBy {CausedBy.controller = PlayerRelation.Opponent, CausedBy.condition = TriggerCondition.Discards (DiscardTrigger.MkDiscardTrigger (DiscardSubject.Discarder (PlayerActsOn.MkPlayerActsOn PlayerRelation.You (Filter.And []))) DiscardWay.AnyDiscard Batching.EachOccurrence)})
+      " {\"type\":\"CausedBy\",\"value\":{\"controller\":{\"type\":\"Opponent\"},\"condition\":{\"type\":\"Discards\",\"value\":{\"subject\":{\"type\":\"Discarder\",\"value\":{\"player\":{\"type\":\"You\"},\"filter\":{\"type\":\"And\",\"value\":[]}}}}}}} "
   Spec.it s "AnyOf round-trips both of its branches" $
     Common.assertCodec
       s
@@ -1336,8 +1286,9 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.PlayerLosesCoinFlip PlayerRelation.Opponent)
       " {\"type\":\"PlayerLosesCoinFlip\",\"value\":{\"type\":\"Opponent\"}} "
-  -- CR 702.170a. Nullary, SelfCycled's shape: the ability is printed on the card
-  -- that becomes plotted, so there is nothing to select among.
+  -- CR 702.170a. Nullary, SelfRevealedForMiracle's shape: the ability is
+  -- printed on the card that becomes plotted, so there is nothing to select
+  -- among.
   Spec.it s "SelfBecomesPlotted round-trips" $
     Common.assertCodec
       s

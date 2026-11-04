@@ -1524,7 +1524,7 @@ connive resolving source controller legal (Connive.Type.MkConnive quantity ref) 
 -- and buried through the same funnel the counted branch below uses, so CR
 -- 701.9a's move is RECORDED as a discard -- writing it as a zone change instead
 -- would land every card in the right graveyard and leave
--- TriggerCondition.SelfDiscarded silent.
+-- TriggerCondition.Discards silent.
 --
 -- CR 701.9b's two exceptions are refs that ASK rather than read, through
 -- askingObjects: a random discard (Hymn to Tourach), and a card another player

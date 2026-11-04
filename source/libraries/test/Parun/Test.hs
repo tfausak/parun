@@ -290,6 +290,9 @@ import qualified Parun.Codec.DifferentInSpec
 import qualified Parun.Codec.DiscardCardsSpec
 import qualified Parun.Codec.DiscardCauseSpec
 import qualified Parun.Codec.DiscardSpec
+import qualified Parun.Codec.DiscardSubjectSpec
+import qualified Parun.Codec.DiscardTriggerSpec
+import qualified Parun.Codec.DiscardWaySpec
 import qualified Parun.Codec.DiscardedSpec
 import qualified Parun.Codec.DistinctOfSpec
 import qualified Parun.Codec.DivideSpec
@@ -1255,6 +1258,9 @@ spec s registry corpus = do
   Parun.Codec.DiscardCauseSpec.spec s
   Parun.Codec.DiscardedSpec.spec s
   Parun.Codec.DiscardSpec.spec s
+  Parun.Codec.DiscardSubjectSpec.spec s
+  Parun.Codec.DiscardTriggerSpec.spec s
+  Parun.Codec.DiscardWaySpec.spec s
   Parun.Codec.DistinctOfSpec.spec s
   Parun.Codec.DoesNotUntapNextSpec.spec s
   Parun.Codec.DrawCountRewriteSpec.spec s

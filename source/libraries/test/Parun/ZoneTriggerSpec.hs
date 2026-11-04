@@ -93,6 +93,9 @@ import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.DiscardCards as DiscardCards
 import qualified Parun.Types.DiscardCause as DiscardCause
+import qualified Parun.Types.DiscardSubject as DiscardSubject
+import qualified Parun.Types.DiscardTrigger as DiscardTrigger
+import qualified Parun.Types.DiscardWay as DiscardWay
 import qualified Parun.Types.Discarded as Discarded
 import qualified Parun.Types.DrawnUnder as DrawnUnder
 import qualified Parun.Types.Drew as Drew
@@ -1896,29 +1899,24 @@ representativeEvents cond =
         -- CR 726.2's third ability is controlled by the taker, so alice's take.
         TriggerCondition.PlayerTookInitiative -> one (GameEvent.TookInitiative S.alice)
         -- CR 702.179d's own event, an opponent's loss.
-        TriggerCondition.SelfCycled -> one (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.ToPayCyclingCost Nothing Nothing))
         -- CR 702.94a's cause, so the event is one this condition genuinely
         -- admits; an Ordinary reveal would pin nothing.
         TriggerCondition.SelfRevealedForMiracle -> one (GameEvent.Revealed (Revealed.MkRevealed S.alice departed (RevealCause.ForMiracle (Cost.Type.MkCost {Cost.Type.mana = Nothing, Cost.Type.components = []})) S.emptyCharacteristics))
         TriggerCondition.RevealedThisWay _ -> one (GameEvent.Revealed (Revealed.MkRevealed S.alice departed (RevealCause.AsDrawnUnder (DrawnUnder.MkDrawnUnder departed RevealTiming.AsDrawn)) S.emptyCharacteristics))
-        -- BOTH causes, which is this condition's whole difference from
-        -- SelfCycled above: CR 702.29a makes cycling a discard, so an ordinary
-        -- discard and a cycle are each an event it genuinely admits, and an arm
-        -- that read the cause would pin nothing for one of them.
-        TriggerCondition.SelfDiscarded ->
-          noTable (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.Ordinary Nothing Nothing))
-            NonEmpty.:| [noTable (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.ToPayCyclingCost Nothing Nothing))]
-        -- CR 702.35a's own discard: the madness set NON-EMPTY, which is the
-        -- only event this condition admits -- the cause is irrelevant to it and
-        -- the flag is not, so a False event would pin nothing.
-        TriggerCondition.SelfExiledForMadness -> one (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.Ordinary (Just MadnessCost.OwnManaCost) Nothing))
-        TriggerCondition.PlayerDiscards _ -> one (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.Ordinary Nothing Nothing))
-        -- The same event, which binds this batch reading's one card as its amount.
-        TriggerCondition.PlayerDiscardsCards _ -> one (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.Ordinary Nothing Nothing))
-        -- The CYCLING cause, which is the only one this condition admits -- an
-        -- Ordinary discard is an event it rejects, and eventBindings is consulted
-        -- only for a match, so it would pin nothing.
-        TriggerCondition.PlayerCycles _ -> one (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.ToPayCyclingCost Nothing Nothing))
+        -- Each way gets the events it genuinely admits, an event it rejected
+        -- pinning nothing (eventBindings is consulted only for a match): BOTH
+        -- causes for AnyDiscard, since CR 702.29a makes cycling a discard; the
+        -- cycling cause alone for Cycled; and for ExiledForMadness the madness
+        -- set NON-EMPTY, the cause being irrelevant to it. A OneOrMore batch
+        -- binds its one card as its amount.
+        TriggerCondition.Discards discardTrigger -> case DiscardTrigger.way discardTrigger of
+          DiscardWay.AnyDiscard ->
+            noTable (discarded DiscardCause.Ordinary Nothing)
+              NonEmpty.:| [noTable (discarded DiscardCause.ToPayCyclingCost Nothing)]
+          DiscardWay.Cycled -> one (discarded DiscardCause.ToPayCyclingCost Nothing)
+          DiscardWay.ExiledForMadness -> one (discarded DiscardCause.Ordinary (Just MadnessCost.OwnManaCost))
+          where
+            discarded cause madness = GameEvent.Discarded (Discarded.MkDiscarded S.alice departed cause madness Nothing)
         -- The ordinal matches the condition's own, so the event is one this
         -- condition genuinely admits -- an event it rejected would pin nothing,
         -- eventBindings being consulted only for a match.
@@ -2450,15 +2448,15 @@ everyTriggerCondition =
     TriggerCondition.CreatureDealtCombatDamageToMonarch,
     TriggerCondition.CreaturesDealtCombatDamageToInitiative,
     TriggerCondition.PlayerTookInitiative,
-    TriggerCondition.SelfCycled,
     TriggerCondition.SelfRevealedForMiracle,
     TriggerCondition.RevealedThisWay (RevealedThisWay.MkRevealedThisWay (Filter.Type.And []) Nothing),
-    TriggerCondition.SelfDiscarded,
-    TriggerCondition.SelfExiledForMadness,
-    TriggerCondition.PlayerDiscards (PlayerActsOn.MkPlayerActsOn PlayerRelation.Opponent (Filter.Type.And [])),
-    TriggerCondition.PlayerDiscardsCards (PlayerActsOn.MkPlayerActsOn PlayerRelation.You (Filter.Type.And [])),
-    TriggerCondition.PlayerCycles PlayerRelation.You,
-    TriggerCondition.PlayerCycles PlayerRelation.Opponent,
+    TriggerCondition.Discards (DiscardTrigger.MkDiscardTrigger DiscardSubject.Self DiscardWay.AnyDiscard Batching.EachOccurrence),
+    TriggerCondition.Discards (DiscardTrigger.MkDiscardTrigger DiscardSubject.Self DiscardWay.Cycled Batching.EachOccurrence),
+    TriggerCondition.Discards (DiscardTrigger.MkDiscardTrigger DiscardSubject.Self DiscardWay.ExiledForMadness Batching.EachOccurrence),
+    TriggerCondition.Discards (DiscardTrigger.MkDiscardTrigger (DiscardSubject.Discarder (PlayerActsOn.MkPlayerActsOn PlayerRelation.Opponent (Filter.Type.And []))) DiscardWay.AnyDiscard Batching.EachOccurrence),
+    TriggerCondition.Discards (DiscardTrigger.MkDiscardTrigger (DiscardSubject.Discarder (PlayerActsOn.MkPlayerActsOn PlayerRelation.You (Filter.Type.And []))) DiscardWay.AnyDiscard Batching.OneOrMore),
+    TriggerCondition.Discards (DiscardTrigger.MkDiscardTrigger (DiscardSubject.Discarder (PlayerActsOn.MkPlayerActsOn PlayerRelation.You (Filter.Type.And []))) DiscardWay.Cycled Batching.EachOccurrence),
+    TriggerCondition.Discards (DiscardTrigger.MkDiscardTrigger (DiscardSubject.Discarder (PlayerActsOn.MkPlayerActsOn PlayerRelation.Opponent (Filter.Type.And []))) DiscardWay.Cycled Batching.EachOccurrence),
     TriggerCondition.PlayerDrawsNthCard (PlayerDrawsNthCard.MkPlayerDrawsNthCard PlayerRelation.You (Just 2)),
     TriggerCondition.PlayerDrawsNthCard (PlayerDrawsNthCard.MkPlayerDrawsNthCard PlayerRelation.You Nothing),
     TriggerCondition.SelfAttacks TriggerFrequency.EveryTime,

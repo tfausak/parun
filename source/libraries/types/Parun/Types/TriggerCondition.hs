@@ -20,6 +20,7 @@ import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
 import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.DieResult as DieResult
+import qualified Parun.Types.DiscardTrigger as DiscardTrigger
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LifeTrigger as LifeTrigger
@@ -122,28 +123,15 @@ data TriggerCondition
     CreaturesDealtCombatDamageToInitiative
   | -- | CR 726.2: "you" took the initiative. Borne by no card.
     PlayerTookInitiative
-  | -- | CR 702.29c: "when you cycle this card". Self-scoped.
-    SelfCycled
   | -- | CR 702.94a: "when you reveal this card this way" -- miracle's triggered
     -- half, linked (CR 603.11) to the static half. Self-scoped.
     SelfRevealedForMiracle
   | -- | CR 603.11 / 607.2h: "whenever you reveal a [quality] card this way" --
     -- the triggered half linked to the bearer's draw-time reveal (Rowen).
     RevealedThisWay RevealedThisWay.RevealedThisWay
-  | -- | CR 701.9a: "when you discard this card" (Bartered Cow). Self-scoped.
-    SelfDiscarded
-  | -- | CR 702.35a: "when this card is exiled this way" -- madness's triggered
-    -- half, linked (CR 603.11) to the static half that exiled it. Self-scoped.
-    SelfExiledForMadness
-  | -- | CR 701.9a read by a bystander: "whenever [a player] discards a [kind of]
-    -- card" (Megrim, Waste Not).
-    PlayerDiscards PlayerActsOn.PlayerActsOn
-  | -- | CR 603.2c's batch reading of the arm above: "whenever you discard one or
-    -- more cards" (Magmakin Artillerist), once per discard event.
-    PlayerDiscardsCards PlayerActsOn.PlayerActsOn
-  | -- | "Whenever you cycle a card" (Prickly Marmoset) -- PlayerDiscards
-    -- narrowed to Parun.Types.DiscardCause.ToPayCyclingCost by CR 702.29a.
-    PlayerCycles PlayerRelation.PlayerRelation
+  | -- | CR 701.9a / 702.29c / 702.35a: a card was discarded (Bartered Cow,
+    -- Megrim, Prickly Marmoset, madness's linked half).
+    Discards DiscardTrigger.DiscardTrigger
   | -- | CR 121.1: "whenever [a player] draws their Nth card each turn" (Erudite
     -- Wizard), by equality on the ordinal the event carries; without an ordinal,
     -- "whenever [a player] draws a card" (Teferi, Hero of Dominaria's emblem).

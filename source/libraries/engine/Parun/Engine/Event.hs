@@ -11022,14 +11022,9 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> False
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> False
   TriggerCondition.PlayerTookInitiative -> False
-  TriggerCondition.SelfCycled -> False
   TriggerCondition.SelfRevealedForMiracle -> False
   TriggerCondition.RevealedThisWay _ -> False
-  TriggerCondition.SelfDiscarded -> False
-  TriggerCondition.SelfExiledForMadness -> False
-  TriggerCondition.PlayerDiscards _ -> False
-  TriggerCondition.PlayerDiscardsCards _ -> False
-  TriggerCondition.PlayerCycles _ -> False
+  TriggerCondition.Discards _ -> False
   TriggerCondition.PlayerDrawsNthCard {} -> False
   -- CR 508.1a makes this the ACTIVE player's turn, which is not the same thing:
   -- CR 109.5's "you" is the ability's controller, and a stolen creature attacks on

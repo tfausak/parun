@@ -19,6 +19,7 @@ import qualified Parun.Codec.DealsDamageToPermanent as DealsDamageToPermanent
 import qualified Parun.Codec.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Codec.DealtDamage as DealtDamage
 import qualified Parun.Codec.DieResult as DieResult
+import qualified Parun.Codec.DiscardTrigger as DiscardTrigger
 import qualified Parun.Codec.Filter as Filter
 import qualified Parun.Codec.Keyword as Keyword
 import qualified Parun.Codec.LifeTrigger as LifeTrigger
@@ -107,14 +108,9 @@ codec =
           Arm.payload "SelfBecomesBlockedByOneOrMore" filterCodec TriggerCondition.SelfBecomesBlockedByOneOrMore (\x -> case x of TriggerCondition.SelfBecomesBlockedByOneOrMore y -> Just y; _ -> Nothing),
           Arm.payload "CreatureBecomesBlockedByAtLeast" CreatureBecomesBlockedByAtLeast.codec TriggerCondition.CreatureBecomesBlockedByAtLeast (\x -> case x of TriggerCondition.CreatureBecomesBlockedByAtLeast y -> Just y; _ -> Nothing),
           Arm.payload "CreatureAttacksUnblocked" filterCodec TriggerCondition.CreatureAttacksUnblocked (\x -> case x of TriggerCondition.CreatureAttacksUnblocked y -> Just y; _ -> Nothing),
-          Arm.nullary "SelfCycled" TriggerCondition.SelfCycled,
           Arm.nullary "SelfRevealedForMiracle" TriggerCondition.SelfRevealedForMiracle,
           Arm.payload "RevealedThisWay" RevealedThisWay.codec TriggerCondition.RevealedThisWay (\x -> case x of TriggerCondition.RevealedThisWay y -> Just y; _ -> Nothing),
-          Arm.nullary "SelfExiledForMadness" TriggerCondition.SelfExiledForMadness,
-          Arm.nullary "SelfDiscarded" TriggerCondition.SelfDiscarded,
-          Arm.payload "PlayerDiscards" PlayerActsOn.codec TriggerCondition.PlayerDiscards (\x -> case x of TriggerCondition.PlayerDiscards y -> Just y; _ -> Nothing),
-          Arm.payload "PlayerDiscardsCards" PlayerActsOn.codec TriggerCondition.PlayerDiscardsCards (\x -> case x of TriggerCondition.PlayerDiscardsCards y -> Just y; _ -> Nothing),
-          Arm.payload "PlayerCycles" PlayerRelation.codec TriggerCondition.PlayerCycles (\x -> case x of TriggerCondition.PlayerCycles y -> Just y; _ -> Nothing),
+          Arm.payload "Discards" DiscardTrigger.codec TriggerCondition.Discards (\x -> case x of TriggerCondition.Discards y -> Just y; _ -> Nothing),
           Arm.payload "PlayerDrawsNthCard" PlayerDrawsNthCard.codec TriggerCondition.PlayerDrawsNthCard (\x -> case x of TriggerCondition.PlayerDrawsNthCard y -> Just y; _ -> Nothing),
           Arm.nullary "SelfPutIntoGraveyardFromLibrary" TriggerCondition.SelfPutIntoGraveyardFromLibrary,
           Arm.nullary "SelfPutIntoGraveyardFromAnywhere" TriggerCondition.SelfPutIntoGraveyardFromAnywhere,
@@ -249,14 +245,9 @@ tagOf x = case x of
   TriggerCondition.SelfBecomesBlockedByOneOrMore {} -> "SelfBecomesBlockedByOneOrMore"
   TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> "CreatureBecomesBlockedByAtLeast"
   TriggerCondition.CreatureAttacksUnblocked {} -> "CreatureAttacksUnblocked"
-  TriggerCondition.SelfCycled {} -> "SelfCycled"
   TriggerCondition.SelfRevealedForMiracle {} -> "SelfRevealedForMiracle"
   TriggerCondition.RevealedThisWay {} -> "RevealedThisWay"
-  TriggerCondition.SelfExiledForMadness {} -> "SelfExiledForMadness"
-  TriggerCondition.SelfDiscarded {} -> "SelfDiscarded"
-  TriggerCondition.PlayerDiscards {} -> "PlayerDiscards"
-  TriggerCondition.PlayerDiscardsCards {} -> "PlayerDiscardsCards"
-  TriggerCondition.PlayerCycles {} -> "PlayerCycles"
+  TriggerCondition.Discards {} -> "Discards"
   TriggerCondition.PlayerDrawsNthCard {} -> "PlayerDrawsNthCard"
   TriggerCondition.SelfPutIntoGraveyardFromLibrary {} -> "SelfPutIntoGraveyardFromLibrary"
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere {} -> "SelfPutIntoGraveyardFromAnywhere"
