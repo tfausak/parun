@@ -6,11 +6,11 @@ module Parun.Types.ReplacementBucket where
 --
 -- Every bucket has a producer. SelfReplacement (616.1a) takes candidates by
 -- their ORIGIN rather than their payload (Parun.Types.ReplacementOrigin); Galvanic
--- Blast creates one. ControlOnEntry (616.1b) is EntryR UnderSourceControl, from
--- Gather Specimens. CopyOnEntry (616.1c) is EntryR AsCopy, from Clone, split from
--- EntryR ChoiceOf, which stays in Other with every other arm. BackFaceOnEntry
--- (616.1d) is EntryR EntersTransformed, from daybound's "if it is
--- night ... it enters transformed" (CR 702.145b). Not CR 712.14a's "put onto the
+-- Blast creates one. ControlOnEntry (616.1b) is EntryR UnderControlOf, from
+-- Gather Specimens and Captive Audience. CopyOnEntry (616.1c) is EntryR
+-- AsCopy, from Clone, split from EntryR ChoiceOf, which stays in Other with
+-- every other arm. BackFaceOnEntry (616.1d) is EntryR EntersTransformed, from
+-- daybound's "if it is night ... it enters transformed" (CR 702.145b). Not CR 712.14a's "put onto the
 -- battlefield transformed", which is an instruction the effect carries
 -- (Parun.Types.EntryRiders) rather than a replacement effect, and so takes no
 -- bucket at all.

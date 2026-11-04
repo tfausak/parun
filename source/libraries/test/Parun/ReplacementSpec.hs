@@ -1086,7 +1086,7 @@ gatherSpecimensSpec s registry =
                   Spec.assertEqWith s "carol named bob's row, so alice's applies second and keeps it" (Projection.controllerOf afterBob namedBob) (Just S.alice)
                 _ -> Spec.assertFailure s "the creature did not reach the battlefield"
         _ -> Spec.assertFailure s "both Gather Specimens rows should be floating"
-    -- WHY CR 800.4a ends the row rather than Event's UnderSourceControl arm
+    -- WHY CR 800.4a ends the row rather than Event's UnderControlOf arm
     -- refusing to name a departed player. A guard inside that arm would leave
     -- alice's row a CR 616.1 candidate, and Replacement.readsApplier answers True
     -- for that rewrite, so the pair stays distinguishable and carol is asked

@@ -2971,16 +2971,22 @@ apply batch applied candidate event =
       -- would not show it. All five arms above land on the object for the same
       -- reason.
       --
-      -- No prompt, and none is owed: CR 616.1b's rewrite has no choice in it,
-      -- and the choice the rule DOES describe -- which of several
-      -- control-modifying effects to apply -- is `choose`'s, one level up.
+      -- CR 616.1b's own choice -- which of several control-modifying effects
+      -- to apply -- is `choose`'s, one level up.
       --
       -- No roster check on `you`, and none is owed: CR 800.4a's second clause
       -- ends a floating control-on-entry row the moment its controller leaves
       -- (Departure.givesControlOnEntryTo), so no row that reaches here can name a
       -- departed player. Parun.ReplacementSpec's "CR 800.4a a control-on-entry row
       -- ends when its controller leaves the game" is what proves it.
-      EntryRewrite.UnderSourceControl -> do
+      --
+      -- Captive Audience's "an opponent of your choice" is the same write with
+      -- the recipient chosen from the relation, through Players.chooseOne as
+      -- ChoosePlayer's arm asks: `you` choose, and an offer of one member asks
+      -- nothing, which is what keeps Gather Specimens' You unprompted.
+      -- data/scenarios' captive-audience-enters-under-the-control-of-the-chosen-opponent
+      -- proves it.
+      EntryRewrite.UnderControlOf relation -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
         case ReplacementCandidate.controller candidate of
           -- CR 109.5 has no answer: a permanent-sourced instance whose source
@@ -2988,9 +2994,14 @@ apply batch applied candidate event =
           -- the entry alone rather than guessing at a player.
           Nothing -> pure (Just event)
           Just you -> do
-            State.modify' $ \gs ->
-              let claim obj = obj {Object.enteredUnder = Just you}
-               in gs {GameState.objects = Map.adjust claim oid (GameState.objects gs)}
+            gs <- State.get
+            recipient <- Players.chooseOne you oid Nothing (Players.offer you gs relation)
+            -- Nobody in the relation is a board CR 104.2a has already ended,
+            -- and leaves the entry alone, as the arm above does.
+            Monad.forM_ recipient $ \player ->
+              State.modify' $ \g ->
+                let claim obj = obj {Object.enteredUnder = Just player}
+                 in g {GameState.objects = Map.adjust claim oid (GameState.objects g)}
             pure (Just event)
       -- CR 614.1c: Shimatsu the Bloodcloaked. "As this creature enters, sacrifice
       -- any number of permanents. This creature enters with that many +1/+1
@@ -3366,7 +3377,7 @@ apply batch applied candidate event =
       -- Object.attachedTo back off the entered object for that reason.
       --
       -- THE CONTROLLER is read LIVE (Projection.controllerOf) rather than off the
-      -- move's `under`, so an EntryRewrite.UnderSourceControl applied earlier in
+      -- move's `under`, so an EntryRewrite.UnderControlOf applied earlier in
       -- this same CR 616.1 loop decides whose "you control" this is.
       --
       -- MINUS `batch` and minus GameState.enteringSubjects, which is CR 614.12a:
@@ -3727,7 +3738,7 @@ apply batch applied candidate event =
       -- transitions from untapped to tapped and nothing watching for that can
       -- fire -- which is CR 603.2e's own sentence about a permanent that enters in
       -- that state. Stamping the ALREADY-MATERIALIZED incarnation is observationally the same
-      -- as minting it tapped, on UnderSourceControl's footing above: runEntry
+      -- as minting it tapped, on UnderControlOf's footing above: runEntry
       -- finishes before the Moved event is recorded, so no trigger scan and no
       -- state-based action can see the interim object.
       --
@@ -3847,7 +3858,7 @@ apply batch applied candidate event =
       -- SacrificeAnyNumber's posture, and what makes `readsApplier` answer False
       -- for this arm. Read NOW rather than at the drain, because a later rewrite
       -- in the same CR 616.1 loop may hand the permanent to someone else
-      -- (UnderSourceControl).
+      -- (UnderControlOf).
       --
       -- NO CONDITION asked here. Rule 702.54a's is Bloodthirst's and lives in
       -- Replacement.admitsEntry; this arm's producer states its own on CR 604.2's

@@ -261,14 +261,14 @@ spec s = Spec.describe s "Parun.Codec.EntryRewrite" $ do
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
       (EntryRewrite.OrTapped (EntryPrice.PayLife 3))
       " {\"type\":\"OrTapped\",\"value\":{\"type\":\"PayLife\",\"value\":3}} "
-  -- CR 616.1b: a control rewrite, payload-free because CR 109.5 derives the
-  -- player.
-  Spec.it s "UnderSourceControl (Gather Specimens)" $
+  -- CR 616.1b: a control rewrite, carrying the recipient's relation to the
+  -- source's controller.
+  Spec.it s "UnderControlOf (Captive Audience)" $
     Common.assertCodec
       s
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
-      EntryRewrite.UnderSourceControl
-      " {\"type\":\"UnderSourceControl\"} "
+      (EntryRewrite.UnderControlOf PlayerRelation.Opponent)
+      " {\"type\":\"UnderControlOf\",\"value\":{\"type\":\"Opponent\"}} "
   -- CR 614.1c / 701.21a: an as-enters sacrifice of any number, carrying both the
   -- criterion the chosen permanents must match -- Shimatsu the Bloodcloaked's is
   -- "any number of permanents", the empty conjunction -- and the counter kind the

@@ -1800,7 +1800,7 @@ addFilter filter_ (filters, quantities) = (filter_ : filters, quantities)
 -- card data, none of which can name a slot.
 --
 -- Every arm here is a REGRESSION FENCE rather than a proven behaviour: the
--- Effect.Replace rows in data/cards/ carry Tapped, UnderSourceControl (Gather
+-- Effect.Replace rows in data/cards/ carry Tapped, UnderControlOf (Gather
 -- Specimens) and WithCounters (Zameck Guildmage), and none of the three names a
 -- slot -- Zameck's count is a Quantity.Literal -- so neutralizing any arm leaves
 -- the whole suite green. They are written because the narrowing one caller over
@@ -1829,7 +1829,7 @@ entryRewriteReads rewrite = case rewrite of
   -- keywords are not reported either. A quoted ability's slots are its own,
   -- bound when IT resolves, CopyException.GainAbility's answer.
   EntryRewrite.EntersWith entersWith -> ([], foldMap (Map.elems . WithCounters.counters) (EntersWith.counters entersWith))
-  EntryRewrite.UnderSourceControl -> ([], [])
+  EntryRewrite.UnderControlOf _ -> ([], [])
   -- BOTH halves: the permanents the sacrifice may take, and CR 702.82a's
   -- per-sacrifice multiplier beside them, which is a Quantity that may name a
   -- slot exactly as the WithCounters arm above is.
@@ -2046,7 +2046,7 @@ entryRewriteEffects rewrite = case rewrite of
   EntryRewrite.ChooseCardName _ -> []
   EntryRewrite.WithCounters _ -> []
   EntryRewrite.EntersWith _ -> []
-  EntryRewrite.UnderSourceControl -> []
+  EntryRewrite.UnderControlOf _ -> []
   EntryRewrite.SacrificeAnyNumber _ -> []
   EntryRewrite.SacrificeToEnter _ -> []
   EntryRewrite.Amplify _ -> []

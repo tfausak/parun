@@ -5352,7 +5352,7 @@ entryRewriteFilters entryRewrite = case entryRewrite of
   -- The quoted abilities are swept by grantedModifications instead
   -- (entryQuotedAbilities), for copyExceptionFilters' GainAbility reason.
   EntryRewrite.EntersWith e -> foldMap withCountersFilters (EntersWith.counters e) <> concatMap keywordFilters (Set.toList (EntersWith.keywords e))
-  EntryRewrite.UnderSourceControl -> []
+  EntryRewrite.UnderControlOf _ -> []
   EntryRewrite.Riot -> []
   EntryRewrite.Unleash -> []
   EntryRewrite.Sunburst -> []

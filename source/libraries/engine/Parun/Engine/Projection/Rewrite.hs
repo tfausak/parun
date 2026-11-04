@@ -1897,7 +1897,7 @@ rewriteEntryRewrite pairs rewrite = case rewrite of
           EntersWith.keywords = Set.map (Filter.rewriteKeyword pairs) (EntersWith.keywords e),
           EntersWith.abilities = fmap (rewriteGrantedAbility pairs) (EntersWith.abilities e)
         }
-  EntryRewrite.UnderSourceControl -> rewrite
+  EntryRewrite.UnderControlOf _ -> rewrite
   EntryRewrite.SacrificeAnyNumber s ->
     EntryRewrite.SacrificeAnyNumber
       s

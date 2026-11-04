@@ -1632,7 +1632,7 @@ entryRewriteNames asking onAbility onEffect x = case x of
   EntryRewrite.ChooseCardName filter_ -> filterNames asking filter_
   EntryRewrite.WithCounters withCounters -> withCountersNames asking withCounters
   EntryRewrite.EntersWith entersWith -> entersWithNames asking onAbility entersWith
-  EntryRewrite.UnderSourceControl -> mempty
+  EntryRewrite.UnderControlOf _relation -> mempty
   EntryRewrite.SacrificeAnyNumber sacrificeAnyNumber -> sacrificeAnyNumberNames asking sacrificeAnyNumber
   EntryRewrite.SacrificeToEnter sacrificeToEnter -> sacrificeToEnterNames asking sacrificeToEnter
   EntryRewrite.ExileFromGraveyard exileFromGraveyard -> exileFromGraveyardNames asking exileFromGraveyard

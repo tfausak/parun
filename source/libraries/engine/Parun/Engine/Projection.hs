@@ -2215,6 +2215,17 @@ textChangesAffecting oid gs =
           | any exchanges stored -> composeWordChanges carried
           | otherwise -> own
 
+-- CR 612.1: a triggered ability of `oid` as its copiable values print it, before
+-- the text changes affecting `oid` rewrote it -- the same ability under either
+-- text, so a memory keyed by it (Object.chosenModes) survives the change. An
+-- ability no printed one rewrites to (a layer-6 grant, CR 612.3) is its own key.
+-- data/scenarios' captive-audience-remembers-its-modes-through-a-text-change
+-- proves it.
+printedTriggeredAbility :: ObjectId -> GameState -> TriggeredAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> TriggeredAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)
+printedTriggeredAbility oid gs ability = case textChangesAffecting oid gs of
+  [] -> ability
+  changes -> Maybe.fromMaybe ability (List.find (\printed -> rewriteTriggeredAbility changes printed == ability) (PC.triggeredAbilities (copiableCharacteristics oid gs)))
+
 -- Layer 3 alone over `oid`, from the stored effects alone: textChangesAffecting's
 -- fold. Stored effects only, the posture of the pair list it replaced, which is
 -- what lets the gather ask it: a static ability's layer-3 effect is not walked.
