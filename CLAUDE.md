@@ -219,13 +219,22 @@ to agents as written. What it doesn't say:
   Fold a known problem in or file it, naming the card that exercises it;
   `docs/agents/set-by-set.md`, "Follow-ups: fold in or file", has the rule.
 
-  A BLOCKED issue records its blocker as a GitHub dependency, not prose (no
-  `Blocked by #N` comment); a closed blocker keeps its link, and a blocker
-  with no issue gets one filed first:
+  A relationship between issues is an explicit GitHub link: blocked by, parent
+  and sub-issue, or related. A mention is not one, "related to #N" least of
+  all, since that is also the non-closing wording and can hide a blocker. Prose
+  saying what the relationship is about is nice to have, on top of the link and
+  never in place of it. A closed blocker keeps its link, and a blocker with no
+  issue gets one filed first:
 
   ```
   gh api -X POST repos/parun-mtg/parun/issues/<N>/dependencies/blocked_by \
     -F issue_id="$(gh api repos/parun-mtg/parun/issues/<BLOCKER> --jq .id)"
+  gh api -X POST repos/parun-mtg/parun/issues/<PARENT>/sub_issues \
+    -F sub_issue_id="$(gh api repos/parun-mtg/parun/issues/<CHILD> --jq .id)"
+  gh api graphql -f query='mutation($a: ID!, $b: ID!) {
+    addRelatesTo(input: {issueId: $a, relatedIssueId: $b}) { clientMutationId }
+  }' -f a="$(gh api repos/parun-mtg/parun/issues/<N> --jq .node_id)" \
+    -f b="$(gh api repos/parun-mtg/parun/issues/<OTHER> --jq .node_id)"
   ```
 
   When a capability lands, read its dependents (`gh api
