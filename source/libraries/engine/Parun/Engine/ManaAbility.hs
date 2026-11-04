@@ -124,6 +124,7 @@ abilityKinds intrinsic roster =
 -- Read at two sites, which are the two halves of CR 605.4a: Parun.Engine.Cost.tapForManaWith
 -- applies one inline as the activation that triggered it finishes, and
 -- Parun.Engine.Engine.placePendingTriggers refuses to put one on the stack.
+-- Parun.Engine.Mana.triggeredYields asks it too, to count that mana in the offer.
 --
 -- Asked of the EVENT that fired it as well as of the ability, and CR 605.5a is
 -- why: an ability that could produce mana "but triggers from an event other
