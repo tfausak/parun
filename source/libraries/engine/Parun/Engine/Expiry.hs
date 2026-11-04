@@ -236,6 +236,7 @@ arm acquisition targets controller source duration gs = case duration of
               DurationEvent.SourceTurnedFaceDown -> event
               DurationEvent.Planeswalked -> event
               DurationEvent.SourceExiledCard -> event
+              DurationEvent.SourceLeftBattlefield -> event
               DurationEvent.SpellCast criterion -> DurationEvent.SpellCast (Filter.bakeBound (Binding.playersIn targets) Map.empty Map.empty criterion)
           )
       )
@@ -485,6 +486,10 @@ endsAt gs moment source expiry = case expiry of
   -- leaving (Furious Rise's 2020-06-23 ruling): the row names the old id, which
   -- CR 400.7 means a later object's exile can't end.
   Expiry.OnEvent (EventExpiry.MkEventExpiry _ DurationEvent.SourceExiledCard) -> moment == ExiledWith source
+  -- CR 702.26d: a phased-out source has not left. One that left before the row
+  -- was armed ends it at the first settle, so the effect does nothing (docs/decisions.md).
+  Expiry.OnEvent (EventExpiry.MkEventExpiry _ DurationEvent.SourceLeftBattlefield) ->
+    moment == Settle && Set.notMember source (GameState.battlefield gs) && Map.notMember source (GameState.phasedOut gs)
   where
     departedTurnOf p = moment == TurnOf p && List.notElem p (Game.stillPlaying gs)
     namedTurnEnds at afterTurn =

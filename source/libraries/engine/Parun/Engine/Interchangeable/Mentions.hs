@@ -1409,6 +1409,7 @@ durationEventNames asking x = case x of
   DurationEvent.SpellCast filter_ -> filterNames asking filter_
   DurationEvent.Planeswalked -> mempty
   DurationEvent.SourceExiledCard -> mempty
+  DurationEvent.SourceLeftBattlefield -> mempty
 
 eachCardFromAmongNames :: (Monoid r) => Asking r -> EachCardFromAmong.EachCardFromAmong -> r
 eachCardFromAmongNames asking x = case x of

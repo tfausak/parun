@@ -2847,21 +2847,22 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
             }
     Spec.assertEqWith s "a planted atom is seen" (atoms planted) 1
   -- CR 508.5's atom is answerable only where the CONTEXT supplies a defending
-  -- player, and exactly two callers fill Filter.Context.defendingPlayers:
+  -- player, and three callers fill Filter.Context.defendingPlayers:
   -- Parun.Engine.Target.admittedGiven for a target slot (CR 702.39a's provoke,
-  -- Sensational Spider-Man, Yare) and Parun.Engine.CombatRestriction.inForce for a
-  -- CR 508.1c gate (Armored Galleon). It is empty everywhere else, so the atom in
-  -- any OTHER position -- a static ability's affected set, a search filter, a
-  -- triggered ability's condition -- would be a silent False. This is the lint
-  -- that keeps that true: what it sweeps is the atom outside a combat
-  -- restriction, by re-encoding each face with its restrictions dropped, and
-  -- outside a mode's target slot, by subtracting what cardFilters finds there.
-  Spec.it s "CR 508.5 no card writes ControlledByRole Defending outside a combat restriction or a target slot" $ do
+  -- Sensational Spider-Man, Yare), Parun.Engine.CombatRestriction.inForce for a
+  -- CR 508.1c gate (Armored Galleon) and Parun.Engine.SourceContext.framedWith,
+  -- which a static ability's modification reads (Gaea's Liege). Any OTHER position
+  -- -- a search filter, a triggered ability's condition -- goes unproved and may
+  -- be a silent False. This is the lint that keeps that true: what it sweeps is
+  -- the atom outside a combat restriction and a static ability, by re-encoding
+  -- each face with those dropped, and outside a mode's target slot, by subtracting
+  -- what cardFilters finds there.
+  Spec.it s "CR 508.5 no card writes ControlledByRole Defending outside a combat restriction, static ability or target slot" $ do
     ps <- S.allPrintings s corpus
     let needle = atomJson (Filter.Type.ControlledByRole TurnRole.Defending)
         atoms c = occurrences needle (Codec.encode (Face.Codec.codec Card.codec) c)
         inSlots c = sum [occurrences needle (atomJson f) | (InTargetSlot, f) <- cardFilters c]
-        elsewhere c = atoms (c {Face.combatRestrictions = []}) - inSlots c
+        elsewhere c = atoms (c {Face.combatRestrictions = [], Face.staticAbilities = []}) - inSlots c
         offenders = filter (anyFace ((/= 0) . elsewhere) . Printing.card) ps
     Spec.assertEqWith s "the atom is the engine's alone outside a gate" (fmap (S.nameOf . Printing.card) offenders) []
     -- Three legs of anti-vacuity, because the narrowing above could hide a real

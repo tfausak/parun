@@ -1164,8 +1164,9 @@ data Context = MkContext
     -- source; for a source with no attack to resolve it, CR 802.2a's every
     -- defending player the controller could choose (Yare). Supplied by the caller for
     -- sourceMeasures' reason -- this module holds no game state and cannot read the
-    -- combat record -- by Parun.Engine.Target.admittedGiven for a target slot and
-    -- by Parun.Engine.CombatRestriction.inForce for a CR 508.1c gate.
+    -- combat record -- by Parun.Engine.SourceContext.framedWith for any framed source,
+    -- then by Parun.Engine.Target.admittedGiven for a target slot and by
+    -- Parun.Engine.CombatRestriction.inForce for a CR 508.1c gate.
     --
     -- LAZY like sourceMeasures, and load-bearingly so: filling it costs a
     -- control-grant walk, and no filter that omits the atom ever forces it.

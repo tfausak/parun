@@ -1,0 +1,224 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "i"
+          },
+          {
+            "card": "Hill Giant",
+            "label": "giant"
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "tired",
+            "tapped": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Energy Tap",
+            "label": "tap"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Gray Ogre",
+            "label": "theirs"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "A Hill Giant's four, not its power of three, proves the amount is its mana value; a tapped creature and bob's are no targets.",
+  "timeline": [
+    {
+      "player": "alice",
+      "refuse": {
+        "Cast": {
+          "mana": [
+            "$i",
+            null
+          ],
+          "object": "$tap",
+          "targets": [
+            "$tired"
+          ]
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "Cast": {
+          "mana": [
+            "$i",
+            null
+          ],
+          "object": "$tap",
+          "targets": [
+            "$theirs"
+          ]
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$i"
+          ],
+          "object": "$tap",
+          "targets": [
+            "$giant"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Tapped": {
+          "object": "$giant",
+          "tapped": true
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            {
+              "manaType": {
+                "type": "Colorless"
+              },
+              "restriction": null,
+              "retention": {
+                "type": "Ordinary"
+              },
+              "rider": null,
+              "sourceChoices": null,
+              "tags": []
+            },
+            {
+              "manaType": {
+                "type": "Colorless"
+              },
+              "restriction": null,
+              "retention": {
+                "type": "Ordinary"
+              },
+              "rider": null,
+              "sourceChoices": null,
+              "tags": []
+            },
+            {
+              "manaType": {
+                "type": "Colorless"
+              },
+              "restriction": null,
+              "retention": {
+                "type": "Ordinary"
+              },
+              "rider": null,
+              "sourceChoices": null,
+              "tags": []
+            },
+            {
+              "manaType": {
+                "type": "Colorless"
+              },
+              "restriction": null,
+              "retention": {
+                "type": "Ordinary"
+              },
+              "rider": null,
+              "sourceChoices": null,
+              "tags": []
+            }
+          ],
+          "of": "ManaPool",
+          "player": "alice"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}
