@@ -440,7 +440,7 @@ afterBlockersDeclared = Combat.blockersDeclared . GameState.combat
 -- The PHASE and not the combat record, unlike afterBlockersDeclared above. CR
 -- 510.1 and CR 510.2 assign and deal combat damage as turn-based actions at the
 -- START of the combat damage step and CR 510.3 gives priority only afterwards, so
--- no priority window of the combat damage step precedes the damage; CR 510.5's
+-- no priority window of the combat damage step precedes the damage; CR 510.4's
 -- first-strike damage step needs nothing further for the same reason. CR 509.1
 -- likewise opens the declare blockers step, so that step is past Panic's point
 -- even before its turn-based action runs (CR 506.7b says "begins").
