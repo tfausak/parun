@@ -206,6 +206,22 @@ Entries are ordered by the first rule each cites.
   positions, and the word goes before a following blank".
 - **Issue**: #4900.
 
+## Whether Confusion in the Ranks counts Kindred as a shared type
+
+- **Question**: Its Oracle says "shares a card type", and CR 205.2a lists
+  kindred. Its 2004 ruling says "share a permanent type", which CR 110.4's six
+  omit. Is a Kindred Artifact a target for a Kindred Enchantment?
+- **Rules**: CR 205.2a, 108.1, 110.4, 308.1; CR of 2026-08-07.
+- **Decision**: Yes: the permanents may share any card type.
+- **Rejected**: CR 110.4's six: the ruling is dated 2004-12-01 and the first
+  Kindred card (then tribal) 2007-05-04, so it cannot have decided Kindred, and
+  CR 108.1 takes the wording from Oracle. Its point is that the types are
+  compared at both moments, which holds either way.
+- **Site**: `data/cards/confusion-in-the-ranks.json`'s bare `CardType` trait,
+  proved by the `confusion-in-the-ranks-counts-kindred-as-a-shared-type`
+  scenario.
+- **Issue**: #5177.
+
 ## What the greatest value is over an empty or undeterminable set
 
 - **Question**: What is "the greatest X among ..." over an empty set, or when

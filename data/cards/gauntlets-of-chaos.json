@@ -1,0 +1,197 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "SacrificeThis"
+              }
+            ],
+            "mana": [
+              {
+                "type": "Generic",
+                "value": 5
+              }
+            ]
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "ExchangeControl",
+                        "value": {
+                          "type": "BetweenSlots",
+                          "value": {
+                            "first": "yours",
+                            "second": "theirs"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "effects": [
+                      {
+                        "type": "Destroy",
+                        "value": {
+                          "ref": {
+                            "type": "AllOf",
+                            "value": [
+                              {
+                                "type": "AttachedToBound",
+                                "value": {
+                                  "filter": {
+                                    "type": "HasSubtype",
+                                    "value": {
+                                      "type": "Aura"
+                                    }
+                                  },
+                                  "slot": "yours"
+                                }
+                              },
+                              {
+                                "type": "AttachedToBound",
+                                "value": {
+                                  "filter": {
+                                    "type": "HasSubtype",
+                                    "value": {
+                                      "type": "Aura"
+                                    }
+                                  },
+                                  "slot": "theirs"
+                                }
+                              }
+                            ]
+                          },
+                          "regenerability": {
+                            "type": "Regenerable"
+                          }
+                        }
+                      }
+                    ],
+                    "ifTaken": {
+                      "type": "AnyTaken",
+                      "value": [
+                        0
+                      ]
+                    }
+                  }
+                ],
+                "targetSlots": {
+                  "theirs": {
+                    "filter": {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HeldBy",
+                          "value": {
+                            "holder": {
+                              "type": "Controller"
+                            },
+                            "relation": {
+                              "type": "Opponent"
+                            }
+                          }
+                        },
+                        {
+                          "type": "Shares",
+                          "value": {
+                            "anchor": {
+                              "type": "Bound",
+                              "value": "yours"
+                            },
+                            "trait": {
+                              "type": "CardType",
+                              "value": [
+                                {
+                                  "type": "Artifact"
+                                },
+                                {
+                                  "type": "Creature"
+                                },
+                                {
+                                  "type": "Land"
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "pool": {
+                      "type": "Permanents"
+                    }
+                  },
+                  "yours": {
+                    "filter": {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HeldBy",
+                          "value": {
+                            "holder": {
+                              "type": "Controller"
+                            },
+                            "relation": {
+                              "type": "You"
+                            }
+                          }
+                        },
+                        {
+                          "type": "Or",
+                          "value": [
+                            {
+                              "type": "HasCardType",
+                              "value": {
+                                "type": "Artifact"
+                              }
+                            },
+                            {
+                              "type": "HasCardType",
+                              "value": {
+                                "type": "Creature"
+                              }
+                            },
+                            {
+                              "type": "HasCardType",
+                              "value": {
+                                "type": "Land"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    "pool": {
+                      "type": "Permanents"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 5
+        }
+      ],
+      "name": "Gauntlets of Chaos",
+      "oracleText": "{5}, Sacrifice this artifact: Exchange control of target artifact, creature, or land you control and target permanent an opponent controls that shares one of those types with it. If those permanents are exchanged this way, destroy all Auras attached to them.",
+      "typeLine": {
+        "types": [
+          {
+            "type": "Artifact"
+          }
+        ]
+      }
+    }
+  ]
+}

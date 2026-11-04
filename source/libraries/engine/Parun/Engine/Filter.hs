@@ -1379,6 +1379,11 @@ data Context = MkContext
     -- slot-anchored Shares CreatureType outside a resolution's own positions
     -- or a target slot" keeps a card out of those.
     slotCreatureTypes :: Map.Map SlotName.SlotName (Set.Set Subtype.Subtype),
+    -- CR 205.2a: the CARD TYPES of the objects the slots hold, for Shares
+    -- CardType Bound -- Confusion in the Ranks' "shares a card type with it", a
+    -- sibling target slot's (Gauntlets of Chaos). `slotCreatureTypes` above in
+    -- every respect, under that lint too.
+    slotCardTypes :: Map.Map SlotName.SlotName (Set.Set CardType.CardType),
     -- CR 608.2c: the MEASURES of the object a resolution's slot holds, for the
     -- Measures atom's OfBound operand (Profaner of the Dead's "the exploited
     -- creature's toughness"). `slotCreatureTypes` above in every respect but one
@@ -1741,7 +1746,7 @@ data Context = MkContext
 -- here owes both halves of the same pair: which way its unfilled read answers,
 -- and what holds a card to the positions that fill it.
 contextFor :: Teams.Teams -> Maybe PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> Context
-contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, sourceDealtDamage = Set.empty, sourceDealtDamageEarlier = Set.empty, slotAmount = Nothing, defendingPlayers = [], activePlayers = [], recipient = Nothing, shares = Map.empty, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, slotVotes = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, evaluatedCreatureTypes = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceChosenNumber = Nothing, sourceLastExiled = Nothing, sourceExiled = Map.empty, reader = Nothing, candidateMeasures = Nothing, battlefieldViews = Seq.empty}
+contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, sourceDealtDamage = Set.empty, sourceDealtDamageEarlier = Set.empty, slotAmount = Nothing, defendingPlayers = [], activePlayers = [], recipient = Nothing, shares = Map.empty, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotCardTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, slotVotes = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, evaluatedCreatureTypes = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceChosenNumber = Nothing, sourceLastExiled = Nothing, sourceExiled = Map.empty, reader = Nothing, candidateMeasures = Nothing, battlefieldViews = Seq.empty}
 
 -- contextFor over a game: its teams (CR 102.4) and its active players (CR 102.1,
 -- 805.4a) filled from the state, the two facts about the table a match may ask.
@@ -1848,7 +1853,7 @@ sharesAnchored trait anchor = case anchor of
     Trait.Controller -> Nothing
     Trait.Sector -> Just (\context view -> meets (Sector.sectorsIn (designations view)) (sourceSectors context))
     Trait.CreatureType -> Nothing
-    Trait.CardType -> Nothing
+    Trait.CardType _ -> Nothing
   Anchor.Bound slot -> case trait of
     -- A slot naming nothing leaves the bound side empty.
     Trait.Name -> Just (\context view -> meets (names view) (Map.findWithDefault Set.empty slot (slotNames context)))
@@ -1863,7 +1868,10 @@ sharesAnchored trait anchor = case anchor of
     Trait.Owner -> Nothing
     Trait.Controller -> Nothing
     Trait.Sector -> Nothing
-    Trait.CardType -> Nothing
+    -- CR 205.2a, CreatureType's posture and for its reason; among the named types
+    -- on the candidate's side alone, which is enough, since a type outside them
+    -- then has nothing to meet.
+    Trait.CardType among -> Just (\context view -> maybe True (meets (cardTypesAmong among view)) (Map.lookup slot (slotCardTypes context)))
   Anchor.Evaluated -> case trait of
     -- The object the surrounding quantity is aimed at (CR 613.4c), and vacuously
     -- FALSE where nothing aims one: no CR 601.2c offer stands behind a Count to
@@ -1874,7 +1882,7 @@ sharesAnchored trait anchor = case anchor of
     Trait.Owner -> Nothing
     Trait.Controller -> Nothing
     Trait.Sector -> Nothing
-    Trait.CardType -> Nothing
+    Trait.CardType _ -> Nothing
   -- Some permanent the nest admits, matched in the OUTER context, so its "you"
   -- and "another" are the outer match's (Pattern Matcher's "another creature
   -- you control"). Vacuously False where nothing fills battlefieldViews.
@@ -1885,7 +1893,7 @@ sharesAnchored trait anchor = case anchor of
     Trait.Owner -> Nothing
     Trait.Sector -> Nothing
     Trait.CreatureType -> Nothing
-    Trait.CardType -> Nothing
+    Trait.CardType _ -> Nothing
   where
     meets a b = not (Set.disjoint a b)
     held = foldMap Set.singleton . controller
@@ -1911,6 +1919,10 @@ attachedAnchored anchor = case anchor of
       )
   -- A group names no one host: Filter.AttachedTo is that reading.
   Anchor.AnyPermanent _ -> Nothing
+
+-- CR 205.2a: a view's card types, among the named ones where a Trait names some.
+cardTypesAmong :: Maybe (Set.Set CardType.CardType) -> View -> Set.Set CardType.CardType
+cardTypesAmong among = maybe id Set.intersection among . cardTypes
 
 -- The one generic matcher. A pure fold over the Filter tree; it never inspects
 -- which effect produced the Filter. Identity checks like IsSource consult the
@@ -3898,7 +3910,7 @@ readsSourceValues predicate = case predicate of
       Trait.Controller -> False
       Trait.Sector -> False
       Trait.CreatureType -> False
-      Trait.CardType -> False
+      Trait.CardType _ -> False
     Anchor.Bound _ -> False
     Anchor.Evaluated -> False
     Anchor.AnyPermanent group -> readsSourceValues group

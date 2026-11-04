@@ -645,7 +645,7 @@ aggregate quantityOf aggregation members = case aggregation of
   -- non-creature subtype (CR 205.3m). 0 over an empty set.
   Aggregation.MostSharing trait -> Just $ case trait of
     Trait.CreatureType -> largestGroup (Set.filter Subtype.isCreatureType . Filter.subtypes)
-    Trait.CardType -> largestGroup Filter.cardTypes
+    Trait.CardType among -> largestGroup (Filter.cardTypesAmong among)
     Trait.Color -> largestGroup Filter.colors
     Trait.Name -> largestGroup Filter.names
     Trait.Owner -> largestGroup (foldMap Set.singleton . Filter.owner)

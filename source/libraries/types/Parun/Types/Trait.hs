@@ -1,5 +1,8 @@
 module Parun.Types.Trait where
 
+import qualified Data.Set as Set
+import qualified Parun.Types.CardType as CardType
+
 -- | What two objects share: a non-empty intersection of their values, so an
 -- object with none (a colourless one, a nameless one under CR 708.2a, one in no
 -- sector) shares nothing. Compared between a candidate and an anchored object by
@@ -21,6 +24,6 @@ data Trait
     Sector
   | -- | CR 205.3m: a creature type.
     CreatureType
-  | -- | CR 205.2a: a card type.
-    CardType
-  deriving (Bounded, Enum, Eq, Ord, Show)
+  | -- | CR 205.2a: a card type, among the named ones where they are named (Gauntlets of Chaos's "one of those types").
+    CardType (Maybe (Set.Set CardType.CardType))
+  deriving (Eq, Ord, Show)

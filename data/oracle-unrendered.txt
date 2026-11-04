@@ -521,6 +521,7 @@ compelled-duel
 compost
 cone-of-flame
 confiscate
+confusion-in-the-ranks
 conjurers-ban
 conjurers-mantle
 conquer
@@ -1072,6 +1073,7 @@ gatekeeper-of-malakir
 gather-specimens
 gather-the-pack
 gauntlet-of-power
+gauntlets-of-chaos
 gauntlets-of-light
 gearshift-ace
 gemcutter-buccaneer

@@ -1116,17 +1116,18 @@ framedNameOffends card =
   let (slotted, elsewhere) = framedNameCounts card
    in elsewhere /= 0 || slotted + elsewhere /= framedNameAtoms (Codec.encode (Face.Codec.codec Card.codec) card)
 
--- The CR 205.3m atoms anchored at a SLOT in an encoding: Filter.Shares
--- CreatureType at a Bound anchor. evaluatedOffends polices the Evaluated one.
+-- The CR 205.3m and CR 205.2a atoms anchored at a SLOT in an encoding:
+-- Filter.Shares CreatureType or CardType at a Bound anchor, which share a posture.
+-- evaluatedOffends polices the Evaluated one.
 boundCreatureTypeAtoms :: Value.Value -> Int
-boundCreatureTypeAtoms = decodedAtoms "Shares" (\atom -> case atom of Filter.Type.Shares Trait.CreatureType (Anchor.Bound _) -> True; _ -> False)
+boundCreatureTypeAtoms = decodedAtoms "Shares" (\atom -> case atom of Filter.Type.Shares Trait.CreatureType (Anchor.Bound _) -> True; Filter.Type.Shares (Trait.CardType _) (Anchor.Bound _) -> True; _ -> False)
 
 -- How many CR 205.3m atoms this card carries in a resolution's own positions --
 -- an effect's ObjectRef (Heirloom Blade), a clause's "if" (Mudbutton Clanger), a
 -- search, a mill tally or a hand sweep, each read through
 -- Parun.Engine.Resolve.Slots.effectContext -- or in a target slot (Unbury), read
 -- through Parun.Engine.Target.slotContext: the two fillers of
--- Filter.Context.slotCreatureTypes. And how many anywhere else, where the atom
+-- Filter.Context.slotCreatureTypes and slotCardTypes. And how many anywhere else, where the atom
 -- is a silent True. The second number is the offence.
 boundCreatureTypeCounts :: Face.Face Card.Type.Card -> (Int, Int)
 boundCreatureTypeCounts card =
@@ -1755,6 +1756,10 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     Spec.assertEqWith s "Mudbutton Clanger's one atom is in its clause's gate" (boundCreatureTypeCounts face) (1, 0)
     unbury <- S.printingOf s registry "Unbury"
     Spec.assertEqWith s "Unbury's two atoms are in its target slots, one naming each sibling" (boundCreatureTypeCounts (S.combinedFace unbury)) (2, 0)
+    gauntlets <- S.printingOf s registry "Gauntlets of Chaos"
+    Spec.assertEqWith s "Gauntlets of Chaos's CR 205.2a atom is in its second target slot" (boundCreatureTypeCounts (S.combinedFace gauntlets)) (1, 0)
+    confusion <- S.printingOf s registry "Confusion in the Ranks"
+    Spec.assertEqWith s "Confusion in the Ranks's CR 205.2a atom is in its target slot" (boundCreatureTypeCounts (S.combinedFace confusion)) (1, 0)
     -- The lint's own proof, the pair differing in one position: the same atom in
     -- a static restriction's affected set, read through a bare contextFor.
     Spec.assertBool s (boundCreatureTypeOffends restricted) "the atom in an affected set offends"
@@ -1841,6 +1846,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Chandra Nalaar", 1), -- its -8, Flame Wave's sentence
         ("Chandra's Fury", 1), -- its damage's object, Flame Wave's sentence
         ("Necrotic Plague", 1), -- its trigger's target slot, relative to the dead creature's controller
+        ("Confusion in the Ranks", 1), -- its trigger's target slot, relative to the entering permanent's controller
         ("Chandra, Pyromaster", 1), -- its +1's second target slot, Flame Wave's sentence
         ("Soul of Shandalar", 2), -- both abilities' second target slots, Flame Wave's sentence
         ("Legion's End", 1), -- its exile's object, relative to the target's controller
