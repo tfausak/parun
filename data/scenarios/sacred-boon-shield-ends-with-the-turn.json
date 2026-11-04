@@ -95,7 +95,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "Cast during the end step, Sacred Boon's shield is gone by the next turn, whose Shock kills the Bears, and its trigger then finds nothing (CR 514.2, 603.7c)",
+  "description": "Cast during the end step, Sacred Boon's shield is gone by the next turn, whose Shock kills the Bears (CR 514.2)",
   "timeline": [
     {
       "do": "Pass",

@@ -47,6 +47,7 @@ import qualified Parun.Engine.Deploy as Deploy
 import qualified Parun.Engine.Expiry as Expiry.Engine
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Interchangeable.Mentions as Mentions
 import qualified Parun.Engine.Mint as Mint
 import qualified Parun.Engine.Plane as Plane
 import qualified Parun.Engine.PlayerEffect as PlayerEffect
@@ -85,6 +86,7 @@ import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.Daytime as Daytime
 import qualified Parun.Types.DealtDamage as DealtDamage
+import qualified Parun.Types.DelayedTrigger as DelayedTrigger
 import qualified Parun.Types.DestructionCause as DestructionCause
 import qualified Parun.Types.DestructionR as DestructionR
 import qualified Parun.Types.DestructionRewrite as DestructionRewrite
@@ -170,6 +172,7 @@ import qualified Parun.Types.TokenPattern as TokenPattern
 import qualified Parun.Types.TokenR as TokenR
 import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
+import qualified Parun.Types.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Parun.Types.TurnUpR as TurnUpR
 import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Parun.Types.UntapR as UntapR
@@ -2621,6 +2624,11 @@ readsSource effect = case effect of
 -- `controller` is: unconditionally would ask about two Rest in Peace that exile
 -- the same card to the same zone whichever applies.
 --
+-- `rider` is folded in UNCONDITIONALLY, `lifetime`'s reason: CR 615.5's
+-- additional effect runs only for the row that applied, so Test of Faith beside
+-- Healing Salve gives counters under one answer and none under the other. Bar its
+-- `source` and the self slot naming it, which `observedSource` asks about.
+--
 -- `origin` is NOT such a hole: highestBucket has already partitioned by bucket,
 -- and CR 616.1a's bucket is exactly an origin of SelfReplacement, so every
 -- candidate reaching this comparison shares one origin.
@@ -2636,12 +2644,13 @@ choose gs event candidates =
           -- `readsSource`'s half of the same test: CR 702.52a's dredge returns
           -- the row's own source, so two dredgers in one graveyard are two
           -- different boards and the drawer is asked which.
-          if readsSource (ReplacementCandidate.effect c)
+          if readsSource (ReplacementCandidate.effect c) || observedSource gs c
             then Just (ReplacementCandidate.source c)
             else Nothing,
           -- CR 608.2h: two rows equal but for the choices they baked (two
           -- Avacyn, Guardian Angel shields) match different sources.
-          ReplacementCandidate.choices c
+          ReplacementCandidate.choices c,
+          fmap (\rider -> (PreventionRider.effects rider, Map.delete Binding.triggerSource (PreventionRider.targets rider), PreventionRider.controller rider)) (ReplacementCandidate.rider c)
         )
    in case candidates of
         [] -> pure Nothing
@@ -2660,6 +2669,26 @@ choose gs event candidates =
                 -- out-of-range index leaves the canonical first standing rather than
                 -- dropping the event or crashing.
                 pure (Just (at candidates answer first))
+
+-- Does which of two rows alike in `effect` applied show through this one's source?
+-- Two Mending Hands leave no trace of it, so they are not a choice.
+--
+-- A rider runs with the row's source as CR 113.7's, and a source still in the game
+-- can be told apart (two Vengeful Archons' damage, one with lifelink); a spell CR
+-- 400.7 has replaced cannot (two Test of Faith). And CR 615.13's "this way" reads
+-- it for a delayed trigger of that source yet to fire or resolve (Sacred Boon
+-- beside Healing Salve); one already resolved reads nothing more, and Heal's
+-- draw never did.
+observedSource :: GameState -> ReplacementCandidate -> Bool
+observedSource gs c =
+  (Maybe.isJust (ReplacementCandidate.rider c) && Maybe.isJust (Game.lookupObject source gs))
+    || any (\entry -> DelayedTrigger.source entry == source && Mentions.readsPrevention (DelayedTrigger.ability entry)) (GameState.delayedTriggers gs)
+    || any stackedReader (GameState.stack gs)
+  where
+    source = ReplacementCandidate.source c
+    stackedReader oid = case fmap Object.source (Game.lookupObject oid gs) of
+      Just (Source.OfTrigger triggered) -> TriggeredAbilitySource.source triggered == source && Mentions.readsPrevention (TriggeredAbilitySource.ability triggered)
+      _ -> False
 
 -- CR 614.1c: Booby Trap's "as this artifact enters, choose an opponent and a
 -- card name" is ONE replacement effect, written as one row per choice. Rows
