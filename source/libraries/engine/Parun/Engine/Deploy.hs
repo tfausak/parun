@@ -58,7 +58,7 @@ ability =
           ActivatedAbility.definedX = Nothing,
           -- CR 307.5's sorcery timing.
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
-          ActivatedAbility.activator = Activator.Controller,
+          ActivatedAbility.activator = Activator.Related PlayerRelation.You,
           ActivatedAbility.condition = Nothing,
           ActivatedAbility.name = Nothing,
           ActivatedAbility.keyword = Nothing

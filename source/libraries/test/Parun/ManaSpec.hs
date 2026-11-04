@@ -492,7 +492,7 @@ manaSpec s registry = Spec.describe s "Mana" $ do
               ActivatedAbility.minimumX = 0,
               ActivatedAbility.definedX = Nothing,
               ActivatedAbility.restrictions = [],
-              ActivatedAbility.activator = Activator.Controller,
+              ActivatedAbility.activator = Activator.Related PlayerRelation.You,
               ActivatedAbility.condition = Nothing,
               ActivatedAbility.name = Nothing,
               ActivatedAbility.keyword = Nothing
@@ -511,7 +511,7 @@ manaSpec s registry = Spec.describe s "Mana" $ do
               ActivatedAbility.minimumX = 0,
               ActivatedAbility.definedX = Nothing,
               ActivatedAbility.restrictions = [],
-              ActivatedAbility.activator = Activator.Controller,
+              ActivatedAbility.activator = Activator.Related PlayerRelation.You,
               ActivatedAbility.condition = Nothing,
               ActivatedAbility.name = Nothing,
               ActivatedAbility.keyword = Nothing
@@ -530,7 +530,7 @@ manaSpec s registry = Spec.describe s "Mana" $ do
               ActivatedAbility.minimumX = 0,
               ActivatedAbility.definedX = Nothing,
               ActivatedAbility.restrictions = [],
-              ActivatedAbility.activator = Activator.Controller,
+              ActivatedAbility.activator = Activator.Related PlayerRelation.You,
               ActivatedAbility.condition = Nothing,
               ActivatedAbility.name = Nothing,
               ActivatedAbility.keyword = Nothing
@@ -4248,7 +4248,7 @@ atLife n gs = gs {GameState.players = Map.adjust (\p -> p {Player.life = n}) S.a
 theAbility :: Printing.Printing -> ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)
 theAbility p = case Face.activatedAbilities (S.combinedFace p) of
   ab : _ -> ab
-  [] -> ActivatedAbility.MkActivatedAbility (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) []) [] 0 Nothing (Mint.oneMode Seq.empty) [] Activator.Controller Nothing Nothing Nothing
+  [] -> ActivatedAbility.MkActivatedAbility (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) []) [] 0 Nothing (Mint.oneMode Seq.empty) [] (Activator.Related PlayerRelation.You) Nothing Nothing Nothing
 
 -- CR 106.3's count read off the BOARD rather than off the card: Cabal Coffers
 -- (Torment) prints "{2}, {T}: Add {B} for each Swamp you control." Oracle text

@@ -350,7 +350,7 @@ legalActions pid gs =
       -- list CR 605.3a's other two windows are served from (Cost.payMana's
       -- candidates, where CR 605.3c drops whichever ability is already
       -- mid-activation):
-      -- controlled, open to any player (CR 602.1b) or tappable under a grant
+      -- controlled, open to this player (CR 602.1b) or tappable under a grant
       -- (Piracy), per Mana.routeAccess, and
       -- offering some route Cost.manaActivations admits
       -- -- CR 118.3's payability of the ability's own cost (CR 602.2b), which

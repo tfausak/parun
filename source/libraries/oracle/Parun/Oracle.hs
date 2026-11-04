@@ -41,6 +41,7 @@ import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.Layout as Layout
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PhaseSelector as PhaseSelector
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.StepBegins as StepBegins
 import qualified Parun.Types.TargetSlot as TargetSlot
@@ -185,7 +186,7 @@ activated context a
   | null (ActivatedAbility.maximumX a),
     ActivatedAbility.minimumX a == 0,
     Maybe.isNothing (ActivatedAbility.definedX a),
-    ActivatedAbility.activator a == Activator.Controller,
+    ActivatedAbility.activator a == Activator.Related PlayerRelation.You,
     Maybe.isNothing (ActivatedAbility.condition a),
     Maybe.isNothing (ActivatedAbility.name a),
     Maybe.isNothing (ActivatedAbility.keyword a) = do

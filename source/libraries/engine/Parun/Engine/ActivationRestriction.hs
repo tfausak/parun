@@ -261,6 +261,9 @@ atInstantSpeed restriction = case restriction of
 -- "fewer than `limit`" reading. The projection is asked only once `limit` is
 -- spent.
 --
+-- Keyed by the ability as printed (Projection.printedActivatedAbility), since a
+-- text change rewrites an ability's words, not which ability it is (CR 612.1).
+--
 -- Not implemented: the count cannot say WHICH copy spent, so when the spent
 -- copy's grant goes and an unspent twin stays, the twin reads as spent (#4627).
 --
@@ -272,7 +275,7 @@ atInstantSpeed restriction = case restriction of
 -- data/cards/ carries both an OnlyOnce rider and a GainAbility (grep,
 -- 2026-10-19).
 unspent :: Natural -> ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> Map.Map (ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)) Natural -> GameState -> Bool
-unspent limit srcId this spent gs = case Map.findWithDefault 0 this spent of
+unspent limit srcId this spent gs = case Map.findWithDefault 0 (Projection.printedActivatedAbility srcId gs this) spent of
   n
     | n < limit -> True
     | otherwise -> n < limit * max 1 (List.genericLength (filter (== this) (Projection.abilitiesOf srcId gs)))
@@ -295,14 +298,15 @@ unspent limit srcId this spent gs = case Map.findWithDefault 0 this spent of
 -- ids are not reused, so it can name nothing else before the turn ends.
 recordActivation :: ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> GameState -> GameState
 recordActivation srcId ability gs =
-  let prints restriction = elem restriction (Keyword.restrictionsOf ability)
+  let key = Projection.printedActivatedAbility srcId gs ability
+      prints restriction = elem restriction (Keyword.restrictionsOf ability)
       perTurnLimited r = case r of
         ActivationRestriction.TimesEachTurn _ -> True
         _ -> False
       perGame g =
-        g {GameState.objects = Map.adjust (\o -> o {Object.activatedOnce = Map.insertWith (+) ability 1 (Object.activatedOnce o)}) srcId (GameState.objects g)}
+        g {GameState.objects = Map.adjust (\o -> o {Object.activatedOnce = Map.insertWith (+) key 1 (Object.activatedOnce o)}) srcId (GameState.objects g)}
       perTurn g =
-        g {GameState.activatedThisTurn = Map.insertWith (Map.unionWith (+)) srcId (Map.singleton ability 1) (GameState.activatedThisTurn g)}
+        g {GameState.activatedThisTurn = Map.insertWith (Map.unionWith (+)) srcId (Map.singleton key 1) (GameState.activatedThisTurn g)}
    in (if any perTurnLimited (Keyword.restrictionsOf ability) then perTurn else id)
         ((if prints ActivationRestriction.OnlyOnce then perGame else id) gs)
 

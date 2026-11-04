@@ -87,7 +87,7 @@ spec s = Spec.describe s "Parun.Codec.ActivatedAbility" $ do
               ModeMemory.NoMemory
           )
           [ActivationRestriction.SorcerySpeed]
-          Activator.Controller
+          (Activator.Related PlayerRelation.You)
           Nothing
           Nothing
           Nothing
@@ -109,7 +109,7 @@ spec s = Spec.describe s "Parun.Codec.ActivatedAbility" $ do
           [ ActivationRestriction.DuringPhase (DuringPhase.MkDuringPhase (PhaseSelector.Step (Phase.Combat CombatStep.DeclareAttackers)) TurnScope.EachTurn),
             ActivationRestriction.AttackedThisStep
           ]
-          Activator.Controller
+          (Activator.Related PlayerRelation.You)
           Nothing
           Nothing
           Nothing
@@ -131,7 +131,7 @@ spec s = Spec.describe s "Parun.Codec.ActivatedAbility" $ do
           Nothing
           (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory)
           [ActivationRestriction.SorcerySpeed]
-          Activator.Controller
+          (Activator.Related PlayerRelation.You)
           Nothing
           Nothing
           (Just (Keyword.Equip (Equip.MkEquip (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 1])) []) Nothing EquipTarget.Creature)))
@@ -151,7 +151,7 @@ spec s = Spec.describe s "Parun.Codec.ActivatedAbility" $ do
           Nothing
           (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory)
           []
-          Activator.Controller
+          (Activator.Related PlayerRelation.You)
           Nothing
           Nothing
           Nothing
@@ -171,7 +171,7 @@ spec s = Spec.describe s "Parun.Codec.ActivatedAbility" $ do
           Nothing
           (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory)
           []
-          Activator.Controller
+          (Activator.Related PlayerRelation.You)
           Nothing
           Nothing
           Nothing
@@ -191,7 +191,7 @@ spec s = Spec.describe s "Parun.Codec.ActivatedAbility" $ do
           (Just (Quantity.Literal 2))
           (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1) ModeMemory.NoMemory)
           []
-          Activator.Controller
+          (Activator.Related PlayerRelation.You)
           Nothing
           Nothing
           Nothing
