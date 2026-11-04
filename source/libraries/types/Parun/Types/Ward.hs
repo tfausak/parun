@@ -1,7 +1,7 @@
 module Parun.Types.Ward where
 
 import qualified Parun.Types.Cost as Cost
-import qualified Parun.Types.PlayerCounterTally as PlayerCounterTally
+import qualified Parun.Types.KeywordCount as KeywordCount
 
 -- | The payload of Parun.Types.Keyword's Ward arm: CR 702.21a's cost, plus CR
 -- 702.21b's X as a second field on it.
@@ -26,20 +26,16 @@ data Ward keyword = MkWard
     -- the value cannot ride Cost's own {X}, whose value CR 107.3a fixes at what
     -- CR 601.2b announced (Parun.Engine.Resolve.Common.announcedXOn).
     --
-    -- A Parun.Types.PlayerCounterTally and NOT the Parun.Types.Quantity that
-    -- Parun.Engine.Keyword.ward widens it into: Quantity names Keyword in its
-    -- ObjectCounters and TimesPaid arms, and Keyword names this, so a Quantity
-    -- here would close a module cycle that only parameterizing Quantity over the
-    -- keyword could open -- and that parameter would have to cascade through the
-    -- fifty-odd types embedding a Quantity. This tally is a documented LEAF, so
-    -- it cannot. Scryfall o:"ward {X}", 2026-09-15, returns Minthara, Merciless
-    -- Soul alone, and it counts player counters; a printing that stated X as
-    -- anything else would be the one to widen this field.
+    -- A Parun.Types.KeywordCount, the N mobilize and firebending restate, and
+    -- NOT the Parun.Types.Quantity that Parun.Engine.Keyword.keywordCount widens
+    -- it into: Quantity names Keyword, and Keyword names this. Minthara,
+    -- Merciless Soul's counts player counters; Phyrexian Fleshgorger's "pay life
+    -- equal to this creature's power" is PayLife 1 per point of Power.
     --
     -- Nothing is every other printing: a ward whose cost is a printed number.
     --
-    -- Parun.LeavesTriggerSpec's "CR 702.21b ward {X}" group proves the
+    -- The "CR 702.21b" scenarios under data/scenarios/ prove the
     -- resolution-time read.
-    perEach :: Maybe PlayerCounterTally.PlayerCounterTally
+    perEach :: Maybe (KeywordCount.KeywordCount keyword)
   }
   deriving (Eq, Ord, Show)

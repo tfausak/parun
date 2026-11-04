@@ -2894,9 +2894,8 @@ rewriteKeyword pairs keyword = case keyword of
   -- the same way -- a ward cost naming a basic land type is the unprinted case
   -- the arms below are also a fence for.
   --
-  -- CR 702.21b's perEach is left alone: a player-counter tally names no word
-  -- CR 612.2 swaps.
-  Keyword.Type.Ward w -> Keyword.Type.Ward w {Ward.cost = rewriteCost pairs (Ward.cost w)}
+  -- CR 702.21b's perEach is a KeywordCount, descended as mobilize's N is.
+  Keyword.Type.Ward w -> Keyword.Type.Ward (Ward.MkWard (rewriteCost pairs (Ward.cost w)) (fmap (rewriteKeywordCount pairs) (Ward.perEach w)))
   -- CR 702.33a, CR 702.33c, CR 702.34a, CR 702.37a and CR 702.42a: each states a
   -- cost as part of the keyword, so rewriteCost carries CR 612.1 into it.
   Keyword.Type.Kicker cost -> Keyword.Type.Kicker (rewriteCost pairs cost)
@@ -3228,7 +3227,7 @@ rewriteKeyword pairs keyword = case keyword of
   -- craft's reason.
   Keyword.Type.Splice splicing -> Keyword.Type.Splice (Splice.MkSplice (rewrite pairs (Splice.onto splicing)) (rewriteCost pairs (Splice.cost splicing)))
 
--- rewriteKeyword's descent into mobilize's and firebending's N: only a tally
+-- rewriteKeyword's descent into mobilize's, firebending's and ward's N: only a tally
 -- carries a Filter, and its scope holds no word, as rewriteQuantity leaves
 -- Count's.
 rewriteKeywordCount :: [(TextWord.TextWord, TextWord.TextWord)] -> KeywordCount.KeywordCount Keyword.Type.Keyword -> KeywordCount.KeywordCount Keyword.Type.Keyword

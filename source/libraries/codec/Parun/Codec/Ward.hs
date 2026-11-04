@@ -4,7 +4,7 @@ module Parun.Codec.Ward where
 
 import qualified Data.Typeable as Typeable
 import qualified Parun.Codec.Cost as Cost
-import qualified Parun.Codec.PlayerCounterTally as PlayerCounterTally
+import qualified Parun.Codec.KeywordCount as KeywordCount
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
@@ -17,5 +17,5 @@ import qualified Parun.Types.Ward as Ward
 codec :: (Typeable.Typeable keyword, Eq keyword) => Codec.Codec keyword -> Codec.Codec (Ward.Ward keyword)
 codec keywordCodec = Fields.object $ do
   cost <- Fields.required "cost" (Cost.codec keywordCodec) Ward.cost
-  perEach <- Fields.defaulted "perEach" Nothing (Common.maybe PlayerCounterTally.codec) Ward.perEach
+  perEach <- Fields.defaulted "perEach" Nothing (Common.maybe (KeywordCount.codec keywordCodec)) Ward.perEach
   pure Ward.MkWard {Ward.cost = cost, Ward.perEach = perEach}
