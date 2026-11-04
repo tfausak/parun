@@ -1,6 +1,6 @@
 {
   "description": "CR 508.3a a block is not an attack, so a blocking Hanweir Garrison makes no tokens",
-  "note": "A creature that blocks did not attack: bob's Hanweir Garrison blocks alice's Goblin Piker and makes no Human tokens. A SelfAttacks trigger that matched the blocking declaration would make two. The -control file is the same card attacking, so the zero is a fact about blocking rather than the fixture.",
+  "note": "A creature that blocks did not attack: bob's Hanweir Garrison blocks alice's Goblin Piker and makes no Human tokens. An attack trigger that matched the blocking declaration would make two. The -control file is the same card attacking, so the zero is a fact about blocking rather than the fixture.",
   "board": {
     "seats": [
       {

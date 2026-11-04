@@ -21,17 +21,22 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PlayerAttacksWith",
+            "type": "Attacks",
             "value": {
-              "attackers": 1,
-              "filter": {
-                "type": "HasCardType",
-                "value": {
-                  "type": "Creature"
+              "type": "Declaration",
+              "value": {
+                "attackers": {
+                  "filter": {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Creature"
+                    }
+                  },
+                  "floor": 1
+                },
+                "player": {
+                  "type": "AnyPlayer"
                 }
-              },
-              "player": {
-                "type": "AnyPlayer"
               }
             }
           },

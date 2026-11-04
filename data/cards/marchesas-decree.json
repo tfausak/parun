@@ -44,7 +44,22 @@
         },
         {
           "condition": {
-            "type": "CreatureAttacksYou"
+            "type": "Attacks",
+            "value": {
+              "type": "Attacker",
+              "value": {
+                "creature": {
+                  "type": "And",
+                  "value": []
+                },
+                "target": {
+                  "type": "Defending",
+                  "value": {
+                    "type": "You"
+                  }
+                }
+              }
+            }
           },
           "modal": {
             "modes": [

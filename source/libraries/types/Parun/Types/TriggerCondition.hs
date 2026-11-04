@@ -2,6 +2,7 @@ module Parun.Types.TriggerCondition where
 
 import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Types.ActingPermanent as ActingPermanent
+import qualified Parun.Types.AttackTrigger as AttackTrigger
 import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
@@ -30,8 +31,6 @@ import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDea
 import qualified Parun.Types.PlacesSticker as PlacesSticker
 import qualified Parun.Types.PlayerActed as PlayerActed
 import qualified Parun.Types.PlayerActsOn as PlayerActsOn
-import qualified Parun.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
-import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Types.PlayerRelation as PlayerRelation
@@ -103,67 +102,9 @@ data TriggerCondition
     -- Wizard), by equality on the ordinal the event carries; without an ordinal,
     -- "whenever [a player] draws a card" (Teferi, Hero of Dominaria's emblem).
     PlayerDrawsNthCard PlayerDrawsNthCard.PlayerDrawsNthCard
-  | -- | CR 508.3a: "whenever [a creature] attacks" (Hanweir Garrison).
-    -- Self-scoped; the TriggerFrequency is Aurelia, the Warleader's "for the
-    -- first time each turn".
-    SelfAttacks TriggerFrequency.TriggerFrequency
-  | -- | CR 508.3a with a companion required -- rule 702.149a's training, the
-    -- Filter asked existentially of everybody else the declaration named.
-    SelfAttacksWithAnother (Filter.Filter Keyword.Keyword)
-  | -- | CR 508.3a's second sentence, self-scoped: "whenever this creature attacks
-    -- a battle" (Thrashing Frontliner), the Filter asked of the PERMANENT CR
-    -- 508.1b announced. AttackTarget.OfPlayer never satisfies it.
-    SelfAttacksPermanent (Filter.Filter Keyword.Keyword)
-  | -- | CR 506.5 read by a bystander: "whenever a creature you control attacks
-    -- alone" -- rule 702.83a's exalted.
-    CreatureAttacksAlone (Filter.Filter Keyword.Keyword)
-  | -- | CR 508.3a's second sentence read by a bystander: "whenever a creature
-    -- attacks you or a planeswalker you control" (Marchesa's Decree), once per
-    -- declared attacker.
-    CreatureAttacksYou
-  | -- | CR 508.3a read by a bystander: "whenever a creature you control attacks"
-    -- (Fervent Charge), once per declared attacker the Filter admits.
-    CreatureAttacks (Filter.Filter Keyword.Keyword)
-  | -- | CR 508.3b: "whenever enchanted player is attacked" (Curse of Vitality),
-    -- once per distinct target, the subject read off Object.attachedTo.
-    --
-    -- Rule 508.3b's planeswalker and battle subjects are SelfIsAttacked below;
-    -- Scryfall o:"is attacked" o:"whenever", 2026-09-07, still matches only
-    -- these five Curses, so that arm's producer is synthetic.
-    AttachedPlayerIsAttacked
-  | -- | CR 508.3b's other two subjects: "whenever this planeswalker is attacked"
-    -- (Synthetic Warded Sentinel), once per distinct target, the subject being
-    -- the ability's own source rather than what it is attached to.
-    SelfIsAttacked
-  | -- | CR 508.3d: "whenever [a player] attacks" -- once per declaration,
-    -- against GameEvent.AttackersDeclared, with the declaring player bound
-    -- under Parun.Engine.Binding.attackingPlayer.
-    PlayerAttacks PlayerRelation.PlayerRelation
-  | -- | CR 508.3c: "whenever [a player] attacks with [n or more creatures]"
-    -- (Military Intelligence) -- the arm above narrowed by a Filter over the
-    -- creatures declared and by how many of them the declaration names; the
-    -- creatures it admitted are bound under Parun.Engine.Binding.attackingCreatures.
-    PlayerAttacksWith PlayerAttacksWith.PlayerAttacksWith
-  | -- | CR 508.3e: "whenever [a player] attacks [another player]" (Seifer,
-    -- Balamb Rival), once per pair; only AttackTarget.OfPlayer matches. Both
-    -- players are bound -- see Parun.Engine.Event.Binding.eventBindingSlots.
-    PlayerAttacksPlayer PlayerAttacksPlayer.PlayerAttacksPlayer
-  | -- | CR 702.105a: dethrone -- SelfAttacks narrowed to the player with the
-    -- most life, or tied for most. Only AttackTarget.OfPlayer satisfies it.
-    SelfAttacksPlayerWithMostLife
-  | -- | CR 702.171b: "whenever this creature attacks while saddled" (Bridled
-    -- Bighorn) -- SelfAttacks narrowed by the bearer carrying
-    -- Designation.Saddled as the declaration happens. The narrowing belongs to
-    -- the event and not to TriggeredAbility.intervening: CR 603.4 would re-check
-    -- an intervening "if" on resolution, where this clause asks only what was
-    -- true as the creature attacked.
-    SelfAttacksWhileSaddled
-  | -- | CR 508.3a narrowed by a state that holds as the bearer attacks -- Kari
-    -- Zev, Crew of Two\'s "whenever Kari Zev attacks while you don\'t control a
-    -- legendary Monkey". SelfAttacksWhileSaddled\'s reading and for its reason:
-    -- the event\'s own qualifier, never re-checked as TriggeredAbility.intervening
-    -- would be (CR 603.4).
-    SelfAttacksWhile Condition.Condition
+  | -- | CR 508.3: a trigger on attackers being declared, as a function of
+    -- Parun.Types.AttackTrigger's arity and fields.
+    Attacks AttackTrigger.AttackTrigger
   | -- | CR 509.3: "whenever [a creature] blocks" or "becomes blocked", in each of
     -- CR 509.3a-e's counts.
     --
@@ -176,10 +117,6 @@ data TriggerCondition
     -- Parun.KeywordTriggerSpec's SelfBlocksOneOrMore and
     -- CreatureBecomesBlockedByAtLeast groups are the proof.
     Blocks BlockTrigger.BlockTrigger
-  | -- | CR 509.1h: "whenever this creature attacks and isn't blocked" -- CR
-    -- 702.68a's frenzy, with the status fixed at the declaration. The Filter's
-    -- source is the bearer, CreatureAttacks' reason.
-    CreatureAttacksUnblocked (Filter.Filter Keyword.Keyword)
   | -- | CR 603.6: "when this card is put into your graveyard from your library"
     -- (Narcomoeba). Self-scoped, and the bearer is CR 400.7's new incarnation.
     SelfPutIntoGraveyardFromLibrary
@@ -387,7 +324,7 @@ data TriggerCondition
   | -- | CR 702.122e: "whenever this Vehicle becomes crewed" (Mobilizer Mech),
     -- which that rule defines as a crew ability of the bearer RESOLVING.
     -- Self-scoped; the TriggerFrequency is Mighty Servant of Leuk-o's "for the
-    -- first time each turn", SelfAttacks' payload one rule over.
+    -- first time each turn", as AttackerTrigger's is one rule over.
     --
     -- Rule 702.122e's second sentence is read off Parun.Engine.Binding.crewers,
     -- which Parun.Engine.Event.Binding stamps for every match: an intervening

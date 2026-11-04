@@ -24,7 +24,15 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfIsAttacked"
+            "type": "Attacks",
+            "value": {
+              "type": "Attacked",
+              "value": {
+                "attacked": {
+                  "type": "Source"
+                }
+              }
+            }
           },
           "modal": {
             "modes": [

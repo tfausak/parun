@@ -60,6 +60,7 @@ import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.Arithmetic as Arithmetic
 import qualified Parun.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import qualified Parun.Types.AttachAll as AttachAll
+import qualified Parun.Types.AttackTrigger as AttackTrigger
 import qualified Parun.Types.BoundMeasure as BoundMeasure
 import qualified Parun.Types.BoundReading as BoundReading
 import qualified Parun.Types.Card as Card.Type
@@ -80,6 +81,7 @@ import qualified Parun.Types.CostSubject as CostSubject
 import qualified Parun.Types.Count as Count.Type
 import qualified Parun.Types.CountedDiscard as CountedDiscard
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.DeclarationTrigger as DeclarationTrigger
 import qualified Parun.Types.Discard as Discard
 import qualified Parun.Types.Draw as Draw
 import qualified Parun.Types.Duration as Duration
@@ -888,7 +890,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         -- than on the constructor: CR 508.1 lets only the active player declare,
         -- so "whenever YOU attack" can only happen on the controller's turn and
         -- "whenever A PLAYER attacks" can happen on anyone's.
-        attacksWith relation ability = ability {TriggeredAbility.condition = TriggerCondition.PlayerAttacks relation}
+        attacksWith relation ability = ability {TriggeredAbility.condition = TriggerCondition.Attacks (AttackTrigger.Declaration (DeclarationTrigger.MkDeclarationTrigger relation Nothing))}
         youAttack = face {Face.delayedAbilities = fmap (attacksWith PlayerRelation.You) (Face.delayedAbilities face)}
         anyoneAttacks = face {Face.delayedAbilities = fmap (attacksWith PlayerRelation.AnyPlayer) (Face.delayedAbilities face)}
     Spec.assertBool s (not (onsetOffends face)) "the real card, ControllersTurn, is accepted"

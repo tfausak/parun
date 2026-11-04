@@ -7,7 +7,10 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Types.ActingPermanent as ActingPermanent
-import qualified Parun.Types.AttackedPlayer as AttackedPlayer
+import qualified Parun.Types.AttackCompany as AttackCompany
+import qualified Parun.Types.AttackTrigger as AttackTrigger
+import qualified Parun.Types.AttackerTarget as AttackerTarget
+import qualified Parun.Types.AttackerTrigger as AttackerTrigger
 import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.BlockCount as BlockCount
@@ -46,9 +49,6 @@ import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.ManaSpecification as ManaSpecification
-import qualified Parun.Types.Measure as Measure
-import qualified Parun.Types.Measures as Measures
-import qualified Parun.Types.Operand as Operand
 import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentAction as PermanentAction
@@ -62,8 +62,6 @@ import qualified Parun.Types.PlacesSticker as PlacesSticker
 import qualified Parun.Types.PlayerActed as PlayerActed
 import qualified Parun.Types.PlayerAction as PlayerAction
 import qualified Parun.Types.PlayerActsOn as PlayerActsOn
-import qualified Parun.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
-import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Types.PlayerRelation as PlayerRelation
@@ -225,142 +223,14 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.PlayerDrawsNthCard (PlayerDrawsNthCard.MkPlayerDrawsNthCard PlayerRelation.You (Just 2)))
       " {\"type\":\"PlayerDrawsNthCard\",\"value\":{\"player\":{\"type\":\"You\"},\"nth\":2}} "
-  -- CR 508.3a. Both frequencies, since "for the first time each turn" is a
-  -- payload on this condition rather than a sibling one.
-  Spec.it s "SelfAttacks round-trips both frequencies" $ do
+  -- CR 508.3a: the source's own "whenever this creature attacks", whose
+  -- fields all default. Parun.Codec.AttackTriggerSpec has the other arms.
+  Spec.it s "Attacks" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime)
-      " {\"type\":\"SelfAttacks\",\"value\":{\"type\":\"EveryTime\"}} "
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.SelfAttacks TriggerFrequency.FirstTimeEachTurn)
-      " {\"type\":\"SelfAttacks\",\"value\":{\"type\":\"FirstTimeEachTurn\"}} "
-  -- CR 702.149a. A Filter over the OTHER attackers, where the sibling above takes
-  -- a frequency and the one below counts the declaration.
-  Spec.it s "SelfAttacksWithAnother" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.SelfAttacksWithAnother (Filter.Measures (Measures.MkMeasures Measure.Power Comparison.GreaterThan (Operand.OfSource Measure.Power))))
-      " {\"type\":\"SelfAttacksWithAnother\",\"value\":{\"type\":\"Measures\",\"value\":{\"measure\":{\"type\":\"Power\"},\"comparison\":{\"type\":\"GreaterThan\"},\"operand\":{\"type\":\"OfSource\",\"value\":{\"type\":\"Power\"}}}}} "
-  -- CR 508.3a's second sentence. A Filter over the PERMANENT attacked, so the
-  -- same wire shape as the arm above over a different subject -- Thrashing
-  -- Frontliner's "a battle".
-  Spec.it s "SelfAttacksPermanent" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.SelfAttacksPermanent (Filter.HasCardType CardType.Battle))
-      " {\"type\":\"SelfAttacksPermanent\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Battle\"}}} "
-  -- CR 506.5. A Filter over the ATTACKER where the sibling above takes a
-  -- frequency: "alone" is the constructor's own, so it has no encoding of its
-  -- own here.
-  Spec.it s "CreatureAttacksAlone" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.CreatureAttacksAlone (Filter.HeldBy Holder.Controller PlayerRelation.You))
-      " {\"type\":\"CreatureAttacksAlone\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}} "
-  -- CR 508.3a's second sentence, nullary where the sibling above takes a Filter:
-  -- CR 508.1a already makes every declared attacker a creature.
-  Spec.it s "CreatureAttacksYou" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      TriggerCondition.CreatureAttacksYou
-      " {\"type\":\"CreatureAttacksYou\"} "
-  -- CR 508.3a read by a bystander, with a Filter over the attacker.
-  Spec.it s "CreatureAttacks" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.CreatureAttacks (Filter.HeldBy Holder.Controller PlayerRelation.You))
-      " {\"type\":\"CreatureAttacks\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}} "
-  -- CR 508.3d. All THREE relations: rule 508.3d's
-  -- "[a player]" is printed as "you" (Boggart Prankster), as "a player" (Avatar
-  -- Roku, Firebender) and as "an opponent" (Ever-Watching Threshold).
-  Spec.it s "PlayerAttacks round-trips all three relations" $ do
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PlayerAttacks PlayerRelation.You)
-      " {\"type\":\"PlayerAttacks\",\"value\":{\"type\":\"You\"}} "
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PlayerAttacks PlayerRelation.Opponent)
-      " {\"type\":\"PlayerAttacks\",\"value\":{\"type\":\"Opponent\"}} "
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PlayerAttacks PlayerRelation.AnyPlayer)
-      " {\"type\":\"PlayerAttacks\",\"value\":{\"type\":\"AnyPlayer\"}} "
-  -- CR 508.3c, the arm above with a Filter and a floor beside the relation --
-  -- Hermes, Overseer of Elpis' "whenever you attack with one or more Birds". A
-  -- named object rather than a bare payload, which is what let the floor become
-  -- a third key rather than a new wire shape.
-  Spec.it s "PlayerAttacksWith" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PlayerAttacksWith (PlayerAttacksWith.MkPlayerAttacksWith PlayerRelation.You (Filter.HasSubtype Subtype.Bird) 1))
-      " {\"type\":\"PlayerAttacksWith\",\"value\":{\"player\":{\"type\":\"You\"},\"filter\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Bird\"}},\"attackers\":1}} "
-  -- CR 508.3e, whose payload names BOTH subjects -- Seifer, Balamb Rival's
-  -- You/AnyPlayer and Lulu, Stern Guardian's Opponent/You. The two keys hold
-  -- DIFFERENT relations in each case, so a codec that crossed them would not
-  -- round-trip. Not the same wire shape as PlayerAttacks above, whose tag
-  -- differs and whose payload is a bare relation, so neither decodes as the
-  -- other.
-  Spec.it s "PlayerAttacksPlayer round-trips both subjects" $ do
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PlayerAttacksPlayer (PlayerAttacksPlayer.MkPlayerAttacksPlayer PlayerRelation.You (AttackedPlayer.Related PlayerRelation.AnyPlayer)))
-      " {\"type\":\"PlayerAttacksPlayer\",\"value\":{\"attacker\":{\"type\":\"You\"},\"attacked\":{\"type\":\"Related\",\"value\":{\"type\":\"AnyPlayer\"}}}} "
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PlayerAttacksPlayer (PlayerAttacksPlayer.MkPlayerAttacksPlayer PlayerRelation.Opponent (AttackedPlayer.Related PlayerRelation.You)))
-      " {\"type\":\"PlayerAttacksPlayer\",\"value\":{\"attacker\":{\"type\":\"Opponent\"},\"attacked\":{\"type\":\"Related\",\"value\":{\"type\":\"You\"}}}} "
-  -- CR 508.3b, nullary for the sibling above's reason and one of its own: the
-  -- subject is whom the ability's own source is attached to.
-  Spec.it s "AttachedPlayerIsAttacked" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      TriggerCondition.AttachedPlayerIsAttacked
-      " {\"type\":\"AttachedPlayerIsAttacked\"} "
-  -- Rule 508.3b's other two subjects, nullary for the arm above's reason: the
-  -- subject is the ability's own source, so there is nothing to parameterize.
-  Spec.it s "SelfIsAttacked" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      TriggerCondition.SelfIsAttacked
-      " {\"type\":\"SelfIsAttacked\"} "
-  -- CR 702.105a, nullary: the comparison is over life totals, so there is nothing
-  -- for a card to parameterize.
-  Spec.it s "SelfAttacksPlayerWithMostLife" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      TriggerCondition.SelfAttacksPlayerWithMostLife
-      " {\"type\":\"SelfAttacksPlayerWithMostLife\"} "
-  Spec.it s "SelfAttacksWhile" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.SelfAttacksWhile (Condition.Compares (Compares.MkCompares (Quantity.Literal 0) Comparison.Exactly (Quantity.Literal 0))))
-      " {\"type\":\"SelfAttacksWhile\",\"value\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":0},\"comparison\":{\"type\":\"Exactly\"},\"threshold\":{\"type\":\"Literal\",\"value\":0}}}} "
-  Spec.it s "SelfAttacksWhileSaddled" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      TriggerCondition.SelfAttacksWhileSaddled
-      " {\"type\":\"SelfAttacksWhileSaddled\"} "
+      (TriggerCondition.Attacks (AttackTrigger.Attacker (AttackerTrigger.MkAttackerTrigger Filter.IsSource AttackerTarget.AnyTarget AttackCompany.AnyCompany TriggerFrequency.EveryTime Nothing)))
+      " {\"type\":\"Attacks\",\"value\":{\"type\":\"Attacker\",\"value\":{}}} "
   -- CR 509.3e read by a bystander: Seifer, Balamb Rival's "a creature attacking
   -- one of your opponents becomes blocked by two or more creatures".
   Spec.it s "Blocks" $
@@ -369,14 +239,6 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker (Filter.IsAttackingPlayer PlayerRelation.Opponent) (BlockCount.AtLeast 2 (Filter.And []))))
       " {\"type\":\"Blocks\",\"value\":{\"role\":{\"type\":\"Attacker\"},\"creature\":{\"type\":\"IsAttackingPlayer\",\"value\":{\"type\":\"Opponent\"}},\"count\":{\"type\":\"AtLeast\",\"value\":{\"floor\":2}}}} "
-  -- CR 509.1h's unblocked branch, nullary like the blocked one: "attacks and
-  -- isn't blocked" has no per-blocker reading to carry a Filter for.
-  Spec.it s "CreatureAttacksUnblocked" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.CreatureAttacksUnblocked Filter.IsSource)
-      " {\"type\":\"CreatureAttacksUnblocked\",\"value\":{\"type\":\"IsSource\"}} "
   Spec.it s "SelfLeavesGraveyard" $
     Common.assertCodec
       s
@@ -886,8 +748,7 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.CreatureExploits (CreatureExploits.MkCreatureExploits (Filter.HasCardType CardType.Creature) (Filter.Not Filter.IsToken)))
       " {\"type\":\"CreatureExploits\",\"value\":{\"exploiter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"exploited\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}}} "
-  -- CR 702.122e's marker, self-scoped but carrying a frequency for SelfAttacks'
-  -- reason above -- Mighty Servant of Leuk-o prints "for the first time each
+  -- CR 702.122e's marker, self-scoped but carrying a frequency -- Mighty Servant of Leuk-o prints "for the first time each
   -- turn". Both, since either could round-trip alone.
   Spec.it s "SelfBecomesCrewed round-trips both frequencies" $ do
     Common.assertCodec

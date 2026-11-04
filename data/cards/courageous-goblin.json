@@ -29,75 +29,80 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfAttacksWhile",
+            "type": "Attacks",
             "value": {
-              "type": "Compares",
+              "type": "Attacker",
               "value": {
-                "comparison": {
-                  "type": "AtLeast"
-                },
-                "measured": {
-                  "type": "Count",
+                "while": {
+                  "type": "Compares",
                   "value": {
-                    "aggregation": {
-                      "type": "Members"
+                    "comparison": {
+                      "type": "AtLeast"
                     },
-                    "filter": {
-                      "type": "And",
-                      "value": [
-                        {
-                          "type": "HasCardType",
-                          "value": {
-                            "type": "Creature"
-                          }
-                        },
-                        {
-                          "type": "HeldBy",
-                          "value": {
-                            "holder": {
-                              "type": "Controller"
-                            },
-                            "relation": {
-                              "type": "You"
-                            }
-                          }
-                        },
-                        {
-                          "type": "Measures",
-                          "value": {
-                            "comparison": {
-                              "type": "AtLeast"
-                            },
-                            "measure": {
-                              "type": "Power"
-                            },
-                            "operand": {
-                              "type": "Literal",
-                              "value": 4
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    "scope": {
-                      "type": "InZone",
+                    "measured": {
+                      "type": "Count",
                       "value": {
-                        "player": {
-                          "type": "Relative",
-                          "value": {
-                            "type": "AnyPlayer"
-                          }
+                        "aggregation": {
+                          "type": "Members"
                         },
-                        "zone": {
-                          "type": "Battlefield"
+                        "filter": {
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "HasCardType",
+                              "value": {
+                                "type": "Creature"
+                              }
+                            },
+                            {
+                              "type": "HeldBy",
+                              "value": {
+                                "holder": {
+                                  "type": "Controller"
+                                },
+                                "relation": {
+                                  "type": "You"
+                                }
+                              }
+                            },
+                            {
+                              "type": "Measures",
+                              "value": {
+                                "comparison": {
+                                  "type": "AtLeast"
+                                },
+                                "measure": {
+                                  "type": "Power"
+                                },
+                                "operand": {
+                                  "type": "Literal",
+                                  "value": 4
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "scope": {
+                          "type": "InZone",
+                          "value": {
+                            "player": {
+                              "type": "Relative",
+                              "value": {
+                                "type": "AnyPlayer"
+                              }
+                            },
+                            "zone": {
+                              "type": "Battlefield"
+                            }
+                          }
                         }
                       }
+                    },
+                    "threshold": {
+                      "type": "Literal",
+                      "value": 1
                     }
                   }
-                },
-                "threshold": {
-                  "type": "Literal",
-                  "value": 1
                 }
               }
             }

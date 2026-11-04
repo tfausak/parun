@@ -39,6 +39,8 @@ import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.ArmDelayedTrigger as ArmDelayedTrigger
+import qualified Parun.Types.AttackCount as AttackCount
+import qualified Parun.Types.AttackTrigger as AttackTrigger
 import qualified Parun.Types.BlockCount as BlockCount
 import qualified Parun.Types.BlockRole as BlockRole
 import qualified Parun.Types.BlockTrigger as BlockTrigger
@@ -53,6 +55,7 @@ import qualified Parun.Types.Counterability as Counterability
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamageRecipient as DamageRecipient
 import qualified Parun.Types.DamageTrigger as DamageTrigger
+import qualified Parun.Types.DeclarationTrigger as DeclarationTrigger
 import qualified Parun.Types.Discard as Discard
 import qualified Parun.Types.Draw as Draw
 import qualified Parun.Types.Effect as Effect
@@ -79,7 +82,6 @@ import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.Player as Player
 import qualified Parun.Types.PlayerActed as PlayerActed
 import qualified Parun.Types.PlayerAction as PlayerAction
-import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
@@ -246,7 +248,7 @@ yourRingBearer =
 -- draw a card, then discard a card." Minted here rather than carried in card data
 -- for theRingIsLegendary's reason.
 --
--- TriggerCondition.PlayerAttacksWith is CR 508.3c ("whenever [a player] attacks
+-- AttackTrigger.Declaration's AttackCount is CR 508.3c ("whenever [a player] attacks
 -- with [a creature]") where rule 701.54c prints CR 508.3a ("whenever [a creature]
 -- attacks"), and the two coincide HERE for a reason the rules give rather than for
 -- one parun's model gives. Rule 508.3c fires once per DECLARATION over the
@@ -292,12 +294,13 @@ theRingLootsOnAttack =
                 }
           )
    in Mint.trigger
-        ( TriggerCondition.PlayerAttacksWith
-            PlayerAttacksWith.MkPlayerAttacksWith
-              { PlayerAttacksWith.player = PlayerRelation.You,
-                PlayerAttacksWith.filter = yourRingBearer,
-                PlayerAttacksWith.attackers = 1
-              }
+        ( TriggerCondition.Attacks
+            ( AttackTrigger.Declaration
+                DeclarationTrigger.MkDeclarationTrigger
+                  { DeclarationTrigger.player = PlayerRelation.You,
+                    DeclarationTrigger.attackers = Just (AttackCount.MkAttackCount 1 yourRingBearer)
+                  }
+            )
         )
         (Seq.fromList [draw, discard])
 

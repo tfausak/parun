@@ -28,11 +28,19 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "CreatureAttacksAlone",
+            "type": "Attacks",
             "value": {
-              "type": "HasAttached",
+              "type": "Attacker",
               "value": {
-                "type": "IsSource"
+                "company": {
+                  "type": "Alone"
+                },
+                "creature": {
+                  "type": "HasAttached",
+                  "value": {
+                    "type": "IsSource"
+                  }
+                }
               }
             }
           },

@@ -87,11 +87,16 @@ import qualified Parun.Types.AttachRestriction as AttachRestriction
 import qualified Parun.Types.AttachRewrite as AttachRewrite
 import qualified Parun.Types.AttachTarget as AttachTarget
 import qualified Parun.Types.AttachedToBound as AttachedToBound
+import qualified Parun.Types.AttackCompany as AttackCompany
 import qualified Parun.Types.AttackCost as AttackCost
+import qualified Parun.Types.AttackCount as AttackCount
 import qualified Parun.Types.AttackLimitUnless as AttackLimitUnless
 import qualified Parun.Types.AttackPermission as AttackPermission
 import qualified Parun.Types.AttackRequirement as AttackRequirement
 import qualified Parun.Types.AttackTargetRef as AttackTargetRef
+import qualified Parun.Types.AttackTrigger as AttackTrigger
+import qualified Parun.Types.AttackerTarget as AttackerTarget
+import qualified Parun.Types.AttackerTrigger as AttackerTrigger
 import qualified Parun.Types.Backup as Backup
 import qualified Parun.Types.BecomeCopy as BecomeCopy
 import qualified Parun.Types.BecomesTapState as BecomesTapState
@@ -183,6 +188,7 @@ import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DealDamage as DealDamage
 import qualified Parun.Types.DealtDamage as DealtDamage
+import qualified Parun.Types.DeclarationTrigger as DeclarationTrigger
 import qualified Parun.Types.Defense as Defense
 import qualified Parun.Types.Designate as Designate
 import qualified Parun.Types.Destroy as Destroy
@@ -323,7 +329,6 @@ import qualified Parun.Types.PlacesSticker as PlacesSticker
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
 import qualified Parun.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Parun.Types.PlayerActsOn as PlayerActsOn
-import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Parun.Types.PlayerCounters as PlayerCounters
 import qualified Parun.Types.PlayerEffect as PlayerEffect
@@ -1142,7 +1147,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- Nor does CR 702.110b's, for the same reason.
   TriggerCondition.SelfExploits -> []
   TriggerCondition.CreatureExploits {} -> []
-  -- Nor does CR 702.122e's: its payload is a TriggerFrequency, SelfAttacks' above.
+  -- Nor does CR 702.122e's: its payload is a TriggerFrequency.
   TriggerCondition.SelfBecomesCrewed {} -> []
   -- Nor does CR 702.122b's crewer side, nullary too.
   TriggerCondition.SelfCrewsVehicle -> []
@@ -1177,41 +1182,13 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> []
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> []
   TriggerCondition.PlayerTookInitiative -> []
-  TriggerCondition.SelfAttacks _ -> []
-  -- CR 702.149a's Filter holds no Count for PermanentEnters' reason.
-  TriggerCondition.SelfAttacksWithAnother _ -> []
-  -- Its Filter names the PERMANENT attacked and holds no Count for the arm
-  -- above's reason.
-  TriggerCondition.SelfAttacksPermanent _ -> []
-  TriggerCondition.CreatureAttacksAlone _ -> []
-  -- Nullary, so no Count either.
-  TriggerCondition.CreatureAttacksYou -> []
-  TriggerCondition.CreatureAttacks _ -> []
-  -- Nullary too, and rule 508.3b's "one or more" is the EVENT's grouping rather
-  -- than a number this condition counts.
-  TriggerCondition.AttachedPlayerIsAttacked -> []
-  -- The arm above's answer, over the same event: the subject is one permanent
-  -- and nothing here is counted.
-  TriggerCondition.SelfIsAttacked -> []
-  -- A PlayerRelation holds no Count, and rule 508.3d's "one or more" is the
-  -- EVENT's grouping for the arm above's reason, not a number this condition
-  -- counts.
-  TriggerCondition.PlayerAttacks _ -> []
-  -- The floor this one DOES carry is a bare Natural, BlockCount.AtLeast's shape
-  -- below, rather than a Count over Quantities; its Filter holds no Count for
-  -- PermanentEnters' reason.
-  TriggerCondition.PlayerAttacksWith {} -> []
-  -- Two PlayerRelations hold no Count, and rule 508.3e's "one or more" is the
-  -- EVENT's grouping for AttachedPlayerIsAttacked's reason.
-  TriggerCondition.PlayerAttacksPlayer {} -> []
-  -- CR 702.105a compares life totals rather than counting objects, so no Count.
-  TriggerCondition.SelfAttacksPlayerWithMostLife -> []
-  TriggerCondition.SelfAttacksWhileSaddled -> []
-  TriggerCondition.SelfAttacksWhile condition -> conditionCounts condition
+  -- CR 508.3's Filters hold no Count for PermanentEnters' reason, and CR
+  -- 508.3c's floor is a bare Natural; only the attacker's state can.
+  TriggerCondition.Attacks (AttackTrigger.Attacker t) -> foldMap conditionCounts (AttackerTrigger.while t)
+  TriggerCondition.Attacks _ -> []
   -- CR 509.3's Filters are predicates over the creatures of a block, holding no
   -- Count for PermanentEnters' reason, and CR 509.3e's floor is a bare Natural.
   TriggerCondition.Blocks _ -> []
-  TriggerCondition.CreatureAttacksUnblocked _ -> []
   TriggerCondition.SelfRevealedForMiracle -> []
   TriggerCondition.RevealedThisWay _ -> []
   -- CR 701.9a's discard condition is a PlayerRelation, a Filter and two enums,
@@ -4697,43 +4674,24 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> []
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> []
   TriggerCondition.PlayerTookInitiative -> []
-  TriggerCondition.SelfAttacks _ -> []
-  -- CR 702.149a names a quality the OTHER attackers must have, so this one DOES
-  -- carry a Filter -- "power greater than this creature's power".
-  TriggerCondition.SelfAttacksWithAnother f -> unframed [f]
-  -- CR 508.3a's second sentence names a quality the PERMANENT attacked must
-  -- have, so this one DOES carry a Filter -- Thrashing Frontliner's "a battle".
-  TriggerCondition.SelfAttacksPermanent f -> unframed [f]
-  -- CR 506.5's condition names a quality the ATTACKER must have, so it carries a
-  -- Filter -- rule 702.83a's "a creature you control".
-  TriggerCondition.CreatureAttacksAlone f -> unframed [f]
-  -- CR 508.3a's second sentence names no quality of the attacker -- CR 508.1a has
-  -- already made it a creature -- so this one carries no Filter to traverse.
-  TriggerCondition.CreatureAttacksYou -> []
-  -- Its bystander sibling names a quality of the attacker -- Fervent Charge's "a
-  -- creature you control" -- so it is swept like CreatureAttacksAlone's.
-  TriggerCondition.CreatureAttacks f -> unframed [f]
-  -- CR 508.3b names no quality of anything: its subject is the ability's own
-  -- attachment, so there is no Filter here either.
-  TriggerCondition.AttachedPlayerIsAttacked -> []
-  -- Rule 508.3b's other two subjects name no quality either: the subject is the
-  -- ability's own source, matched by identity.
-  TriggerCondition.SelfIsAttacked -> []
-  -- CR 508.3d names no quality of anything either: its subject is a player, its
-  -- payload is a PlayerRelation and not a Filter, and the creatures it counts
-  -- are the DECLARATION's.
-  TriggerCondition.PlayerAttacks _ -> []
-  -- CR 508.3c names a quality the declared creatures must have, so this one DOES
-  -- carry a Filter -- Hermes, Overseer of Elpis' "Birds".
-  TriggerCondition.PlayerAttacksWith payload -> unframed [PlayerAttacksWith.filter payload]
-  -- CR 508.3e names two players and no quality of anything, so no Filter --
-  -- rule 508.3d's answer, twice over.
-  TriggerCondition.PlayerAttacksPlayer {} -> []
-  -- CR 702.105a names no quality of the attacker, only a fact about whom it
-  -- attacked, so no Filter.
-  TriggerCondition.SelfAttacksPlayerWithMostLife -> []
-  TriggerCondition.SelfAttacksWhileSaddled -> []
-  TriggerCondition.SelfAttacksWhile condition -> frame Unframed (conditionFilters condition)
+  -- CR 508.3 names a quality of the attacker (rule 702.83a's "a creature you
+  -- control"), of the permanent attacked (Thrashing Frontliner's "a battle"), of
+  -- the other attackers (CR 702.149a's "power greater than this creature's
+  -- power") and of the creatures a declaration counts (Hermes, Overseer of
+  -- Elpis' "Birds"); players carry none.
+  TriggerCondition.Attacks trigger -> case trigger of
+    AttackTrigger.Attacker (AttackerTrigger.MkAttackerTrigger creature target company _ while_) ->
+      unframed
+        ( creature
+            : [f | AttackerTarget.Permanent f <- [target]]
+              <> [f | AttackCompany.WithAnother f <- [company]]
+        )
+        <> foldMap (frame Unframed . conditionFilters) while_
+    AttackTrigger.Attacked _ -> []
+    AttackTrigger.Declaration t -> case DeclarationTrigger.attackers t of
+      Nothing -> []
+      Just count -> unframed [AttackCount.filter count]
+    AttackTrigger.Unblocked f -> unframed [f]
   -- CR 509.3 names a quality of the creature that blocks or becomes blocked
   -- (Venom's "enchanted creature", CR 701.54c's "your Ring-bearer") and of the
   -- creatures on the other side (Netcaster Spider's "with flying", rule
@@ -4745,7 +4703,6 @@ triggerConditionFilters triggerCondition = case triggerCondition of
           BlockCount.EachCreature others -> [others]
           BlockCount.AtLeast _ others -> [others]
       )
-  TriggerCondition.CreatureAttacksUnblocked f -> unframed [f]
   TriggerCondition.SelfRevealedForMiracle -> []
   TriggerCondition.RevealedThisWay r -> unframed [RevealedThisWay.card r]
   -- Waste Not's "a creature card", card text swept like PermanentSacrificed's.
@@ -4870,22 +4827,8 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.RevealedThisWay _ -> []
   TriggerCondition.Discards _ -> []
   TriggerCondition.PlayerDrawsNthCard _ -> []
-  TriggerCondition.SelfAttacks _ -> []
-  TriggerCondition.SelfAttacksWithAnother _ -> []
-  TriggerCondition.SelfAttacksPermanent _ -> []
-  TriggerCondition.CreatureAttacksAlone _ -> []
-  TriggerCondition.CreatureAttacksYou -> []
-  TriggerCondition.CreatureAttacks _ -> []
-  TriggerCondition.AttachedPlayerIsAttacked -> []
-  TriggerCondition.SelfIsAttacked -> []
-  TriggerCondition.PlayerAttacks _ -> []
-  TriggerCondition.PlayerAttacksWith _ -> []
-  TriggerCondition.PlayerAttacksPlayer _ -> []
-  TriggerCondition.SelfAttacksPlayerWithMostLife -> []
-  TriggerCondition.SelfAttacksWhileSaddled -> []
-  TriggerCondition.SelfAttacksWhile _ -> []
+  TriggerCondition.Attacks _ -> []
   TriggerCondition.Blocks _ -> []
-  TriggerCondition.CreatureAttacksUnblocked _ -> []
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> []
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> []
   TriggerCondition.SelfPutIntoGraveyardDuringResolution -> []

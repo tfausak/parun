@@ -42,6 +42,8 @@ import qualified Parun.Types.AbilityTriggered as AbilityTriggered
 import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
 import qualified Parun.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Parun.Types.AttackTarget as AttackTarget
+import qualified Parun.Types.AttackTrigger as AttackTrigger
+import qualified Parun.Types.AttackedTrigger as AttackedTrigger
 import qualified Parun.Types.AttackerBlocked as AttackerBlocked
 import qualified Parun.Types.AttackerDeclared as AttackerDeclared
 import qualified Parun.Types.AttackerUnblocked as AttackerUnblocked
@@ -707,22 +709,8 @@ looksBack condition = case condition of
   TriggerCondition.RevealedThisWay _ -> False
   TriggerCondition.Discards _ -> False
   TriggerCondition.PlayerDrawsNthCard {} -> False
-  TriggerCondition.SelfAttacks _ -> False
-  TriggerCondition.SelfAttacksWithAnother _ -> False
-  TriggerCondition.SelfAttacksPermanent _ -> False
-  TriggerCondition.CreatureAttacksAlone _ -> False
-  TriggerCondition.CreatureAttacksYou -> False
-  TriggerCondition.CreatureAttacks _ -> False
-  TriggerCondition.AttachedPlayerIsAttacked -> False
-  TriggerCondition.SelfIsAttacked -> False
-  TriggerCondition.PlayerAttacks _ -> False
-  TriggerCondition.PlayerAttacksWith {} -> False
-  TriggerCondition.PlayerAttacksPlayer {} -> False
-  TriggerCondition.SelfAttacksPlayerWithMostLife -> False
-  TriggerCondition.SelfAttacksWhileSaddled -> False
-  TriggerCondition.SelfAttacksWhile _ -> False
+  TriggerCondition.Attacks _ -> False
   TriggerCondition.Blocks _ -> False
-  TriggerCondition.CreatureAttacksUnblocked _ -> False
   TriggerCondition.SpellOrAbilityCounters _ -> False
   TriggerCondition.AbilityIsCountered -> False
   TriggerCondition.DamageToPlayerPrevented _ -> False
@@ -958,26 +946,14 @@ batchScoped condition = case condition of
   -- unbracketed loop gives each card a group of its own.
   TriggerCondition.Discards discardTrigger -> DiscardTrigger.batching discardTrigger == Batching.OneOrMore
   TriggerCondition.PlayerDrawsNthCard {} -> False
-  TriggerCondition.SelfAttacks _ -> False
-  TriggerCondition.SelfAttacksWithAnother _ -> False
-  TriggerCondition.SelfAttacksPermanent _ -> False
-  TriggerCondition.CreatureAttacksAlone _ -> False
-  TriggerCondition.CreatureAttacksYou -> False
-  TriggerCondition.CreatureAttacks _ -> False
-  TriggerCondition.PlayerAttacks _ -> False
-  TriggerCondition.PlayerAttacksWith {} -> False
-  TriggerCondition.PlayerAttacksPlayer {} -> False
-  TriggerCondition.SelfAttacksPlayerWithMostLife -> False
-  TriggerCondition.SelfAttacksWhileSaddled -> False
-  TriggerCondition.SelfAttacksWhile _ -> False
   -- CR 508.3b / 805.10b: one combined declaration attacks a target once, but
   -- Parun.Engine.Combat records one GameEvent.BecameAttacked per (attacking
-  -- player, target) pair, CR 508.3e's arity, bracketed as one group. Each of
-  -- these matches one target only, so one trigger per group is one per target.
-  -- Parun.TeamSpec's "CR 508.3b a player two teammates attack is attacked once"
-  -- is the proof.
-  TriggerCondition.AttachedPlayerIsAttacked -> True
-  TriggerCondition.SelfIsAttacked -> True
+  -- player, target) pair, CR 508.3e's arity, bracketed as one group. "Is
+  -- attacked" names no attacking player and matches one target only, so one
+  -- trigger per group is one per target. Parun.TeamSpec's "CR 508.3b a player
+  -- two teammates attack is attacked once" is the proof.
+  TriggerCondition.Attacks (AttackTrigger.Attacked t) -> Maybe.isNothing (AttackedTrigger.attacker t)
+  TriggerCondition.Attacks _ -> False
   -- FALSE despite naming batches in the RULES, which is the one group of answers
   -- here that is not what it looks like. Rule 509.3e's "one or more" is already
   -- once-per-declaration, structurally: its events
@@ -988,7 +964,6 @@ batchScoped condition = case condition of
   -- other treatment because they reach a graveyard from four places and no event
   -- carries the arity.
   TriggerCondition.Blocks _ -> False
-  TriggerCondition.CreatureAttacksUnblocked _ -> False
   TriggerCondition.SpellOrAbilityCounters _ -> False
   TriggerCondition.AbilityIsCountered -> False
   TriggerCondition.DamageToPlayerPrevented _ -> False
@@ -2989,26 +2964,11 @@ zonesTriggeredFrom cond =
         TriggerCondition.CreaturesDealtCombatDamageToInitiative -> battlefield
         TriggerCondition.PlayerTookInitiative -> battlefield
         -- CR 302.6 / 508.1a: only a permanent on the battlefield can be declared as an
-        -- attacker, so CR 113.6k never reaches this.
-        TriggerCondition.SelfAttacks _ -> battlefield
-        TriggerCondition.SelfAttacksWithAnother _ -> battlefield
-        TriggerCondition.SelfAttacksPermanent _ -> battlefield
-        TriggerCondition.CreatureAttacksAlone _ -> battlefield
-        TriggerCondition.CreatureAttacksYou -> battlefield
-        TriggerCondition.CreatureAttacks _ -> battlefield
-        TriggerCondition.AttachedPlayerIsAttacked -> battlefield
-        -- CR 508.1b / 310.5: the announcement names a planeswalker the defending player
-        -- CONTROLS or a battle they protect, both battlefield permanents, so CR 113.6k
-        -- never reaches this one either.
-        TriggerCondition.SelfIsAttacked -> battlefield
-        TriggerCondition.PlayerAttacks _ -> battlefield
-        TriggerCondition.PlayerAttacksWith {} -> battlefield
-        TriggerCondition.PlayerAttacksPlayer {} -> battlefield
-        TriggerCondition.SelfAttacksPlayerWithMostLife -> battlefield
-        TriggerCondition.SelfAttacksWhileSaddled -> battlefield
-        TriggerCondition.SelfAttacksWhile _ -> battlefield
+        -- attacker, and CR 508.1b / 310.5's announcement names a planeswalker the
+        -- defending player CONTROLS or a battle they protect, both battlefield
+        -- permanents, so CR 113.6k never reaches this.
+        TriggerCondition.Attacks _ -> battlefield
         TriggerCondition.Blocks _ -> battlefield
-        TriggerCondition.CreatureAttacksUnblocked _ -> battlefield
         -- CR 113.6k's fourth zone: rule 702.94a's reveal happens FROM a hand and rule
         -- 701.20b leaves the card there, so this condition cannot trigger from the
         -- battlefield at all and the hand is the one zone it can. eventTriggers'
@@ -3302,22 +3262,8 @@ stateTriggersOn gs
             TriggerCondition.CreatureDealtCombatDamageToMonarch -> False
             TriggerCondition.CreaturesDealtCombatDamageToInitiative -> False
             TriggerCondition.PlayerTookInitiative -> False
-            TriggerCondition.SelfAttacks _ -> False
-            TriggerCondition.SelfAttacksWithAnother _ -> False
-            TriggerCondition.SelfAttacksPermanent _ -> False
-            TriggerCondition.CreatureAttacksAlone _ -> False
-            TriggerCondition.CreatureAttacksYou -> False
-            TriggerCondition.CreatureAttacks _ -> False
-            TriggerCondition.AttachedPlayerIsAttacked -> False
-            TriggerCondition.SelfIsAttacked -> False
-            TriggerCondition.PlayerAttacks _ -> False
-            TriggerCondition.PlayerAttacksWith {} -> False
-            TriggerCondition.PlayerAttacksPlayer {} -> False
-            TriggerCondition.SelfAttacksPlayerWithMostLife -> False
-            TriggerCondition.SelfAttacksWhileSaddled -> False
-            TriggerCondition.SelfAttacksWhile _ -> False
+            TriggerCondition.Attacks _ -> False
             TriggerCondition.Blocks _ -> False
-            TriggerCondition.CreatureAttacksUnblocked _ -> False
             TriggerCondition.SelfRevealedForMiracle -> False
             TriggerCondition.RevealedThisWay _ -> False
             TriggerCondition.Discards _ -> False

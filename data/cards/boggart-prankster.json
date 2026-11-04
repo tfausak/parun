@@ -29,9 +29,14 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PlayerAttacks",
+            "type": "Attacks",
             "value": {
-              "type": "You"
+              "type": "Declaration",
+              "value": {
+                "player": {
+                  "type": "You"
+                }
+              }
             }
           },
           "modal": {

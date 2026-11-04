@@ -21,9 +21,14 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PlayerAttacks",
+            "type": "Attacks",
             "value": {
-              "type": "Opponent"
+              "type": "Declaration",
+              "value": {
+                "player": {
+                  "type": "Opponent"
+                }
+              }
             }
           },
           "intervening": {

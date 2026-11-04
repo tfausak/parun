@@ -21,43 +21,48 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "CreatureAttacks",
+            "type": "Attacks",
             "value": {
-              "type": "And",
-              "value": [
-                {
-                  "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
-                },
-                {
-                  "type": "Not",
-                  "value": {
-                    "type": "HasKeyword",
-                    "value": {
-                      "type": "Flying"
-                    }
-                  }
-                },
-                {
-                  "type": "Or",
+              "type": "Attacker",
+              "value": {
+                "creature": {
+                  "type": "And",
                   "value": [
                     {
-                      "type": "IsAttackingPlayer",
+                      "type": "HasCardType",
                       "value": {
-                        "type": "You"
+                        "type": "Creature"
                       }
                     },
                     {
-                      "type": "IsAttackingPlaneswalker",
+                      "type": "Not",
                       "value": {
-                        "type": "You"
+                        "type": "HasKeyword",
+                        "value": {
+                          "type": "Flying"
+                        }
                       }
+                    },
+                    {
+                      "type": "Or",
+                      "value": [
+                        {
+                          "type": "IsAttackingPlayer",
+                          "value": {
+                            "type": "You"
+                          }
+                        },
+                        {
+                          "type": "IsAttackingPlaneswalker",
+                          "value": {
+                            "type": "You"
+                          }
+                        }
+                      ]
                     }
                   ]
                 }
-              ]
+              }
             }
           },
           "modal": {
