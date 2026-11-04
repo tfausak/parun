@@ -729,8 +729,11 @@ Entries are ordered by the first rule each cites.
   `Parun.Engine.Resolve.Effect.applyEffectWith` and
   `Parun.Engine.Cost.payComponent`, proved by the `sacred-ground-*` and
   `spiritual-focus-*` scenarios. The `obstinate-baloth-*` scenarios prove
-  only whose spell or ability caused the discard.
-- **Issue**: #5530.
+  only whose spell or ability caused the discard. A token made as that cost
+  is no effect either: `Parun.Engine.Replacement`'s `TokenR` arm reads
+  `TokenPattern.effectsOnly`, proved by the
+  `turntimber-ranger-wolf-is-not-doubled-by-anointed-procession` scenario.
+- **Issue**: #5530, #6114.
 
 ## Whether "if you can't" holds after doing part of an instruction
 

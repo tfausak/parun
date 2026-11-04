@@ -114,6 +114,7 @@ animate-wall
 animists-awakening
 ankh-of-mishra
 annex
+anointed-procession
 aphotic-wisps
 apocalypse-chime
 approach-of-the-second-sun

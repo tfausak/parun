@@ -897,6 +897,7 @@ matchesPrinted viewOf gs event candidate =
         -- creating effect gives its token (CR 111.3) since none is minted yet.
         (ReplacementEffect.TokenR (TokenR.MkTokenR pat _ _), ProposedEvent.WouldCreateTokens pid lots) ->
           matchesPlayer gs candidate (TokenPattern.whose pat) pid
+            && not (TokenPattern.effectsOnly pat && GameState.payingOnResolution gs)
             && any (matchesTokenLot gs (candidateContext gs candidate) (TokenPattern.whatToken pat) pid) lots
         -- CR 614.1b / 500.11: a skip intercepts a step or phase BEGINNING, and
         -- names exactly which one -- and, for a player-scoped skip, whose.
