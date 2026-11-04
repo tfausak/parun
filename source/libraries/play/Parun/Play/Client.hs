@@ -586,16 +586,16 @@ handOff terminal seat = do
 -- during it, and this turn's. Every request's view is read, answered
 -- automatically or not, since the view holds only those two turns' entries.
 -- A seat is sent a request every turn, even one it is controlled for: each
--- priority asks the seat itself whether it concedes (CR 104.3a, 723.6).
---
--- Not implemented: telling a subgame's or a restarted game's turns from the
--- parent's or the old game's, whose turn numbers the mark shares (#5369).
+-- priority asks the seat itself whether it concedes (CR 104.3a, 723.6). The
+-- mark is kept per game, since a subgame's and a restarted game's turns are
+-- numbered from 1 again (CR 727.1, 729.1a).
 collect :: (Monad m) => PlayerView.PlayerView -> Client m ()
 collect view = do
   let seat = PlayerView.viewer view
+      mark = (seat, PlayerView.game view)
       turn = PlayerView.turn view
       entries = PlayerView.witnessed view
-  before <- State.gets (Map.lookup seat . Hotseat.seen)
+  before <- State.gets (Map.lookup mark . Hotseat.seen)
   let missed = case before of
         Just (t, n)
           | t == turn -> List.genericDrop n entries
@@ -604,7 +604,7 @@ collect view = do
       unread = Seq.fromList (Render.events view missed)
   State.modify' $ \h ->
     h
-      { Hotseat.seen = Map.insert seat (turn, Natural.length entries) (Hotseat.seen h),
+      { Hotseat.seen = Map.insert mark (turn, Natural.length entries) (Hotseat.seen h),
         Hotseat.news = Map.insertWith (flip (<>)) seat unread (Hotseat.news h)
       }
 

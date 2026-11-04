@@ -32,6 +32,7 @@ viewFor :: PlayerId.PlayerId -> GameState.GameState -> PlayerView.PlayerView
 viewFor pid gs =
   PlayerView.MkPlayerView
     { PlayerView.viewer = pid,
+      PlayerView.game = GameState.gameNumber gs,
       PlayerView.turn = GameState.turnNumber gs,
       PlayerView.phase = GameState.phase gs,
       PlayerView.active = GameState.activePlayer gs,

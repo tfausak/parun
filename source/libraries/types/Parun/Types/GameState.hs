@@ -581,6 +581,14 @@ data GameState = MkGameState
     -- 727.1's restart, which begins a new game of the SAME match. Parun models
     -- no match beyond it, so a game built by Setup.emptyGame starts at 0.
     subgamesThisMatch :: Natural.Natural,
+    -- | CR 727.1 / 729.1a: how many games have begun this match, counting this
+    -- one, every subgame and every restarted game; match-scoped as
+    -- `subgamesThisMatch` is, and carried as it is.
+    gamesThisMatch :: Natural.Natural,
+    -- | CR 727.1 / 729.1a: which of `gamesThisMatch` this game is, so a
+    -- subgame's or a restarted game's turn numbers, which begin again at 1,
+    -- are not taken for this game's. Parun.Engine.PlayerView shows it.
+    gameNumber :: Natural.Natural,
     -- | CR 500.7 / 103.1: while an extra turn is under way, the seat the
     -- ordinary turn order resumes from; Nothing on an ordinary turn.
     turnAnchor :: Maybe PlayerId.PlayerId,

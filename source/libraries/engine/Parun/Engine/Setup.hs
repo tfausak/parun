@@ -340,6 +340,10 @@ gameWith settings order =
           -- CR 100.6a: parun models no match around this game, so the match it
           -- belongs to has had no subgame yet.
           GameState.subgamesThisMatch = 0,
+          -- CR 727.1 / 729.1a: the match's first game; startGameFromCards
+          -- numbers each later one.
+          GameState.gamesThisMatch = 1,
+          GameState.gameNumber = 1,
           GameState.turnAnchor = Nothing,
           GameState.extraTurnUnderWay = Nothing,
           GameState.rollingDie = Nothing,
@@ -615,6 +619,11 @@ startGameFromCards perform exemptions = do
   State.modify' $ \g ->
     let (split, next) = splitComponents (GameState.nextObjectId g) (GameState.objects g)
      in g {GameState.objects = split, GameState.nextObjectId = next}
+  -- CR 727.1 / 729.1a: a restart and a subgame each begin a new game of the
+  -- match, numbered after every game begun so far.
+  State.modify' $ \g ->
+    let begun = 1 + GameState.gamesThisMatch g
+     in g {GameState.gamesThisMatch = begun, GameState.gameNumber = begun}
   gs <- State.get
   let owners = Game.stillPlayingInOrder gs
       -- Cards in exile, and nothing else: CR 727.2's "all Magic cards" is what
@@ -1810,5 +1819,8 @@ funnelBack finalSub parent =
           -- subgame of this match, so the resumed main game takes the deeper
           -- tally -- nextTimestamp's treatment, and monotone for its reason,
           -- subgameStateFrom having inherited the parent's raised value.
-          GameState.subgamesThisMatch = max (GameState.subgamesThisMatch parent) (GameState.subgamesThisMatch finalSub)
+          GameState.subgamesThisMatch = max (GameState.subgamesThisMatch parent) (GameState.subgamesThisMatch finalSub),
+          -- CR 729.1a: the main game resumes as itself (its gameNumber), with
+          -- the games the subgame began on the match's books.
+          GameState.gamesThisMatch = max (GameState.gamesThisMatch parent) (GameState.gamesThisMatch finalSub)
         }

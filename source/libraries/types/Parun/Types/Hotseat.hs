@@ -16,9 +16,9 @@ data Hotseat = MkHotseat
     unread :: Bool,
     -- | CR 104.3a: the seats that asked to concede.
     conceding :: Set.Set PlayerId.PlayerId,
-    -- | Per seat, the turn and how many of its witnessed entries the client
-    -- has read off its views.
-    seen :: Map.Map PlayerId.PlayerId (Natural.Natural, Natural.Natural),
+    -- | Per seat and game of the match (PlayerView.game), the turn and how
+    -- many of its witnessed entries the client has read off its views.
+    seen :: Map.Map (PlayerId.PlayerId, Natural.Natural) (Natural.Natural, Natural.Natural),
     -- | Per seat, the entries read off its views and not yet shown it, as the
     -- client words them. They outlive the turn they were read in.
     news :: Map.Map PlayerId.PlayerId (Seq.Seq Text.Text),

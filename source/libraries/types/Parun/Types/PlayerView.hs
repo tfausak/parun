@@ -11,6 +11,9 @@ import qualified Parun.Types.SeatView as SeatView
 -- | CR 400.2 / 723.4: everything one seat may see of a game, and nothing else.
 data PlayerView = MkPlayerView
   { viewer :: PlayerId.PlayerId,
+    -- | CR 727.1 / 729.1a: which game of the match this is
+    -- (GameState.gameNumber), whose turns `turn` counts.
+    game :: Natural.Natural,
     turn :: Natural.Natural,
     phase :: Phase.Phase,
     active :: PlayerId.PlayerId,
