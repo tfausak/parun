@@ -5,19 +5,23 @@ import qualified Data.Set as Set
 import qualified Numeric.Natural as Natural
 import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.AttackTarget as AttackTarget
+import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.ControlClock as ControlClock
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordInstance as KeywordInstance
+import qualified Parun.Types.ModeIndex as ModeIndex
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.PlayerChoice as PlayerChoice
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Parun.Types.Source as Source
 import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.Zone as Zone
 
 -- | CR 608.2h: what an object WAS, filed under the id it had while it existed.
@@ -220,6 +224,10 @@ data LastKnown = MkLastKnown
     -- Object.announcedX as it left, so an enters-the-battlefield ability whose
     -- source is already gone still reads it (Game.announcedXOf).
     announcedX :: !(Maybe Natural.Natural),
+    -- | CR 700.2b / 113.7a: the modes its triggered abilities had chosen --
+    -- Object.chosenModes as it left, so a trigger whose source is gone before
+    -- CR 603.3 places it still bars them (Parun.Engine.Engine.placeBorne).
+    chosenModes :: !(Map.Map (TriggeredAbility.TriggeredAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)) (Set.Set ModeIndex.ModeIndex)),
     -- | CR 702.30a: how far each player's echo window had run on it --
     -- Object.controlClock as it left. Not a characteristic (CR 109.3's list has
     -- no clock), and per-INCARNATION, so CR 400.7 deletes the only copy of it
