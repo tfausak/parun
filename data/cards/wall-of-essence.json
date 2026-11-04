@@ -36,11 +36,13 @@
           "condition": {
             "type": "IsDealtDamage",
             "value": {
-              "kind": {
-                "type": "Combat"
-              },
-              "recipient": {
-                "type": "Self"
+              "dealt": {
+                "kind": {
+                  "type": "Combat"
+                },
+                "recipient": {
+                  "type": "Self"
+                }
               }
             }
           },

@@ -52,9 +52,14 @@
                               "type": "Triggered",
                               "value": {
                                 "condition": {
-                                  "type": "DealsCombatDamage",
+                                  "type": "DealsDamage",
                                   "value": {
-                                    "type": "Self"
+                                    "actor": {
+                                      "type": "Self"
+                                    },
+                                    "kind": {
+                                      "type": "Combat"
+                                    }
                                   }
                                 },
                                 "modal": {

@@ -26,25 +26,36 @@
       "delayedAbilities": {
         "harsh justice": {
           "condition": {
-            "type": "PermanentDealsCombatDamageToPlayer",
+            "type": "DealsDamage",
             "value": {
-              "filter": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
+              "actor": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    },
+                    {
+                      "type": "IsAttacking"
                     }
-                  },
-                  {
-                    "type": "IsAttacking"
-                  }
-                ]
+                  ]
+                }
               },
-              "recipient": {
-                "type": "You"
-              }
+              "kind": {
+                "type": "Combat"
+              },
+              "recipients": [
+                {
+                  "type": "Player",
+                  "value": {
+                    "type": "You"
+                  }
+                }
+              ]
             }
           },
           "modal": {

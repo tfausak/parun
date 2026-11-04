@@ -32,12 +32,19 @@
             "type": "AnyOf",
             "value": [
               {
-                "type": "SelfBlocks"
+                "type": "Blocks",
+                "value": {
+                  "role": {
+                    "type": "Blocker"
+                  }
+                }
               },
               {
-                "type": "CreatureBecomesBlocked",
+                "type": "Blocks",
                 "value": {
-                  "type": "IsSource"
+                  "role": {
+                    "type": "Attacker"
+                  }
                 }
               }
             ]

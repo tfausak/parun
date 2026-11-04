@@ -2,6 +2,7 @@
 
 module Parun.Codec.AttackerBlocked where
 
+import qualified Data.Set as Set
 import qualified Parun.Codec.ObjectId as ObjectId
 import qualified Parun.Codec.PlayerId as PlayerId
 import qualified Parun.JsonCodec.Codec as Codec
@@ -16,10 +17,10 @@ codec :: Codec.Codec AttackerBlocked.AttackerBlocked
 codec = Fields.object $ do
   attacker <- Fields.required "attacker" ObjectId.codec AttackerBlocked.attacker
   defender <- Fields.required "defender" PlayerId.codec AttackerBlocked.defender
-  -- Defaulted rather than required, and to ZERO rather than to a plausible
-  -- count: CR 509.1h's escape clause is the one producer that leaves nobody
-  -- blocking the creature, so the key rides on every other road.
-  blockers <- Fields.defaulted "blockers" 0 Common.natural AttackerBlocked.blockers
+  -- Defaulted rather than required, and to NO creature: CR 509.1h's escape
+  -- clause is the one producer that leaves nobody blocking the creature, so
+  -- the key rides on every other road.
+  blockers <- Fields.defaulted "blockers" Set.empty (Common.set ObjectId.codec) AttackerBlocked.blockers
   pure
     AttackerBlocked.MkAttackerBlocked
       { AttackerBlocked.attacker = attacker,

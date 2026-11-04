@@ -51,9 +51,10 @@ import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.Bid as Bid
 import qualified Parun.Types.BindAmount as BindAmount
 import qualified Parun.Types.Blight as Blight
-import qualified Parun.Types.BlockPair as BlockPair
+import qualified Parun.Types.BlockCount as BlockCount
 import qualified Parun.Types.BlockPermission as BlockPermission
 import qualified Parun.Types.BlockRequirement as BlockRequirement
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.CantAttackPlayer as CantAttackPlayer
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.CantBlockCreatures as CantBlockCreatures
@@ -116,9 +117,8 @@ import qualified Parun.Types.DamagePart as DamagePart
 import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
+import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DealDamage as DealDamage
-import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
-import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Designate as Designate
 import qualified Parun.Types.Destroy as Destroy
@@ -207,7 +207,7 @@ import qualified Parun.Types.OfferCast as OfferCast
 import qualified Parun.Types.PayGate as PayGate
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
-import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
+import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
@@ -2096,15 +2096,11 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.SpellCast (SpellCast.MkSpellCast f scope fromZone ordinal window copies) -> TriggerCondition.SpellCast (SpellCast.MkSpellCast (Filter.rewrite pairs f) scope fromZone ordinal window copies)
   TriggerCondition.SelfEnters -> condition
   TriggerCondition.StepBegins {} -> condition
-  TriggerCondition.SelfDealsCombatDamageToPlayer _ -> condition
-  TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> condition
-  TriggerCondition.DealsCombatDamage watched -> TriggerCondition.DealsCombatDamage (acting watched)
-  TriggerCondition.DealsDamageToPlayer p -> TriggerCondition.DealsDamageToPlayer p {DealsDamageToPlayer.actor = acting (DealsDamageToPlayer.actor p)}
-  TriggerCondition.DealsDamageToPermanent p -> TriggerCondition.DealsDamageToPermanent p {DealsDamageToPermanent.actor = acting (DealsDamageToPermanent.actor p)}
-  TriggerCondition.DealsDamage watched -> TriggerCondition.DealsDamage (acting watched)
-  TriggerCondition.IsDealtDamage dealt -> TriggerCondition.IsDealtDamage dealt {DealtDamage.recipient = acting (DealtDamage.recipient dealt)}
+  -- Positional, so a field the record gains stops the build here: a kind and a
+  -- card type name no subtype for CR 612.1's pairs to swap.
+  TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger actor kind recipients) -> TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger (acting actor) kind recipients)
+  TriggerCondition.IsDealtDamage watched -> TriggerCondition.IsDealtDamage watched {PermanentIsDealtDamage.dealt = (PermanentIsDealtDamage.dealt watched) {DealtDamage.recipient = acting (DealtDamage.recipient (PermanentIsDealtDamage.dealt watched))}}
   TriggerCondition.PlayerIsDealtDamage _ -> condition
-  TriggerCondition.PermanentDealsCombatDamageToPlayer p -> TriggerCondition.PermanentDealsCombatDamageToPlayer p {PermanentDealsCombatDamageToPlayer.filter = Filter.rewrite pairs (PermanentDealsCombatDamageToPlayer.filter p)}
   TriggerCondition.PermanentsDealCombatDamageToPlayer p -> TriggerCondition.PermanentsDealCombatDamageToPlayer p {PermanentsDealCombatDamageToPlayer.filter = Filter.rewrite pairs (PermanentsDealCombatDamageToPlayer.filter p)}
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> condition
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> condition
@@ -2143,15 +2139,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.SelfAttacksPlayerWithMostLife -> condition
   TriggerCondition.SelfAttacksWhileSaddled -> condition
   TriggerCondition.SelfAttacksWhile c -> TriggerCondition.SelfAttacksWhile (rewriteCondition pairs c)
-  TriggerCondition.SelfBlocks -> condition
-  TriggerCondition.CreatureBlocks f -> TriggerCondition.CreatureBlocks (Filter.rewrite pairs f)
-  TriggerCondition.CreatureBlocksCreature p -> TriggerCondition.CreatureBlocksCreature (rewriteBlockPair pairs p)
-  TriggerCondition.SelfBlocksAtLeast _ -> condition
-  TriggerCondition.SelfBlocksOneOrMore f -> TriggerCondition.SelfBlocksOneOrMore (Filter.rewrite pairs f)
-  TriggerCondition.CreatureBecomesBlocked f -> TriggerCondition.CreatureBecomesBlocked (Filter.rewrite pairs f)
-  TriggerCondition.CreatureBecomesBlockedBy p -> TriggerCondition.CreatureBecomesBlockedBy (rewriteBlockPair pairs p)
-  TriggerCondition.SelfBecomesBlockedByOneOrMore f -> TriggerCondition.SelfBecomesBlockedByOneOrMore (Filter.rewrite pairs f)
-  TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> condition
+  TriggerCondition.Blocks t -> TriggerCondition.Blocks (rewriteBlockTrigger pairs t)
   TriggerCondition.CreatureAttacksUnblocked f -> TriggerCondition.CreatureAttacksUnblocked (Filter.rewrite pairs f)
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> condition
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> condition
@@ -2232,8 +2220,12 @@ rewriteTriggerCondition pairs condition = case condition of
       ActingPermanent.Matching f -> ActingPermanent.Matching (Filter.rewrite pairs f)
 
 -- CR 612.1 through both ends of a pairwise block trigger.
-rewriteBlockPair :: [(TextWord.TextWord, TextWord.TextWord)] -> BlockPair.BlockPair -> BlockPair.BlockPair
-rewriteBlockPair pairs p = BlockPair.MkBlockPair {BlockPair.blocker = Filter.rewrite pairs (BlockPair.blocker p), BlockPair.attacker = Filter.rewrite pairs (BlockPair.attacker p)}
+rewriteBlockTrigger :: [(TextWord.TextWord, TextWord.TextWord)] -> BlockTrigger.BlockTrigger -> BlockTrigger.BlockTrigger
+rewriteBlockTrigger pairs (BlockTrigger.MkBlockTrigger role creature count) =
+  BlockTrigger.MkBlockTrigger role (Filter.rewrite pairs creature) $ case count of
+    BlockCount.Once -> BlockCount.Once
+    BlockCount.EachCreature others -> BlockCount.EachCreature (Filter.rewrite pairs others)
+    BlockCount.AtLeast n others -> BlockCount.AtLeast n (Filter.rewrite pairs others)
 
 -- CR 612.1 through a casting permission's one condition.
 rewriteCastingPermission :: [(TextWord.TextWord, TextWord.TextWord)] -> CastingPermission.CastingPermission -> CastingPermission.CastingPermission
@@ -2304,7 +2296,7 @@ rewriteDuration pairs duration = case duration of
   Duration.Indefinite -> duration
   Duration.Perpetual -> duration
   Duration.UntilYourNextTurn -> duration
-  Duration.UntilYourNextStep _ -> duration
+  Duration.UntilNextStepOf _ -> duration
   Duration.UntilEndOfYourNextTurn -> duration
   -- A PlayerRef names its seat structurally -- by slot or by relation -- and
   -- carries no word CR 612.1 can swap, so the reference is left alone.

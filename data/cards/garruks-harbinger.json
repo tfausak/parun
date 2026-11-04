@@ -49,15 +49,31 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentDealsCombatDamageToPlayer",
+            "type": "DealsDamage",
             "value": {
-              "filter": {
-                "type": "IsSource"
+              "actor": {
+                "type": "Matching",
+                "value": {
+                  "type": "IsSource"
+                }
               },
-              "orTheirPlaneswalkers": true,
-              "recipient": {
-                "type": "AnyPlayer"
-              }
+              "kind": {
+                "type": "Combat"
+              },
+              "recipients": [
+                {
+                  "type": "Player",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                },
+                {
+                  "type": "Permanent",
+                  "value": {
+                    "type": "Planeswalker"
+                  }
+                }
+              ]
             }
           },
           "modal": {

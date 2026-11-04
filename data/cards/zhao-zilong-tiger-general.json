@@ -43,7 +43,12 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfBlocks"
+            "type": "Blocks",
+            "value": {
+              "role": {
+                "type": "Blocker"
+              }
+            }
           },
           "modal": {
             "modes": [

@@ -94,64 +94,76 @@
             "type": "AnyOf",
             "value": [
               {
-                "type": "CreatureBlocksCreature",
+                "type": "Blocks",
                 "value": {
-                  "attacker": {
-                    "type": "And",
-                    "value": [
-                      {
-                        "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
-                      },
-                      {
-                        "type": "Not",
-                        "value": {
-                          "type": "HasSubtype",
+                  "count": {
+                    "type": "EachCreature",
+                    "value": {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HasCardType",
                           "value": {
-                            "type": "Wall"
+                            "type": "Creature"
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasSubtype",
+                            "value": {
+                              "type": "Wall"
+                            }
                           }
                         }
-                      }
-                    ]
+                      ]
+                    }
                   },
-                  "blocker": {
+                  "creature": {
                     "type": "HasAttached",
                     "value": {
                       "type": "IsSource"
                     }
+                  },
+                  "role": {
+                    "type": "Blocker"
                   }
                 }
               },
               {
-                "type": "CreatureBecomesBlockedBy",
+                "type": "Blocks",
                 "value": {
-                  "attacker": {
+                  "count": {
+                    "type": "EachCreature",
+                    "value": {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HasCardType",
+                          "value": {
+                            "type": "Creature"
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasSubtype",
+                            "value": {
+                              "type": "Wall"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "creature": {
                     "type": "HasAttached",
                     "value": {
                       "type": "IsSource"
                     }
                   },
-                  "blocker": {
-                    "type": "And",
-                    "value": [
-                      {
-                        "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
-                      },
-                      {
-                        "type": "Not",
-                        "value": {
-                          "type": "HasSubtype",
-                          "value": {
-                            "type": "Wall"
-                          }
-                        }
-                      }
-                    ]
+                  "role": {
+                    "type": "Attacker"
                   }
                 }
               }

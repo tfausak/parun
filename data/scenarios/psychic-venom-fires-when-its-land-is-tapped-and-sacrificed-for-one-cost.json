@@ -1,0 +1,140 @@
+{
+  "board": {
+    "active": "bob",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Evolving Wilds",
+            "label": "wilds"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island",
+            "label": "top"
+          },
+          {
+            "card": "Plains",
+            "label": "plains"
+          },
+          {
+            "card": "Island",
+            "label": "bottom"
+          }
+        ],
+        "name": "bob"
+      },
+      {
+        "battlefield": [
+          {
+            "attached": "wilds",
+            "card": "Psychic Venom",
+            "label": "venom"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 603.10: Psychic Venom triggers when its land is tapped and sacrificed for one cost, though neither the land nor the Aura is on the battlefield when the trigger is put on the stack",
+  "note": "Bob activates his enchanted Evolving Wilds, tapping it before sacrificing it. Alice's Venom, buried by CR 704.5m, still deals bob 2 before the Wilds' search resolves.",
+  "timeline": [
+    {
+      "do": {
+        "Activate": {
+          "costOrder": [
+            0,
+            1
+          ],
+          "object": "$wilds"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Psychic Venom",
+          "count": 1,
+          "player": "alice",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 18,
+          "player": "bob"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$plains"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "$top",
+            "$bottom"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Plains",
+          "count": 1,
+          "player": "bob",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

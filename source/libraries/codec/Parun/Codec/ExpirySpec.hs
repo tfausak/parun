@@ -28,6 +28,7 @@ import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.StepBegan as StepBegan
+import qualified Parun.Types.StepOfControllerOf as StepOfControllerOf
 import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.While as While
 
@@ -119,6 +120,17 @@ spec s = Spec.describe s "Parun.Codec.Expiry" $ do
       Expiry.codec
       (Expiry.DuringUntapStepOf (PlayerId.MkPlayerId 2))
       " {\"type\":\"DuringUntapStepOf\",\"value\":2} "
+  Spec.it s "AtStepOfControllerOf carries its step and object" $
+    Common.assertCodec
+      s
+      Expiry.codec
+      ( Expiry.AtStepOfControllerOf
+          StepOfControllerOf.MkStepOfControllerOf
+            { StepOfControllerOf.phase = Phase.Beginning BeginningStep.Untap,
+              StepOfControllerOf.object = ObjectId.MkObjectId 5
+            }
+      )
+      " {\"type\":\"AtStepOfControllerOf\",\"value\":{\"object\":5,\"phase\":{\"type\":\"Beginning\",\"value\":{\"type\":\"Untap\"}}}} "
   Spec.it s "DuringTurnOfControllerOf carries its object and turn" $
     Common.assertCodec
       s

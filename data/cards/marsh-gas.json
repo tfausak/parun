@@ -1,0 +1,68 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Marsh Gas",
+      "oracleText": "All creatures get -2/-0 until end of turn.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "ModifyTarget",
+                    "value": {
+                      "duration": {
+                        "type": "UntilEndOfTurn"
+                      },
+                      "modification": {
+                        "type": "ModifyPowerToughness",
+                        "value": {
+                          "power": {
+                            "type": "Literal",
+                            "value": -2
+                          },
+                          "toughness": {
+                            "type": "Literal",
+                            "value": 0
+                          }
+                        }
+                      },
+                      "ref": {
+                        "type": "EachMatching",
+                        "value": {
+                          "type": "HasCardType",
+                          "value": {
+                            "type": "Creature"
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}

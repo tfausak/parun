@@ -34,30 +34,33 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "CreatureBlocksCreature",
+            "type": "Blocks",
             "value": {
-              "attacker": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
-                  },
-                  {
-                    "type": "Not",
-                    "value": {
-                      "type": "HasKeyword",
+              "count": {
+                "type": "EachCreature",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
                       "value": {
-                        "type": "Flying"
+                        "type": "Creature"
+                      }
+                    },
+                    {
+                      "type": "Not",
+                      "value": {
+                        "type": "HasKeyword",
+                        "value": {
+                          "type": "Flying"
+                        }
                       }
                     }
-                  }
-                ]
+                  ]
+                }
               },
-              "blocker": {
-                "type": "IsSource"
+              "role": {
+                "type": "Blocker"
               }
             }
           },

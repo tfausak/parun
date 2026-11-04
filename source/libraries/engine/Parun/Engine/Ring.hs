@@ -36,9 +36,12 @@ import qualified Parun.Engine.Mint as Mint
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Types.AbilityName as AbilityName
+import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.ArmDelayedTrigger as ArmDelayedTrigger
-import qualified Parun.Types.BlockPair as BlockPair
+import qualified Parun.Types.BlockCount as BlockCount
+import qualified Parun.Types.BlockRole as BlockRole
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
@@ -47,6 +50,9 @@ import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.CountedDiscard as CountedDiscard
 import qualified Parun.Types.Counterability as Counterability
+import qualified Parun.Types.DamageKind as DamageKind
+import qualified Parun.Types.DamageRecipient as DamageRecipient
+import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.Discard as Discard
 import qualified Parun.Types.Draw as Draw
 import qualified Parun.Types.Effect as Effect
@@ -69,7 +75,6 @@ import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.Onset as Onset
 import qualified Parun.Types.Operand as Operand
-import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.Player as Player
 import qualified Parun.Types.PlayerActed as PlayerActed
@@ -214,7 +219,7 @@ theRingEmblem temptations =
 
 -- | CR 701.54e's "is your Ring-bearer", as a Filter: the two conjuncts a Filter
 -- can carry, beside the battlefield one Affected.Matching and
--- TriggerCondition.PermanentDealsCombatDamageToPlayer each supply themselves.
+-- TriggerCondition.DealsDamage each supply themselves.
 -- HeldBy Controller You is "under your control", whose "you" is CR 109.5's -- the
 -- emblem's controller, which CR 114.2 makes the player it was minted for; and
 -- IsRingBearer is "has the Ring-bearer designation", asked of that same
@@ -307,9 +312,9 @@ theRingBlockerSacrificeName = AbilityName.MkAbilityName (Text.pack "sacrifice th
 -- of combat." Minted here rather than carried in card data for
 -- theRingIsLegendary's reason.
 --
--- TriggerCondition.CreatureBecomesBlockedBy read by a BYSTANDER, as
+-- CR 509.3d's TriggerCondition.Blocks read by a BYSTANDER, as
 -- theRingDrainsOnCombatDamage's is: the emblem is neither the blocked creature nor
--- the blocker, so the attacker's Filter is what "your Ring-bearer" comes to and it
+-- the blocker, so the named attacker's Filter is what "your Ring-bearer" comes to and it
 -- is the shared `yourRingBearer` above, with the trigger's controller as CR
 -- 109.5's perspective. The blocker's Filter admits any: CR 701.54c names no
 -- quality of it.
@@ -340,7 +345,7 @@ theRingSacrificesTheBlocker =
               ArmDelayedTrigger.duration = Nothing,
               ArmDelayedTrigger.ability = Nothing
             }
-   in Mint.trigger (TriggerCondition.CreatureBecomesBlockedBy BlockPair.MkBlockPair {BlockPair.blocker = Filter.And [], BlockPair.attacker = yourRingBearer}) (Seq.singleton effect)
+   in Mint.trigger (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker yourRingBearer (BlockCount.EachCreature (Filter.And [])))) (Seq.singleton effect)
 
 -- | CR 603.7 / 701.54c: the delayed half of the sentence above -- at end of
 -- combat, the blocking creature is sacrificed.
@@ -375,7 +380,7 @@ theRingBlockerSacrifice =
 -- damage to a player, each opponent loses 3 life." Minted here rather than carried
 -- in card data for theRingIsLegendary's reason.
 --
--- TriggerCondition.PermanentDealsCombatDamageToPlayer is a BYSTANDER condition --
+-- TriggerCondition.DealsDamage is here a BYSTANDER condition --
 -- the emblem is not the damager, and CR 114.3 leaves it no power to deal damage
 -- with -- so the Filter is what "your Ring-bearer" comes to, and it is the shared
 -- `yourRingBearer` above. That condition's Filter is read against the DAMAGER
@@ -406,7 +411,13 @@ theRingDrainsOnCombatDamage =
       -- or does not, and an ability that exists and declines to trigger is a
       -- different thing.
       Mint.trigger
-        (TriggerCondition.PermanentDealsCombatDamageToPlayer (PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer yourRingBearer PlayerRelation.AnyPlayer False))
+        ( TriggerCondition.DealsDamage
+            DamageTrigger.MkDamageTrigger
+              { DamageTrigger.actor = ActingPermanent.Matching yourRingBearer,
+                DamageTrigger.kind = Just DamageKind.Combat,
+                DamageTrigger.recipients = Set.singleton (DamageRecipient.Player PlayerRelation.AnyPlayer)
+              }
+        )
         (Seq.singleton effect)
 
 -- | CR 701.54c's first clause, "Your Ring-bearer is legendary", as the emblem's one

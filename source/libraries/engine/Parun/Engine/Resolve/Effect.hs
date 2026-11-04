@@ -526,7 +526,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.MoveMana payload -> Damage.moveMana resolving source controller legal payload
   Effect.Search payload -> Damage.search performManaAbility runSubgame resolving source controller legal payload
   Effect.ExileAllGraveyards -> Damage.exileAllGraveyards source controller
-  Effect.ExileHandThenDraw -> Damage.exileHandThenDraw controller
+  Effect.ExileHandThenDraw -> Damage.exileHandThenDraw (runReplacementEffects runSubgame) controller
   Effect.NoteManaSpent -> Damage.noteManaSpent resolving source
   Effect.RestartGame payload -> Damage.restartGame performHandAction runSubgame resolving source controller legal payload
   Effect.PlaySubgame payload -> Damage.playSubgame runSubgame resolving payload
@@ -571,7 +571,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.ForEachNumber payload -> Zones.forEachNumber applyLoopBody runSubgame resolving source controller legal chosen payload
   Effect.Repeat payload -> Zones.repeatArm applyLoopBody runSubgame resolving source controller legal chosen payload
   Effect.RepeatIf payload -> Zones.repeatIf applyLoopBody runSubgame resolving source controller legal chosen payload
-  Effect.Draw payload -> Zones.draw resolving source controller legal payload
+  Effect.Draw payload -> Zones.draw (runReplacementEffects runSubgame) resolving source controller legal payload
   Effect.Mill payload -> Zones.mill resolving source controller legal payload
   Effect.Reveal payload -> Zones.reveal resolving source controller legal chosen payload
   Effect.LookAt payload -> Zones.lookAt resolving source controller legal chosen payload
@@ -582,7 +582,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.Clash payload -> Zones.clash resolving source controller payload
   Effect.AsYouCascade payload -> Zones.asYouCascade applyOneEffect runSubgame resolving source controller legal chosen payload
   Effect.Explore payload -> Zones.explore resolving source controller legal payload
-  Effect.Connive payload -> Zones.connive resolving source controller legal payload
+  Effect.Connive payload -> Zones.connive (runReplacementEffects runSubgame) resolving source controller legal payload
   Effect.Discard payload -> Zones.discard resolving source controller legal chosen payload
   Effect.LoseLife payload -> Zones.loseLife resolving source controller legal payload
   Effect.GainLife payload -> Zones.gainLife resolving source controller legal payload
@@ -803,6 +803,7 @@ runEntryEffect runSubgame pending = do
 -- next state-based action check: the replaced event and the rest of its batch
 -- were simultaneous (CR 616.1), so what happens instead of it lands before CR
 -- 704.5g reads the board. For a loss of the game or a draw, it runs after each
+-- draw of an instruction's sequence (Event.drawSeries, CR 614.11a), after each
 -- resolved instruction and in every settle before priority; a loss a
 -- state-based action check meets runs inside that check instead (Sba.performStateBasedActions' `instead`, runDamageRewriteEffect).
 -- The callers GameState.pendingReplacementEffects lists keep it empty at every

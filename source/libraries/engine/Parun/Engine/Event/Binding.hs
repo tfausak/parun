@@ -34,7 +34,9 @@ import qualified Parun.Types.BecameUnattached as BecameUnattached
 import qualified Parun.Types.BecomesTapState as BecomesTapState
 import Parun.Types.Binding (Binding)
 import qualified Parun.Types.Binding as Binding.Type
-import qualified Parun.Types.BlockPair as BlockPair
+import qualified Parun.Types.BlockCount as BlockCount
+import qualified Parun.Types.BlockRole as BlockRole
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.BlocksDeclared as BlocksDeclared
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardType as CardType
@@ -49,6 +51,8 @@ import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamagePrevented as DamagePrevented
+import qualified Parun.Types.DamageRecipient as DamageRecipient
+import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DiscardSubject as DiscardSubject
 import qualified Parun.Types.DiscardTrigger as DiscardTrigger
 import qualified Parun.Types.Discarded as Discarded
@@ -69,7 +73,7 @@ import qualified Parun.Types.Mentored as Mentored
 import qualified Parun.Types.Moved as Moved
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.OwnedZone as OwnedZone
-import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
+import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
@@ -166,59 +170,33 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- CR 500.1 giving every step exactly one turn to belong to.
   (TriggerCondition.StepBegins {}, GameEvent.StepBegan ev) ->
     Binding.setTriggerPlayer (StepBegan.player ev) Map.empty
-  -- CR 702.70a's "that player": the player the bearer dealt combat damage to.
+  -- CR 603.2 / 120.1's damage, three slots unconditional given a match, since
+  -- every GameEvent.DamageDealt carries a source and an amount:
   --
-  -- HOW MUCH, alongside it: Questing Beast's "it deals THAT MUCH damage to target
-  -- planeswalker that player controls" counts the damage the event carried, under
-  -- the same reserved slot CR 615.13's prevention and CR 119.9's life gain stamp
-  -- (see Binding.eventAmount) and the same one the bystander arm below stamps.
+  -- HOW MUCH: Questing Beast's "that much" and Shroofus Sproutsire's "that many"
+  -- count the damage the event carried, under the slot CR 615.13's prevention
+  -- and CR 119.9's life gain stamp (Binding.eventAmount), summed by
+  -- batchBindings across a batch. The AMOUNT the event recorded and never the
+  -- damager's power: CR 702.19b lets a trampler assign part of its power to a
+  -- blocker, so the two come apart on Parun.TriggerSpec's shroofusSpec board.
   --
-  -- Both stamped on the ToPlayer branch alone. The other four recipients are
-  -- events this condition does not admit -- matchesTrigger requires a player
-  -- recipient -- so claiming a slot there would name a match that never
-  -- happened. Given a match both are unconditional, which is what
-  -- eventBindingSlots' per-condition promise needs: every GameEvent.DamageDealt
-  -- carries a DamageEvent.amount.
-  (TriggerCondition.SelfDealsCombatDamageToPlayer _, GameEvent.DamageDealt ev) ->
-    case DamageEvent.target ev of
-      Recipient.ToPlayer pid -> Binding.setTriggerPlayer pid (Binding.setEventAmount (DamageEvent.amount ev) Map.empty)
-      Recipient.ToCreature _ -> Map.empty
-      Recipient.ToPlaneswalker _ -> Map.empty
-      Recipient.ToBattle _ -> Map.empty
-      Recipient.ToObject _ -> Map.empty
-      -- Unreachable, for the reason the DamageToPlayerPrevented arm above gives.
-      Recipient.ToPile _ -> Map.empty
-  -- The same two slots for the arm without CR 510.1's combat narrowing, and for
-  -- the same reasons: the recipient is "that player" and the amount is "that
-  -- much", both unconditional given a match.
-  (TriggerCondition.DealsDamageToPlayer _, GameEvent.DamageDealt ev) ->
-    case DamageEvent.target ev of
-      Recipient.ToPlayer pid -> Binding.setTriggerPlayer pid (Binding.setEventAmount (DamageEvent.amount ev) Map.empty)
-      Recipient.ToCreature _ -> Map.empty
-      Recipient.ToPlaneswalker _ -> Map.empty
-      Recipient.ToBattle _ -> Map.empty
-      Recipient.ToObject _ -> Map.empty
-      -- Unreachable, for the reason the DamageToPlayerPrevented arm above gives.
-      Recipient.ToPile _ -> Map.empty
-  -- CR 120.3's amount for the arm one recipient over, and the damaged permanent
-  -- under `became`, the object the event names: Bellowing Fiend's "that
-  -- creature's controller", Hooded Blightfang's "that planeswalker". Both are
-  -- unconditional given a match, which admits only an object recipient.
-  (TriggerCondition.DealsDamageToPermanent _, GameEvent.DamageDealt ev) ->
-    maybe id Binding.setBecame (Recipient.objectOf (DamageEvent.target ev)) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty)
-  -- Horned Cheetah's and Spirit Link's "that much" for the any-recipient arm,
-  -- which batchBindings sums across one damage event, and the damager, which
-  -- `batchPartition` splits that event by. Unconditional given a match.
-  (TriggerCondition.DealsDamage _, GameEvent.DamageDealt ev) ->
-    Binding.setCombatDamager (DamageEvent.source ev) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty)
-  -- Doomskar Warrior's "that many" for the player-or-battle arm, and Aisha of
-  -- Sparks and Smoke's and Noble Purpose's "that much" for the any-recipient
-  -- one, whose batch batchBindings sums across the CR 510.2 step; that one's
-  -- damager beside it, for the arm above's reason. Unconditional given a match.
-  (TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle, GameEvent.DamageDealt ev) ->
-    Binding.setEventAmount (DamageEvent.amount ev) Map.empty
-  (TriggerCondition.DealsCombatDamage _, GameEvent.DamageDealt ev) ->
-    Binding.setCombatDamager (DamageEvent.source ev) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty)
+  -- The DAMAGER, CR 120.1's source: Aragorn, Hornburg Hero's "it", read off the
+  -- field matchesTrigger applied the actor to, and what `batchPartition` splits
+  -- a batch by.
+  --
+  -- And where the trigger names one, the RECIPIENT: the damaged player under
+  -- `triggerPlayer` for a player recipient (CR 702.70a's and Larceny's "that
+  -- player", neither the bearer's controller nor the damager's), the damaged
+  -- permanent under `became` for a permanent one (Bellowing Fiend's "that
+  -- creature's controller", Hooded Blightfang's "that planeswalker"). Each is
+  -- bound only for the kind of recipient the event names, and only where the
+  -- trigger admits that kind, so a batch naming no recipient binds neither.
+  (TriggerCondition.DealsDamage watched, GameEvent.DamageDealt ev) ->
+    let target = DamageEvent.target ev
+        (players, permanents) = namesRecipients watched
+        player = if players then Recipient.playerOf target else Nothing
+        permanent = if permanents then Recipient.objectOf target else Nothing
+     in maybe id Binding.setTriggerPlayer player (maybe id Binding.setBecame permanent (Binding.setCombatDamager (DamageEvent.source ev) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty)))
   -- CR 603.2's "that many" and CR 400.7e's "that creature": how many counters
   -- moved, read off the event's own before/after pair, and on what. Chandra,
   -- Fire Artisan's "she deals that much damage" counts the loyalty that came off,
@@ -244,30 +222,6 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
               CounterGrouping.EachPermanent -> Binding.setEventAmount amount
               _ -> id
          in withObject (withAmount Map.empty)
-  -- CR 510.2's "it": the permanent that dealt the combat damage, which Aragorn,
-  -- Hornburg Hero's payload doubles the counters on. Read off the event's source,
-  -- the same field matchesTrigger applied the Filter to, so the slot names exactly
-  -- the permanent the condition admitted.
-  --
-  -- HOW MUCH, alongside it: Shroofus Sproutsire's "create that many 1/1 green
-  -- Saproling creature tokens" counts the damage the event carried, under the same
-  -- reserved slot CR 615.13's prevention and CR 119.9's life gain stamp (see
-  -- Binding.eventAmount). The AMOUNT the event recorded and never the damager's
-  -- power: CR 702.19b lets a trampler assign part of its power to a blocker, so
-  -- the two come apart on exactly the board Parun.TriggerSpec's shroofusSpec runs.
-  --
-  -- The DAMAGED PLAYER beside them, under the same `triggerPlayer` slot the
-  -- self-scoped arm above stamps: Larceny's "whenever a creature you control deals
-  -- combat damage to a player, THAT PLAYER discards a card" names a seat that is
-  -- neither the bearer's controller nor the damager's.
-  --
-  -- All three unconditional given a match, which is what eventBindingSlots'
-  -- per-condition promise needs: every GameEvent.DamageDealt carries a
-  -- DamageEvent.source and a DamageEvent.amount, and matchesTrigger has already
-  -- required a player target unless orTheirPlaneswalkers admitted a
-  -- planeswalker, whose case binds no player.
-  (TriggerCondition.PermanentDealsCombatDamageToPlayer _, GameEvent.DamageDealt ev) ->
-    maybe id Binding.setTriggerPlayer (Recipient.playerOf (DamageEvent.target ev)) (Binding.setCombatDamager (DamageEvent.source ev) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty))
   -- CR 603.2c's batch reading: the damagers' CONTROLLER, Norn's Decree's "that
   -- opponent", off the same `postEventView` the matcher read the Filter
   -- through, so "whose was it" and "did it qualify" come from one sample. And
@@ -610,43 +564,6 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- rejected reaches no binding at all.
   (TriggerCondition.PlayerAttacksPlayer {}, GameEvent.BecameAttacked (BecameAttacked.MkBecameAttacked attacker (AttackTarget.OfPlayer attacked))) ->
     Binding.setAttackingPlayer attacker (Binding.setTriggerPlayer attacked Map.empty)
-  -- CR 509.3e's "that attacking creature", off the grouped blocking event: the
-  -- attacker the event names, and again not the bearer, which is a bystander.
-  -- CR 508.5's defending player rides that event too and goes unbound, the
-  -- CreatureAttacksYou arm above's reasoning -- matchesTrigger has already
-  -- required whom the attacker attacked to be a player the PlayerRelation
-  -- admits.
-  (TriggerCondition.CreatureBecomesBlockedByAtLeast {}, GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked attacker _ _)) ->
-    Binding.setAttackingCreature attacker Map.empty
-  -- The same slot off matchesTrigger's OTHER road into this condition (rule
-  -- 509.3e's "effects that add or remove blockers"): the attacker
-  -- GameEvent.BecameBlocking names, which is the creature that just became
-  -- blocked by one more. Without this arm the trigger fires with an empty
-  -- binding map and Seifer's "that attacking creature" resolves to nothing --
-  -- a board indistinguishable from one where it never fired, which is why
-  -- Parun.ZoneTriggerSpec's representativeEvents lists BOTH events for this
-  -- condition and intersects what they stamp.
-  --
-  -- The BLOCKER the event also names goes unbound: this form names a number
-  -- rather than an object, and eventBindingSlots promises
-  -- Binding.attackingCreature alone.
-  --
-  -- Unguarded on the producer where matchesTrigger is not, for the
-  -- PlayerAttacksPlayer arm's converse reason: an event this condition
-  -- rejected reaches no binding at all, so a declaration's producer has
-  -- already been answered by the time anything asks here.
-  (TriggerCondition.CreatureBecomesBlockedByAtLeast {}, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker})) ->
-    Binding.setAttackingCreature attacker Map.empty
-  -- CR 702.130a's "defending player", the same phrase and the same reserved slot
-  -- as the arm above -- CR 508.5 resolves it for an ability naming an ATTACKING
-  -- creature, which is what the event's attacker is. Read off the event for
-  -- that arm's reason: every writer of it stamps CR 508.5's answer there --
-  -- Combat.declareBlockers, Combat.becomeBlocked (CR 509.1h's effect) and
-  -- Combat.putOntoBattlefieldBlocking (CR 509.4). The attacker itself is
-  -- Somberwald Alpha's "it", a bystander's, so it is bound too, under the slot
-  -- CreatureAttacks' arm fills.
-  (TriggerCondition.CreatureBecomesBlocked _, GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked attacker defending _)) ->
-    Binding.setTriggerPlayer defending (Binding.setAttackingCreature attacker Map.empty)
   -- The same slot off CR 509.1h's other branch, stamped there by its one writer,
   -- Combat.declareBlockers: Abyssal Nightstalker's "defending player".
   (TriggerCondition.CreatureAttacksUnblocked _, GameEvent.AttackerUnblocked u) ->
@@ -796,31 +713,50 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- pays {2}".
   (TriggerCondition.PermanentBecomesTargeted _, GameEvent.BecameTarget t) ->
     Binding.setTargetingObject (BecameTarget.source t) (maybe Map.empty (`Binding.setBecame` Map.empty) (Recipient.objectOf (BecameTarget.targeted t)))
-  -- CR 509.3d's "that creature": the blocker whose declaration fired this, which
-  -- rule 702.25a's payload gives -1/-1 and CR 701.54c's sacrifices. The attacker
-  -- gets no slot: the bearer is CR 113.7a's source, and a bystander's rule names
-  -- it only in the condition.
+  -- CR 509.3a / 509.3e on the blocking side: Super-Soldier Serum's "it" is the
+  -- blocker. The attackers ride the event but go unbound: no printing names them.
   --
-  -- Guarded on the watched end, so where the creature it admits is the BLOCKER
-  -- this stamps nothing: under CR 603.1b's AnyOf this branch is unioned with
-  -- CreatureBlocksCreature's off one event, and Thicket Basilisk's "that creature"
-  -- would otherwise name the Basilisk itself
+  -- The pairwise count reads the other event, so it stamps nothing here, which
+  -- keeps a pairwise branch of CR 603.1b's AnyOf from naming its own blocker.
+  (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker _ count), GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared blocker _)) -> case count of
+    BlockCount.Once -> Binding.setBlockingCreature blocker Map.empty
+    BlockCount.AtLeast {} -> Binding.setBlockingCreature blocker Map.empty
+    BlockCount.EachCreature _ -> Map.empty
+  -- CR 509.3b's "that creature": the ATTACKER on the very same declaration, which
+  -- Loyal Sentry's payload destroys. CR 509.3d's "that creature": the blocker,
+  -- which rule 702.25a's payload gives -1/-1 and CR 701.54c's sacrifices. The
+  -- named creature gets no slot of its own: the bearer is CR 113.7a's source,
+  -- and a bystander's rule names it only in the condition.
+  --
+  -- Guarded on the named end, so where the Filter admits the OTHER end this
+  -- stamps nothing: under CR 603.1b's AnyOf the two roles are unioned off one
+  -- event, and Thicket Basilisk's "that creature" would otherwise name the
+  -- Basilisk itself
   -- (data/scenarios/thicket-basilisk-destroys-a-non-wall-at-end-of-combat.json),
   -- Venom's "the other creature" its host. Read outside CR 603.7c's frame, so a
-  -- delayed trigger's slot atom in a pair would stamp nothing; none in data/cards, 2026-11-03.
-  (TriggerCondition.CreatureBecomesBlockedBy pair, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker, BecameBlocking.blocker = blocker}))
-    | admittedAt (Projection.sourceContext gs (Just you) bearer) board gs attacker (BlockPair.attacker pair) ->
-        Binding.setBlockingCreature blocker Map.empty
-  -- CR 509.3a read by a bystander: Super-Soldier Serum's "it" is the blocker,
-  -- never the bearer, under the name the two arms above give it.
-  (TriggerCondition.CreatureBlocks _, GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared blocker _)) ->
-    Binding.setBlockingCreature blocker Map.empty
-  -- CR 509.3b's "that creature": the ATTACKER on the very same declaration, which
-  -- Loyal Sentry's payload destroys. The mirror of the arm above, guarded on the
-  -- blocker's end for that arm's reason.
-  (TriggerCondition.CreatureBlocksCreature pair, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker, BecameBlocking.blocker = blocker}))
-    | admittedAt (Projection.sourceContext gs (Just you) bearer) board gs blocker (BlockPair.blocker pair) ->
-        Binding.setBlockedCreature attacker Map.empty
+  -- delayed trigger's slot atom in the Filter would stamp nothing; none in
+  -- data/cards, 2026-11-03.
+  (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger role creature (BlockCount.EachCreature _)), GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker, BecameBlocking.blocker = blocker})) -> case role of
+    BlockRole.Blocker
+      | admittedAt (Projection.sourceContext gs (Just you) bearer) board gs blocker creature -> Binding.setBlockedCreature attacker Map.empty
+    BlockRole.Attacker
+      | admittedAt (Projection.sourceContext gs (Just you) bearer) board gs attacker creature -> Binding.setBlockingCreature blocker Map.empty
+    _ -> Map.empty
+  -- CR 509.3c: the blocked attacker is Somberwald Alpha's "it", and CR 702.130a's
+  -- "defending player" (afflict) is CR 508.5's, which every writer of the event
+  -- stamps -- Combat.declareBlockers, Combat.becomeBlocked (CR 509.1h's effect)
+  -- and Combat.putOntoBattlefieldBlocking (CR 509.4).
+  (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker _ BlockCount.Once), GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked attacker defending _)) ->
+    Binding.setTriggerPlayer defending (Binding.setAttackingCreature attacker Map.empty)
+  -- CR 509.3e's "that attacking creature" (Seifer, Balamb Rival), off both of
+  -- that form's events: the becoming and an arrival at an attacker blocked
+  -- already. Without the second the trigger fires with an empty binding map,
+  -- which is why Parun.ZoneTriggerSpec's representativeEvents lists BOTH. The
+  -- defending player goes unbound, since the arrival does not carry one.
+  (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker _ (BlockCount.AtLeast _ _)), GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked attacker _ _)) ->
+    Binding.setAttackingCreature attacker Map.empty
+  (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker _ (BlockCount.AtLeast _ _)), GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker})) ->
+    Binding.setAttackingCreature attacker Map.empty
   -- CR 603.6a's "enters attached to a creature": that host, bound as the
   -- trigger is placed, so Infinite Reflection copies it even once the Aura has
   -- moved on (its ruling, 2012-05-01). Through CR 608.2h's record where CR
@@ -1078,20 +1014,21 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- trampler split its power across a blocker and a player, and CR 120.3 admits
   -- noncombat damage whose amount its source's power never named at all.
   --
-  -- ONE event's amount, not a batch's: CR 510.2 deals a combat damage step's
-  -- damage simultaneously and Parun.Engine.Damage records a DamageDealt per
-  -- surviving event, so two blockers stamp two triggers with their own numbers
-  -- rather than one with the sum. Pinned by Parun.TriggerSpec's two-blocker board.
+  -- ONE event's amount, which batchBindings sums under Batching.OneOrMore: two
+  -- blockers' simultaneous damage (CR 510.2) is one trigger reading the total.
+  -- data/scenarios/life-trigger/cr-603-2c-coalhauler-swine-reads-a-double-blocks-total-once.json
+  -- proves the sum.
   --
   -- Unconditional given a match, which is what eventBindingSlots' per-condition
   -- promise needs: every GameEvent.DamageDealt carries a DamageEvent.amount,
   -- whichever of CR 120.3's damage kinds it is.
   --
-  -- The DAMAGER takes Binding.combatDamager beside it, which is CR 120.1's "an
-  -- object that deals damage is the source of that damage" -- Belltower Sphinx's
-  -- "that source's controller mills that many cards", read through
-  -- PlayerRef.HolderOfBound. Also unconditional given a match:
-  -- DamageEvent.source is an ObjectId outright, so there is nothing to fail.
+  -- Under Batching.EachOccurrence the DAMAGER takes Binding.combatDamager
+  -- beside it, which is CR 120.1's "an object that deals damage is the source
+  -- of that damage" -- Belltower Sphinx's "that source's controller mills that
+  -- many cards", read through PlayerRef.HolderOfBound. Also unconditional given
+  -- a match: DamageEvent.source is an ObjectId outright, so there is nothing to
+  -- fail. Not under OneOrMore, whose batch may name several sources.
   --
   -- The slot is not combat-scoped here even though its name is: CR 120.1 makes
   -- every damage event name a source, and Belltower Sphinx's trigger admits a
@@ -1101,8 +1038,11 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- The RECIPIENT under `became`, the object the event names: Death Pits of
   -- Rath's "destroy it". For a Self reading it is the bearer again. Also
   -- unconditional given a match, which admits only an object recipient.
-  (TriggerCondition.IsDealtDamage _, GameEvent.DamageDealt ev) ->
-    maybe id Binding.setBecame (Recipient.objectOf (DamageEvent.target ev)) (Binding.setCombatDamager (DamageEvent.source ev) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty))
+  (TriggerCondition.IsDealtDamage watched, GameEvent.DamageDealt ev) ->
+    let damager = case PermanentIsDealtDamage.batching watched of
+          Batching.EachOccurrence -> Binding.setCombatDamager (DamageEvent.source ev)
+          Batching.OneOrMore -> id
+     in maybe id Binding.setBecame (Recipient.objectOf (DamageEvent.target ev)) (damager (Binding.setEventAmount (DamageEvent.amount ev) Map.empty))
   -- CR 120.3's "that many" for a damaged player (Lich), summed across the
   -- batch by batchBindings, and the damaged player under `triggerPlayer`, which
   -- batchPartition splits the batch by. A damaged planeswalker (Vengeful
@@ -1190,8 +1130,8 @@ batchPartition cond bindings = case cond of
   -- One occurrence per damager: Noble Purpose's "a creature you control deals
   -- combat damage" fires for each creature that connected in the CR 510.2 step,
   -- and Spirit Link's "deals damage" for its host's one damage event. A Self
-  -- reading has one damager, the bearer, so the split leaves it whole.
-  TriggerCondition.DealsCombatDamage _ -> object Binding.combatDamager
+  -- reading has one damager, the bearer, so the split leaves it whole, and a
+  -- trigger naming a recipient is not batch-scoped at all.
   TriggerCondition.DealsDamage _ -> object Binding.combatDamager
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> seat Binding.damagersController <> seat Binding.triggerPlayer
   -- CR 726.2's "one or more creatures A PLAYER controls": one occurrence per
@@ -1203,6 +1143,10 @@ batchPartition cond bindings = case cond of
   -- data/scenarios/card-trigger/cr-603-2c-vengeful-pharaoh-triggers-once-for-you-and-once-per-planeswalker.json
   -- proves the split.
   TriggerCondition.PlayerIsDealtDamage _ -> seat Binding.triggerPlayer <> object Binding.became
+  -- One occurrence per damaged permanent: Death Pits of Rath's "a creature is
+  -- dealt damage" destroys each creature a batch damaged, and Ripjaw Raptor's
+  -- Self reading has one.
+  TriggerCondition.IsDealtDamage _ -> object Binding.became
   -- CR 601.2c: one occurrence per targeting object, each its own announcement,
   -- even where several land in one group -- Hive Mind's copies, made inside its
   -- ForEach's bracket. data/scenarios/leyline-of-combustion-burns-once-per-hive-mind-copy.json
@@ -1243,6 +1187,21 @@ batchBindings (first NonEmpty.:| rest) = List.foldl' (Map.unionWith join) first 
 -- 603.10), so Venom's host is still enchanted after CR 704.5m buried Venom.
 admittedAt :: Filter.Context -> Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> GameState -> ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> Bool
 admittedAt context board gs oid f = maybe False (\view -> Filter.matches context view f) (postEventView board gs oid)
+
+-- CR 509.3: the slots eventBindings stamps for a block trigger. The blocker for
+-- CR 509.3a / 509.3e's blocking side (Super-Soldier Serum's "it"), the other
+-- creature for CR 509.3b / 509.3d (Loyal Sentry's attacker, flanking's
+-- blocker), the attacker and CR 508.5's defending player for CR 509.3c
+-- (afflict), and the attacker alone for CR 509.3e's attacking side (Seifer,
+-- Balamb Rival), whose arrivals carry no defending player.
+blockSlots :: BlockRole.BlockRole -> BlockCount.BlockCount -> Set.Set SlotName.SlotName
+blockSlots role count = case (role, count) of
+  (BlockRole.Blocker, BlockCount.Once) -> Set.singleton Binding.blockingCreature
+  (BlockRole.Blocker, BlockCount.AtLeast {}) -> Set.singleton Binding.blockingCreature
+  (BlockRole.Blocker, BlockCount.EachCreature _) -> Set.singleton Binding.blockedCreature
+  (BlockRole.Attacker, BlockCount.Once) -> Set.fromList [Binding.attackingCreature, Binding.triggerPlayer]
+  (BlockRole.Attacker, BlockCount.AtLeast {}) -> Set.singleton Binding.attackingCreature
+  (BlockRole.Attacker, BlockCount.EachCreature _) -> Set.singleton Binding.blockingCreature
 
 -- CR 603.10's first sentence: `oid` as the event's own board sample shows it
 -- (Projection.sampledView), and CR 608.2h's last known information for an id
@@ -1472,58 +1431,27 @@ eventBindingSlots cond = case cond of
   -- (matchesTrigger's StateIs arm answers False for every event), so no event
   -- contributes anything to one.
   TriggerCondition.StateIs _ -> Set.empty
-  -- CR 702.70a's "that player": the player the bearer dealt combat damage to.
-  --
-  -- CR 510.2's amount beside it, which Questing Beast's "that much" reads: the
-  -- same slot CR 615.13's prevention and CR 119.9's life gain stamp. Guaranteed
-  -- given a match -- every DamageDealt event carries an amount.
-  TriggerCondition.SelfDealsCombatDamageToPlayer _ -> Set.fromList [Binding.eventAmount, Binding.triggerPlayer]
-  -- Just the amount for the two wider arms: a battle or a creature recipient
-  -- names no player, so "that player" is not guaranteed given a match.
-  TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> Set.singleton Binding.eventAmount
-  -- The damager beside the any-recipient arm's amount, for `batchPartition`.
-  TriggerCondition.DealsCombatDamage _ -> Set.fromList [Binding.combatDamager, Binding.eventAmount]
-  -- The same pair for the arm without the combat narrowing, and equally guaranteed
-  -- -- every DamageDealt event carries an amount, whichever CR 120.3 kind it was.
-  TriggerCondition.DealsDamageToPlayer _ -> Set.fromList [Binding.eventAmount, Binding.triggerPlayer]
-  -- The amount and the damaged permanent for the arm one recipient over, both
-  -- guaranteed given a match.
-  TriggerCondition.DealsDamageToPermanent _ -> Set.fromList [Binding.eventAmount, Binding.became]
-  TriggerCondition.DealsDamage _ -> Set.fromList [Binding.combatDamager, Binding.eventAmount]
+  -- The eventBindings arm's slots: the amount and the damager always, a
+  -- recipient's slot where every recipient the trigger names is of its kind.
+  TriggerCondition.DealsDamage watched -> fst (damageSlots watched)
   -- CR 120.3's amount for enrage, which Coalhauler Swine's "it deals that much
   -- damage to each player" reads: the same slot CR 615.13's prevention and CR
   -- 119.9's life gain stamp, and guaranteed given a match -- every DamageDealt
   -- event carries an amount, whichever of CR 120.3's two damage kinds this
   -- condition admitted.
   --
-  -- Plus CR 120.1's source, which Belltower Sphinx's "that source's controller"
-  -- reads, and equally guaranteed -- every DamageDealt event carries one.
-  -- And the recipient under `became`, which Death Pits of Rath's "destroy it"
-  -- reads. See the eventBindings arm above.
-  TriggerCondition.IsDealtDamage _ -> Set.fromList [Binding.became, Binding.combatDamager, Binding.eventAmount]
+  -- Plus, per source, CR 120.1's source, which Belltower Sphinx's "that
+  -- source's controller" reads, and equally guaranteed -- every DamageDealt
+  -- event carries one. And the recipient under `became`, which Death Pits of
+  -- Rath's "destroy it" reads. See the eventBindings arm above.
+  TriggerCondition.IsDealtDamage watched -> case PermanentIsDealtDamage.batching watched of
+    Batching.EachOccurrence -> Set.fromList [Binding.became, Binding.combatDamager, Binding.eventAmount]
+    Batching.OneOrMore -> Set.fromList [Binding.became, Binding.eventAmount]
   -- The damaged player only where no planeswalker can stand in for one.
   TriggerCondition.PlayerIsDealtDamage watched
     | PlayerIsDealtDamage.orTheirPlaneswalkers watched -> Set.singleton Binding.eventAmount
     | otherwise -> Set.fromList [Binding.eventAmount, Binding.triggerPlayer]
-  -- CR 510.2's damager, which the bystander's form needs and the self-scoped one
-  -- above does not: there the damager IS the bearer, already bound as CR 113.7a's
-  -- source. Aragorn, Hornburg Hero's "double the number of +1/+1 counters on it"
-  -- is the reader. Guaranteed given a match -- every DamageDealt event carries a
-  -- source.
-  --
-  -- CR 510.2's amount beside its damager, which Shroofus Sproutsire's "that many"
-  -- reads: the same slot CR 615.13's prevention and CR 119.9's life gain stamp, and
-  -- guaranteed given a match for the same reason -- every DamageDealt event carries
-  -- an amount.
-  --
-  -- CR 603.2's "that player" beside them, which Larceny's "that player discards a
-  -- card" reads -- the same slot the self-scoped arm above stamps. Guaranteed
-  -- given a match where matchesTrigger admits only a player recipient, which
-  -- orTheirPlaneswalkers lifts (Hunter's Insight).
-  TriggerCondition.PermanentDealsCombatDamageToPlayer p
-    | PermanentDealsCombatDamageToPlayer.orTheirPlaneswalkers p -> Set.fromList [Binding.combatDamager, Binding.eventAmount]
-    | otherwise -> Set.fromList [Binding.combatDamager, Binding.eventAmount, Binding.triggerPlayer]
-  -- The damagers' CONTROLLER and the damaged player where the arm above binds
+  -- The damagers' CONTROLLER and the damaged player where DealsDamage binds
   -- three: the trigger event is a whole CR 510.2 step split by both (CR
   -- 603.2c), so they are the seats every member of an occurrence shares. Norn's
   -- Decree's "that opponent" reads the first, Feline Sovereign's "that player"
@@ -1633,42 +1561,12 @@ eventBindingSlots cond = case cond of
   TriggerCondition.SelfAttacksPlayerWithMostLife -> Set.empty
   TriggerCondition.SelfAttacksWhileSaddled -> Set.empty
   TriggerCondition.SelfAttacksWhile _ -> Set.empty
-  -- Nothing, unlike SelfAttacks above: the blocker is the bearer, already bound
-  -- as CR 113.7a's source, and the attacker the event also carries is what CR
-  -- 509.3b's condition names rather than this one, below. CR 509.1a makes the
-  -- blocker's controller the defending player, whom CR 109.5's `you` already
-  -- names.
-  TriggerCondition.SelfBlocks -> Set.empty
-  TriggerCondition.CreatureBlocks _ -> Set.singleton Binding.blockingCreature
-  TriggerCondition.SelfBlocksAtLeast _ -> Set.empty
-  TriggerCondition.SelfBlocksOneOrMore _ -> Set.empty
-  -- CR 509.3b's form is the one that DOES name the attacker, off the same event.
-  -- Guaranteed rather than conditional, as CreatureBecomesBlockedBy's is: every
-  -- declaration carries both ids, and matchesTrigger has already read the
-  -- blocker's Filter.
-  TriggerCondition.CreatureBlocksCreature _ -> Set.singleton Binding.blockedCreature
-  -- CR 508.5's defending player, which the becomes-blocked event carries for
-  -- SelfAttacks' reason -- rule 702.130a's afflict is the reader. No BLOCKER: CR
-  -- 509.3c names none, so GameEvent.AttackerBlocked carries none, and CR 509.3d's
-  -- form below is the one that binds one. The blocked attacker is Somberwald
-  -- Alpha's "it".
-  --
-  -- Unconditional, as this classification has to be: every AttackerBlocked event
-  -- carries both.
-  TriggerCondition.CreatureBecomesBlocked _ -> Set.fromList [Binding.attackingCreature, Binding.triggerPlayer]
-  -- CR 509.3d's form is the one that DOES name a blocker, and
-  -- GameEvent.BecameBlocking carries it: rule 702.25a's "the blocking creature".
-  -- Guaranteed rather than conditional -- every such event carries both ids, and
-  -- matchesTrigger has already read the attacker's Filter.
-  TriggerCondition.CreatureBecomesBlockedBy _ -> Set.singleton Binding.blockingCreature
-  -- CR 509.3e names a SET of blockers rather than one, and no reader in the
-  -- pool reaches into it: Serra Inquisitors' payload names only itself.
-  TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> Set.empty
-  -- Seifer, Balamb Rival's "that attacking creature", the same reserved slot
-  -- CreatureAttacksYou fills off its own event.
-  TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> Set.singleton Binding.attackingCreature
+  -- CR 509.3: what eventBindings stamps, as a function of the role and count,
+  -- each guaranteed given a match -- every such event carries both ids, and
+  -- matchesTrigger has already read the named creature's Filter.
+  TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger role _ count) -> blockSlots role count
   -- CR 508.5's defending player, which GameEvent.AttackerUnblocked carries for
-  -- CreatureBecomesBlocked's reason: Abyssal Nightstalker's "defending player
+  -- CR 509.3c's reason (blockSlots): Abyssal Nightstalker's "defending player
   -- discards a card". No blocker -- CR 509.1h's unblocked branch has none.
   TriggerCondition.CreatureAttacksUnblocked _ -> Set.fromList [Binding.attackingCreature, Binding.triggerPlayer]
   -- CR 113.6k: the bearer of a library-to-graveyard trigger IS the arriving
@@ -2135,10 +2033,10 @@ eventBindingSlotsSometimes cond = case cond of
   -- in data/cards/ names either under it.
   TriggerCondition.PlayerIsDealtDamage watched
     | PlayerIsDealtDamage.orTheirPlaneswalkers watched -> Set.fromList [Binding.became, Binding.triggerPlayer]
-  -- The damaged player, bound for damage to them and not to a planeswalker.
-  -- Hunter's Insight admits both and reads neither.
-  TriggerCondition.PermanentDealsCombatDamageToPlayer p
-    | PermanentDealsCombatDamageToPlayer.orTheirPlaneswalkers p -> Set.singleton Binding.triggerPlayer
+  -- A recipient's slot where the trigger also names a recipient of the other
+  -- kind, bound for that kind's damage alone. Garruk's Harbinger admits both
+  -- and reads neither.
+  TriggerCondition.DealsDamage watched -> snd (damageSlots watched)
   -- Binding.handArrival, bound when the move a destination-free condition
   -- matched reached a hand. Nothing in data/cards/ names it under one.
   TriggerCondition.CardLeavesZone p
@@ -2177,3 +2075,25 @@ eventBindingSlotsSometimes cond = case cond of
   -- Mariner).
   TriggerCondition.PermanentBecomesTargeted c | PermanentsBecomeTargeted.includesYou c -> Set.singleton Binding.became
   _ -> Set.empty
+
+-- CR 603.2 / 120.1: the slots a DealsDamage trigger's eventBindings arm binds,
+-- as (always, sometimes). The amount and the damager always; `triggerPlayer`
+-- and `became` always where every recipient the trigger names is a player or
+-- every one a permanent, sometimes where it names both kinds, and never where
+-- it names none.
+damageSlots :: DamageTrigger.DamageTrigger -> (Set.Set SlotName.SlotName, Set.Set SlotName.SlotName)
+damageSlots watched =
+  ( Set.fromList ([Binding.combatDamager, Binding.eventAmount] <> [Binding.triggerPlayer | players, not permanents] <> [Binding.became | permanents, not players]),
+    Set.fromList [slot | players, permanents, slot <- [Binding.triggerPlayer, Binding.became]]
+  )
+  where
+    (players, permanents) = namesRecipients watched
+
+-- Whether a DealsDamage trigger names a player recipient, and a permanent one.
+namesRecipients :: DamageTrigger.DamageTrigger -> (Bool, Bool)
+namesRecipients watched = (any isPlayer recipients, not (all isPlayer recipients))
+  where
+    recipients = Set.toList (DamageTrigger.recipients watched)
+    isPlayer r = case r of
+      DamageRecipient.Player _ -> True
+      DamageRecipient.Permanent _ -> False

@@ -8,6 +8,7 @@ import qualified Parun.Types.PhaseSelector as PhaseSelector
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.StepBegan as StepBegan
+import qualified Parun.Types.StepOfControllerOf as StepOfControllerOf
 import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.While as While
 
@@ -43,10 +44,14 @@ data Expiry
   | -- | CR 611.2a: "until your next turn", as a concrete player. Ends as that
     -- player's turn begins.
     AtTurnOf PlayerId.PlayerId
-  | -- | CR 611.2a: Duration.UntilYourNextStep, as a concrete player.
+  | -- | CR 611.2a: Duration.UntilNextStepOf, as a concrete player.
     -- Ends as that step of that player's turn next begins, before anything
     -- triggered then is put on the stack (CR 117.3a).
     AtStepOf StepBegan.StepBegan
+  | -- | CR 611.2a: AtStepOf with its seat not yet known: "until its controller's
+    -- next untap step" (Orcish Farmer), read as the step begins. It tracks the
+    -- permanent and not its controller (Elvish Hunter's ruling).
+    AtStepOfControllerOf StepOfControllerOf.StepOfControllerOf
   | -- | CR 611.2a: "until the end of your next turn", as a concrete player and
     -- the turn the duration began on. Ends as that player's next turn ends, in
     -- its cleanup step (CR 514) -- a whole turn later than AtTurnOf above.

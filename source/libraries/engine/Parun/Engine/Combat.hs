@@ -1049,9 +1049,18 @@ flowBySize classOf counts roomAt creatures =
 -- CR 508.1b's announcement list for the combat in progress, empty when no
 -- defending player has been chosen -- which is a combat no creature may attack
 -- in, so no requirement can be instantiated and none can be disobeyed.
+--
+-- CR 102.1 / 506.3c / 508.4a: a defending player who has left the game since
+-- the beginning of combat step designated them is not one to announce. The
+-- designation itself keeps them: a battle they protect stays attacked by what
+-- already attacks it (CR 704.5x), which stillAttackedBattle reads through it. The
+-- departure scenarios "a player who leaves during beginning of combat cannot be
+-- attacked" and "a player who left is not offered to tokens entering
+-- attacking" prove it.
 declarableTargets :: GameState -> [AttackTarget.AttackTarget]
 declarableTargets gs =
-  concatMap (\defender -> NonEmpty.toList (attackTargets defender gs)) (Defender.defendingPlayers gs)
+  let playing = Game.stillPlaying gs
+   in concatMap (\defender -> NonEmpty.toList (attackTargets defender gs)) (filter (`List.elem` playing) (Defender.defendingPlayers gs))
 
 -- How many of `required` this declaration obeys (CR 508.1d): a requirement
 -- instance is obeyed exactly when the declaration attacks with its creature AND
@@ -1718,10 +1727,10 @@ becomeBlocked oid gs =
               -- still says the creature is blocked.
               case Defender.playerOfAttacker Projection.controllerWithLastKnown oid gs Applicative.<|> Maybe.listToMaybe (Defender.defendingPlayers gs) of
                 Nothing -> blocked
-                -- Blocked by ZERO creatures, which is this road's whole point:
+                -- Blocked by NO creature, which is this road's whole point:
                 -- CR 509.3e's count triggers ask how many creatures block it,
                 -- and the answer here is none.
-                Just defending -> Event.recordEvent (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked oid defending 0)) blocked
+                Just defending -> Event.recordEvent (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked oid defending Set.empty)) blocked
 
 -- CR 509.3a's and CR 509.3b's THIRD road onto the blocking side, the one neither
 -- CR 509.1a's declaration nor CR 509.4's entry covers: an effect makes creatures
@@ -1808,7 +1817,7 @@ switchBlockers first second gs =
               becameBlocked = filter (\oid -> not (isBlocked oid gs)) (ListUtils.nubOrd (fmap snd arrivals))
               blocked h oid = case Defender.playerOfAttacker Projection.controllerWithLastKnown oid gs of
                 Nothing -> h
-                Just defending -> Event.recordEvent (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked oid defending (Natural.length (Map.findWithDefault Set.empty oid moved)))) h
+                Just defending -> Event.recordEvent (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked oid defending (Map.findWithDefault Set.empty oid moved))) h
            in List.foldl' blocked (List.foldl' record switched arrivals) becameBlocked
 
 -- CR 509.3a's effect road, the one that makes a creature block ANEW: two
@@ -1873,7 +1882,7 @@ exchangeBlocks first second gs =
       blocks h (blocker, attackers) =
         if Set.null attackers
           then h
-          else Event.recordEvent (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared blocker (Natural.length attackers))) h
+          else Event.recordEvent (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared blocker attackers)) h
    in if first == second
         || not (isBlocker first)
         || not (isBlocker second)
@@ -2652,15 +2661,7 @@ putOntoBattlefieldAttacking :: AttackChoice -> ObjectId -> Game ()
 putOntoBattlefieldAttacking choice oid = do
   gs <- State.get
   let c = GameState.combat gs
-      -- declarableTargets with CR 506.3c / CR 508.4a's liveness filter applied
-      -- to the defending players first: a player who has left the game is no
-      -- longer one to be put onto the battlefield attacking, and under CR 802.2
-      -- the others still are.
-      playing = Game.stillPlaying gs
-      targets =
-        concatMap
-          (\defender -> NonEmpty.toList (attackTargets defender gs))
-          (filter (\defender -> List.elem defender playing) (Defender.defendingPlayers gs))
+      targets = declarableTargets gs
       -- CR 702.116a's "that player or a planeswalker they control", narrowing the
       -- CR 508.4 candidates above rather than the board: a planeswalker no
       -- defending player controls is not among them to begin with, and a battle
@@ -2880,14 +2881,14 @@ enterBlocking controller oid attacker = do
   -- player rides the event as it does off the declaration; the guard
   -- above has already settled that it is this creature's controller.
   --
-  -- Blocked by ONE creature, and that is not a shortcut: this event is
+  -- Blocked by this ONE creature, and that is not a shortcut: this event is
   -- withheld unless the attacker was unblocked, so the arrival that
   -- records it is the only creature blocking the attacker at the moment
   -- it becomes blocked. A doubled arrival's second token joins AFTER
   -- this becoming, and CR 509.3e's count reads that off its own
   -- GameEvent.BecameBlocking instead.
   Monad.unless wasBlocked $
-    State.modify' (Event.recordEvent (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked attacker controller 1)))
+    State.modify' (Event.recordEvent (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked attacker controller (Set.singleton oid))))
 
 -- CR 509.1 / CR 802.4: each defending player declares blockers, in APNAP order
 -- (CR 101.4) -- the order Defender.defendingPlayers already comes back in. One
@@ -3127,7 +3128,7 @@ attemptBlockDeclaration perform pid asked attacking rejected = do
               -- than written as Set.empty because the event is the record. No
               -- reader looks: both refuse BlockProducer.Declared.
               State.modify' $ \g -> List.foldl' (\h (blocker, attacker) -> Event.recordEvent (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = blocker, BecameBlocking.attacker = attacker, BecameBlocking.producer = BlockProducer.Declared, BecameBlocking.attackerWasBlocked = Set.member attacker wasBlocked, BecameBlocking.blockersBefore = Map.findWithDefault Set.empty attacker (Combat.blockers (GameState.combat gs2))})) h) g pairs
-              State.modify' $ \g -> List.foldl' (\h (blocker, attackers) -> Event.recordEvent (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared blocker (Natural.length attackers))) h) g (filter (not . Set.null . snd) (Map.toList declaration))
+              State.modify' $ \g -> List.foldl' (\h (blocker, attackers) -> Event.recordEvent (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared blocker attackers)) h) g (filter (not . Set.null . snd) (Map.toList declaration))
               -- CR 509.1h: the same declaration makes each attacker it named a BLOCKED
               -- creature. One event per attacker rather than per pair, which is CR
               -- 509.3c's "only once each combat for that creature" -- a real dedup,
@@ -3147,7 +3148,7 @@ attemptBlockDeclaration perform pid asked attacking rejected = do
               -- The defending player rides the event as it rides AttackerDeclared (CR
               -- 702.130a's afflict is the reader), with `pid` as the fallback.
               --
-              -- CR 509.3e's count rides it too, and here it is the whole
+              -- CR 509.3e's blockers ride it too, and here they are the whole
               -- declaration's -- read off `merged`, which is the state this
               -- becoming leaves behind. Rule 509.3e's first sentence asks for
               -- exactly that: "if the creature ... is blocked by that many
@@ -3156,5 +3157,5 @@ attemptBlockDeclaration perform pid asked attacking rejected = do
               State.modify'
                 ( \g ->
                     let defendingFor oid = Maybe.fromMaybe pid (Defender.playerOfAttacker Projection.controllerWithLastKnown oid g)
-                     in List.foldl' (\h attacker -> Event.recordEvent (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked attacker (defendingFor attacker) (Natural.length (Map.findWithDefault Set.empty attacker merged)))) h) g (Set.toList becameBlocked)
+                     in List.foldl' (\h attacker -> Event.recordEvent (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked attacker (defendingFor attacker) (Map.findWithDefault Set.empty attacker merged))) h) g (Set.toList becameBlocked)
                 )

@@ -55,17 +55,28 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentDealsCombatDamageToPlayer",
+            "type": "DealsDamage",
             "value": {
-              "filter": {
-                "type": "HasCardType",
+              "actor": {
+                "type": "Matching",
                 "value": {
-                  "type": "Creature"
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
                 }
               },
-              "recipient": {
-                "type": "You"
-              }
+              "kind": {
+                "type": "Combat"
+              },
+              "recipients": [
+                {
+                  "type": "Player",
+                  "value": {
+                    "type": "You"
+                  }
+                }
+              ]
             }
           },
           "modal": {

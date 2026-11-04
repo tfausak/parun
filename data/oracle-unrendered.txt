@@ -1926,6 +1926,7 @@ orchard-spirit
 orcish-artillery
 orcish-conscripts
 orcish-captain
+orcish-farmer
 orcish-spy
 orcish-squatters
 orcish-veteran
@@ -2314,7 +2315,6 @@ rune-sealed-wall
 runed-halo
 runic-armasaur
 runic-repetition
-rush-of-blood
 rust-goliath
 rustic-clachan
 sabertooth-mauler
@@ -2519,6 +2519,7 @@ soldevi-digger
 soldevi-sage
 solemnity
 song-of-the-dryads
+sonic-burst
 sonorous-howlbonder
 sorcerer-class
 sorcerers-strongbox

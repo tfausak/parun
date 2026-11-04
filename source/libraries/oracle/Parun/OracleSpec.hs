@@ -22,11 +22,15 @@ import qualified Parun.Types.AffectedUnless as AffectedUnless
 import qualified Parun.Types.AgainstSlot as AgainstSlot
 import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.Arithmetic as Arithmetic
+import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.BeginningStep as BeginningStep
-import qualified Parun.Types.BlockPair as BlockPair
+import qualified Parun.Types.BlockCount as BlockCount
+import qualified Parun.Types.BlockRole as BlockRole
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.CardSelection as CardSelection
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
 import qualified Parun.Types.ChooseBetween as ChooseBetween
@@ -53,6 +57,8 @@ import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.Create as Create
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamagePart as DamagePart
+import qualified Parun.Types.DamageRecipient as DamageRecipient
+import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DealDamage as DealDamage
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Destroy as Destroy
@@ -109,6 +115,7 @@ import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PayBranch as PayBranch
 import qualified Parun.Types.PayGate as PayGate
 import qualified Parun.Types.PayObligation as PayObligation
+import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PhaseSelector as PhaseSelector
 import qualified Parun.Types.PlayerEffect as PlayerEffect
@@ -336,28 +343,28 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   Spec.it s "render prints a trigger on attacking, blocking and combat damage" $ do
     let on event effects = withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [triggered event [clause effects] []]})
     Spec.assertEq s [[Text.pack "Whenever Spark attacks, defending player discards a card.", Text.pack "When Spark attacks, defending player discards a card."]] (Oracle.abilities (on (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime) [discard (PlayerRef.InSlot thatPlayer) 1]))
-    let raiders = on (TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.Opponent) [discard (PlayerRef.InSlot thatPlayer) 1]
+    let raiders = on (TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger ActingPermanent.Self (Just DamageKind.Combat) (Set.singleton (DamageRecipient.Player PlayerRelation.Opponent)))) [discard (PlayerRef.InSlot thatPlayer) 1]
     Spec.assertEq s (Just (Text.pack "Whenever Spark deals combat damage to an opponent, that player discards a card.")) (Oracle.render raiders)
     Spec.assertBool s (Oracle.says raiders spark (Text.pack "Whenever this creature deals combat damage to an opponent, that opponent discards a card.")) "that opponent unsaid"
-    let sentry = on (TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair Filter.IsSource (Filter.HasCardType CardType.Creature))) [destroy (ObjectRef.AllOf (ObjectRef.InSlot thatAttacker NonEmpty.:| [ObjectRef.InSlot self])) Regenerability.Regenerable]
+    let sentry = on (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.IsSource (BlockCount.EachCreature (Filter.HasCardType CardType.Creature)))) [destroy (ObjectRef.AllOf (ObjectRef.InSlot thatAttacker NonEmpty.:| [ObjectRef.InSlot self])) Regenerability.Regenerable]
     Spec.assertEq s (Just (Text.pack "Whenever Spark blocks a creature, destroy that creature and it.")) (Oracle.render sentry)
     Spec.assertBool s (Oracle.says sentry spark (Text.pack "When this creature blocks a creature, destroy that creature and this creature.")) "Loyal Sentry's wording unsaid"
     Spec.assertBool s (Oracle.says sentry spark (Text.pack "When this creature blocks a creature, destroy both creatures.")) "Alaborn Zealot's wording unsaid"
     -- Two instructions destroy one after the other (CR 608.2c), not as the
     -- one action the sentence names (CR 608.2f).
-    let staggered = on (TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair Filter.IsSource (Filter.HasCardType CardType.Creature))) [destroy (ObjectRef.InSlot thatAttacker) Regenerability.Regenerable, destroy (ObjectRef.InSlot self) Regenerability.Regenerable]
+    let staggered = on (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.IsSource (BlockCount.EachCreature (Filter.HasCardType CardType.Creature)))) [destroy (ObjectRef.InSlot thatAttacker) Regenerability.Regenerable, destroy (ObjectRef.InSlot self) Regenerability.Regenerable]
     Spec.assertBool s (not (Oracle.says staggered spark (Text.pack "When this creature blocks a creature, destroy that creature and this creature."))) "two destructions said as one"
-    let roc = on (TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair Filter.IsSource (Filter.And [Filter.HasCardType CardType.Creature, Filter.Not (Filter.HasKeyword Keyword.Flying)]))) [modify (ObjectRef.InSlot self) Duration.UntilEndOfTurn (pt 1 0)]
+    let roc = on (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.IsSource (BlockCount.EachCreature (Filter.And [Filter.HasCardType CardType.Creature, Filter.Not (Filter.HasKeyword Keyword.Flying)])))) [modify (ObjectRef.InSlot self) Duration.UntilEndOfTurn (pt 1 0)]
     Spec.assertEq s (Just (Text.pack "Whenever Spark blocks a creature without flying, it gets +1/+0 until end of turn.")) (Oracle.render roc)
     Spec.assertBool s (Oracle.says roc spark (Text.pack "Whenever this creature blocks a creature without flying, this creature gets +1/+0 until end of turn.")) "the name after the event unsaid"
     Spec.assertEq s (Just (Text.pack "Whenever Spark enters or attacks, you gain 1 life.")) (Oracle.render (on (TriggerCondition.AnyOf [TriggerCondition.SelfEnters, TriggerCondition.SelfAttacks TriggerFrequency.EveryTime]) [gainLife 1]))
     let creature = Filter.HasCardType CardType.Creature
         both = ObjectRef.AllOf (ObjectRef.InSlot thatAttacker NonEmpty.:| [ObjectRef.InSlot thatBlocker])
-    Spec.assertEq s (Just (Text.pack "Whenever Spark blocks or becomes blocked by a creature, it deals 3 damage to that creature.")) (Oracle.render (on (TriggerCondition.AnyOf [TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair Filter.IsSource creature), TriggerCondition.CreatureBecomesBlockedBy (BlockPair.MkBlockPair creature Filter.IsSource)]) [damageBy [(both, Quantity.Literal 3)]]))
-    let raptor = on (TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing)) [gainLifeBy (Quantity.InSlot (SlotName.MkSlotName (Text.pack "thatMuch")))]
+    Spec.assertEq s (Just (Text.pack "Whenever Spark blocks or becomes blocked by a creature, it deals 3 damage to that creature.")) (Oracle.render (on (TriggerCondition.AnyOf [TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.IsSource (BlockCount.EachCreature creature)), TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker Filter.IsSource (BlockCount.EachCreature creature))]) [damageBy [(both, Quantity.Literal 3)]]))
+    let raptor = on (TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing) Batching.OneOrMore)) [gainLifeBy (Quantity.InSlot (SlotName.MkSlotName (Text.pack "thatMuch")))]
     Spec.assertEq s (Just (Text.pack "Whenever Spark is dealt damage, you gain that much life.")) (Oracle.render raptor)
     Spec.assertBool s (Oracle.says raptor spark (Text.pack "Enrage \8212 Whenever this creature is dealt damage, you gain that much life.")) "enrage unsaid"
-    let essence = on (TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self (Just DamageKind.Combat))) [gainLifeBy (Quantity.InSlot (SlotName.MkSlotName (Text.pack "thatMuch")))]
+    let essence = on (TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self (Just DamageKind.Combat)) Batching.OneOrMore)) [gainLifeBy (Quantity.InSlot (SlotName.MkSlotName (Text.pack "thatMuch")))]
     Spec.assertBool s (Oracle.says essence spark (Text.pack "Whenever this creature is dealt combat damage, you gain that much life.")) "Wall of Essence's wording unsaid"
     Spec.assertBool s (not (Oracle.says essence spark (Text.pack "Enrage \8212 Whenever this creature is dealt combat damage, you gain that much life."))) "enrage said of combat damage alone"
 
@@ -375,7 +382,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s [[Text.pack "Whenever a creature you control dies, you gain 1 life.", Text.pack "Whenever Spark or another creature you control dies, you gain 1 life."]] (Oracle.abilities (on [CardType.Creature] (TriggerCondition.PermanentDies mine) [gainLife 1]))
     Spec.assertEq s [[Text.pack "Whenever a creature you control dies, you gain 1 life."]] (Oracle.abilities (on [CardType.Artifact] (TriggerCondition.PermanentDies mine) [gainLife 1]))
     -- CR 509.3c read by a bystander (Somberwald Alpha).
-    Spec.assertEq s [[Text.pack "Whenever a creature you control becomes blocked, you gain 1 life."]] (Oracle.abilities (on [CardType.Artifact] (TriggerCondition.CreatureBecomesBlocked mine) [gainLife 1]))
+    Spec.assertEq s [[Text.pack "Whenever a creature you control becomes blocked, you gain 1 life."]] (Oracle.abilities (on [CardType.Artifact] (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker mine BlockCount.Once)) [gainLife 1]))
     Spec.assertEq s [[Text.pack "Whenever a creature you control attacks and isn't blocked, you gain 1 life."]] (Oracle.abilities (on [CardType.Artifact] (TriggerCondition.CreatureAttacksUnblocked mine) [gainLife 1]))
     let dragon = on [CardType.Creature] (TriggerCondition.SelfPutFromBattlefieldInto (OwnedZone.MkOwnedZone Zone.Graveyard PlayerRelation.You)) [Effect.MoveToZone (move (ObjectRef.InSlot became) Zone.Hand)]
     Spec.assertEq s (Just (Text.pack "When Spark is put into your graveyard from the battlefield, return it to your hand.")) (Oracle.render dragon)
@@ -667,7 +674,8 @@ spec s = Spec.describe s "Parun.Oracle" $ do
 
   -- CR 107.3: a change that counts reads "for each" (Empyrial Armor) or "+X"
   -- with what X is (Inner Calm, Outer Strength), "for each" first; a change by
-  -- the target's own power is written as doubling is (#5486).
+  -- the target's own power reads so floored (CR 107.1b, Rush of Blood) and not
+  -- bare, which is doubling (CR 701.10b-c, Unleash Fury).
   Spec.it s "render prints a change to power and toughness that counts" $ do
     let hand = countOf (Filter.And []) (InZone.MkInZone Zone.Hand (PlayerRef.Relative PlayerRelation.You))
         creature = [(target, TargetSlot.required Pool.Creatures Nothing)]
@@ -676,6 +684,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertBool s (Oracle.says calm (CardName.MkCardName (Text.pack "Spark")) (Text.pack "Target creature gets +X/+X until end of turn, where X is the number of cards in your hand.")) "no \"where X is\""
     let artifacts = countOf (Filter.And [Filter.HasCardType CardType.Artifact, Filter.HeldBy Holder.Controller PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
     Spec.assertEq s (Just (Text.pack "Spark gets +1/+0 for each artifact you control.")) (Oracle.render (withFace (\f -> f {Face.staticAbilities = [static (Affected.Matching Filter.IsSource) [ptBy artifacts (Quantity.Literal 0)]]})))
+    Spec.assertEq s (Just (Text.pack "Target creature gets +X/+0 until end of turn, where X is its power.")) (Oracle.render (spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (ptBy (Quantity.Arithmetic (Arithmetic.NonNegative (powerOf target))) (Quantity.Literal 0))]] creature))
     Spec.assertEq s Nothing (Oracle.render (spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (ptBy (powerOf target) (Quantity.Literal 0))]] creature))
 
   -- CR 604.3 / 208.2: a characteristic-defining ability gives the stars a face
@@ -731,9 +740,11 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s (Just (Text.pack "{B}: Spark gets +1/+1 until end of turn unless any player pays {2}.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [unlessAny]})))
     let blight = triggered TriggerCondition.SelfEnters [(clause [draw (PlayerRef.Relative PlayerRelation.You) 1]) {Clause.payGate = Just (gate PayBranch.IfPaid (PlayerRef.InSlot you) (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.Blight (CostAmount.Fixed 1)]))}] []
     Spec.assertEq s (Just (Text.pack "When Spark enters, you may blight 1. If you do, draw a card.")) (Oracle.render (withFace (\f -> (typed [CardType.Enchantment] [] f) {Face.triggeredAbilities = [blight]})))
-    let goblin = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed 2)) (Filter.HasCardType CardType.Creature))]) (draw (PlayerRef.Relative PlayerRelation.You) 1)
+    let goblin = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed 2)) (Filter.HasCardType CardType.Creature) CardSelection.ByChoice)]) (draw (PlayerRef.Relative PlayerRelation.You) 1)
     Spec.assertEq s (Just (Text.pack "Discard two creature cards: Draw a card.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [goblin]})))
-    let slate = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.DiscardCards (DiscardCards.MkDiscardCards ObjectCount.Every (Filter.And []))]) (draw (PlayerRef.Relative PlayerRelation.You) 1)
+    let helm = activated (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 3])) [CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.And []) CardSelection.AtRandom)]) (draw (PlayerRef.Relative PlayerRelation.You) 1)
+    Spec.assertEq s (Just (Text.pack "{3}, Discard a card at random: Draw a card.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [helm]})))
+    let slate = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.DiscardCards (DiscardCards.MkDiscardCards ObjectCount.Every (Filter.And []) CardSelection.ByChoice)]) (draw (PlayerRef.Relative PlayerRelation.You) 1)
     Spec.assertEq s (Just (Text.pack "Discard your hand: Draw a card.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [slate]})))
 
   -- CR 608.2c / 608.2d: a clause hanging off the one before it reads with

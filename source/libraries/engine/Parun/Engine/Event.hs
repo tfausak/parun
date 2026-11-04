@@ -4495,12 +4495,16 @@ apply batch applied candidate event =
       -- half is a regression fence, since no test replaces the return.
       --
       -- The loss is QUEUED, GameLossR's reason: this module is below the one
-      -- that takes a player out of the game. It runs before the next
-      -- instruction or state-based action check.
+      -- that takes a player out of the game. It runs before the next draw of
+      -- an instruction's sequence (drawSeries, CR 614.11a), and otherwise
+      -- before the next instruction or state-based action check.
+      -- data/scenarios/replacement's
+      -- cr-614-11a-forbidden-crypt-s-loss-meets-lich-s-mirror-before-the-next-draw
+      -- proves it.
       --
-      -- Not implemented: a later draw of the same sequence is replaced before
-      -- that loss, so a loss replacement (Lich's Mirror) cannot act between the
-      -- two as CR 614.11a asks (#5511).
+      -- Not implemented: a draw this module makes in another's place
+      -- (DrawRewrite.DrawInstead and its kin) is replaced before that loss
+      -- runs (#6096).
       DrawRewrite.FromGraveyardOrLose -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
         gs <- State.get
@@ -10396,6 +10400,21 @@ drawCard pid = Monad.void (drawCardReturning pid)
 drawCardReturning :: PlayerId -> Game (Maybe ObjectId)
 drawCardReturning = drawCardSpentReturning DrawKind.Other Set.empty
 
+-- CR 121.2 / 614.11a: `n` individual draws by `pid`, with `settle` run after
+-- each, so what a replacement queued in a draw's place (Forbidden Crypt's loss,
+-- and Lich's Mirror's reset in that loss's place) is done before the sequence
+-- resumes. `settle` is Resolve.runReplacementEffects, which this module is
+-- below. A drawer who has left the game draws no more (CR 800.4a). Answers
+-- drawCardReturning's ids.
+drawSeries :: Game () -> PlayerId -> Natural -> Game [ObjectId]
+drawSeries settle pid n = Maybe.catMaybes <$> Monad.replicateM (Natural.toIntSaturating n) one
+  where
+    one = do
+      playing <- State.gets (List.elem pid . Game.stillPlaying)
+      if playing
+        then drawCardReturning pid <* settle
+        else pure Nothing
+
 -- CR 504.1: the active player's turn-based draw in their draw step.
 drawForTurn :: PlayerId -> Game ()
 drawForTurn pid = Monad.void (drawCardSpentReturning (DrawKind.TurnBased pid) Set.empty pid)
@@ -11009,15 +11028,9 @@ controllerTurnScoped cond = case cond of
   -- not a turn.
   TriggerCondition.PermanentSacrificed {} -> False
   TriggerCondition.StateIs _ -> False
-  TriggerCondition.SelfDealsCombatDamageToPlayer _ -> False
-  TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> False
-  TriggerCondition.DealsCombatDamage _ -> False
-  TriggerCondition.DealsDamageToPlayer _ -> False
-  TriggerCondition.DealsDamageToPermanent _ -> False
   TriggerCondition.DealsDamage _ -> False
   TriggerCondition.IsDealtDamage _ -> False
   TriggerCondition.PlayerIsDealtDamage _ -> False
-  TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> False
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> False
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> False
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> False
@@ -11060,15 +11073,7 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.SelfAttacksPlayerWithMostLife -> False
   TriggerCondition.SelfAttacksWhileSaddled -> False
   TriggerCondition.SelfAttacksWhile _ -> False
-  TriggerCondition.SelfBlocks -> False
-  TriggerCondition.CreatureBlocks _ -> False
-  TriggerCondition.CreatureBlocksCreature _ -> False
-  TriggerCondition.SelfBlocksAtLeast _ -> False
-  TriggerCondition.SelfBlocksOneOrMore _ -> False
-  TriggerCondition.CreatureBecomesBlocked _ -> False
-  TriggerCondition.CreatureBecomesBlockedBy _ -> False
-  TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> False
-  TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> False
+  TriggerCondition.Blocks _ -> False
   TriggerCondition.CreatureAttacksUnblocked _ -> False
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> False
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> False

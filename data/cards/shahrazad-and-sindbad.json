@@ -155,9 +155,22 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfDealsCombatDamageToPlayer",
+            "type": "DealsDamage",
             "value": {
-              "type": "Opponent"
+              "actor": {
+                "type": "Self"
+              },
+              "kind": {
+                "type": "Combat"
+              },
+              "recipients": [
+                {
+                  "type": "Player",
+                  "value": {
+                    "type": "Opponent"
+                  }
+                }
+              ]
             }
           },
           "intervening": {

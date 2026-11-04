@@ -1675,6 +1675,7 @@ oneMountainState mountain ph =
           GameState.battlefieldWhenTriggered = Map.empty,
           GameState.controlSample = Map.empty,
           GameState.boardAtControlSample = Nothing,
+          GameState.heldBoards = [],
           GameState.damageScannedThrough = 0,
           GameState.delayedTriggers = Seq.empty,
           GameState.continuousEffects = [],

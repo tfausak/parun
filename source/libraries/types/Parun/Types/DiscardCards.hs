@@ -1,5 +1,6 @@
 module Parun.Types.DiscardCards where
 
+import qualified Parun.Types.CardSelection as CardSelection
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.ObjectCount as ObjectCount
 
@@ -11,8 +12,11 @@ import qualified Parun.Types.ObjectCount as ObjectCount
 -- Parun.Types.CostComponent is.
 --
 -- count is Parun.Types.Sacrifice's reading and not
--- Parun.Types.TapForTotalPower's: the cards are chosen and counted exactly,
--- unless it is ObjectCount.Every, which chooses nothing.
+-- Parun.Types.TapForTotalPower's: the cards are counted exactly, unless it is
+-- ObjectCount.Every, which picks nothing and so reads no selection.
+--
+-- selection is CR 701.9b's: the payer chooses unless the cost says at random,
+-- which CR 601.2h pays in its second pass (Parun.Engine.Cost.paidInSecondPass).
 --
 -- The Filter admits everything for a cost that names no quality -- Cathartic
 -- Reunion's "discard two cards" is @And []@ -- rather than the field being
@@ -23,6 +27,7 @@ import qualified Parun.Types.ObjectCount as ObjectCount
 -- CostComponent arm's note rather than this record's.
 data DiscardCards keyword = MkDiscardCards
   { count :: ObjectCount.ObjectCount,
-    whichCards :: Filter.Filter keyword
+    whichCards :: Filter.Filter keyword,
+    selection :: CardSelection.CardSelection
   }
   deriving (Eq, Ord, Show)

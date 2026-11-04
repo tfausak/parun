@@ -139,11 +139,13 @@
                     "type": "GrantPlayFromExile",
                     "value": {
                       "duration": {
-                        "type": "UntilYourNextStep",
+                        "type": "UntilNextStepOf",
                         "value": {
-                          "type": "Ending",
-                          "value": {
-                            "type": "EndStep"
+                          "step": {
+                            "type": "Ending",
+                            "value": {
+                              "type": "EndStep"
+                            }
                           }
                         }
                       },

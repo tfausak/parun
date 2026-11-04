@@ -3802,7 +3802,7 @@ groupAttachCardsSpec s registry =
         -- first strike and vigilance, and is a legendary Soldier in addition to
         -- its other types. Whenever enchanted creature attacks or blocks, attach
         -- any number of target Equipment you control to it." The blocking half is
-        -- TriggerCondition.CreatureBlocks. The other leg differs in the one
+        -- CR 509.3a's TriggerCondition.Blocks. The other leg differs in the one
         -- blocker: alice's unenchanted Piker, which carries the Bonesplitter.
         Spec.it s "CR 509.3a Super-Soldier Serum's creature blocks and takes alice's Equipment" $ do
           serum <- S.printingOf s registry "Super-Soldier Serum"
@@ -3818,7 +3818,7 @@ groupAttachCardsSpec s registry =
               (bobsGear, g5) = S.addPermanent batterfist S.bob g4
               (aura, g6) = S.addPermanent serum S.alice g5
               board = S.attach aura soldier (S.attach split other g6)
-              blocks blocker = settle S.identityAnswer (S.withEvents [GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared blocker 1)] board)
+              blocks blocker = settle S.identityAnswer (S.withEvents [GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared blocker Set.empty)] board)
               after = S.runPure S.identityAnswer (blocks soldier) Stack.resolveTop
               bystander = blocks other
           Spec.assertEqWith s "both of alice's Equipment are on the enchanted Giant" (hostOf split after, hostOf left after) (Just soldier, Just soldier)

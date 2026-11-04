@@ -198,6 +198,11 @@ data GameState = MkGameState
     -- (`boardBeforeEvent`). Its own copy of this field and of the filed boards is
     -- empty.
     boardAtControlSample :: Maybe GameState,
+    -- | CR 603.8 across CR 724.1c's or 724.2c's check: the board before each
+    -- pass of it that performed a state-based action, oldest first, which the
+    -- next settle opens with (Parun.Engine.Engine.performSettle). Each entry's
+    -- own copy of this field is empty.
+    heldBoards :: [GameState],
     -- | How far the state-based action check has consumed the event log --
     -- CR 704.5h's and CR 903.9a's "since the last state-based action check".
     damageScannedThrough :: Natural.Natural,
@@ -231,7 +236,8 @@ data GameState = MkGameState
     -- Effect.DealDamage and Effect.Fight arms, and Parun.Engine.Engine's combat
     -- damage step); for a loss or a draw, the state-based action pass that met
     -- it (Sba.checkOnce, Engine.settlePasses) and each resolved instruction
-    -- (Resolve.applyEffectWith).
+    -- (Resolve.applyEffectWith), and each draw of an instruction's sequence
+    -- (Event.drawSeries).
     pendingReplacementEffects :: Seq.Seq PendingReplacementEffect.PendingReplacementEffect,
     -- | CR 616.1 and Lich's Mirror's ruling: the objects a state-based action
     -- check moves, keyed to the source of the replacement whose effects run in

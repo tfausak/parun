@@ -40,10 +40,13 @@ import qualified Parun.Types.AgainstSlot as AgainstSlot
 import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.Arithmetic as Arithmetic
 import qualified Parun.Types.BeginningStep as BeginningStep
-import qualified Parun.Types.BlockPair as BlockPair
+import qualified Parun.Types.BlockCount as BlockCount
+import qualified Parun.Types.BlockRole as BlockRole
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.CardSelection as CardSelection
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
 import qualified Parun.Types.Clause as Clause
@@ -65,9 +68,11 @@ import qualified Parun.Types.CountedDiscard as CountedDiscard
 import qualified Parun.Types.Counter as Counter
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.Create as Create
+import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamagePart as DamagePart
+import qualified Parun.Types.DamageRecipient as DamageRecipient
+import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DealDamage as DealDamage
-import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Types.Destroy as Destroy
 import qualified Parun.Types.DestructionR as DestructionR
 import qualified Parun.Types.DestructionRewrite as DestructionRewrite
@@ -670,7 +675,8 @@ costPart n = case Node.tag n of
     k <- Node.child n >>= integer
     m <- natural n k
     Right (Right (CostComponent.PayLife (CostAmount.Fixed m)))
-  "DiscardHand" -> Right (Right (CostComponent.DiscardCards DiscardCards.MkDiscardCards {DiscardCards.count = ObjectCount.Every, DiscardCards.whichCards = Filter.And []}))
+  "DiscardHand" -> Right (Right (CostComponent.DiscardCards DiscardCards.MkDiscardCards {DiscardCards.count = ObjectCount.Every, DiscardCards.whichCards = Filter.And [], DiscardCards.selection = CardSelection.ByChoice}))
+  "DiscardACardAtRandom" -> Right (Right (CostComponent.DiscardCards DiscardCards.MkDiscardCards {DiscardCards.count = ObjectCount.Exactly (CostAmount.Fixed 1), DiscardCards.whichCards = Filter.And [], DiscardCards.selection = CardSelection.AtRandom}))
   _ -> Node.untranslated n
   where
     itself c = do
@@ -719,19 +725,19 @@ trigger n = case Node.tag n of
       Nothing -> do
         f <- permanents outermost who
         Right (TriggerCondition.CreatureAttacksUnblocked f, bound [("Trigger_ThatCreature", Oracle.Trigger.attackingCreature), ("Trigger_DefendingPlayer", Oracle.Trigger.thatPlayer)])
-  "WhenACreatureBlocks" -> itself TriggerCondition.SelfBlocks
+  "WhenACreatureBlocks" -> itself (blocks BlockRole.Blocker Filter.IsSource BlockCount.Once)
   "WhenACreatureBecomesBlocked" -> do
     who <- Node.argument n
     case single who of
-      Just "ThisPermanent" -> itself (TriggerCondition.CreatureBecomesBlocked Filter.IsSource)
+      Just "ThisPermanent" -> itself (blocks BlockRole.Attacker Filter.IsSource BlockCount.Once)
       Just _ -> Node.untranslated n
       Nothing -> do
         f <- permanents outermost who
-        Right (TriggerCondition.CreatureBecomesBlocked f, bound [("Trigger_ThatCreature", Oracle.Trigger.attackingCreature), ("Trigger_DefendingPlayer", Oracle.Trigger.thatPlayer)])
-  "WhenACreatureBlocksACreature" -> other (TriggerCondition.CreatureBlocksCreature . BlockPair.MkBlockPair Filter.IsSource) Oracle.Trigger.thatAttacker
-  "WhenACreatureBecomesBlockedByACreature" -> other (\f -> TriggerCondition.CreatureBecomesBlockedBy (BlockPair.MkBlockPair f Filter.IsSource)) Oracle.Trigger.thatBlocker
-  "WhenACreatureDealsCombatDamageToAPlayer" -> damaged TriggerCondition.SelfDealsCombatDamageToPlayer
-  "WhenAPermanentDealsDamageToAPlayer" -> damaged (\relation -> TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self relation Nothing))
+        Right (blocks BlockRole.Attacker f BlockCount.Once, bound [("Trigger_ThatCreature", Oracle.Trigger.attackingCreature), ("Trigger_DefendingPlayer", Oracle.Trigger.thatPlayer)])
+  "WhenACreatureBlocksACreature" -> other (blocks BlockRole.Blocker Filter.IsSource . BlockCount.EachCreature) Oracle.Trigger.thatAttacker
+  "WhenACreatureBecomesBlockedByACreature" -> other (blocks BlockRole.Attacker Filter.IsSource . BlockCount.EachCreature) Oracle.Trigger.thatBlocker
+  "WhenACreatureDealsCombatDamageToAPlayer" -> damaged (Just DamageKind.Combat)
+  "WhenAPermanentDealsDamageToAPlayer" -> damaged Nothing
   "AtTheBeginningOfAPlayersUpkeep" -> step (Phase.Beginning BeginningStep.Upkeep)
   "AtTheBeginningOfAPlayersDrawStep" -> step (Phase.Beginning BeginningStep.DrawStep)
   "AtTheBeginningOfAPlayersEndStep" -> step (Phase.Ending EndingStep.EndStep)
@@ -749,6 +755,8 @@ trigger n = case Node.tag n of
   _ -> Node.untranslated n
   where
     bound pairs = outermost {bindings = Map.fromList pairs}
+    -- CR 509.3's one condition, from its three fields.
+    blocks role creature count = TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger role creature count)
     -- The source's own event, which calls the source "that creature" too.
     itself condition = do
       who <- Node.argument n
@@ -761,12 +769,12 @@ trigger n = case Node.tag n of
       Monad.unless (single who == Just "ThisPermanent") (Node.untranslated n)
       f <- permanents outermost what
       Right (condition f, bound [("Trigger_ThatCreature", Oracle.Target.selfSlot), ("Trigger_ThatOtherPermanent", slot'), ("Trigger_ThatOtherCreature", slot')])
-    -- The source dealing damage to a player of a relation.
-    damaged condition = do
+    -- The source dealing damage of the kind to a player of a relation.
+    damaged kind = do
       (who, whom) <- pair n
       Monad.unless (single who == Just "ThisPermanent") (Node.untranslated n)
       relation <- players whom
-      Right (condition relation, bound [("Trigger_ThatCreature", Oracle.Target.selfSlot), ("Trigger_ThatPlayer", Oracle.Trigger.thatPlayer)])
+      Right (TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger ActingPermanent.Self kind (Set.singleton (DamageRecipient.Player relation))), bound [("Trigger_ThatCreature", Oracle.Target.selfSlot), ("Trigger_ThatPlayer", Oracle.Trigger.thatPlayer)])
     step phase = do
       whose <- Node.argument n
       scope <- case singlePlayer whose of

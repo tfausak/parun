@@ -1,8 +1,8 @@
 module Parun.Types.Conjure where
 
+import qualified Parun.Types.CardSelection as CardSelection
 import qualified Parun.Types.ConjureCards as ConjureCards
 import qualified Parun.Types.ConjureDestination as ConjureDestination
-import qualified Parun.Types.ConjureSelection as ConjureSelection
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.SlotName as SlotName
 
@@ -49,7 +49,7 @@ data Conjure card = MkConjure
     -- | Which question the sentence asks of the candidates above -- "a random
     -- card" or "a card of your choice". Unobservable on a one-candidate list
     -- and on a duplicate, where neither question is asked.
-    selection :: ConjureSelection.ConjureSelection,
+    selection :: CardSelection.CardSelection,
     -- | The zone it arrives in.
     destination :: ConjureDestination.ConjureDestination,
     -- | The slot the conjured cards are bound to, for a later clause to name --
@@ -66,5 +66,5 @@ defaultQuantity = Quantity.Literal 1
 -- | What a card naming one card outright writes, and the value the codec
 -- elides. Randomness rather than choice: the printings that say neither are the
 -- one-candidate ones, where the two are indistinguishable.
-defaultSelection :: ConjureSelection.ConjureSelection
-defaultSelection = ConjureSelection.AtRandom
+defaultSelection :: CardSelection.CardSelection
+defaultSelection = CardSelection.AtRandom

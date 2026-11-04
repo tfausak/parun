@@ -1116,8 +1116,8 @@ repeatIf applyLoopBody runSubgame resolving source controller legal chosen (Repe
           run
   run
 
-draw :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Draw.Draw -> Game ()
-draw resolving source controller legal (Draw.MkDraw ref quantity mSlot) = do
+draw :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Draw.Draw -> Game ()
+draw settle resolving source controller legal (Draw.MkDraw ref quantity mSlot) = do
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
@@ -1145,9 +1145,9 @@ draw resolving source controller legal (Draw.MkDraw ref quantity mSlot) = do
               Nothing -> pure []
               -- CR 121.2: draw the settled count one at a time, so each draw
               -- re-reads the library top and the CR 104.3c empty-library loss is
-              -- preserved.
-              Just (drawer, settled) ->
-                Maybe.catMaybes <$> Monad.replicateM (Natural.toIntSaturating settled) (Event.drawCardReturning drawer)
+              -- preserved; CR 614.11a: what a replacement queued in one draw's
+              -- place lands before the next.
+              Just (drawer, settled) -> Event.drawSeries settle drawer settled
             -- CR 603.12: fewer cards drawn than the instruction named, against
             -- the count BEFORE any replacement -- The Royal Scions' 2019-10-04
             -- rulings, fewer than four does not trigger and five or more does.
@@ -1502,8 +1502,8 @@ explore resolving source controller legal ref = do
   ordered <- Common.forEachOrder resolving Nothing id (Common.objectRefRecipients legal resolving controller source gs ref)
   Monad.mapM_ (Common.exploreOne resolving) (Maybe.mapMaybe Recipient.objectOf ordered)
 
-connive :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Connive.Type.Connive -> Game ()
-connive resolving source controller legal (Connive.Type.MkConnive quantity ref) = do
+connive :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Connive.Type.Connive -> Game ()
+connive settle resolving source controller legal (Connive.Type.MkConnive quantity ref) = do
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
@@ -1516,7 +1516,7 @@ connive resolving source controller legal (Connive.Type.MkConnive quantity ref) 
   -- Amass's arm for the unevaluable case.
   case Quantity.evaluateFor viewOf context gs resolving source quantity of
     Nothing -> pure ()
-    Just n -> Monad.mapM_ (Common.conniveOne (Integer.toNaturalSaturating n)) (Maybe.mapMaybe Recipient.objectOf ordered)
+    Just n -> Monad.mapM_ (Common.conniveOne settle (Integer.toNaturalSaturating n)) (Maybe.mapMaybe Recipient.objectOf ordered)
 
 -- The card names the set, so CR 701.9b's default choice -- the discarding
 -- player's -- does not arise and the discarding player is not prompted. Named

@@ -7,7 +7,7 @@ import qualified Parun.Types.DamageKind as DamageKind
 -- Parun.Types.PlayerIsDealtDamage's dealt, a Parun.Types.PlayerRef in
 -- Parun.Types.Quantity's PlayersDealtDamageThisTurn and
 -- DamageDealtToPlayersThisTurn, a
--- Parun.Types.ActingPermanent in Parun.Types.TriggerCondition's IsDealtDamage.
+-- Parun.Types.ActingPermanent in Parun.Types.PermanentIsDealtDamage's dealt.
 data DealtDamage recipient = MkDealtDamage
   { recipient :: recipient,
     -- | Nothing for any damage; Just Combat for CR 510.2's combat damage alone

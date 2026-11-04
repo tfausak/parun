@@ -51,14 +51,17 @@ import qualified Parun.Types.BecameTarget as BecameTarget
 import qualified Parun.Types.BecameUnattached as BecameUnattached
 import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.BeginningStep as BeginningStep
-import qualified Parun.Types.BlockPair as BlockPair
+import qualified Parun.Types.BlockCount as BlockCount
 import qualified Parun.Types.BlockProducer as BlockProducer
+import qualified Parun.Types.BlockRole as BlockRole
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.BlocksDeclared as BlocksDeclared
 import qualified Parun.Types.CandidateId as CandidateId
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
+import qualified Parun.Types.CardSelection as CardSelection
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CardsPutIntoZone as CardsPutIntoZone
 import qualified Parun.Types.CausedBy as CausedBy
@@ -82,14 +85,13 @@ import qualified Parun.Types.CounterMotion as CounterMotion
 import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.Countering as Countering
 import qualified Parun.Types.CountersPlaced as CountersPlaced
-import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamagePrevented as DamagePrevented
-import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
-import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
+import qualified Parun.Types.DamageRecipient as DamageRecipient
+import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.Designation as Designation
@@ -138,7 +140,7 @@ import qualified Parun.Types.PaymentMoment as PaymentMoment
 import qualified Parun.Types.PendingTrigger as PendingTrigger
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
-import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
+import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
@@ -226,7 +228,7 @@ cyclingTriggerSpec s registry =
           gs = g1 {GameState.priority = Just S.alice}
           -- The same card, the same graveyard, one component over: a cost that
           -- discards a card of the player's choice rather than this one.
-          discarded = S.runPure S.identityAnswer gs (Cost.payComponent S.manaPerformer PaymentMoment.OutsideResolution Nothing Map.empty S.alice S.noSource (CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.Type.And []))))
+          discarded = S.runPure S.identityAnswer gs (Cost.payComponent S.manaPerformer PaymentMoment.OutsideResolution Nothing Map.empty S.alice S.noSource (CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.Type.And []) CardSelection.ByChoice)))
           after = S.runPure S.identityAnswer discarded Engine.settleForPriority
       Spec.assertEqWith s "the Aven really did reach the graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice discarded)) 1
       Spec.assertEqWith s "nothing was put on the stack" (GameState.stack after) []
@@ -1837,33 +1839,23 @@ representativeEvents cond =
         -- it at all (Event.matchesTrigger's StateIs arm answers False for every
         -- event). Any event is therefore as representative as any other.
         TriggerCondition.StateIs _ -> one (GameEvent.StepBegan (StepBegan.MkStepBegan (Phase.Ending EndingStep.EndStep) S.alice))
-        TriggerCondition.SelfDealsCombatDamageToPlayer _ -> one combatDamage
-        -- TWO, one per recipient kind this arm admits: a floor claimed for the
-        -- player alone would come apart on the battle.
-        TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle ->
-          noTable combatDamage
-            NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToBattle arrived) 3 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
-        -- TWO again, a player and a creature: this arm admits any recipient.
-        TriggerCondition.DealsCombatDamage _ ->
-          noTable combatDamage
-            NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToCreature arrived) 3 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
-        -- TWO of them, for IsDealtDamage's reason below: this arm admits
-        -- both of CR 120.3's damage kinds, so a floor claimed for combat alone
-        -- would come apart on the noncombat one.
-        TriggerCondition.DealsDamageToPlayer _ ->
-          noTable combatDamage
-            NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToPlayer S.bob) 3 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat))]
-        -- CR 120.3's other recipient, the bearer still the SOURCE. TWO of them for
-        -- the arm above's reason: with no kind named this condition admits both
-        -- damage kinds, and the combat one is among them for the arm naming it.
-        TriggerCondition.DealsDamageToPermanent _ ->
-          noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToCreature arrived) 4 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat))
-            NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToCreature arrived) 5 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
-        -- TWO again, a creature and a player, one of each kind: this arm admits
-        -- any recipient and either kind.
-        TriggerCondition.DealsDamage _ ->
-          noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToCreature arrived) 4 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat))
-            NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToPlayer S.bob) 5 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
+        -- One event per damage kind and recipient the trigger admits, so a floor
+        -- claimed for one would come apart on another. Naming no recipient
+        -- admits a player and a creature alike.
+        TriggerCondition.DealsDamage watched ->
+          let kinds = maybe [DamageKind.Noncombat, DamageKind.Combat] pure (DamageTrigger.kind watched)
+              recipients = case Set.toList (DamageTrigger.recipients watched) of
+                [] -> [Recipient.ToPlayer S.bob, Recipient.ToCreature arrived]
+                named -> damaged <$> named
+              damaged recipient = case recipient of
+                DamageRecipient.Player _ -> Recipient.ToPlayer S.bob
+                DamageRecipient.Permanent CardType.Planeswalker -> Recipient.ToPlaneswalker arrived
+                DamageRecipient.Permanent CardType.Battle -> Recipient.ToBattle arrived
+                DamageRecipient.Permanent _ -> Recipient.ToCreature arrived
+              events = [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed recipient 3 False False False 0 Nothing Nothing mempty False kind)) | kind <- kinds, recipient <- recipients]
+           in case events of
+                event : rest -> event NonEmpty.:| rest
+                [] -> one combatDamage
         -- CR 120.3's event pointed the other way, at the BEARER -- so the pair
         -- really matches. TWO of them, combat and noncombat, because this
         -- condition admits both, as the arm above does: a floor claimed for one
@@ -1881,16 +1873,9 @@ representativeEvents cond =
         TriggerCondition.PlayerIsDealtDamage _ ->
           noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToPlayer S.alice) 2 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat))
             NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToPlayer S.alice) 3 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
-        -- The same event read by a bystander, and the only one this condition
-        -- admits.
-        TriggerCondition.PermanentDealsCombatDamageToPlayer p
-          | PermanentDealsCombatDamageToPlayer.orTheirPlaneswalkers p ->
-              noTable combatDamage
-                NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToPlaneswalker arrived) 3 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
-        TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> one combatDamage
         -- The same one event, and NOT because the batch reading matches nothing:
         -- Event.matchesTrigger answers alike for both (its batch arm delegates to
-        -- the singular's), CR 603.2c's once-per-step scoping living in
+        -- DealsDamage's), CR 603.2c's once-per-step scoping living in
         -- Event.eventTriggers instead -- PermanentsDie's posture below.
         TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> one combatDamage
         -- CR 725.2's and CR 726.2's damage, dealt to alice: the inherent
@@ -1981,59 +1966,33 @@ representativeEvents cond =
         -- The same declaration event, and the state it is narrowed by is read off
         -- the board rather than bound.
         TriggerCondition.SelfAttacksWhile _ -> one (GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared departed S.carol (AttackTarget.OfPlayer S.carol) 1 S.alice))
-        -- The GROUPED blocking event, which is CR 509.3a's arity: one per blocking
-        -- creature, whatever it was declared against.
-        TriggerCondition.SelfBlocks -> one (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared departed 1))
-        TriggerCondition.CreatureBlocks _ -> one (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared departed 1))
-        -- The same event with the count read, which is all CR 509.3e adds.
-        TriggerCondition.SelfBlocksAtLeast _ -> one (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared departed 2))
-        -- The same grouped event once more, with the count IGNORED: CR 509.3e's
-        -- filtered form reads the attackers off Combat.blockers instead, and
-        -- binds nothing off the log.
-        TriggerCondition.SelfBlocksOneOrMore _ -> one (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared departed 1))
-        -- The PAIRWISE event instead: CR 509.3b's bearer is the BLOCKER too, and
-        -- the attacker beside it is what this one binds. The blocker is the departed
-        -- id, since eventBindings binds only where the watched end has a view.
-        TriggerCondition.CreatureBlocksCreature _ -> one (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = departed, BecameBlocking.attacker = ObjectId.MkObjectId 41, BecameBlocking.producer = BlockProducer.Declared, BecameBlocking.attackerWasBlocked = False, BecameBlocking.blockersBefore = Set.empty}))
-        -- CR 508.5's defending player again, and carol for SelfAttacks' reason
-        -- above: eventBindings binds this field under `thatPlayer`.
-        TriggerCondition.CreatureBecomesBlocked _ -> one (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked departed S.carol 1))
-        -- The same declaration event SelfBlocks names, with the ids the other way
-        -- round: the ATTACKER is the watched end here, and the blocker is what it
-        -- binds. The attacker is the departed id, as for CreatureBlocksCreature.
-        TriggerCondition.CreatureBecomesBlockedBy _ -> one (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 41, BecameBlocking.attacker = departed, BecameBlocking.producer = BlockProducer.Declared, BecameBlocking.attackerWasBlocked = False, BecameBlocking.blockersBefore = Set.empty}))
-        -- The GROUPED attacking-side event, which is what makes this one fire
-        -- once where the arm above fires per blocker. carol on CreatureBecomesBlocked's
-        -- reasoning -- and this one binds that player nothing, which is the
-        -- difference the pin catches.
-        --
-        -- The SECOND list longer than one, and for the same reason as
-        -- CreatureBecomesBlockedByAtLeast below: rule 509.3e's second producer,
-        -- the arrival of a creature put onto the battlefield blocking an
-        -- attacker that was already blocked, is admitted under a different event
-        -- constructor. This condition names a SET rather than an object, so both
-        -- events bind nothing and the intersection is empty -- which is what an
-        -- eventBindings arm added here without eventBindingSlots being told
-        -- would break.
-        TriggerCondition.SelfBecomesBlockedByOneOrMore _ ->
-          noTable (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked departed S.carol 1))
-            NonEmpty.:| [noTable (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 42, BecameBlocking.attacker = departed, BecameBlocking.producer = BlockProducer.PutOntoBattlefield, BecameBlocking.attackerWasBlocked = True, BecameBlocking.blockersBefore = Set.singleton (ObjectId.MkObjectId 43)}))]
-        -- The same grouped event once more, with the ids read the other way from
-        -- every arm above it: the bearer is a BYSTANDER, so `departed` sits in
-        -- the attacker position and is what this one binds -- an arm that bound
-        -- the bearer instead would pin the empty set here.
-        --
-        -- The LAST list longer than one, and rule 509.3e's second producer is
-        -- why: this condition also admits the arrival of a creature put onto the
-        -- battlefield blocking, which names the attacker in a different payload
-        -- and so needs its own eventBindings arm. An arm added to matchesTrigger
-        -- and forgotten there would bind nothing for this event, Seifer's "that
-        -- attacking creature" would resolve to nothing, and the board would be
-        -- indistinguishable from one where the trigger never fired -- so the
-        -- intersection is the fence for exactly that.
-        TriggerCondition.CreatureBecomesBlockedByAtLeast {} ->
-          noTable (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked departed S.carol 1))
-            NonEmpty.:| [noTable (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 42, BecameBlocking.attacker = departed, BecameBlocking.producer = BlockProducer.PutOntoBattlefield, BecameBlocking.attackerWasBlocked = True, BecameBlocking.blockersBefore = Set.singleton (ObjectId.MkObjectId 43)}))]
+        -- CR 509.3: one shape of event per role and count.
+        TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger role _ count) -> case (role, count) of
+          -- The GROUPED blocking event, which is CR 509.3a's arity and CR
+          -- 509.3e's: one per blocking creature, whatever it was declared
+          -- against. The blocker is what both bind.
+          (BlockRole.Blocker, BlockCount.Once) -> one (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared departed (Set.singleton (ObjectId.MkObjectId 41))))
+          (BlockRole.Blocker, BlockCount.AtLeast {}) -> one (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared departed (Set.fromList [ObjectId.MkObjectId 41, ObjectId.MkObjectId 42])))
+          -- The PAIRWISE event instead: CR 509.3b's named creature is the
+          -- BLOCKER, and the attacker beside it is what this one binds. The
+          -- blocker is the departed id, since eventBindings binds only where the
+          -- named end has a view.
+          (BlockRole.Blocker, BlockCount.EachCreature _) -> one (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = departed, BecameBlocking.attacker = ObjectId.MkObjectId 41, BecameBlocking.producer = BlockProducer.Declared, BecameBlocking.attackerWasBlocked = False, BecameBlocking.blockersBefore = Set.empty}))
+          -- CR 508.5's defending player, and carol for SelfAttacks' reason above:
+          -- eventBindings binds this field under `thatPlayer`.
+          (BlockRole.Attacker, BlockCount.Once) -> one (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked departed S.carol (Set.singleton (ObjectId.MkObjectId 41))))
+          -- The pairwise event with the ids the other way round: the ATTACKER is
+          -- the named end here, and the blocker is what it binds.
+          (BlockRole.Attacker, BlockCount.EachCreature _) -> one (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 41, BecameBlocking.attacker = departed, BecameBlocking.producer = BlockProducer.Declared, BecameBlocking.attackerWasBlocked = False, BecameBlocking.blockersBefore = Set.empty}))
+          -- BOTH of rule 509.3e's attacking-side producers: the becoming, and the
+          -- arrival of a creature put onto the battlefield blocking an attacker
+          -- that was already blocked, under a different event constructor. An
+          -- eventBindings arm forgotten for the second would bind nothing, and
+          -- Seifer's "that attacking creature" would resolve to nothing -- so the
+          -- intersection is the fence for exactly that.
+          (BlockRole.Attacker, BlockCount.AtLeast {}) ->
+            noTable (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked departed S.carol (Set.singleton (ObjectId.MkObjectId 41))))
+              NonEmpty.:| [noTable (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 42, BecameBlocking.attacker = departed, BecameBlocking.producer = BlockProducer.PutOntoBattlefield, BecameBlocking.attackerWasBlocked = True, BecameBlocking.blockersBefore = Set.singleton (ObjectId.MkObjectId 43)}))]
         -- The same declaration's unblocked branch, which carries the attacker
         -- and CR 508.5's defending player.
         TriggerCondition.CreatureAttacksUnblocked _ -> one (GameEvent.AttackerUnblocked (AttackerUnblocked.MkAttackerUnblocked departed S.carol))
@@ -2085,7 +2044,7 @@ representativeEvents cond =
         TriggerCondition.PermanentReturnedToHand _ -> one (moved Zone.Battlefield Zone.Hand)
         -- The same one event, and NOT because the batch reading matches nothing:
         -- Event.matchesTrigger answers alike for both (its batch arm delegates to
-        -- the singular's), CR 603.2c's once-per-batch scoping living in
+        -- DealsDamage's), CR 603.2c's once-per-batch scoping living in
         -- Event.eventTriggers instead -- PermanentsDie's posture below.
         TriggerCondition.PermanentsReturnedToHand _ -> one (moved Zone.Battlefield Zone.Hand)
         -- The zone read on the DEPARTURE side instead: every destination the
@@ -2414,25 +2373,26 @@ everyTriggerCondition =
     TriggerCondition.PermanentsDie Filter.Type.IsSource,
     TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing TurnScope.EachTurn),
     TriggerCondition.StateIs (Condition.Type.Compares (Compares.MkCompares (Quantity.Type.Literal 0) Comparison.Exactly (Quantity.Type.Literal 0))),
-    TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.AnyPlayer,
-    TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle,
-    TriggerCondition.DealsCombatDamage ActingPermanent.Self,
-    TriggerCondition.DealsCombatDamage (ActingPermanent.Matching (Filter.Type.And [])),
-    TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self PlayerRelation.AnyPlayer Nothing),
-    TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer (ActingPermanent.Matching (Filter.Type.And [])) PlayerRelation.Opponent Nothing),
-    TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer (ActingPermanent.Matching (Filter.Type.And [])) PlayerRelation.Opponent (Just DamageKind.Noncombat)),
-    TriggerCondition.DealsDamageToPermanent (DealsDamageToPermanent.MkDealsDamageToPermanent ActingPermanent.Self CardType.Creature Nothing),
-    TriggerCondition.DealsDamageToPermanent (DealsDamageToPermanent.MkDealsDamageToPermanent ActingPermanent.Self CardType.Creature (Just DamageKind.Combat)),
-    TriggerCondition.DealsDamage ActingPermanent.Self,
-    TriggerCondition.DealsDamage (ActingPermanent.Matching (Filter.Type.HasAttached Filter.Type.IsSource)),
-    TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing),
-    TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage (ActingPermanent.Matching (Filter.Type.And [])) Nothing),
-    TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self (Just DamageKind.Combat)),
+    TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger ActingPermanent.Self (Just DamageKind.Combat) (Set.singleton (DamageRecipient.Player PlayerRelation.AnyPlayer))),
+    TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger ActingPermanent.Self (Just DamageKind.Combat) (Set.fromList [DamageRecipient.Player PlayerRelation.AnyPlayer, DamageRecipient.Permanent CardType.Battle])),
+    TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger ActingPermanent.Self (Just DamageKind.Combat) Set.empty),
+    TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger (ActingPermanent.Matching (Filter.Type.And [])) (Just DamageKind.Combat) Set.empty),
+    TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger ActingPermanent.Self Nothing (Set.singleton (DamageRecipient.Player PlayerRelation.AnyPlayer))),
+    TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger (ActingPermanent.Matching (Filter.Type.And [])) Nothing (Set.singleton (DamageRecipient.Player PlayerRelation.Opponent))),
+    TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger (ActingPermanent.Matching (Filter.Type.And [])) (Just DamageKind.Noncombat) (Set.singleton (DamageRecipient.Player PlayerRelation.Opponent))),
+    TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger ActingPermanent.Self Nothing (Set.singleton (DamageRecipient.Permanent CardType.Creature))),
+    TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger ActingPermanent.Self (Just DamageKind.Combat) (Set.singleton (DamageRecipient.Permanent CardType.Creature))),
+    TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger ActingPermanent.Self Nothing Set.empty),
+    TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger (ActingPermanent.Matching (Filter.Type.HasAttached Filter.Type.IsSource)) Nothing Set.empty),
+    TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger (ActingPermanent.Matching (Filter.Type.And [])) (Just DamageKind.Combat) (Set.singleton (DamageRecipient.Player PlayerRelation.AnyPlayer))),
+    TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger (ActingPermanent.Matching (Filter.Type.And [])) (Just DamageKind.Combat) (Set.fromList [DamageRecipient.Player PlayerRelation.AnyPlayer, DamageRecipient.Permanent CardType.Planeswalker])),
+    TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing) Batching.OneOrMore),
+    TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing) Batching.EachOccurrence),
+    TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage (ActingPermanent.Matching (Filter.Type.And [])) Nothing) Batching.OneOrMore),
+    TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self (Just DamageKind.Combat)) Batching.OneOrMore),
     TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You Nothing) False),
     TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You (Just DamageKind.Noncombat)) False),
     TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You (Just DamageKind.Combat)) True),
-    TriggerCondition.PermanentDealsCombatDamageToPlayer (PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer (Filter.Type.And []) PlayerRelation.AnyPlayer False),
-    TriggerCondition.PermanentDealsCombatDamageToPlayer (PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer (Filter.Type.And []) PlayerRelation.AnyPlayer True),
     TriggerCondition.PermanentsDealCombatDamageToPlayer (PermanentsDealCombatDamageToPlayer.MkPermanentsDealCombatDamageToPlayer (Filter.Type.And []) PlayerRelation.AnyPlayer False),
     TriggerCondition.CreatureDealtCombatDamageToMonarch,
     TriggerCondition.CreaturesDealtCombatDamageToInitiative,
@@ -2475,15 +2435,15 @@ everyTriggerCondition =
     TriggerCondition.SelfAttacksPlayerWithMostLife,
     TriggerCondition.SelfAttacksWhileSaddled,
     TriggerCondition.SelfAttacksWhile (Condition.Type.Compares (Compares.MkCompares (Quantity.Type.Literal 0) Comparison.Exactly (Quantity.Type.Literal 0))),
-    TriggerCondition.SelfBlocks,
-    TriggerCondition.CreatureBlocks (Filter.Type.And []),
-    TriggerCondition.SelfBlocksAtLeast 2,
-    TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair (Filter.Type.And []) (Filter.Type.And [])),
-    TriggerCondition.CreatureBecomesBlocked (Filter.Type.And []),
-    TriggerCondition.SelfBlocksOneOrMore (Filter.Type.And []),
-    TriggerCondition.CreatureBecomesBlockedBy (BlockPair.MkBlockPair (Filter.Type.And []) (Filter.Type.And [])),
-    TriggerCondition.SelfBecomesBlockedByOneOrMore (Filter.Type.And []),
-    TriggerCondition.CreatureBecomesBlockedByAtLeast (CreatureBecomesBlockedByAtLeast.MkCreatureBecomesBlockedByAtLeast PlayerRelation.Opponent 2),
+    TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.Type.IsSource BlockCount.Once),
+    TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker (Filter.Type.And []) BlockCount.Once),
+    TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.Type.IsSource (BlockCount.AtLeast 2 (Filter.Type.And []))),
+    TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker (Filter.Type.And []) (BlockCount.EachCreature (Filter.Type.And []))),
+    TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker (Filter.Type.And []) BlockCount.Once),
+    TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.Type.IsSource (BlockCount.AtLeast 1 (Filter.Type.And []))),
+    TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker (Filter.Type.And []) (BlockCount.EachCreature (Filter.Type.And []))),
+    TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker Filter.Type.IsSource (BlockCount.AtLeast 1 (Filter.Type.And []))),
+    TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker (Filter.Type.IsAttackingPlayer PlayerRelation.Opponent) (BlockCount.AtLeast 2 (Filter.Type.And []))),
     TriggerCondition.CreatureAttacksUnblocked (Filter.Type.And []),
     TriggerCondition.SelfPutIntoGraveyardFromLibrary,
     TriggerCondition.SelfPutIntoGraveyardFromAnywhere,

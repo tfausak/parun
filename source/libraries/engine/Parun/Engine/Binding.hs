@@ -1225,17 +1225,17 @@ damagersController = SlotName.MkSlotName (Text.pack "thatDamagersController")
 -- GameEvent.DamageDealt the condition matched, so the payload is an ordinary slot
 -- read rather than a "the creature that hit them" opcode.
 --
--- The name is combat's but the slot is not: IsDealtDamage stamps it for CR
--- 120.3's noncombat damage too, which is Belltower Sphinx's "that source's
--- controller". The wire spelling is `thatDamager` and cards already write it, so
--- the name stays.
+-- The name is combat's but the slot is not: IsDealtDamage's per-source reading
+-- stamps it for CR 120.3's noncombat damage too, which is Belltower Sphinx's
+-- "that source's controller". The wire spelling is `thatDamager` and cards
+-- already write it, so the name stays.
 --
 -- Distinct from `triggerSource` (CR 113.7a) for the reason `attackingCreature`
 -- is: the bystander form of the condition watches every permanent its controller
 -- has, so the bearer is routinely a different permanent from the damager, and
 -- Aragorn watching a Wolf of his own is the ordinary case rather than the corner
--- one. The self-scoped SelfDealsCombatDamageToPlayer needs no such slot, its
--- damager BEING the bearer.
+-- one. A self-scoped reading needs no such slot, its damager BEING the bearer,
+-- though DealsDamage stamps it for every reading alike.
 --
 -- One object per event, never a group: CR 510.2 deals all the assigned damage at
 -- once, but Parun.Engine.Damage records one DamageEvent per source-and-recipient

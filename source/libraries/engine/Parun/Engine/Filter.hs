@@ -3310,7 +3310,7 @@ overComponent onFilter onCounters component = case component of
   -- so rule 612.1 finds no word in this component to swap.
   CostComponent.CollectEvidence _ -> component
   CostComponent.CollectEvidenceOfTargets -> component
-  CostComponent.DiscardCards (DiscardCards.MkDiscardCards n criterion) -> CostComponent.DiscardCards (DiscardCards.MkDiscardCards n (onFilter criterion))
+  CostComponent.DiscardCards discard -> CostComponent.DiscardCards discard {DiscardCards.whichCards = onFilter (DiscardCards.whichCards discard)}
   CostComponent.PutCardFromHandOntoBattlefield criterion -> CostComponent.PutCardFromHandOntoBattlefield (onFilter criterion)
   CostComponent.ExileCardsFromHand (ExileCardsFromHand.MkExileCardsFromHand n criterion) -> CostComponent.ExileCardsFromHand (ExileCardsFromHand.MkExileCardsFromHand n (onFilter criterion))
   CostComponent.RevealCardFromHand criterion -> CostComponent.RevealCardFromHand (onFilter criterion)

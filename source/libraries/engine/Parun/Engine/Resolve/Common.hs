@@ -30,6 +30,7 @@ import qualified Parun.Engine.CounterRestriction as CounterRestriction
 import qualified Parun.Engine.Damage as Damage
 import qualified Parun.Engine.Daytime as Daytime
 import qualified Parun.Engine.Decide as Decide
+import qualified Parun.Engine.Departure as Departure
 import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Expiry as Expiry
 import qualified Parun.Engine.Filter as Filter
@@ -49,6 +50,7 @@ import qualified Parun.Engine.Replacement as Replacement
 import Parun.Engine.Resolve.Slots (attackedBy, boundSlots, chosenCandidates, effectContext, effectObjectRefs, effectPlayerRefs, effectViewOf, graveyardCardsOf, handCardsOf, legalMany, legalOne, libraryCardsOf, matchingFromAmong, objectRefObjects, playerRefPlayers, playerRefSlots, replacementRowSlots, resolutionReads, resolvingAbilityName, resolvingKind, slotBindings, slotGroup)
 import qualified Parun.Engine.Restamp as Restamp
 import qualified Parun.Engine.Room as Room
+import qualified Parun.Engine.Sba as Sba
 import qualified Parun.Engine.SourceContext as SourceContext
 import qualified Parun.Engine.Star as Star
 import qualified Parun.Engine.Sticker as Sticker
@@ -155,6 +157,7 @@ import qualified Parun.Types.PayObligation as PayObligation
 import qualified Parun.Types.PayOffer as PayOffer
 import qualified Parun.Types.PaymentDecision as PaymentDecision
 import qualified Parun.Types.PaymentSubject as PaymentSubject
+import qualified Parun.Types.PendingReplacementEffect as PendingReplacementEffect
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentAction as PermanentAction
 import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
@@ -2365,6 +2368,27 @@ recordExilePile before gs =
           let (stamp, gs1) = Game.freshTimestamp gs
            in gs1 {GameState.exilePiles = foldr (\oid -> Map.insert oid stamp) kept unstamped}
 
+-- CR 724.1c / 724.2c: state-based action passes to a fixpoint (CR 704.3),
+-- placing no trigger. CR 603.8 has a state trigger armed on the board before
+-- a pass that performed something triggered, and 724.1f / 724.2f put it on the
+-- stack at the next settle, so that board is kept for it
+-- (GameState.heldBoards). data/scenarios/turn's Synthetic Final Raising and
+-- Synthetic Raising Truce scenarios prove it.
+checkWithoutPriority :: (Game Result -> PendingReplacementEffect.PendingReplacementEffect -> Game ()) -> (Game Result -> Game ()) -> Game Result -> Game ()
+checkWithoutPriority runDamageRewriteEffect runReplacementEffects runSubgame = go 0
+  where
+    go passes = do
+      begun <- State.gets GameState.lastChoice
+      held <- State.gets GameState.heldBoards
+      board <- State.gets (\gs -> gs {GameState.heldBoards = []})
+      performed <- Sba.performStateBasedActions (runDamageRewriteEffect runSubgame) held
+      Monad.when performed (State.modify' (\gs -> gs {GameState.heldBoards = held <> [board]}))
+      runReplacementEffects runSubgame
+      passed <- Departure.passesSince begun passes
+      Departure.checkMandatoryLoop passed
+      ended <- State.gets (Maybe.isJust . GameState.result)
+      Monad.when (performed && not ended) (go passed)
+
 -- CR 724.1b: how one object leaves the stack when an effect ends the turn. A card
 -- or a token is EXILED, which is a zone change like any other; an ability is not
 -- represented by a card, so it ceases to exist instead (Game.cease, CR 608.2n's
@@ -4551,15 +4575,15 @@ exploreOne resolving oid = do
 -- projection, exploreOne's reading: the hand incarnation is gone by then, and a
 -- double-faced card in a graveyard has only its front face's characteristics
 -- (CR 712.8a).
-conniveOne :: Natural -> ObjectId -> Game ()
-conniveOne n oid = Monad.when (n > 0) $ do
+conniveOne :: Game () -> Natural -> ObjectId -> Game ()
+conniveOne settle n oid = Monad.when (n > 0) $ do
   gs <- State.get
   Monad.forM_ (Projection.controllerWithLastKnown oid gs) $ \pid -> do
     -- CR 121.2a: the N-card draw is one replaceable instruction, settled before
-    -- any of CR 121.2's individual draws -- Effect.Draw's arm, line for line.
+    -- any of CR 121.2's individual draws -- Effect.Draw's arm, line for line,
+    -- `settle` included (CR 614.11a).
     outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.DrawCards Nothing pid n)
-    Monad.forM_ (outcome >>= Replacement.asPerformed PlayerInstruction.DrawCards) $ \(drawer, settled) ->
-      Monad.replicateM_ (Natural.toIntSaturating settled) (Event.drawCard drawer)
+    Monad.forM_ (outcome >>= Replacement.asPerformed PlayerInstruction.DrawCards) (uncurry (Event.drawSeries settle))
     drawn <- State.get
     let held = Game.cardsIn Zone.Hand pid drawn
     -- The discard is N however many cards the draw actually delivered (CR

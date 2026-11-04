@@ -11,8 +11,7 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.PlayerAttacksWith as PlayerAttacksWith
 
--- | A bare object keyed by the record's field names, as
--- Parun.Codec.CreatureBecomesBlockedByAtLeast is. All three keys are required:
+-- | A bare object keyed by the record's field names. All three keys are required:
 -- no part of the printed sentence has a default, an unfiltered "whenever you
 -- attack" being Parun.Types.TriggerCondition's PlayerAttacks instead, and a
 -- defaulted floor would let a card mean "one or more" by saying nothing.

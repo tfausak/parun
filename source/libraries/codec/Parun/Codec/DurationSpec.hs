@@ -18,8 +18,10 @@ import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
+import qualified Parun.Types.NextStepOf as NextStepOf
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.SlotName as SlotName
 
@@ -61,12 +63,12 @@ spec s = Spec.describe s "Parun.Codec.Duration" $ do
       Duration.UntilYourNextTurn
       " {\"type\":\"UntilYourNextTurn\"} "
   -- CR 611.2a: until a step of your turn next begins.
-  Spec.it s "UntilYourNextStep carries its step" $
+  Spec.it s "UntilNextStepOf carries its step, and leaves out you" $
     Common.assertCodec
       s
       Duration.codec
-      (Duration.UntilYourNextStep (Phase.Ending EndingStep.EndStep))
-      " {\"type\":\"UntilYourNextStep\",\"value\":{\"type\":\"Ending\",\"value\":{\"type\":\"EndStep\"}}} "
+      (Duration.UntilNextStepOf (NextStepOf.MkNextStepOf (Phase.Ending EndingStep.EndStep) (PlayerRef.Relative PlayerRelation.You)))
+      " {\"type\":\"UntilNextStepOf\",\"value\":{\"step\":{\"type\":\"Ending\",\"value\":{\"type\":\"EndStep\"}}}} "
   -- CR 611.2a: until the END of your next turn, a whole turn later.
   Spec.it s "UntilEndOfYourNextTurn" $
     Common.assertCodec

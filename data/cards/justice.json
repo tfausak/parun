@@ -100,45 +100,47 @@
           "condition": {
             "type": "DealsDamage",
             "value": {
-              "type": "Matching",
-              "value": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "HasColor",
-                    "value": {
-                      "type": "Red"
-                    }
-                  },
-                  {
-                    "type": "Or",
-                    "value": [
-                      {
-                        "type": "And",
-                        "value": [
-                          {
-                            "type": "HasCardType",
-                            "value": {
-                              "type": "Creature"
-                            }
-                          },
-                          {
-                            "type": "IsInZone",
-                            "value": {
-                              "type": "Battlefield"
-                            }
-                          }
-                        ]
-                      },
-                      {
-                        "type": "IsInZone",
-                        "value": {
-                          "type": "Stack"
-                        }
+              "actor": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasColor",
+                      "value": {
+                        "type": "Red"
                       }
-                    ]
-                  }
-                ]
+                    },
+                    {
+                      "type": "Or",
+                      "value": [
+                        {
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "HasCardType",
+                              "value": {
+                                "type": "Creature"
+                              }
+                            },
+                            {
+                              "type": "IsInZone",
+                              "value": {
+                                "type": "Battlefield"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "IsInZone",
+                          "value": {
+                            "type": "Stack"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
               }
             }
           },

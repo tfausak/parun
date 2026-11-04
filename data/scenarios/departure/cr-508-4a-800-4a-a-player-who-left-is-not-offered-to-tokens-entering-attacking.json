@@ -1,0 +1,101 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Hanweir Garrison",
+            "label": "garrison",
+            "ready": true
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "life": 3,
+        "name": "bob"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Mountain",
+            "label": "mountain"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Lightning Bolt",
+            "label": "bolt"
+          }
+        ],
+        "name": "carol"
+      }
+    ],
+    "step": "BeginningOfCombat"
+  },
+  "description": "CR 508.4 / 800.4a a player who left after attackers were declared is not offered to Hanweir Garrison's tokens entering attacking",
+  "note": "Alice's Garrison attacks carol; in response to its trigger, carol's Lightning Bolt takes bob's last 3 life. Bob is no defending player by the time the tokens enter, so carol is the only player each can attack and neither is asked about.",
+  "timeline": [
+    {
+      "do": {
+        "Attack": [
+          "$garrison"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseAttackTarget": "$carol"
+      },
+      "player": "alice",
+      "source": "$garrison",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$mountain"
+          ],
+          "object": "$bolt",
+          "targets": [
+            "$bob"
+          ]
+        }
+      },
+      "player": "carol",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "OrderTimestamps": [
+          "Human Token",
+          "Human Token#2"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Attackers": {
+          "attackers": {
+            "$garrison": "$carol",
+            "Human Token": "$carol",
+            "Human Token#2": "$carol"
+          }
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    }
+  ]
+}

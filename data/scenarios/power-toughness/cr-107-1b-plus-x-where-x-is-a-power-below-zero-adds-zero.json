@@ -1,0 +1,111 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Silent Arbiter",
+            "counters": [
+              {
+                "key": {
+                  "type": "MinusOneMinusOne"
+                },
+                "value": 4
+              }
+            ],
+            "label": "silent-arbiter"
+          },
+          {
+            "card": "Mountain",
+            "label": "mountain"
+          },
+          {
+            "card": "Mountain",
+            "label": "mountain-2"
+          },
+          {
+            "card": "Mountain",
+            "label": "mountain-3"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Rush of Blood",
+            "label": "rush-of-blood"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 107.1b plus X where X is a power below zero adds zero",
+  "final": [
+    {
+      "Count": {
+        "card": "Rush of Blood",
+        "count": 0,
+        "player": "alice",
+        "zone": "Hand"
+      }
+    },
+    {
+      "Count": {
+        "card": "Rush of Blood",
+        "count": 1,
+        "player": "alice",
+        "zone": "Graveyard"
+      }
+    },
+    {
+      "PowerToughness": {
+        "object": "$silent-arbiter",
+        "power": -3,
+        "toughness": 1
+      }
+    },
+    {
+      "Tapped": {
+        "object": "$mountain",
+        "tapped": true
+      }
+    },
+    {
+      "Tapped": {
+        "object": "$mountain-2",
+        "tapped": true
+      }
+    },
+    {
+      "Tapped": {
+        "object": "$mountain-3",
+        "tapped": true
+      }
+    }
+  ],
+  "note": "Unleash Fury's board (cr-701-10c-107-1b-doubling-a-power-below-zero-modifies-it-downwards.json) with Rush of Blood: the -3/1 stays -3/1, where doubling makes it -6/1 (CR 701.10c) and an unfloored X would too.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$mountain",
+            "$mountain-2",
+            "$mountain-3"
+          ],
+          "object": "$rush-of-blood",
+          "targets": [
+            "$silent-arbiter"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

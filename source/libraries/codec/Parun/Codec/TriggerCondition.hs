@@ -3,7 +3,7 @@ module Parun.Codec.TriggerCondition where
 import qualified Parun.Codec.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Codec.ActingPermanent as ActingPermanent
 import qualified Parun.Codec.BecomesTapState as BecomesTapState
-import qualified Parun.Codec.BlockPair as BlockPair
+import qualified Parun.Codec.BlockTrigger as BlockTrigger
 import qualified Parun.Codec.CardLeavesZone as CardLeavesZone
 import qualified Parun.Codec.CardName as CardName
 import qualified Parun.Codec.CardPutIntoGraveyard as CardPutIntoGraveyard
@@ -13,11 +13,8 @@ import qualified Parun.Codec.ClassLevel as ClassLevel
 import qualified Parun.Codec.Condition as Condition
 import qualified Parun.Codec.ControllerBecomesTarget as ControllerBecomesTarget
 import qualified Parun.Codec.CounterTrigger as CounterTrigger
-import qualified Parun.Codec.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Parun.Codec.CreatureExploits as CreatureExploits
-import qualified Parun.Codec.DealsDamageToPermanent as DealsDamageToPermanent
-import qualified Parun.Codec.DealsDamageToPlayer as DealsDamageToPlayer
-import qualified Parun.Codec.DealtDamage as DealtDamage
+import qualified Parun.Codec.DamageTrigger as DamageTrigger
 import qualified Parun.Codec.DieResult as DieResult
 import qualified Parun.Codec.DiscardTrigger as DiscardTrigger
 import qualified Parun.Codec.Filter as Filter
@@ -26,7 +23,7 @@ import qualified Parun.Codec.LifeTrigger as LifeTrigger
 import qualified Parun.Codec.OwnedZone as OwnedZone
 import qualified Parun.Codec.PermanentActed as PermanentActed
 import qualified Parun.Codec.PermanentBecomesDesignated as PermanentBecomesDesignated
-import qualified Parun.Codec.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
+import qualified Parun.Codec.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Codec.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Codec.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Codec.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
@@ -69,15 +66,9 @@ codec =
           Arm.payload "PermanentsEnter" filterCodec TriggerCondition.PermanentsEnter (\x -> case x of TriggerCondition.PermanentsEnter y -> Just y; _ -> Nothing),
           Arm.payload "StepBegins" StepBegins.codec TriggerCondition.StepBegins (\x -> case x of TriggerCondition.StepBegins y -> Just y; _ -> Nothing),
           Arm.payload "StateIs" Condition.codec TriggerCondition.StateIs (\x -> case x of TriggerCondition.StateIs y -> Just y; _ -> Nothing),
-          Arm.payload "SelfDealsCombatDamageToPlayer" PlayerRelation.codec TriggerCondition.SelfDealsCombatDamageToPlayer (\x -> case x of TriggerCondition.SelfDealsCombatDamageToPlayer y -> Just y; _ -> Nothing),
-          Arm.nullary "SelfDealsCombatDamageToPlayerOrBattle" TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle,
-          Arm.payload "DealsCombatDamage" ActingPermanent.codec TriggerCondition.DealsCombatDamage (\x -> case x of TriggerCondition.DealsCombatDamage y -> Just y; _ -> Nothing),
-          Arm.payload "DealsDamageToPlayer" DealsDamageToPlayer.codec TriggerCondition.DealsDamageToPlayer (\x -> case x of TriggerCondition.DealsDamageToPlayer y -> Just y; _ -> Nothing),
-          Arm.payload "DealsDamageToPermanent" DealsDamageToPermanent.codec TriggerCondition.DealsDamageToPermanent (\x -> case x of TriggerCondition.DealsDamageToPermanent y -> Just y; _ -> Nothing),
-          Arm.payload "DealsDamage" ActingPermanent.codec TriggerCondition.DealsDamage (\x -> case x of TriggerCondition.DealsDamage y -> Just y; _ -> Nothing),
-          Arm.payload "IsDealtDamage" (DealtDamage.codec ActingPermanent.codec) TriggerCondition.IsDealtDamage (\x -> case x of TriggerCondition.IsDealtDamage y -> Just y; _ -> Nothing),
+          Arm.payload "DealsDamage" DamageTrigger.codec TriggerCondition.DealsDamage (\x -> case x of TriggerCondition.DealsDamage y -> Just y; _ -> Nothing),
+          Arm.payload "IsDealtDamage" PermanentIsDealtDamage.codec TriggerCondition.IsDealtDamage (\x -> case x of TriggerCondition.IsDealtDamage y -> Just y; _ -> Nothing),
           Arm.payload "PlayerIsDealtDamage" PlayerIsDealtDamage.codec TriggerCondition.PlayerIsDealtDamage (\x -> case x of TriggerCondition.PlayerIsDealtDamage y -> Just y; _ -> Nothing),
-          Arm.payload "PermanentDealsCombatDamageToPlayer" PermanentDealsCombatDamageToPlayer.codec TriggerCondition.PermanentDealsCombatDamageToPlayer (\x -> case x of TriggerCondition.PermanentDealsCombatDamageToPlayer y -> Just y; _ -> Nothing),
           Arm.payload "PermanentsDealCombatDamageToPlayer" PermanentsDealCombatDamageToPlayer.codec TriggerCondition.PermanentsDealCombatDamageToPlayer (\x -> case x of TriggerCondition.PermanentsDealCombatDamageToPlayer y -> Just y; _ -> Nothing),
           Arm.nullary "CreatureDealtCombatDamageToMonarch" TriggerCondition.CreatureDealtCombatDamageToMonarch,
           Arm.nullary "CreaturesDealtCombatDamageToInitiative" TriggerCondition.CreaturesDealtCombatDamageToInitiative,
@@ -96,15 +87,7 @@ codec =
           Arm.nullary "SelfAttacksPlayerWithMostLife" TriggerCondition.SelfAttacksPlayerWithMostLife,
           Arm.nullary "SelfAttacksWhileSaddled" TriggerCondition.SelfAttacksWhileSaddled,
           Arm.payload "SelfAttacksWhile" Condition.codec TriggerCondition.SelfAttacksWhile (\x -> case x of TriggerCondition.SelfAttacksWhile y -> Just y; _ -> Nothing),
-          Arm.nullary "SelfBlocks" TriggerCondition.SelfBlocks,
-          Arm.payload "CreatureBlocks" filterCodec TriggerCondition.CreatureBlocks (\x -> case x of TriggerCondition.CreatureBlocks y -> Just y; _ -> Nothing),
-          Arm.payload "CreatureBlocksCreature" BlockPair.codec TriggerCondition.CreatureBlocksCreature (\x -> case x of TriggerCondition.CreatureBlocksCreature y -> Just y; _ -> Nothing),
-          Arm.payload "SelfBlocksAtLeast" Common.natural TriggerCondition.SelfBlocksAtLeast (\x -> case x of TriggerCondition.SelfBlocksAtLeast y -> Just y; _ -> Nothing),
-          Arm.payload "SelfBlocksOneOrMore" filterCodec TriggerCondition.SelfBlocksOneOrMore (\x -> case x of TriggerCondition.SelfBlocksOneOrMore y -> Just y; _ -> Nothing),
-          Arm.payload "CreatureBecomesBlocked" filterCodec TriggerCondition.CreatureBecomesBlocked (\x -> case x of TriggerCondition.CreatureBecomesBlocked y -> Just y; _ -> Nothing),
-          Arm.payload "CreatureBecomesBlockedBy" BlockPair.codec TriggerCondition.CreatureBecomesBlockedBy (\x -> case x of TriggerCondition.CreatureBecomesBlockedBy y -> Just y; _ -> Nothing),
-          Arm.payload "SelfBecomesBlockedByOneOrMore" filterCodec TriggerCondition.SelfBecomesBlockedByOneOrMore (\x -> case x of TriggerCondition.SelfBecomesBlockedByOneOrMore y -> Just y; _ -> Nothing),
-          Arm.payload "CreatureBecomesBlockedByAtLeast" CreatureBecomesBlockedByAtLeast.codec TriggerCondition.CreatureBecomesBlockedByAtLeast (\x -> case x of TriggerCondition.CreatureBecomesBlockedByAtLeast y -> Just y; _ -> Nothing),
+          Arm.payload "Blocks" BlockTrigger.codec TriggerCondition.Blocks (\x -> case x of TriggerCondition.Blocks y -> Just y; _ -> Nothing),
           Arm.payload "CreatureAttacksUnblocked" filterCodec TriggerCondition.CreatureAttacksUnblocked (\x -> case x of TriggerCondition.CreatureAttacksUnblocked y -> Just y; _ -> Nothing),
           Arm.nullary "SelfRevealedForMiracle" TriggerCondition.SelfRevealedForMiracle,
           Arm.payload "RevealedThisWay" RevealedThisWay.codec TriggerCondition.RevealedThisWay (\x -> case x of TriggerCondition.RevealedThisWay y -> Just y; _ -> Nothing),
@@ -201,15 +184,9 @@ tagOf x = case x of
   TriggerCondition.PermanentsEnter {} -> "PermanentsEnter"
   TriggerCondition.StepBegins {} -> "StepBegins"
   TriggerCondition.StateIs {} -> "StateIs"
-  TriggerCondition.SelfDealsCombatDamageToPlayer {} -> "SelfDealsCombatDamageToPlayer"
-  TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle {} -> "SelfDealsCombatDamageToPlayerOrBattle"
-  TriggerCondition.DealsCombatDamage {} -> "DealsCombatDamage"
-  TriggerCondition.DealsDamageToPlayer {} -> "DealsDamageToPlayer"
-  TriggerCondition.DealsDamageToPermanent {} -> "DealsDamageToPermanent"
   TriggerCondition.DealsDamage {} -> "DealsDamage"
   TriggerCondition.IsDealtDamage {} -> "IsDealtDamage"
   TriggerCondition.PlayerIsDealtDamage {} -> "PlayerIsDealtDamage"
-  TriggerCondition.PermanentDealsCombatDamageToPlayer {} -> "PermanentDealsCombatDamageToPlayer"
   TriggerCondition.PermanentsDealCombatDamageToPlayer {} -> "PermanentsDealCombatDamageToPlayer"
   TriggerCondition.CreatureDealtCombatDamageToMonarch {} -> "CreatureDealtCombatDamageToMonarch"
   TriggerCondition.CreaturesDealtCombatDamageToInitiative {} -> "CreaturesDealtCombatDamageToInitiative"
@@ -228,15 +205,7 @@ tagOf x = case x of
   TriggerCondition.SelfAttacksPlayerWithMostLife {} -> "SelfAttacksPlayerWithMostLife"
   TriggerCondition.SelfAttacksWhileSaddled {} -> "SelfAttacksWhileSaddled"
   TriggerCondition.SelfAttacksWhile {} -> "SelfAttacksWhile"
-  TriggerCondition.SelfBlocks {} -> "SelfBlocks"
-  TriggerCondition.CreatureBlocks {} -> "CreatureBlocks"
-  TriggerCondition.CreatureBlocksCreature {} -> "CreatureBlocksCreature"
-  TriggerCondition.SelfBlocksAtLeast {} -> "SelfBlocksAtLeast"
-  TriggerCondition.SelfBlocksOneOrMore {} -> "SelfBlocksOneOrMore"
-  TriggerCondition.CreatureBecomesBlocked {} -> "CreatureBecomesBlocked"
-  TriggerCondition.CreatureBecomesBlockedBy {} -> "CreatureBecomesBlockedBy"
-  TriggerCondition.SelfBecomesBlockedByOneOrMore {} -> "SelfBecomesBlockedByOneOrMore"
-  TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> "CreatureBecomesBlockedByAtLeast"
+  TriggerCondition.Blocks {} -> "Blocks"
   TriggerCondition.CreatureAttacksUnblocked {} -> "CreatureAttacksUnblocked"
   TriggerCondition.SelfRevealedForMiracle {} -> "SelfRevealedForMiracle"
   TriggerCondition.RevealedThisWay {} -> "RevealedThisWay"

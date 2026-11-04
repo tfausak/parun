@@ -4,7 +4,7 @@ import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.DurationEvent as DurationEvent
 import qualified Parun.Types.Keyword as Keyword
-import qualified Parun.Types.Phase as Phase
+import qualified Parun.Types.NextStepOf as NextStepOf
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.SlotName as SlotName
 
@@ -26,10 +26,10 @@ data Duration
     -- resolved to a concrete player by Parun.Engine.Expiry.arm (CR 109.5) -- it cannot
     -- be a PlayerId here, because a printed card does not know one.
     UntilYourNextTurn
-  | -- | CR 611.2a: "until the beginning of your next upkeep" (Grinning
-    -- Totem), "until your next end step" (Haste Magic): ends as that step of
-    -- your turn next begins. "Your" is resolved the way the arm above's is.
-    UntilYourNextStep Phase.Phase
+  | -- | CR 611.2a: "until the beginning of your next upkeep" (Grinning Totem),
+    -- "until its controller's next untap step" (Orcish Farmer): ends as that step
+    -- of that player's turn next begins. Parun.Engine.Expiry.arm reads the seat.
+    UntilNextStepOf NextStepOf.NextStepOf
   | -- | CR 611.2a: "until the end of your next turn" (Soulfire Eruption), which
     -- ends a whole turn later than the arm above: as that turn ENDS, in its
     -- cleanup step (CR 514), rather than as it begins. Both "your"s are resolved

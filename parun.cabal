@@ -277,10 +277,10 @@ library codec
     Parun.Codec.Blight
     Parun.Codec.BlockCost
     Parun.Codec.BlockCostSpec
+    Parun.Codec.BlockCount
+    Parun.Codec.BlockCountSpec
     Parun.Codec.BlockersAre
     Parun.Codec.BlockersAreSpec
-    Parun.Codec.BlockPair
-    Parun.Codec.BlockPairSpec
     Parun.Codec.BlockPermission
     Parun.Codec.BlockPermissionSpec
     Parun.Codec.BlockProducer
@@ -293,6 +293,8 @@ library codec
     Parun.Codec.BlocksDeclaredSpec
     Parun.Codec.BlockStatus
     Parun.Codec.BlockStatusSpec
+    Parun.Codec.BlockTrigger
+    Parun.Codec.BlockTriggerSpec
     Parun.Codec.Board
     Parun.Codec.BoardSpec
     Parun.Codec.BoundMeasure
@@ -320,6 +322,8 @@ library codec
     Parun.Codec.CardNameSpec
     Parun.Codec.CardPutIntoGraveyard
     Parun.Codec.CardPutIntoGraveyardSpec
+    Parun.Codec.CardSelection
+    Parun.Codec.CardSelectionSpec
     Parun.Codec.CardSpec
     Parun.Codec.CardsPutIntoZone
     Parun.Codec.CardsPutIntoZoneSpec
@@ -425,8 +429,6 @@ library codec
     Parun.Codec.ConjureDestination
     Parun.Codec.ConjureDestinationSpec
     Parun.Codec.ConjureEntry
-    Parun.Codec.ConjureSelection
-    Parun.Codec.ConjureSelectionSpec
     Parun.Codec.ConjureSpec
     Parun.Codec.Connive
     Parun.Codec.ContinuousEffect
@@ -552,8 +554,6 @@ library codec
     Parun.Codec.CreateEmblem
     Parun.Codec.CreateEmblemSpec
     Parun.Codec.CreateSpec
-    Parun.Codec.CreatureBecomesBlockedByAtLeast
-    Parun.Codec.CreatureBecomesBlockedByAtLeastSpec
     Parun.Codec.CreatureExploits
     Parun.Codec.CreatureExploitsSpec
     Parun.Codec.Crewing
@@ -581,17 +581,17 @@ library codec
     Parun.Codec.DamagePrevented
     Parun.Codec.DamagePreventedSpec
     Parun.Codec.DamageR
+    Parun.Codec.DamageRecipient
+    Parun.Codec.DamageRecipientSpec
     Parun.Codec.DamageRewrite
     Parun.Codec.DamageRewriteSpec
     Parun.Codec.DamageRSpec
+    Parun.Codec.DamageTrigger
+    Parun.Codec.DamageTriggerSpec
     Parun.Codec.Daytime
     Parun.Codec.DaytimeSpec
     Parun.Codec.DealDamage
     Parun.Codec.DealDamageSpec
-    Parun.Codec.DealsDamageToPermanent
-    Parun.Codec.DealsDamageToPermanentSpec
-    Parun.Codec.DealsDamageToPlayer
-    Parun.Codec.DealsDamageToPlayerSpec
     Parun.Codec.DealtDamage
     Parun.Codec.DealtDamageSpec
     Parun.Codec.DealtDamageTo
@@ -1073,6 +1073,8 @@ library codec
     Parun.Codec.NextDamageInstance
     Parun.Codec.NextDamageOutcome
     Parun.Codec.NextDamageOutcomeSpec
+    Parun.Codec.NextStepOf
+    Parun.Codec.NextStepOfSpec
     Parun.Codec.Ninjutsu
     Parun.Codec.NinjutsuSpec
     Parun.Codec.NinjutsuVariant
@@ -1139,8 +1141,8 @@ library codec
     Parun.Codec.PermanentBecomesDesignatedSpec
     Parun.Codec.PermanentCandidate
     Parun.Codec.PermanentCandidateSpec
-    Parun.Codec.PermanentDealsCombatDamageToPlayer
-    Parun.Codec.PermanentDealsCombatDamageToPlayerSpec
+    Parun.Codec.PermanentIsDealtDamage
+    Parun.Codec.PermanentIsDealtDamageSpec
     Parun.Codec.PermanentsBecomeTargeted
     Parun.Codec.PermanentsBecomeTargetedSpec
     Parun.Codec.PermanentsDealCombatDamageToPlayer
@@ -1467,6 +1469,7 @@ library codec
     Parun.Codec.StepBeganSpec
     Parun.Codec.StepBegins
     Parun.Codec.StepBeginsSpec
+    Parun.Codec.StepOfControllerOf
     Parun.Codec.StickerKind
     Parun.Codec.StickerKindSpec
     Parun.Codec.StickerPlacement
@@ -2477,14 +2480,15 @@ library types
     Parun.Types.Binding
     Parun.Types.Blight
     Parun.Types.BlockCost
+    Parun.Types.BlockCount
     Parun.Types.BlockersAre
-    Parun.Types.BlockPair
     Parun.Types.BlockPermission
     Parun.Types.BlockProducer
     Parun.Types.BlockRequirement
     Parun.Types.BlockRole
     Parun.Types.BlocksDeclared
     Parun.Types.BlockStatus
+    Parun.Types.BlockTrigger
     Parun.Types.Board
     Parun.Types.BoundMeasure
     Parun.Types.BoundReading
@@ -2502,6 +2506,7 @@ library types
     Parun.Types.CardLeavesZone
     Parun.Types.CardName
     Parun.Types.CardPutIntoGraveyard
+    Parun.Types.CardSelection
     Parun.Types.CardsPutIntoZone
     Parun.Types.CardType
     Parun.Types.CarryOver
@@ -2564,7 +2569,6 @@ library types
     Parun.Types.ConjureCards
     Parun.Types.ConjureDestination
     Parun.Types.ConjureEntry
-    Parun.Types.ConjureSelection
     Parun.Types.Connive
     Parun.Types.ContinuousEffect
     Parun.Types.ControlChanged
@@ -2633,7 +2637,6 @@ library types
     Parun.Types.Create
     Parun.Types.CreateCopy
     Parun.Types.CreateEmblem
-    Parun.Types.CreatureBecomesBlockedByAtLeast
     Parun.Types.CreatureExploits
     Parun.Types.Crewing
     Parun.Types.CrewRestriction
@@ -2648,11 +2651,11 @@ library types
     Parun.Types.DamagePattern
     Parun.Types.DamagePrevented
     Parun.Types.DamageR
+    Parun.Types.DamageRecipient
     Parun.Types.DamageRewrite
+    Parun.Types.DamageTrigger
     Parun.Types.Daytime
     Parun.Types.DealDamage
-    Parun.Types.DealsDamageToPermanent
-    Parun.Types.DealsDamageToPlayer
     Parun.Types.DealtDamage
     Parun.Types.DealtDamageTo
     Parun.Types.Decider
@@ -2933,6 +2936,7 @@ library types
     Parun.Types.NamesAre
     Parun.Types.NextDamageInstance
     Parun.Types.NextDamageOutcome
+    Parun.Types.NextStepOf
     Parun.Types.Ninjutsu
     Parun.Types.NinjutsuVariant
     Parun.Types.Object
@@ -2974,7 +2978,7 @@ library types
     Parun.Types.PermanentAction
     Parun.Types.PermanentBecomesDesignated
     Parun.Types.PermanentCandidate
-    Parun.Types.PermanentDealsCombatDamageToPlayer
+    Parun.Types.PermanentIsDealtDamage
     Parun.Types.PermanentsBecomeTargeted
     Parun.Types.PermanentsDealCombatDamageToPlayer
     Parun.Types.PermanentTappedForMana
@@ -3162,6 +3166,7 @@ library types
     Parun.Types.Status
     Parun.Types.StepBegan
     Parun.Types.StepBegins
+    Parun.Types.StepOfControllerOf
     Parun.Types.StickerContent
     Parun.Types.StickerKind
     Parun.Types.StickerPlacement

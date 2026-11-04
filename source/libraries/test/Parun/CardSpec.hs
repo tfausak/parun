@@ -100,9 +100,10 @@ import qualified Parun.Types.Bid as Bid
 import qualified Parun.Types.BindAmount as BindAmount
 import qualified Parun.Types.Blight as Blight
 import qualified Parun.Types.BlockCost as BlockCost
-import qualified Parun.Types.BlockPair as BlockPair
+import qualified Parun.Types.BlockCount as BlockCount
 import qualified Parun.Types.BlockPermission as BlockPermission
 import qualified Parun.Types.BlockRequirement as BlockRequirement
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.CantAttackPlayer as CantAttackPlayer
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.CantBlockCreatures as CantBlockCreatures
@@ -179,9 +180,8 @@ import qualified Parun.Types.DamagePart as DamagePart
 import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
+import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DealDamage as DealDamage
-import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
-import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Defense as Defense
 import qualified Parun.Types.Designate as Designate
@@ -311,7 +311,7 @@ import qualified Parun.Types.PayGate as PayGate
 import qualified Parun.Types.PerCreature as PerCreature
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
-import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
+import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
@@ -986,7 +986,7 @@ durationConditions duration = case duration of
   Duration.Indefinite -> []
   Duration.Perpetual -> []
   Duration.UntilYourNextTurn -> []
-  Duration.UntilYourNextStep _ -> []
+  Duration.UntilNextStepOf _ -> []
   Duration.UntilEndOfYourNextTurn -> []
   -- A PlayerRef carries no Condition, and so no Count.
   Duration.UntilEndOfNextTurnOf _ -> []
@@ -1169,16 +1169,10 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.SelfLeavesGraveyard -> []
   TriggerCondition.StepBegins {} -> []
   TriggerCondition.StateIs condition -> conditionCounts condition
-  TriggerCondition.SelfDealsCombatDamageToPlayer _ -> []
-  TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> []
-  TriggerCondition.DealsCombatDamage _ -> []
-  TriggerCondition.DealsDamageToPlayer _ -> []
-  TriggerCondition.DealsDamageToPermanent _ -> []
   TriggerCondition.DealsDamage _ -> []
   TriggerCondition.IsDealtDamage _ -> []
   TriggerCondition.PlayerIsDealtDamage _ -> []
   -- Its watcher-scoped sibling carries a Filter, and a Filter holds no Count.
-  TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> []
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> []
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> []
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> []
@@ -1203,7 +1197,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- EVENT's grouping for the arm above's reason, not a number this condition
   -- counts.
   TriggerCondition.PlayerAttacks _ -> []
-  -- The floor this one DOES carry is a bare Natural, SelfBlocksAtLeast's shape
+  -- The floor this one DOES carry is a bare Natural, BlockCount.AtLeast's shape
   -- below, rather than a Count over Quantities; its Filter holds no Count for
   -- PermanentEnters' reason.
   TriggerCondition.PlayerAttacksWith {} -> []
@@ -1214,25 +1208,9 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.SelfAttacksPlayerWithMostLife -> []
   TriggerCondition.SelfAttacksWhileSaddled -> []
   TriggerCondition.SelfAttacksWhile condition -> conditionCounts condition
-  TriggerCondition.SelfBlocks -> []
-  TriggerCondition.CreatureBlocks _ -> []
-  -- CR 509.3b names the attacker without counting anything, and its Filter holds
-  -- no Count for PermanentEnters' reason.
-  TriggerCondition.CreatureBlocksCreature _ -> []
-  TriggerCondition.SelfBlocksAtLeast _ -> []
-  -- CR 509.3e's filtered form spends the number on a quality instead, so its
-  -- Filter holds no Count either.
-  TriggerCondition.SelfBlocksOneOrMore _ -> []
-  -- CR 509.3c's Filter is over the attacker, holding no Count for
-  -- PermanentEnters' reason.
-  TriggerCondition.CreatureBecomesBlocked _ -> []
-  -- CR 509.3d's Filter is a predicate over the blocker, and holds no Count for
-  -- PermanentEnters' reason.
-  TriggerCondition.CreatureBecomesBlockedBy _ -> []
-  TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> []
-  -- CR 509.3e's bystander form counts BLOCKERS rather than objects a Count
-  -- names, and its PlayerRelation is no Count either.
-  TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> []
+  -- CR 509.3's Filters are predicates over the creatures of a block, holding no
+  -- Count for PermanentEnters' reason, and CR 509.3e's floor is a bare Natural.
+  TriggerCondition.Blocks _ -> []
   TriggerCondition.CreatureAttacksUnblocked _ -> []
   TriggerCondition.SelfRevealedForMiracle -> []
   TriggerCondition.RevealedThisWay _ -> []
@@ -4071,7 +4049,7 @@ costComponentFilters component = case component of
   CostComponent.CollectEvidence _ -> []
   CostComponent.CollectEvidenceOfTargets -> []
   -- CR 601.2f's discard as a cost: Magmatic Insight's "a land card".
-  CostComponent.DiscardCards (DiscardCards.MkDiscardCards _ f) -> [f]
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards _ f _) -> [f]
   CostComponent.PutCardFromHandOntoBattlefield f -> [f]
   -- CR 406.2 out of the hand: Cadaverous Bloom's "a card".
   CostComponent.ExileCardsFromHand (ExileCardsFromHand.MkExileCardsFromHand _ f) -> [f]
@@ -4503,7 +4481,7 @@ durationFilters duration =
           Duration.Indefinite -> []
           Duration.Perpetual -> []
           Duration.UntilYourNextTurn -> []
-          Duration.UntilYourNextStep _ -> []
+          Duration.UntilNextStepOf _ -> []
           Duration.UntilEndOfYourNextTurn -> []
           Duration.UntilEndOfNextTurnOf _ -> []
           Duration.DuringNextTurnOf _ -> []
@@ -4704,21 +4682,14 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.StateIs condition -> frame Unframed (conditionFilters condition)
   TriggerCondition.SelfEnters -> []
   TriggerCondition.StepBegins {} -> []
-  TriggerCondition.SelfDealsCombatDamageToPlayer _ -> []
-  TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> []
   -- A bystander's damage conditions carry one over the watched permanent, swept
   -- for PermanentActs' reason: Noble Purpose's "a creature you control", Death
   -- Pits of Rath's "a creature", Spirit Link's and Curiosity's "enchanted
-  -- creature". The self-scoped readings carry nothing.
-  TriggerCondition.DealsCombatDamage watched -> actingFilters watched
-  TriggerCondition.DealsDamageToPlayer p -> actingFilters (DealsDamageToPlayer.actor p)
-  TriggerCondition.DealsDamageToPermanent p -> actingFilters (DealsDamageToPermanent.actor p)
-  TriggerCondition.DealsDamage watched -> actingFilters watched
-  TriggerCondition.IsDealtDamage dealt -> actingFilters (DealtDamage.recipient dealt)
+  -- creature", Tovolar's "a Wolf or Werewolf you control". The self-scoped
+  -- readings carry nothing, and a recipient holds no Filter.
+  TriggerCondition.DealsDamage watched -> actingFilters (DamageTrigger.actor watched)
+  TriggerCondition.IsDealtDamage watched -> actingFilters (DealtDamage.recipient (PermanentIsDealtDamage.dealt watched))
   TriggerCondition.PlayerIsDealtDamage _ -> []
-  -- Its watcher-scoped sibling carries one -- Tovolar's "a Wolf or Werewolf you
-  -- control", which the card lint must sweep.
-  TriggerCondition.PermanentDealsCombatDamageToPlayer p -> unframed [PermanentDealsCombatDamageToPlayer.filter p]
   -- CR 603.2c's batch reading of the same written form carries the same Filter,
   -- swept the same way for PermanentsDie's reason: answering [] here would exempt
   -- Pia Nalaar's "artifact creatures you control" from every corpus filter lint.
@@ -4763,28 +4734,17 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.SelfAttacksPlayerWithMostLife -> []
   TriggerCondition.SelfAttacksWhileSaddled -> []
   TriggerCondition.SelfAttacksWhile condition -> frame Unframed (conditionFilters condition)
-  TriggerCondition.SelfBlocks -> []
-  -- CR 509.3b names a quality of the attacker blocked, Netcaster Spider's "with
-  -- flying", and whose block it watches, Venom's "enchanted creature".
-  TriggerCondition.CreatureBlocksCreature pair -> unframed [BlockPair.blocker pair, BlockPair.attacker pair]
-  TriggerCondition.CreatureBlocks f -> unframed [f]
-  TriggerCondition.SelfBlocksAtLeast _ -> []
-  -- CR 509.3e's filtered form names a quality the attackers blocked must have,
-  -- so this one DOES carry a Filter.
-  TriggerCondition.SelfBlocksOneOrMore f -> unframed [f]
-  -- CR 509.3c's Filter is over the attacker -- Somberwald Alpha's "a creature
-  -- you control".
-  TriggerCondition.CreatureBecomesBlocked f -> unframed [f]
-  -- CR 509.3d names a quality of the blocker, rule 702.25a's "without flanking",
-  -- and the attacker it watches, CR 701.54c's "your Ring-bearer".
-  TriggerCondition.CreatureBecomesBlockedBy pair -> unframed [BlockPair.blocker pair, BlockPair.attacker pair]
-  -- The same rule's attacking-side form, whose Filter is a predicate over the
-  -- blockers -- Serra Inquisitors' "black".
-  TriggerCondition.SelfBecomesBlockedByOneOrMore f -> unframed [f]
-  -- The same rule read by a bystander names a quality of nothing: whom the
-  -- attacker attacked is a PlayerRelation and the blockers are only counted, so
-  -- there is no Filter here.
-  TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> []
+  -- CR 509.3 names a quality of the creature that blocks or becomes blocked
+  -- (Venom's "enchanted creature", CR 701.54c's "your Ring-bearer") and of the
+  -- creatures on the other side (Netcaster Spider's "with flying", rule
+  -- 702.25a's "without flanking", Serra Inquisitors' "black").
+  TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger _ creature count) ->
+    unframed
+      ( creature : case count of
+          BlockCount.Once -> []
+          BlockCount.EachCreature others -> [others]
+          BlockCount.AtLeast _ others -> [others]
+      )
   TriggerCondition.CreatureAttacksUnblocked f -> unframed [f]
   TriggerCondition.SelfRevealedForMiracle -> []
   TriggerCondition.RevealedThisWay r -> unframed [RevealedThisWay.card r]
@@ -4899,15 +4859,9 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   -- CR 603.8's state trigger holds a Condition, which is a pair of Quantities
   -- and Filters -- no SlotName of its own.
   TriggerCondition.StateIs _ -> []
-  TriggerCondition.SelfDealsCombatDamageToPlayer _ -> []
-  TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> []
-  TriggerCondition.DealsCombatDamage _ -> []
-  TriggerCondition.DealsDamageToPlayer _ -> []
-  TriggerCondition.DealsDamageToPermanent _ -> []
   TriggerCondition.DealsDamage _ -> []
   TriggerCondition.IsDealtDamage _ -> []
   TriggerCondition.PlayerIsDealtDamage _ -> []
-  TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> []
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> []
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> []
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> []
@@ -4930,15 +4884,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.SelfAttacksPlayerWithMostLife -> []
   TriggerCondition.SelfAttacksWhileSaddled -> []
   TriggerCondition.SelfAttacksWhile _ -> []
-  TriggerCondition.SelfBlocks -> []
-  TriggerCondition.CreatureBlocks _ -> []
-  TriggerCondition.CreatureBlocksCreature _ -> []
-  TriggerCondition.SelfBlocksAtLeast _ -> []
-  TriggerCondition.SelfBlocksOneOrMore _ -> []
-  TriggerCondition.CreatureBecomesBlocked _ -> []
-  TriggerCondition.CreatureBecomesBlockedBy _ -> []
-  TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> []
-  TriggerCondition.CreatureBecomesBlockedByAtLeast _ -> []
+  TriggerCondition.Blocks _ -> []
   TriggerCondition.CreatureAttacksUnblocked _ -> []
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> []
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> []

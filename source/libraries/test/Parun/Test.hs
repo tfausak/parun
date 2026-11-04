@@ -118,12 +118,13 @@ import qualified Parun.Codec.BidSpec
 import qualified Parun.Codec.BindAmountSpec
 import qualified Parun.Codec.BindingSpec
 import qualified Parun.Codec.BlockCostSpec
-import qualified Parun.Codec.BlockPairSpec
+import qualified Parun.Codec.BlockCountSpec
 import qualified Parun.Codec.BlockPermissionSpec
 import qualified Parun.Codec.BlockProducerSpec
 import qualified Parun.Codec.BlockRequirementSpec
 import qualified Parun.Codec.BlockRoleSpec
 import qualified Parun.Codec.BlockStatusSpec
+import qualified Parun.Codec.BlockTriggerSpec
 import qualified Parun.Codec.BlockersAreSpec
 import qualified Parun.Codec.BlocksDeclaredSpec
 import qualified Parun.Codec.BoardSpec
@@ -139,6 +140,7 @@ import qualified Parun.Codec.CardIdentitySpec
 import qualified Parun.Codec.CardLeavesZoneSpec
 import qualified Parun.Codec.CardNameSpec
 import qualified Parun.Codec.CardPutIntoGraveyardSpec
+import qualified Parun.Codec.CardSelectionSpec
 import qualified Parun.Codec.CardSpec
 import qualified Parun.Codec.CardTypeSpec
 import qualified Parun.Codec.CardsPutIntoZoneSpec
@@ -189,7 +191,6 @@ import qualified Parun.Codec.ComponentCardSpec
 import qualified Parun.Codec.ConditionSpec
 import qualified Parun.Codec.ConjureCardsSpec
 import qualified Parun.Codec.ConjureDestinationSpec
-import qualified Parun.Codec.ConjureSelectionSpec
 import qualified Parun.Codec.ConjureSpec
 import qualified Parun.Codec.ContinuousEffectSpec
 import qualified Parun.Codec.ControlChangedSpec
@@ -252,7 +253,6 @@ import qualified Parun.Codec.CraftSpec
 import qualified Parun.Codec.CreateCopySpec
 import qualified Parun.Codec.CreateEmblemSpec
 import qualified Parun.Codec.CreateSpec
-import qualified Parun.Codec.CreatureBecomesBlockedByAtLeastSpec
 import qualified Parun.Codec.CreatureExploitsSpec
 import qualified Parun.Codec.CrewRestrictionSpec
 import qualified Parun.Codec.CrewingSpec
@@ -266,12 +266,12 @@ import qualified Parun.Codec.DamagePartSpec
 import qualified Parun.Codec.DamagePatternSpec
 import qualified Parun.Codec.DamagePreventedSpec
 import qualified Parun.Codec.DamageRSpec
+import qualified Parun.Codec.DamageRecipientSpec
 import qualified Parun.Codec.DamageRewriteSpec
+import qualified Parun.Codec.DamageTriggerSpec
 import qualified Parun.Codec.DamagedPartySpec
 import qualified Parun.Codec.DaytimeSpec
 import qualified Parun.Codec.DealDamageSpec
-import qualified Parun.Codec.DealsDamageToPermanentSpec
-import qualified Parun.Codec.DealsDamageToPlayerSpec
 import qualified Parun.Codec.DealtDamageSpec
 import qualified Parun.Codec.DealtDamageToSpec
 import qualified Parun.Codec.DeciderSpec
@@ -506,6 +506,7 @@ import qualified Parun.Codec.MovedSpec
 import qualified Parun.Codec.NameChooserSpec
 import qualified Parun.Codec.NamesAreSpec
 import qualified Parun.Codec.NextDamageOutcomeSpec
+import qualified Parun.Codec.NextStepOfSpec
 import qualified Parun.Codec.NinjutsuSpec
 import qualified Parun.Codec.NinjutsuVariantSpec
 import qualified Parun.Codec.ObjectCountSpec
@@ -538,7 +539,7 @@ import qualified Parun.Codec.PendingReplacementEffectSpec
 import qualified Parun.Codec.PermanentActionSpec
 import qualified Parun.Codec.PermanentBecomesDesignatedSpec
 import qualified Parun.Codec.PermanentCandidateSpec
-import qualified Parun.Codec.PermanentDealsCombatDamageToPlayerSpec
+import qualified Parun.Codec.PermanentIsDealtDamageSpec
 import qualified Parun.Codec.PermanentTappedForManaSpec
 import qualified Parun.Codec.PermanentWasSacrificedSpec
 import qualified Parun.Codec.PermanentsBecomeTargetedSpec
@@ -1103,6 +1104,7 @@ spec s registry corpus = do
   Parun.Codec.CardArrivedInSpec.spec s
   Parun.Codec.EntriesTriggerSpec.spec s
   Parun.Codec.EntryTriggeringSpec.spec s
+  Parun.Codec.NextStepOfSpec.spec s
   Parun.Codec.ObjectCountSpec.spec s
   Parun.Codec.CardIdentitySpec.spec s
   Parun.Codec.CardLeavesZoneSpec.spec s
@@ -1155,7 +1157,7 @@ spec s registry corpus = do
   Parun.Codec.ConditionSpec.spec s
   Parun.Codec.ConjureCardsSpec.spec s
   Parun.Codec.ConjureDestinationSpec.spec s
-  Parun.Codec.ConjureSelectionSpec.spec s
+  Parun.Codec.CardSelectionSpec.spec s
   Parun.Codec.ConjureSpec.spec s
   Parun.Codec.ContinuousEffectSpec.spec s
   Parun.Codec.ControlChangedSpec.spec s
@@ -1220,7 +1222,6 @@ spec s registry corpus = do
   Parun.Codec.CreateCopySpec.spec s
   Parun.Codec.CreateEmblemSpec.spec s
   Parun.Codec.CreateSpec.spec s
-  Parun.Codec.CreatureBecomesBlockedByAtLeastSpec.spec s
   Parun.Codec.CreatureExploitsSpec.spec s
   Parun.Codec.CrewingSpec.spec s
   Parun.Codec.CrewRestrictionSpec.spec s
@@ -1230,6 +1231,8 @@ spec s registry corpus = do
   Parun.Codec.DamageIsSpec.spec s
   Parun.Codec.DamageDealerSpec.spec s
   Parun.Codec.DamageKindSpec.spec s
+  Parun.Codec.DamageRecipientSpec.spec s
+  Parun.Codec.DamageTriggerSpec.spec s
   Parun.Codec.DamagePartSpec.spec s
   Parun.Codec.DamagePatternSpec.spec s
   Parun.Codec.DamagePreventedSpec.spec s
@@ -1239,8 +1242,6 @@ spec s registry corpus = do
   Parun.Codec.DamageRSpec.spec s
   Parun.Codec.DaytimeSpec.spec s
   Parun.Codec.DealDamageSpec.spec s
-  Parun.Codec.DealsDamageToPermanentSpec.spec s
-  Parun.Codec.DealsDamageToPlayerSpec.spec s
   Parun.Codec.DeciderSpec.spec s
   Parun.Codec.DefendersAreSpec.spec s
   Parun.Codec.DefenseSpec.spec s
@@ -1505,8 +1506,8 @@ spec s registry corpus = do
   Parun.Codec.PermanentActionSpec.spec s
   Parun.Codec.PermanentBecomesDesignatedSpec.spec s
   Parun.Codec.PermanentCandidateSpec.spec s
-  Parun.Codec.BlockPairSpec.spec s
-  Parun.Codec.PermanentDealsCombatDamageToPlayerSpec.spec s
+  Parun.Codec.BlockCountSpec.spec s
+  Parun.Codec.BlockTriggerSpec.spec s
   Parun.Codec.PlayerActsOnSpec.spec s
   Parun.Codec.PermanentsBecomeTargetedSpec.spec s
   Parun.Codec.PermanentsDealCombatDamageToPlayerSpec.spec s
@@ -1539,6 +1540,7 @@ spec s registry corpus = do
   Parun.Codec.LifeTallySpec.spec s
   Parun.Codec.SpellTallySpec.spec s
   Parun.Codec.WhichTurnSpec.spec s
+  Parun.Codec.PermanentIsDealtDamageSpec.spec s
   Parun.Codec.PlayerIsDealtDamageSpec.spec s
   Parun.Codec.PlayersWhoSpec.spec s
   Parun.Codec.SuperlativeSpec.spec s

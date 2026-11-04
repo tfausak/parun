@@ -58,6 +58,7 @@ import qualified Parun.Engine.Activatable as Activatable
 import qualified Parun.Engine.Activate as Activate
 import qualified Parun.Engine.Engine as Engine
 import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Mint as Mint
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Setup as Setup
 import qualified Parun.Engine.Stack as Stack
@@ -76,7 +77,6 @@ import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.Printing as Printing
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.TapState as TapState
-import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.Zone as Zone
 
@@ -285,7 +285,7 @@ crewedByRiderSpec s registry = Spec.describe s "CrewedByRider" $ do
 drawsOnCombatDamage :: ObjectId.ObjectId -> GameState.GameState -> Bool
 drawsOnCombatDamage oid gs =
   any
-    ((\condition -> case condition of TriggerCondition.SelfDealsCombatDamageToPlayer _ -> True; _ -> False) . TriggeredAbility.condition)
+    ((== Mint.dealsCombatDamageToAPlayer) . TriggeredAbility.condition)
     (Projection.triggeredAbilitiesOf oid gs)
 
 -- Taps `tappers` to pay CR 702.122a's cost and answers nothing else: Gearshift

@@ -73,6 +73,7 @@ import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamagePrevented as DamagePrevented
+import qualified Parun.Types.DamageTrigger as DamageTrigger
 import Parun.Types.DelayedTrigger (DelayedTrigger)
 import qualified Parun.Types.DelayedTrigger as DelayedTrigger
 import qualified Parun.Types.DieResult as DieResult
@@ -115,6 +116,7 @@ import Parun.Types.PendingTrigger (PendingTrigger)
 import qualified Parun.Types.PendingTrigger as PendingTrigger
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentAction as PermanentAction
+import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
 import qualified Parun.Types.PlanarDieRolled as PlanarDieRolled
 import qualified Parun.Types.PlayerActed as PlayerActed
@@ -694,15 +696,9 @@ looksBack condition = case condition of
   -- zone change at all, so CR 603.10a's list cannot reach them.
   TriggerCondition.StepBegins {} -> False
   TriggerCondition.StateIs _ -> False
-  TriggerCondition.SelfDealsCombatDamageToPlayer _ -> False
-  TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> False
-  TriggerCondition.DealsCombatDamage _ -> False
-  TriggerCondition.DealsDamageToPlayer _ -> False
-  TriggerCondition.DealsDamageToPermanent _ -> False
   TriggerCondition.DealsDamage _ -> False
   TriggerCondition.IsDealtDamage _ -> False
   TriggerCondition.PlayerIsDealtDamage _ -> False
-  TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> False
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> False
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> False
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> False
@@ -725,15 +721,7 @@ looksBack condition = case condition of
   TriggerCondition.SelfAttacksPlayerWithMostLife -> False
   TriggerCondition.SelfAttacksWhileSaddled -> False
   TriggerCondition.SelfAttacksWhile _ -> False
-  TriggerCondition.SelfBlocks -> False
-  TriggerCondition.CreatureBlocks _ -> False
-  TriggerCondition.CreatureBlocksCreature _ -> False
-  TriggerCondition.SelfBlocksAtLeast _ -> False
-  TriggerCondition.SelfBlocksOneOrMore _ -> False
-  TriggerCondition.CreatureBecomesBlocked _ -> False
-  TriggerCondition.CreatureBecomesBlockedBy _ -> False
-  TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> False
-  TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> False
+  TriggerCondition.Blocks _ -> False
   TriggerCondition.CreatureAttacksUnblocked _ -> False
   TriggerCondition.SpellOrAbilityCounters _ -> False
   TriggerCondition.AbilityIsCountered -> False
@@ -926,38 +914,30 @@ batchScoped condition = case condition of
   TriggerCondition.PermanentsEnter _ -> True
   TriggerCondition.StepBegins {} -> False
   TriggerCondition.StateIs _ -> False
-  TriggerCondition.SelfDealsCombatDamageToPlayer _ -> False
-  -- Per recipient, like the arm above: CR 510.1b sends an unblocked attacker's
-  -- damage to the one player or battle it attacks.
-  TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> False
-  -- A True for the reason PermanentsDealCombatDamageToPlayer's below gives: CR
-  -- 510.2 deals a step's combat damage as one event, so damage to two blockers,
-  -- or to a blocker and a trampled-over player, is one trigger event, not two.
-  -- One per damager, split by batchPartition: Noble Purpose's two creatures
-  -- connecting are two.
-  TriggerCondition.DealsCombatDamage _ -> True
-  TriggerCondition.DealsDamageToPlayer _ -> False
-  TriggerCondition.DealsDamageToPermanent _ -> False
-  -- DealsCombatDamage's True without the combat narrowing: one damage
-  -- event to several recipients -- a CR 510.2 step, or one CR 608.2f
-  -- instruction -- is one trigger event, its amount summed by batchBindings.
-  TriggerCondition.DealsDamage _ -> True
-  -- Not implemented: one occurrence per damaged permanent when several
-  -- sources damage it at once, which Ripjaw Raptor's and Fungusaur's rulings
-  -- give; each source's event triggers it (#5554).
-  TriggerCondition.IsDealtDamage _ -> False
+  -- CR 603.2c: "deals damage" naming no recipient is one occurrence per damage
+  -- event and damager -- a CR 510.2 step, or one CR 608.2f instruction, damaging
+  -- several recipients is one trigger event, its amount summed by
+  -- batchBindings, and batchPartition splits it per damager (Noble Purpose's two
+  -- creatures connecting are two). A named recipient is one occurrence per
+  -- recipient: CR 510.1b sends an unblocked attacker's damage to the one player
+  -- or battle it attacks.
+  TriggerCondition.DealsDamage watched -> Set.null (DamageTrigger.recipients watched)
+  -- "Is dealt damage" is one occurrence per damaged permanent however many
+  -- sources dealt it at once (Ripjaw Raptor's and Fungusaur's rulings), split
+  -- by batchPartition; "a source deals damage to" (Belltower Sphinx) is one per
+  -- damage event, so per source.
+  TriggerCondition.IsDealtDamage watched -> PermanentIsDealtDamage.batching watched == Batching.OneOrMore
   -- CR 603.2c: simultaneous damage to the player is one event of their being
   -- dealt damage -- Lich's ruling sacrifices "for that damage simultaneously".
   -- Split per damaged player, and per damaged planeswalker, by batchPartition.
   TriggerCondition.PlayerIsDealtDamage _ -> True
-  TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> False
   -- A True beside PermanentsDie: CR 510.2 deals every combat damage of a step
   -- simultaneously, Parun.Engine.Damage.dealWave brackets the step as one
   -- Parun.Types.EventGroup, and "one or more artifact creatures ... deal combat
   -- damage" (Pia Nalaar, Chief Mechanic) names that whole group as its trigger
   -- event, which occurs once per damagers' controller and damaged player
-  -- (Event.Binding's batchPartition) -- where the arm above is CR 603.2c's
-  -- second sentence and fires once per damager.
+  -- (Event.Binding's batchPartition) -- where DealsDamage naming a player is
+  -- CR 603.2c's second sentence and fires once per damager.
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> True
   -- CR 725.2 prints "whenever A CREATURE deals combat damage to the monarch",
   -- CR 603.2c's second sentence: one trigger per damaging creature.
@@ -990,9 +970,6 @@ batchScoped condition = case condition of
   TriggerCondition.SelfAttacksPlayerWithMostLife -> False
   TriggerCondition.SelfAttacksWhileSaddled -> False
   TriggerCondition.SelfAttacksWhile _ -> False
-  TriggerCondition.SelfBlocks -> False
-  TriggerCondition.CreatureBlocks _ -> False
-  TriggerCondition.CreatureBlocksCreature _ -> False
   -- CR 508.3b / 805.10b: one combined declaration attacks a target once, but
   -- Parun.Engine.Combat records one GameEvent.BecameAttacked per (attacking
   -- player, target) pair, CR 508.3e's arity, bracketed as one group. Each of
@@ -1010,12 +987,7 @@ batchScoped condition = case condition of
   -- True would be a second dedup over an already-unique trigger. Deaths get the
   -- other treatment because they reach a graveyard from four places and no event
   -- carries the arity.
-  TriggerCondition.SelfBlocksAtLeast _ -> False
-  TriggerCondition.SelfBlocksOneOrMore _ -> False
-  TriggerCondition.CreatureBecomesBlocked _ -> False
-  TriggerCondition.CreatureBecomesBlockedBy _ -> False
-  TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> False
-  TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> False
+  TriggerCondition.Blocks _ -> False
   TriggerCondition.CreatureAttacksUnblocked _ -> False
   TriggerCondition.SpellOrAbilityCounters _ -> False
   TriggerCondition.AbilityIsCountered -> False
@@ -2468,8 +2440,13 @@ eventTriggers events gs =
 --
 -- `joinOn` names which keys share those bindings: every CR 603.2d instance of
 -- one batch trigger is a trigger of the whole batch, though only the instances
--- an entry added survive past the entry's own match. A fence: no pool card
--- reads a mixed batch's bindings through an additional instance.
+-- an entry added survive past the entry's own match. The join reads the least
+-- key's members alone -- the first instance, which every matching member has --
+-- since each further instance repeats the same events and would count them
+-- again: Harmonic Prodigy's second Coalhauler Swine trigger reads the
+-- Pyroclasm's 2, not 4.
+-- data/scenarios/harmonic-prodigy-killed-by-the-damage-still-doubled-what-it-triggered.json
+-- proves it.
 --
 -- Per GROUP and never per scan: several groups can share one CR 117.5 scan
 -- (GameState.scannedThrough is not bumped until the scan ends), and CR 704.3
@@ -2479,7 +2456,8 @@ eventTriggers events gs =
 -- eventTriggers and inherentTriggers.
 oncePerBatch :: (Ord j, Ord k) => (k -> j) -> [(Maybe k, PendingTrigger)] -> [PendingTrigger]
 oncePerBatch joinOn entries =
-  let joined = Map.fromListWith (flip (<>)) [(joinOn batch, [PendingTrigger.bindings trigger]) | (Just batch, trigger) <- entries]
+  let canonical = Map.fromListWith min [(joinOn batch, batch) | (Just batch, _) <- entries]
+      joined = Map.fromListWith (flip (<>)) [(joinOn batch, [PendingTrigger.bindings trigger]) | (Just batch, trigger) <- entries, Map.lookup (joinOn batch) canonical == Just batch]
       joinedFor batch trigger = case Map.lookup (joinOn batch) joined of
         Just (first : rest) -> trigger {PendingTrigger.bindings = batchBindings (first NonEmpty.:| rest)}
         _ -> trigger
@@ -2992,19 +2970,10 @@ zonesTriggeredFrom cond =
         -- reader in any zone; stateTriggers below gathers them from the battlefield
         -- and, for CR 113.6p's objects, the command zone.
         TriggerCondition.StateIs _ -> battlefield
-        TriggerCondition.SelfDealsCombatDamageToPlayer _ -> battlefield
-        TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> battlefield
-        TriggerCondition.DealsCombatDamage _ -> battlefield
-        -- CR 113.6's default once more, and for the arm above's reason: a Self
-        -- bearer is the damage's SOURCE, and a noncombat source on the stack or in
-        -- a graveyard is a different object from this permanent. A bystander
-        -- (Curiosity) watches from the battlefield as every other does.
-        TriggerCondition.DealsDamageToPlayer _ -> battlefield
-        -- CR 113.6's default once more, for the DealsDamageToPlayer arm's
-        -- reason: the bearer is the damage's SOURCE, and a source anywhere but the
-        -- battlefield is a different object from this permanent.
-        TriggerCondition.DealsDamageToPermanent _ -> battlefield
-        -- CR 113.6's default again, for the DealsDamageToPlayer arm's reason.
+        -- CR 113.6's default: a Self bearer is the damage's SOURCE, and a
+        -- noncombat source on the stack or in a graveyard is a different object
+        -- from this permanent. A bystander (Curiosity) watches from the
+        -- battlefield as every other does.
         TriggerCondition.DealsDamage _ -> battlefield
         -- CR 113.6's default again, and the match's own shape on top of it: a Self
         -- reading compares the bearer against the event's RECIPIENT, and CR 120.3's
@@ -3013,8 +2982,7 @@ zonesTriggeredFrom cond =
         -- Rath) watches from the battlefield as every other does.
         TriggerCondition.IsDealtDamage _ -> battlefield
         TriggerCondition.PlayerIsDealtDamage _ -> battlefield
-        TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> battlefield
-        -- The batch reading watches from the battlefield too, and for the arm above's
+        -- The batch reading watches from the battlefield too, for DealsDamage's
         -- reason: its bearer is a bystander.
         TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> battlefield
         TriggerCondition.CreatureDealtCombatDamageToMonarch -> battlefield
@@ -3039,15 +3007,7 @@ zonesTriggeredFrom cond =
         TriggerCondition.SelfAttacksPlayerWithMostLife -> battlefield
         TriggerCondition.SelfAttacksWhileSaddled -> battlefield
         TriggerCondition.SelfAttacksWhile _ -> battlefield
-        TriggerCondition.SelfBlocks -> battlefield
-        TriggerCondition.CreatureBlocks _ -> battlefield
-        TriggerCondition.CreatureBlocksCreature _ -> battlefield
-        TriggerCondition.SelfBlocksAtLeast _ -> battlefield
-        TriggerCondition.SelfBlocksOneOrMore _ -> battlefield
-        TriggerCondition.CreatureBecomesBlocked _ -> battlefield
-        TriggerCondition.CreatureBecomesBlockedBy _ -> battlefield
-        TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> battlefield
-        TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> battlefield
+        TriggerCondition.Blocks _ -> battlefield
         TriggerCondition.CreatureAttacksUnblocked _ -> battlefield
         -- CR 113.6k's fourth zone: rule 702.94a's reveal happens FROM a hand and rule
         -- 701.20b leaves the card there, so this condition cannot trigger from the
@@ -3335,15 +3295,9 @@ stateTriggersOn gs
             TriggerCondition.PermanentEnters _ -> False
             TriggerCondition.PermanentsEnter _ -> False
             TriggerCondition.StepBegins {} -> False
-            TriggerCondition.SelfDealsCombatDamageToPlayer _ -> False
-            TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> False
-            TriggerCondition.DealsCombatDamage _ -> False
-            TriggerCondition.DealsDamageToPlayer _ -> False
-            TriggerCondition.DealsDamageToPermanent _ -> False
             TriggerCondition.DealsDamage _ -> False
             TriggerCondition.IsDealtDamage _ -> False
             TriggerCondition.PlayerIsDealtDamage _ -> False
-            TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> False
             TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> False
             TriggerCondition.CreatureDealtCombatDamageToMonarch -> False
             TriggerCondition.CreaturesDealtCombatDamageToInitiative -> False
@@ -3362,15 +3316,7 @@ stateTriggersOn gs
             TriggerCondition.SelfAttacksPlayerWithMostLife -> False
             TriggerCondition.SelfAttacksWhileSaddled -> False
             TriggerCondition.SelfAttacksWhile _ -> False
-            TriggerCondition.SelfBlocks -> False
-            TriggerCondition.CreatureBlocks _ -> False
-            TriggerCondition.CreatureBlocksCreature _ -> False
-            TriggerCondition.SelfBlocksAtLeast _ -> False
-            TriggerCondition.SelfBlocksOneOrMore _ -> False
-            TriggerCondition.CreatureBecomesBlocked _ -> False
-            TriggerCondition.CreatureBecomesBlockedBy _ -> False
-            TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> False
-            TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> False
+            TriggerCondition.Blocks _ -> False
             TriggerCondition.CreatureAttacksUnblocked _ -> False
             TriggerCondition.SelfRevealedForMiracle -> False
             TriggerCondition.RevealedThisWay _ -> False
@@ -3544,10 +3490,8 @@ stateTriggersOn gs
 -- later readings already hold: an instance armed on two boards is one waiting
 -- ability, CR 603.8 holding it back until it has left the stack. The live
 -- reading comes first and keeps its order. data/scenarios/trigger's City in a
--- Bottle scenario proves it.
---
--- Not implemented: a state matched only before CR 724.1c's or 724.2c's check,
--- which no settle keeps a board for, has not triggered (#5359).
+-- Bottle scenario proves it, and data/scenarios/turn's Synthetic Final
+-- Raising one the boards CR 724.1c's check hands on (GameState.heldBoards).
 stateTriggers :: [GameState] -> GameState -> [PendingTrigger]
 stateTriggers boards live = List.foldl' widen (armedOn live) (reverse boards)
   where

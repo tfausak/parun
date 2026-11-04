@@ -1,0 +1,160 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Orcish Farmer",
+            "label": "farmer",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "i1",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "i2",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Reality Ripple",
+            "label": "ripple"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "land",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 702.26d A land phased out as its controller's untap step begins stays under Orcish Farmer's Swamp to that player's next",
+  "timeline": [
+    {
+      "do": {
+        "Activate": {
+          "mana": [
+            null
+          ],
+          "object": "$farmer",
+          "targets": [
+            "$land"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$i1",
+            "$i2"
+          ],
+          "object": "$ripple",
+          "targets": [
+            "$land"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Subtypes": {
+          "object": "$land",
+          "subtypes": [
+            "Swamp"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "Upkeep",
+      "turn": 2
+    },
+    {
+      "do": {
+        "Attack": []
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 3
+    },
+    {
+      "check": {
+        "Subtypes": {
+          "object": "$land",
+          "subtypes": [
+            "Forest"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "Upkeep",
+      "turn": 4
+    }
+  ]
+}

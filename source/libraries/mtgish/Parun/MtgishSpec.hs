@@ -23,6 +23,7 @@ import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.Card as Card
+import qualified Parun.Types.CardSelection as CardSelection
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
 import qualified Parun.Types.Clause as Clause
@@ -40,6 +41,7 @@ import qualified Parun.Types.CostModifier as CostModifier
 import qualified Parun.Types.Count as Count
 import qualified Parun.Types.DestructionR as DestructionR
 import qualified Parun.Types.DestructionRewrite as DestructionRewrite
+import qualified Parun.Types.DiscardCards as DiscardCards
 import qualified Parun.Types.Duration as Duration
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EntryR as EntryR
@@ -179,6 +181,11 @@ spec s = Spec.describe s "Parun.Mtgish" $ do
   Spec.it s "reads sacrificing a permanent of a description as a cost" $ do
     Spec.assertEq s (Right ()) (accepts fallenAngel)
     Spec.assertEq s [[CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.HasCardType CardType.Creature))]] (fmap (Cost.components . ActivatedAbility.cost) (Face.activatedAbilities (translated fallenAngel)))
+
+  -- CR 701.9b: "Discard a card at random" as a cost.
+  Spec.it s "reads discarding a card at random as a cost" $ do
+    Spec.assertEq s (Right ()) (accepts coralHelm)
+    Spec.assertEq s [[CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.And []) CardSelection.AtRandom)]] (fmap (Cost.components . ActivatedAbility.cost) (Face.activatedAbilities (translated coralHelm)))
 
   -- CR 106.1: "Add {W} or {U}" is one mode for each kind of mana, the rest
   -- of the instructions in each.
@@ -466,6 +473,13 @@ fallenAngel :: (String, String)
 fallenAngel =
   ( "{\"_OracleCard\":\"Card\",\"Name\":\"Fallen Angel\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Creature\"],\"Subtypes\":[\"Angel\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":3},{\"_ManaSymbol\":\"ManaCostB\"},{\"_ManaSymbol\":\"ManaCostB\"}],\"Rules\":[{\"_Rule\":\"Flying\"},{\"_Rule\":\"Activated\",\"args\":[{\"_Cost\":\"SacrificeAPermanent\",\"args\":{\"_Permanents\":\"IsCardtype\",\"args\":\"Creature\"}},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"CreatePermanentLayerEffectUntil\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},[{\"_LayerEffect\":\"AdjustPT\",\"args\":[2,1]}],{\"_Expiration\":\"UntilEndOfTurn\"}]}]}]}],\"CardPT\":{\"Power\":3,\"Toughness\":3}}",
     "Flying\nSacrifice a creature: This creature gets +2/+1 until end of turn."
+  )
+
+-- | Coral Helm's AST, and its Oracle text.
+coralHelm :: (String, String)
+coralHelm =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Coral Helm\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Artifact\"],\"Subtypes\":[]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":3}],\"Rules\":[{\"_Rule\":\"Activated\",\"args\":[{\"_Cost\":\"And\",\"args\":[{\"_Cost\":\"PayMana\",\"args\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":3}]},{\"_Cost\":\"DiscardACardAtRandom\"}]},{\"_Actions\":\"Targeted\",\"args\":[[{\"_Target\":\"TargetPermanent\",\"args\":{\"_Permanents\":\"IsCardtype\",\"args\":\"Creature\"}}],{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"CreatePermanentLayerEffectUntil\",\"args\":[{\"_Permanent\":\"Ref_TargetPermanent\"},[{\"_LayerEffect\":\"AdjustPT\",\"args\":[2,2]}],{\"_Expiration\":\"UntilEndOfTurn\"}]}]}]}]}]}",
+    "{3}, Discard a card at random: Target creature gets +2/+2 until end of turn."
   )
 
 -- | Adarkar Wastes's AST, and its Oracle text.

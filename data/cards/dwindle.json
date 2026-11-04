@@ -67,11 +67,16 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "CreatureBlocks",
+            "type": "Blocks",
             "value": {
-              "type": "HasAttached",
-              "value": {
-                "type": "IsSource"
+              "creature": {
+                "type": "HasAttached",
+                "value": {
+                  "type": "IsSource"
+                }
+              },
+              "role": {
+                "type": "Blocker"
               }
             }
           },

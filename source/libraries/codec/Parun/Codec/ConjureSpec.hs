@@ -6,10 +6,10 @@ import qualified Parun.Codec.Conjure as Conjure
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
+import qualified Parun.Types.CardSelection as CardSelection
 import qualified Parun.Types.Conjure as Conjure
 import qualified Parun.Types.ConjureCards as ConjureCards
 import qualified Parun.Types.ConjureDestination as ConjureDestination
-import qualified Parun.Types.ConjureSelection as ConjureSelection
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.SlotName as SlotName
@@ -75,7 +75,7 @@ spec s = Spec.describe s "Parun.Codec.Conjure" $ do
       ( Conjure.MkConjure
           { Conjure.quantity = Conjure.defaultQuantity,
             Conjure.cards = ConjureCards.Written (Text.pack "Ponder" NonEmpty.:| [Text.pack "Dark Ritual"]),
-            Conjure.selection = ConjureSelection.ByChoice,
+            Conjure.selection = CardSelection.ByChoice,
             Conjure.destination = ConjureDestination.Hand,
             Conjure.slot = Nothing
           }

@@ -1,0 +1,260 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Clay Statue",
+            "label": "statue",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "m1"
+          },
+          {
+            "card": "Mountain",
+            "label": "m2"
+          },
+          {
+            "card": "Mountain",
+            "label": "m3"
+          },
+          {
+            "card": "Mountain",
+            "label": "m4"
+          },
+          {
+            "card": "Mountain",
+            "label": "m5"
+          },
+          {
+            "card": "Mountain",
+            "label": "m6"
+          },
+          {
+            "card": "Mountain",
+            "label": "m7"
+          },
+          {
+            "card": "Mountain",
+            "label": "m8"
+          },
+          {
+            "card": "Mountain",
+            "label": "m9"
+          },
+          {
+            "card": "Mountain",
+            "label": "m10"
+          },
+          {
+            "card": "Mountain",
+            "label": "m11"
+          },
+          {
+            "card": "Mountain",
+            "label": "m12"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Fissure",
+            "label": "a"
+          },
+          {
+            "card": "Fissure",
+            "label": "b"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Bad Moon",
+            "label": "moon"
+          },
+          {
+            "card": "Forest",
+            "label": "forest"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "Fissure destroys a creature through a regeneration shield, or a land, and nothing else",
+  "timeline": [
+    {
+      "do": {
+        "Activate": {
+          "mana": [
+            "$m1",
+            "$m2",
+            null
+          ],
+          "object": "$statue"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "Cast": {
+          "mana": [
+            "$m3",
+            "$m4",
+            "$m5",
+            "$m6",
+            "$m7",
+            null
+          ],
+          "object": "$a",
+          "targets": [
+            "$moon"
+          ]
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$m3",
+            "$m4",
+            "$m5",
+            "$m6",
+            "$m7",
+            null
+          ],
+          "object": "$a",
+          "targets": [
+            "$statue"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Clay Statue",
+          "count": 1,
+          "player": "alice",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$m8",
+            "$m9",
+            "$m10",
+            "$m11",
+            "$m12"
+          ],
+          "object": "$b",
+          "targets": [
+            "$forest"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Forest",
+          "count": 1,
+          "player": "bob",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Bad Moon",
+          "count": 1,
+          "player": "bob",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

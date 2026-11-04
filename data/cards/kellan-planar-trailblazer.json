@@ -155,9 +155,22 @@
                               "type": "Triggered",
                               "value": {
                                 "condition": {
-                                  "type": "SelfDealsCombatDamageToPlayer",
+                                  "type": "DealsDamage",
                                   "value": {
-                                    "type": "AnyPlayer"
+                                    "actor": {
+                                      "type": "Self"
+                                    },
+                                    "kind": {
+                                      "type": "Combat"
+                                    },
+                                    "recipients": [
+                                      {
+                                        "type": "Player",
+                                        "value": {
+                                          "type": "AnyPlayer"
+                                        }
+                                      }
+                                    ]
                                   }
                                 },
                                 "modal": {

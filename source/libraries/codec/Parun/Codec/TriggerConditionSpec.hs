@@ -10,7 +10,9 @@ import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.AttackedPlayer as AttackedPlayer
 import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.BecomesTapState as BecomesTapState
-import qualified Parun.Types.BlockPair as BlockPair
+import qualified Parun.Types.BlockCount as BlockCount
+import qualified Parun.Types.BlockRole as BlockRole
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
@@ -28,11 +30,10 @@ import qualified Parun.Types.CounterHolder as CounterHolder
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CounterMotion as CounterMotion
 import qualified Parun.Types.CounterTrigger as CounterTrigger
-import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.DamageKind as DamageKind
-import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
-import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
+import qualified Parun.Types.DamageRecipient as DamageRecipient
+import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.DieResult as DieResult
@@ -42,7 +43,6 @@ import qualified Parun.Types.DiscardWay as DiscardWay
 import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Holder as Holder
-import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.ManaSpecification as ManaSpecification
@@ -53,7 +53,7 @@ import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentAction as PermanentAction
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
-import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
+import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
@@ -124,91 +124,33 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.StateIs (Condition.Compares (Compares.MkCompares (Quantity.Literal 0) Comparison.Exactly (Quantity.Literal 0))))
       " {\"type\":\"StateIs\",\"value\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":0},\"comparison\":{\"type\":\"Exactly\"},\"threshold\":{\"type\":\"Literal\",\"value\":0}}}} "
-  -- CR 603.2 / 509-510: the bearer dealt combat damage to a player the relation
-  -- admits. BOTH relations, since the pool prints one of each: CR 702.70a's
-  -- poisonous and Longtusk Cub say "a player", where Questing Beast says "an
-  -- opponent", and a collapsed encoding would make the two one trigger.
-  Spec.it s "SelfDealsCombatDamageToPlayer round-trips both relations" $ do
+  -- CR 603.2 / 120.1: the damage trigger, its record's own spec covering the
+  -- fields (Parun.Codec.DamageTriggerSpec).
+  Spec.it s "DealsDamage" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.AnyPlayer)
-      " {\"type\":\"SelfDealsCombatDamageToPlayer\",\"value\":{\"type\":\"AnyPlayer\"}} "
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.Opponent)
-      " {\"type\":\"SelfDealsCombatDamageToPlayer\",\"value\":{\"type\":\"Opponent\"}} "
-  -- CR 510.1b / 310.5 and CR 510.2: the two wider recipients, each its own tag.
-  Spec.it s "SelfDealsCombatDamageToPlayerOrBattle" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle
-      " {\"type\":\"SelfDealsCombatDamageToPlayerOrBattle\"} "
-  Spec.it s "DealsCombatDamage round-trips both actors" $ do
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.DealsCombatDamage ActingPermanent.Self)
-      " {\"type\":\"DealsCombatDamage\",\"value\":{\"type\":\"Self\"}} "
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.DealsCombatDamage (ActingPermanent.Matching (Filter.HeldBy Holder.Controller PlayerRelation.You)))
-      " {\"type\":\"DealsCombatDamage\",\"value\":{\"type\":\"Matching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}}} "
-  -- CR 603.2 / 120.1: the player-recipient pair without the combat narrowing --
-  -- Akki Lavarunner's own condition. A separate TAG and not a flag on
-  -- SelfDealsCombatDamageToPlayer, so a card written for one can never decode as
-  -- the other.
-  Spec.it s "DealsDamageToPlayer round-trips its actor and relation" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self PlayerRelation.Opponent Nothing))
-      " {\"type\":\"DealsDamageToPlayer\",\"value\":{\"actor\":{\"type\":\"Self\"},\"recipient\":{\"type\":\"Opponent\"}}} "
-  -- CR 120.3's other recipient; `kind` omitted for damage of any kind.
-  Spec.it s "DealsDamageToPermanent" $ do
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.DealsDamageToPermanent (DealsDamageToPermanent.MkDealsDamageToPermanent ActingPermanent.Self CardType.Creature Nothing))
-      " {\"type\":\"DealsDamageToPermanent\",\"value\":{\"actor\":{\"type\":\"Self\"},\"recipient\":{\"type\":\"Creature\"}}} "
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.DealsDamageToPermanent (DealsDamageToPermanent.MkDealsDamageToPermanent ActingPermanent.Self CardType.Planeswalker (Just DamageKind.Combat)))
-      " {\"type\":\"DealsDamageToPermanent\",\"value\":{\"actor\":{\"type\":\"Self\"},\"recipient\":{\"type\":\"Planeswalker\"},\"kind\":{\"type\":\"Combat\"}}} "
-  Spec.it s "DealsDamage round-trips both actors" $ do
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.DealsDamage ActingPermanent.Self)
-      " {\"type\":\"DealsDamage\",\"value\":{\"type\":\"Self\"}} "
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.DealsDamage (ActingPermanent.Matching (Filter.HasAttached Filter.IsSource)))
-      " {\"type\":\"DealsDamage\",\"value\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasAttached\",\"value\":{\"type\":\"IsSource\"}}}} "
+      (TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger ActingPermanent.Self (Just DamageKind.Combat) (Set.singleton (DamageRecipient.Player PlayerRelation.Opponent))))
+      " {\"type\":\"DealsDamage\",\"value\":{\"actor\":{\"type\":\"Self\"},\"kind\":{\"type\":\"Combat\"},\"recipients\":[{\"type\":\"Player\",\"value\":{\"type\":\"Opponent\"}}]}} "
   -- CR 120.3: the same history read the other way round -- the permanent was
   -- DEALT damage.
   Spec.it s "IsDealtDamage round-trips both actors and a kind" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing))
-      " {\"type\":\"IsDealtDamage\",\"value\":{\"recipient\":{\"type\":\"Self\"}}} "
+      (TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing) Batching.OneOrMore))
+      " {\"type\":\"IsDealtDamage\",\"value\":{\"dealt\":{\"recipient\":{\"type\":\"Self\"}}}} "
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage (ActingPermanent.Matching (Filter.HasCardType CardType.Creature)) Nothing))
-      " {\"type\":\"IsDealtDamage\",\"value\":{\"recipient\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}}} "
+      (TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage (ActingPermanent.Matching (Filter.HasCardType CardType.Creature)) Nothing) Batching.OneOrMore))
+      " {\"type\":\"IsDealtDamage\",\"value\":{\"dealt\":{\"recipient\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}}}} "
     -- Wall of Essence's "is dealt combat damage".
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.IsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self (Just DamageKind.Combat)))
-      " {\"type\":\"IsDealtDamage\",\"value\":{\"recipient\":{\"type\":\"Self\"},\"kind\":{\"type\":\"Combat\"}}} "
+      (TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self (Just DamageKind.Combat)) Batching.OneOrMore))
+      " {\"type\":\"IsDealtDamage\",\"value\":{\"dealt\":{\"recipient\":{\"type\":\"Self\"},\"kind\":{\"type\":\"Combat\"}}}} "
   -- Lich's any damage, and Chandra's Spitfire's noncombat damage to an
   -- opponent.
   Spec.it s "PlayerIsDealtDamage round-trips both kinds" $ do
@@ -222,15 +164,7 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.Opponent (Just DamageKind.Noncombat)) False))
       " {\"type\":\"PlayerIsDealtDamage\",\"value\":{\"dealt\":{\"recipient\":{\"type\":\"Opponent\"},\"kind\":{\"type\":\"Noncombat\"}}}} "
-  -- The same event read by a bystander, carrying Tovolar's "you control" and
-  -- Teysa's "to you": two relations, so a crossed codec would not round-trip.
-  Spec.it s "PermanentDealsCombatDamageToPlayer round-trips with its Filter and recipient" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.PermanentDealsCombatDamageToPlayer (PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer (Filter.HeldBy Holder.Controller PlayerRelation.Opponent) PlayerRelation.You False))
-      " {\"type\":\"PermanentDealsCombatDamageToPlayer\",\"value\":{\"filter\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"Opponent\"}}},\"recipient\":{\"type\":\"You\"}}} "
-  -- CR 603.2c's batch reading of that same form, carrying the same Filter -- so a
+  -- CR 603.2c's batch reading of DealsDamage's combat damage to a player, so a
   -- separate tag is the only thing that keeps Pia Nalaar's once-per-step card and
   -- Tovolar's once-per-damager card apart on the wire.
   Spec.it s "PermanentsDealCombatDamageToPlayer round-trips with its Filter and recipient" $
@@ -427,79 +361,14 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       TriggerCondition.SelfAttacksWhileSaddled
       " {\"type\":\"SelfAttacksWhileSaddled\"} "
-  -- CR 509.3a, and nullary where its mirror is not: rule 509.3a's
-  -- once-each-combat is not a frequency a card chooses.
-  Spec.it s "SelfBlocks" $
+  -- CR 509.3e read by a bystander: Seifer, Balamb Rival's "a creature attacking
+  -- one of your opponents becomes blocked by two or more creatures".
+  Spec.it s "Blocks" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      TriggerCondition.SelfBlocks
-      " {\"type\":\"SelfBlocks\"} "
-  -- CR 509.3a read by a bystander, with a Filter over the blocker.
-  Spec.it s "CreatureBlocks" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.CreatureBlocks (Filter.HasAttached Filter.IsSource))
-      " {\"type\":\"CreatureBlocks\",\"value\":{\"type\":\"HasAttached\",\"value\":{\"type\":\"IsSource\"}}} "
-  -- CR 509.3b, which carries a Filter over the ATTACKER the bearer blocked --
-  -- Netcaster Spider's "a creature with flying". The attacker is also a BINDING,
-  -- and that is a separate thing the payload reads rather than an encoding of it.
-  Spec.it s "CreatureBlocksCreature" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair Filter.IsSource (Filter.HasKeyword Keyword.Flying)))
-      " {\"type\":\"CreatureBlocksCreature\",\"value\":{\"blocker\":{\"type\":\"IsSource\"},\"attacker\":{\"type\":\"HasKeyword\",\"value\":{\"type\":\"Flying\"}}}} "
-  -- CR 509.3e, and NOT nullary: the floor is the card's own number.
-  Spec.it s "SelfBlocksAtLeast" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.SelfBlocksAtLeast 2)
-      " {\"type\":\"SelfBlocksAtLeast\",\"value\":2} "
-  -- CR 509.3e's filtered form, whose tag must stay distinct from the counted one
-  -- above: the two read the same grouped event and differ only in what they ask
-  -- of it.
-  Spec.it s "SelfBlocksOneOrMore" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.SelfBlocksOneOrMore (Filter.HasColor Color.Black))
-      " {\"type\":\"SelfBlocksOneOrMore\",\"value\":{\"type\":\"HasColor\",\"value\":{\"type\":\"Black\"}}} "
-  -- CR 509.3c, the Filter over the ATTACKER: Somberwald Alpha's "a creature
-  -- you control".
-  Spec.it s "CreatureBecomesBlocked" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.CreatureBecomesBlocked (Filter.HeldBy Holder.Controller PlayerRelation.You))
-      " {\"type\":\"CreatureBecomesBlocked\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}} "
-  -- CR 509.3d, which carries a Filter over the BLOCKER where its once-each-combat
-  -- sibling above carries nothing -- rule 702.25a's "without flanking".
-  Spec.it s "CreatureBecomesBlockedBy" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.CreatureBecomesBlockedBy (BlockPair.MkBlockPair (Filter.Not (Filter.HasKeyword Keyword.Flanking)) Filter.IsSource))
-      " {\"type\":\"CreatureBecomesBlockedBy\",\"value\":{\"blocker\":{\"type\":\"Not\",\"value\":{\"type\":\"HasKeyword\",\"value\":{\"type\":\"Flanking\"}}},\"attacker\":{\"type\":\"IsSource\"}}} "
-  -- CR 509.3e read from the attacking side. A distinct tag from the per-blocker
-  -- form above, which carries the same payload and differs only in arity.
-  Spec.it s "SelfBecomesBlockedByOneOrMore" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.SelfBecomesBlockedByOneOrMore (Filter.HasColor Color.Black))
-      " {\"type\":\"SelfBecomesBlockedByOneOrMore\",\"value\":{\"type\":\"HasColor\",\"value\":{\"type\":\"Black\"}}} "
-  -- The same rule read by a bystander: a PAYLOAD OBJECT rather than a bare
-  -- Filter, since this form carries both whom the attacker attacked and the
-  -- floor on the blockers.
-  Spec.it s "CreatureBecomesBlockedByAtLeast" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.CreatureBecomesBlockedByAtLeast (CreatureBecomesBlockedByAtLeast.MkCreatureBecomesBlockedByAtLeast PlayerRelation.Opponent 2))
-      " {\"type\":\"CreatureBecomesBlockedByAtLeast\",\"value\":{\"attacked\":{\"type\":\"Opponent\"},\"blockers\":2}} "
+      (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker (Filter.IsAttackingPlayer PlayerRelation.Opponent) (BlockCount.AtLeast 2 (Filter.And []))))
+      " {\"type\":\"Blocks\",\"value\":{\"role\":{\"type\":\"Attacker\"},\"creature\":{\"type\":\"IsAttackingPlayer\",\"value\":{\"type\":\"Opponent\"}},\"count\":{\"type\":\"AtLeast\",\"value\":{\"floor\":2}}}} "
   -- CR 509.1h's unblocked branch, nullary like the blocked one: "attacks and
   -- isn't blocked" has no per-blocker reading to carry a Filter for.
   Spec.it s "CreatureAttacksUnblocked" $

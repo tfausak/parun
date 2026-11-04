@@ -1,0 +1,130 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Celestial Prism",
+            "label": "prism"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Savannah Lions",
+            "label": "lions"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "manaPool": "CC",
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "Celestial Prism pays {2} and taps for a colour its controller names",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$prism"
+          ],
+          "object": "$lions",
+          "yields": [
+            [
+              {
+                "manaType": {
+                  "type": "Colored",
+                  "value": {
+                    "type": "White"
+                  }
+                },
+                "restriction": null,
+                "retention": {
+                  "type": "Ordinary"
+                },
+                "rider": null,
+                "sourceChoices": null,
+                "tags": [
+                  {
+                    "type": "Artifact"
+                  }
+                ]
+              }
+            ]
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Savannah Lions",
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Tapped": {
+          "object": "$prism",
+          "tapped": true
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

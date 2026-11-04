@@ -2169,7 +2169,7 @@ castTheCardSpec s registry =
                 _ -> Spec.assertFailure s "Psychic Theft should exile exactly one card"
             _ -> Spec.assertFailure s "six printings"
 
--- "Until the beginning of your next upkeep" (Duration.UntilYourNextStep).
+-- "Until the beginning of your next upkeep" (Duration.UntilNextStepOf).
 -- Oracle text checked against api.scryfall.com, 2026-09-26:
 --
 -- Grinning Totem {4} Artifact -- "{2}, {T}, Sacrifice this artifact: Search
@@ -2209,7 +2209,7 @@ nextUpkeepSpec s registry =
       activated source board = case Activatable.abilitiesFor source board of
         [ability] -> Just (S.runPure atBobAnswer (S.runPure atBobAnswer board (Activate.activateAbility S.alice source ability)) Stack.resolveTop)
         _ -> Nothing
-   in Spec.describe s "UntilYourNextStep" $ do
+   in Spec.describe s "UntilNextStepOf" $ do
         -- CR 500.11: Eon Hub skips every upkeep, so the duration outlasts the
         -- start of alice's next turn and she may still cast the card then.
         Spec.it s "CR 611.2a Elkin Bottle's card stays castable into alice's next turn when Eon Hub skips her upkeep" $ do

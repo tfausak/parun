@@ -86,10 +86,11 @@ import qualified Parun.Types.BindAmount as BindAmount
 import qualified Parun.Types.Binding as Binding
 import qualified Parun.Types.Blight as Blight
 import qualified Parun.Types.BlockCost as BlockCost
-import qualified Parun.Types.BlockPair as BlockPair
+import qualified Parun.Types.BlockCount as BlockCount
 import qualified Parun.Types.BlockPermission as BlockPermission
 import qualified Parun.Types.BlockRequirement as BlockRequirement
 import qualified Parun.Types.BlockRole as BlockRole
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.BoundMeasure as BoundMeasure
 import qualified Parun.Types.CandidateId as CandidateId
 import qualified Parun.Types.CantAttackPlayer as CantAttackPlayer
@@ -174,9 +175,8 @@ import qualified Parun.Types.DamagePart as DamagePart
 import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
+import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DealDamage as DealDamage
-import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
-import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.DelayedTrigger as DelayedTrigger
 import qualified Parun.Types.Designate as Designate
@@ -311,6 +311,7 @@ import qualified Parun.Types.MoveMana as MoveMana
 import qualified Parun.Types.MoveToZone as MoveToZone
 import qualified Parun.Types.MovedKinds as MovedKinds
 import qualified Parun.Types.NextDamageInstance as NextDamageInstance
+import qualified Parun.Types.NextStepOf as NextStepOf
 import qualified Parun.Types.Ninjutsu as Ninjutsu
 import qualified Parun.Types.ObjectCount as ObjectCount
 import Parun.Types.ObjectId (ObjectId)
@@ -328,7 +329,7 @@ import qualified Parun.Types.PerCreature as PerCreature
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentCandidate as PermanentCandidate
-import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
+import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
@@ -413,6 +414,7 @@ import qualified Parun.Types.Splice as Splice
 import qualified Parun.Types.StatedFlip as StatedFlip
 import qualified Parun.Types.StaticAbility as StaticAbility
 import qualified Parun.Types.StepBegins as StepBegins
+import qualified Parun.Types.StepOfControllerOf as StepOfControllerOf
 import qualified Parun.Types.Suspend as Suspend
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
 import qualified Parun.Types.Tap as Tap
@@ -756,6 +758,7 @@ arithmeticNames asking onQuantity x = case x of
   Arithmetic.Quotient quotient -> quotientNames asking onQuantity quotient
   Arithmetic.Times times -> timesNames asking onQuantity times
   Arithmetic.Negate quantity -> onQuantity quantity
+  Arithmetic.NonNegative quantity -> onQuantity quantity
 
 armDelayedTriggerNames :: (Monoid r) => Asking r -> (ability -> r) -> ArmDelayedTrigger.ArmDelayedTrigger ability -> r
 armDelayedTriggerNames asking onAbility x = case x of
@@ -1344,7 +1347,7 @@ divideNames asking x = case x of
 
 discardCardsNames :: (Monoid r) => Asking r -> DiscardCards.DiscardCards keyword -> r
 discardCardsNames asking x = case x of
-  DiscardCards.MkDiscardCards _count whichCards -> filterNames asking whichCards
+  DiscardCards.MkDiscardCards _count whichCards _selection -> filterNames asking whichCards
 
 doesNotUntapNextNames :: (Monoid r) => Asking r -> DoesNotUntapNext.DoesNotUntapNext -> r
 doesNotUntapNextNames asking x = case x of
@@ -1386,7 +1389,7 @@ durationNames asking x = case x of
   Duration.Indefinite -> mempty
   Duration.Perpetual -> mempty
   Duration.UntilYourNextTurn -> mempty
-  Duration.UntilYourNextStep _ -> mempty
+  Duration.UntilNextStepOf next -> playerRefNames asking (NextStepOf.player next)
   Duration.UntilEndOfYourNextTurn -> mempty
   Duration.UntilEndOfNextTurnOf playerRef -> playerRefNames asking playerRef
   Duration.DuringNextTurnOf playerRef -> playerRefNames asking playerRef
@@ -1742,6 +1745,7 @@ expiryNames asking x = case x of
   Expiry.While while -> whileNames asking while
   Expiry.AtTurnOf _playerId -> mempty
   Expiry.AtStepOf _stepBegan -> mempty
+  Expiry.AtStepOfControllerOf stepOf -> names asking (== StepOfControllerOf.object stepOf)
   Expiry.AtEndOfTurnOf _afterTurn -> mempty
   Expiry.DuringTurnOf _afterTurn -> mempty
   Expiry.DuringUntapStepOf _playerId -> mempty
@@ -2386,13 +2390,11 @@ permanentCandidateNames :: (Monoid r) => Asking r -> PermanentCandidate.Permanen
 permanentCandidateNames asking x = case x of
   PermanentCandidate.MkPermanentCandidate source _provenance effect _ordinal -> names asking (== source) <> replacementEffectNames asking (const mempty) (grantedAbilityNames asking (const mempty)) (effectNames asking (const mempty) (grantedAbilityNames asking (const mempty))) effect
 
-dealsDamageToPlayerNames :: (Monoid r) => Asking r -> DealsDamageToPlayer.DealsDamageToPlayer -> r
-dealsDamageToPlayerNames asking x = case x of
-  DealsDamageToPlayer.MkDealsDamageToPlayer actor _recipient _kind -> actingPermanentNames asking actor
-
-permanentDealsCombatDamageToPlayerNames :: (Monoid r) => Asking r -> PermanentDealsCombatDamageToPlayer.PermanentDealsCombatDamageToPlayer -> r
-permanentDealsCombatDamageToPlayerNames asking x = case x of
-  PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer filter_ _recipient _orTheirPlaneswalkers -> filterNames asking filter_
+-- A kind and a recipient hold no names: a relation and a card type name no
+-- object.
+damageTriggerNames :: (Monoid r) => Asking r -> DamageTrigger.DamageTrigger -> r
+damageTriggerNames asking x = case x of
+  DamageTrigger.MkDamageTrigger actor _kind _recipients -> actingPermanentNames asking actor
 
 playerActsOnNames :: (Monoid r) => Asking r -> PlayerActsOn.PlayerActsOn -> r
 playerActsOnNames asking x = case x of
@@ -3000,8 +3002,15 @@ toughnessNames :: (Monoid r) => Asking r -> Toughness.Toughness -> r
 toughnessNames asking x = case x of
   Toughness.MkToughness unwrap -> quantityNames asking unwrap
 
-blockPairNames :: (Monoid r) => Asking r -> BlockPair.BlockPair -> r
-blockPairNames asking pair = filterNames asking (BlockPair.blocker pair) <> filterNames asking (BlockPair.attacker pair)
+blockTriggerNames :: (Monoid r) => Asking r -> BlockTrigger.BlockTrigger -> r
+blockTriggerNames asking x = case x of
+  BlockTrigger.MkBlockTrigger _role creature count -> filterNames asking creature <> blockCountNames asking count
+
+blockCountNames :: (Monoid r) => Asking r -> BlockCount.BlockCount -> r
+blockCountNames asking x = case x of
+  BlockCount.Once -> mempty
+  BlockCount.EachCreature others -> filterNames asking others
+  BlockCount.AtLeast _floor others -> filterNames asking others
 
 triggerConditionNames :: (Monoid r) => Asking r -> TriggerCondition.TriggerCondition -> r
 triggerConditionNames asking x = case x of
@@ -3010,15 +3019,9 @@ triggerConditionNames asking x = case x of
   TriggerCondition.PermanentsEnter filter_ -> filterNames asking filter_
   TriggerCondition.StepBegins stepBegins -> stepBeginsNames asking stepBegins
   TriggerCondition.StateIs condition -> conditionNames asking condition
-  TriggerCondition.SelfDealsCombatDamageToPlayer _playerRelation -> mempty
-  TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> mempty
-  TriggerCondition.DealsCombatDamage actingPermanent -> actingPermanentNames asking actingPermanent
-  TriggerCondition.DealsDamageToPlayer dealsDamageToPlayer -> dealsDamageToPlayerNames asking dealsDamageToPlayer
-  TriggerCondition.DealsDamageToPermanent dealsDamageToPermanent -> actingPermanentNames asking (DealsDamageToPermanent.actor dealsDamageToPermanent)
-  TriggerCondition.DealsDamage actingPermanent -> actingPermanentNames asking actingPermanent
-  TriggerCondition.IsDealtDamage dealt -> actingPermanentNames asking (DealtDamage.recipient dealt)
+  TriggerCondition.DealsDamage damageTrigger -> damageTriggerNames asking damageTrigger
+  TriggerCondition.IsDealtDamage watched -> actingPermanentNames asking (DealtDamage.recipient (PermanentIsDealtDamage.dealt watched))
   TriggerCondition.PlayerIsDealtDamage _playerIsDealtDamage -> mempty
-  TriggerCondition.PermanentDealsCombatDamageToPlayer permanentDealsCombatDamageToPlayer -> permanentDealsCombatDamageToPlayerNames asking permanentDealsCombatDamageToPlayer
   TriggerCondition.PermanentsDealCombatDamageToPlayer permanentsDealCombatDamageToPlayer -> permanentsDealCombatDamageToPlayerNames asking permanentsDealCombatDamageToPlayer
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> mempty
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> mempty
@@ -3041,15 +3044,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SelfAttacksPlayerWithMostLife -> mempty
   TriggerCondition.SelfAttacksWhileSaddled -> mempty
   TriggerCondition.SelfAttacksWhile condition -> conditionNames asking condition
-  TriggerCondition.SelfBlocks -> mempty
-  TriggerCondition.CreatureBlocks filter_ -> filterNames asking filter_
-  TriggerCondition.CreatureBlocksCreature pair -> blockPairNames asking pair
-  TriggerCondition.SelfBlocksAtLeast _natural -> mempty
-  TriggerCondition.SelfBlocksOneOrMore filter_ -> filterNames asking filter_
-  TriggerCondition.CreatureBecomesBlocked filter_ -> filterNames asking filter_
-  TriggerCondition.CreatureBecomesBlockedBy pair -> blockPairNames asking pair
-  TriggerCondition.SelfBecomesBlockedByOneOrMore filter_ -> filterNames asking filter_
-  TriggerCondition.CreatureBecomesBlockedByAtLeast _creatureBecomesBlockedByAtLeast -> mempty
+  TriggerCondition.Blocks blockTrigger -> blockTriggerNames asking blockTrigger
   TriggerCondition.CreatureAttacksUnblocked filter_ -> filterNames asking filter_
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> mempty
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> mempty
