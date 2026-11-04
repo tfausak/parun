@@ -1,9 +1,8 @@
 {
-  "description": "CR 400.3 whole card: the granted {T} bounces a nonland permanent to its OWNER's hand",
   "board": {
+    "active": "alice",
     "seats": [
       {
-        "name": "alice",
         "battlefield": [
           {
             "card": "Island",
@@ -16,20 +15,20 @@
             "card": "Retraction Helix",
             "label": "helix"
           }
-        ]
+        ],
+        "name": "alice"
       },
       {
-        "name": "bob",
         "battlefield": [
           {
             "card": "Prodigal Sorcerer",
             "label": "sorcerer",
             "ready": true
           }
-        ]
+        ],
+        "name": "bob"
       },
       {
-        "name": "carol",
         "battlefield": [
           {
             "card": "Goblin Piker",
@@ -41,159 +40,176 @@
             "label": "carol-island",
             "ready": true
           }
-        ]
+        ],
+        "name": "carol"
       }
     ],
-    "active": "alice",
     "step": "PrecombatMain"
   },
+  "description": "CR 400.3 whole card: the granted {T} bounces a nonland permanent to its OWNER's hand",
+  "note": "Bob is offered the Sorcerer's printed ping alone while the Helix is on the stack, and both abilities once it resolves: the second is the grant, not the fixture.",
   "timeline": [
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "do": {
         "Cast": {
+          "mana": [
+            "$island"
+          ],
           "object": "$helix",
           "targets": [
             "$sorcerer"
-          ],
-          "mana": [
-            "$island"
           ]
         }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
+      },
       "player": "alice",
-      "do": "Pass"
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "bob",
-      "do": "Pass"
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
+      "do": "Pass",
       "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
       "check": {
         "View": {
+          "is": [
+            "Pass",
+            "Activate $sorcerer"
+          ],
           "of": "Offered",
-          "player": "alice",
+          "player": "bob"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
           "is": [
             "Pass"
-          ]
+          ],
+          "of": "Offered",
+          "player": "alice"
         }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
+      },
       "player": "alice",
-      "do": "Pass"
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
+      "do": "Pass",
+      "player": "alice",
       "step": "PrecombatMain",
-      "player": "bob",
+      "turn": 1
+    },
+    {
       "check": {
         "View": {
-          "of": "Offered",
-          "player": "bob",
           "is": [
             "Pass",
             "Activate $sorcerer",
             "Activate $sorcerer"
-          ]
+          ],
+          "of": "Offered",
+          "player": "bob"
         }
-      }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "bob",
       "do": {
         "Activate": {
-          "object": "$sorcerer",
           "ability": 1,
+          "object": "$sorcerer",
           "targets": [
             "$piker"
           ]
         }
-      }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
+      "do": "Pass",
       "player": "bob",
-      "do": "Pass"
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "bob",
       "check": {
         "Count": {
-          "player": "carol",
-          "zone": "Hand",
           "card": "Goblin Piker",
-          "count": 1
+          "count": 1,
+          "player": "carol",
+          "zone": "Hand"
         }
-      }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "bob",
       "check": {
         "View": {
+          "is": [],
           "of": "Zone",
           "player": "bob",
-          "zone": "Hand",
-          "is": []
+          "zone": "Hand"
         }
-      }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "bob",
       "check": {
         "Count": {
-          "player": "carol",
-          "zone": "Battlefield",
           "card": "Goblin Piker",
-          "count": 0
+          "count": 0,
+          "player": "carol",
+          "zone": "Battlefield"
         }
-      }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "bob",
       "check": {
         "Count": {
-          "player": "carol",
-          "zone": "Battlefield",
           "card": "Island",
-          "count": 1
+          "count": 1,
+          "player": "carol",
+          "zone": "Battlefield"
         }
-      }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
     },
     {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "bob",
       "check": {
         "Tapped": {
           "object": "$sorcerer",
           "tapped": true
         }
-      }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
     }
   ]
 }

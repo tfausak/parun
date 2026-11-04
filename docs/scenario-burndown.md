@@ -1,15 +1,23 @@
 # Scenario burndown
 
-The gameplay tests still written in Haskell that `data/scenarios` could hold,
-each tagged with what the scenario format lacks to express it. Tracked by
-#4420, related to #146.
+The gameplay tests still written in Haskell that might move to
+`data/scenarios`, each tagged with what the census guessed the scenario format
+lacked. Tracked by #4420, related to #146.
 
-A unit of work is one tag: give the format that check, move or board feature
-(a type, a codec with a round-trip spec, a runner arm, a README line), then
-`grep` the tag below and convert the tests it names. `ready` marks a test
-that needs nothing new. Remove the tag from each
-line it frees; a line with no tags left is a test ready to convert, and a
-converted test's line is deleted.
+The target: every gameplay test that reads naturally as a scenario moves, and
+the rest stay in Haskell, which is fine; emptying Haskell is not a goal. A
+natural scenario is a board, moves and checks of observable game state. A
+test of one subsystem driven directly, of an internal store, of the event log
+with no observable restatement, or of a state no sequence of moves reaches
+stays in Haskell, and the format does not grow just for it.
+
+A unit of work is the first `###` section under "Tests", or part of it. Each
+listed test is read from its source and then converted (its Haskell block and
+the helpers it orphans deleted), deleted because an existing scenario already
+covers it, or kept in Haskell with its reason in the PR body; its line goes
+either way. The format gains a check, move or board feature (a type, a codec
+with a round-trip spec, a runner arm, a README line) only when that frees
+several listed tests. The unit that empties the list deletes this doc.
 
 - `check:*` the test's board and moves already replay as a scenario; only
   what it asserts has no `Check`. `check:helper-*` is a spec-local helper to
@@ -17,151 +25,115 @@ converted test's line is deleted.
 - `move:*` the test answers a prompt the timeline has no move for.
 - `board:*` the test's starting state holds something a board cannot place.
 
-The list comes from a recorded census of `origin/main` @ 1598871. It is a
-starting point, not a verdict: a listed test that turns out to be a unit test
-of one subsystem stays in Haskell and loses its line. A `board:*` tag was read
-off the recorded run's start state alone, so it misses links and statuses on
-what it names; triage a tag's tests from their source before building for it. Tests that drive a
-subsystem directly rather than playing a game are not listed.
+The list comes from a recorded census of `origin/main` @ 1598871. A tag is a
+guess, and some are out of date: one may name something the format now has,
+and a `board:*` tag was read off the recorded run's start state alone, so it
+misses links and statuses on what it names. Tests that drive a subsystem
+directly rather than playing a game are not listed, and nor are tests added
+since the census.
 
 ## Tags
 
-In order of how many tests each would free, highest first. Tags naming a
-single spec-local helper, and the `other-*` tail, are left out: grep for them.
+By how many listed tests carry each, highest first. Tags naming a single
+spec-local helper, and the `other-*` tail, are left out: grep for them.
 
-- `board:continuous-effect`: a continuous effect already in force
-- `board:replacement`: a replacement effect already in force
 - `check:events`: event history: not state, so a test reading it stays in Haskell unless it can be re-expressed
-- `board:combat`: combat already under way
-- `check:legal-targets`: the legal targets for a slot
-- `board:face`: a face other than the front
-- `board:delayed-trigger`: a delayed trigger already armed
-- `board:protector`: a battle's protector
-- `move:expect-rejected`: a move the engine is expected to refuse, such as an illegal block or an untargetable cast
-- `board:objects-ids`
-- `check:prompt-offers`: the options a prompt offers
-- `board:sickness`: summoning sickness settled for a player other than the controller
-- `board:face-down`: a face-down object
 - `check:prompt-payload`: what a prompt offers, beyond its candidates
-- `board:entered-with`: linked "entered with" records
-- `board:outside-the-game`: cards outside the game
 - `check:intermediate-state`: an assertion on a state before the end of the run; split the scenario or check at that moment
-- `check:designations`: an object's designations and recorded values (monstrous X)
-- `board:exile-linked`: an exiled card linked to what exiled it (CR 607.2a, hideaway, "until it leaves")
-- `check:delayed-triggers`: the delayed triggers armed
+- `move:expect-rejected`: a move the engine is expected to refuse, such as an illegal block or an untargetable cast
 - `board:player-startingdeck`
-- `check:mana-pool`: the mana a cost spent, or what floats after it
+- `board:outside-the-game`: cards outside the game
+- `board:face-down`: a face-down object
+- `check:delayed-triggers`: the delayed triggers armed
+- `board:exile-linked`: an exiled card linked to what exiled it (CR 607.2a, hideaway, "until it leaves")
+- `board:combat`: combat already under way
+- `board:entered-with`: linked "entered with" records
 - `board:source-ofmerge`
-- `board:object-bindings`
+- `check:legal-targets`: the legal targets for a slot
 - `board:dungeons`: dungeons
 - `board:daytime`
 - `board:source-ofmeld`
+- `move:cast-face`: casting a named face
+- `board:objects-ids`
 - `board:object-designations`
-- `check:abilities`: an object's abilities
-- `board:stack`: something on the stack
+- `board:continuous-effect`: a continuous effect already in force
+- `board:replacement`: a replacement effect already in force
+- `board:delayed-trigger`: a delayed trigger already armed
 - `check:tapped-count`: how many permanents a player has tapped
 - `board:object-attachedto`
 - `board:player-effect`: a player effect already in force
 - `check:face-down`: whether an exiled card is face down
-- `check:castable`: whether a card in hand can be cast at all
-- `board:graveyard`
-- `board:object-chosencolor`
 - `move:nested`: the `nested` prompt
+- `board:object-bindings`
+- `check:abilities`: an object's abilities
+- `board:stack`: something on the stack
+- `board:object-chosencolor`
 - `board:player-speed`
-- `board:second-board`: an assertion made on a second, differently built board
-- `board:hypothetical`: a state no sequence of moves reaches
+- `board:player-commandercasts`
+- `board:graveyard`
 - `check:creature-count`: how many creatures a player controls
 - `check:combat`: combat state beyond attackers and blockers
 - `move:ChooseCost:unmatchable`: the `ChooseCost:unmatchable` prompt
-- `board:player-commandercasts`
+- `check:mana-value`: an object's mana value
+- `check:prompt-order`: the order prompts were asked in
+- `board:face`: a face other than the front
 - `board:object-classlevel`
 - `board:control`
 - `move:OrderTriggers-departed-source`: a trigger whose source has left the game, which no reference names
 - `board:foretold`: a foretold card
-- `check:mana-value`: an object's mana value
 - `board:battlefield`
-- `move:cast-face`: casting a named face
+- `check:prompt-count`: how many times a prompt is asked
+- `board:objectprohibitions`
+- `check:prompt-offers`: the options a prompt offers
+- `board:hypothetical`: a state no sequence of moves reaches
 - `board:player-status`: a player who has left the game
 - `check:player-effects`: a player effect in force
-- `check:supertypes`: an object's supertypes
+- `check:continuous-effects`: the continuous effects stored
+- `board:schemedecks`
+- `board:protector`: a battle's protector
 - `check:prompt-candidates`: which objects or players a prompt offered
 - `move:out-of-range-answer`: an answer outside what the prompt offers, which the engine clamps or ignores and the runner refuses up front
-- `ready`: nothing is missing: convert by hand
-- `board:player-designations`
 - `board:object-chosenplayer`
 - `board:attackprohibitions`
 - `board:object-turnedoverat`
 - `board:object-doesnotuntapfor`
 - `board:object-chosennames`
 - `move:pile-target`: a target naming a face-down pile
-- `check:prompt-count`: how many times a prompt is asked
-- `check:continuous-effects`: the continuous effects stored
-- `board:objectprohibitions`
+- `check:supertypes`: an object's supertypes
 - `board:object-goadedby`
 - `board:zone-phasedout`
 - `board:object-unlockedhalves`
-- `board:schemedecks`
 - `check:mana-types`: the mana types a permanent can produce
 - `check:subtype-member`: whether an object has one subtype, among many
-- `check:prompt-order`: the order prompts were asked in
 - `check:bindings`: an object's linked bindings
+- `check:designations`: an object's designations and recorded values (monstrous X)
+- `check:mana-pool`: the mana a cost spent, or what floats after it
 - `check:exile-linked`: which object an exiled card is linked to
 - `check:phasing`: whether a permanent is phased out, and how
-- `board:plotted`: a plotted card
 - `board:haunting`: a card haunting a creature
 - `board:exiled-until-monarch`: a card exiled until an opponent becomes the monarch
+- `check:power-toughness-absent`: that an object has no power and toughness
+- `check:face`: which face an object shows
+- `check:castable`: whether a card in hand can be cast at all
+- `board:second-board`: an assertion made on a second, differently built board
+- `board:plotted`: a plotted card
 - `check:plotted`: whether a card is plotted
 - `check:lands-played`: how many lands a player has played this turn
-- `check:power-toughness-absent`: that an object has no power and toughness
 - `check:card-types`: an object's card types
 - `move:ChooseManaYield`: the `ChooseManaYield` prompt
 - `board:last-known`: last-known information edited by hand
 - `board:attraction-deck`: an Attraction deck
-- `board:lands-played`: lands already played this turn
 - `board:events`: this turn's event history
 - `check:playable-from-exile`: an exiled card someone may play
 - `check:block-requirements`: the block requirements in force
 - `check:sickness`: whether a creature is summoning sick
 - `board:exile-cast-permission`: an exiled card someone may cast
-- `check:face`: which face an object shows
 - `check:tokens`: whether an object is a token
 - `check:named-copy-choices`: the cards a copy effect has already named
 - `check:player-control`: which player controls another player's decisions
-- `check:commander-damage`: the combat damage a commander has dealt each player
 - `check:text-changes`: the text changes affecting an object
 
 ## Tests
-
-### `ActivateSpec`
-
-- CR 101.1 the ChooseX bound is the greatest toughness among creatures you control | `check:prompt-payload`
-- CR 113.7 the Aura itself does not have the ability it grants | `check:abilities` `check:helper-activationsOf`
-- CR 113.8 an activated ability resolves under whoever activated it, not a later controller | `check:continuous-effects`
-- CR 118.9 a declined first equip still spends the turn's first | `board:player-designations`
-- CR 118.9 the next turn has a first equip again | `board:player-designations`
-- CR 118.9 whole card: the first equip may be paid with {0}, and the second may not | `board:player-designations`
-- CR 118.9b the player may decline the alternative and pay the printed cost | `board:player-designations`
-- CR 302.6 a stolen creature's {T} ability is not offered to the thief | `check:helper-isActivate`
-- CR 307.5 the Desert's ping is NOT offered in the postcombat main phase | `check:other-Combat.Type.attacked`
-- CR 400.7 / 602.5b the permanent that returns may activate it again | `check:helper-activationsOf` `check:helper-isOnlyOnce`
-- CR 506.7b/g the rider opens at the declaration and runs to the end of the combat phase | `board:hypothetical` `check:other-Turn.afterBlockersDeclared`
-- CR 513.2 the encore tokens are sacrificed at the beginning of the next end step | `check:delayed-triggers`
-- CR 601.2b the ChooseX bound is the energy the player can spend | `check:prompt-payload`
-- CR 602.2 an X past the energy on hand is a no-op | `move:out-of-range-answer`
-- CR 602.2 an ability with no timing rider is still offered during combat | `check:helper-isActivate`
-- CR 602.2a cycling from hand reveals the Mauler as the ability is announced | `check:helper-revealed` `check:events`
-- CR 602.5b the permanent's other ability is untouched | `check:helper-activationsOf` `check:helper-isOnlyOnce`
-- CR 611.2 without the spell the creature has its printed ability alone | `check:abilities` `check:helper-helixSorcerer` `check:helper-helixState`
-- CR 613.1f the enchanted creature has the granted ability ALONGSIDE its printed one | `check:abilities` `check:helper-grantedAbility` `check:helper-theAbility`
-- CR 613.7 Humility AFTER the Aura takes the granted ability with the rest | `check:abilities`
-- CR 613.7 Humility BEFORE the Aura leaves the granted ability standing | `check:abilities` `check:helper-theAbility`
-- CR 701.20a a search that finds nothing reveals nothing | `check:helper-revealsOf` `check:events`
-- CR 701.20a basic landcycling reveals the Forest it fetches | `check:helper-revealsOf` `check:events`
-- CR 701.20a whole card: Braidwood Sextant fetches a Forest and reveals it | `check:events`
-- CR 702.142a the boast ability is offered only once this creature has attacked | `check:other-ActivatedAbility.keyword`
-- CR 702.49a the minted cost is the printed one plus the return | `check:other-ActivatedAbility.cost` `check:other-Face.activatedAbilities`
-- CR 702.57b whole card: Steeling Stance's forecast pumps once and is refused for the rest of the turn | `check:helper-revealsOf` `check:events`
-- CR 702.84a the unearthed permanent that dies is exiled instead | `board:continuous-effect` `board:delayed-trigger` `board:entered-with` `board:graveyard` `board:replacement`
 
 ### `ActivationProhibitionSpec`
 

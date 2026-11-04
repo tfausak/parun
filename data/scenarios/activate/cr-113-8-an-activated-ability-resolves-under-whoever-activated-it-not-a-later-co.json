@@ -1,0 +1,164 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Darksteel Myr",
+            "label": "myr",
+            "ready": true
+          },
+          {
+            "card": "Aladdin",
+            "label": "aladdin",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "island",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "m1",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "m2",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "m3",
+            "ready": true
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Seasinger",
+            "label": "seasinger",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "bob-island",
+            "ready": true
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 113.8 an activated ability resolves under whoever activated it, not a later controller",
+  "final": [
+    {
+      "View": {
+        "is": [],
+        "of": "Stack"
+      }
+    },
+    {
+      "View": {
+        "is": "alice",
+        "object": "$myr",
+        "of": "Controller"
+      }
+    },
+    {
+      "View": {
+        "is": "bob",
+        "object": "$aladdin",
+        "of": "Controller"
+      }
+    }
+  ],
+  "note": "The controller of an activated ability on the stack is the player who activated it, fixed at activation, so Seasinger taking Aladdin while its ability waits does not move the ability to bob. The Myr is alice's own artifact: had the ability resolved under bob it would have changed control, and under alice its \"for as long as you control this creature\" never starts (CR 611.2b), so nothing changes.",
+  "timeline": [
+    {
+      "do": {
+        "Activate": {
+          "ability": 0,
+          "mana": [
+            "$m1",
+            "$m2",
+            "$m3",
+            null
+          ],
+          "object": "$aladdin",
+          "targets": [
+            "$myr"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Activate": {
+          "ability": 0,
+          "mana": [
+            null
+          ],
+          "object": "$seasinger",
+          "targets": [
+            "$aladdin"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "ability of $aladdin"
+          ],
+          "of": "Stack"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "bob",
+          "object": "$aladdin",
+          "of": "Controller"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}
