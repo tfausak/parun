@@ -2763,6 +2763,7 @@ territorial-kavu
 territorial-maro
 terror-of-the-peaks
 test-of-faith
+tetravus
 tezzeret-artifice-master
 tezzeret-cruel-machinist
 tezzerets-gatebreaker
