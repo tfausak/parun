@@ -427,7 +427,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- PlayerRef.Candidate does there: Jace's Archivist's "the greatest number
         -- of cards a player discarded this way" (data/scenarios'
         -- jaces-archivist-draws-the-most-any-player-discarded-this-way).
-        Quantity.Count c -> Count.evaluate viewOf (\mOid2 view -> evaluateAgainst viewOf context gs announcedOn mOid2 (Just view)) context {Filter.evaluated = mOid, Filter.evaluatedCreatureTypes = fmap (Set.filter Subtype.Engine.isCreatureType . Filter.subtypes) mView, Filter.recipient = (mView >>= Filter.playerIdentity) <|> Filter.recipient context} gs c
+        Quantity.Count c -> Count.evaluate viewOf (\mOid2 view -> evaluateAgainst viewOf context gs announcedOn mOid2 (Just view)) talliesWhatHappened context {Filter.evaluated = mOid, Filter.evaluatedCreatureTypes = fmap (Set.filter Subtype.Engine.isCreatureType . Filter.subtypes) mView, Filter.recipient = (mView >>= Filter.playerIdentity) <|> Filter.recipient context} gs c
         -- CR 106.4: the mana-pool fold (Parun.Engine.ManaCount). Takes the ViewOf but
         -- not the second injection the Count arm above does: a mana unit has no
         -- characteristics for a projection to describe, so the view is there only to
@@ -917,10 +917,9 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- empty log does: nobody having cast is an answered question. What is
         -- unanswered is only the reference.
         --
-        -- Not implemented: a player who cast and then left the game is not a
-        -- Scope.OverPlayers candidate, so a fold over players drops their casts
-        -- (#5740).
-        Quantity.SpellsCast tally -> case playersOf (SpellTally.player tally) of
+        -- The history roster, LifeChanged's: a spell cast by a player who has since
+        -- left the game was still cast (CR 800.4i).
+        Quantity.SpellsCast tally -> case historyPlayersOf (SpellTally.player tally) of
           Just [pid] -> Just (toInteger (Map.findWithDefault 0 pid (Game.castsPerPlayer (Game.turnLog (SpellTally.turn tally) gs))))
           _ -> Nothing
         -- CR 608.2n / 608.2i: how many times the ability this evaluation is aimed at
@@ -1746,6 +1745,97 @@ readsX quantity = case quantity of
   -- slot at all, so the target/amount distinction above does not arise.
   Quantity.AgainstExiledPile a -> readsX (AgainstExiledPile.quantity a)
   Quantity.AgainstLastCardExiledWith l -> readsX (AgainstLastCardExiledWith.quantity l)
+
+-- CR 800.4i: does this per-player quantity tally actions players took, so that a
+-- fold over players (Count.evaluate's Scope.OverPlayers arm) still finds a player
+-- who has left the game? True exactly where evaluateAgainst's own arm reads its
+-- reference through historyPlayersOf, so the fold and the arm judge one roster.
+-- The departure/cr-800-4i scenarios prove SpellsCast (Daybreak Ranger) and
+-- LifeChanged (Savage Gorger).
+--
+-- A compound answers False, a REGRESSION FENCE: no card folds one over players'
+-- history, and whether a departed player answers its other parts is per part.
+-- Written out arm by arm, readsX's posture.
+talliesWhatHappened :: Quantity -> Bool
+talliesWhatHappened quantity = case quantity of
+  Quantity.InSlot _ -> False
+  Quantity.Share _ -> False
+  Quantity.WasBound _ -> False
+  Quantity.BoundCount _ -> False
+  Quantity.UniqueVowelsOnSticker _ -> False
+  Quantity.VotesReceived _ -> False
+  Quantity.Arithmetic _ -> False
+  Quantity.AtMost _ -> False
+  Quantity.Count _ -> False
+  Quantity.Literal _ -> False
+  Quantity.Measure _ -> False
+  Quantity.Intensity -> False
+  Quantity.Star -> False
+  Quantity.ManaCount _ -> False
+  Quantity.LifeTotal _ -> False
+  Quantity.StartingLifeTotal _ -> False
+  Quantity.Speed _ -> False
+  Quantity.IsMonarch _ -> False
+  Quantity.HasPlayerDesignation {} -> False
+  Quantity.IsStartingPlayer _ -> False
+  Quantity.IsActivePlayer _ -> False
+  Quantity.PlayerCounters {} -> False
+  Quantity.Devotion {} -> False
+  Quantity.PartySize _ -> False
+  Quantity.ObjectCounters _ -> False
+  Quantity.ObjectCountersOfAnyKind -> False
+  Quantity.LettersOnNameStickers _ -> False
+  Quantity.NameStickers -> False
+  Quantity.PowerOfStickers -> False
+  Quantity.ToughnessOfStickers -> False
+  Quantity.HasDesignation _ -> False
+  Quantity.DesignationValue _ -> False
+  Quantity.StoredResultsOfSameValue -> False
+  Quantity.ClassLevel -> False
+  Quantity.WasForetold -> False
+  Quantity.TributeWasPaid -> False
+  Quantity.TimesPaid _ -> False
+  Quantity.CastUsing _ -> False
+  Quantity.TagWasSpent {} -> False
+  Quantity.TagWasSpentOfOwnColor {} -> False
+  Quantity.ChosenColorsItIs -> False
+  Quantity.ChosenNumber -> False
+  Quantity.ManaSpent _ -> False
+  Quantity.WasToken -> False
+  Quantity.WasAttacking -> False
+  Quantity.WasBlocking -> False
+  Quantity.WasBlockedThisTurn -> False
+  Quantity.ControlGained _ _ -> False
+  Quantity.PlayedBy _ -> False
+  Quantity.DamageDealtThisTurn _ -> False
+  Quantity.OpponentsAttacked _ -> False
+  Quantity.AttackersDeclaredThisTurn _ -> False
+  Quantity.AttackersDeclaredThisCombat -> False
+  Quantity.AttackedInLastTurnOf _ -> False
+  Quantity.AttackersInTheirLastTurn _ -> False
+  Quantity.CardsDiscardedThisTurn _ -> False
+  Quantity.CardsDrawnThisTurn _ -> False
+  Quantity.BendingsThisTurn _ -> False
+  Quantity.LifeChanged _ -> True
+  Quantity.PlayersDealtDamageThisTurn _ -> True
+  Quantity.DamageDealtToPlayersThisTurn _ -> True
+  Quantity.SpellsCast _ -> True
+  Quantity.TimesThisTurn _ -> False
+  Quantity.ActivationsThisTurn _ -> True
+  Quantity.PermanentsDiedThisTurn -> False
+  Quantity.SpellsCastUsingThisTurn _ -> False
+  Quantity.SubgamesThisMatch -> False
+  Quantity.DungeonsCompleted _ -> False
+  Quantity.CommanderCasts _ -> False
+  Quantity.CompletedDungeon {} -> False
+  Quantity.EnteredThisTurn -> False
+  Quantity.EnteredFrom _ -> False
+  Quantity.WasCastFrom _ -> False
+  Quantity.BlockersBeyond _ -> False
+  Quantity.StationMeasure -> False
+  Quantity.AgainstSlot _ -> False
+  Quantity.AgainstExiledPile _ -> False
+  Quantity.AgainstLastCardExiledWith _ -> False
 
 -- CR 202.3: each generic symbol contributes its number, each colored or
 -- colorless symbol one, and each hybrid symbol its largest half (CR 202.3f). A

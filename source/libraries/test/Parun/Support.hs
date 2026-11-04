@@ -1880,6 +1880,7 @@ countOf viewOf context gs =
     -- Scope.InHistory candidate, whose view is a CR 608.2h snapshot -- gets
     -- noSource, which names nothing and so binds nothing.
     (\mOid view -> Quantity.evaluateAgainst viewOf context gs (Maybe.fromMaybe noSource mOid) mOid (Just view))
+    Quantity.talliesWhatHappened
     context
     gs
 
