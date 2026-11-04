@@ -2235,8 +2235,8 @@ printedTriggeredAbility :: ObjectId -> GameState -> TriggeredAbility Card.Type.C
 printedTriggeredAbility = printedAbility rewriteTriggeredAbility PC.triggeredAbilities
 
 -- printedAbility for CR 602.5b's counted riders (Object.activatedOnce,
--- GameState.activatedThisTurn). data/scenarios'
--- mild-mannered-librarian-stays-spent-through-a-text-change proves it.
+-- GameState.activatedThisTurn). data/scenarios' mild-mannered-librarian-* and
+-- skinshifter-* text-change pairs prove it, spent before the change and after.
 printedActivatedAbility :: ObjectId -> GameState -> ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)
 printedActivatedAbility = printedAbility rewriteActivatedAbility PC.activatedAbilities
 
