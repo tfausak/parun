@@ -31,13 +31,11 @@ data BecameBlocking = MkBecameBlocking
     -- it now" from "was unblocked" either. Parun.Engine.Game.removeFromCombat is
     -- what spells that emptied key.
     --
-    -- Both of rule 509.3e's forms read it
-    -- (TriggerCondition.SelfBecomesBlockedByOneOrMore and
-    -- TriggerCondition.CreatureBecomesBlockedByAtLeast), each firing off an
-    -- arrival only when no GameEvent.AttackerBlocked rode the same arrival --
-    -- CR 509.3c withholds that event exactly when this field is True, so the
-    -- field is how each of them and the arm on that event avoid answering one
-    -- becoming-blocked twice.
+    -- Rule 509.3e's attacker-side form reads it (Parun.Types.BlockCount.AtLeast
+    -- under Parun.Types.BlockRole.Attacker), firing off an arrival only when no
+    -- GameEvent.AttackerBlocked rode the same arrival -- CR 509.3c withholds
+    -- that event exactly when this field is True, so the field is how the form
+    -- avoids answering one becoming-blocked twice.
     attackerWasBlocked :: Bool,
     -- | CR 509.3e's comparand: the creatures blocking the ATTACKER immediately
     -- before this event, read before the write that added this blocker.
@@ -59,11 +57,9 @@ data BecameBlocking = MkBecameBlocking
     -- leaves the others in, which is what made a doubled arrival invisible to
     -- both readers.
     --
-    -- The SET rather than a count, because the two readers want different
-    -- things off it: TriggerCondition.CreatureBecomesBlockedByAtLeast counts,
-    -- and TriggerCondition.SelfBecomesBlockedByOneOrMore asks its Filter about
-    -- each id (through CR 608.2h last known information, a blocker that has
-    -- since left keeping its id here).
+    -- The SET rather than a count, because that form counts only the ids its
+    -- Filter admits (through CR 608.2h last known information, a blocker that
+    -- has since left keeping its id here).
     blockersBefore :: Set.Set ObjectId.ObjectId
   }
   deriving (Eq, Ord, Show)

@@ -35,9 +35,10 @@ import qualified Parun.Types.AttackTargetRef as AttackTargetRef
 import qualified Parun.Types.Backup as Backup
 import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.BeginningStep as BeginningStep
-import qualified Parun.Types.BlockPair as BlockPair
+import qualified Parun.Types.BlockCount as BlockCount
 import qualified Parun.Types.BlockRole as BlockRole
 import qualified Parun.Types.BlockStatus as BlockStatus
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.BoundReading as BoundReading
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import Parun.Types.Card (Card)
@@ -6740,7 +6741,7 @@ rampage n =
               (ObjectRef.EachMatching Filter.IsSource)
               Nothing
           )
-   in Mint.trigger (TriggerCondition.CreatureBecomesBlocked Filter.IsSource) (Seq.singleton effect)
+   in Mint.trigger (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker Filter.IsSource BlockCount.Once)) (Seq.singleton effect)
 
 -- CR 702.25a. CR 509.3d is the event -- "becomes blocked by a creature", once for
 -- each creature that blocks -- and NOT CR 509.3c's "becomes blocked", which fires
@@ -6757,10 +6758,11 @@ rampage n =
 flanking :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 flanking =
   Mint.trigger
-    ( TriggerCondition.CreatureBecomesBlockedBy
-        BlockPair.MkBlockPair
-          { BlockPair.blocker = Filter.And [Filter.HasCardType CardType.Creature, Filter.Not (Filter.HasKeyword Keyword.Flanking)],
-            BlockPair.attacker = Filter.IsSource
+    ( TriggerCondition.Blocks
+        BlockTrigger.MkBlockTrigger
+          { BlockTrigger.role = BlockRole.Attacker,
+            BlockTrigger.creature = Filter.IsSource,
+            BlockTrigger.count = BlockCount.EachCreature (Filter.And [Filter.HasCardType CardType.Creature, Filter.Not (Filter.HasKeyword Keyword.Flanking)])
           }
     )
     (Seq.singleton flankingEffect)
@@ -6820,11 +6822,11 @@ bushido n = [bushidoBlocks n, bushidoBecomesBlocked n]
 
 -- CR 509.3a's half of rule 702.45a.
 bushidoBlocks :: Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
-bushidoBlocks = bushidoHalf TriggerCondition.SelfBlocks
+bushidoBlocks = bushidoHalf (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.IsSource BlockCount.Once))
 
 -- CR 509.3c's half of rule 702.45a.
 bushidoBecomesBlocked :: Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
-bushidoBecomesBlocked = bushidoHalf (TriggerCondition.CreatureBecomesBlocked Filter.IsSource)
+bushidoBecomesBlocked = bushidoHalf (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker Filter.IsSource BlockCount.Once))
 
 -- The +N/+N the two halves share.
 bushidoHalf :: TriggerCondition.TriggerCondition -> Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
@@ -6905,7 +6907,7 @@ afflict n =
               LifeLossCause.ByEffect
               Nothing
           )
-   in Mint.trigger (TriggerCondition.CreatureBecomesBlocked Filter.IsSource) (Seq.singleton effect)
+   in Mint.trigger (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker Filter.IsSource BlockCount.Once)) (Seq.singleton effect)
 
 -- CR 702.134a, the first minted ability that TARGETS. A REAL choice, since with
 -- two smaller attackers the rules leave which one open.

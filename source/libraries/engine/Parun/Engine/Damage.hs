@@ -1340,9 +1340,12 @@ processDamage events = do
   --
   -- Through Event.resolveLifeGain, CR 614.1's funnel for the class, and the
   -- SETTLED amount is what moves the total and what the record names.
+  --
+  -- Not implemented: Lich's draws in a lifelink gain's place land nothing
+  -- they queued before the next draw (#6105).
   gains <-
     Monad.forM (lifelinkGains survivors) $ \(pid, total) -> do
-      settled <- Event.resolveLifeGain pid total
+      settled <- Event.resolveLifeGain (pure ()) pid total
       Monad.when (settled > 0) (State.modify' (Game.adjustLife pid (toInteger settled)))
       pure (pid, settled)
   -- CR 120.4c: "damage that's been dealt is processed into its results, as

@@ -1,6 +1,6 @@
 module Parun.Types.AttackerBlocked where
 
-import qualified Numeric.Natural as Natural
+import qualified Data.Set as Set
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.PlayerId as PlayerId
 
@@ -10,17 +10,18 @@ import qualified Parun.Types.PlayerId as PlayerId
 data AttackerBlocked = MkAttackerBlocked
   { attacker :: ObjectId.ObjectId,
     defender :: PlayerId.PlayerId,
-    -- | CR 509.3e's comparand at the moment of THIS becoming: how many creatures
-    -- were blocking the attacker as it became a blocked creature. However many
-    -- the declaration gave it (CR 509.1h) on that road; exactly one on CR
+    -- | CR 509.3e's comparand at the moment of THIS becoming: the creatures
+    -- blocking the attacker as it became a blocked creature. However many the
+    -- declaration gave it (CR 509.1h) on that road; exactly the arrival on CR
     -- 509.3c's arrival road, that rule recording this event only for an
-    -- attacker no creature was blocking yet; and zero for CR 509.1h's escape
+    -- attacker no creature was blocking yet; and none for CR 509.1h's escape
     -- clause, where an effect makes a creature blocked by nothing at all.
     --
-    -- Carried rather than counted off Combat.blockers when the condition is
+    -- Carried rather than read off Combat.blockers when the condition is
     -- scanned, which is a STALE read on the arrival road: arrivals that came
     -- after this one are already in the entry by then (CR 509.2a), so the
-    -- becoming would be measured against a later board.
-    blockers :: Natural.Natural
+    -- becoming would be measured against a later board. The set rather than a
+    -- count because a filtered CR 509.3e trigger asks about each blocker.
+    blockers :: Set.Set ObjectId.ObjectId
   }
   deriving (Eq, Ord, Show)

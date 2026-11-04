@@ -576,7 +576,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.Reveal payload -> Zones.reveal resolving source controller legal chosen payload
   Effect.LookAt payload -> Zones.lookAt resolving source controller legal chosen payload
   Effect.ArrangeInLibrary payload -> Zones.arrangeInLibrary resolving source controller legal payload
-  Effect.Scry payload -> Zones.scry resolving source controller legal payload
+  Effect.Scry payload -> Zones.scry (runReplacementEffects runSubgame) resolving source controller legal payload
   Effect.Surveil payload -> Zones.surveil resolving source controller legal payload
   Effect.Fateseal payload -> Zones.fateseal resolving source controller legal payload
   Effect.Clash payload -> Zones.clash resolving source controller payload
@@ -585,7 +585,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.Connive payload -> Zones.connive (runReplacementEffects runSubgame) resolving source controller legal payload
   Effect.Discard payload -> Zones.discard resolving source controller legal chosen payload
   Effect.LoseLife payload -> Zones.loseLife resolving source controller legal payload
-  Effect.GainLife payload -> Zones.gainLife resolving source controller legal payload
+  Effect.GainLife payload -> Zones.gainLife (runReplacementEffects runSubgame) resolving source controller legal payload
   Effect.ExchangeLifeTotals payload -> Zones.exchangeLifeTotals controller legal payload
   Effect.ExchangeValues payload -> Zones.exchangeValues resolving source controller legal payload
   Effect.SetLifeTotal payload -> Zones.setLifeTotal resolving source controller legal payload
@@ -803,8 +803,9 @@ runEntryEffect runSubgame pending = do
 -- next state-based action check: the replaced event and the rest of its batch
 -- were simultaneous (CR 616.1), so what happens instead of it lands before CR
 -- 704.5g reads the board. For a loss of the game or a draw, it runs after each
--- draw of an instruction's sequence (Event.drawSeries, CR 614.11a), after each
--- resolved instruction and in every settle before priority; a loss a
+-- draw of a sequence, an instruction's or a replacement's (Event.drawSeries, CR
+-- 614.11a), after each resolved instruction and in every settle before
+-- priority; a loss a
 -- state-based action check meets runs inside that check instead (Sba.performStateBasedActions' `instead`, runDamageRewriteEffect).
 -- The callers GameState.pendingReplacementEffects lists keep it empty at every
 -- priority window.

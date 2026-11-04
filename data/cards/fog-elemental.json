@@ -82,7 +82,12 @@
                 }
               },
               {
-                "type": "SelfBlocks"
+                "type": "Blocks",
+                "value": {
+                  "role": {
+                    "type": "Blocker"
+                  }
+                }
               }
             ]
           },

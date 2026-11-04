@@ -1,0 +1,75 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Carrion Grub",
+            "label": "grub"
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Char-Rumbler"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 107.1b plus X where X is the greatest power in a graveyard below zero adds zero",
+  "note": "Carrion Grub over a graveyard holding only Char-Rumbler (-1/3): X is -1, so the Grub stays 0/5 rather than -1/5.",
+  "timeline": [
+    {
+      "check": {
+        "PowerToughness": {
+          "object": "$grub",
+          "power": 0,
+          "toughness": 5
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

@@ -52,7 +52,9 @@ import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.Action as Action.Type
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.Affected as Affected
-import qualified Parun.Types.BlockPair as BlockPair
+import qualified Parun.Types.BlockCount as BlockCount
+import qualified Parun.Types.BlockRole as BlockRole
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
@@ -1531,23 +1533,23 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
   -- Inquisitors' "black"), so no board can make the swap visible and an arm that
   -- returned the condition unchanged would pass every gameplay case in
   -- Parun.TriggerSpec.
-  Spec.it s "CR 612.1 a rule 509.3 condition's Filter is rewritten, and its nullary sibling is not" $ do
+  Spec.it s "CR 612.1 a rule 509.3 condition's Filter is rewritten, and the source's own is not" $ do
     let rewrite = Projection.rewriteTriggerCondition [(TextWord.SubtypeWord Subtype.Type.Wraith, TextWord.SubtypeWord Subtype.Type.Elf)]
     Spec.assertEqWith
       s
       "CR 509.3b's Filter over the attacker blocked takes the swap"
-      (rewrite (TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair Filter.Type.IsSource (Filter.Type.HasSubtype Subtype.Type.Wraith))))
-      (TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair Filter.Type.IsSource (Filter.Type.HasSubtype Subtype.Type.Elf)))
+      (rewrite (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.Type.IsSource (BlockCount.EachCreature (Filter.Type.HasSubtype Subtype.Type.Wraith)))))
+      (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.Type.IsSource (BlockCount.EachCreature (Filter.Type.HasSubtype Subtype.Type.Elf))))
     Spec.assertEqWith
       s
       "CR 509.3d's, read from the other side, takes it too"
-      (rewrite (TriggerCondition.CreatureBecomesBlockedBy (BlockPair.MkBlockPair (Filter.Type.HasSubtype Subtype.Type.Wraith) Filter.Type.IsSource)))
-      (TriggerCondition.CreatureBecomesBlockedBy (BlockPair.MkBlockPair (Filter.Type.HasSubtype Subtype.Type.Elf) Filter.Type.IsSource))
+      (rewrite (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker Filter.Type.IsSource (BlockCount.EachCreature (Filter.Type.HasSubtype Subtype.Type.Wraith)))))
+      (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker Filter.Type.IsSource (BlockCount.EachCreature (Filter.Type.HasSubtype Subtype.Type.Elf))))
     Spec.assertEqWith
       s
-      "and CR 509.3a's nullary form holds no word to swap"
-      (rewrite TriggerCondition.SelfBlocks)
-      TriggerCondition.SelfBlocks
+      "and CR 509.3a's source-only form holds no word to swap"
+      (rewrite (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.Type.IsSource BlockCount.Once)))
+      (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.Type.IsSource BlockCount.Once))
 
   -- A CREATURE type word in a type line, swapped -- the half CR 612.2 names
   -- second, and the half no pair could reach before Artificial Evolution. Bog

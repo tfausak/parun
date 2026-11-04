@@ -3997,6 +3997,9 @@ bindAmountSlot resolving source slot n gs =
 -- The one road for every arm that arrives at a TOTAL rather than at an amount:
 -- Effect.SetLifeTotal, Effect.ExchangeLifeTotals and
 -- Effect.RedistributeLifeTotals.
+--
+-- Not implemented: Lich's draws in an upward delta's place land nothing they
+-- queued before the next draw (#6105).
 changeLifeByDelta :: PlayerId -> Integer -> Game ()
 changeLifeByDelta pid delta =
   if delta < 0
@@ -4004,7 +4007,7 @@ changeLifeByDelta pid delta =
       settled <- Event.resolveLifeLoss LifeLossCause.ByEffect pid (Integer.toNaturalSaturating (negate delta))
       Event.changeLife pid (negate (toInteger settled))
     else do
-      settled <- Event.resolveLifeGain pid (Integer.toNaturalSaturating delta)
+      settled <- Event.resolveLifeGain (pure ()) pid (Integer.toNaturalSaturating delta)
       Event.changeLife pid (toInteger settled)
 
 -- CR 701.23: do to a found card what the search said -- a move, a CR 701.20a
@@ -4583,7 +4586,7 @@ conniveOne settle n oid = Monad.when (n > 0) $ do
     -- any of CR 121.2's individual draws -- Effect.Draw's arm, line for line,
     -- `settle` included (CR 614.11a).
     outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.DrawCards Nothing pid n)
-    Monad.forM_ (outcome >>= Replacement.asPerformed PlayerInstruction.DrawCards) (uncurry (Event.drawSeries settle))
+    Monad.forM_ (outcome >>= Replacement.asPerformed PlayerInstruction.DrawCards) (uncurry (Event.drawSeries settle Set.empty))
     drawn <- State.get
     let held = Game.cardsIn Zone.Hand pid drawn
     -- The discard is N however many cards the draw actually delivered (CR

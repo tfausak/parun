@@ -94,12 +94,23 @@
         },
         {
           "condition": {
-            "type": "CreatureBecomesBlockedByAtLeast",
+            "type": "Blocks",
             "value": {
-              "attacked": {
-                "type": "Opponent"
+              "count": {
+                "type": "AtLeast",
+                "value": {
+                  "floor": 2
+                }
               },
-              "blockers": 2
+              "creature": {
+                "type": "IsAttackingPlayer",
+                "value": {
+                  "type": "Opponent"
+                }
+              },
+              "role": {
+                "type": "Attacker"
+              }
             }
           },
           "modal": {

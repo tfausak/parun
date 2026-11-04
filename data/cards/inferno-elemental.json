@@ -41,30 +41,36 @@
             "type": "AnyOf",
             "value": [
               {
-                "type": "CreatureBlocksCreature",
+                "type": "Blocks",
                 "value": {
-                  "attacker": {
-                    "type": "HasCardType",
+                  "count": {
+                    "type": "EachCreature",
                     "value": {
-                      "type": "Creature"
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
                     }
                   },
-                  "blocker": {
-                    "type": "IsSource"
+                  "role": {
+                    "type": "Blocker"
                   }
                 }
               },
               {
-                "type": "CreatureBecomesBlockedBy",
+                "type": "Blocks",
                 "value": {
-                  "attacker": {
-                    "type": "IsSource"
-                  },
-                  "blocker": {
-                    "type": "HasCardType",
+                  "count": {
+                    "type": "EachCreature",
                     "value": {
-                      "type": "Creature"
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
                     }
+                  },
+                  "role": {
+                    "type": "Attacker"
                   }
                 }
               }

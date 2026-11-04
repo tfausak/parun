@@ -753,6 +753,7 @@ ruleSpec s registry = Spec.describe s "Rules" $ do
     -- The new game really is a new game, not the old one with a board wiped.
     Spec.assertEqWith s "CR 727.1a: bob is the starting player" (GameState.activePlayer after) S.bob
     Spec.assertEqWith s "CR 727.1: the rebuilt game is on turn 1" (GameState.turnNumber after) 1
+    Spec.assertEqWith s "CR 727.1: the match's second game" (GameState.gameNumber after, GameState.gamesThisMatch after) (2, 2)
     Spec.assertEqWith s "CR 727.4: settled at the first untap step" (GameState.phase after) Turn.firstPhase
     Spec.assertEqWith s "CR 103.5: carol drew a fresh opening hand" (S.handSize S.carol after) 7
     Spec.assertEqWith s "the game did not end -- the new game is live" (GameState.result after) Nothing
@@ -1082,6 +1083,7 @@ ruleSpec s registry = Spec.describe s "Rules" $ do
     Spec.assertEqWith s "the trigger resolved and left the stack" (GameState.stack after) []
     Spec.assertEqWith s "CR 729.1a: the subgame did not decide the main game" (GameState.result after) Nothing
     Spec.assertEqWith s "CR 100.6a: the subgame it played is on the match's books, in the resumed main game" (GameState.subgamesThisMatch after) 1
+    Spec.assertEqWith s "CR 729.1a: the main game resumes as the match's first game of two" (GameState.gameNumber after, GameState.gamesThisMatch after) (1, 2)
 
   -- CR 603.4 over CR 100.6a: the SAME board as the case above with exactly one
   -- thing different -- the match has already had a subgame -- so Shahrazad and
@@ -1230,6 +1232,7 @@ ruleSpec s registry = Spec.describe s "Rules" $ do
     -- CR 100.6a: a subgame started INSIDE a subgame is still a subgame of this
     -- match, so the resumed top-level game counts both (Setup.funnelBack).
     Spec.assertEqWith s "CR 729.6/100.6a: both levels are on the match's books" (GameState.subgamesThisMatch after) 2
+    Spec.assertEqWith s "CR 729.6: the main game resumes as the match's first game of three" (GameState.gameNumber after, GameState.gamesThisMatch after) (1, 3)
 
   Spec.it s "a subgame replays deterministically (the reason Prompt.PlaySubgame was rejected, CR 729 / M0's determinism criterion)" $ do
     -- A Prompt would run the subgame INSIDE the answer function, below

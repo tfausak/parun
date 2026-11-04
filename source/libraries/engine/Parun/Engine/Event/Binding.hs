@@ -34,7 +34,9 @@ import qualified Parun.Types.BecameUnattached as BecameUnattached
 import qualified Parun.Types.BecomesTapState as BecomesTapState
 import Parun.Types.Binding (Binding)
 import qualified Parun.Types.Binding as Binding.Type
-import qualified Parun.Types.BlockPair as BlockPair
+import qualified Parun.Types.BlockCount as BlockCount
+import qualified Parun.Types.BlockRole as BlockRole
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.BlocksDeclared as BlocksDeclared
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardType as CardType
@@ -562,43 +564,6 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- rejected reaches no binding at all.
   (TriggerCondition.PlayerAttacksPlayer {}, GameEvent.BecameAttacked (BecameAttacked.MkBecameAttacked attacker (AttackTarget.OfPlayer attacked))) ->
     Binding.setAttackingPlayer attacker (Binding.setTriggerPlayer attacked Map.empty)
-  -- CR 509.3e's "that attacking creature", off the grouped blocking event: the
-  -- attacker the event names, and again not the bearer, which is a bystander.
-  -- CR 508.5's defending player rides that event too and goes unbound, the
-  -- CreatureAttacksYou arm above's reasoning -- matchesTrigger has already
-  -- required whom the attacker attacked to be a player the PlayerRelation
-  -- admits.
-  (TriggerCondition.CreatureBecomesBlockedByAtLeast {}, GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked attacker _ _)) ->
-    Binding.setAttackingCreature attacker Map.empty
-  -- The same slot off matchesTrigger's OTHER road into this condition (rule
-  -- 509.3e's "effects that add or remove blockers"): the attacker
-  -- GameEvent.BecameBlocking names, which is the creature that just became
-  -- blocked by one more. Without this arm the trigger fires with an empty
-  -- binding map and Seifer's "that attacking creature" resolves to nothing --
-  -- a board indistinguishable from one where it never fired, which is why
-  -- Parun.ZoneTriggerSpec's representativeEvents lists BOTH events for this
-  -- condition and intersects what they stamp.
-  --
-  -- The BLOCKER the event also names goes unbound: this form names a number
-  -- rather than an object, and eventBindingSlots promises
-  -- Binding.attackingCreature alone.
-  --
-  -- Unguarded on the producer where matchesTrigger is not, for the
-  -- PlayerAttacksPlayer arm's converse reason: an event this condition
-  -- rejected reaches no binding at all, so a declaration's producer has
-  -- already been answered by the time anything asks here.
-  (TriggerCondition.CreatureBecomesBlockedByAtLeast {}, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker})) ->
-    Binding.setAttackingCreature attacker Map.empty
-  -- CR 702.130a's "defending player", the same phrase and the same reserved slot
-  -- as the arm above -- CR 508.5 resolves it for an ability naming an ATTACKING
-  -- creature, which is what the event's attacker is. Read off the event for
-  -- that arm's reason: every writer of it stamps CR 508.5's answer there --
-  -- Combat.declareBlockers, Combat.becomeBlocked (CR 509.1h's effect) and
-  -- Combat.putOntoBattlefieldBlocking (CR 509.4). The attacker itself is
-  -- Somberwald Alpha's "it", a bystander's, so it is bound too, under the slot
-  -- CreatureAttacks' arm fills.
-  (TriggerCondition.CreatureBecomesBlocked _, GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked attacker defending _)) ->
-    Binding.setTriggerPlayer defending (Binding.setAttackingCreature attacker Map.empty)
   -- The same slot off CR 509.1h's other branch, stamped there by its one writer,
   -- Combat.declareBlockers: Abyssal Nightstalker's "defending player".
   (TriggerCondition.CreatureAttacksUnblocked _, GameEvent.AttackerUnblocked u) ->
@@ -748,31 +713,50 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- pays {2}".
   (TriggerCondition.PermanentBecomesTargeted _, GameEvent.BecameTarget t) ->
     Binding.setTargetingObject (BecameTarget.source t) (maybe Map.empty (`Binding.setBecame` Map.empty) (Recipient.objectOf (BecameTarget.targeted t)))
-  -- CR 509.3d's "that creature": the blocker whose declaration fired this, which
-  -- rule 702.25a's payload gives -1/-1 and CR 701.54c's sacrifices. The attacker
-  -- gets no slot: the bearer is CR 113.7a's source, and a bystander's rule names
-  -- it only in the condition.
+  -- CR 509.3a / 509.3e on the blocking side: Super-Soldier Serum's "it" is the
+  -- blocker. The attackers ride the event but go unbound: no printing names them.
   --
-  -- Guarded on the watched end, so where the creature it admits is the BLOCKER
-  -- this stamps nothing: under CR 603.1b's AnyOf this branch is unioned with
-  -- CreatureBlocksCreature's off one event, and Thicket Basilisk's "that creature"
-  -- would otherwise name the Basilisk itself
+  -- The pairwise count reads the other event, so it stamps nothing here, which
+  -- keeps a pairwise branch of CR 603.1b's AnyOf from naming its own blocker.
+  (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker _ count), GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared blocker _)) -> case count of
+    BlockCount.Once -> Binding.setBlockingCreature blocker Map.empty
+    BlockCount.AtLeast {} -> Binding.setBlockingCreature blocker Map.empty
+    BlockCount.EachCreature _ -> Map.empty
+  -- CR 509.3b's "that creature": the ATTACKER on the very same declaration, which
+  -- Loyal Sentry's payload destroys. CR 509.3d's "that creature": the blocker,
+  -- which rule 702.25a's payload gives -1/-1 and CR 701.54c's sacrifices. The
+  -- named creature gets no slot of its own: the bearer is CR 113.7a's source,
+  -- and a bystander's rule names it only in the condition.
+  --
+  -- Guarded on the named end, so where the Filter admits the OTHER end this
+  -- stamps nothing: under CR 603.1b's AnyOf the two roles are unioned off one
+  -- event, and Thicket Basilisk's "that creature" would otherwise name the
+  -- Basilisk itself
   -- (data/scenarios/thicket-basilisk-destroys-a-non-wall-at-end-of-combat.json),
   -- Venom's "the other creature" its host. Read outside CR 603.7c's frame, so a
-  -- delayed trigger's slot atom in a pair would stamp nothing; none in data/cards, 2026-11-03.
-  (TriggerCondition.CreatureBecomesBlockedBy pair, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker, BecameBlocking.blocker = blocker}))
-    | admittedAt (Projection.sourceContext gs (Just you) bearer) board gs attacker (BlockPair.attacker pair) ->
-        Binding.setBlockingCreature blocker Map.empty
-  -- CR 509.3a read by a bystander: Super-Soldier Serum's "it" is the blocker,
-  -- never the bearer, under the name the two arms above give it.
-  (TriggerCondition.CreatureBlocks _, GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared blocker _)) ->
-    Binding.setBlockingCreature blocker Map.empty
-  -- CR 509.3b's "that creature": the ATTACKER on the very same declaration, which
-  -- Loyal Sentry's payload destroys. The mirror of the arm above, guarded on the
-  -- blocker's end for that arm's reason.
-  (TriggerCondition.CreatureBlocksCreature pair, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker, BecameBlocking.blocker = blocker}))
-    | admittedAt (Projection.sourceContext gs (Just you) bearer) board gs blocker (BlockPair.blocker pair) ->
-        Binding.setBlockedCreature attacker Map.empty
+  -- delayed trigger's slot atom in the Filter would stamp nothing; none in
+  -- data/cards, 2026-11-03.
+  (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger role creature (BlockCount.EachCreature _)), GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker, BecameBlocking.blocker = blocker})) -> case role of
+    BlockRole.Blocker
+      | admittedAt (Projection.sourceContext gs (Just you) bearer) board gs blocker creature -> Binding.setBlockedCreature attacker Map.empty
+    BlockRole.Attacker
+      | admittedAt (Projection.sourceContext gs (Just you) bearer) board gs attacker creature -> Binding.setBlockingCreature blocker Map.empty
+    _ -> Map.empty
+  -- CR 509.3c: the blocked attacker is Somberwald Alpha's "it", and CR 702.130a's
+  -- "defending player" (afflict) is CR 508.5's, which every writer of the event
+  -- stamps -- Combat.declareBlockers, Combat.becomeBlocked (CR 509.1h's effect)
+  -- and Combat.putOntoBattlefieldBlocking (CR 509.4).
+  (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker _ BlockCount.Once), GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked attacker defending _)) ->
+    Binding.setTriggerPlayer defending (Binding.setAttackingCreature attacker Map.empty)
+  -- CR 509.3e's "that attacking creature" (Seifer, Balamb Rival), off both of
+  -- that form's events: the becoming and an arrival at an attacker blocked
+  -- already. Without the second the trigger fires with an empty binding map,
+  -- which is why Parun.ZoneTriggerSpec's representativeEvents lists BOTH. The
+  -- defending player goes unbound, since the arrival does not carry one.
+  (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker _ (BlockCount.AtLeast _ _)), GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked attacker _ _)) ->
+    Binding.setAttackingCreature attacker Map.empty
+  (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker _ (BlockCount.AtLeast _ _)), GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker})) ->
+    Binding.setAttackingCreature attacker Map.empty
   -- CR 603.6a's "enters attached to a creature": that host, bound as the
   -- trigger is placed, so Infinite Reflection copies it even once the Aura has
   -- moved on (its ruling, 2012-05-01). Through CR 608.2h's record where CR
@@ -1204,6 +1188,21 @@ batchBindings (first NonEmpty.:| rest) = List.foldl' (Map.unionWith join) first 
 admittedAt :: Filter.Context -> Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> GameState -> ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> Bool
 admittedAt context board gs oid f = maybe False (\view -> Filter.matches context view f) (postEventView board gs oid)
 
+-- CR 509.3: the slots eventBindings stamps for a block trigger. The blocker for
+-- CR 509.3a / 509.3e's blocking side (Super-Soldier Serum's "it"), the other
+-- creature for CR 509.3b / 509.3d (Loyal Sentry's attacker, flanking's
+-- blocker), the attacker and CR 508.5's defending player for CR 509.3c
+-- (afflict), and the attacker alone for CR 509.3e's attacking side (Seifer,
+-- Balamb Rival), whose arrivals carry no defending player.
+blockSlots :: BlockRole.BlockRole -> BlockCount.BlockCount -> Set.Set SlotName.SlotName
+blockSlots role count = case (role, count) of
+  (BlockRole.Blocker, BlockCount.Once) -> Set.singleton Binding.blockingCreature
+  (BlockRole.Blocker, BlockCount.AtLeast {}) -> Set.singleton Binding.blockingCreature
+  (BlockRole.Blocker, BlockCount.EachCreature _) -> Set.singleton Binding.blockedCreature
+  (BlockRole.Attacker, BlockCount.Once) -> Set.fromList [Binding.attackingCreature, Binding.triggerPlayer]
+  (BlockRole.Attacker, BlockCount.AtLeast {}) -> Set.singleton Binding.attackingCreature
+  (BlockRole.Attacker, BlockCount.EachCreature _) -> Set.singleton Binding.blockingCreature
+
 -- CR 603.10's first sentence: `oid` as the event's own board sample shows it
 -- (Projection.sampledView), and CR 608.2h's last known information for an id
 -- the sample does not hold -- one gone before the sample was taken, or any id
@@ -1562,42 +1561,12 @@ eventBindingSlots cond = case cond of
   TriggerCondition.SelfAttacksPlayerWithMostLife -> Set.empty
   TriggerCondition.SelfAttacksWhileSaddled -> Set.empty
   TriggerCondition.SelfAttacksWhile _ -> Set.empty
-  -- Nothing, unlike SelfAttacks above: the blocker is the bearer, already bound
-  -- as CR 113.7a's source, and the attacker the event also carries is what CR
-  -- 509.3b's condition names rather than this one, below. CR 509.1a makes the
-  -- blocker's controller the defending player, whom CR 109.5's `you` already
-  -- names.
-  TriggerCondition.SelfBlocks -> Set.empty
-  TriggerCondition.CreatureBlocks _ -> Set.singleton Binding.blockingCreature
-  TriggerCondition.SelfBlocksAtLeast _ -> Set.empty
-  TriggerCondition.SelfBlocksOneOrMore _ -> Set.empty
-  -- CR 509.3b's form is the one that DOES name the attacker, off the same event.
-  -- Guaranteed rather than conditional, as CreatureBecomesBlockedBy's is: every
-  -- declaration carries both ids, and matchesTrigger has already read the
-  -- blocker's Filter.
-  TriggerCondition.CreatureBlocksCreature _ -> Set.singleton Binding.blockedCreature
-  -- CR 508.5's defending player, which the becomes-blocked event carries for
-  -- SelfAttacks' reason -- rule 702.130a's afflict is the reader. No BLOCKER: CR
-  -- 509.3c names none, so GameEvent.AttackerBlocked carries none, and CR 509.3d's
-  -- form below is the one that binds one. The blocked attacker is Somberwald
-  -- Alpha's "it".
-  --
-  -- Unconditional, as this classification has to be: every AttackerBlocked event
-  -- carries both.
-  TriggerCondition.CreatureBecomesBlocked _ -> Set.fromList [Binding.attackingCreature, Binding.triggerPlayer]
-  -- CR 509.3d's form is the one that DOES name a blocker, and
-  -- GameEvent.BecameBlocking carries it: rule 702.25a's "the blocking creature".
-  -- Guaranteed rather than conditional -- every such event carries both ids, and
-  -- matchesTrigger has already read the attacker's Filter.
-  TriggerCondition.CreatureBecomesBlockedBy _ -> Set.singleton Binding.blockingCreature
-  -- CR 509.3e names a SET of blockers rather than one, and no reader in the
-  -- pool reaches into it: Serra Inquisitors' payload names only itself.
-  TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> Set.empty
-  -- Seifer, Balamb Rival's "that attacking creature", the same reserved slot
-  -- CreatureAttacksYou fills off its own event.
-  TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> Set.singleton Binding.attackingCreature
+  -- CR 509.3: what eventBindings stamps, as a function of the role and count,
+  -- each guaranteed given a match -- every such event carries both ids, and
+  -- matchesTrigger has already read the named creature's Filter.
+  TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger role _ count) -> blockSlots role count
   -- CR 508.5's defending player, which GameEvent.AttackerUnblocked carries for
-  -- CreatureBecomesBlocked's reason: Abyssal Nightstalker's "defending player
+  -- CR 509.3c's reason (blockSlots): Abyssal Nightstalker's "defending player
   -- discards a card". No blocker -- CR 509.1h's unblocked branch has none.
   TriggerCondition.CreatureAttacksUnblocked _ -> Set.fromList [Binding.attackingCreature, Binding.triggerPlayer]
   -- CR 113.6k: the bearer of a library-to-graveyard trigger IS the arriving

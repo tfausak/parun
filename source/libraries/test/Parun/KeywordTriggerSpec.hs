@@ -39,6 +39,9 @@ import qualified Parun.Types.Action as A
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackerDeclared as AttackerDeclared
 import qualified Parun.Types.BeginningStep as BeginningStep
+import qualified Parun.Types.BlockCount as BlockCount
+import qualified Parun.Types.BlockRole as BlockRole
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CombatDamageAmount as CombatDamageAmount
 import qualified Parun.Types.CombatStep as CombatStep
@@ -398,7 +401,7 @@ prowessSpec s _ =
 
 -- CR 509.3e: "Whenever [a creature] blocks two or more creatures, . . ." -- the
 -- form that reads HOW MANY, matched against the same grouped
--- GameEvent.BlocksDeclared SelfBlocks reads.
+-- GameEvent.BlocksDeclared CR 509.3a reads.
 --
 -- Lairwatch Giant {5}{W} Creature -- Giant Warrior 5/3, "This creature can block
 -- an additional creature each combat / Whenever this creature blocks two or more
@@ -848,7 +851,7 @@ creatureBecomesBlockedByAtLeastSpec s registry =
                   GameEvent.AbilityTriggered record ->
                     AbilityTriggered.source record == TriggerSource.OfObject oid
                       && case TriggeredAbility.condition (AbilityTriggered.ability record) of
-                        TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> True
+                        TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker _ (BlockCount.AtLeast {})) -> True
                         _ -> False
                   _ -> False
               )

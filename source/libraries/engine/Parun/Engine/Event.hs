@@ -1944,7 +1944,7 @@ bringInFrom destination pid outerId gs = case Map.lookup outerId (GameState.outs
 -- convenience rather than a constraint.
 resolveZoneChange :: Maybe GameState -> Maybe DiscardCause.DiscardCause -> LibraryPosition.LibraryPosition -> Bool -> ZoneChange -> Game (Maybe ZoneChange, Maybe ObjectId, Bool, Maybe PrintingId.PrintingId, LibraryPosition.LibraryPosition)
 resolveZoneChange asOf discarded requestedPosition resolving zc = do
-  (outcome, _, _, exiledBy, shuffling, splitEarly) <- applyReplacementsFully asOf Set.empty Map.empty Set.empty (ProposedEvent.WouldChangeZone zc discarded requestedPosition resolving)
+  (outcome, _, _, exiledBy, shuffling, splitEarly) <- applyReplacementsFully (pure ()) asOf Set.empty Map.empty Set.empty (ProposedEvent.WouldChangeZone zc discarded requestedPosition resolving)
   -- CR 401.2's end as the loop left it: a redirect into a library may state one.
   let position = case outcome of
         Just (ProposedEvent.WouldChangeZone _ _ settledPosition _) -> settledPosition
@@ -2081,7 +2081,7 @@ offerCommandZoneFirst gs event bucket split = case (event, split, fmap Replaceme
 -- 701.19a). A rewrite that cancels an event has already performed its own
 -- consequences by the time it returns Nothing.
 applyReplacements :: ProposedEvent -> Game (Maybe ProposedEvent)
-applyReplacements = applyReplacementsIn Nothing Set.empty Set.empty
+applyReplacements = applyReplacementsIn (pure ()) Nothing Set.empty Set.empty
 
 -- CR 608.2f / 704.3: `asOf` is the board a BATCH's candidates are read from --
 -- `Just` the state the batch began in, or `Nothing` for the live board. Only the
@@ -2208,9 +2208,15 @@ applyReplacements = applyReplacementsIn Nothing Set.empty Set.empty
 --
 -- `spent` is for an event made in place of another (CR 614.5): its rows are
 -- never offered it. Empty everywhere else.
-applyReplacementsIn :: Maybe GameState -> Set ObjectId -> Set CandidateId -> ProposedEvent -> Game (Maybe ProposedEvent)
-applyReplacementsIn asOf batch spent event = do
-  (outcome, _, _, _, _, _) <- applyReplacementsFully asOf batch Map.empty spent event
+--
+-- `settle` is drawSeries', run between the draws a row makes in the event's
+-- place (CR 614.11a): Resolve.runReplacementEffects from a proposer that holds
+-- it, and `pure ()` from one below Resolve. Not implemented: a sequence a row
+-- makes in place of an event proposed with `pure ()` lands nothing it queued
+-- before its next draw (#6105).
+applyReplacementsIn :: Game () -> Maybe GameState -> Set ObjectId -> Set CandidateId -> ProposedEvent -> Game (Maybe ProposedEvent)
+applyReplacementsIn settle asOf batch spent event = do
+  (outcome, _, _, _, _, _) <- applyReplacementsFully settle asOf batch Map.empty spent event
   pure outcome
 
 -- The same loop, answering CR 615.13's second question as well: WHICH prevention
@@ -2228,7 +2234,7 @@ applyReplacementsIn asOf batch spent event = do
 -- off the first component alone.
 applyReplacementsReporting :: Maybe GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> ProposedEvent -> Game ([ProposedEvent], [Replacement.DamageThread], [Prevention])
 applyReplacementsReporting asOf batch allowances spent event = do
-  (outcome, residue, prevented, _, _, _) <- applyReplacementsFully asOf batch allowances spent event
+  (outcome, residue, prevented, _, _, _) <- applyReplacementsFully (pure ()) asOf batch allowances spent event
   let (added, dealt) = Either.partitionEithers residue
   pure (Maybe.maybeToList outcome <> dealt, added, prevented)
 
@@ -2249,14 +2255,14 @@ applyReplacementsReporting asOf batch allowances spent event = do
 -- carried in per event: it caps what a countdown covers here, and a share of 0
 -- keeps its row out of CR 616.1's offer entirely. Empty for every caller but
 -- the batch, which is every caller but resolveDamage.
-applyReplacementsFully :: Maybe GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
-applyReplacementsFully asOf batch allowances spent = loop asOf batch Nothing allowances spent [] Nothing False Nothing
+applyReplacementsFully :: Game () -> Maybe GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
+applyReplacementsFully settle asOf batch allowances spent = loop settle asOf batch Nothing allowances spent [] Nothing False Nothing
 
 -- The last accumulator is CR 903.9c's split, taken when the owner accepted CR
 -- 903.9b's offer for a melded or merged commander inside the loop -- see
 -- `offerCommandZoneFirst`.
-loop :: Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
-loop asOf batch diverting allowances applied prevented exiledBy shuffling split event = do
+loop :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
+loop settle asOf batch diverting allowances applied prevented exiledBy shuffling split event = do
   gs <- State.get
   -- From scratch each iteration: collect against the CURRENT state (or, for a
   -- CR 608.2f batch, the state the batch began in), minus CR 614.5's
@@ -2301,21 +2307,21 @@ loop asOf batch diverting allowances applied prevented exiledBy shuffling split 
           redirected <- divertEntry batch from oid
           case redirected of
             Just (ProposedEvent.WouldChangeZone zc _ _ _)
-              | ZoneChange.to zc == Zone.Battlefield -> loop asOf batch Nothing allowances applied prevented exiledBy shuffling split event
+              | ZoneChange.to zc == Zone.Battlefield -> loop settle asOf batch Nothing allowances applied prevented exiledBy shuffling split event
             _ -> pure (redirected, [], prevented, exiledBy, shuffling, split)
     -- CR 616.1f / 614.6: no candidate remains, so the surviving event happens.
     [] -> pure (Just event, [], prevented, exiledBy, shuffling, split)
     bucket -> do
       first <- offerCommandZoneFirst gs event bucket split
       case first of
-        Just (rewritten, split1) -> loop asOf batch diverting allowances applied prevented exiledBy shuffling split1 rewritten
-        Nothing -> chooseAndApply asOf batch diverting allowances applied prevented exiledBy shuffling split gs event bucket
+        Just (rewritten, split1) -> loop settle asOf batch diverting allowances applied prevented exiledBy shuffling split1 rewritten
+        Nothing -> chooseAndApply settle asOf batch diverting allowances applied prevented exiledBy shuffling split gs event bucket
 
 -- The CR 616.1 choice among the card-borne candidates of one bucket, and its
 -- application. Split out of `loop` so `offerCommandZoneFirst` can stand in front
 -- of it.
-chooseAndApply :: Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> GameState -> ProposedEvent -> [ReplacementCandidate] -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
-chooseAndApply asOf batch diverting allowances applied prevented exiledBy shuffling split gs event bucket = do
+chooseAndApply :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> GameState -> ProposedEvent -> [ReplacementCandidate] -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
+chooseAndApply settle asOf batch diverting allowances applied prevented exiledBy shuffling split gs event bucket = do
   picked <- Replacement.choose gs event bucket
   case picked of
     -- Unreachable: highestBucket returns [] for an empty input, so `bucket`
@@ -2350,8 +2356,8 @@ chooseAndApply asOf batch diverting allowances applied prevented exiledBy shuffl
       | Just covered <- Replacement.partialCoverage gs allowances candidate event,
         Just (front, rest) <- Replacement.splitDamage covered event -> do
           let applied1 = Set.insert (ReplacementCandidate.identity candidate) applied
-          (survivor, residue1, prevented1, exiledBy1, shuffling1, split1) <- applyChosen asOf batch diverting allowances applied prevented exiledBy shuffling split candidate front
-          (leftover, residue2, prevented2, exiledBy2, shuffling2, split2) <- loop asOf batch diverting allowances applied1 prevented1 exiledBy1 shuffling1 split1 rest
+          (survivor, residue1, prevented1, exiledBy1, shuffling1, split1) <- applyChosen settle asOf batch diverting allowances applied prevented exiledBy shuffling split candidate front
+          (leftover, residue2, prevented2, exiledBy2, shuffling2, split2) <- loop settle asOf batch diverting allowances applied1 prevented1 exiledBy1 shuffling1 split1 rest
           pure (survivor, residue1 <> fmap Right (Maybe.maybeToList leftover) <> residue2, prevented2, exiledBy2, shuffling2, split2)
     -- CR 614.5: Eye for an Eye's two damages are one modified event, so each
     -- thread carries what has applied so far, and what applies later may reach
@@ -2363,7 +2369,7 @@ chooseAndApply asOf batch diverting allowances applied prevented exiledBy shuffl
           Replacement.consume (ReplacementCandidate.identity candidate)
           let applied1 = Set.insert (ReplacementCandidate.identity candidate) applied
           pure (Nothing, [Left (de, applied1), Left (also, applied1)], prevented, exiledBy, shuffling, split)
-    Just candidate -> applyChosen asOf batch diverting allowances applied prevented exiledBy shuffling split candidate event
+    Just candidate -> applyChosen settle asOf batch diverting allowances applied prevented exiledBy shuffling split candidate event
 
 -- CR 614.1a: the noncombat damage a DamageRewrite.AlsoToSourceController row adds
 -- beside the event it replaces, from the row's source, sized as the event is now,
@@ -2384,8 +2390,8 @@ alsoDealt gs candidate de = case ReplacementCandidate.effect candidate of
 -- One iteration of `loop`: apply the chosen candidate to the event and continue
 -- with what comes back. Split out so the partial-cover branch above and the
 -- ordinary one apply a candidate the same way.
-applyChosen :: Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
-applyChosen asOf batch diverting allowances applied prevented exiledBy shuffling split candidate event = do
+applyChosen :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
+applyChosen settle asOf batch diverting allowances applied prevented exiledBy shuffling split candidate event = do
   gs <- State.get
   -- CR 615.12: the chosen effect is a prevention effect and this damage
   -- can't be prevented (Spider-Punk), so it is APPLIED and prevents none
@@ -2420,7 +2426,7 @@ applyChosen asOf batch diverting allowances applied prevented exiledBy shuffling
   let inert = Replacement.inertPrevention gs candidate event
   outcome <- case inert of
     Just rewrite -> applyInertly candidate rewrite event
-    Nothing -> apply batch applied candidate event
+    Nothing -> apply settle batch applied candidate event
   -- CR 615.13: read OUTSIDE `apply`, from the event before and after, so
   -- no arm of that fold has to report anything and none can forget to.
   -- What makes it exact rather than a guess is Replacement.prevents: only a
@@ -2435,7 +2441,7 @@ applyChosen asOf batch diverting allowances applied prevented exiledBy shuffling
     Just rewritten
       | Just moved <- movedDamage event rewritten ->
           pure (Nothing, [Left (moved, applied1)], prevented1, exiledBy, shuffling, split)
-    Just rewritten -> loop asOf batch diverting allowances applied1 prevented1 (exiledByAfter candidate event rewritten exiledBy) (shuffling || shufflesAfter candidate) split rewritten
+    Just rewritten -> loop settle asOf batch diverting allowances applied1 prevented1 (exiledByAfter candidate event rewritten exiledBy) (shuffling || shufflesAfter candidate) split rewritten
 
 -- The damage event a rewrite moved onto a different recipient, read off the
 -- event before and after as `exiledByAfter` reads a destination; Nothing for
@@ -2608,8 +2614,8 @@ dealing de = if DamageEvent.amount de == 0 then Nothing else Just (ProposedEvent
 -- `applied` is CR 614.5's set of rows already applied to this event, which a
 -- rewrite performing NEW events of the same class in its place hands on to
 -- them, together with the candidate itself.
-apply :: Set ObjectId -> Set CandidateId -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent)
-apply batch applied candidate event =
+apply :: Game () -> Set ObjectId -> Set CandidateId -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent)
+apply settle batch applied candidate event =
   case (ReplacementCandidate.effect candidate, event) of
     (ReplacementEffect.ZoneChangeR (ZoneChangeR.MkZoneChangeR _ toDest revealing _ toPosition optional), ProposedEvent.WouldChangeZone zc discarded position resolving) -> do
       -- CR 614.1a's "you may ... instead" (Library of Leng): the row's
@@ -4280,7 +4286,7 @@ apply batch applied candidate event =
       -- Replacement.readsApplier answers True for this rewrite alone.
       --
       -- The ids are snapshotted from the pre-move board and then moved one at a
-      -- time, `drawCardReturning`'s shape: Game.zoneMembers is top-first, so
+      -- time, `performDraw`'s shape: Game.zoneMembers is top-first, so
       -- `take` off the front is the top `n`, and each move is CR 400.7's funnel
       -- with every replacement of its own. Replacement.breaches has already
       -- refused a library too short, so the take is never partial when it starts
@@ -4310,7 +4316,7 @@ apply batch applied candidate event =
       -- "you" as well: its pattern is LifeLossPattern's Related You.
       LifeLossRewrite.GainInstead -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        settled <- resolveLifeGainSpent (spentWith candidate applied) pid n
+        settled <- resolveLifeGainSpent settle (spentWith candidate applied) pid n
         changeLife pid (toInteger settled)
         pure Nothing
     -- Unreachable: `applies` admits LifeLossR only against WouldLoseLife.
@@ -4334,7 +4340,7 @@ apply batch applied candidate event =
       -- never by this row again (CR 614.5): a Words of Worship gain stands.
       LifeGainRewrite.DrawInstead -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        Monad.replicateM_ (Natural.toIntSaturating n) (drawCardSpent (spentWith candidate applied) pid)
+        Monad.void (drawSeries settle (spentWith candidate applied) pid n)
         pure Nothing
       -- CR 614.6 with CR 119.3: Tainted Remedy's "loses that much life
       -- instead", LifeLossRewrite.GainInstead's arm the other direction. The
@@ -4369,7 +4375,7 @@ apply batch applied candidate event =
       -- other, so a LifeGainR row resizes it.
       DrawRewrite.GainLife n -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        settled <- resolveLifeGainSpent (spentWith candidate applied) pid n
+        settled <- resolveLifeGainSpent settle (spentWith candidate applied) pid n
         changeLife pid (toInteger settled)
         pure Nothing
       -- CR 400.11c through the same CR 614.6 cancellation: Ring of Ma'rûf's
@@ -4496,15 +4502,10 @@ apply batch applied candidate event =
       --
       -- The loss is QUEUED, GameLossR's reason: this module is below the one
       -- that takes a player out of the game. It runs before the next draw of
-      -- an instruction's sequence (drawSeries, CR 614.11a), and otherwise
-      -- before the next instruction or state-based action check.
-      -- data/scenarios/replacement's
-      -- cr-614-11a-forbidden-crypt-s-loss-meets-lich-s-mirror-before-the-next-draw
-      -- proves it.
-      --
-      -- Not implemented: a draw this module makes in another's place
-      -- (DrawRewrite.DrawInstead and its kin) is replaced before that loss
-      -- runs (#6096).
+      -- a sequence (drawSeries, CR 614.11a), an instruction's or one a
+      -- replacement makes in a draw's place, and otherwise before the next
+      -- instruction or state-based action check. data/scenarios/replacement's
+      -- cr-614-11a-forbidden-crypt-s-loss-meets-lich-s-mirror-* prove it.
       DrawRewrite.FromGraveyardOrLose -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
         gs <- State.get
@@ -4572,7 +4573,7 @@ apply batch applied candidate event =
       -- 614.5): a second Archive doubles each, so two draw four (its ruling).
       DrawRewrite.DrawInstead n -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        Monad.replicateM_ (Natural.toIntSaturating n) (drawCardSpent (spentWith candidate applied) pid)
+        Monad.void (drawSeries settle (spentWith candidate applied) pid n)
         pure Nothing
       -- CR 614.1a / 701.9a: Chains of Mephistopheles' "that player discards a
       -- card instead. If the player discards a card this way, they draw a card.
@@ -4600,7 +4601,7 @@ apply batch applied candidate event =
           then asEffect $ do
             milled <- millFrom pid 1
             Monad.unless (null milled) (State.modify' (recordEvent (GameEvent.Milled (Milled.MkMilled pid (Seq.fromList milled)))))
-          else drawCardSpent (spentWith candidate applied) pid
+          else Monad.void (drawSeries settle (spentWith candidate applied) pid 1)
         pure Nothing
       -- CR 614.10: Island Sanctuary's "instead you may skip that draw. If you do,
       -- [these effects]". The decider is the drawer, Dredge's posture; declining
@@ -4648,7 +4649,7 @@ apply batch applied candidate event =
     -- draw where the row's controller IS the instructed player, which the pool's
     -- one producer never is -- its pattern is ControllerRelation.Related Opponent.
     --
-    -- Each of these is an individual draw through `drawCard`, so CR 616.1g's inner
+    -- Each of these is an individual draw through `drawSeries`, so CR 616.1g's inner
     -- events still raise their own WouldDraw and a per-draw row (Words of Worship)
     -- still applies to them.
     (ReplacementEffect.DrawCountR (DrawCountR.MkDrawCountR _ _ rewrite), ProposedEvent.WouldPerform PlayerInstruction.DrawCards _ pid _) -> case rewrite of
@@ -4656,7 +4657,7 @@ apply batch applied candidate event =
         Replacement.consume (ReplacementCandidate.identity candidate)
         gs <- State.get
         let drawers = filter (\p -> p == pid || Just p == ReplacementCandidate.controller candidate) (Game.apnapOrder gs)
-        Monad.mapM_ drawCard drawers
+        Monad.forM_ drawers $ \drawer -> drawSeries settle Set.empty drawer 1
         pure Nothing
     -- Unreachable: `applies` admits DrawCountR only against a draw instruction.
     (ReplacementEffect.DrawCountR {}, _) -> pure (Just event)
@@ -4683,9 +4684,8 @@ apply batch applied candidate event =
         pure (Just (ProposedEvent.WouldPerform instruction performer pid (Replacement.scale scaling n)))
       InstructionRewrite.DrawInstead -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        outcome <- applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.DrawCards Nothing pid n)
-        Monad.forM_ (outcome >>= Replacement.asPerformed PlayerInstruction.DrawCards) $ \(drawer, settled) ->
-          Monad.replicateM_ (Natural.toIntSaturating settled) (drawCard drawer)
+        outcome <- applyReplacementsIn settle Nothing Set.empty Set.empty (ProposedEvent.WouldPerform PlayerInstruction.DrawCards Nothing pid n)
+        Monad.forM_ (outcome >>= Replacement.asPerformed PlayerInstruction.DrawCards) (uncurry (drawSeries settle Set.empty))
         pure Nothing
       -- Unreachable: Parun.EffectLintSpec's "no card pairs an instruction with
       -- a rewrite the engine cannot carry out" confines RollD20Instead to a
@@ -5436,7 +5436,7 @@ runEntry diverting origin given oid = do
   -- below for the reason `before` is.
   beforeSubjects <- State.gets GameState.enteringSubjects
   State.modify' (\gs -> gs {GameState.enteringBeside = batch, GameState.enteringSubjects = Map.insert oid origin beforeSubjects})
-  (outcome, _, _, _, _, _) <- loop Nothing batch diverting Map.empty Set.empty [] Nothing False Nothing (ProposedEvent.WouldEnter oid)
+  (outcome, _, _, _, _, _) <- loop (pure ()) Nothing batch diverting Map.empty Set.empty [] Nothing False Nothing (ProposedEvent.WouldEnter oid)
   case outcome of
     Just (ProposedEvent.WouldChangeZone zc _ position _) -> do
       Monad.void (takeEnteringCounters oid)
@@ -5817,7 +5817,7 @@ resolveDestruction :: Maybe GameState -> DestructionCause.DestructionCause -> Re
 resolveDestruction asOf cause regenerability oid = do
   live <- State.get
   let settledRegenerability = strengthen (Maybe.fromMaybe live asOf) oid regenerability
-  outcome <- applyReplacementsIn asOf Set.empty Set.empty (ProposedEvent.WouldBeDestroyed oid settledRegenerability cause)
+  outcome <- applyReplacementsIn (pure ()) asOf Set.empty Set.empty (ProposedEvent.WouldBeDestroyed oid settledRegenerability cause)
   pure (outcome >>= Replacement.asDestruction)
 
 -- CR 701.19c: a standing prohibition (Hurr Jackal) forbids regeneration of the
@@ -6191,7 +6191,7 @@ resolveLifeLoss :: LifeLossCause.LifeLossCause -> PlayerId -> Natural -> Game Na
 resolveLifeLoss = resolveLifeLossSpent Nothing Set.empty
 
 -- A loss made in place of another event by a replacement (CR 614.5): `spent`
--- holds the rows that already had their opportunity, drawCardSpent's reason.
+-- holds the rows that already had their opportunity, drawSeries' reason.
 --
 -- `asOf` is applyReplacementsIn's: Just the board a damage batch began in, so a
 -- row's condition is judged before the event, never on a result of it already
@@ -6205,7 +6205,7 @@ resolveLifeLossSpent asOf spent cause pid n =
       if PlayerEffect.prohibitsLosingLife pid gs
         then pure 0
         else do
-          outcome <- applyReplacementsIn asOf Set.empty spent (ProposedEvent.WouldLoseLife cause pid n)
+          outcome <- applyReplacementsIn (pure ()) asOf Set.empty spent (ProposedEvent.WouldLoseLife cause pid n)
           pure (maybe 0 snd (outcome >>= Replacement.asLifeLoss))
 
 -- CR 119.3 / 119.10 / 120.3f: settle how much life a player actually gains, and
@@ -6232,12 +6232,14 @@ resolveLifeLossSpent asOf spent cause pid n =
 -- has already ordered and spent could not produce. The classification question
 -- goes to Parun.Engine.PlayerEffect.prohibitsGainingLife, so nothing here cases on
 -- an effect. Parun.PlayerEffectSpec's GiantCindermaw group is the proof.
-resolveLifeGain :: PlayerId -> Natural -> Game Natural
-resolveLifeGain = resolveLifeGainSpent Set.empty
+--
+-- `settle` is drawSeries', for the draws Lich makes in the gain's place.
+resolveLifeGain :: Game () -> PlayerId -> Natural -> Game Natural
+resolveLifeGain settle = resolveLifeGainSpent settle Set.empty
 
 -- resolveLifeLossSpent's gain side.
-resolveLifeGainSpent :: Set CandidateId -> PlayerId -> Natural -> Game Natural
-resolveLifeGainSpent spent pid n =
+resolveLifeGainSpent :: Game () -> Set CandidateId -> PlayerId -> Natural -> Game Natural
+resolveLifeGainSpent settle spent pid n =
   if n == 0
     then pure 0
     else do
@@ -6245,7 +6247,7 @@ resolveLifeGainSpent spent pid n =
       if PlayerEffect.prohibitsGainingLife pid gs
         then pure 0
         else do
-          outcome <- applyReplacementsIn Nothing Set.empty spent (ProposedEvent.WouldGainLife pid n)
+          outcome <- applyReplacementsIn settle Nothing Set.empty spent (ProposedEvent.WouldGainLife pid n)
           pure (maybe 0 snd (outcome >>= Replacement.asLifeGain))
 
 -- CR 705.1's flip of ONE coin. The ONE road every flip in the engine takes:
@@ -6258,7 +6260,7 @@ resolveLifeGainSpent spent pid n =
 -- HERE rather than in Parun.Engine.Coin, which holds the rest of rule 705, because
 -- the flip is a replaceable event: CR 614's loop lives in this module and this
 -- module imports Parun.Engine.Coin, so the funnel has to sit on this side of that
--- edge -- proposeUntap, resolveLifeGain and drawCardReturning's position exactly.
+-- edge -- proposeUntap, resolveLifeGain and drawCardSpentReturning's position exactly.
 --
 -- Answers the face the instruction reads and whether an effect STATES the
 -- flipper wins it (CR 705.3). The caller decides what a win means for its own
@@ -6303,7 +6305,7 @@ flipOneCoin throw mFlipper called stated = case mFlipper of
         kept = case throw of
           Just _ -> Map.empty
           Nothing -> Map.fromList [(ReplacementCandidate.identity c, 0) | c <- Replacement.applicable Nothing gs (ProposedEvent.WouldThrow proposed), Replacement.substitutesAction (ReplacementCandidate.effect c)]
-    (outcome, _, _, _, _, _) <- applyReplacementsFully Nothing Set.empty kept Set.empty (ProposedEvent.WouldThrow proposed)
+    (outcome, _, _, _, _, _) <- applyReplacementsFully (pure ()) Nothing Set.empty kept Set.empty (ProposedEvent.WouldThrow proposed)
     -- A cancelled flip is unreachable: Parun.EffectLintSpec's "no card pairs an
     -- instruction with a rewrite the engine cannot carry out" admits
     -- InstructionRewrite.DrawInstead on a scry alone. A row that cancelled a
@@ -9586,7 +9588,7 @@ createTokens controller card copy n tapped entering attached marks = do
 -- rows (Containment Priest's ruling of 2021-03-19).
 divertEntry :: Set ObjectId -> Zone -> ObjectId -> Game (Maybe ProposedEvent)
 divertEntry batch from oid =
-  applyReplacementsIn Nothing (Set.insert oid batch) Set.empty (ProposedEvent.WouldChangeZone (ZoneChange.MkZoneChange oid oid from Zone.Battlefield) Nothing LibraryPosition.defaultValue False)
+  applyReplacementsIn (pure ()) Nothing (Set.insert oid batch) Set.empty (ProposedEvent.WouldChangeZone (ZoneChange.MkZoneChange oid oid from Zone.Battlefield) Nothing LibraryPosition.defaultValue False)
 
 -- An entry a CR 614.6 redirect took, which runEntry has placed when minted.
 isDiverted :: EntryRefusal.EntryRefusal -> Bool
@@ -10381,12 +10383,46 @@ changeLife pid delta =
 -- than beside its callers because rule 121.9 says "as they draw it": every route
 -- that draws -- the draw step, an opening hand, a Draw effect -- opens the same
 -- window, and none of them learns that it did.
+--
+-- Not implemented: a sequence of draws a replacement makes in this draw's place
+-- lands nothing it queued before its next draw (#6105).
 drawCard :: PlayerId -> Game ()
-drawCard pid = Monad.void (drawCardReturning pid)
+drawCard pid = Monad.void (drawCardSpentReturning DrawKind.Other (pure ()) Set.empty pid)
 
--- drawCardReturning is to drawCard what changeZoneReturning is to changeZone, and
--- for CR 121.1's "and reveal IT" (#1899): Just the id the card ARRIVED in the hand
--- under (CR 400.7), which is where a later clause of the same resolution names it.
+-- CR 121.2 / 614.11a: `n` individual draws by `pid`, with `settle` run after
+-- each, so what a replacement queued in a draw's place (Forbidden Crypt's loss,
+-- and Lich's Mirror's reset in that loss's place) is done before the sequence
+-- resumes. `settle` is Resolve.runReplacementEffects, which this module is
+-- below, and is handed down to the replacement loop, so a sequence a
+-- replacement makes in one draw's place (Alhammarret's Archive's two) settles
+-- the same way. A drawer who has left the game draws no more (CR 800.4a).
+-- `spent` is drawCardSpentReturning's, and so are the ids it answers.
+drawSeries :: Game () -> Set CandidateId -> PlayerId -> Natural -> Game [ObjectId]
+drawSeries settle spent pid n = Maybe.catMaybes <$> Monad.replicateM (Natural.toIntSaturating n) one
+  where
+    one = do
+      playing <- State.gets (List.elem pid . Game.stillPlaying)
+      if playing
+        then drawCardSpentReturning DrawKind.Other settle spent pid <* settle
+        else pure Nothing
+
+-- CR 504.1: the active player's turn-based draw in their draw step. `settle`
+-- is drawSeries', for a sequence a replacement makes in its place.
+drawForTurn :: Game () -> PlayerId -> Game ()
+drawForTurn settle pid = Monad.void (drawCardSpentReturning (DrawKind.TurnBased pid) settle Set.empty pid)
+
+-- CR 614.5: the rows a replacement's own new events are not offered to -- those
+-- already applied to the event it replaced, and itself.
+spentWith :: ReplacementCandidate -> Set CandidateId -> Set CandidateId
+spentWith candidate = Set.insert (ReplacementCandidate.identity candidate)
+
+-- `spent` is for a draw made in place of another by a draw replacement (CR
+-- 614.5): the rows that already had their opportunity at the event it replaces.
+-- `settle` is drawSeries'.
+--
+-- For CR 121.1's "and reveal IT" (#1899): Just the id the card ARRIVED in the
+-- hand under (CR 400.7), which is where a later clause of the same resolution
+-- names it.
 --
 -- Nothing where there is no such card -- a draw a replacement took (CR 614.6), an
 -- empty library (CR 104.3c is then the whole of what happened), or a move a
@@ -10397,41 +10433,9 @@ drawCard pid = Monad.void (drawCardReturning pid)
 -- the card is drawn, but as a result of the replacement, so the instruction's
 -- "reveal it" does not reach it. A rewrite keeping the drawer is Plagiarize
 -- aimed at its own controller, which its ruling calls no useful effect.
-drawCardReturning :: PlayerId -> Game (Maybe ObjectId)
-drawCardReturning = drawCardSpentReturning DrawKind.Other Set.empty
-
--- CR 121.2 / 614.11a: `n` individual draws by `pid`, with `settle` run after
--- each, so what a replacement queued in a draw's place (Forbidden Crypt's loss,
--- and Lich's Mirror's reset in that loss's place) is done before the sequence
--- resumes. `settle` is Resolve.runReplacementEffects, which this module is
--- below. A drawer who has left the game draws no more (CR 800.4a). Answers
--- drawCardReturning's ids.
-drawSeries :: Game () -> PlayerId -> Natural -> Game [ObjectId]
-drawSeries settle pid n = Maybe.catMaybes <$> Monad.replicateM (Natural.toIntSaturating n) one
-  where
-    one = do
-      playing <- State.gets (List.elem pid . Game.stillPlaying)
-      if playing
-        then drawCardReturning pid <* settle
-        else pure Nothing
-
--- CR 504.1: the active player's turn-based draw in their draw step.
-drawForTurn :: PlayerId -> Game ()
-drawForTurn pid = Monad.void (drawCardSpentReturning (DrawKind.TurnBased pid) Set.empty pid)
-
--- CR 614.5: the rows a replacement's own new events are not offered to -- those
--- already applied to the event it replaced, and itself.
-spentWith :: ReplacementCandidate -> Set CandidateId -> Set CandidateId
-spentWith candidate = Set.insert (ReplacementCandidate.identity candidate)
-
--- A draw made in place of another by a draw replacement (CR 614.5): `spent`
--- holds the rows that already had their opportunity at the event it replaces.
-drawCardSpent :: Set CandidateId -> PlayerId -> Game ()
-drawCardSpent spent pid = Monad.void (drawCardSpentReturning DrawKind.Other spent pid)
-
-drawCardSpentReturning :: DrawKind.DrawKind -> Set CandidateId -> PlayerId -> Game (Maybe ObjectId)
-drawCardSpentReturning kind spent pid = do
-  outcome <- applyReplacementsIn Nothing Set.empty spent (ProposedEvent.WouldDraw pid kind)
+drawCardSpentReturning :: DrawKind.DrawKind -> Game () -> Set CandidateId -> PlayerId -> Game (Maybe ObjectId)
+drawCardSpentReturning kind settle spent pid = do
+  outcome <- applyReplacementsIn settle Nothing Set.empty spent (ProposedEvent.WouldDraw pid kind)
   case outcome >>= Replacement.asDraw of
     -- CR 614.6: a replacement took the draw, so it never happens. The row has
     -- already done its own work; nothing is left to do here and nothing is
@@ -11073,15 +11077,7 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.SelfAttacksPlayerWithMostLife -> False
   TriggerCondition.SelfAttacksWhileSaddled -> False
   TriggerCondition.SelfAttacksWhile _ -> False
-  TriggerCondition.SelfBlocks -> False
-  TriggerCondition.CreatureBlocks _ -> False
-  TriggerCondition.CreatureBlocksCreature _ -> False
-  TriggerCondition.SelfBlocksAtLeast _ -> False
-  TriggerCondition.SelfBlocksOneOrMore _ -> False
-  TriggerCondition.CreatureBecomesBlocked _ -> False
-  TriggerCondition.CreatureBecomesBlockedBy _ -> False
-  TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> False
-  TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> False
+  TriggerCondition.Blocks _ -> False
   TriggerCondition.CreatureAttacksUnblocked _ -> False
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> False
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> False

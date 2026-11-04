@@ -18,6 +18,7 @@ import qualified Parun.Types.PlayerView as PlayerView
 codec :: Codec.Codec PlayerView.PlayerView
 codec = Fields.object $ do
   viewer <- Fields.required "viewer" PlayerId.codec PlayerView.viewer
+  game <- Fields.required "game" Common.natural PlayerView.game
   turn <- Fields.required "turn" Common.natural PlayerView.turn
   phase <- Fields.required "phase" Phase.codec PlayerView.phase
   active <- Fields.required "active" PlayerId.codec PlayerView.active
@@ -31,6 +32,7 @@ codec = Fields.object $ do
   pure
     PlayerView.MkPlayerView
       { PlayerView.viewer = viewer,
+        PlayerView.game = game,
         PlayerView.turn = turn,
         PlayerView.phase = phase,
         PlayerView.active = active,
