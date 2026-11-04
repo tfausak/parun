@@ -27,7 +27,9 @@ import qualified Parun.Engine.ManaAbility as ManaAbility
 import qualified Parun.Engine.ManaCount as ManaCount
 import qualified Parun.Engine.ManaFilter as ManaFilter
 import qualified Parun.Engine.Modal as Modal
+import qualified Parun.Engine.Plane as Plane
 import qualified Parun.Engine.PlayerEffect as PlayerEffect
+import qualified Parun.Engine.Players as Players
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Quantity as Quantity
@@ -78,6 +80,9 @@ import qualified Parun.Types.LifeLossCause as LifeLossCause
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import Parun.Types.Mana (Mana)
 import qualified Parun.Types.Mana as Mana
+import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
+import qualified Parun.Types.ManaAdded as ManaAdded
+import qualified Parun.Types.ManaAddedCause as ManaAddedCause
 import qualified Parun.Types.ManaAddition as ManaAddition
 import Parun.Types.ManaCost (ManaCost)
 import qualified Parun.Types.ManaCost as ManaCost
@@ -95,11 +100,14 @@ import Parun.Types.ManaType (ManaType)
 import qualified Parun.Types.ManaType as ManaType
 import Parun.Types.ManaUnit (ManaUnit)
 import qualified Parun.Types.ManaUnit as ManaUnit
+import qualified Parun.Types.Modal as Modal.Type
+import qualified Parun.Types.ModeIndex as ModeIndex
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectCount as ObjectCount
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.Optionality as Optionality
 import qualified Parun.Types.PaymentSubject as PaymentSubject
+import qualified Parun.Types.PendingTrigger as PendingTrigger
 import Parun.Types.PhaseSelector (PhaseSelector)
 import qualified Parun.Types.PhaseSelector as PhaseSelector
 import qualified Parun.Types.PhyrexianPayment as PhyrexianPayment
@@ -121,6 +129,8 @@ import qualified Parun.Types.SpendTrigger as SpendTrigger
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.Supertype as Supertype
 import qualified Parun.Types.TappedForMana as TappedForMana
+import qualified Parun.Types.TriggerSource as TriggerSource
+import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.WhenSpent as WhenSpent
 import qualified Parun.Types.WhichCounters as WhichCounters
 import qualified Parun.Types.Zone as Zone
@@ -228,9 +238,6 @@ data Measure
 -- whoever called it. `capacity` is Parun.Engine.Cost.manaActivations at every one.
 -- The incoming Measure is DISCARDED for that reason: a caller cannot ask the
 -- supply walk for the offer's answer.
---
--- Not implemented: the mana a triggered mana ability would add to a route's, so
--- a cost payable only with it is not offered until that mana floats (#6060).
 supplyCapacity :: Capacity -> Capacity
 supplyCapacity capacity _measure pcs pid oid cost restrictions ability gs = case Cost.mana cost of
   Nothing -> noActivations
@@ -696,7 +703,14 @@ manaSuppliesGiven capacity pcs pid borrowed oid gs =
       -- CR 106.6: a grant's restriction rides on the yield the supply counts,
       -- as it will on the mana Parun.Engine.Cost.tapForManaWith adds.
       restricted extra (activations, yield, manaCost, own) = (activations, maybe yield (\restriction -> MkYield {yieldMana = restrictMana restriction (yieldMana yield), yieldDoubling = fmap (unitsOf . restrictMana restriction . Mana.MkMana) (yieldDoubling yield)}) extra, manaCost, own)
-      counted = concatMap (\option -> foldMap (\extra -> fmap (restricted extra) (perCandidate option)) (routeAccess (mayTakeRoute controls pid oid gs) borrowed (ManaOption.cost option) (ManaOption.ability option))) options
+      -- CR 605.4a: what the triggered mana abilities this activation fires add
+      -- to the payer's pool rides with the route, after any borrowed
+      -- restriction, which narrows only the route's own mana (CR 106.6).
+      triggered option (activations, yield, manaCost, own) =
+        [ (activations, yield {yieldMana = Mana.MkMana (unitsOf (yieldMana yield) <> unitsOf bonus)}, manaCost, own)
+        | bonus <- triggeredYields pid (choosable option) oid option (yieldMana yield) gs
+        ]
+      counted = concatMap (\option -> foldMap (\extra -> concatMap (triggered option . restricted extra) (perCandidate option)) (routeAccess (mayTakeRoute controls pid oid gs) borrowed (ManaOption.cost option) (ManaOption.ability option))) options
       available = filter (\(activations, _, _, _) -> Activations.times activations > 0) counted
       yieldOf (_, yield, _, _) = yield
       -- Ordered so `maximumBy` prefers the larger count, and a mana-free route
@@ -708,6 +722,77 @@ manaSuppliesGiven capacity pcs pid borrowed oid gs =
 
 -- Whether one clause of a mana option adds mana by CR 701.10f's doubling
 -- (ManaProduction.Pooled), whose yield is the pool it is added to.
+-- CR 605.4a: each way the triggered mana abilities one activation of this
+-- route fires could add mana to the payer's pool, the empty run where none
+-- fires. Floating first and paying after is the player's order (CR 601.2g), so
+-- the offer counts it: one Forest under Mana Flare offers Grizzly Bears.
+--
+-- The events are Parun.Engine.Cost.tapForManaWith's, recorded on a copy of the
+-- board, and the triggers are gathered and classified as its applyManaTriggers
+-- does, so the measure and the payment agree on what fires. `share` is the
+-- payer's share on this branch of the walk, which can be repriced past the
+-- option's own yield. One round is the whole of it: a trigger's mana is
+-- resolution mana, which fires no triggered mana ability (CR 605.5a).
+triggeredYields :: PlayerId -> Map.Map SlotName.SlotName (Set.Set PlayerId) -> ObjectId -> ManaOption -> Mana -> GameState -> [Mana]
+triggeredYields pid chosen oid option share gs =
+  let made = yieldUnits option
+      types = Set.fromList (fmap ManaUnit.manaType (made <> unitsOf share))
+      tapped =
+        [ GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = oid, TappedForMana.mana = types, TappedForMana.player = pid})
+        | List.elem CostComponent.TapThis (Cost.components (ManaOption.cost option)) && not (Set.null types)
+        ]
+      added =
+        [ GameEvent.ManaAdded (ManaAdded.MkManaAdded {ManaAdded.player = recipient, ManaAdded.source = oid, ManaAdded.mana = Set.fromList (typesOf mana), ManaAdded.cause = ManaAddedCause.ManaAbility})
+        | (ref, mana) <- Map.toList (ManaOption.yield option),
+          not (null (unitsOf mana)),
+          recipient <- recipientsOf pid chosen gs ref
+        ]
+      resolved = GameEvent.ManaAbilityResolved (ManaAbilityResolved.MkManaAbilityResolved {ManaAbilityResolved.permanent = oid, ManaAbilityResolved.amount = Natural.length made})
+      events = tapped <> added <> [resolved]
+      board = List.foldl' (flip Event.recordEvent) gs events
+      recorded = Foldable.toList (Seq.drop (Seq.length (GameState.events board) - length events) (GameState.events board))
+      fired = filter (\pending -> ManaAbility.isTriggeredManaAbility (fmap LoggedEvent.event (PendingTrigger.firedBy pending)) (PendingTrigger.ability pending)) (Event.reactionTriggers recorded board)
+   in fmap (Mana.MkMana . concat) (traverse (triggerAdds pid board) fired)
+
+-- What one fired triggered mana ability adds to `pid`'s pool, a list entry per
+-- choice of type: Parun.Engine.Resolve.Effect.performTriggeredManaAbility's
+-- slots and modes, and Parun.Engine.Resolve.Arms.Damage.addMana's read of each
+-- AddMana. Its other effects pay for nothing and are not run.
+triggerAdds :: PlayerId -> GameState -> PendingTrigger.PendingTrigger -> [[ManaUnit]]
+triggerAdds pid gs pending = case PendingTrigger.source pending of
+  TriggerSource.Sourceless -> [[]]
+  TriggerSource.OfObject source ->
+    let controller = PendingTrigger.controller pending
+        modal = TriggeredAbility.modal (PendingTrigger.ability pending)
+        every = Set.fromList (fmap fst (zip (fmap ModeIndex.MkModeIndex [0 ..]) (Modal.modeEffects modal)))
+        bound =
+          Map.union
+            (Binding.targetsOf (PendingTrigger.bindings pending))
+            (Map.fromList [(Binding.triggerSource, Set.singleton (Recipient.ToObject source)), (Binding.you, Set.singleton (Recipient.ToPlayer controller))])
+        resolutionReads = Players.resolution (`Projection.controllerWithLastKnown` gs) (`Game.ownerWithLastKnown` gs) (`Game.acquisitionOf` gs) bound (Plane.rangePerspective source controller gs) controller gs
+        context = Projection.framedBySlots gs bound (Projection.sourceContext gs (Just controller) source)
+        unitOf addition manaType =
+          ManaUnit.MkManaUnit
+            { ManaUnit.manaType = manaType,
+              ManaUnit.tags = productionTagsGiven Map.empty source gs,
+              ManaUnit.retention = ManaAddition.retention addition,
+              ManaUnit.restriction = ManaAddition.restriction addition,
+              ManaUnit.rider = ManaAddition.rider addition,
+              ManaUnit.spendTrigger = spendTriggerOf controller source gs =<< ManaAddition.whenSpent addition,
+              ManaUnit.sourceChoices = sourceChoicesOf source gs,
+              ManaUnit.sourceLastExiled = lastExiledWith Nothing source gs
+            }
+        adds addition
+          | List.notElem pid (Maybe.fromMaybe [] (Players.named resolutionReads gs (ManaAddition.player addition))) = [[]]
+          | otherwise =
+              let howMany = max 0 (Integer.toIntSaturating (Maybe.fromMaybe 0 (Quantity.evaluate (Projection.fullView gs) context gs source (ManaAddition.count addition))))
+               in case produced bound source gs (ManaAddition.production addition) of
+                    Settles run -> [concat (replicate howMany (fmap (unitOf addition) run))]
+                    Offers offered -> [replicate howMany (unitOf addition manaType) | manaType <- NonEmpty.toList offered]
+     in case Modal.forcedSelection every (Modal.Type.selection modal) of
+          Nothing -> [[]]
+          Just selection -> fmap concat (traverse adds (Maybe.mapMaybe ManaAbility.manaProduced (Modal.modesEffects selection modal)))
+
 readsPool :: (Clause.Clause Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card), a) -> Bool
 readsPool (clause, _) = any (poolProduction . ManaAddition.production) (Maybe.mapMaybe ManaAbility.manaProduced (Foldable.toList (Clause.effects clause)))
   where
