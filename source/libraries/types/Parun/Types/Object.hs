@@ -910,10 +910,8 @@ data Object = MkObject
     -- bearing two equal copies (CR 113.2c) -- two Auras granting one ability --
     -- may spend each once.
     -- Parun.Engine.ActivationRestriction's OnlyOnce arm compares the count with
-    -- the copies the object bears.
-    --
-    -- Not implemented: keeping it across a text change rewriting the ability
-    -- (#6043).
+    -- the copies the object bears. Keyed as printed before any text change (CR
+    -- 612.1, Parun.Engine.Projection.printedActivatedAbility).
     activatedOnce :: Map.Map (ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)) Natural.Natural,
     -- | The modes each of this object's triggered abilities has chosen, for a
     -- ModeMemory.ObjectLifetime instruction (CR 700.2b), keyed by the ability

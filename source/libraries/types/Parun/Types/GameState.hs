@@ -435,7 +435,8 @@ data GameState = MkGameState
     -- handoff, which is the whole of "each turn". Keyed by the SOURCE object and
     -- then by the ability, since a permanent may print the rider on one of two
     -- abilities (Locust Swarm). The ability BY VALUE and counted, for CR
-    -- 602.5c's identically worded twins, as Object.activatedOnce is.
+    -- 602.5c's identically worded twins, and as printed (CR 612.1), as
+    -- Object.activatedOnce is.
     activatedThisTurn :: Map.Map ObjectId.ObjectId (Map.Map (ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)) Natural.Natural),
     -- | CR 602.2: every activated ability begun this turn, oldest first, as
     -- Parun.Types.CostModifier.onlyFirst, Quantity.TimesThisTurn and
