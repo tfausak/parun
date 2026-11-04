@@ -511,7 +511,7 @@ selfBlocksCreatureSpec s registry =
       atDamage = S.runToStep (Phase.Combat CombatStep.CombatDamage) S.aggressiveAnswer
       atDamageWithout = S.runToStep (Phase.Combat CombatStep.CombatDamage) noBlocks
       atDamageSecond = S.runToStep (Phase.Combat CombatStep.CombatDamage) blockSecond
-   in Spec.describe s "SelfBlocksCreature" $ do
+   in Spec.describe s "CreatureBlocksCreature" $ do
         -- The proving test, and its control: the same board with CR 509.1's
         -- declaration switched off. Blocking, both creatures are gone before
         -- damage; declining, both are alive and the Piker's 2 gets through.

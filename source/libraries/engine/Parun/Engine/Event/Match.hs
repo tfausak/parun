@@ -17,7 +17,7 @@ import Numeric.Natural (Natural)
 import qualified Parun.Engine.Binding as Binding
 import qualified Parun.Engine.Condition as Condition
 import qualified Parun.Engine.Count as Count
-import Parun.Engine.Event.Binding (admitsDeparture, admittedAttackers, admittedDepartures, admittedPreventedSources, combatDamagerOn, postEventView)
+import Parun.Engine.Event.Binding (admitsDeparture, admittedAt, admittedAttackers, admittedDepartures, admittedPreventedSources, combatDamagerOn, postEventView)
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.PlayerEffect as PlayerEffect
@@ -45,6 +45,7 @@ import qualified Parun.Types.BecameTarget as BecameTarget
 import qualified Parun.Types.BecameUnattached as BecameUnattached
 import qualified Parun.Types.BecomesTapState as BecomesTapState
 import Parun.Types.Binding (Binding)
+import qualified Parun.Types.BlockPair as BlockPair
 import qualified Parun.Types.BlockProducer as BlockProducer
 import qualified Parun.Types.BlocksDeclared as BlocksDeclared
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
@@ -1156,7 +1157,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- this condition does not read, which is rule 509.3a's last sentence.
   --
   -- The attacking creatures the declaration named are neither compared nor bound:
-  -- this condition is CR 509.3a's, which names none. SelfBlocksCreature's arm
+  -- this condition is CR 509.3a's, which names none. CreatureBlocksCreature's arm
   -- below is rule 509.3b's, which does.
   --
   -- The GROUPED event, which is rule 509.3a's "only once each combat for that
@@ -1204,28 +1205,26 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- SelfBlocks above, together with the attacker eventBindings stamps under
   -- Binding.blockedCreature.
   --
-  -- The Filter is a predicate over that ATTACKER, read from the game as it
-  -- stands, which is rule 509.3f's "at the point blockers are declared" for
-  -- SelfBecomesBlockedBy's reason below. viewWithLastKnown for that arm's reason
+  -- The pair's Filters read both creatures from the game as it stands, which is
+  -- rule 509.3f's "at the point blockers are declared" for
+  -- CreatureBecomesBlockedBy's reason below. viewWithLastKnown for that arm's reason
   -- too -- an attacker already gone (CR 608.2h) is still read as it was on the
   -- battlefield.
-  TriggerCondition.SelfBlocksCreature f -> case event of
+  TriggerCondition.CreatureBlocksCreature pair -> case event of
     GameEvent.BecameBlocking b
-      | BecameBlocking.blocker b == bearer,
+      | admittedAt bearerContext gs (BecameBlocking.attacker b) (BlockPair.attacker pair),
         -- CR 509.3b's last sentence: "It won't trigger if the creature is put
         -- onto the battlefield blocking." CR 509.3d's arm below is where that
         -- same event does fire, which is the whole reason it is recorded.
         --
         -- Proved rather than fenced, since Aetherplasm: it puts a creature
         -- CARD onto the battlefield blocking, so the arrival brings its own
-        -- text. Parun.CombatEffectSpec puts Loyal Sentry out that way against a
-        -- 2/2 and reddens here when this guard is dropped, with the same Sentry
-        -- DECLARED as the control leg where it does fire.
+        -- text. data/scenarios/combat-cost's
+        -- cr-509-3b-a-creature-put-onto-the-battlefield-blocking-never-blocked
+        -- puts Loyal Sentry out that way and reddens here when this guard is
+        -- dropped; its -control twin DECLARES the same Sentry, where it does fire.
         BecameBlocking.producer b /= BlockProducer.PutOntoBattlefield ->
-          let attacker = BecameBlocking.attacker b
-           in case Projection.viewWithLastKnown attacker gs attacker of
-                Nothing -> False
-                Just view -> Filter.matches bearerContext view f
+          admittedAt bearerContext gs (BecameBlocking.blocker b) (BlockPair.blocker pair)
     -- CR 509.3a's grouped event is the once-per-combat one, and matching it here
     -- would lose a blocker's second attacker.
     GameEvent.BlocksDeclared {} -> False
@@ -1246,7 +1245,7 @@ armMatches bindings board gs bearer you cond event = case cond of
     _ -> False
   -- CR 509.3e: the bearer blocked at least one creature the Filter admits. The
   -- same grouped event SelfBlocks and SelfBlocksAtLeast read, so the printed "one
-  -- or more" fires once for the whole declaration; SelfBlocksCreature's arm above
+  -- or more" fires once for the whole declaration; CreatureBlocksCreature's arm above
   -- is the per-attacker reading, and two admitted attackers tells them apart.
   --
   -- The attackers come from Combat.blockers rather than from the event, which
@@ -1258,7 +1257,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- or the effect (Combat.exchangeBlocks) that made the event.
   --
   -- viewWithLastKnown, and the Filter context framed by the bearer, exactly as
-  -- SelfBecomesBlockedBy's arm below does it.
+  -- CreatureBecomesBlockedBy's arm below does it.
   TriggerCondition.SelfBlocksOneOrMore f -> case event of
     GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared blocker _)
       | blocker == bearer ->
@@ -1309,34 +1308,13 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- triggers on the stack before any player gets priority, so nothing has had a
   -- window to change them. viewWithLastKnown, so a blocker already gone (CR
   -- 608.2h) is still read as it was on the battlefield.
-  TriggerCondition.SelfBecomesBlockedBy f -> case event of
-    GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = blocker, BecameBlocking.attacker = attacker})
-      | attacker == bearer ->
-          case Projection.viewWithLastKnown blocker gs blocker of
-            Nothing -> False
-            Just view -> Filter.matches bearerContext view f
-    -- The GROUPED event is CR 509.3c's, and matching it here would collapse two
-    -- blockers into one trigger.
-    GameEvent.AttackerBlocked {} -> False
-    _ -> False
-  -- CR 509.3d read by a BYSTANDER: the Filter is asked of the ATTACKER, where
-  -- the arm above asks it of the blocker and compares the attacker against the
-  -- bearer. CR 701.54c's three-temptation tier is the caller, and its Filter is
-  -- Parun.Engine.Ring.yourRingBearer -- the emblem is not in the event at all, so
-  -- nothing here compares an id to the bearer.
   --
-  -- BecameBlocking.producer is not read, for the arm above's reason:
-  -- rule 509.3d's third sentence admits a creature put onto the battlefield
-  -- blocking.
-  --
-  -- No arm on GameEvent.AttackerBlocked, which is CR 509.3c's grouped event:
-  -- rule 701.54c sacrifices "the blocking creature", one per blocker, and the
-  -- grouped event names none of them.
-  TriggerCondition.PermanentBecomesBlockedBy f -> case event of
-    GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker}) ->
-      case Projection.viewWithLastKnown attacker gs attacker of
-        Nothing -> False
-        Just view -> Filter.matches bearerContext view f
+  -- A bystander reads it too: CR 701.54c's emblem (Parun.Engine.Ring), which is in
+  -- the event at neither end, and Venom, watching its host.
+  TriggerCondition.CreatureBecomesBlockedBy pair -> case event of
+    GameEvent.BecameBlocking b ->
+      admittedAt bearerContext gs (BecameBlocking.attacker b) (BlockPair.attacker pair)
+        && admittedAt bearerContext gs (BecameBlocking.blocker b) (BlockPair.blocker pair)
     -- The GROUPED event is CR 509.3c's, and matching it here would collapse two
     -- blockers into one trigger.
     GameEvent.AttackerBlocked {} -> False

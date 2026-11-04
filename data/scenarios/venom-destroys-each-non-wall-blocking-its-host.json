@@ -1,0 +1,161 @@
+{
+  "description": "CR 509.3d / 603.7 Venom: enchanted creature becomes blocked; each non-Wall blocker is destroyed at end of combat, a Wall and the host are not",
+  "note": "Three blockers, two of them non-Wall, one trigger each. Nothing deals damage.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Aegis Turtle",
+            "label": "host",
+            "ready": true
+          },
+          {
+            "card": "Venom",
+            "label": "venom",
+            "attached": "host"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Aegis Turtle",
+            "label": "b1"
+          },
+          {
+            "card": "Aegis Turtle",
+            "label": "b2"
+          },
+          {
+            "card": "Wall of Stone",
+            "label": "w"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$host"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "bob",
+      "do": {
+        "Block": {
+          "$b1": [
+            "$host"
+          ],
+          "$b2": [
+            "$host"
+          ],
+          "$w": [
+            "$host"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "do": {
+        "OrderTriggers": [
+          "$venom",
+          "$venom"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndOfCombat",
+      "player": "alice",
+      "do": {
+        "OrderTriggers": [
+          "$venom",
+          "$venom"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Graveyard",
+          "card": "Aegis Turtle",
+          "count": 2
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Battlefield",
+          "card": "Wall of Stone",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Aegis Turtle",
+          "count": 1
+        }
+      }
+    }
+  ]
+}

@@ -12,6 +12,7 @@ import qualified Parun.Oracle.Target as Target
 import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.BeginningStep as BeginningStep
+import qualified Parun.Types.BlockPair as BlockPair
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Compares as Compares
 import qualified Parun.Types.Comparison as Comparison
@@ -67,7 +68,7 @@ event :: Target.Context -> Bool -> TriggerCondition.TriggerCondition -> [Event]
 event context creature c = case c of
   -- One description of the creature for both: "blocks or becomes blocked by
   -- a creature" (Inferno Elemental).
-  TriggerCondition.AnyOf [TriggerCondition.SelfBlocksCreature f, TriggerCondition.SelfBecomesBlockedBy g] | f == g -> do
+  TriggerCondition.AnyOf [TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair Filter.Type.IsSource f), TriggerCondition.CreatureBecomesBlockedBy (BlockPair.MkBlockPair g Filter.Type.IsSource)] | f == g -> do
     (one, that) <- described context f
     itself recurring (Text.pack ("blocks or becomes blocked by " <> one)) [(thatAttacker, that), (thatBlocker, that)] []
   TriggerCondition.AnyOf cs@(_ : _ : _) -> do
@@ -194,10 +195,10 @@ selfEvent context creature c = case c of
   TriggerCondition.SelfAttacksUnblocked -> [(recurring, "attacks and isn't blocked", [(thatPlayer, "defending player")])]
   TriggerCondition.SelfBlocks -> [(recurring, "blocks", [])]
   TriggerCondition.CreatureBecomesBlocked Filter.Type.IsSource -> [(recurring, "becomes blocked", [(thatPlayer, "defending player"), (attackingCreature, "it")])]
-  TriggerCondition.SelfBlocksCreature f -> do
+  TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair Filter.Type.IsSource f) -> do
     (one, that) <- described context f
     [(recurring, "blocks " <> one, [(thatAttacker, that)])]
-  TriggerCondition.SelfBecomesBlockedBy f -> do
+  TriggerCondition.CreatureBecomesBlockedBy (BlockPair.MkBlockPair f Filter.Type.IsSource) -> do
     (one, that) <- described context f
     [(recurring, "becomes blocked by " <> one, [(thatBlocker, that)])]
   -- Free: the ability word enrage (CR 207.2c) printed (Ripjaw Raptor) or

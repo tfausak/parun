@@ -10,8 +10,6 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #6012: Venom. An Aura can't watch its host block or be blocked by a creature
-  it filters, naming the other creature.
 - #5999: Errantry. Nothing lets a creature attack only with no other attacker
   beside it; `CantAttackAlone` is the opposite direction.
 - #5177: Gauntlets of Chaos. No filter reads a shared card type with a sibling

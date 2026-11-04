@@ -108,23 +108,28 @@
         },
         {
           "condition": {
-            "type": "SelfBecomesBlockedBy",
+            "type": "CreatureBecomesBlockedBy",
             "value": {
-              "type": "And",
-              "value": [
-                {
-                  "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
+              "attacker": {
+                "type": "IsSource"
+              },
+              "blocker": {
+                "type": "And",
+                "value": [
+                  {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Creature"
+                    }
+                  },
+                  {
+                    "type": "HasSubtype",
+                    "value": {
+                      "type": "Wall"
+                    }
                   }
-                },
-                {
-                  "type": "HasSubtype",
-                  "value": {
-                    "type": "Wall"
-                  }
-                }
-              ]
+                ]
+              }
             }
           },
           "modal": {

@@ -86,49 +86,59 @@
             "type": "AnyOf",
             "value": [
               {
-                "type": "SelfBlocksCreature",
+                "type": "CreatureBlocksCreature",
                 "value": {
-                  "type": "And",
-                  "value": [
-                    {
-                      "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
-                    },
-                    {
-                      "type": "Not",
-                      "value": {
-                        "type": "HasColor",
+                  "attacker": {
+                    "type": "And",
+                    "value": [
+                      {
+                        "type": "HasCardType",
                         "value": {
-                          "type": "Black"
+                          "type": "Creature"
+                        }
+                      },
+                      {
+                        "type": "Not",
+                        "value": {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Black"
+                          }
                         }
                       }
-                    }
-                  ]
+                    ]
+                  },
+                  "blocker": {
+                    "type": "IsSource"
+                  }
                 }
               },
               {
-                "type": "SelfBecomesBlockedBy",
+                "type": "CreatureBecomesBlockedBy",
                 "value": {
-                  "type": "And",
-                  "value": [
-                    {
-                      "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
-                    },
-                    {
-                      "type": "Not",
-                      "value": {
-                        "type": "HasColor",
+                  "attacker": {
+                    "type": "IsSource"
+                  },
+                  "blocker": {
+                    "type": "And",
+                    "value": [
+                      {
+                        "type": "HasCardType",
                         "value": {
-                          "type": "Black"
+                          "type": "Creature"
+                        }
+                      },
+                      {
+                        "type": "Not",
+                        "value": {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Black"
+                          }
                         }
                       }
-                    }
-                  ]
+                    ]
+                  }
                 }
               }
             ]

@@ -33,6 +33,7 @@ import qualified Parun.Types.BecameUnattached as BecameUnattached
 import qualified Parun.Types.BecomesTapState as BecomesTapState
 import Parun.Types.Binding (Binding)
 import qualified Parun.Types.Binding as Binding.Type
+import qualified Parun.Types.BlockPair as BlockPair
 import qualified Parun.Types.BlocksDeclared as BlocksDeclared
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardType as CardType
@@ -828,34 +829,29 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   (TriggerCondition.PermanentBecomesTargeted _, GameEvent.BecameTarget t) ->
     Binding.setTargetingObject (BecameTarget.source t) (maybe Map.empty (`Binding.setBecame` Map.empty) (Recipient.objectOf (BecameTarget.targeted t)))
   -- CR 509.3d's "that creature": the blocker whose declaration fired this, which
-  -- rule 702.25a's payload gives -1/-1. Unconditional in the same sense as the
-  -- arm above -- every GameEvent.BecameBlocking carries both ids -- so
-  -- eventBindingSlots' per-condition promise holds with no event in hand.
+  -- rule 702.25a's payload gives -1/-1 and CR 701.54c's sacrifices. The attacker
+  -- gets no slot: the bearer is CR 113.7a's source, and a bystander's rule names
+  -- it only in the condition.
   --
-  -- The ATTACKER on the same event is the bearer, already bound as CR 113.7a's
-  -- source, so it gets no second name. Guarded on it, so a declaration in which
-  -- the bearer is the BLOCKER stamps nothing here: under CR 603.1b's AnyOf this
-  -- branch is unioned with SelfBlocksCreature's off one event, and Thicket
-  -- Basilisk's "that creature" would otherwise name the Basilisk itself
-  -- (data/scenarios/thicket-basilisk-destroys-a-non-wall-at-end-of-combat.json).
-  (TriggerCondition.SelfBecomesBlockedBy _, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker, BecameBlocking.blocker = blocker}))
-    | attacker == bearer ->
+  -- Guarded on the watched end, so where the creature it admits is the BLOCKER
+  -- this stamps nothing: under CR 603.1b's AnyOf this branch is unioned with
+  -- CreatureBlocksCreature's off one event, and Thicket Basilisk's "that creature"
+  -- would otherwise name the Basilisk itself
+  -- (data/scenarios/thicket-basilisk-destroys-a-non-wall-at-end-of-combat.json),
+  -- Venom's "the other creature" its host. Read outside CR 603.7c's frame, so a
+  -- delayed trigger's slot atom in a pair would stamp nothing; no card does.
+  (TriggerCondition.CreatureBecomesBlockedBy pair, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker, BecameBlocking.blocker = blocker}))
+    | admittedAt (Projection.sourceContext gs (Just you) bearer) gs attacker (BlockPair.attacker pair) ->
         Binding.setBlockingCreature blocker Map.empty
-  -- CR 701.54c's "the blocking creature", off the same field and under the same
-  -- name. The bystander form: the ATTACKER is not the bearer here, and it gets no
-  -- slot, rule 701.54c naming it only as "your Ring-bearer" in the condition.
-  (TriggerCondition.PermanentBecomesBlockedBy _, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = blocker})) ->
-    Binding.setBlockingCreature blocker Map.empty
   -- CR 509.3a read by a bystander: Super-Soldier Serum's "it" is the blocker,
   -- never the bearer, under the name the two arms above give it.
   (TriggerCondition.CreatureBlocks _, GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared blocker _)) ->
     Binding.setBlockingCreature blocker Map.empty
   -- CR 509.3b's "that creature": the ATTACKER on the very same declaration, which
-  -- Loyal Sentry's payload destroys. The mirror of the arm above, and
-  -- unconditional for the same reason; here it is the BLOCKER that is the bearer
-  -- and so gets no second name. Guarded on it for the arm above's reason.
-  (TriggerCondition.SelfBlocksCreature _, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker, BecameBlocking.blocker = blocker}))
-    | blocker == bearer ->
+  -- Loyal Sentry's payload destroys. The mirror of the arm above, guarded on the
+  -- blocker's end for that arm's reason.
+  (TriggerCondition.CreatureBlocksCreature pair, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker, BecameBlocking.blocker = blocker}))
+    | admittedAt (Projection.sourceContext gs (Just you) bearer) gs blocker (BlockPair.blocker pair) ->
         Binding.setBlockedCreature attacker Map.empty
   -- CR 603.6a's "enters attached to a creature": that host, bound as the
   -- trigger is placed, so Infinite Reflection copies it even once the Aura has
@@ -1277,6 +1273,11 @@ batchBindings (first NonEmpty.:| rest) = List.foldl' (Map.unionWith join) first 
           Binding.Type.objects = Binding.Type.objects a <> Binding.Type.objects b
         }
 
+-- CR 509.3b / 509.3d: whether one end of a block is what the pair's Filter
+-- watches, through CR 608.2h's record for a creature already gone.
+admittedAt :: Filter.Context -> GameState -> ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> Bool
+admittedAt context gs oid f = maybe False (\view -> Filter.matches context view f) (Projection.viewWithLastKnown oid gs oid)
+
 -- CR 603.10's first sentence: `oid` as the event's own board sample shows it
 -- (Projection.sampledView), and CR 608.2h's last known information for an id
 -- the sample does not hold -- one gone before the sample was taken, or any id
@@ -1695,10 +1696,10 @@ eventBindingSlots cond = case cond of
   TriggerCondition.SelfBlocksAtLeast _ -> Set.empty
   TriggerCondition.SelfBlocksOneOrMore _ -> Set.empty
   -- CR 509.3b's form is the one that DOES name the attacker, off the same event.
-  -- Guaranteed rather than conditional, as SelfBecomesBlockedBy's is: every
-  -- declaration carries both ids, and matchesTrigger has already pinned the
-  -- blocker to the bearer.
-  TriggerCondition.SelfBlocksCreature _ -> Set.singleton Binding.blockedCreature
+  -- Guaranteed rather than conditional, as CreatureBecomesBlockedBy's is: every
+  -- declaration carries both ids, and matchesTrigger has already read the
+  -- blocker's Filter.
+  TriggerCondition.CreatureBlocksCreature _ -> Set.singleton Binding.blockedCreature
   -- CR 508.5's defending player, which the becomes-blocked event carries for
   -- SelfAttacks' reason -- rule 702.130a's afflict is the reader. No BLOCKER: CR
   -- 509.3c names none, so GameEvent.AttackerBlocked carries none, and CR 509.3d's
@@ -1711,9 +1712,8 @@ eventBindingSlots cond = case cond of
   -- CR 509.3d's form is the one that DOES name a blocker, and
   -- GameEvent.BecameBlocking carries it: rule 702.25a's "the blocking creature".
   -- Guaranteed rather than conditional -- every such event carries both ids, and
-  -- matchesTrigger has already pinned the attacker to the bearer.
-  TriggerCondition.SelfBecomesBlockedBy _ -> Set.singleton Binding.blockingCreature
-  TriggerCondition.PermanentBecomesBlockedBy _ -> Set.singleton Binding.blockingCreature
+  -- matchesTrigger has already read the attacker's Filter.
+  TriggerCondition.CreatureBecomesBlockedBy _ -> Set.singleton Binding.blockingCreature
   -- CR 509.3e names a SET of blockers rather than one, and no reader in the
   -- pool reaches into it: Serra Inquisitors' payload names only itself.
   TriggerCondition.SelfBecomesBlockedByOneOrMore _ -> Set.empty

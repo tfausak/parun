@@ -50,6 +50,7 @@ import qualified Parun.Types.BecameTarget as BecameTarget
 import qualified Parun.Types.BecameUnattached as BecameUnattached
 import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.BeginningStep as BeginningStep
+import qualified Parun.Types.BlockPair as BlockPair
 import qualified Parun.Types.BlockProducer as BlockProducer
 import qualified Parun.Types.BlocksDeclared as BlocksDeclared
 import qualified Parun.Types.CandidateId as CandidateId
@@ -1991,17 +1992,16 @@ representativeEvents cond =
         -- binds nothing off the log.
         TriggerCondition.SelfBlocksOneOrMore _ -> one (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared departed 1))
         -- The PAIRWISE event instead: CR 509.3b's bearer is the BLOCKER too, and
-        -- the attacker beside it is what this one binds. The blocker is the pin's
-        -- bearer, id 0, since eventBindings binds only for the bearer's side.
-        TriggerCondition.SelfBlocksCreature _ -> one (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 0, BecameBlocking.attacker = ObjectId.MkObjectId 41, BecameBlocking.producer = BlockProducer.Declared, BecameBlocking.attackerWasBlocked = False, BecameBlocking.blockersBefore = Set.empty}))
+        -- the attacker beside it is what this one binds. The blocker is the departed
+        -- id, since eventBindings binds only where the watched end has a view.
+        TriggerCondition.CreatureBlocksCreature _ -> one (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = departed, BecameBlocking.attacker = ObjectId.MkObjectId 41, BecameBlocking.producer = BlockProducer.Declared, BecameBlocking.attackerWasBlocked = False, BecameBlocking.blockersBefore = Set.empty}))
         -- CR 508.5's defending player again, and carol for SelfAttacks' reason
         -- above: eventBindings binds this field under `thatPlayer`.
         TriggerCondition.CreatureBecomesBlocked _ -> one (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked departed S.carol 1))
         -- The same declaration event SelfBlocks names, with the ids the other way
-        -- round: this condition's bearer is the ATTACKER, and the blocker is what
-        -- it binds. The attacker is the pin's bearer, as for SelfBlocksCreature.
-        TriggerCondition.SelfBecomesBlockedBy _ -> one (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 41, BecameBlocking.attacker = ObjectId.MkObjectId 0, BecameBlocking.producer = BlockProducer.Declared, BecameBlocking.attackerWasBlocked = False, BecameBlocking.blockersBefore = Set.empty}))
-        TriggerCondition.PermanentBecomesBlockedBy _ -> one (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 41, BecameBlocking.attacker = departed, BecameBlocking.producer = BlockProducer.Declared, BecameBlocking.attackerWasBlocked = False, BecameBlocking.blockersBefore = Set.empty}))
+        -- round: the ATTACKER is the watched end here, and the blocker is what it
+        -- binds. The attacker is the departed id, as for CreatureBlocksCreature.
+        TriggerCondition.CreatureBecomesBlockedBy _ -> one (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 41, BecameBlocking.attacker = departed, BecameBlocking.producer = BlockProducer.Declared, BecameBlocking.attackerWasBlocked = False, BecameBlocking.blockersBefore = Set.empty}))
         -- The GROUPED attacking-side event, which is what makes this one fire
         -- once where the arm above fires per blocker. carol on CreatureBecomesBlocked's
         -- reasoning -- and this one binds that player nothing, which is the
@@ -2492,10 +2492,10 @@ everyTriggerCondition =
     TriggerCondition.SelfBlocks,
     TriggerCondition.CreatureBlocks (Filter.Type.And []),
     TriggerCondition.SelfBlocksAtLeast 2,
-    TriggerCondition.SelfBlocksCreature (Filter.Type.And []),
+    TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair (Filter.Type.And []) (Filter.Type.And [])),
     TriggerCondition.CreatureBecomesBlocked (Filter.Type.And []),
     TriggerCondition.SelfBlocksOneOrMore (Filter.Type.And []),
-    TriggerCondition.SelfBecomesBlockedBy (Filter.Type.And []),
+    TriggerCondition.CreatureBecomesBlockedBy (BlockPair.MkBlockPair (Filter.Type.And []) (Filter.Type.And [])),
     TriggerCondition.SelfBecomesBlockedByOneOrMore (Filter.Type.And []),
     TriggerCondition.CreatureBecomesBlockedByAtLeast (CreatureBecomesBlockedByAtLeast.MkCreatureBecomesBlockedByAtLeast PlayerRelation.Opponent 2),
     TriggerCondition.SelfAttacksUnblocked,
@@ -2670,7 +2670,6 @@ everyTriggerCondition =
     TriggerCondition.SelfBecomesAttachedTo (Filter.Type.And []),
     TriggerCondition.SelfBecomesUnattachedFrom (Filter.Type.And []),
     TriggerCondition.Reflexive,
-    TriggerCondition.PermanentBecomesBlockedBy (Filter.Type.And []),
     TriggerCondition.PlacesSticker (PlacesSticker.MkPlacesSticker PlayerRelation.You (Set.singleton StickerKind.Art) (Filter.Type.And []))
   ]
     -- EVERY action under EVERY relation, on the PlayerBecomesMonarch pair's

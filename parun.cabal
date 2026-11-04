@@ -275,6 +275,8 @@ library codec
     Parun.Codec.BlockCostSpec
     Parun.Codec.BlockersAre
     Parun.Codec.BlockersAreSpec
+    Parun.Codec.BlockPair
+    Parun.Codec.BlockPairSpec
     Parun.Codec.BlockPermission
     Parun.Codec.BlockPermissionSpec
     Parun.Codec.BlockProducer
@@ -2456,6 +2458,7 @@ library types
     Parun.Types.Blight
     Parun.Types.BlockCost
     Parun.Types.BlockersAre
+    Parun.Types.BlockPair
     Parun.Types.BlockPermission
     Parun.Types.BlockProducer
     Parun.Types.BlockRequirement

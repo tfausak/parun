@@ -38,6 +38,7 @@ import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.ArmDelayedTrigger as ArmDelayedTrigger
+import qualified Parun.Types.BlockPair as BlockPair
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
@@ -306,13 +307,12 @@ theRingBlockerSacrificeName = AbilityName.MkAbilityName (Text.pack "sacrifice th
 -- of combat." Minted here rather than carried in card data for
 -- theRingIsLegendary's reason.
 --
--- TriggerCondition.PermanentBecomesBlockedBy is a BYSTANDER condition, as
+-- TriggerCondition.CreatureBecomesBlockedBy read by a BYSTANDER, as
 -- theRingDrainsOnCombatDamage's is: the emblem is neither the blocked creature nor
--- the blocker, so the Filter is what "your Ring-bearer" comes to and it is the
--- shared `yourRingBearer` above, read against the ATTACKER with the trigger's
--- controller as CR 109.5's perspective. TriggerCondition.SelfBecomesBlockedBy
--- could not have carried it -- that condition compares the attacker against the
--- bearer, and CR 114.3 leaves an emblem nothing to attack with.
+-- the blocker, so the attacker's Filter is what "your Ring-bearer" comes to and it
+-- is the shared `yourRingBearer` above, with the trigger's controller as CR
+-- 109.5's perspective. The blocker's Filter admits any: CR 701.54c names no
+-- quality of it.
 --
 -- CR 509.3d's arity is one trigger per BLOCKER, which is rule 701.54c's own: "the
 -- blocking creature's controller sacrifices IT" names one creature, so two
@@ -340,7 +340,7 @@ theRingSacrificesTheBlocker =
               ArmDelayedTrigger.duration = Nothing,
               ArmDelayedTrigger.ability = Nothing
             }
-   in Mint.trigger (TriggerCondition.PermanentBecomesBlockedBy yourRingBearer) (Seq.singleton effect)
+   in Mint.trigger (TriggerCondition.CreatureBecomesBlockedBy BlockPair.MkBlockPair {BlockPair.blocker = Filter.And [], BlockPair.attacker = yourRingBearer}) (Seq.singleton effect)
 
 -- | CR 603.7 / 701.54c: the delayed half of the sentence above -- at end of
 -- combat, the blocking creature is sacrificed.

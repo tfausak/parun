@@ -1,0 +1,207 @@
+{
+  "description": "CR 509.3d Venom ruling: Crown of the Ages moves it after blockers are declared; the new host's blocker lives, the old host's blocker still dies",
+  "note": "Crown resolves with the first host's trigger still on the stack: the ability fired as blocks were declared, and it names its own blocker however the Aura moves.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Aegis Turtle",
+            "label": "host",
+            "ready": true
+          },
+          {
+            "card": "Venom",
+            "label": "venom",
+            "attached": "host"
+          },
+          {
+            "card": "Armored Whirl Turtle",
+            "label": "next",
+            "ready": true
+          },
+          {
+            "card": "Crown of the Ages",
+            "label": "crown",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "i1"
+          },
+          {
+            "card": "Island",
+            "label": "i2"
+          },
+          {
+            "card": "Island",
+            "label": "i3"
+          },
+          {
+            "card": "Island",
+            "label": "i4"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Aegis Turtle",
+            "label": "b1"
+          },
+          {
+            "card": "Caelorna, Coral Tyrant",
+            "label": "b2"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$host",
+          "$next"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "bob",
+      "do": {
+        "Block": {
+          "$b1": [
+            "$host"
+          ],
+          "$b2": [
+            "$next"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$crown",
+          "targets": [
+            "$venom"
+          ],
+          "mana": [
+            "$i1",
+            "$i2",
+            "$i3",
+            "$i4"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseAttachment",
+          "with": "$next"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "AttachedTo",
+          "object": "$venom",
+          "is": "$next"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Battlefield",
+          "card": "Aegis Turtle",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Graveyard",
+          "card": "Aegis Turtle",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Battlefield",
+          "card": "Caelorna, Coral Tyrant",
+          "count": 1
+        }
+      }
+    }
+  ]
+}

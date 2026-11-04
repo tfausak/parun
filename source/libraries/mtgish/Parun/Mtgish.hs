@@ -40,6 +40,7 @@ import qualified Parun.Types.AgainstSlot as AgainstSlot
 import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.Arithmetic as Arithmetic
 import qualified Parun.Types.BeginningStep as BeginningStep
+import qualified Parun.Types.BlockPair as BlockPair
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
@@ -720,8 +721,8 @@ trigger n = case Node.tag n of
       Nothing -> do
         f <- permanents outermost who
         Right (TriggerCondition.CreatureBecomesBlocked f, bound [("Trigger_ThatCreature", Oracle.Trigger.attackingCreature), ("Trigger_DefendingPlayer", Oracle.Trigger.thatPlayer)])
-  "WhenACreatureBlocksACreature" -> other TriggerCondition.SelfBlocksCreature Oracle.Trigger.thatAttacker
-  "WhenACreatureBecomesBlockedByACreature" -> other TriggerCondition.SelfBecomesBlockedBy Oracle.Trigger.thatBlocker
+  "WhenACreatureBlocksACreature" -> other (TriggerCondition.CreatureBlocksCreature . BlockPair.MkBlockPair Filter.IsSource) Oracle.Trigger.thatAttacker
+  "WhenACreatureBecomesBlockedByACreature" -> other (\f -> TriggerCondition.CreatureBecomesBlockedBy (BlockPair.MkBlockPair f Filter.IsSource)) Oracle.Trigger.thatBlocker
   "WhenACreatureDealsCombatDamageToAPlayer" -> damaged TriggerCondition.SelfDealsCombatDamageToPlayer
   "WhenAPermanentDealsDamageToAPlayer" -> damaged (\relation -> TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self relation Nothing))
   "AtTheBeginningOfAPlayersUpkeep" -> step (Phase.Beginning BeginningStep.Upkeep)

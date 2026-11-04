@@ -34,6 +34,7 @@ import qualified Parun.Types.AttachRestriction as AttachRestriction
 import qualified Parun.Types.AttackTargetRef as AttackTargetRef
 import qualified Parun.Types.Backup as Backup
 import qualified Parun.Types.BeginningStep as BeginningStep
+import qualified Parun.Types.BlockPair as BlockPair
 import qualified Parun.Types.BlockRole as BlockRole
 import qualified Parun.Types.BlockStatus as BlockStatus
 import qualified Parun.Types.BoundReading as BoundReading
@@ -6749,8 +6750,11 @@ rampage n =
 flanking :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 flanking =
   Mint.trigger
-    ( TriggerCondition.SelfBecomesBlockedBy
-        (Filter.And [Filter.HasCardType CardType.Creature, Filter.Not (Filter.HasKeyword Keyword.Flanking)])
+    ( TriggerCondition.CreatureBecomesBlockedBy
+        BlockPair.MkBlockPair
+          { BlockPair.blocker = Filter.And [Filter.HasCardType CardType.Creature, Filter.Not (Filter.HasKeyword Keyword.Flanking)],
+            BlockPair.attacker = Filter.IsSource
+          }
     )
     (Seq.singleton flankingEffect)
 

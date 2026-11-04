@@ -52,6 +52,7 @@ import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.Action as Action.Type
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.Affected as Affected
+import qualified Parun.Types.BlockPair as BlockPair
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
@@ -1535,13 +1536,13 @@ spec s registry = Spec.describe s "Parun.Engine.Projection" $ do
     Spec.assertEqWith
       s
       "CR 509.3b's Filter over the attacker blocked takes the swap"
-      (rewrite (TriggerCondition.SelfBlocksCreature (Filter.Type.HasSubtype Subtype.Type.Wraith)))
-      (TriggerCondition.SelfBlocksCreature (Filter.Type.HasSubtype Subtype.Type.Elf))
+      (rewrite (TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair Filter.Type.IsSource (Filter.Type.HasSubtype Subtype.Type.Wraith))))
+      (TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair Filter.Type.IsSource (Filter.Type.HasSubtype Subtype.Type.Elf)))
     Spec.assertEqWith
       s
       "CR 509.3d's, read from the other side, takes it too"
-      (rewrite (TriggerCondition.SelfBecomesBlockedBy (Filter.Type.HasSubtype Subtype.Type.Wraith)))
-      (TriggerCondition.SelfBecomesBlockedBy (Filter.Type.HasSubtype Subtype.Type.Elf))
+      (rewrite (TriggerCondition.CreatureBecomesBlockedBy (BlockPair.MkBlockPair (Filter.Type.HasSubtype Subtype.Type.Wraith) Filter.Type.IsSource)))
+      (TriggerCondition.CreatureBecomesBlockedBy (BlockPair.MkBlockPair (Filter.Type.HasSubtype Subtype.Type.Elf) Filter.Type.IsSource))
     Spec.assertEqWith
       s
       "and CR 509.3a's nullary form holds no word to swap"

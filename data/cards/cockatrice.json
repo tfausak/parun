@@ -100,49 +100,59 @@
             "type": "AnyOf",
             "value": [
               {
-                "type": "SelfBlocksCreature",
+                "type": "CreatureBlocksCreature",
                 "value": {
-                  "type": "And",
-                  "value": [
-                    {
-                      "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
-                    },
-                    {
-                      "type": "Not",
-                      "value": {
-                        "type": "HasSubtype",
+                  "attacker": {
+                    "type": "And",
+                    "value": [
+                      {
+                        "type": "HasCardType",
                         "value": {
-                          "type": "Wall"
+                          "type": "Creature"
+                        }
+                      },
+                      {
+                        "type": "Not",
+                        "value": {
+                          "type": "HasSubtype",
+                          "value": {
+                            "type": "Wall"
+                          }
                         }
                       }
-                    }
-                  ]
+                    ]
+                  },
+                  "blocker": {
+                    "type": "IsSource"
+                  }
                 }
               },
               {
-                "type": "SelfBecomesBlockedBy",
+                "type": "CreatureBecomesBlockedBy",
                 "value": {
-                  "type": "And",
-                  "value": [
-                    {
-                      "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
-                    },
-                    {
-                      "type": "Not",
-                      "value": {
-                        "type": "HasSubtype",
+                  "attacker": {
+                    "type": "IsSource"
+                  },
+                  "blocker": {
+                    "type": "And",
+                    "value": [
+                      {
+                        "type": "HasCardType",
                         "value": {
-                          "type": "Wall"
+                          "type": "Creature"
+                        }
+                      },
+                      {
+                        "type": "Not",
+                        "value": {
+                          "type": "HasSubtype",
+                          "value": {
+                            "type": "Wall"
+                          }
                         }
                       }
-                    }
-                  ]
+                    ]
+                  }
                 }
               }
             ]

@@ -34,26 +34,31 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfBlocksCreature",
+            "type": "CreatureBlocksCreature",
             "value": {
-              "type": "And",
-              "value": [
-                {
-                  "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
-                },
-                {
-                  "type": "Not",
-                  "value": {
-                    "type": "HasKeyword",
+              "attacker": {
+                "type": "And",
+                "value": [
+                  {
+                    "type": "HasCardType",
                     "value": {
-                      "type": "Flying"
+                      "type": "Creature"
+                    }
+                  },
+                  {
+                    "type": "Not",
+                    "value": {
+                      "type": "HasKeyword",
+                      "value": {
+                        "type": "Flying"
+                      }
                     }
                   }
-                }
-              ]
+                ]
+              },
+              "blocker": {
+                "type": "IsSource"
+              }
             }
           },
           "modal": {
