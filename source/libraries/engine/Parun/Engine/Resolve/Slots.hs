@@ -1203,6 +1203,19 @@ productionPlayerRefs production = case production of
   ManaProduction.Noted -> []
   ManaProduction.CouldProduce _ -> []
   ManaProduction.Pooled counted -> [ManaCount.player counted]
+  ManaProduction.ProducedByTapped -> []
+
+-- The slot a production reads: only the tapped permanent's types name one.
+productionSlots :: ManaProduction.ManaProduction -> Map.Map SlotName SlotArity
+productionSlots production = case production of
+  ManaProduction.OfType _ -> Map.empty
+  ManaProduction.AnyColor -> Map.empty
+  ManaProduction.Chosen -> Map.empty
+  ManaProduction.SnowSymbol -> Map.empty
+  ManaProduction.Noted -> Map.empty
+  ManaProduction.CouldProduce _ -> Map.empty
+  ManaProduction.Pooled _ -> Map.empty
+  ManaProduction.ProducedByTapped -> oneSlot Binding.manaSource
 
 -- The slots a MonarchTarget reads: only the targeted arm names one.
 monarchTargetSlots :: MonarchTarget.MonarchTarget -> Map.Map SlotName SlotArity
@@ -1272,8 +1285,8 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   Effect.ModifyTarget (ModifyTarget.MkModifyTarget duration modification _ each) ->
     joinTwo (maybe id Map.delete each (joinSlots (fmap quantitySlots (Projection.quantitiesOf modification)))) (durationSlots duration)
   Effect.ChangeText (ChangeText.MkChangeText _ _ slot duration) -> joinTwo (oneSlot slot) (durationSlots duration)
-  Effect.AddMana {} -> Map.empty
-  Effect.Firebend {} -> Map.empty
+  Effect.AddMana (ManaAddition.MkManaAddition _ production _ _ _ _ _) -> productionSlots production
+  Effect.Firebend (ManaAddition.MkManaAddition _ production _ _ _ _ _) -> productionSlots production
   -- The actor is effectPlayerRefs' half, joined at the head; the FILTER is a
   -- read like Search's, a card naming a slot in it being read here.
   Effect.ActivateManaAbilities (ActivateManaAbilities.MkActivateManaAbilities _ filter_) -> filterSlotsOf filter_

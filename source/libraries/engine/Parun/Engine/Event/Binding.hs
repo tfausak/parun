@@ -999,16 +999,16 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- permanent IS the bearer's host, so the id is always there.
   (TriggerCondition.AttachedPermanentTappedForMana, GameEvent.TappedForMana tapped) ->
     Binding.setManaSource (TappedForMana.permanent tapped) Map.empty
-  -- The same slot for the bystander reading: Autumn Willow, Harmony's "add an
-  -- additional {G}" goes to CR 109.5's "you", and a printing of this shape
-  -- whose recipient is the permanent's controller reads it through
-  -- PlayerRef.HolderOfBound. That is not the tapping player where an
-  -- effect lets another player tap it (Piracy), which this slot does not name.
+  -- The same slot for the bystander reading: Vernal Bloom's "its controller"
+  -- reads it through PlayerRef.HolderOfBound. "That player" is the tapping
+  -- player instead (Manabarbs, Mana Flare), who differs where an effect lets
+  -- another player tap it (Piracy).
   --
   -- Unconditional given a match, the arm above's reason: matchesTrigger accepts
-  -- only a GameEvent.TappedForMana, which carries the permanent outright.
+  -- only a GameEvent.TappedForMana, which carries the permanent and the player
+  -- outright.
   (TriggerCondition.PermanentTappedForMana {}, GameEvent.TappedForMana tapped) ->
-    Binding.setManaSource (TappedForMana.permanent tapped) Map.empty
+    Binding.setTriggerPlayer (TappedForMana.player tapped) (Binding.setManaSource (TappedForMana.permanent tapped) Map.empty)
   -- CR 605.1b's resolution read off the bearer's own mana ability: the permanent
   -- needs no slot -- it IS the bearer, whom Binding.triggerSource already names
   -- -- and what the payload reads instead is how much mana the activation made,
@@ -2024,9 +2024,9 @@ eventBindingSlots cond = case cond of
   -- The permanent tapped for mana, which the arm above stamps for every
   -- match: Wild Growth reads it through PlayerRef.HolderOfBound.
   TriggerCondition.AttachedPermanentTappedForMana -> Set.singleton Binding.manaSource
-  -- The same slot for the bystander reading, stamped by the arm above for every
-  -- match.
-  TriggerCondition.PermanentTappedForMana {} -> Set.singleton Binding.manaSource
+  -- The same slot for the bystander reading and the tapping player beside it,
+  -- stamped by the arm above for every match.
+  TriggerCondition.PermanentTappedForMana {} -> Set.fromList [Binding.manaSource, Binding.triggerPlayer]
   -- A deliberate empty: Caged Sun's "that color" is the bearer's chosen color,
   -- and it names no source. A card that did would take manaSource.
   TriggerCondition.AbilityAddsMana {} -> Set.empty

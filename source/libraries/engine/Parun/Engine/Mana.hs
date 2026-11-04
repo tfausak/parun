@@ -66,6 +66,7 @@ import qualified Parun.Types.ExilePermanents as ExilePermanents
 import qualified Parun.Types.ExiledPile as ExiledPile
 import qualified Parun.Types.Filter as Filter.Type
 import Parun.Types.Game (Game)
+import qualified Parun.Types.GameEvent as GameEvent
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
@@ -74,6 +75,7 @@ import qualified Parun.Types.HybridPayment as HybridPayment
 import qualified Parun.Types.HybridPhyrexian as HybridPhyrexian
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LifeLossCause as LifeLossCause
+import qualified Parun.Types.LoggedEvent as LoggedEvent
 import Parun.Types.Mana (Mana)
 import qualified Parun.Types.Mana as Mana
 import qualified Parun.Types.ManaAddition as ManaAddition
@@ -111,12 +113,14 @@ import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Quantity as Quantity.Type
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Sacrifice as Sacrifice
+import Parun.Types.SlotName (SlotName)
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SourceChoices as SourceChoices
 import qualified Parun.Types.SpendManaAsThough as SpendManaAsThough
 import qualified Parun.Types.SpendTrigger as SpendTrigger
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.Supertype as Supertype
+import qualified Parun.Types.TappedForMana as TappedForMana
 import qualified Parun.Types.WhenSpent as WhenSpent
 import qualified Parun.Types.WhichCounters as WhichCounters
 import qualified Parun.Types.Zone as Zone
@@ -224,6 +228,9 @@ data Measure
 -- whoever called it. `capacity` is Parun.Engine.Cost.manaActivations at every one.
 -- The incoming Measure is DISCARDED for that reason: a caller cannot ask the
 -- supply walk for the offer's answer.
+--
+-- Not implemented: the mana a triggered mana ability would add to a route's, so
+-- a cost payable only with it is not offered until that mana floats (#6060).
 supplyCapacity :: Capacity -> Capacity
 supplyCapacity capacity _measure pcs pid oid cost restrictions ability gs = case Cost.mana cost of
   Nothing -> noActivations
@@ -272,19 +279,23 @@ noActivations = Activations.MkActivations {Activations.times = 0, Activations.cl
 -- added, which for an activation is AFTER its cost is paid (CR 602.2b / 605.3b)
 -- -- Doubling Cube's {3} leaves the pool it then doubles. Every other read is
 -- off `gs`.
-produced :: ObjectId -> GameState -> ManaProduction -> Produced
-produced oid gs = producedVisiting Set.empty oid gs gs
+--
+-- CR 106.12a's "any type that land produced" reads the types off the tap that
+-- fired the ability, the slot in `bound` naming the permanent: nothing on the
+-- board answers for them (Parun.Types.TappedForMana). CR 605.4a applies the
+-- ability right after that tap, so its latest tap is the one. Without the slot
+-- (an activated ability) no type is defined, and CR 106.5 adds none.
+produced :: Map.Map SlotName (Set.Set Recipient.Recipient) -> ObjectId -> GameState -> ManaProduction -> Produced
+produced bound oid gs = producedVisiting bound Set.empty oid gs gs
 
-producedVisiting :: Set.Set ObjectId -> ObjectId -> GameState -> GameState -> ManaProduction -> Produced
-producedVisiting visited oid gs poolBoard production = case production of
+producedVisiting :: Map.Map SlotName (Set.Set Recipient.Recipient) -> Set.Set ObjectId -> ObjectId -> GameState -> GameState -> ManaProduction -> Produced
+producedVisiting bound visited oid gs poolBoard production = case production of
   ManaProduction.OfType manaType -> Settles [manaType]
   ManaProduction.AnyColor ->
     Offers
       (fmap ManaType.Colored (Color.White NonEmpty.:| [Color.Blue, Color.Black, Color.Red, Color.Green]))
   ManaProduction.Chosen ->
-    case fmap ManaType.Colored (Set.toList (Maybe.fromMaybe Set.empty (Game.currentChoice Chosen.Colors oid gs))) of
-      first : second : more -> Offers (first NonEmpty.:| (second : more))
-      settled -> Settles settled
+    among (fmap ManaType.Colored (Set.toList (Maybe.fromMaybe Set.empty (Game.currentChoice Chosen.Colors oid gs))))
   ManaProduction.SnowSymbol -> Settles [ManaType.Colorless]
   ManaProduction.Noted -> Settles (foldMap Foldable.toList (Map.lookup oid (GameState.notedMana gs)))
   ManaProduction.CouldProduce could ->
@@ -292,12 +303,24 @@ producedVisiting visited oid gs poolBoard production = case production of
         context = Projection.sourceContext gs (Projection.controllerOf oid gs) oid
         asked other = Set.notMember other visiting && maybe False (\view -> Filter.matches context view (CouldProduce.among could)) (Projection.fullView gs other)
         types = Set.filter (ManaFilter.matchesType (CouldProduce.types could)) (Set.fromList (concatMap (\other -> manaTypesVisiting visiting other gs) (filter asked (Set.toList (GameState.battlefield gs)))))
-     in case Set.toList types of
-          first : second : more -> Offers (first NonEmpty.:| (second : more))
-          settled -> Settles settled
+     in among (Set.toList types)
   ManaProduction.Pooled counted ->
     let context = Projection.sourceContext poolBoard (Projection.controllerOf oid gs) oid
      in Settles (foldMap (fmap ManaUnit.manaType) (ManaCount.units (Projection.fullView poolBoard) context poolBoard counted))
+  ManaProduction.ProducedByTapped ->
+    among [manaType | Recipient.ToObject tapped <- foldMap Set.toList (Map.lookup Binding.manaSource bound), manaType <- Set.toList (latestTapProduced tapped gs)]
+  where
+    among types = case types of
+      first : second : more -> Offers (first NonEmpty.:| (second : more))
+      settled -> Settles settled
+
+-- CR 106.12a: the types of mana a permanent's latest tap for mana produced.
+latestTapProduced :: ObjectId -> GameState -> Set.Set ManaType
+latestTapProduced oid = Foldable.foldl' newest Set.empty . GameState.events
+  where
+    newest older logged = case LoggedEvent.event logged of
+      GameEvent.TappedForMana tapped | TappedForMana.permanent tapped == oid -> TappedForMana.mana tapped
+      _ -> older
 
 -- CR 106.3: what one AddMana instruction's production comes to on a board --
 -- a settled run of mana, possibly empty (CR 106.5's undefined type adds none),
@@ -696,6 +719,7 @@ readsPool (clause, _) = any (poolProduction . ManaAddition.production) (Maybe.ma
       ManaProduction.Noted -> False
       ManaProduction.CouldProduce _ -> False
       ManaProduction.Pooled _ -> True
+      ManaProduction.ProducedByTapped -> False
 
 -- CR 603.7a / 106.6a: the delayed ability a Parun.Types.WhenSpent creates as
 -- one mana is produced, its text read off the source's rules text now (CR
@@ -886,7 +910,7 @@ pricedOptionsVisiting visited paid poolBoard pcs oid gs =
       -- differing only in the pools they read (produced's `poolBoard`), so every
       -- other production gives one list twice and the pairs line up.
       additionRuns reader addition =
-        let runsOn board = case producedVisiting visited oid gs board (ManaAddition.production addition) of
+        let runsOn board = case producedVisiting Map.empty visited oid gs board (ManaAddition.production addition) of
               Settles run -> [fmap (unitFor reader addition) run]
               Offers types -> fmap (\manaType -> [unitFor reader addition manaType]) (NonEmpty.toList types)
          in zip (runsOn gs) (runsOn poolBoard)

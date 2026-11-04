@@ -1239,7 +1239,8 @@ performManaPayGate runSubgame source controller cIdx gate answers = do
 -- read off an object. CR 605.1b leaves no targets to bind, so what the event
 -- bound (Parun.Engine.Event.Binding.eventBindings) is the whole environment --
 -- Binding.manaSource, which is how Wild Growth's "its controller" names the
--- land rather than the Aura. What one effect binds, a later one reads
+-- land rather than the Aura, and Binding.triggerPlayer, Mana Flare's "that
+-- player". What one effect binds, a later one reads
 -- (runCarrying): Synthetic Wellspring of Legends' subgame winner.
 --
 -- A SOURCELESS pending trigger cannot arrive: no inherent ability the rulebook

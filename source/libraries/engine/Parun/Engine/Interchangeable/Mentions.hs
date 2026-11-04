@@ -2148,6 +2148,7 @@ manaProductionNames asking x = case x of
   ManaProduction.Noted -> mempty
   ManaProduction.CouldProduce (CouldProduce.MkCouldProduce among _types) -> filterNames asking among
   ManaProduction.Pooled manaCount -> manaCountNames asking manaCount
+  ManaProduction.ProducedByTapped -> slotNames asking Binding.Engine.manaSource
 
 manaCountNames :: (Monoid r) => Asking r -> ManaCount.ManaCount -> r
 manaCountNames asking x = case x of

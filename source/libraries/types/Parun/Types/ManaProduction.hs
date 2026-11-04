@@ -61,4 +61,7 @@ data ManaProduction
   | -- | CR 701.10f: as much of each type as the counted pool holds, doubling
     -- it (Doubling Cube).
     Pooled ManaCount.ManaCount
+  | -- | CR 106.12a: a type the permanent this ability saw tapped for mana
+    -- produced (Binding.manaSource), Mana Flare's "any type that land produced".
+    ProducedByTapped
   deriving (Eq, Ord, Show)
