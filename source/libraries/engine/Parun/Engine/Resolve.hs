@@ -119,7 +119,7 @@ onsetGatedAbilities effects =
 namesOwnTurn :: Onset.Onset -> Bool
 namesOwnTurn onset = case onset of
   Onset.Immediately -> False
-  Onset.FromNextTurnOf ref -> ref == PlayerRef.Relative PlayerRelation.You
+  Onset.FromNextTurnOf ref -> ref == Just (PlayerRef.Relative PlayerRelation.You)
   Onset.FromThatExtraTurn -> True
 
 -- boundSlots over a whole effect list: the write half of the dataflow lint.

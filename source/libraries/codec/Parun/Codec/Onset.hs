@@ -10,7 +10,7 @@ codec =
   Arm.tagged
     tagOf
     [ Arm.nullary "Immediately" Onset.Immediately,
-      Arm.payload "FromNextTurnOf" PlayerRef.codec Onset.FromNextTurnOf (\x -> case x of Onset.FromNextTurnOf y -> Just y; _ -> Nothing),
+      Arm.optionalPayload "FromNextTurnOf" PlayerRef.codec Onset.FromNextTurnOf (\x -> case x of Onset.FromNextTurnOf y -> Just y; _ -> Nothing),
       Arm.nullary "FromThatExtraTurn" Onset.FromThatExtraTurn
     ]
 

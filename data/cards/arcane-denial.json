@@ -152,7 +152,10 @@
                   {
                     "type": "ArmDelayedTrigger",
                     "value": {
-                      "name": "its controller may draw"
+                      "name": "its controller may draw",
+                      "onset": {
+                        "type": "FromNextTurnOf"
+                      }
                     }
                   }
                 ]
@@ -162,7 +165,10 @@
                   {
                     "type": "ArmDelayedTrigger",
                     "value": {
-                      "name": "you draw"
+                      "name": "you draw",
+                      "onset": {
+                        "type": "FromNextTurnOf"
+                      }
                     }
                   }
                 ]

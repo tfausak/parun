@@ -28,7 +28,8 @@ data TurnWindow
     AnyTurn
   | -- | Onset.FromNextTurnOf, before that player's next turn has arrived: the
     -- entry watches for nothing yet, whatever its condition matches. The player
-    -- is read once, at arming. This is the exact mirror of Expiry.AtTurnOf,
+    -- is read once, at arming; Nothing waits for the next turn to begin,
+    -- whoever's it is. This is the exact mirror of Expiry.AtTurnOf,
     -- which ENDS a stored effect at the boundary this one OPENS a delayed
     -- ability at.
     --
@@ -38,7 +39,7 @@ data TurnWindow
     -- whose turn never begins at all (CR 800.4k) does not supply it -- so the
     -- only honest thing to store is the boundary, and the number when the turn
     -- arrives.
-    NextTurnOf PlayerId.PlayerId
+    NextTurnOf (Maybe PlayerId.PlayerId)
   | -- | The same onset once that turn has begun: the number
     -- Parun.Engine.Event.settleOnsets read off GameState.turnNumber as it did, and
     -- NO other turn.
