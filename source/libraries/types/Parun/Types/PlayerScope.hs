@@ -42,7 +42,7 @@ import qualified Parun.Types.TurnRole as TurnRole
 data PlayerScope
   = -- | The players in this relation to the perspective (CR 109.5, 102.3).
     Related PlayerRelation.PlayerRelation
-  | -- | CR 110.1 / 122.1: the players leading or trailing the table on a measure.
+  | -- | CR 110.1 / 119.1 / 122.1: the players leading or trailing the table on a measure.
     --
     -- PERSPECTIVE-FREE, like AnyPlayer: the sentence names no "you" for a
     -- carrier to supply, so Parun.Engine.PlayerEffect.playersInScope answers it

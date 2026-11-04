@@ -9,4 +9,6 @@ data PlayerMeasure
     PermanentsControlled
   | -- | CR 122.1: how many counters of this kind the player has.
     CountersOf PlayerCounterKind.PlayerCounterKind
+  | -- | CR 119.1: the player's life total.
+    LifeTotal
   deriving (Eq, Ord, Show)

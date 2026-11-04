@@ -188,7 +188,7 @@ data PlayerRef
     -- effect's recipient and a Scope or ManaCount alike. Parun.CountSpec's
     -- Synthetic Toll of the Siege proves the count.
     Attacking AttackingPlayers.AttackingPlayers
-  | -- | CR 110.1 / 122.1: the players leading or trailing the table on a measure.
+  | -- | CR 110.1 / 119.1 / 122.1: the players leading or trailing the table on a measure.
     Superlative Superlative.Superlative
   | -- | CR 102.1 / 802.2: the players holding a role the turn hands out --
     -- Stand or Fall's "for each defending player". PlayerScope's InRole, for a
