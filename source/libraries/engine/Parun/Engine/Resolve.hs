@@ -23,6 +23,7 @@ import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Keyword as Keyword.Engine
 import qualified Parun.Engine.Modal as Modal
+import qualified Parun.Engine.Phasing as Phasing
 import qualified Parun.Engine.PlayerDesignation as PlayerDesignation
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.Rewrite as Projection
@@ -304,8 +305,10 @@ resolveSpellWith runSubgame oid = do
             modeOwnedSlots = Map.union (Modal.modesTargetSlots chosenSelection (Face.spell face)) (Game.splicedTargetSlots obj gs)
             legalSlot slot recipients = case Map.lookup slot slots of
               -- CR 608.2b is about TARGETS. A slot declaring none is a RESERVED
-              -- binding and was never targeted.
-              Nothing -> recipients
+              -- binding and was never targeted; CR 702.26b still applies to it.
+              -- Kept because the CR states it: no test observes this arm, only
+              -- resolveModesWith's twin.
+              Nothing -> Phasing.existing gs recipients
               -- Per RECIPIENT and not per slot (CR 608.2b): the slot's surviving
               -- targets are still affected.
               Just targetSlot -> Set.filter (\recipient -> Target.stillLegal (resolvingKind oid gs) Nothing (Just (spellController obj oid gs)) (Object.bindings obj) (Game.acquisitionOf oid gs) oid recipient targetSlot gs) recipients
@@ -800,8 +803,9 @@ resolveModesWith runSubgame stackId srcId modes = do
           chosen = Binding.targetsOf (Object.bindings obj)
           legalSlot slot recipients = case Map.lookup slot slots of
             -- CR 608.2b is about TARGETS. A slot declaring none is a RESERVED
-            -- binding and can never have become an illegal target.
-            Nothing -> recipients
+            -- binding and can never have become an illegal target; CR 702.26b
+            -- still applies to it.
+            Nothing -> Phasing.existing gs recipients
             -- CR 608.2b: the perspective is the ABILITY's controller. `srcId`
             -- stays the source (CR 113.7) and may well be gone -- exactly the
             -- case this rule is about. Judged per RECIPIENT.

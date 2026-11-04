@@ -3405,8 +3405,11 @@ libraryCardsOf context gs pid filter_ =
 -- same objects, and is never a declared target; otherwise a Parun.CardSpec lint
 -- ("no delayed ability declares a target slot under a name its card defines")
 -- rules the case out, so this arm never actually chooses.
+--
+-- Less a phased-out member (CR 702.26b), which every reader of a group owes:
+-- thatcher-revolt-phased-out-token-outlives-the-sacrifice is the board.
 slotGroup :: SlotName -> ObjectId -> GameState -> Maybe (Seq.Seq ObjectId)
-slotGroup slot resolving gs = Binding.objectsOf slot (resolvingBindings resolving gs)
+slotGroup slot resolving gs = Seq.filter (`Map.notMember` GameState.phasedOut gs) <$> Binding.objectsOf slot (resolvingBindings resolving gs)
 
 -- The bindings of the object whose own resolution this is, live while it is still
 -- on the stack and CR 608.2h's last known information once it is not.
