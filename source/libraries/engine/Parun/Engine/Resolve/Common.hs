@@ -3862,19 +3862,18 @@ overHolderBindings holder f gs =
           GameState.stackArchive = Map.adjust put holder (GameState.stackArchive gs)
         }
 
--- CR 701.8b's "put into a graveyard this way", asked of one CR 400.7 incarnation:
--- is it a card, and is it in a graveyard? Both halves are questions about where
--- the object ended up rather than about the destruction, which is why they are
--- asked of the board after the funnel ran (see Effect.Destroy's arm).
+-- "Put into a graveyard this way" (CR 701.8a), asked of one CR 400.7 incarnation:
+-- is it in a graveyard? A question about where the object ended up rather than
+-- about the destruction, which is why it is asked of the board after the funnel
+-- ran (see Effect.Destroy's arm).
 --
 -- WHOSE graveyard is not asked: CR 400.3 files the arrival under the owner and
 -- no printed reader of this slot distinguishes them. Object.zone is the read
--- because it tracks the zone sets and answers in one lookup; CR 111.6 is the
--- card half.
-isCardInAGraveyard :: ObjectId -> GameState -> Bool
-isCardInAGraveyard oid gs = case Game.lookupObject oid gs of
+-- because it tracks the zone sets and answers in one lookup.
+isInAGraveyard :: ObjectId -> GameState -> Bool
+isInAGraveyard oid gs = case Game.lookupObject oid gs of
   Nothing -> False
-  Just obj -> Object.zone obj == Zone.Graveyard && not (Game.isToken oid gs)
+  Just obj -> Object.zone obj == Zone.Graveyard
 
 -- The default runner for the resolutions the live loop does not drive: a
 -- PlaySubgame effect reports a draw and binds nothing. Parun.Engine.Engine passes

@@ -7,26 +7,13 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 
 ## Expressible today
 
-These need no new capability, but `parun translate` does not translate them yet.
-Each names the mtgish node the translator stops at.
-
-- Spirit Shackle: `_Trigger:WhenAPermanentBecomesTapped`
-- Sunken City: `_Action:MayCost`
-- Tawnos's Wand: `_Permanents:PowerIs`
-- The Rack: `_ReplacementActionWouldEnter:ChooseAPlayer`
-- Thoughtlace: `_Actions:Targeted_Modal`
-- Uncle Istvan: `_Rule:PreventDamage`
-- Visions: `_Action:LookAtTheTopNumberCardsOfPlayersLibrary`
-- Volcanic Eruption: `_GameNumber:ValueX`
-- Word of Binding: `_GameNumber:ValueX`
+Every expressible Fourth Edition card has been added to `data/cards/`.
 
 ## Needs a capability
 
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #6082: Tetravus. Separate abilities can't share the tokens one of them made
-  (CR 607.2a), across turns and after it leaves.
 - #6083: Power Surge. Nothing records a player's untapped lands as the turn
   began, before CR 502.3 untaps them.
 - #6084: Nafs Asp. A payment is asked once on resolution (CR 118.12a), not left
