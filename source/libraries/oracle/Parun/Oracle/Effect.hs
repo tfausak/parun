@@ -49,6 +49,7 @@ import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EntryRiders as EntryRiders
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.ForEach as ForEach
+import qualified Parun.Types.ForbidBeingBlocked as ForbidBeingBlocked
 import qualified Parun.Types.IfTaken as IfTaken
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
@@ -553,19 +554,8 @@ modified context m more = do
            in any within (Target.earlier context)
         _ -> False
   change <- if among then [changed, Text.pack "also " <> changed] else [changed]
-  -- A rule granted until end of turn lasts "this turn": "can't be blocked
-  -- this turn" (Zhuge Jin, Wu Strategist). Beside a change to the object's
-  -- characteristics it is not spelled out here.
-  let ruled = fmap (Maybe.isJust . granted) (ModifyTarget.modification m : more)
-      granted n = case n of
-        Modification.GainAbility a -> Continuous.unblockable a
-        _ -> Nothing
-  lasting <- case (and ruled, or ruled, ModifyTarget.duration m) of
-    (True, _, Duration.UntilEndOfTurn) -> [Nothing]
-    (False, False, d) -> Continuous.duration d
-    _ -> []
+  lasting <- Continuous.duration (ModifyTarget.duration m)
   case lasting of
-    Nothing | and ruled -> [MkPredicate (Just who) (change <> Text.pack " this turn" <> defined) [] [] Nothing False]
     Nothing -> [MkPredicate (Just who) (change <> defined) [] [] Nothing False]
     -- Free: the duration ends the sentence (Giant Growth) or opens it
     -- (Aspirant's Ascent).
@@ -832,6 +822,21 @@ effect context e = case e of
               Just DamageKind.Combat -> Text.pack "combat "
               Just DamageKind.Noncombat -> Text.pack "noncombat "
         [MkPredicate Nothing (Text.pack "prevent the next " <> n <> Text.pack " " <> kind <> Text.pack "damage that would be dealt to " <> Target.wording who <> Text.pack " this turn") [] (Target.mentions who) Nothing False]
+  -- CR 509.1b: "Target creature can't be blocked this turn" (Zhuge Jin, Wu
+  -- Strategist), the restriction on the objects a slot names. The duration
+  -- follows the blockers ("by Walls this turn") but comes before an exception
+  -- (Jovens' Tools' "this turn except by Walls").
+  Effect.ForbidBeingBlocked f
+    | Filter.Type.IsBound slot <- ForbidBeingBlocked.affected f,
+      ForbidBeingBlocked.duration f == Duration.UntilEndOfTurn -> do
+        who <- Target.object context Target.Affected (ObjectRef.InSlot slot)
+        let blockers = ForbidBeingBlocked.blockers f
+            thisTurn = Text.pack " this turn"
+        by <- Continuous.blockedBy context blockers
+        let verb' = case blockers of
+              Filter.Type.Not _ -> Text.pack "can't be blocked" <> thisTurn <> by
+              _ -> Text.pack "can't be blocked" <> by <> thisTurn
+        [MkPredicate (Just who) verb' [] [] Nothing False]
   _ -> []
 
 -- | "[Return/Exile/Put] [objects] [to/into/on] [zone]": a zone change (CR

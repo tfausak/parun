@@ -60,39 +60,18 @@
                   {
                     "effects": [
                       {
-                        "type": "ModifyTarget",
+                        "type": "ForbidBeingBlocked",
                         "value": {
+                          "affected": {
+                            "type": "IsBound",
+                            "value": "self"
+                          },
+                          "blockers": {
+                            "type": "And",
+                            "value": []
+                          },
                           "duration": {
                             "type": "UntilEndOfTurn"
-                          },
-                          "modification": {
-                            "type": "GainAbility",
-                            "value": {
-                              "type": "Rules",
-                              "value": {
-                                "combatRestrictions": [
-                                  {
-                                    "type": "CantBeBlockedBy",
-                                    "value": {
-                                      "affected": {
-                                        "type": "Matching",
-                                        "value": {
-                                          "type": "IsSource"
-                                        }
-                                      },
-                                      "blockers": {
-                                        "type": "And",
-                                        "value": []
-                                      }
-                                    }
-                                  }
-                                ]
-                              }
-                            }
-                          },
-                          "ref": {
-                            "type": "InSlot",
-                            "value": "self"
                           }
                         }
                       }

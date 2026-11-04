@@ -86,6 +86,7 @@ import qualified Parun.Types.EquipTarget as EquipTarget
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.ForEach as ForEach
+import qualified Parun.Types.ForbidBeingBlocked as ForbidBeingBlocked
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Hop as Hop
@@ -137,7 +138,6 @@ import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.Replace as Replace
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
 import qualified Parun.Types.ReplacementOrigin as ReplacementOrigin
-import qualified Parun.Types.RuleAbilities as RuleAbilities
 import qualified Parun.Types.Sacrifice as Sacrifice
 import qualified Parun.Types.SacrificeEffect as SacrificeEffect
 import qualified Parun.Types.Sacrificer as Sacrificer
@@ -1183,19 +1183,22 @@ effects context n = case Node.tag n of
       pure [Effect.DealDamage DealDamage.MkDealDamage {DealDamage.parts = Seq.fromList (fmap (\ref -> DamagePart.MkDamagePart ref q) refs), DealDamage.dealer = dealer, DealDamage.excess = Nothing, DealDamage.tally = Nothing, DealDamage.damaged = Nothing, DealDamage.excessTally = Nothing}]
     destroy regenerability ref = pure [Effect.Destroy Destroy.MkDestroy {Destroy.ref = ref, Destroy.regenerability = regenerability, Destroy.slot = Nothing, Destroy.buried = Nothing, Destroy.permanents = Nothing}]
     move zone ref = pure [Effect.MoveToZone (moveTo zone ref)]
-    -- "Target creature can't be blocked this turn" (CR 509.1b): the rule
-    -- granted for a while. The pool writes "can't attack" or "can't block"
-    -- for a while as a prohibition instead (Panic Attack), which is not read
-    -- here.
+    -- "Target creature can't be blocked this turn" (CR 509.1b): a
+    -- restriction on the objects a slot names, an effect rather than a granted
+    -- ability, so a later Humility leaves it (CR 613.1f). The pool writes
+    -- "can't attack" or "can't block" for a while as a prohibition instead
+    -- (Panic Attack), which is not read here, nor is a class's.
     ruled ref rules until' = do
       duration <- Node.node until' >>= expiration
+      bound <- case ref of
+        ObjectRef.InSlot name -> pure name
+        _ -> Node.untranslated n
       rs <- Common.asArray rules >>= traverse (Node.node Monad.>=> combatRestriction (Affected.Matching Filter.IsSource))
-      Monad.unless (all unblockable rs) (Node.untranslated n)
-      let rule' = GrantedAbility.Rules mempty {RuleAbilities.combatRestrictions = rs}
-      pure [Effect.ModifyTarget ModifyTarget.MkModifyTarget {ModifyTarget.duration = duration, ModifyTarget.modification = Modification.GainAbility rule', ModifyTarget.ref = ref, ModifyTarget.each = Nothing}]
+      barred <- traverse (maybe (Node.untranslated n) pure . unblockable) rs
+      pure [Effect.ForbidBeingBlocked ForbidBeingBlocked.MkForbidBeingBlocked {ForbidBeingBlocked.duration = duration, ForbidBeingBlocked.affected = Filter.IsBound bound, ForbidBeingBlocked.blockers = blockers} | blockers <- barred]
     unblockable r = case r of
-      CombatRestriction.CantBeBlockedBy _ -> True
-      _ -> False
+      CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy _ blockers Nothing Nothing) -> Just blockers
+      _ -> Nothing
     modify ref changes until' = do
       duration <- Node.node until' >>= expiration
       ms <- Common.asArray changes >>= traverse (Node.node Monad.>=> staticModification)

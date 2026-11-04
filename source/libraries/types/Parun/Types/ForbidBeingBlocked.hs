@@ -15,10 +15,11 @@ import qualified Parun.Types.Keyword as Keyword
 --
 -- A class and never a named set, CR 611.2c's third sentence: the effect modifies
 -- no characteristic, so it reaches creatures that were not on the battlefield
--- when it began. "Target creature can't be blocked this turn" names one object
--- and stays a granted Parun.Types.CantBeBlockedBy; The Black Gate names its
--- target with an IsBound 'affected' because 'blockers' bakes the player it chose
--- (Parun.Engine.Resolve.Common.storedClass).
+-- when it began. "Target creature can't be blocked this turn" names its target
+-- with an IsBound 'affected' (Parun.Engine.Resolve.Common.storedClass bakes it,
+-- and The Black Gate's chosen player in 'blockers'): an effect rather than a
+-- granted Parun.Types.CantBeBlockedBy, so a later Humility (CR 613.1f) leaves
+-- it. The ghirapur-guide-s-restriction-outlasts-humility scenario is the proof.
 data ForbidBeingBlocked = MkForbidBeingBlocked
   { duration :: Duration.Duration,
     affected :: Filter.Filter Keyword.Keyword,

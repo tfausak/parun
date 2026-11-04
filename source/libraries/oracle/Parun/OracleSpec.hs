@@ -70,6 +70,7 @@ import qualified Parun.Types.EntryRewrite as EntryRewrite
 import qualified Parun.Types.EntryRiders as EntryRiders
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter
+import qualified Parun.Types.ForbidBeingBlocked as ForbidBeingBlocked
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Hop as Hop
@@ -128,7 +129,6 @@ import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.Replace as Replace
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
 import qualified Parun.Types.ReplacementOrigin as ReplacementOrigin
-import qualified Parun.Types.RuleAbilities as RuleAbilities
 import qualified Parun.Types.Sacrifice as Sacrifice
 import qualified Parun.Types.SacrificeEffect as SacrificeEffect
 import qualified Parun.Types.Sacrificer as Sacrificer
@@ -936,10 +936,10 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   -- CR 509.1b / 611.2a: a creature that can't be blocked for the rest of the
   -- turn, which Oracle text says "this turn".
   Spec.it s "render prints a creature that can't be blocked this turn" $ do
-    let rules = GrantedAbility.Rules mempty {RuleAbilities.combatRestrictions = [CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy (Affected.Matching Filter.IsSource) (Filter.And []) Nothing Nothing)]}
-        unblocked changes = spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn m | m <- changes]] [(target, TargetSlot.required Pool.Creatures Nothing)]
-    Spec.assertEq s (Just (Text.pack "Target creature can't be blocked this turn.")) (Oracle.render (unblocked [Modification.GainAbility rules]))
-    Spec.assertEq s Nothing (Oracle.render (unblocked [pt 1 0, Modification.GainAbility rules]))
+    let unblocked duration blockers = spell [clause [Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration (Filter.IsBound target) blockers)]] [(target, TargetSlot.required Pool.Creatures Nothing)]
+    Spec.assertEq s (Just (Text.pack "Target creature can't be blocked this turn.")) (Oracle.render (unblocked Duration.UntilEndOfTurn (Filter.And [])))
+    Spec.assertEq s (Just (Text.pack "Target creature can't be blocked this turn except by Walls.")) (Oracle.render (unblocked Duration.UntilEndOfTurn (Filter.Not (Filter.HasSubtype Subtype.Wall))))
+    Spec.assertEq s Nothing (Oracle.render (unblocked Duration.UntilEndOfCombat (Filter.And [])))
 
   -- CR 506.7a: a time before attackers are declared follows the turn it is
   -- in after a comma.

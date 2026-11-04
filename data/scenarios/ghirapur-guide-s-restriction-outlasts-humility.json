@@ -132,6 +132,12 @@
       "do": {
         "Activate": {
           "ability": 0,
+          "mana": [
+            "$f1",
+            "$f2",
+            "$f3",
+            null
+          ],
           "object": "$guide",
           "targets": [
             "$ogre"

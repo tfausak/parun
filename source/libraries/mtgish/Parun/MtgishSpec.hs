@@ -47,6 +47,7 @@ import qualified Parun.Types.EntryRewrite as EntryRewrite
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.ForEach as ForEach
+import qualified Parun.Types.ForbidBeingBlocked as ForbidBeingBlocked
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Hop as Hop
@@ -59,7 +60,6 @@ import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.Mill as Mill
 import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
-import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.ModifyTarget as ModifyTarget
 import qualified Parun.Types.ObjectCount as ObjectCount
 import qualified Parun.Types.ObjectRef as ObjectRef
@@ -77,7 +77,6 @@ import qualified Parun.Types.PrintedReplacement as PrintedReplacement
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.Replace as Replace
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
-import qualified Parun.Types.RuleAbilities as RuleAbilities
 import qualified Parun.Types.Sacrifice as Sacrifice
 import qualified Parun.Types.Scope as Scope
 import qualified Parun.Types.Search as Search
@@ -289,8 +288,10 @@ spec s = Spec.describe s "Parun.Mtgish" $ do
   Spec.it s "reads a creature that can't be blocked this turn" $ do
     Spec.assertEq s (Right ()) (accepts zhugeJin)
     Spec.assertEq s [[ActivationRestriction.DuringTurn TurnScope.ControllersTurn, ActivationRestriction.BeforeStep (Phase.Combat CombatStep.DeclareAttackers)]] (fmap ActivatedAbility.restrictions (Face.activatedAbilities (translated zhugeJin)))
-    let unblocked = GrantedAbility.Rules mempty {RuleAbilities.combatRestrictions = [CombatRestriction.CantBeBlockedBy (CantBeBlockedBy.MkCantBeBlockedBy (Affected.Matching Filter.IsSource) (Filter.And []) Nothing Nothing)]}
-    Spec.assertEq s [(Duration.UntilEndOfTurn, Modification.GainAbility unblocked)] [(ModifyTarget.duration m, ModifyTarget.modification m) | Effect.ModifyTarget m <- activatedEffects (translated zhugeJin)]
+    let bound f = case ForbidBeingBlocked.affected f of
+          Filter.IsBound _ -> True
+          _ -> False
+    Spec.assertEq s [(Duration.UntilEndOfTurn, True, Filter.And [])] [(ForbidBeingBlocked.duration f, bound f, ForbidBeingBlocked.blockers f) | Effect.ForbidBeingBlocked f <- activatedEffects (translated zhugeJin)]
 
   -- Every keyword that stands alone, as the rule naming it, round-trips to
   -- its own printed name: the round trip over the whole of that table.
