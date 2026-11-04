@@ -1576,8 +1576,8 @@ priorityLoop = do
                               -- permission came from a resolution rather than
                               -- from printed text. CR 613.1's next projection is
                               -- what makes the ending visible; nothing is undone.
-                              Action.Type.EndEffect oid -> do
-                                EndEffect.endEffect performManaAbility p oid
+                              Action.Type.EndEffect _ resolution -> do
+                                EndEffect.endEffect performManaAbility p resolution
                                 State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
                                 settleForPriority
                                 loop trail'

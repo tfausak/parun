@@ -40,6 +40,7 @@ import qualified Parun.Engine.Card as Engine.Card
 import qualified Parun.Engine.Combat as Combat
 import qualified Parun.Engine.Damage as Damage
 import qualified Parun.Engine.Driver as Driver
+import qualified Parun.Engine.EndEffect as EndEffect
 import qualified Parun.Engine.Engine as Engine
 import qualified Parun.Engine.Event.Trigger as Event.Trigger
 import qualified Parun.Engine.Filter as Filter
@@ -1946,7 +1947,12 @@ describeAction gs action = case action of
   Action.Plot oid _ -> fmap (Text.pack "Plot " <>) (describeObject gs oid)
   Action.Foretell oid -> fmap (Text.pack "Foretell " <>) (describeObject gs oid)
   Action.Suspend oid -> fmap (Text.pack "Suspend " <>) (describeObject gs oid)
-  Action.EndEffect oid -> fmap (Text.pack "EndEffect " <>) (describeObject gs oid)
+  -- The second of one source's offers to a seat reads "EndEffect $asp #2".
+  Action.EndEffect source resolution ->
+    let nth = case EndEffect.offerIndex source resolution gs of
+          0 -> Text.empty
+          index -> Text.pack (" #" <> show (index + 1))
+     in fmap (\name -> Text.pack "EndEffect " <> name <> nth) (describeObject gs source)
   _ -> pure (Text.pack (show action))
 
 -- | One line per failure, naming entries in the JSON a scenario writes them in.

@@ -560,7 +560,7 @@ playing wanted action = case action of
   Action.Type.PutCompanionIntoHand -> False
   Action.Type.RollPlanarDie -> False
   Action.Type.Ignore _ _ -> False
-  Action.Type.EndEffect _ -> False
+  Action.Type.EndEffect {} -> False
   Action.Type.ActivateManaAbility _ -> False
 
 -- Crucible of Worlds {3} Artifact: "You may play lands from your graveyard." The

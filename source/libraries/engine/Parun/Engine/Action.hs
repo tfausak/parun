@@ -247,7 +247,7 @@ legalActions pid gs =
       -- effect", the printed sentence, and Gliding Licid's one sentence stores
       -- four continuous effects that must end together. Nothing is left for the
       -- player to choose once the permanent is chosen.
-      endings = fmap Action.EndEffect (EndEffect.endable pid gs)
+      endings = fmap (uncurry Action.EndEffect) (EndEffect.endable pid gs)
       -- CR 116.2k / 702.170a: the sixth special action, and the second whose
       -- window is CR 116.2a's rather than CR 116.2b's -- "any time you have
       -- priority during your main phase while the stack is empty". That gate is

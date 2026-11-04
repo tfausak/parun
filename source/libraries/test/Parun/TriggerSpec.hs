@@ -1183,9 +1183,8 @@ stampedeSpec s registry =
 -- Tidal Wave {2}{U} Instant: "Create a 5/5 blue Wall creature token with defender.
 -- Sacrifice it at the beginning of the next end step." CR 603.7c's object-bound
 -- delayed ability -- "it" must survive the resolution that armed it. Synthetic
--- Deferred Rally and Synthetic Standing Bounty join it for two shapes Tidal Wave
--- cannot reach: a delayed ability with an intervening "if", and one whose stated
--- duration is CR 116.2c's pay-to-end.
+-- Deferred Rally joins it for a shape Tidal Wave cannot reach: a delayed ability
+-- with an intervening "if".
 delayedSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 delayedSpec s registry =
   let endStep = Phase.Ending EndingStep.EndStep

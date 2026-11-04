@@ -763,6 +763,7 @@ import qualified Parun.Codec.UntapHoldSpec
 import qualified Parun.Codec.UntapRSpec
 import qualified Parun.Codec.UntapRestrictionSpec
 import qualified Parun.Codec.UntapRewriteSpec
+import qualified Parun.Codec.UntilPaidSpec
 import qualified Parun.Codec.UsesSpec
 import qualified Parun.Codec.VanguardSpec
 import qualified Parun.Codec.VentureMarkerEnteredSpec
@@ -1509,6 +1510,7 @@ spec s registry corpus = do
   Parun.Codec.OutsideObjectSpec.spec s
   Parun.Codec.OwnedZoneSpec.spec s
   Parun.Codec.PaidExpirySpec.spec s
+  Parun.Codec.UntilPaidSpec.spec s
   Parun.Codec.PairingSpec.spec s
   Parun.Codec.PartnerTextSpec.spec s
   Parun.Codec.PastActivationSpec.spec s

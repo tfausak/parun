@@ -569,7 +569,7 @@ becomeCopy resolving source controller legal (BecomeCopy.MkBecomeCopy original s
                 let (ts, gs1) = Game.freshTimestamp gs
                     acquired o = o {Object.acquisition = Acquisition.Copied ts}
                  in acquire (Game.supersedeStoredCopies (Set.fromList subjects) gs1 {GameState.objects = foldr (\subject -> Map.adjust acquired subject . write subject) (GameState.objects gs1) subjects})
-              Just stated -> case Expiry.arm (Game.readingAcquisition resolving source) legal controller source stated gs of
+              Just stated -> case Expiry.arm resolving legal controller source stated gs of
                 -- CR 611.2b: the duration never started, so nothing is stored.
                 Nothing -> gs
                 Just expiry ->
@@ -910,7 +910,7 @@ armDelayedTrigger resolving source controller legal arm@(ArmDelayedTrigger.MkArm
           -- the OUTER Maybe is the card printing no duration; the inner one is
           -- Expiry.arm reporting that a printed duration never STARTED (CR
           -- 611.2b).
-          State.put (Event.armDelayed ability source controller captured (Event.armOnset (Common.oneSeat legal resolving source controller gs) source controller gs onset) (duration >>= \d -> Expiry.arm (Game.readingAcquisition resolving source) legal controller source d gs) gs)
+          State.put (Event.armDelayed ability source controller captured (Event.armOnset (Common.oneSeat legal resolving source controller gs) source controller gs onset) (duration >>= \d -> Expiry.arm resolving legal controller source d gs) gs)
 
 replace :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Replace.Replace Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Game ()
 replace resolving source controller legal (Replace.MkReplace duration uses origin condition re) =
@@ -920,7 +920,7 @@ replace resolving source controller legal (Replace.MkReplace duration uses origi
   -- travels with the row rather than being re-derived.
   State.modify' $ \gs ->
     let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
-     in case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs of
+     in case Expiry.arm resolving legal controller source duration gs of
           -- CR 611.2b: the duration never started.
           Nothing -> gs
           Just expiry ->
@@ -1241,7 +1241,7 @@ skipPhase resolving source controller legal (SkipPhase.MkSkipPhase ref selector 
   -- player takes the one row. Replacement.applies matches it for the team.
   gs <- State.get
   let named = List.foldl' (\kept pid -> if any (Turn.sharesTurn gs pid) kept then kept else kept <> [pid]) [] (playerRefPlayers legal resolving source controller gs ref)
-      install pid g = case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration g of
+      install pid g = case Expiry.arm resolving legal controller source duration g of
         Nothing -> g
         Just expiry ->
           let (ts, g1) = Game.freshTimestamp g
@@ -1331,12 +1331,12 @@ affectPlayers resolving source controller legal (AffectPlayers.MkAffectPlayers d
         -- opponents each have a different next turn, so the set is fixed as
         -- the effect begins.
         armed = case Expiry.perSeat duration of
-          Nothing -> [(scope, expiry) | expiry <- Maybe.maybeToList (Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs), scope <- baked]
+          Nothing -> [(scope, expiry) | expiry <- Maybe.maybeToList (Expiry.arm resolving legal controller source duration gs), scope <- baked]
           Just seated ->
             [ (AffectedPlayers.Named pid, expiry)
             | pid <- Game.stillPlaying gs,
               any (PlayerEffect.applies pid controller gs) baked,
-              expiry <- Maybe.maybeToList (Expiry.arm (Game.readingAcquisition resolving source) legal controller source (seated pid) gs)
+              expiry <- Maybe.maybeToList (Expiry.arm resolving legal controller source (seated pid) gs)
             ]
         install g ((scope, expiry), bakedEffect) =
           let (ts, g1) = Game.freshTimestamp g
@@ -1371,7 +1371,7 @@ requireBlock resolving source controller legal (RequireBlock.MkRequireBlock dura
   -- requirement on a declaration dynamic (Alluring Scent). An absent attacker
   -- is one row naming none (Predatory Rampage). How many requirements the rows
   -- state is `arity`, read at Parun.Engine.BlockRequirement.
-  State.modify' $ \gs -> case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs of
+  State.modify' $ \gs -> case Expiry.arm resolving legal controller source duration gs of
     -- CR 611.2b: the duration never started, so nothing is stored.
     Nothing -> gs
     Just expiry ->
@@ -1412,7 +1412,7 @@ prohibit resolving source controller legal (Prohibit.MkProhibit what duration af
   -- Parun.Engine.RestrictedCreatures.prohibited and never by a projection. CR
   -- 701.19c makes the Regenerate row a property the DESTRUCTION acquires, at
   -- Event.resolveDestruction.
-  State.modify' $ \gs -> case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs of
+  State.modify' $ \gs -> case Expiry.arm resolving legal controller source duration gs of
     -- CR 611.2b: the duration never started, or a "for as long as" one has
     -- already ended (Wall of Stolen Identity gone before its trigger
     -- resolved), so nothing is stored.
@@ -1459,7 +1459,7 @@ forbidAttack resolving source controller legal (ForbidAttack.MkForbidAttack dura
   -- 613.11 keeps a restriction on a declaration out of the layers, so the row
   -- is read at Parun.Engine.CombatRestriction.attackProhibited (or, aimed, at
   -- Parun.Engine.CombatRestriction.cantAttackPlayer) and never by a projection.
-  State.modify' $ \gs -> case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs of
+  State.modify' $ \gs -> case Expiry.arm resolving legal controller source duration gs of
     -- CR 611.2b: the duration never started, so nothing is stored.
     Nothing -> gs
     Just expiry ->
@@ -1495,7 +1495,7 @@ forbidBeingBlocked resolving source controller legal (ForbidBeingBlocked.MkForbi
   -- this resolution is inside it; bound players baked now; CR 109.5's
   -- controller stored. Read at
   -- Parun.Engine.CombatRestriction.storedEvasions, never by a projection.
-  State.modify' $ \gs -> case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs of
+  State.modify' $ \gs -> case Expiry.arm resolving legal controller source duration gs of
     -- CR 611.2b: the duration never started, so nothing is stored.
     Nothing -> gs
     Just expiry ->
@@ -1519,7 +1519,7 @@ requireAttack resolving source controller legal (RequireAttack.MkRequireAttack d
   -- 608.2b) stores nothing, which is Alluring Siren's fizzle. A Matching class
   -- is ForbidAttack's: one row per defender, its bound players baked now, since
   -- CR 611.2c keeps a requirement on a declaration dynamic.
-  State.modify' $ \gs -> case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs of
+  State.modify' $ \gs -> case Expiry.arm resolving legal controller source duration gs of
     -- CR 611.2b: the duration never started, so nothing is stored.
     Nothing -> gs
     Just expiry ->

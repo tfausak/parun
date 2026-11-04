@@ -5418,7 +5418,7 @@ isActivateOfOgre oid action = case action of
   Action.Type.PutCompanionIntoHand -> False
   Action.Type.RollPlanarDie -> False
   Action.Type.Ignore _ _ -> False
-  Action.Type.EndEffect _ -> False
+  Action.Type.EndEffect {} -> False
   Action.Type.ActivateManaAbility _ -> False
 
 -- The single activated ability of a printing. Total: every caller below names a

@@ -300,7 +300,7 @@ modifyTarget resolving source controller legal chosen (ModifyTarget.MkModifyTarg
   State.modify' $ \gs ->
     case Common.frozenAffected gs affected of
       [] -> gs
-      targets -> case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs of
+      targets -> case Expiry.arm resolving legal controller source duration gs of
         -- CR 611.2b: the duration never started, so nothing is stored.
         Nothing -> gs
         Just expiry ->
@@ -376,7 +376,7 @@ changeText resolving source controller legal (ChangeText.MkChangeText families f
         -- CR 611.2a's Indefinite unless the card states a duration (Crystal
         -- Spray's "until end of turn"), armed through Expiry like the other
         -- storing arms; Nothing when the duration has already passed.
-        case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs of
+        case Expiry.arm resolving legal controller source duration gs of
           Nothing -> gs
           Just expiry ->
             -- CR 611 / 612: a continuous effect over the one target, with the

@@ -428,6 +428,7 @@ import qualified Parun.Types.TurnUpR as TurnUpR
 import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Parun.Types.TypeLine as TypeLine
 import qualified Parun.Types.UntapRestriction as UntapRestriction
+import qualified Parun.Types.UntilPaid as UntilPaid
 import qualified Parun.Types.Uses as Uses
 import qualified Parun.Types.Vote as Vote
 import qualified Parun.Types.VoteChoices as VoteChoices
@@ -4445,7 +4446,7 @@ durationFilters duration =
   concatMap conditionFilters (durationConditions duration)
     <> slotlessCost
       ( case duration of
-          Duration.UntilPaid cost -> costFilters cost
+          Duration.UntilPaid untilPaid -> costFilters (UntilPaid.cost untilPaid)
           Duration.UntilEndOfTurn -> []
           Duration.Indefinite -> []
           Duration.Perpetual -> []

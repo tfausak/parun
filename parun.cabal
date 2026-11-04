@@ -1606,6 +1606,8 @@ library codec
     Parun.Codec.UntapRewrite
     Parun.Codec.UntapRewriteSpec
     Parun.Codec.UntapRSpec
+    Parun.Codec.UntilPaid
+    Parun.Codec.UntilPaidSpec
     Parun.Codec.Uses
     Parun.Codec.UsesSpec
     Parun.Codec.Vanguard
@@ -3258,6 +3260,7 @@ library types
     Parun.Types.UntapR
     Parun.Types.UntapRestriction
     Parun.Types.UntapRewrite
+    Parun.Types.UntilPaid
     Parun.Types.Uses
     Parun.Types.Vanguard
     Parun.Types.VariableChoice

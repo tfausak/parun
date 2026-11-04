@@ -127,7 +127,7 @@ data Expiry
     -- Carries the COST for the same reason Duration.UntilPaid does: it is what
     -- the offer quotes and what the payment charges. Both halves of one printed
     -- sentence therefore end together -- every effect the resolution stored
-    -- carries this same arm and the same source.
+    -- carries this same arm and the same PaidExpiry.resolution.
     --
     -- Carries the SEAT beside it, as While above does: CR 109.5's "you" is the
     -- player who activated the ability or controlled the spell, so the offer is

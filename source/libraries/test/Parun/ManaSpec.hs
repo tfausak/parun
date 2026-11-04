@@ -1290,7 +1290,7 @@ isManaActivation action = case action of
   Action.Type.PutCompanionIntoHand -> False
   Action.Type.RollPlanarDie -> False
   Action.Type.Ignore _ _ -> False
-  Action.Type.EndEffect _ -> False
+  Action.Type.EndEffect {} -> False
   Action.Type.Pass -> False
 
 -- Activates a mana ability whenever one is offered, and passes once none is.

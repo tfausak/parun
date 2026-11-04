@@ -1,0 +1,23 @@
+{
+  "description": "CR 116.2c whole card: Nafs Asp's victim pays {1} in their upkeep, long after the trigger resolved, and loses no life at the draw step",
+  "note": "The ruling's 'commonly pay during upkeep'. The offer survives the turn change and the Asp's death: the debt belongs to the delayed ability, not the permanent (CR 603.7). The unpaid control is nafs-asp-makes-the-player-it-hits-lose-1-life-at-their-next-draw-step.json.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Nafs Asp", "label": "asp", "ready": true}, {"card": "Mountain", "label": "mountain"}], "hand": [{"card": "Shock", "label": "shock"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Forest", "label": "forest"}]},
+      {"name": "carol", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$asp"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"ChooseAttackTarget": "$bob"}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "do": {"Cast": {"object": "$shock", "targets": ["$asp"], "mana": ["$mountain"]}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Nafs Asp", "count": 1}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "do": {"Take": {"action": "EndEffect $asp", "mana": ["$forest"]}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"View": {"of": "Offered", "player": "bob", "is": ["Pass"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "bob", "life": 19}}}
+  ]
+}
