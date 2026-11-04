@@ -231,7 +231,8 @@ data GameState = MkGameState
     -- Effect.DealDamage and Effect.Fight arms, and Parun.Engine.Engine's combat
     -- damage step); for a loss or a draw, the state-based action pass that met
     -- it (Sba.checkOnce, Engine.settlePasses) and each resolved instruction
-    -- (Resolve.applyEffectWith).
+    -- (Resolve.applyEffectWith), and each draw of an instruction's sequence
+    -- (Event.drawSeries).
     pendingReplacementEffects :: Seq.Seq PendingReplacementEffect.PendingReplacementEffect,
     -- | CR 616.1 and Lich's Mirror's ruling: the objects a state-based action
     -- check moves, keyed to the source of the replacement whose effects run in

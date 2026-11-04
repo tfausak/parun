@@ -1032,12 +1032,15 @@ exileAllGraveyards source controller = do
 -- is why this is one opcode rather than an exile followed by a Draw. Both
 -- halves go through the usual funnels, so a short deck still loses at the first
 -- upkeep exactly as the mulligan redraw already does.
-exileHandThenDraw :: PlayerId -> Game ()
-exileHandThenDraw controller = do
+--
+-- `settle` lands what a replacement queued in one draw's place before the next
+-- (CR 614.11a), the Draw arm's.
+exileHandThenDraw :: Game () -> PlayerId -> Game ()
+exileHandThenDraw settle controller = do
   gs <- State.get
   let handIds = Game.zoneMembers Zone.Hand controller gs
   Monad.void (Event.changeZonesTogether (fmap (\oid -> (oid, Zone.Exile)) handIds))
-  got <- Maybe.catMaybes <$> Monad.replicateM (length handIds) (Event.drawCardReturning controller)
+  got <- Event.drawSeries settle controller (Natural.length handIds)
   -- CR 603.12: the Draw arm's shortfall. A REGRESSION FENCE: nothing arms a
   -- reflexive after it.
   Monad.when (length got < length handIds) Common.fallShort
