@@ -1376,16 +1376,21 @@ pairwiseContext gs creature =
   withCharacteristicsOf creature gs (Filter.contextIn gs (controllerOf creature gs) (Just creature))
 
 -- CR 603.10's first sentence: a permanent as a trigger event's own board sample
--- (Event.Trigger.battlefieldAt) shows it -- the characteristics and controller it
--- had immediately after the event -- whether it still stands or has since left,
--- in which case CR 608.2h's record supplies what the sample does not carry.
-sampledView :: ObjectId -> BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics -> GameState -> Filter.View
-sampledView oid candidate gs =
+-- (Event.Trigger.battlefieldAt) shows it -- the characteristics, controller and
+-- attachers it had immediately after the event -- whether it still stands or
+-- has since left, in which case CR 608.2h's record supplies what the sample does
+-- not carry. The attachers come off the same `board`, so an Aura CR 704.5m has
+-- buried since still enchants it; data/scenarios's
+-- venom-fires-though-the-block-toll-knocks-it-off-its-host proves it.
+sampledView :: Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> ObjectId -> BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics -> GameState -> Filter.View
+sampledView board oid candidate gs =
   let pc = BattlefieldCandidate.characteristics candidate
       controller = BattlefieldCandidate.controller candidate
-   in case Game.lastKnownOf oid gs of
+      attacher aid = maybe (viewWithLastKnownAnywhere gs aid) (\c -> Just (sampledView board aid c gs)) (Map.lookup aid board)
+      view = case Game.lastKnownOf oid gs of
         Just lk -> Count.lastKnownView (viewWithLastKnownAnywhere gs) oid gs lk {LastKnown.characteristics = pc, LastKnown.controller = controller}
         Nothing -> viewOfCharacteristics (viewWithLastKnownAnywhere gs) oid pc (Just controller) (countersOf oid gs) gs
+   in view {Filter.attachedViews = Maybe.mapMaybe attacher (Set.toList (BattlefieldCandidate.attached candidate))}
 
 -- CR 110.2's controller off viewWithLastKnownAnywhere (CR 608.2h): controllerOf
 -- for an object that exists, the record's for one that has left, Nothing for an id

@@ -1,0 +1,148 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Black Knight",
+            "label": "host",
+            "ready": true
+          },
+          {
+            "attached": "host",
+            "card": "Super-Soldier Serum",
+            "label": "serum"
+          },
+          {
+            "card": "Bonesplitter",
+            "label": "bonesplitter"
+          },
+          {
+            "card": "Opalescence"
+          },
+          {
+            "card": "Humility",
+            "label": "humility"
+          },
+          {
+            "card": "Ashnod's Altar",
+            "label": "altar"
+          },
+          {
+            "card": "Forest",
+            "label": "forest"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "attached": "host",
+            "card": "Oppressive Rays"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "BeginningOfCombat"
+  },
+  "description": "CR 603.10 Super-Soldier Serum: the attack toll is paid by sacrificing Humility, so its host regains protection from white and CR 704.5m buries the Serum before triggers are put on the stack; the attack still triggers it",
+  "note": "Opalescence makes Humility a creature for Ashnod's Altar. Paying Oppressive Rays' {3} turns the Black Knight's protection from white back on, which makes both white Auras illegal on it.",
+  "timeline": [
+    {
+      "do": {
+        "Attack": [
+          "$host"
+        ]
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseManaSource",
+          "with": "$altar"
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseSacrifices",
+          "with": [
+            "$humility"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseManaSource",
+          "with": "$forest"
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseExtraManaSource",
+          "with": null
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseTargets": {
+          "equipment": [
+            "$bonesplitter"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Super-Soldier Serum",
+          "count": 1,
+          "player": "alice",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": "$host",
+          "object": "$bonesplitter",
+          "of": "AttachedTo"
+        }
+      },
+      "player": "alice",
+      "step": "CombatDamage",
+      "turn": 1
+    }
+  ]
+}
