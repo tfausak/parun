@@ -235,6 +235,12 @@ evaluate viewOf quantityOf talliesWhatHappened context gs count =
         -- matching card" instead. Order-insensitive like every Aggregation, so no
         -- APNAP walk. An empty library has no top card, so Vampire Nocturnus'
         -- "is black" counts nothing.
+        -- CR 500.12: the record of the board before this turn's untap step. Its
+        -- members are objectless, as InHistory's are: some have since left.
+        Scope.AsTurnBegan ->
+          let views = Map.elems (Map.mapWithKey (\oid record -> lastKnownView viewOf oid gs record) (Maybe.fromMaybe Map.empty (GameState.permanentsAsTurnBegan gs)))
+              kept = fmap ((,) Nothing) (Maybe.mapMaybe (keep predicate context . Just) views)
+           in aggregate quantityOf aggregation kept
         Scope.InPosition position (InZone.MkInZone zone ref) -> do
           pids <- playersFor viewOf context gs ref
           let ids = foldMap (\pid -> Game.atPosition position (Filter.source context) zone pid gs) pids
@@ -1101,6 +1107,7 @@ lastKnownView peers oid gs lastKnown =
           (LastKnown.characteristics lastKnown)
       )
         { Filter.identity = Just oid,
+          Filter.tapped = LastKnown.tapped lastKnown,
           Filter.attacking = LastKnown.attacking lastKnown,
           -- CR 508.1b: what it was attacking as it left (Mangara, the Diplomat's
           -- ruling), and that planeswalker's controller as it left, which

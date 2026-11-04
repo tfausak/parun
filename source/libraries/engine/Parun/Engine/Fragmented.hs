@@ -113,6 +113,8 @@ digest gs =
                 GameState.lastKnown = Map.empty,
                 GameState.stackArchive = Map.empty,
                 GameState.stackedIn = Map.empty,
+                -- One value for a whole turn, and the digest keeps turnNumber.
+                GameState.permanentsAsTurnBegan = Nothing,
                 -- Canonical rather than dropped, so CR 732.3's own example recurs,
                 -- and a loop that moves a counter back.
                 GameState.continuousEffects = effects,

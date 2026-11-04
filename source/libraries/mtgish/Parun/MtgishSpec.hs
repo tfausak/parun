@@ -220,6 +220,10 @@ spec s = Spec.describe s "Parun.Mtgish" $ do
   -- CR 604.3: Nightmare's two abilities define one star each, and Dakmor
   -- Sorceress's one is written into both boxes, as the pool writes it; the
   -- printed 4 in the other box is what the engine reads there.
+  -- CR 500.12: a count of the board as the turn began, and the trigger's player it names.
+  Spec.it s "translates Power Surge" $ do
+    Spec.assertEq s (Right ()) (accepts powerSurge)
+
   Spec.it s "writes a characteristic-defining ability into both boxes" $ do
     Spec.assertEq s (Right ()) (accepts nightmare)
     Spec.assertEq s (Right ()) (accepts dakmorSorceress)
@@ -438,6 +442,13 @@ sarcomancy :: (String, String)
 sarcomancy =
   ( "{\"_OracleCard\":\"Card\",\"Name\":\"Sarcomancy\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Enchantment\"],\"Subtypes\":[]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostB\"}],\"Rules\":[{\"_Rule\":\"TriggerA\",\"args\":[{\"_Trigger\":\"WhenAPermanentEntersTheBattlefield\",\"args\":{\"_Permanents\":\"SinglePermanent\",\"args\":{\"_Permanent\":\"ThisPermanent\"}}},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"CreateTokens\",\"args\":[[{\"_CreatableToken\":\"TokenWithPT\",\"args\":[{\"_PT\":\"PT\",\"args\":[2,2]},{\"_TokenColorList\":\"Colors\",\"args\":[\"Black\"]},[],[\"Creature\"],{\"_TokenSubtypes\":\"SubtypesList\",\"args\":[\"Zombie\"]},[]]}],[]]}]}]},{\"_Rule\":\"TriggerI\",\"args\":[{\"_Trigger\":\"AtTheBeginningOfAPlayersUpkeep\",\"args\":{\"_Players\":\"SinglePlayer\",\"args\":{\"_Player\":\"You\"}}},{\"_Condition\":\"NoPermanentsPassFilter\",\"args\":[{\"_Permanents\":\"IsCreatureType\",\"args\":\"Zombie\"},{\"_Permanents\":\"OnTheBattlefield\"}]},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"PermanentDealsDamage\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},{\"_GameNumber\":\"Integer\",\"args\":1},{\"_DamageRecipient\":\"Player\",\"args\":{\"_Player\":\"You\"}}]}]}]}]}",
     "When this enchantment enters, create a 2/2 black Zombie creature token.\nAt the beginning of your upkeep, if there are no Zombies on the battlefield, this enchantment deals 1 damage to you."
+  )
+
+-- | Power Surge's AST, and its Oracle text.
+powerSurge :: (String, String)
+powerSurge =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Power Surge\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Enchantment\"],\"Subtypes\":[]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostR\"},{\"_ManaSymbol\":\"ManaCostR\"}],\"Rules\":[{\"_Rule\":\"TriggerA\",\"args\":[{\"_Trigger\":\"AtTheBeginningOfAPlayersUpkeep\",\"args\":{\"_Players\":\"AnyPlayer\"}},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"PermanentDealsDamage\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},{\"_GameNumber\":\"TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn\",\"args\":{\"_Permanents\":\"And\",\"args\":[{\"_Permanents\":\"IsUntapped\"},{\"_Permanents\":\"IsCardtype\",\"args\":\"Land\"},{\"_Permanents\":\"ControlledByAPlayer\",\"args\":{\"_Players\":\"SinglePlayer\",\"args\":{\"_Player\":\"Trigger_ThatPlayer\"}}}]}},{\"_DamageRecipient\":\"Player\",\"args\":{\"_Player\":\"Trigger_ThatPlayer\"}}]}]}]}]}",
+    "At the beginning of each player's upkeep, this enchantment deals X damage to that player, where X is the number of untapped lands they controlled at the beginning of this turn."
   )
 
 -- | Dakmor Sorceress's AST, and its Oracle text.

@@ -1,0 +1,115 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Power Surge",
+      "oracleText": "At the beginning of each player's upkeep, this enchantment deals X damage to that player, where X is the number of untapped lands they controlled at the beginning of this turn.",
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "StepBegins",
+            "value": {
+              "phase": {
+                "type": "Beginning",
+                "value": {
+                  "type": "Upkeep"
+                }
+              },
+              "scope": {
+                "type": "EachTurn"
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "DealDamage",
+                        "value": {
+                          "parts": [
+                            {
+                              "quantity": {
+                                "type": "Count",
+                                "value": {
+                                  "aggregation": {
+                                    "type": "Members"
+                                  },
+                                  "filter": {
+                                    "type": "And",
+                                    "value": [
+                                      {
+                                        "type": "Not",
+                                        "value": {
+                                          "type": "IsTapped"
+                                        }
+                                      },
+                                      {
+                                        "type": "HasCardType",
+                                        "value": {
+                                          "type": "Land"
+                                        }
+                                      },
+                                      {
+                                        "type": "HeldByBound",
+                                        "value": {
+                                          "holder": {
+                                            "type": "Controller"
+                                          },
+                                          "slot": "thatPlayer"
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  "scope": {
+                                    "type": "AsTurnBegan"
+                                  }
+                                }
+                              },
+                              "ref": {
+                                "type": "InSlot",
+                                "value": "thatPlayer"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}

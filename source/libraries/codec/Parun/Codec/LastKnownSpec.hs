@@ -77,7 +77,8 @@ spec s = Spec.describe s "Parun.Codec.LastKnown" $ do
           LastKnown.zone = Zone.Battlefield,
           LastKnown.home = Zone.Command,
           LastKnown.pile = Just (PlayerId.MkPlayerId 6),
-          LastKnown.lapsedGrants = Set.singleton (Condition.Compares (Compares.MkCompares (Quantity.Literal 3) Comparison.AtLeast (Quantity.Literal 5)))
+          LastKnown.lapsedGrants = Set.singleton (Condition.Compares (Compares.MkCompares (Quantity.Literal 3) Comparison.AtLeast (Quantity.Literal 5))),
+          LastKnown.tapped = True
         }
       ( " {\"characteristics\":"
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
@@ -93,7 +94,7 @@ spec s = Spec.describe s "Parun.Codec.LastKnown" $ do
           <> ",\"chosenModes\":[{\"key\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}},\"value\":[2]}]"
           <> ",\"controlClock\":[{\"player\":1,\"clock\":{\"type\":\"SinceLastUpkeep\"}}]"
           <> ",\"zone\":{\"type\":\"Battlefield\"},\"home\":{\"type\":\"Command\"},\"pile\":6"
-          <> ",\"lapsedGrants\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":3},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":5}}}]} "
+          <> ",\"lapsedGrants\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":3},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":5}}}],\"tapped\":true} "
       )
   -- CR 109.3: neither an attachment nor a chosen name is a characteristic, and
   -- most objects have neither, so the absent case is written out rather than left
@@ -129,7 +130,8 @@ spec s = Spec.describe s "Parun.Codec.LastKnown" $ do
           LastKnown.zone = Zone.Stack,
           LastKnown.home = Zone.Battlefield,
           LastKnown.pile = Nothing,
-          LastKnown.lapsedGrants = Set.empty
+          LastKnown.lapsedGrants = Set.empty,
+          LastKnown.tapped = False
         }
       ( " {\"characteristics\":"
           <> minimalJson

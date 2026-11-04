@@ -22,7 +22,8 @@ codec =
       Arm.payload "OverBound" SlotName.codec (Scope.OverBound BoundReading.AsBound) (\x -> case x of Scope.OverBound BoundReading.AsBound y -> Just y; _ -> Nothing),
       Arm.payload "OverBoundBeforeMove" SlotName.codec (Scope.OverBound BoundReading.BeforeMove) (\x -> case x of Scope.OverBound BoundReading.BeforeMove y -> Just y; _ -> Nothing),
       Arm.payload "TopOf" InZone.codec (Scope.InPosition ZonePosition.Top) (\x -> case x of Scope.InPosition ZonePosition.Top y -> Just y; _ -> Nothing),
-      Arm.payload "AboveSource" InZone.codec (Scope.InPosition ZonePosition.AboveSource) (\x -> case x of Scope.InPosition ZonePosition.AboveSource y -> Just y; _ -> Nothing)
+      Arm.payload "AboveSource" InZone.codec (Scope.InPosition ZonePosition.AboveSource) (\x -> case x of Scope.InPosition ZonePosition.AboveSource y -> Just y; _ -> Nothing),
+      Arm.nullary "AsTurnBegan" Scope.AsTurnBegan
     ]
 
 tagOf :: Scope.Scope -> String
@@ -34,3 +35,4 @@ tagOf x = case x of
   Scope.OverBound BoundReading.BeforeMove _ -> "OverBoundBeforeMove"
   Scope.InPosition ZonePosition.Top _ -> "TopOf"
   Scope.InPosition ZonePosition.AboveSource _ -> "AboveSource"
+  Scope.AsTurnBegan -> "AsTurnBegan"

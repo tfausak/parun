@@ -339,6 +339,12 @@ data GameState = MkGameState
     -- member's. Kept across turns; a restart (CR 727.1) and a subgame (CR
     -- 729.2) begin it again. Turn.turnsBegun reads it.
     turnsBegun :: Map.Map PlayerId.PlayerId Natural.Natural,
+    -- | CR 500.12 / 502.1: every permanent as this turn began, phased-out ones
+    -- being none (CR 702.26b); Nothing until Parun.Engine.Engine.runStep files
+    -- it at the turn's first step, Engine.beginTurn having cleared the last
+    -- turn's. An unforced thunk over that board, whose own copy of this field is
+    -- Nothing, so a game nothing reads it in never projects it.
+    permanentsAsTurnBegan :: Maybe (Map.Map ObjectId.ObjectId LastKnown.LastKnown),
     result :: Maybe Result.Result,
     -- | CR 727.4: raised while a restart has replaced this game underneath the
     -- frames still running it; Engine.runStep lowers it as turn 1's untap step

@@ -10244,6 +10244,7 @@ lastKnownFrom gs oid obj =
     (Game.pileHolderOf oid gs)
     -- CR 604.2's clauses, asked while there is still a board to ask them of.
     (Projection.lapsedGrantsOf (Projection.fullView gs) characteristics oid gs)
+    (Game.isTapped oid gs)
   where
     characteristics = Projection.project oid gs
 

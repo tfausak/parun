@@ -2863,6 +2863,7 @@ scopeNames asking x = case x of
   Scope.OverPlayers playerRef -> playerRefNames asking playerRef
   Scope.OverBound _ slotName -> slotNames asking slotName
   Scope.InPosition _position inZone -> inZoneNames asking inZone
+  Scope.AsTurnBegan -> mempty
 
 searchNames :: (Monoid r) => Asking r -> Search.Search -> r
 searchNames asking x = case x of

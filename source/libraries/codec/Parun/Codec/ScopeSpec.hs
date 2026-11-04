@@ -67,4 +67,11 @@ spec s = Spec.describe s "Parun.Codec.Scope" $ do
       Scope.codec
       (Scope.InPosition ZonePosition.AboveSource (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You)))
       " {\"type\":\"AboveSource\",\"value\":{\"zone\":{\"type\":\"Graveyard\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}} "
+  -- CR 500.12: the permanents as the turn began.
+  Spec.it s "AsTurnBegan" $
+    Common.assertCodec
+      s
+      Scope.codec
+      Scope.AsTurnBegan
+      " {\"type\":\"AsTurnBegan\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Scope.codec

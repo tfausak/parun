@@ -1348,6 +1348,21 @@ Entries are ordered by the first rule each cites.
   Life wither or infect.
 - **Issue**: #5571.
 
+## Whether "at the beginning of this turn" sees an effect lasting until that turn
+
+- **Question**: Power Surge counts the lands a player controlled at the beginning
+  of this turn. An "until your next turn" effect ended as that turn began: is the
+  count of the board with it or without it?
+- **Rules**: CR 500.12 leaves no game event between turns, and neither CR 500.4
+  nor CR 514.2 says when a duration naming a turn ends relative to its beginning.
+  No ruling on the card.
+- **Decision**: Without it. The turn has begun once its first step is reached, and
+  the effect ended as it began.
+- **Rejected**: With it, which counts a land the effect's end took from its
+  controller as that turn began.
+- **Site**: `Parun.Engine.Engine`'s `runStep`, filing
+  `GameState.permanentsAsTurnBegan` after `Parun.Engine.Expiry.dropAtTurnOf`.
+
 ## Whether assigning no combat damage beats assigning toughness
 
 - **Question**: Gauntlets of Light's creature assigns combat damage equal to its

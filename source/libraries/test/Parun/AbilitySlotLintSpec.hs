@@ -191,6 +191,8 @@ scopeOffends scope = case scope of
   Scope.OverBound {} -> False
   -- The InZone arm's pairing, asked of a position in a zone.
   Scope.InPosition _ inZone -> scopeOffends (Scope.InZone inZone)
+  -- Every permanent at once, so no player's copy of a zone to pair with.
+  Scope.AsTurnBegan -> False
 
 cardOffendsSharedZoneScope :: Face.Face Card.Type.Card -> Bool
 cardOffendsSharedZoneScope card =
