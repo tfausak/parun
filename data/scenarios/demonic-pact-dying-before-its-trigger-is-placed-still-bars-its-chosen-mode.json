@@ -106,6 +106,14 @@
       "turn": 1
     },
     {
+      "do": {
+        "Attack": []
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
       "player": "alice",
       "refuse": {
         "Answer": {
