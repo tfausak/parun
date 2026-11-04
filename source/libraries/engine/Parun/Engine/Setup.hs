@@ -792,7 +792,7 @@ anteFromLibraries seated = do
   let anteOne pid = do
         gs <- State.get
         drawn <- Game.drawAmong Prompt.RandomObject (Game.zoneMembers Zone.Library pid gs)
-        Monad.forM_ drawn (`Event.changeZone` Zone.Ante)
+        Monad.forM_ drawn (\oid -> Event.changeZone (pure ()) oid Zone.Ante)
   Monad.when playing (Monad.forM_ seated anteOne)
 
 -- CR 103.2d / 123.2: each player who brought more than three sticker sheets

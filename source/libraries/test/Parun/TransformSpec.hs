@@ -680,7 +680,7 @@ enterTransformedSpec s registry = Spec.describe s "Entering the battlefield tran
     let transformed = EntryRiders.defaultValue {EntryRiders.transformed = True}
         put riders printing =
           let (board, oid) = S.handOne printing emptyBoard
-           in (oid, S.runPure S.identityAnswer board (Monad.void (Event.changeZoneEntering oid Zone.Battlefield LibraryPosition.defaultValue riders (Just S.alice))))
+           in (oid, S.runPure S.identityAnswer board (Monad.void (Event.changeZoneEntering (pure ()) oid Zone.Battlefield LibraryPosition.defaultValue riders (Just S.alice))))
         (refusedId, refused) = put transformed piker
         (_, entered) = put EntryRiders.defaultValue piker
         (_, turned) = put transformed gargoyle

@@ -71,7 +71,7 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
   Spec.it s "CR 113.6b a stated row functions from the hand, so a discard lands in the library" $ do
     nexus <- S.printingOf s registry "Nexus of Fate"
     let (nexusId, gs) = S.addHandCard nexus S.alice (Setup.emptyGame S.bothPlayers)
-        discarded = S.runPure S.identityAnswer gs (Event.discard DiscardCause.Ordinary S.alice nexusId)
+        discarded = S.runPure S.identityAnswer gs (Event.discard (pure ()) DiscardCause.Ordinary S.alice nexusId)
     Spec.assertEqWith s "CR 614.6 the discarded card is in its owner's library" (length (Game.zoneMembers Zone.Library S.alice discarded)) 1
     Spec.assertEqWith s "and the graveyard the discard aimed at is empty" (length (Game.zoneMembers Zone.Graveyard S.alice discarded)) 0
     Spec.assertEqWith s "the hand it left is empty too" (length (Game.zoneMembers Zone.Hand S.alice discarded)) 0
@@ -82,7 +82,7 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
   Spec.it s "CR 113.6b a stated row functions from the library, so a milled card stays there" $ do
     nexus <- S.printingOf s registry "Nexus of Fate"
     let (nexusId, gs) = S.addLibraryCard nexus S.alice (Setup.emptyGame S.bothPlayers)
-        milled = S.runPure S.identityAnswer gs (Event.changeZone nexusId Zone.Graveyard)
+        milled = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) nexusId Zone.Graveyard)
     Spec.assertEqWith s "CR 614.6 the card never left the library" (length (Game.zoneMembers Zone.Library S.alice milled)) 1
     Spec.assertEqWith s "and the graveyard is empty" (length (Game.zoneMembers Zone.Graveyard S.alice milled)) 0
   -- The gate the three cases above cannot show, as a pair of boards differing in
@@ -96,7 +96,7 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
     let (pikerId, base) = S.addPermanent piker S.alice (Setup.emptyGame S.bothPlayers)
         inGraveyard = snd (S.addGraveyardCard restInPeace S.bob base)
         onBattlefield = snd (S.addPermanent restInPeace S.bob base)
-        binned st = S.runPure S.identityAnswer st (Event.changeZone pikerId Zone.Graveyard)
+        binned st = S.runPure S.identityAnswer st (Event.changeZone (pure ()) pikerId Zone.Graveyard)
     Spec.assertEqWith s "the CARD in a graveyard replaces nothing: the creature reaches its owner's graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice (binned inGraveyard))) 1
     Spec.assertEqWith s "and nothing was exiled" (length (Game.zoneMembers Zone.Exile S.alice (binned inGraveyard))) 0
     Spec.assertEqWith s "CR 113.6's default: the same enchantment on the battlefield exiles it instead" (length (Game.zoneMembers Zone.Exile S.alice (binned onBattlefield))) 1
@@ -120,7 +120,7 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
     let (pikerId, base) = S.addPermanent piker S.bob (Setup.emptyGame S.bothPlayers)
         onStack = snd (S.spellOnStack anafenza S.alice base)
         onBattlefield = snd (S.addPermanent anafenza S.alice base)
-        binned st = S.runPure S.identityAnswer st (Event.changeZone pikerId Zone.Graveyard)
+        binned st = S.runPure S.identityAnswer st (Event.changeZone (pure ()) pikerId Zone.Graveyard)
     Spec.assertEqWith s "the SPELL replaces nothing: bob's creature reaches his graveyard" (length (Game.zoneMembers Zone.Graveyard S.bob (binned onStack))) 1
     Spec.assertEqWith s "and nothing was exiled" (length (Game.zoneMembers Zone.Exile S.bob (binned onStack))) 0
     Spec.assertEqWith s "CR 113.6's default: the same card on the battlefield exiles it instead" (length (Game.zoneMembers Zone.Exile S.bob (binned onBattlefield))) 1
@@ -152,7 +152,7 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
         (nexusId, g4) = S.addHandCard nexus S.alice g3
         (pikerId, gs) = S.addHandCard piker S.alice g4
         stock = Game.zoneMembers Zone.Library S.alice gs
-        discarding oid = S.runPure reversingShuffle gs (Event.discard DiscardCause.Ordinary S.alice oid)
+        discarding oid = S.runPure reversingShuffle gs (Event.discard (pure ()) DiscardCause.Ordinary S.alice oid)
         after = discarding nexusId
         control = discarding pikerId
     Spec.assertEqWith s "CR 701.24a the arriving card is on TOP, which only a shuffle of the library it was put at the bottom of could do" (fmap (`List.elem` stock) (Game.zoneMembers Zone.Library S.alice after)) [False, True, True, True]
@@ -169,7 +169,7 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (nexusId, g1) = S.addHandCard nexus S.alice (Setup.emptyGame S.bothPlayers)
         (pikerId, gs) = S.addHandCard piker S.alice g1
-        discarding oid = S.runPure reversingShuffle gs (Event.discard DiscardCause.Ordinary S.alice oid)
+        discarding oid = S.runPure reversingShuffle gs (Event.discard (pure ()) DiscardCause.Ordinary S.alice oid)
     Spec.assertEqWith s "CR 701.20a the Nexus was shown, under the id it had in the zone it left" (revealed (discarding nexusId)) [nexusId]
     Spec.assertEqWith s "the control: discarding a card with no such row shows nobody anything" (revealed (discarding pikerId)) []
     Spec.assertEqWith s "and the control card really was discarded" (length (Game.zoneMembers Zone.Graveyard S.alice (discarding pikerId))) 1

@@ -2096,7 +2096,7 @@ championSpec s registry =
                     S.runPure
                       S.identityAnswer
                       championed
-                      (Event.changeZone prophetId Zone.Graveyard >> Engine.settleForPriority >> Stack.resolveTop)
+                      (Event.changeZone (pure ()) prophetId Zone.Graveyard >> Engine.settleForPriority >> Stack.resolveTop)
               case battlefieldNamed abolisherName S.bob after of
                 Nothing -> Spec.assertFailure s "CR 702.72a the championed Merfolk did not return to the battlefield"
                 Just returned ->
@@ -2201,7 +2201,7 @@ soulbondSpec s registry =
           case onBattlefield wolfirName paired of
             Nothing -> Spec.assertFailure s "the Wolfir did not reach the battlefield"
             Just wolfirId -> do
-              let after = S.runPure S.identityAnswer paired (Event.changeZone giantId Zone.Graveyard >> Engine.settleForPriority)
+              let after = S.runPure S.identityAnswer paired (Event.changeZone (pure ()) giantId Zone.Graveyard >> Engine.settleForPriority)
               Spec.assertEqWith s "CR 702.95e the Wolfir is its printed 4/4 again" (S.powerToughnessOf wolfirId after) (Just (4, 4))
               Spec.assertEqWith s "CR 702.95e and it is paired with nothing" (Game.lookupObject wolfirId after >>= Object.paired) Nothing
         -- Rule 702.95a's SECOND ability: the Wolfir is already on the battlefield
@@ -2327,7 +2327,7 @@ graftSpec s registry =
             (giantCard, g2) = S.addHandCard giant S.alice g1
             (plainsCard, g3) = S.addHandCard plains S.alice g2
             (initiateCard, g4) = S.addHandCard initiate S.alice g3
-            entered = S.runPure S.identityAnswer g4 (Event.changeZone landCard Zone.Battlefield)
+            entered = S.runPure S.identityAnswer g4 (Event.changeZone (pure ()) landCard Zone.Battlefield)
             -- RE-FOUND rather than tracked: CR 400.7 makes the permanent a NEW
             -- object, so the hand card's id names nothing on the battlefield. The
             -- Reborn is the only permanent there, and the first assertion below
@@ -2338,7 +2338,7 @@ graftSpec s registry =
       -- resolves. `placed` stops one step short, where the CR 603.4 "if" has
       -- already decided whether anything reached the stack at all.
       placed :: (forall r. Prompt.Prompt r -> r) -> ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
-      placed answer oid gs = S.runPure answer gs (Event.changeZone oid Zone.Battlefield >> Engine.settleForPriority)
+      placed answer oid gs = S.runPure answer gs (Event.changeZone (pure ()) oid Zone.Battlefield >> Engine.settleForPriority)
       entersUnder :: (forall r. Prompt.Prompt r -> r) -> ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
       entersUnder answer oid gs = S.runPure answer (placed answer oid gs) Stack.resolveTop
    in Spec.describe s "Graft" $ do
@@ -2473,7 +2473,7 @@ backupSpec s registry =
       -- ability then resolves.
       entersTargeting :: ObjectId.ObjectId -> ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
       entersTargeting victim card gs =
-        S.runPure (targeting victim) gs (Event.changeZone card Zone.Battlefield >> Engine.settleForPriority >> Stack.resolveTop)
+        S.runPure (targeting victim) gs (Event.changeZone (pure ()) card Zone.Battlefield >> Engine.settleForPriority >> Stack.resolveTop)
       -- alice attacks with everything, then CR 509.1b's question: may bob's
       -- `blocker` alone block `attacker`?
       attacked gs = snd (Engine.runGamePure S.aggressiveAnswer gs (Combat.declareAttackers S.manaPerformer S.alice))
@@ -2506,7 +2506,7 @@ backupSpec s registry =
               let (card, staged) = S.addHandCard archpriest S.alice gs0
                   -- RE-FOUND after the entry, CR 400.7 having made the permanent
                   -- a new object; the hand card's id names nothing to target.
-                  placed = S.runPure S.identityAnswer staged (Event.changeZone card Zone.Battlefield)
+                  placed = S.runPure S.identityAnswer staged (Event.changeZone (pure ()) card Zone.Battlefield)
                   selfId = Maybe.fromMaybe card (Maybe.listToMaybe (reverse (Game.zoneMembers Zone.Battlefield S.alice placed)))
                   backed = S.runPure (targeting selfId) placed (Engine.settleForPriority >> Stack.resolveTop)
                   after = S.runCombat S.aggressiveAnswer backed
@@ -2564,7 +2564,7 @@ backupSpec s registry =
               let (card, staged) = S.addHandCard archpriest S.alice (S.landsFor swamp S.alice 3 gs0)
                   (murderId, armed) = S.addHandCard murder S.alice staged
                   before = Game.zoneMembers Zone.Battlefield S.alice armed
-                  placed = S.runPure (targeting pikerId) armed (Event.changeZone card Zone.Battlefield >> Engine.settleForPriority)
+                  placed = S.runPure (targeting pikerId) armed (Event.changeZone (pure ()) card Zone.Battlefield >> Engine.settleForPriority)
                   archId = List.find (`notElem` before) (Game.zoneMembers Zone.Battlefield S.alice placed)
               case archId of
                 Nothing -> Spec.assertFailure s "the Archpriest did not reach the battlefield"
@@ -2589,12 +2589,12 @@ backupSpec s registry =
             (gs0, [pikerId], [jeditId]) -> do
               let (card, staged) = S.addHandCard archpriest S.alice gs0
                   before = Game.zoneMembers Zone.Battlefield S.alice staged
-                  entered = S.runPure S.identityAnswer staged (Event.changeZone card Zone.Battlefield)
+                  entered = S.runPure S.identityAnswer staged (Event.changeZone (pure ()) card Zone.Battlefield)
                   archId = List.find (`notElem` before) (Game.zoneMembers Zone.Battlefield S.alice entered)
               case archId of
                 Nothing -> Spec.assertFailure s "the Archpriest did not reach the battlefield"
                 Just selfId -> do
-                  let backed = S.runPure (targeting pikerId) entered (Event.destroy Regenerability.Regenerable [selfId] >> Engine.settleForPriority >> Stack.resolveTop)
+                  let backed = S.runPure (targeting pikerId) entered (Event.destroy (pure ()) Regenerability.Regenerable [selfId] >> Engine.settleForPriority >> Stack.resolveTop)
                       after = S.runCombat S.aggressiveAnswer backed
                   Spec.assertBool s (not (S.onBattlefield jeditId after)) "CR 113.7a the 5/5 blocker was destroyed by the deathtouch granted off the Archpriest's last known information"
                   Spec.assertBool s (Projection.hasKeyword Keyword.Type.Deathtouch pikerId backed) "and the Piker did hold deathtouch before damage"
@@ -2616,7 +2616,7 @@ backupSpec s registry =
               let (card, staged) = S.addHandCard archpriest S.alice (S.landsFor plains S.alice 5 gs0)
                   (weaveId, armed) = S.addHandCard mirrorweave S.alice staged
                   before = Game.zoneMembers Zone.Battlefield S.alice armed
-                  placed = S.runPure (targeting pikerId) armed (Event.changeZone card Zone.Battlefield >> Engine.settleForPriority)
+                  placed = S.runPure (targeting pikerId) armed (Event.changeZone (pure ()) card Zone.Battlefield >> Engine.settleForPriority)
                   archId = List.find (`notElem` before) (Game.zoneMembers Zone.Battlefield S.alice placed)
               case archId of
                 Nothing -> Spec.assertFailure s "the Archpriest did not reach the battlefield"

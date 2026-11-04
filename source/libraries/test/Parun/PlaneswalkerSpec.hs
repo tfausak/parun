@@ -840,7 +840,7 @@ ashiokLoyaltySpec s registry = Spec.describe s "AshiokLoyalty" $ do
     let (ashiokId, board) = ashiokBoard ashiok [swamp]
         (heldId, withHeld) = S.addHandCard maiden S.alice board
         minted = useLoyaltyAbility S.identityAnswer ashiokMinusTwo ashiok ashiokId withHeld
-        exiled = S.runPure S.identityAnswer minted (Event.changeZone heldId Zone.Exile)
+        exiled = S.runPure S.identityAnswer minted (Event.changeZone (pure ()) heldId Zone.Exile)
         after = throughBeginningOfCombat exiled
         tokens = S.tokensOf after
     Spec.assertEqWith s "CR 603.4: the intervening if holds, so both tokens' abilities trigger" (length (filter isAbilityTriggered (S.eventsOf after))) 2
@@ -886,7 +886,7 @@ ashiokLoyaltySpec s registry = Spec.describe s "AshiokLoyalty" $ do
     let (ashiokId, board) = ashiokBoard ashiok [swamp]
         (pikerId, withPiker) = S.addPermanent piker S.alice board
         minted = useLoyaltyAbility S.identityAnswer ashiokMinusTwo ashiok ashiokId withPiker
-        exiled = S.runPure S.identityAnswer minted (Event.changeZone pikerId Zone.Exile)
+        exiled = S.runPure S.identityAnswer minted (Event.changeZone (pure ()) pikerId Zone.Exile)
         after = throughBeginningOfCombat exiled
         tokens = S.tokensOf after
     Spec.assertEqWith s "CR 603.4: a card arrived in exile, so both tokens' abilities trigger" (length (filter isAbilityTriggered (S.eventsOf after))) 2
@@ -902,7 +902,7 @@ ashiokLoyaltySpec s registry = Spec.describe s "AshiokLoyalty" $ do
         (pikerId, withPiker) = S.addPermanent piker S.alice board
         minted = useLoyaltyAbility S.identityAnswer ashiokMinusTwo ashiok ashiokId withPiker
         victim = Maybe.listToMaybe (S.tokensOf minted)
-        exiled = S.runPure S.identityAnswer minted (mapM_ (`Event.changeZone` Zone.Exile) victim)
+        exiled = S.runPure S.identityAnswer minted (mapM_ (\oid -> Event.changeZone (pure ()) oid Zone.Exile) victim)
         after = throughBeginningOfCombat exiled
         tokens = S.tokensOf after
     Spec.assertEqWith s "CR 603.4: no CARD arrived in exile, so neither surviving ability triggers" (length (filter isAbilityTriggered (S.eventsOf after))) 0

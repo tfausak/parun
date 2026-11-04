@@ -75,9 +75,9 @@ riders =
 --
 -- An EMPTY LIBRARY cloaks nothing. CR 701.58a names a card, and CR 609.3 leaves
 -- the rest of the effect to do as much as it can.
-cloak :: PlayerId -> Game ()
-cloak pid = do
+cloak :: Game () -> PlayerId -> Game ()
+cloak settle pid = do
   gs <- State.get
   case Game.zoneMembers Zone.Library pid gs of
     [] -> pure ()
-    top : _ -> Monad.void (Event.changeZoneEntering top Zone.Battlefield LibraryPosition.defaultValue riders (Just pid))
+    top : _ -> Monad.void (Event.changeZoneEntering settle top Zone.Battlefield LibraryPosition.defaultValue riders (Just pid))

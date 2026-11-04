@@ -1625,7 +1625,7 @@ exileUntilMonarchSpec s registry = Spec.describe s "ExileUntilMonarch" $ do
             (Map.singleton slot (Set.singleton (Recipient.ToCreature oid)))
             (jailerExile slot)
         exiled = snd (Engine.runGamePure S.identityAnswer base exile)
-        settled = snd (Engine.runGamePure S.identityAnswer exiled MoveDuration.returnDue)
+        settled = snd (Engine.runGamePure S.identityAnswer exiled (MoveDuration.returnDue (pure ())))
     Spec.assertEqWith s "the watch was registered" (Map.size (GameState.movedUntil exiled)) 1
     Spec.assertEqWith s "bob is still the monarch, unchanged" (GameState.monarch settled) (Just S.bob)
     Spec.assertEqWith s "nothing came back to the battlefield" (Set.size (GameState.battlefield settled)) 0
@@ -1652,9 +1652,9 @@ exileUntilMonarchSpec s registry = Spec.describe s "ExileUntilMonarch" $ do
         -- Monarch.crown and not a write to GameState.monarch, because that is
         -- where a crowning marks the watches now -- a bare field write is not a
         -- crowning at all.
-        alicesCrown = snd (Engine.runGamePure S.identityAnswer (Monarch.crown S.alice exiled) MoveDuration.returnDue)
+        alicesCrown = snd (Engine.runGamePure S.identityAnswer (Monarch.crown S.alice exiled) (MoveDuration.returnDue (pure ())))
         -- bob deals combat damage to the monarch (CR 725.3) and takes it back.
-        bobsCrown = snd (Engine.runGamePure S.identityAnswer (Monarch.crown S.bob alicesCrown) MoveDuration.returnDue)
+        bobsCrown = snd (Engine.runGamePure S.identityAnswer (Monarch.crown S.bob alicesCrown) (MoveDuration.returnDue (pure ())))
     Spec.assertEqWith s "alice holding the crown does not discharge the watch" (Map.size (GameState.movedUntil alicesCrown)) 1
     Spec.assertEqWith s "nor return the creature" (Set.size (GameState.battlefield alicesCrown)) 0
     Spec.assertEqWith s "bob retaking it does return the creature" (Set.size (GameState.battlefield bobsCrown)) 1
@@ -1679,7 +1679,7 @@ exileUntilMonarchSpec s registry = Spec.describe s "ExileUntilMonarch" $ do
         exiled = snd (Engine.runGamePure S.identityAnswer base exile)
         -- CR 725.4's third sentence is the only way back to no monarch, and it
         -- crowns nobody, so this is a bare field write by construction.
-        noMonarch = snd (Engine.runGamePure S.identityAnswer exiled {GameState.monarch = Nothing} MoveDuration.returnDue)
+        noMonarch = snd (Engine.runGamePure S.identityAnswer exiled {GameState.monarch = Nothing} (MoveDuration.returnDue (pure ())))
     Spec.assertEqWith s "the watch is still armed" (Map.size (GameState.movedUntil noMonarch)) 1
     Spec.assertEqWith s "and nothing returned" (Set.size (GameState.battlefield noMonarch)) 0
   -- CR 610.3d across the two endings: a Banisher Priest-style source leaves,
@@ -1704,16 +1704,16 @@ exileUntilMonarchSpec s registry = Spec.describe s "ExileUntilMonarch" $ do
             (Map.singleton slot (Set.singleton (Recipient.ToCreature jailed)))
             (jailerExile slot)
         banish = do
-          moved <- Event.changeZoneReturning held Zone.Exile
+          moved <- Event.changeZoneReturning (pure ()) held Zone.Exile
           State.modify' (\g -> g {GameState.movedUntil = GameState.movedUntil g <> Map.fromList [(m, ReturnWatch.MkReturnWatch (ReturnEnding.SourceLeaves source) Zone.Battlefield) | m <- Foldable.toList moved]})
         settled =
           snd
             ( Engine.runGamePure S.identityAnswer base $ do
                 exile
                 banish
-                Event.changeZone source Zone.Graveyard
+                Event.changeZone (pure ()) source Zone.Graveyard
                 State.modify' (Monarch.crown S.bob)
-                MoveDuration.returnDue
+                MoveDuration.returnDue (pure ())
             )
         arrivals = fmap snd (List.sort [(Object.timestamp obj, fmap S.nameOf (Game.cardOf oid settled)) | oid <- Set.toList (GameState.battlefield settled), Just obj <- [Game.lookupObject oid settled]])
     Spec.assertEqWith s "the Soul Warden came back before the Goblin Piker" arrivals [Just (S.printingName warden), Just (S.printingName piker)]
@@ -1921,7 +1921,7 @@ optionalEffectSpec s registry =
             [ability] -> do
               let cycled = S.runPure takeOptional gs (Activate.activateAbility S.alice worthyId ability)
                   placed = S.runPure takeOptional cycled Engine.settleForPriority
-                  gone = S.runPure S.identityAnswer placed (Event.changeZone piker Zone.Graveyard)
+                  gone = S.runPure S.identityAnswer placed (Event.changeZone (pure ()) piker Zone.Graveyard)
                   ((_, after), transcript) = Replay.record takeOptional gone Stack.resolveTop
               Spec.assertEqWith s "the trigger left the stack" (length (GameState.stack after)) (length (GameState.stack placed) - 1)
               Spec.assertEqWith s "and no may was ever asked" (filter isOptionalResponse transcript) []

@@ -160,7 +160,7 @@ objectFactSpec s registry = Spec.describe s "ObjectFacts" $ do
 -- deterministic and cached (batch-recipe.md).
 afterMountainMoved :: Printing.Printing -> GameState.GameState
 afterMountainMoved mountain =
-  S.runPure S.identityAnswer (S.oneMountainState mountain Phase.PrecombatMain) (Event.changeZone (ObjectId.MkObjectId 0) Zone.Battlefield)
+  S.runPure S.identityAnswer (S.oneMountainState mountain Phase.PrecombatMain) (Event.changeZone (pure ()) (ObjectId.MkObjectId 0) Zone.Battlefield)
 
 gameSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 gameSpec s registry = Spec.describe s "Game" $ do
@@ -207,7 +207,7 @@ gameSpec s registry = Spec.describe s "Game" $ do
                   (ObjectId.MkObjectId 0)
                   (GameState.objects base)
             }
-        moved = S.runPure S.identityAnswer stamped (Event.changeZone (ObjectId.MkObjectId 0) Zone.Battlefield)
+        moved = S.runPure S.identityAnswer stamped (Event.changeZone (pure ()) (ObjectId.MkObjectId 0) Zone.Battlefield)
         landed = Map.elems (Map.filter (\o -> Object.zone o == Zone.Battlefield) (GameState.objects moved))
     Spec.assertEqWith s "reset" (fmap Object.bindings landed) [Map.empty]
 
@@ -216,7 +216,7 @@ gameSpec s registry = Spec.describe s "Game" $ do
     mountain <- S.printingOf s registry "Mountain"
     let (oid, gs) = S.addPermanent piker S.bob (S.landsInPlay mountain 1)
         before = GameState.nextTimestamp gs
-        movedState = S.runPure S.identityAnswer gs (Event.changeZone oid Zone.Graveyard)
+        movedState = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) oid Zone.Graveyard)
         movedId = case Game.zoneMembers Zone.Graveyard S.bob movedState of
           i : _ -> i
           [] -> ObjectId.MkObjectId 999

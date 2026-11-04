@@ -2205,7 +2205,7 @@ fizzleSpec s registry = Spec.describe s "Fizzle" $ do
         -- Kill the sole real target before resolution: CR 608.2b makes it
         -- illegal (it's no longer a legal CreatureTarget), while the
         -- reserved slot -- never targeted -- stays vacuously legal.
-        gone = S.runPure S.identityAnswer withBindings (Event.changeZone victim Zone.Graveyard)
+        gone = S.runPure S.identityAnswer withBindings (Event.changeZone (pure ()) victim Zone.Graveyard)
         mode = Mode.MkMode (Seq.singleton (Mint.mandatory (Seq.fromList [Effect.Destroy (Destroy.MkDestroy (ObjectRef.InSlot targetSlot) Regenerability.Regenerable Nothing Nothing Nothing), Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 1) Nothing)]))) slots
         run = Resolve.resolveModes abilId source [(ModeInstance.MkModeInstance 0 (ModeIndex.MkModeIndex 0) 0, mode)]
         after = snd (Engine.runGamePure S.identityAnswer gone run)

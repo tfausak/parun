@@ -2142,7 +2142,7 @@ spymastersVaultSpec s registry =
             (mongerId, g3) = S.addPermanent monger S.alice g2
             (pikerId, g4) = S.addPermanent piker S.alice g3
             (_, g5) = S.addLibraryCard giant S.alice g4
-            g6 = if killFirst then S.runPure S.identityAnswer g5 (Event.destroy Regenerability.Regenerable [pikerId]) else g5
+            g6 = if killFirst then S.runPure S.identityAnswer g5 (Event.destroy (pure ()) Regenerability.Regenerable [pikerId]) else g5
             floated = S.runPure S.identityAnswer g6 (S.tapForMana swampId)
             ability = case Face.activatedAbilities (S.combinedFace vault) of
               _ : connive : _ -> connive
@@ -2511,7 +2511,7 @@ betrayalSpec s registry = Spec.describe s "CR 701.26a a becomes-tapped trigger" 
     case board of
       ([enchanted, _], _, gs) -> do
         let shielded = S.addRegenShield enchanted gs
-            after = settleAndResolve (S.runPure S.identityAnswer shielded (Event.destroy Regenerability.Regenerable [enchanted]))
+            after = settleAndResolve (S.runPure S.identityAnswer shielded (Event.destroy (pure ()) Regenerability.Regenerable [enchanted]))
         Spec.assertEqWith s "CR 701.19a carol drew off the regeneration's tap" (handNames S.carol after) ["Island"]
         Spec.assertBool s (S.onBattlefield enchanted after) "the shield really stopped the destruction"
         Spec.assertEqWith s "and the regenerated creature really is tapped" (tapStatusOf enchanted after) (Just TapState.Tapped)

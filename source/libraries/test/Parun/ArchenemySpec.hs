@@ -135,7 +135,7 @@ spec s registry = Spec.describe s "Parun.Engine.Archenemy" $ do
     let (victim, b1) = S.addPermanent piker S.alice board
         (survivor, b2) = S.addPermanent piker S.alice b1
         set = S.runPure S.identityAnswer (inMain S.alice b2) (Engine.runTurnBasedActions Phase.PrecombatMain >> Engine.priorityLoop)
-        died = S.runPure S.identityAnswer set (Event.destroy Regenerability.Regenerable [victim] >> Engine.priorityLoop)
+        died = S.runPure S.identityAnswer set (Event.destroy (pure ()) Regenerability.Regenerable [victim] >> Engine.priorityLoop)
     Spec.assertEqWith s "CR 701.33b the scheme is no longer face up" (Archenemy.faceUp died) []
     Spec.assertEqWith s "and is on the bottom of alice's scheme deck" (names (Archenemy.deckOf S.alice died) died) ["Look Skyward and Despair", "The Very Soil Shall Shake"]
     Spec.assertEqWith s "so the surviving Piker is its printed 2/1 again" (S.powerToughnessOf survivor died) (Just (2, 1))

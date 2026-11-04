@@ -1104,7 +1104,7 @@ nullChamberSpec s registry =
       case enteredOne board after of
         Nothing -> Spec.assertFailure s "Null Chamber did not reach the battlefield"
         Just chamber -> do
-          let gone = S.runPure S.identityAnswer gs (Event.destroy Regenerability.Regenerable [chamber])
+          let gone = S.runPure S.identityAnswer gs (Event.destroy (pure ()) Regenerability.Regenerable [chamber])
           Spec.assertBool s (PlayerEffect.prohibitsCasting S.alice pikerId VariableChoice.Announced gs) "prohibited while it stands"
           Spec.assertBool s (not (PlayerEffect.prohibitsCasting S.alice pikerId VariableChoice.Announced gone)) "not prohibited once it is gone"
           Spec.assertBool s (elem (Action.Type.Cast pikerId (S.printingName piker) Facing.FaceUp) (Action.legalActions S.alice gone)) "and the cast is offered again"

@@ -970,7 +970,7 @@ spec s registry = Spec.describe s "Parun.Engine.Departure" $ do
             State.modify' (<> [pid])
             pure OptionalDecision.Exercises
           _ -> pure (S.identityAnswer p)
-        asked = State.execState (Engine.runGame step board (Event.changeZonesTogether [(lentId, Zone.Library), (keptId, Zone.Library)])) []
+        asked = State.execState (Engine.runGame step board (Event.changeZonesTogether (pure ()) [(lentId, Zone.Library), (keptId, Zone.Library)])) []
     Spec.assertEqWith s "bob controls the lent Bears" (Projection.controllerOf lentId board) (Just S.bob)
     Spec.assertEqWith s "CR 101.4 alice, the active player, chooses before bob" asked [S.alice, S.bob]
 

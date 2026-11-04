@@ -775,7 +775,7 @@ spec s registry = Spec.describe s "Meld" $ do
     case mMelded of
       Nothing -> Spec.assertFailure s "expected the melding ability to put one permanent onto the battlefield"
       Just meldedId -> do
-        let dead = S.runPure S.identityAnswer board (Event.destroy Regenerability.Regenerable [meldedId])
+        let dead = S.runPure S.identityAnswer board (Event.destroy (pure ()) Regenerability.Regenerable [meldedId])
             settled = S.runPure S.identityAnswer dead Engine.settleForPriority
             after = S.runPure S.identityAnswer settled (Stack.resolveTop >> Stack.resolveTop)
         Spec.assertEqWith
@@ -805,7 +805,7 @@ spec s registry = Spec.describe s "Meld" $ do
     case mMelded of
       Nothing -> Spec.assertFailure s "expected the melding ability to put one permanent onto the battlefield"
       Just meldedId -> do
-        let dead = S.runPure S.identityAnswer board (Event.destroy Regenerability.Regenerable [meldedId])
+        let dead = S.runPure S.identityAnswer board (Event.destroy (pure ()) Regenerability.Regenerable [meldedId])
             reported = [(fmap S.nameOf (Game.cardOf oid dead), change) | c <- Foldable.toList (Ante.ownershipChanges dead), let oid = OwnershipChange.object c; change = (OwnershipChange.startingOwner c, OwnershipChange.owner c)]
         Spec.assertEqWith s "CR 108.3 only the Garrison changed owner, bob's to begin and alice's now" reported [(Just (CardName.MkCardName (Text.pack "Hanweir Garrison")), (S.bob, S.alice))]
         let whileMelded = [(fmap (S.nameOf . Printing.card) (Game.printingOf (OwnershipChange.card c) board), OwnershipChange.object c) | c <- Foldable.toList (Ante.ownershipChanges board)]
@@ -838,7 +838,7 @@ spec s registry = Spec.describe s "Meld" $ do
     case mMelded of
       Nothing -> Spec.assertFailure s "expected the melding ability to put one permanent onto the battlefield"
       Just meldedId -> do
-        let dead = S.runPure S.identityAnswer board (Event.destroy Regenerability.Regenerable [meldedId])
+        let dead = S.runPure S.identityAnswer board (Event.destroy (pure ()) Regenerability.Regenerable [meldedId])
             settled = S.runPure S.identityAnswer dead Engine.settleForPriority
             -- SIX resolutions over a stack of three, so the counter assertion
             -- below reads a drained stack: capping the resolutions at the
@@ -884,8 +884,8 @@ spec s registry = Spec.describe s "Meld" $ do
         bothNames = List.sort [CardName.MkCardName (Text.pack "Hanweir Battlements"), CardName.MkCardName (Text.pack "Hanweir Garrison")]
     case (mMelded, Projection.abilitiesOf censusId board) of
       (Just meldedId, [ability]) -> do
-        let tallied gs victims = S.runPure S.identityAnswer (S.runPure S.identityAnswer gs (Event.destroy Regenerability.Regenerable victims)) (do Activate.activateAbility S.alice censusId ability; Stack.resolveTop)
-            dead = S.runPure S.identityAnswer board (Event.destroy Regenerability.Regenerable [meldedId])
+        let tallied gs victims = S.runPure S.identityAnswer (S.runPure S.identityAnswer gs (Event.destroy (pure ()) Regenerability.Regenerable victims)) (do Activate.activateAbility S.alice censusId ability; Stack.resolveTop)
+            dead = S.runPure S.identityAnswer board (Event.destroy (pure ()) Regenerability.Regenerable [meldedId])
         Spec.assertEqWith s "CR 712.21e the melded permanent is two cards put into a graveyard, so alice gains 2" (S.lifeOf S.alice (tallied board [meldedId])) (Just 22)
         Spec.assertEqWith s "CR 712.21e and one object that changed zones" (objectsMovedTo Zone.Graveyard dead) (Just 1)
         -- CR 111.6's "a token isn't a card", off a board differing in ONE thing:
@@ -893,7 +893,7 @@ spec s registry = Spec.describe s "Meld" $ do
         -- object into the graveyard and still no third card, which is the
         -- conjunct Synthetic Grave Census prints as "cards".
         Spec.assertEqWith s "CR 111.6 a token dying beside them is not a card, so still 2" (S.lifeOf S.alice (tallied withToken [meldedId, tokenId])) (Just 22)
-        Spec.assertEqWith s "CR 712.21e and the token IS an object that changed zones, so 2 there" (objectsMovedTo Zone.Graveyard (S.runPure S.identityAnswer withToken (Event.destroy Regenerability.Regenerable [meldedId, tokenId]))) (Just 2)
+        Spec.assertEqWith s "CR 712.21e and the token IS an object that changed zones, so 2 there" (objectsMovedTo Zone.Graveyard (S.runPure S.identityAnswer withToken (Event.destroy (pure ()) Regenerability.Regenerable [meldedId, tokenId]))) (Just 2)
         -- The proxies, after every behaviour: alice really was at 20 when the
         -- ability resolved, and the two cards really were in her graveyard for
         -- the fold to find.
@@ -920,7 +920,7 @@ spec s registry = Spec.describe s "Meld" $ do
         (mMelded, withTownship) = meldedThrough withCase battlements garrison mountain
         (firstPiker, withOne) = S.addPermanent piker S.alice withTownship
         (secondPiker, board) = S.addPermanent piker S.alice withOne
-        dead victims = S.runPure S.identityAnswer board (Event.destroy Regenerability.Regenerable victims)
+        dead victims = S.runPure S.identityAnswer board (Event.destroy (pure ()) Regenerability.Regenerable victims)
         atEndStep gs =
           S.runPure S.identityAnswer (Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan (Phase.Ending EndingStep.EndStep) S.alice)) (gs {GameState.phase = Phase.Ending EndingStep.EndStep})) (Engine.settleForPriority >> Engine.priorityLoop)
     case mMelded of
@@ -951,7 +951,7 @@ spec s registry = Spec.describe s "Meld" $ do
         handNames gs = Maybe.mapMaybe (\oid -> fmap S.nameOf (Game.cardOf oid gs)) (Game.zoneMembers Zone.Hand S.alice gs)
     case (mMelded, Projection.abilitiesOf noRestId board) of
       (Just meldedId, [ability]) -> do
-        let dead order = S.runPure (ordering order) board (Event.destroy Regenerability.Regenerable [meldedId])
+        let dead order = S.runPure (ordering order) board (Event.destroy (pure ()) Regenerability.Regenerable [meldedId])
             after order = S.runPure S.identityAnswer (dead order) (do Activate.activateAbility S.alice noRestId ability; Stack.resolveTop)
         Spec.assertEqWith s "CR 712.21 / 700.4 the trailing Garrison returns to alice's hand" (handNames (after [1, 0])) [S.printingName garrison]
         Spec.assertEqWith s "and so does the leading one, on the other arrangement" (handNames (after [0, 1])) [S.printingName garrison]
@@ -981,7 +981,7 @@ spec s registry = Spec.describe s "Meld" $ do
     case mMelded of
       Nothing -> Spec.assertFailure s "expected the melding ability to put one permanent onto the battlefield"
       Just meldedId -> do
-        let dead = S.runPure S.identityAnswer board (Event.destroy Regenerability.Regenerable [meldedId])
+        let dead = S.runPure S.identityAnswer board (Event.destroy (pure ()) Regenerability.Regenerable [meldedId])
             settled = S.runPure S.identityAnswer dead Engine.settleForPriority
             after = S.runPure S.identityAnswer settled Stack.resolveTop
         Spec.assertEqWith s "CR 712.21c the trigger exiled both cards" (List.sort (exileNames after)) bothNames
@@ -1147,7 +1147,7 @@ spec s registry = Spec.describe s "Meld" $ do
       Just (meldedId, components) -> case Foldable.toList components of
         [firstPid, secondPid] -> do
           let designating = designatingComponent meldedId
-              run pid = S.runPure reclaiming (designating pid board) (Event.destroy Regenerability.Regenerable [meldedId] >> Engine.settleForPriority)
+              run pid = S.runPure reclaiming (designating pid board) (Event.destroy (pure ()) Regenerability.Regenerable [meldedId] >> Engine.settleForPriority)
               nameOf pid = fmap (S.nameOf . Printing.card) (Game.printingOf pid board)
           Spec.assertEqWith s "CR 903.9a naming the first component puts THAT card into the command zone" (commandNames (run firstPid)) (Maybe.maybeToList (nameOf firstPid))
           Spec.assertEqWith s "and its partner is left in the graveyard" (graveyardNames (run firstPid)) (Maybe.maybeToList (nameOf secondPid))
@@ -1407,7 +1407,7 @@ duplicating victim order p = case p of
 -- The melded permanent destroyed under a given CR 712.21a arrangement: the board
 -- on which its two cards have arrived in alice's graveyard.
 splitOff :: ObjectId.ObjectId -> [Natural.Natural] -> GameState.GameState -> GameState.GameState
-splitOff meldedId order gs = S.runPure (ordering order) gs (Event.destroy Regenerability.Regenerable [meldedId])
+splitOff meldedId order gs = S.runPure (ordering order) gs (Event.destroy (pure ()) Regenerability.Regenerable [meldedId])
 
 -- splitOff, then the Hanweir Garrison card put back onto the battlefield and made
 -- to deal its 2 damage to bob. Nothing here decides lifelink: whether alice gains
@@ -1420,7 +1420,7 @@ garrisonPings garrison meldedId order gs =
   let buried = splitOff meldedId order gs
       inGraveyard = filter (\oid -> fmap S.nameOf (Game.cardOf oid buried) == Just (S.printingName garrison)) (Game.zoneMembers Zone.Graveyard S.alice buried)
    in case inGraveyard of
-        [card] -> case S.runPureWith S.identityAnswer buried (Event.changeZoneReturning card Zone.Battlefield) of
+        [card] -> case S.runPureWith S.identityAnswer buried (Event.changeZoneReturning (pure ()) card Zone.Battlefield) of
           (arrived, returned) -> case Foldable.toList arrived of
             [back] -> Just (S.runPure S.identityAnswer returned (Damage.applyDamage (pure ()) [Event.damageEvent returned DamageKind.Combat back (Recipient.ToPlayer S.bob) 2]))
             _ -> Nothing

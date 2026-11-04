@@ -41,9 +41,9 @@ controlsSubtype subtype pid gs = any (\oid -> Set.member subtype (Projection.sub
 -- battlefield under their control. GameEvent.PlayerActed is recorded only when
 -- the card reached the battlefield, since an entry prevented or replaced opens
 -- nothing that triggers (CR 701.51c).
-open :: PlayerId -> Game ()
-open pid = do
-  entered <- enterTop SideDeck.Attraction pid
+open :: Game () -> PlayerId -> Game ()
+open settle pid = do
+  entered <- enterTop settle SideDeck.Attraction pid
   Monad.unless (null entered) $
     State.modify' (Event.recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.OpenAttraction pid)))
 
@@ -52,13 +52,13 @@ open pid = do
 -- what reached it. Through Event.changeZoneEntering, so an entry replacement or
 -- prohibition applies as to any other entry (CR 701.51c). An empty deck moves
 -- nothing (CR 609.3; the FAQ for an empty Contraption deck).
-enterTop :: SideDeck.SideDeck -> PlayerId -> Game [ObjectId]
-enterTop kind pid = do
+enterTop :: Game () -> SideDeck.SideDeck -> PlayerId -> Game [ObjectId]
+enterTop settle kind pid = do
   gs <- State.get
   case Game.sideDeckOf kind pid gs of
     [] -> pure []
     top : _ -> do
-      entered <- Event.changeZoneEntering top Zone.Battlefield LibraryPosition.defaultValue riders (Just pid)
+      entered <- Event.changeZoneEntering settle top Zone.Battlefield LibraryPosition.defaultValue riders (Just pid)
       after <- State.get
       pure (filter (`Set.member` GameState.battlefield after) (Foldable.toList entered))
 

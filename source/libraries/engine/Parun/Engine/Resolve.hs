@@ -29,7 +29,7 @@ import qualified Parun.Engine.Projection.Rewrite as Projection
 import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Replacement as Replacement
 import qualified Parun.Engine.Resolve.Common as Common
-import Parun.Engine.Resolve.Effect (applyEffectWith, payGatePaid)
+import Parun.Engine.Resolve.Effect (applyEffectWith, payGatePaid, runReplacementEffects)
 import Parun.Engine.Resolve.Slots (boundSlots, effectContext, resolvingAbilityName, resolvingKind, slotsAreExhaustive, slotsOf)
 import qualified Parun.Engine.SourceContext as SourceContext
 import qualified Parun.Engine.Target as Target
@@ -310,7 +310,7 @@ resolveSpellWith runSubgame oid = do
               -- targets are still affected.
               Just targetSlot -> Set.filter (\recipient -> Target.stillLegal (resolvingKind oid gs) Nothing (Just (spellController obj oid gs)) (Object.bindings obj) (Game.acquisitionOf oid gs) oid recipient targetSlot gs) recipients
          in if targetsAllIllegal oid gs
-              then Event.changeZone oid Zone.Graveyard
+              then Event.changeZone (runReplacementEffects runSubgame) oid Zone.Graveyard
               else do
                 let effectController = spellController obj oid gs
                 -- CR 702.174j's spell ability, ahead of everything else the card
@@ -448,9 +448,9 @@ resolveSpellWith runSubgame oid = do
                     indexedClauses
                 firstOfName <- noteResolved oid effectController
                 applyEpic oid effectController
-                exiled <- applyParadigm oid effectController firstOfName
-                encoded <- if exiled then pure True else applyCipher oid effectController
-                Monad.unless encoded (finishSpell oid face effectController)
+                exiled <- applyParadigm (runReplacementEffects runSubgame) oid effectController firstOfName
+                encoded <- if exiled then pure True else applyCipher (runReplacementEffects runSubgame) oid effectController
+                Monad.unless encoded (finishSpell (runReplacementEffects runSubgame) oid face effectController)
 
 -- CR 702.174b's instant-and-sorcery half: "If this spell's gift cost was paid,
 -- [effect]". A SPELL ability, where rule 702.174b's permanent half is a triggered
@@ -610,8 +610,8 @@ noteResolved oid controller = do
 -- armed with Expiry.Never for "for the rest of the game", epic's reason, and
 -- binds this id for Keyword.paradigmCopy to find in GameState.stackArchive.
 -- Parun.CastSpec's "Paradigm" group proves both abilities.
-applyParadigm :: ObjectId -> PlayerId -> Bool -> Game Bool
-applyParadigm oid controller firstOfName = do
+applyParadigm :: Game () -> ObjectId -> PlayerId -> Bool -> Game Bool
+applyParadigm settle oid controller firstOfName = do
   gs <- State.get
   if not (Keyword.Engine.hasParadigm (Map.keysSet (Projection.keywordsOf oid gs)))
     then pure False
@@ -624,7 +624,7 @@ applyParadigm oid controller firstOfName = do
           (Map.singleton Keyword.Engine.paradigmSlot (Binding.toObject oid))
           (Just TurnWindow.AnyTurn)
           (Just Expiry.Type.Never)
-      Event.changeZone oid Zone.Exile
+      Event.changeZone settle oid Zone.Exile
       pure True
 
 -- CR 702.99a's spell ability, "if this spell is represented by a card, you may
@@ -641,8 +641,8 @@ applyParadigm oid controller firstOfName = do
 -- The creature is CHOSEN, not targeted (CR 115.1), from the permanents the
 -- controller controls that are creatures now -- read through the projection, so
 -- an animated land qualifies. No creature leaves nothing to ask.
-applyCipher :: ObjectId -> PlayerId -> Game Bool
-applyCipher oid controller = do
+applyCipher :: Game () -> ObjectId -> PlayerId -> Game Bool
+applyCipher settle oid controller = do
   gs <- State.get
   let represented = case fmap Object.source (Game.lookupObject oid gs) of
         Just (Source.OfCard _) -> True
@@ -656,7 +656,7 @@ applyCipher oid controller = do
   case picked of
     Nothing -> pure False
     Just chosen -> do
-      landed <- Event.changeZoneReturning oid Zone.Exile
+      landed <- Event.changeZoneReturning settle oid Zone.Exile
       -- CR 702.99b: the link is filed only where the card reached exile; a
       -- replacement that sent it elsewhere leaves nothing encoded.
       State.modify' $ \g ->
@@ -692,8 +692,8 @@ applyCipher oid controller = do
 -- Replacement.rowApplied says that row is what moved the card: a row the
 -- controller took ahead of it sends the spell somewhere else and CR 614.6 leaves
 -- the rider nothing to hang on.
-finishSpell :: ObjectId -> Face.Face Card.Type.Card -> PlayerId -> Game ()
-finishSpell oid face controller = do
+finishSpell :: Game () -> ObjectId -> Face.Face Card.Type.Card -> PlayerId -> Game ()
+finishSpell settle oid face controller = do
   bought <- State.gets (maybe False Object.boughtBack . Game.lookupObject oid)
   Monad.when bought (State.modify' (snd . Replacement.installBuybackReturn oid controller))
   -- CR 701.24a's shuffle is the Omen row's own rider, so rule 720.3d leaves
@@ -702,7 +702,7 @@ finishSpell oid face controller = do
   rebounds <- State.gets reboundApplies
   reboundRow <- rowWhen rebounds Replacement.installReboundExile
   adventureRow <- rowWhen (Card.isAdventure face) Replacement.installAdventureExile
-  landed <- Event.changeZoneResolvingReturning oid Zone.Graveyard
+  landed <- Event.changeZoneResolvingReturning settle oid Zone.Graveyard
   moved <- State.get
   let took = maybe False (\ts -> Replacement.rowApplied oid ts moved)
   Monad.forM_ landed $ \newId -> do

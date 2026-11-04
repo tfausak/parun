@@ -543,7 +543,7 @@ restartSpec s registry = Spec.describe s "restart (CR 727)" $ do
         (bId, g2) = S.addPermanent mountain S.bob g1
         g3 = addMany mountain 7 S.alice (addMany mountain 7 S.bob g2)
         -- move bob's card to his graveyard, to prove zone-independence.
-        g4 = snd (Engine.runGamePure S.identityAnswer g3 (Event.changeZone bId Zone.Graveyard))
+        g4 = snd (Engine.runGamePure S.identityAnswer g3 (Event.changeZone (pure ()) bId Zone.Graveyard))
         after = snd (Engine.runGamePure S.identityAnswer g4 (Setup.restartGame S.performer Set.empty S.alice))
         ownedCount pid = length (filter (\o -> Object.owner o == pid) (Map.elems (GameState.objects after)))
         libHandCount pid = length (Game.zoneMembers Zone.Library pid after) + length (Game.zoneMembers Zone.Hand pid after)

@@ -237,7 +237,7 @@ gorgonsKissSpec s registry = Spec.describe s "Case of the Gorgon's Kiss" $ do
     let run n =
           let (caseId, withCase) = S.addPermanent gorgonsKiss S.alice (Setup.emptyGame S.bothPlayers)
               (pikers, filled) = List.foldl' (\(ids, g) _ -> let (i, g2) = S.addPermanent piker S.alice g in (ids <> [i], g2)) ([], withCase) [1 .. n :: Int]
-              dead = S.runPure S.identityAnswer filled (Event.destroy Regenerability.Regenerable pikers)
+              dead = S.runPure S.identityAnswer filled (Event.destroy (pure ()) Regenerability.Regenerable pikers)
            in (caseId, throughEndStep dead)
         (solvedId, solved) = run 3
         (unsolvedId, unsolved) = run 2

@@ -1,0 +1,49 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Synthetic Blood Dividend",
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "LifeLossR",
+            "value": {
+              "matching": {
+                "whichCause": {
+                  "type": "ByPayment"
+                },
+                "whose": {
+                  "type": "You"
+                }
+              },
+              "rewrite": {
+                "type": "GainInstead"
+              }
+            }
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}

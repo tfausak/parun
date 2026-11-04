@@ -2106,7 +2106,7 @@ alteredManifest s registry top land n = do
 putOntoBattlefield :: Maybe (FaceDownState.FaceDownState (GrantedAbility.GrantedAbility Card.Card)) -> ObjectId.ObjectId -> GameState.GameState -> (GameState.GameState, Maybe ObjectId.ObjectId)
 putOntoBattlefield faceDown oid gs =
   let riders = EntryRiders.defaultValue {EntryRiders.faceDown = faceDown}
-      (entered, moved) = Engine.runGamePure S.identityAnswer gs (Event.changeZoneEntering oid Zone.Battlefield LibraryPosition.defaultValue riders (Just S.alice))
+      (entered, moved) = Engine.runGamePure S.identityAnswer gs (Event.changeZoneEntering (pure ()) oid Zone.Battlefield LibraryPosition.defaultValue riders (Just S.alice))
    in -- At most ONE arrival: the funnel answers with several only for a melded
       -- permanent leaving the battlefield (CR 712.21), and this move enters one.
       (S.runPure S.identityAnswer moved Engine.priorityLoop, Maybe.listToMaybe (Foldable.toList entered))
@@ -2373,7 +2373,7 @@ enterFaceDown :: Printing.Printing -> PlayerId.PlayerId -> GameState.GameState -
 enterFaceDown printing pid gs =
   let (oid, g1) = S.addLibraryCard printing pid gs
       riders = EntryRiders.defaultValue {EntryRiders.faceDown = Just (FaceDownState.defaultFor FaceDownReason.Manifested)}
-      (entered, moved) = Engine.runGamePure S.identityAnswer g1 (Event.changeZoneEntering oid Zone.Battlefield LibraryPosition.defaultValue riders (Just pid))
+      (entered, moved) = Engine.runGamePure S.identityAnswer g1 (Event.changeZoneEntering (pure ()) oid Zone.Battlefield LibraryPosition.defaultValue riders (Just pid))
    in (S.settleSba moved, Maybe.listToMaybe (Foldable.toList entered))
 
 -- THE BOARD Primal Whisperer's count is read on, returned as (the board, the

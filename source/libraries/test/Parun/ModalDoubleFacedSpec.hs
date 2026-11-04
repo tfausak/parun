@@ -366,7 +366,7 @@ spec s registry = Spec.describe s "ModalDoubleFaced" $ do
     birgi <- S.printingOf s registry "Birgi, God of Storytelling"
     let moveTo zone printing =
           let (oid, board) = handBoardOne printing
-           in (oid, S.runPure S.identityAnswer board (Monad.void (Event.changeZoneEntering oid zone LibraryPosition.defaultValue EntryRiders.defaultValue (Just S.alice))))
+           in (oid, S.runPure S.identityAnswer board (Monad.void (Event.changeZoneEntering (pure ()) oid zone LibraryPosition.defaultValue EntryRiders.defaultValue (Just S.alice))))
         (zofId, zofAfter) = moveTo Zone.Battlefield zof
         (_, birgiAfter) = moveTo Zone.Battlefield birgi
         (buriedId, buried) = moveTo Zone.Graveyard zof

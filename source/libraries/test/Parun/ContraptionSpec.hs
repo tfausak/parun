@@ -229,7 +229,7 @@ bossSpec s registry = Spec.describe s "Steamflogger Boss" $ do
                 Monad.void (Engine.placePendingTriggers [])
                 g <- State.get
                 Monad.forM_ (filter (\oid -> Projection.namesOf oid g == Set.singleton (CardName.MkCardName (Text.pack "Wrench-Rigger"))) (Set.toList (GameState.battlefield g))) $ \oid ->
-                  Event.changeZone oid Zone.Graveyard
+                  Event.changeZone (pure ()) oid Zone.Graveyard
                 Engine.priorityLoop
            in driving [Designation.Sprocket2, Designation.Sprocket1] id Nothing gs riggerGone
         (withBoss, _) = run (snd (S.addPermanent boss S.alice base))
@@ -278,8 +278,8 @@ scrapyardSpec s registry = Spec.describe s "Scrapyard" $ do
   Spec.it s "a Contraption leaving the battlefield for the graveyard goes to the scrapyard" $ do
     depot <- S.printingOf s registry "Arms Depot"
     let (depotId, gs) = S.addPermanent depot S.alice (Setup.emptyGame S.bothPlayers)
-        binned = S.runPure S.identityAnswer gs (Event.changeZone depotId Zone.Graveyard)
-        exiled = S.runPure S.identityAnswer gs (Event.changeZone depotId Zone.Exile)
+        binned = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) depotId Zone.Graveyard)
+        exiled = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) depotId Zone.Exile)
     Spec.assertEqWith s "nothing in the graveyard" (Game.zoneMembers Zone.Graveyard S.alice binned) []
     Spec.assertEqWith s "one card in the command zone" (Set.size (GameState.command binned)) 1
     Spec.assertEqWith s "but exile is exile" (Set.size (GameState.exile exiled)) 1

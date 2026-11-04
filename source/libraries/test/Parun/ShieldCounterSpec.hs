@@ -132,8 +132,8 @@ shieldCounterSpec s registry = Spec.describe s "Shield counters (CR 122.1c)" $ d
     case bird of
       Nothing -> Spec.assertFailure s "the bird did not reach the battlefield"
       Just oid -> do
-        let byEffect = S.runPure S.identityAnswer entered (Event.destroy Regenerability.Regenerable [oid])
-            byRule = S.runPure S.identityAnswer entered (Event.destroyInBatch entered DestructionCause.ByRule Regenerability.Regenerable [oid])
+        let byEffect = S.runPure S.identityAnswer entered (Event.destroy (pure ()) Regenerability.Regenerable [oid])
+            byRule = S.runPure S.identityAnswer entered (Event.destroyInBatch (pure ()) entered DestructionCause.ByRule Regenerability.Regenerable [oid])
         Spec.assertEqWith s "setup: one shield counter, on both boards" (shields oid entered) 1
         Spec.assertBool s (Set.member oid (GameState.battlefield byEffect)) "an effect's destruction is replaced"
         Spec.assertEqWith s "spending the counter" (shields oid byEffect) 0
@@ -258,7 +258,7 @@ shieldCounterSpec s registry = Spec.describe s "Shield counters (CR 122.1c)" $ d
     bolt <- S.printingOf s registry "Lightning Bolt"
     (guard_, punked) <- guardBoard True 1
     let once = S.settleSba (castAt guard_ bolt punked)
-        destroyed = S.runPure S.identityAnswer once (Event.destroy Regenerability.Regenerable [guard_])
+        destroyed = S.runPure S.identityAnswer once (Event.destroy (pure ()) Regenerability.Regenerable [guard_])
     Spec.assertBool s (Set.member guard_ (GameState.battlefield once)) "setup: the 1/4 survived the Bolt"
     Spec.assertBool s (not (Set.member guard_ (GameState.battlefield destroyed))) "and an effect's destruction then goes unreplaced"
   -- CR 615.12a: "a prevention effect is applied to any particular unpreventable
@@ -274,7 +274,7 @@ shieldCounterSpec s registry = Spec.describe s "Shield counters (CR 122.1c)" $ d
     bolt <- S.printingOf s registry "Lightning Bolt"
     (guard_, punked) <- guardBoard True 2
     let once = S.settleSba (castAt guard_ bolt punked)
-        destroyed = S.runPure S.identityAnswer once (Event.destroy Regenerability.Regenerable [guard_])
+        destroyed = S.runPure S.identityAnswer once (Event.destroy (pure ()) Regenerability.Regenerable [guard_])
     Spec.assertEqWith s "setup: two shield counters" (shields guard_ punked) 2
     Spec.assertEqWith s "the whole 3 is still marked" (S.damageOf guard_ once) (Just 3)
     Spec.assertEqWith s "one counter came off, not both" (shields guard_ once) 1

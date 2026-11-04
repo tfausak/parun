@@ -2315,9 +2315,9 @@ countersOn kind oid gs =
 -- CR 701.9a's discards of a DiscardCards cost, as ONE event group, binding
 -- Binding.discardedCard off what ARRIVED in a public zone (CR 400.7j),
 -- DiscardThis's posture: Necromancer's Stockpile's "the discarded card".
-discardsBound :: PlayerId -> [ObjectId] -> Game Payment.Payment
-discardsBound pid cards = do
-  arrived <- Event.simultaneously (fmap Foldable.fold (Monad.mapM (Event.discardReturning DiscardCause.Ordinary pid) cards))
+discardsBound :: Game () -> PlayerId -> [ObjectId] -> Game Payment.Payment
+discardsBound settle pid cards = do
+  arrived <- Event.simultaneously (fmap Foldable.fold (Monad.mapM (Event.discardReturning settle DiscardCause.Ordinary pid) cards))
   after <- State.get
   pure $ case filter (\a -> maybe False (not . Game.isHiddenZone . Object.zone) (Game.lookupObject a after)) (Foldable.toList arrived) of
     [] -> bindsNothing
@@ -6501,14 +6501,14 @@ payPayable perform moment paidFor slots pid oid component = case component of
   -- turn history all see it. `pid` is the player paying, who for "sacrifice
   -- this" is its controller.
   CostComponent.SacrificeThis -> do
-    Event.sacrifice pid oid
+    Event.sacrifice (ManaAbilityPerformer.settle perform) pid oid
     pure bindsNothing
   -- Through Event.changeZone, the CR 400.7 funnel, and never a direct zone poke,
   -- SacrificeThis' call above and for its reason. CR 400.3 is what makes the bare
   -- Zone.Hand right: an object that would go to a hand other than its owner's
   -- goes to its owner's, so the funnel already spells the printed "its owner's".
   CostComponent.ReturnThis -> do
-    Event.changeZone oid Zone.Hand
+    Event.changeZone (ManaAbilityPerformer.settle perform) oid Zone.Hand
     pure bindsNothing
   -- CR 119.4: the payment is subtracted from the life total. Not every
   -- component reached the gate: one a cost effect reads off the spell's targets
@@ -6538,7 +6538,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
   -- Binds NO slot: CR 701.17c's look-back is for a later clause of the same
   -- resolution, and a cost has none -- see Parun.Types.CostComponent's arm.
   CostComponent.MillCards n -> do
-    arrived <- Event.millFrom pid n
+    arrived <- Event.millFrom (ManaAbilityPerformer.settle perform) pid n
     Monad.unless (null arrived) (State.modify' (Event.recordEvent (GameEvent.Milled (Milled.MkMilled pid (Seq.fromList arrived)))))
     pure bindsNothing
   -- CR 701.20a: one Revealed per card, top first. Binds no slot: no card that
@@ -6576,7 +6576,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
           else Game.choose (Prompt.ChooseSacrifices decider pid oid candidates n Seq.empty)
       if Set.isSubsetOf chosen (Set.fromList candidates) && Natural.length chosen == n
         then do
-          Event.sacrificeAll (fmap ((,) pid) (Set.toAscList chosen))
+          Event.sacrificeAll (ManaAbilityPerformer.settle perform) (fmap ((,) pid) (Set.toAscList chosen))
           -- CR 608.2h: the permanents are gone by the time anything this cost paid
           -- for resolves, so an effect that reads one ("the sacrificed creature's
           -- power") needs a name for it. One of the components that bind a slot
@@ -6681,7 +6681,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
         else Game.choose (Prompt.ChooseReturns decider pid oid candidates n)
     if Set.isSubsetOf chosen (Set.fromList candidates) && Natural.length chosen == n
       then do
-        Monad.void (Event.changeZonesTogether (fmap (\returned -> (returned, Zone.Hand)) (Set.toAscList chosen)))
+        Monad.void (Event.changeZonesTogether (ManaAbilityPerformer.settle perform) (fmap (\returned -> (returned, Zone.Hand)) (Set.toAscList chosen)))
         pure (Payment.Paid (Binding.paidObjects Binding.returnedPermanent (Set.map Recipient.ToObject chosen)))
       else pure Payment.Unpaid
   -- CR 406.2 as a cost: Food Chain's "Exile a creature you control". The
@@ -6699,7 +6699,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
         else Game.choose (Prompt.ChooseExiles decider pid oid candidates n)
     if Set.isSubsetOf chosen (Set.fromList candidates) && Natural.length chosen == n
       then do
-        Monad.void (Event.changeZonesTogether (fmap (\exiled -> (exiled, Zone.Exile)) (Set.toAscList chosen)))
+        Monad.void (Event.changeZonesTogether (ManaAbilityPerformer.settle perform) (fmap (\exiled -> (exiled, Zone.Exile)) (Set.toAscList chosen)))
         pure (Payment.Paid (Binding.paidObjects Binding.exiledPermanent (Set.map Recipient.ToObject chosen)))
       else pure Payment.Unpaid
   -- CR 701.9b: the discarding player chooses which cards, so this is a prompt.
@@ -6738,14 +6738,14 @@ payPayable perform moment paidFor slots pid oid component = case component of
     let distinct = ListUtils.nubOrd chosen
     if all (\c -> List.elem c held) distinct && Natural.length distinct == n
       then do
-        discardsBound pid distinct
+        discardsBound (ManaAbilityPerformer.settle perform) pid distinct
       else pure Payment.Unpaid
   -- Every matching card, Slate of Ancestry's "Discard your hand": nothing is
   -- chosen, so nothing is asked (CR 701.9b's choice has one answer), and the
   -- cards go as ONE event group and are bound, the arm above's reasons.
   CostComponent.DiscardCards (DiscardCards.MkDiscardCards ObjectCount.Every criterion _) -> do
     gs <- State.get
-    discardsBound pid (discardCandidates slots pid oid criterion gs)
+    discardsBound (ManaAbilityPerformer.settle perform) pid (discardCandidates slots pid oid criterion gs)
   -- CR 701.9a's move, through the funnel DiscardCards uses above. No prompt: the
   -- cost names this card.
   --
@@ -6762,7 +6762,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
   -- Binds Binding.discardedCard off what ARRIVED, bindExiled's posture, and only
   -- where CR 400.7j lets the ability find it: in a PUBLIC zone.
   CostComponent.DiscardThis cause -> do
-    arrived <- Event.discardReturning cause pid oid
+    arrived <- Event.discardReturning (ManaAbilityPerformer.settle perform) cause pid oid
     gs <- State.get
     let findable = Seq.filter (\a -> maybe False (not . Game.isHiddenZone . Object.zone) (Game.lookupObject a gs)) arrived
     pure $ case Foldable.toList findable of
@@ -6792,7 +6792,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
     case picked of
       Nothing -> pure Payment.Unpaid
       Just chosen -> do
-        Event.changeZone chosen Zone.Battlefield
+        Event.changeZone (ManaAbilityPerformer.settle perform) chosen Zone.Battlefield
         pure bindsNothing
   -- CR 406.2's move out of the hidden hand, PutCardFromHandOntoBattlefield's arm
   -- above with the other destination: the candidates are re-read HERE so an
@@ -6824,7 +6824,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
                 else Game.choose (Prompt.ChooseExiles decider pid oid candidates n)
     if Set.isSubsetOf chosen (Set.fromList candidates) && Natural.length chosen == n
       then do
-        Monad.void (Event.changeZonesTogether (fmap (\c -> (c, Zone.Exile)) (Set.toAscList chosen)))
+        Monad.void (Event.changeZonesTogether (ManaAbilityPerformer.settle perform) (fmap (\c -> (c, Zone.Exile)) (Set.toAscList chosen)))
         pure bindsNothing
       else pure Payment.Unpaid
   -- CR 701.20a's reveal as a cost, the arm above's pool and prompt with no zone
@@ -6874,7 +6874,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
     beheld <- beholdObjects paidFor slots pid oid 1 criterion
     case beheld of
       Just [chosen] -> do
-        arrived <- Event.changeZoneReturning chosen Zone.Exile
+        arrived <- Event.changeZoneReturning (ManaAbilityPerformer.settle perform) chosen Zone.Exile
         let link = ExileLink.MkExileLink {ExileLink.source = oid, ExileLink.ability = Nothing}
         State.modify' (\g -> g {GameState.exiledWith = foldr (`Map.insert` link) (GameState.exiledWith g) arrived})
         pure bindsNothing
@@ -7069,7 +7069,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
   -- The forage BINDS NOTHING: rule 701.61a names neither the cards exiled nor the
   -- Food sacrificed afterwards, so no printing has anything to read.
   CostComponent.Forage -> do
-    did <- Forage.forage pid oid
+    did <- Forage.forage (ManaAbilityPerformer.settle perform) pid oid
     pure (if did then bindsNothing else Payment.Unpaid)
   -- CR 705.1's flip as a payment, through Event.flipWinLoseCoin so a cost's coin
   -- is the same CR 705.1 event an effect's coin is -- Karplusan Minotaur's own
@@ -7150,7 +7150,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
   -- Binds Binding.exiledCard off what ARRIVED, ExileThis' binding below and for
   -- its reason.
   CostComponent.ExileThisFromGraveyard -> do
-    arrived <- Event.changeZoneReturning oid Zone.Exile
+    arrived <- Event.changeZoneReturning (ManaAbilityPerformer.settle perform) oid Zone.Exile
     pure (bindExiled arrived)
   -- CR 406.2's move off the BATTLEFIELD, through the same funnel and with no
   -- prompt for the same reason: the cost names this permanent. CR 118.3 asked
@@ -7163,7 +7163,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
   -- made, not the permanent that left, which is why the binding is taken off what
   -- arrived; see that slot.
   CostComponent.ExileThis -> do
-    arrived <- Event.changeZoneReturning oid Zone.Exile
+    arrived <- Event.changeZoneReturning (ManaAbilityPerformer.settle perform) oid Zone.Exile
     pure (bindExiled arrived)
   -- CR 406.2's move again, for CHOSEN cards: the payer picks which, so this is a
   -- prompt. Elided only when forced, Sacrifice's elision.
@@ -7188,7 +7188,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
         else Game.choose (Prompt.ChooseExilesFromGraveyard decider pid oid candidates n)
     if Set.isSubsetOf chosen (Set.fromList candidates) && Natural.length chosen == n
       then do
-        Monad.void (Event.changeZonesTogether (fmap (\c -> (c, Zone.Exile)) (Set.toAscList chosen)))
+        Monad.void (Event.changeZonesTogether (ManaAbilityPerformer.settle perform) (fmap (\c -> (c, Zone.Exile)) (Set.toAscList chosen)))
         pure bindsNothing
       else pure Payment.Unpaid
   -- CR 702.167a's [materials]: the arm above over the battlefield and the
@@ -7217,7 +7217,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
         else Game.choose (Prompt.ChooseMaterials decider pid oid candidates n orMore)
     if Set.isSubsetOf chosen (Set.fromList candidates) && enough chosen
       then do
-        arrived <- Event.changeZonesTogether (fmap (\c -> (c, Zone.Exile)) (Set.toAscList chosen))
+        arrived <- Event.changeZonesTogether (ManaAbilityPerformer.settle perform) (fmap (\c -> (c, Zone.Exile)) (Set.toAscList chosen))
         pure (Payment.Paid (Binding.paidObjects Binding.craftMaterials (Set.fromList (fmap Recipient.ToObject (foldMap Foldable.toList arrived)))))
       else pure Payment.Unpaid
   -- CR 701.59a: the payer chooses WHICH cards and HOW MANY, so this is a prompt,
@@ -7242,7 +7242,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
     let collected = sum (fmap (`evidenceValue` gs) (Set.toAscList chosen))
     if Set.isSubsetOf chosen (Set.fromList candidates) && collected >= toInteger n
       then do
-        Monad.void (Event.changeZonesTogether (fmap (\c -> (c, Zone.Exile)) (Set.toAscList chosen)))
+        Monad.void (Event.changeZonesTogether (ManaAbilityPerformer.settle perform) (fmap (\c -> (c, Zone.Exile)) (Set.toAscList chosen)))
         -- CR 701.59a's "whenever you collect evidence" reads this.
         State.modify' (Event.recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.CollectEvidence pid)))
         pure (Payment.Paid (Binding.paidObjects Binding.collectedEvidence (Set.map Recipient.ToObject chosen)))
@@ -7260,7 +7260,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
     case topExileCandidate slots pid oid criterion gs of
       Nothing -> pure Payment.Unpaid
       Just candidate -> do
-        Event.changeZone candidate Zone.Exile
+        Event.changeZone (ManaAbilityPerformer.settle perform) candidate Zone.Exile
         pure bindsNothing
 
 -- CR 614.16's question, asked of a payment: does the placement this cost makes

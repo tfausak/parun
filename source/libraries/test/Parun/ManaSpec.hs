@@ -475,7 +475,7 @@ manaSpec s registry = Spec.describe s "Mana" $ do
         -- CR 611.3b: a static ability's effect applies only while its permanent
         -- is on the battlefield, so the ability rule 305.6 gives the land comes
         -- back once Humility is destroyed.
-        gone = S.runPure S.identityAnswer gs (Event.destroy Regenerability.Regenerable [humilityId])
+        gone = S.runPure S.identityAnswer gs (Event.destroy (pure ()) Regenerability.Regenerable [humilityId])
     Spec.assertBool s (not (Mana.canPay Cost.manaActivations S.alice greenGreen gs)) "under Humility alice cannot pay {G}{G}"
     Spec.assertBool s (Mana.canPay Cost.manaActivations S.alice greenGreen gone) "and can once Humility has left"
     Spec.assertEqWith s "the Arbor adds nothing under Humility" (Mana.manaTypesOf arborId gs) []
@@ -914,7 +914,7 @@ upwellingSpec s registry = Spec.describe s "Upwelling" $ do
     case extras of
       [] -> Spec.assertFailure s "fixture should have an Upwelling on the battlefield"
       oid : _ -> do
-        let gone = S.runPure S.identityAnswer floated (Event.destroy Regenerability.Regenerable [oid])
+        let gone = S.runPure S.identityAnswer floated (Event.destroy (pure ()) Regenerability.Regenerable [oid])
         Spec.assertEqWith s "kept while it stands" (poolSize S.alice (Mana.emptiedManaPools floated)) 1
         Spec.assertEqWith s "alice loses it once it is gone" (poolSize S.alice (Mana.emptiedManaPools gone)) 0
         Spec.assertEqWith s "and so does bob" (poolSize S.bob (Mana.emptiedManaPools gone)) 0
@@ -2733,7 +2733,7 @@ grinningIgnusSpec s registry = Spec.describe s "Grinning Ignus" $ do
     let (ignusId, board) = ignusBoard ignus mountain
         after = snd (State.evalState (Engine.runGame (takesIgnusOnce ignusId) board Engine.priorityLoop) (0 :: Int))
     Spec.assertEqWith s "CR 118.1 the cost put the Ignus in its owner's hand" (S.handSize S.alice after) 1
-    Spec.assertEqWith s "CR 400.7 through Event.changeZone, so the move is a recorded event bound for the hand" (fmap ZoneChange.to (filter ((== ignusId) . ZoneChange.departed) (S.zoneChangesOf after))) [Zone.Hand]
+    Spec.assertEqWith s "CR 400.7 through Event.changeZone (pure ()), so the move is a recorded event bound for the hand" (fmap ZoneChange.to (filter ((== ignusId) . ZoneChange.departed) (S.zoneChangesOf after))) [Zone.Hand]
     Spec.assertEqWith s "and off the battlefield it left" (S.creaturesInPlay S.alice after) 0
     Spec.assertEqWith s "CR 602.2b the activation still resolved and added {C}{C}{R}" (poolTypes S.alice after) [ManaType.Colorless, ManaType.Colorless, ManaType.Colored Color.Red]
 

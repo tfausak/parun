@@ -223,7 +223,7 @@ ruleOfLawSpec s registry =
       case GameState.stack cast of
         [] -> Spec.assertFailure s "expected the spell on the stack"
         top : _ -> do
-          let countered = S.runPure S.identityAnswer cast (Event.counter S.noSource S.bob top)
+          let countered = S.runPure S.identityAnswer cast (Event.counter (pure ()) S.noSource S.bob top)
           Spec.assertEqWith s "the stack is empty again" (GameState.stack countered) []
           Spec.assertBool s (PlayerEffect.prohibitsCasting S.alice anySpellId VariableChoice.Announced countered) "still prohibited"
 
@@ -235,7 +235,7 @@ ruleOfLawSpec s registry =
       let (_, _, z, plain) = ruleOfLawBoard plains ruleOfLaw
           (rol, onBoard) = S.addPermanent ruleOfLaw S.alice plain
           castOne = S.withEvents [GameEvent.SpellCast (SpellWasCast.MkSpellWasCast S.alice S.noSource S.emptyCharacteristics (Just Zone.Hand) Nothing Set.empty)] onBoard
-          gone = S.runPure S.identityAnswer castOne (Event.destroy Regenerability.Regenerable [rol])
+          gone = S.runPure S.identityAnswer castOne (Event.destroy (pure ()) Regenerability.Regenerable [rol])
       Spec.assertBool s (PlayerEffect.prohibitsCasting S.alice anySpellId VariableChoice.Announced castOne) "prohibited while it stands"
       Spec.assertBool s (not (PlayerEffect.prohibitsCasting S.alice anySpellId VariableChoice.Announced gone)) "not prohibited once it is gone"
       Spec.assertBool s (elem (Action.Type.Cast z (S.printingName ruleOfLaw) Facing.FaceUp) (Action.legalActions S.alice gone)) "and a cast is offered again"
@@ -2481,7 +2481,7 @@ storedSpec s registry =
     Spec.it s "CR 611.2b the conditional sweep deletes a player effect whose condition has failed" $ do
       piker <- S.printingOf s registry "Goblin Piker"
       let (srcId, conditional) = storedConditional piker
-          gone = S.runPure S.identityAnswer conditional (Event.destroy Regenerability.Regenerable [srcId])
+          gone = S.runPure S.identityAnswer conditional (Event.destroy (pure ()) Regenerability.Regenerable [srcId])
           (changed, swept) = Engine.runGamePure S.identityAnswer gone Expiry.sweepConditional
       Spec.assertBool s changed "the sweep reports a change"
       Spec.assertEqWith s "deleted, not masked" (GameState.playerEffects swept) []

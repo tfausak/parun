@@ -249,7 +249,7 @@ selfDiscardTriggerSpec s registry =
         Spec.it s "CR 702.29a a cycling discard fires it too, and CR 702.29d once" $ do
           cow <- S.printingOf s registry "Bartered Cow"
           let (gs, cowId) = S.handOne cow (Setup.emptyGame S.bothPlayers)
-              run cause = S.runPure S.identityAnswer gs (Event.discard cause S.alice cowId)
+              run cause = S.runPure S.identityAnswer gs (Event.discard (pure ()) cause S.alice cowId)
               stackAfter g = length (GameState.stack (S.runPure S.identityAnswer g Engine.settleForPriority))
           Spec.assertEqWith s "an ordinary discard makes one Food" (S.countOnBattlefieldByName foodTokenName S.alice (settle (run DiscardCause.Ordinary))) 1
           Spec.assertEqWith s "a cycling discard makes one too" (S.countOnBattlefieldByName foodTokenName S.alice (settle (run DiscardCause.ToPayCyclingCost))) 1

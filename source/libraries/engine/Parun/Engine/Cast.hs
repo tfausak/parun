@@ -2714,7 +2714,7 @@ castSpellWith perform timed offered applied widened pid oid name facing = Event.
       -- CR 708.4 is the same claim about the other status: the object is turned
       -- face down BEFORE it is put onto the stack, so the move carries the
       -- facing too and no reader inside it sees a face-up incarnation.
-      moved <- Event.changeZoneCasting pid oid Zone.Stack (Just name) facing
+      moved <- Event.changeZoneCasting (ManaAbilityPerformer.settle perform) pid oid Zone.Stack (Just name) facing
       -- ONE object on the stack, which is CR 601.2a's "the spell": the funnel
       -- answers with more than one arrival only for a melded permanent leaving
       -- the battlefield (CR 712.21), and CR 601.2's cast moves a CARD or a copy
@@ -2788,8 +2788,8 @@ landDropOpen pid gs =
 -- that permission's `landEnters` says -- Lightstall Inquisitor's "each land
 -- played this way enters tapped". A player permission's rider is `riders`
 -- below.
-playLand :: Bool -> PlayerId -> ObjectId -> Maybe CardName.CardName -> Game ()
-playLand offered pid oid mName = do
+playLand :: Game () -> Bool -> PlayerId -> ObjectId -> Maybe CardName.CardName -> Game ()
+playLand settle offered pid oid mName = do
   -- CR 406.3a, the land half of the turn turnedUpForPlay states: a land played
   -- out of face-down exile is turned face up just before it is played, so the
   -- reads below see the card rather than that rule's characteristicless object.
@@ -2815,7 +2815,7 @@ playLand offered pid oid mName = do
   -- CR 614.1a: a land an EntryRewrite.SacrificeToEnter turns into the graveyard
   -- was still played, so it spends the permission as a land that arrived does.
   State.modify' (\g -> g {GameState.refusedEntries = Just Set.empty})
-  moved <- Event.changeZoneShowing (Just pid) oid Zone.Battlefield mName entering
+  moved <- Event.changeZoneShowing settle (Just pid) oid Zone.Battlefield mName entering
   refused <- State.gets (maybe False (Set.member oid) . GameState.refusedEntries)
   State.modify' (\g -> g {GameState.refusedEntries = Nothing})
   Monad.unless (Seq.null moved && not refused) $ do

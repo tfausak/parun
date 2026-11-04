@@ -100,7 +100,7 @@ learn settle pid resolving source = do
         -- watching for a discard sees it. Ordinary rather than ByEffect: rule
         -- 701.48a's "you may discard a card. If you do, draw" makes the discard a
         -- CR 118.12 cost paid on resolution, and a cost is not an effect.
-        Event.discard DiscardCause.Ordinary pid discarded
+        Event.discard settle DiscardCause.Ordinary pid discarded
         -- CR 121.1, through the draw funnel, so CR 121.3's empty library and CR
         -- 614's draw replacements both get their opportunity.
         Event.drawCard settle pid

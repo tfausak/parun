@@ -289,7 +289,7 @@ graveyardTriggerSpec s registry =
         Spec.it s "CR 113.6k Narcomoeba put into the graveyard from the HAND does not trigger" $ do
           narcomoeba <- S.printingOf s registry "Narcomoeba"
           let (handCard, gs) = S.addHandCard narcomoeba S.alice (Setup.emptyGame S.bothPlayers)
-              buried = S.runPure S.identityAnswer gs (Event.changeZone handCard Zone.Graveyard)
+              buried = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) handCard Zone.Graveyard)
           Spec.assertEqWith s "nothing triggered" (fmap PendingTrigger.source (gathered buried)) []
           Spec.assertBool s (Set.member narcomoebaName (namesIn Zone.Graveyard S.alice buried)) "it is in the graveyard"
         -- "from your library" doing real work, half two: dying is a move to
@@ -297,7 +297,7 @@ graveyardTriggerSpec s registry =
         Spec.it s "CR 113.6k Narcomoeba dying from the BATTLEFIELD does not trigger" $ do
           narcomoeba <- S.printingOf s registry "Narcomoeba"
           let (creature, gs) = S.addPermanent narcomoeba S.alice (Setup.emptyGame S.bothPlayers)
-              died = S.runPure S.identityAnswer gs (Event.changeZone creature Zone.Graveyard)
+              died = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) creature Zone.Graveyard)
           Spec.assertEqWith s "nothing triggered" (fmap PendingTrigger.source (gathered died)) []
           Spec.assertBool s (Set.member narcomoebaName (namesIn Zone.Graveyard S.alice died)) "it is in the graveyard"
         -- The zone half, isolated from the mill: a graveyard card whose only
@@ -307,9 +307,9 @@ graveyardTriggerSpec s registry =
           soulWarden <- S.printingOf s registry "Soul Warden"
           piker <- S.printingOf s registry "Goblin Piker"
           let (wardenCard, gs0) = S.addLibraryCard soulWarden S.alice (Setup.emptyGame S.bothPlayers)
-              buried = S.runPure S.identityAnswer gs0 (Event.changeZone wardenCard Zone.Graveyard)
+              buried = S.runPure S.identityAnswer gs0 (Event.changeZone (pure ()) wardenCard Zone.Graveyard)
               (pikerCard, gs1) = S.addHandCard piker S.alice buried
-              entered = S.runPure S.identityAnswer gs1 (Event.changeZone pikerCard Zone.Battlefield)
+              entered = S.runPure S.identityAnswer gs1 (Event.changeZone (pure ()) pikerCard Zone.Battlefield)
           Spec.assertBool s (Set.member (CardName.MkCardName $ Text.pack "Soul Warden") (namesIn Zone.Graveyard S.alice entered)) "the Warden is in the graveyard"
           Spec.assertEqWith s "and a creature entering fires nothing" (fmap PendingTrigger.source (gathered entered)) []
         -- Bloodghast's second line, a static ability reading "an opponent has 10
@@ -365,12 +365,12 @@ gaeasBlessingSpec s registry =
               (herTopId, g3) = S.addLibraryCard bolt S.alice g2
               (hisDeeperId, g4) = S.addLibraryCard bolt S.bob g3
               (hisTopId, board) = S.addLibraryCard piker S.bob g4
-              buried = S.runPure S.identityAnswer board (Event.changeZone blessingId Zone.Graveyard)
+              buried = S.runPure S.identityAnswer board (Event.changeZone (pure ()) blessingId Zone.Graveyard)
               placed = S.runPure S.identityAnswer buried Engine.settleForPriority
               emptied = case Game.zoneMembers Zone.Graveyard S.alice placed of
                 -- CR 400.7 minted a fresh id when the card arrived, so the
                 -- graveyard's own member is the one to exile.
-                [buriedId] -> S.runPure S.identityAnswer placed (Event.changeZone buriedId Zone.Exile)
+                [buriedId] -> S.runPure S.identityAnswer placed (Event.changeZone (pure ()) buriedId Zone.Exile)
                 _ -> placed
               withCard = S.runPure reversing placed Stack.resolveTop
               withoutCard = S.runPure reversing emptied Stack.resolveTop
@@ -573,7 +573,7 @@ anyOfEffectZoneTriggerSpec s registry =
         Spec.it s "CR 113.6m the dies half is exempted, triggers once from the battlefield, and returns the card" $ do
           nabob <- S.printingOf s registry "Synthetic Homing Nabob"
           let (victim, g1) = S.addPermanent nabob S.alice (Setup.emptyGame S.bothPlayers)
-              placed = settle (S.runPure S.identityAnswer g1 (Event.destroy Regenerability.Regenerable [victim]))
+              placed = settle (S.runPure S.identityAnswer g1 (Event.destroy (pure ()) Regenerability.Regenerable [victim]))
               after = resolveTop placed
           Spec.assertEqWith s "exactly one trigger reached the stack" (length (GameState.stack placed)) 1
           Spec.assertBool s (Set.member nabobName (namesIn Zone.Hand S.alice after)) "the Nabob is in alice's hand"
@@ -710,7 +710,7 @@ serraAvatarSpec s registry =
         -- say about it.
         Spec.it s "CR 603.6 a Serra Avatar put into the graveyard from the HAND triggers" $ do
           (handCard, gs) <- cardIn S.addHandCard
-          let discarded = S.runPure S.identityAnswer gs (Event.changeZone handCard Zone.Graveyard)
+          let discarded = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) handCard Zone.Graveyard)
               (placed, after) = fireTrigger discarded
           Spec.assertEqWith s "the trigger reached the stack" (length (GameState.stack placed)) 1
           Spec.assertBool s (Set.member avatarName (namesIn Zone.Library S.alice after)) "it is in its owner's library"
@@ -720,7 +720,7 @@ serraAvatarSpec s registry =
         -- fires BOTH conditions; the hand case above is what only this one sees.
         Spec.it s "CR 603.6 a Serra Avatar milled from the LIBRARY triggers" $ do
           (libraryCard, gs) <- cardIn S.addLibraryCard
-          let milled = S.runPure S.identityAnswer gs (Event.changeZone libraryCard Zone.Graveyard)
+          let milled = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) libraryCard Zone.Graveyard)
               (placed, after) = fireTrigger milled
           Spec.assertEqWith s "the trigger reached the stack" (length (GameState.stack placed)) 1
           Spec.assertBool s (Set.member avatarName (namesIn Zone.Library S.alice after)) "it is back in its owner's library"
@@ -745,7 +745,7 @@ serraAvatarSpec s registry =
         -- the battlefield really does leave nothing on the stack.
         Spec.it s "CR 603.6 a Serra Avatar EXILED from the battlefield triggers nothing" $ do
           (creature, gs) <- cardIn S.addPermanent
-          let exiled = S.runPure S.identityAnswer gs (Event.changeZone creature Zone.Exile)
+          let exiled = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) creature Zone.Exile)
           Spec.assertEqWith s "nothing triggered" (fmap PendingTrigger.source (gathered exiled)) []
           Spec.assertBool s (Set.member avatarName (namesIn Zone.Exile S.alice exiled)) "it is in exile"
 
@@ -789,7 +789,7 @@ planarVoidSpec s registry =
           piker <- S.printingOf s registry "Goblin Piker"
           (_, board) <- withVoid
           let (pikerId, gs) = S.addPermanent piker S.alice board
-              died = S.runPure S.identityAnswer gs (Event.destroy Regenerability.Regenerable [pikerId])
+              died = S.runPure S.identityAnswer gs (Event.destroy (pure ()) Regenerability.Regenerable [pikerId])
               (placed, after) = fireTrigger died
           Spec.assertBool s (Set.member pikerName (namesIn Zone.Exile S.alice after)) "CR 603.6 the arriving card was exiled"
           Spec.assertBool s (not (Set.member pikerName (namesIn Zone.Graveyard S.alice after))) "and left the graveyard"
@@ -803,7 +803,7 @@ planarVoidSpec s registry =
           piker <- S.printingOf s registry "Goblin Piker"
           (_, board) <- withVoid
           let (handCard, gs) = S.addHandCard piker S.alice board
-              discarded = S.runPure S.identityAnswer gs (Event.changeZone handCard Zone.Graveyard)
+              discarded = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) handCard Zone.Graveyard)
               (placed, after) = fireTrigger discarded
           Spec.assertBool s (Set.member pikerName (namesIn Zone.Exile S.alice after)) "CR 603.6 the discarded card was exiled"
           Spec.assertEqWith s "one trigger reached the stack" (length (GameState.stack placed)) 1
@@ -814,7 +814,7 @@ planarVoidSpec s registry =
         -- gathered at all and its own card stays where it landed.
         Spec.it s "CR 603.10 the Void's OWN arrival in the graveyard triggers nothing" $ do
           (voidId, board) <- withVoid
-          let died = S.runPure S.identityAnswer board (Event.destroy Regenerability.Regenerable [voidId])
+          let died = S.runPure S.identityAnswer board (Event.destroy (pure ()) Regenerability.Regenerable [voidId])
               settled = S.runPure S.identityAnswer died Engine.settleForPriority
               -- Resolved as well as settled, so the exile assertion below is
               -- about a trigger that DIDN'T FIRE rather than one that merely sat
@@ -855,7 +855,7 @@ diesTriggerSpec s registry =
         Spec.it s "CR 700.4 a Traveler exiled from the battlefield does not trigger" $ do
           doomedTraveler <- S.printingOf s registry "Doomed Traveler"
           let (traveler, gs) = S.addPermanent doomedTraveler S.alice (Setup.emptyGame S.bothPlayers)
-              exiled = S.runPure S.identityAnswer gs (Event.changeZone traveler Zone.Exile)
+              exiled = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) traveler Zone.Exile)
           Spec.assertEqWith s "nothing triggered" (fmap PendingTrigger.source (gathered exiled)) []
           Spec.assertBool s (Set.member travelerName (namesIn Zone.Exile S.alice exiled)) "it is in exile"
         -- The other half of "from the battlefield": the same card discarded
@@ -863,7 +863,7 @@ diesTriggerSpec s registry =
         Spec.it s "CR 700.4 a Traveler discarded from the HAND does not trigger" $ do
           doomedTraveler <- S.printingOf s registry "Doomed Traveler"
           let (traveler, gs) = S.addHandCard doomedTraveler S.alice (Setup.emptyGame S.bothPlayers)
-              discarded = S.runPure S.identityAnswer gs (Event.changeZone traveler Zone.Graveyard)
+              discarded = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) traveler Zone.Graveyard)
           Spec.assertEqWith s "nothing triggered" (fmap PendingTrigger.source (gathered discarded)) []
         -- Self-scoped: SOME OTHER creature dying is not this Traveler's
         -- death, even though the Traveler is right there to see it.
@@ -872,7 +872,7 @@ diesTriggerSpec s registry =
           piker <- S.printingOf s registry "Goblin Piker"
           let (_, withTraveler) = S.addPermanent doomedTraveler S.alice (Setup.emptyGame S.bothPlayers)
               (pikerId, gs) = S.addPermanent piker S.alice withTraveler
-              died = S.runPure S.identityAnswer gs (Event.changeZone pikerId Zone.Graveyard)
+              died = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) pikerId Zone.Graveyard)
           Spec.assertEqWith s "nothing triggered" (fmap PendingTrigger.source (gathered died)) []
         -- CR 603.3a through CR 603.10a's look-back: "the player who controlled
         -- the ability's source at the time it triggered" is read from the game
@@ -885,7 +885,7 @@ diesTriggerSpec s registry =
           let (traveler, withTraveler) = S.addPermanent doomedTraveler S.bob (Setup.emptyGame S.bothPlayers)
               (aura, withAura) = S.addPermanent controlMagic S.alice withTraveler
               stolen = S.attach aura traveler withAura
-              died = S.runPure S.identityAnswer stolen (Event.changeZone traveler Zone.Graveyard)
+              died = S.runPure S.identityAnswer stolen (Event.changeZone (pure ()) traveler Zone.Graveyard)
           Spec.assertEqWith s "alice controlled it as it died" (Projection.controllerOf traveler stolen) (Just S.alice)
           Spec.assertEqWith s "so the trigger is hers, not its owner's" (fmap PendingTrigger.controller (gathered died)) [S.alice]
 
@@ -997,7 +997,7 @@ permanentDiesSpec s registry =
                     Filter.Type.HeldBy Holder.Controller PlayerRelation.You
                   ]
               (merenId, gs) = S.addPermanent meren S.alice (Setup.emptyGame S.bothPlayers)
-              died = S.runPure S.identityAnswer gs (Event.changeZone merenId Zone.Graveyard)
+              died = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) merenId Zone.Graveyard)
           Spec.assertEqWith s "nothing triggered" (sourcesOf died) []
           case Event.unscannedEvents died of
             [death] -> do
@@ -1009,20 +1009,20 @@ permanentDiesSpec s registry =
         -- of alice's Meren is not it.
         Spec.it s "CR 109.5 you control: an opponent's creature dying fires nothing" $ do
           (_, pikerId, gs) <- merenBeside "Goblin Piker" S.bob (Setup.emptyGame S.bothPlayers)
-          let died = S.runPure S.identityAnswer gs (Event.changeZone pikerId Zone.Graveyard)
+          let died = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) pikerId Zone.Graveyard)
           Spec.assertEqWith s "nothing triggered" (sourcesOf died) []
         -- "CREATURE", the HasCardType arm. A land alice controls reaching the
         -- same graveyard from the same battlefield is not a creature dying.
         Spec.it s "CR 205.2a creature: a land of alice's dying fires nothing" $ do
           (_, landId, gs) <- merenBeside "Mountain" S.alice (Setup.emptyGame S.bothPlayers)
-          let died = S.runPure S.identityAnswer gs (Event.changeZone landId Zone.Graveyard)
+          let died = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) landId Zone.Graveyard)
           Spec.assertEqWith s "nothing triggered" (sourcesOf died) []
         -- CR 700.4 doing the same work it does for SelfDies: "dies" is
         -- narrower than CR 603.6c's leaves-the-battlefield. alice's own
         -- creature EXILED off the battlefield has left it without dying.
         Spec.it s "CR 700.4 a creature of alice's exiled from the battlefield fires nothing" $ do
           (_, pikerId, gs) <- merenBeside "Goblin Piker" S.alice (Setup.emptyGame S.bothPlayers)
-          let exiled = S.runPure S.identityAnswer gs (Event.changeZone pikerId Zone.Exile)
+          let exiled = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) pikerId Zone.Exile)
           Spec.assertEqWith s "nothing triggered" (sourcesOf exiled) []
         -- The same card discarded from a HAND reaches the same graveyard and
         -- has not died: the `from` half of CR 700.4.
@@ -1031,7 +1031,7 @@ permanentDiesSpec s registry =
           piker <- S.printingOf s registry "Goblin Piker"
           let (_, withMeren) = S.addPermanent meren S.alice (Setup.emptyGame S.bothPlayers)
               (handCard, gs) = S.addHandCard piker S.alice withMeren
-              discarded = S.runPure S.identityAnswer gs (Event.changeZone handCard Zone.Graveyard)
+              discarded = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) handCard Zone.Graveyard)
           Spec.assertEqWith s "nothing triggered" (sourcesOf discarded) []
         -- CR 603.10a / CR 608.2h: the dying creature is read as it was
         -- IMMEDIATELY PRIOR to the event. bob owns the Piker, alice has stolen
@@ -1047,7 +1047,7 @@ permanentDiesSpec s registry =
               (pikerId, withPiker) = S.addPermanent piker S.bob withMeren
               (aura, withAura) = S.addPermanent controlMagic S.alice withPiker
               stolen = S.attach aura pikerId withAura
-              died = S.runPure S.identityAnswer stolen (Event.changeZone pikerId Zone.Graveyard)
+              died = S.runPure S.identityAnswer stolen (Event.changeZone (pure ()) pikerId Zone.Graveyard)
           Spec.assertEqWith s "alice controlled it as it died" (Projection.controllerOf pikerId stolen) (Just S.alice)
           Spec.assertEqWith s "so her Meren triggered" (sourcesOf died) [TriggerSource.OfObject merenId]
         -- The condition is the card's, not this spec's: the printed Filter is
@@ -2686,7 +2686,7 @@ selfPutFromBattlefieldIntoSpec s registry =
         let (oid, g1) = S.addPermanent card owner (S.landsInPlay swamp 1)
             g2 = if owner == controller then g1 else S.giveControl oid controller g1
             g3 = iterate (snd . S.addLibraryCard swamp owner) g2 !! 5
-            (_, moved) = S.runPureWith S.identityAnswer g3 (Event.changeZoneReturning oid zone)
+            (_, moved) = S.runPureWith S.identityAnswer g3 (Event.changeZoneReturning (pure ()) oid zone)
         pure (drain moved)
       namesOf zone pid gs = Maybe.mapMaybe (\oid -> fmap Face.name (Game.faceOf oid gs)) (Game.zoneMembers zone pid gs)
       depthOf name pid gs = List.elemIndex (CardName.MkCardName (Text.pack name)) (namesOf Zone.Library pid gs)

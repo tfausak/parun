@@ -4421,7 +4421,7 @@ fullTextSpec s registry = Spec.describe s "HasFullText" $ do
     let (pikerId, b0) = S.addPermanent piker S.bob (Setup.emptyGame S.bothPlayers)
         (_, asAnafenza) = fullTextBoard shapeshifter anafenza b0
         (_, asSorcerer) = fullTextBoard shapeshifter sorcerer b0
-        kill = S.runPure S.identityAnswer `flip` Event.destroy Regenerability.Regenerable [pikerId]
+        kill = S.runPure S.identityAnswer `flip` Event.destroy (pure ()) Regenerability.Regenerable [pikerId]
     Spec.assertEqWith s "CR 612.6 bob's Piker is exiled, not put in his graveyard" (length (Game.zoneMembers Zone.Graveyard S.bob (kill asAnafenza))) 0
     Spec.assertEqWith s "with the Sorcerer on top it reaches his graveyard" (length (Game.zoneMembers Zone.Graveyard S.bob (kill asSorcerer))) 1
 
@@ -4609,7 +4609,7 @@ exchangeTextBoxSpec s registry = Spec.describe s "ExchangeTextBoxes" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     exchange <- S.printingOf s registry "Exchange of Words"
     let (sentryId, sorcererId, wordsId, _, after) = exchangeOfWordsBoard sentry sorcerer piker exchange
-        gone = S.runPure S.identityAnswer after (Event.changeZone wordsId Zone.Graveyard)
+        gone = S.runPure S.identityAnswer after (Event.changeZone (pure ()) wordsId Zone.Graveyard)
         swept = S.runPure S.identityAnswer gone Engine.settleForPriority
     Spec.assertBool s (null (Projection.abilitiesOf sentryId swept)) "the Sentry has given the ping back"
     Spec.assertBool s (Projection.hasKeyword Keyword.Defender sentryId swept) "and has its own defender again"
@@ -4629,7 +4629,7 @@ exchangeTextBoxSpec s registry = Spec.describe s "ExchangeTextBoxes" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     exchange <- S.printingOf s registry "Exchange of Words"
     let (sentryId, sorcererId, wordsId, _, after) = exchangeOfWordsBoard sentry sorcerer piker exchange
-        gone = S.runPure S.identityAnswer after (Event.changeZone sorcererId Zone.Graveyard)
+        gone = S.runPure S.identityAnswer after (Event.changeZone (pure ()) sorcererId Zone.Graveyard)
         swept = S.runPure S.identityAnswer gone Engine.settleForPriority
         pinged = S.runPure (pingFrom sentryId) swept S.priorityGame
     Spec.assertEqWith s "CR 612.5 the Sentry still deals 1 damage to bob" (S.lifeOf S.bob pinged) (fmap (subtract 1) (S.lifeOf S.bob swept))
@@ -4645,7 +4645,7 @@ exchangeTextBoxSpec s registry = Spec.describe s "ExchangeTextBoxes" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     exchange <- S.printingOf s registry "Exchange of Words"
     let (akiriId, sentryId, _, _, after) = akiriExchangeBoard akiri sentry ring piker exchange
-        gone = S.runPure S.identityAnswer after (Event.changeZone akiriId Zone.Graveyard)
+        gone = S.runPure S.identityAnswer after (Event.changeZone (pure ()) akiriId Zone.Graveyard)
         swept = S.runPure S.identityAnswer gone Engine.settleForPriority
     Spec.assertEqWith s "CR 612.5 the Sentry is still a 5/3" (S.powerToughnessOf sentryId swept) (Just (5, 3))
     Spec.assertBool s (Maybe.isNothing (Game.lookupObject akiriId swept)) "Akiri having left"

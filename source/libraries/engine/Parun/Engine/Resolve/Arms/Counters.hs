@@ -137,8 +137,8 @@ import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.WhichCounters as WhichCounters
 import qualified Parun.Types.Zone as Zone
 
-counter :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Counter.Counter -> Game ()
-counter resolving source controller legal (Counter.MkCounter ref mSlot mSources mInstead) = do
+counter :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Counter.Counter -> Game ()
+counter settle resolving source controller legal (Counter.MkCounter ref mSlot mSources mInstead) = do
   gs <- State.get
   let named = objectRefObjects legal resolving controller source gs ref
       -- CR 113.7: each named ability's source, read BEFORE the funnel runs --
@@ -186,7 +186,7 @@ counter resolving source controller legal (Counter.MkCounter ref mSlot mSources 
                 pure (Zone.Library, position)
             | otherwise -> pure (CounterDestination.zone destination, LibraryPosition.defaultValue)
         _ -> pure (Zone.Graveyard, LibraryPosition.defaultValue)
-  moved <- Event.counterReturning destinationOf resolving source controller named
+  moved <- Event.counterReturning settle destinationOf resolving source controller named
   let countered = fmap fst moved
   -- CR 701.6a's "countered this way" is what the funnel COUNTERED, never what
   -- the sweep named. Bound onto this effect's SOURCE, and bound even at zero.
@@ -468,10 +468,10 @@ fromOutsideTheGame source controller payload = Event.bringInto payload source co
 -- about the object ON THE STACK. The faceOf gate is what makes an ability inert
 -- here -- CR 113.7a's ability object has no card behind it, so exiling it would
 -- take the ability off the stack in the middle of its own resolution.
-exileThisSpell :: ObjectId -> Game ()
-exileThisSpell resolving = do
+exileThisSpell :: Game () -> ObjectId -> Game ()
+exileThisSpell settle resolving = do
   gs <- State.get
-  Monad.when (Maybe.isJust (Game.faceOf resolving gs)) (Event.changeZone resolving Zone.Exile)
+  Monad.when (Maybe.isJust (Game.faceOf resolving gs)) (Event.changeZone settle resolving Zone.Exile)
 
 -- CR 122: PutCounters' mirror, deliberately NOT through a CR 614.16 gate --
 -- nothing in CR 614 replaces a removal.
@@ -1270,15 +1270,15 @@ firebend applyEffectWith runSubgame resolving source controller legal chosen add
 -- Parun.Engine.Amass.amass's, and this arm evaluates only the printed N.
 --
 -- Targetless: no CR 608.2b legality to re-check.
-amass :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Amass.Type.Amass -> Game ()
-amass resolving source controller legal (Amass.Type.MkAmass quantity subtype mSlot) = do
+amass :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Amass.Type.Amass -> Game ()
+amass settle resolving source controller legal (Amass.Type.MkAmass quantity subtype mSlot) = do
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
   case Quantity.evaluateFor viewOf context gs resolving source quantity of
     Nothing -> pure () -- unevaluable quantity: no-op (the powerOf posture)
     Just n -> do
-      chose <- Amass.amass controller source resolving subtype (Integer.toNaturalSaturating n)
+      chose <- Amass.amass settle controller source resolving subtype (Integer.toNaturalSaturating n)
       -- CR 701.47c: "the amassed Army" is the creature chosen, whether or not it
       -- received counters -- so this is bound off the choice and not off the
       -- counters, and an amass whose pool was empty (CR 701.47b) binds nothing.
@@ -1343,17 +1343,17 @@ blight resolving source controller legal (Blight.Type.MkBlight ref quantity mSlo
 temptWithTheRing :: PlayerId -> Game ()
 temptWithTheRing = Ring.tempt
 
-openAttraction :: PlayerId -> Game ()
+openAttraction :: Game () -> PlayerId -> Game ()
 openAttraction = Attraction.open
 
 -- The Unstable FAQ: the assembling permanent is the one the ObjectRef names
 -- as this instruction is reached (CR 608.2c), or none where the player
 -- assembles; Steamflogger Boss's row reads it.
-assemble :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Maybe ObjectRef -> Game ()
-assemble resolving source controller legal ref = do
+assemble :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Maybe ObjectRef -> Game ()
+assemble settle resolving source controller legal ref = do
   gs <- State.get
   let assembler = ref >>= \r -> Maybe.listToMaybe (Maybe.mapMaybe Recipient.objectOf (Common.objectRefRecipients legal resolving controller source gs r))
-  Contraption.assemble assembler controller
+  Contraption.assemble settle assembler controller
 
 -- CR 701.31c: the cause is the planar die's exactly when this is CR 901.8's
 -- planeswalking ability resolving.
@@ -1375,13 +1375,13 @@ claimPrize controller = State.modify' (Event.recordEvent (GameEvent.PlayerActed 
 
 -- CR 701.61a: the resolving controller forages; the keyword action is
 -- Parun.Engine.Forage.forage's, prompts and all.
-forage :: ObjectId -> PlayerId -> Game ()
-forage resolving controller = Monad.void (Forage.forage controller resolving)
+forage :: Game () -> ObjectId -> PlayerId -> Game ()
+forage settle resolving controller = Monad.void (Forage.forage settle controller resolving)
 
 -- CR 701.36a: the resolving controller populates; the keyword action is
 -- Parun.Engine.Populate.populate's, prompt and all.
-populate :: ObjectId -> PlayerId -> Game ()
-populate resolving controller = Populate.populate controller resolving
+populate :: Game () -> ObjectId -> PlayerId -> Game ()
+populate settle resolving controller = Populate.populate settle controller resolving
 
 -- CR 701.56a: the resolving controller time travels, one procedure in
 -- Parun.Engine.TimeTravel. Targetless: no CR 608.2b legality to re-check.
@@ -1403,20 +1403,20 @@ learn settle resolving source controller = Learn.learn settle controller resolvi
 -- keyword action is Parun.Engine.Cloak.cloak's, listing and all. APNAP (CR
 -- 608.2f) orders the several, which is Effect.Shuffle's posture and for its
 -- reason: the order is a fact about the rules rather than about PlayerId's Ord.
-cloak :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerRef -> Game ()
-cloak resolving source controller legal ref = do
+cloak :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerRef -> Game ()
+cloak settle resolving source controller legal ref = do
   gs <- State.get
   let named = Set.fromList (playerRefPlayers legal resolving source controller gs ref)
-  Monad.mapM_ Cloak.cloak (filter (`Set.member` named) (Game.apnapOrder gs))
+  Monad.mapM_ (Cloak.cloak settle) (filter (`Set.member` named) (Game.apnapOrder gs))
 
 -- CR 701.62a: the named players each manifest dread, the keyword action being
 -- Parun.Engine.ManifestDread.manifestDread's, choice and event alike. APNAP
 -- orders the several, the Cloak arm's reason.
-manifestDread :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerRef -> Game ()
-manifestDread resolving source controller legal ref = do
+manifestDread :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerRef -> Game ()
+manifestDread settle resolving source controller legal ref = do
   gs <- State.get
   let named = Set.fromList (playerRefPlayers legal resolving source controller gs ref)
-  Monad.mapM_ (ManifestDread.manifestDread source) (filter (`Set.member` named) (Game.apnapOrder gs))
+  Monad.mapM_ (ManifestDread.manifestDread settle source) (filter (`Set.member` named) (Game.apnapOrder gs))
 
 -- CR 701.49: the whole keyword action, which Parun.Engine.Dungeon owns.
 venture :: PlayerId -> Maybe Subtype.Subtype -> Game ()
@@ -1652,8 +1652,8 @@ flipArm resolving source controller legal ref =
     -- no alternative characteristics simply does nothing.
     foldr Game.flipPermanent gs (objectRefObjects legal resolving controller source gs ref)
 
-meld :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Meld.Meld Card.Type.Card -> Game ()
-meld resolving source controller legal (Meld.MkMeld ref resultCard) = do
+meld :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Meld.Meld Card.Type.Card -> Game ()
+meld settle resolving source controller legal (Meld.MkMeld ref resultCard) = do
   gs <- State.get
   -- An ordinary read of the ref (CR 608.2c), not a question: the cards were
   -- named by the ability that melds -- for the pool's only pair, the slot its
@@ -1666,7 +1666,7 @@ meld resolving source controller legal (Meld.MkMeld ref resultCard) = do
   -- current zone" -- the cards are wherever the exile left them, and this
   -- resolution simply had no effect. Nothing is bound and no slot is filled: no
   -- printing names the melded permanent later in its own instruction list.
-  Monad.void (Event.meld controller (objectRefObjects legal resolving controller source gs ref) resultCard)
+  Monad.void (Event.meld settle controller (objectRefObjects legal resolving controller source gs ref) resultCard)
 
 phaseOut :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ObjectRef -> Game ()
 phaseOut resolving source controller legal ref =

@@ -1546,8 +1546,8 @@ markDuplicate oid snapshot =
 -- Inline rather than delegating to a `conjureOntoBattlefieldFor` body, which is
 -- createTokens' reason: the project writes no export lists, so a second
 -- top-level name would be a public door past the check.
-conjureOntoBattlefield :: PlayerId -> Card -> Maybe PC.ProjectedCharacteristics -> Natural -> TapState.TapState -> Game (Seq.Seq ObjectId)
-conjureOntoBattlefield controller card copied count tapped = do
+conjureOntoBattlefield :: Game () -> PlayerId -> Card -> Maybe PC.ProjectedCharacteristics -> Natural -> TapState.TapState -> Game (Seq.Seq ObjectId)
+conjureOntoBattlefield settle controller card copied count tapped = do
   gs <- State.get
   if List.notElem controller (Game.stillPlaying gs)
     then pure Seq.empty
@@ -1556,7 +1556,7 @@ conjureOntoBattlefield controller card copied count tapped = do
       ids <- Monad.replicateM (Natural.toIntSaturating count) (State.state (mintCard controller (Just controller) printingId Zone.Battlefield LibraryPosition.defaultValue tapped))
       Monad.forM_ copied (\snapshot -> Monad.mapM_ (`markDuplicate` snapshot) ids)
       let siblingsOf oid = Set.delete oid (Set.fromList ids)
-      refusals <- traverse (\oid -> (,) oid <$> runEntry (Just Zone.Battlefield) Nothing (siblingsOf oid) oid) ids
+      refusals <- traverse (\oid -> (,) oid <$> runEntry settle (Just Zone.Battlefield) Nothing (siblingsOf oid) oid) ids
       let entered = [oid | (oid, Nothing) <- refusals]
       Monad.mapM_ unmake [oid | (oid, Just refusal) <- refusals, not (isDiverted refusal)]
       settleMinted (GameState.nextTimestamp gs) entered
@@ -2214,8 +2214,7 @@ applyReplacements = applyReplacementsIn (pure ()) Nothing Set.empty Set.empty
 --
 -- `settle` is drawSeries', run between the draws a row makes in the event's
 -- place (CR 614.11a): Resolve.runReplacementEffects from a proposer that holds
--- it, and `pure ()` from one whose event no row turns into a draw or a gain,
--- or from runEntry (#6118).
+-- it, and `pure ()` from one whose event no row turns into a draw or a gain.
 applyReplacementsIn :: Game () -> Maybe GameState -> Set ObjectId -> Set CandidateId -> ProposedEvent -> Game (Maybe ProposedEvent)
 applyReplacementsIn settle asOf batch spent event = do
   (outcome, _, _, _, _, _) <- applyReplacementsFully settle asOf batch Map.empty spent event
@@ -3139,7 +3138,7 @@ apply settle batch applied candidate event =
             -- action on several objects, so every member's CR 616.1 loop reads the
             -- board the batch began on. Parun.EventSpec's Shimatsu case is the
             -- proof -- Rest in Peace among the chosen still exiles what follows it.
-            sacrificeAll (fmap ((,) controller) (Set.toAscList chosen))
+            sacrificeAll settle (fmap ((,) controller) (Set.toAscList chosen))
             -- "That many": the permanents CHOSEN, which is also the permanents
             -- sacrificed -- every member was on the battlefield under this
             -- player's control when it was offered, and nothing between there and
@@ -3224,7 +3223,7 @@ apply settle batch applied candidate event =
                       -- FILTERED, NOT TRUSTED (#222): an answer outside the
                       -- allowed sets would starve a later member or overpay.
                       pure (Maybe.fromMaybe forced (List.find (\set -> Set.fromList set == answer) allowed))
-                sacrificeAll (fmap ((,) controller) chosen)
+                sacrificeAll settle (fmap ((,) controller) chosen)
                 pure (Just event)
       -- CR 702.38a: amplify N (Feral Throwback). "As this object enters, reveal
       -- any number of cards from your hand that share a creature type with it.
@@ -3367,7 +3366,7 @@ apply settle batch applied candidate event =
                 -- ONE event (CR 608.2f): "exile any number of creature cards" is one
                 -- action on several objects. The Sutured Ghoul scenario in
                 -- data/scenarios/entry-replacement proves it: Spirit Mascot fires once.
-                arrivals <- changeZonesTogether (fmap (\card -> (card, Zone.Exile)) chosen)
+                arrivals <- changeZonesTogether settle (fmap (\card -> (card, Zone.Exile)) chosen)
                 State.modify' $ \gs2 ->
                   gs2 {GameState.exiledWith = foldr (\arrival -> Map.insert arrival ExileLink.MkExileLink {ExileLink.source = oid, ExileLink.ability = Just Binding.entryExileLink}) (GameState.exiledWith gs2) (foldMap Foldable.toList arrivals)}
                 -- "For each creature card exiled this way": the cards that reached
@@ -3801,9 +3800,10 @@ apply settle batch applied candidate event =
             -- life total: rule 119.4's last clause makes the payment a life loss
             -- like any other, so a card watching for life loss sees this one.
             --
-            -- Not implemented: runEntry proposes the entry with `pure ()`, so
-            -- Lich's draws in place of a gain made in this payment's place land
-            -- nothing they queued before the next draw (#6118).
+            -- With the entry's `settle`, so Lich's draws in place of a gain made
+            -- in this payment's place settle between them (CR 614.11a):
+            -- cr-614-11a-forbidden-crypt-s-loss-meets-lich-s-mirror-between-the-draws-of-a-life-payment-on-entry
+            -- proves it.
             EntryPrice.PayLife n -> do
               answer <-
                 if canPayLife controller n gs
@@ -4202,7 +4202,7 @@ apply settle batch applied candidate event =
       -- Aura leaving the battlefield is what takes the row away.
       DestructionRewrite.UmbraArmor -> do
         State.modify' (\gs -> gs {GameState.objects = Map.adjust (\obj -> obj {Object.damage = 0}) oid (GameState.objects gs)})
-        destroy Regenerability.Regenerable [ReplacementCandidate.source candidate]
+        destroy settle Regenerability.Regenerable [ReplacementCandidate.source candidate]
         pure Nothing
       -- CR 614.1a / 701.69a: Pyramids' "remove all damage marked on it
       -- instead", and nothing else -- no tap and no removal from combat, which
@@ -4306,7 +4306,7 @@ apply settle batch applied candidate event =
           -- nobody, there being no library its clause could measure.
           Nothing -> pure (Just event)
           Just you -> do
-            Monad.mapM_ (`changeZone` Zone.Exile) (take (Natural.toIntSaturating n) (Game.zoneMembers Zone.Library you gs))
+            Monad.mapM_ (\oid -> changeZone settle oid Zone.Exile) (take (Natural.toIntSaturating n) (Game.zoneMembers Zone.Library you gs))
             pure Nothing
       -- CR 614.6 with CR 728.1a: Strong, the Brutish Thespian's "you gain life
       -- rather than lose life from radiation". THE SECOND ARM THAT CANCELS, the
@@ -4436,9 +4436,9 @@ apply settle batch applied candidate event =
           OptionalDecision.Declines -> pure (Just event)
           OptionalDecision.Exercises -> do
             Replacement.consume (ReplacementCandidate.identity candidate)
-            milled <- millFrom pid n
+            milled <- millFrom settle pid n
             Monad.unless (null milled) (State.modify' (recordEvent (GameEvent.Milled (Milled.MkMilled pid (Seq.fromList milled)))))
-            Monad.void (changeZoneReturning (ReplacementCandidate.source candidate) Zone.Hand)
+            Monad.void (changeZoneReturning settle (ReplacementCandidate.source candidate) Zone.Hand)
             pure Nothing
       -- CR 614.10 / 614.6: Plagiarize's "that player skips that draw and you
       -- draw a card". The event is left STANDING with the row's controller as
@@ -4495,7 +4495,7 @@ apply settle batch applied candidate event =
             -- replacement on the payment moved away is not chased.
             after <- State.get
             Monad.forM_ revealed $ \oid ->
-              Monad.when (oid `elem` Game.zoneMembers Zone.Library pid after) (changeZone oid Zone.Graveyard)
+              Monad.when (oid `elem` Game.zoneMembers Zone.Library pid after) (changeZone settle oid Zone.Graveyard)
             pure Nothing
       -- CR 614.6 / 104.3e: Forbidden Crypt's "return a card from your graveyard
       -- to your hand instead. If you can't, you lose the game." The draw never
@@ -4517,7 +4517,7 @@ apply settle batch applied candidate event =
         gs <- State.get
         let cards = Game.cardsIn Zone.Graveyard pid gs
         picked <- Game.chooseAmong (\decider who pool -> Prompt.ChooseCardInGraveyard decider who (ReplacementCandidate.source candidate) pool Seq.empty) pid cards
-        arrived <- maybe (pure Seq.empty) (`changeZoneReturning` Zone.Hand) picked
+        arrived <- maybe (pure Seq.empty) (\oid -> changeZoneReturning settle oid Zone.Hand) picked
         after <- State.get
         let loss =
               PendingReplacementEffect.MkPendingReplacementEffect
@@ -4563,7 +4563,7 @@ apply settle batch applied candidate event =
                 (passed, rest) = List.break wanted (Game.zoneMembers Zone.Library pid gs)
                 found = Maybe.listToMaybe rest
             Monad.mapM_ (reveal RevealCause.Ordinary pid) (passed <> Maybe.maybeToList found)
-            Monad.forM_ found (`changeZone` Zone.Hand)
+            Monad.forM_ found (\oid -> changeZone settle oid Zone.Hand)
             ordered <- case passed of
               _ : _ : _ -> do
                 asked <- State.get
@@ -4571,7 +4571,7 @@ apply settle batch applied candidate event =
                 pure (Game.permute passed order)
               _ -> pure passed
             Monad.forM_ (reverse ordered) $ \oid ->
-              changeZoneAttaching Nothing Set.empty oid Zone.Library LibraryPosition.Bottom Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
+              changeZoneAttaching settle Nothing Set.empty oid Zone.Library LibraryPosition.Bottom Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
             pure Nothing
       -- CR 614.1a: Alhammarret's Archive's "draw two cards instead". The draw is
       -- cancelled (CR 614.6) and N new draws made by the player the EVENT
@@ -4602,10 +4602,10 @@ apply settle batch applied candidate event =
           _ -> do
             answer <- Game.choose (Prompt.ChooseDiscard (Decide.deciderFor pid gs) pid held 1)
             pure (Maybe.listToMaybe (filter (`elem` held) answer <> held))
-        discarded <- asEffect (maybe (pure Seq.empty) (discardReturning DiscardCause.ByEffect pid) picked)
+        discarded <- asEffect (maybe (pure Seq.empty) (discardReturning settle DiscardCause.ByEffect pid) picked)
         if null discarded
           then asEffect $ do
-            milled <- millFrom pid 1
+            milled <- millFrom settle pid 1
             Monad.unless (null milled) (State.modify' (recordEvent (GameEvent.Milled (Milled.MkMilled pid (Seq.fromList milled)))))
           else Monad.void (drawSeries settle (spentWith candidate applied) pid 1)
         pure Nothing
@@ -5408,6 +5408,12 @@ copiedSnapshotWithLastKnown oid gs = case Game.lastKnownOf oid gs of
 -- object leaving: the battlefield for a minted object, which leaves none, and
 -- Nothing for a meld, which is offered none.
 --
+-- `settle` is drawSeries', for the draws a life payment on entry can become
+-- (CR 614.11a), handed down by every door that moves an object. A door passes
+-- `pure ()` only where its move cannot become an entry: a state-based action's,
+-- a departure's, a mulligan's, ante's and CR 724.1b's exile. The one redirect
+-- onto the battlefield in data/cards/ watches a discard (Obstinate Baloth).
+--
 -- Always the LIVE board (`Nothing`), even when the zone change containing this
 -- entry belongs to a CR 608.2f batch: the entering object is not on the
 -- pre-batch board at all, and CR 614.12 asks about now rather than about when
@@ -5418,8 +5424,8 @@ copiedSnapshotWithLastKnown oid gs = case Game.lastKnownOf oid gs of
 -- engine's reading, resting on CR 614.12; no rule states it outright.
 -- docs/decisions.md, "Which board an entry inside a batch collects replacement
 -- effects from".
-runEntry :: Maybe Zone -> Maybe EntryOrigin.EntryOrigin -> Set ObjectId -> ObjectId -> Game (Maybe EntryRefusal.EntryRefusal)
-runEntry diverting origin given oid = do
+runEntry :: Game () -> Maybe Zone -> Maybe EntryOrigin.EntryOrigin -> Set ObjectId -> ObjectId -> Game (Maybe EntryRefusal.EntryRefusal)
+runEntry settle diverting origin given oid = do
   -- CR 608.2f / 614.12: inside one action (`together`), what an EARLIER call
   -- put onto the battlefield entered at the same moment as this object, so it
   -- is a sibling too -- Ornate Imitations' later numbers and Mirror Match's later
@@ -5442,7 +5448,7 @@ runEntry diverting origin given oid = do
   -- below for the reason `before` is.
   beforeSubjects <- State.gets GameState.enteringSubjects
   State.modify' (\gs -> gs {GameState.enteringBeside = batch, GameState.enteringSubjects = Map.insert oid origin beforeSubjects})
-  (outcome, _, _, _, _, _) <- loop (pure ()) Nothing batch diverting Map.empty Set.empty [] Nothing False Nothing (ProposedEvent.WouldEnter oid)
+  (outcome, _, _, _, _, _) <- loop settle Nothing batch diverting Map.empty Set.empty [] Nothing False Nothing (ProposedEvent.WouldEnter oid)
   case outcome of
     Just (ProposedEvent.WouldChangeZone zc _ position _) -> do
       Monad.void (takeEnteringCounters oid)
@@ -6557,8 +6563,8 @@ beginsPhase selector pid = do
 -- component for that. Widening rather than special-casing is what makes CR
 -- 712.21c reachable: an effect that finds what the permanent became finds both
 -- cards, where a single-id answer would silently drop the second.
-changeZone :: ObjectId -> Zone -> Game ()
-changeZone oid requestedDest = Monad.void (changeZoneReturning oid requestedDest)
+changeZone :: Game () -> ObjectId -> Zone -> Game ()
+changeZone settle oid requestedDest = Monad.void (changeZoneReturning settle oid requestedDest)
 
 -- changeZoneReturning for a move whose effect says how the object ENTERS -- CR
 -- 110.5b's tap state, CR 712.14a's transformed face, CR 708.3's face-down entry
@@ -6602,8 +6608,8 @@ changeZone oid requestedDest = Monad.void (changeZoneReturning oid requestedDest
 -- 712.14b is not a replacement effect -- there is no event for CR 616.1 to
 -- choose among, and running the entry loop first would fire CR 614.1c's
 -- as-enters abilities for a card that never enters.
-changeZoneEntering :: ObjectId -> Zone -> LibraryPosition.LibraryPosition -> EntryRiders.EntryRiders Natural (GrantedAbility.Type.GrantedAbility Card.Type.Card) -> Maybe PlayerId -> Game (Seq.Seq ObjectId)
-changeZoneEntering oid = changeZoneEnteringIn Nothing Set.empty Nothing oid oid
+changeZoneEntering :: Game () -> ObjectId -> Zone -> LibraryPosition.LibraryPosition -> EntryRiders.EntryRiders Natural (GrantedAbility.Type.GrantedAbility Card.Type.Card) -> Maybe PlayerId -> Game (Seq.Seq ObjectId)
+changeZoneEntering settle oid = changeZoneEnteringIn settle Nothing Set.empty Nothing oid oid
 
 -- changeZoneEntering for ONE MEMBER of a CR 608.2f batch: `asOf` and `batch` are
 -- applyReplacementsIn's, and Parun.Engine.Resolve's Effect.MoveToZone arm is the
@@ -6614,8 +6620,8 @@ changeZoneEntering oid = changeZoneEnteringIn Nothing Set.empty Nothing oid oid
 -- doors' riders are built by rules and carry none, so they pass the moving object.
 -- `seed` is changeZoneAttaching's, the host an Aura enters attached to where the
 -- MoveToZone arm already made CR 303.4f's choice (EntryHost.Chosen).
-changeZoneEnteringIn :: Maybe GameState -> Set ObjectId -> Maybe Recipient.Recipient -> ObjectId -> ObjectId -> Zone -> LibraryPosition.LibraryPosition -> EntryRiders.EntryRiders Natural (GrantedAbility.Type.GrantedAbility Card.Type.Card) -> Maybe PlayerId -> Game (Seq.Seq ObjectId)
-changeZoneEnteringIn asOf batch seed source oid requestedDest position riders under = do
+changeZoneEnteringIn :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Recipient.Recipient -> ObjectId -> ObjectId -> Zone -> LibraryPosition.LibraryPosition -> EntryRiders.EntryRiders Natural (GrantedAbility.Type.GrantedAbility Card.Type.Card) -> Maybe PlayerId -> Game (Seq.Seq ObjectId)
+changeZoneEnteringIn settle asOf batch seed source oid requestedDest position riders under = do
   -- CR 614.12b: this member is moving now, so it no longer owes anything to an
   -- earlier member's choice (see amongPending).
   State.modify' (\g -> g {GameState.enteringPending = Map.delete oid (GameState.enteringPending g)})
@@ -6684,7 +6690,7 @@ changeZoneEnteringIn asOf batch seed source oid requestedDest position riders un
   if refused
     then pure Seq.empty
     else do
-      entered <- changeZoneAttaching asOf batch oid requestedDest position seed (EntryRiders.tapped riders) (EntryRiders.counters riders) under2 shown facing (EntryRiders.exiledFaceDown riders) CarryOver.NotCarried False (fmap ((,) source) (EntryRiders.characteristics riders))
+      entered <- changeZoneAttaching settle asOf batch oid requestedDest position seed (EntryRiders.tapped riders) (EntryRiders.counters riders) under2 shown facing (EntryRiders.exiledFaceDown riders) CarryOver.NotCarried False (fmap ((,) source) (EntryRiders.characteristics riders))
       Monad.forM_ noted $ \printingId ->
         State.modify' $ \g -> g {GameState.notedCards = foldr (`Map.insert` printingId) (GameState.notedCards g) entered}
       pure entered
@@ -6731,8 +6737,8 @@ changeZoneEnteringIn asOf batch seed source oid requestedDest position riders un
 -- `tapped` is CR 614.1d's "enters tapped" a permission states for the land
 -- played under it (Parun.Types.ExilePlayPermission.landEnters), seeded on the
 -- proposed event as changeZoneEntering's rider is.
-changeZoneShowing :: Maybe PlayerId -> ObjectId -> Zone -> Maybe CardName.CardName -> TapState.TapState -> Game (Seq.Seq ObjectId)
-changeZoneShowing under oid requestedDest shown tapped = changeZoneAttaching Nothing Set.empty oid requestedDest LibraryPosition.defaultValue Nothing tapped Map.empty under shown Facing.FaceUp False CarryOver.NotCarried False Seq.empty
+changeZoneShowing :: Game () -> Maybe PlayerId -> ObjectId -> Zone -> Maybe CardName.CardName -> TapState.TapState -> Game (Seq.Seq ObjectId)
+changeZoneShowing settle under oid requestedDest shown tapped = changeZoneAttaching settle Nothing Set.empty oid requestedDest LibraryPosition.defaultValue Nothing tapped Map.empty under shown Facing.FaceUp False CarryOver.NotCarried False Seq.empty
 
 -- changeZoneShowing for a move that puts the object into its destination FACE
 -- DOWN -- the CR 110.5b "unless a spell or ability says otherwise" that morph is.
@@ -6757,8 +6763,8 @@ changeZoneShowing under oid requestedDest shown tapped = changeZoneAttaching Not
 -- is called, and the substitution that empties the name reads it (faceOf) rather
 -- than being stored. Turning the permanent face up is what makes it observable
 -- again (CR 708.8).
-changeZoneFaceDown :: ObjectId -> Zone -> Maybe CardName.CardName -> Game (Seq.Seq ObjectId)
-changeZoneFaceDown oid requestedDest shown = changeZoneAttaching Nothing Set.empty oid requestedDest LibraryPosition.defaultValue Nothing TapState.Untapped Map.empty Nothing shown (Facing.faceDown FaceDownReason.Morphed) False CarryOver.NotCarried False Seq.empty
+changeZoneFaceDown :: Game () -> ObjectId -> Zone -> Maybe CardName.CardName -> Game (Seq.Seq ObjectId)
+changeZoneFaceDown settle oid requestedDest shown = changeZoneAttaching settle Nothing Set.empty oid requestedDest LibraryPosition.defaultValue Nothing TapState.Untapped Map.empty Nothing shown (Facing.faceDown FaceDownReason.Morphed) False CarryOver.NotCarried False Seq.empty
 
 -- CR 601.2a's move: the card goes onto the stack and "that player becomes its
 -- controller". The caster is carried BY THE MOVE, for the reason CR 709.3a
@@ -6779,12 +6785,12 @@ changeZoneFaceDown oid requestedDest shown = changeZoneAttaching Nothing Set.emp
 --
 -- A CR 707.13 copy outside the game (GameState.outsideCopies) takes
 -- `castFromOutside` instead: it is in no zone, so nothing leaves one.
-changeZoneCasting :: PlayerId -> ObjectId -> Zone -> Maybe CardName.CardName -> Facing.Facing -> Game (Seq.Seq ObjectId)
-changeZoneCasting caster oid requestedDest shown facing = do
+changeZoneCasting :: Game () -> PlayerId -> ObjectId -> Zone -> Maybe CardName.CardName -> Facing.Facing -> Game (Seq.Seq ObjectId)
+changeZoneCasting settle caster oid requestedDest shown facing = do
   gs <- State.get
   if Set.member oid (GameState.outsideCopies gs)
     then castFromOutside caster oid requestedDest shown facing
-    else changeZoneAttaching Nothing Set.empty oid requestedDest LibraryPosition.defaultValue Nothing TapState.Untapped Map.empty (Just caster) shown facing False CarryOver.NotCarried False Seq.empty
+    else changeZoneAttaching settle Nothing Set.empty oid requestedDest LibraryPosition.defaultValue Nothing TapState.Untapped Map.empty (Just caster) shown facing False CarryOver.NotCarried False Seq.empty
 
 -- CR 601.2a from outside the game (CR 400.11): "moves that copy of a card from
 -- where it is to the stack". The CR 614 loop runs, since a replacement keyed on
@@ -6834,8 +6840,8 @@ castFromOutside caster oid requestedDest shown facing = do
 --
 -- A separate door rather than a fourth parameter on changeZone: a batch is the
 -- rare case, and for a single move the board it begins on IS the live one.
-changeZoneInBatch :: GameState -> ObjectId -> Zone -> Game ()
-changeZoneInBatch asOf oid requestedDest = Monad.void (changeZoneInBatchReturning asOf oid requestedDest)
+changeZoneInBatch :: Game () -> GameState -> ObjectId -> Zone -> Game ()
+changeZoneInBatch settle asOf oid requestedDest = Monad.void (changeZoneInBatchReturning settle asOf oid requestedDest)
 
 -- changeZoneInBatch, answering with the destination incarnations' ids -- what
 -- changeZoneReturning is to changeZone, and the same answer: the CR 400.7 ids,
@@ -6843,8 +6849,8 @@ changeZoneInBatch asOf oid requestedDest = Monad.void (changeZoneInBatchReturnin
 -- funnel reads them for CR 701.8b's "put into a graveyard this way", and a
 -- search's and a surveil's batches (Resolve.Effect.putFound, applySurveil) for
 -- the cards they moved.
-changeZoneInBatchReturning :: GameState -> ObjectId -> Zone -> Game (Seq.Seq ObjectId)
-changeZoneInBatchReturning asOf oid requestedDest = changeZoneAttaching (Just asOf) Set.empty oid requestedDest LibraryPosition.defaultValue Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
+changeZoneInBatchReturning :: Game () -> GameState -> ObjectId -> Zone -> Game (Seq.Seq ObjectId)
+changeZoneInBatchReturning settle asOf oid requestedDest = changeZoneAttaching settle (Just asOf) Set.empty oid requestedDest LibraryPosition.defaultValue Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
 
 -- CR 608.2f / 610.3d: move every member of `moves` under the rules' defaults as
 -- ONE event, answering each member's CR 400.7 ids in order. The batch door for a
@@ -6856,8 +6862,8 @@ changeZoneInBatchReturning asOf oid requestedDest = changeZoneAttaching (Just as
 --
 -- Parun.LeavesTriggerSpec's Rest in Peace case and data/scenarios/
 -- simultaneous-moves' Banisher Priest and Palace Jailer boards prove it.
-changeZonesTogether :: [(ObjectId, Zone)] -> Game [Seq.Seq ObjectId]
-changeZonesTogether batch = simultaneously . together $ do
+changeZonesTogether :: Game () -> [(ObjectId, Zone)] -> Game [Seq.Seq ObjectId]
+changeZonesTogether settle batch = simultaneously . together $ do
   -- Lich's Mirror's ruling, asked of the whole batch before any of it moves.
   kept <- contestedKept (fmap fst batch)
   before <- State.get
@@ -6865,7 +6871,7 @@ changeZonesTogether batch = simultaneously . together $ do
       entering = [oid | (oid, Zone.Battlefield) <- moves]
       step (sofar, acc) (oid, dest) = do
         State.modify' (\g -> g {GameState.enteringPending = Map.delete oid (GameState.enteringPending g)})
-        new <- changeZoneAttaching (Just before) sofar oid dest LibraryPosition.defaultValue Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
+        new <- changeZoneAttaching settle (Just before) sofar oid dest LibraryPosition.defaultValue Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
         pure (foldr Set.insert sofar new, new : acc)
   fmap (reverse . snd) (amongPending Nothing entering (Monad.foldM step (Set.empty, []) moves))
 
@@ -6888,11 +6894,11 @@ changeZonesTogether batch = simultaneously . together $ do
 -- `millFromReturningTaken` answers the LIBRARY ids taken as well, for the tally
 -- CR 728.1 asks about -- those cards have moved by the time it is read, so the
 -- pre-move ids are the only handle on what they were.
-millFrom :: PlayerId -> Natural -> Game [ObjectId]
-millFrom pid n = fmap snd (millFromReturningTaken pid n)
+millFrom :: Game () -> PlayerId -> Natural -> Game [ObjectId]
+millFrom settle pid n = fmap snd (millFromReturningTaken settle pid n)
 
-millFromReturningTaken :: PlayerId -> Natural -> Game ([ObjectId], [ObjectId])
-millFromReturningTaken pid n
+millFromReturningTaken :: Game () -> PlayerId -> Natural -> Game ([ObjectId], [ObjectId])
+millFromReturningTaken settle pid n
   -- No instruction, so no event: CR 701.17a's action is to put cards into a
   -- graveyard, and a count of zero puts none. Bruvac the Grandiloquent's clause
   -- says "one or more" for the same reason, and `applies` leans on this rather
@@ -6914,11 +6920,11 @@ millFromReturningTaken pid n
           -- printed one.
           let cards = List.genericTake settled (Game.zoneMembers Zone.Library miller gs)
           -- ONE event (CR 608.2f), whose cards the owner may arrange (CR 404.3).
-          arrived <- fmap (concatMap Foldable.toList) (changeZonesTogether (fmap (\card -> (card, Zone.Graveyard)) cards))
+          arrived <- fmap (concatMap Foldable.toList) (changeZonesTogether settle (fmap (\card -> (card, Zone.Graveyard)) cards))
           pure (cards, arrived)
 
-changeZoneReturning :: ObjectId -> Zone -> Game (Seq.Seq ObjectId)
-changeZoneReturning oid requestedDest = changeZoneAttaching Nothing Set.empty oid requestedDest LibraryPosition.defaultValue Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
+changeZoneReturning :: Game () -> ObjectId -> Zone -> Game (Seq.Seq ObjectId)
+changeZoneReturning settle oid requestedDest = changeZoneAttaching settle Nothing Set.empty oid requestedDest LibraryPosition.defaultValue Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
 
 -- changeZoneReturning for CR 608.2n's own move, "as the final part of an instant
 -- or sorcery spell's resolution". The ONE door that stamps
@@ -6929,8 +6935,8 @@ changeZoneReturning oid requestedDest = changeZoneAttaching Nothing Set.empty oi
 --
 -- A separate door rather than a parameter on changeZoneReturning, for the reason
 -- changeZoneInBatch is one: the caller is Parun.Engine.Resolve.finishSpell alone.
-changeZoneResolvingReturning :: ObjectId -> Zone -> Game (Seq.Seq ObjectId)
-changeZoneResolvingReturning oid requestedDest = changeZoneAttaching Nothing Set.empty oid requestedDest LibraryPosition.defaultValue Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried True Seq.empty
+changeZoneResolvingReturning :: Game () -> ObjectId -> Zone -> Game (Seq.Seq ObjectId)
+changeZoneResolvingReturning settle oid requestedDest = changeZoneAttaching settle Nothing Set.empty oid requestedDest LibraryPosition.defaultValue Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried True Seq.empty
 
 -- changeZoneReturning with an attachment seed. Per CR 303.4 attachment is a
 -- property of entering, not a step after it: the CR 614.1c entry replacement loop
@@ -6992,8 +6998,10 @@ changeZoneResolvingReturning oid requestedDest = changeZoneAttaching Nothing Set
 --
 -- `defining` is CR 611.2e's effects, each with its source: empty for every
 -- door but changeZoneEntering, and stored only on a battlefield arrival.
-changeZoneAttaching :: Maybe GameState -> Set ObjectId -> ObjectId -> Zone -> LibraryPosition.LibraryPosition -> Maybe Recipient.Recipient -> TapState.TapState -> Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural -> Maybe PlayerId -> Maybe CardName.CardName -> Facing.Facing -> Bool -> CarryOver.CarryOver -> Bool -> Seq.Seq (ObjectId, Modification.Modification (GrantedAbility.Type.GrantedAbility Card.Type.Card)) -> Game (Seq.Seq ObjectId)
-changeZoneAttaching = changeZoneWithCause Nothing
+--
+-- `settle` is runEntry's, which every door carries.
+changeZoneAttaching :: Game () -> Maybe GameState -> Set ObjectId -> ObjectId -> Zone -> LibraryPosition.LibraryPosition -> Maybe Recipient.Recipient -> TapState.TapState -> Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural -> Maybe PlayerId -> Maybe CardName.CardName -> Facing.Facing -> Bool -> CarryOver.CarryOver -> Bool -> Seq.Seq (ObjectId, Modification.Modification (GrantedAbility.Type.GrantedAbility Card.Type.Card)) -> Game (Seq.Seq ObjectId)
+changeZoneAttaching settle = changeZoneWithCause settle Nothing
 
 -- CR 611.2e: one of the instruction's "is" effects over the permanent just
 -- placed, stored as a resolution's continuous effect would be (CR 611.2a's
@@ -7163,8 +7171,8 @@ contestedKept oids = do
   after <- State.gets GameState.contested
   pure (Set.fromList [oid | oid <- oids, Map.lookup oid after == Just Nothing])
 
-changeZoneWithCause :: Maybe DiscardCause.DiscardCause -> Maybe GameState -> Set ObjectId -> ObjectId -> Zone -> LibraryPosition.LibraryPosition -> Maybe Recipient.Recipient -> TapState.TapState -> Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural -> Maybe PlayerId -> Maybe CardName.CardName -> Facing.Facing -> Bool -> CarryOver.CarryOver -> Bool -> Seq.Seq (ObjectId, Modification.Modification (GrantedAbility.Type.GrantedAbility Card.Type.Card)) -> Game (Seq.Seq ObjectId)
-changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition seed tapped entering under shown facing concealed carrying resolving defining = do
+changeZoneWithCause :: Game () -> Maybe DiscardCause.DiscardCause -> Maybe GameState -> Set ObjectId -> ObjectId -> Zone -> LibraryPosition.LibraryPosition -> Maybe Recipient.Recipient -> TapState.TapState -> Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural -> Maybe PlayerId -> Maybe CardName.CardName -> Facing.Facing -> Bool -> CarryOver.CarryOver -> Bool -> Seq.Seq (ObjectId, Modification.Modification (GrantedAbility.Type.GrantedAbility Card.Type.Card)) -> Game (Seq.Seq ObjectId)
+changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosition seed tapped entering under shown facing concealed carrying resolving defining = do
   yielded <- Set.member oid <$> contestedKept [oid]
   gs <- State.get
   case Game.lookupObject oid gs of
@@ -7347,7 +7355,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
         Just settled
           | ZoneChange.to settled == Zone.Battlefield && EntryRestriction.prohibited oid fromZone gs ->
               if fromZone == Zone.Stack
-                then changeZoneReturning oid Zone.Graveyard
+                then changeZoneReturning settle oid Zone.Graveyard
                 else pure Seq.empty
         Just settled -> do
           let dest = ZoneChange.to settled
@@ -8172,7 +8180,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                     -- under data/scenarios/aura prove it.
                     State.modify' (\g -> List.foldl' (storeEntryEffect newId) g defining)
                     Monad.mapM_ (uncurry (addEnteringCounters Nothing newId)) (Map.toAscList entering)
-                    refusal <- runEntry (Just fromZone) (Game.entryOriginOf oid unentered) batch newId
+                    refusal <- runEntry settle (Just fromZone) (Game.entryOriginOf oid unentered) batch newId
                     fallen <- case refusal of
                       Nothing -> pure Seq.empty
                       -- CR 614.1a: EntryRewrite.SacrificeToEnter's "if you don't, put
@@ -8183,7 +8191,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                       Just EntryRefusal.Unpaid -> do
                         State.put unentered
                         State.modify' (\g -> g {GameState.refusedEntries = fmap (Set.insert oid) (GameState.refusedEntries g)})
-                        if fromZone == Zone.Graveyard then pure Seq.empty else changeZoneReturning oid Zone.Graveyard
+                        if fromZone == Zone.Graveyard then pure Seq.empty else changeZoneReturning settle oid Zone.Graveyard
                       -- CR 303.4g: an Aura with nothing to enchant "remains in its
                       -- current zone, unless that zone is the stack", which puts it
                       -- into its owner's graveyard instead. Copy Enchantment that
@@ -8192,7 +8200,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                       -- no test drives another origin.
                       Just EntryRefusal.Unhosted -> do
                         State.put unentered
-                        if fromZone == Zone.Stack then changeZoneReturning oid Zone.Graveyard else pure Seq.empty
+                        if fromZone == Zone.Stack then changeZoneReturning settle oid Zone.Graveyard else pure Seq.empty
                       -- CR 614.6 / 614.12: a battlefield-bound redirect, asked inside
                       -- the entry loop (Replacement.matchesPrinted), takes the card,
                       -- so the entry is unmade and the modified event is the move,
@@ -8202,7 +8210,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                       -- hallowed-moonlight-exiles-a-card-that-enters-as-a-copy-of-a-creature.
                       Just (EntryRefusal.Diverted zone end) -> do
                         State.put unentered
-                        changeZoneWithCause discarded asOf batch oid zone end Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried resolving Seq.empty
+                        changeZoneWithCause settle discarded asOf batch oid zone end Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried resolving Seq.empty
                     pure (fmap (\r -> (r, if fromZone == Zone.Stack || isDiverted r then fallen else Seq.empty)) refusal)
               -- Read off the refusal and not off whether `newId` still names an
               -- object: the graveyard move above re-mints from the rolled-back
@@ -8228,7 +8236,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                     then pure (foldMap snd refusal)
                     else do
                       State.put unentered
-                      if fromZone == Zone.Stack then changeZoneReturning oid Zone.Graveyard else pure Seq.empty
+                      if fromZone == Zone.Stack then changeZoneReturning settle oid Zone.Graveyard else pure Seq.empty
                 else do
                   -- CR 709.5h: an ability that triggers on a door opening fires "regardless
                   -- of whether it was given that designation while entering the
@@ -8771,8 +8779,8 @@ permissionRiders src gs played =
 -- Parun.Types.DestructionCause: a caller with a whole event of its own to destroy in
 -- is a resolving spell or ability (CR 609.1), and CR 122.1c's shield reads that.
 -- The rules' own destructions come through destroyInBatch, which asks.
-destroy :: Regenerability.Regenerability -> [ObjectId] -> Game ()
-destroy regenerability oids = Monad.void (destroyIn Nothing DestructionCause.ByEffect regenerability oids)
+destroy :: Game () -> Regenerability.Regenerability -> [ObjectId] -> Game ()
+destroy settle regenerability oids = Monad.void (destroyIn settle Nothing DestructionCause.ByEffect regenerability oids)
 
 -- destroy, answering with the permanents it ACTUALLY destroyed (CR 701.8b), which
 -- is emphatically not the batch it was handed: an indestructible member never
@@ -8793,8 +8801,8 @@ destroy regenerability oids = Monad.void (destroyIn Nothing DestructionCause.ByE
 --
 -- A second door rather than a return type on `destroy`, the changeZoneReturning
 -- posture: only the Destroy opcode's bound slots use the answer.
-destroyReturning :: Regenerability.Regenerability -> [ObjectId] -> Game [(ObjectId, Seq.Seq ObjectId)]
-destroyReturning = destroyIn Nothing DestructionCause.ByEffect
+destroyReturning :: Game () -> Regenerability.Regenerability -> [ObjectId] -> Game [(ObjectId, Seq.Seq ObjectId)]
+destroyReturning settle = destroyIn settle Nothing DestructionCause.ByEffect
 
 -- destroy for a batch that is one PART of a larger simultaneous event, whose board
 -- is `asOf`. CR 704.3's state-based-action check is that event, and Sba is the
@@ -8809,8 +8817,8 @@ destroyReturning = destroyIn Nothing DestructionCause.ByEffect
 -- The one door that ASKS for the Parun.Types.DestructionCause, because it is the one
 -- whose caller may be a rule: CR 704.5g/h destroy with no effect involved, which is
 -- what CR 122.1c's replacement does not reach.
-destroyInBatch :: GameState -> DestructionCause.DestructionCause -> Regenerability.Regenerability -> [ObjectId] -> Game ()
-destroyInBatch asOf cause regenerability oids = Monad.void (destroyIn (Just asOf) cause regenerability oids)
+destroyInBatch :: Game () -> GameState -> DestructionCause.DestructionCause -> Regenerability.Regenerability -> [ObjectId] -> Game ()
+destroyInBatch settle asOf cause regenerability oids = Monad.void (destroyIn settle (Just asOf) cause regenerability oids)
 
 -- The shared body. Three readers of a board, and they do NOT all get the same one:
 --
@@ -8843,8 +8851,8 @@ destroyInBatch asOf cause regenerability oids = Monad.void (destroyIn (Just asOf
 -- against one board, not a sequence -- so the bracket adds no claim they do not.
 -- Day of Judgment's deaths are the case it decides, and CR 603.10a's own Example
 -- is why they must not be a sequence.
-destroyIn :: Maybe GameState -> DestructionCause.DestructionCause -> Regenerability.Regenerability -> [ObjectId] -> Game [(ObjectId, Seq.Seq ObjectId)]
-destroyIn asOf cause regenerability oids = simultaneously $ do
+destroyIn :: Game () -> Maybe GameState -> DestructionCause.DestructionCause -> Regenerability.Regenerability -> [ObjectId] -> Game [(ObjectId, Seq.Seq ObjectId)]
+destroyIn settle asOf cause regenerability oids = simultaneously $ do
   live <- State.get
   let gs = Maybe.fromMaybe live asOf
   fmap Maybe.catMaybes . Monad.forM (doomedAmong live gs oids) $ \oid -> do
@@ -8857,7 +8865,7 @@ destroyIn asOf cause regenerability oids = simultaneously $ do
       -- the destruction is honoured. changeZone is a no-op for an object already
       -- gone, which is what makes naming the batch's members up front safe.
       Just target -> do
-        arrived <- changeZoneInBatchReturning gs target Zone.Graveyard
+        arrived <- changeZoneInBatchReturning settle gs target Zone.Graveyard
         pure (Just (target, arrived))
 
 -- The members a destruction reaches: still there on the live board, and not
@@ -8933,10 +8941,10 @@ destructionsStanding asOf cause regenerability oids = do
 -- (CR 405.4), taken from the caller rather than re-derived: by the time the CR
 -- 117.5 scan reads this event the controller can no longer be asked for exactly
 -- (see Parun.Types.Countering).
-counter :: ObjectId -> PlayerId -> ObjectId -> Game ()
-counter source controller oid = do
+counter :: Game () -> ObjectId -> PlayerId -> ObjectId -> Game ()
+counter settle source controller oid = do
   gs <- State.get
-  Monad.void (counterOne gs (pure (Zone.Graveyard, LibraryPosition.defaultValue)) source source controller oid)
+  Monad.void (counterOne settle gs (pure (Zone.Graveyard, LibraryPosition.defaultValue)) source source controller oid)
 
 -- counter over a whole batch, answering with the objects it ACTUALLY countered
 -- (CR 701.6a) -- which is emphatically not the batch it was handed: an id naming
@@ -8961,10 +8969,10 @@ counter source controller oid = do
 --
 -- A second door rather than a return type on `counter`, the destroyReturning
 -- posture: only the Counter opcode's bound slots use the answer.
-counterReturning :: (ObjectId -> Game (Zone.Zone, LibraryPosition.LibraryPosition)) -> ObjectId -> ObjectId -> PlayerId -> [ObjectId] -> Game [(ObjectId, Seq.Seq ObjectId)]
-counterReturning destinationOf counterer source controller victims = do
+counterReturning :: Game () -> (ObjectId -> Game (Zone.Zone, LibraryPosition.LibraryPosition)) -> ObjectId -> ObjectId -> PlayerId -> [ObjectId] -> Game [(ObjectId, Seq.Seq ObjectId)]
+counterReturning settle destinationOf counterer source controller victims = do
   before <- State.get
-  fmap Maybe.catMaybes (traverse (\oid -> fmap (fmap ((,) oid)) (counterOne before (destinationOf oid) counterer source controller oid)) victims)
+  fmap Maybe.catMaybes (traverse (\oid -> fmap (fmap ((,) oid)) (counterOne settle before (destinationOf oid) counterer source controller oid)) victims)
 
 -- The shared body of both doors: counter ONE object, answering Nothing when it
 -- was not countered and the incarnations its move minted when it was.
@@ -8981,8 +8989,8 @@ counterReturning destinationOf counterer source controller victims = do
 --
 -- `before` is the board CR 113.6g's condition is judged on: the batch's, taken
 -- once by counterReturning before any victim moves (CR 608.2f).
-counterOne :: GameState -> Game (Zone.Zone, LibraryPosition.LibraryPosition) -> ObjectId -> ObjectId -> PlayerId -> ObjectId -> Game (Maybe (Seq.Seq ObjectId))
-counterOne before destination counterer source controller oid = do
+counterOne :: Game () -> GameState -> Game (Zone.Zone, LibraryPosition.LibraryPosition) -> ObjectId -> ObjectId -> PlayerId -> ObjectId -> Game (Maybe (Seq.Seq ObjectId))
+counterOne settle before destination counterer source controller oid = do
   gs <- State.get
   case Game.lookupObject oid gs of
     Nothing -> pure Nothing
@@ -9022,7 +9030,7 @@ counterOne before destination counterer source controller oid = do
         | all (Condition.holds (Projection.fullView before) (Projection.sourceContext before (Projection.controllerOf oid before) oid) before oid) condition -> pure Nothing
       _ -> do
         (zone, position) <- destination
-        moved <- changeZoneAttaching Nothing Set.empty oid zone position Nothing TapState.Untapped Map.empty (Just controller) Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
+        moved <- changeZoneAttaching settle Nothing Set.empty oid zone position Nothing TapState.Untapped Map.empty (Just controller) Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
         if Seq.null moved
           then pure Nothing
           else do
@@ -9257,8 +9265,8 @@ protectedFromCountering counterer oid gs =
 -- sacrifice. sacrificeAll is the same door for an instruction that names
 -- several, sacrificeInBatch for a batch nested in a larger event, and
 -- sacrificeIn is the shared body.
-sacrifice :: PlayerId -> ObjectId -> Game ()
-sacrifice pid oid = sacrificeIn Nothing [(pid, oid)]
+sacrifice :: Game () -> PlayerId -> ObjectId -> Game ()
+sacrifice settle pid oid = sacrificeIn settle Nothing [(pid, oid)]
 
 -- CR 608.2f: the sacrifice funnel for a whole batch one instruction named -- All
 -- Is Dust's "each player sacrifices all permanents they control that are one or
@@ -9269,16 +9277,16 @@ sacrifice pid oid = sacrificeIn Nothing [(pid, oid)]
 -- PAIRED rather than a player and a list, because CR 701.21a makes the
 -- sacrificing player a fact about each member: an edict's batch spans seats, and
 -- the rule's "a permanent they don't control" is asked of each pair.
-sacrificeAll :: [(PlayerId, ObjectId)] -> Game ()
-sacrificeAll = sacrificeIn Nothing
+sacrificeAll :: Game () -> [(PlayerId, ObjectId)] -> Game ()
+sacrificeAll settle = sacrificeIn settle Nothing
 
 -- sacrificeAll for a batch that is one PART of a larger simultaneous event, whose
 -- board is `asOf`. destroyInBatch's door one funnel over, and CR 704.3's
 -- state-based-action check is the same event: Parun.Engine.Sba's CR 704.5s / 714.4
 -- Saga sacrifices stand on the board the pass began in, so a replacement effect
 -- belonging to a Saga the same pass is sacrificing still applies to the rest.
-sacrificeInBatch :: GameState -> [(PlayerId, ObjectId)] -> Game ()
-sacrificeInBatch asOf = sacrificeIn (Just asOf)
+sacrificeInBatch :: Game () -> GameState -> [(PlayerId, ObjectId)] -> Game ()
+sacrificeInBatch settle asOf = sacrificeIn settle (Just asOf)
 
 -- The shared body. Two readers of a board, split the way destroyIn splits its
 -- three:
@@ -9321,8 +9329,8 @@ sacrificeInBatch asOf = sacrificeIn (Just asOf)
 -- The whole body is ONE event, destroyIn's bracket for destroyIn's reason: CR
 -- 608.2f makes an action taken on multiple objects simultaneous, and every caller
 -- hands a batch one instruction or one CR 704.3 pass named.
-sacrificeIn :: Maybe GameState -> [(PlayerId, ObjectId)] -> Game ()
-sacrificeIn asOf victims = simultaneously $ do
+sacrificeIn :: Game () -> Maybe GameState -> [(PlayerId, ObjectId)] -> Game ()
+sacrificeIn settle asOf victims = simultaneously $ do
   began <- State.get
   let gs = Maybe.fromMaybe began asOf
   Monad.forM_ victims $ \(pid, oid) -> do
@@ -9364,7 +9372,7 @@ sacrificeIn asOf victims = simultaneously $ do
           | SacrificeRestriction.prohibited oid gs -> pure ()
           | otherwise -> do
               State.modify' (recordEvent (GameEvent.PermanentSacrificed (PermanentWasSacrificed.MkPermanentWasSacrificed pid oid)))
-              changeZoneInBatch gs oid Zone.Graveyard
+              changeZoneInBatch settle gs oid Zone.Graveyard
         Zone.Library -> pure ()
         Zone.Hand -> pure ()
         Zone.Graveyard -> pure ()
@@ -9446,8 +9454,8 @@ sacrificeIn asOf victims = simultaneously $ do
 --
 -- Not an event bracket of its own: the caller is the one CR 608.2f event, and
 -- under Event.together the entries are recorded after this returns anyway.
-createTokens :: PlayerId -> Card -> Maybe PC.ProjectedCharacteristics -> Natural -> TapState.TapState -> Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural -> Maybe [Recipient.Recipient] -> Set Designation.Designation -> Game [ObjectId]
-createTokens controller card copy n tapped entering attached marks = do
+createTokens :: Game () -> PlayerId -> Card -> Maybe PC.ProjectedCharacteristics -> Natural -> TapState.TapState -> Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural -> Maybe [Recipient.Recipient] -> Set Designation.Designation -> Game [ObjectId]
+createTokens settle controller card copy n tapped entering attached marks = do
   gs <- State.get
   if List.notElem controller (Game.stillPlaying gs)
     then pure []
@@ -9581,7 +9589,7 @@ createTokens controller card copy n tapped entering attached marks = do
               -- `siblingsOf` then hands each entry loop.
               let siblingsOf oid = Set.delete oid (Set.fromList ids)
               Monad.mapM_ (\oid -> Monad.mapM_ (uncurry (addEnteringCounters Nothing oid)) (Map.toAscList entering)) ids
-              refusals <- traverse (\oid -> (,) oid <$> runEntry (Just Zone.Battlefield) Nothing (siblingsOf oid) oid) ids
+              refusals <- traverse (\oid -> (,) oid <$> runEntry settle (Just Zone.Battlefield) Nothing (siblingsOf oid) oid) ids
               let entered = [oid | (oid, Nothing) <- refusals]
               Monad.mapM_ unmake [oid | (oid, Just refusal) <- refusals, not (isDiverted refusal)]
               settleMinted (GameState.nextTimestamp unminted) entered
@@ -9691,8 +9699,8 @@ recordMintedEntry newId = do
 -- The back faces are up by construction -- CR 712.4b leaves a meld card's own half
 -- of the oversized face meaningless alone, so parun prints neither half's back and
 -- the interned result IS the combined face, face up on its only face.
-meld :: PlayerId -> [ObjectId] -> Card -> Game (Maybe ObjectId)
-meld controller victims resultCard = do
+meld :: Game () -> PlayerId -> [ObjectId] -> Card -> Game (Maybe ObjectId)
+meld settle controller victims resultCard = do
   gs <- State.get
   case meldable victims gs of
     -- CR 701.42b/701.42c. Nothing is written, so nothing moves.
@@ -9788,7 +9796,7 @@ meld controller victims resultCard = do
       -- only EntryRewrite.SacrificeToEnter and an ExileFromGraveyard carrying
       -- `orGraveyard` refuse an entry, and a melded permanent's rows are its meld
       -- result's, none of which prints either.
-      Monad.void (runEntry Nothing Nothing Set.empty newId)
+      Monad.void (runEntry settle Nothing Nothing Set.empty newId)
       -- CR 603.6a's enters-the-battlefield triggers scan this, and it is recorded
       -- after the entry loop so the snapshot describes a settled permanent --
       -- recordMintedEntry's reasons, one zone over. `from` is where the cards were,
@@ -10450,15 +10458,15 @@ drawCardSpentReturning kind settle spent pid = do
     -- recorded.
     Nothing -> pure Nothing
     Just drawer -> do
-      drawn <- performDraw drawer
+      drawn <- performDraw settle drawer
       pure (if drawer == pid then drawn else Nothing)
 
 -- The draw itself, once CR 616.1's loop has left it standing. Split out so that
 -- rule 614.11's ordering is visible: the proposal above runs BEFORE the library
 -- is looked at, which is what makes a row apply "even if no cards could be drawn
 -- because there are no cards in the affected player's library".
-performDraw :: PlayerId -> Game (Maybe ObjectId)
-performDraw pid = do
+performDraw :: Game () -> PlayerId -> Game (Maybe ObjectId)
+performDraw settle pid = do
   gs <- State.get
   -- The top CARD (CR 121.1): a token shuffled in waits there for CR 704.5d (CR
   -- 111.7) and is no card. Proved by
@@ -10468,7 +10476,7 @@ performDraw pid = do
       State.put gs {GameState.drewFromEmpty = Set.insert pid (GameState.drewFromEmpty gs)}
       pure Nothing
     top : _ -> do
-      moved <- changeZoneReturning top Zone.Hand
+      moved <- changeZoneReturning settle top Zone.Hand
       -- ONE card, which is what a draw is (CR 121.1) -- the funnel answers with
       -- more than one arrival only for a melded permanent leaving the
       -- battlefield (CR 712.21), and this move starts in a library. CR 712.21a
@@ -10631,8 +10639,8 @@ offerMiracleReveal pid drawn = do
 -- Recorded only when the move COMPLETED -- an unknown id or a cancelled CR 616.1
 -- loop must record nothing (CR 603.2g). The id recorded is the one the funnel
 -- MINTED, since CR 702.29c's abilities trigger from wherever the card winds up.
-discard :: DiscardCause.DiscardCause -> PlayerId -> ObjectId -> Game ()
-discard cause pid oid = Monad.void (discardReturning cause pid oid)
+discard :: Game () -> DiscardCause.DiscardCause -> PlayerId -> ObjectId -> Game ()
+discard settle cause pid oid = Monad.void (discardReturning settle cause pid oid)
 
 -- CR 118.12: run `body` as the "[do something]" of a resolving "If [a player]
 -- does" (True): "the action [do something] is a cost, paid when the spell or
@@ -10679,13 +10687,13 @@ resolvingDiscardCause gs
 -- by the time anything reads the slot, so binding it would name an object no
 -- reader of the destination zone can find. Nothing for a move that did not
 -- complete -- an unknown id, or a CR 616.1 loop the player cancelled.
-discardReturning :: DiscardCause.DiscardCause -> PlayerId -> ObjectId -> Game (Seq.Seq ObjectId)
-discardReturning cause pid oid = do
+discardReturning :: Game () -> DiscardCause.DiscardCause -> PlayerId -> ObjectId -> Game (Seq.Seq ObjectId)
+discardReturning settle cause pid oid = do
   before <- State.get
   -- READ BEFORE THE MOVE: CR 400.7 deletes this incarnation, so the hand card's
   -- own keywords are unreadable by the time the funnel returns.
   let madness = Keyword.madnessCosts (Projection.handMintingKeywordsOf oid before)
-  moved <- changeZoneWithCause (Just cause) Nothing Set.empty oid Zone.Graveyard LibraryPosition.defaultValue Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
+  moved <- changeZoneWithCause settle (Just cause) Nothing Set.empty oid Zone.Graveyard LibraryPosition.defaultValue Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
   after <- State.get
   -- CR 702.35a's "exiled THIS WAY": which redirect the CR 616.1 loop applied,
   -- not where the card wound up. GameState.exiledWith is the funnel's own record
