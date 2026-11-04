@@ -811,7 +811,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- Venom's "the other creature" its host. Read outside CR 603.7c's frame, so a
   -- delayed trigger's slot atom in a pair would stamp nothing; none in data/cards, 2026-11-03.
   (TriggerCondition.CreatureBecomesBlockedBy pair, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker, BecameBlocking.blocker = blocker}))
-    | admittedAt (Projection.sourceContext gs (Just you) bearer) gs attacker (BlockPair.attacker pair) ->
+    | admittedAt (Projection.sourceContext gs (Just you) bearer) board gs attacker (BlockPair.attacker pair) ->
         Binding.setBlockingCreature blocker Map.empty
   -- CR 509.3a read by a bystander: Super-Soldier Serum's "it" is the blocker,
   -- never the bearer, under the name the two arms above give it.
@@ -821,7 +821,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- Loyal Sentry's payload destroys. The mirror of the arm above, guarded on the
   -- blocker's end for that arm's reason.
   (TriggerCondition.CreatureBlocksCreature pair, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker, BecameBlocking.blocker = blocker}))
-    | admittedAt (Projection.sourceContext gs (Just you) bearer) gs blocker (BlockPair.blocker pair) ->
+    | admittedAt (Projection.sourceContext gs (Just you) bearer) board gs blocker (BlockPair.blocker pair) ->
         Binding.setBlockedCreature attacker Map.empty
   -- CR 603.6a's "enters attached to a creature": that host, bound as the
   -- trigger is placed, so Infinite Reflection copies it even once the Aura has
@@ -1246,9 +1246,10 @@ batchBindings (first NonEmpty.:| rest) = List.foldl' (Map.unionWith join) first 
         }
 
 -- CR 509.3b / 509.3d: whether one end of a block is what the pair's Filter
--- watches, through CR 608.2h's record for a creature already gone.
-admittedAt :: Filter.Context -> GameState -> ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> Bool
-admittedAt context gs oid f = maybe False (\view -> Filter.matches context view f) (Projection.viewWithLastKnown oid gs oid)
+-- watches, as the event's own board sample shows it (`postEventView`, CR
+-- 603.10), so Venom's host is still enchanted after CR 704.5m buried Venom.
+admittedAt :: Filter.Context -> Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> GameState -> ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> Bool
+admittedAt context board gs oid f = maybe False (\view -> Filter.matches context view f) (postEventView board gs oid)
 
 -- CR 603.10's first sentence: `oid` as the event's own board sample shows it
 -- (Projection.sampledView), and CR 608.2h's last known information for an id
@@ -1256,7 +1257,7 @@ admittedAt context gs oid f = maybe False (\view -> Filter.matches context view 
 -- when the caller has no sample (an empty board).
 postEventView :: Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> GameState -> ObjectId -> Maybe Filter.View
 postEventView board gs oid = case Map.lookup oid board of
-  Just candidate -> Just (Projection.sampledView oid candidate gs)
+  Just candidate -> Just (Projection.sampledView board oid candidate gs)
   Nothing -> Projection.viewWithLastKnown oid gs oid
 
 -- CR 725.2 / CR 726.2: the creature that dealt this event's COMBAT damage to

@@ -37,6 +37,7 @@ import qualified Parun.Types.AimedAt as AimedAt
 import qualified Parun.Types.AimedPlayers as AimedPlayers
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackerDeclared as AttackerDeclared
+import qualified Parun.Types.BattlefieldCandidate as BattlefieldCandidate
 import qualified Parun.Types.Binding as Binding
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardIdentity as CardIdentity
@@ -167,11 +168,14 @@ objects pcs gs a b =
       beforeNamed oid = maybe False (\gone -> namedByAnother gone gs) (before oid)
       sameBefore = beforeRecord a == beforeRecord b && not (beforeNamed a) && not (beforeNamed b)
       sameView = lookBack (viewOf a) == lookBack (viewOf b) && dealtAmounts a == dealtAmounts b && actedOnBy a gs == actedOnBy b gs && sameBefore
-      -- Keyed by every permanent alike, so compared rather than searched.
+      -- Keyed by every permanent alike, so compared rather than searched. A
+      -- CR 603.10 sample's attachers (BattlefieldCandidate.attached) are
+      -- searched: a host's entry may name one of the two and not the other.
       sameSample m = Map.lookup a m == Map.lookup b m
+      namesOne candidate = Set.member a (BattlefieldCandidate.attached candidate) == Set.member b (BattlefieldCandidate.attached candidate)
       sameSamples =
         sameSample (GameState.controlSample gs)
-          && all sameSample (Map.elems (GameState.battlefieldWhenTriggered gs))
+          && all (\m -> sameSample m && all namesOne m) (Map.elems (GameState.battlefieldWhenTriggered gs))
    in a == b
         || ( quiet gs
                && Map.lookup a pcs == Map.lookup b pcs
@@ -259,7 +263,8 @@ representatives pcs gs candidates =
 --     GameState.controlSample (CR 603.2's control diff) and
 --     GameState.battlefieldWhenTriggered (CR 603.10's look-back) are keyed by
 --     every permanent alike, so objects COMPARES the two entries in each
---     rather than searching for the ids.
+--     rather than searching for the ids, and searches only a sample's
+--     attachers.
 --   * GameState.eventsLastTurn is read by the per-seat view and by the "last
 --     turn" tallies (Quantity's SpellsCast and LifeChanged), which count per
 --     PLAYER and name no object, so no choice between objects can turn on it.

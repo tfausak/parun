@@ -1,9 +1,11 @@
 module Parun.Types.BattlefieldCandidate where
 
+import qualified Data.Set as Set
+import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.PlayerId as PlayerId
 
 -- | One permanent as CR 603.10's trigger scan needs to see it: who controlled it
--- (CR 603.3a) and what it looked like at that moment. Parun.Engine.Event's
+-- (CR 603.3a), what it looked like and what was attached to it at that moment. Parun.Engine.Event's
 -- battlefieldCandidates builds these, and
 -- Parun.Types.GameState.battlefieldWhenTriggered files them per event group with
 -- the reasoning for why a sample is needed at all.
@@ -20,7 +22,11 @@ import qualified Parun.Types.PlayerId as PlayerId
 -- avoid.
 data BattlefieldCandidate a = MkBattlefieldCandidate
   { controller :: PlayerId.PlayerId,
-    characteristics :: a
+    characteristics :: a,
+    -- | CR 303.4b / 301.5a: the permanents attached to it (Game.attachments),
+    -- so "enchanted creature" reads the attachment the event saw, not one CR
+    -- 704.5m has since undone.
+    attached :: Set.Set ObjectId.ObjectId
   }
   deriving (Eq, Ord, Show)
 

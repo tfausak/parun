@@ -247,9 +247,6 @@ data TriggerCondition
     -- 702.25a's flanking, CR 701.54c's Ring-bearer, Venom), once per pair
     -- admitted, binding the blocker.
     --
-    -- Not implemented: Filter.HasAttached reading the attachment as it was at
-    -- the event (CR 603.10), for this and CreatureBlocksCreature (#6055).
-    --
     -- A creature put onto the battlefield blocking fires it too, unlike
     -- CreatureBlocksCreature: Flash Foliage blocking Benalish Cavalry is the pooled
     -- pair, and Parun.CombatCostSpec's PutOntoBattlefieldBlocking group is the

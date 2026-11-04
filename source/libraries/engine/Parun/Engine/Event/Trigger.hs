@@ -150,8 +150,8 @@ import Parun.Types.ZoneChange (ZoneChange)
 import qualified Parun.Types.ZoneChange as ZoneChange
 
 -- CR 603.10's "objects that exist immediately after an event", taken of the
--- battlefield: every permanent standing on it, the player controlling it, and the
--- projection its abilities are read out of.
+-- battlefield: every permanent standing on it, the player controlling it, the
+-- projection its abilities are read out of, and what is attached to it.
 --
 -- The whole battlefield rather than a diff or an overrides-only map, because all
 -- three of the answers the scan wants can move and only a full reading tells
@@ -171,7 +171,7 @@ battlefieldCandidates gs =
                 -- Unreachable: projectAll is keyed on the same battlefield set this
                 -- list walks, so every oid drawn from it has an entry.
                 Nothing -> Nothing
-                Just pc -> fmap (\ctrl -> (oid, BattlefieldCandidate.MkBattlefieldCandidate {BattlefieldCandidate.controller = ctrl, BattlefieldCandidate.characteristics = pc})) (Projection.controllerOfGiven grants oid gs)
+                Just pc -> fmap (\ctrl -> (oid, BattlefieldCandidate.MkBattlefieldCandidate {BattlefieldCandidate.controller = ctrl, BattlefieldCandidate.characteristics = pc, BattlefieldCandidate.attached = Game.attachments oid gs})) (Projection.controllerOfGiven grants oid gs)
             )
             (Set.toAscList (GameState.battlefield gs))
         )
