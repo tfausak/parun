@@ -839,7 +839,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- would otherwise name the Basilisk itself
   -- (data/scenarios/thicket-basilisk-destroys-a-non-wall-at-end-of-combat.json),
   -- Venom's "the other creature" its host. Read outside CR 603.7c's frame, so a
-  -- delayed trigger's slot atom in a pair would stamp nothing; no card does.
+  -- delayed trigger's slot atom in a pair would stamp nothing; none in data/cards, 2026-11-03.
   (TriggerCondition.CreatureBecomesBlockedBy pair, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker, BecameBlocking.blocker = blocker}))
     | admittedAt (Projection.sourceContext gs (Just you) bearer) gs attacker (BlockPair.attacker pair) ->
         Binding.setBlockingCreature blocker Map.empty
