@@ -1,10 +1,9 @@
 module Parun.Types.TriggerCondition where
 
-import qualified Numeric.Natural as Natural
 import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.BecomesTapState as BecomesTapState
-import qualified Parun.Types.BlockPair as BlockPair
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
@@ -14,7 +13,6 @@ import qualified Parun.Types.ClassLevel as ClassLevel
 import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.ControllerBecomesTarget as ControllerBecomesTarget
 import qualified Parun.Types.CounterTrigger as CounterTrigger
-import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DieResult as DieResult
@@ -166,81 +164,18 @@ data TriggerCondition
     -- the event\'s own qualifier, never re-checked as TriggeredAbility.intervening
     -- would be (CR 603.4).
     SelfAttacksWhile Condition.Condition
-  | -- | CR 509.3a: "whenever [a creature] blocks" (Pride Guardian).
-    -- Self-scoped, and once per blocking creature however many it blocked.
-    SelfBlocks
-  | -- | CR 509.3a read by a bystander: "whenever enchanted creature blocks"
-    -- (Super-Soldier Serum), once per blocker the Filter admits.
-    CreatureBlocks (Filter.Filter Keyword.Keyword)
-  | -- | CR 509.3b: "whenever [a creature] blocks a creature" (Loyal Sentry, Venom),
-    -- once per pair admitted, binding the attacker.
+  | -- | CR 509.3: "whenever [a creature] blocks" or "becomes blocked", in each of
+    -- CR 509.3a-e's counts.
     --
-    -- Rule 509.3b's other producer reaches it: an effect that causes the bearer
-    -- to block (Parun.Engine.Combat.switchBlockers, General Jarkeld), which
-    -- records the same event with the flag clear. Parun.CombatCostSpec's
-    -- SwitchBlockers group is the proof.
-    CreatureBlocksCreature BlockPair.BlockPair
-  | -- | CR 509.3e: "whenever [a creature] blocks two or more creatures"
-    -- (Lairwatch Giant); the Natural is a floor, never an exact count.
-    SelfBlocksAtLeast Natural.Natural
-  | -- | CR 509.3e: "whenever [a creature] blocks one or more [F] creatures"
-    -- (Serra Inquisitors' first half) -- SelfBlocksAtLeast spending the number
-    -- on a quality instead.
-    --
-    -- Rule 509.3e's "effects that add or remove blockers" reach this and
-    -- SelfBlocksAtLeast through Sorrow's Path, and Parun.CombatCostSpec's
-    -- ExchangeBlocks group is the proof.
-    SelfBlocksOneOrMore (Filter.Filter Keyword.Keyword)
-  | -- | CR 509.3c: "whenever [a creature] becomes blocked", once per attacker
-    -- the Filter admits: Filter.IsSource for the source's own (Sacred Prey), any
-    -- other for a bystander's (Somberwald Alpha).
-    --
-    -- Rule 509.3c's other two producers reach it: Effect.BecomesBlocked (Curtain
-    -- of Light) and a creature put onto the battlefield blocking (CR 509.4),
-    -- which Flash Foliage exercises -- Parun.CombatCostSpec's
-    -- PutOntoBattlefieldBlocking group is the proof.
-    CreatureBecomesBlocked (Filter.Filter Keyword.Keyword)
-  | -- | CR 509.3d: "whenever [a creature] becomes blocked by a creature" (CR
-    -- 702.25a's flanking, CR 701.54c's Ring-bearer, Venom), once per pair
-    -- admitted, binding the blocker.
-    --
-    -- A creature put onto the battlefield blocking fires it too, unlike
-    -- CreatureBlocksCreature: Flash Foliage blocking Benalish Cavalry is the pooled
-    -- pair, and Parun.CombatCostSpec's PutOntoBattlefieldBlocking group is the
-    -- proof.
-    --
-    -- Rule 509.3d's remaining producer reaches it too, and through the same arm:
-    -- an effect that causes a creature to block (General Jarkeld), which carries
-    -- that rule's own guard, "only if it wasn't already blocking that attacking
-    -- creature at that time". Parun.CombatCostSpec's "CR 509.3d: but the Cavalry's
-    -- flanking fired on the block the effect made" is the proof.
-    CreatureBecomesBlockedBy BlockPair.BlockPair
-  | -- | CR 509.3e: "whenever [a creature] becomes blocked by one or more [F]
-    -- creatures" (Serra Inquisitors' second half) -- SelfBlocksOneOrMore from
-    -- the attacking side, so the whole declaration fires it once.
-    --
-    -- Rule 509.3e's "effects that add or remove blockers" reaches it where the
-    -- arrival is the first admitted blocker: Aetherplasm swapping itself out for
-    -- a black creature card is the pooled pair, and Parun.KeywordTriggerSpec's
-    -- SelfBlocksOneOrMore group is the proof. General Jarkeld moving black
-    -- blockers onto it is the effect road, and Parun.CombatCostSpec's
-    -- SwitchBlockers group is that proof.
-    SelfBecomesBlockedByOneOrMore (Filter.Filter Keyword.Keyword)
-  | -- | CR 509.3e read by a bystander on the attacking side: "whenever a
-    -- creature attacking one of your opponents becomes blocked by two or more
-    -- creatures" (Seifer, Balamb Rival); the number is a floor, and only
-    -- Parun.Types.AttackTarget.OfPlayer satisfies the PlayerRelation.
-    --
-    -- Both GameEvent.AttackerBlocked and GameEvent.BecameBlocking bind the
-    -- attacker, which Parun.ZoneTriggerSpec's representativeEvents pins by
-    -- listing both. Rule 509.3e's added blockers reach it through a creature put
-    -- onto the battlefield blocking an already-blocked attacker: Flash Foliage's
-    -- Saproling joining a declared Hill Giant is the pooled pair, and
-    -- Parun.KeywordTriggerSpec's CreatureBecomesBlockedByAtLeast group is the
-    -- proof. General Jarkeld moving two blockers onto a singly-blocked
-    -- attacker is the effect road, and Parun.CombatCostSpec's SwitchBlockers
-    -- group is that proof.
-    CreatureBecomesBlockedByAtLeast CreatureBecomesBlockedByAtLeast.CreatureBecomesBlockedByAtLeast
+    -- Each producer of those rules reaches it: CR 509.1's declaration, an effect
+    -- that causes a creature to block (Parun.Engine.Combat.switchBlockers,
+    -- General Jarkeld; Combat.exchangeBlocks, Sorrow's Path), Effect.BecomesBlocked
+    -- (Curtain of Light) and a creature put onto the battlefield blocking (CR
+    -- 509.4; Flash Foliage, Aetherplasm). Parun.CombatCostSpec's SwitchBlockers,
+    -- ExchangeBlocks and PutOntoBattlefieldBlocking groups and
+    -- Parun.KeywordTriggerSpec's SelfBlocksOneOrMore and
+    -- CreatureBecomesBlockedByAtLeast groups are the proof.
+    Blocks BlockTrigger.BlockTrigger
   | -- | CR 509.1h: "whenever this creature attacks and isn't blocked" -- CR
     -- 702.68a's frenzy, with the status fixed at the declaration. The Filter's
     -- source is the bearer, CreatureAttacks' reason.

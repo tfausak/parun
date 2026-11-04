@@ -44,8 +44,10 @@ import qualified Parun.Types.BecameTarget as BecameTarget
 import qualified Parun.Types.BecameUnattached as BecameUnattached
 import qualified Parun.Types.BecomesTapState as BecomesTapState
 import Parun.Types.Binding (Binding)
-import qualified Parun.Types.BlockPair as BlockPair
+import qualified Parun.Types.BlockCount as BlockCount
 import qualified Parun.Types.BlockProducer as BlockProducer
+import qualified Parun.Types.BlockRole as BlockRole
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.BlocksDeclared as BlocksDeclared
 import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
@@ -65,7 +67,6 @@ import qualified Parun.Types.CounterMotion as CounterMotion
 import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.Countering as Countering
 import qualified Parun.Types.CountersPlaced as CountersPlaced
-import qualified Parun.Types.CreatureBecomesBlockedByAtLeast as CreatureBecomesBlockedByAtLeast
 import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
@@ -178,6 +179,90 @@ declarationsOf bearer gs =
 -- rest. Parun.CombatCostSpec's SwitchBlockers group proves it for both forms.
 answersEffectCrossing :: ObjectId -> Set.Set ObjectId -> Set.Set ObjectId -> Bool
 answersEffectCrossing blocker before after = Set.lookupMin (Set.difference after before) == Just blocker
+
+-- CR 509.3: whether `event` fires a Parun.Types.BlockTrigger. The role says
+-- which creature of the block the trigger names, and the count which of rule
+-- 509.3's events answers it.
+--
+-- Every creature is read off `board` (admittedAt), CR 603.10's sample, which is
+-- rule 509.3f's "at the point" it blocked or became blocked: CR 704.5m may bury
+-- an Aura between the declaration and the scan, and the Aura's trigger still
+-- fires (data/scenarios's
+-- super-soldier-serum-fires-though-the-block-toll-knocks-it-off-its-host and
+-- venom-fires-though-the-block-toll-knocks-it-off-the-attacking-host). A
+-- creature the sample does not hold is read through CR 608.2h's record.
+--
+-- A count's creatures come off the EVENT and never off Combat.blockers, which
+-- by the time a condition is scanned holds every arrival that came after the one
+-- being answered: CR 509.2a puts these triggers on the stack before any player
+-- gets priority, and CR 614.16 can double one token-making effect into several
+-- arrivals at once.
+blocks :: Filter.Context -> Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> GameState -> BlockTrigger.BlockTrigger -> GameEvent -> Bool
+blocks context board gs (BlockTrigger.MkBlockTrigger role creature count) event =
+  let admits = admittedAt context board gs
+      tally others = Natural.length . Set.filter (`admits` others)
+   in case (role, count, event) of
+        -- CR 509.3a: the GROUPED event, which is that rule's "only once each
+        -- combat for that creature, even if it blocks multiple creatures". CR
+        -- 509.4's creature put onto the battlefield blocking records only a
+        -- GameEvent.BecameBlocking, which is rule 509.3a's last sentence.
+        (BlockRole.Blocker, BlockCount.Once, GameEvent.BlocksDeclared d) -> admits (BlocksDeclared.blocker d) creature
+        -- CR 509.3e on the blocking side, off the same grouped event, so the
+        -- printed "one or more" fires once for the whole declaration. Rule
+        -- 509.3e's "effects that add or remove blockers" record it too:
+        -- Combat.exchangeBlocks (Sorrow's Path), and Parun.CombatCostSpec's
+        -- ExchangeBlocks group is the proof.
+        (BlockRole.Blocker, BlockCount.AtLeast n others, GameEvent.BlocksDeclared d) ->
+          admits (BlocksDeclared.blocker d) creature && tally others (BlocksDeclared.blocked d) >= n
+        -- CR 509.3b: the PAIRWISE event, "once for each attacking creature the
+        -- creature with the ability blocks". Its last sentence is the producer
+        -- guard: data/scenarios/combat-cost's
+        -- cr-509-3b-a-creature-put-onto-the-battlefield-blocking-never-blocked
+        -- reddens when it is dropped.
+        (BlockRole.Blocker, BlockCount.EachCreature others, GameEvent.BecameBlocking b) ->
+          BecameBlocking.producer b /= BlockProducer.PutOntoBattlefield
+            && admits (BecameBlocking.blocker b) creature
+            && admits (BecameBlocking.attacker b) others
+        -- CR 509.3c: one event per blocked attacker is what Combat records, so
+        -- matching it once is that rule's "only once each combat for that
+        -- creature". Parun.TriggerSpec's two-blocker case tells it apart from a
+        -- match on GameEvent.BecameBlocking.
+        (BlockRole.Attacker, BlockCount.Once, GameEvent.AttackerBlocked a) -> admits (AttackerBlocked.attacker a) creature
+        -- CR 509.3d: the pair read from the ATTACKING side, once per blocker.
+        -- The producer is deliberately not read: rule 509.3d's third sentence is
+        -- the one form of CR 509.3 that CR 509.4's "never blocked" does not
+        -- silence, and Parun.CombatCostSpec's PutOntoBattlefieldBlocking group is
+        -- the proof.
+        (BlockRole.Attacker, BlockCount.EachCreature others, GameEvent.BecameBlocking b) ->
+          admits (BecameBlocking.attacker b) creature && admits (BecameBlocking.blocker b) others
+        -- CR 509.3e from the attacking side: the BECOMING, which the whole
+        -- declaration fires once. `>=` and never `==` is the rule's last
+        -- sentence.
+        (BlockRole.Attacker, BlockCount.AtLeast n others, GameEvent.AttackerBlocked a) ->
+          admits (AttackerBlocked.attacker a) creature && tally others (AttackerBlocked.blockers a) >= n
+        -- Rule 509.3e's "effects that add or remove blockers" on CR 509.4's road:
+        -- one arrival joining an attacker that was blocked ALREADY (Flash
+        -- Foliage's Saproling joining a declared blocker, Aetherplasm), which
+        -- crosses the floor rather than clearing it. Removing blockers cannot
+        -- reach this: the tally only falls.
+        --
+        -- BecameBlocking.attackerWasBlocked is "GameEvent.AttackerBlocked was not
+        -- also recorded for this arrival": CR 509.3c withholds that event exactly
+        -- when the field is set, so the two arms split every arrival between them
+        -- and a doubled pair landing on an unblocked attacker fires once. The
+        -- producer is load-bearing beside it: Combat.declareBlockers records this
+        -- constructor once per declared pair under BlockProducer.Declared, which
+        -- the arm above has already answered. Parun.KeywordTriggerSpec's
+        -- CreatureBecomesBlockedByAtLeast group is the proof.
+        (BlockRole.Attacker, BlockCount.AtLeast n others, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = blocker, BecameBlocking.attacker = attacker, BecameBlocking.producer = BlockProducer.PutOntoBattlefield, BecameBlocking.attackerWasBlocked = True, BecameBlocking.blockersBefore = before})) ->
+          admits attacker creature && tally others before < n && tally others (Set.insert blocker before) >= n
+        -- The same crossing on the effect road (Combat.switchBlockers, General
+        -- Jarkeld), one simultaneous change, answered once on
+        -- answersEffectCrossing's arrival. Parun.CombatCostSpec's SwitchBlockers
+        -- group is the proof.
+        (BlockRole.Attacker, BlockCount.AtLeast n others, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = blocker, BecameBlocking.attacker = attacker, BecameBlocking.producer = BlockProducer.ByEffect after, BecameBlocking.attackerWasBlocked = True, BecameBlocking.blockersBefore = before})) ->
+          admits attacker creature && answersEffectCrossing blocker before after && tally others before < n && tally others after >= n
+        _ -> False
 
 -- CR 702.122e: how many times the bearer has become crewed this turn --
 -- declarationsOf above one rule over, over GameEvent.BecameCrewed rather than
@@ -778,7 +863,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- was the ONLY one the declaration named. The same event SelfAttacks reads,
   -- with the count taken instead of the bearer's identity.
   --
-  -- `count == 1` and never a floor, unlike SelfBlocksAtLeast's `>= n`: rule 506.5
+  -- `count == 1` and never a floor, unlike BlockCount.AtLeast's `>= n`: rule 506.5
   -- says "the ONLY creature declared as an attacker", which is one number.
   --
   -- The attacker is read off `board`, CR 603.10's sample (`postEventView`) --
@@ -869,7 +954,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- matching it here would fire once per declared Bird instead.
   --
   -- AT LEAST, never exactly, which is how the printed "N or more" reads and how
-  -- TriggerCondition.SelfBlocksAtLeast reads its own rule.
+  -- Parun.Types.BlockCount.AtLeast reads its own rule.
   --
   -- The creatures come from Combat.declaredAttackers rather than from the event,
   -- which carries only who declared, and NOT from Combat.attackers as
@@ -888,11 +973,11 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- attackers apart under the shared team turns option (CR 805.10a), which
   -- Parun.TeamSpec's Military Intelligence case proves.
   --
-  -- viewWithLastKnown and the Filter context framed by the bearer, exactly as
-  -- SelfBlocksOneOrMore's arm below does it. Nothing is bound, so the context's
-  -- empty slot map is honest here. The set is Event.Binding.admittedAttackers,
-  -- which eventBindings also stamps under Binding.attackingCreatures, so the
-  -- creatures counted here are the ones the payload's "they" names.
+  -- viewWithLastKnown and the Filter context framed by the bearer. Nothing is
+  -- bound, so the context's empty slot map is honest here. The set is
+  -- Event.Binding.admittedAttackers, which eventBindings also stamps under
+  -- Binding.attackingCreatures, so the creatures counted here are the ones the
+  -- payload's "they" names.
   TriggerCondition.PlayerAttacksWith p@(PlayerAttacksWith.MkPlayerAttacksWith relation _ floor_) -> case event of
     GameEvent.AttackersDeclared attacker
       | PlayerRelation.holds (Game.teams gs) relation you attacker ->
@@ -1005,20 +1090,6 @@ armMatches bindings board gs bearer you cond event = case cond of
                     Just theirs -> all (maybe True (<= theirs) . lifeOf) (Game.stillPlaying gs)
             _ -> False
     _ -> False
-  -- CR 509.3a: the bearer was DECLARED as a blocker. SelfAttacks' mirror, and
-  -- matched against GameEvent.BlocksDeclared for that arm's reason -- CR 509.4's
-  -- creature put onto the battlefield blocking is in Combat.blockers, and the
-  -- only event it records on the blocking side is a GameEvent.BecameBlocking
-  -- this condition does not read, which is rule 509.3a's last sentence.
-  --
-  -- The attacking creatures the declaration named are neither compared nor bound:
-  -- this condition is CR 509.3a's, which names none. CreatureBlocksCreature's arm
-  -- below is rule 509.3b's, which does.
-  --
-  -- The GROUPED event, which is rule 509.3a's "only once each combat for that
-  -- creature, even if it blocks multiple creatures": a blocker declared against
-  -- two attackers makes two BecameBlocking and one BlocksDeclared, so matching
-  -- the pairwise one here would fire twice.
   -- CR 508.3a narrowed by a state, SelfAttacksWhileSaddled's posture: the
   -- declaration SelfAttacks matches, and the condition asked of the live board
   -- when triggers are collected, through the view Event.interveningHolds reads.
@@ -1040,312 +1111,10 @@ armMatches bindings board gs bearer you cond event = case cond of
     GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared oid _ _ _ _) ->
       oid == bearer && maybe False (Set.member Designation.Saddled . Object.designations) (Game.lookupObject bearer gs)
     _ -> False
-  TriggerCondition.SelfBlocks -> case event of
-    GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared blocker _) -> blocker == bearer
-    -- The bearer BECOMING blocked is the other side of the same declaration and
-    -- not this condition: CR 509.3a's creature is the one doing the blocking.
-    GameEvent.AttackerBlocked {} -> False
-    _ -> False
-  -- CR 509.3a read by a bystander: SelfBlocks' event, with the Filter over the
-  -- blocker. CreatureAttacks' reading of the Filter's source: "enchanted
-  -- creature" is HasAttached IsSource (Super-Soldier Serum). The blocker is read
-  -- off `board` (CR 509.3f, 603.10), so a Serum CR 704.5m buried after the
-  -- declaration still enchants it: data/scenarios's
-  -- super-soldier-serum-fires-though-the-block-toll-knocks-it-off-its-host
-  -- proves it.
-  TriggerCondition.CreatureBlocks f -> case event of
-    GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared blocker _) ->
-      case postEventView board gs blocker of
-        Nothing -> False
-        Just view -> Filter.matches bearerContext view f
-    _ -> False
-  -- CR 509.3b: the PAIRWISE event, which is that rule's "once for each attacking
-  -- creature the creature with the ability blocks" -- and the difference from
-  -- SelfBlocks above, together with the attacker eventBindings stamps under
-  -- Binding.blockedCreature.
-  --
-  -- The pair's Filters read both creatures off `board` (admittedAt), which is
-  -- rule 509.3f's "at the point blockers are declared" for
-  -- CreatureBecomesBlockedBy's reason below.
-  TriggerCondition.CreatureBlocksCreature pair -> case event of
-    GameEvent.BecameBlocking b
-      | admittedAt bearerContext board gs (BecameBlocking.attacker b) (BlockPair.attacker pair),
-        -- CR 509.3b's last sentence: "It won't trigger if the creature is put
-        -- onto the battlefield blocking." CR 509.3d's arm below is where that
-        -- same event does fire, which is the whole reason it is recorded.
-        --
-        -- Proved rather than fenced, since Aetherplasm: it puts a creature
-        -- CARD onto the battlefield blocking, so the arrival brings its own
-        -- text. data/scenarios/combat-cost's
-        -- cr-509-3b-a-creature-put-onto-the-battlefield-blocking-never-blocked
-        -- puts Loyal Sentry out that way and reddens here when this guard is
-        -- dropped; its -control twin DECLARES the same Sentry, where it does fire.
-        BecameBlocking.producer b /= BlockProducer.PutOntoBattlefield ->
-          admittedAt bearerContext board gs (BecameBlocking.blocker b) (BlockPair.blocker pair)
-    -- CR 509.3a's grouped event is the once-per-combat one, and matching it here
-    -- would lose a blocker's second attacker.
-    GameEvent.BlocksDeclared {} -> False
-    -- CR 509.3c's grouped event is the bearer BECOMING blocked, which is not a
-    -- block by it.
-    GameEvent.AttackerBlocked {} -> False
-    _ -> False
-  -- CR 509.3e: the bearer blocked at least `n` creatures. SelfBlocks with the
-  -- count read, on the very same grouped event -- which is what makes rule
-  -- 509.3e's "when blockers are declared" the moment this fires.
-  --
-  -- Rule 509.3e's "effects that add or remove blockers" reach it through the
-  -- same event: Combat.exchangeBlocks (Sorrow's Path) records it for a creature
-  -- made to block anew, and Parun.CombatCostSpec's ExchangeBlocks group is the
-  -- proof.
-  TriggerCondition.SelfBlocksAtLeast n -> case event of
-    GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared blocker count) -> blocker == bearer && count >= n
-    _ -> False
-  -- CR 509.3e: the bearer blocked at least one creature the Filter admits. The
-  -- same grouped event SelfBlocks and SelfBlocksAtLeast read, so the printed "one
-  -- or more" fires once for the whole declaration; CreatureBlocksCreature's arm above
-  -- is the per-attacker reading, and two admitted attackers tells them apart.
-  --
-  -- The attackers come from Combat.blockers rather than from the event, which
-  -- carries a count and no ids -- the count being unfiltered, and this condition
-  -- asking about a quality. That map is keyed by ATTACKER, so the bearer's own
-  -- entries are the ones whose blocker set holds it. Exact at this moment for
-  -- SelfAttacksWithAnother's reason: CR 509.2a puts these triggers on the stack
-  -- before any player gets priority, so the record still holds the declaration
-  -- or the effect (Combat.exchangeBlocks) that made the event.
-  --
-  -- Each attacker is read off `board` (`postEventView`), framed by the bearer.
-  TriggerCondition.SelfBlocksOneOrMore f -> case event of
-    GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared blocker _)
-      | blocker == bearer ->
-          let admits attacker = maybe False (\view -> Filter.matches bearerContext view f) (postEventView board gs attacker)
-              blocked =
-                fmap
-                  fst
-                  (filter (\(_, blockers) -> Set.member bearer blockers) (Map.toList (Combat.blockers (GameState.combat gs))))
-           in any admits blocked
-    -- The PAIRWISE event is CR 509.3b's, and matching it here would fire once per
-    -- attacker blocked rather than once for the declaration.
-    GameEvent.BecameBlocking {} -> False
-    _ -> False
-  -- CR 509.3c: an attacker the Filter admits BECAME a blocked creature, which CR
-  -- 509.1h makes the declaration's other product. SelfBlocks' arm above is the
-  -- mirror. CreatureAttacksAlone's reading of the attacker.
-  --
-  -- One event per blocked attacker is what Combat.declareBlockers records, so
-  -- matching it once is rule 509.3c's "only once each combat for that creature".
-  -- A match on GameEvent.BecameBlocking's attacker would fire once per blocker
-  -- instead; Parun.TriggerSpec's two-blocker case is what tells the two apart.
-  TriggerCondition.CreatureBecomesBlocked f -> case event of
-    GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked attacker _ _) ->
-      case postEventView board gs attacker of
-        Nothing -> False
-        Just view -> Filter.matches bearerContext view f
-    -- The same declaration's other branch, and CR 509.1h makes the two exclusive
-    -- for any one attacker.
-    GameEvent.AttackerUnblocked _ -> False
-    -- CR 509.4's creature put onto the battlefield blocking never "blocked", but
-    -- that is not why this is False: a blocker's own declaration is CR 509.3a's
-    -- event, whoever it was declared against.
-    GameEvent.BecameBlocking {} -> False
-    _ -> False
-  -- CR 509.3d: a creature the Filter admits became a blocking creature FOR the
-  -- bearer. The pair on GameEvent.BecameBlocking is read from the ATTACKING
-  -- side, which is what makes this fire once per blocker where
-  -- CreatureBecomesBlocked's arm above fires once per attacker.
-  --
-  -- BecameBlocking.producer is deliberately not read: rule 509.3d's
-  -- third sentence is "In addition, it will trigger if a creature is put onto
-  -- the battlefield blocking that creature", the one form of CR 509.3 that CR
-  -- 509.4's "never blocked" does not silence. CR 509.3b's arm above reads the
-  -- producer, and that difference is the rule.
-  --
-  -- Both creatures are read off `board` (admittedAt), CR 603.10's sample, which
-  -- is rule 509.3f's "at the point it becomes a blocking creature": CR 704.5m
-  -- may bury an Aura between the declaration and the scan, and Venom watching
-  -- its host still fires (data/scenarios's
-  -- venom-fires-though-the-block-toll-knocks-it-off-the-attacking-host, and
-  -- venom-fires-though-the-block-toll-knocks-it-off-its-host for the arm
-  -- above). A creature the sample does not hold is read through CR 608.2h's
-  -- record.
-  --
-  -- A bystander reads it too: CR 701.54c's emblem (Parun.Engine.Ring), which is in
-  -- the event at neither end, and Venom, watching its host.
-  TriggerCondition.CreatureBecomesBlockedBy pair -> case event of
-    GameEvent.BecameBlocking b ->
-      admittedAt bearerContext board gs (BecameBlocking.attacker b) (BlockPair.attacker pair)
-        && admittedAt bearerContext board gs (BecameBlocking.blocker b) (BlockPair.blocker pair)
-    -- The GROUPED event is CR 509.3c's, and matching it here would collapse two
-    -- blockers into one trigger.
-    GameEvent.AttackerBlocked {} -> False
-    _ -> False
-  -- CR 509.3e read from the attacking side: the bearer became blocked, by at
-  -- least one creature the Filter admits. The GROUPED event, which is the printed
-  -- "one or more" -- the arm above fires once per blocker, and two admitted
-  -- blockers tells the two apart.
-  --
-  -- The blockers come from Combat.blockers for SelfBlocksOneOrMore's reason:
-  -- GameEvent.AttackerBlocked names the attacker, CR 508.5's defending player and
-  -- CR 509.3e's count, and no blocker at all. The map is keyed by attacker, so the
-  -- bearer's own entry is the whole answer here.
-  --
-  -- That entry is the LIVE one, where the arm below takes its set off the event.
-  -- The two agree wherever a board can tell them apart: on CR 509.1's road the
-  -- event is recorded after the declaration's own write and nothing else has run
-  -- (CR 509.2a), and on CR 509.4's road CR 509.3c withholds it unless the
-  -- attacker was unblocked, so the only ids the live entry adds are arrivals from
-  -- the same batch -- and a batch is one Resolve.Create's tokens, minted from one
-  -- spec, which no Filter can tell apart.
-  TriggerCondition.SelfBecomesBlockedByOneOrMore f ->
-    let admits blocker = maybe False (\view -> Filter.matches bearerContext view f) (postEventView board gs blocker)
-     in case event of
-          GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked attacker _ _)
-            | attacker == bearer -> any admits (Set.toList (Map.findWithDefault Set.empty bearer (Combat.blockers (GameState.combat gs))))
-          -- Rule 509.3e's second sentence -- "effects that add or remove
-          -- blockers can also cause such abilities to trigger" -- for the
-          -- producer the pool has: a creature PUT ONTO THE BATTLEFIELD blocking.
-          -- The arm CreatureBecomesBlockedByAtLeast carries below, with the
-          -- count traded for this condition's Filter, which is the only
-          -- difference between the two conditions.
-          --
-          -- The CROSSING and not the arrival: the bearer becomes blocked by one
-          -- or more admitted creatures at the moment the FIRST admitted one
-          -- joins, so an arrival that merely adds a second is no new event. That
-          -- is what `not (any admits prior)` says, where the count arm says
-          -- `== n`. Removing blockers cannot reach this form either -- a
-          -- departure only shrinks the admitted set.
-          --
-          -- `prior` is BecameBlocking.blockersBefore, recorded at the arrival
-          -- rather than reconstructed here: CR 509.2a puts these triggers on the
-          -- stack before any player gets priority, so the bearer's live entry
-          -- holds this arrival AND every arrival that came after it in the same
-          -- batch. Deleting this one from that entry left the batch's others in,
-          -- and each of a doubled pair then read the other as a prior blocker.
-          -- A REGRESSION FENCE on this arm, where the count arm below proves it:
-          -- no pooled board reaches a doubled arrival this Filter admits, Flash
-          -- Foliage's Saprolings being green where the one filtered printing
-          -- asks for black.
-          --
-          -- A blocker that has since left keeps its id in that entry, and
-          -- `admits` reads it through CR 608.2h last known information -- which
-          -- is the right answer rather than a leak. An attacker declared blocked
-          -- by an admitted creature became blocked by one THEN, so a later
-          -- arrival is no new becoming however the first one ended.
-          --
-          -- BecameBlocking.attackerWasBlocked is "GameEvent.AttackerBlocked was
-          -- not also recorded for this same arrival": CR 509.3c withholds that
-          -- event exactly when the attacker was already blocked, and without
-          -- this conjunct an arrival that is the attacker's FIRST blocker would
-          -- be answered by the arm above and by this one both. A REGRESSION
-          -- FENCE rather than proved behaviour: no pooled board can reach an
-          -- arrival that is admitted AND lands on an unblocked attacker.
-          -- Aetherplasm has to be blocking to put anything out, so the attacker
-          -- is blocked by then whatever became of the declared blocker; and
-          -- Flash Foliage, which can name an unblocked attacker, makes a GREEN
-          -- Saproling where the only filtered printing on this side asks for
-          -- black. Relaxing the conjunct to a wildcard leaves the whole suite
-          -- green.
-          --
-          -- BecameBlocking.producer is load-bearing beside it:
-          -- Combat.declareBlockers records this same constructor once per
-          -- declared PAIR under BlockProducer.Declared, so an arm admitting that
-          -- would answer an ordinary declaration the arm above has already
-          -- answered, once more per blocker.
-          GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = blocker, BecameBlocking.attacker = attacker, BecameBlocking.producer = BlockProducer.PutOntoBattlefield, BecameBlocking.attackerWasBlocked = True, BecameBlocking.blockersBefore = prior})
-            | attacker == bearer -> admits blocker && not (any admits (Set.toList prior))
-          -- The same crossing on the effect road (Combat.switchBlockers,
-          -- General Jarkeld): one simultaneous change, so it reads the sets
-          -- before and after it and answers once, on answersEffectCrossing's
-          -- arrival. Parun.CombatCostSpec's SwitchBlockers group is the proof.
-          GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = blocker, BecameBlocking.attacker = attacker, BecameBlocking.producer = BlockProducer.ByEffect after, BecameBlocking.attackerWasBlocked = True, BecameBlocking.blockersBefore = prior})
-            | attacker == bearer -> answersEffectCrossing blocker prior after && any admits (Set.toList after) && not (any admits (Set.toList prior))
-          _ -> False
-  -- CR 509.3e read by a BYSTANDER on the attacking side: a creature attacking a
-  -- player the PlayerRelation admits became blocked by at least `n` creatures.
-  -- The arm above with its Filter traded for a count, and the identity check on
-  -- the bearer dropped -- Seifer, Balamb Rival watches everybody's attackers,
-  -- including its own controller's, so nothing here compares an id to the bearer.
-  --
-  -- TWO events, which is rule 509.3e's two producers, and each answers for the
-  -- moment it names. GameEvent.AttackerBlocked is the BECOMING: the whole
-  -- declaration fires it once, and `>=` and never `==` there is rule 509.3e's
-  -- last sentence. GameEvent.BecameBlocking is one arrival joining a creature
-  -- that was blocked already, which crosses a floor rather than clearing one, so
-  -- the arm on it reads `==`.
-  --
-  -- Each count comes off its own EVENT and not off Combat.blockers, which by the
-  -- time a condition is scanned holds every arrival that came after the one being
-  -- answered: CR 509.2a puts these triggers on the stack before any player gets
-  -- priority, and CR 614.16 can double one token-making effect into several
-  -- arrivals at once. Reading the record instead made a doubled arrival jump the
-  -- floor rather than land on it, and made the becoming it rode count the
-  -- arrivals that followed it.
-  --
-  -- Whom the attacker attacked comes from Combat.attackers and only
-  -- AttackTarget.OfPlayer answers: CR 508.1b lists player, planeswalker and
-  -- battle separately, so a creature sent at an opponent's planeswalker is not
-  -- attacking that opponent -- where CR 508.5's defending player, which the event
-  -- carries, would resolve to them. SelfAttacksPlayerWithMostLife reads the same
-  -- record for the same reason.
-  TriggerCondition.CreatureBecomesBlockedByAtLeast (CreatureBecomesBlockedByAtLeast.MkCreatureBecomesBlockedByAtLeast relation n) ->
-    let attacksAdmittedPlayer attacker = case Map.lookup attacker (Combat.attackers (GameState.combat gs)) of
-          Just (AttackTarget.OfPlayer attacked) -> PlayerRelation.holds (Game.teams gs) relation you attacked
-          _ -> False
-     in case event of
-          GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked attacker _ blockers) -> attacksAdmittedPlayer attacker && blockers >= n
-          -- Rule 509.3e's second sentence -- "effects that add or remove
-          -- blockers can also cause such abilities to trigger" -- for the one
-          -- producer the pool has: a creature PUT ONTO THE BATTLEFIELD
-          -- blocking an attacker that was ALREADY blocked, which is Flash
-          -- Foliage's Saproling joining a declared blocker. That road records
-          -- no GameEvent.AttackerBlocked at all --
-          -- Combat.putOntoBattlefieldBlocking withholds it under CR 509.3c's
-          -- "only if the attacking creature was an unblocked creature at that
-          -- time" -- so the arm above never sees the arrival, and the guard
-          -- there is CR 509.3c's own and must not be weakened to reach it.
-          --
-          -- Removing blockers cannot reach THIS form of the rule: the count
-          -- only falls, and a floor is never crossed upwards by a departure.
-          --
-          -- The producer is load-bearing. Combat.declareBlockers records this
-          -- same constructor once per declared PAIR under
-          -- BlockProducer.Declared, so an unguarded arm would answer an
-          -- ordinary declaration the arm above has already answered, once more
-          -- per blocker.
-          --
-          -- `+ 1 == n` here where the arm above reads `>= n`, and the two are
-          -- not in disagreement. The rule's "at least" is about how many
-          -- creatures blocked at one becoming, which is one number the arm above
-          -- reads once. This arrival takes the tally from `before` to one more
-          -- than that, so it crosses the floor exactly when the floor is that
-          -- one more; `>=` would fire again on every further arrival, where the
-          -- attacker did not newly become blocked by that many creatures.
-          --
-          -- Simultaneous arrivals fall out of the same reading rather than
-          -- needing a batch: each carries its own `before`, so a doubled pair
-          -- taking a block from one to three lands on two with the first of them
-          -- and overshoots with the second.
-          --
-          -- BecameBlocking.attackerWasBlocked in place of the `n >= 2` conjunct
-          -- reading the live record needed, and it says the same thing in the
-          -- rule's own terms: CR 509.3c withholds GameEvent.AttackerBlocked
-          -- exactly when this field is set, so the two arms split every arrival
-          -- between them and neither answers one the other did. The becoming an
-          -- arrival at an unblocked attacker makes is the arm above's, count and
-          -- all -- which is what stops a doubled pair landing on an unblocked
-          -- attacker from firing once for the becoming and once for its second
-          -- token.
-          GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker, BecameBlocking.producer = BlockProducer.PutOntoBattlefield, BecameBlocking.attackerWasBlocked = True, BecameBlocking.blockersBefore = before}) ->
-            attacksAdmittedPlayer attacker && Natural.length before + 1 == n
-          -- The effect road (Combat.switchBlockers, General Jarkeld) adds and
-          -- removes blockers in one change, so the floor is crossed when the
-          -- tally before it is under `n` and the tally after it is not, and
-          -- answered once, on answersEffectCrossing's arrival.
-          -- Parun.CombatCostSpec's SwitchBlockers group is the proof.
-          GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = blocker, BecameBlocking.attacker = attacker, BecameBlocking.producer = BlockProducer.ByEffect after, BecameBlocking.attackerWasBlocked = True, BecameBlocking.blockersBefore = before}) ->
-            attacksAdmittedPlayer attacker && answersEffectCrossing blocker before after && Natural.length before < n && Natural.length after >= n
-          _ -> False
+  -- CR 509.3, as a function of Parun.Types.BlockTrigger's fields: blocks.
+  TriggerCondition.Blocks t -> blocks bearerContext board gs t event
   -- CR 509.1h: the bearer became an UNBLOCKED creature, which the glossary's
-  -- "attacks and isn't blocked" entry sends here. CreatureBecomesBlocked's arm above
+  -- "attacks and isn't blocked" entry sends here. CR 509.3c's arm of `blocks`
   -- is the other branch of the same turn-based action, and no attacker can
   -- produce both events in one declaration.
   --

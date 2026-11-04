@@ -11,9 +11,9 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 -- with one or more Birds" at a floor of one, Military Intelligence's "whenever
 -- you attack with two or more creatures" at two.
 --
--- A record for Parun.Types.CreatureBecomesBlockedByAtLeast's reason: the printed
--- form pairs a subject with a narrowing and a count, and the threshold is a
--- field beside the other two rather than a re-spelling of every pattern.
+-- A record because the printed form pairs a subject with a narrowing and a
+-- count, and the threshold is a field beside the other two rather than a
+-- re-spelling of every pattern.
 data PlayerAttacksWith = MkPlayerAttacksWith
   { player :: PlayerRelation.PlayerRelation,
     filter :: Filter.Filter Keyword.Keyword,

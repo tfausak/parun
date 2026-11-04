@@ -43,8 +43,18 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfBlocksAtLeast",
-            "value": 2
+            "type": "Blocks",
+            "value": {
+              "count": {
+                "type": "AtLeast",
+                "value": {
+                  "floor": 2
+                }
+              },
+              "role": {
+                "type": "Blocker"
+              }
+            }
           },
           "modal": {
             "modes": [

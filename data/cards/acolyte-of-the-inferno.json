@@ -35,16 +35,19 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "CreatureBecomesBlockedBy",
+            "type": "Blocks",
             "value": {
-              "attacker": {
-                "type": "IsSource"
-              },
-              "blocker": {
-                "type": "HasCardType",
+              "count": {
+                "type": "EachCreature",
                 "value": {
-                  "type": "Creature"
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
                 }
+              },
+              "role": {
+                "type": "Attacker"
               }
             }
           },

@@ -86,10 +86,11 @@ import qualified Parun.Types.BindAmount as BindAmount
 import qualified Parun.Types.Binding as Binding
 import qualified Parun.Types.Blight as Blight
 import qualified Parun.Types.BlockCost as BlockCost
-import qualified Parun.Types.BlockPair as BlockPair
+import qualified Parun.Types.BlockCount as BlockCount
 import qualified Parun.Types.BlockPermission as BlockPermission
 import qualified Parun.Types.BlockRequirement as BlockRequirement
 import qualified Parun.Types.BlockRole as BlockRole
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.BoundMeasure as BoundMeasure
 import qualified Parun.Types.CandidateId as CandidateId
 import qualified Parun.Types.CantAttackPlayer as CantAttackPlayer
@@ -3001,8 +3002,15 @@ toughnessNames :: (Monoid r) => Asking r -> Toughness.Toughness -> r
 toughnessNames asking x = case x of
   Toughness.MkToughness unwrap -> quantityNames asking unwrap
 
-blockPairNames :: (Monoid r) => Asking r -> BlockPair.BlockPair -> r
-blockPairNames asking pair = filterNames asking (BlockPair.blocker pair) <> filterNames asking (BlockPair.attacker pair)
+blockTriggerNames :: (Monoid r) => Asking r -> BlockTrigger.BlockTrigger -> r
+blockTriggerNames asking x = case x of
+  BlockTrigger.MkBlockTrigger _role creature count -> filterNames asking creature <> blockCountNames asking count
+
+blockCountNames :: (Monoid r) => Asking r -> BlockCount.BlockCount -> r
+blockCountNames asking x = case x of
+  BlockCount.Once -> mempty
+  BlockCount.EachCreature others -> filterNames asking others
+  BlockCount.AtLeast _floor others -> filterNames asking others
 
 triggerConditionNames :: (Monoid r) => Asking r -> TriggerCondition.TriggerCondition -> r
 triggerConditionNames asking x = case x of
@@ -3036,15 +3044,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SelfAttacksPlayerWithMostLife -> mempty
   TriggerCondition.SelfAttacksWhileSaddled -> mempty
   TriggerCondition.SelfAttacksWhile condition -> conditionNames asking condition
-  TriggerCondition.SelfBlocks -> mempty
-  TriggerCondition.CreatureBlocks filter_ -> filterNames asking filter_
-  TriggerCondition.CreatureBlocksCreature pair -> blockPairNames asking pair
-  TriggerCondition.SelfBlocksAtLeast _natural -> mempty
-  TriggerCondition.SelfBlocksOneOrMore filter_ -> filterNames asking filter_
-  TriggerCondition.CreatureBecomesBlocked filter_ -> filterNames asking filter_
-  TriggerCondition.CreatureBecomesBlockedBy pair -> blockPairNames asking pair
-  TriggerCondition.SelfBecomesBlockedByOneOrMore filter_ -> filterNames asking filter_
-  TriggerCondition.CreatureBecomesBlockedByAtLeast _creatureBecomesBlockedByAtLeast -> mempty
+  TriggerCondition.Blocks blockTrigger -> blockTriggerNames asking blockTrigger
   TriggerCondition.CreatureAttacksUnblocked filter_ -> filterNames asking filter_
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> mempty
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> mempty

@@ -98,28 +98,33 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "CreatureBecomesBlocked",
+            "type": "Blocks",
             "value": {
-              "type": "And",
-              "value": [
-                {
-                  "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
-                },
-                {
-                  "type": "HeldBy",
-                  "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
+              "creature": {
+                "type": "And",
+                "value": [
+                  {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Creature"
+                    }
+                  },
+                  {
+                    "type": "HeldBy",
+                    "value": {
+                      "holder": {
+                        "type": "Controller"
+                      },
+                      "relation": {
+                        "type": "You"
+                      }
                     }
                   }
-                }
-              ]
+                ]
+              },
+              "role": {
+                "type": "Attacker"
+              }
             }
           },
           "modal": {

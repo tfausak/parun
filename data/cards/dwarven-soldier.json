@@ -32,43 +32,65 @@
             "type": "AnyOf",
             "value": [
               {
-                "type": "SelfBlocksOneOrMore",
+                "type": "Blocks",
                 "value": {
-                  "type": "And",
-                  "value": [
-                    {
-                      "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
-                    },
-                    {
-                      "type": "HasSubtype",
-                      "value": {
-                        "type": "Orc"
+                  "count": {
+                    "type": "AtLeast",
+                    "value": {
+                      "floor": 1,
+                      "others": {
+                        "type": "And",
+                        "value": [
+                          {
+                            "type": "HasCardType",
+                            "value": {
+                              "type": "Creature"
+                            }
+                          },
+                          {
+                            "type": "HasSubtype",
+                            "value": {
+                              "type": "Orc"
+                            }
+                          }
+                        ]
                       }
                     }
-                  ]
+                  },
+                  "role": {
+                    "type": "Blocker"
+                  }
                 }
               },
               {
-                "type": "SelfBecomesBlockedByOneOrMore",
+                "type": "Blocks",
                 "value": {
-                  "type": "And",
-                  "value": [
-                    {
-                      "type": "HasCardType",
-                      "value": {
-                        "type": "Creature"
-                      }
-                    },
-                    {
-                      "type": "HasSubtype",
-                      "value": {
-                        "type": "Orc"
+                  "count": {
+                    "type": "AtLeast",
+                    "value": {
+                      "floor": 1,
+                      "others": {
+                        "type": "And",
+                        "value": [
+                          {
+                            "type": "HasCardType",
+                            "value": {
+                              "type": "Creature"
+                            }
+                          },
+                          {
+                            "type": "HasSubtype",
+                            "value": {
+                              "type": "Orc"
+                            }
+                          }
+                        ]
                       }
                     }
-                  ]
+                  },
+                  "role": {
+                    "type": "Attacker"
+                  }
                 }
               }
             ]

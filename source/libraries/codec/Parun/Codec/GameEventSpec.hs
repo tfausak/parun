@@ -261,24 +261,24 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       GameEvent.codec
       (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 6, BecameBlocking.attacker = ObjectId.MkObjectId 7, BecameBlocking.producer = BlockProducer.Declared, BecameBlocking.attackerWasBlocked = False, BecameBlocking.blockersBefore = Set.empty}))
       " {\"type\":\"BecameBlocking\",\"value\":{\"blocker\":6,\"attacker\":7}} "
-  -- An object and a COUNT: CR 509.3a's event is per blocking creature, and the
-  -- number beside it is how many attackers it took (CR 509.3e). Distinct
-  -- numbers again, so a codec that swapped them would fail.
+  -- An object and a SET: CR 509.3a's event is per blocking creature, and the
+  -- set beside it is the attackers it took (CR 509.3e). Distinct numbers again,
+  -- so a codec that swapped them would fail.
   Spec.it s "BlocksDeclared" $
     Common.assertCodec
       s
       GameEvent.codec
-      (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared (ObjectId.MkObjectId 9) 2))
-      " {\"type\":\"BlocksDeclared\",\"value\":{\"blocker\":9,\"count\":2}} "
-  -- An object, a player and a count: CR 509.3c's event is per blocked ATTACKER,
-  -- so the blockers are not named in it, but CR 508.5's defending player is and
-  -- so is how many creatures blocked it (CR 509.3e). Three distinct numbers.
+      (GameEvent.BlocksDeclared (BlocksDeclared.MkBlocksDeclared (ObjectId.MkObjectId 9) (Set.singleton (ObjectId.MkObjectId 2))))
+      " {\"type\":\"BlocksDeclared\",\"value\":{\"blocker\":9,\"blocked\":[2]}} "
+  -- An object, a player and a set: CR 509.3c's event is per blocked ATTACKER,
+  -- and CR 508.5's defending player and the creatures that blocked it (CR
+  -- 509.3e) ride it. Three distinct numbers.
   Spec.it s "AttackerBlocked" $
     Common.assertCodec
       s
       GameEvent.codec
-      (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked (ObjectId.MkObjectId 8) (PlayerId.MkPlayerId 2) 3))
-      " {\"type\":\"AttackerBlocked\",\"value\":{\"attacker\":8,\"defender\":2,\"blockers\":3}} "
+      (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked (ObjectId.MkObjectId 8) (PlayerId.MkPlayerId 2) (Set.singleton (ObjectId.MkObjectId 3))))
+      " {\"type\":\"AttackerBlocked\",\"value\":{\"attacker\":8,\"defender\":2,\"blockers\":[3]}} "
   -- CR 509.1h's other branch: the attacker and CR 508.5's defending player, and
   -- no count of the blockers there were none of.
   Spec.it s "AttackerUnblocked" $

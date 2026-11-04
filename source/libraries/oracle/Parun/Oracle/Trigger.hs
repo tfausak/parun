@@ -14,7 +14,9 @@ import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.BeginningStep as BeginningStep
-import qualified Parun.Types.BlockPair as BlockPair
+import qualified Parun.Types.BlockCount as BlockCount
+import qualified Parun.Types.BlockRole as BlockRole
+import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Compares as Compares
 import qualified Parun.Types.Comparison as Comparison
@@ -71,7 +73,7 @@ event :: Target.Context -> Bool -> TriggerCondition.TriggerCondition -> [Event]
 event context creature c = case c of
   -- One description of the creature for both: "blocks or becomes blocked by
   -- a creature" (Inferno Elemental).
-  TriggerCondition.AnyOf [TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair Filter.Type.IsSource f), TriggerCondition.CreatureBecomesBlockedBy (BlockPair.MkBlockPair g Filter.Type.IsSource)] | f == g -> do
+  TriggerCondition.AnyOf [TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.Type.IsSource (BlockCount.EachCreature f)), TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker Filter.Type.IsSource (BlockCount.EachCreature g))] | f == g -> do
     (one, that) <- described context f
     itself recurring (Text.pack ("blocks or becomes blocked by " <> one)) [(thatAttacker, that), (thatBlocker, that)] []
   TriggerCondition.AnyOf cs@(_ : _ : _) -> do
@@ -98,7 +100,7 @@ event context creature c = case c of
     word <- ["it", that]
     subject <- also one
     [other ("Whenever " <> subject <> " dies") [(becameSlot, word), (departedPermanent, word)]]
-  TriggerCondition.CreatureBecomesBlocked f -> do
+  TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker f BlockCount.Once) -> do
     (one, that) <- described context f
     -- Free: the attacker is "it" (Somberwald Alpha) or "that creature".
     word <- ["it", that]
@@ -202,12 +204,12 @@ selfEvent context creature c = case c of
   TriggerCondition.SelfAttacksWhileSaddled -> [(recurring, "attacks while saddled", [])]
   TriggerCondition.CreatureAttacksAlone Filter.Type.IsSource -> [(recurring, "attacks alone", [(attackingCreature, "it")])]
   TriggerCondition.CreatureAttacksUnblocked Filter.Type.IsSource -> [(recurring, "attacks and isn't blocked", [(thatPlayer, "defending player"), (attackingCreature, "it")])]
-  TriggerCondition.SelfBlocks -> [(recurring, "blocks", [])]
-  TriggerCondition.CreatureBecomesBlocked Filter.Type.IsSource -> [(recurring, "becomes blocked", [(thatPlayer, "defending player"), (attackingCreature, "it")])]
-  TriggerCondition.CreatureBlocksCreature (BlockPair.MkBlockPair Filter.Type.IsSource f) -> do
+  TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.Type.IsSource BlockCount.Once) -> [(recurring, "blocks", [])]
+  TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker Filter.Type.IsSource BlockCount.Once) -> [(recurring, "becomes blocked", [(thatPlayer, "defending player"), (attackingCreature, "it")])]
+  TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.Type.IsSource (BlockCount.EachCreature f)) -> do
     (one, that) <- described context f
     [(recurring, "blocks " <> one, [(thatAttacker, that)])]
-  TriggerCondition.CreatureBecomesBlockedBy (BlockPair.MkBlockPair f Filter.Type.IsSource) -> do
+  TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker Filter.Type.IsSource (BlockCount.EachCreature f)) -> do
     (one, that) <- described context f
     [(recurring, "becomes blocked by " <> one, [(thatBlocker, that)])]
   -- Free: the ability word enrage (CR 207.2c) printed (Ripjaw Raptor) or

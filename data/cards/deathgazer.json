@@ -86,58 +86,64 @@
             "type": "AnyOf",
             "value": [
               {
-                "type": "CreatureBlocksCreature",
+                "type": "Blocks",
                 "value": {
-                  "attacker": {
-                    "type": "And",
-                    "value": [
-                      {
-                        "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
-                      },
-                      {
-                        "type": "Not",
-                        "value": {
-                          "type": "HasColor",
+                  "count": {
+                    "type": "EachCreature",
+                    "value": {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HasCardType",
                           "value": {
-                            "type": "Black"
+                            "type": "Creature"
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "Black"
+                            }
                           }
                         }
-                      }
-                    ]
+                      ]
+                    }
                   },
-                  "blocker": {
-                    "type": "IsSource"
+                  "role": {
+                    "type": "Blocker"
                   }
                 }
               },
               {
-                "type": "CreatureBecomesBlockedBy",
+                "type": "Blocks",
                 "value": {
-                  "attacker": {
-                    "type": "IsSource"
-                  },
-                  "blocker": {
-                    "type": "And",
-                    "value": [
-                      {
-                        "type": "HasCardType",
-                        "value": {
-                          "type": "Creature"
-                        }
-                      },
-                      {
-                        "type": "Not",
-                        "value": {
-                          "type": "HasColor",
+                  "count": {
+                    "type": "EachCreature",
+                    "value": {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HasCardType",
                           "value": {
-                            "type": "Black"
+                            "type": "Creature"
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "Black"
+                            }
                           }
                         }
-                      }
-                    ]
+                      ]
+                    }
+                  },
+                  "role": {
+                    "type": "Attacker"
                   }
                 }
               }
