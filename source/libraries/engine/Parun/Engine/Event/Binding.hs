@@ -172,7 +172,8 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- eventBindingSlots' unconditional promise for this condition needs. It names
   -- the seat the turn began with; under the shared team turns option an ability that
   -- reads the slot is re-bound once per player whose step it is (CR 805.4d,
-  -- Parun.Engine.Event.Trigger.stepTriggerPlayers).
+  -- Parun.Engine.Event.Trigger.stepTriggerPlayers), and a delayed ability keeps
+  -- the seat its arming environment named (Parun.Engine.Event.Trigger.delayedPending).
   --
   -- Unconditional given a match: every GameEvent.StepBegan carries a PlayerId,
   -- CR 500.1 giving every step exactly one turn to belong to.

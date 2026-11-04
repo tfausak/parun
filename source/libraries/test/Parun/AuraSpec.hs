@@ -2968,16 +2968,17 @@ licidSpec s registry = Spec.describe s "Licid" $ do
       Nothing -> Spec.assertFailure s "Gliding Licid should print one activated ability"
       Just (lic, host, after) -> do
         let ready = after {GameState.priority = Just S.alice}
-            paid = S.settleSba (S.runPure S.identityAnswer ready (EndEffect.endEffect S.manaPerformer S.alice lic))
+            paid = S.settleSba (S.runPure S.identityAnswer ready (mapM_ (EndEffect.endEffect S.manaPerformer S.alice . snd) (EndEffect.endable S.alice ready)))
         -- The OFFER, which no printed permission grants: it rides the stored
         -- effect, so it exists only because the ability resolved.
-        Spec.assertBool s (List.elem (Action.Type.EndEffect lic) (Action.legalActions S.alice ready)) "CR 116.2c: alice is offered the pay-to-end while the effect is live"
+        Spec.assertBool s (offersEnding lic (Action.legalActions S.alice ready)) "CR 116.2c: alice is offered the pay-to-end while the effect is live"
+        Spec.assertEqWith s "one sentence is one offer, however many effects it stored" (length (EndEffect.endable S.alice ready)) 1
         -- CR 109.5: "you may pay" is the player who ACTIVATED the ability, and
         -- bob is not them. Asked on the SAME board, and bob holds the same three
         -- Islands alice does (licidBoard stocks both seats), so the only
         -- difference between the two reads is the seat rather than the mana. The
         -- case below is what parts "activator" from "current controller".
-        Spec.assertBool s (List.notElem (Action.Type.EndEffect lic) (Action.legalActions S.bob (ready {GameState.priority = Just S.bob}))) "and bob, who did not activate the ability, is not"
+        Spec.assertBool s (not (offersEnding lic (Action.legalActions S.bob (ready {GameState.priority = Just S.bob})))) "and bob, who did not activate the ability, is not"
         -- FIRST after the payment, and the gameplay-level read: the creature the
         -- Licid was enchanting has lost the keyword, which is the whole of what
         -- the effect was doing to the board.
@@ -2990,7 +2991,7 @@ licidSpec s registry = Spec.describe s "Licid" $ do
         Spec.assertBool s (Set.member lic (GameState.battlefield paid)) "and still on the battlefield rather than in the graveyard"
         Spec.assertEqWith s "with the ability the removal took back again" (length (Projection.abilitiesOf lic paid)) 1
         -- And the offer is gone with the effect: paying twice is not on the menu.
-        Spec.assertBool s (List.notElem (Action.Type.EndEffect lic) (Action.legalActions S.alice (paid {GameState.priority = Just S.alice}))) "and the offer is gone with the effect it ended"
+        Spec.assertBool s (not (offersEnding lic (Action.legalActions S.alice (paid {GameState.priority = Just S.alice})))) "and the offer is gone with the effect it ended"
   -- CR 109.5's two sentences, told apart. The clause is part of an ACTIVATED
   -- ability, so its "you" is the player who activated it -- not the current
   -- controller of the object it is on, which is what the STATIC-ability sentence
@@ -3013,8 +3014,8 @@ licidSpec s registry = Spec.describe s "Licid" $ do
             stolen = S.settleSba (S.attachTo aura (Recipient.ToObject lic) withAura)
         -- THE pair, gameplay level and first: the offer stayed with alice and
         -- never reached bob, whose control of the Licid the leg below confirms.
-        Spec.assertBool s (List.elem (Action.Type.EndEffect lic) (Action.legalActions S.alice (stolen {GameState.priority = Just S.alice}))) "CR 116.2c: alice activated it, so she is still offered the payment"
-        Spec.assertBool s (List.notElem (Action.Type.EndEffect lic) (Action.legalActions S.bob (stolen {GameState.priority = Just S.bob}))) "and bob, who merely controls it now, is not"
+        Spec.assertBool s (offersEnding lic (Action.legalActions S.alice (stolen {GameState.priority = Just S.alice}))) "CR 116.2c: alice activated it, so she is still offered the payment"
+        Spec.assertBool s (not (offersEnding lic (Action.legalActions S.bob (stolen {GameState.priority = Just S.bob})))) "and bob, who merely controls it now, is not"
         -- The anti-vacuity leg, after the pair: control really did move, so the
         -- two seats above are genuinely a different answer to the two readings.
         Spec.assertEqWith s "CR 613.1b: Confiscate moved control of the Licid" (Projection.controllerOf lic stolen) (Just S.bob)
@@ -3031,6 +3032,12 @@ licidSpec s registry = Spec.describe s "Licid" $ do
 -- aimAtOffered rather than a hand-built recipient: the slot's pool is
 -- Pool.Creatures, which offers Recipient.ToCreature, and a ToObject of the same
 -- permanent is dropped by CR 608.2b's re-read with no error.
+-- CR 116.2c: is ending an effect of this source among these actions?
+offersEnding :: ObjectId.ObjectId -> [Action.Type.Action] -> Bool
+offersEnding source = any $ \action -> case action of
+  Action.Type.EndEffect offered _ -> offered == source
+  _ -> False
+
 licidBoard ::
   Printing.Printing ->
   Printing.Printing ->

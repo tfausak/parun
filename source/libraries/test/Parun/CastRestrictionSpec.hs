@@ -1020,7 +1020,7 @@ offeredPlays pid gs =
         A.PutCompanionIntoHand -> False
         A.RollPlanarDie -> False
         A.Ignore _ _ -> False
-        A.EndEffect _ -> False
+        A.EndEffect {} -> False
         A.ActivateManaAbility _ -> False
    in filter isPlay (Action.legalActions pid gs)
 
@@ -2044,7 +2044,7 @@ manaActivationOffer action = case action of
   A.Suspend _ -> False
   A.PutCompanionIntoHand -> False
   A.RollPlanarDie -> False
-  A.EndEffect _ -> False
+  A.EndEffect {} -> False
 
 -- Take ONE named action and pass at every other prompt. Pinned to the action
 -- rather than to a kind of action, since this board offers alice a card of her

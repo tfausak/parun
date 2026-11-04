@@ -1,0 +1,20 @@
+{
+  "description": "CR 116.2c whole card: bob pays Quenchable Fire's {U} at the end step, and the caster's next upkeep deals him nothing",
+  "note": "The unpaid control is quenchable-fire-unpaid-deals-3-more-at-your-next-upkeep.json. His second Island is untapped, so the offer's absence afterwards is the payment and not the mana.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Mountain", "label": "m1"}, {"card": "Mountain", "label": "m2"}, {"card": "Mountain", "label": "m3"}, {"card": "Mountain", "label": "m4"}], "hand": [{"card": "Quenchable Fire", "label": "fire"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Island", "label": "island"}, {"card": "Island", "label": "island-2"}]},
+      {"name": "carol", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$fire", "targets": ["$bob"], "mana": ["$m1", "$m2", "$m3", "$m4"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "EndStep", "player": "bob", "do": {"Take": {"action": "EndEffect spell of $fire", "mana": ["$island", null]}}},
+    {"turn": 1, "step": "EndStep", "player": "bob", "check": {"View": {"of": "Offered", "player": "bob", "is": ["Pass", "ActivateManaAbility $island-2"]}}},
+    {"turn": 4, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 17}}}
+  ]
+}

@@ -177,7 +177,7 @@ actionOffer gs action = fields (("action", R.Text (Text.pack kind)) : rest)
       Action.Foretell oid -> ("Foretell", on oid)
       Action.Suspend oid -> ("Suspend", on oid)
       Action.PutCompanionIntoHand -> ("PutCompanionIntoHand", [])
-      Action.EndEffect oid -> ("EndEffect", on oid)
+      Action.EndEffect oid _ -> ("EndEffect", on oid)
       Action.RollPlanarDie -> ("RollPlanarDie", [])
     on oid = [("object", object oid)]
     named name = [("name", R.Text (CardName.unwrap name))]

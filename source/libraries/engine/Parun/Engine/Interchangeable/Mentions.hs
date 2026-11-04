@@ -450,6 +450,7 @@ import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Parun.Types.UntapR as UntapR
 import qualified Parun.Types.UntapRestriction as UntapRestriction
 import qualified Parun.Types.UntapRewrite as UntapRewrite
+import qualified Parun.Types.UntilPaid as UntilPaid
 import qualified Parun.Types.Vote as Vote
 import qualified Parun.Types.VoteChoices as VoteChoices
 import qualified Parun.Types.VoteObjects as VoteObjects
@@ -1407,7 +1408,7 @@ durationNames asking x = case x of
   Duration.ForAsLongAs condition -> conditionNames asking condition
   Duration.UntilEndOfCombat -> mempty
   Duration.UntilEndOfCombatOnYourNextTurn -> mempty
-  Duration.UntilPaid cost -> costNames asking (keywordNames asking) cost
+  Duration.UntilPaid (UntilPaid.MkUntilPaid payer cost) -> playerRefNames asking payer <> costNames asking (keywordNames asking) cost
   Duration.UntilUsed slot -> foldMap (slotNames asking) slot
   Duration.UntilEvent durationEvent -> durationEventNames asking durationEvent
 
@@ -2372,7 +2373,7 @@ orElseNames asking x = case x of
 
 paidExpiryNames :: (Monoid r) => Asking r -> PaidExpiry.PaidExpiry -> r
 paidExpiryNames asking x = case x of
-  PaidExpiry.MkPaidExpiry _player cost -> costNames asking (keywordNames asking) cost
+  PaidExpiry.MkPaidExpiry _player cost resolution -> costNames asking (keywordNames asking) cost <> names asking (== resolution)
 
 payGateNames :: (Monoid r) => Asking r -> PayGate.PayGate -> r
 payGateNames asking x = case x of

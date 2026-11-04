@@ -267,6 +267,7 @@ import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TurnFaceDown as TurnFaceDown
 import qualified Parun.Types.TurnUpR as TurnUpR
 import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
+import qualified Parun.Types.UntilPaid as UntilPaid
 import qualified Parun.Types.Vote as Vote
 import qualified Parun.Types.VoteChoices as VoteChoices
 import qualified Parun.Types.VoteObjects as VoteObjects
@@ -1090,10 +1091,11 @@ effectPlayerRefs effect = case effect of
   Effect.EndCombatPhase -> []
   Effect.GainControl (GainControl.MkGainControl _ _ to) -> [to]
   Effect.ExchangeControl {} -> []
-  Effect.ArmDelayedTrigger arm -> case ArmDelayedTrigger.onset arm of
-    Onset.FromNextTurnOf ref -> Maybe.maybeToList ref
-    Onset.Immediately -> []
-    Onset.FromThatExtraTurn -> []
+  Effect.ArmDelayedTrigger arm ->
+    foldMap durationPlayerRefs (ArmDelayedTrigger.duration arm) <> case ArmDelayedTrigger.onset arm of
+      Onset.FromNextTurnOf ref -> Maybe.maybeToList ref
+      Onset.Immediately -> []
+      Onset.FromThatExtraTurn -> []
   -- CR 400.1's zone reference, which lives inside the permission payloads rather
   -- than in a field of the opcode -- so the walk is
   -- Parun.Engine.PlayerEffect.playerRefsIn's and this arm joins it in, which is
@@ -1673,7 +1675,7 @@ durationPlayerRefs duration = case duration of
   -- A Condition's own references are Quantity.bakePlayerRef's half, reached
   -- through conditionSlots rather than through a list of references.
   Duration.ForAsLongAs _ -> []
-  Duration.UntilPaid _ -> []
+  Duration.UntilPaid untilPaid -> [UntilPaid.payer untilPaid]
   Duration.UntilEndOfCombat -> []
   Duration.UntilEndOfCombatOnYourNextTurn -> []
   Duration.UntilUsed _ -> []
@@ -1699,7 +1701,8 @@ durationSlots duration = case duration of
   Duration.ForAsLongAs condition -> conditionSlots condition
   -- A Cost reads no slot: the activation cost of an ability is not walked by
   -- modeSlots either, and CR 116.2c's price is paid outside any resolution, so
-  -- there is no binding environment for it to name.
+  -- there is no binding environment for it to name. The payer is a reference,
+  -- durationPlayerRefs' half.
   Duration.UntilPaid _ -> Map.empty
   Duration.UntilEndOfCombat -> Map.empty
   Duration.UntilEndOfCombatOnYourNextTurn -> Map.empty
@@ -2416,7 +2419,8 @@ durationSlotsAreExhaustive duration = case duration of
   Duration.DuringYourNextTurn -> True
   Duration.DuringThatExtraTurn -> True
   Duration.ForAsLongAs condition -> conditionSlotsAreExhaustive condition
-  -- durationSlots' answer: a Cost reads no slot, so its enumeration is complete.
+  -- durationSlots' answer: a Cost reads no slot, and its payer names at most one,
+  -- so the enumeration is complete.
   Duration.UntilPaid _ -> True
   Duration.UntilEndOfCombat -> True
   Duration.UntilEndOfCombatOnYourNextTurn -> True
