@@ -4445,6 +4445,7 @@ quantityKindFilters quantity = case quantity of
   -- Its own Filter, which no Count holds and countFilters cannot see.
   Quantity.Type.ActivationsThisTurn tally -> [(Unframed, ActivationsThisTurn.source tally)]
   Quantity.Type.PermanentsDiedThisTurn -> []
+  Quantity.Type.DamagePreventedThisWay -> []
   Quantity.Type.SpellsCastUsingThisTurn {} -> []
   Quantity.Type.SubgamesThisMatch -> []
   Quantity.Type.DungeonsCompleted _ -> []
@@ -5352,7 +5353,7 @@ entryRewriteFilters entryRewrite = case entryRewrite of
   -- The quoted abilities are swept by grantedModifications instead
   -- (entryQuotedAbilities), for copyExceptionFilters' GainAbility reason.
   EntryRewrite.EntersWith e -> foldMap withCountersFilters (EntersWith.counters e) <> concatMap keywordFilters (Set.toList (EntersWith.keywords e))
-  EntryRewrite.UnderSourceControl -> []
+  EntryRewrite.UnderControlOf _ -> []
   EntryRewrite.Riot -> []
   EntryRewrite.Unleash -> []
   EntryRewrite.Sunburst -> []

@@ -18,7 +18,7 @@ import qualified Parun.Types.PlayerId as PlayerId
 -- "you" -- the entering permanent's controller, settled by CR 614.12's "as it
 -- would exist on the battlefield" -- and it cannot wait, because a rewrite later
 -- in the same CR 616.1 loop may hand the permanent to somebody else
--- (EntryRewrite.UnderSourceControl).
+-- (EntryRewrite.UnderControlOf).
 --
 -- `object` is the permanent that entered, which is both the effects' source and
 -- the object every Filter.IsSource in them resolves against.

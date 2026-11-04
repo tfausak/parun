@@ -343,6 +343,8 @@ data Quantity
   | -- | CR 400.7 / 608.2i: 1 if the object this quantity is evaluated against
     -- entered the battlefield this turn, else 0, read off GameState.events.
     EnteredThisTurn
+  | -- | CR 615.5: how much damage the source's own prevention effect has stopped, read off GameState.damagePreventedBy (Sacred Boon).
+    DamagePreventedThisWay
   | -- | CR 400.7 / 400.3: did the object this quantity is evaluated against enter
     -- the battlefield out of that player's copy of that zone? 1 if so and 0 if not.
     EnteredFrom InZone.InZone

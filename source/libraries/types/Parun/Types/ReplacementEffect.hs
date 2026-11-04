@@ -51,7 +51,7 @@ import qualified Parun.Types.ZoneChangeR as ZoneChangeR
 -- ControllerRelation field beside it.
 --
 -- One EntryR arm serves the printed row and the floating one alike, whatever the
--- rewrite: Gather Specimens installs UnderSourceControl over an opponent's
+-- rewrite: Gather Specimens installs UnderControlOf You over an opponent's
 -- entries, Zameck Guildmage WithCounters over its controller's, and
 -- Parun.EntryReplacementSpec's "CR 614.1c a creature entering after the ability
 -- resolved enters with the additional counter" is what proves the counter-placing

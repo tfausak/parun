@@ -90,9 +90,11 @@ data EntryRewrite ability effect
     -- stored layer-6 grant (Degavolver's "with 'Pay 3 life: Regenerate this
     -- creature.'"); Parun.ReplacementSpec's Degavolver group proves it.
     EntersWith (EntersWith.EntersWith ability)
-  | -- | CR 616.1b / Gather Specimens: the object enters under the control of the
-    -- effect's source's controller, written to Object.enteredUnder.
-    UnderSourceControl
+  | -- | CR 616.1b: the object enters under the control of a player in this
+    -- relation to the effect's source's controller, chosen by that controller
+    -- and written to Object.enteredUnder -- You for Gather Specimens, Opponent
+    -- for Captive Audience.
+    UnderControlOf PlayerRelation.PlayerRelation
   | -- | CR 614.1c / 614.13a / Shimatsu the Bloodcloaked: sacrifice any number of
     -- permanents matching the Filter as this enters. The count buys the counters the
     -- payload's CounterKind names, or is read back through a

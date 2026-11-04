@@ -2304,6 +2304,7 @@ rust-goliath
 rustic-clachan
 sabertooth-mauler
 sabin-master-monk
+sacred-boon
 sacred-ground
 sacred-rites
 safe-passage
@@ -3337,3 +3338,4 @@ cosmogoyf
 go-ninja-go
 nether-shadow
 shapeshifter
+captive-audience

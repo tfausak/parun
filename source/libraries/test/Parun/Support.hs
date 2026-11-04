@@ -1749,6 +1749,7 @@ oneMountainState mountain ph =
           GameState.eventsLastTurn = mempty,
           GameState.castsBeforeThisTurn = mempty,
           GameState.damageBeforeThisTurn = mempty,
+          GameState.damagePreventedBy = mempty,
           GameState.attacksInOwnLastTurn = mempty,
           GameState.resolvedNames = Map.empty,
           GameState.movedUntil = Map.empty,

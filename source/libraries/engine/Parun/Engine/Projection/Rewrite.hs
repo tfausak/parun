@@ -1897,7 +1897,7 @@ rewriteEntryRewrite pairs rewrite = case rewrite of
           EntersWith.keywords = Set.map (Filter.rewriteKeyword pairs) (EntersWith.keywords e),
           EntersWith.abilities = fmap (rewriteGrantedAbility pairs) (EntersWith.abilities e)
         }
-  EntryRewrite.UnderSourceControl -> rewrite
+  EntryRewrite.UnderControlOf _ -> rewrite
   EntryRewrite.SacrificeAnyNumber s ->
     EntryRewrite.SacrificeAnyNumber
       s
@@ -2447,6 +2447,7 @@ rewriteQuantity pairs quantity = case quantity of
   Quantity.Type.TimesThisTurn _ -> quantity
   Quantity.Type.ActivationsThisTurn tally -> Quantity.Type.ActivationsThisTurn tally {ActivationsThisTurn.source = Filter.rewrite pairs (ActivationsThisTurn.source tally)}
   Quantity.Type.PermanentsDiedThisTurn -> quantity
+  Quantity.Type.DamagePreventedThisWay -> quantity
   Quantity.Type.SpellsCastUsingThisTurn _ -> quantity
   Quantity.Type.SubgamesThisMatch -> quantity
   Quantity.Type.DungeonsCompleted _ -> quantity

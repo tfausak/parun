@@ -47,6 +47,7 @@ import qualified Parun.Engine.Deploy as Deploy
 import qualified Parun.Engine.Expiry as Expiry.Engine
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Interchangeable.Mentions as Mentions
 import qualified Parun.Engine.Mint as Mint
 import qualified Parun.Engine.Plane as Plane
 import qualified Parun.Engine.PlayerEffect as PlayerEffect
@@ -85,6 +86,7 @@ import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.Daytime as Daytime
 import qualified Parun.Types.DealtDamage as DealtDamage
+import qualified Parun.Types.DelayedTrigger as DelayedTrigger
 import qualified Parun.Types.DestructionCause as DestructionCause
 import qualified Parun.Types.DestructionR as DestructionR
 import qualified Parun.Types.DestructionRewrite as DestructionRewrite
@@ -170,6 +172,7 @@ import qualified Parun.Types.TokenPattern as TokenPattern
 import qualified Parun.Types.TokenR as TokenR
 import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
+import qualified Parun.Types.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Parun.Types.TurnUpR as TurnUpR
 import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Parun.Types.UntapR as UntapR
@@ -787,21 +790,6 @@ confinedToSource pat = case pat of
   Filter.Type.And fs -> any confinedToSource fs
   _ -> False
 
--- CR 614.12: the board on which a card bound for the battlefield is judged "as
--- it would exist on the battlefield" -- this one with the card on it under a
--- fresh timestamp (CR 613.7d), as runEntry's subject, so its own static
--- abilities and the effects already in force apply to it. Not
--- Object.newIncarnation: the move has not happened, so the card keeps
--- Object.castFrom, which "wasn't cast" reads.
-arrivingBoard :: ObjectId -> GameState -> GameState
-arrivingBoard oid gs = case Game.lookupObject oid gs of
-  Nothing -> gs
-  Just obj ->
-    let (ts, g1) = Game.freshTimestamp (Game.removeFromZones oid gs)
-        arrived = obj {Object.zone = Zone.Battlefield, Object.timestamp = ts}
-        placed = Game.insertIntoZone Zone.Battlefield LibraryPosition.defaultValue (Object.owner obj) oid g1 {GameState.objects = Map.insert oid arrived (GameState.objects g1)}
-     in placed {GameState.enteringSubjects = Map.insert oid (Game.entryOriginOf oid gs) (GameState.enteringSubjects gs)}
-
 -- CR 614.1: does this replacement's printed pattern match this event?
 matchesPrinted :: (ObjectId -> Filter.View) -> GameState -> ProposedEvent -> ReplacementCandidate -> Bool
 matchesPrinted viewOf gs event candidate =
@@ -820,31 +808,30 @@ matchesPrinted viewOf gs event candidate =
         -- spell or ability, its controller read live (Game.causeNow) since the
         -- move has not happened yet -- the one Moved.causedBy will record.
         --
-        -- CR 614.12: a card bound for the battlefield is judged on `arrivingBoard`,
-        -- as it would exist there; a minted object, already on it, is not.
-        -- Proved by the scenarios
-        -- hallowed-moonlight-exiles-a-noncreature-artifact-entering-as-a-creature
-        -- and hallowed-moonlight-lets-heliod-enter-as-a-noncreature.
-        --
-        -- Not implemented: applying a CR 616.1c-d entry rewrite (a copy) to a
-        -- card before the redirect reads it (gap #6041); reading it under a
-        -- controller other than the one it has now (gap #6042).
+        -- CR 614.12 / 616.1c: a pattern naming the battlefield judges the card as
+        -- it would exist there, after any copy entry rewrite and under the player
+        -- it enters under (CR 110.2a), so it is asked of runEntry's subject
+        -- (Event.divertEntry) and not before the move; every other pattern is
+        -- asked before it. Before the move, a CR 101.2 prohibition goes first,
+        -- which is CR 614.17c. Proved by the scenarios
+        -- hallowed-moonlight-exiles-a-card-that-enters-as-a-copy-of-a-creature,
+        -- hallowed-moonlight-judges-heliod-on-the-devotion-of-the-player-it-enters-under
+        -- and hallowed-moonlight-leaves-a-caged-creature-card-in-the-graveyard.
         (ReplacementEffect.ZoneChangeR (ZoneChangeR.MkZoneChangeR pat _ _ _ _ _), ProposedEvent.WouldChangeZone zc discarded _ resolving) ->
           let oid = ZoneChange.object zc
-              arriving = ZoneChange.to zc == Zone.Battlefield && ZoneChange.from zc /= Zone.Battlefield
-              board = arrivingBoard oid gs
-              onBoard = Projection.viewsOf board
+              entering = Map.member oid (GameState.enteringSubjects gs)
+              namesBattlefield = ZoneChangePattern.whenDestination pat == Just Zone.Battlefield
               -- The zone it leaves is the event's, not a characteristic, so
               -- IsInZone still reads it there; the scenario
               -- cr-400-7a-a-spell-that-became-no-permanent-carries-no-text proves it.
-              arrived o = if o == oid then (onBoard o) {Filter.zone = Filter.zone (viewOf o)} else onBoard o
-              (judgedView, judgedBoard) = if arriving then (arrived, board) else (viewOf, gs)
-           in maybe True (== ZoneChange.to zc) (ZoneChangePattern.whenDestination pat)
+              judgedView o = if entering && o == oid then (viewOf o) {Filter.zone = Just (ZoneChange.from zc)} else viewOf o
+           in namesBattlefield == entering
+                && maybe True (== ZoneChange.to zc) (ZoneChangePattern.whenDestination pat)
                 && maybe True ((== discarded) . Just) (ZoneChangePattern.whenDiscarded pat)
                 && all (\relation -> maybe False (PlayerRelation.holdsFor (Game.teams gs) relation (ReplacementCandidate.controller candidate) . Just) (Game.causeNow gs)) (ZoneChangePattern.causedBy pat)
                 && (resolving || not (ZoneChangePattern.duringResolution pat))
                 && matchesZoneOwner gs candidate (ZoneChangePattern.whoseObject pat) oid
-                && matchesFiltered judgedView judgedBoard candidate (ZoneChangePattern.whatObject pat) oid
+                && matchesFiltered judgedView gs candidate (ZoneChangePattern.whatObject pat) oid
         -- CR 615.1: which events the pattern admits (see matchesDamagePattern),
         -- plus the one fact about the ROW rather than the event -- a shield
         -- spent to nothing is no longer a prevention effect.
@@ -1271,7 +1258,7 @@ admitsEntry gs oid rewrite = case rewrite of
   -- already been asked before this row was collected -- RunEffects' answer below,
   -- and for its reason.
   EntryRewrite.EntersWith _ -> True
-  EntryRewrite.UnderSourceControl -> True
+  EntryRewrite.UnderControlOf _ -> True
   EntryRewrite.SacrificeAnyNumber {} -> True
   -- CR 614.1a states no condition: too few candidates is the card's "if you
   -- don't" branch, settled in Parun.Engine.Event's arm rather than here.
@@ -1440,7 +1427,7 @@ entryCostOf rewrite = case rewrite of
   EntryRewrite.ChooseCardName _ -> Nothing
   EntryRewrite.WithCounters _ -> Nothing
   EntryRewrite.EntersWith _ -> Nothing
-  EntryRewrite.UnderSourceControl -> Nothing
+  EntryRewrite.UnderControlOf _ -> Nothing
   EntryRewrite.SacrificeAnyNumber _ -> Nothing
   EntryRewrite.ExileFromGraveyard _ -> Nothing
   EntryRewrite.EntersAttachedTo _ -> Nothing
@@ -2080,7 +2067,7 @@ bucketOfEffect re = case re of
   -- disagree: taking the control rewrite first hands Clone's own CR 109.5 copy
   -- choice to the NEW controller, and taking the copy first hands it to the old
   -- one.
-  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.UnderSourceControl) -> ReplacementBucket.ControlOnEntry
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.UnderControlOf _)) -> ReplacementBucket.ControlOnEntry
   -- CR 616.1d, and the only arm that is: "replacement and/or prevention effects
   -- that would cause a card to enter the battlefield with its back face up".
   -- That is the whole of what daybound's rewrite does (CR 702.145b), so it ranks
@@ -2281,7 +2268,7 @@ readsApplier re = case re of
   -- installed. Two Gather Specimens are one card, so their `effect` values are
   -- identical while their controllers are not, and applying one puts the
   -- permanent somewhere applying the other does not.
-  ReplacementEffect.EntryR (EntryR.MkEntryR _ EntryRewrite.UnderSourceControl) -> True
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.UnderControlOf _)) -> True
   -- CR 702.145b: no chooser at all, and no payload -- the rewrite shows
   -- the back face of the card the event already named, and which face that is
   -- comes from the card. Two such rows are the same write twice, Tapped's answer.
@@ -2350,7 +2337,7 @@ readsApplier re = case re of
   -- library, so two rows alike in `effect` and unlike in `you` empty different
   -- libraries -- and `breaches` asks that same seat's count, so one may apply
   -- where the other does not. The other arm that answers True,
-  -- EntryRewrite.UnderSourceControl, answers it under a different rule; what the
+  -- EntryRewrite.UnderControlOf, answers it under a different rule; what the
   -- two share is reading the candidate's own `controller` to apply.
   --
   -- A FENCE rather than a proved behaviour, and provably so: the only printing
@@ -2621,6 +2608,11 @@ readsSource effect = case effect of
 -- `controller` is: unconditionally would ask about two Rest in Peace that exile
 -- the same card to the same zone whichever applies.
 --
+-- `rider` is folded in UNCONDITIONALLY, `lifetime`'s reason: CR 615.5's
+-- additional effect runs only for the row that applied, so Test of Faith beside
+-- Healing Salve gives counters under one answer and none under the other. Bar its
+-- `source` and the self slot naming it, which `observedSource` asks about.
+--
 -- `origin` is NOT such a hole: highestBucket has already partitioned by bucket,
 -- and CR 616.1a's bucket is exactly an origin of SelfReplacement, so every
 -- candidate reaching this comparison shares one origin.
@@ -2636,12 +2628,13 @@ choose gs event candidates =
           -- `readsSource`'s half of the same test: CR 702.52a's dredge returns
           -- the row's own source, so two dredgers in one graveyard are two
           -- different boards and the drawer is asked which.
-          if readsSource (ReplacementCandidate.effect c)
+          if readsSource (ReplacementCandidate.effect c) || observedSource gs c
             then Just (ReplacementCandidate.source c)
             else Nothing,
           -- CR 608.2h: two rows equal but for the choices they baked (two
           -- Avacyn, Guardian Angel shields) match different sources.
-          ReplacementCandidate.choices c
+          ReplacementCandidate.choices c,
+          fmap (\rider -> (PreventionRider.effects rider, Map.delete Binding.triggerSource (PreventionRider.targets rider), PreventionRider.controller rider)) (ReplacementCandidate.rider c)
         )
    in case candidates of
         [] -> pure Nothing
@@ -2660,6 +2653,26 @@ choose gs event candidates =
                 -- out-of-range index leaves the canonical first standing rather than
                 -- dropping the event or crashing.
                 pure (Just (at candidates answer first))
+
+-- Does which of two rows alike in `effect` applied show through this one's source?
+-- Two Mending Hands leave no trace of it, so they are not a choice.
+--
+-- A rider runs with the row's source as CR 113.7's, and a source still in the game
+-- can be told apart (two Vengeful Archons' damage, one with lifelink); a spell CR
+-- 400.7 has replaced cannot (two Test of Faith). And CR 615.13's "this way" reads
+-- it for a delayed trigger of that source yet to fire or resolve (Sacred Boon
+-- beside Healing Salve); one already resolved reads nothing more, and Heal's
+-- draw never did.
+observedSource :: GameState -> ReplacementCandidate -> Bool
+observedSource gs c =
+  (Maybe.isJust (ReplacementCandidate.rider c) && Maybe.isJust (Game.lookupObject source gs))
+    || any (\entry -> DelayedTrigger.source entry == source && Mentions.readsPrevention (DelayedTrigger.ability entry)) (GameState.delayedTriggers gs)
+    || any stackedReader (GameState.stack gs)
+  where
+    source = ReplacementCandidate.source c
+    stackedReader oid = case fmap Object.source (Game.lookupObject oid gs) of
+      Just (Source.OfTrigger triggered) -> TriggeredAbilitySource.source triggered == source && Mentions.readsPrevention (TriggeredAbilitySource.ability triggered)
+      _ -> False
 
 -- CR 614.1c: Booby Trap's "as this artifact enters, choose an opponent and a
 -- card name" is ONE replacement effect, written as one row per choice. Rows
@@ -2704,7 +2717,7 @@ recordsAChoice effect = case effect of
     EntryRewrite.ChoiceByCoinFlip _ -> False
     EntryRewrite.WithCounters {} -> False
     EntryRewrite.EntersWith _ -> False
-    EntryRewrite.UnderSourceControl -> False
+    EntryRewrite.UnderControlOf _ -> False
     EntryRewrite.SacrificeAnyNumber {} -> False
     EntryRewrite.SacrificeToEnter {} -> False
     EntryRewrite.ExileFromGraveyard _ -> False

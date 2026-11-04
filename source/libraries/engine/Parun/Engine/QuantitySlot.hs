@@ -204,6 +204,7 @@ overSlots f quantity =
         -- names no amount.
         Quantity.ActivationsThisTurn _ -> pure quantity
         Quantity.PermanentsDiedThisTurn -> pure quantity
+        Quantity.DamagePreventedThisWay -> pure quantity
         Quantity.SpellsCastUsingThisTurn _ -> pure quantity
         Quantity.SubgamesThisMatch -> pure quantity
         -- And another again, CR 309.7's completion tally having nothing beside its
@@ -382,6 +383,7 @@ nestedRefs quantity = case quantity of
   Quantity.TimesThisTurn _ -> Set.empty
   Quantity.ActivationsThisTurn tally -> Set.singleton (Left (ActivationsThisTurn.activator tally))
   Quantity.PermanentsDiedThisTurn -> Set.empty
+  Quantity.DamagePreventedThisWay -> Set.empty
   Quantity.SpellsCastUsingThisTurn _ -> Set.empty
   Quantity.SubgamesThisMatch -> Set.empty
   Quantity.DungeonsCompleted ref -> Set.singleton (Left ref)
@@ -506,6 +508,7 @@ nestedCounts quantity = case quantity of
   Quantity.TimesThisTurn _ -> []
   Quantity.ActivationsThisTurn _ -> []
   Quantity.PermanentsDiedThisTurn -> []
+  Quantity.DamagePreventedThisWay -> []
   Quantity.SpellsCastUsingThisTurn {} -> []
   Quantity.SubgamesThisMatch -> []
   Quantity.DungeonsCompleted _ -> []
@@ -655,6 +658,7 @@ mapPlayerRefs f intoCount quantity =
         Quantity.TimesThisTurn _ -> quantity
         Quantity.ActivationsThisTurn tally -> Quantity.ActivationsThisTurn tally {ActivationsThisTurn.activator = f (ActivationsThisTurn.activator tally)}
         Quantity.PermanentsDiedThisTurn -> quantity
+        Quantity.DamagePreventedThisWay -> quantity
         Quantity.SpellsCastUsingThisTurn _ -> quantity
         Quantity.SubgamesThisMatch -> quantity
         Quantity.DungeonsCompleted ref -> Quantity.DungeonsCompleted (f ref)

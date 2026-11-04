@@ -606,8 +606,8 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
               ActiveReplacement.choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing Nothing Acquisition.Own
             }
         g3 = S.addReplacement active g2
-        asked = answersFor S.identityAnswer g3 (Event.runEntry False Nothing Set.empty piker)
-        after = S.runPure S.identityAnswer g3 (Event.runEntry False Nothing Set.empty piker)
+        asked = answersFor S.identityAnswer g3 (Event.runEntry Nothing Nothing Set.empty piker)
+        after = S.runPure S.identityAnswer g3 (Event.runEntry Nothing Nothing Set.empty piker)
     Spec.assertBool s (not (wasAskedForEntryOption asked)) "no ChooseEntryOption was raised"
     Spec.assertEqWith s "the sole option applied anyway" (Projection.powerOf piker after) (Just 3)
   -- #79: resolveDestruction answers with the SETTLED object, not a Bool. The
@@ -1086,7 +1086,7 @@ gatherSpecimensSpec s registry =
                   Spec.assertEqWith s "carol named bob's row, so alice's applies second and keeps it" (Projection.controllerOf afterBob namedBob) (Just S.alice)
                 _ -> Spec.assertFailure s "the creature did not reach the battlefield"
         _ -> Spec.assertFailure s "both Gather Specimens rows should be floating"
-    -- WHY CR 800.4a ends the row rather than Event's UnderSourceControl arm
+    -- WHY CR 800.4a ends the row rather than Event's UnderControlOf arm
     -- refusing to name a departed player. A guard inside that arm would leave
     -- alice's row a CR 616.1 candidate, and Replacement.readsApplier answers True
     -- for that rewrite, so the pair stays distinguishable and carol is asked

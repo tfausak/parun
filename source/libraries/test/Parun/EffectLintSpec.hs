@@ -554,6 +554,7 @@ printedBoxQuantity quantity = case quantity of
   Quantity.Type.TimesThisTurn _ -> False
   Quantity.Type.ActivationsThisTurn _ -> False
   Quantity.Type.PermanentsDiedThisTurn -> False
+  Quantity.Type.DamagePreventedThisWay -> False
   Quantity.Type.SpellsCastUsingThisTurn {} -> False
   Quantity.Type.SubgamesThisMatch -> False
   Quantity.Type.DungeonsCompleted {} -> False

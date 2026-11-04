@@ -64,8 +64,9 @@ data PreventNextDamage effect = MkPreventNextDamage
     quantity :: Quantity.Quantity,
     -- | CR 615.5's additional effect -- Test of Faith's "for each 1 damage
     -- prevented this way, put a +1/+1 counter on that creature". Empty for a
-    -- shield with no such clause, which is every other prevention in the pool,
-    -- so the key is elided rather than written as an empty array.
+    -- shield with no such clause, or one whose clause waits for a delayed trigger
+    -- (Sacred Boon, Quantity.DamagePreventedThisWay), so the key is elided
+    -- rather than written as an empty array.
     riders :: Seq.Seq effect
   }
   deriving (Eq, Ord, Show)

@@ -1694,7 +1694,7 @@ printlifterSpec s registry = Spec.describe s "The counters a Create says its tok
 --
 -- CR 614.3's FLOATING row carrying CR 614.1c's counter rewrite, aimed at other
 -- permanents by Filter: Gather Specimens' shape with the rewrite swapped from
--- EntryRewrite.UnderSourceControl to EntryRewrite.WithCounters. Every other
+-- EntryRewrite.UnderControlOf to EntryRewrite.WithCounters. Every other
 -- counter row in data/cards rides the entering permanent's own static ability
 -- with Filter.IsSource -- Barkhide Troll's, the counter half of Faerie Squadron's
 -- EntryRewrite.EntersWith, and the ones Parun.Engine.Keyword mints for vanishing,

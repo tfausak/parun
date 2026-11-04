@@ -1,9 +1,10 @@
--- | The effect DSL's one walk, answering two questions of a tree -- an effect,
+-- | The effect DSL's one walk, answering three questions of a tree -- an effect,
 -- an ability, a replacement, a cost, a duration, a card -- through the leaves
 -- an Asking names: whether it might name one object, which
--- Parun.Engine.Interchangeable asks of every stored row; and which of the
--- turn's history it reads (CR 732.3), which Parun.Engine.Fragmented asks of
--- every printing.
+-- Parun.Engine.Interchangeable asks of every stored row; which of the turn's
+-- history it reads (CR 732.3), which Parun.Engine.Fragmented asks of every
+-- printing; and whether it reads what its source's prevention effect stopped
+-- (CR 615.13), which Parun.Engine.Replacement.choose asks of a waiting ability.
 --
 -- One function per type, each matching every constructor POSITIONALLY, so a
 -- new constructor is a missing-pattern error here and a new field an arity
@@ -27,6 +28,7 @@
 module Parun.Engine.Interchangeable.Mentions where
 
 import qualified Data.Map.Strict as Map
+import qualified Data.Monoid as Monoid
 import qualified Parun.Engine.Binding as Binding.Engine
 import qualified Parun.Types.AbilityAct as AbilityAct
 import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
@@ -464,8 +466,28 @@ data Asking r = MkAsking
     -- Eq does not compare.
     keyed :: r,
     -- | A read of the turn's history (CR 732.3).
-    history :: HistoryRead.HistoryRead -> r
+    history :: HistoryRead.HistoryRead -> r,
+    -- | A read of what the source's own prevention effect stopped (CR 615.13).
+    prevention :: r
   }
+
+-- | Does this ability read what its source's prevention effect stopped?
+readsPrevention :: TriggeredAbility.TriggeredAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> Bool
+readsPrevention =
+  Monoid.getAny
+    . triggeredAbilityNames
+      asking
+      (const mempty)
+      (grantedAbilityNames asking (const mempty))
+  where
+    asking =
+      MkAsking
+        { names = const mempty,
+          context = mempty,
+          keyed = mempty,
+          history = const mempty,
+          prevention = Monoid.Any True
+        }
 
 -- Whether reading this slot might name the object.
 slotNames :: Asking r -> SlotName.SlotName -> r
@@ -1632,7 +1654,7 @@ entryRewriteNames asking onAbility onEffect x = case x of
   EntryRewrite.ChooseCardName filter_ -> filterNames asking filter_
   EntryRewrite.WithCounters withCounters -> withCountersNames asking withCounters
   EntryRewrite.EntersWith entersWith -> entersWithNames asking onAbility entersWith
-  EntryRewrite.UnderSourceControl -> mempty
+  EntryRewrite.UnderControlOf _relation -> mempty
   EntryRewrite.SacrificeAnyNumber sacrificeAnyNumber -> sacrificeAnyNumberNames asking sacrificeAnyNumber
   EntryRewrite.SacrificeToEnter sacrificeToEnter -> sacrificeToEnterNames asking sacrificeToEnter
   EntryRewrite.ExileFromGraveyard exileFromGraveyard -> exileFromGraveyardNames asking exileFromGraveyard
@@ -2661,6 +2683,7 @@ quantityNames asking x = case x of
     AbilityAct.Resolved -> HistoryRead.Resolutions
   Quantity.ActivationsThisTurn tally -> history asking HistoryRead.Activations <> playerRefNames asking (ActivationsThisTurn.activator tally) <> filterNames asking (ActivationsThisTurn.source tally) <> activationCriteriaNames asking (ActivationsThisTurn.criteria tally)
   Quantity.PermanentsDiedThisTurn -> history asking HistoryRead.Deaths
+  Quantity.DamagePreventedThisWay -> prevention asking
   Quantity.SpellsCastUsingThisTurn _keywordFamily -> history asking HistoryRead.Casts
   Quantity.SubgamesThisMatch -> mempty
   Quantity.DungeonsCompleted playerRef -> playerRefNames asking playerRef
@@ -3056,7 +3079,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SpellOrAbilityCounters _playerRelation -> mempty
   TriggerCondition.AbilityIsCountered -> mempty
   TriggerCondition.DamageToPlayerPrevented _playerRelation -> mempty
-  TriggerCondition.SelfPreventsDamage filter_ -> filterNames asking filter_
+  TriggerCondition.SelfPreventsDamage filter_ -> prevention asking <> filterNames asking filter_
   TriggerCondition.PlayerGainsLife lifeTrigger -> triggerFrequencyNames asking HistoryRead.LifeGains (LifeTrigger.frequency lifeTrigger)
   TriggerCondition.PlayersGainLife _playerRelation -> mempty
   TriggerCondition.PlayerLosesLife lifeTrigger -> triggerFrequencyNames asking HistoryRead.LifeLosses (LifeTrigger.frequency lifeTrigger)

@@ -498,6 +498,7 @@ happenedBetween before after =
             GameState.lastChoice = GameState.lastChoice before,
             GameState.drewFromEmpty = GameState.drewFromEmpty before,
             GameState.fellShort = GameState.fellShort before,
+            GameState.damagePreventedBy = GameState.damagePreventedBy before,
             GameState.exiledWith = GameState.exiledWith before,
             GameState.exilePiles = GameState.exilePiles before,
             GameState.ambientAmounts = GameState.ambientAmounts before,

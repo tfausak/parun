@@ -201,6 +201,7 @@ codec =
       Arm.payload "TimesThisTurn" AbilityAct.codec Quantity.TimesThisTurn (\x -> case x of Quantity.TimesThisTurn y -> Just y; _ -> Nothing),
       Arm.payload "ActivationsThisTurn" ActivationsThisTurn.codec Quantity.ActivationsThisTurn (\x -> case x of Quantity.ActivationsThisTurn y -> Just y; _ -> Nothing),
       Arm.nullary "PermanentsDiedThisTurn" Quantity.PermanentsDiedThisTurn,
+      Arm.nullary "DamagePreventedThisWay" Quantity.DamagePreventedThisWay,
       Arm.payload "SpellsCastUsingThisTurn" KeywordFamily.codec Quantity.SpellsCastUsingThisTurn (\x -> case x of Quantity.SpellsCastUsingThisTurn y -> Just y; _ -> Nothing),
       Arm.nullary "SubgamesThisMatch" Quantity.SubgamesThisMatch,
       -- CR 309.7's tally, with only a PlayerRef on the wire for
@@ -314,6 +315,7 @@ tagOf x = case x of
   Quantity.TimesThisTurn {} -> "TimesThisTurn"
   Quantity.ActivationsThisTurn {} -> "ActivationsThisTurn"
   Quantity.PermanentsDiedThisTurn {} -> "PermanentsDiedThisTurn"
+  Quantity.DamagePreventedThisWay {} -> "DamagePreventedThisWay"
   Quantity.SpellsCastUsingThisTurn {} -> "SpellsCastUsingThisTurn"
   Quantity.SubgamesThisMatch {} -> "SubgamesThisMatch"
   Quantity.DungeonsCompleted {} -> "DungeonsCompleted"

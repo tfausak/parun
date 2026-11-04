@@ -20,6 +20,7 @@ import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Projection.View as Projection
+import qualified Parun.Engine.Replacement as Replacement
 import qualified Parun.Engine.Turn as Turn
 import qualified Parun.Extra.Integer as Integer
 import qualified Parun.Extra.Natural as Natural
@@ -1418,7 +1419,7 @@ processDamage events = do
     ( \gs ->
         let marked = List.foldl' markOne gs survivors
             tallied = List.foldl' tallyOne marked survivors
-            noted = List.foldl' (\g p -> Event.recordEvent (GameEvent.DamagePrevented (DamagePrevented.MkDamagePrevented (Prevention.by p) (Prevention.amounts p))) g) tallied (filter (\p -> sum (fmap sum (Prevention.amounts p)) > 0) prevented)
+            noted = List.foldl' (\g p -> tallyPrevention p (Event.recordEvent (GameEvent.DamagePrevented (DamagePrevented.MkDamagePrevented (Prevention.by p) (Prevention.amounts p))) g)) tallied (filter (\p -> sum (fmap sum (Prevention.amounts p)) > 0) prevented)
             dealt = List.foldl' (\g ev -> Event.recordEvent (GameEvent.DamageDealt ev) g) noted survivors
          in -- CR 119.2's life loss is recorded AFTER the damage that caused it,
             -- which is the same reasoning the prevention/damage order above
@@ -1472,6 +1473,14 @@ processDamage events = do
   State.modify' $ \gs ->
     gs {GameState.pendingPreventionRiders = GameState.pendingPreventionRiders gs <> Seq.fromList (filter (Maybe.isJust . Prevention.rider) prevented)}
   pure (survivors, gains)
+
+-- CR 615.5: adds one application to the tally Quantity.DamagePreventedThisWay
+-- reads, under the object printing the effect (Replacement.printedBy) and
+-- nothing for a minted row.
+tallyPrevention :: Prevention.Prevention -> GameState -> GameState
+tallyPrevention p gs = case Replacement.printedBy (Prevention.by p) of
+  Nothing -> gs
+  Just printer -> gs {GameState.damagePreventedBy = Map.insertWith (+) printer (sum (fmap sum (Prevention.amounts p))) (GameState.damagePreventedBy gs)}
 
 -- CR 120.3f's gain, RECORDED -- processDamage performs it and hands back what
 -- it settled -- so that "whenever you gain life" sees lifelink (CR 702.15b) and
