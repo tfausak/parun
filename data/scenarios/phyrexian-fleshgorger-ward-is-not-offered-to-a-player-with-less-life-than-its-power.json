@@ -1,0 +1,102 @@
+{
+  "board": {
+    "active": "bob",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Phyrexian Fleshgorger",
+            "label": "fleshgorger",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "forest",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Giant Growth",
+            "label": "giant-growth"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Mountain",
+            "label": "mountain",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Shock",
+            "label": "shock"
+          }
+        ],
+        "life": 6,
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 702.21b / 119.4 Phyrexian Fleshgorger's ward of 7 life is not offered to a player with 6, and the spell is countered",
+  "final": [
+    {
+      "Life": {
+        "life": 6,
+        "player": "bob"
+      }
+    },
+    {
+      "Damage": {
+        "damage": 0,
+        "object": "$fleshgorger"
+      }
+    },
+    {
+      "Count": {
+        "card": "Shock",
+        "count": 1,
+        "player": "bob",
+        "zone": "Graveyard"
+      }
+    }
+  ],
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$mountain",
+            null
+          ],
+          "object": "$shock",
+          "targets": [
+            "$fleshgorger"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "trigger of $fleshgorger",
+            "Shock"
+          ],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

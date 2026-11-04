@@ -1,0 +1,189 @@
+{
+  "board": {
+    "active": "bob",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Phyrexian Fleshgorger",
+            "label": "fleshgorger",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "forest",
+            "ready": true
+          },
+          {
+            "card": "Exquisite Blood",
+            "label": "exquisite-blood"
+          },
+          {
+            "card": "Ajani's Pridemate",
+            "label": "pridemate",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Giant Growth",
+            "label": "giant-growth"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Mountain",
+            "label": "mountain",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Shock",
+            "label": "shock"
+          }
+        ],
+        "life": 20,
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 702.21b Phyrexian Fleshgorger's ward costs its power as the ability resolves, paid as one life loss",
+  "final": [
+    {
+      "Life": {
+        "life": 10,
+        "player": "bob"
+      }
+    },
+    {
+      "Life": {
+        "life": 30,
+        "player": "alice"
+      }
+    },
+    {
+      "PowerToughness": {
+        "object": "$pridemate",
+        "power": 3,
+        "toughness": 3
+      }
+    },
+    {
+      "PowerToughness": {
+        "object": "$fleshgorger",
+        "power": 10,
+        "toughness": 8
+      }
+    },
+    {
+      "Damage": {
+        "damage": 2,
+        "object": "$fleshgorger"
+      }
+    },
+    {
+      "Count": {
+        "card": "Shock",
+        "count": 1,
+        "player": "bob",
+        "zone": "Graveyard"
+      }
+    }
+  ],
+  "note": "Giant Growth resolves between the trigger and its resolution, so 10 life, not 7. Exquisite Blood triggering once, and Ajani's Pridemate getting one counter, rule out ten one-life payments.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$mountain",
+            null
+          ],
+          "object": "$shock",
+          "targets": [
+            "$fleshgorger"
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "trigger of $fleshgorger",
+            "Shock"
+          ],
+          "of": "Stack"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$forest",
+            null
+          ],
+          "object": "$giant-growth",
+          "targets": [
+            "$fleshgorger"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseToPay": {
+          "decision": {
+            "type": "Pays"
+          },
+          "mana": [
+            null
+          ]
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 10,
+          "player": "bob"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "trigger of $exquisite-blood",
+            "Shock"
+          ],
+          "of": "Stack"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

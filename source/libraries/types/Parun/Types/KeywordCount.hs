@@ -4,9 +4,9 @@ import qualified Numeric.Natural as Natural
 import qualified Parun.Types.KeywordTally as KeywordTally
 import qualified Parun.Types.PlayerCounterTally as PlayerCounterTally
 
--- | The N of CR 702.181a's "mobilize N" and CR 702.189a's "firebending N": a
--- printed number, or one the card restates as a value its ability reads as it
--- resolves (CR 608.2h).
+-- | The N of CR 702.181a's "mobilize N" and CR 702.189a's "firebending N", and
+-- CR 702.21b's ward X (Parun.Types.Ward.perEach): a printed number, or one the
+-- card restates as a value its ability reads as it resolves (CR 608.2h).
 --
 -- PARAMETRIC in the keyword for Parun.Types.Devour's reason: the Filter can name
 -- a Keyword and Keyword names this. Only @KeywordCount Keyword.Keyword@ is ever

@@ -3616,9 +3616,8 @@ keywordPayloadFilters keyword = case keyword of
   -- like the rest: Parun.Engine.Companion.fulfilled matches it against a printed
   -- face through a bare Context, so no slot is in scope.
   Keyword.Companion predicate -> [predicate]
-  -- CR 702.21a's cost. Rule 702.21b's perEach is a Parun.Types.PlayerCounterTally,
-  -- which names a counter kind and a player and holds no Filter.
-  Keyword.Ward w -> costFilters (Ward.cost w)
+  -- CR 702.21a's cost, and rule 702.21b's perEach as mobilize's N.
+  Keyword.Ward w -> costFilters (Ward.cost w) <> foldMap keywordCountFilters (Ward.perEach w)
   -- CR 702.94a's payload is a Cost too, so its filters are reached the same way.
   Keyword.Miracle cost -> costFilters cost
   -- CR 702.37a: the morph cost, whose components may hold a Filter exactly as

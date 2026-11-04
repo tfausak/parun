@@ -1696,11 +1696,16 @@ plus base extra =
 -- -- Killing Wave's ruling, "each player pays life and sacrifices creatures at
 -- the same time".
 together :: NonEmpty.NonEmpty (Cost Keyword.Type.Keyword) -> Cost Keyword.Type.Keyword
-together costs =
-  let summed = foldr1 plus costs
-      life = sum [n | CostComponent.PayLife (CostAmount.Fixed n) <- Cost.components summed]
-      others = filter (\component -> case component of CostComponent.PayLife (CostAmount.Fixed _) -> False; _ -> True) (Cost.components summed)
-   in summed {Cost.components = others <> [CostComponent.PayLife (CostAmount.Fixed life) | life > 0]}
+together = lifeSummed . foldr1 plus
+
+-- CR 119.4: every fixed life payment of one cost summed into ONE PayLife, so
+-- the life is paid as one event and the total, not each part, is what CR 119.4
+-- measures. `together`'s and `repeated`'s.
+lifeSummed :: Cost Keyword.Type.Keyword -> Cost Keyword.Type.Keyword
+lifeSummed cost =
+  let life = sum [n | CostComponent.PayLife (CostAmount.Fixed n) <- Cost.components cost]
+      others = filter (\component -> case component of CostComponent.PayLife (CostAmount.Fixed _) -> False; _ -> True) (Cost.components cost)
+   in cost {Cost.components = others <> [CostComponent.PayLife (CostAmount.Fixed life) | life > 0]}
 
 -- CR 702.24a's "[cost] for each age counter on it": N whole copies of this cost,
 -- as ONE cost. `plus` folded over itself, so the mana parts concatenate and the
@@ -1725,8 +1730,11 @@ together costs =
 -- real and payable and is what "for each" of nothing means. Rule 702.24a reaches
 -- neither zero case -- the age counter is put on before the offer -- but
 -- Parun.Types.PayGate.perEach is stated over every count.
+--
+-- Fixed life is `lifeSummed`: Phyrexian Fleshgorger's ward, PayLife 1 per point
+-- of power, pays its life once.
 repeated :: Natural -> Cost Keyword.Type.Keyword -> Cost Keyword.Type.Keyword
-repeated n cost = foldr plus (Cost.MkCost (fmap (const (ManaCost.MkManaCost [])) (Cost.mana cost)) []) (List.genericReplicate n cost)
+repeated n cost = lifeSummed $ foldr plus (Cost.MkCost (fmap (const (ManaCost.MkManaCost [])) (Cost.mana cost)) []) (List.genericReplicate n cost)
 
 -- CR 601.2b: substitute the chosen value of X everywhere in this cost -- the mana
 -- part's ManaSymbol.Variable, and every component's X (`substituteAnnounced`).

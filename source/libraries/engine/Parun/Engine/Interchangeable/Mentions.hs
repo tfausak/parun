@@ -3247,7 +3247,7 @@ voteObjectsNames asking x = case x of
 
 wardNames :: (Monoid r) => Asking r -> (keyword -> r) -> Ward.Ward keyword -> r
 wardNames asking onKeyword x = case x of
-  Ward.MkWard cost perEach -> costNames asking onKeyword cost <> foldMap (playerCounterTallyNames asking) perEach
+  Ward.MkWard cost perEach -> costNames asking onKeyword cost <> foldMap (keywordCountNames asking) perEach
 
 whenSpentNames :: (Monoid r) => Asking r -> WhenSpent.WhenSpent -> r
 whenSpentNames asking x = case x of

@@ -6,7 +6,10 @@ import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.Cost as Cost
+import qualified Parun.Types.CostAmount as CostAmount
+import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.KeywordCount as KeywordCount
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
@@ -43,11 +46,25 @@ spec s = Spec.describe s "Parun.Codec.Ward" $ do
           { Ward.cost = Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost [ManaSymbol.Generic 1]), Cost.components = []},
             Ward.perEach =
               Just
-                PlayerCounterTally.MkPlayerCounterTally
-                  { PlayerCounterTally.player = PlayerRef.Relative PlayerRelation.You,
-                    PlayerCounterTally.kind = PlayerCounterKind.Experience
-                  }
+                ( KeywordCount.PlayerCounters
+                    PlayerCounterTally.MkPlayerCounterTally
+                      { PlayerCounterTally.player = PlayerRef.Relative PlayerRelation.You,
+                        PlayerCounterTally.kind = PlayerCounterKind.Experience
+                      }
+                )
           }
       )
-      " {\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"perEach\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"kind\":{\"type\":\"Experience\"}}} "
+      " {\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"perEach\":{\"type\":\"PlayerCounters\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"kind\":{\"type\":\"Experience\"}}}} "
+  -- CR 702.21b: Phyrexian Fleshgorger's "pay life equal to this creature's
+  -- power", one life per point of power.
+  Spec.it s "MkWard with a power-sized life payment" $
+    Common.assertCodec
+      s
+      codec
+      ( Ward.MkWard
+          { Ward.cost = Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost []), Cost.components = [CostComponent.PayLife (CostAmount.Fixed 1)]},
+            Ward.perEach = Just KeywordCount.Power
+          }
+      )
+      " {\"cost\":{\"mana\":[],\"components\":[{\"type\":\"PayLife\",\"value\":{\"type\":\"Fixed\",\"value\":1}}]},\"perEach\":{\"type\":\"Power\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

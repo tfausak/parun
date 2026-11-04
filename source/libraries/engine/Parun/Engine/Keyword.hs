@@ -6310,7 +6310,7 @@ mobilize n =
             }
    in Mint.trigger (TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue)) (Seq.fromList [spawn, arm])
 
--- The quantity mobilize's and firebending's N reads as the ability resolves
+-- The quantity mobilize's, firebending's and ward's N reads as the ability resolves
 -- (CR 608.2h). Power reads the triggered ability's source, the object carrying
 -- the keyword (CR 113.7); a tally's or a counter count's "you" is the ability's
 -- controller (CR 109.5).
@@ -6986,9 +6986,8 @@ training =
 --
 -- CR 702.21b's X rides PayGate.perEach, which Parun.Engine.Resolve.Effect.payGatePaidBy
 -- evaluates against the RESOLUTION -- "not locked in as the ability triggers".
--- The narrow tally the keyword stores is widened into a Quantity here, the one
--- place the two namespaces meet; Parun.Types.Ward.perEach says why it is stored
--- narrow.
+-- The KeywordCount the keyword stores is widened into a Quantity here
+-- (keywordCount); Parun.Types.Ward.perEach says why it is stored narrow.
 ward :: Ward.Ward Keyword -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 ward w =
   let clause = Mint.mandatoryPaying gate (Seq.singleton effect)
@@ -7001,7 +7000,7 @@ ward w =
             PayGate.basis = Nothing,
             PayGate.branch = PayBranch.IfNotPaid,
             PayGate.obligation = PayObligation.Optional,
-            PayGate.perEach = fmap Quantity.PlayerCounters (Ward.perEach w),
+            PayGate.perEach = fmap keywordCount (Ward.perEach w),
             PayGate.x = Nothing,
             PayGate.offeredAt = Nothing
           }
