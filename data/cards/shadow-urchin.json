@@ -73,31 +73,43 @@
         },
         {
           "condition": {
-            "type": "PermanentDies",
+            "type": "Leaves",
             "value": {
-              "type": "And",
-              "value": [
+              "destinations": [
                 {
-                  "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
+                  "zone": {
+                    "type": "Graveyard"
                   }
-                },
-                {
-                  "type": "HeldBy",
-                  "value": {
-                    "holder": {
-                      "type": "Controller"
-                    },
-                    "relation": {
-                      "type": "You"
-                    }
-                  }
-                },
-                {
-                  "type": "HasCountersOfAnyKind"
                 }
-              ]
+              ],
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    },
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
+                      }
+                    },
+                    {
+                      "type": "HasCountersOfAnyKind"
+                    }
+                  ]
+                }
+              }
             }
           },
           "modal": {

@@ -148,6 +148,8 @@ import qualified Parun.Types.InstructionRewrite as InstructionRewrite
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.Layer as Layer
 import qualified Parun.Types.Layout as Layout
+import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.LifeLoss as LifeLoss
 import qualified Parun.Types.LookAt as LookAt
@@ -2626,8 +2628,8 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- And the same atom in a DELAYED ability's condition, the other carrier
     -- clashesIn folds the walk over. Paired with the slot the destruction never
     -- bound, so the pair differs in the slot name alone.
-    Spec.assertBool s (clashesIn [destruction] [TriggerCondition.PermanentDies (Filter.Type.IsControllerOfBound destroyedSlot)] []) "a singular read inside a delayed condition's filter is caught"
-    Spec.assertBool s (not (clashesIn [destruction] [TriggerCondition.PermanentDies (Filter.Type.IsControllerOfBound elsewhereSlot)] [])) "a singular read inside a delayed condition's filter of another slot is left alone"
+    Spec.assertBool s (clashesIn [destruction] [TriggerCondition.Leaves (LeavesTrigger.dies (LeavingPermanent.Matching (Filter.Type.IsControllerOfBound destroyedSlot)))] []) "a singular read inside a delayed condition's filter is caught"
+    Spec.assertBool s (not (clashesIn [destruction] [TriggerCondition.Leaves (LeavesTrigger.dies (LeavingPermanent.Matching (Filter.Type.IsControllerOfBound elsewhereSlot)))] [])) "a singular read inside a delayed condition's filter of another slot is left alone"
     -- The PlayerRef carrier, where CR 608.2h's HolderOfBound names an OBJECT
     -- slot and reads it through Resolve.playerRefPlayers' legalOne. Three boards
     -- differing in one thing

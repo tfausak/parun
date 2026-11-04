@@ -34,36 +34,48 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentDies",
+            "type": "Leaves",
             "value": {
-              "type": "Or",
-              "value": [
+              "destinations": [
                 {
-                  "type": "IsSource"
-                },
-                {
-                  "type": "And",
+                  "zone": {
+                    "type": "Graveyard"
+                  }
+                }
+              ],
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "Or",
                   "value": [
                     {
-                      "type": "HasSubtype",
-                      "value": {
-                        "type": "Vampire"
-                      }
+                      "type": "IsSource"
                     },
                     {
-                      "type": "HeldBy",
-                      "value": {
-                        "holder": {
-                          "type": "Controller"
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HasSubtype",
+                          "value": {
+                            "type": "Vampire"
+                          }
                         },
-                        "relation": {
-                          "type": "You"
+                        {
+                          "type": "HeldBy",
+                          "value": {
+                            "holder": {
+                              "type": "Controller"
+                            },
+                            "relation": {
+                              "type": "You"
+                            }
+                          }
                         }
-                      }
+                      ]
                     }
                   ]
                 }
-              ]
+              }
             }
           },
           "modal": {

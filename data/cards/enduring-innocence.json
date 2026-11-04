@@ -121,20 +121,32 @@
         },
         {
           "condition": {
-            "type": "PermanentDies",
+            "type": "Leaves",
             "value": {
-              "type": "And",
-              "value": [
+              "destinations": [
                 {
-                  "type": "IsSource"
-                },
-                {
-                  "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
+                  "zone": {
+                    "type": "Graveyard"
                   }
                 }
-              ]
+              ],
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "IsSource"
+                    },
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    }
+                  ]
+                }
+              }
             }
           },
           "modal": {

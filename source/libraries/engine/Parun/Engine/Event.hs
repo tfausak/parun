@@ -11017,8 +11017,6 @@ controllerTurnScoped cond = case cond of
   -- watches rather than a narrowing this condition states, and the Equipment's
   -- controller need not be that player.
   TriggerCondition.AttachedCreatureMentors -> False
-  -- CR 303.4 names no turn either: an enchanted permanent can leave on anyone's.
-  TriggerCondition.AttachedPermanentLeaves _ -> False
   -- Nor does CR 701.26a: an enchanted creature can be tapped on anyone's turn,
   -- and Betrayal's whole point is that the Aura's controller is not the tapping
   -- creature's. Nor CR 701.26b: CR 502.3's untap step is the active player's,
@@ -11070,20 +11068,16 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.Attacks (AttackTrigger.Attacked t) -> AttackedTrigger.attacker t == Just PlayerRelation.You
   TriggerCondition.Attacks _ -> False
   TriggerCondition.Blocks _ -> False
+  -- CR 603.6c names no turn: a permanent can leave the battlefield on anyone's.
+  -- Whippoorwill's "this turn" is its delayed entry's CR 603.7b duration, not
+  -- anything the condition states.
+  TriggerCondition.Leaves _ -> False
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> False
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> False
   TriggerCondition.SelfPutIntoGraveyardDuringResolution -> False
   -- CR 603.2b names no turn, so the bystander reading is unscoped like the
   -- self-scoped one above.
   TriggerCondition.CardPutIntoGraveyard _ -> False
-  TriggerCondition.SelfDies -> False
-  TriggerCondition.PermanentDies _ -> False
-  TriggerCondition.PermanentsDie _ -> False
-  TriggerCondition.SelfLeavesTheBattlefield -> False
-  TriggerCondition.SelfPutFromBattlefieldInto _ -> False
-  TriggerCondition.PermanentLeavesTheBattlefield _ -> False
-  TriggerCondition.PermanentReturnedToHand _ -> False
-  TriggerCondition.PermanentsReturnedToHand _ -> False
   -- The third arm carrying a TurnScope, and the classification follows the FIELD
   -- rather than the constructor: Kishla Skimmer prints "during your turn" and a
   -- printing of the same family without it would not.
@@ -11104,8 +11098,6 @@ controllerTurnScoped cond = case cond of
   -- Dutiful Knowledge Seeker's arrival names no turn.
   TriggerCondition.CardsPutIntoZone {} -> False
   TriggerCondition.SelfLeavesGraveyard -> False
-  -- Rule 702.55b names no turn.
-  TriggerCondition.HauntedCreatureDies -> False
   TriggerCondition.SpellOrAbilityCounters _ -> False
   TriggerCondition.AbilityIsCountered -> False
   -- Damage can be prevented on anybody's turn.
@@ -11163,13 +11155,6 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.LoseControlOfBound _ -> False
   -- Carries no TurnScope: control may change on anyone's turn.
   TriggerCondition.LoseControlOfSelf -> False
-  -- Carries no TurnScope either: rule 701.66a's delayed ability watches for as
-  -- long as it takes, on whoever's turn the land dies or is exiled.
-  TriggerCondition.BoundDiesOrIsExiled _ -> False
-  -- Carries no TurnScope either. Whippoorwill's "this turn" is its delayed
-  -- entry's CR 603.7b duration rather than anything this condition states, and
-  -- the creature can die on an opponent's turn just the same.
-  TriggerCondition.BoundDies _ -> False
   -- Carries no TurnScope either, and CR 603.12 restricts a reflexive to no turn:
   -- it fires on whatever turn the ability that created it resolved on, which for
   -- an instant-speed creator is an opponent's as readily as its controller's.

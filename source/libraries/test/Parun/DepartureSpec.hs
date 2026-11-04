@@ -29,6 +29,7 @@ import qualified Parun.Extra.Int as Int
 import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
+import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.CardName as CardName
@@ -36,6 +37,7 @@ import qualified Parun.Types.Combat as Combat.Type
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.Departure as Departure.Type
+import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Game as Game.Type
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameSettings as GameSettings
@@ -56,6 +58,7 @@ import Parun.Types.Printing (Printing)
 import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.RangeOfInfluence as RangeOfInfluence
+import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.ReplacementEntry as ReplacementEntry
 import qualified Parun.Types.Response as Response
 import qualified Parun.Types.Result as Result
@@ -64,6 +67,7 @@ import qualified Parun.Types.ReturnWatch as ReturnWatch
 import qualified Parun.Types.Source as Source
 import qualified Parun.Types.Status as Status
 import qualified Parun.Types.StepBegan as StepBegan
+import qualified Parun.Types.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZoneChange as ZoneChange
 import Parun.ZoneTriggerSpec (paysFor)
@@ -696,6 +700,23 @@ spec s registry = Spec.describe s "Parun.Engine.Departure" $ do
     Spec.assertEqWith s "carol's Shredder is a 1/1 while alice's Piker is on the battlefield" (Projection.powerOf shredderId board) (Just 1)
     Spec.assertEqWith s "carol's Super Shredder saw the Piker leave the GAME (CR 603.6c)" (Projection.powerOf shredderId settled, Projection.toughnessOf shredderId settled) (Just 2, Just 2)
     Spec.assertEqWith s "the Piker is gone entirely -- it left the game, it did not change zones" (Game.lookupObject pikerId settled) Nothing
+
+  -- The same departure against a DEATH trigger: CR 700.4's "dies" is a move to
+  -- a graveyard, and CR 603.6c's leaving-the-game form reaches no zone, so it is
+  -- no death. A pair differing only in how the Piker leaves: destroyed, carol's
+  -- Shadows of the Past triggers; gone with alice, it does not.
+  Spec.it s "CR 800.4a/700.4 a permanent leaving the game with its owner did not die" $ do
+    piker <- S.printingOf s registry "Goblin Piker"
+    shadows <- S.printingOf s registry "Shadows of the Past"
+    let (pikerId, withPiker) = S.addPermanent piker S.alice S.threePlayerGame
+        (shadowsId, board) = S.addPermanent shadows S.carol withPiker
+        triggered gs = fmap (\oid -> fmap Object.source (Game.lookupObject oid gs)) (GameState.stack gs)
+        bearer = [Just (Source.OfTrigger TriggeredAbilitySource.MkTriggeredAbilitySource {TriggeredAbilitySource.source = shadowsId, TriggeredAbilitySource.ability = ab, TriggeredAbilitySource.createdAt = Nothing, TriggeredAbilitySource.delayed = Map.empty, TriggeredAbilitySource.acquisition = Acquisition.Own}) | ab <- Face.triggeredAbilities (S.combinedFace shadows)]
+        destroyed = S.runPure S.identityAnswer board (Event.destroy (pure ()) Regenerability.Regenerable [pikerId] >> Engine.settleForPriority)
+        departed = S.runPure S.identityAnswer board (Departure.leaveGame Departure.Type.Conceded S.alice >> Engine.settleForPriority)
+    Spec.assertEqWith s "CR 700.4 the destroyed Piker died: the Shadows trigger is on the stack" (triggered destroyed) bearer
+    Spec.assertEqWith s "CR 603.6c the Piker that left the game with alice did not die: nothing triggered" (triggered departed) []
+    Spec.assertEqWith s "and the Piker really left the game" (Game.lookupObject pikerId departed) Nothing
 
   -- CR 800.4a's fourth clause on the STACK, which is the other half of "still
   -- controlled by that player": CR 405.4 makes a spell's controller the player

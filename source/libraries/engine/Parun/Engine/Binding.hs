@@ -900,17 +900,16 @@ manaSource = SlotName.MkSlotName (Text.pack "thatManaSource")
 -- battlefield, which is CR 603.10a's look-back and CR 608.2h's last known
 -- information.
 --
--- Bound for the BYSTANDER conditions only --
--- TriggerCondition.PermanentLeavesTheBattlefield, its destination-pinned
--- PermanentReturnedToHand, its graveyard-pinned PermanentDies, where Cleopatra,
--- Exiled Pharaoh's "draw a card for each counter on it" reads it, and, for CR
--- 303.4b's enchanted creature, AttachedPermanentLeaves, where Banewasp Affliction's
--- "that creature's controller loses life equal to its toughness" reads it, and
+-- Bound for the BYSTANDER conditions only -- a TriggerCondition.Leaves whose
+-- subject is not the source, any destination, where Cleopatra, Exiled
+-- Pharaoh's "draw a card for each counter on it" reads it, and, for CR 303.4b's
+-- enchanted creature, an Attached Leaves, where Banewasp Affliction's "that
+-- creature's controller loses life equal to its toughness" reads it, and
 -- CR 701.21a's PermanentSacrificed, where Prowling Geistcatcher's "if that
--- creature was a token" reads it. Under
--- TriggerCondition.SelfLeavesTheBattlefield and SelfDies the departed id already
--- IS CR 113.7a's `triggerSource`, so a second name for one object would be the
--- redundancy SelfPutIntoGraveyardFromAnywhere's empty floor declines.
+-- creature was a token" reads it. Under a self TriggerCondition.Leaves the
+-- departed id already IS CR 113.7a's `triggerSource`, so a second name for one
+-- object would be the redundancy SelfPutIntoGraveyardFromAnywhere's empty floor
+-- declines.
 --
 -- Every read of it is CR 608.2h's last known information --
 -- Parun.Engine.Resolve.Slots.effectViewOf is what licenses that for this slot, exactly
@@ -932,7 +931,7 @@ departedPermanent = SlotName.MkSlotName (Text.pack "thatDepartedPermanent")
 -- bound -- "that land", the subject of the delayed ability rule 701.66a creates.
 -- Stamped by Parun.Engine.Resolve.Arms.Counters's Earthbend arm onto the resolving
 -- object, so CR 603.7c's captured environment carries it and the delayed
--- ability's TriggerCondition.BoundDiesOrIsExiled can name it.
+-- ability's TriggerCondition.Leaves can name it (LeavingPermanent.Bound).
 --
 -- Reserved rather than the card's own target slot name, because the delayed
 -- ability lives in the engine (rule 701 being the rulebook's) and so cannot know

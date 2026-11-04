@@ -95,6 +95,8 @@ import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeTally as LifeTally
@@ -809,7 +811,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         strangerSlot = SlotName.MkSlotName (Text.pack "elsewhere")
         tokenTapping slot =
           (vanillaFace "Token" instantLine)
-            { Face.delayedAbilities = Map.singleton (AbilityName.MkAbilityName (Text.pack "later")) (modalTrigger TriggerCondition.SelfDies [lintMode [Effect.Tap (Tap.plain (ObjectRef.InSlot slot))] []])
+            { Face.delayedAbilities = Map.singleton (AbilityName.MkAbilityName (Text.pack "later")) (modalTrigger (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)) [lintMode [Effect.Tap (Tap.plain (ObjectRef.InSlot slot))] []])
             }
     Spec.assertBool s (sweeps (mintingSpell createToken (tokenTapping strangerSlot))) "a token's delayed ability reading a slot the token never binds is caught"
     Spec.assertBool s (not (sweeps (mintingSpell createToken (tokenTapping Binding.triggerSource)))) "and one reading its own source is accepted"
@@ -934,7 +936,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         -- Rule 702.70a's shape, as a targetless read of "that player".
         tokenDrawing condition = (vanillaFace "Token" instantLine) {Face.triggeredAbilities = [oneEffectTrigger condition (Effect.Draw (Draw.MkDraw (PlayerRef.InSlot Binding.triggerPlayer) (Quantity.Type.Literal 1) Nothing))]}
     Spec.assertEqWith s "no dangling triggered-ability slot" (fmap (S.nameOf . Printing.card) offenders) []
-    Spec.assertBool s (sweeps (mintingSpell createToken (tokenDrawing TriggerCondition.SelfDies))) "a token's dies trigger reading thatPlayer is caught"
+    Spec.assertBool s (sweeps (mintingSpell createToken (tokenDrawing (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self))))) "a token's dies trigger reading thatPlayer is caught"
     Spec.assertBool s (not (sweeps (mintingSpell createToken (tokenDrawing Mint.dealsCombatDamageToAPlayer)))) "and its combat-damage trigger reading thatPlayer is accepted"
   -- The sweep above passes VACUOUSLY: no committed card misauthors the
   -- pairing, so the sweep proves nothing about the lint. Both directions are
@@ -955,11 +957,11 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
       "CR 400.7e became under an enters trigger is rejected"
     Spec.assertBool
       s
-      (not (triggeredAbilityOffends (oneEffectTrigger TriggerCondition.SelfDies returnIt)))
+      (not (triggeredAbilityOffends (oneEffectTrigger (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)) returnIt)))
       "and under a dies trigger it is accepted"
     Spec.assertBool
       s
-      (triggeredAbilityOffends (oneEffectTrigger TriggerCondition.SelfDies thatPlayerDraws))
+      (triggeredAbilityOffends (oneEffectTrigger (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)) thatPlayerDraws))
       "CR 702.70a thatPlayer under a dies trigger is rejected"
     Spec.assertBool
       s
@@ -1395,7 +1397,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
       "CR 109.5 you is accepted: an activation binds the player who activated it"
     Spec.assertBool
       s
-      (not (triggeredAbilityOffends (oneEffectTrigger TriggerCondition.SelfDies youDiscards)))
+      (not (triggeredAbilityOffends (oneEffectTrigger (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)) youDiscards)))
       "and the very same effect is accepted on a triggered ability"
     Spec.assertBool
       s
@@ -1473,7 +1475,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         secondModeReads condition = modalTrigger condition [lintMode [] [], lintMode [returnBecame] []]
     Spec.assertBool
       s
-      (not (triggeredAbilityOffends (secondModeReads TriggerCondition.SelfDies)))
+      (not (triggeredAbilityOffends (secondModeReads (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)))))
       "the condition's event slots reach a later mode too"
     Spec.assertBool
       s
@@ -1504,7 +1506,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         -- The delayed lint calls modalSlotsOffend itself, with the whole card's
         -- minted slots on the bound side; nothing here mints, so the bound side
         -- is CR 113.7's source alone.
-        delayed modes = modalSlotsOffend (const Set.empty) (Set.singleton Binding.triggerSource) (TriggeredAbility.modal (modalTrigger TriggerCondition.SelfDies modes))
+        delayed modes = modalSlotsOffend (const Set.empty) (Set.singleton Binding.triggerSource) (TriggeredAbility.modal (modalTrigger (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)) modes))
         -- The chosen graveyard card's SCOPE as the SOLE reader of a declared
         -- slot, which is Grasping Tentacles' second clause with its mill set
         -- aside. The pair differs in the scope alone, so it proves
@@ -1524,8 +1526,8 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         inSlot = [lintMode [takeFrom (ZoneScope.InSlot victim)] [victim]]
     Spec.assertBool s (activatedAbilityOffends (modalActivated unread)) "an activated ability declaring an unread slot is rejected"
     Spec.assertBool s (not (activatedAbilityOffends (modalActivated read_))) "and reading everything it declares is accepted"
-    Spec.assertBool s (triggeredAbilityOffends (modalTrigger TriggerCondition.SelfDies unread)) "a triggered ability declaring an unread slot is rejected"
-    Spec.assertBool s (not (triggeredAbilityOffends (modalTrigger TriggerCondition.SelfDies read_))) "and reading everything it declares is accepted"
+    Spec.assertBool s (triggeredAbilityOffends (modalTrigger (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)) unread)) "a triggered ability declaring an unread slot is rejected"
+    Spec.assertBool s (not (triggeredAbilityOffends (modalTrigger (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)) read_))) "and reading everything it declares is accepted"
     Spec.assertBool s (delayed unread) "a delayed ability declaring an unread slot is rejected"
     Spec.assertBool s (not (delayed read_)) "and reading everything it declares is accepted"
     -- The real card whose landing exposed the gap, accepted: its ability declares

@@ -21,10 +21,22 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentReturnedToHand",
+            "type": "Leaves",
             "value": {
-              "type": "And",
-              "value": []
+              "destinations": [
+                {
+                  "zone": {
+                    "type": "Hand"
+                  }
+                }
+              ],
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": []
+                }
+              }
             }
           },
           "modal": {

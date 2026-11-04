@@ -577,7 +577,7 @@ oneSeatDelayedSpec s registry =
 -- event. So no printing reads a life gain in the batch scope, and a printing
 -- that did -- "whenever one or more players gain life" -- would refute this.
 -- Nothing in the CR forbids one: CR 603.2c's first sentence is written for
--- exactly this shape, and PermanentsDie is the same wording one event family
+-- exactly this shape, and a OneOrMore Leaves is the same wording one event family
 -- over.
 --
 -- The batch comes from Centaur Peacemaker, {1}{G}{W} Creature -- Centaur Cleric

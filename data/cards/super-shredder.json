@@ -34,11 +34,16 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentLeavesTheBattlefield",
+            "type": "Leaves",
             "value": {
-              "type": "Not",
-              "value": {
-                "type": "IsSource"
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "Not",
+                  "value": {
+                    "type": "IsSource"
+                  }
+                }
               }
             }
           },

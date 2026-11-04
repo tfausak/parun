@@ -112,23 +112,35 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentDies",
+            "type": "Leaves",
             "value": {
-              "type": "And",
-              "value": [
+              "destinations": [
                 {
-                  "type": "IsSource"
-                },
-                {
-                  "type": "Not",
-                  "value": {
-                    "type": "HasSubtype",
-                    "value": {
-                      "type": "Spirit"
-                    }
+                  "zone": {
+                    "type": "Graveyard"
                   }
                 }
-              ]
+              ],
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "IsSource"
+                    },
+                    {
+                      "type": "Not",
+                      "value": {
+                        "type": "HasSubtype",
+                        "value": {
+                          "type": "Spirit"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
             }
           },
           "modal": {

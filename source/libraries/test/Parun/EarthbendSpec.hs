@@ -2,8 +2,8 @@
 
 -- Covers: CR 701.66 EARTHBEND -- Parun.Engine.Earthbend, Effect.Earthbend's arm in
 -- Parun.Engine.Resolve.Effect (and the Binding.earthbentLand stamp it writes),
--- TriggerCondition.BoundDiesOrIsExiled's arms in Parun.Engine.Event.Match (whose
--- boundDeparts it shares with the narrower BoundDies) and Parun.Engine.Event.Binding, and the row rule 701.66a's delayed ability holds on
+-- TriggerCondition.Leaves' Bound subject in Parun.Engine.Event.Match's `leaves`
+-- and Parun.Engine.Event.Binding's `leavesBindings`, and the row rule 701.66a's delayed ability holds on
 -- Parun.Engine.Keyword.mintedDelayedAbilities.
 --
 -- Earthbending Lesson ({3}{G} Sorcery -- Lesson, whose whole text is "Earthbend

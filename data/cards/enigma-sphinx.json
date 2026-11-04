@@ -55,14 +55,18 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfPutFromBattlefieldInto",
+            "type": "Leaves",
             "value": {
-              "owner": {
-                "type": "You"
-              },
-              "zone": {
-                "type": "Graveyard"
-              }
+              "destinations": [
+                {
+                  "owner": {
+                    "type": "You"
+                  },
+                  "zone": {
+                    "type": "Graveyard"
+                  }
+                }
+              ]
             }
           },
           "modal": {

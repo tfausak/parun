@@ -38,6 +38,8 @@ import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeTally as LifeTally
 import qualified Parun.Types.OwnedZone as OwnedZone
@@ -101,7 +103,7 @@ event context creature c = case c of
       "a land you control" -> ["Landfall \8212 "]
       _ -> [""]
     [other (opening' <> "Whenever " <> subject <> " enters") [(becameSlot, word)]]
-  TriggerCondition.PermanentDies f -> do
+  TriggerCondition.Leaves t@(LeavesTrigger.MkLeavesTrigger (LeavingPermanent.Matching f) _ _) | t == LeavesTrigger.dies (LeavingPermanent.Matching f) -> do
     (one, that) <- described context f
     word <- ["it", that]
     subject <- also one
@@ -199,12 +201,12 @@ event context creature c = case c of
 selfEvent :: Target.Context -> Bool -> TriggerCondition.TriggerCondition -> [([String], String, [(SlotName.SlotName, String)])]
 selfEvent context creature c = case c of
   TriggerCondition.SelfEnters -> [(["When"], "enters", [])]
-  TriggerCondition.SelfDies
-    | creature -> [(["When"], "dies", [(becameSlot, "it")])]
-    | otherwise -> [(["When"], "is put into a graveyard from the battlefield", [(becameSlot, "it")])]
-  TriggerCondition.SelfLeavesTheBattlefield -> [(["When"], "leaves the battlefield", [(becameSlot, "it")])]
-  TriggerCondition.SelfPutFromBattlefieldInto (OwnedZone.MkOwnedZone Zone.Graveyard PlayerRelation.You) -> [(["When"], "is put into your graveyard from the battlefield", [(becameSlot, "it")])]
-  TriggerCondition.SelfPutFromBattlefieldInto (OwnedZone.MkOwnedZone Zone.Exile PlayerRelation.AnyPlayer) -> [(["When"], "is put into exile from the battlefield", [(becameSlot, "it")])]
+  TriggerCondition.Leaves t
+    | t == LeavesTrigger.dies LeavingPermanent.Self, creature -> [(["When"], "dies", [(becameSlot, "it")])]
+    | t == LeavesTrigger.dies LeavingPermanent.Self -> [(["When"], "is put into a graveyard from the battlefield", [(becameSlot, "it")])]
+    | t == LeavesTrigger.defaultValue -> [(["When"], "leaves the battlefield", [(becameSlot, "it")])]
+    | t == putFromBattlefieldInto Zone.Graveyard PlayerRelation.You -> [(["When"], "is put into your graveyard from the battlefield", [(becameSlot, "it")])]
+    | t == putFromBattlefieldInto Zone.Exile PlayerRelation.AnyPlayer -> [(["When"], "is put into exile from the battlefield", [(becameSlot, "it")])]
   TriggerCondition.Attacks (AttackTrigger.Attacker (AttackerTrigger.MkAttackerTrigger creature' AttackerTarget.AnyTarget company frequency Nothing))
     | Filter.Type.IsSource <- creature', AttackCompany.AnyCompany <- company, TriggerFrequency.EveryTime <- frequency -> [(recurring, "attacks", [(thatPlayer, "defending player")])]
     | Filter.Type.IsSource <- creature', AttackCompany.AnyCompany <- company, TriggerFrequency.FirstTimeEachTurn <- frequency -> [(recurring, "attacks for the first time each turn", [(thatPlayer, "defending player")])]
@@ -240,8 +242,13 @@ selfEvent context creature c = case c of
 -- known to own: what it became in "your graveyard" (CR 404.1).
 ownership :: TriggerCondition.TriggerCondition -> [SlotName.SlotName]
 ownership c = case c of
-  TriggerCondition.SelfPutFromBattlefieldInto (OwnedZone.MkOwnedZone Zone.Graveyard PlayerRelation.You) -> [becameSlot]
+  TriggerCondition.Leaves t | t == putFromBattlefieldInto Zone.Graveyard PlayerRelation.You -> [becameSlot]
   _ -> []
+
+-- | The source's own departure for one owned zone: Enigma Sphinx's "your
+-- graveyard", God-Eternal Oketra's "exile".
+putFromBattlefieldInto :: Zone.Zone -> PlayerRelation.PlayerRelation -> LeavesTrigger.LeavesTrigger
+putFromBattlefieldInto zone owner = LeavesTrigger.defaultValue {LeavesTrigger.destinations = Set.singleton (OwnedZone.MkOwnedZone zone owner)}
 
 -- | Free for an event that can recur: "Whenever" (Wall of Dust) or "When"
 -- (Loyal Sentry, which destroys itself).

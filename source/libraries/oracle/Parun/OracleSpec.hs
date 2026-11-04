@@ -89,6 +89,8 @@ import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
 import qualified Parun.Types.Layout as Layout
+import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LifeLoss as LifeLoss
@@ -316,7 +318,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   Spec.it s "render prints a trigger on entering or dying" $ do
     let imp = triggered TriggerCondition.SelfEnters [clause [damage [(target, 2)]]] [(target, TargetSlot.required Pool.Creatures Nothing)]
     Spec.assertEq s [[Text.pack "When Spark enters, it deals 2 damage to target creature.", Text.pack "When Spark enters, Spark deals 2 damage to target creature."]] (Oracle.abilities (withFace (\f -> f {Face.triggeredAbilities = [imp]})))
-    let star = triggered TriggerCondition.SelfDies [clause [draw (PlayerRef.Relative PlayerRelation.You) 1]] []
+    let star = triggered (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)) [clause [draw (PlayerRef.Relative PlayerRelation.You) 1]] []
     Spec.assertEq s [[Text.pack "When Spark dies, draw a card.", Text.pack "When Spark dies, you draw a card."]] (Oracle.abilities (withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [star]})))
     Spec.assertEq s [[Text.pack "When Spark is put into a graveyard from the battlefield, draw a card.", Text.pack "When Spark is put into a graveyard from the battlefield, you draw a card."]] (Oracle.abilities (withFace (\f -> (typed [CardType.Artifact] [] f) {Face.triggeredAbilities = [star]})))
 
@@ -380,18 +382,18 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s (Just (Text.pack "Whenever another creature enters, you gain 1 life.")) (Oracle.render (on [CardType.Creature] (TriggerCondition.PermanentEnters others) [gainLife 1]))
     Spec.assertEq s [[Text.pack "Whenever a creature enters, Spark deals 2 damage to it.", Text.pack "Whenever a creature enters, Spark deals 2 damage to that creature."]] (Oracle.abilities (on [CardType.Enchantment] (TriggerCondition.PermanentEnters (Filter.HasCardType CardType.Creature)) [damageBy [(ObjectRef.InSlot became, Quantity.Literal 2)]]))
     Spec.assertEq s (Just (Text.pack "Landfall \8212 Whenever a land you control enters, you gain 1 life.")) (Oracle.render (on [CardType.Creature] (TriggerCondition.PermanentEnters (Filter.And [Filter.HasCardType CardType.Land, Filter.HeldBy Holder.Controller PlayerRelation.You])) [gainLife 1]))
-    Spec.assertEq s [[Text.pack "Whenever a creature you control dies, you gain 1 life.", Text.pack "Whenever Spark or another creature you control dies, you gain 1 life."]] (Oracle.abilities (on [CardType.Creature] (TriggerCondition.PermanentDies mine) [gainLife 1]))
-    Spec.assertEq s [[Text.pack "Whenever a creature you control dies, you gain 1 life."]] (Oracle.abilities (on [CardType.Artifact] (TriggerCondition.PermanentDies mine) [gainLife 1]))
+    Spec.assertEq s [[Text.pack "Whenever a creature you control dies, you gain 1 life.", Text.pack "Whenever Spark or another creature you control dies, you gain 1 life."]] (Oracle.abilities (on [CardType.Creature] (TriggerCondition.Leaves (LeavesTrigger.dies (LeavingPermanent.Matching mine))) [gainLife 1]))
+    Spec.assertEq s [[Text.pack "Whenever a creature you control dies, you gain 1 life."]] (Oracle.abilities (on [CardType.Artifact] (TriggerCondition.Leaves (LeavesTrigger.dies (LeavingPermanent.Matching mine))) [gainLife 1]))
     -- CR 509.3c read by a bystander (Somberwald Alpha).
     Spec.assertEq s [[Text.pack "Whenever a creature you control becomes blocked, you gain 1 life."]] (Oracle.abilities (on [CardType.Artifact] (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker mine BlockCount.Once)) [gainLife 1]))
     Spec.assertEq s [[Text.pack "Whenever a creature you control attacks and isn't blocked, you gain 1 life."]] (Oracle.abilities (on [CardType.Artifact] (TriggerCondition.Attacks (AttackTrigger.Unblocked mine)) [gainLife 1]))
-    let dragon = on [CardType.Creature] (TriggerCondition.SelfPutFromBattlefieldInto (OwnedZone.MkOwnedZone Zone.Graveyard PlayerRelation.You)) [Effect.MoveToZone (move (ObjectRef.InSlot became) Zone.Hand)]
+    let dragon = on [CardType.Creature] (TriggerCondition.Leaves LeavesTrigger.defaultValue {LeavesTrigger.destinations = Set.singleton (OwnedZone.MkOwnedZone Zone.Graveyard PlayerRelation.You)}) [Effect.MoveToZone (move (ObjectRef.InSlot became) Zone.Hand)]
     Spec.assertEq s (Just (Text.pack "When Spark is put into your graveyard from the battlefield, return it to your hand.")) (Oracle.render dragon)
     -- The card the source became is yours to return from your graveyard;
     -- another creature's is not.
     let returned = Effect.MoveToZone ((move (ObjectRef.InSlot became) Zone.Hand) {MoveToZone.origin = Just Zone.Graveyard})
-    Spec.assertEq s (Just (Text.pack "When Spark dies, return it from your graveyard to your hand.")) (Oracle.render (on [CardType.Creature] TriggerCondition.SelfDies [returned]))
-    Spec.assertEq s Nothing (Oracle.render (on [CardType.Creature] (TriggerCondition.PermanentDies mine) [returned]))
+    Spec.assertEq s (Just (Text.pack "When Spark dies, return it from your graveyard to your hand.")) (Oracle.render (on [CardType.Creature] (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)) [returned]))
+    Spec.assertEq s Nothing (Oracle.render (on [CardType.Creature] (TriggerCondition.Leaves (LeavesTrigger.dies (LeavingPermanent.Matching mine))) [returned]))
 
   -- CR 603.4: "[When/Whenever/At] [event], if [condition], [effect]", the
   -- condition a count of cards in a hand or of permanents, the source's
@@ -552,7 +554,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
   -- (Undying Beast); a card returns from your graveyard by name (Reassembling
   -- Skeleton).
   Spec.it s "render calls the card a dying creature became it" $ do
-    let beast = triggered TriggerCondition.SelfDies [clause [Effect.MoveToZone (move (ObjectRef.InSlot became) Zone.Hand)]] []
+    let beast = triggered (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)) [clause [Effect.MoveToZone (move (ObjectRef.InSlot became) Zone.Hand)]] []
     Spec.assertEq s (Just (Text.pack "When Spark dies, return it to its owner's hand.")) (Oracle.render (withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [beast]})))
     let rising = activated (Cost.MkCost (Just (ManaCost.MkManaCost [green])) []) (Effect.MoveToZone (move (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "self"))) Zone.Battlefield) {MoveToZone.origin = Just Zone.Graveyard})
     Spec.assertEq s (Just (Text.pack "{G}: Return Spark from your graveyard to the battlefield.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [rising]})))
@@ -730,7 +732,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let graveyardCards = countOf (Filter.And []) (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You))
         disdain = spell [(clause [counter]) {Clause.payGate = Just ((gate PayBranch.IfNotPaid (PlayerRef.HolderOfBound Holder.Controller Hop.Itself target) (mana [ManaSymbol.Generic 1])) {PayGate.perEach = Just graveyardCards})}] spellSlot
     Spec.assertEq s (Just (Text.pack "Counter target spell unless its controller pays {1} for each card in your graveyard.")) (Oracle.render disdain)
-    let seer = triggered TriggerCondition.SelfDies [(clause [draw (PlayerRef.Relative PlayerRelation.You) 1]) {Clause.payGate = Just (gate PayBranch.IfPaid (PlayerRef.InSlot you) (mana [ManaSymbol.Generic 1, ManaSymbol.OfType (ManaType.Colored Color.Blue)]))}] []
+    let seer = triggered (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)) [(clause [draw (PlayerRef.Relative PlayerRelation.You) 1]) {Clause.payGate = Just (gate PayBranch.IfPaid (PlayerRef.InSlot you) (mana [ManaSymbol.Generic 1, ManaSymbol.OfType (ManaType.Colored Color.Blue)]))}] []
     Spec.assertEq s [[Text.pack "When Spark dies, you may pay {1}{U}. If you do, draw a card."]] (Oracle.abilities (withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [seer]})))
     let mountain = Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.HasSubtype Subtype.Mountain))]
         upkeep = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing TurnScope.ControllersTurn)

@@ -409,7 +409,7 @@ spec s registry = Spec.describe s "Meld" $ do
   --
   -- The board is the melding case above's, and the LOG is what the batch is read
   -- off: of the batch arms Parun.Types.TriggerCondition has over a DEPARTURE,
-  -- PermanentsDie and PermanentsReturnedToHand take no exile, and no card in
+  -- A OneOrMore Leaves takes no exile, and no card in
   -- data/cards/ spells CardsLeaveZone out of the battlefield.
   Spec.it s "CR 608.2f the pair leaves the battlefield in one event" $ do
     battlements <- S.printingOf s registry "Hanweir Battlements"

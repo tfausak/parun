@@ -1571,7 +1571,7 @@ aimCreature oid p = case p of
 -- and stop.
 --
 -- The card's third sentence is a CR 603.7 delayed trigger watching the bound
--- creature's death, which the card writes as TriggerCondition.BoundDies over the
+-- creature's death, which the card writes as a Bound TriggerCondition.Leaves over the
 -- same "target" slot -- CR 700.4's one destination, where rule 701.66a's
 -- earthbend sibling admits exile too. The last three cases below prove both
 -- halves and CR 603.7b's duration.
@@ -1618,7 +1618,7 @@ whippoorwillSpec s registry = Spec.describe s "Whippoorwill (CR 615.12)" $ do
     Spec.assertEqWith s "setup: both creatures really died" (Game.lookupObject named killed, Game.lookupObject bystander killed) (Nothing, Nothing)
     Spec.assertEqWith s "setup: exactly one trigger reached the stack" (length (GameState.stack killed)) 1
   -- CR 700.4 read literally, which is the whole of why this condition is not
-  -- TriggerCondition.BoundDiesOrIsExiled: the same creature removed to exile from
+  -- earthbend's Leaves to a graveyard or exile: the same creature removed to exile from
   -- the battlefield fires nothing. Two boards differing in exactly one thing --
   -- the destination -- off the same armed fixture.
   Spec.it s "CR 700.4 the same creature exiled from the battlefield instead fires nothing" $ do

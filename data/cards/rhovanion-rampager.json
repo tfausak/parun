@@ -116,7 +116,16 @@
         },
         {
           "condition": {
-            "type": "SelfDies"
+            "type": "Leaves",
+            "value": {
+              "destinations": [
+                {
+                  "zone": {
+                    "type": "Graveyard"
+                  }
+                }
+              ]
+            }
           },
           "modal": {
             "modes": [

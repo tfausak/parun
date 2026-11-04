@@ -20,8 +20,8 @@ import qualified Parun.Codec.DieResult as DieResult
 import qualified Parun.Codec.DiscardTrigger as DiscardTrigger
 import qualified Parun.Codec.Filter as Filter
 import qualified Parun.Codec.Keyword as Keyword
+import qualified Parun.Codec.LeavesTrigger as LeavesTrigger
 import qualified Parun.Codec.LifeTrigger as LifeTrigger
-import qualified Parun.Codec.OwnedZone as OwnedZone
 import qualified Parun.Codec.PermanentActed as PermanentActed
 import qualified Parun.Codec.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Codec.PermanentIsDealtDamage as PermanentIsDealtDamage
@@ -41,7 +41,6 @@ import qualified Parun.Codec.SlotName as SlotName
 import qualified Parun.Codec.SpellCast as SpellCast
 import qualified Parun.Codec.StepBegins as StepBegins
 import qualified Parun.Codec.TriggerFrequency as TriggerFrequency
-import qualified Parun.Codec.Zone as Zone
 import qualified Parun.JsonCodec.Arm as Arm
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
@@ -81,27 +80,18 @@ codec =
           Arm.nullary "SelfPutIntoGraveyardFromLibrary" TriggerCondition.SelfPutIntoGraveyardFromLibrary,
           Arm.nullary "SelfPutIntoGraveyardFromAnywhere" TriggerCondition.SelfPutIntoGraveyardFromAnywhere,
           Arm.nullary "SelfPutIntoGraveyardDuringResolution" TriggerCondition.SelfPutIntoGraveyardDuringResolution,
-          Arm.nullary "SelfDies" TriggerCondition.SelfDies,
           Arm.nullary "SelfLeavesGraveyard" TriggerCondition.SelfLeavesGraveyard,
           Arm.payload "CardPutIntoGraveyard" CardPutIntoGraveyard.codec TriggerCondition.CardPutIntoGraveyard (\x -> case x of TriggerCondition.CardPutIntoGraveyard y -> Just y; _ -> Nothing),
-          Arm.payload "PermanentDies" filterCodec TriggerCondition.PermanentDies (\x -> case x of TriggerCondition.PermanentDies y -> Just y; _ -> Nothing),
-          Arm.payload "PermanentsDie" filterCodec TriggerCondition.PermanentsDie (\x -> case x of TriggerCondition.PermanentsDie y -> Just y; _ -> Nothing),
-          Arm.nullary "SelfLeavesTheBattlefield" TriggerCondition.SelfLeavesTheBattlefield,
-          Arm.payload "SelfPutFromBattlefieldInto" OwnedZone.codec TriggerCondition.SelfPutFromBattlefieldInto (\x -> case x of TriggerCondition.SelfPutFromBattlefieldInto y -> Just y; _ -> Nothing),
-          Arm.payload "PermanentLeavesTheBattlefield" filterCodec TriggerCondition.PermanentLeavesTheBattlefield (\x -> case x of TriggerCondition.PermanentLeavesTheBattlefield y -> Just y; _ -> Nothing),
-          Arm.payload "PermanentReturnedToHand" filterCodec TriggerCondition.PermanentReturnedToHand (\x -> case x of TriggerCondition.PermanentReturnedToHand y -> Just y; _ -> Nothing),
-          Arm.payload "PermanentsReturnedToHand" filterCodec TriggerCondition.PermanentsReturnedToHand (\x -> case x of TriggerCondition.PermanentsReturnedToHand y -> Just y; _ -> Nothing),
+          Arm.payload "Leaves" LeavesTrigger.codec TriggerCondition.Leaves (\x -> case x of TriggerCondition.Leaves y -> Just y; _ -> Nothing),
           Arm.payload "CardLeavesZone" CardLeavesZone.codec TriggerCondition.CardLeavesZone (\x -> case x of TriggerCondition.CardLeavesZone y -> Just y; _ -> Nothing),
           Arm.payload "CardsLeaveZone" CardLeavesZone.codec TriggerCondition.CardsLeaveZone (\x -> case x of TriggerCondition.CardsLeaveZone y -> Just y; _ -> Nothing),
           Arm.payload "CardsPutIntoZone" CardsPutIntoZone.codec TriggerCondition.CardsPutIntoZone (\x -> case x of TriggerCondition.CardsPutIntoZone y -> Just y; _ -> Nothing),
-          Arm.optionalPayload "AttachedPermanentLeaves" Zone.codec TriggerCondition.AttachedPermanentLeaves (\x -> case x of TriggerCondition.AttachedPermanentLeaves y -> Just y; _ -> Nothing),
           Arm.payload "BecomesTapState" BecomesTapState.codec TriggerCondition.BecomesTapState (\x -> case x of TriggerCondition.BecomesTapState y -> Just y; _ -> Nothing),
           Arm.payload "PermanentsBecomeTapped" filterCodec TriggerCondition.PermanentsBecomeTapped (\x -> case x of TriggerCondition.PermanentsBecomeTapped y -> Just y; _ -> Nothing),
           Arm.nullary "AttachedPermanentTappedForMana" TriggerCondition.AttachedPermanentTappedForMana,
           Arm.payload "PermanentTappedForMana" PermanentTappedForMana.codec TriggerCondition.PermanentTappedForMana (\x -> case x of TriggerCondition.PermanentTappedForMana y -> Just y; _ -> Nothing),
           Arm.payload "AbilityAddsMana" AbilityAddsMana.codec TriggerCondition.AbilityAddsMana (\x -> case x of TriggerCondition.AbilityAddsMana y -> Just y; _ -> Nothing),
           Arm.nullary "SelfManaAbilityResolves" TriggerCondition.SelfManaAbilityResolves,
-          Arm.nullary "HauntedCreatureDies" TriggerCondition.HauntedCreatureDies,
           Arm.payload "SpellOrAbilityCounters" PlayerRelation.codec TriggerCondition.SpellOrAbilityCounters (\x -> case x of TriggerCondition.SpellOrAbilityCounters y -> Just y; _ -> Nothing),
           Arm.nullary "AbilityIsCountered" TriggerCondition.AbilityIsCountered,
           Arm.payload "DamageToPlayerPrevented" PlayerRelation.codec TriggerCondition.DamageToPlayerPrevented (\x -> case x of TriggerCondition.DamageToPlayerPrevented y -> Just y; _ -> Nothing),
@@ -137,8 +127,6 @@ codec =
           Arm.payload "PlayerBecomesMonarch" PlayerRelation.codec TriggerCondition.PlayerBecomesMonarch (\x -> case x of TriggerCondition.PlayerBecomesMonarch y -> Just y; _ -> Nothing),
           Arm.payload "LoseControlOfBound" SlotName.codec TriggerCondition.LoseControlOfBound (\x -> case x of TriggerCondition.LoseControlOfBound y -> Just y; _ -> Nothing),
           Arm.nullary "LoseControlOfSelf" TriggerCondition.LoseControlOfSelf,
-          Arm.payload "BoundDiesOrIsExiled" SlotName.codec TriggerCondition.BoundDiesOrIsExiled (\x -> case x of TriggerCondition.BoundDiesOrIsExiled y -> Just y; _ -> Nothing),
-          Arm.payload "BoundDies" SlotName.codec TriggerCondition.BoundDies (\x -> case x of TriggerCondition.BoundDies y -> Just y; _ -> Nothing),
           Arm.payload "RoomEntered" RoomIndex.codec TriggerCondition.RoomEntered (\x -> case x of TriggerCondition.RoomEntered y -> Just y; _ -> Nothing),
           Arm.payload "PlayerActs" (PlayerActed.codec PlayerRelation.codec) TriggerCondition.PlayerActs (\x -> case x of TriggerCondition.PlayerActs y -> Just y; _ -> Nothing),
           Arm.payload "PlayerLosesGame" PlayerRelation.codec TriggerCondition.PlayerLosesGame (\x -> case x of TriggerCondition.PlayerLosesGame y -> Just y; _ -> Nothing),
@@ -185,27 +173,18 @@ tagOf x = case x of
   TriggerCondition.SelfPutIntoGraveyardFromLibrary {} -> "SelfPutIntoGraveyardFromLibrary"
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere {} -> "SelfPutIntoGraveyardFromAnywhere"
   TriggerCondition.SelfPutIntoGraveyardDuringResolution {} -> "SelfPutIntoGraveyardDuringResolution"
-  TriggerCondition.SelfDies {} -> "SelfDies"
   TriggerCondition.SelfLeavesGraveyard {} -> "SelfLeavesGraveyard"
   TriggerCondition.CardPutIntoGraveyard {} -> "CardPutIntoGraveyard"
-  TriggerCondition.PermanentDies {} -> "PermanentDies"
-  TriggerCondition.PermanentsDie {} -> "PermanentsDie"
-  TriggerCondition.SelfLeavesTheBattlefield {} -> "SelfLeavesTheBattlefield"
-  TriggerCondition.SelfPutFromBattlefieldInto {} -> "SelfPutFromBattlefieldInto"
-  TriggerCondition.PermanentLeavesTheBattlefield {} -> "PermanentLeavesTheBattlefield"
-  TriggerCondition.PermanentReturnedToHand {} -> "PermanentReturnedToHand"
-  TriggerCondition.PermanentsReturnedToHand {} -> "PermanentsReturnedToHand"
+  TriggerCondition.Leaves {} -> "Leaves"
   TriggerCondition.CardLeavesZone {} -> "CardLeavesZone"
   TriggerCondition.CardsLeaveZone {} -> "CardsLeaveZone"
   TriggerCondition.CardsPutIntoZone {} -> "CardsPutIntoZone"
-  TriggerCondition.AttachedPermanentLeaves {} -> "AttachedPermanentLeaves"
   TriggerCondition.BecomesTapState {} -> "BecomesTapState"
   TriggerCondition.PermanentsBecomeTapped {} -> "PermanentsBecomeTapped"
   TriggerCondition.AttachedPermanentTappedForMana {} -> "AttachedPermanentTappedForMana"
   TriggerCondition.PermanentTappedForMana {} -> "PermanentTappedForMana"
   TriggerCondition.AbilityAddsMana {} -> "AbilityAddsMana"
   TriggerCondition.SelfManaAbilityResolves {} -> "SelfManaAbilityResolves"
-  TriggerCondition.HauntedCreatureDies {} -> "HauntedCreatureDies"
   TriggerCondition.SpellOrAbilityCounters {} -> "SpellOrAbilityCounters"
   TriggerCondition.AbilityIsCountered {} -> "AbilityIsCountered"
   TriggerCondition.DamageToPlayerPrevented {} -> "DamageToPlayerPrevented"
@@ -241,8 +220,6 @@ tagOf x = case x of
   TriggerCondition.PlayerBecomesMonarch {} -> "PlayerBecomesMonarch"
   TriggerCondition.LoseControlOfBound {} -> "LoseControlOfBound"
   TriggerCondition.LoseControlOfSelf {} -> "LoseControlOfSelf"
-  TriggerCondition.BoundDiesOrIsExiled {} -> "BoundDiesOrIsExiled"
-  TriggerCondition.BoundDies {} -> "BoundDies"
   TriggerCondition.RoomEntered {} -> "RoomEntered"
   TriggerCondition.PlayerActs {} -> "PlayerActs"
   TriggerCondition.PlayerLosesGame {} -> "PlayerLosesGame"

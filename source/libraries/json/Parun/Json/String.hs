@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Parun.Json.String where
 
 import qualified Control.Monad as Monad
@@ -7,6 +5,7 @@ import qualified Data.ByteString.Builder as Builder
 import qualified Data.Char as Char
 import qualified Data.Text as Text
 import qualified Parun.Extra.Ord as Ord
+import qualified Parun.Extra.Parsec as Parsec
 import qualified Parun.Extra.Semigroup as Semigroup
 import qualified Text.Parsec as Parsec
 
@@ -15,20 +14,32 @@ newtype String = MkString
   }
   deriving (Eq, Ord, Show)
 
-decode :: (Parsec.Stream s m Char) => Parsec.ParsecT s u m Parun.Json.String.String
-decode = MkString . Text.pack <$> Parsec.between (Parsec.char '"') (Parsec.char '"') (Parsec.many decodeChar)
+decode :: Parsec.Parsec Text.Text u Parun.Json.String.String
+decode = Parsec.char '"' *> decodeBody []
 
-decodeChar :: (Parsec.Stream s m Char) => Parsec.ParsecT s u m Char
-decodeChar =
+-- | The rest of a string, after the chunks read so far, newest first. A run of
+-- unescaped characters is read in one step.
+decodeBody :: [Text.Text] -> Parsec.Parsec Text.Text u Parun.Json.String.String
+decodeBody chunks = do
+  chunk <- Parsec.takeWhile isUnescaped
   Parsec.choice
-    [ decodeUnescapedChar,
-      Parsec.char '\\' *> decodeEscapedChar
+    [ Parsec.char '"' *> (pure $! MkString (assemble (chunk : chunks))),
+      do
+        c <- Parsec.char '\\' *> decodeEscapedChar
+        decodeBody (Text.singleton c : chunk : chunks)
     ]
 
-decodeUnescapedChar :: (Parsec.Stream s m Char) => Parsec.ParsecT s u m Char
-decodeUnescapedChar = Parsec.satisfy $ \c -> c >= ' ' && c /= '"' && c /= '\\'
+-- | Joins the chunks, newest first. A lone chunk is a slice of the whole
+-- input, so it is copied rather than keeping the input alive.
+assemble :: [Text.Text] -> Text.Text
+assemble chunks = case chunks of
+  [chunk] -> Text.copy chunk
+  _ -> Text.concat (reverse chunks)
 
-decodeEscapedChar :: (Parsec.Stream s m Char) => Parsec.ParsecT s u m Char
+isUnescaped :: Char -> Bool
+isUnescaped c = c >= ' ' && c /= '"' && c /= '\\'
+
+decodeEscapedChar :: Parsec.Parsec Text.Text u Char
 decodeEscapedChar =
   Parsec.choice
     [ '"' <$ Parsec.char '"',
@@ -42,7 +53,7 @@ decodeEscapedChar =
       Parsec.char 'u' *> decodeCodePoint
     ]
 
-decodeCodePoint :: (Parsec.Stream s m Char) => Parsec.ParsecT s u m Char
+decodeCodePoint :: Parsec.Parsec Text.Text u Char
 decodeCodePoint = do
   hi <- decodeHex
   if Ord.between 0xd800 0xdbff hi
@@ -54,7 +65,7 @@ decodeCodePoint = do
       Monad.when (Ord.between 0xdc00 0xdfff hi) $ fail "unpaired low surrogate"
       pure $ Char.chr hi
 
-decodeHex :: (Parsec.Stream s m Char) => Parsec.ParsecT s u m Int
+decodeHex :: Parsec.Parsec Text.Text u Int
 decodeHex = do
   ds <- Parsec.count 4 Parsec.hexDigit
   pure $ foldl' (\n d -> (16 * n) + Char.digitToInt d) 0 ds

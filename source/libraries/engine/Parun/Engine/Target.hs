@@ -1304,16 +1304,7 @@ aimingsBy referent signature ranges slots =
 aimingRanges :: Maybe AbilityName.AbilityName -> Maybe PlayerId -> ObjectId -> Maybe Natural -> Map SlotName TargetSlot -> Map SlotName (Set Recipient) -> GameState -> Map SlotName (Natural, Natural)
 aimingRanges reader perspective source announced slots sets gs =
   let counting = countingBy reader perspective (Binding.fromChoices Map.empty announced Seq.empty) source gs
-      x = Maybe.fromMaybe 0 announced
-      countOf slot = case (announced, TargetSlot.count slot) of
-        (Nothing, SlotCount.AnnouncedX) -> TargetCount.anyNumber
-        (Nothing, SlotCount.UpToAnnouncedX) -> TargetCount.anyNumber
-        (_, c) -> SlotCount.at counting x c
-      rangeOf slot capacity =
-        let count = countOf slot
-            ceiling_ = TargetCount.ceilingOn capacity count
-         in (min (TargetCount.least count) ceiling_, ceiling_)
-   in Map.intersectionWith rangeOf slots (slotCapacities counting x slots sets gs)
+   in Map.intersectionWith (announcedRange counting announced) slots (slotCapacities counting announced slots sets gs)
 
 -- One legal set per named slot; casting prompts with exactly this map. `source`
 -- is the object the targeting is relative to -- the spell object at cast, the
@@ -1437,8 +1428,10 @@ finiteRange counting announced candidates count =
         within (sizes range most)
 
 -- How many subsets legalSetsGiven's second pass enumerates for one sibling
--- before leaving the bound open: "up to three" over seventeen candidates is 834,
--- and "up to two" over forty-four is 991.
+-- before leaving the bound open ("up to three" over seventeen candidates is 834,
+-- and "up to two" over forty-four is 991), and how many announcements
+-- jointlyFillableGiven visits before answering fillable ("any number" over ten
+-- candidates is 1024).
 subsetBudget :: Natural
 subsetBudget = 1024
 
@@ -1634,7 +1627,8 @@ fixedCount slot = case TargetSlot.count slot of
 -- target creatures" or "up to X target ..." reads instead of a printed range
 -- (SlotCount.at). It comes in as a number rather than being read off the board
 -- here because CR 601.2b's announcement is not recorded anywhere yet -- the
--- object is put on the stack carrying it only after CR 601.2c is done.
+-- object is put on the stack carrying it only after CR 601.2c is done. Nothing
+-- is a gate asking before the announcement, which reads every count (countAt).
 --
 -- `capacity` is how many of the slot's legal recipients ONE announcement could
 -- name, which is the slot's own candidate count for every slot but a
@@ -1643,11 +1637,20 @@ fixedCount slot = case TargetSlot.count slot of
 -- `counting` answers a slot counted by a COMPUTED number ("up to X target
 -- creatures ... where X is your devotion to black", Mogis's Marauder) -- see
 -- countingBy, which every caller builds from the board it is judging on.
-announcedRange :: (Quantity -> Natural) -> Natural -> TargetSlot -> Natural -> (Natural, Natural)
+announcedRange :: (Quantity -> Natural) -> Maybe Natural -> TargetSlot -> Natural -> (Natural, Natural)
 announcedRange counting x slot capacity =
-  let count = SlotCount.at counting x (TargetSlot.count slot)
+  let count = countAt counting x (TargetSlot.count slot)
       ceiling_ = TargetCount.ceilingOn capacity count
    in (min (TargetCount.least count) ceiling_, ceiling_)
+
+-- SlotCount.at under an X that may not be announced yet: Nothing gives a count
+-- reading the X every number, since the announcement could still make any of
+-- them (CR 601.2b).
+countAt :: (Quantity -> Natural) -> Maybe Natural -> SlotCount.SlotCount -> TargetCount.TargetCount
+countAt counting x count = case (x, count) of
+  (Nothing, SlotCount.AnnouncedX) -> TargetCount.anyNumber
+  (Nothing, SlotCount.UpToAnnouncedX) -> TargetCount.anyNumber
+  _ -> SlotCount.at counting (Maybe.fromMaybe 0 x) count
 
 -- CR 601.2c: how many of each slot's legal recipients a single COHERENT
 -- announcement could name -- the number the count is measured against, both when
@@ -1680,7 +1683,7 @@ announcedRange counting x slot capacity =
 -- A slot whose `together` asks for one zone is narrowed the same way, to the
 -- most of its candidates one graveyard holds. data/scenarios/activate's Nullmage
 -- Advocate case proves it.
-slotCapacities :: (Quantity -> Natural) -> Natural -> Map SlotName TargetSlot -> Map SlotName (Set Recipient) -> GameState -> Map SlotName Natural
+slotCapacities :: (Quantity -> Natural) -> Maybe Natural -> Map SlotName TargetSlot -> Map SlotName (Set Recipient) -> GameState -> Map SlotName Natural
 slotCapacities counting x slots sets gs =
   let legalOf name = Map.findWithDefault Set.empty name sets
       capacity name slot = min (scoped name slot) (togetherCapacity slot (legalOf name))
@@ -1820,7 +1823,7 @@ askChooser reader controller chooser oid source seed x slots sets mine = do
       -- CR 801.5a: a chooser names only what lies in their own range as well as
       -- the controller's, which `sets` already holds to.
       offered = Map.mapWithKey (\slot -> piledOffer (most slot) (Just chooser) gs . inChooserRange source chooser gs) sets
-      ranges = Map.restrictKeys (Map.intersectionWith (announcedRange counting x) slots (slotCapacities counting x slots offered gs)) mine
+      ranges = Map.restrictKeys (Map.intersectionWith (announcedRange counting (Just x)) slots (slotCapacities counting (Just x) slots offered gs)) mine
       variable = Map.keysSet (Map.filter (uncurry (/=)) ranges)
       offers = Map.restrictKeys (Map.intersectionWith (\targetSlot legal -> (SlotCount.at counting x (TargetSlot.count targetSlot), legal)) slots offered) variable
   announced <-
@@ -2072,11 +2075,11 @@ pileMembers perspective pile gs =
 selectionLegal :: StackObjectKind.StackObjectKind -> Maybe AbilityName.AbilityName -> Maybe PlayerId -> Map SlotName Binding.Type.Binding -> ObjectId -> Natural -> Map SlotName TargetSlot -> Map SlotName (Set Recipient) -> Map SlotName (Set Recipient) -> GameState -> Bool
 selectionLegal kind reader perspective seed source x slots sets chosen gs =
   let counting = countingBy reader perspective seed source gs
-      caps = slotCapacities counting x slots sets gs
+      caps = slotCapacities counting (Just x) slots sets gs
       slotLegal slot targetSlot =
         let legal = Map.findWithDefault Set.empty slot sets
             picked = Map.findWithDefault Set.empty slot chosen
-            (_, hi) = announcedRange counting x targetSlot (Map.findWithDefault 0 slot caps)
+            (_, hi) = announcedRange counting (Just x) targetSlot (Map.findWithDefault 0 slot caps)
             -- The count the slot DEMANDS, unnarrowed by the board -- unlike the
             -- ceiling beside it, which the board is entitled to lower (a caster
             -- cannot choose more targets than there are). CR 601.2c gives no such
@@ -2087,7 +2090,7 @@ selectionLegal kind reader perspective seed source x slots sets chosen gs =
             -- Where the count is printed, `fillableModes` refused the mode before
             -- the announcement began and this bound is the same number
             -- announcedRange narrowed to. Where it is CR 601.2b's X, that gate ran
-            -- at the X=0 floor and could not know the value, so this is the only
+            -- before the value existed and read every count, so this is the only
             -- place an X announced above what the board can supply is caught --
             -- Parun.CombatSpec's "CR 601.2c announcing more X than there are
             -- creatures reverses the whole activation" proves it.
@@ -2201,12 +2204,22 @@ zoneHolding gs recipient = do
 -- and Synthetic Hammer Refrain's `dealer` per occurrence -- so for those the
 -- range is one size and the product is a handful of re-derivations. Of the
 -- slots a sibling's BOUND names, Spawnbroker's `yours` is counted one, Measured
--- Refrain's gauge "up to two" and Synthetic Counted Verdict's "up to three", which
--- pays every subset of at most three. None is counted "any number", which is the
--- count that would make this every subset of the slot's candidates.
+-- Refrain's gauge "up to two", Synthetic Counted Verdict's "up to three",
+-- Synthetic Wide Verdict's "any number" and Synthetic Announced Verdict's X.
 --
--- Not implemented: a bounded search for a named slot counted "any number", or
--- one counted by an X this gate reads at its zero floor (#4830).
+-- A slot counted by CR 601.2b's X is searched at
+-- every size before the X is announced, since the announcement could make any
+-- of them (Parun.TargetSpec's "CR 601.2b a sibling-count bound over X targets
+-- is searched at every X").
+--
+-- CAPPED at subsetBudget assignments, past which the mode is judged fillable:
+-- a false offer the caster takes back with nothing changed (CR 601.2c, 601.2e,
+-- 733.1), a false refusal a legal play denied. selectionLegal judges every
+-- announcement exactly. Parun.TargetSpec's "CR 601.2c past the cap a
+-- sibling-count mode is offered, and a witness there still resolves" proves it.
+--
+-- Not implemented: an exact answer past the cap, which CR 700.2e's other
+-- chooser and CR 603.3c's modal trigger can observe (#6115).
 jointlyFillableGiven :: StackObjectKind.StackObjectKind -> Maybe AbilityName.AbilityName -> Pools -> Maybe PlayerId -> Map SlotName Binding.Type.Binding -> ObjectId -> Map SlotName TargetSlot -> Map SlotName (Set Recipient) -> GameState -> Bool
 jointlyFillableGiven kind reader pools perspective seed source slots sets gs =
   let declared = Map.keysSet slots
@@ -2219,13 +2232,14 @@ jointlyFillableGiven kind reader pools perspective seed source slots sets gs =
       -- itself named included.
       named = Map.restrictKeys slots (foldMap reads_ readers)
       counting = countingBy reader perspective seed source gs
-      demanded slot = TargetCount.least (SlotCount.at counting 0 (TargetSlot.count slot))
+      announced = Binding.amountOf Binding.variableX seed
+      demanded slot = TargetCount.least (countAt counting announced (TargetSlot.count slot))
       legalOf name = Map.findWithDefault Set.empty name sets
       -- The sizes ONE announcement could name this slot at, measured against
       -- slotCapacities for that function's reason rather than against the union.
-      caps = slotCapacities counting 0 slots sets gs
+      caps = slotCapacities counting announced slots sets gs
       sizesOf name slot =
-        let (lo, hi) = announcedRange counting 0 slot (Map.findWithDefault 0 name caps)
+        let (lo, hi) = announcedRange counting announced slot (Map.findWithDefault 0 name caps)
          in [lo .. hi]
       assignments =
         List.foldr
@@ -2244,7 +2258,9 @@ jointlyFillableGiven kind reader pools perspective seed source slots sets gs =
                in Set.isSubsetOf (Map.findWithDefault Set.empty name chosen) legal
                     && Natural.length legal >= demanded slot
          in and (Map.elems (Map.mapWithKey admits readers))
-   in Map.null readers || any coherent assignments
+      -- Lazy, so only the visited prefix and one assignment past it are built.
+      (visited, beyond) = List.genericSplitAt subsetBudget assignments
+   in Map.null readers || any coherent visited || not (null beyond)
 
 -- The subsets of exactly this size, ascending, which is the shape the search
 -- above enumerates one slot's candidate answers in. Empty when the set is
@@ -2284,6 +2300,7 @@ fillableModes kind reader perspective seed source extra modal gs =
 fillableModesGiven :: StackObjectKind.StackObjectKind -> Maybe AbilityName.AbilityName -> Pools -> Maybe PlayerId -> Map SlotName Binding.Type.Binding -> ObjectId -> Map SlotName TargetSlot -> Modal.Modal Card (GrantedAbility.GrantedAbility Card) -> GameState -> Set ModeIndex
 fillableModesGiven kind reader pools perspective seed source extra modal gs =
   let counting = countingBy reader perspective seed source gs
+      announced = Binding.amountOf Binding.variableX seed
       ms = Foldable.toList (Modal.modes modal)
       fillable i m =
         let slots = maybe id (\p -> announcedSlots p source gs) perspective (Map.union extra (Mode.targetSlots m))
@@ -2320,12 +2337,13 @@ fillableModesGiven kind reader pools perspective seed source extra modal gs =
          in -- CR 115.6 / 601.2c: a slot is unfillable when the board cannot supply
             -- the MINIMUM its count demands. An "up to one" slot with no legal
             -- recipient demands none, and is answered with zero targets.
-            if or (Map.elems (Map.intersectionWith short slots (slotCapacities counting 0 slots sets gs)))
+            if or (Map.elems (Map.intersectionWith short slots (slotCapacities counting announced slots sets gs)))
               || not (jointlyFillableGiven kind reader pools perspective seed source slots sets gs)
               then Nothing
               else Just (ModeIndex.MkModeIndex i)
-      -- CR 601.2b's X=0: a slot counting the announced X demands no target until
-      -- that announcement exists. A printed floor (Face.minimumX,
+      -- CR 601.2b: a slot counting the announced X demands no target until that
+      -- announcement exists (countAt), and a seed's X where it holds one (CR
+      -- 702.37f's turned-face-up trigger). A printed floor (Face.minimumX,
       -- ActivatedAbility.minimumX) is not read here, so this gate is the looser
       -- one, and the announced X is judged again once named (above).
       --
@@ -2333,7 +2351,7 @@ fillableModesGiven kind reader pools perspective seed source extra modal gs =
       -- function's reason: a graveyard-scoped slot is offered the union over the
       -- named slot's players, and a minimum no ONE of those graveyards can supply
       -- is a mode with no legal announcement rather than a fillable one.
-      short slot capacity = capacity < TargetCount.least (SlotCount.at counting 0 (TargetSlot.count slot))
+      short slot capacity = capacity < TargetCount.least (countAt counting announced (TargetSlot.count slot))
    in Set.fromList (Maybe.mapMaybe (uncurry fillable) (zip [0 :: Natural ..] ms))
 
 -- CR 603.2: every target slot with its "that player" atoms baked against this

@@ -1257,7 +1257,7 @@ hostOfSourceCounts = chosenValueCounts hostFramed (const False) hostOfSourceTag
 -- `sourceFramed`, and the four a card in the pool writes it in. A trigger
 -- condition is outside: CR 704.5n leaves an Equipment unattached on the
 -- battlefield before a CR 603.10a look-back is matched, and "when enchanted
--- creature leaves the battlefield" is TriggerCondition.AttachedPermanentLeaves.
+-- creature leaves the battlefield" is TriggerCondition.Leaves of LeavingPermanent.Attached.
 hostFramed :: Framing -> Bool
 hostFramed framing = case framing of
   SourceHostFramed -> True
@@ -1954,8 +1954,9 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- abilities, whose X CR 602.2b announces.
     --
     -- Exactly, against the mana value: Chthonian Nightmare, Tamiyo, Compleated
-    -- Sage, Synthetic Counted Verdict, Spell Blast and Detonate in a slot, and Fear of
-    -- Change and Ornate Imitations in a reference pick, at the top level and
+    -- Sage, Synthetic Counted, Announced and Wide Verdict, Spell Blast and
+    -- Detonate in a slot, and Fear of Change and Ornate Imitations in a reference
+    -- pick, at the top level and
     -- inside a ForEachNumber body; Isareth the Awakener in a reflexive delayed
     -- ability's slot, whose amount the arming resolution's chosen X binds.
     --
@@ -1985,6 +1986,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Tamiyo, Compleated Sage", 1),
         ("Liliana, Heretical Healer", 1),
         ("Synthetic Counted Verdict", 1),
+        ("Synthetic Announced Verdict", 1),
+        ("Synthetic Wide Verdict", 1),
         ("Spell Blast", 1),
         ("Detonate", 1),
         ("Fear of Change", 1),

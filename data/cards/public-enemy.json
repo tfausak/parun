@@ -44,9 +44,18 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "AttachedPermanentLeaves",
+            "type": "Leaves",
             "value": {
-              "type": "Graveyard"
+              "destinations": [
+                {
+                  "zone": {
+                    "type": "Graveyard"
+                  }
+                }
+              ],
+              "permanent": {
+                "type": "Attached"
+              }
             }
           },
           "modal": {

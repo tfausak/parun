@@ -4,7 +4,8 @@
       "delayedAbilities": {
         "sacrifice the returned creature": {
           "condition": {
-            "type": "SelfLeavesTheBattlefield"
+            "type": "Leaves",
+            "value": {}
           },
           "modal": {
             "modes": [

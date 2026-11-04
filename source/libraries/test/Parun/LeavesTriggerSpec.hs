@@ -67,6 +67,8 @@ import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LastKnown as LastKnown
+import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.ManaCost as ManaCost
@@ -79,6 +81,7 @@ import qualified Parun.Types.MutateSide as MutateSide
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.OptionalDecision as OptionalDecision
+import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PaymentDecision as PaymentDecision
 import qualified Parun.Types.PendingTrigger as PendingTrigger
 import qualified Parun.Types.Phase as Phase
@@ -148,8 +151,8 @@ permanentLeavesTheBattlefieldSpec s registry =
               moves = filter (\e -> case e of GameEvent.Moved {} -> True; _ -> False) (S.eventsOf gone)
           case moves of
             [departure] -> do
-              Spec.assertBool s (Event.matchesTrigger gone shredderId S.bob (TriggerCondition.PermanentLeavesTheBattlefield (Filter.Type.And [])) departure) "a Filter without the exclusion admits the Shredder's own departure"
-              Spec.assertBool s (not (Event.matchesTrigger gone shredderId S.bob (TriggerCondition.PermanentLeavesTheBattlefield (Filter.Type.Not Filter.Type.IsSource)) departure)) "so the printed \"another\" is the only thing declining it"
+              Spec.assertBool s (Event.matchesTrigger gone shredderId S.bob (TriggerCondition.Leaves LeavesTrigger.defaultValue {LeavesTrigger.permanent = LeavingPermanent.Matching (Filter.Type.And [])}) departure) "a Filter without the exclusion admits the Shredder's own departure"
+              Spec.assertBool s (not (Event.matchesTrigger gone shredderId S.bob (TriggerCondition.Leaves LeavesTrigger.defaultValue {LeavesTrigger.permanent = LeavingPermanent.Matching (Filter.Type.Not Filter.Type.IsSource)}) departure)) "so the printed \"another\" is the only thing declining it"
             other -> Spec.assertFailure s ("expected exactly one zone change, got " <> show (length other))
 
 -- CR 603.6c's leaves-the-battlefield family with the DESTINATION named --
@@ -164,7 +167,7 @@ permanentLeavesTheBattlefieldSpec s registry =
 --
 -- The second thing it proves is CR 603.2c's scoping. The printed singular is one
 -- occurrence per permanent, so one spell returning two of them triggers twice --
--- unlike PermanentsDie's "one or more", which Event.batchScoped collapses.
+-- unlike a OneOrMore Leaves' "one or more", which Event.batchScoped collapses.
 permanentReturnedToHandSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 permanentReturnedToHandSpec s registry =
   let -- alice's Justice watching, and a Goblin Piker for each entry in `owners`.
@@ -193,7 +196,7 @@ permanentReturnedToHandSpec s registry =
         -- The destination, and nothing else. ONE board, moved two ways: a hand
         -- fires this condition and a graveyard does not, which is what a Filter
         -- over the object alone could never say -- CR 603.6c admits every zone
-        -- but the battlefield, so PermanentLeavesTheBattlefield takes the two
+        -- but the battlefield, so a Leaves naming no destination takes the two
         -- alike and only a condition naming the destination can tell them apart.
         Spec.it s "CR 603.6c a Piker destroyed rather than returned leaves Justice a 2/2" $ do
           island <- S.printingOf s registry "Island"
@@ -249,8 +252,7 @@ permanentReturnedToHandSpec s registry =
 -- CR 603.2c's FIRST sentence on the event the group above proves the second
 -- for: "whenever ONE OR MORE noncreature permanents are returned to hand" fires
 -- once for the batch however many moved --
--- TriggerCondition.PermanentsReturnedToHand, beside PermanentReturnedToHand the
--- way PermanentsDie stands beside PermanentDies.
+-- a Leaves of Batching.OneOrMore, beside the EachOccurrence one Justice bears.
 --
 -- Tameshi, Reality Architect {2}{U} Legendary Creature -- Moonfolk Wizard 2/3 is
 -- the card (data/cards/tameshi-reality-architect.json): "Whenever one or more
@@ -345,7 +347,7 @@ permanentsReturnedToHandSpec s registry =
           Spec.assertEqWith s "the first drew for both" (S.handSize S.alice first) 4
         -- CR 603.10a: a leaves-the-battlefield ability looks back, so Tameshi
         -- swept up in the same batch as the Sol Ring still sees it go and still
-        -- draws -- Event.looksBack's batch arm, PermanentsDie's own Example in
+        -- draws -- Event.looksBack's Leaves arm, a batch death being the Example in
         -- that rule. Bracketed by hand, the narrowest path that makes the two
         -- returns one event group.
         Spec.it s "CR 603.10a Tameshi returned in the same batch as an artifact still draws" $ do
@@ -991,7 +993,7 @@ handArrivalSpec s registry =
           Spec.assertEqWith s "CR 401.5 and not the Knight beneath it" (Visibility.sees S.bob knightId gs) Visibility.Type.Obscured
           Spec.assertEqWith s "one trigger reached the stack" (length (GameState.stack settled)) 1
 
--- What PermanentReturnedToHand's bindings are FOR -- Warped Devotion {2}{B}
+-- What a bystander return to hand's bindings are FOR -- Warped Devotion {2}{B}
 -- Enchantment, "Whenever a permanent is returned to a player's hand, that
 -- player discards a card" (data/cards/warped-devotion.json; name, cost, type
 -- line and Oracle text checked against Scryfall 2026-09-02). "That player" is
@@ -1083,7 +1085,7 @@ warpedDevotionSpec s registry =
               Spec.assertEqWith
                 s
                 "the owner and the departed permanent, nothing else"
-                (Event.eventBindings gone Nothing Map.empty (ObjectId.MkObjectId 0) S.bob (TriggerCondition.PermanentReturnedToHand (Filter.Type.And [])) ev)
+                (Event.eventBindings gone Nothing Map.empty (ObjectId.MkObjectId 0) S.bob (TriggerCondition.Leaves LeavesTrigger.defaultValue {LeavesTrigger.permanent = LeavingPermanent.Matching (Filter.Type.And []), LeavesTrigger.destinations = Set.singleton (OwnedZone.MkOwnedZone Zone.Hand PlayerRelation.AnyPlayer)}) ev)
                 (Map.fromList [(Binding.triggerPlayer, Binding.toPlayer S.bob), (Binding.departedPermanent, Binding.toObject pikerId)])
             other -> Spec.assertFailure s ("expected one move of the Piker, got " <> show (length other))
 
@@ -1160,7 +1162,7 @@ becameSlotSpec s registry =
           let departed = ObjectId.MkObjectId 1
               arrived = ObjectId.MkObjectId 2
               died = GameEvent.Moved (Moved.moved (ZoneChange.MkZoneChange departed arrived Zone.Battlefield Zone.Graveyard) S.emptyCharacteristics)
-          Spec.assertEqWith s "became names the graveyard incarnation" (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice TriggerCondition.SelfDies died) (Map.singleton Binding.became (Binding.toObject arrived))
+          Spec.assertEqWith s "became names the graveyard incarnation" (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)) died) (Map.singleton Binding.became (Binding.toObject arrived))
         -- A condition that is not a look-back gets no such slot: Narcomoeba's
         -- bearer IS the arriving card, so binding it again would be a second
         -- name for the same object.
@@ -1182,7 +1184,7 @@ becameSlotSpec s registry =
           Spec.assertEqWith
             s
             "became names the Aura's incarnation, not the host's"
-            (Event.eventBindings (Setup.emptyGame S.bothPlayers) (Just bearerArrived) Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.AttachedPermanentLeaves (Just Zone.Graveyard)) hostDied)
+            (Event.eventBindings (Setup.emptyGame S.bothPlayers) (Just bearerArrived) Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.Leaves LeavesTrigger.defaultValue {LeavesTrigger.permanent = LeavingPermanent.Attached, LeavesTrigger.destinations = Set.singleton (OwnedZone.MkOwnedZone Zone.Graveyard PlayerRelation.AnyPlayer)}) hostDied)
             (Map.fromList [(Binding.became, Binding.toObject bearerArrived), (Binding.departedPermanent, Binding.toObject departed)])
           -- CR 303.4b's half stands alone where the bearer reached no graveyard:
           -- the host's departure is the EVENT's datum and CR 704.5n's Equipment
@@ -1191,7 +1193,7 @@ becameSlotSpec s registry =
           Spec.assertEqWith
             s
             "and the host alone where the bearer reached no graveyard"
-            (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.AttachedPermanentLeaves (Just Zone.Graveyard)) hostDied)
+            (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.Leaves LeavesTrigger.defaultValue {LeavesTrigger.permanent = LeavingPermanent.Attached, LeavesTrigger.destinations = Set.singleton (OwnedZone.MkOwnedZone Zone.Graveyard PlayerRelation.AnyPlayer)}) hostDied)
             (Map.singleton Binding.departedPermanent (Binding.toObject departed))
         -- The pin on Event.eventBindingSlots, the per-CONDITION slot set the
         -- card lint asks (CardSpec's "every slot a triggered ability reads is
@@ -1207,7 +1209,7 @@ becameSlotSpec s registry =
         -- classification answers the guaranteed floor rather than the union: a
         -- slot the lint says is available must be bound for every event that
         -- could have placed the trigger. A few conditions have a list longer
-        -- than one -- SelfLeavesTheBattlefield, where the two destinations
+        -- than one -- a Leaves naming no destination, where the two destinations
         -- disagree about `became`; IsDealtDamage, where CR 120.3's two
         -- damage kinds agree on `thatMuch` and so make the floor a real one;
         -- and Blocks' attacking-side AtLeast, where rule 509.3e's two producers
@@ -1216,7 +1218,7 @@ becameSlotSpec s registry =
         -- single event's keyset.
         --
         -- The BEARER ARRIVAL argument is a present one, and a second dimension of
-        -- the intersection for AttachedPermanentLeaves with no destination alone:
+        -- the intersection for an Attached Leaves with no destination alone:
         -- it is CR 400.7f's datum rather than a shape the event can take, and
         -- eventBindingSlots' arm claims the slot with a destination on CR 704.5m's
         -- Aura, whose arrival is present for every event that form admits, while
@@ -1228,7 +1230,7 @@ becameSlotSpec s registry =
         Spec.it s "CR 603.2 eventBindingSlots names exactly the keys eventBindings stamps for EVERY event a condition admits" $ do
           piker <- S.printingOf s registry "Goblin Piker"
           let bearerBecame = Just (ObjectId.MkObjectId 3)
-              -- The state for the one arm that reads one. PermanentReturnedToHand
+              -- The state for the one arm that reads one. A bystander Leaves
               -- looks CR 400.3's owner up off CR 608.2h's record of the DEPARTED
               -- id, and GameState.objects is left EMPTY here on purpose: CR 111.7
               -- and CR 704.5d delete a token that has reached a hand, and
@@ -1256,7 +1258,8 @@ becameSlotSpec s registry =
           mapM_
             ( \cond ->
                 let bearerArrivals = case cond of
-                      TriggerCondition.AttachedPermanentLeaves Nothing -> bearerBecame NonEmpty.:| [Nothing]
+                      TriggerCondition.Leaves t
+                        | LeavesTrigger.permanent t == LeavingPermanent.Attached && Set.null (LeavesTrigger.destinations t) -> bearerBecame NonEmpty.:| [Nothing]
                       _ -> bearerBecame NonEmpty.:| []
                     stamped = do
                       arrival <- bearerArrivals
@@ -1313,8 +1316,8 @@ withRepresentativeEntrant placed pikerId g = case Game.lookupObject pikerId plac
   Nothing -> g
 
 -- CR 400.7e's slot under a BYSTANDER's dies trigger, the last of the four
--- conditions that bind it (SelfDies in becameSlotSpec above,
--- SelfLeavesTheBattlefield in leavesBattlefieldSpec, PermanentEnters in
+-- conditions that bind it (a self death in becameSlotSpec above, a bare self
+-- departure in leavesBattlefieldSpec, PermanentEnters in
 -- aetherFlashSpec below, and this): "Abilities that trigger when an object moves
 -- from one zone to another ... can find the new object that it became in the
 -- zone it moved to when the ability triggered, if that zone is a public zone."
@@ -1327,17 +1330,16 @@ withRepresentativeEntrant placed pikerId g = case Game.lookupObject pikerId plac
 -- off what this one exiled, is promiseOfTomorrowReturnSpec below.
 --
 -- The discriminating assertion is WHICH id the payload moves. CR 603.10a makes
--- Event.matchesTrigger's PermanentDies arm match on ZoneChange.departed, so
+-- Event.matchesTrigger's Leaves arm match on ZoneChange.departed, so
 -- "you control" is answerable from CR 608.2h last known information; but CR
 -- 400.7 deleted that id when the creature died, so the effect has to be handed
 -- ZoneChange.object -- the card now in the graveyard -- instead. Reading
 -- `departed` here would leave the creature sitting in the graveyard, which is
 -- exactly what assertions (a) and (b) below rule out.
 --
--- CR 400.7e's public-zone proviso needs no guard: the PermanentDies arm has
--- already required battlefield-to-graveyard, and CR 400.2 lists the graveyard
--- among the public zones. SelfLeavesTheBattlefield is the condition where the
--- proviso does real work, and it is guarded there.
+-- CR 400.7e's public-zone proviso holds: a death is battlefield-to-graveyard,
+-- and CR 400.2 lists the graveyard among the public zones. A Leaves naming no
+-- destination is where the proviso does real work, and it is guarded there.
 --
 -- Goblin Piker is the victim rather than a token, deliberately: CR 111.7 makes
 -- a token in a zone other than the battlefield cease to exist, so a token
@@ -1385,13 +1387,13 @@ promiseOfTomorrowSpec s registry =
             ([pikerName], [], True)
         -- eventBindings in isolation, so the binding is pinned to CR 400.7e
         -- rather than to Promise of Tomorrow's payload. The contrast with the
-        -- SelfDies arm above is only in which object the BEARER is; the slot
+        -- self death above is only in which object the BEARER is; the slot
         -- names ZoneChange.object either way.
-        Spec.it s "CR 400.7e eventBindings binds the ARRIVING id for PermanentDies too" $ do
+        Spec.it s "CR 400.7e eventBindings binds the ARRIVING id for a bystander's death too" $ do
           let departed = ObjectId.MkObjectId 1
               arrived = ObjectId.MkObjectId 2
               died = GameEvent.Moved (Moved.moved (ZoneChange.MkZoneChange departed arrived Zone.Battlefield Zone.Graveyard) S.emptyCharacteristics)
-          Spec.assertEqWith s "became names the graveyard incarnation and departedPermanent the battlefield one" (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.PermanentDies (Filter.Type.HasCardType CardType.Creature)) died) (Map.fromList [(Binding.became, Binding.toObject arrived), (Binding.departedPermanent, Binding.toObject departed)])
+          Spec.assertEqWith s "became names the graveyard incarnation and departedPermanent the battlefield one" (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.Leaves (LeavesTrigger.dies (LeavingPermanent.Matching (Filter.Type.HasCardType CardType.Creature)))) died) (Map.fromList [(Binding.became, Binding.toObject arrived), (Binding.departedPermanent, Binding.toObject departed)])
 
 -- CR 603.10a's departed permanent under a BYSTANDER's DIES trigger, which
 -- promiseOfTomorrowSpec above deliberately does not read: Promise of Tomorrow
@@ -1804,7 +1806,7 @@ undyingSpec s registry =
 
 -- CR 702.135a afterlife N: "When this permanent is put into a graveyard from the
 -- battlefield, create N 1/1 white and black Spirit creature tokens with flying."
--- Minted by Parun.Engine.Keyword.afterlife on the same TriggerCondition.SelfDies
+-- Minted by Parun.Engine.Keyword.afterlife on the same self death
 -- undying and persist take, and the FIRST minted keyword ability that creates a
 -- token -- so what is under test is a whole card, minted in the engine rather
 -- than read from card data.
@@ -2744,14 +2746,14 @@ bystanderSpec s registry =
     --   * CR 708.8 leaves a permanent turned face up ON the battlefield, so
     --     there is no departure for a look-back to recover.
     Spec.it s "CR 603.10a the look-back families are the ones that rule lists" $ do
-      Spec.assertBool s (Event.looksBack (TriggerCondition.PermanentDies (Filter.Type.And []))) "a dies trigger is a leaves-the-battlefield ability"
-      Spec.assertBool s (Event.looksBack TriggerCondition.SelfLeavesTheBattlefield) "and so is the wider written form"
+      Spec.assertBool s (Event.looksBack (TriggerCondition.Leaves (LeavesTrigger.dies (LeavingPermanent.Matching (Filter.Type.And []))))) "a dies trigger is a leaves-the-battlefield ability"
+      Spec.assertBool s (Event.looksBack (TriggerCondition.Leaves LeavesTrigger.defaultValue)) "and so is the wider written form"
       Spec.assertBool s (Event.looksBack (TriggerCondition.PermanentSacrificed (PlayerActsOn.MkPlayerActsOn PlayerRelation.AnyPlayer (Filter.Type.And [])))) "a sacrifice trigger is named outright"
       Spec.assertBool s (not (Event.looksBack TriggerCondition.SelfPutIntoGraveyardFromAnywhere)) "CR 603.6c says put-into-a-graveyard-from-anywhere is not one"
       Spec.assertBool s (not (Event.looksBack (TriggerCondition.PermanentTurnedFaceUp (Filter.Type.And [])))) "and CR 708.8 leaves a turned-up permanent on the battlefield"
       -- CR 603.1b: one ability, several conditions -- it looks back if any of
       -- them does, and the pair below differ only in whether one does.
-      Spec.assertBool s (Event.looksBack (TriggerCondition.AnyOf [TriggerCondition.SelfEnters, TriggerCondition.SelfDies])) "an AnyOf containing one looks back"
+      Spec.assertBool s (Event.looksBack (TriggerCondition.AnyOf [TriggerCondition.SelfEnters, TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)])) "an AnyOf containing one looks back"
       Spec.assertBool s (not (Event.looksBack (TriggerCondition.AnyOf [TriggerCondition.SelfEnters, TriggerCondition.SelfTurnedFaceUp]))) "and one containing none does not"
     -- The OTHER shape the rule reaches, at the gather rather than through a
     -- whole turn: a CR 603.2b step trigger whose bearer is gone by the
@@ -3268,7 +3270,8 @@ screamsFromWithinSpec s registry =
 -- "an ability of a permanent that refers to the enchanted [object] refers to
 -- whatever object that permanent is attached to, even if the permanent with the
 -- ability isn't an Aura" -- so an Equipment's "equipped creature dies" is the
--- same attachment link and the same TriggerCondition.AttachedPermanentLeaves.
+-- same attachment link and the same TriggerCondition.Leaves of
+-- LeavingPermanent.Attached.
 --
 -- Synthetic Widowed Blade ({2} Artifact -- Equipment, "Equipped creature gets
 -- +2/+0. / Whenever equipped creature dies, return Synthetic Widowed Blade from
@@ -3289,7 +3292,7 @@ screamsFromWithinSpec s registry =
 -- what leaves an Aura triggering from the battlefield naming a different
 -- incarnation. It is also why this card is the FIRST in the pool to reach
 -- CR 113.6m's Aura clause at all -- `Event.selfNamingSlots` gives an
--- AttachedPermanentLeaves ability the reserved source slot alone, so every printed
+-- Attached Leaves ability the reserved source slot alone, so every printed
 -- Aura with this condition answers Nothing through the fold whether the clause
 -- is read or not, and only a bearer whose ability names its own source can tell
 -- the exception's two sides apart.
@@ -3375,7 +3378,7 @@ heirloomBladeSpec s registry =
 -- type line and oracle text checked against Scryfall.)
 --
 -- CR 303.4m makes "equipped creature" the same attachment link and the same
--- TriggerCondition.AttachedPermanentLeaves an Aura's "enchanted creature dies"
+-- Attached TriggerCondition.Leaves an Aura's "enchanted creature dies"
 -- uses; CR 704.5n makes it a different QUESTION. The Equipment becomes
 -- unattached and REMAINS on the battlefield in the same CR 117.5 batch that
 -- buried its host, so at the moment triggers are placed there is neither a live
@@ -3654,18 +3657,18 @@ banewaspAfflictionSpec s registry =
 -- the exception is never reached (`becameSlotSpec` above proves the trigger
 -- fires either way). Here the delayed ability's own effect states the graveyard
 -- it moves the card out of, so the fold DOES pin the graveyard, and only
--- `Event.conditionPutsSelfInto` reading SelfDies against that zone exempts the
--- ability back to the battlefield default -- where its SelfDies condition needs
+-- `Event.conditionPutsSelfInto` reading a self death against that zone exempts
+-- the ability back to the battlefield default -- where its death condition needs
 -- to function to ever be checked at all.
 --
 -- The proving quantity is whether the trigger reaches the stack: without the
 -- exception, `functionsIn Zone.Battlefield` answers Nothing for this ability,
 -- `leftBattlefield`'s filter excludes it from the death event's own candidates,
--- and SelfDies is never checked against the one event that could satisfy it.
+-- and the death is never checked against the one event that could satisfy it.
 --
 -- AND CR 400.7e is what lets the DELAYED payload act, which is the other half of
 -- this group. CR 603.7e gives the delayed ability the arming ability's
--- SOURCE -- the dead battlefield id CR 608.2h supplies for a SelfDies trigger --
+-- SOURCE -- the dead battlefield id CR 608.2h supplies for a self death --
 -- so a payload naming the reserved source slot would move nothing. The card
 -- names Binding.became instead, exactly as Screams from Within's does, and CR
 -- 603.7c is what carries it across the arming: the environment
@@ -3714,8 +3717,8 @@ ivoryGargoyleSpec s registry =
           Spec.assertEqWith s "resolving it armed exactly one delayed ability" (Seq.length (GameState.delayedTriggers armed)) 1
         -- The classification itself, isolated from the board: without the
         -- exception the delayed effect's stated graveyard origin would pin the
-        -- ability there; with it, SelfDies exempts the pin away.
-        Spec.it s "CR 113.6m the ability's own effect names the graveyard, and SelfDies exempts it" $ do
+        -- ability there; with it, a self death exempts the pin away.
+        Spec.it s "CR 113.6m the ability's own effect names the graveyard, and a self death exempts it" $ do
           gargoyle <- S.printingOf s registry "Ivory Gargoyle"
           let face = S.combinedFace gargoyle
           Spec.assertEqWith

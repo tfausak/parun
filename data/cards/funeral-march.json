@@ -37,7 +37,12 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "AttachedPermanentLeaves"
+            "type": "Leaves",
+            "value": {
+              "permanent": {
+                "type": "Attached"
+              }
+            }
           },
           "modal": {
             "modes": [
