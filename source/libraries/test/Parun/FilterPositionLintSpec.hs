@@ -2123,6 +2123,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Starlight Snare", 1), -- Claustrophobia's wording
         ("Artificer's Hex", 2), -- its intervening "if" and the destruction it gates
         ("Armor of Faith", 1), -- an activated ability pumping the Aura's host
+        ("Holy Armor", 1), -- the same, with +0/+1
         ("Torture", 1), -- an activated ability putting a counter on it
         ("The Brute", 1), -- an activated ability regenerating it
         ("Carapace", 1), -- the same, with the Aura sacrificed as the cost (CR 113.7a)
