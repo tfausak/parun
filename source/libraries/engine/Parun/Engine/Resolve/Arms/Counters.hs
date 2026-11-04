@@ -1390,14 +1390,14 @@ timeTravel resolving controller = TimeTravel.timeTravel controller resolving
 
 -- CR 701.70a: the resolving controller recruits; the keyword action is
 -- Parun.Engine.Recruit.recruit's, prompt and token alike.
-recruit :: PlayerId -> Game ()
+recruit :: Game () -> PlayerId -> Game ()
 recruit = Recruit.recruit
 
 -- CR 701.48a: the resolving controller learns; the keyword action is
 -- Parun.Engine.Learn.learn's, prompts and all. `source` is the object the
 -- card brought in from outside the game is credited to (CR 400.11c).
-learn :: ObjectId -> ObjectId -> PlayerId -> Game ()
-learn resolving source controller = Learn.learn controller resolving source
+learn :: Game () -> ObjectId -> ObjectId -> PlayerId -> Game ()
+learn settle resolving source controller = Learn.learn settle controller resolving source
 
 -- CR 701.58a: the named players each cloak the top card of their library; the
 -- keyword action is Parun.Engine.Cloak.cloak's, listing and all. APNAP (CR

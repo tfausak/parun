@@ -5767,7 +5767,7 @@ payManaWindowThen perform inFlight record subject spending pid substituting cost
             -- then CR 400.7d's record of what was spent. Event.payLife is monadic
             -- because CR 119.4's loss goes through the replacement funnel.
             State.modify' (Mana.setPool pid (Mana.Type.MkMana (withheld <> left)))
-            Event.payLife pid life
+            Event.payLife (ManaAbilityPerformer.settle perform) pid life
             State.modify' (recordSpent spent)
             pure (True, extra, shutWindow {ManaWindow.spent = Mana.Type.unwrap spent})
       -- CR 400.7d's cost record for the MANA, kept where CR 107.4h's third
@@ -6516,7 +6516,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
   -- without it, so `payComponent`'s guard is the only CR 119.4 check it gets.
   -- Parun.CastSpec's Terror of the Peaks group is the proof.
   CostComponent.PayLife amount -> paidAnnounced amount $ \n -> do
-    Event.payLife pid n
+    Event.payLife (ManaAbilityPerformer.settle perform) pid n
     pure bindsNothing
   -- PayLife's arm over the live half: `announce` fixes the component first, so
   -- only one joining after it (PayLife's caveat above) is measured here. A FENCE:

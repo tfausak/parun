@@ -316,7 +316,7 @@ damageSpec s registry = Spec.describe s "Damage" $ do
           Prompt.ChooseTargets _ _ _ sets -> S.preferring ((== Just giantId) . Recipient.objectOf) sets
           _ -> attackTheBattle battle p
         attacked = S.runPure returning gs (Combat.declareAttackers S.manaPerformer S.alice)
-        dealt = S.runPure returning attacked (Monad.void Damage.dealCombatDamage >> Engine.settleForPriority)
+        dealt = S.runPure returning attacked (Monad.void (Damage.dealCombatDamage (pure ())) >> Engine.settleForPriority)
         resolved = S.runPure returning dealt Stack.resolveTop
     Spec.assertEqWith s "CR 603.2 the Hill Giant returned to the battlefield" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Hill Giant")) S.alice resolved) 1
     Spec.assertEqWith s "the Archpriest attacked the battle" (fmap (\a -> Map.lookup a (Combat.Type.attackers (GameState.combat attacked))) mine) [Just (AttackTarget.OfBattle battle)]
@@ -329,7 +329,7 @@ damageSpec s registry = Spec.describe s "Damage" $ do
     (gs, battle, _, _, _) <- battleCombat s registry S.carol S.carol [piker] [] []
     let attacked = S.runPure (attackTheBattle battle) gs (Combat.declareAttackers S.manaPerformer S.alice)
         killed = S.runPure S.identityAnswer attacked (Event.destroy Regenerability.Regenerable [battle])
-        dealt = S.runPure S.identityAnswer killed (Monad.void Damage.dealCombatDamage)
+        dealt = S.runPure S.identityAnswer killed (Monad.void (Damage.dealCombatDamage (pure ())))
     Spec.assertEqWith s "no damage was dealt at all" (S.damageEventsOf dealt) []
 
 -- CR 310.12b, CR 310.7 / 704.5v and CR 310.8 / 704.5w: what happens when the last

@@ -1062,7 +1062,7 @@ spinesplitterSpec s registry =
         S.runPure
           S.identityAnswer
           gs
-          (Damage.applyDamage [DamageEvent.MkDamageEvent src target amount False False False 0 Nothing Nothing mempty False DamageKind.Noncombat])
+          (Damage.applyDamage (pure ()) [DamageEvent.MkDamageEvent src target amount False False False 0 Nothing Nothing mempty False DamageKind.Noncombat])
    in Spec.describe s "Furious Spinesplitter" $ do
         Spec.it s "CR 120.1 a counter for each OPPONENT dealt damage, not for each damage event" $ do
           spinesplitter <- S.printingOf s registry "Furious Spinesplitter"
@@ -1075,7 +1075,7 @@ spinesplitterSpec s registry =
               atBobTwice = atEnd (hit spine (Recipient.ToPlayer S.bob) 5 (hit spine (Recipient.ToPlayer S.bob) 3 base))
               atAlice = atEnd (hit spine (Recipient.ToPlayer S.alice) 7 base)
               atBobsSentry = atEnd (hit spine (Recipient.ToCreature bobsSentry) 1 base)
-              bobPaid = atEnd (S.runPure S.identityAnswer base (Event.payLife S.bob 6))
+              bobPaid = atEnd (S.runPure S.identityAnswer base (Event.payLife (pure ()) S.bob 6))
           Spec.assertEqWith s "CR 702.19: the printed trample is there" (Map.member Keyword.Type.Trample (Projection.keywordsOf spine base)) True
           Spec.assertEqWith s "nobody was dealt damage, so no counter" (countersOn spine quiet) 0
           Spec.assertEqWith s "one opponent was, so one" (countersOn spine atBob) 1
@@ -1127,7 +1127,7 @@ tymnaSpec s registry =
         S.runPure
           S.identityAnswer
           gs
-          (Damage.applyDamage [DamageEvent.MkDamageEvent src (Recipient.ToPlayer target) amount False False False 0 Nothing Nothing mempty False kind])
+          (Damage.applyDamage (pure ()) [DamageEvent.MkDamageEvent src (Recipient.ToPlayer target) amount False False False 0 Nothing Nothing mempty False kind])
    in Spec.describe s "Tymna the Weaver"
         . Spec.it s "CR 510.2 X counts the opponents dealt COMBAT damage this turn"
         $ do
@@ -1158,7 +1158,7 @@ stampedeSpec s registry =
         S.runPure
           S.identityAnswer
           gs
-          (Damage.applyDamage [DamageEvent.MkDamageEvent src (Recipient.ToPlayer target) 2 False False False 0 Nothing Nothing mempty False kind])
+          (Damage.applyDamage (pure ()) [DamageEvent.MkDamageEvent src (Recipient.ToPlayer target) 2 False False False 0 Nothing Nothing mempty False kind])
    in Spec.describe s "Vivien's Stampede"
         . Spec.it s "CR 603.7 at the next main phase alice draws one per player dealt combat damage"
         $ do

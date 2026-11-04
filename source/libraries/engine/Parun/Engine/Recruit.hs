@@ -31,7 +31,6 @@ import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Replacement as Replacement
-import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
@@ -152,13 +151,14 @@ soldierToken =
 -- CR 609.3 rather than CR 608.2d: an empty library or an empty hand makes a
 -- step do as much as possible rather than stopping the action, so
 -- Parun.Engine.Resolve.Common.effectIsImpossible never refuses this arm.
-recruit :: PlayerId -> Game ()
-recruit pid = do
+--
+-- `settle` is Event.drawSeries' (CR 614.11a).
+recruit :: Game () -> PlayerId -> Game ()
+recruit settle pid = do
   -- CR 121.2a: the one-card draw is one replaceable instruction, Effect.Draw's
   -- arm line for line.
-  outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.DrawCards Nothing pid 1)
-  Monad.forM_ (outcome >>= Replacement.asPerformed PlayerInstruction.DrawCards) $ \(drawer, settled) ->
-    Monad.replicateM_ (Natural.toIntSaturating settled) (Event.drawCard drawer)
+  outcome <- Event.applyReplacementsIn settle Nothing Set.empty Set.empty (ProposedEvent.WouldPerform PlayerInstruction.DrawCards Nothing pid 1)
+  Monad.forM_ (outcome >>= Replacement.asPerformed PlayerInstruction.DrawCards) (uncurry (Event.drawSeries settle Set.empty))
   drawn <- State.get
   let held = Game.cardsIn Zone.Hand pid drawn
   chosen <- case held of

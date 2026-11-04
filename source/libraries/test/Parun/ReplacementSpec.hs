@@ -308,7 +308,7 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
           [ DamageEvent.MkDamageEvent victimA (Recipient.ToCreature victimA) 2 False False False 0 Nothing Nothing mempty False DamageKind.Combat,
             DamageEvent.MkDamageEvent victimB (Recipient.ToCreature victimB) 2 False False False 0 Nothing Nothing mempty False DamageKind.Combat
           ]
-        after = S.runPure S.identityAnswer resolved (Damage.applyDamage batch)
+        after = S.runPure S.identityAnswer resolved (Damage.applyDamage (pure ()) batch)
     Spec.assertEqWith s "the first attacker's damage was prevented" (S.damageOf victimA after) (Just 0)
     Spec.assertEqWith s "and so was the second's, independently" (S.damageOf victimB after) (Just 0)
     Spec.assertEqWith s "no damage event was recorded at all" (S.damageEventsOf after) []
@@ -372,7 +372,7 @@ spec s registry = Spec.describe s "Parun.Engine.Replacement" $ do
         (troll, g1) = S.addPermanent uthdenTroll S.alice base
         armed = S.runPure S.identityAnswer g1 (Activate.activateAbility S.alice troll (theAbility uthdenTroll) >> Stack.resolveTop)
         -- 2 damage is lethal to a 2/2.
-        hurt = S.runPure S.identityAnswer armed (Damage.applyDamage [DamageEvent.MkDamageEvent troll (Recipient.ToCreature troll) 2 False False False 0 Nothing Nothing mempty False DamageKind.Combat])
+        hurt = S.runPure S.identityAnswer armed (Damage.applyDamage (pure ()) [DamageEvent.MkDamageEvent troll (Recipient.ToCreature troll) 2 False False False 0 Nothing Nothing mempty False DamageKind.Combat])
         settled = S.settleSba hurt
     Spec.assertBool s (Set.member troll (GameState.battlefield settled)) "the shield saved it"
   Spec.it s "CR 614.8 regeneration replaces the destruction, so Rest in Peace never sees it" $ do
@@ -842,7 +842,7 @@ galvanicBlastSpec s registry =
           (victim, g3) = S.addPermanent pikerPrinting S.bob g2
           (ts, g4) = Game.freshTimestamp g3
           armed = S.addReplacement (blastShape mine ts) g4
-          hit src = S.runPure S.identityAnswer armed (Damage.applyDamage [DamageEvent.MkDamageEvent src (Recipient.ToCreature victim) 2 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat])
+          hit src = S.runPure S.identityAnswer armed (Damage.applyDamage (pure ()) [DamageEvent.MkDamageEvent src (Recipient.ToCreature victim) 2 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat])
       Spec.assertEqWith s "its own source's 2 becomes 4" (S.damageOf victim (hit mine)) (Just 4)
       Spec.assertEqWith s "another source's 2 stays 2" (S.damageOf victim (hit theirs)) (Just 2)
 
@@ -1549,7 +1549,7 @@ darkblastSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n
 darkblastSpec s registry = Spec.describe s "Darkblast (CR 702.52)" $ do
   Spec.it s "CR 702.52a dredging returns the card and mills three instead of drawing" $ do
     board <- dredgeBoard s registry 4
-    let after = S.runPure dredging board (Event.drawCard S.alice)
+    let after = S.runPure dredging board (Event.drawCard (pure ()) S.alice)
     Spec.assertEqWith s "CR 702.52a the Darkblast came back, and no library card was drawn" (handNames S.alice after) [CardName.MkCardName (Text.pack "Darkblast")]
     Spec.assertEqWith s "CR 701.17a three cards were milled, not one drawn" (length (Game.zoneMembers Zone.Library S.alice after)) 1
     Spec.assertEqWith s "CR 614.6 and the graveyard holds those three alone" (length (graveyardNames S.alice after)) 3
@@ -1559,7 +1559,7 @@ darkblastSpec s registry = Spec.describe s "Darkblast (CR 702.52)" $ do
   -- out of CR 616.1's offer entirely, so the draw happens as proposed.
   Spec.it s "CR 702.52b a library short of three is not offered the dredge at all" $ do
     board <- dredgeBoard s registry 2
-    let after = S.runPure dredging board (Event.drawCard S.alice)
+    let after = S.runPure dredging board (Event.drawCard (pure ()) S.alice)
     Spec.assertEqWith s "CR 702.52b the Darkblast stayed in the graveyard" (graveyardNames S.alice after) [CardName.MkCardName (Text.pack "Darkblast")]
     Spec.assertEqWith s "CR 121.1 so alice drew her card" (S.handSize S.alice after) 1
     Spec.assertEqWith s "and only that one card left her library" (length (Game.zoneMembers Zone.Library S.alice after)) 1
@@ -1568,7 +1568,7 @@ darkblastSpec s registry = Spec.describe s "Darkblast (CR 702.52)" $ do
   -- decision -- so the draw is left standing and nothing is milled.
   Spec.it s "CR 702.52a declining leaves the draw standing" $ do
     board <- dredgeBoard s registry 4
-    let after = S.runPure S.identityAnswer board (Event.drawCard S.alice)
+    let after = S.runPure S.identityAnswer board (Event.drawCard (pure ()) S.alice)
     Spec.assertEqWith s "CR 702.52a the Darkblast stayed in the graveyard" (graveyardNames S.alice after) [CardName.MkCardName (Text.pack "Darkblast")]
     Spec.assertEqWith s "CR 121.1 alice drew her card" (S.handSize S.alice after) 1
     Spec.assertEqWith s "and nothing was milled" (length (Game.zoneMembers Zone.Library S.alice after)) 3

@@ -1197,12 +1197,12 @@ movedMana losers gainers gs =
 -- this is emptyManaPools' charge, of the whole pool, read on the state the move
 -- happens in. A self-targeted Drain Power still charges: the mana is lost
 -- before it is added back.
-moveMana :: [PlayerId] -> [PlayerId] -> Game ()
-moveMana losers gainers = do
+moveMana :: Game () -> [PlayerId] -> [PlayerId] -> Game ()
+moveMana settle losers gainers = do
   gs <- State.get
   let losses = Map.fromList (fmap (\pid -> (pid, Natural.length (Mana.unwrap (Game.poolOf pid gs)))) losers)
   State.put (movedMana losers gainers gs)
-  chargeForLostMana gs losses
+  chargeForLostMana settle gs losses
 
 -- CR 500.5: as a step or phase ends, any unspent mana left in a player's mana
 -- pool empties -- a turn-based action that does not use the stack (CR 703.4q).
@@ -1271,23 +1271,24 @@ emptiedManaPools gs =
 -- Event.resolveLifeLoss, CR 614.1's funnel, carrying CR 119.3's ByEffect: this
 -- is an effect's loss and not a payment's, so a row scoped to a payment does not
 -- reach it.
-emptyManaPools :: Game ()
-emptyManaPools = do
+emptyManaPools :: Game () -> Game ()
+emptyManaPools settle = do
   gs <- State.get
   let swept = emptiedManaPools gs
       sizeOf pool = Natural.length (Mana.unwrap pool)
       lostBy pid before = Natural.minusSaturating (sizeOf before) (maybe 0 sizeOf (Map.lookup pid (GameState.manaPool swept)))
   State.put swept
-  chargeForLostMana gs (Map.mapWithKey lostBy (GameState.manaPool gs))
+  chargeForLostMana settle gs (Map.mapWithKey lostBy (GameState.manaPool gs))
 
 -- The charge both roads share: each player who lost a nonzero amount, and on
 -- whom `gs` (the state the loss happened in) has the static, loses that much
--- life.
-chargeForLostMana :: GameState -> Map.Map PlayerId Natural -> Game ()
-chargeForLostMana gs losses =
+-- life. `settle` is Event.drawSeries', for the draws Lich makes in place of
+-- a gain made in the loss's place.
+chargeForLostMana :: Game () -> GameState -> Map.Map PlayerId Natural -> Game ()
+chargeForLostMana settle gs losses =
   Event.simultaneously . Monad.forM_ (Map.toList (Map.filter (/= 0) losses)) $ \(pid, lost) ->
     Monad.when (PlayerEffect.losesLifeForUnspentMana pid gs) $ do
-      settled <- Event.resolveLifeLoss LifeLossCause.ByEffect pid lost
+      settled <- Event.resolveLifeLoss settle LifeLossCause.ByEffect pid lost
       Event.changeLife pid (negate (toInteger settled))
 
 -- CR 514.2: "all 'until end of turn' and 'this turn' effects end", during the

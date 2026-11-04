@@ -966,7 +966,7 @@ gambitSpec s registry = Spec.describe s "AlchemistsGambit" $ do
               let (g6, shield) = S.handOne mending (S.landsFor plains S.alice 1 g)
                   shielded = castAndResolveWith (aimCreature target) shield g6
                   hit = DamageEvent.MkDamageEvent striker (Recipient.ToCreature target) 3 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
-               in S.damageOf target (S.runPure S.identityAnswer shielded (Damage.applyDamage [hit]))
+               in S.damageOf target (S.runPure S.identityAnswer shielded (Damage.applyDamage (pure ()) [hit]))
         pure (gs, gambitId, warpId, struck)
   -- THE PROVING CASE. The Gambit, cleaved, creates extra turn A; Time Warp,
   -- cast after it, creates extra turn B, which CR 500.7 takes first. "That

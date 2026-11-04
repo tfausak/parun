@@ -1100,7 +1100,7 @@ spec s registry = Spec.describe s "Meld" $ do
             let after = S.runPure (sparing battlementsId S.identityAnswer) (ready gs) (do Activate.activateAbility S.alice battlementsId melding; Stack.resolveTop)
              in fmap (\oid -> (oid, after)) (Maybe.listToMaybe (namedTownship after (Game.zoneMembers Zone.Battlefield S.alice after)))
           _ -> Nothing
-        pings (oid, gs) = S.runPure S.identityAnswer gs (Damage.applyDamage [Event.damageEvent gs DamageKind.Combat oid (Recipient.ToPlayer S.bob) 2])
+        pings (oid, gs) = S.runPure S.identityAnswer gs (Damage.applyDamage (pure ()) [Event.damageEvent gs DamageKind.Combat oid (Recipient.ToPlayer S.bob) 2])
         gained grant = fmap (\onBoard -> let hit = pings onBoard in (S.lifeOf S.alice hit, S.lifeOf S.bob hit)) (melds (grant board))
     case Face.activatedAbilities (S.combinedFace collector) of
       ability : _ -> do
@@ -1302,7 +1302,7 @@ spec s registry = Spec.describe s "Meld" $ do
       Just (meldedId, components) -> case Foldable.toList components of
         firstPid : _ -> do
           let designated = designatingComponent meldedId firstPid board
-              pings gs = S.runPure S.identityAnswer gs (Damage.applyDamage [Event.damageEvent gs DamageKind.Combat meldedId (Recipient.ToPlayer S.bob) 2])
+              pings gs = S.runPure S.identityAnswer gs (Damage.applyDamage (pure ()) [Event.damageEvent gs DamageKind.Combat meldedId (Recipient.ToPlayer S.bob) 2])
               tally gs = maybe 0 (sum . Map.elems . Player.commanderDamage) (Map.lookup S.bob (GameState.players gs))
           Spec.assertEqWith s "CR 903.10a the Garrison is alice's commander, so the melded permanent's 2 is tallied" (tally (pings designated)) 2
           Spec.assertEqWith s "and nothing is tallied when she designated neither half" (tally (pings board)) 0
@@ -1338,7 +1338,7 @@ spec s registry = Spec.describe s "Meld" $ do
       Nothing -> Spec.assertFailure s "expected the melding ability to put one permanent onto the battlefield"
       Just meldedId -> do
         let bounced order = S.runPure (arranging meldedId order) board (do S.cast S.alice griptideId; Stack.resolveTop)
-            drawn order = S.runPure (arranging meldedId order) (bounced order) (Event.drawCard S.alice)
+            drawn order = S.runPure (arranging meldedId order) (bounced order) (Event.drawCard (pure ()) S.alice)
             handNames gs = Maybe.mapMaybe (\oid -> fmap S.nameOf (Game.cardOf oid gs)) (Game.zoneMembers Zone.Hand S.alice gs)
         Spec.assertEqWith s "CR 712.21a the melded order puts the Garrison down first, so alice draws the Battlements" (handNames (drawn [0, 1])) [S.printingName battlements]
         Spec.assertEqWith s "CR 712.21a and the arrangement alice chose instead puts the Garrison on top" (handNames (drawn [1, 0])) [S.printingName garrison]
@@ -1422,7 +1422,7 @@ garrisonPings garrison meldedId order gs =
    in case inGraveyard of
         [card] -> case S.runPureWith S.identityAnswer buried (Event.changeZoneReturning card Zone.Battlefield) of
           (arrived, returned) -> case Foldable.toList arrived of
-            [back] -> Just (S.runPure S.identityAnswer returned (Damage.applyDamage [Event.damageEvent returned DamageKind.Combat back (Recipient.ToPlayer S.bob) 2]))
+            [back] -> Just (S.runPure S.identityAnswer returned (Damage.applyDamage (pure ()) [Event.damageEvent returned DamageKind.Combat back (Recipient.ToPlayer S.bob) 2]))
             _ -> Nothing
         _ -> Nothing
 

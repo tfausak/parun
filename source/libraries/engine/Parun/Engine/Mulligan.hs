@@ -78,7 +78,7 @@ openingHands perform seated = do
     owners
     ( \pid -> do
         n <- State.gets (startingHandSize pid)
-        Monad.replicateM_ (Natural.toIntSaturating n) (Event.drawCard pid)
+        Monad.replicateM_ (Natural.toIntSaturating n) (Event.drawCard (pure ()) pid)
     )
   mulliganRounds perform Map.empty owners
   -- CR 103.6: the opening-hand window, after the WHOLE CR 103.5 process.
@@ -331,7 +331,7 @@ takeMulligan counts pid = do
   Monad.forM_ handIds (\oid -> Event.changeZone oid Zone.Library)
   Event.shuffleLibrary pid
   handSize <- State.gets (startingHandSize pid)
-  Monad.replicateM_ (Natural.toIntSaturating handSize) (Event.drawCard pid)
+  Monad.replicateM_ (Natural.toIntSaturating handSize) (Event.drawCard (pure ()) pid)
   -- The SAME offer the declaration prompt reported -- offerFor is a pure
   -- function of `counts`, `pid` and the seat roster, none of which the redraw
   -- touches -- so this bottoms exactly what the player was promised.

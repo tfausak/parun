@@ -878,7 +878,7 @@ handArrivalSpec s registry =
         card <- S.printingOf s registry drawn
         let (_, withBrinefarer) = S.addPermanent brinefarer S.alice (S.landsInPlay forest 1)
             (_, gs) = S.addLibraryCard card S.alice withBrinefarer
-        pure (S.printingName card, settleAfter (Event.drawCard S.alice) gs)
+        pure (S.printingName card, settleAfter (Event.drawCard (pure ()) S.alice) gs)
    in Spec.describe s "Hand arrival" $ do
         -- The proving case: "that card" names the drawn card in alice's hand.
         Spec.it s "Kithkin Brinefarer conjures a duplicate of the Kithkin card alice draws" $ do
@@ -911,7 +911,7 @@ handArrivalSpec s registry =
               (tenderId, g2) = S.addPermanent tender S.alice g1
               (_, g3) = S.addPermanent piker S.alice g2
               (_, gs) = S.addLibraryCard giant S.alice g3
-              (_, after) = settleAfter (Event.drawCard S.alice) gs
+              (_, after) = settleAfter (Event.drawCard (pure ()) S.alice) gs
               drawnPT = fmap (`S.powerToughnessOf` after) (named (S.printingName giant) after)
           Spec.assertEqWith s "the Hill Giant in hand is a 6/3" drawnPT [Just (6, 3)]
           -- Perpetual: X was fixed as the ability resolved.
