@@ -85,7 +85,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "docs/decisions.md's reading: a land annexed after Orcish Farmer stays a Swamp through its old controller's untap step, to its new controller's",
+  "description": "Elvish Hunter's ruling: a land annexed after Orcish Farmer stays a Swamp through its old controller's untap step, to its new controller's",
   "timeline": [
     {
       "do": {

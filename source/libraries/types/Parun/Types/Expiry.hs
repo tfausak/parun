@@ -49,8 +49,8 @@ data Expiry
     -- triggered then is put on the stack (CR 117.3a).
     AtStepOf StepBegan.StepBegan
   | -- | CR 611.2a: AtStepOf with its seat not yet known: "until its controller's
-    -- next untap step" (Orcish Farmer), read as the step begins
-    -- (@docs/decisions.md@, "Whose next step a control change leaves").
+    -- next untap step" (Orcish Farmer), read as the step begins. It tracks the
+    -- permanent and not its controller (Elvish Hunter's ruling).
     AtStepOfControllerOf StepOfControllerOf.StepOfControllerOf
   | -- | CR 611.2a: "until the end of your next turn", as a concrete player and
     -- the turn the duration began on. Ends as that player's next turn ends, in

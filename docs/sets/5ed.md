@@ -33,7 +33,7 @@ Finished 2026-11-04.
   (#6078), #5995 Coral Helm (#6092), #5996 Orcish Farmer (#6100). From other
   sets: Confusion in the Ranks, Eloren Wilds, The Black Gate, Detention Vortex,
   Sonic Burst.
-- Filed along the way: #6000 (Erg Raiders' departed control history), #6024
+- Filed along the way: #6000 (Erg Raiders' departed control history; closed by #6005), #6024
   (the client can't arrange a graveyard batch), #6047 (a counted redirect skips
   a shield's division), #6055 (a host-watching block trigger reads at the
   scan), #6060 (a cost payable only with triggered mana), #6062 (a granted
@@ -41,7 +41,7 @@ Finished 2026-11-04.
   (Panic's siblings), #6072 (the next turn's upkeep; closed by #6074), #6079
   (a target-bound attack waiver), #6080 (the {T} half of "as though it had
   haste"), #6094 (Dream Halls).
-- Audits: 18 of 22 capability PRs, and hand batch #6008; 5 found rules defects.
+- Audits: 18 of 22 capability PRs, and hand batch #6008; 6 found rules defects.
   - #6016: copy-acquired pairs read another pair's rows.
   - #6038: three: Syphon Soul and Chandra counted Eye's damage as dealt this
     way, CR 615.7's division over the added damage, Eye's chooser.
@@ -50,10 +50,11 @@ Finished 2026-11-04.
   - #6057: a phased-out permanent was still exchanged.
   - #6059: two on the new `LeftTheGame` road: a stolen staying Aura's controller,
     and two players leaving at once.
+  - #6100: a phased-out land's step spent while it had no controller.
 - Cost (`script/session-tokens.sh` over the set's transcripts, the last two
   units' session included whole): cache reads 0.27B, cache writes 10M, output
-  3.1M; 1.5M cache reads per card. The costliest units: #6003 (12.9M), #6061
-  (11.4M), #6008 (11.2M). Wall clock ~30h. Unit 10 left no log entry; a session failing
+  3.1M; 1.5M cache reads per card. The costliest units, audits and fixers
+  counted: #6038 (19.0M), #6058 (15.6M), #6049 (14.3M). Wall clock ~30h. Unit 10 left no log entry; a session failing
   after #6078's merge left another written up afterwards.
 - Owner review:
   - #6058: decisions.md "Whether assigning no combat damage beats assigning
@@ -62,12 +63,10 @@ Finished 2026-11-04.
     shared type".
   - #6038: decisions.md "Whether damage a replacement adds joins a division
     already owed"; a contested shield can be asked twice.
-  - #6100: decisions.md "Whose next step a control change leaves".
-  - #6000: an intervening reading for Erg Raiders, pending its filed issue.
   - #6049, #6053: new `ChooseReplacement` prompts with no consequence on alike
     shields and two Island Sanctuaries, asked rather than elided.
-  - #6072: the skipped-upkeep case, an unsettled CR 614.10a reading.
   - Breaking wire: #6008 (`whosePhase`), #6015 (`MilledThisTurn`), #6016
     (`enteredWith` in a saved state), #6038, #6048 (`ChooseNumber.upTo`), #6054
-    (block trigger payloads), #6059 (a bare destination), #6065 (the activator's
-    default tag), #6071 (`BeforeCombatDamage`), #6100 (`UntilYourNextStep`).
+    (block trigger payloads), #6058 (`assignsCombatDamageWithToughness`), #6059
+    (a bare destination), #6065 (the activator's default tag), #6071
+    (`BeforeCombatDamage`), #6100 (`UntilYourNextStep`).

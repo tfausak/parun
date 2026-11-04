@@ -117,10 +117,11 @@ arm acquisition targets controller source duration gs = case duration of
   -- duration armed during that very step outlives
   -- it: the step has already begun, so only a later beginning ends it.
   --
-  -- The controller of a bound object still in the game is NOT sampled, the
-  -- reading docs/decisions.md's "Whose next step a control change leaves" records:
-  -- data/scenarios' orcish-farmer-follows-a-land-annexed-before-its-untap-step
-  -- proves it. A reference naming nobody stores nothing, the arms below' reason.
+  -- The controller of a bound object still in the game is NOT sampled: "its
+  -- controller's next untap step" tracks the permanent and not its controller
+  -- (Ajani Vengeant and Elvish Hunter's rulings). data/scenarios'
+  -- orcish-farmer-follows-a-land-annexed-before-its-untap-step proves it. A
+  -- reference naming nobody stores nothing, the arms below' reason.
   Duration.UntilNextStepOf next -> case NextStepOf.player next of
     PlayerRef.HolderOfBound Holder.Controller Hop.Itself slot
       | Just oid <- Map.lookup slot (Binding.objectsIn targets),
@@ -239,7 +240,7 @@ arm acquisition targets controller source duration gs = case duration of
           )
       )
 
--- The ONE seat a Duration.UntilEndOfNextTurnOf or DuringNextTurnOf reference
+-- The ONE seat a Duration.UntilEndOfNextTurnOf, DuringNextTurnOf or UntilNextStepOf reference
 -- names, sampled as the window begins. One stored row names one turn, so a
 -- reference naming several seats arms nothing; no printing states such a window
 -- (Scryfall o:"each opponent's next turn", o:"opponents' next turns",
@@ -282,8 +283,6 @@ perSeat duration = case duration of
   Duration.Indefinite -> Nothing
   Duration.Perpetual -> Nothing
   Duration.UntilYourNextTurn -> Nothing
-  Duration.UntilNextStepOf next@NextStepOf.MkNextStepOf {NextStepOf.player = PlayerRef.Candidate} ->
-    Just (\pid -> Duration.UntilNextStepOf next {NextStepOf.player = PlayerRef.Specific pid})
   Duration.UntilNextStepOf _ -> Nothing
   Duration.UntilEndOfYourNextTurn -> Nothing
   Duration.DuringYourNextTurn -> Nothing
@@ -411,11 +410,15 @@ endsAt gs moment source expiry = case expiry of
   -- CR 800.4m's "a specific point in that turn": a departed player's step
   -- never begins, so the duration ends where that turn would have.
   Expiry.AtStepOf began -> moment == StepOf began || departedTurnOf (StepBegan.player began)
-  -- Read live, so the step of the object's controller then. Dropped as hygiene
-  -- once its object is gone, DuringTurnOfControllerOf's reason.
+  -- Read live, so the step of the object's controller then. A phased-out
+  -- permanent is not under its controller's control (CR 702.26d), so its step
+  -- waits, windowReached's guard. Dropped as hygiene once its object is gone,
+  -- DuringTurnOfControllerOf's reason.
   Expiry.AtStepOfControllerOf (StepOfControllerOf.MkStepOfControllerOf step oid) ->
     (moment == Cleanup && Maybe.isNothing (Game.lookupObject oid gs))
-      || any (\pid -> moment == StepOf (StepBegan.MkStepBegan step pid)) (View.controllerOf oid gs)
+      || ( Set.member oid (GameState.battlefield gs)
+             && any (\pid -> moment == StepOf (StepBegan.MkStepBegan step pid)) (View.controllerOf oid gs)
+         )
   -- CR 611.2a: "until the end of your next turn" ends at that turn's cleanup
   -- (CR 514.2), one NAMED turn later (see Parun.Types.AfterTurn), so the turn the
   -- duration began on is not its next turn. CR 800.4m ends it where a departed

@@ -1304,20 +1304,3 @@ Entries are ordered by the first rule each cites.
   `CombatDamageAmount`'s order, proved by the scenarios
   "assigning-no-combat-damage-beats-an-older-toughness-marker" and "...-newer-...".
 - **Issue**: #5462.
-
-## Whose next step a control change leaves
-
-- **Question**: Orcish Farmer's "until its controller's next untap step", when
-  the land changes controller after the effect begins: the untap step of the
-  player who controlled it then, or of whoever controls it as a step begins?
-- **Rules**: CR 611.2a, 611.2c; CR of 2026-08-07. Orcish Farmer's one ruling
-  (2008-10-01) speaks only to what the land loses.
-- **Decision**: Whoever controls it as the step begins. "Its controller" names the
-  land's controller, which CR 108.4 reads at the moment asked, and Wall of Dust's
-  "during its controller's next turn" is already read this way.
-- **Rejected**: Sampling the seat as the effect begins, which
-  `UntilEndOfNextTurnOf` does where the card names a player rather than an object
-  it still follows.
-- **Site**: `Parun.Engine.Expiry.arm`, stored as `Expiry.AtStepOfControllerOf`.
-  data/scenarios' orcish-farmer-follows-a-land-annexed-before-its-untap-step
-  proves it.
