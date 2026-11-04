@@ -140,7 +140,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "Refused at bob with no Island; paying {U}{U}{U} at its upkeep untaps it, declining leaves it tapped; bob's Island lets it attack; Boil takes alice's Islands and the Fish with them.",
+  "description": "Island Fish Jasconius: refused at bob with no Island; paying {U}{U}{U} at upkeep untaps it, declining leaves it tapped; bob's Island lets it attack; Boil takes alice's Islands and the Fish",
   "timeline": [
     {
       "do": {

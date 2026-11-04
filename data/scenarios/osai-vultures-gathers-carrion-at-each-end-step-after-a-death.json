@@ -120,7 +120,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "Two deaths on turn 1 put one counter, not two; no death on turn 2 puts none; a death on bob's turn 4 puts the second, at each end step and not only alice's. One counter can't pay; two buy +1/+1.",
+  "description": "Osai Vultures: two deaths put one counter, no death none, a death on bob's turn the second; one counter can't pay, two buy +1/+1",
   "timeline": [
     {
       "do": {

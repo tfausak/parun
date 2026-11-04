@@ -88,7 +88,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "Draw and reveal: the Island stays in hand and bob saw it; a turn later the Hill Giant is drawn, and goes to the graveyard.",
+  "description": "Sindbad: draws and reveals; the Island stays in hand, the Hill Giant goes to the graveyard, and bob saw each",
   "timeline": [
     {
       "do": {

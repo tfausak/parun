@@ -487,7 +487,8 @@ endsAt gs moment source expiry = case expiry of
   -- CR 400.7 means a later object's exile can't end.
   Expiry.OnEvent (EventExpiry.MkEventExpiry _ DurationEvent.SourceExiledCard) -> moment == ExiledWith source
   -- CR 702.26d: a phased-out source has not left. One that left before the row
-  -- was armed ends it at the first settle, so the effect does nothing (docs/decisions.md).
+  -- was armed ends it at the first settle, so the effect does nothing
+  -- (docs/decisions.md, A continuous effect "until" its source leaves).
   Expiry.OnEvent (EventExpiry.MkEventExpiry _ DurationEvent.SourceLeftBattlefield) ->
     moment == Settle && Set.notMember source (GameState.battlefield gs) && Map.notMember source (GameState.phasedOut gs)
   where

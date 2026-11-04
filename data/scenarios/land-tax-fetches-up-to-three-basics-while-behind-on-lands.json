@@ -116,7 +116,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "Behind on lands, alice takes two of the three a search would allow, the Library-only nonbasic Mishra's Factory not being on offer. Level on lands two turns later it never triggers: a trigger would raise a ChooseOptional prompt no entry answers, failing the run.",
+  "description": "Land Tax: behind on lands, alice takes two basics and may not take Mishra's Factory; level on lands two turns later it does not trigger, whose optional prompt no entry answers",
   "timeline": [
     {
       "do": {

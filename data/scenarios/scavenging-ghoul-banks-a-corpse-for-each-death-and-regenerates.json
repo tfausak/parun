@@ -120,7 +120,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "Two deaths bank two corpse counters at the end step, where Osai Vultures' 'a creature died' banks one. Spending one regenerates it through bob's Bolt, leaving one.",
+  "description": "Scavenging Ghoul: two deaths bank two corpse counters at the end step; spending one regenerates it through bob's Bolt, leaving one",
   "timeline": [
     {
       "do": {

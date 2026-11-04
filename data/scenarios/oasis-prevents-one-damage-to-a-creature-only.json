@@ -84,7 +84,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "Oasis's shield takes one of the Bolt's three, leaving 2 on the Hill Giant; a player is no target.",
+  "description": "Oasis: its shield takes one of the Bolt's three, leaving 2 on the Hill Giant; a player is no target",
   "timeline": [
     {
       "player": "alice",

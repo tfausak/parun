@@ -83,7 +83,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "Animated, it is a land, artifact and 2/2 Assembly-Worker till end of turn and no longer; the second Factory's {T} pumps it and refuses the Grizzly Bears, not an Assembly-Worker, and the unanimated Factory is no creature to target.",
+  "description": "Mishra's Factory: animated it is a land, artifact and 2/2 Assembly-Worker until end of turn; the second Factory's {T} pumps it and refuses the Bears and an unanimated Factory",
   "timeline": [
     {
       "player": "alice",

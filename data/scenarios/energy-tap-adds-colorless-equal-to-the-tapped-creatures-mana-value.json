@@ -90,7 +90,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "A Hill Giant's four, not its power of three, proves the amount is its mana value; a tapped creature and bob's are no targets.",
+  "description": "Energy Tap: tapping Hill Giant adds four, its mana value and not its power of three; a tapped creature and bob's are no targets",
   "timeline": [
     {
       "player": "alice",
@@ -167,49 +167,49 @@
               "manaType": {
                 "type": "Colorless"
               },
-              "restriction": null,
+              "tags": [],
               "retention": {
                 "type": "Ordinary"
               },
+              "restriction": null,
               "rider": null,
-              "sourceChoices": null,
-              "tags": []
+              "sourceChoices": null
             },
             {
               "manaType": {
                 "type": "Colorless"
               },
-              "restriction": null,
+              "tags": [],
               "retention": {
                 "type": "Ordinary"
               },
+              "restriction": null,
               "rider": null,
-              "sourceChoices": null,
-              "tags": []
+              "sourceChoices": null
             },
             {
               "manaType": {
                 "type": "Colorless"
               },
-              "restriction": null,
+              "tags": [],
               "retention": {
                 "type": "Ordinary"
               },
+              "restriction": null,
               "rider": null,
-              "sourceChoices": null,
-              "tags": []
+              "sourceChoices": null
             },
             {
               "manaType": {
                 "type": "Colorless"
               },
-              "restriction": null,
+              "tags": [],
               "retention": {
                 "type": "Ordinary"
               },
+              "restriction": null,
               "rider": null,
-              "sourceChoices": null,
-              "tags": []
+              "sourceChoices": null
             }
           ],
           "of": "ManaPool",

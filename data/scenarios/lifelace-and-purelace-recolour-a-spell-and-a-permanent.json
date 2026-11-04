@@ -97,7 +97,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "Lifelace makes a spell green on the stack; Purelace makes a permanent white, and it stays white past the turn. Both replace the old colour.",
+  "description": "Lifelace and Purelace: one makes a spell green on the stack, the other a permanent white past the turn, each replacing the old colour",
   "timeline": [
     {
       "do": {

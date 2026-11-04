@@ -131,7 +131,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "Three seats, three Forest counts. Declared at carol it reads her one Forest, not alice's two or bob's four, which also sits out the summed reading of every defending player; at the end step it reads alice's again.",
+  "description": "Gaea's Liege: declared at carol it counts her one Forest, not alice's two, bob's four or every defending player's sum; at the end step it counts alice's again",
   "timeline": [
     {
       "check": {

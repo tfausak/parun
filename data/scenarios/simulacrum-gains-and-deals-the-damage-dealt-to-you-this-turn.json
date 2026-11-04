@@ -123,7 +123,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "alice took 2 on turn 1 and 3 on turn 3; bob took 2 on turn 3. Only her 3 of this turn counts: gained and dealt to her Craw Wurm, which 5 would kill. bob's Ogre is no target.",
+  "description": "Simulacrum: alice took 2 on turn 1 and 3 on turn 3, and bob 2 on turn 3; only her 3 counts, gained and dealt to her Craw Wurm, which 5 would kill; bob's Ogre is no target",
   "timeline": [
     {
       "do": {

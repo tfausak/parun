@@ -113,7 +113,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "Turn 2: alice discards, so no damage and no tap. Turn 4: she declines, takes 3, and it taps. Turn 6: Samite Healer stops 1 of the 3, and the 2 dealt still tap it. Turn 8: Healing Salve stops all 3, nothing is dealt, and it stays untapped.",
+  "description": "Mishra's War Machine: discarding stops damage and tap; declining deals 3 and taps; Samite Healer's 1 leaves 2 dealt, which taps; Healing Salve's 3 leaves nothing dealt, which does not",
   "timeline": [
     {
       "do": {

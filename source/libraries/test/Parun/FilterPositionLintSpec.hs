@@ -2862,7 +2862,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     let needle = atomJson (Filter.Type.ControlledByRole TurnRole.Defending)
         atoms c = occurrences needle (Codec.encode (Face.Codec.codec Card.codec) c)
         inSlots c = sum [occurrences needle (atomJson f) | (InTargetSlot, f) <- cardFilters c]
-        elsewhere c = atoms (c {Face.combatRestrictions = [], Face.staticAbilities = []}) - inSlots c
+        elsewhere c = let bare = c {Face.combatRestrictions = [], Face.staticAbilities = []} in atoms bare - inSlots bare
         offenders = filter (anyFace ((/= 0) . elsewhere) . Printing.card) ps
     Spec.assertEqWith s "the atom is the engine's alone outside a gate" (fmap (S.nameOf . Printing.card) offenders) []
     -- Three legs of anti-vacuity, because the narrowing above could hide a real

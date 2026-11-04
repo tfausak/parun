@@ -120,7 +120,7 @@
     ],
     "step": "PrecombatMain"
   },
-  "description": "It enchants only an artifact an opponent controls. Each tap of bob's Icy Manipulator lets alice, the Aura's controller, choose: 1 damage to bob on turn 1, a creature being no target of that mode, then 1 life for her on turn 3.",
+  "description": "Relic Bind: enchants only an artifact an opponent controls; each tap of bob's Icy Manipulator lets alice, its controller, choose 1 damage to bob, not to a creature, or 1 life for herself",
   "timeline": [
     {
       "do": {
