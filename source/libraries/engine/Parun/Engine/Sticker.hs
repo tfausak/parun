@@ -45,10 +45,11 @@ refsOn pid slot sheet =
   ]
 
 -- | CR 123.3 / 123.2c: the stickers of these kinds on the player's chosen
--- sheets that are on no object they own, in any zone.
---
--- Not implemented: a ruling on a stickered card that changed owners; its
--- stickers count only against its current owner (#4888).
+-- sheets that are on no object they own, in any zone. CR 123.3 reads current
+-- ownership, so a stickered card that changed owners frees its sticker, and CR
+-- 729.4 puts main-game objects outside a subgame, so they use none up there.
+-- Parun.StickerSpec's "CR 123.3 a stickered card changing owners" and "CR 729.4"
+-- prove them.
 available :: PlayerId -> Set.Set StickerKind.StickerKind -> GameState -> [StickerRef.StickerRef]
 available pid kinds gs = case Map.lookup pid (GameState.players gs) of
   Nothing -> []
@@ -129,8 +130,9 @@ place optional placer oid kinds cap free = do
 -- | CR 123.6b: the object's CONTROLLER, or its owner for a card with none (CR
 -- 108.4a, which Projection.controllerOf answers), chooses where the word goes:
 -- the start, or after any number of the words now in its name, the longest
--- name's where it has several (gap #4901). An object whose names hold no word
--- has one position and is not asked.
+-- name's where it has several (docs/decisions.md, "Where a name sticker's word
+-- goes in an object with several names"). An object whose names hold no word has
+-- one position and is not asked.
 namePosition :: ObjectId -> Game Natural
 namePosition oid = do
   gs <- State.get

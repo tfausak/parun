@@ -23,8 +23,8 @@ wordCount = Natural.length . wordsOf
 
 -- | CR 123.6b-c: @word@ after the first @k@ words, or at the end of a name
 -- with fewer. A blank stays, and the word goes before a blank that follows
--- word k, parun's reading (gap #4900): docs/decisions.md, "Where a name
--- sticker's word goes beside a blank".
+-- word k, parun's reading: docs/decisions.md, "Where a name sticker's word goes
+-- beside a blank".
 insertAfter :: Natural -> Text.Text -> CardName.CardName -> CardName.CardName
 insertAfter k word name =
   let go :: Natural -> [Text.Text] -> [Text.Text]

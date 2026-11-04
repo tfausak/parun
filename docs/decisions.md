@@ -31,6 +31,26 @@ Each entry gives:
 
 Entries are ordered by the first rule each cites.
 
+## Whether a sticker outlasts the draw of its sheet
+
+- **Question**: A card left in exile through a restart, or a commander moved
+  into a subgame, keeps its stickers while each game draws sheets again. The
+  sticker's sheet may not be drawn this time, and if it is drawn, the sticker
+  is already on an object.
+- **Rules**: CR 103.2d, 123.2c, 123.3, 123.5, 727.5, 729.2, 729.2c; CR of
+  2026-08-07. No ruling.
+- **Decision**: The sticker stays and goes on applying off a sheet not drawn.
+  Off a drawn one, it counts as on an object its owner owns, so it is not
+  offered again.
+- **Rejected**: it comes off, which only CR 123.5's hidden zones do; it stays
+  but stops applying, since CR 123.2c's access limits which sticker a player
+  chooses, under CR 123.3, and no rule ends a placed sticker's effect.
+- **Site**: `Parun.Engine.Game.stickerContent`, which reads the brought sheets,
+  and `Parun.Engine.Sticker.available`, proved by `Parun.StickerSpec`'s "CR
+  727.5/123.2c a card left in exile keeps its stickers, one off an undrawn sheet
+  still applying and one off a drawn sheet still used".
+- **Issue**: #4887.
+
 ## Whether a merged copy of a mutating spell is a token
 
 - **Question**: A copy of a mutating creature spell merges with its target
@@ -192,6 +212,39 @@ Entries are ordered by the first rule each cites.
   the scenarios `cr-120-4c-elderscale-wurm-reads-the-life-before-*`.
 - **Issue**: #5809.
 
+## Whether a card a restart leaves in exile keeps its stickers
+
+- **Question**: CR 727.5 exempts a card from the restart, so it never moves and
+  CR 123.5 has nothing to say. Karn Liberated's ruling has it that no action
+  taken in the restarted game applies to the new one, and putting on a sticker
+  was one.
+- **Rules**: CR 123.5, 727.1, 727.5; Karn Liberated's ruling, "No actions taken
+  in the game that was restarted apply to the new game"; CR of 2026-08-07.
+- **Decision**: It keeps them. It stays the same object, as its CR 727.4 "those
+  cards" read needs. Every other card's stickers come off.
+- **Rejected**: it loses them under the ruling, whose example is an effect
+  carrying over rather than a change to a card that stays where it was.
+- **Site**: `Parun.Engine.Setup.restartGame`, proved by `Parun.StickerSpec`'s
+  "CR 727.5/123.2c a card left in exile keeps its stickers, one off an undrawn
+  sheet still applying and one off a drawn sheet still used".
+- **Issue**: #4887.
+
+## How a host's and a merging spell's stickers interleave
+
+- **Question**: Every sticker on either object takes a new timestamp at a merge.
+  CR 613.7k keeps the relative order of "those stickers" as an object "becomes
+  part of a merged permanent", which fixes each object's own and not how the
+  two objects' interleave.
+- **Rules**: CR 123.5b, 613.7k; CR of 2026-08-07. No ruling.
+- **Decision**: Old timestamp order across both objects.
+- **Rejected**: the host's then the spell's, or the reverse, which make the over
+  or under choice or which object is the host decide P/T when no rule ties the
+  two together.
+- **Site**: `Parun.Engine.Event.merge`, proved by `Parun.StickerSpec`'s "CR
+  613.7k a host's and a merging spell's stickers keep their old timestamp
+  order".
+- **Issue**: #4947.
+
 ## Where a name sticker's word goes beside a blank
 
 - **Question**: A name with a blank line (Wolf in _____ Clothing). The blank
@@ -205,6 +258,23 @@ Entries are ordered by the first rule each cites.
   `Parun.StickerSpec`'s "CR 123.6a Wolf in _____ Clothing offers four
   positions, and the word goes before a following blank".
 - **Issue**: #4900.
+
+## Where a name sticker's word goes in an object with several names
+
+- **Question**: CR 123.6b speaks of one name, but a split card off the stack and
+  a creature with Spy Kit have several, which may differ in length.
+- **Rules**: CR 123.6b, 123.6c, 612.7, 709.4; CR of 2026-08-07. No ruling.
+- **Decision**: One position, offered up to the longest name's word count, and
+  the word goes into every name: after that many words, or at the end of a
+  shorter name as CR 123.6c has it.
+- **Rejected**: one position per name, since CR 123.6b has the controller choose
+  one position and a Spy Kit host's names cannot be asked one by one; capping at
+  the shortest name, which refuses positions CR 123.6b allows in a longer one.
+- **Site**: `Parun.Engine.Sticker.namePosition` and
+  `Parun.Engine.Projection.applyModification`'s `InsertNameWords` arm, proved by
+  `Parun.StickerSpec`'s "CR 123.6b/612.7 positions run to the longest name and a
+  shorter name takes the word at its end".
+- **Issue**: #4901.
 
 ## Whether Confusion in the Ranks counts Kindred as a shared type
 

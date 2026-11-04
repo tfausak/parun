@@ -9940,8 +9940,8 @@ meldable victims gs = do
 -- Object.face is left to an unmerged permanent: Game.shownFace reads the pile's.
 --
 -- CR 123.5b / 613.7k: the spell's stickers join the host's, all restamped at
--- the merge, in their old timestamp order across the two objects, which the rule
--- does not fix (gap #4947).
+-- the merge, in their old timestamp order across the two objects:
+-- docs/decisions.md, "How a host's and a merging spell's stickers interleave".
 merge :: ObjectId -> ObjectId -> MutateSide.MutateSide -> Game Bool
 merge sid target side = do
   gs <- State.get
