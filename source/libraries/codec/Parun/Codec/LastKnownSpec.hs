@@ -5,6 +5,7 @@ import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Parun.Codec.LastKnown as LastKnown
 import qualified Parun.Codec.ProjectedCharacteristicsSpec as ProjectedCharacteristicsSpec
+import qualified Parun.Codec.TriggeredAbilitySourceSpec as TriggeredAbilitySourceSpec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.Acquisition as Acquisition
@@ -23,6 +24,7 @@ import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
+import qualified Parun.Types.ModeIndex as ModeIndex
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.PlayerChoice as PlayerChoice
 import qualified Parun.Types.PlayerId as PlayerId
@@ -70,6 +72,7 @@ spec s = Spec.describe s "Parun.Codec.LastKnown" $ do
           LastKnown.paidCosts = Map.singleton (Keyword.Offspring (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) [])) (Map.singleton (KeywordInstance.Own 1) 1),
           LastKnown.prototyped = True,
           LastKnown.announcedX = Just 4,
+          LastKnown.chosenModes = Map.singleton TriggeredAbilitySourceSpec.ability (Set.singleton (ModeIndex.MkModeIndex 2)),
           LastKnown.controlClock = Map.singleton (PlayerId.MkPlayerId 1) ControlClock.SinceLastUpkeep,
           LastKnown.zone = Zone.Battlefield,
           LastKnown.home = Zone.Command,
@@ -87,6 +90,7 @@ spec s = Spec.describe s "Parun.Codec.LastKnown" $ do
           <> ",\"paidCosts\":[{\"key\":{\"type\":\"Offspring\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}},\"value\":[{\"key\":{\"type\":\"Own\",\"value\":1},\"value\":1}]}]"
           <> ",\"prototyped\":true"
           <> ",\"announcedX\":4"
+          <> ",\"chosenModes\":[{\"key\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}},\"value\":[2]}]"
           <> ",\"controlClock\":[{\"player\":1,\"clock\":{\"type\":\"SinceLastUpkeep\"}}]"
           <> ",\"zone\":{\"type\":\"Battlefield\"},\"home\":{\"type\":\"Command\"},\"pile\":6"
           <> ",\"lapsedGrants\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":3},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":5}}}]} "
@@ -120,6 +124,7 @@ spec s = Spec.describe s "Parun.Codec.LastKnown" $ do
           LastKnown.paidCosts = Map.empty,
           LastKnown.prototyped = False,
           LastKnown.announcedX = Nothing,
+          LastKnown.chosenModes = Map.empty,
           LastKnown.controlClock = Map.empty,
           LastKnown.zone = Zone.Stack,
           LastKnown.home = Zone.Battlefield,

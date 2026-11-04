@@ -785,6 +785,7 @@ lastKnownRiderSpec s registry =
                     LastKnown.paidCosts = Map.empty,
                     LastKnown.prototyped = False,
                     LastKnown.announcedX = Nothing,
+                    LastKnown.chosenModes = Map.empty,
                     -- CR 702.30a: nothing here asks about an echo window.
                     LastKnown.controlClock = Map.empty,
                     LastKnown.zone = Zone.Battlefield,

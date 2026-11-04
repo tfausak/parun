@@ -10216,6 +10216,8 @@ lastKnownFrom gs oid obj =
     (Object.prototyped obj)
     -- CR 107.3m's, for the same reason.
     (Object.announcedX obj)
+    -- CR 700.2b's memory, per-incarnation (CR 400.7).
+    (Object.chosenModes obj)
     -- CR 702.30a's echo window: per-incarnation, so this is the last moment it
     -- exists.
     (Object.controlClock obj)
