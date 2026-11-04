@@ -18,6 +18,7 @@ import qualified Parun.Codec.CreatureExploits as CreatureExploits
 import qualified Parun.Codec.DamageTrigger as DamageTrigger
 import qualified Parun.Codec.DieResult as DieResult
 import qualified Parun.Codec.DiscardTrigger as DiscardTrigger
+import qualified Parun.Codec.EntersTrigger as EntersTrigger
 import qualified Parun.Codec.Filter as Filter
 import qualified Parun.Codec.Keyword as Keyword
 import qualified Parun.Codec.LeavesTrigger as LeavesTrigger
@@ -59,9 +60,7 @@ codec =
   let filterCodec = Filter.codec Keyword.codec
    in Arm.tagged
         tagOf
-        [ Arm.nullary "SelfEnters" TriggerCondition.SelfEnters,
-          Arm.payload "PermanentEnters" filterCodec TriggerCondition.PermanentEnters (\x -> case x of TriggerCondition.PermanentEnters y -> Just y; _ -> Nothing),
-          Arm.payload "PermanentsEnter" filterCodec TriggerCondition.PermanentsEnter (\x -> case x of TriggerCondition.PermanentsEnter y -> Just y; _ -> Nothing),
+        [ Arm.payload "Enters" EntersTrigger.codec TriggerCondition.Enters (\x -> case x of TriggerCondition.Enters y -> Just y; _ -> Nothing),
           Arm.payload "StepBegins" StepBegins.codec TriggerCondition.StepBegins (\x -> case x of TriggerCondition.StepBegins y -> Just y; _ -> Nothing),
           Arm.payload "StateIs" Condition.codec TriggerCondition.StateIs (\x -> case x of TriggerCondition.StateIs y -> Just y; _ -> Nothing),
           Arm.payload "DealsDamage" DamageTrigger.codec TriggerCondition.DealsDamage (\x -> case x of TriggerCondition.DealsDamage y -> Just y; _ -> Nothing),
@@ -152,9 +151,7 @@ codec =
 
 tagOf :: TriggerCondition.TriggerCondition -> String
 tagOf x = case x of
-  TriggerCondition.SelfEnters {} -> "SelfEnters"
-  TriggerCondition.PermanentEnters {} -> "PermanentEnters"
-  TriggerCondition.PermanentsEnter {} -> "PermanentsEnter"
+  TriggerCondition.Enters {} -> "Enters"
   TriggerCondition.StepBegins {} -> "StepBegins"
   TriggerCondition.StateIs {} -> "StateIs"
   TriggerCondition.DealsDamage {} -> "DealsDamage"

@@ -45,7 +45,8 @@
             "type": "AnyOf",
             "value": [
               {
-                "type": "SelfEnters"
+                "type": "Enters",
+                "value": {}
               },
               {
                 "type": "Attacks",

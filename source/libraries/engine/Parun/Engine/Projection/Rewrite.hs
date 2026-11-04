@@ -146,6 +146,7 @@ import qualified Parun.Types.EachCardInGraveyard as EachCardInGraveyard
 import qualified Parun.Types.EachCardInHand as EachCardInHand
 import qualified Parun.Types.Earthbend as Earthbend
 import qualified Parun.Types.Effect as Effect
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EntersWith as EntersWith
 import qualified Parun.Types.EntriesTrigger as EntriesTrigger
 import qualified Parun.Types.EntryFlip as EntryFlip
@@ -2081,8 +2082,9 @@ rewriteCounterHolder pairs holder = case holder of
 rewriteTriggerCondition :: [(TextWord.TextWord, TextWord.TextWord)] -> TriggerCondition.TriggerCondition -> TriggerCondition.TriggerCondition
 rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.StateIs c -> TriggerCondition.StateIs (rewriteCondition pairs c)
-  TriggerCondition.PermanentEnters f -> TriggerCondition.PermanentEnters (Filter.rewrite pairs f)
-  TriggerCondition.PermanentsEnter f -> TriggerCondition.PermanentsEnter (Filter.rewrite pairs f)
+  -- Positional, so a later field fails to compile here rather than riding a
+  -- record update unrewritten.
+  TriggerCondition.Enters (EntersTrigger.MkEntersTrigger permanent batching) -> TriggerCondition.Enters (EntersTrigger.MkEntersTrigger (acting permanent) batching)
   TriggerCondition.CardPutIntoGraveyard p -> TriggerCondition.CardPutIntoGraveyard p {CardPutIntoGraveyard.filter = Filter.rewrite pairs (CardPutIntoGraveyard.filter p)}
   -- The Filter is rewritten and the TurnScope carried through, the SpellCast arm's
   -- reason: a rebuild that dropped the field would reset the trigger to firing on
@@ -2097,7 +2099,6 @@ rewriteTriggerCondition pairs condition = case condition of
   -- The TurnScope is carried through untouched, not dropped: a rebuild that
   -- forgot the field would reset a text-changed trigger to firing every turn.
   TriggerCondition.SpellCast (SpellCast.MkSpellCast f scope fromZone ordinal window copies) -> TriggerCondition.SpellCast (SpellCast.MkSpellCast (Filter.rewrite pairs f) scope fromZone ordinal window copies)
-  TriggerCondition.SelfEnters -> condition
   TriggerCondition.StepBegins {} -> condition
   -- Positional, so a field the record gains stops the build here: a kind and a
   -- card type name no subtype for CR 612.1's pairs to swap.

@@ -214,6 +214,7 @@ import qualified Parun.Types.Earthbend as Earthbend
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.Emerge as Emerge
 import qualified Parun.Types.EnteredZone as EnteredZone
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EntersWith as EntersWith
 import qualified Parun.Types.EntriesTrigger as EntriesTrigger
 import qualified Parun.Types.EntryAttack as EntryAttack
@@ -2865,6 +2866,7 @@ scopeNames asking x = case x of
   Scope.OverPlayers playerRef -> playerRefNames asking playerRef
   Scope.OverBound _ slotName -> slotNames asking slotName
   Scope.InPosition _position inZone -> inZoneNames asking inZone
+  Scope.AsTurnBegan -> mempty
 
 searchNames :: (Monoid r) => Asking r -> Search.Search -> r
 searchNames asking x = case x of
@@ -3015,6 +3017,11 @@ attackTriggerNames asking x = case x of
   AttackTrigger.Declaration declarationTrigger -> declarationTriggerNames asking declarationTrigger
   AttackTrigger.Unblocked filter_ -> filterNames asking filter_
 
+entersTriggerNames :: (Monoid r) => Asking r -> EntersTrigger.EntersTrigger -> r
+entersTriggerNames asking x = case x of
+  -- A batching, which names nothing.
+  EntersTrigger.MkEntersTrigger permanent _batching -> actingPermanentNames asking permanent
+
 leavesTriggerNames :: (Monoid r) => Asking r -> LeavesTrigger.LeavesTrigger -> r
 leavesTriggerNames asking x = case x of
   -- Zones and a batching, which name nothing.
@@ -3068,9 +3075,7 @@ blockCountNames asking x = case x of
 
 triggerConditionNames :: (Monoid r) => Asking r -> TriggerCondition.TriggerCondition -> r
 triggerConditionNames asking x = case x of
-  TriggerCondition.SelfEnters -> mempty
-  TriggerCondition.PermanentEnters filter_ -> filterNames asking filter_
-  TriggerCondition.PermanentsEnter filter_ -> filterNames asking filter_
+  TriggerCondition.Enters entersTrigger -> entersTriggerNames asking entersTrigger
   TriggerCondition.StepBegins stepBegins -> stepBeginsNames asking stepBegins
   TriggerCondition.StateIs condition -> conditionNames asking condition
   TriggerCondition.DealsDamage damageTrigger -> damageTriggerNames asking damageTrigger

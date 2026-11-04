@@ -20,6 +20,7 @@ import qualified Parun.Engine.Projection.View as ProjectionView
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
 import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
+import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.AttackCount as AttackCount
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackTrigger as AttackTrigger
@@ -62,6 +63,7 @@ import qualified Parun.Types.DiscardSubject as DiscardSubject
 import qualified Parun.Types.DiscardTrigger as DiscardTrigger
 import qualified Parun.Types.Discarded as Discarded
 import qualified Parun.Types.Drew as Drew
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.Exploited as Exploited
 import qualified Parun.Types.Filter as Filter.Type
 import Parun.Types.GameEvent (GameEvent)
@@ -273,32 +275,8 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
     Binding.setBecame (ZoneChange.object (Moved.change m)) Map.empty
   (TriggerCondition.CardPutIntoGraveyard _, GameEvent.CardArrived zc) ->
     Binding.setBecame (ZoneChange.object zc) Map.empty
-  -- CR 400.7e again, read in the ENTRY direction: the object that moved is the
-  -- entrant, and what it became is the permanent now on the battlefield --
-  -- ZoneChange.object, the field leavesBindings reads for the same reason.
-  --
-  -- The SAME slot as a death's, CR 400.7e being one rule with two readings. What
-  -- differs is which object CR 113.7a's source happens to be, a fact about the
-  -- CONDITION rather than the slot: a self death matches the departing incarnation, so
-  -- `triggerSource` and `became` are two incarnations of one card, while here the
-  -- bearer is another permanent entirely. Two slots would have to be kept apart by
-  -- every reader for a distinction no rule draws -- and Resolve, where the slot is
-  -- read, never learns which condition placed the ability.
-  --
-  -- The public-zone proviso holds by construction here too, `to == Battlefield`
-  -- having already been required.
-  --
-  -- Bound whatever the Filter admits, creature or not: whether the entrant can
-  -- RECEIVE what the payload does is the payload's question (CR 120.1a for
-  -- damage), and a binding that existed only for creatures would make the slot's
-  -- presence depend on the entrant, which eventBindingSlots cannot express.
-  (TriggerCondition.PermanentEnters _, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)) ->
-    Binding.setBecame (ZoneChange.object zc) Map.empty
-  -- Its batch reading stamps the same entrant as a one-member GROUP, so
-  -- batchBindings' append joins the whole entry event's entrants under one
-  -- slot (CR 603.2c) where a recipient would keep only the first.
-  (TriggerCondition.PermanentsEnter _, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)) ->
-    Binding.setBecameGroup (Seq.singleton (ZoneChange.object zc)) Map.empty
+  -- CR 603.6a: entersSlots' slots, off the entry matched.
+  (TriggerCondition.Enters t, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)) -> entersBindings gs t zc
   -- CR 708.7's "that creature": the permanent that was turned face up, which Pine
   -- Walker untaps. The bearer is a bystander here -- CR 113.7a's source slot names
   -- the WATCHER, and on Pine Walker's own board the two are different permanents --
@@ -314,13 +292,13 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- ability, so a second slot would be two names for one notion kept apart by
   -- every reader for a distinction no rule draws. It is also the only choice that
   -- serves CR 603.1b's AnyOf, whose slots eventBindingSlots INTERSECTS: a fresh
-  -- name would make the intersection with PermanentEnters empty forever, and
+  -- name would make the intersection with Matching Enters empty forever, and
   -- Case of the Pilfered Proof reads exactly that intersection.
   --
   -- Unconditional given a match, which is what eventBindingSlots' per-condition
   -- promise needs: every GameEvent.TurnedFaceUp carries exactly one permanent.
   -- Bound whatever the Filter admitted,
-  -- for the PermanentEnters arm's reason.
+  -- for entersSlots' reason.
   --
   -- SelfTurnedFaceUp gets no such arm: there the subject IS the bearer, whom CR
   -- 113.7a's source slot already names.
@@ -567,14 +545,6 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
     Binding.setAttackingCreature attacker Map.empty
   (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker _ (BlockCount.AtLeast _ _)), GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker})) ->
     Binding.setAttackingCreature attacker Map.empty
-  -- CR 603.6a's "enters attached to a creature": that host, bound as the
-  -- trigger is placed, so Infinite Reflection copies it even once the Aura has
-  -- moved on (its ruling, 2012-05-01). Through CR 608.2h's record where CR
-  -- 704.5m buried the Aura before the trigger was placed (CR 704.3), which
-  -- data/scenarios/copy's Infinite Reflection scenario proves. Bound only for an
-  -- entrant that was attached to an object.
-  (TriggerCondition.SelfEnters, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)) ->
-    maybe Map.empty (`Binding.setAttachedHost` Map.empty) (Game.hostWithLastKnown (ZoneChange.object zc) gs)
   -- CR 701.3a's "that creature" read from the ATTACHMENT: the host the bearer
   -- went onto, which Enormous Energy Blade taps. SelfBecomesAttachedBy has no arm
   -- here at all, and the two together are the pair -- whichever end of rule
@@ -1066,6 +1036,56 @@ attackSlots trigger = case trigger of
     Just _ -> Set.fromList [Binding.attackingPlayer, Binding.attackingCreatures]
   AttackTrigger.Unblocked _ -> Set.fromList [Binding.attackingCreature, Binding.triggerPlayer]
 
+-- CR 603.6a: the slots an entry trigger stamps, by subject: the floor, then
+-- those bound only sometimes.
+--
+-- A Self subject's entrant IS the bearer, so CR 113.7a's source slot already
+-- names it and `became` would be a second name for one object. It binds the
+-- host it entered attached to ("enters attached to a creature"), as the trigger
+-- is placed, so Infinite Reflection copies it even once the Aura has moved on
+-- (its ruling, 2012-05-01): through CR 608.2h's record where CR 704.5m buried
+-- the Aura before the trigger was placed (CR 704.3), which data/scenarios/copy's
+-- Infinite Reflection scenario proves. Only sometimes, since only an entrant
+-- attached to an object has one; data/cards/infinite-reflection.json is the
+-- reader.
+--
+-- A Matching subject binds CR 400.7e's `became` in the ENTRY direction: the
+-- object that moved is the entrant, and what it became is the permanent now on
+-- the battlefield -- ZoneChange.object, the field leavesBindings reads for the
+-- same reason. The SAME slot as a death's, CR 400.7e being one rule with two
+-- readings. What differs is which object CR 113.7a's source happens to be, a
+-- fact about the CONDITION rather than the slot: a self death matches the
+-- departing incarnation, so `triggerSource` and `became` are two incarnations of
+-- one card, while here the bearer is another permanent entirely. Two slots
+-- would have to be kept apart by every reader for a distinction no rule draws
+-- -- and Resolve, where the slot is read, never learns which condition placed
+-- the ability. The public-zone proviso holds by construction, `to ==
+-- Battlefield` having already been required. Bound whatever the Filter admits,
+-- creature or not: whether the entrant can RECEIVE what the payload does is the
+-- payload's question (CR 120.1a for damage), and a binding that existed only
+-- for creatures would make the slot's presence depend on the entrant, which
+-- eventBindingSlots cannot express. On the floor, so guaranteed given a match.
+--
+-- A OneOrMore batch stamps the same entrant as a one-member GROUP, so
+-- batchBindings' append joins the whole entry event's entrants under one slot
+-- (CR 603.2c) where a recipient would keep only the first: Dunbarrow
+-- Revivalist's boon attaches its Role to "one of them", which a choice among the
+-- group reads.
+entersSlots :: EntersTrigger.EntersTrigger -> (Set.Set SlotName.SlotName, Set.Set SlotName.SlotName)
+entersSlots t = case EntersTrigger.permanent t of
+  ActingPermanent.Self -> (Set.empty, Set.singleton Binding.attachedHost)
+  ActingPermanent.Matching _ -> (Set.singleton Binding.became, Set.empty)
+
+-- CR 603.6a: entersSlots, stamped off the entry eventBindings was reached past.
+entersBindings :: GameState -> EntersTrigger.EntersTrigger -> ZoneChange.ZoneChange -> Map.Map SlotName.SlotName Binding
+entersBindings gs t zc = case EntersTrigger.permanent t of
+  ActingPermanent.Self -> maybe Map.empty (`Binding.setAttachedHost` Map.empty) (Game.hostWithLastKnown entrant gs)
+  ActingPermanent.Matching _ -> case EntersTrigger.batching t of
+    Batching.EachOccurrence -> Binding.setBecame entrant Map.empty
+    Batching.OneOrMore -> Binding.setBecameGroup (Seq.singleton entrant) Map.empty
+  where
+    entrant = ZoneChange.object zc
+
 -- CR 603.6c: which slots a leaves-the-battlefield trigger is GUARANTEED to bind
 -- given a match (eventBindingSlots' floor), and which only for some of its
 -- departures (eventBindingSlotsSometimes), by subject and destination.
@@ -1183,9 +1203,9 @@ attackBindings gs bearer you trigger event = case (trigger, event) of
 --
 -- The shape is conditional because the two readers are: an ObjectRef reads
 -- either, while a bare SlotName read through Parun.Engine.Resolve's legalOne
--- (Unstable Shapeshifter) reads only the recipient. That reader hangs on
--- PermanentEnters, which cannot split. Every condition that can carry a split is
--- a battlefield DEPARTURE -- CR 712.21's own scope -- and its readers reach the
+-- (Unstable Shapeshifter) reads only the recipient. That reader hangs on a
+-- Matching Enters, which cannot split. Every condition that can carry a split
+-- is a battlefield DEPARTURE -- CR 712.21's own scope -- and its readers reach the
 -- whole group: Promise of Tomorrow, Yedora Grave Gardener and Endless
 -- Cockroaches spend the slot as an ObjectRef, and rule 702.55a's haunt
 -- (Effect.ExileHaunting under a self death) reads it group first. Screams from
@@ -1291,17 +1311,8 @@ eventBindingSlots cond = case cond of
   -- CR 701.3d's mirror, on its own slot for Parun.Engine.Binding.unattachedHost's
   -- reason.
   TriggerCondition.SelfBecomesUnattachedFrom _ -> Set.singleton Binding.unattachedHost
-  -- CR 603.6a's two written forms differ only in which object the bearer is.
-  -- SelfEnters matches on `object == bearer`, so CR 113.7a's source slot already
-  -- names the entrant and `became` would be a second name for one object.
-  -- "Whenever a [type] enters" has no such luck.
-  TriggerCondition.SelfEnters -> Set.empty
-  TriggerCondition.PermanentEnters _ -> Set.singleton Binding.became
-  -- The batch's entrants, every member's `became` joined as a GROUP by
-  -- batchBindings: Dunbarrow Revivalist's boon attaches its Role to "one of
-  -- them", which a choice among the group reads. Guaranteed given a match, the
-  -- PermanentEnters arm's reason.
-  TriggerCondition.PermanentsEnter _ -> Set.singleton Binding.became
+  -- CR 603.6a: entersSlots has the whole of it.
+  TriggerCondition.Enters t -> fst (entersSlots t)
   -- CR 603.2b's step beginning names no OBJECT -- but it names the active player,
   -- and the active player is not what CR 109.5's `you` means, so "that player"
   -- needs a slot of its own. Shizuko, Caller of Autumn is the reader.
@@ -1691,9 +1702,8 @@ eventBindingSlots cond = case cond of
 -- which unions where the floor's pin intersects.
 eventBindingSlotsSometimes :: TriggerCondition -> Set.Set SlotName.SlotName
 eventBindingSlotsSometimes cond = case cond of
-  -- The host an Aura entered attached to, bound only where the entrant is
-  -- attached. data/cards/infinite-reflection.json is the reader.
-  TriggerCondition.SelfEnters -> Set.singleton Binding.attachedHost
+  -- The host a Self entrant entered attached to: entersSlots has it.
+  TriggerCondition.Enters t -> snd (entersSlots t)
   -- CR 400.7e's and CR 400.7f's proviso where the trigger admits a hidden
   -- destination or none: leavesSlots has the whole of it.
   TriggerCondition.Leaves t -> snd (leavesSlots t)
@@ -1720,7 +1730,7 @@ eventBindingSlotsSometimes cond = case cond of
   -- CR 603.1b's branches disagreeing with each other, which is a fourth way for a
   -- slot to be bound for some of a condition's events and not all: eventBindings
   -- stamps whatever the MATCHED branch does, while the floor above intersects.
-  -- Balemurk Leech is the pool's shape -- PermanentEnters binds CR 400.7e's
+  -- Balemurk Leech is the pool's shape -- a Matching Enters binds CR 400.7e's
   -- `became` and RoomFullyUnlocked binds nothing, so a room unlocking leaves the
   -- slot empty and a matching enchantment entering fills it.
   --

@@ -10,6 +10,7 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.Card as Card
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
@@ -28,7 +29,7 @@ import qualified Parun.Types.TriggeredAbilitySource as TriggeredAbilitySource
 ability :: TriggeredAbility.TriggeredAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)
 ability =
   TriggeredAbility.MkTriggeredAbility
-    { TriggeredAbility.condition = TriggerCondition.SelfEnters,
+    { TriggeredAbility.condition = TriggerCondition.Enters EntersTrigger.defaultValue,
       TriggeredAbility.modal =
         Modal.MkModal
           (Seq.singleton (Mode.MkMode Seq.empty Map.empty))
@@ -57,7 +58,7 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbilitySource" $ do
           TriggeredAbilitySource.delayed = Map.empty,
           TriggeredAbilitySource.acquisition = Acquisition.Own
         }
-      " {\"source\":6,\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}}} "
+      " {\"source\":6,\"ability\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}}} "
   -- CR 603.7a: the same record for an ability that fired from a delayed entry,
   -- which is the one case the key is present for.
   Spec.it s "a delayed triggered ability, which carries when it was created" $
@@ -71,7 +72,7 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbilitySource" $ do
           TriggeredAbilitySource.delayed = Map.empty,
           TriggeredAbilitySource.acquisition = Acquisition.Own
         }
-      " {\"source\":6,\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}},\"createdAt\":3} "
+      " {\"source\":6,\"ability\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}},\"createdAt\":3} "
   -- CR 113.7a: the delayed declarations frozen as the ability triggered.
   Spec.it s "a triggered ability carrying its source's delayed declarations" $
     Common.assertCodec
@@ -84,7 +85,7 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbilitySource" $ do
           TriggeredAbilitySource.delayed = Map.singleton (AbilityName.MkAbilityName (Text.pack "later")) ability,
           TriggeredAbilitySource.acquisition = Acquisition.Own
         }
-      " {\"source\":6,\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}},\"delayed\":{\"later\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}}}} "
+      " {\"source\":6,\"ability\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}},\"delayed\":{\"later\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}}}} "
   -- CR 607.5: an ability a copy effect gave its source, which is the one case
   -- the key is present for.
   Spec.it s "a triggered ability a copy effect gave its source" $
@@ -98,6 +99,6 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbilitySource" $ do
           TriggeredAbilitySource.delayed = Map.empty,
           TriggeredAbilitySource.acquisition = Acquisition.Copied (Timestamp.MkTimestamp 4)
         }
-      " {\"source\":6,\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}},\"acquisition\":{\"type\":\"Copied\",\"value\":4}} "
+      " {\"source\":6,\"ability\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}},\"acquisition\":{\"type\":\"Copied\",\"value\":4}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s TriggeredAbilitySource.codec

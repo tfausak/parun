@@ -22,7 +22,7 @@ spec s = Spec.describe s "Parun.Codec.AbilityTriggered" $ do
             AbilityTriggered.ability = TriggeredAbilitySourceSpec.ability
           }
       )
-      " {\"source\":{\"type\":\"OfObject\",\"value\":1},\"controller\":0,\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}}} "
+      " {\"source\":{\"type\":\"OfObject\",\"value\":1},\"controller\":0,\"ability\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}}} "
   -- CR 725.2 / CR 702.179d: the same record for an inherent ability with no
   -- object behind it, where the controller is what tells two players' instances
   -- of the one ability apart.
@@ -36,5 +36,5 @@ spec s = Spec.describe s "Parun.Codec.AbilityTriggered" $ do
             AbilityTriggered.ability = TriggeredAbilitySourceSpec.ability
           }
       )
-      " {\"source\":{\"type\":\"Sourceless\"},\"controller\":1,\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}}} "
+      " {\"source\":{\"type\":\"Sourceless\"},\"controller\":1,\"ability\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s AbilityTriggered.codec

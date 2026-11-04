@@ -106,36 +106,41 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentEnters",
+            "type": "Enters",
             "value": {
-              "type": "Or",
-              "value": [
-                {
-                  "type": "IsSource"
-                },
-                {
-                  "type": "And",
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "Or",
                   "value": [
                     {
-                      "type": "HasSubtype",
-                      "value": {
-                        "type": "Dragon"
-                      }
+                      "type": "IsSource"
                     },
                     {
-                      "type": "HeldBy",
-                      "value": {
-                        "holder": {
-                          "type": "Controller"
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HasSubtype",
+                          "value": {
+                            "type": "Dragon"
+                          }
                         },
-                        "relation": {
-                          "type": "You"
+                        {
+                          "type": "HeldBy",
+                          "value": {
+                            "holder": {
+                              "type": "Controller"
+                            },
+                            "relation": {
+                              "type": "You"
+                            }
+                          }
                         }
-                      }
+                      ]
                     }
                   ]
                 }
-              ]
+              }
             }
           },
           "modal": {

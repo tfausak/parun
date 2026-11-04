@@ -18,6 +18,7 @@ import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DieResult as DieResult
 import qualified Parun.Types.DiscardTrigger as DiscardTrigger
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
@@ -51,14 +52,8 @@ import qualified Parun.Types.TriggerFrequency as TriggerFrequency
 -- filtered condition reads them, and so does. That is why several rules have a
 -- constructor of each shape rather than one written as `Filter.IsSource`.
 data TriggerCondition
-  = -- | CR 603.6a: "when this ... enters". Self-scoped.
-    SelfEnters
-  | -- | CR 603.6a read by a bystander: "whenever a [type] enters", the bearer
-    -- included.
-    PermanentEnters (Filter.Filter Keyword.Keyword)
-  | -- | CR 603.2c's batch reading of the arm above: "when one or more creatures
-    -- enter under your control" (Dunbarrow Revivalist's boon), once for the batch.
-    PermanentsEnter (Filter.Filter Keyword.Keyword)
+  = -- | CR 603.6a: a permanent enters the battlefield.
+    Enters EntersTrigger.EntersTrigger
   | -- | CR 603.2b: "at the beginning of [each|your] <step>"; the TurnScope
     -- decides whose turn qualifies.
     StepBegins StepBegins.StepBegins

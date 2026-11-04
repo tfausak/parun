@@ -85,9 +85,14 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentEnters",
+            "type": "Enters",
             "value": {
-              "type": "IsSource"
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "IsSource"
+                }
+              }
             }
           },
           "modal": {

@@ -119,6 +119,7 @@ import qualified Parun.Types.EachCardInExiledPile as EachCardInExiledPile
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.Emerge as Emerge
 import qualified Parun.Types.EndingStep as EndingStep
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EntryAttack as EntryAttack
 import qualified Parun.Types.EntryController as EntryController
 import qualified Parun.Types.EntryR as EntryR
@@ -6433,9 +6434,7 @@ graft =
               MoveCounters.to = ObjectRef.InSlot Binding.became
             }
    in Mint.triggerOf
-        ( TriggerCondition.PermanentEnters
-            (Filter.And [Filter.HasCardType CardType.Creature, Filter.Not Filter.IsSource])
-        )
+        (TriggerCondition.Enters (EntersTrigger.matching (Filter.And [Filter.HasCardType CardType.Creature, Filter.Not Filter.IsSource])))
         ( Just
             ( Condition.Compares
                 (Compares.MkCompares (Quantity.ObjectCounters CounterKind.PlusOnePlusOne) Comparison.AtLeast (Quantity.Literal 1))
@@ -6520,7 +6519,7 @@ soulbondSelfEnters =
         Mint.youMay
           (Seq.singleton (Effect.Pair (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents unpairedOther (PlayerRef.Relative PlayerRelation.You) HowMany.one Zone.Battlefield))))
    in Mint.triggerOf
-        TriggerCondition.SelfEnters
+        (TriggerCondition.Enters EntersTrigger.defaultValue)
         ( Just
             ( Condition.All
                 [ soulbondSelfEligible,
@@ -6556,12 +6555,14 @@ soulbondOtherEnters =
         Mint.youMay
           (Seq.singleton (Effect.Pair (ObjectRef.InSlot Binding.became)))
    in Mint.triggerOf
-        ( TriggerCondition.PermanentEnters
-            ( Filter.And
-                [ Filter.HasCardType CardType.Creature,
-                  Filter.HeldBy Holder.Controller PlayerRelation.You,
-                  Filter.Not Filter.IsSource
-                ]
+        ( TriggerCondition.Enters
+            ( EntersTrigger.matching
+                ( Filter.And
+                    [ Filter.HasCardType CardType.Creature,
+                      Filter.HeldBy Holder.Controller PlayerRelation.You,
+                      Filter.Not Filter.IsSource
+                    ]
+                )
             )
         )
         ( Just
@@ -6586,9 +6587,7 @@ evolve =
               (Quantity.Arithmetic (Arithmetic.Plus (Plus.MkPlus quantity (Quantity.Literal 1))))
           )
    in Mint.triggerIf
-        ( TriggerCondition.PermanentEnters
-            (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You])
-        )
+        (TriggerCondition.Enters (EntersTrigger.matching (Filter.And [Filter.HasCardType CardType.Creature, Filter.HeldBy Holder.Controller PlayerRelation.You])))
         (Condition.Any (fmap (entrantExceeds . Quantity.Measure) [Measure.Power, Measure.Toughness]))
         (Seq.singleton effect)
 
@@ -7304,7 +7303,7 @@ evoke :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 evoke =
   let effect = Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot Binding.triggerSource, SacrificeEffect.sacrificer = Sacrificer.PermanentController, SacrificeEffect.sacrificed = Nothing}
    in Mint.triggerIf
-        TriggerCondition.SelfEnters
+        (TriggerCondition.Enters EntersTrigger.defaultValue)
         (Condition.Compares (Compares.MkCompares (Quantity.CastUsing (KeywordDesignator.OfFamily KeywordFamily.Evoke)) Comparison.AtLeast (Quantity.Literal 1)))
         (Seq.singleton effect)
 
@@ -7347,7 +7346,7 @@ offspring cost = paidTokenCopies (Keyword.Offspring cost) (Quantity.Literal 1) [
 gift :: Gift.Gift -> Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 gift something ordinal =
   Mint.triggerIf
-    TriggerCondition.SelfEnters
+    (TriggerCondition.Enters EntersTrigger.defaultValue)
     (Condition.Compares (Compares.MkCompares (Quantity.TimesPaid (KeywordDesignator.OfInstance (Keyword.Gift something) ordinal)) Comparison.AtLeast (Quantity.Literal 1)))
     (Seq.fromList [giftEffect something (KeywordInstance.Own ordinal), Effect.GiveGift])
 
@@ -7446,7 +7445,7 @@ paidTokenCopies keyword quantity exceptions ordinal =
               CreateCopy.linked = False
             }
    in Mint.triggerIf
-        TriggerCondition.SelfEnters
+        (TriggerCondition.Enters EntersTrigger.defaultValue)
         (Condition.Compares (Compares.MkCompares (Quantity.TimesPaid (KeywordDesignator.OfInstance keyword ordinal)) Comparison.AtLeast (Quantity.Literal 1)))
         (Seq.singleton copied)
 
@@ -7562,7 +7561,7 @@ spiritToken =
 -- it as the ability resolves. X is CR 107.3m's announced one, read as
 -- Quantity.InSlot Binding.variableX: the permanent carries no such binding (CR
 -- 400.7), so both checks answer it out of Filter.Context's boundAmounts, which
--- Parun.Engine.Condition.inheritedX fills on a SelfEnters trigger alone --
+-- Parun.Engine.Condition.inheritedX fills on a Self Enters trigger alone --
 -- rule 107.3m's own boundary, the one Parun.Engine.Engine.placeBorne already draws
 -- for a trigger's target count.
 --
@@ -7571,7 +7570,7 @@ ravenous :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 ravenous =
   let effect = Effect.Draw Draw.MkDraw {Draw.player = PlayerRef.Relative PlayerRelation.You, Draw.quantity = Quantity.Literal 1, Draw.slot = Nothing}
    in Mint.triggerIf
-        TriggerCondition.SelfEnters
+        (TriggerCondition.Enters EntersTrigger.defaultValue)
         ( Condition.Compares
             (Compares.MkCompares (Quantity.InSlot Binding.variableX) Comparison.AtLeast (Quantity.Literal 5))
         )
@@ -7580,7 +7579,7 @@ ravenous =
 -- CR 702.123a: fabricate N. "When this permanent enters, you may put N +1/+1
 -- counters on it. If you don't, create N 1/1 colorless Servo artifact creature
 -- tokens." Afterlife's mint over CR 603.6a's entry event, so the condition is
--- TriggerCondition.SelfEnters; Glint-Sleeve Artisan is the printing.
+-- a Self TriggerCondition.Enters; Glint-Sleeve Artisan is the printing.
 --
 -- ONE CLAUSE and no branching opcode: rule 702.123a prints CR 118.12a's rewriting
 -- already performed, so CR 118.12 makes the counters a COST paid as the ability
@@ -7628,14 +7627,14 @@ fabricate n =
               Create.linked = False
             }
    in Mint.triggerOf
-        TriggerCondition.SelfEnters
+        (TriggerCondition.Enters EntersTrigger.defaultValue)
         Nothing
         (Mint.oneModeOf Map.empty (Seq.singleton clause))
 
 -- CR 702.165a: "When this creature enters, put N +1\/+1 counters on target
 -- creature. If that's another creature, it also gains the non-backup abilities
 -- of this creature printed below this one until end of turn." Fabricate's mint
--- over CR 603.6a's entry event, so the condition is TriggerCondition.SelfEnters.
+-- over CR 603.6a's entry event, so the condition is a Self TriggerCondition.Enters.
 --
 -- TWO CLAUSES and one target slot, which is how the sentence is punctuated: the
 -- counters land whatever the target turns out to be, and only the grant carries
@@ -7691,7 +7690,7 @@ backup (Backup.MkBackup n above) =
             Mint.mandatoryIf another (Seq.singleton grant)
           ]
    in Mint.triggerOf
-        TriggerCondition.SelfEnters
+        (TriggerCondition.Enters EntersTrigger.defaultValue)
         Nothing
         (Mint.oneModeOf (Map.singleton backupTarget slot) clauses)
 
@@ -7711,7 +7710,7 @@ exploit =
         Mint.youMay
           (Seq.singleton Effect.Exploit)
    in Mint.triggerOf
-        TriggerCondition.SelfEnters
+        (TriggerCondition.Enters EntersTrigger.defaultValue)
         Nothing
         (Mint.oneModeOf Map.empty (Seq.singleton clause))
 
@@ -7793,7 +7792,7 @@ servoToken =
 -- create a [token], then attach this Equipment to it" -- differing only in the
 -- token each rule names. So one builder mints all three, and the three arms of
 -- `abilitiesFor` differ only in the Card they hand it. Fabricate's mint over CR
--- 603.6a's entry event, so the condition is TriggerCondition.SelfEnters.
+-- 603.6a's entry event, so the condition is a Self TriggerCondition.Enters.
 --
 -- ONE clause holding TWO effects, not two clauses: rule 702.92a's "then" is a
 -- sequence inside a single sentence, and Resolve's per-effect re-read of the
@@ -7823,7 +7822,7 @@ attachToOwnToken token =
               Create.creator = PlayerRef.Relative PlayerRelation.You,
               Create.linked = False
             }
-   in Mint.trigger TriggerCondition.SelfEnters (Seq.fromList [spawn, Effect.Attach attachedTokenSlot])
+   in Mint.trigger (TriggerCondition.Enters EntersTrigger.defaultValue) (Seq.fromList [spawn, Effect.Attach attachedTokenSlot])
 
 -- The slot the create binds and the attach reads. Not a target: nothing is
 -- declared on the stack, so CR 608.2b never touches it.
@@ -7983,7 +7982,7 @@ tokenCard name typeLine colors stats abilities =
 -- library in a random order. The exiled card gains 'The player who controls the
 -- permanent that exiled this card may look at this card in the exile zone.'"
 -- Fabricate's mint over CR 603.6a's entry event, so the condition is
--- TriggerCondition.SelfEnters; Windbrisk Heights is the printing.
+-- a Self TriggerCondition.Enters; Windbrisk Heights is the printing.
 --
 -- THREE CLAUSES, and "the rest" needs no opcode of its own: the third reads the
 -- same slot the look bound and finds the exiled card gone, CR 400.7 having minted
@@ -8042,7 +8041,7 @@ hideaway n =
           )
       clause effects = Mint.mandatory (Seq.fromList effects)
    in Mint.triggerOf
-        TriggerCondition.SelfEnters
+        (TriggerCondition.Enters EntersTrigger.defaultValue)
         Nothing
         (Mint.oneModeOf Map.empty (Seq.fromList [clause [look], clause [hide, allow], clause [rest]]))
 
@@ -8145,7 +8144,7 @@ partnerWith name =
               Search.andOr = False
             }
    in Mint.triggerOf
-        TriggerCondition.SelfEnters
+        (TriggerCondition.Enters EntersTrigger.defaultValue)
         Nothing
         (Mint.oneModeOf (Map.singleton partnerWithTarget slot) (Seq.singleton (Mint.clause (Optionality.Optional (PlayerRef.InSlot partnerWithTarget)) (Seq.singleton effect))))
 
@@ -9528,7 +9527,7 @@ championEnters quality =
           nothingExiled
           (Seq.singleton (Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot Binding.triggerSource, SacrificeEffect.sacrificer = Sacrificer.EffectController, SacrificeEffect.sacrificed = Nothing}))
    in Mint.triggerOf
-        TriggerCondition.SelfEnters
+        (TriggerCondition.Enters EntersTrigger.defaultValue)
         Nothing
         (Mint.oneModeOf Map.empty (Seq.fromList [exile, sacrifice]))
 

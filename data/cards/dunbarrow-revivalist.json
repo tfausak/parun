@@ -4,28 +4,36 @@
       "delayedAbilities": {
         "dunbarrow revivalist boon": {
           "condition": {
-            "type": "PermanentsEnter",
+            "type": "Enters",
             "value": {
-              "type": "And",
-              "value": [
-                {
-                  "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
-                },
-                {
-                  "type": "HeldBy",
-                  "value": {
-                    "holder": {
-                      "type": "Controller"
+              "batching": {
+                "type": "OneOrMore"
+              },
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
                     },
-                    "relation": {
-                      "type": "You"
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
+                      }
                     }
-                  }
+                  ]
                 }
-              ]
+              }
             }
           },
           "modal": {
@@ -201,7 +209,8 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfEnters"
+            "type": "Enters",
+            "value": {}
           },
           "modal": {
             "modes": [

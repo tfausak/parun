@@ -410,6 +410,12 @@ gameStateRoundTripSpec s registry corpus = do
     let board = S.oneMountainState mountain Phase.PrecombatMain
     roundTrips "a held board" board {GameState.heldBoards = [board]}
 
+  -- GameState.permanentsAsTurnBegan, CR 500.12's record.
+  Spec.it s "the permanents as the turn began round trip" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    let board = S.oneMountainState mountain Phase.PrecombatMain
+    roundTrips "the permanents as the turn began" board {GameState.permanentsAsTurnBegan = Just (Map.mapMaybeWithKey (\oid _ -> Event.lastKnownRecord board oid) (GameState.objects board))}
+
   Spec.it s "a non-empty stack round trips" $ do
     mountain <- S.printingOf s registry "Mountain"
     bolt <- S.printingOf s registry "Lightning Bolt"

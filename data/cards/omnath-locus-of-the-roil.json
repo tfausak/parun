@@ -47,7 +47,8 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfEnters"
+            "type": "Enters",
+            "value": {}
           },
           "modal": {
             "modes": [
@@ -128,28 +129,33 @@
         },
         {
           "condition": {
-            "type": "PermanentEnters",
+            "type": "Enters",
             "value": {
-              "type": "And",
-              "value": [
-                {
-                  "type": "HasCardType",
-                  "value": {
-                    "type": "Land"
-                  }
-                },
-                {
-                  "type": "HeldBy",
-                  "value": {
-                    "holder": {
-                      "type": "Controller"
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Land"
+                      }
                     },
-                    "relation": {
-                      "type": "You"
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
+                      }
                     }
-                  }
+                  ]
                 }
-              ]
+              }
             }
           },
           "modal": {

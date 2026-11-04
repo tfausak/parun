@@ -712,6 +712,8 @@ library codec
     Parun.Codec.EnteredZoneSpec
     Parun.Codec.EnteringTogether
     Parun.Codec.EnteringTogetherSpec
+    Parun.Codec.EntersTrigger
+    Parun.Codec.EntersTriggerSpec
     Parun.Codec.EntersWith
     Parun.Codec.EntersWithSpec
     Parun.Codec.Entrant
@@ -2736,6 +2738,7 @@ library types
     Parun.Types.EndTurnSignal
     Parun.Types.EnteredZone
     Parun.Types.EnteringTogether
+    Parun.Types.EntersTrigger
     Parun.Types.EntersWith
     Parun.Types.Entrant
     Parun.Types.EntriesTrigger

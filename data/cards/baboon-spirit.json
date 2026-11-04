@@ -160,40 +160,45 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentEnters",
+            "type": "Enters",
             "value": {
-              "type": "And",
-              "value": [
-                {
-                  "type": "Not",
-                  "value": {
-                    "type": "IsSource"
-                  }
-                },
-                {
-                  "type": "Not",
-                  "value": {
-                    "type": "IsToken"
-                  }
-                },
-                {
-                  "type": "HasSubtype",
-                  "value": {
-                    "type": "Spirit"
-                  }
-                },
-                {
-                  "type": "HeldBy",
-                  "value": {
-                    "holder": {
-                      "type": "Controller"
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "Not",
+                      "value": {
+                        "type": "IsSource"
+                      }
                     },
-                    "relation": {
-                      "type": "You"
+                    {
+                      "type": "Not",
+                      "value": {
+                        "type": "IsToken"
+                      }
+                    },
+                    {
+                      "type": "HasSubtype",
+                      "value": {
+                        "type": "Spirit"
+                      }
+                    },
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
+                      }
                     }
-                  }
+                  ]
                 }
-              ]
+              }
             }
           },
           "modal": {

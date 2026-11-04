@@ -79,48 +79,53 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentEnters",
+            "type": "Enters",
             "value": {
-              "type": "Or",
-              "value": [
-                {
-                  "type": "IsSource"
-                },
-                {
-                  "type": "And",
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "Or",
                   "value": [
                     {
-                      "type": "Not",
-                      "value": {
-                        "type": "IsSource"
-                      }
+                      "type": "IsSource"
                     },
                     {
-                      "type": "Not",
-                      "value": {
-                        "type": "IsToken"
-                      }
-                    },
-                    {
-                      "type": "HasSubtype",
-                      "value": {
-                        "type": "Cat"
-                      }
-                    },
-                    {
-                      "type": "HeldBy",
-                      "value": {
-                        "holder": {
-                          "type": "Controller"
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "IsSource"
+                          }
                         },
-                        "relation": {
-                          "type": "You"
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "IsToken"
+                          }
+                        },
+                        {
+                          "type": "HasSubtype",
+                          "value": {
+                            "type": "Cat"
+                          }
+                        },
+                        {
+                          "type": "HeldBy",
+                          "value": {
+                            "holder": {
+                              "type": "Controller"
+                            },
+                            "relation": {
+                              "type": "You"
+                            }
+                          }
                         }
-                      }
+                      ]
                     }
                   ]
                 }
-              ]
+              }
             }
           },
           "modal": {

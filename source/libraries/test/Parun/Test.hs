@@ -331,6 +331,7 @@ import qualified Parun.Codec.EndTurnSignalSpec
 import qualified Parun.Codec.EndingStepSpec
 import qualified Parun.Codec.EnteredZoneSpec
 import qualified Parun.Codec.EnteringTogetherSpec
+import qualified Parun.Codec.EntersTriggerSpec
 import qualified Parun.Codec.EntersWithSpec
 import qualified Parun.Codec.EntrantSpec
 import qualified Parun.Codec.EntriesTriggerSpec
@@ -1067,6 +1068,7 @@ spec s registry corpus = do
   Parun.Codec.AttackCompanySpec.spec s
   Parun.Codec.AttackCountSpec.spec s
   Parun.Codec.AttackTriggerSpec.spec s
+  Parun.Codec.EntersTriggerSpec.spec s
   Parun.Codec.LeavesTriggerSpec.spec s
   Parun.Codec.LeavingPermanentSpec.spec s
   Parun.Codec.AttackedSubjectSpec.spec s

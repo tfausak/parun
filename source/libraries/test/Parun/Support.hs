@@ -1012,7 +1012,7 @@ addExiledCard printing pid gs =
 
 -- A creature of a printing on the battlefield under `pid`, WITH the CR 603.6a
 -- enters event crafted alongside it, so Engine.placePendingTriggers finds its
--- SelfEnters trigger pending. addPermanent alone puts the permanent there without
+-- Self Enters trigger pending. addPermanent alone puts the permanent there without
 -- an event, and no trigger fires off a board that was simply arranged.
 --
 -- The from-zone is the stack, which is where a resolved creature spell comes
@@ -1710,6 +1710,7 @@ oneMountainState mountain ph =
           GameState.passed = Set.empty,
           GameState.turnNumber = 1,
           GameState.turnsBegun = Map.singleton alice 1,
+          GameState.permanentsAsTurnBegan = Nothing,
           GameState.result = Nothing,
           GameState.restartSignal = RestartSignal.Playing,
           GameState.endTurnSignal = EndTurnSignal.Running,

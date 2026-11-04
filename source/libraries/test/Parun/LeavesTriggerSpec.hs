@@ -57,6 +57,7 @@ import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EndingStep as EndingStep
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EntryRiders as EntryRiders
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.FaceDownReason as FaceDownReason
@@ -1240,7 +1241,7 @@ becameSlotSpec s registry =
               -- off a live Game.lookupObject would be partial in play, and a
               -- pinState holding the arrival would let it pass here anyway. The
               -- one object stocked (withRepresentativeEntrant) arrives in
-              -- SelfEnters' second row alone, whose arm claims its slot only
+              -- A Self Enters' second row alone, whose arm claims its slot only
               -- sometimes for exactly that reason.
               --
               -- The record is the ZONE-CHANGE FUNNEL's own, lifted off a real
@@ -1308,7 +1309,7 @@ becameSlotSpec s registry =
             everyTriggerCondition
 
 -- The board both pins read: `representativeEntrant` stands on it attached to
--- `representativeHost`, so SelfEnters' CR 603.6a host is bound for the one
+-- `representativeHost`, so a Self Enters' CR 603.6a host is bound for the one
 -- representative entry that names it. The Piker on `placed` lends the object.
 withRepresentativeEntrant :: GameState.GameState -> ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
 withRepresentativeEntrant placed pikerId g = case Game.lookupObject pikerId placed of
@@ -1317,7 +1318,7 @@ withRepresentativeEntrant placed pikerId g = case Game.lookupObject pikerId plac
 
 -- CR 400.7e's slot under a BYSTANDER's dies trigger, the last of the four
 -- conditions that bind it (a self death in becameSlotSpec above, a bare self
--- departure in leavesBattlefieldSpec, PermanentEnters in
+-- departure in leavesBattlefieldSpec, Matching Enters in
 -- aetherFlashSpec below, and this): "Abilities that trigger when an object moves
 -- from one zone to another ... can find the new object that it became in the
 -- zone it moved to when the ability triggered, if that zone is a public zone."
@@ -2753,8 +2754,8 @@ bystanderSpec s registry =
       Spec.assertBool s (not (Event.looksBack (TriggerCondition.PermanentTurnedFaceUp (Filter.Type.And [])))) "and CR 708.8 leaves a turned-up permanent on the battlefield"
       -- CR 603.1b: one ability, several conditions -- it looks back if any of
       -- them does, and the pair below differ only in whether one does.
-      Spec.assertBool s (Event.looksBack (TriggerCondition.AnyOf [TriggerCondition.SelfEnters, TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)])) "an AnyOf containing one looks back"
-      Spec.assertBool s (not (Event.looksBack (TriggerCondition.AnyOf [TriggerCondition.SelfEnters, TriggerCondition.SelfTurnedFaceUp]))) "and one containing none does not"
+      Spec.assertBool s (Event.looksBack (TriggerCondition.AnyOf [TriggerCondition.Enters EntersTrigger.defaultValue, TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)])) "an AnyOf containing one looks back"
+      Spec.assertBool s (not (Event.looksBack (TriggerCondition.AnyOf [TriggerCondition.Enters EntersTrigger.defaultValue, TriggerCondition.SelfTurnedFaceUp]))) "and one containing none does not"
     -- The OTHER shape the rule reaches, at the gather rather than through a
     -- whole turn: a CR 603.2b step trigger whose bearer is gone by the
     -- boundary. Khabál Ghoul ("At the beginning of each end step, put a +1/+1
@@ -2978,7 +2979,7 @@ aetherFlashSpec s registry =
           let castCard = ObjectId.MkObjectId 1
               entered = ObjectId.MkObjectId 2
               entry = GameEvent.Moved (Moved.moved (ZoneChange.MkZoneChange castCard entered Zone.Stack Zone.Battlefield) S.emptyCharacteristics)
-          Spec.assertEqWith s "became names the permanent that entered" (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.PermanentEnters (Filter.Type.HasCardType CardType.Creature)) entry) (Map.singleton Binding.became (Binding.toObject entered))
+          Spec.assertEqWith s "became names the permanent that entered" (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.Enters (EntersTrigger.matching (Filter.Type.HasCardType CardType.Creature))) entry) (Map.singleton Binding.became (Binding.toObject entered))
         -- CR 603.6a's "EACH TIME an event puts one or more permanents onto
         -- the battlefield" met with a per-entrant payload: Dragon Fodder
         -- ({1}{R} Sorcery, "create two 1/1 red Goblin creature tokens") makes

@@ -82,7 +82,7 @@ spec s = Spec.describe s "Parun.Codec.ManaUnit" $ do
           ManaUnit.sourceLastExiled = Nothing
         }
       ( " {\"manaType\":{\"type\":\"Colored\",\"value\":{\"type\":\"Red\"}},\"tags\":[],\"retention\":{\"type\":\"Ordinary\"},\"restriction\":null,\"rider\":null,"
-          <> "\"spendTrigger\":{\"casts\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Instant\"}},\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}},\"source\":4,\"controller\":0},"
+          <> "\"spendTrigger\":{\"casts\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Instant\"}},\"ability\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}},\"source\":4,\"controller\":0},"
           <> "\"sourceChoices\":null} "
       )
   Spec.it s "has a schema" $

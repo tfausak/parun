@@ -3455,8 +3455,8 @@ discardOf event = case event of
 --
 -- The id is ZoneChange.object and not ZoneChange.departed: CR 400.7 makes the
 -- entrant a NEW object, and the caller asks about the permanent that is on the
--- battlefield now. The same choice Parun.Engine.Event's PermanentEnters arm makes
--- for CR 603.6a, so a trigger and this reader agree on what entered.
+-- battlefield now. The same choice Parun.Engine.Event.Match.enters makes for CR
+-- 603.6a, so a trigger and this reader agree on what entered.
 --
 -- castOf's and discardOf's sibling, and here for their import-graph reason:
 -- enteredThisTurn below is the per-object reader.

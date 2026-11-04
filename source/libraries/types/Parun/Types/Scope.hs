@@ -9,12 +9,13 @@ import qualified Parun.Types.ZonePosition as ZonePosition
 
 -- | What a Parun.Types.Count folds over: a zone's current residents, the event
 -- log, the players themselves, the objects one of the surrounding
--- announcement's slots names, or one POSITION in a zone. Five domains rather
--- than one because the second reads CR 608.2h last-known information from a
--- stored snapshot, not a live object, the third folds over candidates CR 109.1
--- says are not objects at all, the fourth takes its candidates from the
--- resolution's bindings rather than from the board, and the fifth narrows the
--- first's candidates before the Filter is asked rather than after.
+-- announcement's slots names, one POSITION in a zone, or the permanents as the
+-- turn began. Six domains rather than one because the second reads CR 608.2h
+-- last-known information from a stored snapshot, not a live object, the third
+-- folds over candidates CR 109.1 says are not objects at all, the fourth takes
+-- its candidates from the resolution's bindings rather than from the board, the
+-- fifth narrows the first's candidates before the Filter is asked rather than
+-- after, and the sixth reads a board CR 502.1 and 502.3 have since changed.
 --
 -- A MANA POOL is deliberately not an arm of its own: the pool is none of CR 400.1's
 -- zones (CR 106.4 attaches it to a player instead), and a Count's Filter and
@@ -85,4 +86,7 @@ data Scope
   | -- | CR 401.2 / 404.1: the cards at this position of each library or graveyard
     -- the InZone names; no candidate in an unordered zone.
     InPosition ZonePosition.ZonePosition InZone.InZone
+  | -- | CR 500.12: the permanents as this turn began, seen through
+    -- GameState.permanentsAsTurnBegan; the Filter says whose.
+    AsTurnBegan
   deriving (Eq, Ord, Show)

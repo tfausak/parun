@@ -40,9 +40,11 @@ import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Quantity as Quantity
 import qualified Parun.Engine.Turn as Turn
+import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.Compares as Compares
 import qualified Parun.Types.Condition as Condition.Type
 import qualified Parun.Types.DuringPhase as DuringPhase
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
 import Parun.Types.ObjectId (ObjectId)
@@ -104,11 +106,12 @@ holds viewOf context gs oid condition =
 -- reads as False; that agrees for "5 or more" and would not for a clause naming a
 -- smaller threshold.
 --
--- Parun.EntryReplacementSpec's Ravenous group is what proves it: CR 702.156a's "if X
--- is 5 or more" is the one condition in the pool that reads this.
+-- data/scenarios/entry-replacement's cr-702-156a pair is what proves it: CR
+-- 702.156a's "if X is 5 or more" is the one condition in the pool that reads
+-- this.
 inheritedX :: TriggerCondition.TriggerCondition -> ObjectId -> GameState -> Map.Map SlotName Natural
 inheritedX condition oid gs = case condition of
-  TriggerCondition.SelfEnters ->
+  TriggerCondition.Enters (EntersTrigger.MkEntersTrigger ActingPermanent.Self _) ->
     Map.singleton Binding.variableX (Game.announcedXOf oid gs)
   _ -> Map.empty
 
