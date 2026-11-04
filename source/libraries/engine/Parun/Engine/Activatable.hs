@@ -317,7 +317,7 @@ mayActivateGiven grants pid srcId ability gs = case activatorOfGiven grants srcI
 -- That is where the DIVISION OF LABOUR between this list and mayActivateGiven
 -- lies, and it is not symmetric. On the battlefield the two agree by
 -- construction: the `activator` filter drops exactly the objects
--- mayActivateGiven's Controller arm would refuse, which is why
+-- mayActivateGiven's default would refuse, which is why
 -- Parun.ActivateSpec's Withered Wretch negative goes red only when BOTH are
 -- neutralized. Off it they do not: for "any player" mayActivateGiven asks only
 -- that the object HAVE an activator and that `pid` still be playing, and
