@@ -396,10 +396,8 @@ slotContext reader perspective unannounced bindings acquisition source amount gs
       --
       -- A departed sibling TARGET answers from last known information: its
       -- controller by Run Away Together's ruling, its creature types by Raise
-      -- the Draugr's.
-      --
-      -- Not implemented: CR 608.2b's last sentence blanking its names here,
-      -- as slotAmount's bound below does (#4865).
+      -- the Draugr's, and its name by the same reading, CR 608.2b's last
+      -- sentence governing the effect rather than this legality check.
       base = Projection.framedBySlots gs (Binding.recipientsBySlot targets bindings) framed
       framed =
         -- CR 607.5: the choices of the abilities `acquisition` names -- the
@@ -474,7 +472,8 @@ slotContext reader perspective unannounced bindings acquisition source amount gs
       -- sentence has the effect fail to determine any information about an
       -- illegal target. Nihiloor's scenario "measures a dead tapped creature"
       -- proves the first half and Synthetic Counted Verdict's "fails to count a
-      -- dead gauge" the second.
+      -- dead gauge" the second. Whether a number should read differently from
+      -- the names above is #6113.
       targeted = foldMap (Set.fromList . Maybe.mapMaybe Recipient.objectOf . Set.toList) targets
       boundView oid = if Set.member oid targeted then Projection.fullView gs oid else Projection.viewWithLastKnownAnywhere gs oid
       evaluated = amount >>= Quantity.evaluate boundView base gs source
