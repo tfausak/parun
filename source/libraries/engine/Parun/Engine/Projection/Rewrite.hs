@@ -2234,10 +2234,11 @@ rewriteTriggerCondition pairs condition = case condition of
       ActingPermanent.Self -> ActingPermanent.Self
       ActingPermanent.Matching f -> ActingPermanent.Matching (Filter.rewrite pairs f)
 
--- CR 612.1 through a casting permission's one condition.
+-- CR 612.1 through both ends of a pairwise block trigger.
 rewriteBlockPair :: [(TextWord.TextWord, TextWord.TextWord)] -> BlockPair.BlockPair -> BlockPair.BlockPair
 rewriteBlockPair pairs p = BlockPair.MkBlockPair {BlockPair.blocker = Filter.rewrite pairs (BlockPair.blocker p), BlockPair.attacker = Filter.rewrite pairs (BlockPair.attacker p)}
 
+-- CR 612.1 through a casting permission's one condition.
 rewriteCastingPermission :: [(TextWord.TextWord, TextWord.TextWord)] -> CastingPermission.CastingPermission -> CastingPermission.CastingPermission
 rewriteCastingPermission pairs permission = case permission of
   CastingPermission.CastAsThoughItHadFlash condition additional -> CastingPermission.CastAsThoughItHadFlash (fmap (rewriteCondition pairs) condition) additional
