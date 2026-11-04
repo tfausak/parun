@@ -34,14 +34,19 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "DealsDamageToPlayer",
+            "type": "DealsDamage",
             "value": {
               "actor": {
                 "type": "Self"
               },
-              "recipient": {
-                "type": "Opponent"
-              }
+              "recipients": [
+                {
+                  "type": "Player",
+                  "value": {
+                    "type": "Opponent"
+                  }
+                }
+              ]
             }
           },
           "modal": {

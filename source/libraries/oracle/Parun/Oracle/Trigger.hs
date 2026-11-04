@@ -5,6 +5,7 @@ module Parun.Oracle.Trigger where
 import qualified Control.Monad as Monad
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Parun.Oracle.Filter as Filter
 import qualified Parun.Oracle.Prose as Prose
@@ -20,7 +21,8 @@ import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.Count as Count
 import qualified Parun.Types.DamageKind as DamageKind
-import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
+import qualified Parun.Types.DamageRecipient as DamageRecipient
+import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Filter as Filter.Type
@@ -31,7 +33,6 @@ import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeTally as LifeTally
 import qualified Parun.Types.OwnedZone as OwnedZone
-import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlayerRef as PlayerRef
@@ -108,16 +109,17 @@ event context creature c = case c of
     word <- ["it", that]
     subject <- also one
     [other ("Whenever " <> subject <> " attacks and isn't blocked") [(attackingCreature, word), (thatPlayer, "defending player")]]
-  TriggerCondition.PermanentDealsCombatDamageToPlayer p -> do
-    (one, that) <- described context (PermanentDealsCombatDamageToPlayer.filter p)
-    (whom, player') <- player (PermanentDealsCombatDamageToPlayer.recipient p)
-    [other ("Whenever " <> one <> " deals combat damage to " <> whom) [(thatPlayer, player'), (combatDamager, that)]]
+  TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger (ActingPermanent.Matching f) (Just DamageKind.Combat) recipients)
+    | [DamageRecipient.Player relation] <- Set.toList recipients -> do
+        (one, that) <- described context f
+        (whom, player') <- player relation
+        [other ("Whenever " <> one <> " deals combat damage to " <> whom) [(thatPlayer, player'), (combatDamager, that)]]
+    | Set.null recipients -> do
+        (one, that) <- described context f
+        [other ("Whenever " <> one <> " deals combat damage") [(combatDamager, that)]]
   TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage (ActingPermanent.Matching f) Nothing) Batching.OneOrMore) -> do
     (one, _) <- described context f
     [other ("Whenever " <> one <> " is dealt damage") [(becameSlot, "it")]]
-  TriggerCondition.DealsCombatDamage (ActingPermanent.Matching f) -> do
-    (one, that) <- described context f
-    [other ("Whenever " <> one <> " deals combat damage") [(combatDamager, that)]]
   TriggerCondition.PlayerAttacks relation -> do
     who <- case relation of
       PlayerRelation.You -> ["you attack"]
@@ -212,14 +214,17 @@ selfEvent context creature c = case c of
   -- not (Stuffy Doll).
   TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing) Batching.OneOrMore) -> [(recurring <> ["Enrage \8212 Whenever"], "is dealt damage", [])]
   TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self (Just DamageKind.Combat)) Batching.OneOrMore) -> [(recurring, "is dealt combat damage", [])]
-  TriggerCondition.DealsDamage ActingPermanent.Self -> [(recurring, "deals damage", [])]
-  TriggerCondition.DealsCombatDamage ActingPermanent.Self -> [(recurring, "deals combat damage", [])]
-  TriggerCondition.SelfDealsCombatDamageToPlayer relation -> do
-    (whom, that) <- player relation
-    [(recurring, "deals combat damage to " <> whom, [(thatPlayer, that)])]
-  TriggerCondition.DealsDamageToPlayer (DealsDamageToPlayer.MkDealsDamageToPlayer ActingPermanent.Self relation Nothing) -> do
-    (whom, that) <- player relation
-    [(recurring, "deals damage to " <> whom, [(thatPlayer, that)])]
+  TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger ActingPermanent.Self kind recipients)
+    | Set.null recipients, Nothing <- kind -> [(recurring, "deals damage", [])]
+    | Set.null recipients, Just DamageKind.Combat <- kind -> [(recurring, "deals combat damage", [])]
+    | [DamageRecipient.Player relation] <- Set.toList recipients,
+      Just DamageKind.Combat <- kind -> do
+        (whom, that) <- player relation
+        [(recurring, "deals combat damage to " <> whom, [(thatPlayer, that)])]
+    | [DamageRecipient.Player relation] <- Set.toList recipients,
+      Nothing <- kind -> do
+        (whom, that) <- player relation
+        [(recurring, "deals damage to " <> whom, [(thatPlayer, that)])]
   _ -> []
 
 -- | The slots of the source's own event naming a card its controller is

@@ -49,7 +49,29 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfDealsCombatDamageToPlayerOrBattle"
+            "type": "DealsDamage",
+            "value": {
+              "actor": {
+                "type": "Self"
+              },
+              "kind": {
+                "type": "Combat"
+              },
+              "recipients": [
+                {
+                  "type": "Player",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                },
+                {
+                  "type": "Permanent",
+                  "value": {
+                    "type": "Battle"
+                  }
+                }
+              ]
+            }
           },
           "modal": {
             "modes": [

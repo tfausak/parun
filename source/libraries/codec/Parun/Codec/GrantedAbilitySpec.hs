@@ -9,6 +9,7 @@ import qualified Parun.Codec.GrantedAbility as GrantedAbility
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
+import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.Activator as Activator
 import qualified Parun.Types.Affected as Affected
@@ -22,6 +23,9 @@ import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.CostComponent as CostComponent
 import qualified Parun.Types.CostDirection as CostDirection
 import qualified Parun.Types.CostReduction as CostReduction
+import qualified Parun.Types.DamageKind as DamageKind
+import qualified Parun.Types.DamageRecipient as DamageRecipient
+import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.ManaCost as ManaCost
@@ -88,7 +92,7 @@ spec s = Spec.describe s "Parun.Codec.GrantedAbility" $ do
       codec
       ( GrantedAbility.Triggered
           ( TriggeredAbility.MkTriggeredAbility
-              (TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.AnyPlayer)
+              (TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger ActingPermanent.Self (Just DamageKind.Combat) (Set.singleton (DamageRecipient.Player PlayerRelation.AnyPlayer))))
               emptyModal
               Nothing
               Nothing
@@ -96,7 +100,7 @@ spec s = Spec.describe s "Parun.Codec.GrantedAbility" $ do
               Set.empty
           )
       )
-      " {\"type\":\"Triggered\",\"value\":{\"condition\":{\"type\":\"SelfDealsCombatDamageToPlayer\",\"value\":{\"type\":\"AnyPlayer\"}},\"modal\":{\"modes\":[{}]}}} "
+      " {\"type\":\"Triggered\",\"value\":{\"condition\":{\"type\":\"DealsDamage\",\"value\":{\"actor\":{\"type\":\"Self\"},\"kind\":{\"type\":\"Combat\"},\"recipients\":[{\"type\":\"Player\",\"value\":{\"type\":\"AnyPlayer\"}}]}},\"modal\":{\"modes\":[{}]}}} "
   -- Streetwise Negotiator's "This creature assigns combat damage equal to its
   -- toughness rather than its power", as backup hands it over.
   Spec.it s "Static" $

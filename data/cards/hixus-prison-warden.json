@@ -43,28 +43,39 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentDealsCombatDamageToPlayer",
+            "type": "DealsDamage",
             "value": {
-              "filter": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
+              "actor": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    },
+                    {
+                      "type": "IsInZone",
+                      "value": {
+                        "type": "Battlefield"
+                      }
                     }
-                  },
-                  {
-                    "type": "IsInZone",
-                    "value": {
-                      "type": "Battlefield"
-                    }
-                  }
-                ]
+                  ]
+                }
               },
-              "recipient": {
-                "type": "You"
-              }
+              "kind": {
+                "type": "Combat"
+              },
+              "recipients": [
+                {
+                  "type": "Player",
+                  "value": {
+                    "type": "You"
+                  }
+                }
+              ]
             }
           },
           "intervening": {

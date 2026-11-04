@@ -181,7 +181,9 @@
                         "condition": {
                           "type": "DealsDamage",
                           "value": {
-                            "type": "Self"
+                            "actor": {
+                              "type": "Self"
+                            }
                           }
                         },
                         "modal": {

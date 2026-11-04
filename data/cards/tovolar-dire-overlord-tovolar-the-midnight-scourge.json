@@ -43,44 +43,55 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentDealsCombatDamageToPlayer",
+            "type": "DealsDamage",
             "value": {
-              "filter": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "Or",
-                    "value": [
-                      {
-                        "type": "HasSubtype",
-                        "value": {
-                          "type": "Wolf"
+              "actor": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "Or",
+                      "value": [
+                        {
+                          "type": "HasSubtype",
+                          "value": {
+                            "type": "Wolf"
+                          }
+                        },
+                        {
+                          "type": "HasSubtype",
+                          "value": {
+                            "type": "Werewolf"
+                          }
                         }
-                      },
-                      {
-                        "type": "HasSubtype",
-                        "value": {
-                          "type": "Werewolf"
+                      ]
+                    },
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
                         }
-                      }
-                    ]
-                  },
-                  {
-                    "type": "HeldBy",
-                    "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
                       }
                     }
-                  }
-                ]
+                  ]
+                }
               },
-              "recipient": {
-                "type": "AnyPlayer"
-              }
+              "kind": {
+                "type": "Combat"
+              },
+              "recipients": [
+                {
+                  "type": "Player",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                }
+              ]
             }
           },
           "modal": {
@@ -424,44 +435,55 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentDealsCombatDamageToPlayer",
+            "type": "DealsDamage",
             "value": {
-              "filter": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "Or",
-                    "value": [
-                      {
-                        "type": "HasSubtype",
-                        "value": {
-                          "type": "Wolf"
+              "actor": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "Or",
+                      "value": [
+                        {
+                          "type": "HasSubtype",
+                          "value": {
+                            "type": "Wolf"
+                          }
+                        },
+                        {
+                          "type": "HasSubtype",
+                          "value": {
+                            "type": "Werewolf"
+                          }
                         }
-                      },
-                      {
-                        "type": "HasSubtype",
-                        "value": {
-                          "type": "Werewolf"
+                      ]
+                    },
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
                         }
-                      }
-                    ]
-                  },
-                  {
-                    "type": "HeldBy",
-                    "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
                       }
                     }
-                  }
-                ]
+                  ]
+                }
               },
-              "recipient": {
-                "type": "AnyPlayer"
-              }
+              "kind": {
+                "type": "Combat"
+              },
+              "recipients": [
+                {
+                  "type": "Player",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                }
+              ]
             }
           },
           "modal": {

@@ -109,7 +109,7 @@
         },
         {
           "condition": {
-            "type": "DealsDamageToPermanent",
+            "type": "DealsDamage",
             "value": {
               "actor": {
                 "type": "Matching",
@@ -148,9 +148,14 @@
                   ]
                 }
               },
-              "recipient": {
-                "type": "Planeswalker"
-              }
+              "recipients": [
+                {
+                  "type": "Permanent",
+                  "value": {
+                    "type": "Planeswalker"
+                  }
+                }
+              ]
             }
           },
           "modal": {

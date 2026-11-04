@@ -174,9 +174,8 @@ import qualified Parun.Types.DamagePart as DamagePart
 import qualified Parun.Types.DamagePattern as DamagePattern
 import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
+import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DealDamage as DealDamage
-import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
-import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.DelayedTrigger as DelayedTrigger
 import qualified Parun.Types.Designate as Designate
@@ -328,7 +327,6 @@ import qualified Parun.Types.PerCreature as PerCreature
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentCandidate as PermanentCandidate
-import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
@@ -2387,13 +2385,11 @@ permanentCandidateNames :: (Monoid r) => Asking r -> PermanentCandidate.Permanen
 permanentCandidateNames asking x = case x of
   PermanentCandidate.MkPermanentCandidate source _provenance effect _ordinal -> names asking (== source) <> replacementEffectNames asking (const mempty) (grantedAbilityNames asking (const mempty)) (effectNames asking (const mempty) (grantedAbilityNames asking (const mempty))) effect
 
-dealsDamageToPlayerNames :: (Monoid r) => Asking r -> DealsDamageToPlayer.DealsDamageToPlayer -> r
-dealsDamageToPlayerNames asking x = case x of
-  DealsDamageToPlayer.MkDealsDamageToPlayer actor _recipient _kind -> actingPermanentNames asking actor
-
-permanentDealsCombatDamageToPlayerNames :: (Monoid r) => Asking r -> PermanentDealsCombatDamageToPlayer.PermanentDealsCombatDamageToPlayer -> r
-permanentDealsCombatDamageToPlayerNames asking x = case x of
-  PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer filter_ _recipient _orTheirPlaneswalkers -> filterNames asking filter_
+-- A kind and a recipient hold no names: a relation and a card type name no
+-- object.
+damageTriggerNames :: (Monoid r) => Asking r -> DamageTrigger.DamageTrigger -> r
+damageTriggerNames asking x = case x of
+  DamageTrigger.MkDamageTrigger actor _kind _recipients -> actingPermanentNames asking actor
 
 playerActsOnNames :: (Monoid r) => Asking r -> PlayerActsOn.PlayerActsOn -> r
 playerActsOnNames asking x = case x of
@@ -3011,15 +3007,9 @@ triggerConditionNames asking x = case x of
   TriggerCondition.PermanentsEnter filter_ -> filterNames asking filter_
   TriggerCondition.StepBegins stepBegins -> stepBeginsNames asking stepBegins
   TriggerCondition.StateIs condition -> conditionNames asking condition
-  TriggerCondition.SelfDealsCombatDamageToPlayer _playerRelation -> mempty
-  TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> mempty
-  TriggerCondition.DealsCombatDamage actingPermanent -> actingPermanentNames asking actingPermanent
-  TriggerCondition.DealsDamageToPlayer dealsDamageToPlayer -> dealsDamageToPlayerNames asking dealsDamageToPlayer
-  TriggerCondition.DealsDamageToPermanent dealsDamageToPermanent -> actingPermanentNames asking (DealsDamageToPermanent.actor dealsDamageToPermanent)
-  TriggerCondition.DealsDamage actingPermanent -> actingPermanentNames asking actingPermanent
+  TriggerCondition.DealsDamage damageTrigger -> damageTriggerNames asking damageTrigger
   TriggerCondition.IsDealtDamage watched -> actingPermanentNames asking (DealtDamage.recipient (PermanentIsDealtDamage.dealt watched))
   TriggerCondition.PlayerIsDealtDamage _playerIsDealtDamage -> mempty
-  TriggerCondition.PermanentDealsCombatDamageToPlayer permanentDealsCombatDamageToPlayer -> permanentDealsCombatDamageToPlayerNames asking permanentDealsCombatDamageToPlayer
   TriggerCondition.PermanentsDealCombatDamageToPlayer permanentsDealCombatDamageToPlayer -> permanentsDealCombatDamageToPlayerNames asking permanentsDealCombatDamageToPlayer
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> mempty
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> mempty

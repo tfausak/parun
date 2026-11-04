@@ -26,11 +26,13 @@
           "condition": {
             "type": "DealsDamage",
             "value": {
-              "type": "Matching",
-              "value": {
-                "type": "HasAttached",
+              "actor": {
+                "type": "Matching",
                 "value": {
-                  "type": "IsSource"
+                  "type": "HasAttached",
+                  "value": {
+                    "type": "IsSource"
+                  }
                 }
               }
             }

@@ -1234,8 +1234,8 @@ damagersController = SlotName.MkSlotName (Text.pack "thatDamagersController")
 -- is: the bystander form of the condition watches every permanent its controller
 -- has, so the bearer is routinely a different permanent from the damager, and
 -- Aragorn watching a Wolf of his own is the ordinary case rather than the corner
--- one. The self-scoped SelfDealsCombatDamageToPlayer needs no such slot, its
--- damager BEING the bearer.
+-- one. A self-scoped reading needs no such slot, its damager BEING the bearer,
+-- though DealsDamage stamps it for every reading alike.
 --
 -- One object per event, never a group: CR 510.2 deals all the assigned damage at
 -- once, but Parun.Engine.Damage records one DamageEvent per source-and-recipient

@@ -11009,15 +11009,9 @@ controllerTurnScoped cond = case cond of
   -- not a turn.
   TriggerCondition.PermanentSacrificed {} -> False
   TriggerCondition.StateIs _ -> False
-  TriggerCondition.SelfDealsCombatDamageToPlayer _ -> False
-  TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> False
-  TriggerCondition.DealsCombatDamage _ -> False
-  TriggerCondition.DealsDamageToPlayer _ -> False
-  TriggerCondition.DealsDamageToPermanent _ -> False
   TriggerCondition.DealsDamage _ -> False
   TriggerCondition.IsDealtDamage _ -> False
   TriggerCondition.PlayerIsDealtDamage _ -> False
-  TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> False
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> False
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> False
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> False

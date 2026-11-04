@@ -933,7 +933,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         tokenDrawing condition = (vanillaFace "Token" instantLine) {Face.triggeredAbilities = [oneEffectTrigger condition (Effect.Draw (Draw.MkDraw (PlayerRef.InSlot Binding.triggerPlayer) (Quantity.Type.Literal 1) Nothing))]}
     Spec.assertEqWith s "no dangling triggered-ability slot" (fmap (S.nameOf . Printing.card) offenders) []
     Spec.assertBool s (sweeps (mintingSpell createToken (tokenDrawing TriggerCondition.SelfDies))) "a token's dies trigger reading thatPlayer is caught"
-    Spec.assertBool s (not (sweeps (mintingSpell createToken (tokenDrawing (TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.AnyPlayer))))) "and its combat-damage trigger reading thatPlayer is accepted"
+    Spec.assertBool s (not (sweeps (mintingSpell createToken (tokenDrawing Mint.dealsCombatDamageToAPlayer)))) "and its combat-damage trigger reading thatPlayer is accepted"
   -- The sweep above passes VACUOUSLY: no committed card misauthors the
   -- pairing, so the sweep proves nothing about the lint. Both directions are
   -- proven here instead, against a hand-built offender (never a card file --
@@ -961,7 +961,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
       "CR 702.70a thatPlayer under a dies trigger is rejected"
     Spec.assertBool
       s
-      (not (triggeredAbilityOffends (oneEffectTrigger (TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.AnyPlayer) thatPlayerDraws)))
+      (not (triggeredAbilityOffends (oneEffectTrigger Mint.dealsCombatDamageToAPlayer thatPlayerDraws)))
       "and under a combat-damage trigger it is accepted"
     Spec.assertBool
       s
@@ -985,7 +985,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
       "CR 603.2 thatPlayer in a filter under an enters trigger is rejected"
     Spec.assertBool
       s
-      (not (triggeredAbilityOffends (modalTrigger (TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.AnyPlayer) [narrowed])))
+      (not (triggeredAbilityOffends (modalTrigger Mint.dealsCombatDamageToAPlayer [narrowed])))
       "and under a combat-damage trigger it is accepted"
     Spec.assertBool
       s
@@ -1015,7 +1015,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
       "CR 603.2 thatPlayer inside a bound under an enters trigger is rejected"
     Spec.assertBool
       s
-      (not (triggeredAbilityOffends (modalTrigger (TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.AnyPlayer) [bounded thatPlayer])))
+      (not (triggeredAbilityOffends (modalTrigger Mint.dealsCombatDamageToAPlayer [bounded thatPlayer])))
       "and under a combat-damage trigger it is accepted"
     -- The pair that differs in exactly one thing: the same bound on the same
     -- trigger, reading CR 109.5's caster instead of a slot, stays accepted -- so
@@ -1057,7 +1057,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
       "CR 603.2 thatPlayer as a chooser under an enters trigger is rejected"
     Spec.assertBool
       s
-      (not (triggeredAbilityOffends (modalTrigger (TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.AnyPlayer) [chosen])))
+      (not (triggeredAbilityOffends (modalTrigger Mint.dealsCombatDamageToAPlayer [chosen])))
       "and under a combat-damage trigger it is accepted"
     Spec.assertBool
       s
@@ -1100,7 +1100,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
       "CR 608.2c thatPlayer inside a condition's number under an enters trigger is rejected"
     Spec.assertBool
       s
-      (not (triggeredAbilityOffends (modalTrigger (TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.AnyPlayer) [gated throughRef])))
+      (not (triggeredAbilityOffends (modalTrigger Mint.dealsCombatDamageToAPlayer [gated throughRef])))
       "and under a combat-damage trigger it is accepted"
     Spec.assertBool
       s
@@ -1108,7 +1108,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
       "CR 608.2c thatPlayer inside a condition's count filter under an enters trigger is rejected"
     Spec.assertBool
       s
-      (not (triggeredAbilityOffends (modalTrigger (TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.AnyPlayer) [gated throughCountFilter])))
+      (not (triggeredAbilityOffends (modalTrigger Mint.dealsCombatDamageToAPlayer [gated throughCountFilter])))
       "and that one too is accepted under a combat-damage trigger"
     Spec.assertBool
       s
@@ -1132,7 +1132,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
       "CR 608.2h thatPlayer inside an effect's number under an enters trigger is rejected"
     Spec.assertBool
       s
-      (not (triggeredAbilityOffends (modalTrigger (TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.AnyPlayer) [drawsTally (PlayerRef.InSlot Binding.triggerPlayer)])))
+      (not (triggeredAbilityOffends (modalTrigger Mint.dealsCombatDamageToAPlayer [drawsTally (PlayerRef.InSlot Binding.triggerPlayer)])))
       "and under a combat-damage trigger it is accepted"
     -- The pair that differs in exactly one thing, the arm of the reference: a
     -- number reading CR 109.5's caster stays accepted, so the lint reads the
@@ -1197,15 +1197,15 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         -- measured against different bound objects. Asserted on the carrier
         -- rather than at gameplay level: no card in `data/cards/` writes a gate
         -- scaled per bound object, so no board raises the prompt.
-        inert quantity = Engine.orderInert (modalTrigger (TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.AnyPlayer) [scaled quantity])
+        inert quantity = Engine.orderInert (modalTrigger Mint.dealsCombatDamageToAPlayer [scaled quantity])
         -- One tagged list over both consumers rather than an assertion apiece,
         -- FilterPositionLintSpec's shape: a carrier the fold stops at names
         -- itself instead of hiding behind whichever assertion runs first.
         rows =
           [ ("D4: a scope's player, unbound", rejected TriggerCondition.SelfEnters throughScope),
-            ("D4: a scope's player, bound", rejected (TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.AnyPlayer) throughScope),
+            ("D4: a scope's player, bound", rejected Mint.dealsCombatDamageToAPlayer throughScope),
             ("D4: a count's filter, unbound", rejected TriggerCondition.SelfEnters throughCountFilter),
-            ("D4: a count's filter, bound", rejected (TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.AnyPlayer) throughCountFilter),
+            ("D4: a count's filter, bound", rejected Mint.dealsCombatDamageToAPlayer throughCountFilter),
             ("D4: no slot at all", rejected TriggerCondition.SelfEnters throughNoSlot),
             ("CR 603.3b: inert scaled per bound object", inert throughScope),
             ("CR 603.3b: inert scaled by a slotless fold", inert throughNoSlot)

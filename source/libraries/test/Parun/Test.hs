@@ -266,12 +266,12 @@ import qualified Parun.Codec.DamagePartSpec
 import qualified Parun.Codec.DamagePatternSpec
 import qualified Parun.Codec.DamagePreventedSpec
 import qualified Parun.Codec.DamageRSpec
+import qualified Parun.Codec.DamageRecipientSpec
 import qualified Parun.Codec.DamageRewriteSpec
+import qualified Parun.Codec.DamageTriggerSpec
 import qualified Parun.Codec.DamagedPartySpec
 import qualified Parun.Codec.DaytimeSpec
 import qualified Parun.Codec.DealDamageSpec
-import qualified Parun.Codec.DealsDamageToPermanentSpec
-import qualified Parun.Codec.DealsDamageToPlayerSpec
 import qualified Parun.Codec.DealtDamageSpec
 import qualified Parun.Codec.DealtDamageToSpec
 import qualified Parun.Codec.DeciderSpec
@@ -538,7 +538,6 @@ import qualified Parun.Codec.PendingReplacementEffectSpec
 import qualified Parun.Codec.PermanentActionSpec
 import qualified Parun.Codec.PermanentBecomesDesignatedSpec
 import qualified Parun.Codec.PermanentCandidateSpec
-import qualified Parun.Codec.PermanentDealsCombatDamageToPlayerSpec
 import qualified Parun.Codec.PermanentIsDealtDamageSpec
 import qualified Parun.Codec.PermanentTappedForManaSpec
 import qualified Parun.Codec.PermanentWasSacrificedSpec
@@ -1231,6 +1230,8 @@ spec s registry corpus = do
   Parun.Codec.DamageIsSpec.spec s
   Parun.Codec.DamageDealerSpec.spec s
   Parun.Codec.DamageKindSpec.spec s
+  Parun.Codec.DamageRecipientSpec.spec s
+  Parun.Codec.DamageTriggerSpec.spec s
   Parun.Codec.DamagePartSpec.spec s
   Parun.Codec.DamagePatternSpec.spec s
   Parun.Codec.DamagePreventedSpec.spec s
@@ -1240,8 +1241,6 @@ spec s registry corpus = do
   Parun.Codec.DamageRSpec.spec s
   Parun.Codec.DaytimeSpec.spec s
   Parun.Codec.DealDamageSpec.spec s
-  Parun.Codec.DealsDamageToPermanentSpec.spec s
-  Parun.Codec.DealsDamageToPlayerSpec.spec s
   Parun.Codec.DeciderSpec.spec s
   Parun.Codec.DefendersAreSpec.spec s
   Parun.Codec.DefenseSpec.spec s
@@ -1507,7 +1506,6 @@ spec s registry corpus = do
   Parun.Codec.PermanentBecomesDesignatedSpec.spec s
   Parun.Codec.PermanentCandidateSpec.spec s
   Parun.Codec.BlockPairSpec.spec s
-  Parun.Codec.PermanentDealsCombatDamageToPlayerSpec.spec s
   Parun.Codec.PlayerActsOnSpec.spec s
   Parun.Codec.PermanentsBecomeTargetedSpec.spec s
   Parun.Codec.PermanentsDealCombatDamageToPlayerSpec.spec s

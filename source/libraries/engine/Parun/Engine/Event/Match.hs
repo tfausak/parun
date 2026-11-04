@@ -71,8 +71,8 @@ import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.DamagePrevented as DamagePrevented
-import qualified Parun.Types.DealsDamageToPermanent as DealsDamageToPermanent
-import qualified Parun.Types.DealsDamageToPlayer as DealsDamageToPlayer
+import qualified Parun.Types.DamageRecipient as DamageRecipient
+import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.DieResult as DieResult
@@ -112,7 +112,6 @@ import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
-import qualified Parun.Types.PermanentDealsCombatDamageToPlayer as PermanentDealsCombatDamageToPlayer
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
 import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
@@ -509,93 +508,37 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- CR 603.8: a state trigger is not an event trigger. It never matches an entry
   -- in the log; stateTriggers below is its whole story.
   TriggerCondition.StateIs _ -> False
-  -- CR 510.1b / 510.2: the bearer dealt COMBAT damage to a PLAYER the relation
-  -- admits. Combat damage already records a DamageDealt event, so this is a
-  -- filter over the log.
+  -- CR 603.2 / 120.1: the watched permanent or spell dealt damage of the kind to
+  -- a recipient the trigger admits, any recipient where it names none. Firing
+  -- once per damage event and damager for that reading is `batchScoped`,
+  -- `batchPartition` and eventTriggers' dedup, never this arm.
   --
-  -- The relation is asked of the RECIPIENT, against CR 109.5's `you` -- the
-  -- ability's controller, which CR 603.3a makes the bearer's controller. It is
-  -- not redundant with the attack: CR 614.9's redirection replaces the event's
-  -- recipient and nothing else, so Harm's Way can make an attacking creature's
-  -- combat damage land on its own controller, and an "opponent" trigger must not
-  -- fire there. The arm below is where that is proved, the pool's "to an
-  -- opponent" flip card carrying it.
-  TriggerCondition.SelfDealsCombatDamageToPlayer relation -> case event of
-    GameEvent.DamageDealt ev ->
-      DamageEvent.source ev == bearer
-        && DamageEvent.kind ev == DamageKind.Combat
-        && maybe False (PlayerRelation.holds (Game.teams gs) relation you) (Recipient.playerOf (DamageEvent.target ev))
-    _ -> False
-  -- CR 510.1b / 310.5: the arm above with a battle beside the player. The
-  -- battle is read the way DealsDamageToPermanent reads its card type, off
-  -- Projection.damagedCardTypes, so an attacked permanent that is a battle and
-  -- something else still counts.
-  TriggerCondition.SelfDealsCombatDamageToPlayerOrBattle -> case event of
-    GameEvent.DamageDealt ev ->
-      DamageEvent.source ev == bearer
-        && DamageEvent.kind ev == DamageKind.Combat
-        && (Maybe.isJust (Recipient.playerOf (DamageEvent.target ev)) || Set.member CardType.Battle (Projection.damagedCardTypes gs (DamageEvent.target ev)))
-    _ -> False
-  -- CR 510.1: the watched permanent dealt combat damage to anything it may be
-  -- assigned to. Every such event matches; firing once for the CR 510.2 step
-  -- and damager is `batchScoped`, `batchPartition` and eventTriggers' dedup,
-  -- never this arm.
-  TriggerCondition.DealsCombatDamage watched -> case event of
-    GameEvent.DamageDealt ev ->
-      damageBy watched (DamageEvent.source ev)
-        && DamageEvent.kind ev == DamageKind.Combat
-    _ -> False
-  -- CR 603.2 / 120.1: the watched permanent or spell dealt damage of ANY kind to
-  -- a PLAYER the relation admits -- SelfDealsCombatDamageToPlayer's arm with CR
-  -- 510.1's combat test dropped, so a Soul's Fire pointed at a player fires it
-  -- exactly as an unblocked attack does.
+  -- A player recipient's relation is read off the RECIPIENT against CR 109.5's
+  -- `you`, the bearer's controller even when the damager is another permanent
+  -- (Curiosity's ruling). It is not redundant with the attack: CR 614.9's
+  -- redirection replaces the event's recipient and nothing else, so Harm's Way
+  -- can turn an attacker's combat damage onto its own controller.
+  -- Parun.FlipSpec's "CR 603.2 Harm's Way sends Akki's combat damage to alice,
+  -- and Akki does not flip" proves the relation, and data/scenarios/event-trigger's
+  -- "Teysa ignores combat damage dealt to another player" a bystander's.
   --
-  -- The relation is read off the RECIPIENT against CR 109.5's `you`, that
-  -- arm's reading, and CR 614.9's redirection is what makes it observable:
-  -- Parun.FlipSpec's "CR 603.2 Harm's Way sends Akki's combat damage to alice, and
-  -- Akki does not flip" and "CR 603.2 the same noncombat damage aimed at alice
-  -- does not flip Akki" prove the relation, from each damage kind; "CR 603.2 Akki
-  -- flips on the NONCOMBAT damage Soul's Fire makes it deal to bob" proves that
-  -- the kind is not narrowed.
-  --
-  -- The relation is the bearer's controller's even when the damager is another
-  -- permanent: Curiosity's "an opponent" is its own controller's (its ruling),
-  -- whoever controls the enchanted creature.
-  TriggerCondition.DealsDamageToPlayer watched -> case event of
-    GameEvent.DamageDealt ev ->
-      damageBy (DealsDamageToPlayer.actor watched) (DamageEvent.source ev)
-        && all (== DamageEvent.kind ev) (DealsDamageToPlayer.kind watched)
-        && maybe False (PlayerRelation.holds (Game.teams gs) (DealsDamageToPlayer.recipient watched) you) (Recipient.playerOf (DamageEvent.target ev))
-    _ -> False
-  -- CR 603.2 / 120.3: the same arm with rule 120.3's other recipient, a permanent
-  -- of a card type rather than a player. Strax, Sontaran Nurse's "Glory of Battle"
-  -- is a reader, and its own "Grenades!" fight is a noncombat source, so it names
-  -- no kind; Phage the Untouchable's "combat damage" names CR 510.2's.
-  --
-  -- Projection.damagedCardTypes rather than a Recipient.ToCreature test, the same
-  -- reading CR 120.3's own results take: the TAG is the classification made
-  -- where the recipient was built, and an attacked permanent that is both a
-  -- planeswalker and a creature carries the planeswalker one while still being
-  -- dealt damage to a creature. The tag is unioned in rather than replaced,
-  -- which is CR 608.2h's last known information for a recipient the damage has
-  -- already killed.
-  TriggerCondition.DealsDamageToPermanent watched -> case event of
-    GameEvent.DamageDealt ev ->
-      damageBy (DealsDamageToPermanent.actor watched) (DamageEvent.source ev)
-        && all (== DamageEvent.kind ev) (DealsDamageToPermanent.kind watched)
-        && Set.member (DealsDamageToPermanent.recipient watched) (Projection.damagedCardTypes gs (DamageEvent.target ev))
-    _ -> False
-  -- CR 120.1: the watched permanent dealt damage to anything, of either kind.
-  -- Every such event matches; firing once per damage event and damager is
-  -- DealsCombatDamage's reading.
+  -- A permanent recipient's card type is read off Projection.damagedCardTypes
+  -- rather than a Recipient.ToCreature test: the tag is the classification made
+  -- where the recipient was built, so an attacked permanent that is a
+  -- planeswalker and a creature is still dealt damage as a creature, and the tag
+  -- is unioned in, CR 608.2h's last known information for a recipient the damage
+  -- killed.
   TriggerCondition.DealsDamage watched -> case event of
-    GameEvent.DamageDealt ev -> damageBy watched (DamageEvent.source ev)
+    GameEvent.DamageDealt ev ->
+      damageBy (DamageTrigger.actor watched) (DamageEvent.source ev)
+        && all (== DamageEvent.kind ev) (DamageTrigger.kind watched)
+        && (Set.null (DamageTrigger.recipients watched) || any (damagedIs (DamageEvent.target ev)) (DamageTrigger.recipients watched))
     _ -> False
   -- CR 120.3: the watched permanent was DEALT damage -- enrage's event, and
   -- Death Pits of Rath's. DealsDamage's arm with the check moved from the
   -- event's SOURCE to its RECIPIENT.
   --
-  -- The KIND conjunct is DealsDamageToPermanent's: Nothing for Ripjaw
+  -- The KIND conjunct is DealsDamage's: Nothing for Ripjaw
   -- Raptor's unqualified phrase, which a Prodigal Sorcerer's ping fires exactly
   -- as combat damage does; Just Combat for Wall of Essence's CR 510.2 damage.
   --
@@ -620,31 +563,6 @@ armMatches bindings board gs bearer you cond event = case cond of
       let dealt = PlayerIsDealtDamage.dealt watched
        in all (== DamageEvent.kind ev) (DealtDamage.kind dealt)
             && dealtToRelated board gs (PlayerRelation.holds (Game.teams gs) (DealtDamage.recipient dealt) you) (PlayerIsDealtDamage.orTheirPlaneswalkers watched) (DamageEvent.target ev)
-    _ -> False
-  -- The same event read by a BYSTANDER (CR 510.1b / 510.2): a permanent the Filter
-  -- admits dealt combat damage to a player the relation admits, read like
-  -- SelfDealsCombatDamageToPlayer's: Teysa, Envoy of Ghosts' "to you", which
-  -- data/scenarios/event-trigger's "Teysa ignores combat damage dealt to another
-  -- player" proves. The Filter reads the event's DAMAGER, the bearer
-  -- contributing only CR 109.5's "you" and the Filter.Context's source -- which
-  -- is what would make Filter.IsSource the self-scoped reading.
-  --
-  -- The damager off `board` (Event.Binding.postEventView), not the live view:
-  -- CR 603.10's first sentence wants it as it existed immediately after the
-  -- damage, and parun scans the log after CR 704's pass, which may have buried
-  -- what granted the quality the Filter asks about. data/scenarios/event-trigger's
-  -- "The Raven's Warning sees Venser's Sliver fly as it hit" proves it. The
-  -- DamageKind test is a fence rather than a tested branch: no card in the pool
-  -- makes a Wolf or Werewolf deal NONCOMBAT damage while a Tovolar watches.
-  TriggerCondition.PermanentDealsCombatDamageToPlayer p -> case event of
-    GameEvent.DamageDealt ev ->
-      DamageEvent.kind ev == DamageKind.Combat
-        && dealtToRelated board gs (PlayerRelation.holds (Game.teams gs) (PermanentDealsCombatDamageToPlayer.recipient p) you) (PermanentDealsCombatDamageToPlayer.orTheirPlaneswalkers p) (DamageEvent.target ev)
-        && ( let damager = DamageEvent.source ev
-              in case postEventView board gs damager of
-                   Nothing -> False
-                   Just view -> Filter.matches bearerContext view (PermanentDealsCombatDamageToPlayer.filter p)
-           )
     _ -> False
   -- CR 725.2: a creature dealt combat damage to the monarch, who is "you" --
   -- the ability's controller (Event.Trigger.inherentTriggers). The damager is
@@ -1650,7 +1568,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- CR 603.2c's batch reading of PermanentEnters, delegated for PermanentsDie's
   -- reason: which entries this condition admits is the singular arm's answer.
   TriggerCondition.PermanentsEnter f -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.PermanentEnters f) event
-  -- CR 603.2c's batch reading of PermanentDealsCombatDamageToPlayer (Pia Nalaar,
+  -- CR 603.2c's batch reading of DealsDamage's combat damage to a player (Pia Nalaar,
   -- Chief Mechanic's "whenever ONE OR MORE artifact creatures you control deal
   -- combat damage to a player"), delegated for PermanentsDie's reason: which
   -- damage events this condition admits is the singular arm's answer, filter,
@@ -1664,11 +1582,11 @@ armMatches bindings board gs bearer you cond event = case cond of
       gs
       bearer
       you
-      ( TriggerCondition.PermanentDealsCombatDamageToPlayer
-          PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer
-            { PermanentDealsCombatDamageToPlayer.filter = PermanentsDealCombatDamageToPlayer.filter p,
-              PermanentDealsCombatDamageToPlayer.recipient = PermanentsDealCombatDamageToPlayer.recipient p,
-              PermanentDealsCombatDamageToPlayer.orTheirPlaneswalkers = False
+      ( TriggerCondition.DealsDamage
+          DamageTrigger.MkDamageTrigger
+            { DamageTrigger.actor = ActingPermanent.Matching (PermanentsDealCombatDamageToPlayer.filter p),
+              DamageTrigger.kind = Just DamageKind.Combat,
+              DamageTrigger.recipients = Set.singleton (DamageRecipient.Player (PermanentsDealCombatDamageToPlayer.recipient p))
             }
       )
       event
@@ -2085,7 +2003,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- if it admits any of them (Event.Binding.admittedPreventedSources), one
   -- application being one CR 615.13 trigger however many sources it covered.
   -- The bearer contributes only CR 109.5's "you" and the Filter.Context's
-  -- source, as in the PermanentDealsCombatDamageToPlayer arm above. viewWithLastKnown:
+  -- source, as in the DealsDamage arm above. viewWithLastKnown:
   -- CR 608.2h's record is what still answers "was it a creature" for a source
   -- gone by now. Proved by judgment-of-alexander-fires-for-a-sacrificed-creature.
   --
@@ -2960,8 +2878,9 @@ armMatches bindings board gs bearer you cond event = case cond of
     scopeNamed = Count.scopePlayers (Projection.viewWithLastKnownAnywhere gs) bearerContext gs
     -- A damage condition's watched permanent, the damage's source or recipient:
     -- the bearer by id, or a permanent the Filter admits. The Filter reads it
-    -- through `board`, CR 603.10's battlefield immediately after the damage, as
-    -- PermanentDealsCombatDamageToPlayer does: damage that kills Spirit Link's
+    -- through `board`, CR 603.10's battlefield immediately after the damage:
+    -- data/scenarios/event-trigger's "The Raven's Warning sees Venser's Sliver
+    -- fly as it hit" proves it, and damage that kills Spirit Link's
     -- host also buries the Aura (CR 704.5m) before the log is scanned, and the
     -- link has to be read as it stood. A spell source is on no such board and is
     -- read from its last known information (CR 608.2h), Chandra's Phoenix's "red
@@ -2972,6 +2891,10 @@ armMatches bindings board gs bearer you cond event = case cond of
     damageBy watched oid = case watched of
       ActingPermanent.Self -> oid == bearer
       ActingPermanent.Matching f -> maybe False (\view -> Filter.matches bearerContext (ProjectionView.lastZoned gs oid view) f) (postEventView board gs oid)
+    -- CR 120.1: is the damage's recipient one this DamageRecipient admits?
+    damagedIs target recipient = case recipient of
+      DamageRecipient.Player relation -> maybe False (PlayerRelation.holds (Game.teams gs) relation you) (Recipient.playerOf target)
+      DamageRecipient.Permanent cardType -> Set.member cardType (Projection.damagedCardTypes gs target)
 
 -- CR 106.12a's second half: did an activation that produced @produced@ produce
 -- the mana this condition specified? The narrowing half of the
