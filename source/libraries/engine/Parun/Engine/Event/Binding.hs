@@ -2024,8 +2024,8 @@ eventBindingSlots cond = case cond of
   -- The permanent tapped for mana, which the arm above stamps for every
   -- match: Wild Growth reads it through PlayerRef.HolderOfBound.
   TriggerCondition.AttachedPermanentTappedForMana -> Set.singleton Binding.manaSource
-  -- The same slot for the bystander reading, stamped by the arm above for every
-  -- match.
+  -- The same slot for the bystander reading and the tapping player beside it,
+  -- stamped by the arm above for every match.
   TriggerCondition.PermanentTappedForMana {} -> Set.fromList [Binding.manaSource, Binding.triggerPlayer]
   -- A deliberate empty: Caged Sun's "that color" is the bearer's chosen color,
   -- and it names no source. A card that did would take manaSource.

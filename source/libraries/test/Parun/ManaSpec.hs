@@ -4200,8 +4200,6 @@ poolUnits :: GameState.GameState -> [ManaUnit.ManaUnit]
 poolUnits gs = case Game.poolOf S.alice gs of
   Mana.Type.MkMana units -> units
 
--- What is floating, as types in pool order -- poolSize's discriminating twin,
--- for a case where the SIZE is the same under either answer.
 -- Mana Flare (5ED, Oracle text checked on Scryfall, 2026-11-04): "Whenever a
 -- player taps a land for mana, that player adds one mana of any type that land
 -- produced." Its other behaviours are scenarios under data/scenarios/mana/.
@@ -4232,6 +4230,8 @@ manaFlareSpec s registry = Spec.describe s "Mana Flare" $ do
     Spec.assertEqWith s "the first tap's {W} and Mana Flare's" (poolTypes S.alice first) [ManaType.Colored Color.White, ManaType.Colored Color.White]
     Spec.assertEqWith s "then the second's {U} and Mana Flare's" (poolTypes S.alice second) [ManaType.Colored Color.White, ManaType.Colored Color.White, ManaType.Colored Color.Blue, ManaType.Colored Color.Blue]
 
+-- What is floating, as types in pool order -- poolSize's discriminating twin,
+-- for a case where the SIZE is the same under either answer.
 poolTypes :: PlayerId.PlayerId -> GameState.GameState -> [ManaType.ManaType]
 poolTypes pid gs = case Game.poolOf pid gs of
   Mana.Type.MkMana units -> fmap ManaUnit.manaType units
