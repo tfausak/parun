@@ -1683,7 +1683,7 @@ subtractHalf face =
 
 -- The face of this card with the given name, if it has one. CR 709.4a: a card's
 -- faces are referred to BY NAME, which is what a player names in paper and what
--- survives in a DecisionLog; the Ord on Card.faces is printed order and carries
+-- survives in a recorded answer; the Ord on Card.faces is printed order and carries
 -- no identity.
 --
 -- Nothing when no face is so named, and the FIRST match otherwise -- so a hit is
