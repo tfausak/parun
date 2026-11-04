@@ -2421,7 +2421,7 @@ harmsWaySpec s registry = Spec.describe s "Harm's Way (CR 614.9, CR 615.7, CR 60
     -- THE gameplay assertion: the moved 2 lands on the target, the rest stays.
     Spec.assertEqWith s "bob, the target, takes the 2 that moved" (S.lifeOf S.bob after) (Just 18)
     Spec.assertEqWith s "alice takes the remaining 3" (S.lifeOf S.alice after) (Just 17)
-    Spec.assertEqWith s "two events, the moved one first" (zip (amounts after) (targets after)) [(2, Recipient.ToPlayer S.bob), (3, Recipient.ToPlayer S.alice)]
+    Spec.assertEqWith s "two events, the moved one settling last" (zip (amounts after) (targets after)) [(3, Recipient.ToPlayer S.alice), (2, Recipient.ToPlayer S.bob)]
     Spec.assertEqWith s "the row is spent and gone" (countedRedirectRows after) []
     -- The proxies, after the behaviour: one described row, naming no recipient
     -- by id, aimed at bob and watching omega.
@@ -2516,7 +2516,7 @@ harmsWaySpec s registry = Spec.describe s "Harm's Way (CR 614.9, CR 615.7, CR 60
       s
       "the creature's 3 is one event, and the moved 2 and its residue the other two"
       (zip (amounts aliceFirst) (targets aliceFirst))
-      [(3, Recipient.ToCreature mine), (2, Recipient.ToPlayer S.bob), (1, Recipient.ToPlayer S.alice)]
+      [(3, Recipient.ToCreature mine), (1, Recipient.ToPlayer S.alice), (2, Recipient.ToPlayer S.bob)]
     Spec.assertEqWith s "either way bob takes exactly the 2" (fmap (`S.lifeOf` creatureFirst) [S.bob] <> fmap (`S.lifeOf` aliceFirst) [S.bob]) [Just 18, Just 18]
     Spec.assertBool s (wasAskedToAllocateDamage (answersFor (orderedBy [Recipient.ToPlayer S.alice]) redirected (Damage.applyDamage batch))) "alice was asked how to divide the 2"
   -- The BASELINE: the same board, the spell never cast.

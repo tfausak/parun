@@ -2342,7 +2342,7 @@ chooseAndApply asOf batch diverting allowances applied prevented exiledBy shuffl
     -- refutes it, and none has a producer.
     --
     -- The two halves may end up on the SAME recipient, which CR 120.4 deals
-    -- as one event; resolveDamage rejoins them once the loop is done
+    -- as one event; resolveDamageBatch rejoins them once the batch is done
     -- (Replacement.oneEventPerRecipient), rather than here, because a later
     -- iteration can still move either half.
     Just candidate
@@ -2426,9 +2426,24 @@ applyChosen asOf batch diverting allowances applied prevented exiledBy shuffling
   -- PREVENTION rewrite's shrinkage is prevention, where CR 614.1a's
   -- SetAmount and Scale shrink an event without preventing a point of it.
   let prevented1 = prevented <> Maybe.maybeToList (Replacement.preventionBy inert candidate event outcome)
+  let applied1 = Set.insert (ReplacementCandidate.identity candidate) applied
   case outcome of
     Nothing -> pure (Nothing, [], prevented1, exiledBy, shuffling, split)
-    Just rewritten -> loop asOf batch diverting allowances (Set.insert (ReplacementCandidate.identity candidate) applied) prevented1 (exiledByAfter candidate event rewritten exiledBy) (shuffling || shufflesAfter candidate) split rewritten
+    -- CR 614.9 / 615.7: damage moved onto another recipient goes back to the
+    -- batch, whose division of a shield there must span it (settlesFirst).
+    Just rewritten
+      | Just moved <- movedDamage event rewritten ->
+          pure (Nothing, [Left (moved, applied1)], prevented1, exiledBy, shuffling, split)
+    Just rewritten -> loop asOf batch diverting allowances applied1 prevented1 (exiledByAfter candidate event rewritten exiledBy) (shuffling || shufflesAfter candidate) split rewritten
+
+-- The damage event a rewrite moved onto a different recipient, read off the
+-- event before and after as `exiledByAfter` reads a destination; Nothing for
+-- any other outcome.
+movedDamage :: ProposedEvent -> ProposedEvent -> Maybe DamageEvent.DamageEvent
+movedDamage before after = case (before, after) of
+  (ProposedEvent.WouldDealDamage old, ProposedEvent.WouldDealDamage new)
+    | DamageEvent.target new /= DamageEvent.target old -> Just new
+  _ -> Nothing
 
 -- CR 607.2b's link, read OUTSIDE `apply` from the event before and after --
 -- `preventionBy`'s posture above, for its reason: no arm of that fold has to
@@ -5733,18 +5748,19 @@ settleThreads threads = do
       (dealt2, prevented2) <- settleThreads waiting
       pure (dealt <> dealt2, prevented <> prevented2)
 
--- Which threads settle this round. A row that adds damage and is its event's only
--- effect asks no one anything (CR 616.1's "two or more"), so it goes ahead of
--- every question. Otherwise the adding row's chooser has a choice, which takes its
--- APNAP turn (CR 101.4): the earliest such seat's adding threads settle, behind
--- every earlier seat's threads with a question or a CR 616.1 choice of their own.
--- A thread with neither waits, its shield free to meet what is added.
--- docs/decisions.md, "Whether damage a replacement adds joins a division already
--- owed".
+-- Which threads settle this round. A row that adds damage or moves it (CR 614.9)
+-- and is its event's only effect asks no one anything (CR 616.1's "two or
+-- more"), so it goes ahead of every question. Otherwise the adding row's chooser
+-- has a choice, which takes its APNAP turn (CR 101.4): the earliest such seat's
+-- adding threads settle, behind every earlier seat's threads with a question or a
+-- CR 616.1 choice of their own. A thread with neither waits, its shield free to
+-- meet what is added. docs/decisions.md, "Whether damage a replacement adds joins
+-- a division already owed".
 settlesFirst :: GameState -> [Replacement.DamageThread] -> Replacement.DamageThread -> Bool
 settlesFirst gs threads =
   let rows (de, spent) = filter (\row -> not (Set.member (ReplacementCandidate.identity row) spent)) (Replacement.applicable Nothing gs (ProposedEvent.WouldDealDamage de))
-      adds thread = any (Maybe.isJust . flip (alsoDealt gs) (fst thread)) (rows thread)
+      delivers de row = Maybe.isJust (alsoDealt gs row de) || any Replacement.redirects (Replacement.damageRewriteOf row)
+      adds thread = any (delivers (fst thread)) (rows thread)
       lone thread = adds thread && length (rows thread) == 1
       rank = Replacement.apnapRank gs . fst
       asked = Replacement.questioned gs threads

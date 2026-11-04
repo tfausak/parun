@@ -118,14 +118,16 @@ Entries are ordered by the first rule each cites.
   CR 616.1's choices fix. Bob, active, owes a CR 615.7 division over two hits,
   and alice's Eye would add a third. Does his division span it? Lifelink
   observes it. And if alice has a second effect on her event, and so a choice,
-  whose question comes first?
+  whose question comes first? Harm's Way moving damage onto the shielded
+  recipient asks the same.
 - **Rules**: CR 101.4, 101.4b, 615.7, 616.1, 616.1f; CR of 2026-08-07.
-- **Decision**: A row that adds damage and is its event's only effect asks no
-  one anything, so it applies first and the division spans what it adds. A row
-  beside another effect is its chooser's choice, which takes its APNAP turn:
-  earlier seats' questions and CR 616.1 choices come first and cannot see what
-  it may add, and whatever of a shield they leave is divided afterwards. A
-  player with neither waits, keeping a shield for the added damage.
+- **Decision**: A row that adds or moves damage and is its event's only effect
+  asks no one anything, so it applies first and the division spans what it
+  adds or moves. A row beside another effect is its chooser's choice, which
+  takes its APNAP turn: earlier seats' questions and CR 616.1 choices come
+  first and cannot see what it may add, and whatever of a shield they leave is
+  divided afterwards. A player with neither waits, keeping a shield for the
+  added damage.
 - **Rejected**: Every seat answering first over what exists: bob's shield could
   never meet damage no one had any say in. Every adding row first: bob, the
   nonactive player, would spend a shared shield ahead of alice by a choice
@@ -134,8 +136,10 @@ Entries are ordered by the first rule each cites.
 - **Site**: `Parun.Engine.Event.settlesFirst`, proved by the scenarios
   `eye-for-an-eye-damage-back-joins-a-division-over-two-hits`,
   `eye-for-an-eye-waits-its-apnap-turn-behind-a-shared-shield` and
-  `eye-for-an-eye-waits-behind-an-earlier-seats-own-choice`.
-- **Issue**: #5991.
+  `eye-for-an-eye-waits-behind-an-earlier-seats-own-choice`; for a move,
+  `harms-way-onto-a-shielded-creature-joins-the-shields-division` and
+  `harms-way-onto-a-shielded-player-joins-a-division-already-owed`.
+- **Issue**: #5991, #6047.
 
 ## Whether "each creature and each planeswalker" reaches a permanent twice
 
