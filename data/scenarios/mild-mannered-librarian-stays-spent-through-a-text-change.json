@@ -98,7 +98,8 @@
             "$f1",
             "$f2",
             "$f3",
-            "$f4"
+            "$f4",
+            null
           ],
           "object": "$lib"
         }
@@ -137,7 +138,8 @@
       "do": {
         "Cast": {
           "mana": [
-            "$i1"
+            "$i1",
+            null
           ],
           "object": "$evo",
           "targets": [
@@ -186,7 +188,8 @@
             "$f5",
             "$f6",
             "$f7",
-            "$f8"
+            "$f8",
+            null
           ],
           "object": "$lib"
         }
