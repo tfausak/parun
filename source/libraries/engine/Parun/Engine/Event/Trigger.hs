@@ -154,7 +154,7 @@ import qualified Parun.Types.ZoneChange as ZoneChange
 -- projection its abilities are read out of, and what is attached to it.
 --
 -- The whole battlefield rather than a diff or an overrides-only map, because all
--- three of the answers the scan wants can move and only a full reading tells
+-- four of the answers the scan wants can move and only a full reading tells
 -- "unchanged" from "not there". The controller half is the one that used to be
 -- kept alone, as a layer-2 overrides map; folding it in here costs nothing extra,
 -- since the projection this walks is the same one the controller walk needs.

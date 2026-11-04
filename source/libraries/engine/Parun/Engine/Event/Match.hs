@@ -902,8 +902,9 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- apart.
   --
   -- The permanent's characteristics come from the game as it stands;
-  -- viewWithLastKnown with the BEARER as the source, the attacked permanent being a different object, so CR
-  -- 608.2h's last known information does not stand in for it.
+  -- viewWithLastKnown with the BEARER as the source, the attacked permanent
+  -- being a different object, so CR 608.2h's last known information does not
+  -- stand in for it.
   TriggerCondition.SelfAttacksPermanent f -> case event of
     GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared oid _ target _ _)
       | oid == bearer ->
