@@ -320,6 +320,8 @@ library codec
     Parun.Codec.CardNameSpec
     Parun.Codec.CardPutIntoGraveyard
     Parun.Codec.CardPutIntoGraveyardSpec
+    Parun.Codec.CardSelection
+    Parun.Codec.CardSelectionSpec
     Parun.Codec.CardSpec
     Parun.Codec.CardsPutIntoZone
     Parun.Codec.CardsPutIntoZoneSpec
@@ -425,8 +427,6 @@ library codec
     Parun.Codec.ConjureDestination
     Parun.Codec.ConjureDestinationSpec
     Parun.Codec.ConjureEntry
-    Parun.Codec.ConjureSelection
-    Parun.Codec.ConjureSelectionSpec
     Parun.Codec.ConjureSpec
     Parun.Codec.Connive
     Parun.Codec.ContinuousEffect
@@ -2504,6 +2504,7 @@ library types
     Parun.Types.CardLeavesZone
     Parun.Types.CardName
     Parun.Types.CardPutIntoGraveyard
+    Parun.Types.CardSelection
     Parun.Types.CardsPutIntoZone
     Parun.Types.CardType
     Parun.Types.CarryOver
@@ -2566,7 +2567,6 @@ library types
     Parun.Types.ConjureCards
     Parun.Types.ConjureDestination
     Parun.Types.ConjureEntry
-    Parun.Types.ConjureSelection
     Parun.Types.Connive
     Parun.Types.ContinuousEffect
     Parun.Types.ControlChanged

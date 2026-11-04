@@ -44,6 +44,7 @@ import qualified Parun.Types.BlockPair as BlockPair
 import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.CardSelection as CardSelection
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
 import qualified Parun.Types.Clause as Clause
@@ -670,7 +671,8 @@ costPart n = case Node.tag n of
     k <- Node.child n >>= integer
     m <- natural n k
     Right (Right (CostComponent.PayLife (CostAmount.Fixed m)))
-  "DiscardHand" -> Right (Right (CostComponent.DiscardCards DiscardCards.MkDiscardCards {DiscardCards.count = ObjectCount.Every, DiscardCards.whichCards = Filter.And []}))
+  "DiscardHand" -> Right (Right (CostComponent.DiscardCards DiscardCards.MkDiscardCards {DiscardCards.count = ObjectCount.Every, DiscardCards.whichCards = Filter.And [], DiscardCards.selection = CardSelection.ByChoice}))
+  "DiscardACardAtRandom" -> Right (Right (CostComponent.DiscardCards DiscardCards.MkDiscardCards {DiscardCards.count = ObjectCount.Exactly (CostAmount.Fixed 1), DiscardCards.whichCards = Filter.And [], DiscardCards.selection = CardSelection.AtRandom}))
   _ -> Node.untranslated n
   where
     itself c = do

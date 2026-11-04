@@ -3,10 +3,12 @@
 module Parun.Codec.DiscardCards where
 
 import qualified Data.Typeable as Typeable
+import qualified Parun.Codec.CardSelection as CardSelection
 import qualified Parun.Codec.Filter as Filter
 import qualified Parun.Codec.ObjectCount as ObjectCount
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Fields as Fields
+import qualified Parun.Types.CardSelection as CardSelection.Type
 import qualified Parun.Types.DiscardCards as DiscardCards
 
 -- | A bare object keyed by the record's field names, Parun.Codec.ExileCardsFromGraveyard's
@@ -15,4 +17,5 @@ codec :: (Typeable.Typeable keyword, Eq keyword) => Codec.Codec keyword -> Codec
 codec keywordCodec = Fields.object $ do
   count <- Fields.required "count" ObjectCount.codec DiscardCards.count
   whichCards <- Fields.required "whichCards" (Filter.codec keywordCodec) DiscardCards.whichCards
-  pure DiscardCards.MkDiscardCards {DiscardCards.count = count, DiscardCards.whichCards = whichCards}
+  selection <- Fields.defaulted "selection" CardSelection.Type.ByChoice CardSelection.codec DiscardCards.selection
+  pure DiscardCards.MkDiscardCards {DiscardCards.count = count, DiscardCards.whichCards = whichCards, DiscardCards.selection = selection}

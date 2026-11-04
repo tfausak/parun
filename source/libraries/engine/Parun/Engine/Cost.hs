@@ -82,6 +82,7 @@ import qualified Parun.Types.Binding as Binding.Type
 import qualified Parun.Types.CandidateCost as CandidateCost
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.CardSelection as CardSelection
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CastingPermission as CastingPermission
 import qualified Parun.Types.Chosen as Chosen
@@ -971,7 +972,7 @@ candidateCostsGiven permitted pid name oid gs =
                                      -- CR 702.81a ADDS to the printed cost rather than
                                      -- replacing it, jump-start's shape below, and
                                      -- names a QUALITY where rule 702.133a names none.
-                                     printed {Cost.components = Cost.components printed <> [CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.Type.HasCardType CardType.Land))]}
+                                     printed {Cost.components = Cost.components printed <> [CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.Type.HasCardType CardType.Land) CardSelection.ByChoice)]}
                                  ]
                                else []
                            )
@@ -982,7 +983,7 @@ candidateCostsGiven permitted pid name oid gs =
                                      (Just Keyword.Type.JumpStart)
                                      -- CR 702.133a's cost names no quality -- "discard a
                                      -- card" -- so the criterion admits everything.
-                                     printed {Cost.components = Cost.components printed <> [CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.Type.And []))]}
+                                     printed {Cost.components = Cost.components printed <> [CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.Type.And []) CardSelection.ByChoice)]}
                                  ]
                                else []
                            )
@@ -2792,15 +2793,15 @@ claimOf slots pid oid component gs =
         -- states a non-empty mana part, so `repeatsOf` settles at 1 before any axis
         -- matters.
         CostComponent.ExileThis -> claim (ClaimAxis.Removal Zone.Battlefield) itself 1
-        CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed n)) criterion) ->
+        CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed n)) criterion _) ->
           claim (ClaimAxis.Removal Zone.Hand) (Set.fromList (discardCandidates slots pid oid criterion gs)) n
         -- Nothing until CR 601.2b fixes the count, Sacrifice's posture.
-        CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Announced _)) _) -> Nothing
+        CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Announced _)) _ _) -> Nothing
         -- Nothing: CR 701.9a's whole-hand discard is paid by whatever the hand
         -- holds, an empty one included, so it spends nothing another component
         -- could run short of. A FENCE: Slate of Ancestry states no other
         -- component drawing on the hand.
-        CostComponent.DiscardCards (DiscardCards.MkDiscardCards ObjectCount.Every _) -> Nothing
+        CostComponent.DiscardCards (DiscardCards.MkDiscardCards ObjectCount.Every _ _) -> Nothing
         CostComponent.DiscardThis _ -> claim (ClaimAxis.Removal Zone.Hand) itself 1
         -- The same hand pool the two arms above claim, and on the same axis: what the
         -- payment spends is a card leaving the hand, and the battlefield end adds a
@@ -3988,12 +3989,12 @@ canPayComponent slots pid oid component gs = case component of
   -- additional cost. Load-bearing for the OFFER, which Cast.castable measures
   -- while the card is still in hand -- without it a hand of "Cathartic Reunion
   -- plus one other card" would offer the Reunion on the strength of itself.
-  CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly amount) criterion) -> payableAnnounced amount $ \n ->
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly amount) criterion _) -> payableAnnounced amount $ \n ->
     Natural.length (discardCandidates slots pid oid criterion gs) >= n
   -- "Discard your hand" discards every card there is, so an empty hand pays it
   -- (CR 118.3 asks for no resource it lacks). data/scenarios/cost's "Slate of
   -- Ancestry's discard-your-hand cost is paid with an empty hand" proves it.
-  CostComponent.DiscardCards (DiscardCards.MkDiscardCards ObjectCount.Every _) -> True
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards ObjectCount.Every _ _) -> True
   -- CR 118.3: payable only if the hand holds a card the criterion admits. This
   -- is what keeps Hakbal of the Surging Soul's landless controller from being
   -- offered a cost they cannot pay -- CR 118.12's offer is gated on
@@ -4797,7 +4798,9 @@ announceSubstitutionsReading slots substituting pid oid cost = case Cost.mana co
 -- does -- but CR 601.2h pays those in a SECOND pass (paidInSecondPass below),
 -- and `payComponent` refuses a MillCards only short of cards, which the gate
 -- measured and the window cannot change, so no failure can follow one within
--- this payment.
+-- this payment. A random discard shares that pass and a window can empty its
+-- hand, but no printing holds both (AtomicCards' "at random" costs, 2026-11-04;
+-- a cost discarding at random and milling would refute this).
 --
 -- Rule 733.1's SHUFFLE and REVEAL clauses, which CR 605.1a does NOT exclude --
 -- Parun.Engine.ManaAbility.movesLibraryCard answers False of Effect.Shuffle and
@@ -5364,23 +5367,26 @@ orderPass pid oid components =
 -- involve random elements or moving objects from the library to a public zone"
 -- being the first, and this the rest?
 --
--- CostComponent.FlipCoin is the RANDOM half's only arm; nothing in
--- Parun.Types.CostComponent rolls a die, so every other answer below is decided by
--- the library half alone. One predicate for both, because rule 601.2h's two
--- criteria select one pass between them.
+-- CostComponent.FlipCoin and a random CostComponent.DiscardCards are the RANDOM
+-- half's arms; nothing in Parun.Types.CostComponent rolls a die, so every other
+-- answer below is decided by the library half alone. One predicate for both,
+-- because rule 601.2h's two criteria select one pass between them.
 --
 -- EXHAUSTIVE with no wildcard, `orderSensitive`'s posture and for its reason.
 paidInSecondPass :: CostComponent.CostComponent Keyword.Type.Keyword -> Bool
 paidInSecondPass component = case component of
   -- CR 701.17a moves cards from a library to a graveyard, and CR 400.2 makes the
-  -- one hidden and the other public. The one True arm in the vocabulary.
+  -- one hidden and the other public.
   CostComponent.MillCards _ -> True
   -- CR 701.20a shows the cards and moves none, so the first pass holds it.
   CostComponent.RevealTopOfLibrary _ -> False
+  -- CR 601.2h's RANDOM half reaches a discard only at random; Parun.CostSpec's
+  -- "a random discard is paid after a chosen one" proves it.
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly _) _ CardSelection.AtRandom) -> True
+  CostComponent.DiscardCards {} -> False
   -- A HAND is not a library (CR 400.2 makes both hidden, which is not what rule
   -- 601.2h asks), and a graveyard, a battlefield and a stack are not either, so
   -- every other component that moves an object stays in the first pass.
-  CostComponent.DiscardCards {} -> False
   CostComponent.DiscardThis _ -> False
   CostComponent.PutCardFromHandOntoBattlefield _ -> False
   CostComponent.SacrificeThis -> False
@@ -5414,9 +5420,8 @@ paidInSecondPass component = case component of
   -- battlefield to a graveyard, and neither is a library, so the first pass holds
   -- it -- the header's reading.
   CostComponent.Forage -> False
-  -- CR 601.2h's RANDOM half, and the one part of this type that reaches it: a
-  -- coin flip is the rule's own example of a cost involving a random element, so
-  -- it is paid after every part that does not.
+  -- CR 601.2h's RANDOM half: a coin flip is the rule's own example of a cost
+  -- involving a random element, so it is paid after every part that does not.
   CostComponent.FlipCoin -> True
   -- CR 702.174a's choice moves no object and involves no random element, so
   -- neither half of rule 601.2h's first criterion reaches it.
@@ -5555,8 +5560,7 @@ orderSensitive component = case component of
   CostComponent.Forage -> True
   -- False: CR 705.1's flip spends nothing another part of the same cost could
   -- have spent, the per-player scalars' answer. Alone in CR 601.2h's second pass
-  -- on this pool -- `paidInSecondPass` above puts it there and nothing else --
-  -- so `orderObservable` is False either way.
+  -- on this pool, so `orderObservable` is False either way.
   CostComponent.FlipCoin -> False
   -- False: rule 702.174a's choice spends nothing another part of the same cost
   -- could have spent, FlipCoin's answer just above.
@@ -6717,14 +6721,20 @@ payPayable perform moment paidFor slots pid oid component = case component of
   -- The discards are ONE event group, Sacrifice's reason; Parun.CostSpec's "CR
   -- 601.2h Cathartic Reunion's two discards fire Magmakin Artillerist once, for 2"
   -- proves it. discardsBound binds what arrived.
-  CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly amount) criterion) -> paidAnnounced amount $ \n -> do
+  --
+  -- CR 701.9b's random discard asks nobody: Prompt.RandomObject is the draw, one
+  -- card at a time, and data/scenarios' coral-helm-discards-the-card-randomness-named
+  -- proves it.
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly amount) criterion selection) -> paidAnnounced amount $ \n -> do
     gs <- State.get
     let held = discardCandidates slots pid oid criterion gs
         decider = Decide.deciderFor pid gs
     chosen <-
       if Natural.length held <= n
         then pure held
-        else Game.choose (Prompt.ChooseDiscard decider pid held n)
+        else case selection of
+          CardSelection.ByChoice -> Game.choose (Prompt.ChooseDiscard decider pid held n)
+          CardSelection.AtRandom -> Game.drawDistinct Prompt.RandomObject n held
     let distinct = ListUtils.nubOrd chosen
     if all (\c -> List.elem c held) distinct && Natural.length distinct == n
       then do
@@ -6733,7 +6743,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
   -- Every matching card, Slate of Ancestry's "Discard your hand": nothing is
   -- chosen, so nothing is asked (CR 701.9b's choice has one answer), and the
   -- cards go as ONE event group and are bound, the arm above's reasons.
-  CostComponent.DiscardCards (DiscardCards.MkDiscardCards ObjectCount.Every criterion) -> do
+  CostComponent.DiscardCards (DiscardCards.MkDiscardCards ObjectCount.Every criterion _) -> do
     gs <- State.get
     discardsBound pid (discardCandidates slots pid oid criterion gs)
   -- CR 701.9a's move, through the funnel DiscardCards uses above. No prompt: the

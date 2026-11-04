@@ -139,6 +139,7 @@ import qualified Parun.Codec.CardIdentitySpec
 import qualified Parun.Codec.CardLeavesZoneSpec
 import qualified Parun.Codec.CardNameSpec
 import qualified Parun.Codec.CardPutIntoGraveyardSpec
+import qualified Parun.Codec.CardSelectionSpec
 import qualified Parun.Codec.CardSpec
 import qualified Parun.Codec.CardTypeSpec
 import qualified Parun.Codec.CardsPutIntoZoneSpec
@@ -189,7 +190,6 @@ import qualified Parun.Codec.ComponentCardSpec
 import qualified Parun.Codec.ConditionSpec
 import qualified Parun.Codec.ConjureCardsSpec
 import qualified Parun.Codec.ConjureDestinationSpec
-import qualified Parun.Codec.ConjureSelectionSpec
 import qualified Parun.Codec.ConjureSpec
 import qualified Parun.Codec.ContinuousEffectSpec
 import qualified Parun.Codec.ControlChangedSpec
@@ -1156,7 +1156,7 @@ spec s registry corpus = do
   Parun.Codec.ConditionSpec.spec s
   Parun.Codec.ConjureCardsSpec.spec s
   Parun.Codec.ConjureDestinationSpec.spec s
-  Parun.Codec.ConjureSelectionSpec.spec s
+  Parun.Codec.CardSelectionSpec.spec s
   Parun.Codec.ConjureSpec.spec s
   Parun.Codec.ContinuousEffectSpec.spec s
   Parun.Codec.ControlChangedSpec.spec s

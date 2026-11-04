@@ -1345,7 +1345,7 @@ divideNames asking x = case x of
 
 discardCardsNames :: (Monoid r) => Asking r -> DiscardCards.DiscardCards keyword -> r
 discardCardsNames asking x = case x of
-  DiscardCards.MkDiscardCards _count whichCards -> filterNames asking whichCards
+  DiscardCards.MkDiscardCards _count whichCards _selection -> filterNames asking whichCards
 
 doesNotUntapNextNames :: (Monoid r) => Asking r -> DoesNotUntapNext.DoesNotUntapNext -> r
 doesNotUntapNextNames asking x = case x of

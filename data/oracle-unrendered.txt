@@ -2519,6 +2519,7 @@ soldevi-digger
 soldevi-sage
 solemnity
 song-of-the-dryads
+sonic-burst
 sonorous-howlbonder
 sorcerer-class
 sorcerers-strongbox
