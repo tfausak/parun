@@ -23,44 +23,23 @@
                   {
                     "effects": [
                       {
-                        "type": "ModifyTarget",
+                        "type": "ForbidBeingBlocked",
                         "value": {
-                          "duration": {
-                            "type": "UntilEndOfTurn"
+                          "affected": {
+                            "type": "IsBound",
+                            "value": "target"
                           },
-                          "modification": {
-                            "type": "GainAbility",
+                          "blockers": {
+                            "type": "Not",
                             "value": {
-                              "type": "Rules",
+                              "type": "HasSubtype",
                               "value": {
-                                "combatRestrictions": [
-                                  {
-                                    "type": "CantBeBlockedBy",
-                                    "value": {
-                                      "affected": {
-                                        "type": "Matching",
-                                        "value": {
-                                          "type": "IsSource"
-                                        }
-                                      },
-                                      "blockers": {
-                                        "type": "Not",
-                                        "value": {
-                                          "type": "HasSubtype",
-                                          "value": {
-                                            "type": "Wall"
-                                          }
-                                        }
-                                      }
-                                    }
-                                  }
-                                ]
+                                "type": "Wall"
                               }
                             }
                           },
-                          "ref": {
-                            "type": "InSlot",
-                            "value": "target"
+                          "duration": {
+                            "type": "UntilEndOfTurn"
                           }
                         }
                       }
