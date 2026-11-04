@@ -1709,6 +1709,7 @@ oneMountainState mountain ph =
           GameState.passed = Set.empty,
           GameState.turnNumber = 1,
           GameState.turnsBegun = Map.singleton alice 1,
+          GameState.permanentsAsTurnBegan = Nothing,
           GameState.result = Nothing,
           GameState.restartSignal = RestartSignal.Playing,
           GameState.endTurnSignal = EndTurnSignal.Running,

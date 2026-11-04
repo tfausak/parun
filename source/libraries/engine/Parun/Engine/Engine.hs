@@ -1780,6 +1780,8 @@ beginTurn extra pid gs =
             GameState.turnNumber = GameState.turnNumber gs + 1,
             -- CR 500.7: the turn is one of each taker's turns of the game.
             GameState.turnsBegun = Turn.countTurnBegun takers (GameState.turnsBegun gs),
+            -- The outgoing turn's; runStep files this one's.
+            GameState.permanentsAsTurnBegan = Nothing,
             -- CR 500.7: which extra turn this is, for a duration naming it
             -- (Expiry.DuringExtraTurn); Nothing on an ordinary turn.
             GameState.extraTurnUnderWay = extra,
@@ -1894,6 +1896,10 @@ advance = do
 -- state-based actions, then move on. Bails out as soon as the game has a result.
 runStep :: Game ()
 runStep = do
+  -- CR 500.12: nothing happens between turns, so the board this turn's first
+  -- step opens on is the board as the turn began, whatever skips that step (CR
+  -- 500.11) and however many untap steps CR 500.8 adds to the turn.
+  State.modify' fileTurnBegan
   -- CR 727.4: the effect that restarts the game finishes resolving just before the
   -- first turn's untap step, so if the previous step unwound on a restart, this is
   -- that untap step. Lower the signal first.
@@ -1937,6 +1943,14 @@ runStep = do
       if not begins
         then skipStep phase
         else runStepThatBegan phase
+
+-- GameState.permanentsAsTurnBegan, once a turn, after Expiry.dropAtTurnOf
+-- (docs/decisions.md's "at the beginning of this turn"). The record is left
+-- unforced.
+fileTurnBegan :: GameState -> GameState
+fileTurnBegan gs = case GameState.permanentsAsTurnBegan gs of
+  Just _ -> gs
+  Nothing -> gs {GameState.permanentsAsTurnBegan = Just (Map.fromList (Maybe.mapMaybe (\oid -> fmap ((,) oid) (Event.lastKnownRecord gs oid)) (Set.toAscList (GameState.battlefield gs))))}
 
 -- CR 500.11: proceed past a SKIPPED PHASE as though it didn't exist -- so the
 -- rest of its steps leave the schedule and `advance` picks up whatever CR 500.1's

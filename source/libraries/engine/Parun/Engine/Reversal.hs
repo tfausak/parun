@@ -126,6 +126,7 @@ withoutAnnouncement before entry closed = do
   passed <- one GameState.passed
   turnNumber <- one GameState.turnNumber
   turnsBegun <- mapOf GameState.turnsBegun
+  permanentsAsTurnBegan <- one GameState.permanentsAsTurnBegan
   result <- one GameState.result
   restartSignal <- one GameState.restartSignal
   endTurnSignal <- one GameState.endTurnSignal
@@ -263,6 +264,7 @@ withoutAnnouncement before entry closed = do
         GameState.passed = passed,
         GameState.turnNumber = turnNumber,
         GameState.turnsBegun = turnsBegun,
+        GameState.permanentsAsTurnBegan = permanentsAsTurnBegan,
         GameState.result = result,
         GameState.restartSignal = restartSignal,
         GameState.endTurnSignal = endTurnSignal,

@@ -1510,6 +1510,9 @@ quantity context value = do
     "TheNumberOfPermanentsOnTheBattlefield" -> do
       f <- Node.argument n >>= permanents context
       Right (Quantity.Count Count.MkCount {Count.scope = Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)), Count.filter = f, Count.aggregation = Aggregation.Members})
+    "TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn" -> do
+      f <- Node.argument n >>= permanents context
+      Right (Quantity.Count Count.MkCount {Count.scope = Scope.AsTurnBegan, Count.filter = f, Count.aggregation = Aggregation.Members})
     "TheNumberOfCardsInPlayersHand" -> do
       whose <- Node.argument n >>= player context
       Right (Quantity.Count Count.MkCount {Count.scope = Scope.InZone (InZone.MkInZone Zone.Hand whose), Count.filter = Filter.And [], Count.aggregation = Aggregation.Members})
@@ -1583,7 +1586,7 @@ atom context n = case Node.tag n of
   "ControlledByAPlayer" -> do
     who <- Node.child n
     case (Node.tag who, fmap Node.node (Node.args who)) of
-      ("SinglePlayer", Just (Right p)) | Just s <- Map.lookup (Node.tag p) (references context) -> Right (Filter.HeldByBound Holder.Controller s)
+      ("SinglePlayer", Just (Right p)) | Just s <- Map.lookup (Node.tag p) (references context <> bindings context) -> Right (Filter.HeldByBound Holder.Controller s)
       _ -> fmap (Filter.HeldBy Holder.Controller) (Node.argument n >>= players)
   -- "Another": other than the source, or than an object a slot names.
   "Other" -> do

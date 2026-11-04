@@ -230,6 +230,12 @@ evaluate viewOf quantityOf talliesWhatHappened context gs count =
                 | otherwise = countsWithoutCharacteristics aggregation predicate && wasDiscarded gs oid
               kept = Maybe.mapMaybe (\oid -> if member oid then fmap ((,) (Just oid)) (keep predicate context (viewOf oid)) else Nothing) ids
            in aggregate quantityOf aggregation kept
+        -- CR 500.12: the record of the board before this turn's untap step. Its
+        -- members are objectless, as InHistory's are: some have since left.
+        Scope.AsTurnBegan ->
+          let views = Map.elems (Map.mapWithKey (\oid record -> lastKnownView viewOf oid gs record) (Maybe.fromMaybe Map.empty (GameState.permanentsAsTurnBegan gs)))
+              kept = fmap ((,) Nothing) (Maybe.mapMaybe (keep predicate context . Just) views)
+           in aggregate quantityOf aggregation kept
         -- CR 401.2 / 404.1: each named library or graveyard, narrowed by
         -- POSITION before the Filter is asked -- the zone arm above answers "any
         -- matching card" instead. Order-insensitive like every Aggregation, so no
@@ -1101,6 +1107,7 @@ lastKnownView peers oid gs lastKnown =
           (LastKnown.characteristics lastKnown)
       )
         { Filter.identity = Just oid,
+          Filter.tapped = LastKnown.tapped lastKnown,
           Filter.attacking = LastKnown.attacking lastKnown,
           -- CR 508.1b: what it was attacking as it left (Mangara, the Diplomat's
           -- ruling), and that planeswalker's controller as it left, which

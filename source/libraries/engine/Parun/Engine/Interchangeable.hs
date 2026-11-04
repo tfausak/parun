@@ -268,6 +268,9 @@ representatives pcs gs candidates =
 --   * GameState.eventsLastTurn is read by the per-seat view and by the "last
 --     turn" tallies (Quantity's SpellsCast and LifeChanged), which count per
 --     PLAYER and name no object, so no choice between objects can turn on it.
+--   * GameState.permanentsAsTurnBegan is keyed by every permanent, but no
+--     choice this turn can change it and it is read only by a Count over the
+--     whole record, so what two candidates' entries say cannot separate them.
 --   * GameState.outsideObjects (CR 729.4) is keyed by ids belonging to a game
 --     this one is nested inside, and its value names no object -- an owner, a
 --     printing and a face-up/face-down status (CR 110.5); the id supplies of
