@@ -1147,7 +1147,7 @@ draw settle resolving source controller legal (Draw.MkDraw ref quantity mSlot) =
               -- re-reads the library top and the CR 104.3c empty-library loss is
               -- preserved; CR 614.11a: what a replacement queued in one draw's
               -- place lands before the next.
-              Just (drawer, settled) -> Event.drawSeries settle drawer settled
+              Just (drawer, settled) -> Event.drawSeries settle Set.empty drawer settled
             -- CR 603.12: fewer cards drawn than the instruction named, against
             -- the count BEFORE any replacement -- The Royal Scions' 2019-10-04
             -- rulings, fewer than four does not trigger and five or more does.
@@ -1367,8 +1367,8 @@ arrangeInLibrary resolving source controller legal (ArrangeInLibrary.MkArrangeIn
   Monad.forM_ asked $ \arranger ->
     Monad.mapM_ (Common.arrangeInLibrary arranger named) (filter (\pid -> List.elem pid owners) (Game.apnapOrder gs))
 
-scry :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerQuantity.PlayerQuantity -> Game ()
-scry resolving source controller legal (PlayerQuantity.MkPlayerQuantity ref quantity) = do
+scry :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerQuantity.PlayerQuantity -> Game ()
+scry settle resolving source controller legal (PlayerQuantity.MkPlayerQuantity ref quantity) = do
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
@@ -1386,7 +1386,7 @@ scry resolving source controller legal (PlayerQuantity.MkPlayerQuantity ref quan
         -- CR 701.22b: scry 0 is not a scry, so zero raises no prompt and
         -- proposes no event for a CR 614.1a row to replace.
         Just n | n > 0 -> do
-          outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.Scry Nothing pid (Integer.toNaturalSaturating n))
+          outcome <- Event.applyReplacementsIn settle Nothing Set.empty Set.empty (ProposedEvent.WouldPerform PlayerInstruction.Scry Nothing pid (Integer.toNaturalSaturating n))
           -- A row that replaced the scry outright (Eligeth, Crossroads Augur)
           -- has done its own work: nothing to decide and, CR 614.6, no scry.
           Monad.forM (outcome >>= Replacement.asPerformed PlayerInstruction.Scry) $ \(scryer, settled) ->
@@ -1677,8 +1677,8 @@ loseLife resolving source controller legal (LifeLoss.MkLifeLoss ref quantity cau
 -- across players sees one trigger event rather than one per seat. Nothing about
 -- the WRITES moves: the amounts already come off the one pre-effect `gs`, and
 -- what the bracket changes is the group the log stamps.
-gainLife :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerQuantity.PlayerQuantity -> Game ()
-gainLife resolving source controller legal (PlayerQuantity.MkPlayerQuantity ref quantity) = do
+gainLife :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerQuantity.PlayerQuantity -> Game ()
+gainLife settle resolving source controller legal (PlayerQuantity.MkPlayerQuantity ref quantity) = do
   gs <- State.get
   let viewOf = effectViewOf resolving source legal gs
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
@@ -1690,7 +1690,7 @@ gainLife resolving source controller legal (PlayerQuantity.MkPlayerQuantity ref 
         -- LoseLife's road above one direction over: a LifeGainR row resizes the
         -- gain and the SETTLED amount is what moves the total.
         | n > 0 -> do
-            settled <- Event.resolveLifeGain pid (Integer.toNaturalSaturating n)
+            settled <- Event.resolveLifeGain settle pid (Integer.toNaturalSaturating n)
             Event.changeLife pid (toInteger settled)
       _ -> pure ()
 

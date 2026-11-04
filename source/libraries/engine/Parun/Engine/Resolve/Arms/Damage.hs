@@ -1040,7 +1040,7 @@ exileHandThenDraw settle controller = do
   gs <- State.get
   let handIds = Game.zoneMembers Zone.Hand controller gs
   Monad.void (Event.changeZonesTogether (fmap (\oid -> (oid, Zone.Exile)) handIds))
-  got <- Event.drawSeries settle controller (Natural.length handIds)
+  got <- Event.drawSeries settle Set.empty controller (Natural.length handIds)
   -- CR 603.12: the Draw arm's shortfall. A REGRESSION FENCE: nothing arms a
   -- reflexive after it.
   Monad.when (length got < length handIds) Common.fallShort

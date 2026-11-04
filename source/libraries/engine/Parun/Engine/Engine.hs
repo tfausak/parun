@@ -545,7 +545,7 @@ runTurnBasedActions phase = do
     -- crank (CR 701.45a leaving it out of the rules), the active player's, so
     -- it takes the CR 800.4j guard.
     Phase.Beginning BeginningStep.Upkeep -> Monad.mapM_ Contraption.crank live
-    Phase.Beginning BeginningStep.DrawStep -> Monad.mapM_ Event.drawForTurn live
+    Phase.Beginning BeginningStep.DrawStep -> Monad.mapM_ (Event.drawForTurn (Resolve.runReplacementEffects playSubgame)) live
     -- CR 703.4h: choose the defending player. The active player's action (CR
     -- 507.1), and the one item on the list CR 800.4h hands to another seat rather
     -- than dropping, so it is NOT guarded here -- designateDefenders asks
