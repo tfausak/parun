@@ -644,10 +644,10 @@ startGameFromCards perform exemptions = do
       -- through the same Object.newIncarnation, so that a field added later
       -- cannot be forgotten on one path and reset on the other.
       toLibraryCard obj = (Object.newIncarnation obj) {Object.zone = Zone.Library}
-      -- Not implemented: CR 123.5's stickers on a card kept in a command zone
-      -- across a restart (CR 727.2) or carried into a subgame's (CR 729.2c);
-      -- both are dropped here (#4887).
-      toCommandCard obj = (Object.newIncarnation obj) {Object.zone = Zone.Command}
+      -- CR 123.5: the command zone is public, so a commander moving into a
+      -- subgame's keeps its stickers (CR 729.2c), proved by Parun.StickerSpec's
+      -- "CR 123.5/729.2c". A restart has already taken them off (restartGame).
+      toCommandCard obj = (Object.newIncarnation obj) {Object.zone = Zone.Command, Object.stickers = Object.stickers obj}
       rebuilt = Map.filter isCard (Map.withoutKeys (GameState.objects gs) exempt)
       -- CR 903.6: "each player puts their commander from their deck face up into
       -- the command zone". Both callers start a new game following rule 103 (CR
@@ -803,8 +803,11 @@ anteFromLibraries seated = do
 -- brought means none chosen: that player plays without stickers.
 --
 -- Not implemented: CR 123.2a's at least ten unique sheets, which is deck
--- validation (#4886). Not implemented: a ruling on whether a Shahrazad subgame
--- (CR 729.2) plays with sticker sheets; this draws again there (#4887).
+-- validation (#4886).
+--
+-- A restart (CR 727.1) and a subgame (CR 729.2) each follow rule 103, so each
+-- draws again. A sticker that stayed on its object is docs/decisions.md's
+-- "Whether a sticker outlasts the draw of its sheet".
 drawStickerSheets :: [PlayerId] -> Game ()
 drawStickerSheets seated = Monad.forM_ seated $ \pid -> do
   gs <- State.get
@@ -1151,6 +1154,13 @@ restartGame perform exempt starter = do
             GameState.rollingDie = Nothing,
             GameState.rerollRequested = False
           }
+  -- Karn Liberated's ruling, "No actions taken in the game that was restarted
+  -- apply to the new game": every sticker comes off, a commander's included. A
+  -- CR 727.5 card's stays: docs/decisions.md, "Whether a card a restart leaves in
+  -- exile keeps its stickers".
+  State.modify' $ \gs ->
+    let staying oid = Set.member oid exempt && Set.member oid (GameState.exile gs)
+     in gs {GameState.objects = Map.mapWithKey (\oid obj -> if staying oid then obj else obj {Object.stickers = Seq.empty}) (GameState.objects gs)}
   startGameFromCards perform exempt
 
 -- CR 100.2d / 729.2a: every card in every player's Attraction (CR 717.2),
@@ -1618,9 +1628,9 @@ funnelBack finalSub parent =
       -- hand-written zone move outside Event.changeZone, performing that
       -- funnel's per-incarnation reset through the one shared function.
       toLibraryCard obj = (Object.newIncarnation obj) {Object.zone = Zone.Library}
-      -- Not implemented: CR 123.5's stickers on a commander carried back to the
-      -- main game's command zone (CR 729.5c); they are dropped here (#4887).
-      toCommandCard obj = (Object.newIncarnation obj) {Object.zone = Zone.Command}
+      -- CR 123.5, as startGameFromCards' own toCommandCard: a commander keeps
+      -- its stickers coming back to the main game's command zone (CR 729.5c).
+      toCommandCard obj = (Object.newIncarnation obj) {Object.zone = Zone.Command, Object.stickers = Object.stickers obj}
       -- CR 729.5's own exclusion: "all traditional cards they own that are in the
       -- subgame OTHER THAN those in the subgame command zone". So the library
       -- funnel skips the subgame's command zone wholesale, and CR 729.5b and CR

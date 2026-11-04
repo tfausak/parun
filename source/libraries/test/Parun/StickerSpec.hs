@@ -574,6 +574,75 @@ spec s registry = Spec.describe s "Sticker" $ do
     Spec.assertEqWith s "the Piker was stickered before the restart" (stickeredObjects stickered) [pikerId]
     Spec.assertEqWith s "CR 727.2 no object is stickered after it" (stickeredObjects restarted) []
     Spec.assertEqWith s "CR 103.2d the restart drew three sheets again" (reverse asked) [[0, 1, 2, 3], [0, 1, 2], [0, 1]]
+  Spec.it s "CR 729.2/103.2d a subgame draws the sheets again" $ do
+    sheets <- committedSheets
+    mountain <- S.printingOf s registry "Mountain"
+    let plain = Deck.fromCards (Map.singleton mountain 20)
+        (started, _) = startedWith ((S.alice, withSheetsDeck sheets plain) NonEmpty.:| [(S.bob, plain)])
+        (_, asked) = State.runState (Engine.runGame sheetDraws (Setup.subgameStateFrom S.alice started) (Setup.startGameFromCards S.performer Set.empty)) []
+    Spec.assertEqWith s "CR 103.2d the subgame drew three sheets" (reverse asked) [[0, 1, 2, 3], [0, 1, 2], [0, 1]]
+  Spec.it s "CR 729.4 a sticker on a main-game object is free in the subgame" $ do
+    sheets <- committedSheets
+    mountain <- S.printingOf s registry "Mountain"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (pikerId, parent) = S.addPermanent piker S.alice (withSheets (take 1 sheets) (S.landsFor mountain S.alice 10 (Setup.gameWith GameSettings.plain S.bothPlayers)))
+        art = Set.singleton StickerKind.Art
+        stickered = stickerOn pikerId parent
+        placed = foldMap (Foldable.toList . fmap StickerPlacement.sticker . Object.stickers) (Game.lookupObject pikerId stickered)
+        sub = S.runPure S.identityAnswer (Setup.subgameStateFrom S.alice stickered) (Setup.startGameFromCards S.performer Set.empty)
+    Spec.assertEqWith s "the main game has one sticker on the Piker, used up" (fmap (`List.elem` Sticker.available S.alice art stickered) placed) [False]
+    Spec.assertEqWith s "CR 729.4 the subgame offers it again" (fmap (`List.elem` Sticker.available S.alice art sub) placed) [True]
+  Spec.it s "CR 123.3 a stickered card changing owners frees its sticker for its first owner" $ do
+    sheets <- committedSheets
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (pikerId, board) = S.addPermanent piker S.alice (withSheets (take 1 sheets) (Setup.gameWith GameSettings.plain S.bothPlayers))
+        art = Set.singleton StickerKind.Art
+        stickered = stickerOn pikerId board
+        placed = foldMap (Foldable.toList . fmap StickerPlacement.sticker . Object.stickers) (Game.lookupObject pikerId stickered)
+        changed = Game.setOwner pikerId S.bob stickered
+    Spec.assertEqWith s "on alice's card, it is used up" (fmap (`List.elem` Sticker.available S.alice art stickered) placed) [False]
+    Spec.assertEqWith s "the Piker keeps it" (stickerKindsOn pikerId changed) [StickerKind.Art]
+    Spec.assertEqWith s "CR 123.3 on bob's card, alice may choose it again" (fmap (`List.elem` Sticker.available S.alice art changed) placed) [True]
+  Spec.it s "CR 123.5/729.2c a commander keeps its stickers into a subgame and back, but not through a restart" $ do
+    sheets <- committedSheets
+    mountain <- S.printingOf s registry "Mountain"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    let deck = (withSheetsDeck (take 3 sheets) (Deck.fromCards (Map.singleton mountain 10))) {Deck.commander = Set.singleton shimatsu}
+        parent = withSheets (take 3 sheets) (S.runPure S.identityAnswer (S.landsInPlay mountain 2) (Setup.createDeck S.alice deck))
+    case Set.toList (GameState.command parent) of
+      [commander] -> do
+        let art = Set.singleton StickerKind.Art
+            stickered = stickerOn commander parent
+            placed = foldMap (Foldable.toList . fmap StickerPlacement.sticker . Object.stickers) (Game.lookupObject commander stickered)
+            sub = S.runPure S.identityAnswer (Setup.subgameStateFrom S.alice stickered) (Setup.startGameFromCards S.performer Set.empty)
+            secondInSub = stickerOn commander sub
+            back = Setup.funnelBack secondInSub stickered
+            restarted = S.runPure S.identityAnswer stickered (Setup.restartGame S.performer Set.empty S.alice)
+        Spec.assertEqWith s "the commander took a sticker in the main game" (stickerKindsOn commander stickered) [StickerKind.Art]
+        Spec.assertEqWith s "CR 729.2c it is in the subgame's command zone" (Set.toList (GameState.command sub)) [commander]
+        Spec.assertEqWith s "CR 123.5 with the sticker" (stickerKindsOn commander sub) [StickerKind.Art]
+        Spec.assertEqWith s "CR 123.3 which is not free to use again there" (fmap (`List.elem` Sticker.available S.alice art sub) placed) [False]
+        Spec.assertEqWith s "CR 123.5/729.5c back in the main game with the subgame's sticker too" (stickerKindsOn commander back) [StickerKind.Art, StickerKind.Art]
+        Spec.assertEqWith s "a restart puts it back in the command zone" (Set.toList (GameState.command restarted)) [commander]
+        Spec.assertEqWith s "Karn Liberated's ruling: with no sticker" (stickerKindsOn commander restarted) []
+      other -> Spec.assertEqWith s "one commander in the command zone" other []
+  -- Sheet 0 is drawn out by sheetDraws' answers and sheet 2 drawn back in, so one
+  -- board shows both halves of the decision.
+  Spec.it s "CR 727.5/123.2c a card left in exile keeps its stickers, one off an undrawn sheet still applying and one off a drawn sheet still used" $ do
+    sheets <- committedSheets
+    mountain <- S.printingOf s registry "Mountain"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let plain = Deck.fromCards (Map.singleton mountain 20)
+        (started, _) = startedWith ((S.alice, withSheetsDeck sheets plain) NonEmpty.:| [(S.bob, plain)])
+        (pikerId, board) = S.addExiledCard piker S.alice started
+        stickered = Sticker.put S.alice pikerId otter (Just 0) (Sticker.put S.alice pikerId night (Just 0) (board {GameState.players = Map.adjust (\p -> p {Player.chosenStickerSheets = Set.fromList [0, 2]}) S.alice (GameState.players board)}))
+        ((_, restarted), _) = State.runState (Engine.runGame sheetDraws stickered (Setup.restartGame S.performer (Set.singleton pikerId) S.alice)) []
+        words' = Sticker.available S.alice (Set.singleton StickerKind.Name) restarted
+    Spec.assertEqWith s "the draw left out sheet 0 and took sheet 2" (chosenOf S.alice restarted) (Set.fromList [1, 2, 3])
+    Spec.assertEqWith s "CR 727.5 it stayed in exile" (Set.member pikerId (GameState.exile restarted)) True
+    Spec.assertEqWith s "with both stickers" (stickerKindsOn pikerId restarted) [StickerKind.Name, StickerKind.Name]
+    Spec.assertEqWith s "the undrawn sheet's word still shows" (nameTexts pikerId restarted) [Text.pack "Otter Night Goblin Piker"]
+    Spec.assertEqWith s "and the drawn sheet's sticker is still used" (List.elem otter words') False
   -- Three readings of one board: no sticker, a sticker, and the stickered
   -- Piker bounced (CR 123.4: not sticky).
   Spec.it s "CR 123.4 Croakid Amphibonaut flies beside a stickered permanent and stops when the sticker leaves" $ do
@@ -745,8 +814,30 @@ spec s registry = Spec.describe s "Sticker" $ do
         clones = [oid | oid <- Set.toList (GameState.battlefield cloned), Set.notMember oid (GameState.battlefield stickered)]
     Spec.assertEqWith s "CR 707.2 the Clone is named Grizzly Bears" (fmap (\oid -> nameTexts oid cloned) clones) [[Text.pack "Grizzly Bears"]]
     Spec.assertEqWith s "while the original is Grizzly Otter Bears" (nameTexts bearsId cloned) [Text.pack "Grizzly Otter Bears"]
-  -- Divergence 5 (#4901): the sticker is later than Spy Kit, so it reaches every
-  -- name Spy Kit gave. Goblin Piker is in the game, so its name is in the reference.
+  -- The positions run to the longest name, and a shorter one takes the word at
+  -- its end. Wall of Stone is in the game, so its name is in the reference.
+  Spec.it s "CR 123.6b/612.7 positions run to the longest name and a shorter name takes the word at its end" $ do
+    sheets <- committedSheets
+    bears <- S.printingOf s registry "Grizzly Bears"
+    wall <- S.printingOf s registry "Wall of Stone"
+    kit <- S.printingOf s registry "Spy Kit"
+    let (bearsId, g1) = S.addPermanent bears S.alice (withSheets sheets (Setup.gameWith GameSettings.plain S.bothPlayers))
+        (_, g2) = S.addPermanent wall S.bob g1
+        (kitId, g3) = S.addPermanent kit S.alice g2
+        answer :: Prompt.Prompt r -> State.State [[Natural]] r
+        answer p = case p of
+          Prompt.ChooseSticker {} -> pure otter
+          Prompt.ChooseNamePosition _ _ _ offered -> do
+            State.modify' (NonEmpty.toList offered :)
+            pure 2
+          _ -> pure (S.identityAnswer p)
+        ((_, placed), asked) = State.runState (Engine.runGame answer (S.attach kitId bearsId g3) (Sticker.place False S.alice bearsId (Set.singleton StickerKind.Name) Nothing True)) []
+        shown = Set.fromList (nameTexts bearsId placed)
+    Spec.assertEqWith s "CR 123.6b the start or after up to three words, Wall of Stone's count" asked [[0, 1, 2, 3]]
+    Spec.assertBool s (Set.member (Text.pack "Wall of Otter Stone") shown) "the longest name takes the word after two words"
+    Spec.assertBool s (Set.member (Text.pack "Grizzly Bears Otter") shown) "and Grizzly Bears, with two words, takes it after them"
+  -- The sticker is later than Spy Kit, so it reaches every name Spy Kit gave.
+  -- Goblin Piker is in the game, so its name is in the reference.
   Spec.it s "CR 123.6c/612.7 a sticker placed after Spy Kit goes into every name its host has" $ do
     sheets <- committedSheets
     bears <- S.printingOf s registry "Grizzly Bears"
@@ -1597,6 +1688,27 @@ spec s registry = Spec.describe s "Sticker" $ do
         merged = S.runPure answer board (S.cast S.alice card >> drain)
         stickerNumbers = (Just 5, Just 1) :: (Maybe Integer, Maybe Integer)
     Spec.assertEqWith s "CR 123.5b the merged Bears has the spell's sticker and its P/T" (stickerKindsOn bearsId merged, (Projection.powerOf bearsId merged, Projection.toughnessOf bearsId merged)) ([StickerKind.PowerToughness], stickerNumbers)
+  -- The spell's 5/1 goes on before the host's 2/3, so old timestamp order has
+  -- the host's last, where the host's stickers then the spell's would have the
+  -- spell's last.
+  Spec.it s "CR 613.7k a host's and a merging spell's stickers keep their old timestamp order" $ do
+    sheets <- committedSheets
+    picker <- S.printingOf s registry "Wicker Picker"
+    cubwarden <- S.printingOf s registry "Cubwarden"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    plains <- S.printingOf s registry "Plains"
+    let (card, g1) = pickerBoard sheets picker plains 5 1 cubwarden
+        (bearsId, board) = S.addPermanent bears S.alice g1
+        answer :: Prompt.Prompt r -> r
+        answer p = case p of
+          Prompt.ChooseKicker _ _ _ keyword _ _ -> KickerDecision.MkKickerDecision (stickerKick keyword)
+          Prompt.ChooseStickerOrNone _ _ _ offered -> if List.elem otterFiveOne offered then Just otterFiveOne else Nothing
+          Prompt.ChooseCost _ _ _ candidates -> mutateKicked candidates
+          _ -> MutateSpec.mutatingAt MutateSide.Over bearsId p
+        cast = S.runPure answer board (S.cast S.alice card)
+        merged = S.runPure answer (Sticker.put S.alice bearsId nightTwoThree Nothing cast) drain
+    Spec.assertEqWith s "both stickers are on the merged Bears" (stickerKindsOn bearsId merged) [StickerKind.PowerToughness, StickerKind.PowerToughness]
+    Spec.assertEqWith s "CR 613.7k the host's sticker, the later, wins" (Projection.powerOf bearsId merged, Projection.toughnessOf bearsId merged) (Just 2, Just 3)
   -- The Bears takes Otter's 5/1; Turn to Frog makes it 1/1 later; then
   -- Cubwarden mutates onto it.
   Spec.it s "CR 613.7k a host's P/T sticker restamps at the merge and beats Turn to Frog" $ do

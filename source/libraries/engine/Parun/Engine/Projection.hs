@@ -713,8 +713,9 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- CR 612.8: the object loses its names and has only this one.
         Modification.SetName named -> pc {PC.names = Set.singleton named}
         -- CR 123.6b-c / 612.9: the sticker's word after the first @k@ words of
-        -- each name the fold has reached (gap #4901), or the name of an object with
-        -- none.
+        -- each name the fold has reached (docs/decisions.md, "Where a name
+        -- sticker's word goes in an object with several names"), or the name of
+        -- an object with none.
         Modification.InsertNameWords (NameInsertion.MkNameInsertion ws k) ->
           pc {PC.names = if Set.null (PC.names pc) then Set.singleton (CardName.MkCardName ws) else Set.map (NameWords.insertAfter k ws) (PC.names pc)}
         -- CR 613.1b layer 2: controllerOf reads GameState.continuousEffects
