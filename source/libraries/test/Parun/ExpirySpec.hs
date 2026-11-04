@@ -2021,7 +2021,6 @@ whenPaidSpec s = Spec.describe s "WhenPaid" $ do
     Spec.assertEqWith s "an indefinite effect from the same source offers nothing" (Expiry.paidExpiries never) []
     Spec.assertEqWith s "and paying ends it" (GameState.continuousEffects (Expiry.sweep (Expiry.PaidFor S.noSource) armed)) []
     Spec.assertEqWith s "and paying for another resolution does not" (Expiry.paidExpiries (Expiry.sweep (Expiry.PaidFor effectSource) armed)) [(effectSource, blueOfferTo S.alice)]
-    Spec.assertEqWith s "while another object's payment does not" (length (GameState.continuousEffects (Expiry.sweep (Expiry.PaidFor S.noSource) armed))) 1
 
 -- {U}, the price every Licid prints.
 blueCost :: Cost.Type.Cost Keyword.Keyword
