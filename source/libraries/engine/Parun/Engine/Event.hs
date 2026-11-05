@@ -811,8 +811,7 @@ lifePayable pid gs =
 payLife :: Game () -> PlayerId -> Natural -> Game ()
 payLife settle pid n = do
   settled <- resolveLifeLoss settle LifeLossCause.ByPayment pid n
-  Monad.when (settled /= 0) . State.modify' $
-    \gs -> recordEvent (lifeChanged LifeDirection.Lost pid settled gs) (Game.adjustLife pid (negate (toInteger settled)) gs)
+  changeLife pid (negate (toInteger settled))
 
 -- CR 110.5b: stamp the tapped status onto an entering permanent, the write shared
 -- by EntryRewrite.Tapped (CR 614.1d), by the declining half of
@@ -4491,11 +4490,8 @@ apply settle batch applied batchPrevented candidate event =
       -- Exercising cancels, the GainLife arm's CR 614.6: no card is drawn and CR
       -- 121.2's tally does not move.
       --
-      -- The mill is CR 701.17a's, written the way Parun.Engine.Cost's
-      -- MillCards component writes it -- through `changeZoneReturning`, the CR
-      -- 400.7 funnel, then ONE GameEvent.Milled for the batch and none where
-      -- every move was cancelled -- so a watcher cannot tell dredge's mill from
-      -- any other.
+      -- The mill is CR 701.17a's, through `millFrom`, the one mill funnel, so
+      -- a watcher cannot tell dredge's mill from any other.
       --
       -- The card returned is the CANDIDATE's source, rule 702.52a's "this card";
       -- Parun.Engine.Replacement.readsSource is what keeps two dredgers in one
@@ -4512,8 +4508,7 @@ apply settle batch applied batchPrevented candidate event =
           OptionalDecision.Declines -> pure (Just event)
           OptionalDecision.Exercises -> do
             Replacement.consume (ReplacementCandidate.identity candidate)
-            milled <- millFrom settle pid n
-            Monad.unless (null milled) (State.modify' (recordEvent (GameEvent.Milled (Milled.MkMilled pid (Seq.fromList milled)))))
+            Monad.void (millFrom settle pid n)
             Monad.void (changeZoneReturning settle (ReplacementCandidate.source candidate) Zone.Hand)
             pure Nothing
       -- CR 614.10 / 614.6: Plagiarize's "that player skips that draw and you
@@ -4680,9 +4675,7 @@ apply settle batch applied batchPrevented candidate event =
             pure (Maybe.listToMaybe (filter (`elem` held) answer <> held))
         discarded <- asEffect (maybe (pure Seq.empty) (discardReturning settle DiscardCause.ByEffect pid) picked)
         if null discarded
-          then asEffect $ do
-            milled <- millFrom settle pid 1
-            Monad.unless (null milled) (State.modify' (recordEvent (GameEvent.Milled (Milled.MkMilled pid (Seq.fromList milled)))))
+          then asEffect (Monad.void (millFrom settle pid 1))
           else Monad.void (drawSeries settle (spentWith candidate applied) pid 1)
         pure Nothing
       -- CR 614.1a / 701.20e: Aladdin's Lamp. Run here rather than queued, so the
@@ -6188,40 +6181,43 @@ takeBackCopyException oid = State.modify' $ \gs ->
 -- rather than negative, which is what keeps Object.counters a tally of what is
 -- there. CR 122 states no rule making an over-large removal fail.
 --
--- This is not the only place counters leave an object, and the two others are
--- each other's opposite. CR 704.5q's annihilation IS a removal (rule 122.3 says
--- so) and records its own CountersRemoved, from a before/after diff rather than
--- through this door -- Parun.Engine.Sba's `balance` is a pure fold inside the CR
--- 704.3 single-event pass, and its comment gives the argument. CR 122.2's zone
--- change is NOT one and records nothing: "the counters are not 'removed'; they
--- simply cease to exist", so an event there would fire a counter-watching
--- trigger off something the rule denies happened.
+-- CR 704.5q's annihilation IS a removal (rule 122.3 says so) and comes through
+-- `removeCountersPure`, this door's pure core, from Parun.Engine.Sba's pure fold
+-- inside the CR 704.3 single-event pass. CR 122.2's zone change is NOT one and
+-- records nothing: "the counters are not 'removed'; they simply cease to
+-- exist", so an event there would fire a counter-watching trigger off something
+-- the rule denies happened.
 removeCounters :: ObjectId -> CounterKind.CounterKind Keyword.Type.Keyword -> Natural -> Game ()
-removeCounters oid kind n =
-  Monad.when (n > 0) . State.modify' $ \gs ->
-    -- ONE lookup answers both questions -- whether the object is there, and how
-    -- many of the kind it has -- for putCounters' reason: Map.adjust on a
-    -- missing id is a silent no-op, so proceeding would record a removal the
-    -- state does not show.
-    case Game.lookupObject oid gs of
-      Nothing -> gs
-      Just obj ->
-        let before = Map.findWithDefault 0 kind (Object.counters obj)
-            after = if n >= before then 0 else before - n
-            drop_ o =
-              o
-                { Object.counters =
-                    if after == 0
-                      then Map.delete kind (Object.counters o)
-                      else Map.insert kind after (Object.counters o)
-                }
-            dropped = gs {GameState.objects = Map.adjust drop_ oid (GameState.objects gs)}
-         in -- Nothing to remove is nothing to record: an event for a removal that
-            -- did not happen would fire a counter-watching trigger off nothing,
-            -- which is the guard putCounters puts on its own write.
-            if before == 0
-              then gs
-              else recordEvent (GameEvent.CountersRemoved (CounterChange.MkCounterChange oid kind before after)) dropped
+removeCounters oid kind n = State.modify' (removeCountersPure oid kind n)
+
+-- `removeCounters` over a bare state, for a caller inside a pure fold.
+removeCountersPure :: ObjectId -> CounterKind.CounterKind Keyword.Type.Keyword -> Natural -> GameState -> GameState
+removeCountersPure oid kind n gs
+  | n == 0 = gs
+  | otherwise =
+      -- ONE lookup answers both questions -- whether the object is there, and how
+      -- many of the kind it has -- for putCounters' reason: Map.adjust on a
+      -- missing id is a silent no-op, so proceeding would record a removal the
+      -- state does not show.
+      case Game.lookupObject oid gs of
+        Nothing -> gs
+        Just obj ->
+          let before = Map.findWithDefault 0 kind (Object.counters obj)
+              after = if n >= before then 0 else before - n
+              drop_ o =
+                o
+                  { Object.counters =
+                      if after == 0
+                        then Map.delete kind (Object.counters o)
+                        else Map.insert kind after (Object.counters o)
+                  }
+              dropped = gs {GameState.objects = Map.adjust drop_ oid (GameState.objects gs)}
+           in -- Nothing to remove is nothing to record: an event for a removal that
+              -- did not happen would fire a counter-watching trigger off nothing,
+              -- which is the guard putCounters puts on its own write.
+              if before == 0
+                then gs
+                else recordEvent (GameEvent.CountersRemoved (CounterChange.MkCounterChange oid kind before after)) dropped
 
 -- CR 122.6: settle a proposed counter placement. Nothing means none are put on.
 --
@@ -6998,10 +6994,7 @@ changeZonesTogether settle batch = simultaneously . together $ do
 -- cancelled the move (`resolved == Nothing`). changeZoneReturning itself is the
 -- `seed = Nothing` case below.
 -- CR 701.17a: move the top `n` cards of a player's own library (CR 400.3) to
--- their graveyard, answering the ids that ARRIVED. The caller records the CR
--- 701.17a event, because what counts as one mill is the caller's question --
--- Parun.Engine.Cost's MillCards component and Resolve's Effect.Mill arm each write
--- their own.
+-- their graveyard, answering the ids that ARRIVED, and record the mill.
 --
 -- ONE funnel for every mill in the engine, which is what lets an InstructionR row
 -- (Bruvac the Grandiloquent) see a cost's mill and dredge's alike: rule 701.17a
@@ -7037,6 +7030,10 @@ millFromReturningTaken settle pid n
           let cards = List.genericTake settled (Game.cardsIn Zone.Library miller gs)
           -- ONE event (CR 608.2f), whose cards the owner may arrange (CR 404.3).
           arrived <- fmap (concatMap Foldable.toList) (changeZonesTogether settle (fmap (\card -> (card, Zone.Graveyard)) cards))
+          -- CR 701.17a: ONE Milled for the batch, holding every arrival even
+          -- one a replacement diverted, and none where every move was
+          -- cancelled.
+          Monad.unless (null arrived) (State.modify' (recordEvent (GameEvent.Milled (Milled.MkMilled miller (Seq.fromList arrived)))))
           pure (cards, arrived)
 
 changeZoneReturning :: Game () -> ObjectId -> Zone -> Game (Seq.Seq ObjectId)
@@ -10509,9 +10506,9 @@ endOfGameReveals gs = case concatMap (leavingReveals gs) (Map.keys (GameState.ob
   revealed -> simultaneouslyPure (\g -> List.foldl' (flip recordEvent) g revealed) gs
 
 -- CR 119.3: move one player's life total by this much, and record the CR 608.2i
--- event of the matching sign. The write LoseLife, GainLife and
--- ExchangeLifeTotals share; the total itself moves in Game.adjustLife, which
--- every life write goes through for CR 810.9's shared team total.
+-- event of the matching sign. The write LoseLife, GainLife, ExchangeLifeTotals
+-- and payLife share; the total itself moves in Game.adjustLife, which every life
+-- write goes through for CR 810.9's shared team total.
 --
 -- In this module rather than beside those opcodes because a REPLACEMENT gains
 -- life too -- Words of Worship's DrawRewrite.GainLife -- and Parun.Engine.Resolve

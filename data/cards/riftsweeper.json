@@ -41,12 +41,10 @@
                       {
                         "type": "ShuffleIntoLibrary",
                         "value": {
-                          "refs": [
-                            {
-                              "type": "InSlot",
-                              "value": "target"
-                            }
-                          ]
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "target"
+                          }
                         }
                       }
                     ]

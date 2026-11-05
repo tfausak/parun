@@ -146,7 +146,6 @@ import qualified Parun.Types.ManaSymbol as ManaSymbol
 import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.ManaUnit as ManaUnit
 import qualified Parun.Types.ManaWindow as ManaWindow
-import qualified Parun.Types.Milled as Milled
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectCount as ObjectCount
 import Parun.Types.ObjectId (ObjectId)
@@ -6634,17 +6633,15 @@ payPayable perform moment paidFor slots pid oid component = case component of
   -- milling more than the library holds (CR 701.17b); an InstructionR row resizing
   -- the instruction can still take it past that, which is why the funnel clamps.
   --
-  -- Through Event.millFrom, which is CR 614.1a's road as well as CR 400.7's: rule
-  -- 701.17a makes this a mill wherever it happens, so Bruvac the Grandiloquent
-  -- sees a cost's mill exactly as it sees a resolution's. Then recorded as the
-  -- mill it was -- ONE entry for the batch, Resolve's Effect.Mill arm's reading of
-  -- rule 701.17a, and none at all where every move was cancelled.
+  -- Through Event.millFrom, which is CR 614.1a's road as well as CR 400.7's and
+  -- records the mill: rule 701.17a makes this a mill wherever it happens, so
+  -- Bruvac the Grandiloquent sees a cost's mill exactly as it sees a
+  -- resolution's.
   --
   -- Binds NO slot: CR 701.17c's look-back is for a later clause of the same
   -- resolution, and a cost has none -- see Parun.Types.CostComponent's arm.
   CostComponent.MillCards n -> do
-    arrived <- Event.millFrom (ManaAbilityPerformer.settle perform) pid n
-    Monad.unless (null arrived) (State.modify' (Event.recordEvent (GameEvent.Milled (Milled.MkMilled pid (Seq.fromList arrived)))))
+    Monad.void (Event.millFrom (ManaAbilityPerformer.settle perform) pid n)
     pure bindsNothing
   -- CR 701.20a: one Revealed per card, top first. Binds no slot: no card that
   -- prints this reads back what it showed.

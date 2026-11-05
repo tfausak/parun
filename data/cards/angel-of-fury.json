@@ -63,12 +63,10 @@
                       {
                         "type": "ShuffleIntoLibrary",
                         "value": {
-                          "refs": [
-                            {
-                              "type": "InSlot",
-                              "value": "became"
-                            }
-                          ]
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "became"
+                          }
                         }
                       }
                     ],

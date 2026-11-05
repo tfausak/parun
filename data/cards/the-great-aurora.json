@@ -51,26 +51,29 @@
                           "type": "AnyPlayer"
                         }
                       },
-                      "refs": [
-                        {
-                          "type": "EachCardInHand",
-                          "value": {
-                            "hands": {
-                              "type": "Scoped",
-                              "value": {
-                                "type": "AnyPlayer"
+                      "ref": {
+                        "type": "AllOf",
+                        "value": [
+                          {
+                            "type": "EachCardInHand",
+                            "value": {
+                              "hands": {
+                                "type": "Scoped",
+                                "value": {
+                                  "type": "AnyPlayer"
+                                }
                               }
                             }
+                          },
+                          {
+                            "type": "EachMatching",
+                            "value": {
+                              "type": "And",
+                              "value": []
+                            }
                           }
-                        },
-                        {
-                          "type": "EachMatching",
-                          "value": {
-                            "type": "And",
-                            "value": []
-                          }
-                        }
-                      ],
+                        ]
+                      },
                       "slot": "shuffled"
                     }
                   },

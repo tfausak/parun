@@ -114,7 +114,6 @@ import qualified Parun.Types.MakeForetold as MakeForetold
 import qualified Parun.Types.Mana as Mana.Type
 import qualified Parun.Types.Mill as Mill
 import qualified Parun.Types.MillTally as MillTally
-import qualified Parun.Types.Milled as Milled
 import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.MoveToZone as MoveToZone
 import qualified Parun.Types.Object as Object
@@ -597,8 +596,8 @@ exchangeCardZones settle resolving source controller legal chosen (ExchangeCardZ
 -- the named player need not be one of them. Each library is shuffled ONCE (CR
 -- 608.2f), and CR 701.24a makes WHO shuffles unobservable.
 --
--- Every ref's objects move as ONE event (CR 608.2f / 603.2c), so Timetwister's
--- hand and graveyard are one arrival and one shuffle -- proved by
+-- Every object the ref names moves as ONE event (CR 608.2f / 603.2c), so
+-- Timetwister's hand and graveyard are one arrival and one shuffle -- proved by
 -- Parun.MassEffectSpec's Timetwister group.
 --
 -- The slot binds the library incarnations (CR 400.7), for a later count:
@@ -609,9 +608,9 @@ exchangeCardZones settle resolving source controller legal chosen (ExchangeCardZ
 -- once -- proved by the scenario
 -- the-great-aurora-counts-a-melded-permanent-once.
 shuffleIntoLibrary :: Game () -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ShuffleIntoLibrary.ShuffleIntoLibrary -> Game ()
-shuffleIntoLibrary settle resolving source controller legal (ShuffleIntoLibrary.MkShuffleIntoLibrary named refs mSlot) = do
+shuffleIntoLibrary settle resolving source controller legal (ShuffleIntoLibrary.MkShuffleIntoLibrary named ref mSlot) = do
   gs <- State.get
-  let targets = ListUtils.nubOrd (foldMap (objectRefObjects legal resolving controller source gs) refs)
+  let targets = ListUtils.nubOrd (objectRefObjects legal resolving controller source gs ref)
       -- The owners are read from the PRE-MOVE objects (CR 701.24c); an id that
       -- no longer resolves contributes no owner.
       owners =
@@ -1226,14 +1225,12 @@ mill settle resolving source controller legal (Mill.MkMill ref quantity mTally m
   -- which the tally below asks its characteristics of, and the ids the moves
   -- ANSWERED, which CR 701.17c's binding holds.
   --
-  -- Then recorded as the mill it was (CR 701.17a): a cancelled move is no card
-  -- milled, so ONE entry per miller holding that player's whole batch, since
-  -- they are milled at once (Contaminated Drink's ruling) -- and recorded even
-  -- for a card a
-  -- replacement diverted elsewhere, since it was milled wherever it ended up.
+  -- The funnel records ONE Milled per miller, holding that player's whole
+  -- batch, since they are milled at once (Contaminated Drink's ruling) -- even
+  -- a card a replacement diverted elsewhere, since it was milled wherever it
+  -- ended up.
   milledBy <- Monad.forM wanted $ \(pid, n) -> do
     (taken, arrived) <- Event.millFromReturningTaken settle pid n
-    Monad.unless (null arrived) (State.modify' (Event.recordEvent (GameEvent.Milled (Milled.MkMilled pid (Seq.fromList arrived)))))
     -- CR 701.17b / 603.12: a library too short for the count named, the Draw
     -- arm's shortfall (Wick's Patrol's 2024-07-26 ruling).
     Monad.when (List.genericLength taken < n) Common.fallShort

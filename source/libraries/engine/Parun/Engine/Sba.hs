@@ -39,13 +39,11 @@ import qualified Parun.Extra.Int as Int
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CommandZoneDecision as CommandZoneDecision
-import qualified Parun.Types.CounterChange as CounterChange
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.Departure as Departure.Type
 import qualified Parun.Types.DestructionCause as DestructionCause
 import Parun.Types.Game (Game)
-import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameOutcome as GameOutcome
 import qualified Parun.Types.GameSettings as GameSettings
 import Parun.Types.GameState (GameState)
@@ -1127,28 +1125,14 @@ checkOnce instead boards = do
           _ -> False
       vanishing = filter isVanishing (Map.keys (GameState.objects departed))
       vanished = List.foldl' (flip Game.deleteObject) departed vanishing
-      removeN n c = let c2 = c - n in if c2 == 0 then Nothing else Just c2
-      balance g (oid, n) =
-        let strip obj = obj {Object.counters = Map.update (removeN n) CounterKind.MinusOneMinusOne (Map.update (removeN n) CounterKind.PlusOnePlusOne (Object.counters obj))}
-         in g {GameState.objects = Map.adjust strip oid (GameState.objects g)}
       outcome = Departure.outcomeAfterLeaving leaving departed
       drained = vanished {GameState.damageScannedThrough = watermark}
-      balanced = List.foldl' balance drained annihilations
-      -- CR 704.5q's removal is a REMOVAL (rule 122.3 uses the word), so it owes
-      -- the same GameEvent.CountersRemoved every other removal records --
-      -- Protean Hydra's "whenever a +1/+1 counter is removed from this creature"
-      -- is the pool's reader.
-      --
-      -- A BEFORE/AFTER DIFF and not a call to Parun.Engine.Event.removeCounters,
-      -- CR 122's funnel, for the reason Parun.Engine.Damage's removalsBetween
-      -- gives at its own site: that funnel is a Game action and `balance` above
-      -- is a pure fold inside the CR 704.3 single-event pass, so routing it would
-      -- sequence what the rule performs simultaneously.
-      --
-      -- Read off `drained` and `balanced` rather than off the pre-pass board the
-      -- classification used, so the pair describes what actually came off: a
-      -- permanent this pass already buried is no longer in GameState.objects, and
-      -- `balance`'s Map.adjust is then a silent no-op that must record nothing.
+      -- CR 704.5q's removal is a REMOVAL (rule 122.3 uses the word), so it goes
+      -- through Event.removeCountersPure, CR 122's funnel, and records the same
+      -- GameEvent.CountersRemoved every other removal does -- Protean Hydra's
+      -- "whenever a +1/+1 counter is removed from this creature" is the pool's
+      -- reader. Run over `drained`, so a permanent this pass already buried
+      -- records nothing.
       --
       -- ONE RECORD PER PERMANENT PER KIND, whatever N is -- CR 704.3 makes the
       -- whole check one event, so a permanent with three +1/+1 and two -1/-1
@@ -1156,15 +1140,8 @@ checkOnce instead boards = do
       -- fires once. Two records rather than one because the constructor carries a
       -- single kind and rule 704.5q removes both, which is Damage's posture for a
       -- permanent that is a battle and a planeswalker at once.
-      countersOn kind oid g = maybe 0 (Map.findWithDefault 0 kind . Object.counters) (Game.lookupObject oid g)
-      annihilationRemovals = do
-        (oid, _) <- annihilations
-        kind <- [CounterKind.PlusOnePlusOne, CounterKind.MinusOneMinusOne]
-        let was = countersOn kind oid drained
-            now = countersOn kind oid balanced
-        Monad.guard (was > now)
-        pure (GameEvent.CountersRemoved (CounterChange.MkCounterChange oid kind was now))
-      recorded = List.foldl' (flip Event.recordEvent) balanced annihilationRemovals
+      annihilate g (oid, n) = List.foldl' (\h kind -> Event.removeCountersPure oid kind n h) g [CounterKind.PlusOnePlusOne, CounterKind.MinusOneMinusOne]
+      recorded = List.foldl' annihilate drained annihilations
       -- CR 704.5aa: "that player's speed becomes 1", applied to the players
       -- classified from the pre-pass board above. Applied LATE like every other
       -- action in this pass, so a permanent this same pass destroyed still starts
