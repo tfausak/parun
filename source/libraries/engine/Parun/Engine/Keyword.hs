@@ -1873,8 +1873,8 @@ battlefieldAbilitiesOf counts = concatMap (uncurry battlefieldAbilitiesFor) (Map
 
 -- CR 602.1: every activated ability an object HAS, the one roster every view
 -- builder reads. `abilities` is its own list beside rule 702's battlefield mint,
--- which no CR 612 text change reaches (docs/decisions.md, "What a text change
--- reaches inside a keyword"); then the hand and graveyard mints, and CR 804.2's
+-- which no CR 612 text change reaches (CR 702.1, 612.1); then the hand and
+-- graveyard mints, and CR 804.2's
 -- ability where `deploys`.
 --
 -- HAS, not can activate here: CR 113.6 says where an ability FUNCTIONS, so crew
@@ -6227,9 +6227,9 @@ myriadExile =
 -- planeswalker they control": a CR 508.4 choice narrowed to the iteration's
 -- opponent, made by the controller in Parun.Engine.Combat and elided at one
 -- candidate. An opponent who is not a defending player narrows to nothing, and
--- the token enters not attacking, by analogy with CR 508.4a, which stops short
--- of a player who never defended -- which is what a game not using CR
--- 802's option leaves.
+-- the token enters not attacking (docs/decisions.md, "Whether a myriad token
+-- attacks an opponent who is not a defending player") -- which is what a game not
+-- using CR 802's option leaves.
 --
 -- Rule 702.116a's "you may" is PER OPPONENT, so it is the loop's own
 -- LoopMembers.AnyNumber rather than a clause's Optionality: the controller picks
@@ -7493,8 +7493,7 @@ paidTokenCopies keyword quantity exceptions ordinal =
 -- having no mana cost to read a colour off (CR 105.2).
 --
 -- No CR 612 text change reaches the Spirit or its colours: they are the rule's
--- words, not the card's (docs/decisions.md, "What a text change reaches inside a
--- keyword").
+-- words, not the card's (CR 702.1).
 afterlife :: Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 afterlife n =
   let spawn =

@@ -163,8 +163,8 @@ spec s registry = Spec.describe s "Face-down exile" $ do
       Spec.assertEqWith s "one card left exile, of the three that were there" (Set.size (GameState.exile after)) 2
     -- CR 406.4's last sentence, read through each seat's PlayerView, the view a
     -- client is handed: the card the draw named is not revealed until the cost
-    -- is paid, and is then revealed to both seats (docs/decisions.md, "When a
-    -- target drawn out of a face-down pile is revealed, and for how long"). The
+    -- is paid, and is then revealed to both seats (docs/synthetic-readings.md,
+    -- "Whether a target drawn out of a face-down pile is revealed"). The
     -- prompts between the draw and the end of the cast are CR 601.2g's mana
     -- window, which ChooseManaSource raises and never elides.
     --

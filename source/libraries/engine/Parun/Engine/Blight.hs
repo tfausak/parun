@@ -57,8 +57,8 @@ payable pid gs = filter (\oid -> not (CounterRestriction.prohibited oid CounterK
 -- | CR 701.68a's pool for a blight an effect INSTRUCTS: `payable` where it holds
 -- a creature, since CR 608.2d forbids choosing an impossible option, and
 -- `candidates` where it holds none, so the blight still happens (CR 701.68c and
--- 701.68d); see docs/decisions.md, "What a mandatory blight puts its counters on
--- when no creature can take them". Proved by Parun.EventTriggerSpec's "CR
+-- 701.68d); see docs/synthetic-readings.md, "What a mandatory blight puts its
+-- counters on when no creature can take them". Proved by Parun.EventTriggerSpec's "CR
 -- 608.2d a mandatory blight refuses the creature that can't take the counter"
 -- and "CR 701.68d Solemnity keeps every counter off and the Chronicler still
 -- triggers".

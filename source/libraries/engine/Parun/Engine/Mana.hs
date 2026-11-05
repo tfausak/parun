@@ -1800,7 +1800,7 @@ supplyOf admitting unit =
 -- that both said "only" of the same mana would each be permitting what the other
 -- forbids, and the union is the reading that keeps CR 101.2 out of it -- an
 -- "only" clause names types the mana may be spent as rather than saying "can't".
--- docs/decisions.md, "How two only-clauses about spending one mana combine".
+-- docs/synthetic-readings.md, "How two only-clauses about spending one mana combine".
 -- The scenario "CR 609.4b two only-clauses about one red mana each permit their
 -- own type" proves it on Celestial Dawn and Synthetic Verdant Prism.
 spendableAs :: [SpendManaAsThough.SpendManaAsThough] -> ManaType -> Set.Set ManaType

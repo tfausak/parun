@@ -89,7 +89,8 @@ data StaticAbility ability = MkStaticAbility
     --
     -- The handover is Parun.Engine.Event's, at the moment the permanent leaves,
     -- and what it hands over is stored as if a resolution had made it, a reading
-    -- no rule forces. So the clause treats the ability's effect as CR 611.2c treats
+    -- no rule forces (docs/decisions.md, "Whether a lingering static effect's set is
+    -- fixed as its permanent leaves"). So the clause treats the ability's effect as CR 611.2c treats
     -- a resolution's: the live
     -- `affected` set below is resolved to the concrete objects it names right
     -- then, and never re-derived again.

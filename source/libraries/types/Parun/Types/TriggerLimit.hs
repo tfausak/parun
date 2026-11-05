@@ -16,9 +16,9 @@ module Parun.Types.TriggerLimit where
 -- otherwise duplicate. That type narrows a trigger EVENT -- Aurelia, the
 -- Warleader "attacks for the first time each turn" -- and the two are
 -- distinguishable: an ability gained after the turn's first matching event has
--- already passed still triggers under this rider and never does under that
--- narrowing. docs/decisions.md, "Whether a trigger limit differs from a
--- first-time-each-turn trigger".
+-- already passed still triggers under this rider (Cursed Wombat's ruling of
+-- 2024-06-07) and never does under that narrowing (Attended Healer's ruling of
+-- 2020-09-25).
 data TriggerLimit
   = -- | The ability triggers on every occurrence of its trigger event
     -- (CR 603.2c). Every printing but the riders' bearers.

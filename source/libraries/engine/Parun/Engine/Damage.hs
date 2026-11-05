@@ -403,9 +403,10 @@ attackerAssignment gs contested (attacker, target) = case Projection.combatDamag
                 OptionalDecision.Declines -> declined
               pure (Just (Maybe.fromMaybe pid who), division, thresholds)
             -- Cunning Giant: all of it to one creature its defending player
-            -- (CR 508.5) controls, whether or not it is attacking anything (see
-            -- docs/decisions.md, "Whether Cunning Giant attacking nothing may
-            -- still assign to a creature").
+            -- controls, whether or not it is attacking anything: its text overrides
+            -- CR 510.1b and 506.4c (CR 101.1), and two players have one defending
+            -- player (CR 506.2). With several, see docs/decisions.md, "Which
+            -- defending player Cunning Giant attacking nothing reads".
             defendingCreatures = foldMap (\pid -> filter (`Projection.isCreatureOf` gs) (Projection.controls pid gs)) defending
             unblocked = case Projection.controllerOf attacker gs of
               Just pid
@@ -455,7 +456,8 @@ attackerAssignment gs contested (attacker, target) = case Projection.combatDamag
                 -- CR 702.22j: with a banding creature among the blockers, the
                 -- DEFENDING player divides the attacking creature's damage. Trample's
                 -- thresholds and CR 510.1e's check are untouched, and the division
-                -- may pass the blockers.
+                -- may pass the blockers; see docs/decisions.md, "Who sends a trampler's
+                -- excess past a banding blocker".
                 --
                 -- CR 702.22k is the mirror, moving the division of a BLOCKING
                 -- creature's damage to the active player. Its site is
@@ -708,9 +710,8 @@ gatherCombatDamage assigns = do
 -- turned face up and assigns ... damage". Asked as the creature's own
 -- assignment comes up, so the active player's attackers have announced against
 -- a face-down blocker before it turns up to announce its own (CR 510.1's
--- order): an attacker tramples over it at the 2\/2's lethal damage. See
--- docs/decisions.md, "When a face-down creature Illusionary Mask cast turns face
--- up in combat".
+-- order; a replacement applies as the event happens, CR 614.1): an attacker
+-- tramples over it at the 2\/2's lethal damage.
 --
 -- No ProposedEvent carries CR 510.1's assignment, because no other replacement
 -- effect reaches it (Scryfall `o:"would assign"`, 2026-10-22, the Mask alone), so
@@ -728,10 +729,10 @@ turnUpToAssign entry = do
 -- above 0, and a recipient: what attackerAssignment and blockerAssignment would
 -- address, read the way each reads it. An attacker that is blocked by nothing
 -- still there and lacks trample (CR 510.1c), and a blocker whose attackers have
--- all gone (CR 510.1d), assign none. An attacker whose CR 510.1b-c option could
--- give it a recipient counts as one that would, a regression fence (see
--- docs/decisions.md, "Whether Cunning Giant attacking nothing may still assign
--- to a creature").
+-- all gone (CR 510.1d), assign none. An attacker that may assign as though
+-- unblocked counts as one that would (Siege Behemoth grants a face-down creature
+-- that). Cunning Giant's option counts too, a regression fence: a face-down
+-- creature cannot have it (CR 708.2, 613.2b).
 wouldAssign :: GameState -> Either (ObjectId, AttackTarget) (ObjectId, Set.Set ObjectId) -> Bool
 wouldAssign gs entry =
   maybe False (> 0) (Projection.combatDamageAmountOf creature gs) && case entry of
@@ -1268,11 +1269,11 @@ processDamage settle events = do
               -- gives the sum. Toxic is scoped to COMBAT damage, so a noncombat
               -- event's captured value is ignored.
               --
-              -- ONE placement and not two, a reading neither CR 120.3b nor CR
-              -- 702.164c forces: two calls would run two CR 616.1
-              -- loops over one player's poison and let a one-shot replacement be
-              -- spent twice. No printing has both keywords anyway (DamageSpec
-              -- hand-builds the event).
+              -- ONE placement and not two: docs/decisions.md, "Whether infect and
+              -- toxic from one source give poison once". Two calls would run two
+              -- CR 616.1 loops over one player's poison. No printing has both
+              -- keywords, but Tainted Strike gives infect to a toxic creature
+              -- (DamageSpec hand-builds the event).
               (if DamageEvent.dealtByInfect ev then DamageEvent.amount ev else 0)
                 + case DamageEvent.kind ev of
                   DamageKind.Combat -> DamageEvent.dealtByToxic ev

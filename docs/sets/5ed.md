@@ -59,8 +59,7 @@ Finished 2026-11-04.
 - Owner review:
   - #6058: decisions.md "Whether assigning no combat damage beats assigning
     toughness", an open call against Narod's 2024-11-08 playtest ruling.
-  - #6057: decisions.md "Whether Confusion in the Ranks counts Kindred as a
-    shared type".
+  - #6057: Confusion in the Ranks counts Kindred as a shared type (CR 205.2a).
   - #6038: decisions.md "Whether damage a replacement adds joins a division
     already owed"; a contested shield can be asked twice.
   - #6049, #6053: new `ChooseReplacement` prompts with no consequence on alike

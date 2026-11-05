@@ -455,7 +455,7 @@ fallShort = State.modify' (\gs -> gs {GameState.fellShort = GameState.fellShort 
 -- CR 603.10 samples (read by the first disjunct, and the samples are
 -- deliberately unforced), the allocators, interning and Oracle-reference memos
 -- an instruction advances before finding nothing to do, CR 104.4b's lastChoice
--- (an offer answered with nothing), CR 121.4's drewFromEmpty (an attempted
+-- (an offer answered with nothing), damagePreventedBy and ambientAmounts, CR 121.4's drewFromEmpty (an attempted
 -- draw) and fellShort (an instruction finding too few cards, which only
 -- applyClauseEffects reads), CR 607.2a's exiledWith and CR 406.4's exilePiles (applyEffectWith
 -- prunes both after EVERY instruction, and a card can leave exile off that
@@ -469,16 +469,21 @@ fallShort = State.modify' (\gs -> gs {GameState.fellShort = GameState.fellShort 
 -- difference either. Everything else is compared, so a new GameState field
 -- counts as state by default.
 --
--- A deny-list and not an allow-list: an allow-list fails as the event-log
--- reading did, on every state-only instruction writing a field it does not
--- name, which grows with the open half; this one fails only on a closed-half write made whether
--- or not anything happened, a finite set. docs/decisions.md,
--- "What counts as an instruction having happened".
+-- CR 603.12 asks whether the trigger event occurred, CR 118.12 whether a cost
+-- was chosen or started (Resolve.recordTaken). This is the implementation's test
+-- for both, not a reading. A deny-list, since an allow-list fails on every
+-- state-only instruction writing a field it does not name.
 --
--- docs/decisions.md's Site line names the tests proving the exiledWith,
--- exilePiles, nextTimestamp and nextEventGroup copies. The rest is a
--- REGRESSION FENCE rather than a proved line: un-copying lastChoice leaves the
--- suite green.
+-- Copies proved: exiledWith by "CR 603.12 an empty mill after a token ceased in
+-- exile arms no reflexive", exilePiles by "CR 603.12 an empty mill after a
+-- face-down card left exile arms no reflexive", nextTimestamp by "CR 701.28e /
+-- 603.12 an ignored convert arms no reflexive", nextEventGroup, controlSample and
+-- Object.controlClock by Parun.ResolveSpec's "CR 118.12 Victimize with no creature
+-- to sacrifice returns nothing", boardAtControlSample by Parun.AuraSpec's "CR
+-- 603.12 Thorin's Equipment go to its target, which then deals damage equal to its
+-- power". The rest is a regression fence: un-copying lastChoice leaves the suite
+-- green. The state half: the scenario "CR 603.12 a choice that records no event
+-- still arms its when you do".
 happenedBetween :: GameState -> GameState -> Bool
 happenedBetween before after =
   let tallyless :: Map.Map SlotName Binding.Type.Binding -> Map.Map SlotName Binding.Type.Binding
@@ -2989,8 +2994,17 @@ changeTargetsFor onto source chooser controller oid = do
 -- otherwise as the chooser hands them out (Prompt.ChooseDivision's Parts). An
 -- answer that does not hand out exactly those parts reverses the whole re-aim,
 -- chooseNewTargetsFor's reject-not-repair. An undivided slot binds its targets
--- alone. docs/decisions.md, "Who says which new target takes a replaced
--- target's part of a division".
+-- alone.
+--
+-- CR 115.7a / 115.7d: targets change one by one, by the player the effect allows,
+-- so which new target replaces which old one, and so takes its part, is that
+-- player's (Goblin Flectomancer's ruling of 2006-02-01: "Each target is treated
+-- individually"; Lutri's of 2020-04-17: "the division can't be changed, although
+-- the targets receiving that damage still can"). CR 115.3 gives each new target
+-- one part.
+--
+-- Not implemented: a target that stays in the final set taking another target's
+-- part, which CR 115.7e allows (#6173).
 reaimDivisions :: PlayerId -> ObjectId -> Map.Map SlotName Binding.Type.Binding -> Map.Map SlotName (Set Recipient) -> Game (Maybe (Map.Map SlotName Binding.Type.Binding))
 reaimDivisions chooser oid bindings picked =
   fmap sequence . flip Map.traverseWithKey picked $ \slot new ->

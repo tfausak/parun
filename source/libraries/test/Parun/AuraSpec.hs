@@ -4029,7 +4029,7 @@ auraSwapSpec s registry =
         -- not the Wings', so Synthetic Enchanted Evolution's Aura -> Background
         -- reaches only the Wings' own type line (CR 704.5p detaches them) and the
         -- swap still offers the two Auras and neither Background
-        -- (docs/decisions.md, "What a text change reaches inside a keyword").
+        -- (CR 702.1).
         Spec.it s "CR 612.2 an Aura swap on Wings changed to Background still offers the Auras" $ do
           (wingsId, evolved, textChanged) <- textChangedSwap s registry ("Raised by Giants", "Master Chef") (Subtype.Aura, Subtype.Background)
           Spec.assertEqWith s "CR 704.5p the changed Wings stay on the battlefield, attached to nothing" (Set.member wingsId (GameState.battlefield evolved), hostOf wingsId evolved) (True, Nothing)

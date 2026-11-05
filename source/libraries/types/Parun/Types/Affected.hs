@@ -22,7 +22,8 @@ import qualified Parun.Types.ObjectId as ObjectId
 -- text keeps its effect alive past its own permanent hands a STORED effect over
 -- as the permanent leaves, and Parun.Engine.Projection.frozenStaticParts resolves
 -- its dynamic set to a TheseObjects at that instant, by analogy with CR 611.2c,
--- which does not itself reach a static ability's effect.
+-- which does not itself reach a static ability's effect (docs/decisions.md, "Whether
+-- a lingering static effect's set is fixed as its permanent leaves").
 data Affected
   = -- | CR 611.2c: a fixed id set, NOT a predicate.
     TheseObjects (Set.Set ObjectId.ObjectId)

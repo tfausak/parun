@@ -259,8 +259,9 @@ passPriorityFrom gs pid =
 -- UntapRestriction.settle keeps every cap. Only a tapped permanent nothing else
 -- holds back is offered, since for any other the untap's outcome is already
 -- settled; a stunned one is, its stun counter (CR 122.1d) taking the untap only
--- once they have chosen it, so it counts against a cap -- docs/decisions.md,
--- "An untap cap leaves tapped only what it must". Asked only where the answer
+-- once they have chosen it, so it counts against a cap: a replacement watches an
+-- event that would happen (CR 614.1), and a cap's "can't" decides first which
+-- untaps would (CR 101.2). Asked only where the answer
 -- matters: a cap the offered permanents already fit, with nothing elective
 -- among them, leaves every one to untap.
 --
@@ -1959,9 +1960,10 @@ runStep = do
         then skipStep phase
         else runStepThatBegan phase
 
--- GameState.permanentsAsTurnBegan, once a turn, after Expiry.dropAtTurnOf
--- (docs/decisions.md's "at the beginning of this turn"). The record is left
--- unforced.
+-- GameState.permanentsAsTurnBegan, once a turn, after Expiry.dropAtTurnOf: an
+-- "until your next turn" effect is already gone (Crystalline Resonance's and
+-- Tezzeret, Cruel Machinist's rulings, "immediately before your next turn
+-- begins"). The record is left unforced.
 fileTurnBegan :: GameState -> GameState
 fileTurnBegan gs = case GameState.permanentsAsTurnBegan gs of
   Just _ -> gs
@@ -2003,10 +2005,10 @@ skipWholePhase phase = do
 -- end of combat" effects though its last step is skipped (Resolve's EndCombatPhase
 -- arm). CR 724.1d skips nothing here, routing an ended turn THROUGH the cleanup step.
 --
--- Run whole here by reading: CR 611.2a ends the durations with the turn, and CR
--- 614.10a alone would leave the damage, so a 5/4 with 3 marked damage whose pump
--- ended alone would revert to a 2/1 that CR 704.5g destroys. Only Synthetic Curfew
--- Bell reaches this. Scenario
+-- Run whole here by reading (docs/synthetic-readings.md, "Whether a skipped
+-- ending phase removes marked damage"): CR 611.2a ends the durations with the
+-- turn, and CR 614.10a alone would leave the damage, so a 5/4 with 3 marked damage
+-- whose pump ended alone would revert to a 2/1 that CR 704.5g destroys. Scenario
 -- cr-514-2-a-pumped-creature-with-damage-marked-on-it-neither-dies-to-its-own-shrinking
 -- pins the reading.
 --

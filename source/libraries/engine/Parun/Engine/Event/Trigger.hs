@@ -1107,8 +1107,7 @@ eventTriggers events gs =
       -- below never learns which rule produced any of these.
       --
       -- Through Projection.mintedTriggeredAbilitiesOf, which applies no CR 612 text
-      -- change to the words rule 702 writes (docs/decisions.md, "What a text change
-      -- reaches inside a keyword"). Rule 310.12b's Siege ability is minted without
+      -- change to the words rule 702 writes (CR 702.1). Rule 310.12b's Siege ability is minted without
       -- that function too.
       abilitiesOf pc = PC.triggeredAbilities pc <> Projection.mintedTriggeredAbilitiesOf pc <> Battle.triggeredAbilitiesOf pc
       -- CR 113.6m's "functions ONLY in that zone", asked of a permanent read AS
@@ -2261,8 +2260,9 @@ eventTriggers events gs =
             -- the zone change's"). Only a bearer on the battlefield is a
             -- permanent (CR 110.1): not a card in a graveyard watching lands
             -- enter (Bloodghast), nor an emblem. A "triggers only
-            -- once" limit still caps the instances (docs/decisions.md, "A trigger
-            -- limit caps an additional trigger"). Delayed and reflexive triggers
+            -- once" limit still caps the instances: the additional instance is a
+            -- second triggering (Yarok's ruling of 2019-07-12), and CR 101.2 puts
+            -- the limit over it. Delayed and reflexive triggers
             -- are gathered elsewhere and never multiplied, as CR 603.2d asks.
             -- Each effect adds its own, so one that names the bearer (Sanctum
             -- of All) adds to one that names the entry.

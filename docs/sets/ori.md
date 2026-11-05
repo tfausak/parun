@@ -72,8 +72,8 @@ Finished 2026-10-31.
   - #5787: decisions.md "Which draw is the first one drawn in a draw step";
     `ProposedEvent.WouldDraw` gained `DrawKind`; Baral, Chief of Compliance
     re-encoded with `ifTaken`.
-  - #5793: decisions.md "A paid flash permission is offered at sorcery
-    timing too"; synthetic card `synthetic-hasty-hydra`.
+  - #5793: paid flash permission at sorcery timing (CR 702.8a, 117.1a); synthetic
+    card `synthetic-hasty-hydra`.
   - #5797: decisions.md "Whether a token an entry redirect takes was
     created"; elision #5798.
   - #5795: the `shuffled` slot keeps one arrival per moved object (a melded

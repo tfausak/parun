@@ -960,9 +960,11 @@ recordAbilityResolution obj = case Object.source obj of
 -- a player does either" prints over the two halves of an either-or pair; the
 -- negative, Browbeat's "if no one does", holds when NONE of them ran. Lich's
 -- "if you can't" holds when one did not run IN FULL (CR 609.3): it ran short, or
--- not at all (docs/decisions.md, "Whether "if you can't" holds after doing part
--- of an instruction"). Asked BEFORE the other three, so a skipped clause raises no
--- prompt.
+-- not at all. Asked BEFORE the other three, so a skipped clause raises no prompt.
+--
+-- Not implemented: not starting that instruction unless it can be done in full,
+-- which CR 118.12 and 118.3 ask of it as a cost (Egon, God of Death's ruling of
+-- 2021-02-05) (#6181).
 --
 -- A pure function rather than a Game action: it reads nothing but the fold.
 ifTakenHolds :: Map.Map ClauseIndex Bool -> Clause.Clause Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool

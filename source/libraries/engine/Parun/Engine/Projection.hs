@@ -2913,7 +2913,8 @@ permanentParts stripped waited functioning setEffs setStripped gs permId = case 
           tagged n sa = if functionsFromZone Zone.Battlefield sa && live n then fmap ((,) n) (partsOf n sa) else []
        in concat (zipWith tagged [0 ..] printed)
 
--- CR 611.2c's freeze, by analogy over a static ability's effect: the parts
+-- CR 611.2c's freeze, by analogy over a static ability's effect (docs/decisions.md,
+-- "Whether a lingering static effect's set is fixed as its permanent leaves"): the parts
 -- `src`'s own static abilities are generating RIGHT NOW, each with the index of the ability it
 -- belongs to, the timestamp CR 613.7a gave it, and its affected set resolved to
 -- the concrete objects it names at this instant.
@@ -3705,6 +3706,7 @@ bestowedView oid gs =
 -- long as it's suspected". The rule's other half, "can't block", is a combat
 -- restriction and lives in Parun.Engine.CombatRestriction, reading the SAME
 -- timestamp through abilityRemovalAfter so one sentence gets one order.
+-- docs/decisions.md, "Which timestamp the suspected designation's abilities have".
 designationGathered :: GameState -> [Gathered]
 designationGathered gs =
   let fromObject oid = case Game.lookupObject oid gs of
@@ -6635,8 +6637,7 @@ triggeredAbilitiesOf oid gs = PC.triggeredAbilities (project oid gs)
 -- finished projection's keyword counts. No CR 612 text change reaches what the
 -- mint writes: those words are the rule's, which CR 207.2a's reminder text only
 -- summarizes, and a keyword's own written word (champion's quality) was already
--- swapped at layer 3 (docs/decisions.md, "What a text change reaches inside a
--- keyword").
+-- swapped at layer 3 (CR 702.1, 612.1).
 mintedTriggeredAbilitiesOf :: ProjectedCharacteristics -> [TriggeredAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)]
 mintedTriggeredAbilitiesOf = Keyword.triggeredAbilitiesOf . PC.keywords
 

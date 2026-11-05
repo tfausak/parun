@@ -567,8 +567,8 @@ merge2 l r =
           -- is not idempotent: a characteristic printed once and belonging to both
           -- halves, which is exactly what CR 709.5a's shared type line is, survives
           -- unionTypeLines and would be doubled here.
-          -- docs/decisions.md, "Which half of a split card answers for a box
-          -- both halves have". Parun.CardSpec's "CR 709.4 the left half answers
+          -- docs/synthetic-readings.md, "Which half of a split card answers for a
+          -- box both halves have". Parun.CardSpec's "CR 709.4 the left half answers
           -- for a box both halves print or define" proves it for toughness, and
           -- its siblings there for loyalty, defense and starting intensity.
           --
@@ -606,8 +606,8 @@ merge2 l r =
           -- player either, since CR 613.7m's choice orders objects and these are one
           -- object's two abilities, so the bias
           -- is where the rules run out, as it is for the printed boxes above.
-          -- docs/decisions.md, "Which half of a split card answers for a box
-          -- both halves have". Parun.CardSpec's "CR 709.4 the left half answers
+          -- docs/synthetic-readings.md, "Which half of a split card answers for a
+          -- box both halves have". Parun.CardSpec's "CR 709.4 the left half answers
           -- for a box both halves print or define" proves it for power.
           Face.characteristicPT = case (snd powerBox, snd toughnessBox) of
             (Nothing, Nothing) -> Nothing

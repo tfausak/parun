@@ -561,8 +561,11 @@ applicable asOf gs event =
 -- results land one at a time on the running total (Parun.Engine.Damage's note
 -- on `lost`), and the Worship example's floor is judged on what the WHOLE
 -- event leaves, so it reads that running total; the row's condition, gathered
--- by `collect`, reads the pre-batch board (docs/decisions.md, "A life-total
--- condition during damage processing").
+-- by `collect`, reads the pre-batch board: CR 120.4d has not occurred, so "as long
+-- as you have" reads the total before it (Elderscale Wurm's ruling of 2012-07-01:
+-- "If you have less than 7 life, damage dealt to you reduces your life total as
+-- normal"). What the floor does beside a loss in the same event is
+-- docs/decisions.md's "How a life floor treats a loss in the same damage event".
 changesLoss :: GameState -> ProposedEvent -> ReplacementCandidate -> Bool
 changesLoss gs event candidate = case (ReplacementCandidate.effect candidate, event) of
   (ReplacementEffect.LifeLossR (LifeLossR.MkLifeLossR _ rewrite), ProposedEvent.WouldLoseLife _ pid n) ->
@@ -1895,8 +1898,8 @@ candidateContext gs candidate =
           }
 
 -- CR 614.16: whether a token row's "an effect would create" reaches `lot`: a
--- lot made as CR 118.12's cost is no effect's (docs/decisions.md, "What a spell
--- or ability causes"), while one another replacement appended is. The
+-- lot made as CR 118.12's cost is no effect's (Library of Leng's ruling, "costs
+-- aren't effects"), while one another replacement appended is. The
 -- turntimber-ranger-* scenarios prove both.
 reachesLot :: TokenPattern.TokenPattern -> TokenLot.TokenLot -> Bool
 reachesLot pat lot = not (TokenPattern.effectsOnly pat) || TokenLot.byEffect lot

@@ -511,7 +511,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
                   Event.becameTarget announced abilId StackObjectKind.ActivatedAbility pid chosen
                   -- CR 406.4 through CR 602.2b: Cast.castProposed's reveal of a
                   -- target drawn out of a face-down pile, kept while the
-                  -- ability is on the stack.
+                  -- ability is on the stack (gap #6175).
                   Monad.mapM_ (Cost.revealPaying (Just abilId) pid) drawn
                   -- CR 121.8: the ability has become activated (CR 602.2b), so
                   -- a card drawn while paying for it turns face up and its

@@ -65,7 +65,7 @@
     "step": "PrecombatMain"
   },
   "description": "CR 115.4 / 120.3h Drain Life at a battle gains all the damage dealt, no limit naming a battle",
-  "note": "X 3 at an Invasion of Dominaria with 5 defense counters: alice gains 3. A limit that names nothing imposes nothing (docs/decisions.md).",
+  "note": "X 3 at an Invasion of Dominaria with 5 defense counters: alice gains 3. A limit naming nothing needs no number (CR 107.2; Drain Life's ruling at a creature).",
   "timeline": [
     {
       "do": {
