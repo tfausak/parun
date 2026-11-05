@@ -205,8 +205,8 @@
         "View": {
           "is": [
             "Boom Scholar",
-            "Island",
-            "Island",
+            "Island#4",
+            "Island#5",
             "Goblin Piker"
           ],
           "of": "Zone",
@@ -228,7 +228,8 @@
             "$m6",
             "$f4",
             "$f5",
-            "$f6"
+            "$f6",
+            null
           ],
           "object": "$snoop"
         }
