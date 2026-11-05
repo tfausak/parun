@@ -69,8 +69,10 @@ import qualified Parun.Types.ZoneChange as ZoneChange
 player :: PlayerId.PlayerId -> Text.Text
 player pid = Text.pack ("Player " <> show (PlayerId.unwrap pid + 1))
 
--- | The board summary: whose turn and step, then each seat's totals and
--- permanents, the deciding seat first, then the stack.
+-- | The board summary: whose turn and step, then each seat's totals,
+-- permanents and public zones, and the cards of another seat's hand or any
+-- seat's library the deciding seat may see (CR 400.2), the deciding seat
+-- first, then the stack.
 board :: PlayerView.PlayerView -> [Text.Text]
 board view =
   [ Text.concat
@@ -103,14 +105,21 @@ board view =
             <> listed view "  Other permanents: " (ordered view others)
             <> listed view "  Graveyard: " (SeatView.graveyard s)
             <> listed view "  Exile: " (SeatView.exile s)
+            <> (if pid == PlayerView.viewer view then [] else listed view "  Seen in hand: " (handOrder view (SeatView.hand s)))
+            <> listed view "  Seen in library, top first: " (SeatView.library s)
     stack = listed view "Stack, top first: " (PlayerView.stack view)
 
 -- | The deciding seat's hand.
 hand :: PlayerView.PlayerView -> [Text.Text]
 hand view =
   let held = concatMap SeatView.hand (filter ((== PlayerView.viewer view) . SeatView.player) (PlayerView.seats view))
-      (lands, spells) = List.partition (isA CardType.Land) held
-   in [Text.pack "Your hand: " <> if null held then Text.pack "empty" else Text.intercalate (Text.pack ", ") (fmap (describe view) (ordered view lands <> ordered view spells))]
+   in [Text.pack "Your hand: " <> if null held then Text.pack "empty" else Text.intercalate (Text.pack ", ") (fmap (describe view) (handOrder view held))]
+
+-- | A hand's cards, lands first, then spells, each by `ordered`.
+handOrder :: PlayerView.PlayerView -> [ObjectView.ObjectView] -> [ObjectView.ObjectView]
+handOrder view held =
+  let (lands, spells) = List.partition (isA CardType.Land) held
+   in ordered view lands <> ordered view spells
 
 -- | Whether the seat sees the object as having a card type.
 isA :: CardType.CardType -> ObjectView.ObjectView -> Bool
