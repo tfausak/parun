@@ -17,13 +17,19 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "CardPutIntoGraveyard",
+            "type": "PutIntoZone",
             "value": {
-              "filter": {
-                "type": "Not",
+              "card": {
+                "type": "Matching",
                 "value": {
-                  "type": "IsSource"
+                  "type": "Not",
+                  "value": {
+                    "type": "IsSource"
+                  }
                 }
+              },
+              "to": {
+                "type": "Graveyard"
               }
             }
           },

@@ -34,24 +34,24 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "CardLeavesZone",
+            "type": "LeavesZone",
             "value": {
-              "filter": {
-                "type": "HeldBy",
+              "card": {
+                "type": "Matching",
                 "value": {
-                  "holder": {
-                    "type": "Owner"
-                  },
-                  "relation": {
-                    "type": "You"
+                  "type": "HeldBy",
+                  "value": {
+                    "holder": {
+                      "type": "Owner"
+                    },
+                    "relation": {
+                      "type": "You"
+                    }
                   }
                 }
               },
               "from": {
                 "type": "Graveyard"
-              },
-              "scope": {
-                "type": "EachTurn"
               },
               "to": {
                 "type": "Hand"

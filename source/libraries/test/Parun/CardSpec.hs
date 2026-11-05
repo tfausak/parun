@@ -115,11 +115,8 @@ import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.CantBlockCreatures as CantBlockCreatures
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardAbilities as CardAbilities
-import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
-import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
 import qualified Parun.Types.CardType as CardType
-import qualified Parun.Types.CardsPutIntoZone as CardsPutIntoZone
 import qualified Parun.Types.CastFromZone as CastFromZone
 import qualified Parun.Types.CastObligation as CastObligation
 import qualified Parun.Types.CastOffer as CastOffer
@@ -271,6 +268,7 @@ import qualified Parun.Types.KeywordCount as KeywordCount
 import qualified Parun.Types.KeywordTally as KeywordTally
 import qualified Parun.Types.Layout as Layout
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
 import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.LibraryPosition as LibraryPosition
@@ -359,6 +357,7 @@ import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Protection as Protection
 import qualified Parun.Types.PutCounters as PutCounters
 import qualified Parun.Types.PutCountersFrom as PutCountersFrom
+import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.PutSticker as PutSticker
 import qualified Parun.Types.Quantity as Quantity.Type
 import qualified Parun.Types.RandomCardInGraveyard as RandomCardInGraveyard
@@ -1164,13 +1163,10 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.PermanentSacrificed {} -> []
   -- CR 603.3b's carries a PlayerRelation, which holds no Count.
   TriggerCondition.SagaFinalChapterTriggers _ -> []
-  TriggerCondition.CardPutIntoGraveyard _ -> []
-  -- CR 603.10a's third family carries a Filter and a TurnScope, and neither holds
-  -- a Count.
-  TriggerCondition.CardLeavesZone {} -> []
-  TriggerCondition.CardsLeaveZone {} -> []
-  TriggerCondition.CardsPutIntoZone {} -> []
-  TriggerCondition.SelfLeavesGraveyard -> []
+  -- A card-zone trigger carries a Filter, zones and a TurnScope, and none holds a
+  -- Count.
+  TriggerCondition.LeavesZone _ -> []
+  TriggerCondition.PutIntoZone _ -> []
   TriggerCondition.StepBegins {} -> []
   TriggerCondition.StateIs condition -> conditionCounts condition
   TriggerCondition.DealsDamage _ -> []
@@ -1230,9 +1226,6 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.SelfBecomesUnattachedFrom _ -> []
   -- CR 603.12's carries nothing at all, so no Count.
   TriggerCondition.Reflexive -> []
-  TriggerCondition.SelfPutIntoGraveyardFromLibrary -> []
-  TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> []
-  TriggerCondition.SelfPutIntoGraveyardDuringResolution -> []
   -- CR 701.6a's countering condition is a PlayerRelation, which holds no Count,
   -- exactly as the discard condition above.
   TriggerCondition.SpellOrAbilityCounters _ -> []
@@ -4624,16 +4617,10 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- CR 603.3b's names a PlayerRelation; the Saga is found through CR 714.2d's
   -- final chapter number rather than through a Filter.
   TriggerCondition.SagaFinalChapterTriggers _ -> []
-  TriggerCondition.CardPutIntoGraveyard p -> unframed [CardPutIntoGraveyard.filter p]
-  -- CR 603.10a's third family carries its Filter inside a record, and it is card
-  -- text like any other -- Kishla Skimmer's "your graveyard" is that Filter.
-  TriggerCondition.CardLeavesZone payload -> unframed [CardLeavesZone.filter payload]
-  -- The batch reading carries the same record, swept the same way.
-  TriggerCondition.CardsLeaveZone payload -> unframed [CardLeavesZone.filter payload]
-  -- The arrival side carries its Filter the same way: Dutiful Knowledge Seeker's
-  -- "cards" is that Filter.
-  TriggerCondition.CardsPutIntoZone payload -> unframed [CardsPutIntoZone.filter payload]
-  TriggerCondition.SelfLeavesGraveyard -> []
+  -- A card-zone trigger's Matching card is card text like any other: Planar
+  -- Void's "another card", Dutiful Knowledge Seeker's "cards".
+  TriggerCondition.LeavesZone t -> actingFilters (LeavesZoneTrigger.card t)
+  TriggerCondition.PutIntoZone t -> actingFilters (PutIntoZoneTrigger.card t)
   TriggerCondition.StateIs condition -> frame Unframed (conditionFilters condition)
   TriggerCondition.StepBegins {} -> []
   -- A bystander's damage conditions carry one over the watched permanent, swept
@@ -4727,9 +4714,6 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.SelfBecomesUnattachedFrom f -> unframed [f]
   -- CR 603.12's carries nothing, so no Filter either.
   TriggerCondition.Reflexive -> []
-  TriggerCondition.SelfPutIntoGraveyardFromLibrary -> []
-  TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> []
-  TriggerCondition.SelfPutIntoGraveyardDuringResolution -> []
   TriggerCondition.SpellOrAbilityCounters _ -> []
   TriggerCondition.AbilityIsCountered -> []
   TriggerCondition.DamageToPlayerPrevented _ -> []
@@ -4808,14 +4792,8 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.Leaves t -> case LeavesTrigger.permanent t of
     LeavingPermanent.Bound slot -> [slot]
     _ -> []
-  TriggerCondition.SelfPutIntoGraveyardFromLibrary -> []
-  TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> []
-  TriggerCondition.SelfPutIntoGraveyardDuringResolution -> []
-  TriggerCondition.CardPutIntoGraveyard _ -> []
-  TriggerCondition.CardLeavesZone {} -> []
-  TriggerCondition.CardsLeaveZone {} -> []
-  TriggerCondition.CardsPutIntoZone {} -> []
-  TriggerCondition.SelfLeavesGraveyard -> []
+  TriggerCondition.LeavesZone _ -> []
+  TriggerCondition.PutIntoZone _ -> []
   TriggerCondition.BecomesTapState _ -> []
   TriggerCondition.PermanentsBecomeTapped _ -> []
   TriggerCondition.AttachedPermanentTappedForMana -> []
@@ -7359,7 +7337,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
                       else Nothing
     Spec.assertEqWith s "every ante is an ante card's Effect.Ante" (Maybe.mapMaybe offends corpus) []
   -- CR 400.1: "your graveyard" in a card-leaves trigger is the pile the card
-  -- left (CardLeavesZone.whose), never a HeldBy Owner on the card -- an owner and
+  -- left (LeavesZoneTrigger.whose), never a HeldBy Owner on the card -- an owner and
   -- the pile disagree between an ownership change and its move (CR 407.3).
   -- A HeldBy Owner beside `whose` is an arrival read ("into your hand").
   Spec.it s "CR 400.1 a card-leaves trigger names whose pile through whose, never HeldBy Owner alone" $ do
@@ -7369,10 +7347,11 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
           Filter.Type.HeldBy Holder.Owner _ -> True
           Filter.Type.And fs -> any ownedByConjunct fs
           _ -> False
-        oldStyle p = List.elem (CardLeavesZone.from p) piles && Maybe.isNothing (CardLeavesZone.whose p) && ownedByConjunct (CardLeavesZone.filter p)
+        oldStyle t = case LeavesZoneTrigger.card t of
+          ActingPermanent.Matching f -> List.elem (LeavesZoneTrigger.from t) piles && Maybe.isNothing (LeavesZoneTrigger.whose t) && ownedByConjunct f
+          ActingPermanent.Self -> False
         offendingCondition condition = case condition of
-          TriggerCondition.CardLeavesZone p -> oldStyle p
-          TriggerCondition.CardsLeaveZone p -> oldStyle p
+          TriggerCondition.LeavesZone t -> oldStyle t
           _ -> False
         offends (path, result) = case result of
           Left reason -> Just (path <> ": " <> Text.unpack reason)

@@ -346,7 +346,7 @@ became = SlotName.MkSlotName (Text.pack "became")
 -- that reach it anyway -- Kithkin Brinefarer's "conjure a duplicate of that
 -- card", Volatile Rift's "it perpetually gets +X/+0" -- so the paper rule on
 -- `became` stands unchanged. Stamped by Parun.Engine.Event.Binding.eventBindings
--- for TriggerCondition.CardLeavesZone; reserved and not a target, `became`'s
+-- for TriggerCondition.LeavesZone; reserved and not a target, `became`'s
 -- posture.
 handArrival :: SlotName
 handArrival = SlotName.MkSlotName (Text.pack "handArrival")
@@ -935,7 +935,7 @@ manaSource = SlotName.MkSlotName (Text.pack "thatManaSource")
 -- CR 701.21a's PermanentSacrificed, where Prowling Geistcatcher's "if that
 -- creature was a token" reads it. Under a self TriggerCondition.Leaves the
 -- departed id already IS CR 113.7a's `triggerSource`, so a second name for one
--- object would be the redundancy SelfPutIntoGraveyardFromAnywhere's empty floor
+-- object would be the redundancy a Self PutIntoZone's empty floor
 -- declines.
 --
 -- Every read of it is CR 608.2h's last known information --

@@ -90,7 +90,17 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfPutIntoGraveyardFromLibrary"
+            "type": "PutIntoZone",
+            "value": {
+              "from": [
+                {
+                  "type": "Library"
+                }
+              ],
+              "to": {
+                "type": "Graveyard"
+              }
+            }
           },
           "modal": {
             "modes": [

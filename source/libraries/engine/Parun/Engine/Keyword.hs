@@ -217,6 +217,7 @@ import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Protection as Protection
 import qualified Parun.Types.Prototype as Prototype
 import qualified Parun.Types.PutCounters as PutCounters
+import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.Reinforce as Reinforce
 import qualified Parun.Types.RemoveCounters as RemoveCounters
@@ -8190,7 +8191,7 @@ hauntSpell =
   let slot = TargetSlot.required Pool.Creatures Nothing
       exile = Effect.ExileHaunting (ExileHaunting.MkExileHaunting Binding.triggerSource hauntTarget)
    in Mint.triggerOf
-        TriggerCondition.SelfPutIntoGraveyardDuringResolution
+        (TriggerCondition.PutIntoZone (PutIntoZoneTrigger.self Zone.Graveyard) {PutIntoZoneTrigger.duringResolution = True})
         Nothing
         (Mint.oneModeTargeting (Map.singleton hauntTarget slot) (Seq.singleton exile))
 

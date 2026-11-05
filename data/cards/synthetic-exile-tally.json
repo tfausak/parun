@@ -19,17 +19,20 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "CardsLeaveZone",
+            "type": "LeavesZone",
             "value": {
-              "filter": {
-                "type": "And",
-                "value": []
+              "batching": {
+                "type": "OneOrMore"
+              },
+              "card": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": []
+                }
               },
               "from": {
                 "type": "Exile"
-              },
-              "scope": {
-                "type": "EachTurn"
               }
             }
           },
