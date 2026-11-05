@@ -478,6 +478,28 @@ Entries are ordered by the first rule each cites.
   only ITS controller may block the creature attacking nothing".
 - **Issue**: #2899.
 
+## Attacks alone after a sacrificed co-attacker
+
+- **Question**: CR 506.5 and CR 508.3a/508.3d read "declared as an attacker",
+  and CR 508.1k makes attacking only a chosen creature still controlled once
+  the costs are paid. Is a chosen creature sacrificed to pay a cost to attack
+  (Exalted Dragon's land, an Ashnod's Altar under Ghostly Prison) declared? Its
+  co-attacker attacks alone, exalted triggers, and "whenever you attack" fires,
+  or not.
+- **Rules**: CR 506.5, 508.1a, 508.1k, 508.3a, 508.3d, 509.1g; CR of
+  2026-08-07.
+- **Decision**: No. A creature is declared as an attacker when the declaration
+  makes it attacking at CR 508.1k, so it is left out of the count, the
+  attack triggers and Combat.declaredAttackers. The blocking side reads CR
+  509.1g the same way, the attacker staying blocked by CR 509.1h's own text.
+- **Rejected**: Counting every creature chosen at CR 508.1a: a creature that
+  never attacked would trigger "whenever a creature attacks" from the
+  graveyard and make its co-attacker share an attack it never made.
+- **Site**: `Parun.Engine.Combat.attemptAttackDeclaration`'s `survivors`,
+  proved by data/scenarios/combat-cost's "CR 506.5 / 508.1k a co-attacker
+  sacrificed to Exalted Dragon leaves the Dragon attacking alone".
+- **Issue**: #6245.
+
 ## Which creatures could have attacked
 
 - **Question**: Season of the Witch spares "creatures that couldn't attack";
