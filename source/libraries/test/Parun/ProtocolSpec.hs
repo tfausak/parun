@@ -178,7 +178,7 @@ spec s registry = Spec.describe s "Protocol" $ do
         creature = Prompt.ChooseCreatureType (Decider.MkDecider S.alice) S.alice oid
         basicLand = Prompt.ChooseBasicLandType (Decider.MkDecider S.alice) S.alice oid
         replies = [Protocol.encodeAnswer creature Subtype.Island, Protocol.encodeAnswer creature Subtype.Goblin, Protocol.encodeAnswer basicLand Subtype.Goblin, Protocol.encodeAnswer basicLand Subtype.Swamp]
-        ((chosen, _), sent) = asking replies gs ((,) <$> Game.choose creature <*> Game.choose basicLand)
+        ((chosen, _), sent) = overTheLine replies gs ((,) <$> Game.choose creature <*> Game.choose basicLand)
         refused = Just (Text.pack "not an answer the prompt offers")
     Spec.assertEqWith s "CR 205.3m creature type problems" (problemsOf "ChooseCreatureType" sent) [Nothing, refused]
     Spec.assertEqWith s "CR 305.6 basic land type problems" (problemsOf "ChooseBasicLandType" sent) [Nothing, refused]
@@ -219,13 +219,13 @@ spec s registry = Spec.describe s "Protocol" $ do
 -- with the next of `replies`; the lines sent and the state after.
 declaring :: [R.Reply] -> GameState.GameState -> ([String], GameState.GameState)
 declaring replies gs =
-  let ((_, after), sent) = asking replies gs (Combat.declareAttackers S.manaPerformer S.alice >> Combat.declareBlockers S.manaPerformer)
+  let ((_, after), sent) = overTheLine replies gs (Combat.declareAttackers S.manaPerformer S.alice >> Combat.declareBlockers S.manaPerformer)
    in (sent, after)
 
 -- Runs `game` over the line, answering each line sent with the next of
 -- `replies`; its result and state after, and the lines sent.
-asking :: [R.Reply] -> GameState.GameState -> Game.Type.Game a -> ((a, GameState.GameState), [String])
-asking replies gs game =
+overTheLine :: [R.Reply] -> GameState.GameState -> Game.Type.Game a -> ((a, GameState.GameState), [String])
+overTheLine replies gs game =
   let send line = State.state $ \(out, rest) -> case rest of
         reply : more -> (Common.render (Codec.Reply.toValue reply), (out <> [Text.unpack line], more))
         [] -> error ("no reply left for " <> Text.unpack line)
