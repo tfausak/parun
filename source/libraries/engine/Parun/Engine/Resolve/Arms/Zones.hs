@@ -597,8 +597,8 @@ exchangeCardZones settle resolving source controller legal chosen (ExchangeCardZ
 -- the named player need not be one of them. Each library is shuffled ONCE (CR
 -- 608.2f), and CR 701.24a makes WHO shuffles unobservable.
 --
--- Every object the ref names moves as ONE event (CR 608.2f / 603.2c), so Timetwister's
--- hand and graveyard are one arrival and one shuffle -- proved by
+-- Every object the ref names moves as ONE event (CR 608.2f / 603.2c), so
+-- Timetwister's hand and graveyard are one arrival and one shuffle -- proved by
 -- Parun.MassEffectSpec's Timetwister group.
 --
 -- The slot binds the library incarnations (CR 400.7), for a later count:
