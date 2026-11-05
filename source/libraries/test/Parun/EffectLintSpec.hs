@@ -146,6 +146,7 @@ import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.InstructionR as InstructionR
 import qualified Parun.Types.InstructionRewrite as InstructionRewrite
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.LaterPayment as LaterPayment
 import qualified Parun.Types.Layer as Layer
 import qualified Parun.Types.Layout as Layout
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
@@ -374,6 +375,7 @@ ownQuantities effect = case effect of
   Effect.CopyStackObject (CopyStackObject.MkCopyStackObject _ _ quantity _ _) -> [quantity]
   Effect.Replace (Replace.MkReplace duration _ _ condition _) -> durationQuantities duration <> foldMap Resolve.conditionQuantities condition
   Effect.SkipPhase (SkipPhase.MkSkipPhase _ _ _ duration) -> durationQuantities duration
+  Effect.LaterPayment (LaterPayment.MkLaterPayment duration _ _) -> durationQuantities duration
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ _ _ _ _ quantity _) -> quantity : durationQuantities duration
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration _ _ _ _ _ _ _ _) -> durationQuantities duration
   Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance duration _ _ _ _) -> durationQuantities duration
@@ -1608,6 +1610,7 @@ effectObjectRefs effect =
         Effect.CopyStackObject (CopyStackObject.MkCopyStackObject ref targets _ _ _) -> read_ (ref : copyTargetsRefs targets)
         Effect.Replace {} -> []
         Effect.SkipPhase {} -> []
+        Effect.LaterPayment {} -> []
         Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ ref _ _ _ _ _) -> read_ (Maybe.maybeToList ref)
         Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ ref _ _ _ _ _ _) -> read_ (Maybe.maybeToList ref)
         Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ ref _ _ _) -> read_ [ref]

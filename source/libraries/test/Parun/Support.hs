@@ -718,6 +718,7 @@ playLandAnswer p = case p of
           A.RollPlanarDie -> False
           A.Ignore _ _ -> False
           A.EndEffect {} -> False
+          A.MakeLaterPayment {} -> False
           A.PayLifeForMana _ _ -> False
           A.ActivateManaAbility _ -> False
      in case filter isPlay actions of
@@ -1712,6 +1713,7 @@ isCastOf oid action = case action of
   A.RollPlanarDie -> False
   A.Ignore _ _ -> False
   A.EndEffect {} -> False
+  A.MakeLaterPayment {} -> False
   A.PayLifeForMana _ _ -> False
   A.ActivateManaAbility _ -> False
 

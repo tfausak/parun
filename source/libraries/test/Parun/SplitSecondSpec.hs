@@ -128,6 +128,7 @@ isCast action = case action of
   A.RollPlanarDie -> False
   A.Ignore _ _ -> False
   A.EndEffect {} -> False
+  A.MakeLaterPayment {} -> False
   A.PayLifeForMana _ _ -> False
   A.ActivateManaAbility _ -> False
 
@@ -148,6 +149,7 @@ isActivate action = case action of
   A.RollPlanarDie -> False
   A.Ignore _ _ -> False
   A.EndEffect {} -> False
+  A.MakeLaterPayment {} -> False
   A.PayLifeForMana _ _ -> False
   A.ActivateManaAbility _ -> False
 
@@ -169,6 +171,7 @@ isManaAbility action = case action of
   A.RollPlanarDie -> False
   A.Ignore _ _ -> False
   A.EndEffect {} -> False
+  A.MakeLaterPayment {} -> False
   A.PayLifeForMana _ _ -> False
 
 castOf :: ObjectId.ObjectId -> Printing.Printing -> A.Action

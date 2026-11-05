@@ -98,6 +98,7 @@ withoutAnnouncement before entry closed = do
   continuousEffects <- listOf GameState.continuousEffects
   copyEffects <- listOf GameState.copyEffects
   replacements <- listOf GameState.replacements
+  laterPayments <- listOf GameState.laterPayments
   pendingPreventionRiders <- seqOf GameState.pendingPreventionRiders
   pendingReplacementEffects <- seqOf GameState.pendingReplacementEffects
   contested <- mapOf GameState.contested
@@ -236,6 +237,7 @@ withoutAnnouncement before entry closed = do
         GameState.continuousEffects = continuousEffects,
         GameState.copyEffects = copyEffects,
         GameState.replacements = replacements,
+        GameState.laterPayments = laterPayments,
         GameState.pendingPreventionRiders = pendingPreventionRiders,
         GameState.pendingReplacementEffects = pendingReplacementEffects,
         GameState.contested = contested,

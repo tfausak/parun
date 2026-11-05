@@ -51,6 +51,7 @@ import qualified Parun.Types.ActiveAttackRequirement as ActiveAttackRequirement
 import qualified Parun.Types.ActiveBlockRequirement as ActiveBlockRequirement
 import qualified Parun.Types.ActiveCopy as ActiveCopy
 import qualified Parun.Types.ActiveEvasion as ActiveEvasion
+import qualified Parun.Types.ActiveLaterPayment as ActiveLaterPayment
 import qualified Parun.Types.ActiveObjectProhibition as ActiveObjectProhibition
 import qualified Parun.Types.ActivePlayerEffect as ActivePlayerEffect
 import qualified Parun.Types.ActiveReplacement as ActiveReplacement
@@ -114,6 +115,7 @@ import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.InitiativeTarget as InitiativeTarget
+import qualified Parun.Types.LaterPayment as LaterPayment
 import qualified Parun.Types.LibraryDepth as LibraryDepth
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.Mana as Mana.Type
@@ -134,6 +136,7 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PreventAllDamage as PreventAllDamage
 import qualified Parun.Types.PreventNextDamage as PreventNextDamage
+import qualified Parun.Types.PreventionRider as PreventionRider
 import qualified Parun.Types.Prohibit as Prohibit
 import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Prompt as Prompt
@@ -998,6 +1001,30 @@ bakeAmount evaluate re = case re of
     settled quantity
       | Set.null (QuantitySlot.slots quantity) = Nothing
       | otherwise = Quantity.Type.Literal <$> evaluate quantity
+
+-- CR 116.2c: store the offer, its environment baked, for Action.MakeLaterPayment.
+-- From `legal`: a target CR 608.2b dropped gets nothing from a payment either.
+laterPayment :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> LaterPayment.LaterPayment (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Game ()
+laterPayment resolving source controller legal (LaterPayment.MkLaterPayment duration cost effects) =
+  State.modify' $ \gs -> case Expiry.arm resolving legal controller source duration gs of
+    -- CR 611.2b: the duration never started.
+    Nothing -> gs
+    Just expiry ->
+      let (createdAt, g1) = Game.freshTimestamp gs
+          row =
+            ActiveLaterPayment.MkActiveLaterPayment
+              { ActiveLaterPayment.cost = cost,
+                ActiveLaterPayment.payoff =
+                  PreventionRider.MkPreventionRider
+                    { PreventionRider.effects = effects,
+                      PreventionRider.targets = legal,
+                      PreventionRider.controller = controller,
+                      PreventionRider.source = source
+                    },
+                ActiveLaterPayment.createdAt = createdAt,
+                ActiveLaterPayment.expiry = expiry
+              }
+       in g1 {GameState.laterPayments = GameState.laterPayments g1 <> [row]}
 
 preventNextDamage :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> PreventNextDamage.PreventNextDamage (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Game ()
 preventNextDamage resolving source controller legal chosen (PreventNextDamage.MkPreventNextDamage duration kind ref whatRecipient whoRecipient sourceFilter quantity riderEffects) = do

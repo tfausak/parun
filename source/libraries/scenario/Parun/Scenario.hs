@@ -1948,6 +1948,7 @@ describeAction gs action = case action of
   Action.Plot oid _ -> fmap (Text.pack "Plot " <>) (describeObject gs oid)
   Action.Foretell oid -> fmap (Text.pack "Foretell " <>) (describeObject gs oid)
   Action.Suspend oid -> fmap (Text.pack "Suspend " <>) (describeObject gs oid)
+  Action.MakeLaterPayment source _ -> fmap (Text.pack "MakeLaterPayment " <>) (describeObject gs source)
   -- The second of one source's offers to a seat reads "EndEffect $asp #2".
   Action.EndEffect source resolution ->
     let nth = case EndEffect.offerIndex source resolution gs of

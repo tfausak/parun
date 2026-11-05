@@ -612,6 +612,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.ArmDelayedTrigger payload -> Objects.armDelayedTrigger resolving source controller legal payload
   Effect.Replace payload -> Objects.replace resolving source controller legal payload
   Effect.PreventNextDamage payload -> Objects.preventNextDamage resolving source controller legal chosen payload
+  Effect.LaterPayment payload -> Objects.laterPayment resolving source controller legal payload
   Effect.PreventAllDamage payload -> Objects.preventAllDamage resolving source controller legal chosen payload
   Effect.NextDamageInstance payload -> Objects.nextDamageInstance resolving source controller legal chosen payload
   Effect.RedirectDamage payload -> Objects.redirectDamage resolving source controller legal payload
@@ -745,6 +746,14 @@ runPreventionRider runSubgame prevention = Foldable.for_ (Prevention.rider preve
         src = PreventionRider.source rider
     Monad.void (runCarrying runSubgame src (PreventionRider.controller rider) Map.empty targets (PreventionRider.effects rider))
     State.modify' (\gs -> gs {GameState.ambientAmounts = was})
+
+-- CR 116.2c: what a paid Parun.Engine.LaterPayment row runs, in the environment
+-- the resolution baked, runPreventionRider's way: `source` is both resolving and
+-- source (CR 113.7), and every slot is treated as a legal target, CR 608.2b having
+-- been applied when the row was stored.
+runLaterPayment :: Game Result -> PreventionRider.PreventionRider -> Game ()
+runLaterPayment runSubgame payoff =
+  Monad.void (runCarrying runSubgame (PreventionRider.source payoff) (PreventionRider.controller payoff) Map.empty (PreventionRider.targets payoff) (PreventionRider.effects payoff))
 
 -- CR 614.1c: run the effects of every as-enters rewrite that has applied and not
 -- run yet. Drains GameState.pendingEntryEffects, which Parun.Engine.Event filled

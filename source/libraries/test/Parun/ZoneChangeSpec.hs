@@ -1275,6 +1275,7 @@ isActivation a = case a of
   A.ActivateManaAbility _ -> False
   A.Ignore _ _ -> False
   A.EndEffect {} -> False
+  A.MakeLaterPayment {} -> False
   A.PayLifeForMana _ _ -> False
 
 -- The life events the whole step logged, by player and amount. CR 701.12c makes

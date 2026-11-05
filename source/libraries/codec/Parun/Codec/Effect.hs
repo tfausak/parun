@@ -74,6 +74,7 @@ import qualified Parun.Codec.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Codec.GrantPlayFromExile as GrantPlayFromExile
 import qualified Parun.Codec.Guess as Guess
 import qualified Parun.Codec.InitiativeTarget as InitiativeTarget
+import qualified Parun.Codec.LaterPayment as LaterPayment
 import qualified Parun.Codec.LifeLoss as LifeLoss
 import qualified Parun.Codec.LookAt as LookAt
 import qualified Parun.Codec.MakeForetold as MakeForetold
@@ -137,6 +138,7 @@ codec cardCodec abilityCodec =
       meldCodec = Meld.codec cardCodec
       replaceCodec = Replace.codec cardCodec abilityCodec (codec cardCodec abilityCodec)
       preventCodec = PreventNextDamage.codec (codec cardCodec abilityCodec)
+      laterPaymentCodec = LaterPayment.codec (codec cardCodec abilityCodec)
       preventAllCodec = PreventAllDamage.codec (codec cardCodec abilityCodec)
       preventInstanceCodec = NextDamageInstance.codec (codec cardCodec abilityCodec)
       forEachCodec = ForEach.codec (codec cardCodec abilityCodec)
@@ -231,6 +233,7 @@ codec cardCodec abilityCodec =
           Arm.payload "Replace" replaceCodec Effect.Replace (\x -> case x of Effect.Replace y -> Just y; _ -> Nothing),
           Arm.payload "SkipPhase" SkipPhase.codec Effect.SkipPhase (\x -> case x of Effect.SkipPhase y -> Just y; _ -> Nothing),
           Arm.payload "PreventNextDamage" preventCodec Effect.PreventNextDamage (\x -> case x of Effect.PreventNextDamage y -> Just y; _ -> Nothing),
+          Arm.payload "LaterPayment" laterPaymentCodec Effect.LaterPayment (\x -> case x of Effect.LaterPayment y -> Just y; _ -> Nothing),
           Arm.payload "PreventAllDamage" preventAllCodec Effect.PreventAllDamage (\x -> case x of Effect.PreventAllDamage y -> Just y; _ -> Nothing),
           Arm.payload "NextDamageInstance" preventInstanceCodec Effect.NextDamageInstance (\x -> case x of Effect.NextDamageInstance y -> Just y; _ -> Nothing),
           Arm.payload "RedirectDamage" RedirectDamage.codec Effect.RedirectDamage (\x -> case x of Effect.RedirectDamage y -> Just y; _ -> Nothing),
@@ -412,6 +415,7 @@ tagOf x = case x of
   Effect.Replace {} -> "Replace"
   Effect.SkipPhase {} -> "SkipPhase"
   Effect.PreventNextDamage {} -> "PreventNextDamage"
+  Effect.LaterPayment {} -> "LaterPayment"
   Effect.PreventAllDamage {} -> "PreventAllDamage"
   Effect.NextDamageInstance {} -> "NextDamageInstance"
   Effect.RedirectDamage {} -> "RedirectDamage"

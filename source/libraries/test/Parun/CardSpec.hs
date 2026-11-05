@@ -267,6 +267,7 @@ import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordCount as KeywordCount
 import qualified Parun.Types.KeywordTally as KeywordTally
+import qualified Parun.Types.LaterPayment as LaterPayment
 import qualified Parun.Types.Layout as Layout
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
 import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
@@ -725,6 +726,7 @@ objectRefPositions =
         -- reach: a copy effect whose candidate description reads a slot no clause
         -- binds is a dangling read like any other.
         ("copy-spell-for-each", Effect.CopyStackObject (CopyStackObject.MkCopyStackObject (plantedRef "cs-ref") (CopyTargets.ForEach (plantedRef "cs-each" NonEmpty.:| [])) CopyStackObject.defaultQuantity CopyStackObject.defaultCopier []), [plantedRef "cs-ref", plantedRef "cs-each"]),
+        ("later-payment", Effect.LaterPayment (LaterPayment.MkLaterPayment Duration.UntilEndOfTurn (Cost.Type.MkCost Nothing []) (Seq.singleton (Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage Duration.UntilEndOfTurn Nothing (Just (plantedRef "lp")) Nothing Nothing Nothing (Quantity.Type.Literal 1) Seq.empty)))), [plantedRef "lp"]),
         ("prevent-next-damage", Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage Duration.UntilEndOfTurn Nothing (Just (plantedRef "pn")) Nothing Nothing Nothing (Quantity.Type.Literal 1) Seq.empty), [plantedRef "pn"]),
         ("prevent-all-damage", Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage Duration.UntilEndOfTurn Nothing (Just (plantedRef "pa")) Nothing Nothing DamageDirection.DealtTo Nothing (Filter.Type.And []) Seq.empty), [plantedRef "pa"]),
         ("redirect-damage", Effect.RedirectDamage (RedirectDamage.MkRedirectDamage Duration.UntilEndOfTurn Nothing Nothing (Just (plantedRef "rd-from")) Nothing Nothing (plantedRef "rd-to") Nothing Uses.Unlimited (Filter.Type.And [])), [plantedRef "rd-from", plantedRef "rd-to"]),
@@ -1381,6 +1383,7 @@ ownCounts effect = case effect of
   Effect.SkipPhase (SkipPhase.MkSkipPhase _ _ _ duration) -> durationCounts duration
   -- CR 615.5's rider is an effect list a card authors, so its Counts are this
   -- card's Counts -- the same recursion Create takes into a minted token.
+  Effect.LaterPayment (LaterPayment.MkLaterPayment duration _ effects) -> durationCounts duration <> concatMap effectCounts effects
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ _ _ _ _ quantity rider) -> durationCounts duration <> quantityCounts quantity <> concatMap effectCounts rider
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration _ _ _ _ _ _ _ rider) -> durationCounts duration <> concatMap effectCounts rider
   Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance duration _ _ rider _) -> durationCounts duration <> concatMap effectCounts rider
@@ -1813,6 +1816,7 @@ effectNestedEffects effect = case effect of
   Effect.Replace (Replace.MkReplace _ _ _ _ replacement) -> replacementPrintedEffects replacement
   -- CR 615.5's rider on the three prevention opcodes a SPELL authors: Test of
   -- Faith's counters, Inkshield's Inklings, Reverse Damage's life.
+  Effect.LaterPayment (LaterPayment.MkLaterPayment _ _ effects) -> Foldable.toList effects
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ _ riders) -> Foldable.toList riders
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ _ _ _ _ _ _ riders) -> Foldable.toList riders
   Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ riders _) -> Foldable.toList riders
@@ -2473,6 +2477,7 @@ effectReplacements effect = case effect of
   Effect.DecreaseSpeed _ -> []
   Effect.SkipPhase {} -> []
   -- CR 615.5's rider can carry an Effect.Replace, so this descends.
+  Effect.LaterPayment (LaterPayment.MkLaterPayment _ _ effects) -> concatMap effectReplacements effects
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ _ rider) -> concatMap effectReplacements rider
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ _ _ _ _ _ _ rider) -> concatMap effectReplacements rider
   Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ rider _) -> concatMap effectReplacements rider
@@ -3049,6 +3054,7 @@ effectMintedFaces effect = case effect of
   Effect.DecreaseSpeed _ -> []
   Effect.SkipPhase {} -> []
   -- CR 615.5's rider can mint a token or emblem of its own, so this descends.
+  Effect.LaterPayment (LaterPayment.MkLaterPayment _ _ effects) -> concatMap effectMintedFaces effects
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ _ rider) -> concatMap effectMintedFaces rider
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ _ _ _ _ _ _ rider) -> concatMap effectMintedFaces rider
   Effect.NextDamageInstance (NextDamageInstance.MkNextDamageInstance _ _ _ rider _) -> concatMap effectMintedFaces rider
@@ -6079,6 +6085,7 @@ effectFilters effect = case effect of
   -- CR 609.7a's chosen source is ChosenSourceFramed (see the overview); the
   -- recipient description is UNFRAMED: Parun.Engine.Replacement evaluates it
   -- against the damage's own recipient, not against this card's frame.
+  Effect.LaterPayment (LaterPayment.MkLaterPayment duration _ effects) -> frame Unframed (durationFilters duration) <> concatMap effectFilters effects
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ ref whatRecipient _ chosenSource quantity rider) ->
     frame Unframed (durationFilters duration) <> frame Unframed (quantityFilters quantity) <> fmap ((,) ChosenSourceFramed) (Maybe.maybeToList chosenSource) <> unframed (Maybe.maybeToList whatRecipient) <> frame SourceHostFramed (foldMap objectRefFilters ref) <> concatMap effectFilters rider
   -- CR 609.7b's property-named source is ReplacementRowFramed: it becomes the

@@ -181,6 +181,7 @@ import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Guess as Guess
 import qualified Parun.Types.HexproofExemption as HexproofExemption
 import qualified Parun.Types.HowMany as HowMany
+import qualified Parun.Types.LaterPayment as LaterPayment
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
 import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
 import qualified Parun.Types.LeavingPermanent as LeavingPermanent
@@ -891,6 +892,8 @@ rewriteEffect pairs effect = case effect of
   -- which rewriteObjectRef is the identity, and every chosenSource it writes
   -- (Auriok Replica, Healing Grace, Samite Ministration, Deflecting Palm) is the
   -- trivial `And []`, so mutating either line reddens nothing.
+  Effect.LaterPayment (LaterPayment.MkLaterPayment duration cost effects) ->
+    Effect.LaterPayment (LaterPayment.MkLaterPayment (rewriteDuration pairs duration) (Filter.rewriteCost pairs cost) (fmap (rewriteEffect pairs) effects))
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration kind ref whatRecipient whoRecipient chosenSource quantity rider) ->
     Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage (rewriteDuration pairs duration) kind (fmap (rewriteObjectRef pairs) ref) (fmap (Filter.rewrite pairs) whatRecipient) whoRecipient (fmap (Filter.rewrite pairs) chosenSource) (rewriteQuantity pairs quantity) (fmap (rewriteEffect pairs) rider))
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration kind ref whatRecipient whoRecipient direction chosenSource whatSource rider) ->
