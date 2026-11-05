@@ -59,9 +59,10 @@ data GameSettings = MkGameSettings
     --
     -- Not implemented: CR 808.2's seating is unchecked (#4497). CR 808.3a's
     -- attack multiple players option is the field above, which is on by
-    -- default, so a game with teams gets it without asking. CR 808.5 needs nothing: no
-    -- Team vs. Team resource is shared (sharedTeamLife is CR 810's and CR 904's),
-    -- and one player has never been able to touch another's cards.
+    -- default, so a game with teams gets it without asking. CR 808.5's resources
+    -- need nothing: none is shared (sharedTeamLife is CR 810's and CR 904's), and
+    -- one player has never been able to touch another's cards. Its review of a
+    -- teammate's hand is Parun.Engine.Visibility.reviewsHandOf.
     teams :: Teams.Teams,
     -- | CR 805.1: whether each team takes its turns together, every member of
     -- the active team being an active player (CR 805.4a, 805.9). Off by
@@ -102,7 +103,8 @@ data GameSettings = MkGameSettings
     twoHeadedGiant :: Bool,
     -- | CR 811: whether this is an Alternating Teams game. Read through
     -- Parun.Engine.Combat.attackableOpponents for CR 811.4's attack limit, which
-    -- filters whatever the attack option above allows (CR 811.2b).
+    -- filters whatever the attack option above allows (CR 811.2b), and
+    -- Parun.Engine.Visibility.reviewsHandOf for CR 811.5's.
     -- Parun.Engine.AlternatingTeams.setUp writes it with teams (CR 811.1) over a
     -- seating it checks (CR 811.3).
     alternatingTeams :: Bool,

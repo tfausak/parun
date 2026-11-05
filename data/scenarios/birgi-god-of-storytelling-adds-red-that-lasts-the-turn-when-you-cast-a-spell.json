@@ -1,0 +1,33 @@
+{
+  "description": "Birgi, God of Storytelling: alice's Shock adds R through Birgi's trigger, and the R is still in her pool after the main phase ends",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {"card": "Birgi, God of Storytelling", "label": "birgi", "ready": true},
+          {"card": "Mountain", "label": "mountain", "ready": true}
+        ],
+        "hand": [{"card": "Shock", "label": "shock"}]
+      },
+      {"name": "bob"}
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$shock", "targets": ["$bob"], "mana": ["$mountain"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Stack", "is": ["trigger of $birgi", "Shock"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {
+      "turn": 1,
+      "step": "BeginningOfCombat",
+      "player": "alice",
+      "check": {"View": {"of": "ManaPool", "player": "alice", "is": [{"manaType": {"type": "Colored", "value": {"type": "Red"}}, "tags": [], "retention": {"type": "UntilEndOfTurn"}, "restriction": null, "rider": null, "sourceChoices": null}]}}
+    }
+  ],
+  "final": [
+    {"Life": {"player": "bob", "life": 18}}
+  ]
+}

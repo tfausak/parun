@@ -191,6 +191,10 @@ reveal pid = do
 -- whose filter admits it (CR 400.11b) spends the same pool entry or outside
 -- object.
 --
+-- A SIXTH in a Commander game: CR 702.139d keeps this road open there, under
+-- CR 903.11a's limits (Event.commanderAdmits). The reveal is not barred, only
+-- the card's coming in.
+--
 -- The payability check is Cost.canPay and NOT Cost.total's CR 601.2f
 -- adjustments, Parun.Engine.Foretell.canForetell's reason: that rule totals the
 -- cost of a spell being cast or an ability being activated, and a special action
@@ -206,6 +210,7 @@ canTake pid gs = case Map.lookup pid (GameState.players gs) of
     Just card ->
       not (Player.companionTaken player)
         && stillOutside pid card gs
+        && Event.commanderAdmits pid card gs
         && Turn.sorcerySpeedWindow pid gs
         && Cost.canPay PaymentSubject.ForNeither pid (GameState.nextObjectId gs) actionCost gs
 

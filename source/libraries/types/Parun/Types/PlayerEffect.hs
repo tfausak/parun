@@ -17,6 +17,7 @@ import qualified Parun.Types.HexproofExemption as HexproofExemption
 import qualified Parun.Types.InZone as InZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
+import qualified Parun.Types.KeywordRiderGrant as KeywordRiderGrant
 import qualified Parun.Types.LandAllowance as LandAllowance
 import qualified Parun.Types.LoyaltyGrant as LoyaltyGrant
 import qualified Parun.Types.ManaFilter as ManaFilter
@@ -118,9 +119,9 @@ data PlayerEffect
   | -- | CR 601.1a / 601.3b / Scout's Warning: this player may PLAY a matching card
     -- as though it had flash, which reaches a land where the arm above does not.
     MayPlayAsThoughItHadFlash (Filter.Filter Keyword.Keyword)
-  | -- | CR 602.5d / 602.5e / Leonin Shikari: this player may activate abilities
-    -- under this rule-702 keyword any time they could cast an instant.
-    ActivateKeywordAtInstantSpeed (KeywordDesignator.KeywordDesignator Keyword.Keyword)
+  | -- | CR 602.5 / Leonin Shikari, Birgi, God of Storytelling: this player may
+    -- activate abilities under a rule-702 keyword past one clause of its rider.
+    KeywordRiderGrant KeywordRiderGrant.KeywordRiderGrant
   | -- | CR 606.3 / The Wandering Emperor, The Chain Veil: this player may
     -- activate the loyalty abilities of a matching permanent past one clause of
     -- that rule.

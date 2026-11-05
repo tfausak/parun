@@ -341,6 +341,15 @@ designate :: PlayerId -> CardIdentity.CardIdentity -> GameState -> GameState
 designate pid identity gs =
   gs {GameState.players = Map.adjust (\p -> p {Player.commander = Set.insert identity (Player.commander p)}) pid (GameState.players gs)}
 
+-- | CR 903.11 / 903.12a: is this a Commander game? Brawl is one, and otherwise
+-- a designated commander stands in for the variant, `Parun.Engine.Setup.startingLife`'s
+-- reason. A subgame keeps the designations, so a subgame of a Commander game is
+-- one: docs/decisions.md, "Whether a subgame of a Commander game is one".
+isCommanderGame :: GameState -> Bool
+isCommanderGame gs =
+  GameSettings.brawl (GameState.settings gs)
+    || not (all (Set.null . Player.commander) (GameState.players gs))
+
 -- | CR 903.3: is this object a commander?
 --
 -- Neither the controller nor the current owner is asked: CR 903.3 makes the

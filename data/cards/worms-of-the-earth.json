@@ -4,7 +4,7 @@
       "entryRestrictions": [
         {
           "affected": {
-            "type": "MatchingAnywhere",
+            "type": "Matching",
             "value": {
               "type": "HasCardType",
               "value": {

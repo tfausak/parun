@@ -9,11 +9,14 @@
 -- The only reader of Parun.Types.EntryRestriction. Each caller asks a Bool about
 -- one entry and never learns which card produced it.
 --
--- TWO places ask, as Parun.Engine.SacrificeRestriction's two do.
+-- THREE places ask. Parun.Engine.Event.runEntry asks of the permanent as it
+-- would exist on the battlefield (CR 614.17d), before and after CR 616.1's entry
+-- loop, for every entry but a meld's.
 -- Parun.Engine.Event.changeZoneAttaching is the funnel every battlefield MOVE
 -- reaches -- a resolving permanent spell, a resolving Effect.MoveToZone, a land
 -- play, a search that puts a card onto the battlefield, CR 701.40a's manifest --
--- so gating it there gates all of them at once. CR 111.5's token takes no move at
+-- so gating it there gates all of them at once, reading the card in the zone it
+-- is leaving (Grafdigger's Cage's ruling). CR 111.5's token takes no move at
 -- all, so Event.createTokens asks separately, passing Zone.Battlefield as the
 -- origin because that is where the token it has just minted sits.
 module Parun.Engine.EntryRestriction where
@@ -47,7 +50,8 @@ import Parun.Types.Zone (Zone)
 -- `origin` is passed in rather than read off the object, because the caller knows
 -- which entry is being judged: Parun.Engine.Event.changeZoneAttaching asks after CR
 -- 616.1's replacement loop has settled the event (CR 614.6), where the object is
--- still in the zone it is leaving, and Event.createTokens asks about a token that
+-- still in the zone it is leaving, Event.runEntry about an object materialized on
+-- the battlefield but still entering from `origin`, and Event.createTokens about a token that
 -- is already on the battlefield -- see there for why that reading also decides
 -- which printings can reach a token at all.
 prohibited :: ObjectId -> Zone -> GameState -> Bool

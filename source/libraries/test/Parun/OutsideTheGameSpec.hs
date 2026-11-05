@@ -1205,6 +1205,31 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
         forAnte = gs {GameState.settings = (GameState.settings gs) {GameSettings.ante = True}}
     Spec.assertEqWith s "CR 407.3 not playing for ante, her hand gets nothing" (printingsIn Zone.Hand S.alice (resolveWish exercising wishId gs)) []
     Spec.assertEqWith s "playing for ante, the same wish brings it in" (printingsIn Zone.Hand S.alice (resolveWish exercising wishId forAnte)) [contract]
+  -- CR 903.11: an ordinary effect brings nothing into a Commander game. The pair
+  -- differs only in alice's designated commander; Zirda, the creature in her
+  -- pool, is what Living Wish admits.
+  Spec.it s "CR 903.11 Living Wish brings nothing into a Commander game" $ do
+    forest <- S.printingOf s registry "Forest"
+    wish <- S.printingOf s registry "Living Wish"
+    zirda <- S.printingOf s registry "Zirda, the Dawnwaker"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    let (board, wishId) = S.handOne wish (S.landsInPlay forest 4)
+        commanded = S.runPure S.identityAnswer board (Setup.createDeck S.alice ((Deck.fromCards Map.empty) {Deck.commander = Set.singleton shimatsu}))
+        withZirda = stockPool [(zirda, 1)]
+    Spec.assertEqWith s "CR 903.11: in a Commander game her hand gets nothing" (printingsIn Zone.Hand S.alice (resolveWish exercising wishId (withZirda commanded))) []
+    Spec.assertEqWith s "with no commander the same wish brings Zirda in" (printingsIn Zone.Hand S.alice (resolveWish exercising wishId (withZirda board))) [zirda]
+  -- CR 729.2c / 903.11: a subgame of a Commander game is one, so its wish
+  -- reaches no main-game card either. docs/decisions.md, "Whether a subgame of a
+  -- Commander game is one".
+  Spec.it s "CR 729.2c/903.11 a wish in a subgame of a Commander game reaches no main-game creature" $ do
+    bear <- S.printingOf s registry "Prodigal Sorcerer"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    let (bearId, plain) = S.addPermanent bear S.alice (Setup.emptyGame S.bothPlayers)
+        commanded = S.runPure S.identityAnswer plain (Setup.createDeck S.alice ((Deck.fromCards Map.empty) {Deck.commander = Set.singleton shimatsu}))
+        predicate = Filter.Or [Filter.HasCardType CardType.Creature, Filter.HasCardType CardType.Land]
+        offered parent = Event.eligible predicate bearId S.alice (Setup.subgameStateFrom S.alice parent)
+    Spec.assertEqWith s "CR 903.11: under a commander nothing is offered" (offered commanded) []
+    Spec.assertEqWith s "CR 729.4: with none the main-game creature is" (offered plain) [OutsideCard.InAnotherGame bearId]
   -- CR 407.3 / 729.4: only the nine ante cards remove a card from the ante, and
   -- a subgame wish is not one of them. alice's main-game ante holds a Sign in
   -- Blood; inside a Shahrazad subgame, Burning Wish asks for it in vain. The

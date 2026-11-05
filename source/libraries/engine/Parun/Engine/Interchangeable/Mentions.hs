@@ -279,6 +279,7 @@ import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordCount as KeywordCount
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordInstance as KeywordInstance
+import qualified Parun.Types.KeywordRiderGrant as KeywordRiderGrant
 import qualified Parun.Types.KeywordTally as KeywordTally
 import qualified Parun.Types.LaterPayment as LaterPayment
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
@@ -2475,7 +2476,8 @@ playerEffectNames asking x = case x of
   PlayerEffect.HasProtectionFrom filter_ -> filterNames asking filter_
   PlayerEffect.CastAsThoughItHadFlash filter_ -> filterNames asking filter_
   PlayerEffect.MayPlayAsThoughItHadFlash filter_ -> filterNames asking filter_
-  PlayerEffect.ActivateKeywordAtInstantSpeed keywordDesignator -> keywordDesignatorNames asking keywordDesignator
+  PlayerEffect.KeywordRiderGrant grant ->
+    keywordDesignatorNames asking (KeywordRiderGrant.abilities grant) <> filterNames asking (KeywordRiderGrant.permanents grant)
   -- A once-per-turn grant is spent off CR 602.2's log, by activator
   -- (Activatable.graceUsed).
   PlayerEffect.LoyaltyGrant grant ->

@@ -49,6 +49,7 @@ import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.PastActivation as PastActivation
 import Parun.Types.PlayerId (PlayerId)
+import qualified Parun.Types.RiderClause as RiderClause
 
 -- CR 602.5: does every clause of this ability's printed "activate only ..."
 -- rider permit activating it right now?
@@ -233,14 +234,18 @@ onlyIfHolds pid srcId board =
     board
     srcId
 
--- CR 602.5d under a permission to activate "any time you could cast an instant"
--- (Leonin Shikari): the sorcery-speed rider reads as CR 602.5e's instant-speed
--- one, and every other clause stands -- "You're still subject to any other
--- restrictions", per the Shikari's ruling. Exhaustive, so a new timing clause
--- is named here by -Werror.
-atInstantSpeed :: ActivationRestriction.ActivationRestriction -> ActivationRestriction.ActivationRestriction
-atInstantSpeed restriction = case restriction of
-  ActivationRestriction.SorcerySpeed -> ActivationRestriction.InstantSpeed
+-- CR 602.5 under a grant relaxing one clause of a keyword's rider, every other
+-- clause standing -- "You're still subject to any other restrictions", per
+-- Leonin Shikari's ruling. Its "any time you could cast an instant" reads CR
+-- 602.5d's sorcery-speed rider as CR 602.5e's; Birgi's "twice rather than once"
+-- sets CR 602.5b's per-turn count, so a second grant adds nothing and none
+-- lowers a count, as Oath of Teferi's ruling reads the same words. Exhaustive,
+-- so a new clause is named here by -Werror.
+relaxedBy :: RiderClause.RiderClause -> ActivationRestriction.ActivationRestriction -> ActivationRestriction.ActivationRestriction
+relaxedBy clause restriction = case restriction of
+  ActivationRestriction.SorcerySpeed -> case clause of
+    RiderClause.InstantSpeed -> ActivationRestriction.InstantSpeed
+    RiderClause.TimesEachTurn _ -> restriction
   ActivationRestriction.DuringPhase _ -> restriction
   ActivationRestriction.DuringTurn _ -> restriction
   ActivationRestriction.AttackedThisStep -> restriction
@@ -249,7 +254,9 @@ atInstantSpeed restriction = case restriction of
   ActivationRestriction.BeforeStep _ -> restriction
   ActivationRestriction.OnlyIf _ -> restriction
   ActivationRestriction.OnlyOnce -> restriction
-  ActivationRestriction.TimesEachTurn _ -> restriction
+  ActivationRestriction.TimesEachTurn limit -> case clause of
+    RiderClause.InstantSpeed -> restriction
+    RiderClause.TimesEachTurn raised -> ActivationRestriction.TimesEachTurn (max limit raised)
   ActivationRestriction.DuringDieRoll -> restriction
   ActivationRestriction.SpendOnly _ -> restriction
   ActivationRestriction.InstantSpeed -> restriction
