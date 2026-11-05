@@ -524,12 +524,18 @@ manaYieldsOfGiven pcs oid gs = ListUtils.nubOrd (fmap (Mana.MkMana . yieldUnits)
 -- What one activation adds to the payer's pool, as the supply model counts it:
 -- the mana it adds whatever the pool holds, and, for CR 701.10f's doubling, what
 -- each unit of a type already in the pool becomes. The doubling is empty for
--- every other yield.
+-- every other yield. `yieldX` is the X its activation announces (CR 601.2b by
+-- way of CR 602.2b), for a route whose yield reads it, and Nothing elsewhere.
 data Yield = MkYield
   { yieldMana :: Mana,
-    yieldDoubling :: Map.Map ManaType [ManaUnit]
+    yieldDoubling :: Map.Map ManaType [ManaUnit],
+    yieldX :: Maybe Natural
   }
   deriving (Eq, Ord, Show)
+
+-- A yield of this mana that doubles nothing and announces no X.
+plainYield :: Mana -> Yield
+plainYield mana = MkYield {yieldMana = mana, yieldDoubling = Map.empty, yieldX = Nothing}
 
 -- The same yields narrowed to the ones this player could actually get, each with
 -- HOW MANY TIMES they could get it, WHAT ONE of those activations spends, and
@@ -571,8 +577,11 @@ data Yield = MkYield
 --
 -- `borrowed` is PlayerEffect.tapForManaGrants' answer for this permanent,
 -- handed in so a caller sweeping every source walks the player's effects once.
-manaSuppliesGiven :: Capacity -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> [Maybe ManaRestriction.ManaRestriction] -> ObjectId -> GameState -> [(Activations.Activations, Yield, ManaCost, Activations.Activations)]
-manaSuppliesGiven capacity pcs pid borrowed oid gs =
+--
+-- `xCeiling` is the largest X a route announcing one is priced at
+-- (`announcing` below); payableResolutionsGiven says why its bound is exact.
+manaSuppliesGiven :: Natural -> Capacity -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> [Maybe ManaRestriction.ManaRestriction] -> ObjectId -> GameState -> [(Activations.Activations, Yield, ManaCost, Activations.Activations)]
+manaSuppliesGiven xCeiling capacity pcs pid borrowed oid gs =
   let -- Applied HERE and not left to the caller: this is the one reader of a
       -- route's yield on the supply side, so wrapping it once is what makes the
       -- model a property of the walk rather than of who called it. Idempotent,
@@ -624,9 +633,10 @@ manaSuppliesGiven capacity pcs pid borrowed oid gs =
                 probed = pricedOn (Mana.MkMana (fmap probeUnit (Set.toList everyManaType))) option
              in MkYield
                   { yieldMana = fixed,
-                    yieldDoubling = Map.fromListWith (flip (<>)) [(ManaUnit.manaType unit, [unit]) | unit <- unitsOf probed List.\\ unitsOf fixed]
+                    yieldDoubling = Map.fromListWith (flip (<>)) [(ManaUnit.manaType unit, [unit]) | unit <- unitsOf probed List.\\ unitsOf fixed],
+                    yieldX = Nothing
                   }
-          else MkYield {yieldMana = shareOf option, yieldDoubling = Map.empty}
+          else plainYield (shareOf option)
       shareOf option = Mana.MkMana (concatMap (\(ref, mana) -> if List.elem pid (recipientsOf pid (choosable option) gs ref) then unitsOf mana else []) (Map.toList (ManaOption.yield option)))
       pricedOn pool option = maybe (Mana.MkMana []) shareOf (Maybe.listToMaybe [priced | (offered, priced) <- manaRepricingsGiven Map.empty (setPool pid pool gs) pcs oid gs, offered == option])
       probeUnit manaType =
@@ -650,11 +660,10 @@ manaSuppliesGiven capacity pcs pid borrowed oid gs =
       -- Priest of Yawgmoth group casts off this supply.
       --
       -- A yield reading how many counters its cost removed is `removable`'s,
-      -- below.
+      -- below, and one reading its own X `announcing`'s.
       --
-      -- Not implemented: a yield reading any other slot its cost binds --
-      -- CR 601.2b's X among them -- which is supplied as the offer prices it
-      -- (#6146).
+      -- Not implemented: a yield reading any other slot its cost binds, which
+      -- is supplied as the offer prices it (#6152).
       perCandidate option =
         let (activations, share, manaCost) = measured option
             readsSlot slot = any (\(clause, _) -> any (Set.member slot . Quantity.objectSlots . ManaAddition.count) (Maybe.mapMaybe ManaAbility.manaProduced (Foldable.toList (Clause.effects clause)))) (ManaOption.steps option)
@@ -671,14 +680,33 @@ manaSuppliesGiven capacity pcs pid borrowed oid gs =
                     let pricedFor candidate = [shareOf priced | (offered, priced) <- manaRepricingsGiven (Binding.paidObjects slot (Set.singleton (Recipient.ToObject candidate))) gs pcs oid gs, offered == option]
                         byYield = Map.fromListWith Set.union [(yield, Set.singleton candidate) | candidate <- Set.toList (Claim.Type.pool claim), yield <- pricedFor candidate]
                         narrowed candidates = activations {Activations.claims = fmap (\other -> if other == claim then other {Claim.Type.pool = candidates} else other) (Activations.claims activations)}
-                     in [(activations, MkYield {yieldMana = yield, yieldDoubling = Map.empty}, manaCost, narrowed candidates) | (yield, candidates) <- Map.toList byYield, not (null (unitsOf yield))]
+                     in [(activations, plainYield yield, manaCost, narrowed candidates) | (yield, candidates) <- Map.toList byYield, not (null (unitsOf yield))]
               _ -> case removable option of
                 Just amounts ->
-                  [ (activations, MkYield {yieldMana = yield, yieldDoubling = Map.empty}, manaCost, activations)
+                  [ (activations, plainYield yield, manaCost, activations)
                   | yield <- ListUtils.nubOrd (concatMap (pricedRemoving option) amounts),
                     not (null (unitsOf yield))
                   ]
-                Nothing -> [(activations, share, manaCost, activations)]
+                Nothing
+                  | announcing option ->
+                      [ (activations, yield {yieldX = Just x}, manaCost, activations)
+                      | x <- [0 .. xCeiling],
+                        yield <- ListUtils.nubOrd [plainYield (shareOf priced) | (offered, priced) <- manaRepricingsGiven (Map.singleton Binding.variableX (Binding.toAmount x)) gs pcs oid gs, offered == option]
+                      ]
+                  | otherwise -> [(activations, share, manaCost, activations)]
+      -- CR 601.2b / 602.2b on the supply side: a yield reading the X its own
+      -- cost announces -- Wizard's Rockets' "{X}, {T}, Sacrifice this artifact:
+      -- Add X mana in any combination of colors" -- is one supply per X up to
+      -- `xCeiling`, each priced with that X bound. Offered, X reads 0. Each
+      -- keeps the PRINTED mana cost and says its X instead, so sourceOptions
+      -- groups them as one route's alternatives and charges each its own {X}.
+      -- X = 0 is kept, so the route stays a supply where the ceiling is 0. The
+      -- proof is data/scenarios/mana's
+      -- cr-601-2b-wizard-s-rockets-colour-fixing-offers-the-cast, and its
+      -- sibling cr-601-2b-wizard-s-rockets-x-is-charged-so-two-islands-offer-no-three-mana-cast.
+      announcing option =
+        any (any (Set.member Binding.variableX . QuantitySlot.slots . ManaAddition.count) . Maybe.mapMaybe ManaAbility.manaProduced . Foldable.toList . Clause.effects . fst) (ManaOption.steps option)
+          && List.elem ManaSymbol.Variable (foldMap ManaCost.unwrap (Cost.mana (ManaOption.cost option)))
       -- CR 601.2h / 118.1 on the supply side: a yield reading how many counters
       -- its cost removed -- Mana Battery's "an additional {R} for each charge
       -- counter removed this way" -- is one supply per number the cost could
@@ -691,7 +719,7 @@ manaSuppliesGiven capacity pcs pid borrowed oid gs =
       -- carry where the floor is all it fixes (CounterSpread.FromAmongAtLeast).
       --
       -- Not implemented: a floor not yet announced (CR 601.2b's X), which is
-      -- supplied as the offer prices it (#6146).
+      -- supplied as the offer prices it (#6152).
       removable option = case [removal | CostComponent.RemoveCounters removal <- Cost.components (ManaOption.cost option)] of
         [CountersFromPermanents.MkCountersFromPermanents (CostAmount.Fixed floor_) which criterion spread]
           | any (any (Set.member Binding.removedCounters . QuantitySlot.slots . ManaAddition.count) . Maybe.mapMaybe ManaAbility.manaProduced . Foldable.toList . Clause.effects . fst) (ManaOption.steps option) ->
@@ -720,7 +748,7 @@ manaSuppliesGiven capacity pcs pid borrowed oid gs =
       controls = (not (any (namesAnother . ManaOption.ability) options) && null borrowed) || Projection.controllerOf oid gs == Just pid
       -- CR 106.6: a grant's restriction rides on the yield the supply counts,
       -- as it will on the mana Parun.Engine.Cost.tapForManaWith adds.
-      restricted extra (activations, yield, manaCost, own) = (activations, maybe yield (\restriction -> MkYield {yieldMana = restrictMana restriction (yieldMana yield), yieldDoubling = fmap (unitsOf . restrictMana restriction . Mana.MkMana) (yieldDoubling yield)}) extra, manaCost, own)
+      restricted extra (activations, yield, manaCost, own) = (activations, maybe yield (\restriction -> yield {yieldMana = restrictMana restriction (yieldMana yield), yieldDoubling = fmap (unitsOf . restrictMana restriction . Mana.MkMana) (yieldDoubling yield)}) extra, manaCost, own)
       -- CR 605.4a: what the triggered mana abilities this activation fires add
       -- to the payer's pool rides with the route, after any borrowed
       -- restriction, which narrows only the route's own mana (CR 106.6).
@@ -2616,12 +2644,14 @@ sourceOptions clauses admitting contends demanded needs supplies =
   let relevant = Map.keysSet needs
       -- Grouped by what ONE activation costs, which is what lets k activations of
       -- the group take k alternatives independently -- and by what it doubles,
-      -- which no alternative within a group can differ in.
+      -- which no alternative within a group can differ in. A route announcing
+      -- an X (manaSuppliesGiven's `announcing`) is grouped apart, its printed
+      -- cost charged at each alternative's own X.
       groups =
         Map.toList
           ( Map.fromListWith
               (flip (<>))
-              (fmap (\(activations, yield, manaCost, own) -> ((activations, manaCost, yieldDoubling yield), [(unitsOf (yieldMana yield), own)])) supplies)
+              (fmap (\(activations, yield, manaCost, own) -> ((activations, manaCost, yieldDoubling yield, Maybe.isJust (yieldX yield)), [(unitsOf (yieldMana yield), own, yieldX yield)])) supplies)
           )
       -- CR 106.6 joins the key the narrow yields are unioned by, so the collapse
       -- never unions a mana one payment admits with one it does not into a supply
@@ -2630,18 +2660,37 @@ sourceOptions clauses admitting contends demanded needs supplies =
       -- yield holds at most one unit, so the fold is that unit's own answer and
       -- the key is exact. A yield adding no mana is no alternative: an activation
       -- taking it is dominated by one taking any other, or by one fewer.
+      --
+      -- CR 106.1a's "in any combination of colors" collapses the same way at
+      -- any size: wide yields alike but for their types, which between them
+      -- are every multiset of n units over the types T they use, are n
+      -- supplies each of any type in T. Exact, since a matching taking those
+      -- n supplies takes some multiset of T. Wizard's Rockets' X = 6 is one
+      -- alternative, not 210.
       alternativesOf yields =
         let (narrow, wide) = List.partition (\units -> length units <= 1) yields
             unions =
               fmap
                 (uncurry collapsed)
                 (Map.toList (Map.fromListWith (<>) (fmap (\units -> (foldMap admitting units, units)) narrow)))
-            apart = fmap (fmap (rewriteSupply clauses . supplyOf admitting)) wide
-         in case ListUtils.nubOrd (filter (not . null) (unions <> apart)) of
+            blank unit = (unit {ManaUnit.manaType = ManaType.Colorless}, admitting unit)
+            alike units = case ListUtils.nubOrd (fmap blank units) of
+              [shape] -> Just (Natural.length units, shape)
+              _ -> Nothing
+            families = Map.fromListWith Set.union [(key, Set.singleton (List.sort (fmap ManaUnit.manaType units))) | units <- wide, Just key <- [alike units]]
+            complete (n, _) multisets =
+              let types = Set.size (Set.unions (fmap Set.fromList (Set.toList multisets)))
+               in toInteger (Set.size multisets) == multichoose (toInteger types) (toInteger n)
+            spread ((n, (unit, admits)), multisets) =
+              let types = Set.unions (fmap Set.fromList (Set.toList multisets))
+               in List.genericReplicate n (rewriteSupply clauses MkSupply {supplyTypes = types, supplyMade = types, supplyTags = ManaUnit.tags unit, supplyAdmits = admits})
+            spreads = Map.filterWithKey complete families
+            apart = [fmap (rewriteSupply clauses . supplyOf admitting) units | units <- wide, maybe True (`Map.notMember` spreads) (alike units)]
+         in case ListUtils.nubOrd (filter (not . null) (unions <> fmap spread (Map.toList spreads) <> apart)) of
               [] -> [[]]
               some -> some
-      optionsFor ((activations, manaCost, doubling), entries) =
-        let yields = fmap fst entries
+      optionsFor ((activations, manaCost, doubling, announcing), xEntries) =
+        let entries = fmap (\(units, own, _) -> (units, own)) xEntries
             claims = Activations.claims activations
             life = Activations.life activations
             energy = Activations.energy activations
@@ -2655,10 +2704,16 @@ sourceOptions clauses admitting contends demanded needs supplies =
             -- yields, rather than one group per yield multiplying the boards.
             -- Parun.ManaSpec's Priest of Yawgmoth group is the proof.
             exclusive = any ((/= activations) . snd) entries
+            -- Each alternative carries the mana cost ITS activation eats: the
+            -- group's, or for an announced X the printed cost at that X.
+            eatenAt = maybe manaCost (`substituteX` manaCost)
+            byX = Map.toList (Map.fromListWith (flip (<>)) [(x, [units]) | (units, _, x) <- xEntries])
             alternatives =
               if exclusive
-                then exclusiveAlternatives entries
-                else fmap (\alternative -> ((alternative, claims), times)) (alternativesOf yields)
+                then fmap (\((supplied, own), n) -> ((supplied, own, manaCost), n)) (exclusiveAlternatives entries)
+                else case [((alternative, claims, eatenAt x), times) | (x, yields) <- byX, alternative <- alternativesOf yields, not (null alternative)] of
+                  [] -> [(([], claims, eatenAt (if announcing then Just 0 else Nothing)), times)]
+                  some -> some
             eats = not (null (ManaCost.unwrap manaCost))
             -- A mana-EATING option is always worth taking fewer times, for the same
             -- reason a claiming or a life-paying one is: what it does not activate
@@ -2680,20 +2735,26 @@ sourceOptions clauses admitting contends demanded needs supplies =
             -- OWN cost, resolved the way the cost being paid is: one option per
             -- resolution, so the board picks. ManaSpending.AsProduced because rule
             -- 118.14's permission is granted for a CAST, and this is an activation.
-            resolved = if eats then resolutions ManaSpending.AsProduced manaCost else [([], 0, 0)]
+            -- Every activation takes the same resolution, save where each
+            -- announces its own X.
+            resolvedAt eaten = if null (ManaCost.unwrap eaten) then [([], 0, 0)] else resolutions ManaSpending.AsProduced eaten
+            resolved k taken =
+              if announcing
+                then traverse (\(_, _, eaten) -> resolvedAt eaten) taken
+                else fmap (List.genericReplicate k) (resolvedAt manaCost)
             free = not eats && (null claims || not contended) && life == 0 && energy == 0
          in case (exclusive && free, coverOptions ceiling_ entries) of
               (True, Just covered) -> covered
               _ -> do
                 k <- counts
                 taken <- boundedMultisets k alternatives
-                (demands, generic, owed) <- resolved
+                ways <- resolved k taken
                 pure
                   MkSourceOption
-                    { optionSupplies = concatMap fst taken,
-                      optionDemands = concat (List.genericReplicate k (demands <> List.genericReplicate generic anyTypeDemand)),
-                      optionClaims = if exclusive then concatMap snd taken else Claim.scale k claims,
-                      optionLife = k * (life + owed),
+                    { optionSupplies = concatMap (\(supplied, _, _) -> supplied) taken,
+                      optionDemands = concatMap (\(demands, generic, _) -> demands <> List.genericReplicate generic anyTypeDemand) ways,
+                      optionClaims = if exclusive then concatMap (\(_, own, _) -> own) taken else Claim.scale k claims,
+                      optionLife = k * life + sum (fmap (\(_, _, owed) -> owed) ways),
                       optionEnergy = k * energy,
                       optionDoublings = if Map.null doubling then [] else List.genericReplicate k (fmap (fmap (rewriteSupply clauses . supplyOf admitting)) doubling)
                     }
@@ -2821,6 +2882,11 @@ sourceOptions clauses admitting contends demanded needs supplies =
       -- FENCE: `resolutions` answers at least one way to pay every cost.
       none = MkSourceOption {optionSupplies = [], optionDemands = [], optionClaims = [], optionLife = 0, optionEnergy = 0, optionDoublings = []}
    in fmap (\group -> case ListUtils.nubOrd (optionsFor group) of [] -> [none]; some -> some) groups
+
+-- How many multisets of `n` elements a set of `types` elements has: C(n +
+-- types - 1, n).
+multichoose :: Integer -> Integer -> Integer
+multichoose types n = product [types .. types + n - 1] `div` product [1 .. n]
 
 -- Every multiset of `k` elements drawn from `xs`, each taken at most its own
 -- number of times, as a list in `xs`' order, the most of each first: C(k + m -
@@ -3003,7 +3069,21 @@ payableResolutionsGiven subject capacity spending sources pcs pid committed comm
         | otherwise = serves . rewriteSupply costClauses
       pooled = fmap (rewriteSupply clauses . supplyOf admitting) (unitsOf (Game.poolOf pid gs))
       borrowed = PlayerEffect.tapForManaGrants pid gs
-      suppliesPer = fmap (\oid -> manaSuppliesGiven capacity pcs pid (borrowed oid) oid gs) sources
+      suppliesAt limit oid = manaSuppliesGiven limit capacity pcs pid (borrowed oid) oid gs
+      -- CR 601.2b / 602.2b: a route announcing its own X (Wizard's Rockets)
+      -- is priced at every X up to D * 2^(m - 1), where D is what the cost and
+      -- every other mana-eating group demand at most and m how many such
+      -- activations the board holds. Exact for a yield of X mana, the one
+      -- printed shape: an activation whose unit (or a CR 701.10f copy of it)
+      -- serves nothing is one paying X - 1 instead, so on a board taking the
+      -- least X every unit serves a demand placed after it, and the last
+      -- such activation has at most D to serve, the one before it D plus the
+      -- last's X, and so on.
+      fixedPer = fmap (suppliesAt 0) sources
+      announced (_, yield, _, _) = Maybe.isJust (yieldX yield)
+      xActivations = sum [Activations.times activations | supplies <- fixedPer, activations <- ListUtils.nubOrd [activations | supply@(activations, _, _, _) <- supplies, announced supply]]
+      xCeiling = demandBoundOf fixedPer * 2 ^ (max 1 xActivations - 1)
+      suppliesPer = if xActivations == 0 then fixedPer else zipWith (\oid fixed -> if any announced fixed then suppliesAt xCeiling oid else fixed) sources fixedPer
       -- WHICH groups are worth taking fewer times: the ones whose claims meet
       -- another group's, this source's included, or the cost's own. Asked
       -- GROUPWISE, one entry per sourceOptions group plus `claimed`, so one
@@ -3025,8 +3105,17 @@ payableResolutionsGiven subject capacity spending sources pcs pid committed comm
       -- exclusive group (sourceOptions).
       costResolutions = resolutions spending cost
       demandSize (demands, generic, _) = Natural.length demands + generic
-      eatingResolutions = [(Activations.times activations, resolutions ManaSpending.AsProduced manaCost) | supplies <- suppliesPer, (activations, manaCost) <- ListUtils.nubOrd [(activations, manaCost) | (activations, _, manaCost, _) <- supplies], not (null (ManaCost.unwrap manaCost))]
-      demandBound = List.foldl' max 0 (fmap demandSize costResolutions) + sum [times * List.foldl' max 0 (fmap demandSize ways) | (times, ways) <- eatingResolutions]
+      -- A route announcing an X eats its printed cost at the largest X it is
+      -- priced at.
+      eatingOf per =
+        [ (Activations.times activations, resolutions ManaSpending.AsProduced (substituteX x manaCost))
+        | supplies <- per,
+          ((activations, manaCost), x) <- Map.toList (Map.fromListWith max [((activations, manaCost), Maybe.fromMaybe 0 (yieldX yield)) | (activations, yield, manaCost, _) <- supplies]),
+          not (null (ManaCost.unwrap manaCost))
+        ]
+      eatingResolutions = eatingOf suppliesPer
+      demandBoundOf per = List.foldl' max 0 (fmap demandSize costResolutions) + sum [times * List.foldl' max 0 (fmap demandSize ways) | (times, ways) <- eatingOf per]
+      demandBound = demandBoundOf suppliesPer
       -- For each type, how many typed demands could take it at most: the
       -- cost's largest count over its resolutions, and each mana-eating group's
       -- taken as often as it can be. A hybrid counts toward both its halves.
