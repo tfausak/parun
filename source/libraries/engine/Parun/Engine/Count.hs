@@ -473,8 +473,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.TargetsPlayer _ -> predicate
         Filter.Type.IsBound _ -> predicate
         Filter.Type.IsTarget -> predicate
-        Filter.Type.ControllerRelatesToBound _ _ -> predicate
-        Filter.Type.SameControllerAsHostOfBound _ -> predicate
+        Filter.Type.ControllerRelatesToBound {} -> predicate
         Filter.Type.HasChosenName {} -> predicate
         Filter.Type.HasChosenColor -> predicate
         Filter.Type.HasChosenSubtype -> predicate

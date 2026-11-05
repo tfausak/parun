@@ -57,6 +57,7 @@ import Parun.Types.GameState (GameState)
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Gift as Gift
 import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.Impending as Impending
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.KeywordCount as KeywordCount
@@ -1261,8 +1262,8 @@ data Context = MkContext
     -- other readers cannot reach it either: Shares Name Bound reads slotNames
     -- rather than this map and carries its own lint, ControllerRelatesToBound reads
     -- slotControllers and carries one that matters MORE, its vacuous direction
-    -- being True, SameControllerAsHostOfBound reads slotHostControllers and
-    -- refuses on an absent key, IsControllerOfBound is False wherever `matches`
+    -- being True, or under Hop.Host reads slotHostControllers and refuses on an
+    -- absent key, IsControllerOfBound is False wherever `matches`
     -- reaches it, HeldByBound Controller is False for a card with no controller
     -- (CR 108.4), and no Filter atom carries a Quantity.
     -- Parun.CardSpec's "CR 400.11c no card asks IsBound
@@ -1336,8 +1337,8 @@ data Context = MkContext
     slotControllers :: Map.Map SlotName.SlotName (Set.Set PlayerId.PlayerId),
     -- CR 110.2 with CR 303.4b: the controllers of the permanents the objects the
     -- resolution's slots hold are ATTACHED TO, for the one atom that compares a
-    -- candidate's controller against them (SameControllerAsHostOfBound, Simic
-    -- Guildmage's "another permanent with the same controller"). One question
+    -- candidate's controller against them (ControllerRelatesToBound under
+    -- Hop.Host, Simic Guildmage's "another permanent with the same controller"). One question
     -- further along than `slotControllers` above -- that field asks who controls
     -- the bound object, this one who controls what the bound object enchants --
     -- and a separate field rather than a read through `slotObjects` for that
@@ -1347,7 +1348,7 @@ data Context = MkContext
     -- `slotCreatureTypes` below in every other respect: lazy, filled by
     -- Parun.Engine.Projection.framedBySlots, empty elsewhere where the atom is a
     -- silent False, and Parun.FilterPositionLintSpec's "CR 110.2 no card asks
-    -- SameControllerAsHostOfBound outside a resolution's own positions" to keep
+    -- a hopped ControllerRelatesToBound outside a resolution's own positions" to keep
     -- a card to the position the pool exercises.
     --
     -- Read LIVE rather than through CR 608.2h's last-known reader, which is the
@@ -2141,24 +2142,25 @@ matches context view predicate = case predicate of
     (Nothing, Nothing) -> False
   -- IsBound over the announcement's every target at once (Binding.announcedTargets).
   Filter.IsTarget -> matches context view (Filter.IsBound Binding.announcedTargets)
-  -- CR 110.2 compared across two of one announcement's targets, and the one atom
-  -- here that is vacuously TRUE rather than False: a slot the context has no key
+  -- CR 110.2 compared across two of one announcement's targets, and under
+  -- Hop.Itself the one atom here that is vacuously TRUE rather than False: a slot the context has no key
   -- for is one nothing has named yet, and a relation with only one party to it
   -- constrains nothing. See the atom's own note for why CR 601.2c makes that the
   -- honest answer -- Parun.Engine.Target.legalSetsGiven's first pass offers the
   -- union and selectionLegal's joint check is what narrows. A key that is present
   -- and EMPTY is the other case: a bound object with no controller (CR 108.4), and
   -- nothing shares a controller with it.
-  Filter.ControllerRelatesToBound relation slot -> case Map.lookup slot (slotControllers context) of
-    Nothing -> True
-    Just pids -> maybe False (\c -> any (\p -> PlayerRelation.holds (teams context) relation p c) pids) (controller view)
-  -- CR 110.2 asked of the bound object's HOST (CR 303.4b), the atom above's
-  -- comparison one link along and with the opposite vacuous direction: an
-  -- absent key answers False, since an attach destination has no joint check
-  -- behind it to narrow a widened offer. A key that is present and EMPTY is a
-  -- bound object attached to nothing, to a player, or to a host that has left
-  -- the battlefield, and nothing shares a controller with any of those.
-  Filter.SameControllerAsHostOfBound slot -> maybe False (`Set.member` Map.findWithDefault Set.empty slot (slotHostControllers context)) (controller view)
+  Filter.ControllerRelatesToBound relation hop slot ->
+    let relates pids = maybe False (\c -> any (\p -> PlayerRelation.holds (teams context) relation p c) pids) (controller view)
+     in case hop of
+          Hop.Itself -> maybe True relates (Map.lookup slot (slotControllers context))
+          -- CR 110.2 asked of the bound object's HOST (CR 303.4b), one link along
+          -- and with the opposite vacuous direction: an absent key answers
+          -- False, since an attach destination has no joint check behind it to
+          -- narrow a widened offer. A key that is present and EMPTY is a bound
+          -- object attached to nothing, to a player, or to a host that has left
+          -- the battlefield, and nothing shares a controller with any of those.
+          Hop.Host -> relates (Map.findWithDefault Set.empty slot (slotHostControllers context))
   -- CR 201.4 at both ends, Filter.Shares' INTERSECTION for CR 201.4g's reason as
   -- much as CR 709.4a's: choosing one of a set of interchangeable names chooses
   -- each of them, so a candidate showing either matches. A source that has chosen
@@ -2673,8 +2675,7 @@ rewrite pairs predicate = case predicate of
   Filter.TargetsPlayer _ -> predicate
   Filter.IsBound _ -> predicate
   Filter.IsTarget -> predicate
-  Filter.ControllerRelatesToBound _ _ -> predicate
-  Filter.SameControllerAsHostOfBound _ -> predicate
+  Filter.ControllerRelatesToBound {} -> predicate
   Filter.HasChosenName {} -> predicate
   Filter.HasChosenColor -> predicate
   Filter.HasChosenSubtype -> predicate
@@ -3443,9 +3444,10 @@ bakeBound players objects controllers predicate = case predicate of
   -- slot's objects had as the resolution read them, named outright for
   -- IsBound's reason -- Mark for Death's "other creatures that player
   -- controls". Left standing where the map has no key, which is CR 601.2c's
-  -- offer before the sibling target is chosen.
-  Filter.ControllerRelatesToBound relation slot -> maybe predicate (\related -> Filter.Or (fmap (Filter.HeldByPlayer Holder.Controller) (Set.toList (related relation)))) (Map.lookup slot controllers)
-  Filter.SameControllerAsHostOfBound _ -> predicate
+  -- offer before the sibling target is chosen. A host hop is left standing
+  -- too: the host is read live as the ability resolves.
+  Filter.ControllerRelatesToBound relation Hop.Itself slot -> maybe predicate (\related -> Filter.Or (fmap (Filter.HeldByPlayer Holder.Controller) (Set.toList (related relation)))) (Map.lookup slot controllers)
+  Filter.ControllerRelatesToBound _ Hop.Host _ -> predicate
   Filter.HasChosenName {} -> predicate
   Filter.HasChosenColor -> predicate
   Filter.HasChosenSubtype -> predicate
@@ -3621,8 +3623,7 @@ manaValueThresholds predicate = case predicate of
   Filter.TargetsPlayer _ -> []
   Filter.IsBound _ -> []
   Filter.IsTarget -> []
-  Filter.ControllerRelatesToBound _ _ -> []
-  Filter.SameControllerAsHostOfBound _ -> []
+  Filter.ControllerRelatesToBound {} -> []
   Filter.HasChosenName {} -> []
   Filter.HasChosenColor -> []
   Filter.HasChosenSubtype -> []
@@ -3780,8 +3781,7 @@ statesAQuality predicate = case predicate of
   Filter.TargetsPlayer _ -> True
   Filter.IsBound _ -> True
   Filter.IsTarget -> True
-  Filter.ControllerRelatesToBound _ _ -> True
-  Filter.SameControllerAsHostOfBound _ -> True
+  Filter.ControllerRelatesToBound {} -> True
   -- CR 701.23b's "stated quality" for HasName's reason, one indirection along: the
   -- description is a card name whichever way the name was arrived at, so a search
   -- whose filter is this one may decline to find what it can see.
@@ -3957,8 +3957,7 @@ readsSourceValues predicate = case predicate of
   Filter.TargetsPlayer _ -> False
   Filter.IsBound _ -> False
   Filter.IsTarget -> False
-  Filter.ControllerRelatesToBound _ _ -> False
-  Filter.SameControllerAsHostOfBound _ -> False
+  Filter.ControllerRelatesToBound {} -> False
   Filter.HasChosenName {} -> True
   Filter.HasChosenColor -> True
   Filter.HasChosenSubtype -> True
@@ -4113,10 +4112,9 @@ overBoundSlotsWith f predicate = case predicate of
   -- Names no slot at all: CR 702.60a's comparison is against the SOURCE, whose
   -- names arrive on Filter.Context.
   -- Reads the whole set too, one field further over.
-  Filter.ControllerRelatesToBound relation slot -> fmap (Filter.ControllerRelatesToBound relation) (f SlotArity.Many slot)
-  -- Reads the whole set too, off its own field: a slot naming a group answers
-  -- with every member's host's controller.
-  Filter.SameControllerAsHostOfBound slot -> fmap Filter.SameControllerAsHostOfBound (f SlotArity.Many slot)
+  -- Under a host hop, off its own field: a slot naming a group answers with
+  -- every member's host's controller.
+  Filter.ControllerRelatesToBound relation hop slot -> fmap (Filter.ControllerRelatesToBound relation hop) (f SlotArity.Many slot)
   -- Reads the whole set too, off its own field.
   Filter.HasChosenName {} -> pure predicate
   -- Reads no slot either: CR 105.2's colour arrives on Filter.Context.

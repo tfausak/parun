@@ -27,6 +27,7 @@ import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.Expansion as Expansion
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
@@ -604,7 +605,7 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
     -- slot is gone (Mark for Death). Unbaked, the atom is vacuously True.
     Spec.it s "bakeBound substitutes a bound object's controller" $ do
       let object = SlotName.MkSlotName (Text.pack "target")
-          atom = Filter.Type.ControllerRelatesToBound PlayerRelation.You object
+          atom = Filter.Type.ControllerRelatesToBound PlayerRelation.You Hop.Itself object
           baked = Filter.bakeBound Map.empty Map.empty (Map.singleton object (const (Set.singleton (player 1)))) atom
       Spec.assertEqWith s "the atom names the controller" baked (Filter.Type.Or [Filter.Type.HeldByPlayer Holder.Controller (player 1)])
       Spec.assertBool s (not (Filter.matches self blackCreature baked)) "player 0's creature is not that player's"
@@ -988,16 +989,16 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
         player = PlayerId.MkPlayerId
         controlledBy pids = self {Filter.slotControllers = Map.singleton slot (Set.fromList (fmap player pids))}
     Spec.it s "matches a candidate the bound object's controller controls" $
-      Spec.assertBool s (Filter.matches (controlledBy [0]) blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot)) "the same controller"
+      Spec.assertBool s (Filter.matches (controlledBy [0]) blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.You Hop.Itself slot)) "the same controller"
 
     Spec.it s "does not match a candidate under another player" $
-      Spec.assertBool s (not (Filter.matches (controlledBy [1]) blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot))) "the owner is not the controller"
+      Spec.assertBool s (not (Filter.matches (controlledBy [1]) blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.You Hop.Itself slot))) "the owner is not the controller"
 
     -- CR 102.2 relative to the bound object's controller rather than the
     -- perspective, which is player 0 here as well as the candidate's controller.
     Spec.it s "CR 102.2 an Opponent relation is relative to the bound object's controller" $ do
-      Spec.assertBool s (Filter.matches (controlledBy [1]) blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.Opponent slot)) "an opponent of player 1"
-      Spec.assertBool s (not (Filter.matches (controlledBy [0]) blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.Opponent slot))) "not an opponent of player 0"
+      Spec.assertBool s (Filter.matches (controlledBy [1]) blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.Opponent Hop.Itself slot)) "an opponent of player 1"
+      Spec.assertBool s (not (Filter.matches (controlledBy [0]) blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.Opponent Hop.Itself slot))) "not an opponent of player 0"
 
     -- The one atom here that widens rather than answering False, and the two cases
     -- that keep the departure narrow: a slot with NO KEY is one CR 601.2c has not
@@ -1005,11 +1006,11 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
     -- none (CR 108.4) and shares one with nobody. Parun.TargetSpec's Bioshift case
     -- is what proves the first at gameplay level.
     Spec.it s "CR 601.2c a slot the announcement has not answered constrains nothing" $ do
-      Spec.assertBool s (Filter.matches self blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot)) "no key at all"
-      Spec.assertBool s (Filter.matches noPerspective blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot)) "and no perspective is needed"
+      Spec.assertBool s (Filter.matches self blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.You Hop.Itself slot)) "no key at all"
+      Spec.assertBool s (Filter.matches noPerspective blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.You Hop.Itself slot)) "and no perspective is needed"
 
     Spec.it s "CR 108.4 a bound object with no controller matches nothing" $
-      Spec.assertBool s (not (Filter.matches (controlledBy []) blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot))) "a bound key naming no controller"
+      Spec.assertBool s (not (Filter.matches (controlledBy []) blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.You Hop.Itself slot))) "a bound key naming no controller"
 
     -- The slot is REPORTED as read, which is what makes
     -- Parun.Engine.Target.jointlyJudged fire on a slot whose only sibling read is
@@ -1019,8 +1020,8 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
     -- own, so a card writing this atom alone is what the arm is a fence for.
     Spec.it s "CR 601.2c the atom reports its slot as one the filter reads" $ do
       let buried f = Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not f]]
-      Spec.assertEqWith s "at the top" (Filter.boundSlots (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot)) (Set.singleton slot)
-      Spec.assertEqWith s "and buried under every combinator" (Filter.boundSlots (buried (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot))) (Set.singleton slot)
+      Spec.assertEqWith s "at the top" (Filter.boundSlots (Filter.Type.ControllerRelatesToBound PlayerRelation.You Hop.Itself slot)) (Set.singleton slot)
+      Spec.assertEqWith s "and buried under every combinator" (Filter.boundSlots (buried (Filter.Type.ControllerRelatesToBound PlayerRelation.You Hop.Itself slot))) (Set.singleton slot)
 
     -- Vacuously False off a candidate with no controller, whichever way the slot
     -- is filled: CR 109.1's list of what an object is has no player in it, so a
@@ -1028,17 +1029,17 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
     -- library (CR 108.4).
     Spec.it s "a candidate with no controller matches nothing" $ do
       let noController = blackCreature {Filter.controller = Nothing}
-      Spec.assertBool s (not (Filter.matches (controlledBy [0]) noController (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot))) "no candidate controller"
-      Spec.assertBool s (not (Filter.matches (controlledBy [0]) aPlayer (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot))) "player"
+      Spec.assertBool s (not (Filter.matches (controlledBy [0]) noController (Filter.Type.ControllerRelatesToBound PlayerRelation.You Hop.Itself slot))) "no candidate controller"
+      Spec.assertBool s (not (Filter.matches (controlledBy [0]) aPlayer (Filter.Type.ControllerRelatesToBound PlayerRelation.You Hop.Itself slot))) "player"
 
-  -- CR 110.2 asked of the bound object's HOST (CR 303.4b). The atom above's
+  -- CR 110.2 asked of the bound object's HOST (CR 303.4b). The group above's
   -- board with the comparison one link along, and the DIRECTION reversed: an
   -- unanswered slot refuses here where it widens there, since no joint check
   -- stands behind an attach destination to narrow a widened offer.
-  Spec.describe s "SameControllerAsHostOfBound" $ do
+  Spec.describe s "ControllerRelatesToBound under Hop.Host" $ do
     let slot = SlotName.MkSlotName (Text.pack "target")
         player = PlayerId.MkPlayerId
-        atom = Filter.Type.SameControllerAsHostOfBound slot
+        atom = Filter.Type.ControllerRelatesToBound PlayerRelation.You Hop.Host slot
         hostControlledBy pids = self {Filter.slotHostControllers = Map.singleton slot (Set.fromList (fmap player pids))}
     Spec.it s "matches a candidate the HOST's controller controls" $
       Spec.assertBool s (Filter.matches (hostControlledBy [0]) blackCreature atom) "the same controller"
@@ -1046,14 +1047,19 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
     Spec.it s "does not match a candidate under another player" $
       Spec.assertBool s (not (Filter.matches (hostControlledBy [1]) blackCreature atom)) "another player's"
 
-    -- The pair that separates this atom from ControllerRelatesToBound above: the
+    -- CR 102.2 relative to the HOST's controller, the unhopped group's case.
+    Spec.it s "CR 102.2 an Opponent relation is relative to the host's controller" $ do
+      Spec.assertBool s (Filter.matches (hostControlledBy [1]) blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.Opponent Hop.Host slot)) "an opponent of player 1"
+      Spec.assertBool s (not (Filter.matches (hostControlledBy [0]) blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.Opponent Hop.Host slot))) "not an opponent of player 0"
+
+    -- The pair that separates the two hops' vacuities: the
     -- same two contexts, and both refuse. A key that is present and EMPTY is a
     -- bound object attached to nothing, to a player (CR 303.4b) or to a host
     -- that has left the battlefield.
     Spec.it s "CR 608.2d an unanswered slot admits nothing rather than everything" $ do
       Spec.assertBool s (not (Filter.matches self blackCreature atom)) "no key at all"
       Spec.assertBool s (not (Filter.matches (hostControlledBy []) blackCreature atom)) "a bound key naming no host controller"
-      Spec.assertBool s (Filter.matches self blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot)) "where its sibling widens on the same context"
+      Spec.assertBool s (Filter.matches self blackCreature (Filter.Type.ControllerRelatesToBound PlayerRelation.You Hop.Itself slot)) "where the unhopped atom widens on the same context"
 
     Spec.it s "a candidate with no controller matches nothing" $ do
       let noController = blackCreature {Filter.controller = Nothing}

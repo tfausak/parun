@@ -1940,7 +1940,7 @@ attachTarget resolving source controller legal (AttachTarget.MkAttachTarget slot
         -- resolution's own reads answer here as they do at its other
         -- positions (CR 608.2c) -- Simic Guildmage's destination asks who
         -- controls the permanent its TARGET slot's Aura is attached to
-        -- (Filter.SameControllerAsHostOfBound), which a bare context could
+        -- (Filter.ControllerRelatesToBound under Hop.Host), which a bare context could
         -- not answer.
         destination <- Attach.chooseHost controller subject (Attach.hostsFor (effectContext gs resolving controller source legal (slotBindings resolving gs)) subject filter_ gs)
         -- Proposed as a bare ToObject; Event.attach re-tags it the way the
