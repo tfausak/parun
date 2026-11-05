@@ -28,7 +28,12 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfLeavesGraveyard"
+            "type": "LeavesZone",
+            "value": {
+              "from": {
+                "type": "Graveyard"
+              }
+            }
           },
           "modal": {
             "modes": [

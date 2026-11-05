@@ -16,11 +16,8 @@ import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.BlockCount as BlockCount
 import qualified Parun.Types.BlockRole as BlockRole
 import qualified Parun.Types.BlockTrigger as BlockTrigger
-import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
-import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
 import qualified Parun.Types.CardType as CardType
-import qualified Parun.Types.CardsPutIntoZone as CardsPutIntoZone
 import qualified Parun.Types.CausedBy as CausedBy
 import qualified Parun.Types.ClassLevel as ClassLevel
 import qualified Parun.Types.Color as Color
@@ -48,6 +45,7 @@ import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
 import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.ManaSpecification as ManaSpecification
@@ -67,6 +65,7 @@ import qualified Parun.Types.PlayerDrawsNthCard as PlayerDrawsNthCard
 import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
+import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.RevealedThisWay as RevealedThisWay
 import qualified Parun.Types.RoomIndex as RoomIndex
@@ -225,76 +224,24 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker (Filter.IsAttackingPlayer PlayerRelation.Opponent) (BlockCount.AtLeast 2 (Filter.And []))))
       " {\"type\":\"Blocks\",\"value\":{\"role\":{\"type\":\"Attacker\"},\"creature\":{\"type\":\"IsAttackingPlayer\",\"value\":{\"type\":\"Opponent\"}},\"count\":{\"type\":\"AtLeast\",\"value\":{\"floor\":2}}}} "
-  Spec.it s "SelfLeavesGraveyard" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      TriggerCondition.SelfLeavesGraveyard
-      " {\"type\":\"SelfLeavesGraveyard\"} "
-  -- CR 113.6k's condition, which names a zone pair rather than the battlefield.
-  Spec.it s "SelfPutIntoGraveyardFromLibrary" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      TriggerCondition.SelfPutIntoGraveyardFromLibrary
-      " {\"type\":\"SelfPutIntoGraveyardFromLibrary\"} "
-  -- The same rule with no origin zone at all -- a separate tag from the one
-  -- above, which it is a superset of: the two must never decode to each other.
-  Spec.it s "SelfPutIntoGraveyardFromAnywhere" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      TriggerCondition.SelfPutIntoGraveyardFromAnywhere
-      " {\"type\":\"SelfPutIntoGraveyardFromAnywhere\"} "
-  -- CR 702.55a's second sentence, a third tag over the same destination: rule
-  -- 608.2n's cause is what it adds, so it must never decode to either above.
-  Spec.it s "SelfPutIntoGraveyardDuringResolution" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      TriggerCondition.SelfPutIntoGraveyardDuringResolution
-      " {\"type\":\"SelfPutIntoGraveyardDuringResolution\"} "
-  -- CR 712.21's Example condition, which carries a Filter over the ARRIVING card
-  -- where Leaves below filters the departed permanent -- a separate tag, since
-  -- the two admit different events.
-  Spec.it s "CardPutIntoGraveyard round-trips with its Filter" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.CardPutIntoGraveyard (CardPutIntoGraveyard.MkCardPutIntoGraveyard (Filter.Not Filter.IsSource) Set.empty))
-      " {\"type\":\"CardPutIntoGraveyard\",\"value\":{\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"IsSource\"}}}} "
   Spec.it s "Leaves" $
     Common.assertCodec
       s
       TriggerCondition.codec
       (TriggerCondition.Leaves LeavesTrigger.defaultValue)
       " {\"type\":\"Leaves\",\"value\":{}} "
-  -- CR 603.10a's third family, whose payload is a record rather than a bare
-  -- Filter: Kishla Skimmer's "your graveyard" is `whose` and its "during your
-  -- turn" is the TurnScope beside it.
-  Spec.it s "CardLeavesZone round-trips with its Filter, TurnScope and zone" $
+  Spec.it s "LeavesZone" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.CardLeavesZone (CardLeavesZone.MkCardLeavesZone (Filter.Not Filter.IsToken) TurnScope.ControllersTurn Zone.Graveyard Nothing (Just PlayerRelation.You)))
-      " {\"type\":\"CardLeavesZone\",\"value\":{\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}},\"scope\":{\"type\":\"ControllersTurn\"},\"from\":{\"type\":\"Graveyard\"},\"whose\":{\"type\":\"You\"}}} "
-  -- CR 603.2c's batch reading of the family above, carrying the same record:
-  -- Spirit Mascot's "your graveyard" is `whose` and its silence about turns is
-  -- the EachTurn beside it.
-  Spec.it s "CardsLeaveZone round-trips with its Filter, TurnScope and zones" $
+      (TriggerCondition.LeavesZone (LeavesZoneTrigger.self Zone.Graveyard))
+      " {\"type\":\"LeavesZone\",\"value\":{\"from\":{\"type\":\"Graveyard\"}}} "
+  Spec.it s "PutIntoZone" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.CardsLeaveZone (CardLeavesZone.MkCardLeavesZone (Filter.Not Filter.IsToken) TurnScope.EachTurn Zone.Graveyard (Just Zone.Exile) (Just PlayerRelation.You)))
-      " {\"type\":\"CardsLeaveZone\",\"value\":{\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}},\"scope\":{\"type\":\"EachTurn\"},\"from\":{\"type\":\"Graveyard\"},\"to\":{\"type\":\"Exile\"},\"whose\":{\"type\":\"You\"}}} "
-  -- The arrival-side twin: Dutiful Knowledge Seeker's "cards" put into a library
-  -- from anywhere, so no origin zone is written.
-  Spec.it s "CardsPutIntoZone round-trips with its Filter and destination" $
-    Common.assertCodec
-      s
-      TriggerCondition.codec
-      (TriggerCondition.CardsPutIntoZone (CardsPutIntoZone.MkCardsPutIntoZone (Filter.Not Filter.IsToken) TurnScope.EachTurn Set.empty Zone.Library))
-      " {\"type\":\"CardsPutIntoZone\",\"value\":{\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}},\"scope\":{\"type\":\"EachTurn\"},\"to\":{\"type\":\"Library\"}}} "
+      (TriggerCondition.PutIntoZone (PutIntoZoneTrigger.self Zone.Graveyard))
+      " {\"type\":\"PutIntoZone\",\"value\":{\"to\":{\"type\":\"Graveyard\"}}} "
   -- CR 701.26a's tap, once per permanent, read off the bearer by id.
   Spec.it s "BecomesTapState round-trips the bearer itself" $
     Common.assertCodec

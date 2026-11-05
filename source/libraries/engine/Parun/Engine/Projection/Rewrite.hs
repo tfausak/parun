@@ -65,10 +65,7 @@ import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.CantBlockCreatures as CantBlockCreatures
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardAbilities as CardAbilities
-import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
-import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
-import qualified Parun.Types.CardsPutIntoZone as CardsPutIntoZone
 import qualified Parun.Types.CastFromZone as CastFromZone
 import qualified Parun.Types.CastOffer as CastOffer
 import qualified Parun.Types.CastRepetition as CastRepetition
@@ -182,6 +179,7 @@ import qualified Parun.Types.Guess as Guess
 import qualified Parun.Types.HexproofExemption as HexproofExemption
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
 import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.LifeLoss as LifeLoss
@@ -239,6 +237,7 @@ import qualified Parun.Types.PrintedReplacement as PrintedReplacement
 import qualified Parun.Types.Prohibit as Prohibit
 import qualified Parun.Types.PutCounters as PutCounters
 import qualified Parun.Types.PutCountersFrom as PutCountersFrom
+import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.PutSticker as PutSticker
 import qualified Parun.Types.Quantity as Quantity.Type
 import qualified Parun.Types.RandomCardInGraveyard as RandomCardInGraveyard
@@ -2084,14 +2083,8 @@ rewriteTriggerCondition pairs condition = case condition of
   -- Positional, so a later field fails to compile here rather than riding a
   -- record update unrewritten.
   TriggerCondition.Enters (EntersTrigger.MkEntersTrigger permanent batching) -> TriggerCondition.Enters (EntersTrigger.MkEntersTrigger (acting permanent) batching)
-  TriggerCondition.CardPutIntoGraveyard p -> TriggerCondition.CardPutIntoGraveyard p {CardPutIntoGraveyard.filter = Filter.rewrite pairs (CardPutIntoGraveyard.filter p)}
-  -- The Filter is rewritten and the TurnScope carried through, the SpellCast arm's
-  -- reason: a rebuild that dropped the field would reset the trigger to firing on
-  -- every turn.
-  TriggerCondition.CardLeavesZone p -> TriggerCondition.CardLeavesZone p {CardLeavesZone.filter = Filter.rewrite pairs (CardLeavesZone.filter p)}
-  TriggerCondition.CardsLeaveZone p -> TriggerCondition.CardsLeaveZone p {CardLeavesZone.filter = Filter.rewrite pairs (CardLeavesZone.filter p)}
-  TriggerCondition.CardsPutIntoZone p -> TriggerCondition.CardsPutIntoZone p {CardsPutIntoZone.filter = Filter.rewrite pairs (CardsPutIntoZone.filter p)}
-  TriggerCondition.SelfLeavesGraveyard -> condition
+  TriggerCondition.LeavesZone (LeavesZoneTrigger.MkLeavesZoneTrigger card from to whose scope batching) -> TriggerCondition.LeavesZone (LeavesZoneTrigger.MkLeavesZoneTrigger (acting card) from to whose scope batching)
+  TriggerCondition.PutIntoZone (PutIntoZoneTrigger.MkPutIntoZoneTrigger card from to scope duringResolution batching) -> TriggerCondition.PutIntoZone (PutIntoZoneTrigger.MkPutIntoZoneTrigger (acting card) from to scope duringResolution batching)
   -- The holder's Filter is rewritten and the counter kind is not: CR 612.1's
   -- pairs swap SUBTYPE words, and a counter kind names none.
   TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger kind motion holder threshold grouping) -> TriggerCondition.CountersChange (CounterTrigger.MkCounterTrigger kind motion (rewriteCounterHolder pairs holder) threshold grouping)
@@ -2139,9 +2132,6 @@ rewriteTriggerCondition pairs condition = case condition of
           destinations
           batching
       )
-  TriggerCondition.SelfPutIntoGraveyardFromLibrary -> condition
-  TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> condition
-  TriggerCondition.SelfPutIntoGraveyardDuringResolution -> condition
   TriggerCondition.SpellOrAbilityCounters _ -> condition
   TriggerCondition.AbilityIsCountered -> condition
   TriggerCondition.DamageToPlayerPrevented _ -> condition

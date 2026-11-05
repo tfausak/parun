@@ -46,13 +46,14 @@ import qualified Parun.Interpreter as Interpreter
 import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
+import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.Affected as Affected
 import qualified Parun.Types.Aggregation as Aggregation
 import qualified Parun.Types.Asked as Asked
+import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardArrivedIn as CardArrivedIn
 import qualified Parun.Types.CardIdentity as CardIdentity
-import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CombatStep as CombatStep
@@ -72,6 +73,7 @@ import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Keyword as Keyword
+import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Mana as Mana.Type
 import qualified Parun.Types.ManaRetention as ManaRetention
@@ -105,7 +107,6 @@ import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.Teams as Teams
 import qualified Parun.Types.TriggerCondition as TriggerCondition
-import qualified Parun.Types.TurnScope as TurnScope
 import qualified Parun.Types.Zone as Zone
 import qualified Parun.Types.ZoneChange as ZoneChange
 
@@ -393,7 +394,7 @@ spec s registry = Spec.describe s "Meld" $ do
         -- CR 603.2c's "that many" counts the cards the FILTER admits: the same
         -- entry read under a creature-card filter binds 1, Hanweir Garrison
         -- being the one creature and Hanweir Battlements a land.
-        let creatures = TriggerCondition.CardsLeaveZone (CardLeavesZone.MkCardLeavesZone (Filter.Type.HasCardType CardType.Creature) TurnScope.EachTurn Zone.Exile Nothing Nothing)
+        let creatures = TriggerCondition.LeavesZone (LeavesZoneTrigger.self Zone.Exile) {LeavesZoneTrigger.card = ActingPermanent.Matching (Filter.Type.HasCardType CardType.Creature), LeavesZoneTrigger.batching = Batching.OneOrMore}
         Spec.assertEqWith
           s
           "a creature-card filter admits one of the two departures"
@@ -410,7 +411,7 @@ spec s registry = Spec.describe s "Meld" $ do
   -- The board is the melding case above's, and the LOG is what the batch is read
   -- off: of the batch arms Parun.Types.TriggerCondition has over a DEPARTURE,
   -- A OneOrMore Leaves takes no exile, and no card in
-  -- data/cards/ spells CardsLeaveZone out of the battlefield.
+  -- data/cards/ spells a batch LeavesZone out of the battlefield.
   Spec.it s "CR 608.2f the pair leaves the battlefield in one event" $ do
     battlements <- S.printingOf s registry "Hanweir Battlements"
     garrison <- S.printingOf s registry "Hanweir Garrison"

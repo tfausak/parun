@@ -95,7 +95,6 @@ import qualified Parun.Types.CandidateCost as CandidateCost
 import Parun.Types.CandidateId (CandidateId)
 import Parun.Types.Card (Card)
 import qualified Parun.Types.Card as Card.Type
-import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CarryOver as CarryOver
@@ -195,6 +194,7 @@ import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.LandOrNonland as LandOrNonland
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.Layout as Layout
+import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LifeChange as LifeChange
 import qualified Parun.Types.LifeDirection as LifeDirection
@@ -253,6 +253,7 @@ import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Prompt as Prompt
 import Parun.Types.ProposedEvent (ProposedEvent)
 import qualified Parun.Types.ProposedEvent as ProposedEvent
+import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.Quantity as Quantity.Type
 import qualified Parun.Types.RangeOfInfluence as RangeOfInfluence
 import qualified Parun.Types.Recipient as Recipient
@@ -11078,32 +11079,11 @@ controllerTurnScoped cond = case cond of
   -- Whippoorwill's "this turn" is its delayed entry's CR 603.7b duration, not
   -- anything the condition states.
   TriggerCondition.Leaves _ -> False
-  TriggerCondition.SelfPutIntoGraveyardFromLibrary -> False
-  TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> False
-  TriggerCondition.SelfPutIntoGraveyardDuringResolution -> False
-  -- CR 603.2b names no turn, so the bystander reading is unscoped like the
-  -- self-scoped one above.
-  TriggerCondition.CardPutIntoGraveyard _ -> False
-  -- The third arm carrying a TurnScope, and the classification follows the FIELD
-  -- rather than the constructor: Kishla Skimmer prints "during your turn" and a
-  -- printing of the same family without it would not.
-  TriggerCondition.CardLeavesZone (CardLeavesZone.MkCardLeavesZone _ TurnScope.ControllersTurn _ _ _) -> True
-  TriggerCondition.CardLeavesZone (CardLeavesZone.MkCardLeavesZone _ TurnScope.EachTurn _ _ _) -> False
-  -- No printing of this family says "during an opponent's turn", so this arm is
-  -- unreachable from card data; answering True would make the classification wrong
-  -- for the sake of that unreachable case.
-  TriggerCondition.CardLeavesZone (CardLeavesZone.MkCardLeavesZone _ TurnScope.OpponentsTurn _ _ _) -> False
-  -- StepBegins' PlayersTurn answer, and for its reason.
-  TriggerCondition.CardLeavesZone (CardLeavesZone.MkCardLeavesZone _ (TurnScope.PlayersTurn _) _ _ _) -> False
-  -- The batch reading of the same family, classified off the same field for the
-  -- same reason: Spirit Mascot prints no turn clause where Kishla Skimmer does.
-  TriggerCondition.CardsLeaveZone (CardLeavesZone.MkCardLeavesZone _ TurnScope.ControllersTurn _ _ _) -> True
-  TriggerCondition.CardsLeaveZone (CardLeavesZone.MkCardLeavesZone _ TurnScope.EachTurn _ _ _) -> False
-  TriggerCondition.CardsLeaveZone (CardLeavesZone.MkCardLeavesZone _ TurnScope.OpponentsTurn _ _ _) -> False
-  TriggerCondition.CardsLeaveZone (CardLeavesZone.MkCardLeavesZone _ (TurnScope.PlayersTurn _) _ _ _) -> False
-  -- Dutiful Knowledge Seeker's arrival names no turn.
-  TriggerCondition.CardsPutIntoZone {} -> False
-  TriggerCondition.SelfLeavesGraveyard -> False
+  -- The classification follows the FIELD rather than the constructor, LifeChanges'
+  -- reading: Kishla Skimmer and Stonebinder's Familiar print "during your turn",
+  -- and Spirit Mascot and Dutiful Knowledge Seeker print no turn.
+  TriggerCondition.LeavesZone t -> LeavesZoneTrigger.scope t == TurnScope.ControllersTurn
+  TriggerCondition.PutIntoZone t -> PutIntoZoneTrigger.scope t == TurnScope.ControllersTurn
   TriggerCondition.SpellOrAbilityCounters _ -> False
   TriggerCondition.AbilityIsCountered -> False
   -- Damage can be prevented on anybody's turn.

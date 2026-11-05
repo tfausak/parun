@@ -34,19 +34,22 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "CardsLeaveZone",
+            "type": "LeavesZone",
             "value": {
-              "filter": {
-                "type": "Not",
+              "batching": {
+                "type": "OneOrMore"
+              },
+              "card": {
+                "type": "Matching",
                 "value": {
-                  "type": "IsToken"
+                  "type": "Not",
+                  "value": {
+                    "type": "IsToken"
+                  }
                 }
               },
               "from": {
                 "type": "Graveyard"
-              },
-              "scope": {
-                "type": "EachTurn"
               },
               "whose": {
                 "type": "You"

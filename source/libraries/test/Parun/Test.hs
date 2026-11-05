@@ -143,13 +143,10 @@ import qualified Parun.Codec.CantSearchLibrariesSpec
 import qualified Parun.Codec.CardAbilitiesSpec
 import qualified Parun.Codec.CardArrivedInSpec
 import qualified Parun.Codec.CardIdentitySpec
-import qualified Parun.Codec.CardLeavesZoneSpec
 import qualified Parun.Codec.CardNameSpec
-import qualified Parun.Codec.CardPutIntoGraveyardSpec
 import qualified Parun.Codec.CardSelectionSpec
 import qualified Parun.Codec.CardSpec
 import qualified Parun.Codec.CardTypeSpec
-import qualified Parun.Codec.CardsPutIntoZoneSpec
 import qualified Parun.Codec.CastFromSpec
 import qualified Parun.Codec.CastFromZoneSpec
 import qualified Parun.Codec.CastObligationSpec
@@ -432,6 +429,7 @@ import qualified Parun.Codec.LandPlayedSpec
 import qualified Parun.Codec.LastKnownSpec
 import qualified Parun.Codec.LayoutSpec
 import qualified Parun.Codec.LeavesTriggerSpec
+import qualified Parun.Codec.LeavesZoneTriggerSpec
 import qualified Parun.Codec.LeavingPermanentSpec
 import qualified Parun.Codec.LeftTheGameSpec
 import qualified Parun.Codec.LibraryDepartureSpec
@@ -619,6 +617,7 @@ import qualified Parun.Codec.ProtectionSpec
 import qualified Parun.Codec.PrototypeSpec
 import qualified Parun.Codec.PutCountersFromSpec
 import qualified Parun.Codec.PutCountersSpec
+import qualified Parun.Codec.PutIntoZoneTriggerSpec
 import qualified Parun.Codec.QuantitySpec
 import qualified Parun.Codec.QuestionSpec
 import qualified Parun.Codec.QuotientSpec
@@ -1126,11 +1125,10 @@ spec s registry corpus = do
   Parun.Codec.NextStepOfSpec.spec s
   Parun.Codec.ObjectCountSpec.spec s
   Parun.Codec.CardIdentitySpec.spec s
-  Parun.Codec.CardLeavesZoneSpec.spec s
+  Parun.Codec.LeavesZoneTriggerSpec.spec s
   Parun.Codec.CardNameSpec.spec s
-  Parun.Codec.CardPutIntoGraveyardSpec.spec s
   Parun.Codec.CardSpec.spec s
-  Parun.Codec.CardsPutIntoZoneSpec.spec s
+  Parun.Codec.PutIntoZoneTriggerSpec.spec s
   Parun.Codec.CardTypeSpec.spec s
   Parun.Codec.CastFromSpec.spec s
   Parun.Codec.CastFromZoneSpec.spec s
