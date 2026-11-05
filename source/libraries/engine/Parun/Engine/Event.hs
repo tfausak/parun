@@ -8604,11 +8604,20 @@ carryOver carrying oldId newId = case carrying of
   CarryOver.NotCarried -> pure ()
   CarryOver.Carried ->
     State.modify' $ \gs ->
-      gs
-        { GameState.continuousEffects = fmap (reanchor oldId (Set.singleton newId)) (GameState.continuousEffects gs),
-          GameState.replacements = fmap (rewatch oldId newId . reenter oldId newId) (GameState.replacements gs),
-          GameState.exiledWith = fmap (relink oldId newId) (GameState.exiledWith gs)
-        }
+      let referred = referTo oldId newId gs
+       in referred {GameState.replacements = fmap (reenter oldId newId) (GameState.replacements referred)}
+
+-- CR 702.140f: an effect referring to or modifying a mutating creature spell
+-- refers to or modifies the permanent it merged with. carryOver's re-keying
+-- without `reenter`, which `merge` runs: CR 730.2b's merge is no entry, so no
+-- EntryR row watches it.
+referTo :: ObjectId -> ObjectId -> GameState -> GameState
+referTo oldId newId gs =
+  gs
+    { GameState.continuousEffects = fmap (reanchor oldId (Set.singleton newId)) (GameState.continuousEffects gs),
+      GameState.replacements = fmap (rewatch oldId newId) (GameState.replacements gs),
+      GameState.exiledWith = fmap (relink oldId newId) (GameState.exiledWith gs)
+    }
 
 -- carryOver's CR 607.2q half: a card exiled to pay the cost of a permanent spell
 -- is linked to the permanent that spell becomes, so a link naming the spell
@@ -10104,6 +10113,9 @@ meldable victims gs = do
 --
 -- CR 123.5b / 613.7k / 730.2b: the spell's stickers take new timestamps at the
 -- merge, in their order, after the host's, which keep theirs (CR 730.2c).
+--
+-- CR 702.140f: what named the spell names the permanent (referTo).
+-- Parun.MutateSpec's Generator Servant case proves it.
 merge :: ObjectId -> ObjectId -> MutateSide.MutateSide -> Game Bool
 merge sid target side = do
   gs <- State.get
@@ -10204,6 +10216,7 @@ merge sid target side = do
               let (snapshot, turned) = readings (unrowed {GameState.copyEffects = alone row : GameState.copyEffects unrowed})
                in (alone row) {ActiveCopy.snapshot = snapshot, ActiveCopy.turned = if turned == snapshot then Nothing else Just turned}
             rows = fmap rewoven (filter (Game.copyCovers gs target) (GameState.copyEffects gs))
+        State.modify' (referTo sid target)
         State.modify' (`forgetObject` sid)
         joining <- State.state (Game.restampPlacements (Seq.sortOn StickerPlacement.timestamp (Object.stickers spell)))
         State.modify'
