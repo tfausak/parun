@@ -526,8 +526,7 @@ rewritePlayerEffect pairs effect = case effect of
   -- cost rather than printed in one. The subject's criteria (a rule-702
   -- designator, CR 605.1a's and CR 606.2's classifications) are no words CR
   -- 612.2 reaches; an addition's scale is Drought's "for each black mana
-  -- symbol", a colour word used as one (docs/decisions.md, "Colour words a
-  -- text change reaches").
+  -- symbol", a colour word used as one (CR 612.2).
   PlayerEffect.ModifyCost (CostModifier.MkCostModifier subject f targets perTarget perEach first change) ->
     let change' = case change of
           CostChange.Add (CostAddition.MkCostAddition components scale) -> CostChange.Add (CostAddition.MkCostAddition (fmap (Filter.rewriteComponent pairs) components) (rewriteCostScale pairs scale))
@@ -668,8 +667,7 @@ rewriteEffect pairs effect = case effect of
   -- that may name a subtype -- Cabal Coffers' "for each Swamp you control"
   -- under a Magical Hack. Parun.ManaSpec's "Cabal Coffers" hacked board is what
   -- proves it. The PRODUCTION is reachable by no pair, naming a mana type
-  -- written as a symbol rather than a word (docs/decisions.md, "Colour words a
-  -- text change reaches").
+  -- written as a symbol rather than a word (Glamerdye's ruling of 2008-08-01).
   --
   -- CR 106.6's restriction and rider carry a filter each, and rule 612.1 reaches
   -- those by the same sentence. A REGRESSION FENCE rather than a proved
@@ -1179,9 +1177,9 @@ composeWordChanges pairs =
 
 -- CR 612.2 over a mana type a card WRITES as a word -- "white mana", "spent as
 -- though it were red mana" -- which is a colour word used as one, where a mana
--- symbol ("Add {W}") is no word and an effect producing mana is never
--- rewritten (docs/decisions.md, "Colour words a text change reaches").
--- Colorless is no colour (CR 105.4) and so no colour word.
+-- symbol ("Add {W}") is no word (Glamerdye's ruling of 2008-08-01) and an effect
+-- producing mana is never rewritten. Colorless is no colour (CR 105.4) and so no
+-- colour word.
 rewriteManaFilter :: [(TextWord.TextWord, TextWord.TextWord)] -> ManaFilter.ManaFilter -> ManaFilter.ManaFilter
 rewriteManaFilter pairs f = case f of
   ManaFilter.Any -> f
@@ -2428,9 +2426,8 @@ rewriteQuantity pairs quantity = case quantity of
   Quantity.Type.PlayedBy _ -> quantity
   Quantity.Type.DamageDealtThisTurn _ -> quantity
   Quantity.Type.PlayerCounters {} -> quantity
-  -- CR 700.5's "devotion to black": a colour word used as one
-  -- (docs/decisions.md, "Colour words a text change reaches"). The PlayerRef
-  -- names no word.
+  -- CR 700.5's "devotion to black": a colour word used as one (CR 612.2). The
+  -- PlayerRef names no word.
   Quantity.Type.Devotion devotion -> Quantity.Type.Devotion devotion {Devotion.colors = Set.map (TextWord.Engine.colorAfter pairs) (Devotion.colors devotion)}
   -- A leaf: CR 700.8's four types are the rule's, not printed words for CR
   -- 612.2 to swap.

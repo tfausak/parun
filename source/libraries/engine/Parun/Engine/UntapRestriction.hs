@@ -130,11 +130,10 @@ gathered candidates gs =
 -- Two passes in `offered`'s order: what was chosen, kept
 -- while every cap still allows it, which is how an answer naming too many is
 -- cut back (Game.pickCounted's truncation); then every offered permanent that
--- is not `elective` and that the caps still allow, since CR 502.3 untaps all of
--- a player's permanents but those an effect keeps tapped -- docs/decisions.md,
--- "An untap cap leaves tapped only what it must". Maximal, not the largest
--- set: Smoke's ruling lets an animated land be the one creature and the one
--- land.
+-- is not `elective` and that the caps still allow: CR 502.3 untaps all of a
+-- player's permanents but those an effect keeps tapped, and a cap keeps tapped
+-- only what exceeds it (CR 101.2). Maximal, not the largest set: Smoke's ruling
+-- lets an animated land be the one creature and the one land.
 settle :: [(Natural, Set ObjectId)] -> Set ObjectId -> [ObjectId] -> Set ObjectId -> Set ObjectId
 settle caps elective offered chosen =
   let fits taken oid = all (\(n, counted) -> not (Set.member oid counted) || Natural.length (Set.intersection counted taken) < n) caps

@@ -148,7 +148,8 @@ revealsItself = any isSelfReveal . HandAction.effects
 -- TERMINATION IS THE PLAYER'S WHERE THE RULE LEAVES IT SO -- the CR 103.5b
 -- window, whose `cap` is Repeatable. An action need not move its card out of the
 -- hand: No-Regrets Egret's only reveals, so the same entry is offered again and
--- again, and CR 103.5b caps nothing. Bounding the offers there -- one per entry,
+-- again (docs/decisions.md, "Whether a mulligan-time action can be repeated before
+-- declaring"). Bounding the offers there -- one per entry,
 -- say -- would be the engine making a choice the rule leaves to the player, so
 -- that loop ends when they decline and not before. An interpreter that never
 -- declines never leaves the window, which is CR 104.4b's optional loop: those

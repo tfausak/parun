@@ -2046,8 +2046,8 @@ piledOffer most perspective gs recipients =
 --
 -- Answers the cards it drew beside the whole answer: CR 406.4 reveals them once
 -- the casting or activation is paid for, which is Parun.Engine.Cast's and
--- Parun.Engine.Activate's to do (docs/decisions.md, "When a target drawn out of a
--- face-down pile is revealed, and for how long"). Nothing reveals here, so
+-- Parun.Engine.Activate's to do (docs/synthetic-readings.md, "Whether a target
+-- drawn out of a face-down pile is revealed"). Nothing reveals here, so
 -- nobody sees the card during CR 601.2g-h.
 drawFromPiles :: Maybe PlayerId -> Set Recipient -> Game (Set Recipient, Set ObjectId)
 drawFromPiles perspective picked = do

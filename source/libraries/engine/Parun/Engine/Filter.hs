@@ -2922,8 +2922,8 @@ rewriteKeyword pairs keyword = case keyword of
   -- CR 702.45a's N is a number and not a word, so CR 612.2 has nothing to swap.
   Keyword.Type.Bushido _ -> keyword
   -- CR 702.46a's N is a number and not a word, and "Spirit" is rule 702.46a's
-  -- word, not the card's, so CR 612.2 has nothing to swap (docs/decisions.md,
-  -- "What a text change reaches inside a keyword").
+  -- word, not the card's, so CR 612.2 has nothing to swap (CR 702.1; Glamerdye's
+  -- ruling of 2008-08-01).
   Keyword.Type.Soulshift _ -> keyword
   Keyword.Type.Dredge _ -> keyword
   -- CR 702.104a's N is a number and not a word, so CR 612.2 has nothing to swap.
@@ -3002,9 +3002,8 @@ rewriteKeyword pairs keyword = case keyword of
   -- CR 702.181a's and CR 702.189a's N is a number, or a count whose Filter the
   -- CARD writes (Avenger of the Fallen's creature cards), so CR 612.2 swaps
   -- whatever word that Filter names. Mobilize's "red Warrior" is rule
-  -- 702.181a's text, not the card's, so no swap reaches it (docs/decisions.md,
-  -- "What a text change reaches inside a keyword"), and firebending's {R} is a
-  -- mana symbol.
+  -- 702.181a's text, not the card's, so no swap reaches it (CR 702.1), and
+  -- firebending's {R} is a mana symbol.
   Keyword.Type.Mobilize n -> Keyword.Type.Mobilize (rewriteKeywordCount pairs n)
   Keyword.Type.Firebending n -> Keyword.Type.Firebending (rewriteKeywordCount pairs n)
   -- CR 702.75a's N is a number and not a word, so CR 612.2 has nothing to swap;
@@ -3024,8 +3023,7 @@ rewriteKeyword pairs keyword = case keyword of
   Keyword.Type.Exalted -> keyword
   -- CR 702.92a, 702.163a and 702.182a are nullary: their creature-type words
   -- (Germ, Rebel, Hero) are the rule's, in the token Parun.Engine.Keyword mints,
-  -- and no CR 612.2 text change reaches them (docs/decisions.md, "What a text
-  -- change reaches inside a keyword").
+  -- and no CR 612.2 text change reaches them (CR 702.1).
   Keyword.Type.LivingWeapon -> keyword
   Keyword.Type.ForMirrodin -> keyword
   Keyword.Type.JobSelect -> keyword
@@ -3037,7 +3035,7 @@ rewriteKeyword pairs keyword = case keyword of
   Keyword.Type.Mentor -> keyword
   -- CR 702.135a's N is a number and not a word, and "white and black Spirit" is
   -- rule 702.135a's text, not the card's, so CR 612.2 has nothing to swap
-  -- (docs/decisions.md, "What a text change reaches inside a keyword").
+  -- (CR 702.1).
   Keyword.Type.Afterlife _ -> keyword
   Keyword.Type.Provoke -> keyword
   Keyword.Type.Training -> keyword
@@ -3137,7 +3135,8 @@ rewriteKeyword pairs keyword = case keyword of
   Keyword.Type.Squad cost -> Keyword.Type.Squad (rewriteCost pairs cost)
   Keyword.Type.Offspring cost -> Keyword.Type.Offspring (rewriteCost pairs cost)
   -- CR 612.2a: "a tapped Fish" and "an Octopus" print a creature type that names
-  -- the token the gift makes, so the swap reaches it.
+  -- the token the gift makes, so the swap reaches it (docs/decisions.md, "What a
+  -- gift does after a text change swaps its creature type").
   Keyword.Type.Gift (Gift.TappedFish subtype) -> Keyword.Type.Gift (Gift.TappedFish (TextWord.subtypeAfter pairs subtype))
   Keyword.Type.Gift (Gift.Octopus subtype) -> Keyword.Type.Gift (Gift.Octopus (TextWord.subtypeAfter pairs subtype))
   Keyword.Type.Gift Gift.Card -> keyword

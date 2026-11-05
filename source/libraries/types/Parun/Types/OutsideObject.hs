@@ -22,8 +22,8 @@ data OutsideObject = MkOutsideObject
     printing :: PrintingId.PrintingId,
     -- | CR 110.5: the out-there object's face-up/face-down STATUS, which is the
     -- one thing about it CR 729.1b does not keep out. A status is not an effect
-    -- or a definition -- CR 708.2 makes the listed characteristics the object's
-    -- own COPIABLE VALUES -- so it travels with the object the way ownership
+    -- or a definition -- and CR 708.2a gives a permanent with that status these
+    -- values -- so it travels with the object the way ownership
     -- does, and Parun.Engine.Event.eligible reads a face-down entry
     -- through Parun.Engine.Card.faceDownFace rather than through the printing.
     --

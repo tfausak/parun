@@ -1,6 +1,6 @@
 {
   "description": "CR 601.3c / 601.2b Harbinger of the Tides cast at sorcery timing may still pay {2} more",
-  "note": "From four blue, alice announces the {U}{U}{2} the permission offers over the printed {U}{U}, emptying her pool (docs/decisions.md, \"A paid flash permission is offered at sorcery timing too\").",
+  "note": "From four blue, alice announces the {U}{U}{2} the permission offers over the printed {U}{U}, emptying her pool (CR 702.8a, 117.1a, 601.3c).",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",

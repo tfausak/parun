@@ -747,8 +747,9 @@ additionalEntryTriggers gs you zc
 -- in a graveyard or an emblem has no such abilities. Read off the board the
 -- ability itself reads: CR 603.10's after the event (GameState.boardAfterEvent),
 -- or for `looksBack` the board before it (GameState.boardBeforeEvent; CR
--- 603.10a, 603.10b, 603.10c, 603.10d, 603.10f, docs/decisions.md, "A look-back
--- ability's additional triggers look back"). A look-back ability's event with
+-- 603.10a, 603.10b, 603.10c, 603.10d, 603.10f; CR 603.2d's count is taken in that
+-- look-back: Teysa Karlov's and Drivnod's rulings count a doubler that left in the
+-- event, whether the ability's permanent stays or leaves). A look-back ability's event with
 -- no such board left the battlefield as it was: CR 701.6a's countering and CR
 -- 701.31's planeswalking move no permanent, so the after board answers.
 additionalTriggers :: GameState -> PlayerId -> ObjectId -> EventGroup.EventGroup -> Bool -> Natural

@@ -450,9 +450,10 @@ withOffering pid oid gs candidate =
 -- 109.5's "you". A free one widens the candidate's window in place; one naming
 -- an additional cost offers the candidate once more with that cost added (CR
 -- 601.2f) and the window carried, so it is paid only by a cast that uses the
--- permission. Offered at sorcery timing too (docs/decisions.md, "A paid flash
--- permission is offered at sorcery timing too"), which the scenario
--- harbinger-of-the-tides-cast-in-a-main-phase-may-pay-two-more proves. The
+-- permission. Offered at sorcery timing too, since CR 702.8a's window is any
+-- time its caster could cast an instant, which CR 117.1a's "any time they have
+-- priority" includes; the scenario
+-- harbinger-of-the-tides-cast-in-a-main-phase-may-pay-two-more proves it. The
 -- scenarios harbinger-of-the-tides-* and swift-reckoning-* prove both shapes.
 --
 -- The condition is asked of the board after CR 601.2a's move
@@ -2141,11 +2142,10 @@ announceReductions pid oid gs cost adjustments =
 --
 -- CR 107.4f's Phyrexian symbol is NOT here: CR 118.7f gives such a reduction one
 -- mana of the symbol's colour with no choice, which reducingManaTypeOf reads
--- directly. The HYBRID Phyrexian symbol is here, as its two colours: CR 107.4f
--- makes it both, so CR 118.7f's one mana of its colour needs one chosen, and CR
--- 118.7e gives that choice to the payer. Its 2 life is no half, since neither
--- rule reduces a cost by life. docs/decisions.md, "How a hybrid Phyrexian
--- symbol in a cost reduction reduces".
+-- directly. The HYBRID Phyrexian symbol is here, as its two colours: CR 107.4g
+-- makes it a Phyrexian symbol, so CR 118.7f gives one mana of its colour, CR
+-- 107.4f makes that colour either of two, and CR 118.7e and 601.2f give the choice
+-- to the payer. Its 2 life is no half: both rules reduce only by mana.
 reductionHalvesOf :: ManaSymbol.ManaSymbol -> Maybe [ManaSymbol.ManaSymbol]
 reductionHalvesOf symbol = case symbol of
   ManaSymbol.Generic _ -> Nothing
@@ -2457,7 +2457,7 @@ beholdObjects paidFor slots pid oid n criterion = do
 --
 -- Also CR 406.4's reveal of a target drawn out of a face-down pile, made once
 -- the spell or ability is paid for (Parun.Engine.Cast.castProposed,
--- Parun.Engine.Activate.activateAbilityWith) and kept as long.
+-- Parun.Engine.Activate.activateAbilityWith) and kept as long (gap #6175).
 revealPaying :: Maybe ObjectId -> PlayerId -> ObjectId -> Game ()
 revealPaying paidFor pid card = do
   Event.reveal RevealCause.Ordinary pid card
@@ -6555,10 +6555,15 @@ nextPromise oid printed gs =
 -- `paidFor` is the stack object the cost is paid for, `pay`'s `announced`, which
 -- a cost's reveal is kept for (`revealPaying`).
 --
--- CR 609.1: a cost is not an effect, so nothing a component moves records a
--- cause (Event.causedBy Nothing), even paid inside a resolution. See
--- docs/decisions.md, "What a spell or ability causes". A fence rather than a
--- proof: no test pays a cost that moves a card inside an effect's scope, such
+-- CR 609.1: a cost to cast or activate causes nothing (Guerrilla Tactics'
+-- ruling of 2004-10-04), so nothing a component moves records a cause
+-- (Event.causedBy Nothing).
+--
+-- Not implemented: a cost paid as a spell or ability resolves counts as caused
+-- by it (Tamiyo, Collector of Tales' rulings of 2019-05-03); this clears that
+-- too (#6180).
+--
+-- A fence rather than a proof: no test pays a cost that moves a card inside an effect's scope, such
 -- as a sacrificing mana ability activated to pay a resolving pay gate.
 payComponent :: ManaAbilityPerformer.ManaAbilityPerformer -> PaymentMoment.PaymentMoment -> Maybe ObjectId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> CostComponent.CostComponent Keyword.Type.Keyword -> Game Payment.Payment
 payComponent perform moment paidFor slots pid oid component = Event.causedBy Nothing $ do

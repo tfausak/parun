@@ -674,15 +674,12 @@ aggregate quantityOf aggregation members = case aggregation of
                   then max without (1 + best (Set.union these used) others)
                   else without
      in Just (toInteger (best Set.empty multiple))
-  -- Undeterminable in both directions. A member whose quantity cannot be
-  -- determined makes the whole maximum undeterminable rather than being dropped, which
-  -- would report the maximum of a set the card never named; and an EMPTY
-  -- matched set has no maximum. Nothing, NOT 0: no rule gives a maximum over
-  -- nothing a value, and where the CR wants an empty maximum to be 0 it
-  -- legislates it case by case (CR 714.2d). CR 208.2a is one such case, applied
-  -- where it is scoped -- at the characteristic-defining ability that consumes
-  -- this count, never here. docs/decisions.md, "What the greatest value is
-  -- over an empty or undeterminable set".
+  -- A member whose quantity cannot be determined makes the whole maximum Nothing
+  -- rather than being dropped, and an EMPTY matched set answers Nothing.
+  --
+  -- Not implemented: CR 107.2's 0 for both (Arni Brokenbrow's and In Search of
+  -- Greatness' rulings of 2021-02-05) (#6219). CR 208.2a is applied where it is
+  -- scoped, at the characteristic-defining ability that consumes this count.
   -- Parun.CountSpec's Rootha, Mastering the Moment group is what proves the
   -- objectless member really is read off its snapshot.
   Aggregation.Greatest quantity -> do

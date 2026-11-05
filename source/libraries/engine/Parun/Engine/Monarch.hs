@@ -134,12 +134,9 @@ crown pid gs =
 -- "Who can become the monarch" is CR 725.4's own words, and the eligibility half
 -- of it is Parun.Engine.PlayerEffect's question (Jared Carthalion, True Heir).
 -- Applied to the ACTIVE player too, though the rule's first sentence states no
--- gate: the third sentence's "if no player still in the game can become the
--- monarch" only means anything if the eligibility test covers every seat the rule
--- might crown, and CR 101.2 would stop the first sentence's crowning anyway. The
--- rejected reading is the literal one, where an ineligible active player blocks
--- sentence 1, fails sentence 2's departure condition and leaves the crown
--- unmoved -- which makes sentence 3 unreachable.
+-- gate. The rejected reading is the literal one: CR 101.2 stops sentence 1, an
+-- active player still in the game fails sentence 2's departure condition, an
+-- eligible seat fails sentence 3's, and nobody is crowned.
 -- docs/decisions.md, "Whether an ineligible active player takes the crown".
 --
 -- The write, the CR 725.1 event record and the exile watches are ONE step,

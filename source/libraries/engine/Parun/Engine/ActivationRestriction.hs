@@ -200,9 +200,11 @@ restrictionMet pid srcId ability gs restriction = case restriction of
   ActivationRestriction.TimesEachTurn limit -> case ability of
     Nothing -> False
     Just this -> unspent limit srcId this (Map.findWithDefault Map.empty srcId (GameState.activatedThisTurn gs)) gs
-  -- Goblin Bookie's "any time it makes sense", read as CR 706.2's modification
-  -- step: open only while Parun.Engine.Resolve.Effect.throwDice is asking
-  -- about a die, so never at priority (CR 117.1b).
+  -- Goblin Bookie's "any time it makes sense": while a die is being rolled, and
+  -- not with nothing to reroll (docs/decisions.md, "Whether Goblin Bookie can be
+  -- activated with nothing to reroll").
+  -- Not implemented: activating at priority to reroll a Die creature, which
+  -- Pippa, Duchess of Dice's rulings allow (#6221).
   ActivationRestriction.DuringDieRoll -> Maybe.isJust (GameState.rollingDie gs)
   -- A payment rule, not a gate: Parun.Engine.Mana.admitsUnder spends only the
   -- mana it names (PaymentSubject.Activating's colours).

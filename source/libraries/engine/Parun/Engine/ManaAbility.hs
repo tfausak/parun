@@ -866,8 +866,8 @@ movesLibraryCard effect = case effect of
   -- the battlefield and exile are libraries no more than the battlefield Create's
   -- token below reaches is.
   --
-  -- docs/decisions.md, "Whether conjuring into a library is a library move for
-  -- a mana ability". The scenario "CR 605.1a conjuring into a library keeps an
+  -- docs/synthetic-readings.md, "Whether conjuring into a library is a library
+  -- move for a mana ability". The scenario "CR 605.1a conjuring into a library keeps an
   -- ability that adds mana off the mana path" proves it on Synthetic Seeded
   -- Grove.
   Effect.Conjure (Conjure.MkConjure _ _ _ destination _) -> case destination of

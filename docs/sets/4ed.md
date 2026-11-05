@@ -52,8 +52,8 @@ Finished 2026-11-04.
     removes `ChooseExtraManaSource` at {0} (248 scenarios lost that answer).
   - #6143: decisions.md "Who pays Quenchable Fire's price once the planeswalker
     changes hands"; Synthetic Standing Bounty deleted for the real card.
-  - #6137: decisions.md "Whether "at the beginning of this turn" sees an effect
-    lasting until that turn", unproven by a scenario.
+  - #6137: "at the beginning of this turn" sees no effect lasting until that
+    turn (Crystalline Resonance's ruling), unproven by a scenario.
   - #6109: the fewest across players is `Negate` over `Greatest`, with no `Least`
     arm.
   - Breaking wire: #6143 (`UntilPaid`'s payer, `PaidExpiry`'s resolution).

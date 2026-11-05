@@ -16,8 +16,8 @@ data TokenLot = MkTokenLot
     copy :: Maybe ProjectedCharacteristics.ProjectedCharacteristics,
     count :: Natural.Natural,
     -- | CR 614.16: an effect makes this lot -- a resolving spell's or
-    -- ability's, or another replacement effect's. False for CR 118.12's cost
-    -- (docs/decisions.md, "What a spell or ability causes").
+    -- ability's, or another replacement effect's. False for CR 118.12's cost,
+    -- which is no effect (Library of Leng's ruling).
     byEffect :: Bool
   }
   deriving (Eq, Ord, Show)

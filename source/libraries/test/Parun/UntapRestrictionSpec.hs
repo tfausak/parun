@@ -379,7 +379,7 @@ capSpec s registry = Spec.describe s "Cap" $ do
     Spec.assertBool s (Game.isTapped firstId untapped) "the first Island is still tapped"
     Spec.assertBool s (not (Game.isTapped secondId untapped)) "the second Island untapped"
     Spec.assertBool s (not (Game.isTapped giantId untapped)) "the Giant untapped"
-  -- docs/decisions.md, "An untap cap leaves tapped only what it must".
+  -- CR 502.3: a cap keeps tapped only what exceeds it (CR 101.2).
   Spec.it s "CR 502.3 an answer naming nothing still untaps two" $ do
     (firstId, secondId, giantId, gs) <- orbBoard s registry False
     let untapped = untapAnswering (\_ _ -> Set.empty) gs

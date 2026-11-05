@@ -1613,7 +1613,7 @@ artificialEvolutionSpec s registry = Spec.describe s "ArtificialEvolution" $ do
   -- CR 702.135b -- "if a permanent has multiple instances of afterlife, each
   -- triggers separately" -- with an Evolution on top: the Spirit is rule
   -- 702.135a's word and no text change reaches it (CR 207.2a,
-  -- docs/decisions.md "What a text change reaches inside a keyword"), so the
+  -- 702.1), so the
   -- printed afterlife 2 and the granted afterlife 1 alike leave Spirits.
   Spec.it s "CR 702.135b an evolved Ministrant plus a granted afterlife leaves three Spirits" $ do
     (ministrantId, alive, tokens, after) <- insuredChain s registry "Ministrant of Obligation" (Just (Subtype.Spirit, Subtype.Elf))

@@ -727,7 +727,8 @@ runPreventionRiders runSubgame = do
 -- it, and Deflecting Palm's "that source's controller" reads the one source
 -- bound. CR 615.5's "amount of damage that was prevented" is the SUM over the
 -- recipients this application covered from that source (two recipients of one
--- source: one lot of 3, not a 2 and a 1). Two sources run twice. The amount is a Quantity.InSlot read of the reserved
+-- source: one lot of 3, not a 2 and a 1). Two sources run twice (docs/decisions.md,
+-- "How many times a prevention's additional effect runs"). The amount is a Quantity.InSlot read of the reserved
 -- Binding.eventAmount slot, published through GameState.ambientAmounts rather
 -- than bound onto an object, because the shielded recipient may be a PLAYER.
 -- Restored rather than cleared, so this cannot clobber an outer amount.
@@ -824,7 +825,7 @@ runReplacementEffects runSubgame = do
 -- runPreventionRider's posture. Every slot the row carries is treated as a LEGAL
 -- target, CR 608.2b having been applied when the installing ability resolved.
 -- An effect (CR 609.1) even when drained inside CR 118.12's cost, so the
--- paying flag is cleared (docs/decisions.md, "What a spell or ability causes").
+-- paying flag is cleared (Game.causeNow).
 runDamageRewriteEffect :: Game Result -> PendingReplacementEffect.PendingReplacementEffect -> Game ()
 runDamageRewriteEffect runSubgame pending =
   let targets = PendingReplacementEffect.targets pending
@@ -1019,6 +1020,10 @@ throwSettled runSubgame roll perDie = do
       -- Recorded as the rerolling player's roll: Pippa's ruling gives a reroll
       -- of another player's die to the rerolling player's "whenever you roll
       -- a die".
+      --
+      -- A die the CR 706.6 ignore would take may still be rerolled first:
+      -- docs/decisions.md, "Whether a reroll reaches a die before the lowest roll is
+      -- ignored".
       rethrow by = do
         settled <- Event.proposeDiceRoll by sides 1
         case settled of
@@ -1127,17 +1132,15 @@ throwSettled runSubgame roll perDie = do
       -- to the die reads no slot. Proved by Parun.DiceSpec's "CR 701.67a a
       -- modifier's waterbend cost is weighed" case.
       payForModifier payer oid cost = Maybe.isJust . fst <$> payGateCost runSubgame Map.empty payer oid cost
-      -- Goblin Bookie's "Activate only any time it makes sense", read as a
-      -- window inside CR 706.2's modification step, beside the static offers
-      -- above. No rule grants one: CR 117.1b ties activation to
-      -- priority, which CR 117.3b hands out only after a resolution. Each ability
-      -- ActivationRestriction.DuringDieRoll marks is offered to the player
-      -- who may activate it, through the same gate a priority activation
-      -- takes (Activatable.activatable), and it resolves at once, as CR
-      -- 605.3b's mana ability does -- the only reading in which the reroll
-      -- reaches the die. Parun.CardSpec keeps such an ability to an untargeted
-      -- Effect.Reroll, which is what lets Prompt.RerollDie ask for it.
-      -- docs/decisions.md, "When Goblin Bookie can be activated".
+      -- "Activate only any time it makes sense" reaches a die being rolled: Pippa,
+      -- Duchess of Dice's rulings of 2020-02-29, on the same words ("any die roll,
+      -- not just yours"; "the result still counts"). No priority falls inside a
+      -- roll (CR 117.1, 117.3b), so each ability ActivationRestriction.DuringDieRoll
+      -- marks is offered through the gate a priority activation takes (CR 602.5a;
+      -- Activatable.activatable) and resolves at once, as the ruling needs it to
+      -- reach the die. CR 706.2b's pick is the roller's, `offering`'s; the order
+      -- below is only where that pick starts. Parun.CardSpec keeps such an ability
+      -- to an untargeted Effect.Reroll, which is what lets Prompt.RerollDie ask for it.
       --
       -- In APNAP order, and within a player in object order, behind the static
       -- offers: the order the roller's pick starts from.

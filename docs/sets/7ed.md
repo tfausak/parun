@@ -38,8 +38,8 @@ Finished 2026-10-23.
   Total 2.44M without the census, 22.3k per card. Wall clock ~3.5h after the
   census; two lanes.
 - Owner review:
-  - #5542: decisions.md "What a spell or ability causes".
-  - #5543: decisions.md "An untap cap leaves tapped only what it must".
+  - #5542: what a spell or ability causes (now #6180).
+  - #5543: an untap cap leaves tapped only what it must (CR 502.3, 101.2).
   - Wire changes: #5544 (`ObjectRef.Players`, `Filter.Controls`,
     `Effect.ChooseQuality`), #5546 (`SharesCreatureTypeWith` takes an
     anchor; `AffectedUnless.amount`), #5547 (`BlockersBeyond` takes a

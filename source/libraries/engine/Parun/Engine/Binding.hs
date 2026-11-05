@@ -646,8 +646,9 @@ acquiredPrefix = Text.pack "acquiredFrom"
 -- holder's id and, for a named one, its own name, so it reads under the
 -- holder's own acquisition (Parun.Engine.Game.acquisitionFor) and a second
 -- instance the copy brought does not. Reserved, as craftLink is.
--- docs/decisions.md's "A kept ability stays linked to its holder's own exiles"
--- is the reading.
+-- CR 607.1a: the kept ability counts as printed on the holder, so CR 607.2b's pair
+-- holds; CR 607.5 gives a second instance the copy brought only its own pair.
+-- Volatile Chimera's 2016-08-23 ruling is the neighbouring case (CR 607.2n).
 keptAbility :: ObjectId -> Maybe AbilityName.AbilityName -> AbilityName.AbilityName
 keptAbility holder = maybe kept (qualified kept)
   where

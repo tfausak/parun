@@ -482,8 +482,8 @@ increaseSpec s registry = Spec.describe s "Increase" $ do
   -- Bob loses life to a Lightning Bolt while alice has no speed, so CR 702.179d's
   -- ability does not exist yet; she then plays Muraganda Raceway, CR 702.179a
   -- starts her speed at 1, and a second Bolt is the ability's first triggering
-  -- though not the turn's first opponent losing life. docs/decisions.md,
-  -- "Whether a trigger limit differs from a first-time-each-turn trigger".
+  -- though not the turn's first opponent losing life: the rider is per ability
+  -- (Cursed Wombat's ruling of 2024-06-07).
   Spec.it s "CR 702.179d an ability gained after the turn's first life loss still triggers once" $ do
     raceway <- S.printingOf s registry "Muraganda Raceway"
     mountain <- S.printingOf s registry "Mountain"

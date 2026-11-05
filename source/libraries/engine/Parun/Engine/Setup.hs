@@ -656,7 +656,8 @@ startGameFromCards perform exemptions = do
       toLibraryCard obj = (Object.newIncarnation obj) {Object.zone = Zone.Library}
       -- CR 123.5: the command zone is public, so a commander moving into a
       -- subgame's keeps its stickers (CR 729.2c), proved by Parun.StickerSpec's
-      -- "CR 123.5/729.2c". A restart has already taken them off (restartGame).
+      -- "CR 123.5/729.2c" (docs/decisions.md, "Whether a commander keeps its stickers
+      -- into a subgame"). A restart has already taken them off (restartGame).
       toCommandCard obj = (Object.newIncarnation obj) {Object.zone = Zone.Command, Object.stickers = Object.stickers obj}
       rebuilt = Map.filter isCard (Map.withoutKeys (GameState.objects gs) exempt)
       -- CR 903.6: "each player puts their commander from their deck face up into
@@ -823,8 +824,12 @@ anteFromLibraries seated = do
 -- validation (#4886).
 --
 -- A restart (CR 727.1) and a subgame (CR 729.2) each follow rule 103, so each
--- draws again. A sticker that stayed on its object is docs/decisions.md's
--- "Whether a sticker outlasts the draw of its sheet".
+-- draws again. A sticker that stayed on its object goes on applying off a sheet
+-- not drawn, CR 123.6-123.8 having no access condition and CR 123.2c's access
+-- being read only by CR 123.3's choice, which does not offer it again off a drawn
+-- one. Whether it stays is docs/decisions.md's "Whether a card a restart leaves in
+-- exile keeps its stickers" and "Whether a commander keeps its stickers into a
+-- subgame".
 drawStickerSheets :: [PlayerId] -> Game ()
 drawStickerSheets seated = Monad.forM_ seated $ \pid -> do
   gs <- State.get
@@ -1358,7 +1363,8 @@ applyCrossings finalSub parent =
       -- this game as it stands at the moment THIS card crosses: the cards which
       -- crossed EARLIER have already gone, so CR 608.2h's record and CR 604.2's
       -- handover are what was true at this instant, and the handed-over set is then
-      -- frozen, by analogy with CR 611.2c.
+      -- frozen (docs/decisions.md, "Whether a lingering static effect's set is fixed
+      -- as its permanent leaves").
       --
       -- The events LAST, so that Event.recordEvent's CR 603.10 sample is of the
       -- board immediately after this card left and before the next one does.
@@ -1378,14 +1384,14 @@ applyCrossings finalSub parent =
       -- treated as though it does not exist" and "can't affect or be affected by
       -- anything else in the game". CR 729.4a mentions none, so the main-game abilities it speaks of
       -- cannot see one leave -- the answer CR 702.26k spells out for the other
-      -- road out of the game. The crossing itself still happens: CR 729.4 puts
-      -- every main-game object outside the subgame, and the wish reaching for it
-      -- belongs to the subgame, which CR 729.1a makes a different game from the
-      -- one rule 702.26b speaks of. Parun.SetupSpec's "CR 702.26b a phased-out
-      -- permanent a subgame takes leaves the main game and triggers nothing" is
-      -- the proof, against a phased-in leg differing in the phase-out alone.
-      -- docs/decisions.md, "Whether a phased-out permanent a subgame takes
-      -- leaves visibly".
+      -- road out of the game.
+      --
+      -- Not implemented: refusing the crossing. CR 702.26b's first sentence has no
+      -- limit to one game, and neither CR 729.4 nor a wish mentions a phased-out
+      -- permanent, so it should not be offered (Living Wish's ruling of
+      -- 2007-09-16); it is, and Parun.SetupSpec's "CR 702.26b a phased-out
+      -- permanent a subgame takes leaves the main game and triggers nothing" pins
+      -- that (#6183).
       --
       -- CR 708.9's first sentence: a face-down permanent moving from the
       -- battlefield to any other zone is revealed by its owner, and a subgame's
@@ -1485,7 +1491,8 @@ funnelBack finalSub parent =
       -- funnel's per-incarnation reset through the one shared function.
       toLibraryCard obj = (Object.newIncarnation obj) {Object.zone = Zone.Library}
       -- CR 123.5, as startGameFromCards' own toCommandCard: a commander keeps
-      -- its stickers coming back to the main game's command zone (CR 729.5c).
+      -- its stickers coming back to the main game's command zone (CR 729.5c;
+      -- docs/decisions.md, "Whether a commander keeps its stickers into a subgame").
       toCommandCard obj = (Object.newIncarnation obj) {Object.zone = Zone.Command, Object.stickers = Object.stickers obj}
       -- CR 729.5's own exclusion: "all traditional cards they own that are in the
       -- subgame OTHER THAN those in the subgame command zone". So the library

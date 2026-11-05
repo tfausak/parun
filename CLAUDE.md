@@ -36,6 +36,8 @@ Read `docs/` by section, on demand, never a whole doc "for context".
   memory, and never a rule number quoted in an issue or a brief.
 - Readings the rules don't force: `docs/decisions.md`, checked before deciding
   one and on every CR update
+- Readings only a synthetic card can observe: `docs/synthetic-readings.md`,
+  checked likewise
 - Prior-art evidence: `docs/prior-art-lessons.md`
 - What the milestone era established: `docs/progress.md` (frozen), newest first
 - A landed unit's authoritative detail: `docs/superpowers/`
@@ -196,13 +198,14 @@ to agents as written. What it doesn't say:
   elision is provably sound --- close the issue as wontfix.
 
 - A reading gets a `docs/decisions.md` entry, in the same PR, only when BOTH
-  hold: it is observable (different game states or legal choices on some
-  legal board), and not forced (neither the CR nor an official ruling picks
+  hold: it is observable (different game states or legal choices on a
+  board printed cards can build), and not forced (neither the CR nor an official ruling picks
   one). The code site cites the entry. A forced reading --- including one
   whose rejected alternative is refuted by a rule or ruling --- cites it at
   the code site instead; an unobservable implementation choice goes in the PR
   body and gets at most a one-line code comment. Check there first, so a
-  settled question is not decided again differently.
+  settled question is not decided again differently. A reading only a synthetic card can observe goes in
+  `docs/synthetic-readings.md`, on the same terms.
 
 - File the issue, cite it inline. An elision gets an issue carrying status,
   rationale and expiry trigger, and a code-site comment stating only what is

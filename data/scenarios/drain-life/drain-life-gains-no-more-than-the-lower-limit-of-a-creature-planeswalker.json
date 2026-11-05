@@ -80,7 +80,7 @@
     "step": "PrecombatMain"
   },
   "description": "CR 306.5c / 208.1 Drain Life at a planeswalker that is also a creature gains no more than the lower of its loyalty and toughness",
-  "note": "Liquimetal Coating makes Chandra an artifact and March of the Machines a 3/3 creature with 5 loyalty. X 5 gains 3, her toughness: both limits apply (docs/decisions.md).",
+  "note": "Liquimetal Coating makes Chandra an artifact and March of the Machines a 3/3 creature with 5 loyalty. X 5 gains 3, her toughness: \"not more than A, B, or C\" binds each that names a number (CR 608.2c).",
   "timeline": [
     {
       "do": {

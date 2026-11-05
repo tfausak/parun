@@ -405,10 +405,10 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- and inside a calculation only determineWith applies it.
         Quantity.Arithmetic arithmetic -> fmap calculate (traverse recur arithmetic)
         -- Nothing propagates from the value as from any operand (CR 107.2's 0 is the
-        -- reader's), but NOT from a limit: "not more than the creature's toughness"
-        -- says nothing when there is no creature (Parun.Types.AtMost), so a limit
-        -- naming no number is skipped. Drain Life at a battle gains all the damage dealt
-        -- (docs/decisions.md, "Drain Life's limits at a target they don't name").
+        -- reader's), but NOT from a limit: CR 107.2's 0 does not reach "not more than
+        -- the creature's toughness" when there is no creature (Parun.Types.AtMost), or
+        -- Drain Life at a creature would gain 0 against its ruling. A limit naming no
+        -- number is skipped, so Drain Life at a battle gains all the damage dealt.
         Quantity.AtMost (AtMost.MkAtMost inner limits) -> fmap (\n -> minimum (n : Maybe.mapMaybe recur (Foldable.toList limits))) (recur inner)
         -- CR 208.2a / 608.2h: delegate to the general Count fold (Parun.Engine.Count),
         -- which reads the CR 613 projection through the injected ViewOf. The second
@@ -1305,8 +1305,7 @@ calculate arithmetic = case arithmetic of
 -- SCOPED TO THE CHARACTERISTIC-DEFINING ABILITY, as CR 208.2a is: the caller is
 -- Projection.applyCharacteristicPT, which layer 7a runs for an object in any
 -- zone (CR 604.3 makes the ability function in all zones), and every other reader
--- of a quantity must keep evaluate's honest Nothing, since no rule tells those to
--- invent a number.
+-- of a quantity keeps evaluate's Nothing (gap #6219, #6220: CR 107.2 gives them 0).
 --
 -- It does NOT descend into a Count, and does not need to: an undeterminable
 -- count IS the number CR 208.2a is talking about, so the 0 goes in whole here

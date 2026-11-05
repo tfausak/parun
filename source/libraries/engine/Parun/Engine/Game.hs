@@ -833,8 +833,11 @@ choiceWithLastKnown field acquisition oid gs = Map.lookup acquisition =<< liveOr
 
 -- | CR 609.1: the cause a move or a discard made now records -- the controller
 -- of the spell or ability whose effect is being performed, and Nothing for CR
--- 118.12's "[do something]", which is a cost and not an effect (Library of
--- Leng's ruling). See docs/decisions.md, "What a spell or ability causes".
+-- 118.12's "[do something]".
+--
+-- Not implemented: that cost counts as caused by the spell or ability resolving
+-- it (CR 118.12a; Tamiyo, Collector of Tales' rulings of 2019-05-03), though
+-- "an effect" still excludes it (Library of Leng's ruling) (#6180).
 causeNow :: GameState -> Maybe PlayerId
 causeNow gs
   | GameState.payingOnResolution gs = Nothing
@@ -2804,12 +2807,10 @@ componentIsToken component = case component of
   -- CR 108.2b / 701.42b: both cards of a meld pair are Magic cards, and a token
   -- cannot be one of them. `sourceIsToken`'s OfMeld arm answers the same.
   MergeComponent.OfMeld _ -> False
-  -- CR 608.3f gives a copy of a permanent spell its token-ness only "as it is put
-  -- onto the battlefield", and CR 702.140c's merge never puts it there --
-  -- `sourceIsToken`'s OfSpellCopy arm answers the same for the same rule.
-  -- Parun.MutateSpec's "CR 730.2d/608.3f a merged permanent whose topmost
-  -- component is a spell copy is no token" proves it. docs/decisions.md,
-  -- "Whether a merged copy of a mutating spell is a token".
+  -- Not implemented: a merged copy of a permanent spell is a token, being one as
+  -- it resolves (CR 111.13, 707.10f), which makes the permanent one with it on
+  -- top (CR 730.2d) (#6172). Parun.MutateSpec's "CR 730.2d/608.3f a merged
+  -- permanent whose topmost component is a spell copy is no token" pins this arm.
   MergeComponent.OfSpellCopy _ -> False
 
 -- CR 108.2 / 903.9c: is this component of a merged permanent a CARD? Not

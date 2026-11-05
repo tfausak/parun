@@ -165,7 +165,9 @@ skipEmptyCombat gs =
 -- can't attack, so the adjacent SEAT being empty is no attack rather than a
 -- fallback to whoever is beyond it. That is what filtering the neighbouring seat
 -- through the still-playing list expresses -- Game.turnOrderFrom keeps a departed
--- seat, so it is the emptied seat itself that is named and then dropped.
+-- seat, so it is the emptied seat itself that is named and then dropped. Later
+-- turns too: docs/decisions.md, "Whether attack left closes up over a seat that
+-- emptied".
 --
 -- CR 801.3 cuts the same list to the opponents within the active player's range
 -- of influence, and so needs no clause for planeswalkers and battles either; no
@@ -2132,9 +2134,12 @@ attackCandidates pid gs =
    in (filter (\oid -> any (attackTargetAllowed barred oid) (declarableTargets gs)) legal, barred)
 
 -- CR 508.1a-d: the candidates some legal declaration contains -- Season of the
--- Witch's ruling's "could have been declared as an attacker". A cost to
--- attack never makes a creature one that couldn't (docs/decisions.md, "Which
--- creatures could have attacked").
+-- Witch's ruling's "could have been declared as an attacker during that turn's
+-- Declare Attackers Step", so over every such step of the turn.
+--
+-- Not implemented: CR 508.1's preamble makes a declaration whose CR 508.1j
+-- payment can't be made illegal, so a creature only in such declarations could
+-- not have attacked; costs are ignored here (#6178).
 --
 -- With no set-shaped restriction in force every candidate is in one: the
 -- ceiling's declaration plus the candidate obeys no fewer requirements and
@@ -2670,7 +2675,8 @@ putOntoBattlefieldAttacking choice oid = do
       -- defending player controls is not among them to begin with, and a battle
       -- that seat protects is not "a planeswalker they control". An empty
       -- narrowing takes CR 508.4a's no-op below, by analogy, the creature entering
-      -- unattacking.
+      -- unattacking (docs/decisions.md, "Whether a myriad token attacks an opponent
+      -- who is not a defending player").
       narrowed = case choice of
         Any -> targets
         Specified _ -> targets
