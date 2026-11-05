@@ -50,6 +50,7 @@ import qualified Parun.Types.ChosenQuality as ChosenQuality
 import qualified Parun.Types.ClassLevel as ClassLevel
 import qualified Parun.Types.CoinReading as CoinReading
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.ColorSpread as ColorSpread
 import qualified Parun.Types.Compares as Compares
 import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.Condition as Condition
@@ -316,7 +317,7 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.AddMana (ManaAddition.MkManaAddition (PlayerRef.Relative PlayerRelation.You) ManaProduction.AnyColor (Quantity.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing))
+      (Effect.AddMana (ManaAddition.MkManaAddition (PlayerRef.Relative PlayerRelation.You) (ManaProduction.AnyColor ColorSpread.OneColor) (Quantity.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing))
       " {\"type\":\"AddMana\",\"value\":{\"production\":{\"type\":\"AnyColor\"}}} "
   -- CR 106.4's other half: Shizuko, Caller of Autumn's "that player adds", where
   -- the recipient is written because CR 109.5's "you" is somebody else.

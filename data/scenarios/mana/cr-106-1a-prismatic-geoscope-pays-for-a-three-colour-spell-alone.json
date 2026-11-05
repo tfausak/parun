@@ -1,0 +1,159 @@
+{
+  "description": "CR 106.1a Prismatic Geoscope pays for a three-colour spell alone with three basic land types",
+  "note": "Island, Swamp and Mountain are tapped, so the Geoscope's three mana are the only supply, and Elemental Augury's {U}{B}{R} takes a choice per unit. A fourth type would make four; Domain counts types, not lands.",
+  "board": {
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Prismatic Geoscope",
+            "label": "geoscope",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "tapped": true
+          },
+          {
+            "card": "Swamp",
+            "tapped": true
+          },
+          {
+            "card": "Mountain",
+            "tapped": true
+          },
+          {
+            "card": "Mountain",
+            "tapped": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Elemental Augury",
+            "label": "augury"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "check": {
+        "View": {
+          "is": [
+            "Pass",
+            "Cast $augury",
+            "ActivateManaAbility $geoscope"
+          ],
+          "of": "Offered",
+          "player": "alice"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$geoscope"
+          ],
+          "object": "$augury",
+          "yields": [
+            [
+              {
+                "manaType": {
+                  "type": "Colored",
+                  "value": {
+                    "type": "Blue"
+                  }
+                },
+                "tags": [
+                  {
+                    "type": "Artifact"
+                  }
+                ],
+                "retention": {
+                  "type": "Ordinary"
+                },
+                "restriction": null,
+                "rider": null,
+                "sourceChoices": null
+              },
+              {
+                "manaType": {
+                  "type": "Colored",
+                  "value": {
+                    "type": "Black"
+                  }
+                },
+                "tags": [
+                  {
+                    "type": "Artifact"
+                  }
+                ],
+                "retention": {
+                  "type": "Ordinary"
+                },
+                "restriction": null,
+                "rider": null,
+                "sourceChoices": null
+              },
+              {
+                "manaType": {
+                  "type": "Colored",
+                  "value": {
+                    "type": "Red"
+                  }
+                },
+                "tags": [
+                  {
+                    "type": "Artifact"
+                  }
+                ],
+                "retention": {
+                  "type": "Ordinary"
+                },
+                "restriction": null,
+                "rider": null,
+                "sourceChoices": null
+              }
+            ]
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ],
+  "final": [
+    {
+      "Count": {
+        "card": "Elemental Augury",
+        "count": 1,
+        "player": "alice",
+        "zone": "Battlefield"
+      }
+    },
+    {
+      "Tapped": {
+        "object": "$geoscope",
+        "tapped": true
+      }
+    }
+  ]
+}

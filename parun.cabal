@@ -411,6 +411,8 @@ library codec
     Parun.Codec.CoinReadingSpec
     Parun.Codec.Color
     Parun.Codec.ColorSpec
+    Parun.Codec.ColorSpread
+    Parun.Codec.ColorSpreadSpec
     Parun.Codec.Combat
     Parun.Codec.CombatDamageAmount
     Parun.Codec.CombatDamageAmountSpec
@@ -2574,6 +2576,7 @@ library types
     Parun.Types.CoinFlipped
     Parun.Types.CoinReading
     Parun.Types.Color
+    Parun.Types.ColorSpread
     Parun.Types.Combat
     Parun.Types.CombatDamageAmount
     Parun.Types.CombatDamageOption

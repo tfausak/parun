@@ -3403,3 +3403,5 @@ go-ninja-go
 nether-shadow
 shapeshifter
 captive-audience
+prismatic-geoscope
+wizards-rockets

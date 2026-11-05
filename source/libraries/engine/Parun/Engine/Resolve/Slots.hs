@@ -1200,7 +1200,7 @@ effectPlayerRefs effect = case effect of
 productionPlayerRefs :: ManaProduction.ManaProduction -> [PlayerRef]
 productionPlayerRefs production = case production of
   ManaProduction.OfType _ -> []
-  ManaProduction.AnyColor -> []
+  ManaProduction.AnyColor _ -> []
   ManaProduction.Chosen -> []
   ManaProduction.SnowSymbol -> []
   ManaProduction.Noted -> []
@@ -1212,7 +1212,7 @@ productionPlayerRefs production = case production of
 productionSlots :: ManaProduction.ManaProduction -> Map.Map SlotName SlotArity
 productionSlots production = case production of
   ManaProduction.OfType _ -> Map.empty
-  ManaProduction.AnyColor -> Map.empty
+  ManaProduction.AnyColor _ -> Map.empty
   ManaProduction.Chosen -> Map.empty
   ManaProduction.SnowSymbol -> Map.empty
   ManaProduction.Noted -> Map.empty
@@ -2466,8 +2466,9 @@ readsX =
         -- Untamed Might's "+X/+X" sits inside the Modification, not on the effect.
         Effect.ModifyTarget (ModifyTarget.MkModifyTarget _ modification _ _) -> any Quantity.readsX (Projection.quantitiesOf modification)
         Effect.ChangeText {} -> False
-        Effect.AddMana _ -> False
-        Effect.Firebend _ -> False
+        -- Wizard's Rockets' "Add X mana".
+        Effect.AddMana addition -> Quantity.readsX (ManaAddition.count addition)
+        Effect.Firebend addition -> Quantity.readsX (ManaAddition.count addition)
         Effect.ActivateManaAbilities _ -> False
         Effect.MoveMana _ -> False
         -- The filter too: Citanul Flute's "mana value X or less" compares against
