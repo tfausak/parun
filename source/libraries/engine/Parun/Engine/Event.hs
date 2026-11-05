@@ -1727,7 +1727,37 @@ eligible predicate source pid gs =
               (\(_, entry) -> OutsideObject.owner entry == pid && admitsOutside entry)
               (Map.toAscList (GameState.outsideObjects gs))
           )
-   in fromPool <> fromOuter
+      -- CR 903.11: no effect in the pool specifically brings a card into a
+      -- Commander game, so a wish brings in nothing there. One that does
+      -- (Playtest Wish) needs a classification on its payload, and still meets
+      -- `commanderAdmits`.
+      inCommander = Commander.isCommanderGame gs
+   in if inCommander then [] else fromPool <> fromOuter
+
+-- CR 903.11a: may this player bring this card into a Commander game from
+-- outside it? Not if it shares a name with a card in their starting deck
+-- (Player.startingDeck, which counts the commander, CR 702.139b), or with a
+-- card they own in the game, read as it would come in. True outside a
+-- Commander game.
+--
+-- The colour-identity limb is not implemented (#6356).
+--
+-- The candidate's names are PRINTED, `eligible`'s reason; an owned card's are
+-- projected, so a Clone's is what it copied. Only an object in a zone counts,
+-- which leaves GameState.outsideCopies out.
+commanderAdmits :: PlayerId -> OutsideCard.OutsideCard -> GameState.GameState -> Bool
+commanderAdmits pid card gs
+  | not (Commander.isCommanderGame gs) = True
+  | otherwise =
+      let printedNames printingId = maybe Set.empty (Game.namesFor Nothing) (Game.cardOfPrinting printingId gs)
+          candidate = case card of
+            OutsideCard.InPool printingId -> printedNames printingId
+            OutsideCard.InAnotherGame outerId -> foldMap (printedNames . OutsideObject.printing) (Map.lookup outerId (GameState.outsideObjects gs))
+          deck = maybe Map.empty Player.startingDeck (Map.lookup pid (GameState.players gs))
+          inDeck = foldMap printedNames (Map.keys (Map.filter (> 0) deck))
+          ownedCard oid obj = Object.owner obj == pid && Game.isCardObject oid gs && Maybe.isJust (Game.zoneOf oid gs)
+          owned = foldMap (`Projection.namesOf` gs) (Map.keys (Map.filterWithKey ownedCard (GameState.objects gs)))
+       in Set.disjoint candidate (inDeck <> owned)
 
 -- CR 400.11c: put cards this player owns from outside the game matching the
 -- Filter where the payload's destination says (CR 400.11b), as many as its

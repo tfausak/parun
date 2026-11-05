@@ -68,6 +68,7 @@ spec s registry = Spec.describe s "Companion" $ do
   newGames s registry
   mainGameCompanion s registry
   specialAction s registry
+  commanderGame s registry
 
 -- CR 103.2b: reveal the first companion offered rather than declining, which is
 -- what Parun.Engine.Script.declining -- and so S.identityAnswer -- answers.
@@ -354,3 +355,58 @@ specialAction s registry = Spec.describe s "CR 116.2g the special action" $ do
     Spec.assertEqWith s "CR 116.2g: a second attempt puts nothing else in the hand" (length (inHand again)) 1
     Spec.assertBool s (List.notElem Action.Type.PutCompanionIntoHand (Action.legalActions S.alice after)) "CR 116.2g: and the action is not offered a second time"
     Spec.assertEqWith s "CR 116.2g: which is the flag, read directly" (fmap Player.companionTaken (Map.lookup S.alice (GameState.players after))) (Just True)
+
+-- `actionBoard` turned into a Commander game: Shimatsu designated as alice's
+-- commander through Setup.createDeck, and the two Zirdas put back in her pool,
+-- which createDeck refilled from the deck's empty sideboard.
+commandedBoard :: Printing.Printing -> PrintingId.PrintingId -> GameState.GameState -> GameState.GameState
+commandedBoard shimatsu zirdaId gs =
+  let built = S.runPure S.identityAnswer gs (Setup.createDeck S.alice ((Deck.fromCards Map.empty) {Deck.commander = Set.singleton shimatsu}))
+      restock p = p {Player.outsideTheGame = Map.singleton zirdaId 2}
+   in built {GameState.players = Map.adjust restock S.alice (GameState.players built)}
+
+commanderGame :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+commanderGame s registry = Spec.describe s "CR 903.11a a Commander game" $ do
+  -- CR 702.139d / 903.11a, the whole of CR 103 run for real: Zirda as commander
+  -- and a second Zirda as companion. The reveal stands; the {3} action does not
+  -- bring in a card named like one in her starting deck. The control is the
+  -- same deck with no commander.
+  Spec.it s "CR 903.11a a second Zirda is revealed beside a Zirda commander, and not taken" $ do
+    (zirda, aliceDeck, _) <- decks s registry
+    mountain <- S.printingOf s registry "Mountain"
+    let ready deck =
+          let built = setup revealingAnswer deck aliceDeck
+              withLands = List.foldl' (\g _ -> snd (S.addPermanent mountain S.alice g)) built [1 :: Int, 2, 3]
+           in withLands {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
+        commanded = ready (aliceDeck {Deck.commander = Set.singleton zirda})
+        plain = ready aliceDeck
+    Spec.assertBool s (Maybe.isJust (companionOf S.alice commanded)) "CR 103.2b: she reveals the companion"
+    Spec.assertBool s (List.notElem Action.Type.PutCompanionIntoHand (Action.legalActions S.alice commanded)) "CR 903.11a: but may not take it"
+    Spec.assertBool s (List.elem Action.Type.PutCompanionIntoHand (Action.legalActions S.alice plain)) "with no commander she may"
+
+  -- CR 903.11a's two name limbs apart. "Owns in the current game": a Zirda in
+  -- her hand that was never in her starting deck bars the action, and only in a
+  -- Commander game.
+  Spec.it s "CR 903.11a a Zirda she owns in the game bars the companion" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    zirda <- S.printingOf s registry "Zirda, the Dawnwaker"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    let (zirdaId, plain) = actionBoard mountain zirda True 3
+        commanded = commandedBoard shimatsu zirdaId plain
+        holding = snd . S.addHandCard zirda S.alice
+        offeredOn gs = List.elem Action.Type.PutCompanionIntoHand (Action.legalActions S.alice gs)
+    Spec.assertBool s (offeredOn commanded) "CR 702.139d: a Commander game offers the action"
+    Spec.assertBool s (not (offeredOn (holding commanded))) "CR 903.11a: not with a Zirda in her hand"
+    Spec.assertBool s (offeredOn (holding plain)) "CR 903.11: outside a Commander game the Zirda in hand is no bar"
+
+  -- "Had in their starting deck": a Zirda recorded there and owned nowhere in
+  -- the game bars it too.
+  Spec.it s "CR 903.11a a Zirda in her starting deck bars the companion" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    zirda <- S.printingOf s registry "Zirda, the Dawnwaker"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    let (zirdaId, plain) = actionBoard mountain zirda True 3
+        commanded = commandedBoard shimatsu zirdaId plain
+        stamp p = p {Player.startingDeck = Map.insert zirdaId 1 (Player.startingDeck p)}
+        stamped = commanded {GameState.players = Map.adjust stamp S.alice (GameState.players commanded)}
+    Spec.assertBool s (List.notElem Action.Type.PutCompanionIntoHand (Action.legalActions S.alice stamped)) "CR 903.11a: a Zirda in her starting deck bars it"
