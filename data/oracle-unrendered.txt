@@ -2926,6 +2926,7 @@ total-war
 touch-of-death
 touch-of-moonglove
 touch-of-the-eternal
+touch-of-vitae
 tovolar-dire-overlord-tovolar-the-midnight-scourge
 tower-geist
 toxic-deluge

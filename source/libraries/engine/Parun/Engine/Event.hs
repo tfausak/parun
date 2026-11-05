@@ -11329,8 +11329,11 @@ triggeredSources boards gs =
 --
 -- COUNTED against PendingTrigger.copies, as stateTriggers counts CR 603.8's
 -- suppression: CR 113.2c makes two value-identical instances on one source two
--- abilities, each with its own allowance. Parun.EventTriggerSpec's "CR 113.2c two
--- Well Rested on one creature each trigger once that turn" proves it.
+-- abilities, each with its own allowance. Two granters' grants are unequal
+-- (Binding.acquiredFrom), so the count is reached only by instances one printing
+-- or one granter repeats; Parun.EventTriggerSpec's per-game rider case drives
+-- it directly, and its "CR 113.2c two Well Rested on one creature each trigger
+-- once that turn" proves the two granters' grants.
 withinTriggerLimit :: GameState -> [PendingTrigger.PendingTrigger] -> [PendingTrigger.PendingTrigger]
 withinTriggerLimit gs =
   let spentKey record = limitKey (AbilityTriggered.source record) (AbilityTriggered.controller record) (AbilityTriggered.ability record)
@@ -11362,10 +11365,9 @@ withinTriggerLimit gs =
 -- active teammate's speed rises once": under the shared team turns option two
 -- active players each spend their own instance of rule 702.179d's ability.
 --
--- Not implemented: value-identical instances on one source share a key and are
--- COUNTED rather than told apart, so when the instance that triggered goes and
--- an identical one that has not stays, the one that stays reads as spent
--- (#4627).
+-- A grant is told apart by its name, drawn from its granter
+-- (Binding.acquiredFrom), so a new granter's grant is unspent; the Well Rested
+-- and Tyvar the Bellicose files in data/scenarios prove it.
 type LimitKey = (TriggerSource.TriggerSource, Maybe PlayerId, TriggeredAbility.TriggeredAbility Card (GrantedAbility.Type.GrantedAbility Card))
 
 limitKey :: TriggerSource.TriggerSource -> PlayerId -> TriggeredAbility.TriggeredAbility Card (GrantedAbility.Type.GrantedAbility Card) -> LimitKey

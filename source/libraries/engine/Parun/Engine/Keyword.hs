@@ -5571,6 +5571,28 @@ reducesByManaCostOnEntry keyword = case keyword of
 restrictionsOf :: ActivatedAbility Card (GrantedAbility.GrantedAbility Card) -> [ActivationRestriction.ActivationRestriction]
 restrictionsOf ability = ActivatedAbility.restrictions ability <> foldMap printedRiders (ActivatedAbility.keyword ability)
 
+-- CR 602.5b: is the ability bound by a rider counting its activations, "only
+-- once" or "only N times each turn"? Parun.Engine.ActivationRestriction's
+-- recordActivation keeps the count; Parun.Engine.Projection names a grant of
+-- such an ability for its granter (Binding.acquiredFrom).
+countsActivations :: ActivatedAbility Card (GrantedAbility.GrantedAbility Card) -> Bool
+countsActivations = any counted . restrictionsOf
+  where
+    counted restriction = case restriction of
+      ActivationRestriction.OnlyOnce -> True
+      ActivationRestriction.TimesEachTurn _ -> True
+      ActivationRestriction.SorcerySpeed -> False
+      ActivationRestriction.DuringPhase _ -> False
+      ActivationRestriction.DuringTurn _ -> False
+      ActivationRestriction.AttackedThisStep -> False
+      ActivationRestriction.AfterBlockersDeclared -> False
+      ActivationRestriction.DuringCombatBefore _ -> False
+      ActivationRestriction.BeforeStep _ -> False
+      ActivationRestriction.OnlyIf _ -> False
+      ActivationRestriction.DuringDieRoll -> False
+      ActivationRestriction.SpendOnly _ -> False
+      ActivationRestriction.InstantSpeed -> False
+
 -- CR 113.6b: the zones rule 702 says the ability a keyword stamps functions
 -- from, empty where it names none. CR 702.57a puts a printed forecast ability in
 -- a hand; CR 702.49a puts minted ninjutsu there, and CR 702.49d commander
