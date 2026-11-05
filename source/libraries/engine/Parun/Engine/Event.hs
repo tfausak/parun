@@ -2351,21 +2351,34 @@ chooseAndApply settle asOf batch diverting allowances applied prevented exiledBy
     -- An effect the covered half's continuation applies is not recorded for the
     -- residue, so it applies to each half. Right when the halves have different
     -- recipients, each its own event (Pyromancer's Gauntlet's and Torbran's
-    -- rulings); where both land on one recipient a non-distributive rewrite
-    -- has by then applied to each (gap #6251).
+    -- rulings).
     --
-    -- The two halves may end up on the SAME recipient, which docs/decisions.md's
-    -- "Whether one instruction naming a recipient twice deals one damage event"
-    -- makes one event; resolveDamageBatch rejoins them once the batch is done
-    -- (Replacement.oneEventPerRecipient), rather than here, because a later
-    -- iteration can still move either half.
+    -- A cover that moved its half nowhere (Harm's Way aimed at the recipient
+    -- already being hit) is no split: the halves rejoin at once and continue as
+    -- the one event docs/decisions.md's "Whether one instruction naming a
+    -- recipient twice deals one damage event" makes them, so a flat bonus
+    -- applies once (CR 614.5). Proved by the scenarios
+    -- harms-way-back-onto-its-recipient-takes-pyromancers-gauntlet-once-*.
+    --
+    -- Halves that land together LATER, each moved there by its own row, are
+    -- rejoined only once the batch is done (Replacement.oneEventPerRecipient),
+    -- because a later iteration can still move either half. Not implemented:
+    -- a flat bonus applying to such halves once (#6267).
     Just candidate
       | Just covered <- Replacement.partialCoverage gs allowances candidate event,
         Just (front, rest) <- Replacement.splitDamage covered event -> do
           let applied1 = Set.insert (ReplacementCandidate.identity candidate) applied
-          (survivor, residue1, prevented1, exiledBy1, shuffling1, split1) <- applyChosen settle asOf batch diverting allowances applied prevented exiledBy shuffling split candidate front
-          (leftover, residue2, prevented2, exiledBy2, shuffling2, split2) <- loop settle asOf batch diverting allowances applied1 prevented1 exiledBy1 shuffling1 split1 rest
-          pure (survivor, residue1 <> fmap Right (Maybe.maybeToList leftover) <> residue2, prevented2, exiledBy2, shuffling2, split2)
+          stepped <- stepChosen settle batch applied prevented exiledBy shuffling split candidate front
+          case stepped of
+            Right (appliedFront, prevented1, exiledBy1, shuffling1, rewritten)
+              | Just whole <- rejoinUnmoved rewritten rest ->
+                  loop settle asOf batch diverting allowances appliedFront prevented1 exiledBy1 shuffling1 split whole
+            _ -> do
+              (survivor, residue1, prevented1, exiledBy1, shuffling1, split1) <- case stepped of
+                Left done -> pure done
+                Right (appliedFront, prevented1, exiledBy1, shuffling1, rewritten) -> loop settle asOf batch diverting allowances appliedFront prevented1 exiledBy1 shuffling1 split rewritten
+              (leftover, residue2, prevented2, exiledBy2, shuffling2, split2) <- loop settle asOf batch diverting allowances applied1 prevented1 exiledBy1 shuffling1 split1 rest
+              pure (survivor, residue1 <> fmap Right (Maybe.maybeToList leftover) <> residue2, prevented2, exiledBy2, shuffling2, split2)
     -- CR 614.5: Eye for an Eye's two damages are one modified event, so each
     -- thread carries what has applied so far, and what applies later may reach
     -- both. CR 615.7: the batch gets both back, since a shield may be asked to
@@ -2394,11 +2407,31 @@ alsoDealt gs candidate de = case ReplacementCandidate.effect candidate of
     pure (damageEvent gs DamageKind.Noncombat (ReplacementCandidate.source candidate) target (DamageEvent.amount de))
   _ -> Nothing
 
+-- The covered half of a split, rejoined with its residue when the cover moved it
+-- nowhere: same recipient and every other field but the amount, so the one event
+-- Replacement.oneEventPerRecipient would make of them. Nothing otherwise.
+rejoinUnmoved :: ProposedEvent -> ProposedEvent -> Maybe ProposedEvent
+rejoinUnmoved covered rest = case (covered, rest) of
+  (ProposedEvent.WouldDealDamage front, ProposedEvent.WouldDealDamage residue)
+    | front {DamageEvent.amount = 0} == residue {DamageEvent.amount = 0} ->
+        Just (ProposedEvent.WouldDealDamage front {DamageEvent.amount = DamageEvent.amount front + DamageEvent.amount residue})
+  _ -> Nothing
+
 -- One iteration of `loop`: apply the chosen candidate to the event and continue
 -- with what comes back. Split out so the partial-cover branch above and the
 -- ordinary one apply a candidate the same way.
 applyChosen :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
 applyChosen settle asOf batch diverting allowances applied prevented exiledBy shuffling split candidate event = do
+  stepped <- stepChosen settle batch applied prevented exiledBy shuffling split candidate event
+  case stepped of
+    Left done -> pure done
+    Right (applied1, prevented1, exiledBy1, shuffling1, rewritten) -> loop settle asOf batch diverting allowances applied1 prevented1 exiledBy1 shuffling1 split rewritten
+
+-- The application itself, short of continuing the loop: Left for an outcome that
+-- ends this thread, Right for the rewritten event and the accumulators the loop
+-- continues it with.
+stepChosen :: Game () -> Set ObjectId -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ReplacementCandidate -> ProposedEvent -> Game (Either (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId) (Set CandidateId, [Prevention], Maybe ObjectId, Bool, ProposedEvent))
+stepChosen settle batch applied prevented exiledBy shuffling split candidate event = do
   gs <- State.get
   -- CR 615.12: the chosen effect is a prevention effect and this damage
   -- can't be prevented (Spider-Punk), so it is APPLIED and prevents none
@@ -2442,14 +2475,14 @@ applyChosen settle asOf batch diverting allowances applied prevented exiledBy sh
   -- counts against it for the rest of the batch (Replacement.floorLeft).
   let prevented1 = prevented <> (Maybe.maybeToList (Replacement.preventionBy inert candidate event outcome), Maybe.maybeToList (Replacement.passageBy candidate event outcome))
   let applied1 = Set.insert (ReplacementCandidate.identity candidate) applied
-  case outcome of
-    Nothing -> pure (Nothing, [], prevented1, exiledBy, shuffling, split)
+  pure $ case outcome of
+    Nothing -> Left (Nothing, [], prevented1, exiledBy, shuffling, split)
     -- CR 614.9 / 615.7: damage moved onto another recipient goes back to the
     -- batch, whose division of a shield there must span it (settlesFirst).
     Just rewritten
       | Just moved <- movedDamage event rewritten ->
-          pure (Nothing, [Left (moved, applied1)], prevented1, exiledBy, shuffling, split)
-    Just rewritten -> loop settle asOf batch diverting allowances applied1 prevented1 (exiledByAfter candidate event rewritten exiledBy) (shuffling || shufflesAfter candidate) split rewritten
+          Left (Nothing, [Left (moved, applied1)], prevented1, exiledBy, shuffling, split)
+    Just rewritten -> Right (applied1, prevented1, exiledByAfter candidate event rewritten exiledBy, shuffling || shufflesAfter candidate, rewritten)
 
 -- The damage event a rewrite moved onto a different recipient, read off the
 -- event before and after as `exiledByAfter` reads a destination; Nothing for
@@ -5789,11 +5822,12 @@ resolveDamage allowances spent earlier de = do
 -- answer the survivors. The typed door Parun.Engine.Damage uses, so Damage never
 -- cases on a ProposedEvent or on a ReplacementEffect.
 --
--- Replacement.oneEventPerRecipient undoes a split where it moved nothing: a
--- counted redirect aimed AT the recipient its chosen source is already damaging
--- lands both halves on that one permanent, and docs/decisions.md's "Whether one
--- instruction naming a recipient twice deals one damage event" makes it one
--- event. Run over the whole batch because a half can come back as a DamageThread;
+-- Replacement.oneEventPerRecipient joins what landed on one recipient: a
+-- redirect moving one proposal of a source onto a recipient another proposal of
+-- it is already damaging, which docs/decisions.md's "Whether one
+-- instruction naming a recipient twice deals one damage event" makes one event.
+-- A split that moved nothing is rejoined earlier, in chooseAndApply. Run over
+-- the whole batch because a half can come back as a DamageThread;
 -- the key's source component keeps a CR 510.2 batch's separate dealers apart.
 --
 -- Each event still runs its OWN CR 616.1 loop and the loop's unit is still one
@@ -11043,8 +11077,9 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.AnyOf conditions -> all controllerTurnScoped conditions
   TriggerCondition.CausedBy narrowed -> controllerTurnScoped (CausedBy.condition narrowed)
   -- CR 702.37e offers the special action "any time you have priority", which is
-  -- every turn and not only the controller's own.
-  TriggerCondition.SelfTurnedFaceUp -> False
+  -- every turn and not only the controller's own; and a Matching subject's
+  -- watcher is not even the player taking it.
+  TriggerCondition.TurnedFaceUp _ -> False
   -- CR 701.27a names no turn at all: an activated ability can transform a
   -- permanent whenever it can be activated, and CR 702.145c's sweep fires on
   -- whosever turn it becomes night.
@@ -11052,10 +11087,6 @@ controllerTurnScoped cond = case cond of
   -- The watcher's side of that answer, and False for the same reason, the
   -- watcher not being the permanent that turned over.
   TriggerCondition.PermanentTransforms _ -> False
-  -- The same rule from the watcher's side, and doubly so: CR 702.37e lets any
-  -- player take the action on any turn, and the watcher is not even the player
-  -- taking it.
-  TriggerCondition.PermanentTurnedFaceUp _ -> False
   TriggerCondition.FaceDownPermanentLeavesRevealed -> False
   -- CR 702.112a's ability fires on combat damage to a player, which any player's
   -- turn can carry, and the watcher's turn is not asked about at all.

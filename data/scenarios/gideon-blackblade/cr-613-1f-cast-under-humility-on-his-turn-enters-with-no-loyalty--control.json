@@ -1,0 +1,81 @@
+{
+  "board": {
+    "active": "bob",
+    "seats": [
+      {
+        "name": "bob"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Humility",
+            "label": "humility"
+          },
+          {
+            "card": "Leyline of Anticipation",
+            "label": "leyline"
+          },
+          {
+            "card": "Plains",
+            "label": "p1"
+          },
+          {
+            "card": "Plains",
+            "label": "p2"
+          },
+          {
+            "card": "Plains",
+            "label": "p3"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Gideon Blackblade",
+            "label": "gideon"
+          }
+        ],
+        "name": "alice"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 613.1f Gideon Blackblade cast under Humility on an opponent's turn enters with four loyalty counters",
+  "note": "Leyline of Anticipation lets alice cast him on bob's turn, where his static ability does not make him a creature, so Humility does not reach him and CR 306.5b's intrinsic ability places his printed loyalty.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$p1",
+            "$p2",
+            "$p3"
+          ],
+          "object": "$gideon"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Counters": {
+          "count": 4,
+          "kind": {
+            "type": "Loyalty"
+          },
+          "object": "Gideon Blackblade"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

@@ -5887,9 +5887,13 @@ stunCounters oid gs = case Game.lookupObject oid gs of
 --
 -- Minted from the finished projection rather than stored on the card, so it is
 -- keyed on the PROJECTED card type and reads the PROJECTED loyalty, a copiable
--- value under CR 707.2 (CR 707.5). Minting AFTER the layer fold puts loyalty out
--- of LoseAllAbilities' reach, though CR 306.5b's is an intrinsic ability CR 613.1f
--- could remove (gap #6242), while riot, being a keyword, is inside it.
+-- value under CR 707.2 (CR 707.5). Minting AFTER the layer fold puts the intrinsic
+-- rows -- CR 306.5b's, CR 310.4b's and CR 714.3's -- outside the lists a CR
+-- 613.1f wipe empties, so each reads PC.lostAllAbilities instead, as
+-- Parun.Engine.Subtype.intrinsicManaAbilityOf does; riot, being a keyword, is
+-- inside the fold. The scenario
+-- gideon-blackblade/cr-613-1f-cast-under-humility-on-his-turn-enters-with-no-loyalty
+-- proves it.
 -- `announcedX` is CR 107.3m's, and the loyalty arm is this
 -- function's reader of it: a printed loyalty of X is settled at CR 601.2b before
 -- it arrives. The rule's other reader is a CR 614.1c row a card writes, which
@@ -5899,13 +5903,12 @@ stunCounters oid gs = case Game.lookupObject oid gs of
 -- inside the loyalty arm, so CR 616.1e can order it against CR 614.16's counter
 -- multipliers -- Tamiyo, Compleated Sage under a Doubling Season is the board
 -- where the two orders disagree. Read off the same finished projection, so a
--- compleated ability the CR 613 fold removed is gone -- which is what a keyword
--- needs, where CR 306.5b's loyalty stays, as above.
+-- compleated ability the CR 613 fold removed is gone.
 intrinsicReplacementsOf :: Natural -> Natural -> Maybe Keyword.Type.Keyword -> ProjectedCharacteristics -> [ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card))]
 intrinsicReplacementsOf announcedX phyrexianLifePaid castUsing pc =
   ( -- CR 614.1c: the entering object is the ability's own source, so the pattern
     -- is Filter.IsSource.
-    if Set.member CardType.Planeswalker (PC.cardTypes pc)
+    if Set.member CardType.Planeswalker (PC.cardTypes pc) && not (PC.lostAllAbilities pc)
       then
         fmap
           ( \printed ->
@@ -5929,8 +5932,9 @@ intrinsicReplacementsOf announcedX phyrexianLifePaid castUsing pc =
            else []
        )
     -- CR 310.4b's intrinsic defense counters -- CR 306.5b's clause one rule
-    -- number over, keyed on the projected card type.
-    <> ( if Set.member CardType.Battle (PC.cardTypes pc)
+    -- number over, keyed on the projected card type and lost the same way.
+    -- Unproven: no card in data/cards/ strips a battle as it enters.
+    <> ( if Set.member CardType.Battle (PC.cardTypes pc) && not (PC.lostAllAbilities pc)
            then
              fmap
                (\(Defense.MkDefense n) -> ReplacementEffect.EntryR (EntryR.MkEntryR Filter.Type.IsSource (EntryRewrite.WithCounters (WithCounters.one CounterKind.Defense (Quantity.Type.Literal (toInteger n))))))
@@ -5944,8 +5948,7 @@ intrinsicReplacementsOf announcedX phyrexianLifePaid castUsing pc =
     <> Keyword.castForReplacementsOf castUsing (PC.keywords pc)
     -- CR 714.3a's intrinsic lore counter -- or CR 714.3b's chosen number, which
     -- rule 714.3b substitutes for it on a Saga with read ahead -- minted off the
-    -- same projection as CR 306.5b's: CR 714.3a's is an intrinsic ability too
-    -- (gap #6242).
+    -- same projection as CR 306.5b's, and lost the same way.
     <> Saga.entryReplacementsOf pc
 
 -- CR 614.1: every replacement effect active on the battlefield -- plus the

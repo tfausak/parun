@@ -141,10 +141,12 @@ Entries are ordered by the first rule each cites.
 
 - **Question**: Char aimed at its own caster deals 4 and 2 to one player. Is
   that two damage events or one of 6? CR 615.10's per-event floor observes it.
-- **Rules**: CR 120.4, 608.2f, 615.7, 615.10, 701.14c; CR of 2026-08-07.
+- **Rules**: CR 120.4, 608.2f, 614.5, 615.7, 615.10, 701.14c; CR of 2026-08-07.
 - **Decision**: One event per recipient, source and moment; the amounts sum,
   over an instruction's aims and over a whole batch's survivors, since a
-  redirect can land two proposals of one source together.
+  redirect can land two proposals of one source together. A counted redirect
+  aimed back at its recipient splits nothing, so a flat bonus such as
+  Pyromancer's Gauntlet's applies to the one event once (CR 614.5).
 - **Rejected**: Two events, which applies CR 615.10 twice. A key without the
   source: combat and fights have several dealers.
 - **Site**: `Parun.Engine.Replacement.oneEventPerRecipient`, proved by
@@ -152,10 +154,13 @@ Entries are ordered by the first rule each cites.
   deals her ONE event, of 6" and the scenario
   `harms-way-onto-another-recipient-of-its-source-is-one-event`; absorb's
   ceiling spans the event at `Parun.Engine.Replacement.ceilingLeft`, proved by
-  `lymph-sliver-absorbs-1-of-earthquake-once-though-pariah-adds-to-it`, and
+  `lymph-sliver-absorbs-1-of-earthquake-once-though-pariah-adds-to-it`;
   CR 615.10's floor at `Parun.Engine.Replacement.floorLeft`, proved by
-  `temple-altisaur-lets-1-of-earthquake-through-once-though-pariah-adds-to-it`.
-- **Issue**: #2586.
+  `temple-altisaur-lets-1-of-earthquake-through-once-though-pariah-adds-to-it`;
+  the redirect aimed back at its recipient at
+  `Parun.Engine.Event.chooseAndApply`, proved by the scenarios
+  `harms-way-back-onto-its-recipient-takes-pyromancers-gauntlet-once-*`.
+- **Issue**: #2586, #6251.
 
 ## Whether damage a replacement adds joins a division already owed
 

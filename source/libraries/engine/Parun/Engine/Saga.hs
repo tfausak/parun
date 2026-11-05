@@ -195,10 +195,14 @@ tracksLore pc = isSaga pc && not (null (chaptersOf pc))
 -- Doubling Season gives a Saga two lore counters as it enters, and CR 714.2b's
 -- chapters I and II both fire off that one placement.
 --
--- Keyed on the SUBTYPE alone and NOT on `tracksLore`, which is rule 714.3a's own
+-- Keyed on the SUBTYPE and NOT on `tracksLore`, which is rule 714.3a's own
 -- wording: it says "each Saga", where CR 714.3c and CR 704.5s both add "with one
--- or more chapter abilities". A Saga stripped of its abilities still enters with a
--- lore counter and then never advances.
+-- or more chapter abilities". But both rows are intrinsic ABILITIES, so a CR
+-- 613.1f wipe takes them (PC.lostAllAbilities, the flag
+-- Parun.Engine.Subtype.intrinsicManaAbilityOf reads): a Saga stripped as it
+-- enters gets no lore counter. The scenario
+-- saga/cr-613-1f-history-of-benalia-under-opalescence-and-humility-enters-with-no-lore
+-- proves it.
 --
 -- CR 714.3b's arm is the OTHER branch, never a second row: rule 714.3a says
 -- "each Saga WITHOUT read ahead" and rule 714.3b "each Saga WITH read ahead", so
@@ -213,7 +217,7 @@ tracksLore pc = isSaga pc && not (null (chaptersOf pc))
 -- chosen.
 entryReplacementsOf :: PC.ProjectedCharacteristics -> [ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card))]
 entryReplacementsOf pc
-  | not (isSaga pc) = []
+  | not (isSaga pc) || PC.lostAllAbilities pc = []
   -- CR 614.1c on both branches: the entering object is the ability's own source.
   | Map.member Keyword.ReadAhead (PC.keywords pc) = [ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource EntryRewrite.ReadAhead)]
   | otherwise = [ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource (EntryRewrite.WithCounters (WithCounters.one CounterKind.Lore (Quantity.Literal 1))))]
