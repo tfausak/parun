@@ -33,7 +33,7 @@ entry =
 
 entryJson :: String
 entryJson =
-  "{\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}},\"source\":4,\"controller\":0,"
+  "{\"ability\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}},\"source\":4,\"controller\":0,"
     <> "\"bindings\":{\"token\":{\"amount\":9}},"
     <> "\"window\":{\"type\":\"AnyTurn\"},\"createdAt\":7}"
 
@@ -48,7 +48,7 @@ spec s = Spec.describe s "Parun.Codec.DelayedTrigger" $ do
       s
       DelayedTrigger.codec
       entry {DelayedTrigger.expiry = Just Expiry.AtCleanup}
-      ( "{\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}},\"source\":4,\"controller\":0,"
+      ( "{\"ability\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}},\"source\":4,\"controller\":0,"
           <> "\"bindings\":{\"token\":{\"amount\":9}},"
           <> "\"window\":{\"type\":\"AnyTurn\"},\"expiry\":{\"type\":\"AtCleanup\"},\"createdAt\":7}"
       )
@@ -58,7 +58,7 @@ spec s = Spec.describe s "Parun.Codec.DelayedTrigger" $ do
       s
       DelayedTrigger.codec
       entry {DelayedTrigger.window = TurnWindow.NextTurnOf (Just (PlayerId.MkPlayerId 2))}
-      ( "{\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}},\"source\":4,\"controller\":0,"
+      ( "{\"ability\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}},\"source\":4,\"controller\":0,"
           <> "\"bindings\":{\"token\":{\"amount\":9}},"
           <> "\"window\":{\"type\":\"NextTurnOf\",\"value\":2},\"createdAt\":7}"
       )
@@ -78,4 +78,4 @@ spec s = Spec.describe s "Parun.Codec.DelayedTrigger" $ do
           DelayedTrigger.expiry = Nothing,
           DelayedTrigger.createdAt = Timestamp.MkTimestamp 7
         }
-      "{\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}},\"source\":4,\"controller\":0,\"window\":{\"type\":\"AnyTurn\"},\"createdAt\":7}"
+      "{\"ability\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}},\"source\":4,\"controller\":0,\"window\":{\"type\":\"AnyTurn\"},\"createdAt\":7}"

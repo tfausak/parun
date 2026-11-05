@@ -1354,7 +1354,7 @@ legalSets kind reader perspective unannounced seed source slots gs =
 -- one answer per distinct value (`rebound` below).
 legalSetsGiven :: StackObjectKind.StackObjectKind -> Maybe AbilityName.AbilityName -> Pools -> Maybe PlayerId -> Bool -> Map SlotName Binding.Type.Binding -> ObjectId -> Map SlotName TargetSlot -> GameState -> Map SlotName (Set Recipient)
 legalSetsGiven kind reader pools perspective unannounced seed source slots gs =
-  let answer bindings slot = legalRecipientsGiven kind reader pools perspective unannounced bindings (Game.acquisitionOf source gs) source slot gs
+  let answer bindings slot = legalRecipientsGiven kind reader pools perspective unannounced bindings (Game.acquisitionFor reader source gs) source slot gs
       -- The FIRST pass sees the seed alone, which is the only thing bound before
       -- CR 601.2c chooses anything; the second sees it under the first pass's
       -- answers. Map.union is left-biased, so a target slot's own answer wins over
@@ -1393,7 +1393,7 @@ legalSetsGiven kind reader pools perspective unannounced seed source slots gs =
             readsOtherwise =
               maybe False (`Set.member` siblings) (scopeSlot (TargetSlot.pool slot))
                 || not (Set.disjoint siblings (foldMap Filter.boundSlots (TargetSlot.filter slot)))
-            boundValue bindings = Filter.slotAmount (slotContext reader perspective unannounced bindings (Game.acquisitionOf source gs) source (TargetSlot.amount slot) gs)
+            boundValue bindings = Filter.slotAmount (slotContext reader perspective unannounced bindings (Game.acquisitionFor reader source gs) source (TargetSlot.amount slot) gs)
             representatives bindingsList =
               if readsOtherwise
                 then bindingsList
@@ -1403,7 +1403,7 @@ legalSetsGiven kind reader pools perspective unannounced seed source slots gs =
               Nothing
                 | Just values <- membersBoundValues counting announcedX boundValue declared slots independent slot ->
                     Set.unions (fmap (\k -> answer widened slot {TargetSlot.amount = Just (Quantity.Type.Literal k)}) values)
-              Nothing -> legalRecipientsGiven kind reader pools perspective True (Map.delete openSlot widened) (Game.acquisitionOf source gs) source slot {TargetSlot.amount = fmap (const openBound) (TargetSlot.amount slot)} gs
+              Nothing -> legalRecipientsGiven kind reader pools perspective True (Map.delete openSlot widened) (Game.acquisitionFor reader source gs) source slot {TargetSlot.amount = fmap (const openBound) (TargetSlot.amount slot)} gs
       dependent = fmap rebound (Map.filter (secondPass declared) slots)
    in -- Map.union is left-biased, so the second pass wins wherever it answered.
       Map.union dependent independent
@@ -1630,7 +1630,7 @@ countingBy :: Maybe AbilityName.AbilityName -> Maybe PlayerId -> Map SlotName Bi
 countingBy reader perspective seed source gs =
   Integer.toNaturalSaturating
     . Maybe.fromMaybe 0
-    . Quantity.evaluate (Projection.fullView gs) (slotContext reader perspective False seed (Game.acquisitionOf source gs) source Nothing gs) gs source
+    . Quantity.evaluate (Projection.fullView gs) (slotContext reader perspective False seed (Game.acquisitionFor reader source gs) source Nothing gs) gs source
 
 -- CR 601.2c: the number of targets a slot's own text fixes ("in some cases, the
 -- number of targets will be defined by the spell's text"), for a slot that
@@ -2174,7 +2174,7 @@ jointlyIllegalGiven kind reader pools perspective unannounced seed source slots 
       refused slot targetSlot =
         let picked = Map.findWithDefault Set.empty slot chosen
          in Set.union
-              (Set.difference picked (legalRecipientsGiven kind reader pools perspective unannounced bindings (Game.acquisitionOf source gs) source targetSlot gs))
+              (Set.difference picked (legalRecipientsGiven kind reader pools perspective unannounced bindings (Game.acquisitionFor reader source gs) source targetSlot gs))
               (togetherRefused targetSlot picked gs)
    in Map.mapWithKey refused (Map.filter (jointlyJudged (Map.keysSet slots)) slots)
 
@@ -2287,7 +2287,7 @@ jointlyFillableGiven kind reader pools perspective seed source slots sets gs =
       coherent chosen =
         let bindings = Map.union (fmap Binding.toRecipients chosen) seed
             admits name slot =
-              let legal = legalRecipientsGiven kind reader pools perspective True bindings (Game.acquisitionOf source gs) source slot gs
+              let legal = legalRecipientsGiven kind reader pools perspective True bindings (Game.acquisitionFor reader source gs) source slot gs
                in Set.isSubsetOf (Map.findWithDefault Set.empty name chosen) legal
                     && Natural.length legal >= demanded slot
          in and (Map.elems (Map.mapWithKey admits readers))
@@ -2298,9 +2298,9 @@ jointlyFillableGiven kind reader pools perspective seed source slots sets gs =
       exactBeyond = case Map.toList readers of
         [(_, reader_)]
           | Just values <- membersBoundValues counting announced (boundValueOf reader_) declared slots sets reader_ ->
-              any (\k -> Natural.length (legalRecipientsGiven kind reader pools perspective True seed (Game.acquisitionOf source gs) source reader_ {TargetSlot.amount = Just (Quantity.Type.Literal k)} gs) >= demanded reader_) values
+              any (\k -> Natural.length (legalRecipientsGiven kind reader pools perspective True seed (Game.acquisitionFor reader source gs) source reader_ {TargetSlot.amount = Just (Quantity.Type.Literal k)} gs) >= demanded reader_) values
         _ -> True
-      boundValueOf slot bindings = Filter.slotAmount (slotContext reader perspective True (Map.union bindings seed) (Game.acquisitionOf source gs) source (TargetSlot.amount slot) gs)
+      boundValueOf slot bindings = Filter.slotAmount (slotContext reader perspective True (Map.union bindings seed) (Game.acquisitionFor reader source gs) source (TargetSlot.amount slot) gs)
    in Map.null readers || any coherent visited || (not (null beyond) && exactBeyond)
 
 -- The subsets of exactly this size, ascending, which is the shape the search

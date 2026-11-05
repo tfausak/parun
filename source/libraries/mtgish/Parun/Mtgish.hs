@@ -53,6 +53,7 @@ import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
 import qualified Parun.Types.Clause as Clause
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.ColorSpread as ColorSpread
 import qualified Parun.Types.CombatRestriction as CombatRestriction
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Compares as Compares
@@ -85,6 +86,7 @@ import qualified Parun.Types.Duration as Duration
 import qualified Parun.Types.DuringPhase as DuringPhase
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EndingStep as EndingStep
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EntryR as EntryR
 import qualified Parun.Types.EntryRewrite as EntryRewrite
 import qualified Parun.Types.EntryRiders as EntryRiders
@@ -706,11 +708,11 @@ trigger n = case Node.tag n of
   "WhenAPermanentEntersTheBattlefield" -> do
     who <- Node.argument n
     case single who of
-      Just "ThisPermanent" -> Right (TriggerCondition.SelfEnters, bound [("ThatEnteringPermanent", Oracle.Target.selfSlot)])
+      Just "ThisPermanent" -> Right (TriggerCondition.Enters EntersTrigger.defaultValue, bound [("ThatEnteringPermanent", Oracle.Target.selfSlot)])
       Just _ -> Node.untranslated n
       Nothing -> do
         f <- permanents outermost who
-        Right (TriggerCondition.PermanentEnters f, bound [("ThatEnteringPermanent", Oracle.Target.becameSlot)])
+        Right (TriggerCondition.Enters (EntersTrigger.matching f), bound [("ThatEnteringPermanent", Oracle.Target.becameSlot)])
   "WhenAPermanentDies" -> do
     who <- Node.argument n
     case single who of
@@ -1346,7 +1348,7 @@ productions context n = case Node.tag n of
     case manaChoice context of
       Just i | (option : _) <- drop i options -> Node.node option >>= productions context
       _ -> Node.untranslated n
-  "AnyManaColor" -> Right [ManaProduction.AnyColor]
+  "AnyManaColor" -> Right [ManaProduction.AnyColor ColorSpread.OneColor]
   'M' : 'a' : 'n' : 'a' : 'P' : 'r' : 'o' : 'd' : 'u' : 'c' : 'e' : [c] | Just t <- Ingest.manaType c -> Right [ManaProduction.OfType t]
   _ -> Node.untranslated n
 
@@ -1510,6 +1512,9 @@ quantity context value = do
     "TheNumberOfPermanentsOnTheBattlefield" -> do
       f <- Node.argument n >>= permanents context
       Right (Quantity.Count Count.MkCount {Count.scope = Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)), Count.filter = f, Count.aggregation = Aggregation.Members})
+    "TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn" -> do
+      f <- Node.argument n >>= permanents context
+      Right (Quantity.Count Count.MkCount {Count.scope = Scope.AsTurnBegan, Count.filter = f, Count.aggregation = Aggregation.Members})
     "TheNumberOfCardsInPlayersHand" -> do
       whose <- Node.argument n >>= player context
       Right (Quantity.Count Count.MkCount {Count.scope = Scope.InZone (InZone.MkInZone Zone.Hand whose), Count.filter = Filter.And [], Count.aggregation = Aggregation.Members})
@@ -1583,7 +1588,7 @@ atom context n = case Node.tag n of
   "ControlledByAPlayer" -> do
     who <- Node.child n
     case (Node.tag who, fmap Node.node (Node.args who)) of
-      ("SinglePlayer", Just (Right p)) | Just s <- Map.lookup (Node.tag p) (references context) -> Right (Filter.HeldByBound Holder.Controller s)
+      ("SinglePlayer", Just (Right p)) | Just s <- Map.lookup (Node.tag p) (references context <> bindings context) -> Right (Filter.HeldByBound Holder.Controller s)
       _ -> fmap (Filter.HeldBy Holder.Controller) (Node.argument n >>= players)
   -- "Another": other than the source, or than an object a slot names.
   "Other" -> do

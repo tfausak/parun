@@ -1,5 +1,6 @@
 module Parun.Types.ManaProduction where
 
+import qualified Parun.Types.ColorSpread as ColorSpread
 import qualified Parun.Types.CouldProduce as CouldProduce
 import qualified Parun.Types.ManaCount as ManaCount
 import qualified Parun.Types.ManaType as ManaType
@@ -19,7 +20,8 @@ import qualified Parun.Types.ManaType as ManaType
 -- obligation a future constructor ("of any type") would carry.
 data ManaProduction
   = OfType ManaType.ManaType
-  | AnyColor
+  | -- | CR 105.4: mana of colours the producing player chooses, spread as given.
+    AnyColor ColorSpread.ColorSpread
   | -- | CR 607.2d: an ability referring to "the chosen color" is linked to the
     -- ability that caused the choice, and adds mana of THAT colour. Coldsteel
     -- Heart's "{T}: Add one mana of the chosen color", linked to its "As this

@@ -34,6 +34,7 @@ import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.CounterKind as CounterKind
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Holder as Holder
@@ -1025,8 +1026,7 @@ evolveSpec s registry =
         Spec.it s "CR 702.100d two instances mint two abilities" $ do
           let abilities = Keyword.abilitiesFor Keyword.Type.Evolve 2
               expected =
-                TriggerCondition.PermanentEnters
-                  (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.HeldBy Holder.Controller PlayerRelation.You])
+                TriggerCondition.Enters (EntersTrigger.matching (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.HeldBy Holder.Controller PlayerRelation.You]))
           Spec.assertEqWith s "two abilities" (length abilities) 2
           Spec.assertEqWith
             s

@@ -14,7 +14,8 @@ module Parun.Types.ReplacementOrigin where
 -- which are replacement effects, and CR 614.15
 -- puts self-replacement effects outside that class.
 --
--- Read only by Parun.Engine.Replacement.bucketOf, which is CR 616.1a's step.
+-- Read by Parun.Engine.Replacement.bucketOf, which is CR 616.1a's step, and
+-- Parun.Engine.Event.applyInertly, where a use goes unspent only on a shield.
 data ReplacementOrigin
   = SelfReplacement -- CR 614.15
   | Other -- CR 614.15's "other replacement effects"

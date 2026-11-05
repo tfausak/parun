@@ -85,6 +85,7 @@ import qualified Parun.Types.DiscardTrigger as DiscardTrigger
 import qualified Parun.Types.DiscardWay as DiscardWay
 import qualified Parun.Types.Discarded as Discarded
 import qualified Parun.Types.Drew as Drew
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EventGroup as EventGroup
 import qualified Parun.Types.Exploited as Exploited
 import qualified Parun.Types.Face as Face
@@ -664,9 +665,7 @@ looksBack condition = case condition of
   TriggerCondition.SelfCrewsVehicle -> False
   -- Entries, not departures (CR 603.6a). The rule's own CR 603.6a checks "all
   -- permanents on the battlefield (including the newcomers)" AFTER the event.
-  TriggerCondition.SelfEnters -> False
-  TriggerCondition.PermanentEnters _ -> False
-  TriggerCondition.PermanentsEnter _ -> False
+  TriggerCondition.Enters _ -> False
   -- Turn structure, the stack, damage, life, counters and the rest: none names a
   -- zone change at all, so CR 603.10a's list cannot reach them.
   TriggerCondition.StepBegins {} -> False
@@ -857,11 +856,9 @@ batchScoped condition = case condition of
   TriggerCondition.CreatureExploits {} -> False
   TriggerCondition.SelfBecomesCrewed {} -> False
   TriggerCondition.SelfCrewsVehicle -> False
-  TriggerCondition.SelfEnters -> False
-  TriggerCondition.PermanentEnters _ -> False
-  -- The batch reading of the arm above: CR 603.2c's "one or more" is one
-  -- occurrence for the whole entry event (Dunbarrow Revivalist's boon).
-  TriggerCondition.PermanentsEnter _ -> True
+  -- CR 603.2c: OneOrMore is one occurrence for the whole entry event
+  -- (Dunbarrow Revivalist's boon).
+  TriggerCondition.Enters t -> EntersTrigger.batching t == Batching.OneOrMore
   TriggerCondition.StepBegins {} -> False
   TriggerCondition.StateIs _ -> False
   -- CR 603.2c: "deals damage" naming no recipient is one occurrence per damage
@@ -2813,9 +2810,7 @@ zonesTriggeredFrom cond =
         TriggerCondition.SelfBecomesPlotted -> Set.singleton Zone.Exile
         -- CR 603.6a is an enters-the-battlefield ability; its bearer is on the
         -- battlefield when it fires.
-        TriggerCondition.SelfEnters -> battlefield
-        TriggerCondition.PermanentEnters _ -> battlefield
-        TriggerCondition.PermanentsEnter _ -> battlefield
+        TriggerCondition.Enters _ -> battlefield
         TriggerCondition.StepBegins {} -> battlefield
         -- CR 709.5c makes an unlocked designation something a permanent ON THE
         -- BATTLEFIELD has, so this condition cannot trigger from a graveyard at all.
@@ -3140,7 +3135,7 @@ stateTriggersOn gs
           liveCondition condition = case condition of
             TriggerCondition.StateIs cond ->
               Condition.holds (Projection.fullView gs) (Projection.sourceContext gs (Just ctrl) oid) gs oid cond
-            TriggerCondition.SelfEnters -> False
+            TriggerCondition.Enters _ -> False
             -- CR 309.4c is an EVENT trigger too: the marker MOVING into the room
             -- is what fires it, not the marker sitting there.
             TriggerCondition.RoomEntered _ -> False
@@ -3181,10 +3176,6 @@ stateTriggersOn gs
             -- CR 704.5m acts on, but it is a state-based action rather than a
             -- CR 603.8 trigger, and no condition here asks about it.
             TriggerCondition.SelfBecomesUnattachedFrom _ -> False
-            -- CR 603.6a is an EVENT trigger, matched against the log; nothing
-            -- about it is a CR 603.8 state.
-            TriggerCondition.PermanentEnters _ -> False
-            TriggerCondition.PermanentsEnter _ -> False
             TriggerCondition.StepBegins {} -> False
             TriggerCondition.DealsDamage _ -> False
             TriggerCondition.IsDealtDamage _ -> False
@@ -3589,6 +3580,11 @@ delayedPending grouped gs =
           -- player" is the seat that just gained, not one the arming spell named.
           -- Map.union is left-biased, so a name the arming environment happens to
           -- share is read as THIS firing's, which is what the printed word means.
+          -- Except a step's beginning, which names only the seat the turn began
+          -- with (Binding.eventBindingsOver) and happens to no player: under CR
+          -- 805.4 that seat is a teammate of the one Nafs Asp hit or Elkin Lair
+          -- exiled from, so what the arming environment named stands. Proved by
+          -- data/scenarios/nafs-asp-under-shared-turns-costs-the-teammate-it-hit.json.
           -- Nothing for CR 400.7f's bearer arrival: this scan looks for events a
           -- delayed entry watches, not for a bearer's own departure, and the
           -- entry's captured environment (CR 603.7c) is where what it knows about
@@ -3596,7 +3592,10 @@ delayedPending grouped gs =
           -- same reason -- this scan gathers no batch -- which is why CR 400.7e's
           -- new object is claimed by eventBindingSlotsSometimes and not by the
           -- floor wherever eventBindings reads that table.
-          (Map.union (eventSlots entry logged) (DelayedTrigger.bindings entry))
+          ( case LoggedEvent.event logged of
+              GameEvent.StepBegan _ -> Map.union (DelayedTrigger.bindings entry) (eventSlots entry logged)
+              _ -> Map.union (eventSlots entry logged) (DelayedTrigger.bindings entry)
+          )
           -- CR 603.7a: what tells the ability this becomes apart from one its
           -- source simply has, once it is on the stack.
           (Just (DelayedTrigger.createdAt entry))

@@ -1,0 +1,23 @@
+{
+  "description": "CR 603.7 whole card: with the Asp dead and the debt unpaid, the offer stays open and bob still loses the life at his draw step",
+  "note": "The paid half is nafs-asp-debt-paid-in-upkeep-costs-no-life.json. The delayed ability is not the permanent's, so the Asp's death ends neither it nor the offer (CR 603.7e).",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Nafs Asp", "label": "asp", "ready": true}, {"card": "Mountain", "label": "mountain"}], "hand": [{"card": "Shock", "label": "shock"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Forest", "label": "forest"}]},
+      {"name": "carol", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$asp"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"ChooseAttackTarget": "$bob"}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "do": {"Cast": {"object": "$shock", "targets": ["$asp"], "mana": ["$mountain"]}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Nafs Asp", "count": 1}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"View": {"of": "Offered", "player": "bob", "is": ["Pass", "EndEffect $asp", "ActivateManaAbility $forest"]}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Life": {"player": "bob", "life": 19}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "bob", "life": 18}}}
+  ]
+}

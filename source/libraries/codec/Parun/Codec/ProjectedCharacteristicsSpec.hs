@@ -156,9 +156,9 @@ testCharacteristicsJson =
     <> RuleAbilitiesSpec.testRuleAbilitiesJson
     <> ","
     <> "\"specialActions\":[{\"type\":\"DiscardThisAnyTime\"}],"
-    <> "\"triggeredAbilities\":[{\"condition\":{\"type\":\"SelfEnters\"},"
+    <> "\"triggeredAbilities\":[{\"condition\":{\"type\":\"Enters\",\"value\":{}},"
     <> "\"modal\":{\"modes\":[{}]}}],"
-    <> "\"delayedAbilities\":{\"later\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}}},"
+    <> "\"delayedAbilities\":{\"later\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}}},"
     <> "\"enchant\":[{\"pool\":{\"type\":\"Creatures\"}}],"
     <> "\"castingPermissions\":[{\"type\":\"CastFromLibraryWhileSearching\"}],"
     <> "\"ruleAbilities\":"

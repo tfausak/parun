@@ -216,139 +216,147 @@ gameWith settings order =
               Player.crankCounter = Designation.Sprocket3
             }
         )
-   in GameState.MkGameState
-        { GameState.settings = settings,
-          GameState.objects = Map.empty,
-          GameState.library = Map.empty,
-          GameState.hand = Map.empty,
-          GameState.graveyard = Map.empty,
-          GameState.battlefield = mempty,
-          GameState.phasedOut = mempty,
-          GameState.exile = mempty,
-          GameState.command = mempty,
-          GameState.ante = mempty,
-          GameState.sideDecks = Map.empty,
-          GameState.stack = [],
-          GameState.stackedIn = Map.empty,
-          GameState.players = Map.fromList (fmap newPlayer order_),
-          -- CR 729.4: nobody is nested inside another game here.
-          GameState.outsideObjects = Map.empty,
-          GameState.broughtIn = Seq.empty,
-          GameState.manaPool = Map.empty,
-          GameState.combat = Combat.emptyCombat,
-          GameState.events = Seq.empty,
-          GameState.nextEventGroup = EventGroup.first,
-          GameState.eventGroupDepth = 0,
-          GameState.enteringTogether = Nothing,
-          GameState.arrivals = Nothing,
-          GameState.payingOnResolution = False,
-          GameState.causing = Nothing,
-          GameState.lastKnown = Map.empty,
-          GameState.stackArchive = Map.empty,
-          GameState.scannedThrough = 0,
-          GameState.boardAfterEvent = Map.empty,
-          GameState.boardBeforeEvent = Map.empty,
-          GameState.battlefieldWhenTriggered = Map.empty,
-          GameState.controlSample = Map.empty,
-          GameState.boardAtControlSample = Nothing,
-          GameState.heldBoards = [],
-          GameState.damageScannedThrough = 0,
-          GameState.delayedTriggers = Seq.empty,
-          GameState.continuousEffects = [],
-          GameState.copyEffects = [],
-          GameState.replacements = [],
-          GameState.pendingPreventionRiders = Seq.empty,
-          GameState.pendingReplacementEffects = Seq.empty,
-          GameState.contested = Map.empty,
-          GameState.ambientAmounts = Map.empty,
-          GameState.detachedBindings = Map.empty,
-          GameState.pendingEntryEffects = Seq.empty,
-          GameState.enteringBeside = Set.empty,
-          GameState.enteringSubjects = Map.empty,
-          GameState.enteredFrom = Map.empty,
-          GameState.enteringPending = Map.empty,
-          GameState.refusedEntries = Nothing,
-          GameState.enteringCounters = Map.empty,
-          GameState.copyExceptionCounters = Map.empty,
-          GameState.playerEffects = [],
-          GameState.blockRequirements = [],
-          GameState.objectProhibitions = [],
-          GameState.attackProhibitions = [],
-          GameState.evasions = [],
-          GameState.attackRequirements = [],
-          GameState.ignoredAbilities = [],
-          GameState.turnOrder = order_,
-          GameState.activePlayer = NonEmpty.head order,
-          GameState.phase = Turn.firstPhase,
-          GameState.remaining = Turn.laterPhases,
-          GameState.priority = Nothing,
-          GameState.passed = Set.empty,
-          GameState.turnNumber = 1,
-          GameState.turnsBegun = Turn.firstTurnBegun settings order_ (NonEmpty.head order),
-          GameState.result = Nothing,
-          GameState.restartSignal = RestartSignal.Playing,
-          GameState.endTurnSignal = EndTurnSignal.Running,
-          GameState.nextObjectId = ObjectId.MkObjectId 0,
-          GameState.printings = Map.empty,
-          GameState.printingIds = Map.empty,
-          GameState.lookedUp = Set.empty,
-          GameState.referenceNames = Map.empty,
-          GameState.outsideCopies = Set.empty,
-          GameState.namedCopyChoices = Map.empty,
-          GameState.notedCards = Map.empty,
-          GameState.notedMana = Map.empty,
-          GameState.nextPrintingId = PrintingId.MkPrintingId 0,
-          GameState.nextTimestamp = Timestamp.MkTimestamp 0,
-          GameState.lastChoice = Timestamp.MkTimestamp 0,
-          GameState.loopInvolvement = Map.empty,
-          GameState.drewFromEmpty = mempty,
-          GameState.fellShort = 0,
-          GameState.landsPlayed = mempty,
-          GameState.cardsPlayed = mempty,
-          GameState.drawsThisTurn = mempty,
-          GameState.keptFaceDown = Nothing,
-          GameState.announcedTops = Nothing,
-          GameState.loopPicks = Nothing,
-          GameState.revealedTops = mempty,
-          GameState.departedThisTurn = mempty,
-          GameState.couldAttackThisTurn = mempty,
-          GameState.activatedThisTurn = mempty,
-          GameState.activationsThisTurn = mempty,
-          GameState.castPermissionsUsedThisTurn = mempty,
-          GameState.rollModifiersUsedThisTurn = mempty,
-          GameState.triggeredThisGame = mempty,
-          GameState.pendingControl = Map.empty,
-          GameState.control = Map.empty,
-          GameState.monarch = Nothing,
-          GameState.initiative = Nothing,
-          -- CR 731.1: "the game starts with neither designation".
-          GameState.daytime = Nothing,
-          GameState.spellsCastLastTurn = 0,
-          GameState.eventsLastTurn = mempty,
-          GameState.castsBeforeThisTurn = mempty,
-          GameState.damageBeforeThisTurn = mempty,
-          GameState.damagePreventedBy = mempty,
-          GameState.attacksInOwnLastTurn = mempty,
-          GameState.resolvedNames = Map.empty,
-          GameState.movedUntil = Map.empty,
-          GameState.haunting = Map.empty,
-          GameState.encoded = Map.empty,
-          GameState.exiledWith = Map.empty,
-          GameState.enteredWith = Map.empty,
-          GameState.exilePiles = Map.empty,
-          GameState.extraTurns = [],
-          -- CR 100.6a: parun models no match around this game, so the match it
-          -- belongs to has had no subgame yet.
-          GameState.subgamesThisMatch = 0,
-          -- CR 727.1 / 729.1a: the match's first game; startGameFromCards
-          -- numbers each later one.
-          GameState.gamesThisMatch = 1,
-          GameState.gameNumber = 1,
-          GameState.turnAnchor = Nothing,
-          GameState.extraTurnUnderWay = Nothing,
-          GameState.rollingDie = Nothing,
-          GameState.rerollRequested = False
-        }
+   in (blankGame settings order_ (NonEmpty.head order)) {GameState.players = Map.fromList (fmap newPlayer order_)}
+
+-- CR 727.1 / 729.2 / 800.2: a game nothing has happened in yet, with no player
+-- records. gameWith adds its players; restartGame and subgameStateFrom name
+-- what crosses into their new game, so a field neither names resets.
+blankGame :: GameSettings.GameSettings -> [PlayerId] -> PlayerId -> GameState
+blankGame settings order active =
+  GameState.MkGameState
+    { GameState.settings = settings,
+      GameState.objects = Map.empty,
+      GameState.library = Map.empty,
+      GameState.hand = Map.empty,
+      GameState.graveyard = Map.empty,
+      GameState.battlefield = mempty,
+      GameState.phasedOut = mempty,
+      GameState.exile = mempty,
+      GameState.command = mempty,
+      GameState.ante = mempty,
+      GameState.sideDecks = Map.empty,
+      GameState.stack = [],
+      GameState.stackedIn = Map.empty,
+      GameState.players = Map.empty,
+      -- CR 729.4: nobody is nested inside another game here.
+      GameState.outsideObjects = Map.empty,
+      GameState.broughtIn = Seq.empty,
+      GameState.manaPool = Map.empty,
+      GameState.combat = Combat.emptyCombat,
+      GameState.events = Seq.empty,
+      GameState.nextEventGroup = EventGroup.first,
+      GameState.eventGroupDepth = 0,
+      GameState.enteringTogether = Nothing,
+      GameState.arrivals = Nothing,
+      GameState.payingOnResolution = False,
+      GameState.causing = Nothing,
+      GameState.lastKnown = Map.empty,
+      GameState.stackArchive = Map.empty,
+      GameState.scannedThrough = 0,
+      GameState.boardAfterEvent = Map.empty,
+      GameState.boardBeforeEvent = Map.empty,
+      GameState.battlefieldWhenTriggered = Map.empty,
+      GameState.controlSample = Map.empty,
+      GameState.boardAtControlSample = Nothing,
+      GameState.heldBoards = [],
+      GameState.damageScannedThrough = 0,
+      GameState.delayedTriggers = Seq.empty,
+      GameState.continuousEffects = [],
+      GameState.copyEffects = [],
+      GameState.replacements = [],
+      GameState.pendingPreventionRiders = Seq.empty,
+      GameState.pendingReplacementEffects = Seq.empty,
+      GameState.contested = Map.empty,
+      GameState.ambientAmounts = Map.empty,
+      GameState.detachedBindings = Map.empty,
+      GameState.pendingEntryEffects = Seq.empty,
+      GameState.enteringBeside = Set.empty,
+      GameState.enteringSubjects = Map.empty,
+      GameState.enteredFrom = Map.empty,
+      GameState.enteringPending = Map.empty,
+      GameState.refusedEntries = Nothing,
+      GameState.enteringCounters = Map.empty,
+      GameState.copyExceptionCounters = Map.empty,
+      GameState.playerEffects = [],
+      GameState.blockRequirements = [],
+      GameState.objectProhibitions = [],
+      GameState.attackProhibitions = [],
+      GameState.evasions = [],
+      GameState.attackRequirements = [],
+      GameState.ignoredAbilities = [],
+      GameState.turnOrder = order,
+      GameState.activePlayer = active,
+      GameState.phase = Turn.firstPhase,
+      GameState.remaining = Turn.laterPhases,
+      GameState.priority = Nothing,
+      GameState.passed = Set.empty,
+      GameState.turnNumber = 1,
+      GameState.turnsBegun = Turn.firstTurnBegun settings order active,
+      GameState.permanentsAsTurnBegan = Nothing,
+      GameState.result = Nothing,
+      GameState.restartSignal = RestartSignal.Playing,
+      GameState.endTurnSignal = EndTurnSignal.Running,
+      GameState.nextObjectId = ObjectId.MkObjectId 0,
+      GameState.printings = Map.empty,
+      GameState.printingIds = Map.empty,
+      GameState.lookedUp = Set.empty,
+      GameState.referenceNames = Map.empty,
+      GameState.outsideCopies = Set.empty,
+      GameState.namedCopyChoices = Map.empty,
+      GameState.notedCards = Map.empty,
+      GameState.notedMana = Map.empty,
+      GameState.nextPrintingId = PrintingId.MkPrintingId 0,
+      GameState.nextTimestamp = Timestamp.MkTimestamp 0,
+      GameState.lastChoice = Timestamp.MkTimestamp 0,
+      GameState.loopInvolvement = Map.empty,
+      GameState.drewFromEmpty = mempty,
+      GameState.fellShort = 0,
+      GameState.landsPlayed = mempty,
+      GameState.cardsPlayed = mempty,
+      GameState.drawsThisTurn = mempty,
+      GameState.keptFaceDown = Nothing,
+      GameState.announcedTops = Nothing,
+      GameState.loopPicks = Nothing,
+      GameState.revealedTops = mempty,
+      GameState.departedThisTurn = mempty,
+      GameState.couldAttackThisTurn = mempty,
+      GameState.activatedThisTurn = mempty,
+      GameState.activationsThisTurn = mempty,
+      GameState.castPermissionsUsedThisTurn = mempty,
+      GameState.rollModifiersUsedThisTurn = mempty,
+      GameState.triggeredThisGame = mempty,
+      GameState.pendingControl = Map.empty,
+      GameState.control = Map.empty,
+      GameState.monarch = Nothing,
+      GameState.initiative = Nothing,
+      -- CR 731.1: "the game starts with neither designation".
+      GameState.daytime = Nothing,
+      GameState.spellsCastLastTurn = 0,
+      GameState.eventsLastTurn = mempty,
+      GameState.castsBeforeThisTurn = mempty,
+      GameState.damageBeforeThisTurn = mempty,
+      GameState.damagePreventedBy = mempty,
+      GameState.attacksInOwnLastTurn = mempty,
+      GameState.resolvedNames = Map.empty,
+      GameState.movedUntil = Map.empty,
+      GameState.haunting = Map.empty,
+      GameState.encoded = Map.empty,
+      GameState.exiledWith = Map.empty,
+      GameState.enteredWith = Map.empty,
+      GameState.exilePiles = Map.empty,
+      GameState.extraTurns = [],
+      -- CR 100.6a: parun models no match around this game, so the match it
+      -- belongs to has had no subgame yet.
+      GameState.subgamesThisMatch = 0,
+      -- CR 727.1 / 729.1a: the match's first game; startGameFromCards
+      -- numbers each later one.
+      GameState.gamesThisMatch = 1,
+      GameState.gameNumber = 1,
+      GameState.turnAnchor = Nothing,
+      GameState.extraTurnUnderWay = Nothing,
+      GameState.rollingDie = Nothing,
+      GameState.rerollRequested = False
+    }
 
 createCard :: PlayerId -> PrintingId.PrintingId -> Game ObjectId
 createCard pid printingId = do
@@ -1012,120 +1020,71 @@ restartGame perform exempt starter = do
     -- CR 727.1: the rebuilt seating order is the players who were still in the
     -- game, in their seats, rotated to begin with `starter` (CR 727.1a).
     let order = rotateTo starter (Game.stillPlayingInOrder gs)
-     in gs
-          { -- GameState.outsideObjects and GameState.broughtIn are deliberately
-            -- absent from this update: CR 727.1 restarts the game, and a card
-            -- outside it is still outside it, so both are carried over unchanged.
-            -- GameState.settings is deliberately absent from this update, and
-            -- so carries over: CR 727.1 restarts "following the procedures set
-            -- forth in rule 103" for the same players with the same decks, and
-            -- nothing in rule 727 turns an option off. CR 727.7 confirms the
-            -- direction by naming an option the restarted game is still using.
+        -- CR 727.1a. Read back off the rebuilt order, exactly as
+        -- subgameStateFrom does, so the two can never disagree and this
+        -- always names a seat: rotateTo leaves an order alone when `starter`
+        -- is not in it, and the head is then the first still-playing seat.
+        -- Serra Avenger's ruling: the restarted game's turns are counted
+        -- afresh, which blankGame does.
+        first = Maybe.fromMaybe starter (Maybe.listToMaybe order)
+     in (blankGame (GameState.settings gs) order first)
+          { -- CR 727.1 restarts "following the procedures set forth in rule
+            -- 103" for the same players with the same decks, and nothing in
+            -- rule 727 turns an option off. CR 727.7 confirms the direction by
+            -- naming an option the restarted game is still using.
+            GameState.settings = GameState.settings gs,
+            -- CR 727.2: every card, startGameFromCards funnels them into the
+            -- new libraries from here.
+            GameState.objects = GameState.objects gs,
+            GameState.library = GameState.library gs,
+            GameState.hand = GameState.hand gs,
+            GameState.graveyard = GameState.graveyard gs,
+            GameState.battlefield = GameState.battlefield gs,
+            GameState.phasedOut = GameState.phasedOut gs,
+            GameState.exile = GameState.exile gs,
+            GameState.command = GameState.command gs,
+            GameState.ante = GameState.ante gs,
+            GameState.sideDecks = GameState.sideDecks gs,
+            GameState.stack = GameState.stack gs,
+            GameState.stackedIn = GameState.stackedIn gs,
+            -- CR 727.1 restarts the game, and a card outside it is still
+            -- outside it.
+            GameState.outsideObjects = GameState.outsideObjects gs,
+            GameState.broughtIn = GameState.broughtIn gs,
+            -- The id, printing and timestamp supplies, so reused cards keep
+            -- unique ids, and what is keyed by them.
+            GameState.nextObjectId = GameState.nextObjectId gs,
+            GameState.nextPrintingId = GameState.nextPrintingId gs,
+            GameState.nextTimestamp = GameState.nextTimestamp gs,
+            GameState.printings = GameState.printings gs,
+            GameState.printingIds = GameState.printingIds gs,
+            GameState.lookedUp = GameState.lookedUp gs,
+            GameState.referenceNames = GameState.referenceNames gs,
+            GameState.outsideCopies = GameState.outsideCopies gs,
+            GameState.namedCopyChoices = GameState.namedCopyChoices gs,
+            GameState.notedCards = GameState.notedCards gs,
+            GameState.loopInvolvement = GameState.loopInvolvement gs,
+            GameState.fellShort = GameState.fellShort gs,
+            -- CR 100.6a / 727.1: a restart begins a new game of the SAME
+            -- match, so the match's tallies carry across it, for the reason
+            -- nextTimestamp is preserved: the question is not about this game.
+            -- startGameFromCards numbers the new game.
+            GameState.subgamesThisMatch = GameState.subgamesThisMatch gs,
+            GameState.gamesThisMatch = GameState.gamesThisMatch gs,
+            GameState.gameNumber = GameState.gameNumber gs,
             -- CR 902.4: the modifier is read off `gs`, the board the restart
             -- starts from, where CR 313.2 has kept every vanguard card since the
             -- game began -- and startGameFromCards leaves it there.
             GameState.players = resetPlayers (GameState.settings gs) (length order) (`lifeModifierOf` gs) (GameState.players gs),
-            GameState.manaPool = Map.empty,
-            GameState.combat = Combat.emptyCombat,
-            GameState.events = Seq.empty,
-            GameState.nextEventGroup = EventGroup.first,
-            GameState.eventGroupDepth = 0,
-            GameState.enteringTogether = Nothing,
-            GameState.arrivals = Nothing,
-            GameState.payingOnResolution = False,
-            GameState.causing = Nothing,
-            GameState.lastKnown = Map.empty,
-            GameState.stackArchive = Map.empty,
-            GameState.scannedThrough = 0,
-            GameState.boardAfterEvent = Map.empty,
-            GameState.boardBeforeEvent = Map.empty,
-            GameState.battlefieldWhenTriggered = Map.empty,
-            GameState.controlSample = Map.empty,
-            GameState.boardAtControlSample = Nothing,
-            GameState.heldBoards = [],
-            GameState.damageScannedThrough = 0,
-            GameState.delayedTriggers = Seq.empty,
-            GameState.continuousEffects = [],
-            GameState.copyEffects = [],
-            GameState.replacements = [],
-            GameState.pendingPreventionRiders = Seq.empty,
-            GameState.pendingReplacementEffects = Seq.empty,
-            GameState.contested = Map.empty,
-            GameState.ambientAmounts = Map.empty,
-            GameState.detachedBindings = Map.empty,
-            GameState.pendingEntryEffects = Seq.empty,
-            GameState.enteringBeside = Set.empty,
-            GameState.enteringSubjects = Map.empty,
-            GameState.enteredFrom = Map.empty,
-            GameState.enteringPending = Map.empty,
-            GameState.refusedEntries = Nothing,
-            GameState.enteringCounters = Map.empty,
-            GameState.copyExceptionCounters = Map.empty,
-            GameState.playerEffects = [],
-            GameState.blockRequirements = [],
-            GameState.objectProhibitions = [],
-            GameState.attackProhibitions = [],
-            GameState.evasions = [],
-            GameState.attackRequirements = [],
-            GameState.ignoredAbilities = [],
-            GameState.turnOrder = order,
-            -- CR 727.1a. Read back off the rebuilt order, exactly as
-            -- subgameStateFrom does, so the two can never disagree and this
-            -- always names a seat: rotateTo leaves an order alone when
-            -- `starter` is not in it, and the head is then the first
-            -- still-playing seat.
-            GameState.activePlayer = Maybe.fromMaybe starter (Maybe.listToMaybe order),
-            GameState.phase = Turn.firstPhase,
-            GameState.remaining = Turn.laterPhases,
-            GameState.priority = Nothing,
-            GameState.passed = Set.empty,
-            GameState.turnNumber = 1,
-            -- Serra Avenger's ruling: the restarted game's turns are counted afresh.
-            GameState.turnsBegun = Turn.firstTurnBegun (GameState.settings gs) order (Maybe.fromMaybe starter (Maybe.listToMaybe order)),
-            GameState.result = Nothing,
             -- CR 727.4: the game the caller was running has been replaced.
             -- Engine.priorityLoop and Engine.runStep read this and unwind to
             -- the rebuilt turn 1 rather than granting priority.
             GameState.restartSignal = RestartSignal.Restarted,
-            -- CR 724.1: the rebuilt game is not the one whose turn was ended.
-            GameState.endTurnSignal = EndTurnSignal.Running,
             -- CR 104.4b: CR 727.1 ends the game that was being played, so the
             -- rebuilt one starts owing nobody a choice. The timestamp supply is
             -- preserved across the restart, so this is the supply's current
             -- value and not zero.
             GameState.lastChoice = GameState.nextTimestamp gs,
-            GameState.drewFromEmpty = mempty,
-            GameState.landsPlayed = mempty,
-            GameState.cardsPlayed = mempty,
-            GameState.drawsThisTurn = mempty,
-            GameState.keptFaceDown = Nothing,
-            GameState.announcedTops = Nothing,
-            GameState.loopPicks = Nothing,
-            GameState.revealedTops = mempty,
-            GameState.departedThisTurn = mempty,
-            GameState.couldAttackThisTurn = mempty,
-            GameState.activatedThisTurn = mempty,
-            GameState.activationsThisTurn = mempty,
-            GameState.castPermissionsUsedThisTurn = mempty,
-            GameState.rollModifiersUsedThisTurn = mempty,
-            GameState.triggeredThisGame = mempty,
-            GameState.pendingControl = Map.empty,
-            GameState.control = Map.empty,
-            GameState.monarch = Nothing,
-            GameState.initiative = Nothing,
-            -- CR 727.1 / 731.1: the restarted game is a new game, which starts
-            -- with neither designation however the ended one finished.
-            GameState.daytime = Nothing,
-            GameState.spellsCastLastTurn = 0,
-            GameState.eventsLastTurn = mempty,
-            GameState.castsBeforeThisTurn = mempty,
-            GameState.damageBeforeThisTurn = mempty,
-            GameState.damagePreventedBy = mempty,
-            GameState.attacksInOwnLastTurn = mempty,
-            GameState.resolvedNames = Map.empty,
-            GameState.movedUntil = Map.empty,
-            GameState.haunting = Map.empty,
-            GameState.encoded = Map.empty,
             -- Kept for the CR 727.5 exemptions alone, and cleared for every
             -- other card: an exempted card never left exile, so what put it
             -- there is still true of it, and CR 727.4's additional instructions
@@ -1134,25 +1093,9 @@ restartGame perform exempt starter = do
             -- Every other entry names a card the rebuild shuffled into a
             -- library, where CR 400.7 has already made it a different object.
             GameState.exiledWith = Map.restrictKeys (GameState.exiledWith gs) exempt,
-            -- CR 727.1: nothing stays on the battlefield through a restart.
-            GameState.enteredWith = Map.empty,
-            -- CR 607.2e's notes, made for permanents the restart removed.
-            GameState.notedMana = Map.empty,
             -- CR 406.4's pile, kept for exactly the cards the line above keeps
             -- and cleared with the rest: a pile is about a card still in exile.
-            GameState.exilePiles = Map.restrictKeys (GameState.exilePiles gs) exempt,
-            -- CR 727.1: the game that scheduled them has ended, so no extra
-            -- turn survives into the new one.
-            GameState.extraTurns = [],
-            -- CR 100.6a / 727.1: a restart begins a new game of the SAME match,
-            -- so the match's subgame tally carries across it. Kept where every
-            -- other per-game record above is cleared, for the reason
-            -- nextTimestamp is preserved: the question is not about this game.
-            GameState.subgamesThisMatch = GameState.subgamesThisMatch gs,
-            GameState.turnAnchor = Nothing,
-            GameState.extraTurnUnderWay = Nothing,
-            GameState.rollingDie = Nothing,
-            GameState.rerollRequested = False
+            GameState.exilePiles = Map.restrictKeys (GameState.exilePiles gs) exempt
           }
   -- Karn Liberated's ruling, "No actions taken in the game that was restarted
   -- apply to the new game": every sticker comes off, a commander's included. A
@@ -1299,148 +1242,52 @@ subgameStateFrom starter parent =
          in case (Game.sourceIsToken source, Game.printingIdOfSource source, NonEmpty.nonEmpty arriving) of
               (False, Just printingId, Just cards) -> Just (OutsideObject.MkOutsideObject (Object.owner obj) printingId (Object.facing obj) cards)
               _ -> Nothing
-   in parent
-        { GameState.objects = movedObjects,
-          GameState.turnOrder = order,
-          -- GameState.settings is deliberately absent from this update too, and
-          -- so carries over from the parent: CR 729.2's subgame "proceeds like
-          -- a normal game, following all other rules in rule 103", and CR
-          -- 729.2c speaks of "a subgame of a Commander game" -- the subgame is
-          -- played in the format the main game is. CR 729.1b keeps EFFECTS from
-          -- crossing, not the options the game was started with.
+   in (blankGame (GameState.settings parent) order firstPlayer)
+        { -- CR 729.2's subgame "proceeds like a normal game, following all
+          -- other rules in rule 103", and CR 729.2c speaks of "a subgame of a
+          -- Commander game" -- the subgame is played in the format the main
+          -- game is. CR 729.1b keeps EFFECTS from crossing, not the options the
+          -- game was started with.
+          GameState.settings = GameState.settings parent,
+          -- CR 729.2a: startGameFromCards shuffles each supplementary deck.
+          GameState.sideDecks = GameState.sideDecks parent,
+          -- The id, printing and timestamp supplies, inherited so every object
+          -- the subgame mints gets an id above every parent id, and what is
+          -- keyed by them.
+          GameState.nextObjectId = GameState.nextObjectId parent,
+          GameState.nextPrintingId = GameState.nextPrintingId parent,
+          GameState.nextTimestamp = GameState.nextTimestamp parent,
+          GameState.printings = GameState.printings parent,
+          GameState.printingIds = GameState.printingIds parent,
+          GameState.lookedUp = GameState.lookedUp parent,
+          GameState.referenceNames = GameState.referenceNames parent,
+          GameState.outsideCopies = GameState.outsideCopies parent,
+          GameState.namedCopyChoices = GameState.namedCopyChoices parent,
+          GameState.notedCards = GameState.notedCards parent,
+          GameState.fellShort = GameState.fellShort parent,
+          -- CR 100.6a: the subgame is a separate GAME (CR 729.1a) but not a
+          -- separate match, so it inherits the match's tallies -- the subgame
+          -- count already counting itself, Engine.playSubgame having raised it
+          -- before building this state. CR 729.6's nested subgame therefore
+          -- counts them all. startGameFromCards numbers the new game.
+          GameState.subgamesThisMatch = GameState.subgamesThisMatch parent,
+          GameState.gamesThisMatch = GameState.gamesThisMatch parent,
+          GameState.gameNumber = GameState.gameNumber parent,
+          GameState.objects = movedObjects,
           -- CR 902.4 / CR 729.2b: read off the PARENT, whose command zone still
           -- holds every vanguard card at this point -- `cmdIds` below is what
           -- moves them into the subgame, and it is computed from the same board.
           -- CR 103.4e likewise: the archenemy's scheme deck is the one moving in.
           GameState.players = resetPlayers (GameState.settings parent) (length order) (`lifeModifierOf` parent) (GameState.players parent),
           GameState.outsideObjects = outside,
-          -- CR 729.4a: nothing has crossed into this subgame yet.
-          GameState.broughtIn = Seq.empty,
-          GameState.library = Map.empty,
-          GameState.hand = Map.empty,
-          GameState.graveyard = Map.empty,
-          GameState.battlefield = mempty,
-          GameState.phasedOut = mempty,
-          GameState.exile = mempty,
           -- CR 729.2c, above. startGameFromCards keeps them here rather than
           -- funnelling them into a library, which is CR 903.6 for the subgame.
           GameState.command = cmdIds,
-          -- CR 729.2: a subgame's zones are new, and no main-game ante card is
-          -- among CR 729.2a-c's movers.
-          GameState.ante = mempty,
-          GameState.stack = [],
-          GameState.stackedIn = Map.empty,
-          GameState.manaPool = Map.empty,
-          GameState.combat = Combat.emptyCombat,
-          GameState.events = Seq.empty,
-          GameState.nextEventGroup = EventGroup.first,
-          GameState.eventGroupDepth = 0,
-          GameState.enteringTogether = Nothing,
-          GameState.arrivals = Nothing,
-          GameState.payingOnResolution = False,
-          GameState.causing = Nothing,
-          GameState.lastKnown = Map.empty,
-          GameState.stackArchive = Map.empty,
-          GameState.scannedThrough = 0,
-          GameState.boardAfterEvent = Map.empty,
-          GameState.boardBeforeEvent = Map.empty,
-          GameState.battlefieldWhenTriggered = Map.empty,
-          GameState.controlSample = Map.empty,
-          GameState.boardAtControlSample = Nothing,
-          GameState.heldBoards = [],
-          GameState.damageScannedThrough = 0,
-          GameState.delayedTriggers = Seq.empty,
-          GameState.continuousEffects = [],
-          GameState.copyEffects = [],
-          GameState.replacements = [],
-          GameState.pendingPreventionRiders = Seq.empty,
-          GameState.pendingReplacementEffects = Seq.empty,
-          GameState.contested = Map.empty,
-          GameState.ambientAmounts = Map.empty,
-          GameState.detachedBindings = Map.empty,
-          GameState.pendingEntryEffects = Seq.empty,
-          GameState.enteringBeside = Set.empty,
-          GameState.enteringSubjects = Map.empty,
-          GameState.enteredFrom = Map.empty,
-          GameState.enteringPending = Map.empty,
-          GameState.refusedEntries = Nothing,
-          GameState.enteringCounters = Map.empty,
-          GameState.copyExceptionCounters = Map.empty,
-          GameState.playerEffects = [],
-          GameState.blockRequirements = [],
-          GameState.objectProhibitions = [],
-          GameState.attackProhibitions = [],
-          GameState.evasions = [],
-          GameState.attackRequirements = [],
-          GameState.ignoredAbilities = [],
-          GameState.activePlayer = firstPlayer,
-          GameState.phase = Turn.firstPhase,
-          GameState.remaining = Turn.laterPhases,
-          GameState.priority = Nothing,
-          GameState.passed = Set.empty,
-          GameState.turnNumber = 1,
-          -- CR 729.2: the subgame is a game of its own, its turns counted afresh.
-          GameState.turnsBegun = Turn.firstTurnBegun (GameState.settings parent) order firstPlayer,
-          GameState.result = Nothing,
-          GameState.restartSignal = RestartSignal.Playing,
-          -- CR 724.1: the subgame is its own game, so it starts running its own turn.
-          GameState.endTurnSignal = EndTurnSignal.Running,
           -- CR 104.4b: the subgame is its own game, so it starts owing nobody a
           -- choice. Set to the INHERITED nextTimestamp rather than to zero,
           -- which the timestamp supply is not: a copied parent marker would
           -- have the subgame draw itself on entry for events at another level.
-          GameState.lastChoice = GameState.nextTimestamp parent,
-          GameState.loopInvolvement = Map.empty,
-          GameState.drewFromEmpty = mempty,
-          GameState.landsPlayed = mempty,
-          GameState.cardsPlayed = mempty,
-          GameState.drawsThisTurn = mempty,
-          GameState.keptFaceDown = Nothing,
-          GameState.announcedTops = Nothing,
-          GameState.loopPicks = Nothing,
-          GameState.revealedTops = mempty,
-          GameState.departedThisTurn = mempty,
-          GameState.couldAttackThisTurn = mempty,
-          GameState.activatedThisTurn = mempty,
-          GameState.activationsThisTurn = mempty,
-          GameState.castPermissionsUsedThisTurn = mempty,
-          GameState.rollModifiersUsedThisTurn = mempty,
-          GameState.triggeredThisGame = mempty,
-          GameState.pendingControl = Map.empty,
-          GameState.control = Map.empty,
-          GameState.monarch = Nothing,
-          GameState.initiative = Nothing,
-          -- CR 729.1a / 731.1: the subgame is its own game, so it starts with
-          -- neither designation and the main game's is untouched by it.
-          GameState.daytime = Nothing,
-          GameState.spellsCastLastTurn = 0,
-          GameState.eventsLastTurn = mempty,
-          GameState.castsBeforeThisTurn = mempty,
-          GameState.damageBeforeThisTurn = mempty,
-          GameState.damagePreventedBy = mempty,
-          GameState.attacksInOwnLastTurn = mempty,
-          GameState.resolvedNames = Map.empty,
-          GameState.movedUntil = Map.empty,
-          GameState.haunting = Map.empty,
-          GameState.encoded = Map.empty,
-          GameState.exiledWith = Map.empty,
-          GameState.enteredWith = Map.empty,
-          GameState.exilePiles = Map.empty,
-          GameState.notedMana = Map.empty,
-          -- CR 729.1a: the subgame is its own game and starts from turn 1, so
-          -- the main game's pending extra turns are not in it. Its own copy
-          -- sits untouched in the outer frame, still waiting when the subgame
-          -- ends.
-          GameState.extraTurns = [],
-          -- CR 100.6a: the subgame is a separate GAME (CR 729.1a) but not a
-          -- separate match, so it inherits the tally -- already counting
-          -- itself, Engine.playSubgame having raised it before building this
-          -- state. CR 729.6's nested subgame therefore counts them all.
-          GameState.subgamesThisMatch = GameState.subgamesThisMatch parent,
-          GameState.turnAnchor = Nothing,
-          GameState.extraTurnUnderWay = Nothing,
-          GameState.rollingDie = Nothing,
-          GameState.rerollRequested = False
+          GameState.lastChoice = GameState.nextTimestamp parent
         }
 
 -- CR 729.4a: the cards the subgame brought in have left the main game, so the
@@ -1810,8 +1657,8 @@ funnelBack finalSub parent =
           -- come back too, or the returned cards would resolve to nothing.
           --
           -- Union is unambiguous rather than merely convenient:
-          -- subgameStateFrom builds the subgame as a record update on `parent`,
-          -- so it INHERITS the table and the counter whole. Anything the
+          -- subgameStateFrom names both as crossing from `parent`, so the
+          -- subgame INHERITS the table and the counter whole. Anything the
           -- subgame interned was minted above every id the parent held, so the
           -- two tables never disagree about an id.
           GameState.printings = Map.union (GameState.printings finalSub) (GameState.printings parent),

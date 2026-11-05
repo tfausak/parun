@@ -20,7 +20,8 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfEnters"
+            "type": "Enters",
+            "value": {}
           },
           "modal": {
             "modes": [

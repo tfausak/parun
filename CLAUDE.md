@@ -293,6 +293,12 @@ to agents as written. What it doesn't say:
     `Object.newIncarnation` resets it on every zone change unless carried
     across there.
 
+    A NEW STORED ROW with an expiry owes `Parun.Engine.Expiry`'s
+    `traverseExpiries` and `Parun.Engine.Interchangeable`'s `namedByStored`,
+    which nothing forces. A NEW `GameState` FIELD resets across a restart and
+    a subgame (`Parun.Engine.Setup`'s `blankGame`) unless `restartGame` or
+    `subgameStateFrom` names it as kept.
+
     A RECORD UPDATE keeps the old value of a field you added, so a descent
     that rebuilds a record drops it: grep `{ SomeRecord.field = ` and say in
     the PR which you checked. The recurring site is

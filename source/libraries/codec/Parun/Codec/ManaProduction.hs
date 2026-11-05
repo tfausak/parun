@@ -1,18 +1,23 @@
 module Parun.Codec.ManaProduction where
 
+import qualified Data.Maybe as Maybe
+import qualified Parun.Codec.ColorSpread as ColorSpread
 import qualified Parun.Codec.CouldProduce as CouldProduce
 import qualified Parun.Codec.ManaCount as ManaCount
 import qualified Parun.Codec.ManaType as ManaType
 import qualified Parun.JsonCodec.Arm as Arm
 import qualified Parun.JsonCodec.Codec as Codec
+import qualified Parun.Types.ColorSpread as ColorSpread
 import qualified Parun.Types.ManaProduction as ManaProduction
 
+-- | @AnyColor@'s spread is optional, its absence CR 105.4's one colour, which
+-- is what nearly every printing means.
 codec :: Codec.Codec ManaProduction.ManaProduction
 codec =
   Arm.tagged
     tagOf
     [ Arm.payload "OfType" ManaType.codec ManaProduction.OfType (\x -> case x of ManaProduction.OfType y -> Just y; _ -> Nothing),
-      Arm.nullary "AnyColor" ManaProduction.AnyColor,
+      Arm.optionalPayload "AnyColor" ColorSpread.codec (ManaProduction.AnyColor . Maybe.fromMaybe ColorSpread.OneColor) (\x -> case x of ManaProduction.AnyColor ColorSpread.OneColor -> Just Nothing; ManaProduction.AnyColor y -> Just (Just y); _ -> Nothing),
       Arm.nullary "Chosen" ManaProduction.Chosen,
       Arm.nullary "SnowSymbol" ManaProduction.SnowSymbol,
       Arm.nullary "Noted" ManaProduction.Noted,

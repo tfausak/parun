@@ -1,0 +1,21 @@
+{
+  "description": "CR 805.4 Elkin Lair's end step ability reads the teammate it exiled from, not the player the team's turn is named for",
+  "note": "Bob plays the land the Lair exiled from his hand, and alice does not. His delayed ability's intervening if asks whether bob played it (CR 603.4), so only alice's triggers at the end step. Read as the seat the step beginning names, bob's would ask about alice and trigger too. The stack holds exactly one Lair ability, and no OrderTriggers prompt is raised.",
+  "board": {
+    "active": "alice",
+    "step": "Untap",
+    "sharedTeamTurns": true,
+    "seats": [
+      {"name": "alice", "team": 1, "hand": [{"card": "Forest"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "team": 1, "hand": [{"card": "Mountain"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+      {"name": "carol", "team": 2, "battlefield": [{"card": "Elkin Lair", "label": "lair"}], "library": [{"card": "Island"}, {"card": "Island"}]},
+      {"name": "dave", "team": 2, "library": [{"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "Upkeep", "player": "carol", "do": {"OrderTriggers": ["$lair", "$lair"]}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Zone", "player": "bob", "zone": "Exile", "is": ["Mountain"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"PlayLand": "Mountain"}},
+    {"turn": 1, "step": "EndStep", "player": "alice", "check": {"View": {"of": "Stack", "is": ["trigger of $lair"]}}}
+  ]
+}

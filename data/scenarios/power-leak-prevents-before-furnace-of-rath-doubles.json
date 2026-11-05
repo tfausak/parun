@@ -1,0 +1,17 @@
+{
+  "description": "Power Leak's prevention applies before Furnace of Rath, per decisions.md's self-replacement entry: 2 - 1, then doubled",
+  "note": "bob pays 1. He is asked nothing about the order: 2 becomes 1 becomes 2, never 4 - 1.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Power Leak", "label": "leak", "attached": "crusade"}, {"card": "Furnace of Rath"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "battlefield": [{"card": "Crusade", "label": "crusade"}, {"card": "Island", "label": "i1", "ready": true}, {"card": "Island", "label": "i2", "ready": true}, {"card": "Island", "label": "i3", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 2, "step": "Upkeep", "player": "bob", "do": {"Answer": {"prompt": "ChooseNumber", "with": 1}}, "source": "$leak"},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "do": {"ChooseToPay": {"decision": {"type": "Pays"}, "mana": ["$i1", null]}}, "source": "$leak"},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "bob", "life": 18}}}
+  ]
+}

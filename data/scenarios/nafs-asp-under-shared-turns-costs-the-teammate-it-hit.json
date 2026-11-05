@@ -1,0 +1,20 @@
+{
+  "description": "CR 805.4b whole card: under shared team turns Nafs Asp's debt falls on the teammate it hit, not the player the team's turn is named for",
+  "note": "Bob and dave take turns as a team with their own life totals, and bob is the seat the turn's step beginning names. The Asp hits dave and he doesn't pay. The team's draw step is dave's too (CR 805.4b), so the ability fires then and dave loses the life.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "sharedTeamTurns": true,
+    "seats": [
+      {"name": "alice", "team": 1, "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Nafs Asp", "label": "asp", "ready": true}]},
+      {"name": "bob", "team": 2, "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "dave", "team": 2, "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$asp"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"ChooseAttackTarget": "$dave"}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "dave", "life": 18}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "bob", "life": 20}}}
+  ]
+}

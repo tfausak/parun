@@ -1,12 +1,11 @@
 module Parun.Types.Duration where
 
 import qualified Parun.Types.Condition as Condition
-import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.DurationEvent as DurationEvent
-import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.NextStepOf as NextStepOf
 import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.UntilPaid as UntilPaid
 
 -- | How long a stored continuous effect lasts, as the CARD says it (CR 611.2).
 -- PRINTED data: this is what appears in card JSON. The game stores
@@ -107,12 +106,16 @@ data Duration
     -- SpecialAction.IgnoreThisUntilEndOfTurn's shape one rule over, so the two
     -- pay-to-take actions are paid through one Parun.Engine.Cost call.
     --
+    -- On a delayed trigger this is no stated duration (CR 603.7b): Nafs Asp's
+    -- ability still fires once, and the offer goes with it
+    -- (Parun.Engine.Expiry.firesOnce).
+    --
     -- No sweep of Parun.Engine.Expiry ends it: the stored counterpart
     -- (Expiry.WhenPaid) is what the special action looks for, and nothing about
     -- the turn's structure ends it. Indefinite is therefore the WRONG arm for a
     -- Licid even though both outlast every window -- an Expiry.Never cannot be
     -- keyed on, so the performer could not find the effects the payment ends.
-    UntilPaid (Cost.Cost Keyword.Keyword)
+    UntilPaid UntilPaid.UntilPaid
   | -- | CR 611.2a / Quicken: "the next ... you ... this turn", stored as
     -- Expiry.WhenUsed. The slot, when present, is Savage Summoning's "that
     -- spell": the spell whose cast uses the effect up, bound into the other rows

@@ -547,7 +547,7 @@ isActivateOf oid action = case action of
   Action.Type.PutCompanionIntoHand -> False
   Action.Type.RollPlanarDie -> False
   Action.Type.Ignore _ _ -> False
-  Action.Type.EndEffect _ -> False
+  Action.Type.EndEffect {} -> False
   Action.Type.Pass -> False
 
 -- CR 605.1a's library clause read of the COST half, which chromaticSpec above

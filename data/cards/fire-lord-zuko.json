@@ -124,15 +124,20 @@
         },
         {
           "condition": {
-            "type": "PermanentEnters",
+            "type": "Enters",
             "value": {
-              "type": "HeldBy",
-              "value": {
-                "holder": {
-                  "type": "Controller"
-                },
-                "relation": {
-                  "type": "You"
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "HeldBy",
+                  "value": {
+                    "holder": {
+                      "type": "Controller"
+                    },
+                    "relation": {
+                      "type": "You"
+                    }
+                  }
                 }
               }
             }

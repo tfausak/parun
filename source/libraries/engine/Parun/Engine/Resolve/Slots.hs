@@ -267,6 +267,7 @@ import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TurnFaceDown as TurnFaceDown
 import qualified Parun.Types.TurnUpR as TurnUpR
 import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
+import qualified Parun.Types.UntilPaid as UntilPaid
 import qualified Parun.Types.Vote as Vote
 import qualified Parun.Types.VoteChoices as VoteChoices
 import qualified Parun.Types.VoteObjects as VoteObjects
@@ -1090,10 +1091,11 @@ effectPlayerRefs effect = case effect of
   Effect.EndCombatPhase -> []
   Effect.GainControl (GainControl.MkGainControl _ _ to) -> [to]
   Effect.ExchangeControl {} -> []
-  Effect.ArmDelayedTrigger arm -> case ArmDelayedTrigger.onset arm of
-    Onset.FromNextTurnOf ref -> Maybe.maybeToList ref
-    Onset.Immediately -> []
-    Onset.FromThatExtraTurn -> []
+  Effect.ArmDelayedTrigger arm ->
+    foldMap durationPlayerRefs (ArmDelayedTrigger.duration arm) <> case ArmDelayedTrigger.onset arm of
+      Onset.FromNextTurnOf ref -> Maybe.maybeToList ref
+      Onset.Immediately -> []
+      Onset.FromThatExtraTurn -> []
   -- CR 400.1's zone reference, which lives inside the permission payloads rather
   -- than in a field of the opcode -- so the walk is
   -- Parun.Engine.PlayerEffect.playerRefsIn's and this arm joins it in, which is
@@ -1198,7 +1200,7 @@ effectPlayerRefs effect = case effect of
 productionPlayerRefs :: ManaProduction.ManaProduction -> [PlayerRef]
 productionPlayerRefs production = case production of
   ManaProduction.OfType _ -> []
-  ManaProduction.AnyColor -> []
+  ManaProduction.AnyColor _ -> []
   ManaProduction.Chosen -> []
   ManaProduction.SnowSymbol -> []
   ManaProduction.Noted -> []
@@ -1210,7 +1212,7 @@ productionPlayerRefs production = case production of
 productionSlots :: ManaProduction.ManaProduction -> Map.Map SlotName SlotArity
 productionSlots production = case production of
   ManaProduction.OfType _ -> Map.empty
-  ManaProduction.AnyColor -> Map.empty
+  ManaProduction.AnyColor _ -> Map.empty
   ManaProduction.Chosen -> Map.empty
   ManaProduction.SnowSymbol -> Map.empty
   ManaProduction.Noted -> Map.empty
@@ -1673,7 +1675,7 @@ durationPlayerRefs duration = case duration of
   -- A Condition's own references are Quantity.bakePlayerRef's half, reached
   -- through conditionSlots rather than through a list of references.
   Duration.ForAsLongAs _ -> []
-  Duration.UntilPaid _ -> []
+  Duration.UntilPaid untilPaid -> [UntilPaid.payer untilPaid]
   Duration.UntilEndOfCombat -> []
   Duration.UntilEndOfCombatOnYourNextTurn -> []
   Duration.UntilUsed _ -> []
@@ -1699,7 +1701,8 @@ durationSlots duration = case duration of
   Duration.ForAsLongAs condition -> conditionSlots condition
   -- A Cost reads no slot: the activation cost of an ability is not walked by
   -- modeSlots either, and CR 116.2c's price is paid outside any resolution, so
-  -- there is no binding environment for it to name.
+  -- there is no binding environment for it to name. The payer is a reference,
+  -- durationPlayerRefs' half.
   Duration.UntilPaid _ -> Map.empty
   Duration.UntilEndOfCombat -> Map.empty
   Duration.UntilEndOfCombatOnYourNextTurn -> Map.empty
@@ -2416,7 +2419,8 @@ durationSlotsAreExhaustive duration = case duration of
   Duration.DuringYourNextTurn -> True
   Duration.DuringThatExtraTurn -> True
   Duration.ForAsLongAs condition -> conditionSlotsAreExhaustive condition
-  -- durationSlots' answer: a Cost reads no slot, so its enumeration is complete.
+  -- durationSlots' answer: a Cost reads no slot, and its payer names at most one,
+  -- so the enumeration is complete.
   Duration.UntilPaid _ -> True
   Duration.UntilEndOfCombat -> True
   Duration.UntilEndOfCombatOnYourNextTurn -> True
@@ -2462,8 +2466,9 @@ readsX =
         -- Untamed Might's "+X/+X" sits inside the Modification, not on the effect.
         Effect.ModifyTarget (ModifyTarget.MkModifyTarget _ modification _ _) -> any Quantity.readsX (Projection.quantitiesOf modification)
         Effect.ChangeText {} -> False
-        Effect.AddMana _ -> False
-        Effect.Firebend _ -> False
+        -- Wizard's Rockets' "Add X mana".
+        Effect.AddMana addition -> Quantity.readsX (ManaAddition.count addition)
+        Effect.Firebend addition -> Quantity.readsX (ManaAddition.count addition)
         Effect.ActivateManaAbilities _ -> False
         Effect.MoveMana _ -> False
         -- The filter too: Citanul Flute's "mana value X or less" compares against
@@ -3210,7 +3215,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
         stated oid = case mFilter of
           Nothing -> True
           Just filter_ -> Filter.matches context (viewOf oid) filter_
-     in filter stated (Game.linkedPile (resolvingAbilityName resolving gs) pile source gs)
+     in filter stated (Game.linkedPile (resolvingAbilityName resolving gs) (Game.readingAcquisition resolving source gs source) pile source gs)
   -- CR 702.99b's relation, the arm above's shape over GameState.encoded. Keyed
   -- on the source's id alone, so a trigger whose creature has since left still
   -- finds the card it last had encoded (CR 608.2h).

@@ -24,6 +24,7 @@ import qualified Parun.Types.DamagePart as DamagePart
 import qualified Parun.Types.DealDamage as DealDamage
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.EndingStep as EndingStep
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EntryRiders as EntryRiders
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.InZone as InZone
@@ -79,7 +80,7 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbility" $ do
       toJson
       fromJson
       ( TriggeredAbility.MkTriggeredAbility
-          { TriggeredAbility.condition = TriggerCondition.SelfEnters,
+          { TriggeredAbility.condition = TriggerCondition.Enters EntersTrigger.defaultValue,
             TriggeredAbility.modal =
               Modal.MkModal
                 (Seq.singleton (Mode.MkMode (Seq.singleton (Clause.MkClause Nothing Nothing Nothing Optionality.Mandatory Nothing (Seq.singleton (Effect.Create (Create.MkCreate (Quantity.Literal 1) (Text.pack "Zombie Token") EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You) False))))) Map.empty))
@@ -91,7 +92,7 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbility" $ do
             TriggeredAbility.functionsFrom = Set.empty
           }
       )
-      " {\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{\"clauses\":[{\"effects\":[{\"type\":\"Create\",\"value\":{\"quantity\":{\"type\":\"Literal\",\"value\":1},\"card\":\"Zombie Token\"}}]}]}]}} "
+      " {\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{\"clauses\":[{\"effects\":[{\"type\":\"Create\",\"value\":{\"quantity\":{\"type\":\"Literal\",\"value\":1},\"card\":\"Zombie Token\"}}]}]}]}} "
   -- CR 603.4's intervening "if" clause is emitted only when the ability states
   -- one, so this case writes the key and the one above omits it.
   Spec.it s "MkTriggeredAbility, Sarcomancy's upkeep trigger (an intervening if)" $
@@ -170,7 +171,7 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbility" $ do
       toJson
       fromJson
       TriggeredAbility.MkTriggeredAbility
-        { TriggeredAbility.condition = TriggerCondition.SelfEnters,
+        { TriggeredAbility.condition = TriggerCondition.Enters EntersTrigger.defaultValue,
           TriggeredAbility.modal =
             Modal.MkModal
               (Seq.singleton (Mode.MkMode Seq.empty Map.empty))
@@ -181,7 +182,7 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbility" $ do
           TriggeredAbility.limit = TriggerLimit.Unlimited,
           TriggeredAbility.functionsFrom = Set.empty
         }
-      " {\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}} "
+      " {\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}} "
   -- CR 613.1f: the name a LoseNamedAbility removal joins to.
   Spec.it s "a named ability carries its name" $
     Common.assertJsonCodec
@@ -189,7 +190,7 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbility" $ do
       toJson
       fromJson
       TriggeredAbility.MkTriggeredAbility
-        { TriggeredAbility.condition = TriggerCondition.SelfEnters,
+        { TriggeredAbility.condition = TriggerCondition.Enters EntersTrigger.defaultValue,
           TriggeredAbility.modal =
             Modal.MkModal
               (Seq.singleton (Mode.MkMode Seq.empty Map.empty))
@@ -200,7 +201,7 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbility" $ do
           TriggeredAbility.limit = TriggerLimit.Unlimited,
           TriggeredAbility.functionsFrom = Set.empty
         }
-      " {\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]},\"name\":\"vigil\"} "
+      " {\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]},\"name\":\"vigil\"} "
   -- CR 113.6b: the zones an ability states it functions in.
   Spec.it s "an ability stating its zones carries them" $
     Common.assertJsonCodec
@@ -208,7 +209,7 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbility" $ do
       toJson
       fromJson
       TriggeredAbility.MkTriggeredAbility
-        { TriggeredAbility.condition = TriggerCondition.SelfEnters,
+        { TriggeredAbility.condition = TriggerCondition.Enters EntersTrigger.defaultValue,
           TriggeredAbility.modal =
             Modal.MkModal
               (Seq.singleton (Mode.MkMode Seq.empty Map.empty))
@@ -219,4 +220,4 @@ spec s = Spec.describe s "Parun.Codec.TriggeredAbility" $ do
           TriggeredAbility.limit = TriggerLimit.Unlimited,
           TriggeredAbility.functionsFrom = Set.fromList [Zone.Library, Zone.Hand]
         }
-      " {\"condition\":{\"type\":\"SelfEnters\"},\"functionsFrom\":[{\"type\":\"Library\"},{\"type\":\"Hand\"}],\"modal\":{\"modes\":[{}]}} "
+      " {\"condition\":{\"type\":\"Enters\",\"value\":{}},\"functionsFrom\":[{\"type\":\"Library\"},{\"type\":\"Hand\"}],\"modal\":{\"modes\":[{}]}} "

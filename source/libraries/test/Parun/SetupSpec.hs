@@ -16,6 +16,8 @@ import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Parun.Cards as Cards
+import qualified Parun.Codec.ActiveReplacementSpec as ActiveReplacementSpec
+import qualified Parun.Codec.DelayedTriggerSpec as DelayedTriggerSpec
 import qualified Parun.Engine.Activate as Activate
 import qualified Parun.Engine.Archenemy as Archenemy
 import qualified Parun.Engine.Departure as Departure
@@ -33,17 +35,29 @@ import qualified Parun.Engine.Turn as Turn
 import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
+import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.Action as A
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
+import qualified Parun.Types.ActiveAttackProhibition as ActiveAttackProhibition
+import qualified Parun.Types.ActiveAttackRequirement as ActiveAttackRequirement
+import qualified Parun.Types.ActiveBlockRequirement as ActiveBlockRequirement
+import qualified Parun.Types.ActiveCopy as ActiveCopy
+import qualified Parun.Types.ActiveEvasion as ActiveEvasion
+import qualified Parun.Types.ActiveObjectProhibition as ActiveObjectProhibition
+import qualified Parun.Types.ActiveReplacement as ActiveReplacement
+import qualified Parun.Types.AffectedPlayers as AffectedPlayers
 import qualified Parun.Types.Asked as Asked
 import qualified Parun.Types.Binding as Binding
 import qualified Parun.Types.CardName as CardName
+import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Color as Color
 import qualified Parun.Types.ComponentCard as ComponentCard
 import qualified Parun.Types.ControlClock as ControlClock
+import qualified Parun.Types.CopyCoverage as CopyCoverage
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.Deck as Deck
+import qualified Parun.Types.DelayedTrigger as DelayedTrigger
 import qualified Parun.Types.Departure as Departure.Type
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.Effect as Effect
@@ -51,15 +65,19 @@ import qualified Parun.Types.ExilePlayPermission as ExilePlayPermission
 import qualified Parun.Types.Expiry as Expiry
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Facing as Facing
+import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.IgnoredAbility as IgnoredAbility
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.ManaSpending as ManaSpending
 import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
+import qualified Parun.Types.Modification as Modification
+import qualified Parun.Types.ModifyPowerToughness as ModifyPowerToughness
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.OutsideDestination as OutsideDestination
@@ -71,23 +89,31 @@ import qualified Parun.Types.PlayPermissionOrigin as PlayPermissionOrigin
 import qualified Parun.Types.Player as Player
 import qualified Parun.Types.PlayerChoice as PlayerChoice
 import qualified Parun.Types.PlayerCounterKind as PlayerCounterKind
+import qualified Parun.Types.PlayerEffect as PlayerEffect
 import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.Printing as Printing
 import qualified Parun.Types.PrintingId as PrintingId
+import qualified Parun.Types.Prohibition as Prohibition
 import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Prompt as Prompt
+import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.Recipient as Recipient
+import qualified Parun.Types.ReplacementOrigin as ReplacementOrigin
+import qualified Parun.Types.RequirementArity as RequirementArity
+import qualified Parun.Types.RestrictedCreatures as RestrictedCreatures
 import qualified Parun.Types.Result as Result
 import qualified Parun.Types.RoomHalf as RoomHalf
 import qualified Parun.Types.Sickness as Sickness
 import qualified Parun.Types.SideDeck as SideDeck
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.Source as Source
+import qualified Parun.Types.SourceChoices as SourceChoices
 import qualified Parun.Types.Status as Status
 import qualified Parun.Types.StoredResult as StoredResult
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.Timestamp as Timestamp
+import qualified Parun.Types.Uses as Uses
 import qualified Parun.Types.Zone as Zone
 
 deckSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -289,7 +315,7 @@ setupSpec s registry = Spec.describe s "Setup" $ do
   -- CR 727.1 restarts "following the procedures set forth in rule 103" for the
   -- same players, and CR 729.2's subgame "proceeds like a normal game": neither
   -- turns an option off, which is why Setup.restartGame and
-  -- Setup.subgameStateFrom leave GameState.settings out of their updates. Read
+  -- Setup.subgameStateFrom name GameState.settings as kept. Read
   -- at gameplay level -- CR 903.12f's twenty-five, which only the carried
   -- setting can produce -- rather than off the field.
   Spec.it s "CR 727.1 / 729.2 a rebuilt Brawl game is still a Brawl game" $ do
@@ -332,6 +358,58 @@ setupSpec s registry = Spec.describe s "Setup" $ do
     Spec.assertEqWith s "setup counts the starting player's first turn" (GameState.turnsBegun built) (Map.singleton S.alice 1)
     Spec.assertEqWith s "a restart counts its controller's first turn and nothing before it" (GameState.turnsBegun restarted) (Map.singleton S.bob 1)
     Spec.assertEqWith s "a subgame counts its starting player's first turn and nothing of the main game's" (GameState.turnsBegun subgame) (Map.singleton S.bob 1)
+
+  -- CR 727.1 / 729.1b: a restart and a subgame are new games, so no stored
+  -- result of the old one survives into them. The board carries a row in every
+  -- carrier, and only Setup.blankGame clears them: neither rebuild names one.
+  Spec.it s "CR 727.1 / 729.1b a restart and a subgame keep no stored row of the game before" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    let (land, built) = S.addPermanent mountain S.alice (Setup.gameWith GameSettings.plain S.bothPlayers)
+        stored = everyCarrier land built
+        restarted = S.runPure S.identityAnswer stored (Setup.restartGame S.performer Set.empty S.alice)
+        subgame = Setup.subgameStateFrom S.alice stored
+    Spec.assertEqWith s "the board carries a row in every carrier" (carrierRows stored) (replicate (length (carrierRows stored)) 1)
+    Spec.assertEqWith s "CR 727.1 a restart clears every carrier" (carrierRows restarted) (replicate (length (carrierRows restarted)) 0)
+    Spec.assertEqWith s "CR 729.1b a subgame clears every carrier" (carrierRows subgame) (replicate (length (carrierRows subgame)) 0)
+    Spec.assertBool s (GameState.nextObjectId restarted >= GameState.nextObjectId stored && GameState.nextTimestamp restarted >= GameState.nextTimestamp stored) "a restart's supplies do not move back"
+    Spec.assertEqWith s "a subgame inherits the supplies" (GameState.nextObjectId subgame, GameState.nextTimestamp subgame) (GameState.nextObjectId stored, GameState.nextTimestamp stored)
+
+-- One row in every stored carrier, each from `source`: the fixture the CR
+-- 727.1 / 729.1b case above clears.
+everyCarrier :: ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
+everyCarrier source gs0 =
+  let (ts, gs1) = Game.freshTimestamp (S.withEffect source (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.Literal 0) (Quantity.Literal 0))) gs0)
+      gs2 = S.addPlayerEffect Expiry.AtCleanup (AffectedPlayers.Named S.bob) PlayerEffect.CantCastSpells S.alice gs1
+      creature = RestrictedCreatures.Named source
+      choices = SourceChoices.MkSourceChoices Map.empty Set.empty Nothing Nothing Acquisition.Own
+      replacement = ActiveReplacement.MkActiveReplacement ActiveReplacementSpec.effect source S.alice ts Expiry.AtCleanup Uses.Unlimited ReplacementOrigin.Other Nothing Nothing Map.empty choices
+   in gs2
+        { GameState.copyEffects = [ActiveCopy.MkActiveCopy source ts Expiry.AtCleanup (CopyCoverage.These (Set.singleton source)) (Projection.project source gs2) Nothing],
+          GameState.replacements = [replacement],
+          GameState.blockRequirements = [ActiveBlockRequirement.MkActiveBlockRequirement source S.alice ts Expiry.AtCleanup creature Nothing RequirementArity.EachSubject],
+          GameState.attackRequirements = [ActiveAttackRequirement.MkActiveAttackRequirement source S.alice ts Expiry.AtCleanup creature Nothing],
+          GameState.objectProhibitions = [ActiveObjectProhibition.MkActiveObjectProhibition source S.alice ts Expiry.AtCleanup Prohibition.Block creature],
+          GameState.attackProhibitions = [ActiveAttackProhibition.MkActiveAttackProhibition source S.alice ts Expiry.AtCleanup creature Nothing],
+          GameState.evasions = [ActiveEvasion.MkActiveEvasion source S.alice ts Expiry.AtCleanup (Filter.HasCardType CardType.Creature) (Filter.HasCardType CardType.Creature)],
+          GameState.ignoredAbilities = [IgnoredAbility.MkIgnoredAbility S.bob source (AbilityName.MkAbilityName (Text.pack "mana")) Expiry.AtCleanup],
+          GameState.delayedTriggers = Seq.singleton DelayedTriggerSpec.entry {DelayedTrigger.source = source, DelayedTrigger.expiry = Just Expiry.AtCleanup}
+        }
+
+-- How many rows each stored carrier holds, in GameState's order.
+carrierRows :: GameState.GameState -> [Int]
+carrierRows gs =
+  [ length (GameState.continuousEffects gs),
+    length (GameState.copyEffects gs),
+    length (GameState.replacements gs),
+    length (GameState.playerEffects gs),
+    length (GameState.blockRequirements gs),
+    length (GameState.attackRequirements gs),
+    length (GameState.objectProhibitions gs),
+    length (GameState.attackProhibitions gs),
+    length (GameState.evasions gs),
+    length (GameState.ignoredAbilities gs),
+    length (GameState.delayedTriggers gs)
+  ]
 
 -- CR 800.2: the options this game starts with. The seat count is the caller's,
 -- so the Brawl legs above differ from their controls in exactly one thing.

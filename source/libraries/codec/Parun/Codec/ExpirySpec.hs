@@ -189,8 +189,8 @@ spec s = Spec.describe s "Parun.Codec.Expiry" $ do
     Common.assertCodec
       s
       Expiry.codec
-      (Expiry.WhenPaid (PaidExpiry.MkPaidExpiry (PlayerId.MkPlayerId 2) (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.OfType (ManaType.Colored Color.Blue)])) [])))
-      " {\"type\":\"WhenPaid\",\"value\":{\"player\":2,\"cost\":{\"mana\":[{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Blue\"}}}]}}} "
+      (Expiry.WhenPaid (PaidExpiry.MkPaidExpiry (PlayerId.MkPlayerId 2) (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.OfType (ManaType.Colored Color.Blue)])) []) (ObjectId.MkObjectId 7)))
+      " {\"type\":\"WhenPaid\",\"value\":{\"player\":2,\"cost\":{\"mana\":[{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Blue\"}}}]},\"resolution\":7}} "
   -- CR 611.2a: the one-shot Duration.UntilUsed arms into, distinct from
   -- AtCleanup, which it also honours.
   Spec.it s "WhenUsed" $

@@ -60,6 +60,7 @@ import qualified Parun.Types.ChoosePlayerAtRandom as ChoosePlayerAtRandom
 import qualified Parun.Types.ChosenPermanents as ChosenPermanents
 import qualified Parun.Types.CoinFace as CoinFace
 import qualified Parun.Types.CoinReading as CoinReading
+import qualified Parun.Types.ColorSpread as ColorSpread
 import qualified Parun.Types.ContinuousEffect as ContinuousEffect
 import qualified Parun.Types.ControlDuration as ControlDuration
 import qualified Parun.Types.ControlPlayer as ControlPlayer
@@ -300,7 +301,7 @@ modifyTarget resolving source controller legal chosen (ModifyTarget.MkModifyTarg
   State.modify' $ \gs ->
     case Common.frozenAffected gs affected of
       [] -> gs
-      targets -> case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs of
+      targets -> case Expiry.arm resolving legal controller source duration gs of
         -- CR 611.2b: the duration never started, so nothing is stored.
         Nothing -> gs
         Just expiry ->
@@ -376,7 +377,7 @@ changeText resolving source controller legal (ChangeText.MkChangeText families f
         -- CR 611.2a's Indefinite unless the card states a duration (Crystal
         -- Spray's "until end of turn"), armed through Expiry like the other
         -- storing arms; Nothing when the duration has already passed.
-        case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs of
+        case Expiry.arm resolving legal controller source duration gs of
           Nothing -> gs
           Just expiry ->
             -- CR 611 / 612: a continuous effect over the one target, with the
@@ -448,7 +449,7 @@ addMana resolving source controller legal (ManaAddition.MkManaAddition ref produ
             ManaUnit.rider = rider,
             ManaUnit.spendTrigger = Mana.spendTriggerOf controller source gs0 =<< whenSpent,
             ManaUnit.sourceChoices = Mana.sourceChoicesOf source gs0,
-            ManaUnit.sourceLastExiled = Mana.lastExiledWith (resolvingAbilityName resolving gs0) source gs0
+            ManaUnit.sourceLastExiled = Mana.lastExiledWith (resolvingAbilityName resolving gs0) (Game.readingAcquisition resolving source gs0 source) source gs0
           }
       -- CR 605.1b's event, per recipient. Nothing is recorded where the
       -- instruction added no mana: an addition of none is no addition, and CR
@@ -491,17 +492,21 @@ addMana resolving source controller legal (ManaAddition.MkManaAddition ref produ
     -- CR 105.4's choice is made ONCE for the whole instruction, which is what
     -- "two mana of any one color they choose" says (Stadium Vendors): the
     -- count replicates the unit the answer settled rather than asking again.
-    Mana.Offers offered ->
+    -- "In any combination of colors" asks once per unit instead: Sarkhan,
+    -- Fireblood's +1 (data/scenarios/sarkhan-fireblood-rummages-and-makes-mana-only-for-dragons.json).
+    Mana.Offers spread offered ->
       let named = playerRefPlayers legal resolving source controller gs0 ref
           ordered = filter (\pid -> List.elem pid named) (Game.apnapOrder gs0)
           recipients = ordered <> filter (\pid -> List.notElem pid ordered) named
        in Monad.forM_ recipients $ \pid -> do
             -- Through Game.chooseAmong, the instruction being mandatory.
             -- Mana.produced answers Offers only for two or more types.
-            picked <- Game.chooseAmong (\decider who -> Prompt.ChooseManaType decider who resolving) pid (NonEmpty.toList offered)
-            let manaType = Maybe.fromMaybe (NonEmpty.head offered) picked
-            State.modify' (Mana.addMana pid (replicate howMany (unitOf manaType)))
-            recordAdded pid (Set.singleton manaType)
+            let pick = fmap (Maybe.fromMaybe (NonEmpty.head offered)) (Game.chooseAmong (\decider who -> Prompt.ChooseManaType decider who resolving) pid (NonEmpty.toList offered))
+            manaTypes <- case spread of
+              ColorSpread.OneColor -> fmap (replicate howMany) pick
+              ColorSpread.AnyCombination -> Monad.replicateM howMany pick
+            State.modify' (Mana.addMana pid (fmap unitOf manaTypes))
+            recordAdded pid (Set.fromList manaTypes)
 
 -- CR 608.2c's instruction, carried out by somebody other than this spell's
 -- controller: Drain Power's first sentence has the TARGETED player activate a
@@ -1578,28 +1583,26 @@ destroy settle resolving source controller legal chosen (Destroy.MkDestroy ref r
   -- would make the rider's quantity unevaluable instead.
   Monad.forM_ mSlot $ \slot ->
     State.modify' (Common.bindAmountSlot resolving source slot (Natural.length destroyed))
-  -- The other reading of the same printed phrase: the CARDS "put into a
+  -- The other reading of the same printed phrase: what was "put into a
   -- graveyard this way", for Come Back Wrong's "return it to the battlefield"
-  -- to name. Bound onto `resolving` and as a GROUP, which is where and how
+  -- to name and Volcanic Eruption's "the number of Mountains" to count. Bound
+  -- onto `resolving` and as a GROUP, which is where and how
   -- MoveToZone binds its own arrivals (CR 400.7j) and the only shape every
   -- reader of a slot a destruction defines can see: slotGroup reads live
   -- GameState unconditionally, where a single binding would have to survive
   -- `chosen`.
   --
-  -- Two filters, both read off the board AFTER the funnel rather than off the
-  -- funnel's answer, because the answer names the incarnation and not where it
-  -- ended up:
+  -- Read off the board AFTER the funnel rather than off the funnel's answer,
+  -- because the answer names the incarnation and not where it ended up: a CR 614
+  -- replacement may send the destroyed permanent to exile instead (Rest in
+  -- Peace), and then nothing was put into a graveyard this way. A cancelled move
+  -- (CR 616.1) has no incarnation at all and is already Nothing.
   --
-  --   * in a GRAVEYARD. A CR 614 replacement may send the destroyed permanent
-  --     to exile instead (Rest in Peace), and then nothing was put into a
-  --     graveyard this way. A cancelled move (CR 616.1) has no incarnation at
-  --     all and is already Nothing.
-  --   * a CARD. CR 111.6 says a token is not a card, and every printed reader
-  --     of this slot says "card" -- "if a creature CARD is put into a graveyard
-  --     this way", "return each CARD put into a graveyard this way". A second
-  --     rule would refuse the same token one step later -- CR 111.8, which
-  --     Parun.Engine.Event's zone-change funnel states -- so this filter is what
-  --     the CARD says rather than the only thing standing in the way.
+  -- A token counts: CR 701.8a moves it to a graveyard, where only CR 111.7's
+  -- state-based action ends it, so it is one of Volcanic Eruption's Mountains
+  -- (data/scenarios/volcanic-eruption-deals-damage-for-each-mountain-put-into-a-graveyard.json).
+  -- A reader saying "card" is kept from it by CR 111.8, which refuses the token
+  -- the move Come Back Wrong asks (data/scenarios/board-effect's CR 111.6 case).
   --
   -- Nothing is bound when nothing qualifies, MoveToZone's rule: no slot names
   -- an empty set, so the later clause finds an unbound slot and does nothing --
@@ -1612,8 +1615,8 @@ destroy settle resolving source controller legal chosen (Destroy.MkDestroy ref r
   -- the amount slot above counts it as one OBJECT destroyed.
   Monad.forM_ mBuried $ \slot -> do
     after <- State.get
-    let buriedCards = concatMap (filter (\oid -> Common.isCardInAGraveyard oid after) . Foldable.toList . snd) destroyed
-    Monad.unless (null buriedCards) (State.modify' (Common.bindObjectsSlot resolving slot (Seq.fromList buriedCards)))
+    let arrivals = concatMap (filter (\oid -> Common.isInAGraveyard oid after) . Foldable.toList . snd) destroyed
+    Monad.unless (null arrivals) (State.modify' (Common.bindObjectsSlot resolving slot (Seq.fromList arrivals)))
   -- The THIRD reading, and the only one that keeps a controller: the PERMANENTS
   -- CR 701.8 destroyed, under the ids they held on the battlefield, for
   -- Effect.ForEach to walk one at a time -- Rampage of the Clans' "for each

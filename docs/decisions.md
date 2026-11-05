@@ -646,6 +646,32 @@ Entries are ordered by the first rule each cites.
   conjures inside an ability that could add mana.
 - **Issue**: none.
 
+## A kept ability stays linked to its holder's own exiles
+
+- **Question**: Mimeoplasm, Revered One becomes a copy of a card "except it's
+  0/0 and has this ability". After the copy, does the kept {2} still refer to
+  the cards Mimeoplasm's printed as-enters ability exiled, or to none, as an
+  ability acquired without its linked twin?
+- **Rules**: CR 607.1a, 607.2b, 607.5, 607.5a, 707.9a; CR of 2026-08-07. No
+  ruling for Mimeoplasm.
+- **Decision**: It stays linked. The exception grants the ability from within
+  the ability itself, so CR 607.1a counts it as printed on the object; the CR
+  607.2b pair is then intact, and CR 607.5's bar covers only a pair acquired
+  together. Only the instance the exception keeps is linked: a second
+  instance the copy itself brought (Mimeoplasm copying a second Mimeoplasm) is
+  CR 607.5's acquired ability and refers to no card.
+- **Rejected**: The kept ability refers to nothing (CR 607.5a by analogy). It
+  loses because CR 607.5a speaks of a choice and not an exile, and it would
+  make "and has this ability" do nothing on the one printing that keeps a
+  linked ability this way. Reading the old pile from every ability of the copy
+  loses on the same board: the copied {2} would find the kept one's cards.
+- **Site**: `Parun.Engine.Binding.keptAbility`, read by
+  `Parun.Engine.Game.acquisitionFor`; proved by
+  `data/scenarios/copy/cr-607-1a-mimeoplasm-copying-a-mimeoplasm-keeps-one-ability-linked-to-its-exiles.json`
+  and
+  `data/scenarios/copy/cr-614-14-mimeoplasm-becomes-a-copy-of-each-card-exiled-with-it-in-turn-and-of-no-other.json`.
+- **Issue**: #4985.
+
 ## When Thieves' Auction's repeated process ends
 
 - **Question**: Thieves' Auction repeats "until all cards exiled this way have
@@ -921,6 +947,24 @@ Entries are ordered by the first rule each cites.
 - **Site**: `Parun.Engine.Event.placeDiverted`. Proved by the scenario
   hallowed-moonlight-exiles-a-card-conjured-onto-the-battlefield.
 - **Issue**: #5764.
+
+## Whether an ability's own "prevent" is a self-replacement
+
+- **Question**: Power Leak deals 2 damage, then says "prevent X of that damage".
+  It is the resolving ability's own effect, as CR 614.15 describes, and it uses
+  "prevent", as CR 615.1a describes. Does it apply first with no choice, or does
+  its victim order it against Furnace of Rath or Reverse Damage?
+- **Rules**: CR 614.15, 608.2c, 615.1, 615.1a, 616.1a, 616.1e; CR of 2026-08-07.
+  CR 614.15 opens "Some replacement effects", CR 615.1 makes a prevention effect
+  continuous, and neither Power Leak nor Errant Minion has a ruling.
+- **Decision**: A self-replacement. It applies first, so Furnace of Rath doubles
+  what is left, and Reverse Damage prevents only that.
+- **Rejected**: A continuous prevention effect under CR 616.1e, which lets the
+  victim take 3 rather than 2 under Furnace of Rath. The sentence qualifies the
+  one before it, as CR 608.2c lets later text do.
+- **Site**: `data/cards/power-leak.json`'s `origin`, proved by the scenario
+  "power-leak-prevents-before-furnace-of-rath-doubles".
+- **Issue**: #6128.
 
 ## Whether a phased-out permanent a subgame takes leaves visibly
 
@@ -1348,6 +1392,24 @@ Entries are ordered by the first rule each cites.
   Life wither or infect.
 - **Issue**: #5571.
 
+## Whether "at the beginning of this turn" sees an effect lasting until that turn
+
+- **Question**: Power Surge counts the lands a player controlled at the beginning
+  of this turn. An "until your next turn" effect ended as that turn began: is the
+  count of the board with it or without it?
+- **Rules**: CR 500.12 leaves no game event between turns, and neither CR 500.4
+  nor CR 514.2 says when a duration naming a turn ends relative to its beginning.
+  No ruling on the card.
+- **Decision**: Without it. The turn has begun once its first step is reached, and
+  the effect ended as it began.
+- **Rejected**: With it, which counts Hydro-Man, Fluid Felon as a land, though his
+  "until your next turn, he becomes a land" ended as that turn began.
+- **Site**: `Parun.Engine.Engine`'s `runStep`, filing
+  `GameState.permanentsAsTurnBegan` after `Parun.Engine.Expiry.dropAtTurnOf`.
+  Unproven by a scenario: no card in the pool is a land only until its
+  controller's next turn (Hydro-Man; Absorbing Man and Crystalline Resonance as a
+  copy of one).
+
 ## Whether assigning no combat damage beats assigning toughness
 
 - **Question**: Gauntlets of Light's creature assigns combat damage equal to its
@@ -1374,3 +1436,18 @@ Entries are ordered by the first rule each cites.
   `CombatDamageAmount`'s order, proved by the scenarios
   "assigning-no-combat-damage-beats-an-older-toughness-marker" and "...-newer-...".
 - **Issue**: #5462.
+
+## Who pays Quenchable Fire's price once the planeswalker changes hands
+
+- **Question**: Quenchable Fire's target is a planeswalker, which changes
+  controllers before the caster's next upkeep. "That planeswalker's controller
+  pays {U}": the player who controlled it as the spell resolved, or whoever
+  controls it when they pay? The card's rulings speak only of a targeted player.
+- **Rules**: CR 116.2c, 608.2c (CR of 2026-08-07).
+- **Decision**: The controller as the spell resolves. The offer's seat is sampled
+  once, as for every CR 116.2c offer.
+- **Rejected**: Whoever controls it at payment, under which the offer moves with
+  the planeswalker. The sentence names no later moment to ask again.
+- **Site**: `Parun.Types.UntilPaid`'s `payer`, sampled by `Parun.Engine.Expiry.arm`.
+  No test changes the planeswalker's controller.
+- **Issue**: #6084.

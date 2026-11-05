@@ -491,7 +491,7 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
               AbilityTriggered.ability = TriggeredAbilitySourceSpec.ability
             }
       )
-      " {\"type\":\"AbilityTriggered\",\"value\":{\"source\":{\"type\":\"OfObject\",\"value\":7},\"controller\":1,\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}}}} "
+      " {\"type\":\"AbilityTriggered\",\"value\":{\"source\":{\"type\":\"OfObject\",\"value\":7},\"controller\":1,\"ability\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}}}} "
   -- The permanent, then the player control LEFT, then the player it went to. The
   -- order matters and distinct ids prove it: "when YOU lose control" reads the
   -- middle field, and a swap would make it read the gainer.
@@ -761,4 +761,4 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
               TriggeredAbilitySource.acquisition = Acquisition.Own
             }
       )
-      " {\"type\":\"TriggeredAbilityResolved\",\"value\":{\"source\":7,\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}},\"createdAt\":4}} "
+      " {\"type\":\"TriggeredAbilityResolved\",\"value\":{\"source\":7,\"ability\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}},\"createdAt\":4}} "

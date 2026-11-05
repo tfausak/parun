@@ -2992,7 +2992,9 @@ legalCopyTargets context batch filter_ among self gs =
         CopyDomain.InZone Zone.Battlefield -> Set.toAscList (GameState.battlefield gs)
         CopyDomain.InZone Zone.Graveyard -> concatMap (\pid -> Game.cardsIn Zone.Graveyard pid gs) (GameState.turnOrder gs)
         CopyDomain.InZone _ -> []
-        CopyDomain.InPile pile -> Game.linkedPile Nothing pile (Maybe.fromMaybe self (Filter.source context)) gs
+        CopyDomain.InPile pile ->
+          let src = Maybe.fromMaybe self (Filter.source context)
+           in Game.linkedPile Nothing (Quantity.readerAcquisition context src gs) pile src gs
    in filter eligible domain
 
 -- CR 707.9g / 603.11: the triggered ability linked to a CR 707.5 entry

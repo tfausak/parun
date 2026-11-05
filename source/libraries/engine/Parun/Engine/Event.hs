@@ -261,6 +261,7 @@ import qualified Parun.Types.ReplacementBucket as ReplacementBucket
 import Parun.Types.ReplacementCandidate (ReplacementCandidate)
 import qualified Parun.Types.ReplacementCandidate as ReplacementCandidate
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
+import qualified Parun.Types.ReplacementOrigin as ReplacementOrigin
 import qualified Parun.Types.RevealCause as RevealCause
 import qualified Parun.Types.RevealObligation as RevealObligation
 import qualified Parun.Types.RevealTiming as RevealTiming
@@ -2405,10 +2406,8 @@ applyChosen settle asOf batch diverting allowances applied prevented exiledBy sh
   -- rule's middle clause, "any additional effects they have will take
   -- place", which is `applyInertly`'s whole job.
   --
-  -- CR 615.3's use count is skipped too, which no card notices: every
-  -- prevention row parun installs is Uses.Unlimited (Resolve.installDamageRow
-  -- says why, and Fog's authored row says Unlimited as well), so the
-  -- `consume` this bypasses would have been a no-op anyway.
+  -- A shield's use count is skipped too, so CR 615.8's "next time" waits for
+  -- damage it can prevent. A self-replacement's is spent, in `applyInertly`.
   --
   -- A SEPARATE fold rather than a flag inside `apply`, because CR 615.12 is
   -- a fact about the (effect, event) PAIR and not about any one rewrite:
@@ -2535,8 +2534,10 @@ shufflesAfter candidate = case ReplacementCandidate.effect candidate of
 --
 -- No `consume` and no `setShield` in any arm, which is CR 615.12's last sentence:
 -- "existing damage prevention shields won't be reduced by damage that can't be
--- prevented". CR 615.3's use count is skipped with it, which no card notices --
--- `loop` above says why.
+-- prevented". A use count is skipped with it, but for a CR 614.15
+-- self-replacement: its one event is this one, and it stands as no shield for the
+-- next. The scenario power-leak-leaves-no-shield-when-damage-cant-be-prevented
+-- proves it.
 --
 -- One arm per DamageRewrite constructor, `apply`'s discipline for `apply`'s
 -- reason: a new prevention rewrite carrying an additional effect must break the
@@ -2545,6 +2546,7 @@ shufflesAfter candidate = case ReplacementCandidate.effect candidate of
 -- for a rewrite that prevents.
 applyInertly :: ReplacementCandidate -> DamageRewrite.DamageRewrite (Effect.Type.Effect Card (GrantedAbility.Type.GrantedAbility Card)) -> ProposedEvent -> Game (Maybe ProposedEvent)
 applyInertly candidate rewrite event = do
+  Monad.when (ReplacementCandidate.origin candidate == ReplacementOrigin.SelfReplacement) (Replacement.consume (ReplacementCandidate.identity candidate))
   case rewrite of
     -- CR 122.1c's "prevent that damage and remove a shield counter from it". The
     -- removal is the additional effect, and it is AMOUNT-INDEPENDENT -- the rule
@@ -2962,7 +2964,7 @@ apply settle batch applied candidate event =
               -- unreachable and is written out only because arm is total over
               -- Duration. No bindings -- CR 614.1c's rewrite is a replacement's,
               -- not a resolution's, so its duration can name no slot.
-              case Expiry.arm (flip Game.acquisitionOf) Map.empty controller oid Duration.Indefinite gs2 of
+              case Expiry.arm oid Map.empty controller oid Duration.Indefinite gs2 of
                 Nothing -> gs2
                 Just expiry ->
                   let (ts, gs3) = Game.freshTimestamp gs2
@@ -3369,7 +3371,7 @@ apply settle batch applied candidate event =
                 -- data/scenarios/entry-replacement proves it: Spirit Mascot fires once.
                 arrivals <- changeZonesTogether settle (fmap (\card -> (card, Zone.Exile)) chosen)
                 State.modify' $ \gs2 ->
-                  gs2 {GameState.exiledWith = foldr (\arrival -> Map.insert arrival ExileLink.MkExileLink {ExileLink.source = oid, ExileLink.ability = Just Binding.entryExileLink}) (GameState.exiledWith gs2) (foldMap Foldable.toList arrivals)}
+                  gs2 {GameState.exiledWith = foldr (\arrival -> Map.insert arrival ExileLink.MkExileLink {ExileLink.source = oid, ExileLink.ability = Just Binding.entryExileLink, ExileLink.acquisition = Game.acquisitionOf oid gs2}) (GameState.exiledWith gs2) (foldMap Foldable.toList arrivals)}
                 -- "For each creature card exiled this way": the cards that reached
                 -- exile, one choice of kind each.
                 exiled <- State.gets (\gs2 -> filter (`Set.member` GameState.exile gs2) (foldMap Foldable.toList arrivals))
@@ -3546,7 +3548,7 @@ apply settle batch applied candidate event =
                   -- and is written out only because arm is total over Duration.
                   -- No bindings: rule 702.136a's riot is a replacement's choice,
                   -- not a resolution, so its duration can name no slot.
-                  case Expiry.arm (flip Game.acquisitionOf) Map.empty controller oid Duration.Indefinite gs2 of
+                  case Expiry.arm oid Map.empty controller oid Duration.Indefinite gs2 of
                     Nothing -> gs2
                     Just expiry ->
                       let (ts, gs3) = Game.freshTimestamp gs2
@@ -5257,7 +5259,7 @@ becomeCopyAs batch candidate asCopy oid = do
             -- this creature is turned face down") stores the copy as a row
             -- that can end, Effect.BecomeCopy's road. The object is the
             -- row's source, which is "this creature".
-            Just stated -> case Expiry.arm (flip Game.acquisitionOf) Map.empty controller oid stated g of
+            Just stated -> case Expiry.arm oid Map.empty controller oid stated g of
               -- CR 611.2b: the duration never started.
               Nothing -> g
               Just expiry ->
@@ -8318,7 +8320,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                   -- CR 607.2b's link is exactly such a finding.
                   Monad.forM_ (if dest == Zone.Exile then exiledBy else Nothing) $ \linked ->
                     Monad.forM_ arrivals $ \arrival ->
-                      State.modify' (\g -> g {GameState.exiledWith = Map.insert arrival ExileLink.MkExileLink {ExileLink.source = linked, ExileLink.ability = Nothing} (GameState.exiledWith g)})
+                      State.modify' (\g -> g {GameState.exiledWith = Map.insert arrival ExileLink.MkExileLink {ExileLink.source = linked, ExileLink.ability = Nothing, ExileLink.acquisition = Game.acquisitionOf linked g} (GameState.exiledWith g)})
                   -- ONE Moved event for the whole move, which is CR 712.21's first
                   -- clause: one permanent leaves the battlefield. `newId` is the
                   -- first arrival, so a trigger reading the destination end of this
@@ -8701,7 +8703,7 @@ lingeringHandover oid lastController gs =
           duration <- fmap snd (filter ((== n) . fst) lingering)
           -- No bindings to bake a CR 611.2b condition against: this duration is
           -- a PRINTED static ability's, and no resolution chose anything for it.
-          expiry <- Maybe.maybeToList (Expiry.arm (flip Game.acquisitionOf) Map.empty lastController oid duration gs)
+          expiry <- Maybe.maybeToList (Expiry.arm oid Map.empty lastController oid duration gs)
           pure
             ContinuousEffect.MkContinuousEffect
               { ContinuousEffect.source = oid,
@@ -8743,7 +8745,7 @@ permissionRiders src gs played =
           (n, ts, modification, _) <- Projection.frozenStaticParts src gs
           duration <- fmap snd (filter ((== n) . fst) riders)
           you <- Maybe.maybeToList controller
-          expiry <- Maybe.maybeToList (Expiry.arm (flip Game.acquisitionOf) Map.empty you src duration gs)
+          expiry <- Maybe.maybeToList (Expiry.arm src Map.empty you src duration gs)
           pure
             ContinuousEffect.MkContinuousEffect
               { ContinuousEffect.source = src,
@@ -10252,6 +10254,7 @@ lastKnownFrom gs oid obj =
     (Game.pileHolderOf oid gs)
     -- CR 604.2's clauses, asked while there is still a board to ask them of.
     (Projection.lapsedGrantsOf (Projection.fullView gs) characteristics oid gs)
+    (Game.isTapped oid gs)
   where
     characteristics = Projection.project oid gs
 
@@ -10978,9 +10981,7 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.StepBegins (StepBegins.MkStepBegins _ _ (TurnScope.PlayersTurn _)) -> False
   -- None of the rest is turn-scoped: each names an event that can happen on
   -- anybody's turn.
-  TriggerCondition.SelfEnters -> False
-  TriggerCondition.PermanentEnters _ -> False
-  TriggerCondition.PermanentsEnter _ -> False
+  TriggerCondition.Enters _ -> False
   -- CR 709.5e restricts the special action to the taker's own turn, but CR
   -- 709.5f's keyword action and CR 709.5d's entry have no such restriction, and
   -- this classification is about the CONDITION rather than about how the

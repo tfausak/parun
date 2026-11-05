@@ -214,14 +214,6 @@ possessive word
 counting :: Context -> Count.Count Quantity.Quantity -> [(Text.Text, Text.Text, [SlotName.SlotName])]
 counting context c = case (Count.aggregation c, Count.scope c) of
   (Aggregation.Members, Scope.InZone (InZone.MkInZone zone whose)) -> do
-    let conjuncts = case Count.filter c of
-          Filter.Type.And fs -> fs
-          f -> [f]
-        controls f = case f of
-          Filter.Type.HeldByBound Holder.Controller _ -> True
-          Filter.Type.HeldByRecipient Holder.Controller -> True
-          _ -> False
-        (controllers, rest) = (filter controls conjuncts, filter (not . controls) conjuncts)
     p <- Filter.phrase (Filter.Type.And rest) (keyword context)
     (placed, fallback, ms) <- case (zone, whose, controllers) of
       (Zone.Battlefield, PlayerRef.Relative PlayerRelation.AnyPlayer, []) ->
@@ -237,10 +229,27 @@ counting context c = case (Count.aggregation c, Count.scope c) of
     one <- Filter.describe Filter.Singular fallback placed
     many <- Filter.describe Filter.Plural fallback placed
     [(one, many, ms)]
+  -- Power Surge's "lands they controlled at the beginning of this turn".
+  (Aggregation.Members, Scope.AsTurnBegan) -> do
+    p <- Filter.phrase (Filter.Type.And rest) (keyword context)
+    (controls', ms) <- controllers >>= \f -> (Text.pack "they control", []) : controllerOf f
+    let began = Text.dropWhileEnd (== 's') controls' <> Text.pack "led at the beginning of this turn"
+        placed = Filter.merge p (Filter.MkPhrase [] [] [Filter.MkQualifier began began])
+    one <- Filter.describe Filter.Singular permanent placed
+    many <- Filter.describe Filter.Plural permanent placed
+    [(one, many, ms)]
   (Aggregation.Members, Scope.OverPlayers (PlayerRef.Relative PlayerRelation.Opponent))
     | Count.filter c == Filter.Type.And [] -> [(Text.pack "opponent you have", Text.pack "opponents you have", [])]
   _ -> []
   where
+    conjuncts = case Count.filter c of
+      Filter.Type.And fs -> fs
+      f -> [f]
+    controls f = case f of
+      Filter.Type.HeldByBound Holder.Controller _ -> True
+      Filter.Type.HeldByRecipient Holder.Controller -> True
+      _ -> False
+    (controllers, rest) = (filter controls conjuncts, filter (not . controls) conjuncts)
     -- A player a slot names is named there (Theft of Dreams) or, named
     -- already, "that player"; the mode keeps the one naming it once.
     controllerOf f = case f of

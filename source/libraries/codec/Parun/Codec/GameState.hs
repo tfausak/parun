@@ -181,6 +181,7 @@ codec resolve = Fields.object $ do
   passed <- Fields.defaulted "passed" Set.empty (Common.set PlayerId.codec) GameState.passed
   turnNumber <- Fields.required "turnNumber" Common.natural GameState.turnNumber
   turnsBegun <- Fields.defaulted "turnsBegun" Map.empty (Common.naturalMap PlayerId.codec Common.natural) GameState.turnsBegun
+  permanentsAsTurnBegan <- Fields.defaulted "permanentsAsTurnBegan" Nothing (Common.maybe (Common.naturalMap ObjectId.codec LastKnown.codec)) GameState.permanentsAsTurnBegan
   result <- Fields.defaulted "result" Nothing (Common.maybe Result.codec) GameState.result
   restartSignal <- Fields.defaulted "restartSignal" RestartSignal.Type.Playing RestartSignal.codec GameState.restartSignal
   endTurnSignal <- Fields.defaulted "endTurnSignal" EndTurnSignal.Type.Running EndTurnSignal.codec GameState.endTurnSignal
@@ -308,6 +309,7 @@ codec resolve = Fields.object $ do
         GameState.passed = passed,
         GameState.turnNumber = turnNumber,
         GameState.turnsBegun = turnsBegun,
+        GameState.permanentsAsTurnBegan = permanentsAsTurnBegan,
         GameState.result = result,
         GameState.restartSignal = restartSignal,
         GameState.endTurnSignal = endTurnSignal,

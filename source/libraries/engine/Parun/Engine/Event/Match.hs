@@ -90,6 +90,7 @@ import qualified Parun.Types.DiscardWay as DiscardWay
 import qualified Parun.Types.Discarded as Discarded
 import qualified Parun.Types.DrawnUnder as DrawnUnder
 import qualified Parun.Types.Drew as Drew
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EventGroup as EventGroup
 import qualified Parun.Types.EventShape as EventShape
 import qualified Parun.Types.Exploited as Exploited
@@ -481,6 +482,33 @@ countersMoved gs you counterTrigger event = case (CounterTrigger.motion counterT
   where
     wanted = CounterTrigger.kind counterTrigger
 
+-- CR 603.6a: a permanent entered the battlefield, an entry that may trigger
+-- `you`'s abilities (`entryTriggers`), and it is the permanent the trigger
+-- watches. The subject, by ActingPermanent:
+--
+-- - Self compares the entrant's id with the bearer's, reading nothing about it.
+-- - Matching reads the entrant off `board` (Event.Binding.postEventView), CR
+--   603.10's battlefield immediately after the entry, and not the live one: CR
+--   704's pass may since have buried what pumped it. Parun.CardTriggerSpec's
+--   "CR 603.10 a Kongming that entered as a 3/3 pays nothing" proves it. Never
+--   the snapshot the Moved event carries: that is the object as it last existed
+--   in the zone it LEFT, and would answer CR 603.6b backwards. An entrant the
+--   sample does not hold that is gone and filed no last known information
+--   matches nothing. The bearer frames the match rather than being it -- it is
+--   the Filter.Context's source (so `Not IsSource` is Soul Warden's "another"),
+--   and its controller is CR 109.5's "you" in "a creature you control enters".
+--
+-- Batching is not read here, `leaves`' reason: `batchScoped` plus
+-- eventTriggers' dedup fires a Batching.OneOrMore trigger once (CR 603.2c).
+enters :: Filter.Context -> Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> GameState -> ObjectId -> PlayerId -> EntersTrigger.EntersTrigger -> GameEvent -> Bool
+enters context board gs bearer you t event = case Game.enteredBattlefieldChange event of
+  Nothing -> False
+  Just zc -> watched (ZoneChange.object zc) && entryTriggers gs you zc
+  where
+    watched entrant = case EntersTrigger.permanent t of
+      ActingPermanent.Self -> entrant == bearer
+      ActingPermanent.Matching f -> maybe False (\view -> Filter.matches context view f) (postEventView board gs entrant)
+
 -- CR 603.6c: a permanent left the battlefield for a destination the trigger
 -- admits, and it is the permanent the trigger watches. An empty destination set
 -- admits any zone and CR 603.6c's leaving-the-game form too (CR 800.4a, 729.4a);
@@ -707,28 +735,7 @@ matchesTriggerGiven bindings board gs bearer you cond event =
 -- on the rest. Past anyTriggerReads, so only matchesTriggerGiven calls it.
 armMatches :: Map.Map SlotName.SlotName Binding -> Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> GameState -> ObjectId -> PlayerId -> TriggerCondition -> GameEvent -> Bool
 armMatches bindings board gs bearer you cond event = case cond of
-  -- CR 603.6a: the bearer's own object entered the battlefield, an entry that
-  -- may trigger `you`'s abilities (`entryTriggers`).
-  TriggerCondition.SelfEnters -> maybe False (\zc -> ZoneChange.object zc == bearer && entryTriggers gs you zc) (Game.enteredBattlefieldChange event)
-  -- CR 603.6a's "whenever a [type] enters": a permanent the Filter admits
-  -- entered the battlefield. The bearer frames the match rather than being it --
-  -- it is the Filter.Context's source (so `Not IsSource` is Soul Warden's
-  -- "another"), and its controller is the perspective CR 109.5 gives "you" in
-  -- "a creature YOU CONTROL enters".
-  TriggerCondition.PermanentEnters f -> case Game.enteredBattlefieldChange event of
-    Nothing -> False
-    -- Deliberately NOT the snapshot the Moved event carries: that is the
-    -- object as it last existed in the zone it LEFT, and reading it here
-    -- would answer CR 603.6b backwards. The entrant comes off `board`
-    -- (Event.Binding.postEventView), CR 603.10's battlefield immediately
-    -- after the entry, and not the live one: CR 704's pass may since have
-    -- buried what pumped it. Parun.CardTriggerSpec's "CR 603.10 a Kongming
-    -- that entered as a 3/3 pays nothing" proves it.
-    --
-    -- Nothing is an entrant the sample does not hold that is gone AND
-    -- filed no last known information, about which no Filter can
-    -- honestly answer.
-    Just zc -> maybe False (\view -> Filter.matches bearerContext view f) (postEventView board gs (ZoneChange.object zc)) && entryTriggers gs you zc
+  TriggerCondition.Enters t -> enters bearerContext board gs bearer you t event
   -- CR 603.2b: this step began, on a turn the scope admits, and -- for a card
   -- that counts main phases rather than naming one -- at CR 505.1b's ordinal.
   TriggerCondition.StepBegins (StepBegins.MkStepBegins wanted ordinal scope) -> case event of
@@ -1069,10 +1076,6 @@ armMatches bindings board gs bearer you cond event = case cond of
           GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _) -> admits zc
           GameEvent.CardArrived zc -> admits zc
           _ -> False
-  -- CR 603.2c's batch reading of PermanentEnters, delegated because which
-  -- entries this condition admits is the singular arm's answer; firing once for
-  -- the batch is `batchScoped` plus eventTriggers' dedup, never this arm.
-  TriggerCondition.PermanentsEnter f -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.PermanentEnters f) event
   -- CR 603.2c's batch reading of DealsDamage's combat damage to a player (Pia Nalaar,
   -- Chief Mechanic's "whenever ONE OR MORE artifact creatures you control deal
   -- combat damage to a player"), delegated because which
@@ -1460,7 +1463,7 @@ armMatches bindings board gs bearer you cond event = case cond of
     _ -> False
   -- CR 601.2i's "any abilities that trigger when a spell is cast": a spell the
   -- Filter admits became cast. The bearer frames the match rather than being it,
-  -- as for PermanentEnters -- it is the Filter.Context's source, and its
+  -- as for a Matching Enters -- it is the Filter.Context's source, and its
   -- controller is the perspective CR 109.5 gives "you" in "whenever YOU CAST an
   -- instant or sorcery spell".
   --
@@ -1638,7 +1641,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   TriggerCondition.PermanentBecomesTargeted c -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.PermanentsBecomeTargeted c) event
   -- CR 709.5h: the bearer is the permanent that was given the designation, and
   -- the door named is the one it was given for. A bare comparison of an id and a
-  -- name, in SelfEnters' shape and for its reason -- nothing about the entrant's
+  -- name, in a Self Enters' shape and for its reason -- nothing about the entrant's
   -- characteristics is read, so there is no CR 608.2h fallback to reach for.
   --
   -- The half is checked as well as the bearer, which is the arm's whole content:
@@ -1648,7 +1651,7 @@ armMatches bindings board gs bearer you cond event = case cond of
     GameEvent.HalfUnlocked (HalfUnlocked.MkHalfUnlocked oid _ name _) -> oid == bearer && name == half
     _ -> False
   -- CR 708.7 through CR 603.2: the bearer is the permanent that turned over.
-  -- SelfEnters' shape -- a bare comparison of ids, with nothing about the
+  -- A Self Enters' shape -- a bare comparison of ids, with nothing about the
   -- permanent's characteristics read, so no CR 608.2h fallback is reachable.
   --
   -- The BEARER check is what keeps one player's face-up Skirk Marauder from
@@ -1735,7 +1738,7 @@ armMatches bindings board gs bearer you cond event = case cond of
                     f
     _ -> False
   -- CR 708.7's OTHER written form, read by a bystander: "whenever a permanent is
-  -- turned face up". PermanentEnters' shape against SelfEnters', and for its
+  -- turned face up". Matching Enters' shape against Self Enters', and for its
   -- reason -- the bearer frames the match rather than being it. The bearer is the
   -- Filter.Context's source (so `Not IsSource` would be an "another"), and its
   -- controller is the perspective CR 109.5 gives "you" in Deathmist Raptor's "a
@@ -1749,7 +1752,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- counter's landing place by object id on a board where the watcher and the
   -- subject are two permanents.
   --
-  -- Read LIVE off the game as it stands, like PermanentEnters and unlike
+  -- Read LIVE off the game as it stands, like a Matching Enters and unlike
   -- Leaves: CR 708.8 leaves the permanent on the battlefield with its
   -- normal copiable values restored, so there is nothing for CR 603.10a's
   -- look-back to recover and the live read is what CR 603.10's first sentence
@@ -2066,7 +2069,7 @@ armMatches bindings board gs bearer you cond event = case cond of
     GameEvent.LandPlayed played ->
       PlayerRelation.holds (Game.teams gs) (PlaysLand.player p) you (LandPlayed.player played)
         && LandPlayed.from played == PlaysLand.from p
-        -- The land as it arrived (CR 400.7i), read the way PermanentEnters
+        -- The land as it arrived (CR 400.7i), read the way a Matching Enters
         -- reads an entrant, so Fires of Mount Doom's Filter.IsBound names the
         -- permanent Cast.playLand's follow moved the binding onto.
         && maybe False (\view -> Filter.matches bearerContext view (PlaysLand.filter p)) (postEventView board gs (LandPlayed.land played))
@@ -2154,7 +2157,7 @@ armMatches bindings board gs bearer you cond event = case cond of
     _ -> False
   -- CR 701.3a read from the HOST: something became attached to the BEARER, and
   -- the Filter narrows WHAT. Two questions, and the split is the condition's
-  -- shape -- a bare id comparison for the host (SelfEnters' arm) and a Filter
+  -- shape -- a bare id comparison for the host (a Self Enters) and a Filter
   -- read for the attachment (PermanentTurnedFaceUp's arm), which is why the
   -- constructor carries one payload and matches on two objects.
   --

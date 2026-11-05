@@ -167,14 +167,15 @@ lookupObject :: ObjectId -> GameState -> Maybe Object
 lookupObject oid gs = Map.lookup oid (GameState.objects gs)
 
 -- | CR 607.2a: the cards in exile in `src`'s `pile`, as a reader named `reader`
--- means it (Binding.isLinkedExile), in ascending id and thus arrival order.
+-- that came with `acquisition` means it (Binding.isLinkedExile), in ascending id
+-- and thus arrival order.
 -- THE one sweep of GameState.exiledWith's piles. The relation and not a zone
 -- sweep, so a card a second copy of the same printing exiled is not in it; and
 -- in exile NOW (CR 400.7), since a card that left is a new object the stale
 -- link no longer names.
-linkedPile :: Maybe AbilityName.AbilityName -> ExiledPile.ExiledPile -> ObjectId -> GameState -> [ObjectId]
-linkedPile reader pile src gs =
-  filter (\o -> maybe False (Binding.isLinkedExile reader pile src) (Map.lookup o (GameState.exiledWith gs))) (Set.toAscList (GameState.exile gs))
+linkedPile :: Maybe AbilityName.AbilityName -> Acquisition.Acquisition -> ExiledPile.ExiledPile -> ObjectId -> GameState -> [ObjectId]
+linkedPile reader acquisition pile src gs =
+  filter (\o -> maybe False (Binding.isLinkedExile reader acquisition pile src) (Map.lookup o (GameState.exiledWith gs))) (Set.toAscList (GameState.exile gs))
 
 -- | CR 607.2a / 613.7d: the LAST of these cards to have been exiled, the one
 -- with the latest timestamp -- Duplicant's "the last creature card exiled with
@@ -2289,6 +2290,14 @@ acquisitionOf oid gs =
     Just row -> Acquisition.Copied (copyRowTimestamp gs row)
     Nothing -> Maybe.fromMaybe Acquisition.Own (liveOrLastKnown Object.acquisition LastKnown.acquisition oid gs)
 
+-- | CR 607.5: the acquisition the ability named `reader` of `oid` comes with:
+-- Own for one a copy effect's exception let it keep (Binding.isKeptOn), which
+-- CR 607.1a treats as printed on it, else acquisitionOf.
+acquisitionFor :: Maybe AbilityName.AbilityName -> ObjectId -> GameState -> Acquisition.Acquisition
+acquisitionFor reader oid gs
+  | maybe False (Binding.isKeptOn oid) reader = Acquisition.Own
+  | otherwise = acquisitionOf oid gs
+
 -- | CR 607.5: the acquisition whose choices, stored results and entrants the
 -- object resolving as `resolving`, a spell or an ability of `source`, reads off
 -- `oid`. For an ability reading its own source, the one it froze as it went
@@ -3455,8 +3464,8 @@ discardOf event = case event of
 --
 -- The id is ZoneChange.object and not ZoneChange.departed: CR 400.7 makes the
 -- entrant a NEW object, and the caller asks about the permanent that is on the
--- battlefield now. The same choice Parun.Engine.Event's PermanentEnters arm makes
--- for CR 603.6a, so a trigger and this reader agree on what entered.
+-- battlefield now. The same choice Parun.Engine.Event.Match.enters makes for CR
+-- 603.6a, so a trigger and this reader agree on what entered.
 --
 -- castOf's and discardOf's sibling, and here for their import-graph reason:
 -- enteredThisTurn below is the per-object reader.

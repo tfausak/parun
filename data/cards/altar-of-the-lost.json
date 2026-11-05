@@ -20,35 +20,15 @@
                       {
                         "type": "AddMana",
                         "value": {
-                          "production": {
-                            "type": "AnyColor"
+                          "count": {
+                            "type": "Literal",
+                            "value": 2
                           },
-                          "restriction": {
-                            "casts": {
-                              "type": "And",
-                              "value": [
-                                {
-                                  "type": "HasKeywordFamily",
-                                  "value": {
-                                    "type": "Flashback"
-                                  }
-                                },
-                                {
-                                  "type": "WasCastFrom",
-                                  "value": {
-                                    "type": "Graveyard"
-                                  }
-                                }
-                              ]
-                            }
-                          }
-                        }
-                      },
-                      {
-                        "type": "AddMana",
-                        "value": {
                           "production": {
-                            "type": "AnyColor"
+                            "type": "AnyColor",
+                            "value": {
+                              "type": "AnyCombination"
+                            }
                           },
                           "restriction": {
                             "casts": {

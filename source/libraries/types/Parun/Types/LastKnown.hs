@@ -257,6 +257,9 @@ data LastKnown = MkLastKnown
     -- clause unasked, and no board is left afterwards to ask it against.
     -- data/scenarios/zone-trigger's Synthetic Hollow Audit pair, a Villainous
     -- Ogre dying with and without a Demon, is the proof.
-    lapsedGrants :: !(Set.Set Condition.Condition)
+    lapsedGrants :: !(Set.Set Condition.Condition),
+    -- | CR 110.5: was it tapped -- Game.isTapped as it left. A status, so no
+    -- characteristic (CR 109.3); Count.lastKnownView reads it.
+    tapped :: !Bool
   }
   deriving (Eq, Ord, Show)

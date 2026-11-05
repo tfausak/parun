@@ -97,6 +97,7 @@ import qualified Parun.Types.Draw as Draw
 import qualified Parun.Types.Duration as Duration
 import qualified Parun.Types.EachCardInHand as EachCardInHand
 import qualified Parun.Types.Effect as Effect
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EntersWith as EntersWith
 import qualified Parun.Types.EntryFlip as EntryFlip
 import qualified Parun.Types.EntryOption as EntryOption
@@ -185,6 +186,7 @@ import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TurnRole as TurnRole
 import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
+import qualified Parun.Types.UntilPaid as UntilPaid
 import qualified Parun.Types.WhichCounters as WhichCounters
 import qualified Parun.Types.WhichTurn as WhichTurn
 import qualified Parun.Types.WithCounters as WithCounters
@@ -1499,9 +1501,9 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- as the repeated-face-name lint above does it.
   Spec.it s "the lint itself catches a state trigger and a nested AnyOf inside an AnyOf" $ do
     let never = Condition.Type.Compares (Compares.MkCompares (Quantity.Type.Literal 0) Comparison.Exactly (Quantity.Type.Literal 1))
-        fine = TriggerCondition.AnyOf [TriggerCondition.SelfEnters, TriggerCondition.RoomFullyUnlocked PlayerRelation.You]
+        fine = TriggerCondition.AnyOf [TriggerCondition.Enters EntersTrigger.defaultValue, TriggerCondition.RoomFullyUnlocked PlayerRelation.You]
     Spec.assertBool s (not (anyOfOffends fine)) "the control: two event triggers side by side are fine"
-    Spec.assertBool s (anyOfOffends (TriggerCondition.AnyOf [TriggerCondition.SelfEnters, TriggerCondition.StateIs never])) "a CR 603.8 state trigger inside an AnyOf is rejected"
+    Spec.assertBool s (anyOfOffends (TriggerCondition.AnyOf [TriggerCondition.Enters EntersTrigger.defaultValue, TriggerCondition.StateIs never])) "a CR 603.8 state trigger inside an AnyOf is rejected"
     Spec.assertBool s (anyOfOffends (TriggerCondition.AnyOf [fine])) "and so is a nested AnyOf"
     -- The recursion is what the nesting check buys: a state trigger one level
     -- down is caught too.
@@ -2150,7 +2152,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- A PERMANENT's trigger condition is source-framed, but CR 704.5n has
     -- unattached an Equipment before a CR 603.10a look-back is matched, so it
     -- is refused.
-    let onTrigger = (S.combinedFace piker) {Face.triggeredAbilities = [oneEffectTrigger (TriggerCondition.PermanentEnters buried) (Effect.Draw (Draw.MkDraw (PlayerRef.InSlot Binding.you) (Quantity.Type.Literal 1) Nothing))]}
+    let onTrigger = (S.combinedFace piker) {Face.triggeredAbilities = [oneEffectTrigger (TriggerCondition.Enters (EntersTrigger.matching buried)) (Effect.Draw (Draw.MkDraw (PlayerRef.InSlot Binding.you) (Quantity.Type.Literal 1) Nothing))]}
     Spec.assertEqWith s "a trigger condition asking it is an offence too" (hostOfSourceCounts onTrigger) (0, 1)
     -- CastOffer.payingInstead carries SlotlessCostFramed and is paid framed by
     -- the OFFERED card (Parun.Engine.Resolve.Effect.offerCastOnce), so neither the
@@ -2372,7 +2374,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         -- announcement could answer in any engine.
         ignoring = base {Face.specialActions = [SpecialAction.IgnoreThisUntilEndOfTurn (AbilityName.MkAbilityName (Text.pack "the prohibition")) sacrificeCost]}
         -- CR 116.2c: the same special action, as the price of ending an effect.
-        ending = base {Face.spell = spellOf [Effect.AffectPlayers (AffectPlayers.MkAffectPlayers (Duration.UntilPaid sacrificeCost) (AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.You)) PlayerEffect.CantCastSpells)]}
+        ending = base {Face.spell = spellOf [Effect.AffectPlayers (AffectPlayers.MkAffectPlayers (Duration.UntilPaid (UntilPaid.MkUntilPaid (PlayerRef.Relative PlayerRelation.You) sacrificeCost)) (AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.You)) PlayerEffect.CantCastSpells)]}
         -- CR 508.1h and CR 509.1d: a declaration announces no target.
         attacking = base {Face.attackCosts = [AttackCost.MkAttackCost (Affected.Matching (Filter.Type.HasCardType CardType.Creature)) (PerCreature.Fixed sacrificeCost) AttackCostScope.Controller Nothing]}
         blocking = base {Face.blockCosts = [BlockCost.MkBlockCost (Affected.Matching (Filter.Type.HasCardType CardType.Creature)) (PerCreature.Fixed sacrificeCost) Nothing Nothing]}
@@ -3063,7 +3065,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
               base
                 { Face.triggeredAbilities =
                     [ oneEffectTrigger
-                        (TriggerCondition.PermanentEnters buried)
+                        (TriggerCondition.Enters (EntersTrigger.matching buried))
                         (Effect.Draw (Draw.MkDraw (PlayerRef.InSlot Binding.you) (Quantity.Type.Literal 1) Nothing))
                     ]
                 }
@@ -3296,7 +3298,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
               base
                 { Face.triggeredAbilities =
                     [ oneEffectTrigger
-                        (TriggerCondition.PermanentEnters buried)
+                        (TriggerCondition.Enters (EntersTrigger.matching buried))
                         (Effect.Draw (Draw.MkDraw (PlayerRef.InSlot Binding.you) (Quantity.Type.Literal 1) Nothing))
                     ]
                 }
@@ -3495,7 +3497,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
           base
             { Face.triggeredAbilities =
                 [ oneEffectTrigger
-                    (TriggerCondition.PermanentEnters buried)
+                    (TriggerCondition.Enters (EntersTrigger.matching buried))
                     (Effect.Draw (Draw.MkDraw (PlayerRef.InSlot Binding.you) (Quantity.Type.Literal 1) Nothing))
                 ]
             }
@@ -3627,10 +3629,10 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
             ("a spell's own filter after its own choice", base {Face.spell = spellOf [Effect.ChooseQuality quality, destroying f] Map.empty}),
             ("an activated ability's target slot", withAbility (\a -> a {ActivatedAbility.modal = spellOf [] (aimed f)})),
             ("an activated ability's sacrifice cost", withAbility (\a -> a {ActivatedAbility.cost = (ActivatedAbility.cost a) {Cost.Type.components = [CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) f)]}})),
-            ("CR 603.6a's trigger condition", base {Face.triggeredAbilities = [oneEffectTrigger (TriggerCondition.PermanentEnters f) draw]}),
-            ("a triggered ability's own filter", base {Face.triggeredAbilities = [oneEffectTrigger TriggerCondition.SelfEnters (Effect.Destroy (Destroy.MkDestroy (ObjectRef.EachMatching f) Regenerability.Regenerable Nothing Nothing Nothing))]}),
+            ("CR 603.6a's trigger condition", base {Face.triggeredAbilities = [oneEffectTrigger (TriggerCondition.Enters (EntersTrigger.matching f)) draw]}),
+            ("a triggered ability's own filter", base {Face.triggeredAbilities = [oneEffectTrigger (TriggerCondition.Enters EntersTrigger.defaultValue) (Effect.Destroy (Destroy.MkDestroy (ObjectRef.EachMatching f) Regenerability.Regenerable Nothing Nothing Nothing))]}),
             ( "CR 603.4's intervening clause",
-              base {Face.triggeredAbilities = [(oneEffectTrigger TriggerCondition.SelfEnters draw) {TriggeredAbility.intervening = Just (Condition.Type.Compares (Compares.MkCompares (Quantity.Type.Count (Count.Type.MkCount (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) f Aggregation.Members)) Comparison.AtLeast (Quantity.Type.Literal 1)))}]}
+              base {Face.triggeredAbilities = [(oneEffectTrigger (TriggerCondition.Enters EntersTrigger.defaultValue) draw) {TriggeredAbility.intervening = Just (Condition.Type.Compares (Compares.MkCompares (Quantity.Type.Count (Count.Type.MkCount (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) f Aggregation.Members)) Comparison.AtLeast (Quantity.Type.Literal 1)))}]}
             )
           ]
         draw = Effect.Draw (Draw.MkDraw (PlayerRef.InSlot Binding.you) (Quantity.Type.Literal 1) Nothing)

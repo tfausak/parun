@@ -1,0 +1,21 @@
+{
+  "description": "CR 116.2c whole card: a double-striking Nafs Asp's two hits are two debts; paying one leaves the other, and bob loses exactly 1 at his draw step",
+  "note": "The ruling's 'they get to pay or take damage twice'. Battle Mastery gives the Asp double strike; bob holds two Forests, so a second offer is affordable and only the offer list tells one debt from two. Paying the first must leave the second on offer (a payment keyed on the source alone would end both), and at the draw step the one left fires for 1, not 2. Alice's life is untouched: the debts are bob's.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Nafs Asp", "label": "asp", "ready": true}, {"card": "Battle Mastery", "attached": "asp"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Forest", "label": "forest-1"}, {"card": "Forest", "label": "forest-2"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$asp"]}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 18}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "bob", "check": {"View": {"of": "Offered", "player": "bob", "is": ["Pass", "EndEffect $asp", "EndEffect $asp #2", "ActivateManaAbility $forest-1", "ActivateManaAbility $forest-2"]}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "do": {"Take": {"action": "EndEffect $asp", "mana": ["$forest-1", null]}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"View": {"of": "Offered", "player": "bob", "is": ["Pass", "EndEffect $asp", "ActivateManaAbility $forest-2"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "bob", "life": 17}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 20}}}
+  ]
+}

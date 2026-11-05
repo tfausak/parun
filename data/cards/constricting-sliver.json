@@ -62,7 +62,8 @@
                 "type": "Triggered",
                 "value": {
                   "condition": {
-                    "type": "SelfEnters"
+                    "type": "Enters",
+                    "value": {}
                   },
                   "modal": {
                     "modes": [

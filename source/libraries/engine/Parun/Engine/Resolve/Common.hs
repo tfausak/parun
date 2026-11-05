@@ -1489,7 +1489,7 @@ preventionRider chosen controller source riderEffects =
 -- `resolving` is the object resolving, which picks the acquisition the duration
 -- reads its source's choices under (Expiry.arm, Game.readingAcquisition).
 installDamageRow :: ObjectId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set ObjectId) -> PlayerId -> ObjectId -> Duration.Duration -> Maybe DamageKind.DamageKind -> DamageRewrite.DamageRewrite (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Uses.Uses -> Maybe PreventionRider.PreventionRider -> Filter.Type.Filter Keyword.Type.Keyword -> (Maybe (Filter.Type.Filter Keyword.Type.Keyword), Maybe PlayerRelation.PlayerRelation) -> GameState -> (Maybe Recipient, Maybe (Filter.Type.Filter Keyword.Type.Keyword, ObjectId)) -> GameState
-installDamageRow resolving targets slots controller source duration kind rewrite uses rider printed describedRecipient g (recipient, sourceChoice) = case Expiry.arm (Game.readingAcquisition resolving source) targets controller source duration g of
+installDamageRow resolving targets slots controller source duration kind rewrite uses rider printed describedRecipient g (recipient, sourceChoice) = case Expiry.arm resolving targets controller source duration g of
   -- CR 611.2b: the duration never started, so no shield is installed.
   Nothing -> g
   Just expiry ->
@@ -2034,7 +2034,7 @@ popControl pid row gs =
 exileFoundFor :: ObjectId -> Seq.Seq ObjectId -> Game ()
 exileFoundFor agent exiled =
   State.modify' $ \gs ->
-    let link = ExileLink.MkExileLink {ExileLink.source = agent, ExileLink.ability = Nothing}
+    let link = ExileLink.MkExileLink {ExileLink.source = agent, ExileLink.ability = Nothing, ExileLink.acquisition = Game.acquisitionOf agent gs}
         file oid = Map.insert oid link
         permission you = (ExilePlayPermission.defaultValue you agent) {ExilePlayPermission.spending = ManaSpending.AnyColor}
         grant you o = o {Object.playPermission = Just (permission you)}
@@ -2279,7 +2279,7 @@ linkCraftMaterials :: ObjectId -> ObjectId -> GameState -> GameState
 linkCraftMaterials resolving entered gs =
   let paid = foldMap Set.toList (Map.lookup Binding.craftMaterials (Binding.targetsOf (slotBindings resolving gs)))
       materials = filter (`Set.member` GameState.exile gs) (Maybe.mapMaybe Recipient.objectOf paid)
-      link = ExileLink.MkExileLink {ExileLink.source = entered, ExileLink.ability = Just Binding.craftLink}
+      link = ExileLink.MkExileLink {ExileLink.source = entered, ExileLink.ability = Just Binding.craftLink, ExileLink.acquisition = Acquisition.Own}
    in gs {GameState.exiledWith = foldr (`Map.insert` link) (GameState.exiledWith gs) materials}
 
 -- CR 607.2a's link, filed as the instruction that made it finishes: every card
@@ -3500,7 +3500,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
     noneCanBeHeld duration ref =
       let named = objectRefObjects legal resolving controller source gs ref
           held = frozenAffected gs (filter (Maybe.isJust . flip Game.lookupObject gs) named)
-       in not (null named) && (null held || Maybe.isNothing (Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs))
+       in not (null named) && (null held || Maybe.isNothing (Expiry.arm resolving legal controller source duration gs))
     -- The tap-state half of Effect.Tap's and Effect.Untap's arms: the sweep
     -- names at least one permanent and none of them is in the state the
     -- instruction needs to find.
@@ -3862,19 +3862,18 @@ overHolderBindings holder f gs =
           GameState.stackArchive = Map.adjust put holder (GameState.stackArchive gs)
         }
 
--- CR 701.8b's "put into a graveyard this way", asked of one CR 400.7 incarnation:
--- is it a card, and is it in a graveyard? Both halves are questions about where
--- the object ended up rather than about the destruction, which is why they are
--- asked of the board after the funnel ran (see Effect.Destroy's arm).
+-- "Put into a graveyard this way" (CR 701.8a), asked of one CR 400.7 incarnation:
+-- is it in a graveyard? A question about where the object ended up rather than
+-- about the destruction, which is why it is asked of the board after the funnel
+-- ran (see Effect.Destroy's arm).
 --
 -- WHOSE graveyard is not asked: CR 400.3 files the arrival under the owner and
 -- no printed reader of this slot distinguishes them. Object.zone is the read
--- because it tracks the zone sets and answers in one lookup; CR 111.6 is the
--- card half.
-isCardInAGraveyard :: ObjectId -> GameState -> Bool
-isCardInAGraveyard oid gs = case Game.lookupObject oid gs of
+-- because it tracks the zone sets and answers in one lookup.
+isInAGraveyard :: ObjectId -> GameState -> Bool
+isInAGraveyard oid gs = case Game.lookupObject oid gs of
   Nothing -> False
-  Just obj -> Object.zone obj == Zone.Graveyard && not (Game.isToken oid gs)
+  Just obj -> Object.zone obj == Zone.Graveyard
 
 -- The default runner for the resolutions the live loop does not drive: a
 -- PlaySubgame effect reports a draw and binds nothing. Parun.Engine.Engine passes
@@ -4653,7 +4652,7 @@ installControl legal resolving controller source recipient duration ref gs =
       | List.notElem recipient (Game.stillPlaying gs) -> gs
       -- CR 611.2b's condition is baked against `legal` rather than `chosen`, so a
       -- slot CR 608.2b has emptied never starts the duration.
-      | otherwise -> case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs of
+      | otherwise -> case Expiry.arm resolving legal controller source duration gs of
           -- CR 611.2b: the duration never started, so nothing is stored and
           -- control never changed.
           Nothing -> gs
