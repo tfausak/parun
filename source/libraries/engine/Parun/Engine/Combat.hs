@@ -1819,8 +1819,11 @@ becomeBlockedAlone oid gs =
 -- Parun.CombatCostSpec's "CR 509.3a the Pride Guardian moved onto the other
 -- attacker does not block again" is the proof.
 --
--- Not implemented: CR 702.22h's spread of a moved blocker across the
--- attacker's band (#6321).
+-- CR 702.22h spreads each arrival across its new attacker's band, outside the
+-- gate: the printed words ask CR 509.1b of the two targets only. A blocker
+-- leaving one member stays on that member's bandmates, since nothing removes it.
+-- data/scenarios/combat-cost/cr-702-22h-a-blocker-switched-onto-a-band-blocks-every-member.json
+-- is the proof.
 switchBlockers :: ObjectId -> ObjectId -> GameState -> GameState
 switchBlockers first second gs =
   let c = GameState.combat gs
@@ -1841,12 +1844,21 @@ switchBlockers first second gs =
       -- gains one when it receives a blocker; and left alone where it neither
       -- had a key nor takes one, since the KEY is CR 509.1h's status.
       assign oid new m = if Set.null new && not (Map.member oid m) then m else Map.insert oid new m
-      moved =
+      switchedOnly =
         assign
           first
           (Set.union (Set.intersection onFirst onSecond) fromSecond)
           (assign second (Set.union (Set.intersection onFirst onSecond) fromFirst) (Combat.blockers c))
-      arrivals = fmap (\b -> (b, second)) (Set.toList fromFirst) <> fmap (\b -> (b, first)) (Set.toList fromSecond)
+      direct = fmap (\b -> (b, second)) (Set.toList fromFirst) <> fmap (\b -> (b, first)) (Set.toList fromSecond)
+      -- CR 702.22h, less a bandmate the blocker already blocks (CR 509.3b).
+      spread =
+        [ (b, mate)
+        | (b, attacker) <- direct,
+          mate <- Set.toList (bandmatesOf attacker c),
+          not (Set.member b (blockersOf mate gs))
+        ]
+      arrivals = direct <> spread
+      moved = List.foldl' (\m (b, attacker) -> Map.insertWith Set.union attacker (Set.singleton b) m) switchedOnly spread
    in if first == second
         || not (Map.member first (Combat.attackers c))
         || not (Map.member second (Combat.attackers c))
