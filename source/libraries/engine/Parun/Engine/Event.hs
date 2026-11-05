@@ -1865,12 +1865,18 @@ bringIn :: OutsideDestination.OutsideDestination -> PlayerId -> PrintingId.Print
 bringIn destination pid printingId gs =
   let (zone, position) = arrivalOf destination
       (oid, gs1) = mintCard pid Nothing printingId zone position TapState.Untapped gs
-      -- One copy, not the entry: CR 100.2a's four-card limit is applied to the
-      -- combined deck and sideboard (CR 100.4a), so copies of a card are COUNTED
-      -- and a player who set aside two can be brought the second one later.
-      spend n = if n <= 1 then Nothing else Just (n - 1)
+   in (oid, spendFromPool pid printingId gs1)
+
+-- CR 400.11b: take one copy of this printing out of the player's sideboard
+-- pool. One copy, not the entry: CR 100.2a's four-card limit is applied to the
+-- combined deck and sideboard (CR 100.4a), so copies of a card are COUNTED and a
+-- player who set aside two can be brought the second one later. `bringIn` and
+-- Parun.Engine.Setup's CR 315.2 conspiracy choice both spend through it.
+spendFromPool :: PlayerId -> PrintingId.PrintingId -> GameState.GameState -> GameState.GameState
+spendFromPool pid printingId gs =
+  let spend n = if n <= 1 then Nothing else Just (n - 1)
       spent p = p {Player.outsideTheGame = Map.update spend printingId (Player.outsideTheGame p)}
-   in (oid, gs1 {GameState.players = Map.adjust spent pid (GameState.players gs1)})
+   in gs {GameState.players = Map.adjust spent pid (GameState.players gs)}
 
 -- CR 712.21a / 730.3a: the owner arranges the cards of a melded or merged
 -- permanent a library destination receives, written back onto the entry
