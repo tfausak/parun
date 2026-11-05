@@ -14,6 +14,7 @@ import qualified Parun.Codec.CoinFlipTrigger as CoinFlipTrigger
 import qualified Parun.Codec.Condition as Condition
 import qualified Parun.Codec.ControllerBecomesTarget as ControllerBecomesTarget
 import qualified Parun.Codec.CounterTrigger as CounterTrigger
+import qualified Parun.Codec.CrewRole as CrewRole
 import qualified Parun.Codec.DamageTrigger as DamageTrigger
 import qualified Parun.Codec.DieResult as DieResult
 import qualified Parun.Codec.DiscardTrigger as DiscardTrigger
@@ -43,7 +44,6 @@ import qualified Parun.Codec.SpellCast as SpellCast
 import qualified Parun.Codec.StepBegins as StepBegins
 import qualified Parun.Codec.TappedForManaTrigger as TappedForManaTrigger
 import qualified Parun.Codec.TransformTrigger as TransformTrigger
-import qualified Parun.Codec.TriggerFrequency as TriggerFrequency
 import qualified Parun.JsonCodec.Arm as Arm
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
@@ -107,8 +107,7 @@ codec =
           Arm.payload "PermanentBecomesDesignated" PermanentBecomesDesignated.codec TriggerCondition.PermanentBecomesDesignated (\x -> case x of TriggerCondition.PermanentBecomesDesignated y -> Just y; _ -> Nothing),
           Arm.nullary "AttachedCreatureMentors" TriggerCondition.AttachedCreatureMentors,
           Arm.payload "Exploits" ExploitTrigger.codec TriggerCondition.Exploits (\x -> case x of TriggerCondition.Exploits y -> Just y; _ -> Nothing),
-          Arm.payload "SelfBecomesCrewed" TriggerFrequency.codec TriggerCondition.SelfBecomesCrewed (\x -> case x of TriggerCondition.SelfBecomesCrewed y -> Just y; _ -> Nothing),
-          Arm.nullary "SelfCrewsVehicle" TriggerCondition.SelfCrewsVehicle,
+          Arm.payload "Crews" CrewRole.codec TriggerCondition.Crews (\x -> case x of TriggerCondition.Crews y -> Just y; _ -> Nothing),
           Arm.payload "PermanentSacrificed" PlayerActsOn.codec TriggerCondition.PermanentSacrificed (\x -> case x of TriggerCondition.PermanentSacrificed y -> Just y; _ -> Nothing),
           Arm.payload "SagaFinalChapterTriggers" PlayerRelation.codec TriggerCondition.SagaFinalChapterTriggers (\x -> case x of TriggerCondition.SagaFinalChapterTriggers y -> Just y; _ -> Nothing),
           Arm.payload "PlayerBecomesMonarch" PlayerRelation.codec TriggerCondition.PlayerBecomesMonarch (\x -> case x of TriggerCondition.PlayerBecomesMonarch y -> Just y; _ -> Nothing),
@@ -180,8 +179,7 @@ tagOf x = case x of
   TriggerCondition.PermanentBecomesDesignated {} -> "PermanentBecomesDesignated"
   TriggerCondition.AttachedCreatureMentors {} -> "AttachedCreatureMentors"
   TriggerCondition.Exploits {} -> "Exploits"
-  TriggerCondition.SelfBecomesCrewed {} -> "SelfBecomesCrewed"
-  TriggerCondition.SelfCrewsVehicle {} -> "SelfCrewsVehicle"
+  TriggerCondition.Crews {} -> "Crews"
   TriggerCondition.PermanentSacrificed {} -> "PermanentSacrificed"
   TriggerCondition.SagaFinalChapterTriggers {} -> "SagaFinalChapterTriggers"
   TriggerCondition.PlayerBecomesMonarch {} -> "PlayerBecomesMonarch"

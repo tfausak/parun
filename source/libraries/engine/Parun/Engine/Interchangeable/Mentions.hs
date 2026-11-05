@@ -174,6 +174,7 @@ import qualified Parun.Types.Create as Create
 import qualified Parun.Types.CreateCopy as CreateCopy
 import qualified Parun.Types.CreateEmblem as CreateEmblem
 import qualified Parun.Types.CrewRestriction as CrewRestriction
+import qualified Parun.Types.CrewRole as CrewRole
 import qualified Parun.Types.Cycling as Cycling
 import qualified Parun.Types.DamagePart as DamagePart
 import qualified Parun.Types.DamagePattern as DamagePattern
@@ -3128,8 +3129,9 @@ triggerConditionNames asking x = case x of
   TriggerCondition.PermanentActs permanentActs -> permanentActedNames asking (actingPermanentNames asking) permanentActs
   TriggerCondition.AttachedCreatureMentors -> mempty
   TriggerCondition.Exploits exploitTrigger -> exploitTriggerNames asking exploitTrigger
-  TriggerCondition.SelfBecomesCrewed triggerFrequency -> triggerFrequencyNames asking HistoryRead.Crews triggerFrequency
-  TriggerCondition.SelfCrewsVehicle -> mempty
+  TriggerCondition.Crews role -> case role of
+    CrewRole.Vehicle triggerFrequency -> triggerFrequencyNames asking HistoryRead.Crews triggerFrequency
+    CrewRole.Crewer -> mempty
   TriggerCondition.PermanentSacrificed permanentSacrificed -> playerActsOnNames asking permanentSacrificed
   TriggerCondition.SagaFinalChapterTriggers _playerRelation -> mempty
   TriggerCondition.PlayerBecomesMonarch _playerRelation -> mempty

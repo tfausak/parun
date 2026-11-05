@@ -93,6 +93,7 @@ import qualified Parun.Types.CounterMotion as CounterMotion
 import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.Countering as Countering
 import qualified Parun.Types.CountersPlaced as CountersPlaced
+import qualified Parun.Types.CrewRole as CrewRole
 import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
@@ -2153,10 +2154,11 @@ representativeEvents cond =
         TriggerCondition.Exploits {} -> one (GameEvent.Exploited (Exploited.MkExploited departed departed))
         -- CR 702.122e's own event, and the only one this condition admits, on
         -- `departed`, which is not the bearer.
-        TriggerCondition.SelfBecomesCrewed _ -> one (GameEvent.BecameCrewed (Crewing.MkCrewing departed (Set.singleton departed)))
-        -- CR 702.122b's own event, with `departed` on BOTH sides so the pair
-        -- matches whichever side the arm reads.
-        TriggerCondition.SelfCrewsVehicle -> one (GameEvent.Crewed (Crewing.MkCrewing departed (Set.singleton departed)))
+        -- CR 702.122b's own event for a Crewer, with `departed` on BOTH sides so
+        -- the pair matches whichever side the arm reads.
+        TriggerCondition.Crews role -> one $ case role of
+          CrewRole.Vehicle _ -> GameEvent.BecameCrewed (Crewing.MkCrewing departed (Set.singleton departed))
+          CrewRole.Crewer -> GameEvent.Crewed (Crewing.MkCrewing departed (Set.singleton departed))
         -- CR 701.21a's own event, and the only one this condition admits. The
         -- pair need not actually match -- `departed` is no artifact on the empty
         -- board -- which is fine for what this pins: the arm binds the event's
@@ -2501,8 +2503,8 @@ everyTriggerCondition =
     TriggerCondition.SelfManaAbilityResolves,
     TriggerCondition.Exploits ExploitTrigger.defaultValue,
     TriggerCondition.Exploits (ExploitTrigger.MkExploitTrigger (ActingPermanent.Matching (Filter.Type.And [])) (Filter.Type.And [])),
-    TriggerCondition.SelfBecomesCrewed TriggerFrequency.EveryTime,
-    TriggerCondition.SelfCrewsVehicle,
+    TriggerCondition.Crews (CrewRole.Vehicle TriggerFrequency.EveryTime),
+    TriggerCondition.Crews CrewRole.Crewer,
     -- ALL THREE relations, on the Declaration rows' reasoning above: an
     -- eventBindings arm that had cased on the relation and stamped nothing under
     -- one of them would go unseen if only one were listed. Vengeful Tracker

@@ -52,9 +52,12 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfBecomesCrewed",
+            "type": "Crews",
             "value": {
-              "type": "FirstTimeEachTurn"
+              "type": "Vehicle",
+              "value": {
+                "type": "FirstTimeEachTurn"
+              }
             }
           },
           "intervening": {

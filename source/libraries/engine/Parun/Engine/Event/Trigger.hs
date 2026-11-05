@@ -643,10 +643,9 @@ looksBack condition = case condition of
   TriggerCondition.Exploits {} -> True
   -- Not on the list: rule 702.122e's Vehicle is on the battlefield when its own
   -- crew ability resolves, so there is no departure to look back past.
-  TriggerCondition.SelfBecomesCrewed {} -> False
   -- Nor here: rule 702.122a's cost taps the crewer, which is not a departure
   -- either.
-  TriggerCondition.SelfCrewsVehicle -> False
+  TriggerCondition.Crews _ -> False
   -- Entries, not departures (CR 603.6a). The rule's own CR 603.6a checks "all
   -- permanents on the battlefield (including the newcomers)" AFTER the event.
   TriggerCondition.Enters _ -> False
@@ -812,8 +811,7 @@ batchScoped condition = case condition of
   TriggerCondition.PermanentBecomesDesignated {} -> False
   TriggerCondition.AttachedCreatureMentors -> False
   TriggerCondition.Exploits {} -> False
-  TriggerCondition.SelfBecomesCrewed {} -> False
-  TriggerCondition.SelfCrewsVehicle -> False
+  TriggerCondition.Crews _ -> False
   -- CR 603.2c: OneOrMore is one occurrence for the whole entry event
   -- (Dunbarrow Revivalist's boon).
   TriggerCondition.Enters t -> EntersTrigger.batching t == Batching.OneOrMore
@@ -2832,10 +2830,9 @@ zonesTriggeredFrom cond =
         TriggerCondition.Exploits {} -> battlefield
         -- The same default: CR 702.122a's ability is a Vehicle permanent's, so its
         -- bearer is on the battlefield and CR 113.6k's exception does not apply.
-        TriggerCondition.SelfBecomesCrewed {} -> battlefield
         -- The same default once more: rule 702.122a taps a creature on the
         -- battlefield, so its bearer is there too.
-        TriggerCondition.SelfCrewsVehicle -> battlefield
+        TriggerCondition.Crews _ -> battlefield
         -- CR 113.6's default: an ability of a permanent functions only while that
         -- permanent is on the battlefield. CR 113.6k's exception is for a trigger
         -- condition that CANNOT trigger from the battlefield, and this one plainly can
@@ -3207,11 +3204,10 @@ stateTriggersOn gs
             -- CR 702.122e likewise fires on a resolution, and the board
             -- afterwards -- an animated Vehicle -- is CR 702.122a's effect
             -- rather than a record of the crewing.
-            TriggerCondition.SelfBecomesCrewed {} -> False
             -- Rule 702.122b fires on that same resolution, and a tapped
             -- creature is CR 702.122a's cost rather than a record of which
             -- Vehicle it paid for.
-            TriggerCondition.SelfCrewsVehicle -> False
+            TriggerCondition.Crews _ -> False
             -- CR 701.21a is a game ACTION, so this is an event trigger too: it
             -- fires on the moment the permanent is sacrificed, and the board
             -- afterwards holds no state a read could recover.

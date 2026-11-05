@@ -1154,9 +1154,8 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- reason.
   TriggerCondition.Exploits {} -> []
   -- Nor does CR 702.122e's: its payload is a TriggerFrequency.
-  TriggerCondition.SelfBecomesCrewed {} -> []
   -- Nor does CR 702.122b's crewer side, nullary too.
-  TriggerCondition.SelfCrewsVehicle -> []
+  TriggerCondition.Crews _ -> []
   -- CR 701.21a's carries a PlayerRelation and a Filter, neither of which holds a
   -- Count.
   TriggerCondition.PermanentSacrificed {} -> []
@@ -4581,10 +4580,9 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.Exploits (ExploitTrigger.MkExploitTrigger exploiter exploited) -> actingFilters exploiter <> unframed [exploited]
   -- CR 702.122e's carries none either: it names "this Vehicle" and nothing about
   -- it to narrow by.
-  TriggerCondition.SelfBecomesCrewed {} -> []
   -- Nor does CR 702.122b's: it names "this creature" and nothing about the
   -- Vehicle to narrow by.
-  TriggerCondition.SelfCrewsVehicle -> []
+  TriggerCondition.Crews _ -> []
   -- CR 106.12a's bystander reading DOES carry a Filter -- Autumn Willow,
   -- Harmony's "a land creature" -- and is swept like the PermanentSacrificed arm
   -- below; the attachment link carries none.
@@ -4796,8 +4794,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.PermanentBecomesDesignated _ -> []
   TriggerCondition.AttachedCreatureMentors -> []
   TriggerCondition.Exploits {} -> []
-  TriggerCondition.SelfBecomesCrewed {} -> []
-  TriggerCondition.SelfCrewsVehicle -> []
+  TriggerCondition.Crews _ -> []
   TriggerCondition.PermanentSacrificed {} -> []
   TriggerCondition.SagaFinalChapterTriggers _ -> []
   TriggerCondition.PlayerBecomesMonarch _ -> []

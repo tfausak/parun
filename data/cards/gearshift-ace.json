@@ -34,7 +34,10 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfCrewsVehicle"
+            "type": "Crews",
+            "value": {
+              "type": "Crewer"
+            }
           },
           "modal": {
             "modes": [

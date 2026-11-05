@@ -264,6 +264,7 @@ import qualified Parun.Codec.CreateCopySpec
 import qualified Parun.Codec.CreateEmblemSpec
 import qualified Parun.Codec.CreateSpec
 import qualified Parun.Codec.CrewRestrictionSpec
+import qualified Parun.Codec.CrewRoleSpec
 import qualified Parun.Codec.CrewingSpec
 import qualified Parun.Codec.CyclingSpec
 import qualified Parun.Codec.DamageDealerSpec
@@ -1255,6 +1256,7 @@ spec s registry corpus = do
   Parun.Codec.CreateEmblemSpec.spec s
   Parun.Codec.CreateSpec.spec s
   Parun.Codec.ExploitTriggerSpec.spec s
+  Parun.Codec.CrewRoleSpec.spec s
   Parun.Codec.AttachDirectionSpec.spec s
   Parun.Codec.AttachmentEndSpec.spec s
   Parun.Codec.AttachmentTriggerSpec.spec s
