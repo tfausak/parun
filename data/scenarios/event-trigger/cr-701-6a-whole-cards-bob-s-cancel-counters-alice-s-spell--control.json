@@ -1,0 +1,44 @@
+{
+  "description": "CR 701.6a whole cards: bob's Cancel counters alice's spell, and alice's Baral stays silent",
+  "note": "The positive scenario's control, with Baral moved to alice's side: the spell that countered is bob's, so Baral's 'a spell or ability you control counters a spell' is not alice's event. A Baral trigger would raise an unscheduled may and fail the run; alice's library still holding its card at beginning of combat shows nothing was drawn.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Baral, Chief of Compliance", "label": "baral" },
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Mountain", "label": "m2" }
+        ],
+        "hand": [
+          { "card": "Goblin Piker", "label": "piker" }
+        ],
+        "library": [
+          { "card": "Mountain" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" },
+          { "card": "Island", "label": "i3" }
+        ],
+        "hand": [
+          { "card": "Cancel", "label": "cancel" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$piker", "mana": ["$m1", "$m2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$cancel", "targets": ["Goblin Piker"], "mana": ["$i1", "$i2", "$i3"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Goblin Piker", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Cancel", "count": 1}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Library", "card": "Mountain", "count": 1}}}
+  ]
+}

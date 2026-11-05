@@ -14,6 +14,7 @@ import qualified Parun.Types.CoinFlipTrigger as CoinFlipTrigger
 import qualified Parun.Types.Condition as Condition
 import qualified Parun.Types.ControllerBecomesTarget as ControllerBecomesTarget
 import qualified Parun.Types.CounterTrigger as CounterTrigger
+import qualified Parun.Types.CounteringTrigger as CounteringTrigger
 import qualified Parun.Types.CrewRole as CrewRole
 import qualified Parun.Types.DamageTrigger as DamageTrigger
 import qualified Parun.Types.DieResult as DieResult
@@ -142,14 +143,11 @@ data TriggerCondition
     -- no hit of the positive shape. A card printing one would want a second arm
     -- here and a second event, not a widening of this one.
     SelfManaAbilityResolves
-  | -- | CR 701.6a: "whenever a spell or ability you control counters a spell"
-    -- (Baral, Chief of Compliance); the relation is on the countering side.
-    SpellOrAbilityCounters PlayerRelation.PlayerRelation
-  | -- | CR 701.6a read from the VICTIM's side, and only for that rule's ability
-    -- half: "whenever an ability is countered" (Synthetic Echo Silencer). Matches
-    -- GameEvent.AbilityCountered and nothing else, so the arm above stays silent
-    -- here and this one stays silent for a countered spell.
-    AbilityIsCountered
+  | -- | CR 701.6a: a spell or ability was countered, by a spell or ability a
+    -- related player controlled -- "a spell or ability you control counters a
+    -- spell" (Baral, Chief of Compliance), "an ability is countered" (Synthetic
+    -- Echo Silencer).
+    Countered CounteringTrigger.CounteringTrigger
   | -- | CR 615.13: "whenever damage that would be dealt to you is prevented"
     -- (Selfless Squire), blind to which prevention effect applied.
     DamageToPlayerPrevented PlayerRelation.PlayerRelation

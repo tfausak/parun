@@ -255,6 +255,7 @@ import qualified Parun.Codec.CounterTriggerSpec
 import qualified Parun.Codec.CounterabilitySpec
 import qualified Parun.Codec.CounteredEndSpec
 import qualified Parun.Codec.CounteringSpec
+import qualified Parun.Codec.CounteringTriggerSpec
 import qualified Parun.Codec.CountersAreSpec
 import qualified Parun.Codec.CountersFromPermanentsSpec
 import qualified Parun.Codec.CountersOnThisSpec
@@ -1238,6 +1239,7 @@ spec s registry corpus = do
   Parun.Codec.CounterPatternSpec.spec s
   Parun.Codec.CounterGroupingSpec.spec s
   Parun.Codec.CounterHolderSpec.spec s
+  Parun.Codec.CounteringTriggerSpec.spec s
   Parun.Codec.CounterMotionSpec.spec s
   Parun.Codec.CounterTriggerSpec.spec s
   Parun.Codec.CountersPlacedSpec.spec s

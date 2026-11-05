@@ -2159,8 +2159,7 @@ rewriteTriggerCondition pairs condition = case condition of
           destinations
           batching
       )
-  TriggerCondition.SpellOrAbilityCounters _ -> condition
-  TriggerCondition.AbilityIsCountered -> condition
+  TriggerCondition.Countered _ -> condition
   TriggerCondition.DamageToPlayerPrevented _ -> condition
   TriggerCondition.SelfPreventsDamage f -> TriggerCondition.SelfPreventsDamage (Filter.rewrite pairs f)
   TriggerCondition.LifeChanges _ -> condition

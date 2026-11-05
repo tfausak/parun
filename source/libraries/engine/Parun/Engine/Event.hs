@@ -11238,8 +11238,7 @@ controllerTurnScoped cond = case cond of
   -- and Spirit Mascot and Dutiful Knowledge Seeker print no turn.
   TriggerCondition.LeavesZone t -> Turn.isControllersTurn (LeavesZoneTrigger.scope t)
   TriggerCondition.PutIntoZone t -> Turn.isControllersTurn (PutIntoZoneTrigger.scope t)
-  TriggerCondition.SpellOrAbilityCounters _ -> False
-  TriggerCondition.AbilityIsCountered -> False
+  TriggerCondition.Countered _ -> False
   -- Damage can be prevented on anybody's turn.
   TriggerCondition.DamageToPlayerPrevented _ -> False
   -- Damage can be prevented on anybody's turn, the arm above's reason.

@@ -3113,8 +3113,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.TappedForMana tappedForMana -> tappedForManaTriggerNames asking tappedForMana
   TriggerCondition.AbilityAddsMana abilityAddsMana -> abilityAddsManaNames asking abilityAddsMana
   TriggerCondition.SelfManaAbilityResolves -> mempty
-  TriggerCondition.SpellOrAbilityCounters _playerRelation -> mempty
-  TriggerCondition.AbilityIsCountered -> mempty
+  TriggerCondition.Countered _counteringTrigger -> mempty
   TriggerCondition.DamageToPlayerPrevented _playerRelation -> mempty
   TriggerCondition.SelfPreventsDamage filter_ -> prevention asking <> filterNames asking filter_
   TriggerCondition.LifeChanges lifeTrigger -> lifeTriggerNames asking lifeTrigger
