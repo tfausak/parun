@@ -10095,11 +10095,8 @@ meldable victims gs = do
 -- Each component keeps the face it showed (Parun.Types.ShownComponent), and
 -- Object.face is left to an unmerged permanent: Game.shownFace reads the pile's.
 --
--- CR 123.5b / 613.7k: the spell's stickers join the host's, all restamped at
--- the merge, in their old timestamp order across the two objects.
---
--- Not implemented: restamping only the spell's stickers, the host staying the
--- same object with its stickers' timestamps (CR 730.2b, 730.2c) (#6174).
+-- CR 123.5b / 613.7k / 730.2b: the spell's stickers take new timestamps at the
+-- merge, in their order, after the host's, which keep theirs (CR 730.2c).
 merge :: ObjectId -> ObjectId -> MutateSide.MutateSide -> Game Bool
 merge sid target side = do
   gs <- State.get
@@ -10201,6 +10198,7 @@ merge sid target side = do
                in (alone row) {ActiveCopy.snapshot = snapshot, ActiveCopy.turned = if turned == snapshot then Nothing else Just turned}
             rows = fmap rewoven (filter (Game.copyCovers gs target) (GameState.copyEffects gs))
         State.modify' (`forgetObject` sid)
+        joining <- State.state (Game.restampPlacements (Seq.sortOn StickerPlacement.timestamp (Object.stickers spell)))
         State.modify'
           ( \g ->
               let u = Game.supersedeStoredCopies (Set.singleton target) g
@@ -10214,14 +10212,13 @@ merge sid target side = do
                                   Object.face = Nothing,
                                   Object.facing = facing,
                                   Object.bindings = Binding.setMergeCopy resulting resultingTurned shown (Object.bindings o),
-                                  Object.stickers = Seq.sortOn StickerPlacement.timestamp (Object.stickers o <> Object.stickers spell)
+                                  Object.stickers = Object.stickers o <> joining
                                 }
                           )
                           target
                           (GameState.objects u)
                     }
           )
-        State.modify' (Game.restampStickers target)
         State.modify' (recordEvent (GameEvent.PermanentActed (PermanentActed.MkPermanentActed PermanentAction.Mutate target)))
         pure True
       _ -> pure False
