@@ -6617,9 +6617,10 @@ changeZone settle oid requestedDest = Monad.void (changeZoneReturning settle oid
 -- the engine never learns which card is entering. The rule's SECOND sentence is
 -- the same refusal CR 712.14b gets below -- "if a player is instructed to put a
 -- card that isn't a double-faced card onto the battlefield transformed or
--- converted, that card stays in its current zone" -- read here as a card whose
--- layout gives Card.backFace nothing to answer with, which takes in a meld card
--- though CR 712.1 makes it double-faced (gap #6257).
+-- converted, that card stays in its current zone" -- read here as a card that
+-- isn't double-faced (Card.isDoubleFaced). A meld card is double-faced (CR
+-- 712.1) with no back face to turn to, so CR 712.4c ignores the instruction and
+-- it enters front face up (CR 712.14).
 --
 -- CR 712.14a and NOT CR 702.145b's entering-transformed ability, which is a
 -- different mechanism: an ability causing a permanent to enter transformed is a
@@ -6663,9 +6664,10 @@ changeZoneEnteringIn settle asOf batch seed source oid requestedDest position ri
   let mCard = Game.cardOf oid gs
       onto = requestedDest == Zone.Battlefield
       -- CR 712.14a's back face, asked only of a move the effect says is
-      -- transformed. Nothing means one of two different things, which is why the
-      -- rider is read alongside it below: no back face to turn to, or no
-      -- instruction to turn at all.
+      -- transformed. Nothing means one of three things, which is why the rider
+      -- and the layout are read alongside it below: a card that isn't
+      -- double-faced, a meld card (CR 712.4c ignores the instruction, so it
+      -- enters front face up), or no instruction to turn at all.
       mBack = if EntryRiders.transformed riders then mCard >>= Card.backFace else Nothing
       -- CR 708.3 turns a face-down entry over BEFORE it enters, so neither the
       -- front face (CR 712.14b, 712.15) nor the card type (CR 400.4a) is asked
@@ -6681,7 +6683,7 @@ changeZoneEnteringIn settle asOf batch seed source oid requestedDest position ri
         onto
           && ( (faceUpEntry && maybe False Card.staysWhenPutOntoBattlefield mCard) -- CR 712.14b
                  || (faceUpEntry && maybe False (instantOrSorcery . Card.combined) mCard && Maybe.isNothing mBack) -- CR 400.4a
-                 || (EntryRiders.transformed riders && Maybe.isNothing mBack) -- CR 712.14a
+                 || (EntryRiders.transformed riders && Maybe.isNothing mBack && not (maybe False Card.isDoubleFaced mCard)) -- CR 712.14a, 712.4c
              )
       -- CR 712.14: "A double-faced card put onto the battlefield from a zone
       -- other than the stack enters the battlefield with its front face up by
