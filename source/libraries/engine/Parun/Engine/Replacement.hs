@@ -58,6 +58,7 @@ import qualified Parun.Engine.SacrificeRestriction as SacrificeRestriction
 import qualified Parun.Engine.SourceContext as SourceContext
 import qualified Parun.Engine.Turn as Turn
 import qualified Parun.Extra.Int as Int
+import qualified Parun.Extra.Integer as Integer
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.ActiveCopy as ActiveCopy
@@ -670,7 +671,8 @@ unspent rewrite = case rewrite of
   DamageRewrite.PreventAllBut _ -> True
   -- CR 702.64b says as much of absorb's ceiling -- it "will apply separately to
   -- damage from other sources, or to damage dealt by the same source at a
-  -- different time" -- so there is nothing to spend and nothing to refuse.
+  -- different time" -- so the row is never spent. One source's share at one
+  -- time is `ceilingLeft`'s, which Event.loop refuses at 0.
   DamageRewrite.PreventUpTo _ -> True
   -- CR 122.1c's prevention is spent by the COUNTER going away, not by a number on
   -- the row: Projection.shieldOf mints it only while a counter is there, so a
@@ -3974,6 +3976,40 @@ hitsOf viewOf grants gs indexed candidate =
 allocatedOut :: Map.Map CandidateId Natural -> ReplacementCandidate -> Bool
 allocatedOut allowances candidate = Map.lookup (ReplacementCandidate.identity candidate) allowances == Just 0
 
+-- CR 702.64b / 615.10: what is left of a PreventUpTo row's ceiling for this
+-- event's source and recipient, `earlier` being what the batch has prevented so
+-- far. A redirect can land a second event of one source on one recipient at one
+-- time, which docs/decisions.md's "Whether one instruction naming a recipient
+-- twice deals one damage event" makes one event, so the row's earlier share of
+-- it counts against the ceiling. Nothing for every other rewrite; Event.loop's
+-- filter refuses a row at Just 0, so CR 616.1 never offers it.
+ceilingLeft :: GameState -> [Prevention] -> ReplacementCandidate -> ProposedEvent -> Maybe Natural
+ceilingLeft gs earlier candidate event = case (ReplacementCandidate.effect candidate, event) of
+  (ReplacementEffect.DamageR (DamageR.MkDamageR _ rewrite _), ProposedEvent.WouldDealDamage de) -> case rewrite of
+    DamageRewrite.PreventUpTo quantity ->
+      let ceiling_ = maybe 0 Integer.toNaturalSaturating (Quantity.evaluate (Projection.fullView gs) (candidateContext gs candidate) gs (ReplacementCandidate.source candidate) quantity)
+          spent =
+            sum
+              [ n
+              | prevention <- earlier,
+                Prevention.by prevention == ReplacementCandidate.identity candidate,
+                Just n <- [Map.lookup (DamageEvent.target de) =<< Map.lookup (DamageEvent.source de) (Prevention.amounts prevention)]
+              ]
+       in Just (ceiling_ - min ceiling_ spent)
+    DamageRewrite.PreventAll -> Nothing
+    DamageRewrite.PreventRemovingShieldCounter -> Nothing
+    DamageRewrite.PreventNext _ -> Nothing
+    DamageRewrite.PreventAllBut _ -> Nothing
+    DamageRewrite.SetAmount _ -> Nothing
+    DamageRewrite.Scale _ -> Nothing
+    DamageRewrite.Redirect _ -> Nothing
+    DamageRewrite.RunEffects _ -> Nothing
+    DamageRewrite.RedirectNext _ _ -> Nothing
+    DamageRewrite.RedirectMatching _ -> Nothing
+    DamageRewrite.TurnFaceUp -> Nothing
+    DamageRewrite.AlsoToSourceController -> Nothing
+  _ -> Nothing
+
 -- CR 616.1 / 101.4: group a batch by whose CR 616.1 choice each event is, active
 -- player first. A stable sort, so events sharing a chooser keep their gather
 -- order and CR 615.7's within-chooser permutation is left to `askOne`.
@@ -4137,7 +4173,9 @@ contestedResource gs candidate = case ReplacementCandidate.effect candidate of
     -- allocate.
     DamageRewrite.PreventAllBut _ -> Nothing
     -- CR 702.64b states the same of absorb as CR 615.10 does of the shield
-    -- above: a batch cannot exhaust it, so there is nothing to allocate.
+    -- above: a batch spends it only within one source's damage to one
+    -- recipient, which is one event (`ceilingLeft`), so there is nothing to
+    -- allocate.
     DamageRewrite.PreventUpTo _ -> Nothing
     DamageRewrite.SetAmount _ -> Nothing
     DamageRewrite.Scale _ -> Nothing
