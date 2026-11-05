@@ -1477,6 +1477,9 @@ priorityLoop = do
                                   then case GameState.stack gs of
                                     [] -> State.modify' (\g -> g {GameState.priority = Nothing, GameState.passed = passed})
                                     _ -> do
+                                      -- CR 117.3b: nobody holds priority from
+                                      -- the last pass until after resolution.
+                                      State.modify' (\g -> g {GameState.priority = Nothing})
                                       Stack.resolveTopWith playSubgame
                                       ended <- State.gets GameState.endTurnSignal
                                       case ended of
