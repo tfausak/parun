@@ -9625,9 +9625,9 @@ createTokens settle controller card copy n tapped entering attached marks = do
           -- exists: the legality reading is about the token's subtypes and its enchant
           -- ability, and Parun.Engine.Projection answers for an object that is on the
           -- board. So the token is minted, judged, and unmade again -- CR 111.5's
-          -- rollback above, to `unminted` and for the same reason, rule 303.4i ending
-          -- in the same words rule 111.5 does. Only the original lot can name a host,
-          -- so an unhostable Aura token refuses the whole event.
+          -- shape above, here back to `unminted`, rule 303.4i ending in the same
+          -- words rule 111.5 does. Only the original lot's token can be an Aura, and
+          -- then the event can't happen, so an unhostable one refuses all of it.
           --
           -- THE AURA TEST is the rule's own scope and not a card-identity read: CR
           -- 303.4i refuses the token, while CR 301.5e says an Equipment in the same

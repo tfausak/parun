@@ -1,3 +1,5 @@
+{-# LANGUAGE RankNTypes #-}
+
 -- Covers: CR 101.2 / CR 400.4a's ENTRY PROHIBITION -- Parun.Types.EntryRestriction,
 -- the Bool Parun.Engine.EntryRestriction answers, and the two places it is asked
 -- (Parun.Engine.Event.changeZoneAttaching, the funnel every battlefield MOVE
@@ -50,6 +52,7 @@ import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.PlayerId as PlayerId
+import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Response as Response
 import qualified Parun.Types.Zone as Zone
 
@@ -228,6 +231,7 @@ replacedTokenCase s registry = do
   let named = CardName.MkCardName . Text.pack
       onBoard pid name = S.countOnBattlefieldByName (named name) pid
       place pid cards g = foldr (\c g1 -> snd (S.addPermanent c pid g1)) g cards
+      run :: (forall r. Prompt.Prompt r -> r) -> ObjectId.ObjectId -> GameState.GameState -> (GameState.GameState, [Response.Response])
       run answer spell gs =
         let ((_, after), responses) = Replay.record answer gs (S.cast S.alice spell >> Stack.resolveTop)
          in (after, responses)
