@@ -93,7 +93,10 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfTurnedFaceUp"
+            "type": "TurnedFaceUp",
+            "value": {
+              "type": "Self"
+            }
           },
           "modal": {
             "modes": [

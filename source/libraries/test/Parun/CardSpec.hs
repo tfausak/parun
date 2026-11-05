@@ -1126,15 +1126,13 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- the traversal has to go through rather than stop here.
   TriggerCondition.AnyOf conditions -> concatMap triggerConditionCounts conditions
   TriggerCondition.CausedBy narrowed -> triggerConditionCounts (CausedBy.condition narrowed)
-  -- CR 708.7's condition is nullary, so there is nothing in it to be a Quantity.
-  TriggerCondition.SelfTurnedFaceUp -> []
+  -- CR 708.7's carries at most a Filter, which holds no Count for Matching
+  -- Enters' reason.
+  TriggerCondition.TurnedFaceUp _ -> []
   -- CR 701.27e's names a face, which is a CardName and not a Quantity.
   TriggerCondition.SelfTransformedInto _ -> []
   -- Its bystander sibling carries a Filter, which holds no Count either.
   TriggerCondition.PermanentTransforms _ -> []
-  -- Its watcher-scoped sibling carries a Filter, and a Filter holds no Count for
-  -- Matching Enters' reason.
-  TriggerCondition.PermanentTurnedFaceUp _ -> []
   -- PermanentActs carries an action and, for a bystander, a Filter -- which
   -- holds no Count for a Matching Enters' reason.
   TriggerCondition.PermanentActs _ -> []
@@ -1218,8 +1216,8 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- CR 702.170a carries nothing at all, so holds no Count.
   TriggerCondition.SelfBecomesPlotted -> []
   TriggerCondition.PlacesSticker _ -> []
-  -- CR 701.3a's carries a Filter, and a Filter holds no Count for
-  -- PermanentTurnedFaceUp's reason.
+  -- CR 701.3a's carries a Filter, and a Filter holds no Count for a Matching
+  -- TurnedFaceUp's reason.
   TriggerCondition.SelfBecomesAttachedBy _ -> []
   -- And so do the attachment-scoped pair, whose Filters are over the host.
   TriggerCondition.SelfBecomesAttachedTo _ -> []
@@ -1701,7 +1699,7 @@ turnUpCostsOf face =
 -- A turned-face-up triggered ability, the one CR 702.37f and CR 702.168e give
 -- the X chosen for the cost.
 turnedUpTriggers :: Face.Face Card.Type.Card -> [TriggeredAbility.TriggeredAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)]
-turnedUpTriggers = filter ((== TriggerCondition.SelfTurnedFaceUp) . TriggeredAbility.condition) . Face.triggeredAbilities
+turnedUpTriggers = filter ((== TriggerCondition.TurnedFaceUp ActingPermanent.Self) . TriggeredAbility.condition) . Face.triggeredAbilities
 
 -- Every CR 118.12 cost this payload offers at resolution, over every mode and
 -- every clause, and every CR 608.2f loop's per-member offer. A READER of X
@@ -4570,16 +4568,17 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- Matching Enters, whose Filter would otherwise never be swept.
   TriggerCondition.AnyOf conditions -> concatMap triggerConditionFilters conditions
   TriggerCondition.CausedBy narrowed -> triggerConditionFilters (CausedBy.condition narrowed)
-  -- CR 708.7's condition is nullary, so there is nothing in it to be a Filter.
-  TriggerCondition.SelfTurnedFaceUp -> []
+  -- CR 708.7's carries one under a Matching subject, and Aven Farseer's is the
+  -- trivial `And []` -- which this sweep must still see, an empty Filter being a
+  -- Filter.
+  TriggerCondition.TurnedFaceUp subject -> case subject of
+    ActingPermanent.Matching f -> unframed [f]
+    ActingPermanent.Self -> []
   -- CR 701.27e's names a face by name; nothing about it is a Filter.
   TriggerCondition.SelfTransformedInto _ -> []
   -- Its bystander sibling carries one -- Cult of the Waxing Moon's "a permanent
   -- you control ... into a non-Human creature".
   TriggerCondition.PermanentTransforms f -> unframed [f]
-  -- Its watcher-scoped sibling carries one, and Aven Farseer's is the trivial
-  -- `And []` -- which this sweep must still see, an empty Filter being a Filter.
-  TriggerCondition.PermanentTurnedFaceUp f -> unframed [f]
   TriggerCondition.FaceDownPermanentLeavesRevealed -> []
   -- CR 702.112b's carries one too -- Valeron Wardens' "a creature you control".
   TriggerCondition.PermanentBecomesDesignated (PermanentBecomesDesignated.MkPermanentBecomesDesignated _ f) -> unframed [f]
@@ -4706,7 +4705,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.SelfBecomesPlotted -> []
   TriggerCondition.PlacesSticker placesSticker -> unframed [PlacesSticker.object placesSticker]
   -- CR 701.3a's carries one over the ATTACHMENT -- Bramble Elemental's "an
-  -- Aura" -- which this sweep must see for PermanentTurnedFaceUp's reason.
+  -- Aura" -- which this sweep must see for a Matching TurnedFaceUp's reason.
   TriggerCondition.SelfBecomesAttachedBy f -> unframed [f]
   -- CR 701.3a and CR 701.3d read from the attachment carry one over the HOST --
   -- Enormous Energy Blade's "a creature" -- and it needs the same sweep.
@@ -4820,10 +4819,9 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   -- any condition, the slot-named one included.
   TriggerCondition.AnyOf conditions -> concatMap triggerConditionSlots conditions
   TriggerCondition.CausedBy narrowed -> triggerConditionSlots (CausedBy.condition narrowed)
-  TriggerCondition.SelfTurnedFaceUp -> []
+  TriggerCondition.TurnedFaceUp _ -> []
   TriggerCondition.SelfTransformedInto _ -> []
   TriggerCondition.PermanentTransforms _ -> []
-  TriggerCondition.PermanentTurnedFaceUp _ -> []
   TriggerCondition.PermanentActs _ -> []
   TriggerCondition.FaceDownPermanentLeavesRevealed -> []
   TriggerCondition.PermanentBecomesDesignated _ -> []
@@ -7704,7 +7702,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- an X its cost does not print is naming nothing.
   Spec.it s "CR 107.3f every triggered ability's resolution-time {X} is chosen, or inherited" $ do
     ps <- S.allPrintings s corpus
-    let inheritsX ability = TriggeredAbility.condition ability `elem` [TriggerCondition.Enters EntersTrigger.defaultValue, TriggerCondition.SelfTurnedFaceUp]
+    let inheritsX ability = TriggeredAbility.condition ability `elem` [TriggerCondition.Enters EntersTrigger.defaultValue, TriggerCondition.TurnedFaceUp ActingPermanent.Self]
         triggers f = Face.triggeredAbilities f <> delayedDeclarations f <> grantedTriggeredAbilities f
         unchosen ability = not (inheritsX ability) && any declaresVariable (announcedGateCostsOf (TriggeredAbility.modal ability))
         idle gate = Maybe.isJust (PayGate.x gate) && not (any declaresVariable (gateCosts gate))
@@ -7737,7 +7735,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- cost (Aurelia's Vindicator's "up to X other target creatures").
   Spec.it s "CR 603.3d only an enters-the-battlefield or turned-face-up triggered ability's target count reads an announced X" $ do
     ps <- S.allPrintings s corpus
-    let inheritsX ability = TriggeredAbility.condition ability `elem` [TriggerCondition.Enters EntersTrigger.defaultValue, TriggerCondition.SelfTurnedFaceUp]
+    let inheritsX ability = TriggeredAbility.condition ability `elem` [TriggerCondition.Enters EntersTrigger.defaultValue, TriggerCondition.TurnedFaceUp ActingPermanent.Self]
         triggers f = Face.triggeredAbilities f <> delayedDeclarations f <> grantedTriggeredAbilities f
         countsByX :: [Modal.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)] -> Bool
         countsByX = any (any (countReadsX . TargetSlot.count) . Modal.allTargetSlots)

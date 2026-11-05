@@ -144,9 +144,11 @@ Entries are ordered by the first rule each cites.
 - **Rules**: CR 120.4, 608.2f, 614.5, 615.7, 615.10, 701.14c; CR of 2026-08-07.
 - **Decision**: One event per recipient, source and moment; the amounts sum,
   over an instruction's aims and over a whole batch's survivors, since a
-  redirect can land two proposals of one source together. Parts redirects land
-  on one recipient join before its replacements apply, carrying every effect
-  that applied to any part, so a flat bonus applies once (CR 614.5).
+  redirect can land two proposals of one source together. A counted redirect
+  aimed back at its recipient splits nothing, so a flat bonus such as
+  Pyromancer's Gauntlet's applies to the one event once (CR 614.5). Parts
+  redirects land on one recipient join before its replacements apply, carrying
+  every effect that applied to any part, so the bonus applies once there too.
 - **Rejected**: Two events, which applies CR 615.10 twice. A key without the
   source: combat and fights have several dealers.
 - **Site**: `Parun.Engine.Replacement.oneEventPerRecipient`, proved by
@@ -155,9 +157,12 @@ Entries are ordered by the first rule each cites.
   `harms-way-onto-another-recipient-of-its-source-is-one-event`; absorb's
   ceiling spans the event at `Parun.Engine.Replacement.ceilingLeft`, proved by
   `lymph-sliver-absorbs-1-of-earthquake-once-though-pariah-adds-to-it`; the
+  redirect aimed back at its recipient at `Parun.Engine.Event.chooseAndApply`,
+  proved by the scenarios
+  `harms-way-back-onto-its-recipient-takes-pyromancers-gauntlet-once-*`; the
   join before replacements at `Parun.Engine.Event.settleThreads`, proved by
   `harms-way-twice-onto-one-recipient-takes-pyromancers-gauntlet-once`.
-- **Issue**: #2586, #6267.
+- **Issue**: #2586, #6251, #6267.
 
 ## Whether damage a replacement adds joins a division already owed
 

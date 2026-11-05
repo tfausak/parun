@@ -80,9 +80,12 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentTurnedFaceUp",
+            "type": "TurnedFaceUp",
             "value": {
-              "type": "IsSource"
+              "type": "Matching",
+              "value": {
+                "type": "IsSource"
+              }
             }
           },
           "modal": {
