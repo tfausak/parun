@@ -1,0 +1,20 @@
+{
+  "description": "CR 509.1c Blaze of Glory's creature must block each attacking creature it can",
+  "note": "bob casts Blaze of Glory on his Wall of Granite as alice's four Goblin Pikers attack. Blocking three of them obeys three of four requirements, so that declaration is refused; blocking all four, which no fixed additional count would allow, stands.",
+  "board": {
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Goblin Piker", "label": "piker 1", "ready": true}, {"card": "Goblin Piker", "label": "piker 2", "ready": true}, {"card": "Goblin Piker", "label": "piker 3", "ready": true}, {"card": "Goblin Piker", "label": "piker 4", "ready": true}]},
+      {"name": "bob", "battlefield": [{"card": "Wall of Granite", "label": "wall"}, {"card": "Plains", "label": "bob plains"}], "hand": [{"card": "Blaze of Glory", "label": "blaze"}]}
+    ],
+    "active": "alice",
+    "step": "BeginningOfCombat"
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$piker 1", "$piker 2", "$piker 3", "$piker 4"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Cast": {"object": "$blaze", "targets": ["$wall"], "mana": ["$bob plains"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": {"Block": {"$wall": ["$piker 1", "$piker 2", "$piker 3"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {"$wall": ["$piker 1", "$piker 2", "$piker 3", "$piker 4"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Blockers": {"attacker": "$piker 4", "blockers": ["$wall"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Blockers": {"attacker": "$piker 1", "blockers": ["$wall"]}}}
+  ]
+}

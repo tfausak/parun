@@ -1,0 +1,11 @@
+{
+  "description": "CR 500.7 whole card: Time Walk's caster takes one extra turn after this one",
+  "note": "Alice casts Time Walk on turn 1; turn 2 is hers and bob's turn comes third.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "UU", "hand": [{"card": "Time Walk", "label": "walk"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$walk"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "ActivePlayer", "is": "alice"}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "ActivePlayer", "is": "bob"}}}
+  ]
+}
