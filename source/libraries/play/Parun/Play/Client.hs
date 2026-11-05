@@ -219,12 +219,12 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
     variable <- field "variable" offer >>= textOf
     least <- field "least" offer >>= naturalOf
     greatest <- field "greatest" offer >>= naturalOf
-    pure
-      ( [Text.concat [Text.pack "Choose ", variable, Text.pack " for ", objectName view source, Text.pack (", from " <> show least <> " to " <> show greatest <> ":")]],
-        \typed -> case Read.readMaybe (Text.unpack (Text.strip typed)) of
-          Just n | least <= n && n <= greatest -> Right (R.Number (toInteger n))
-          _ -> Left (Text.pack ("Type a number from " <> show least <> " to " <> show greatest <> "."))
-      )
+    pure (ranged (Text.concat [Text.pack "Choose ", variable, Text.pack " for ", objectName view source]) least (Just greatest))
+  -- A bid's least is the high bid, and it has no greatest.
+  "ChooseNumber" -> do
+    source <- field "source" offer
+    least <- field "least" offer >>= naturalOf
+    pure (ranged (Text.pack "Choose a number for " <> objectName view source) least (field "greatest" offer >>= naturalOf))
   "ChooseOptional" -> do
     source <- field "source" offer
     pure
@@ -282,6 +282,14 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
   _ -> Nothing
   where
     offer = Question.offer question
+    -- A number from least to greatest, or from least up with no greatest.
+    ranged heading least greatest =
+      let range = maybe ("at least " <> show least) (\most -> "from " <> show least <> " to " <> show most) greatest
+       in ( [heading <> Text.pack (", " <> range <> ":")],
+            \typed -> case Read.readMaybe (Text.unpack (Text.strip typed)) of
+              Just n | least <= n && all (n <=) greatest -> Right (R.Number (toInteger n))
+              _ -> Left (Text.pack ("Type a number " <> maybe "of " (const "") greatest <> range <> "."))
+          )
     -- A source by number, or the line `none` for no source.
     sourcePick heading none others = do
       offered <- field "sources" offer >>= arrayOf >>= mapM manaSource
