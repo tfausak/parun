@@ -1,1 +1,72 @@
-{"faces":[{"name":"Copy Artifact","oracleText":"You may have this enchantment enter as a copy of any artifact on the battlefield, except it's an enchantment in addition to its other types.","typeLine":{"types":[{"type":"Enchantment"}]},"manaCost":[{"type":"Generic","value":1},{"type":"OfType","value":{"type":"Colored","value":{"type":"Blue"}}}],"replacementEffects":[{"effect":{"type":"EntryR","value":{"matching":{"type":"IsSource"},"rewrite":{"type":"AsCopy","value":{"eligible":{"type":"HasCardType","value":{"type":"Artifact"}},"clauses":[{"exceptions":[{"type":"CardTypes","value":{"mode":{"type":"InAddition"},"cardTypes":[{"type":"Enchantment"}]}}]}]}}}}}]}]}
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Copy Artifact",
+      "oracleText": "You may have this enchantment enter as a copy of any artifact on the battlefield, except it's an enchantment in addition to its other types.",
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "EntryR",
+            "value": {
+              "matching": {
+                "type": "IsSource"
+              },
+              "rewrite": {
+                "type": "AsCopy",
+                "value": {
+                  "clauses": [
+                    {
+                      "exceptions": [
+                        {
+                          "type": "CardTypes",
+                          "value": {
+                            "cardTypes": [
+                              {
+                                "type": "Enchantment"
+                              }
+                            ],
+                            "mode": {
+                              "type": "InAddition"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "eligible": {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Artifact"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}
