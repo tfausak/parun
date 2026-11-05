@@ -42,6 +42,7 @@ import qualified Parun.Engine.Binding as Binding
 import qualified Parun.Engine.Card as Card
 import qualified Parun.Engine.Condition as Condition
 import qualified Parun.Engine.Count as Count
+import qualified Parun.Engine.CounterRestriction as CounterRestriction
 import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.Deploy as Deploy
 import qualified Parun.Engine.Expiry as Expiry.Engine
@@ -1952,15 +1953,18 @@ enteringPutter gs oid named = named Applicative.<|> Projection.controllerOf oid 
 -- admits, each cut to the kind it names. CR 614.16's rows name no kind (Doubling
 -- Season doubles any counter), and `whichKind = Nothing` is this module's "any
 -- kind" for the reason the WouldPutCounters arm gives. No empty share is kept.
+--
+-- Nor a kind the permanent can't have put on it (CR 122.6, 101.2): that placement
+-- can't happen, so no row may modify it (CR 614.17c). Judged on the subject as
+-- it would exist on the battlefield (CR 614.17d), which is how runEntry has
+-- materialized it.
 matchingEnteringCounters :: GameState -> ReplacementCandidate -> CounterPattern.CounterPattern -> ObjectId -> Map.Map (Maybe PlayerId) (Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural)
 matchingEnteringCounters gs candidate pat oid =
   Map.filter (not . Map.null) (Map.mapWithKey admitted (enteringCountersOf gs oid))
   where
     admitted named pending
       | maybe False (matchesPutter gs candidate (CounterPattern.subject pat) . CounterCause.ByEffect) (enteringPutter gs oid named) =
-          case CounterPattern.whichKind pat of
-            Nothing -> pending
-            Just kind -> Map.filterWithKey (\k _ -> k == kind) pending
+          Map.filterWithKey (\k _ -> maybe True (== k) (CounterPattern.whichKind pat) && not (CounterRestriction.prohibited oid k gs)) pending
       | otherwise = Map.empty
 
 -- CR 614.1a: apply a scaling to a number. "Plus one" and "twice that many" are

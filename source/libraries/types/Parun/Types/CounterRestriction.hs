@@ -15,9 +15,10 @@ import qualified Parun.Types.Keyword as Keyword
 -- directs something to happen, and another effect states that it can't happen,
 -- the 'can't' effect takes precedence". CR 122.6 says WHICH placements the
 -- printed phrase reaches: counters put on the object while it is on the
--- battlefield, and counters an object is given as it enters. Both roads reach
--- Parun.Engine.Event.settleCounters, which is where a PLACEMENT consults this,
--- after CR 616.1's loop (gap #6235);
+-- battlefield, and counters an object is given as it enters. A PLACEMENT on
+-- either road consults this ahead of CR 616.1's loop (CR 614.17c), at
+-- Parun.Engine.Event.putCountersWithin and
+-- Parun.Engine.Replacement.matchingEnteringCounters;
 -- CR 122.5's third impossibility is the second reader, in Parun.Engine.Resolve's
 -- Effect.MoveCounters arm.
 --
