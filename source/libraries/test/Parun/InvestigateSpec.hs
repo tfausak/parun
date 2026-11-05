@@ -593,6 +593,34 @@ cookbookSpec s registry = Spec.describe s "TheUnderworldCookbook" $ do
     Spec.assertEqWith s "one search, offering nothing" searches [[]]
     Spec.assertEqWith s "and alice's hand is empty" (length (Game.zoneMembers Zone.Hand S.alice after)) 0
 
+-- Aven Windreader's "{1}{U}: Target player reveals the top card of their
+-- library", activated by alice. The SEAT is the assertion: rule 701.20a's shower
+-- is the player carrying the instruction out, the targeted one, so aimed at bob
+-- it is bob and not the ability's controller alice. Each seat's library holds a
+-- different card, so the name says whose top was shown.
+libraryRevealSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+libraryRevealSpec s registry = Spec.describe s "LibraryReveal" $ do
+  Spec.it s "CR 701.20a a target player reveals the top of their own library" $ do
+    windreader <- S.printingOf s registry "Aven Windreader"
+    island <- S.printingOf s registry "Island"
+    giant <- S.printingOf s registry "Hill Giant"
+    piker <- S.printingOf s registry "Goblin Piker"
+    case Face.activatedAbilities (S.combinedFace windreader) of
+      [ability] -> do
+        let (aven, gs1) = S.addPermanent windreader S.alice (S.landsInPlay island 2)
+            (_, gs2) = S.addLibraryCard piker S.alice gs1
+            (_, gs3) = S.addLibraryCard giant S.bob gs2
+            ready = gs3 {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
+            aimed :: PlayerId.PlayerId -> Prompt.Prompt r -> r
+            aimed pid p = case p of
+              Prompt.ChooseTargets _ _ _ sets -> S.preferring (== Recipient.ToPlayer pid) sets
+              _ -> S.identityAnswer p
+            activated pid = S.runPure (aimed pid) ready (Activate.activateAbility S.alice aven ability >> Stack.resolveTop)
+            revealed gs = fmap (fmap (fmap (Text.unpack . CardName.unwrap) . Set.toList)) (S.revealsOf gs)
+        Spec.assertEqWith s "aimed at bob, bob reveals his Hill Giant" (revealed (activated S.bob)) [(S.bob, ["Hill Giant"])]
+        Spec.assertEqWith s "aimed at alice, alice reveals her Goblin Piker" (revealed (activated S.alice)) [(S.alice, ["Goblin Piker"])]
+      _ -> Spec.assertFailure s "Aven Windreader should print one activated ability"
+
 -- Merfolk Spy is the card: {U} Creature -- Merfolk Rogue 1/1, "Islandwalk /
 -- Whenever this creature deals combat damage to a player, that player reveals a
 -- card at random from their hand." It is the pool's first Effect.Reveal inside a
@@ -1268,4 +1296,5 @@ spec s registry = Spec.describe s "Parun.Engine.Resolve" $ do
   runeBrandJugglerSpec s registry
   neighborhoodWatchSpec s registry
   randomRevealSpec s registry
+  libraryRevealSpec s registry
   wildEvocationSpec s registry
