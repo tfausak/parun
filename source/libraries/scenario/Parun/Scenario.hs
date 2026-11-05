@@ -53,6 +53,7 @@ import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Resolve.Effect as Resolve
 import qualified Parun.Engine.Script as Script
 import qualified Parun.Engine.Setup as Setup
+import qualified Parun.Engine.Subtype as Engine.Subtype
 import qualified Parun.Engine.Target as Target
 import qualified Parun.Engine.TextWord as Engine.TextWord
 import qualified Parun.Engine.Turn as Turn
@@ -1111,10 +1112,12 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.PayLifeForMana {} -> True
   Prompt.Type.ReturnCommander {} -> True
   Prompt.Type.DeclareMulligan {} -> True
-  -- Any member of an open class the prompt does not list: a creature type, a
-  -- basic land type, a card name (legalAnswer's question).
-  Prompt.Type.ChooseCreatureType {} -> True
-  Prompt.Type.ChooseBasicLandType {} -> True
+  -- A subtype for the prompt's card type (CR 205.3e): a creature type (CR
+  -- 205.3m), a basic land type (CR 305.6).
+  Prompt.Type.ChooseCreatureType {} -> Engine.Subtype.isCreatureType chosen
+  Prompt.Type.ChooseBasicLandType {} -> Engine.Subtype.isBasicLandType chosen
+  -- Any card name, an open class the prompt does not list (legalAnswer's
+  -- question).
   Prompt.Type.ChooseCardName {} -> True
   -- A distribution or an adjustment rather than a pick from a list, judged
   -- whole by the engine.
