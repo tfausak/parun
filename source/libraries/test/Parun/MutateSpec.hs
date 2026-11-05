@@ -101,6 +101,7 @@ import qualified Parun.Types.ManaType as ManaType
 import qualified Parun.Types.MeldSource as MeldSource
 import qualified Parun.Types.MergeComponent as MergeComponent
 import qualified Parun.Types.MutateSide as MutateSide
+import qualified Parun.Types.Moved as Moved
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.OptionalDecision as OptionalDecision
@@ -113,6 +114,7 @@ import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Protection as Protection
 import qualified Parun.Types.Recipient as Recipient
+import qualified Parun.Types.ReplacementEntry as ReplacementEntry
 import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.RevealCause as RevealCause
 import qualified Parun.Types.Revealed as Revealed
@@ -123,6 +125,7 @@ import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.Transformed as Transformed
 import qualified Parun.Types.TurnUpProcedure as TurnUpProcedure
+import qualified Parun.Types.ZoneChange as ZoneChange
 import qualified Parun.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -1164,6 +1167,109 @@ spec s registry = Spec.describe s "Mutate" $ do
     Spec.assertBool s (notElem (CardName.MkCardName (Text.pack "Cat Token")) (graveyardNames dead)) "CR 111.7 the token component does not stay in the graveyard"
     Spec.assertBool s (elem (CardName.MkCardName (Text.pack "Cubwarden")) (graveyardNames dead)) "CR 730.3 while the card component is put there"
     Spec.assertEqWith s "CR 730.3 and the merged permanent itself is gone" (Game.lookupObject cat dead) Nothing
+  -- CR 730.3e's second sentence: Cubwarden mutated UNDER its own Cat token is a
+  -- token (CR 730.2d), so bob's Leyline of the Void reaches only its card. The
+  -- permanent dies through its token component (CR 700.4) while Cubwarden is
+  -- exiled; merged OVER the Cat, the permanent is no token and the first
+  -- sentence exiles both, which is the control.
+  Spec.it s "CR 730.3e a token-topped merged permanent dies while Leyline of the Void exiles its card" $ do
+    plains <- S.printingOf s registry "Plains"
+    falcon <- S.printingOf s registry "Falcon Abomination"
+    cubwarden <- S.printingOf s registry "Cubwarden"
+    leyline <- S.printingOf s registry "Leyline of the Void"
+    let base = S.landsFor plains S.alice 8 (Setup.emptyGame S.bothPlayers)
+        (host, withHost) = S.addPermanent falcon S.alice base
+        (firstBoard, firstSpell) = S.handOne cubwarden withHost
+        catBoard = merging MutateSide.Over host firstBoard firstSpell
+        cat = catId catBoard
+        (secondBoard, secondSpell) = S.handOne cubwarden catBoard
+        mergedAt side = merging side cat secondBoard secondSpell
+        dead side =
+          let (_, withLeyline) = S.addPermanent leyline S.bob (mergedAt side)
+           in S.runPure S.identityAnswer withLeyline (Event.destroy (pure ()) Regenerability.Regenerable [cat] >> Engine.settleForPriority)
+        exiledNames gs = Maybe.mapMaybe (\oid -> fmap S.nameOf (Game.cardOf oid gs)) (Set.toList (GameState.exile gs))
+        cubwardenName = CardName.MkCardName (Text.pack "Cubwarden")
+        died gs = [() | GameEvent.Moved m <- S.eventsOf gs, Moved.change m == ZoneChange.MkZoneChange cat (ZoneChange.object (Moved.change m)) Zone.Battlefield Zone.Graveyard]
+        under = dead MutateSide.Under
+        over = dead MutateSide.Over
+    Spec.assertBool s (Game.isToken cat (mergedAt MutateSide.Under)) "setup: CR 730.2d merged under the Cat, the permanent is a token"
+    Spec.assertBool s (not (Game.isToken cat (mergedAt MutateSide.Over))) "setup: CR 730.2d merged over it, the permanent is no token"
+    Spec.assertEqWith s "CR 730.3e the card component under the token is exiled" (exiledNames under) [cubwardenName]
+    Spec.assertBool s (notElem cubwardenName (graveyardNames under)) "CR 730.3e and not put into the graveyard"
+    Spec.assertEqWith s "CR 700.4 the permanent itself dies, its token component put into the graveyard" (length (died under)) 1
+    Spec.assertEqWith s "CR 730.3e the token is put into the graveyard and announced there, the card into exile" [ZoneChange.to zc | GameEvent.CardArrived zc <- S.eventsOf under, ZoneChange.departed zc == cat] [Zone.Exile]
+    Spec.assertEqWith s "CR 730.3e merged over the Cat, both components follow Leyline of the Void" (exiledNames over) [cubwardenName]
+    Spec.assertEqWith s "CR 730.3e and the permanent does not die" (length (died over)) 0
+    Spec.assertEqWith s "CR 730.3e nor does anything reach the graveyard" (graveyardNames over) []
+  -- CR 730.3b over CR 730.3e's split: two Cubwardens under a Cat token are both
+  -- exiled by bob's Leyline of the Void, so bob, its controller, orders their
+  -- timestamps. Asking anyone else, or nobody, leaves the reversed run equal to
+  -- the canonical one.
+  Spec.it s "CR 730.3b/730.3e the controller of the row that exiled a token-topped permanent's cards orders them" $ do
+    plains <- S.printingOf s registry "Plains"
+    falcon <- S.printingOf s registry "Falcon Abomination"
+    cubwarden <- S.printingOf s registry "Cubwarden"
+    leyline <- S.printingOf s registry "Leyline of the Void"
+    let base = S.landsFor plains S.alice 12 (Setup.emptyGame S.bothPlayers)
+        (host, withHost) = S.addPermanent falcon S.alice base
+        (firstBoard, firstSpell) = S.handOne cubwarden withHost
+        catBoard = merging MutateSide.Over host firstBoard firstSpell
+        cat = catId catBoard
+        (secondBoard, secondSpell) = S.handOne cubwarden catBoard
+        once = merging MutateSide.Under cat secondBoard secondSpell
+        (thirdBoard, thirdSpell) = S.handOne cubwarden once
+        twice = merging MutateSide.Under cat thirdBoard thirdSpell
+        (_, withLeyline) = S.addPermanent leyline S.bob twice
+        reversingFor :: PlayerId.PlayerId -> Prompt.Prompt r -> r
+        reversingFor who p = case p of
+          Prompt.OrderTimestamps _ pid oids | pid == who -> reverse (zipWith const [0 ..] oids)
+          _ -> S.identityAnswer p
+        dead who = S.runPure (reversingFor who) withLeyline (Event.destroy (pure ()) Regenerability.Regenerable [cat] >> Engine.settleForPriority)
+        stamps gs = fmap Object.timestamp (Maybe.mapMaybe (`Game.lookupObject` gs) (Set.toAscList (GameState.exile gs)))
+        -- alice is asked nothing here, so reversing for her is the canonical run.
+        canonical = dead S.alice
+        reversed = dead S.bob
+    Spec.assertEqWith s "setup: both Cubwardens sit under the Cat" (length (filter (== CardName.MkCardName (Text.pack "Cubwarden")) (componentNames cat withLeyline))) 2
+    Spec.assertEqWith s "setup: CR 730.3e both are exiled" (fmap length [stamps canonical, stamps reversed]) [2, 2]
+    Spec.assertEqWith s "CR 730.3b bob's order is the one their timestamps take" (stamps reversed) (reverse (stamps canonical))
+  -- CR 730.3e with CR 616.1: bob's Leyline of the Void and his Wheel of Sun and
+  -- Moon enchanting alice both reach only the card under the Cat token, and
+  -- alice picks which applies. The one picked settles where Cubwarden goes, and
+  -- the other then has no card left to move: Wheel's reveal happens only when
+  -- Wheel is the one picked, which sends Cubwarden to the bottom of her library.
+  Spec.it s "CR 730.3e/616.1 one row reaching only the cards of a token-topped permanent leaves the other nothing to move" $ do
+    plains <- S.printingOf s registry "Plains"
+    falcon <- S.printingOf s registry "Falcon Abomination"
+    cubwarden <- S.printingOf s registry "Cubwarden"
+    leyline <- S.printingOf s registry "Leyline of the Void"
+    wheel <- S.printingOf s registry "Wheel of Sun and Moon"
+    let base = S.landsFor plains S.alice 8 (Setup.emptyGame S.bothPlayers)
+        (host, withHost) = S.addPermanent falcon S.alice base
+        (firstBoard, firstSpell) = S.handOne cubwarden withHost
+        catBoard = merging MutateSide.Over host firstBoard firstSpell
+        cat = catId catBoard
+        (secondBoard, secondSpell) = S.handOne cubwarden catBoard
+        merged = merging MutateSide.Under cat secondBoard secondSpell
+        (leylineId, withLeyline) = S.addPermanent leyline S.bob merged
+        (wheelId, withWheel) = S.addPermanent wheel S.bob withLeyline
+        (_, stocked) = S.addLibraryCard plains S.alice withWheel
+        enchanting = S.attachTo wheelId (Recipient.ToPlayer S.alice) stocked
+        plainsName = CardName.MkCardName (Text.pack "Plains")
+        picking :: ObjectId.ObjectId -> Prompt.Prompt r -> r
+        picking chosen p = case p of
+          Prompt.ChooseReplacement _ _ entries -> maybe 0 fromIntegral (List.findIndex ((== chosen) . ReplacementEntry.source) entries)
+          _ -> S.identityAnswer p
+        dead chosen = S.runPure (picking chosen) enchanting (Event.destroy (pure ()) Regenerability.Regenerable [cat] >> Engine.settleForPriority)
+        exiledNames gs = Maybe.mapMaybe (\oid -> fmap S.nameOf (Game.cardOf oid gs)) (Set.toList (GameState.exile gs))
+        cubwardenName = CardName.MkCardName (Text.pack "Cubwarden")
+        reveals gs = length [() | GameEvent.Revealed r <- S.eventsOf gs, Revealed.cause r == RevealCause.Ordinary]
+        byLeyline = dead leylineId
+        byWheel = dead wheelId
+    Spec.assertEqWith s "CR 730.3e Leyline picked, Cubwarden is exiled" (exiledNames byLeyline) [cubwardenName]
+    Spec.assertEqWith s "CR 730.3e and Wheel, with no card left to move, reveals nothing" (reveals byLeyline) 0
+    Spec.assertEqWith s "CR 730.3e Wheel picked, Cubwarden goes to the bottom of alice's library" (libraryNames byWheel) [plainsName, cubwardenName]
+    Spec.assertEqWith s "CR 730.3e revealed once, by Wheel" (reveals byWheel) 1
+    Spec.assertEqWith s "CR 730.3e and Leyline exiles nothing" (exiledNames byWheel) []
   -- CR 730.3c read by rule 702.55a's "exile it": Cubwarden mutated over Blind
   -- Hunter has haunt (CR 702.140e), and when it dies its `became` names BOTH
   -- cards, so both are exiled haunting the one target (CR 702.55b's "cards").

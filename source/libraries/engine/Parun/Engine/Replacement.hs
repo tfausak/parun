@@ -801,6 +801,32 @@ confinedToSource pat = case pat of
   Filter.Type.And fs -> any confinedToSource fs
   _ -> False
 
+-- CR 730.3e: does this filter, failing a merged permanent that is a token (CR
+-- 730.2d), still reach the cards among its components? It does when it fails
+-- the permanent only for being a token: the rest of what it names is read off
+-- the permanent, whose components have no characteristics apart from it until
+-- they arrive. The rule's first sentence needs nothing here, since a filter
+-- that excludes tokens already admits a merged permanent that is no token.
+reachesCardComponents :: (ObjectId -> Filter.View) -> GameState -> ReplacementCandidate -> Filter.Type.Filter Keyword.Type.Keyword -> ObjectId -> Bool
+reachesCardComponents viewOf gs candidate filter_ oid =
+  Filter.token (viewOf oid)
+    && maybe False (any Game.componentIsCard . Game.componentsOf . Object.source) (Game.lookupObject oid gs)
+    && Filter.matches (candidateContext gs candidate) ((viewOf oid) {Filter.token = False}) filter_
+
+-- CR 730.3e: is this zone-change row applicable to the moving object only
+-- through its card components, so that it moves those and leaves the rest of
+-- the merged permanent headed where it was? Asked of a candidate `applicable`
+-- already offered, under the same board.
+cardComponentsOnly :: Maybe GameState -> GameState -> ProposedEvent -> ReplacementCandidate -> Bool
+cardComponentsOnly asOf gs event candidate = case (ReplacementCandidate.effect candidate, event) of
+  (ReplacementEffect.ZoneChangeR row, ProposedEvent.WouldChangeZone zc _ _ _) ->
+    let sources = Maybe.fromMaybe gs asOf
+        viewOf = Projection.viewsOf sources
+        filter_ = ZoneChangePattern.whatObject (ZoneChangeR.matching row)
+        oid = ZoneChange.object zc
+     in not (matchesFiltered viewOf sources candidate filter_ oid) && reachesCardComponents viewOf sources candidate filter_ oid
+  _ -> False
+
 -- CR 614.1: does this replacement's printed pattern match this event?
 matchesPrinted :: (ObjectId -> Filter.View) -> GameState -> ProposedEvent -> ReplacementCandidate -> Bool
 matchesPrinted viewOf gs event candidate =
@@ -842,7 +868,9 @@ matchesPrinted viewOf gs event candidate =
                 && all (\relation -> maybe False (PlayerRelation.holdsFor (Game.teams gs) relation (ReplacementCandidate.controller candidate) . Just) (GameState.causing gs)) (ZoneChangePattern.causedBy pat)
                 && (resolving || not (ZoneChangePattern.duringResolution pat))
                 && matchesZoneOwner gs candidate (ZoneChangePattern.whoseObject pat) oid
-                && matchesFiltered judgedView gs candidate (ZoneChangePattern.whatObject pat) oid
+                && ( matchesFiltered judgedView gs candidate (ZoneChangePattern.whatObject pat) oid
+                       || reachesCardComponents judgedView gs candidate (ZoneChangePattern.whatObject pat) oid
+                   )
         -- CR 615.1: which events the pattern admits (see matchesDamagePattern),
         -- plus the one fact about the ROW rather than the event -- a shield
         -- spent to nothing is no longer a prevention effect.

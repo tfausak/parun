@@ -831,6 +831,26 @@ Entries are ordered by the first rule each cites.
   730.2a/712.8g Cubwarden merges with a melded permanent, over and under".
 - **Issue**: PR #3456.
 
+## Which rows CR 730.3e counts as reaching only cards
+
+- **Question**: CR 730.3e names a replacement that applies to a "card" without
+  also including tokens. Is a row worded "nontoken creature" (Anafenza, the
+  Foremost's "would die") such a row, and does a row that also names other
+  characteristics reach the cards of a token-topped merged permanent?
+- **Rules**: CR 730.3e, 730.2d, 108.2, 110.1, 111.1; CR of 2026-09-25.
+- **Decision**: A row reaches the card components when its object filter fails
+  the merged permanent only for being a token: it is judged against the
+  permanent with token-ness cleared. "Nontoken" counts, a permanent being a
+  card or a token (CR 110.1).
+- **Rejected**: Only the word "card": the pool encodes "a card" and "nontoken"
+  alike, and the rule's contrast is with tokens. Judging each card's own
+  characteristics: the components have none apart from the permanent until
+  they arrive.
+- **Site**: `Parun.Engine.Replacement.reachesCardComponents`, proved by
+  `Parun.MutateSpec`'s "CR 730.3e a token-topped merged permanent dies while
+  Leyline of the Void exiles its card".
+- **Issue**: #6169.
+
 ## What a fragmented loop forbids, and who is involved
 
 - **Question**: CR 732.3 names the players "involved in the loop", and has them
