@@ -1893,10 +1893,8 @@ exchangeBlocks first second gs =
 -- Every creature currently IN combat: the attackers, plus every blocking
 -- creature, Combat.blockingNothing's included (CR 509.1g). Not the keys of
 -- Combat.joinedUnder, which can outlive the record it was taken for.
---
--- That inclusion is a regression fence rather than proved behaviour: dropping it
--- leaves the Combat specs green, no board yet changing the control of a creature
--- blocking nothing.
+-- data/scenarios/combat/cr-510-4-white-knight-blocking-nothing-still-makes-a-first-strike-step.json
+-- proves that inclusion.
 combatants :: Combat -> Set ObjectId
 combatants c = Set.unions [Map.keysSet (Combat.attackers c), Combat.blockingNothing c, Set.unions (Map.elems (Combat.blockers c))]
 
