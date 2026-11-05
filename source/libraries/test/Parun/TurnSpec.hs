@@ -1011,7 +1011,7 @@ theBlue = ManaSymbol.OfType (ManaType.Colored Color.Blue)
 -- CR 601.2b / 702.148a: pay the offered cost whose mana is `wanted`.
 payingFor :: [ManaSymbol.ManaSymbol] -> Prompt.Prompt r -> r
 payingFor wanted p = case p of
-  Prompt.ChooseCost _ _ _ candidates ->
+  Prompt.ChooseCost _ _ _ candidates _ ->
     Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just (ManaCost.MkManaCost wanted)) . Cost.Type.mana . CandidateCost.cost) candidates)
   _ -> S.identityAnswer p
 

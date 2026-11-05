@@ -957,7 +957,7 @@ zoneOfNamed printing gs = case namedIn printing gs of
 -- rebuilds every spec in the tree.
 bestowingOn :: ObjectId.ObjectId -> Prompt.Prompt r -> r
 bestowingOn host p = case p of
-  Prompt.ChooseCost _ _ _ candidates ->
+  Prompt.ChooseCost _ _ _ candidates _ ->
     Maybe.fromMaybe
       (Cost.firstOffered candidates)
       (List.find ((== Just (ManaCost.MkManaCost [ManaSymbol.Generic 1, ManaSymbol.OfType (ManaType.Colored Color.Red)])) . Cost.Type.mana . CandidateCost.cost) candidates)

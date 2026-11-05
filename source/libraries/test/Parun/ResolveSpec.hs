@@ -9,6 +9,7 @@ module Parun.ResolveSpec where
 -- Aliased Filter.Type, not Filter, per the project-wide convention (FilterSpec):
 -- the evaluator module Parun.Engine.Filter may later be imported and must not collide.
 
+import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Foldable as Foldable
 import qualified Data.List as List
@@ -48,7 +49,10 @@ import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Parun.Types.Activator as Activator
 import qualified Parun.Types.Aggregation as Aggregation
+import qualified Parun.Types.AttackTarget as AttackTarget
+import qualified Parun.Types.AttackerDeclared as AttackerDeclared
 import qualified Parun.Types.BeginningStep as BeginningStep
+import qualified Parun.Types.CandidateCost as CandidateCost
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
@@ -74,6 +78,7 @@ import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.Departure as Departure.Type
 import qualified Parun.Types.Duration as Duration
 import qualified Parun.Types.Effect as Effect
+import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EntryBlock as EntryBlock
 import qualified Parun.Types.EntryRiders as EntryRiders
@@ -110,6 +115,7 @@ import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.PayOffer as PayOffer
+import qualified Parun.Types.PayerAnswer as PayerAnswer
 import qualified Parun.Types.PaymentDecision as PaymentDecision
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlayerControl as PlayerControl
@@ -2677,12 +2683,68 @@ rhysticSpec s registry =
               copying bobPays p = case p of
                 Prompt.ChooseToPay (Decider.MkDecider d) player _ _ _ earlier
                   | d == player && player == S.bob -> if bobPays then PaymentDecision.Pays else PaymentDecision.Declines
-                  | d == player && player == S.carol -> Maybe.fromMaybe PaymentDecision.Declines (lookup S.bob (Foldable.toList earlier))
+                  | d == player && player == S.carol -> maybe PaymentDecision.Declines told (lookup S.bob (Foldable.toList earlier))
                 _ -> paysFor Nothing p
               paid = S.runPure (copying True) onStack Stack.resolveTop
               declined = S.runPure (copying False) onStack Stack.resolveTop
           Spec.assertEqWith s "CR 101.4b told bob paid, carol paid too" (fmap (`S.lifeOf` paid) [S.alice, S.bob, S.carol]) [Just 20, Just 15, Just 15]
           Spec.assertEqWith s "CR 101.4b told bob declined, carol declined" (fmap (`S.lifeOf` declined) [S.alice, S.bob, S.carol]) (replicate 3 (Just 20))
+
+-- CR 101.4b over a choice of costs: Perforating Artist's "each opponent loses 3
+-- life unless that player sacrifices a nonland permanent of their choice or
+-- discards a card", with its 2024-11-08 ruling that a later opponent knows what
+-- an earlier one chose, though not a card chosen to be discarded (CR 101.4a).
+-- alice's end step, after an attack; bob, then carol, each hold a nonland
+-- permanent and a card in hand. bob pays with the option the case names, and
+-- carol pays with whichever option her ChooseCost says bob paid with, so what
+-- she is told is read off her board.
+perforatingSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+perforatingSpec s registry =
+  let endStep = Phase.Ending EndingStep.EndStep
+      board = do
+        artist <- S.printingOf s registry "Perforating Artist"
+        bears <- S.printingOf s registry "Grizzly Bears"
+        giant <- S.printingOf s registry "Hill Giant"
+        swamp <- S.printingOf s registry "Swamp"
+        let (artistId, g0) = S.addPermanent artist S.alice S.threePlayerGame
+            (bearsId, g1) = S.addPermanent bears S.bob g0
+            (giantId, g2) = S.addPermanent giant S.carol g1
+            (_, g3) = S.addHandCard swamp S.bob g2
+            (_, g4) = S.addHandCard swamp S.carol g3
+            attacked = S.withEvents [GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared artistId S.bob (AttackTarget.OfPlayer S.bob) 1 S.alice)] g4
+            begun = Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan endStep S.alice)) (attacked {GameState.phase = endStep, GameState.activePlayer = S.alice})
+        pure (bearsId, giantId, snd (Engine.runGamePure S.identityAnswer begun Engine.settleForPriority))
+      sacrifices cost = any (\c -> case c of CostComponent.Sacrifice {} -> True; _ -> False) (Cost.Type.components cost)
+      -- bob picks the sacrifice exactly when `bobSacrifices`; carol logs what
+      -- her ChooseCost told her and picks the option it says bob paid with.
+      copying :: Bool -> Prompt.Prompt r -> State.State [[(PlayerId.PlayerId, PayerAnswer.PayerAnswer)]] r
+      copying bobSacrifices p = case p of
+        Prompt.ChooseCost (Decider.MkDecider d) player _ candidates earlier | d == player -> do
+          Monad.when (player == S.carol) (State.modify' (<> [Foldable.toList earlier]))
+          let wanted
+                | player == S.bob = bobSacrifices
+                | otherwise = case lookup S.bob (Foldable.toList earlier) of
+                    Just (PayerAnswer.Paid cost _) -> sacrifices cost
+                    _ -> False
+          pure (Maybe.fromMaybe (S.identityAnswer p) (List.find ((== wanted) . sacrifices . CandidateCost.cost) candidates))
+        Prompt.ChooseToPay (Decider.MkDecider d) player _ _ _ _ | d == player -> pure PaymentDecision.Pays
+        _ -> pure (S.identityAnswer p)
+      resolveWith bobSacrifices onStack = State.runState (Engine.runGame (copying bobSacrifices) onStack Stack.resolveTop) []
+      -- What carol was told of bob: whether he sacrificed, and the objects named.
+      toldOf asked = [fmap (fmap (\a -> case a of PayerAnswer.Paid cost objects -> Just (sacrifices cost, objects); PayerAnswer.Declined -> Nothing)) earlier | earlier <- asked]
+      lives gs = fmap (`S.lifeOf` gs) [S.bob, S.carol]
+   in Spec.describe s "CR 101.4b a later payer of a choice of costs" $ do
+        -- A pair differing only in bob's option.
+        Spec.it s "CR 101.4b a later opponent is told which option an earlier one paid with" $ do
+          (bearsId, giantId, onStack) <- board
+          let ((_, sacrificed), toldSacrifice) = resolveWith True onStack
+              ((_, discarded), toldDiscard) = resolveWith False onStack
+          Spec.assertEqWith s "told bob sacrificed his Bears, carol sacrificed her Giant and kept her hand" (S.onBattlefield giantId sacrificed, S.handSize S.carol sacrificed) (False, 1)
+          Spec.assertEqWith s "told bob discarded, carol discarded and kept her Giant" (S.onBattlefield giantId discarded, S.handSize S.carol discarded) (True, 0)
+          Spec.assertEqWith s "nobody lost life" (lives sacrificed, lives discarded) ([Just 20, Just 20], [Just 20, Just 20])
+          Spec.assertEqWith s "CR 101.4b carol was told bob sacrificed, naming the Bears" (toldOf toldSacrifice) [[(S.bob, Just (True, Set.singleton bearsId))]]
+          Spec.assertEqWith s "CR 101.4a carol was told bob discarded, naming no card" (toldOf toldDiscard) [[(S.bob, Just (False, Set.empty))]]
+          Spec.assertEqWith s "setup: the trigger is on the stack and bob's Bears with it" (length (GameState.stack onStack), S.onBattlefield bearsId onStack) (1, True)
 
 -- CR 118.12 / 118.12a over a cost printed as a CHOICE: Torment of Venom's
 -- "Its controller loses 3 life unless they sacrifice another nonland permanent
@@ -2714,7 +2776,7 @@ tormentSpec s registry =
         pure (other, S.runPure aim gs (S.cast S.alice tormentId))
       logging :: Int -> PaymentDecision.PaymentDecision -> Prompt.Prompt r -> State.State [Either Int (Cost.Type.Cost Keyword.Keyword)] r
       logging pick decision p = case p of
-        Prompt.ChooseCost (Decider.MkDecider d) player _ candidates | d == player && player == S.bob -> do
+        Prompt.ChooseCost (Decider.MkDecider d) player _ candidates _ | d == player && player == S.bob -> do
           State.modify' (<> [Left (length candidates)])
           pure
             ( case drop pick candidates of
@@ -2776,9 +2838,9 @@ cleansingSpec s registry =
         pure ((islandA, islandB, forestC, forestD), onStack)
       -- One ChooseToPay: who was asked, about which land, told what.
       logging ::
-        (PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> Seq.Seq (PlayerId.PlayerId, PaymentDecision.PaymentDecision) -> PaymentDecision.PaymentDecision) ->
+        (PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> Seq.Seq (PlayerId.PlayerId, PayerAnswer.PayerAnswer) -> PaymentDecision.PaymentDecision) ->
         Prompt.Prompt r ->
-        State.State [(PlayerId.PlayerId, Maybe ObjectId.ObjectId, [(PlayerId.PlayerId, PaymentDecision.PaymentDecision)])] r
+        State.State [(PlayerId.PlayerId, Maybe ObjectId.ObjectId, [(PlayerId.PlayerId, PayerAnswer.PayerAnswer)])] r
       logging policy p = case p of
         Prompt.ChooseToPay (Decider.MkDecider d) player _ offer _ earlier | d == player -> do
           let land = case offer of
@@ -2813,7 +2875,7 @@ cleansingSpec s registry =
           Spec.assertEqWith
             s
             "CR 101.4b carol, asked about Island A, was told alice declined and bob paid"
-            [earlier | (who, land, earlier) <- asked, who == S.carol, land == Just islandA]
+            [fmap (fmap told) earlier | (who, land, earlier) <- asked, who == S.carol, land == Just islandA]
             [[(S.alice, PaymentDecision.Declines), (S.bob, PaymentDecision.Pays)]]
         -- A pair differing only in bob's answer for Island A: carol pays for a
         -- land exactly when her prompt says bob paid for it.
@@ -2821,7 +2883,7 @@ cleansingSpec s registry =
           ((islandA, _, _, _), onStack) <- board
           let copying bobPays player land earlier
                 | player == S.bob = if bobPays && land == Just islandA then PaymentDecision.Pays else PaymentDecision.Declines
-                | player == S.carol = Maybe.fromMaybe PaymentDecision.Declines (lookup S.bob (Foldable.toList earlier))
+                | player == S.carol = maybe PaymentDecision.Declines told (lookup S.bob (Foldable.toList earlier))
                 | otherwise = PaymentDecision.Declines
               ((_, paid), _) = resolveWith (copying True) onStack
               ((_, declined), _) = resolveWith (copying False) onStack
@@ -2998,6 +3060,7 @@ spec s registry = Spec.describe s "Parun.Engine.Resolve" $ do
   cleansingSpec s registry
   tariffSpec s registry
   tormentSpec s registry
+  perforatingSpec s registry
   targetSpec s registry
   resolveSpec s registry
   wormsSpec s registry
@@ -3010,3 +3073,9 @@ spec s registry = Spec.describe s "Parun.Engine.Resolve" $ do
 -- looked at the cards and its shuffle re-minted them (CR 701.20d / 701.20e).
 libraryNames :: PlayerId.PlayerId -> GameState.GameState -> [Maybe CardName.CardName]
 libraryNames pid gs = fmap (\oid -> fmap S.nameOf (Game.cardOf oid gs)) (Game.zoneMembers Zone.Library pid gs)
+
+-- What a later payer's prompt says an earlier payer decided (CR 101.4b).
+told :: PayerAnswer.PayerAnswer -> PaymentDecision.PaymentDecision
+told answer = case answer of
+  PayerAnswer.Declined -> PaymentDecision.Declines
+  PayerAnswer.Paid {} -> PaymentDecision.Pays

@@ -268,7 +268,7 @@ spec s registry = Spec.describe s "Scenario" $ do
             modePrompt = Prompt.ChooseModes (Decider.MkDecider S.alice) S.alice spellId (Set.singleton mode) (ModeSelection.ChooseExactly 1)
             xPrompt = Prompt.ChooseX (Decider.MkDecider S.alice) S.alice spellId Binding.variableX 0 9
             cost = Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost []), Cost.components = []}
-            costPrompt = Prompt.ChooseCost (Decider.MkDecider S.alice) S.alice spellId [CandidateCost.plain Nothing cost]
+            costPrompt = Prompt.ChooseCost (Decider.MkDecider S.alice) S.alice spellId [CandidateCost.plain Nothing cost] Seq.empty
             slot = SlotName.MkSlotName (Text.pack "target")
             targetPrompt =
               Prompt.ChooseTargets

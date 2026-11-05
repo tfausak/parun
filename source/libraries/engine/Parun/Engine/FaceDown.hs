@@ -37,6 +37,7 @@ import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
+import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Parun.Engine.Cost as Cost
 import qualified Parun.Engine.Decide as Decide
@@ -255,7 +256,7 @@ turnFaceUp perform pid procedure oid = do
         [] -> pure Nothing
         [only] -> pure (Just only)
         offered -> do
-          answer <- Game.choose (Prompt.ChooseCost (Decide.deciderFor pid before) pid oid (fmap Cost.untagged offered))
+          answer <- Game.choose (Prompt.ChooseCost (Decide.deciderFor pid before) pid oid (fmap Cost.untagged offered) Seq.empty)
           pure (List.find ((== answer) . Cost.untagged) offered)
       Monad.forM_ chosen $ \cost -> do
         paid <- Cost.payAction perform before (PaymentSubject.TurningFaceUp oid) 0 pid oid cost

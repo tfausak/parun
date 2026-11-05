@@ -2387,7 +2387,7 @@ graveRecitalSpec s registry = Spec.describe s "GraveRecital" $ do
         -- index: the flashback {4}{R} and the printed {R} share no reading.
         paying :: [ManaSymbol.ManaSymbol] -> Prompt.Prompt r -> r
         paying wanted p = case p of
-          Prompt.ChooseCost _ _ _ candidates ->
+          Prompt.ChooseCost _ _ _ candidates _ ->
             Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just (ManaCost.MkManaCost wanted)) . Cost.Type.mana . CandidateCost.cost) candidates)
           _ -> S.identityAnswer p
         payingFlashback, payingPrinted :: Prompt.Prompt r -> r
@@ -2569,7 +2569,7 @@ lierSpec s registry = Spec.describe s "Lier" $ do
         -- {4}{R} on the fixed board and read exactly like the broken one.
         paying :: ManaCost.ManaCost -> Prompt.Prompt r -> r
         paying wanted p = case p of
-          Prompt.ChooseCost _ _ _ candidates ->
+          Prompt.ChooseCost _ _ _ candidates _ ->
             Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just wanted) . Cost.Type.mana . CandidateCost.cost) candidates)
           -- Firebolt's own "any target", FILTERED from the offered set rather
           -- than built, and aimed at alice so its 2 damage reports which cast
@@ -3226,7 +3226,7 @@ emergeSpec s registry = Spec.describe s "Emerge" $ do
         run victim =
           let answer :: Prompt.Prompt r -> State.State Bool r
               answer prompt = case prompt of
-                Prompt.ChooseCost _ _ _ payable ->
+                Prompt.ChooseCost _ _ _ payable _ ->
                   let names cost = elem (CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.IsObject victim))) (Cost.Type.components (CandidateCost.cost cost))
                    in pure (case filter names payable of chosen : _ -> chosen; [] -> S.identityAnswer prompt)
                 Prompt.ChooseManaSource _ _ _ candidates -> do
@@ -3314,7 +3314,7 @@ offeringSpec s registry = Spec.describe s "Offering" $ do
         cascadingWith sacrificing prompt = case prompt of
           Prompt.ChooseAction _ _ actions -> Maybe.fromMaybe A.Pass (List.find (\a -> case a of A.Cast {} -> True; _ -> False) actions)
           Prompt.OfferedCast {} -> OptionalDecision.Exercises
-          Prompt.ChooseCost _ _ _ payable -> case filter ((== sacrificing) . sacrifices) payable of
+          Prompt.ChooseCost _ _ _ payable _ -> case filter ((== sacrificing) . sacrifices) payable of
             wanted : _ -> wanted
             [] -> S.identityAnswer prompt
           _ -> S.identityAnswer prompt
@@ -3393,7 +3393,7 @@ harmonizeSpec s registry = Spec.describe s "Harmonize" $ do
               names cost = any (\component -> case component of CostComponent.TapPermanents tap -> pinned (TapPermanents.whichPermanents tap); _ -> False) (Cost.Type.components (CandidateCost.cost cost))
               answer :: Prompt.Prompt r -> State.State Bool r
               answer prompt = case prompt of
-                Prompt.ChooseCost _ _ _ payable -> pure (case filter names payable of chosen : _ -> chosen; [] -> S.identityAnswer prompt)
+                Prompt.ChooseCost _ _ _ payable _ -> pure (case filter names payable of chosen : _ -> chosen; [] -> S.identityAnswer prompt)
                 Prompt.ChooseManaSource _ _ _ candidates -> do
                   floated <- State.get
                   if floated || notElem elvesId (NonEmpty.toList candidates)
@@ -3650,7 +3650,7 @@ henzieSpec s registry = Spec.describe s "Henzie" $ do
     -- everything.
     announcingBlitz :: Bool -> Prompt.Prompt r -> r
     announcingBlitz blitz p = case p of
-      Prompt.ChooseCost _ _ _ candidates -> case filter ((== blitz) . isBlitz . CandidateCost.keyword) candidates of
+      Prompt.ChooseCost _ _ _ candidates _ -> case filter ((== blitz) . isBlitz . CandidateCost.keyword) candidates of
         chosen : _ -> chosen
         [] -> S.identityAnswer p
       Prompt.DeclareAttackers {} -> S.aggressiveAnswer p
@@ -3660,7 +3660,7 @@ henzieSpec s registry = Spec.describe s "Henzie" $ do
     offeredCosts oid board =
       let record :: Prompt.Prompt r -> State.State [CandidateCost.CandidateCost] r
           record p = case p of
-            Prompt.ChooseCost _ _ _ candidates -> announcingBlitz True p <$ State.put candidates
+            Prompt.ChooseCost _ _ _ candidates _ -> announcingBlitz True p <$ State.put candidates
             _ -> pure (S.identityAnswer p)
        in State.execState (Engine.runGame record board (S.cast S.alice oid)) []
 
@@ -4375,7 +4375,7 @@ candidatePairs = fmap (\candidate -> (CandidateCost.reductions candidate, Candid
 -- `paying`.
 payingFor :: [ManaSymbol.ManaSymbol] -> Prompt.Prompt r -> r
 payingFor wanted p = case p of
-  Prompt.ChooseCost _ _ _ candidates ->
+  Prompt.ChooseCost _ _ _ candidates _ ->
     Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just (ManaCost.MkManaCost wanted)) . Cost.Type.mana . CandidateCost.cost) candidates)
   _ -> S.identityAnswer p
 
@@ -4742,7 +4742,7 @@ gorgerRunWith answer (reunionId, ready) =
 -- 616.1) by its value rather than by its place in the offer.
 bloodmadAnswer :: ManaCost.ManaCost -> Prompt.Prompt r -> r
 bloodmadAnswer want p = case p of
-  Prompt.ChooseCost _ _ _ candidates -> Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just want) . Cost.Type.mana . CandidateCost.cost) candidates)
+  Prompt.ChooseCost _ _ _ candidates _ -> Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just want) . Cost.Type.mana . CandidateCost.cost) candidates)
   _ -> madnessAnswer p
 
 -- Takes rule 702.35a's offered cast and answers everything else as S.identityAnswer

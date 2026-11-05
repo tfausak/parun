@@ -133,7 +133,7 @@ atLife n gs = gs {GameState.players = Map.adjust (\p -> p {Player.life = n}) S.a
 -- of the permissions the cast can be made under.
 castingFor :: (forall a. NonEmpty.NonEmpty a -> a) -> Prompt.Prompt r -> r
 castingFor way p = case p of
-  Prompt.ChooseCost _ _ _ candidates -> Maybe.fromMaybe (Cost.firstOffered candidates) (List.find (Maybe.isJust . CandidateCost.keyword) candidates)
+  Prompt.ChooseCost _ _ _ candidates _ -> Maybe.fromMaybe (Cost.firstOffered candidates) (List.find (Maybe.isJust . CandidateCost.keyword) candidates)
   Prompt.ChoosePlayPermission _ _ _ options -> way options
   Prompt.OfferedCast {} -> OptionalDecision.Exercises
   _ -> S.identityAnswer p
@@ -1225,7 +1225,7 @@ spec s registry = Spec.describe s "Sticker" $ do
         printed = S.runPure S.identityAnswer (atLife 3 (fodder 2 bare)) (S.cast S.alice chimera)
         printedFirst :: Prompt.Prompt r -> r
         printedFirst p = case p of
-          Prompt.ChooseCost _ _ _ candidates -> Maybe.fromMaybe (Cost.firstOffered candidates) (List.find (Maybe.isNothing . CandidateCost.keyword) candidates)
+          Prompt.ChooseCost _ _ _ candidates _ -> Maybe.fromMaybe (Cost.firstOffered candidates) (List.find (Maybe.isNothing . CandidateCost.keyword) candidates)
           _ -> S.identityAnswer p
         askedPrinted = S.runPure printedFirst (S.runPure printedFirst (atLife 1 (fodder 3 bare)) (S.cast S.alice chimera)) Stack.resolveTop
     Spec.assertBool s (S.castable S.alice chimera (atLife 1 (fodder 3 bare))) "CR 702.138a at 1 life the escape cost is payable"
@@ -1732,7 +1732,7 @@ spec s registry = Spec.describe s "Sticker" $ do
         answer p = case p of
           Prompt.ChooseKicker _ _ _ keyword _ _ -> KickerDecision.MkKickerDecision (stickerKick keyword)
           Prompt.ChooseStickerOrNone _ _ _ offered -> if List.elem otterFiveOne offered then Just otterFiveOne else Nothing
-          Prompt.ChooseCost _ _ _ candidates -> mutateKicked candidates
+          Prompt.ChooseCost _ _ _ candidates _ -> mutateKicked candidates
           _ -> MutateSpec.mutatingAt MutateSide.Over bearsId p
         merged = S.runPure answer board (S.cast S.alice card >> drain)
         stickerNumbers = (Just 5, Just 1) :: (Maybe Integer, Maybe Integer)
@@ -1751,7 +1751,7 @@ spec s registry = Spec.describe s "Sticker" $ do
         answer p = case p of
           Prompt.ChooseKicker _ _ _ keyword _ _ -> KickerDecision.MkKickerDecision (stickerKick keyword)
           Prompt.ChooseStickerOrNone _ _ _ offered -> if List.elem otterFiveOne offered then Just otterFiveOne else Nothing
-          Prompt.ChooseCost _ _ _ candidates -> mutateKicked candidates
+          Prompt.ChooseCost _ _ _ candidates _ -> mutateKicked candidates
           _ -> MutateSpec.mutatingAt MutateSide.Over bearsId p
         cast = S.runPure answer board (S.cast S.alice card)
         merged = S.runPure answer (Sticker.put S.alice bearsId nightTwoThree Nothing cast) drain
@@ -1822,7 +1822,7 @@ spec s registry = Spec.describe s "Sticker" $ do
         answer p = case p of
           Prompt.ChooseKicker _ _ _ keyword _ _ -> KickerDecision.MkKickerDecision (stickerKick keyword)
           Prompt.ChooseStickerOrNone _ _ _ offered -> if List.elem otterFiveOne offered then Just otterFiveOne else Nothing
-          Prompt.ChooseCost _ _ _ candidates -> mutateKicked candidates
+          Prompt.ChooseCost _ _ _ candidates _ -> mutateKicked candidates
           _ -> MutateSpec.mutatingAt MutateSide.Over bearsId p
         merged = S.runPure answer board (S.cast S.alice card >> drain)
         ((_, g), askedKeeper) = State.runState (Engine.runGame (keeping (Map.lookup bears (GameState.printingIds merged)) S.identityAnswer) merged (Event.destroy (pure ()) Regenerability.Regenerable [bearsId])) 0

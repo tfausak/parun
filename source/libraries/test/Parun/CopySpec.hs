@@ -1650,7 +1650,7 @@ lithoformBoard mountain engine piker mammoth rollicker bolt =
 -- duplicated rather than hoisted.
 castingRollicker :: [ManaSymbol.ManaSymbol] -> ObjectId -> Prompt.Prompt r -> r
 castingRollicker wanted host p = case p of
-  Prompt.ChooseCost _ _ _ candidates ->
+  Prompt.ChooseCost _ _ _ candidates _ ->
     Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just (ManaCost.MkManaCost wanted)) . Cost.Type.mana . CandidateCost.cost) candidates)
   Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter ((== Just host) . Recipient.objectOf) . snd) sets
   _ -> S.identityAnswer p

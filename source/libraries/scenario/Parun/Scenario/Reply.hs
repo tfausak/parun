@@ -461,7 +461,7 @@ shapeOf prompt = case prompt of
   Prompt.ChooseMixedCounterRemoval {} -> mapOf object (mapOf counterKind natural)
   Prompt.ChooseAttachment {} -> object
   Prompt.ChooseTurnUpAttachment {} -> viaCodec Codec.OptionalDecision.codec
-  Prompt.ChooseCost _ _ _ offered -> indexed offered
+  Prompt.ChooseCost _ _ _ offered _ -> indexed offered
   Prompt.ChoosePlayPermission {} -> maybeOf (pairOf object (viaCodec Codec.CastFromZone.codec))
   Prompt.OrderCostComponents {} -> list natural
   Prompt.OrderCombatTolls {} -> list natural

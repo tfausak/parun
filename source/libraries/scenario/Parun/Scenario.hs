@@ -1039,7 +1039,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.Bottom _ _ cards _ -> all (`elem` cards) chosen
   Prompt.Type.MulliganAction _ _ actions -> all (`elem` actions) chosen
   Prompt.Type.OpeningHandAction _ _ actions -> all (`elem` actions) chosen
-  Prompt.Type.ChooseCost _ _ _ costs -> chosen `elem` costs
+  Prompt.Type.ChooseCost _ _ _ costs _ -> chosen `elem` costs
   Prompt.Type.ChooseManaSource _ _ _ candidates -> all (`elem` candidates) chosen
   Prompt.Type.ChooseExtraManaSource _ _ candidates -> all (`elem` candidates) chosen
   Prompt.Type.ChooseCopyTarget _ _ _ objects -> all (`elem` objects) chosen
@@ -1361,7 +1361,7 @@ answerActionChoice key verb choices asked =
                   updateChoices (\current -> current {Choices.x = Nothing})
                   pure x
             _ -> unexpected
-        Prompt.Type.ChooseCost _ _ _ candidates -> case Choices.cost choices of
+        Prompt.Type.ChooseCost _ _ _ candidates _ -> case Choices.cost choices of
           Just wanted -> case filter ((== Just wanted) . Cost.mana . CandidateCost.cost) candidates of
             [cost] -> do
               updateChoices (\current -> current {Choices.cost = Nothing})

@@ -703,7 +703,7 @@ dutifulKnowledgeSeekerSpec s registry =
               main = board {GameState.activePlayer = S.alice, GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.alice}
               under :: Prompt.Prompt r -> r
               under p = case p of
-                Prompt.ChooseCost _ _ _ candidates -> Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just mutateCost) . Cost.Type.mana . CandidateCost.cost) candidates)
+                Prompt.ChooseCost _ _ _ candidates _ -> Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just mutateCost) . Cost.Type.mana . CandidateCost.cost) candidates)
                 Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter ((== Just tokenId) . Recipient.objectOf) . snd) sets
                 Prompt.ChooseMutateSide {} -> MutateSide.Under
                 _ -> S.identityAnswer p
@@ -754,7 +754,7 @@ dutifulKnowledgeSeekerSpec s registry =
                   -- the behold is the only component either option carries.
                   announcing :: Prompt.Prompt r -> r
                   announcing p = case p of
-                    Prompt.ChooseCost _ _ _ candidates
+                    Prompt.ChooseCost _ _ _ candidates _
                       | Just cost <- List.find (\c -> not (null (Cost.Type.components (CandidateCost.cost c))) == beholding) candidates -> cost
                     Prompt.ChooseTargets _ _ _ asked -> fmap (\(_, legal) -> Set.filter ((== Just victimId) . Recipient.objectOf) legal) asked
                     _ -> S.identityAnswer p

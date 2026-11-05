@@ -3037,6 +3037,7 @@ library types
     Parun.Types.PartnerText
     Parun.Types.PastActivation
     Parun.Types.PayBranch
+    Parun.Types.PayerAnswer
     Parun.Types.PayGate
     Parun.Types.Paying
     Parun.Types.Payment
