@@ -79,6 +79,7 @@ import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.ObjectView as ObjectView
@@ -1381,8 +1382,10 @@ facesShown pid gs =
 
 -- The two halves of CR 406.4's last sentence over one cast or activation off
 -- pileBoardUncast: nothing face down is shown to either seat at any prompt
--- after the draw, and once paid for both seats see the drawn card and not the
--- other card of its pile.
+-- after the draw, and once paid for both seats witness a reveal of the drawn
+-- card and not of the other card of its pile. The reveal lasts CR 701.20a's
+-- brief time, so with the spell or ability still on the stack neither seat is
+-- shown a face.
 revealedOncePaid :: (Monad m) => Spec.Spec m n -> CardName.CardName -> CardName.CardName -> GameState.GameState -> GameState.GameState -> Maybe Sightings -> m ()
 revealedOncePaid s drawn other before after seen = do
   let named name = List.find (\oid -> namesOf [oid] after == Set.singleton name) (faceDownExiled after)
@@ -1390,14 +1393,20 @@ revealedOncePaid s drawn other before after seen = do
   Spec.assertEqWith s "while it is paid for, neither seat sees a face-down card" [(a, b) | (_, a, b) <- sightings, not (Set.null a && Set.null b)] []
   case (named drawn, named other) of
     (Just drawnId, Just otherId) -> do
-      Spec.assertEqWith s "once paid for, alice sees the drawn card and not the rest of its pile" (facesShown S.alice after) (Set.singleton drawnId)
-      Spec.assertEqWith s "and so does bob" (facesShown S.bob after) (Set.singleton drawnId)
+      Spec.assertEqWith s "once paid for, alice witnesses the drawn card revealed and not the rest of its pile" (revealsWitnessed S.alice after) [drawnId]
+      Spec.assertEqWith s "and so does bob" (revealsWitnessed S.bob after) [drawnId]
+      Spec.assertEqWith s "the reveal is over while it is still on the stack" (facesShown S.alice after <> facesShown S.bob after) Set.empty
       -- Proxies, AFTER the behaviour so neither can absorb a mutation: the
       -- draw was asked, a mana window followed it, and nothing showed before.
       Spec.assertBool s (any (\(window, _, _) -> window) sightings) "a mana window was raised after the draw"
       Spec.assertEqWith s "before the cast, neither seat sees a face-down card" (facesShown S.alice before <> facesShown S.bob before) Set.empty
       Spec.assertBool s (drawnId /= otherId) "the pile's two cards are two objects"
     _ -> Spec.assertFailure s "both cards of the pile should still be in exile face down"
+
+-- The cards this seat witnessed revealed this turn (CR 701.20a), in log order.
+revealsWitnessed :: PlayerId.PlayerId -> GameState.GameState -> [ObjectId.ObjectId]
+revealsWitnessed pid gs =
+  [Revealed.card r | GameEvent.Revealed r <- fmap LoggedEvent.event (PlayerView.Type.witnessed (PlayerView.viewFor pid gs))]
 
 -- The first draw a slot may name out of a pile, which is the only one a
 -- single-target slot is offered (CR 406.4).

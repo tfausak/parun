@@ -40,7 +40,7 @@ Entries take `docs/decisions.md`'s format and order.
   `Parun.Engine.Target.chooseTargets` drew; proved on Synthetic Blind Reclamation
   by `Parun.ExileSpec`'s "CR 406.4 the card drawn for a spell's target is hidden
   while it is paid for, and revealed to both seats once cast" and its activation
-  twin. How long it lasts is no reading: #6175.
+  twin.
 - **Issue**: #2568.
 
 ## Whether a cast redirected off the stack is still a cast
