@@ -503,14 +503,16 @@ Entries are ordered by the first rule each cites.
 - **Question**: Its 2005 ruling keeps a chosen Aura with nothing to enchant in
   exile, choosable again; its 2004 ruling forbids choosing one. May a player
   choose one?
-- **Rules**: CR 303.4g; CR of 2026-08-07.
+- **Rules**: CR 303.4f, 303.4g; CR of 2026-08-07.
 - **Decision**: Yes, on the later and more specific ruling. Choosing one passes
-  that player's pick.
+  that player's pick. The auction goes on while an exiled card could enter, so
+  only such Auras are left exiled, as that ruling says.
 - **Rejected**: Filtering those Auras out, the 2004 ruling, which the 2005 one's
   "can still be chosen by you or another player later" contradicts.
-- **Site**: `data/cards/thieves-auction.json`'s chooser filter, proved by the
-  scenario `thieves-auction-keeps-an-aura-with-nothing-to-enchant-choosable`.
-  Where the repeat stops is not a reading: #6179.
+- **Site**: `data/cards/thieves-auction.json`'s chooser filter and repeat
+  condition, proved by the scenarios
+  `thieves-auction-keeps-an-aura-with-nothing-to-enchant-choosable` and
+  `thieves-auction-goes-on-for-an-aura-that-can-enter-and-ends-on-one-that-cannot`.
 - **Issue**: #6179.
 
 ## Which board an entry inside a batch collects replacement effects from
@@ -885,6 +887,24 @@ Entries are ordered by the first rule each cites.
 - **Site**: `Parun.Engine.Fragmented.digest`, proved by `Parun.FragmentedSpec`'s
   "a loop that moves a card recurs under the card's new identity".
 - **Issue**: #6184.
+
+## Who a fragmented loop inside a resolution refuses
+
+- **Question**: Inside a repeated process (Thieves' Auction), when does CR
+  732.3's loop close, who is involved, and what is a different choice?
+- **Rules**: CR 732.3; CR of 2026-08-07.
+- **Decision**: A run closes a loop when the next run begins in the state it
+  began in. The involved players are those asked to pick in it; a pick with one
+  option asks nobody. The first of them in APNAP order may not pick what they
+  picked again while the state recurs.
+- **Rejected**: Counting an unasked pick as involvement, which refuses a player
+  their only option while another involved player could still vary theirs.
+- **Site**: `Parun.Engine.Resolve.Arms.Zones.repeatIf` and
+  `Parun.Engine.Resolve.Common.pickByChooser`, proved by the scenarios
+  `thieves-auction-refuses-the-active-player-a-stranded-aura-both-players-chose`
+  and
+  `thieves-auction-goes-on-for-an-aura-that-can-enter-and-ends-on-one-that-cannot`.
+- **Issue**: #6179.
 
 ## Whether attack left closes up over a seat that emptied
 

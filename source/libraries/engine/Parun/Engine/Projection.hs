@@ -4064,6 +4064,9 @@ filterReads f = case f of
   -- which that ability is read against, and nothing here distinguishes the two
   -- either.
   Filter.Type.CanAttachToSubject -> Set.fromList [Types, Subtypes, Colors, Keywords, PowerA, Controller]
+  -- Over-declared for CanHostSubject's reason: the candidate's subtypes and
+  -- enchant ability, read against every possible host.
+  Filter.Type.HasEntryHost -> Set.fromList [Types, Subtypes, Colors, Keywords, PowerA, Controller]
   -- CR 205.2a: the card types of the SUBJECT's host, and nothing of the
   -- candidate at all. Narrower than the two atoms above because the read is
   -- exact -- one characteristic of one other object -- and declared even so,
@@ -4211,6 +4214,7 @@ filterReadsPeers f = case f of
   -- characteristics CR 301.5 and CR 702.5a compare against is another object.
   Filter.Type.CanHostSubject -> True
   Filter.Type.CanAttachToSubject -> True
+  Filter.Type.HasEntryHost -> True
   -- True for the two atoms above's reason: CR 205.2a's read is of the subject's
   -- HOST, which is another object's projection.
   Filter.Type.HostOfSubjectHasCardType _ -> True

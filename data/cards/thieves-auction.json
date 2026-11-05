@@ -70,8 +70,58 @@
                             "type": "AtLeast"
                           },
                           "measured": {
-                            "type": "BoundCount",
-                            "value": "chosen"
+                            "type": "Count",
+                            "value": {
+                              "aggregation": {
+                                "type": "Members"
+                              },
+                              "filter": {
+                                "type": "And",
+                                "value": [
+                                  {
+                                    "type": "IsBound",
+                                    "value": "exiled"
+                                  },
+                                  {
+                                    "type": "IsInZone",
+                                    "value": {
+                                      "type": "Exile"
+                                    }
+                                  },
+                                  {
+                                    "type": "Or",
+                                    "value": [
+                                      {
+                                        "type": "Not",
+                                        "value": {
+                                          "type": "HasSubtype",
+                                          "value": {
+                                            "type": "Aura"
+                                          }
+                                        }
+                                      },
+                                      {
+                                        "type": "HasEntryHost"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "scope": {
+                                "type": "InZone",
+                                "value": {
+                                  "player": {
+                                    "type": "Relative",
+                                    "value": {
+                                      "type": "AnyPlayer"
+                                    }
+                                  },
+                                  "zone": {
+                                    "type": "Exile"
+                                  }
+                                }
+                              }
+                            }
                           },
                           "threshold": {
                             "type": "Literal",
@@ -116,7 +166,6 @@
                                       }
                                     }
                                   },
-                                  "slot": "chosen",
                                   "zone": {
                                     "type": "Battlefield"
                                   }

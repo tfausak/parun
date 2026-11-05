@@ -621,6 +621,7 @@ filterNames asking criterion = case criterion of
   Filter.AttachedNoLaterThanSource -> contextNames asking
   Filter.CanHostSubject -> contextNames asking
   Filter.CanAttachToSubject -> contextNames asking
+  Filter.HasEntryHost -> mempty
   Filter.HostOfSubjectHasCardType _cardType -> contextNames asking
   Filter.IsToken -> mempty
   Filter.IsCommander -> mempty

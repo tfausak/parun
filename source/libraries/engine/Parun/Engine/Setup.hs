@@ -322,6 +322,7 @@ blankGame settings order active =
       GameState.keptFaceDown = Nothing,
       GameState.announcedTops = Nothing,
       GameState.loopPicks = Nothing,
+      GameState.repeatPicks = Nothing,
       GameState.revealedTops = mempty,
       GameState.departedThisTurn = mempty,
       GameState.couldAttackThisTurn = mempty,

@@ -147,6 +147,7 @@ codec keywordCodec =
       Arm.nullary "AttachedNoLaterThanSource" Filter.AttachedNoLaterThanSource,
       Arm.nullary "CanHostSubject" Filter.CanHostSubject,
       Arm.nullary "CanAttachToSubject" Filter.CanAttachToSubject,
+      Arm.nullary "HasEntryHost" Filter.HasEntryHost,
       Arm.payload "HostOfSubjectHasCardType" CardType.codec Filter.HostOfSubjectHasCardType (\x -> case x of Filter.HostOfSubjectHasCardType y -> Just y; _ -> Nothing),
       Arm.nullary "IsCommander" Filter.IsCommander,
       Arm.nullary "IsToken" Filter.IsToken,
@@ -309,6 +310,7 @@ tagOf x = case x of
   Filter.AttachedNoLaterThanSource {} -> "AttachedNoLaterThanSource"
   Filter.CanHostSubject {} -> "CanHostSubject"
   Filter.CanAttachToSubject {} -> "CanAttachToSubject"
+  Filter.HasEntryHost {} -> "HasEntryHost"
   Filter.HostOfSubjectHasCardType {} -> "HostOfSubjectHasCardType"
   Filter.IsCommander {} -> "IsCommander"
   Filter.IsToken {} -> "IsToken"

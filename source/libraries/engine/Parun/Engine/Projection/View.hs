@@ -232,6 +232,7 @@ viewOfCardLapsed lapsed face =
           -- fills this field, and it overlays it onto viewOfObject rather than
           -- reaching this builder, which holds a printed FACE and no board.
           Filter.canAttachToSubject = False,
+          Filter.hasEntryHost = False,
           -- CR 111.6: "A token isn't a card." CR 704.5d already made a token in
           -- any zone this builder describes cease to exist.
           Filter.token = False,
@@ -702,6 +703,7 @@ viewOfCharacteristics peers oid pc controller counters gs =
       -- builder's result rather than passed in, so a search pays for it only when
       -- its filter names the atom.
       Filter.canAttachToSubject = False,
+      Filter.hasEntryHost = False,
       -- CR 111.6 / 730.2d: read live off Object.source, since a merge can change
       -- the answer. False for an id
       -- naming nothing, which CR 608.2b wants of a gone TARGET;

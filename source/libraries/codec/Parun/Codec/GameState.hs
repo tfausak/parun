@@ -62,6 +62,7 @@ import qualified Parun.Codec.Prevention as Prevention
 import qualified Parun.Codec.Printing as Printing
 import qualified Parun.Codec.PrintingId as PrintingId
 import qualified Parun.Codec.ProjectedCharacteristics as ProjectedCharacteristics
+import qualified Parun.Codec.RepeatPicks as RepeatPicks
 import qualified Parun.Codec.RestartSignal as RestartSignal
 import qualified Parun.Codec.Result as Result
 import qualified Parun.Codec.ReturnWatch as ReturnWatch
@@ -207,6 +208,7 @@ codec resolve = Fields.object $ do
   keptFaceDown <- Fields.defaulted "keptFaceDown" Nothing (Common.maybe (Common.naturalMap ObjectId.codec Common.natural)) GameState.keptFaceDown
   announcedTops <- Fields.defaulted "announcedTops" Nothing (Common.maybe (Common.naturalMap PlayerId.codec ObjectId.codec)) GameState.announcedTops
   loopPicks <- Fields.defaulted "loopPicks" Nothing (Common.maybe (Common.seq (Common.tuple PlayerId.codec (Common.set ObjectId.codec)))) GameState.loopPicks
+  repeatPicks <- Fields.defaulted "repeatPicks" Nothing (Common.maybe RepeatPicks.codec) GameState.repeatPicks
   revealedTops <- Fields.defaulted "revealedTops" Map.empty (Common.naturalMap PlayerId.codec ObjectId.codec) GameState.revealedTops
   departedThisTurn <- Fields.defaulted "departedThisTurn" Set.empty (Common.set PlayerId.codec) GameState.departedThisTurn
   couldAttackThisTurn <- Fields.defaulted "couldAttackThisTurn" Set.empty (Common.set ObjectId.codec) GameState.couldAttackThisTurn
@@ -336,6 +338,7 @@ codec resolve = Fields.object $ do
         GameState.keptFaceDown = keptFaceDown,
         GameState.announcedTops = announcedTops,
         GameState.loopPicks = loopPicks,
+        GameState.repeatPicks = repeatPicks,
         GameState.revealedTops = revealedTops,
         GameState.departedThisTurn = departedThisTurn,
         GameState.couldAttackThisTurn = couldAttackThisTurn,

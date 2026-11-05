@@ -189,6 +189,7 @@ import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.RemovalCount as RemovalCount
 import qualified Parun.Types.RemoveCounters as RemoveCounters
 import qualified Parun.Types.RemoveCountersAmong as RemoveCountersAmong
+import qualified Parun.Types.RepeatPicks as RepeatPicks
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
 import qualified Parun.Types.ReplacementOrigin as ReplacementOrigin
 import Parun.Types.Result (Result)
@@ -455,7 +456,8 @@ fallShort = State.modify' (\gs -> gs {GameState.fellShort = GameState.fellShort 
 -- CR 603.10 samples (read by the first disjunct, and the samples are
 -- deliberately unforced), the allocators, interning and Oracle-reference memos
 -- an instruction advances before finding nothing to do, CR 104.4b's lastChoice
--- (an offer answered with nothing), damagePreventedBy and ambientAmounts, CR 121.4's drewFromEmpty (an attempted
+-- (an offer answered with nothing), CR 732.3's repeatPicks (a pick recorded
+-- before the move it names is tried), damagePreventedBy and ambientAmounts, CR 121.4's drewFromEmpty (an attempted
 -- draw) and fellShort (an instruction finding too few cards, which only
 -- applyClauseEffects reads), CR 607.2a's exiledWith and CR 406.4's exilePiles (applyEffectWith
 -- prunes both after EVERY instruction, and a card can leave exile off that
@@ -481,7 +483,7 @@ fallShort = State.modify' (\gs -> gs {GameState.fellShort = GameState.fellShort 
 -- Object.controlClock by Parun.ResolveSpec's "CR 118.12 Victimize with no creature
 -- to sacrifice returns nothing", boardAtControlSample by Parun.AuraSpec's "CR
 -- 603.12 Thorin's Equipment go to its target, which then deals damage equal to its
--- power". The rest is a regression fence: un-copying lastChoice leaves the suite
+-- power". The rest is a regression fence: un-copying lastChoice or repeatPicks leaves the suite
 -- green. The state half: the scenario "CR 603.12 a choice that records no event
 -- still arms its when you do".
 happenedBetween :: GameState -> GameState -> Bool
@@ -506,6 +508,7 @@ happenedBetween before after =
             GameState.lookedUp = GameState.lookedUp before,
             GameState.referenceNames = GameState.referenceNames before,
             GameState.lastChoice = GameState.lastChoice before,
+            GameState.repeatPicks = GameState.repeatPicks before,
             GameState.drewFromEmpty = GameState.drewFromEmpty before,
             GameState.fellShort = GameState.fellShort before,
             GameState.damagePreventedBy = GameState.damagePreventedBy before,
@@ -656,6 +659,10 @@ chosenPermanents purpose legal resolving controller source choice = do
 -- example. Under an unlimited range the seat is asked only where a real choice
 -- remains. Parun.RangeOfInfluenceSpec's "CR 801.5a a chooser handed the choice
 -- names only permanents in their own range" proves the cut.
+--
+-- CR 732.3 inside a RepeatIf (GameState.repeatPicks): the seat is settled first
+-- here too, and offered nothing it is refused; what an asked seat picks is
+-- recorded for the arm (Zones.repeatIf).
 pickByChooser ::
   ObjectId ->
   ObjectId ->
@@ -672,16 +679,25 @@ pickByChooser resolving source controller legal chooser one_ several amount coun
   gs <- State.get
   let named = namesChooser legal resolving source controller gs chooser
       asked = askedChooser resolving source controller legal chooser
-  if Map.null (RangeOfInfluence.unwrap (GameSettings.rangeOfInfluence (GameState.settings gs)))
-    then Game.pickCounted named asked one_ several amount count candidates
-    else do
-      seat <- if named then asked else pure Nothing
-      now <- State.get
-      let grants = Projection.controlGrants now
-          reachable who oid = not (Set.member oid (GameState.battlefield now)) || Projection.objectInRangeGiven grants who oid now
-      case seat of
-        Nothing -> pure (Nothing, [])
-        Just who -> Game.pickCounted True (pure (Just who)) one_ several amount count (filter (reachable who) candidates)
+      unlimited = Map.null (RangeOfInfluence.unwrap (GameSettings.rangeOfInfluence (GameState.settings gs)))
+      refusals = maybe Map.empty RepeatPicks.refused (GameState.repeatPicks gs)
+  (seat, picked) <-
+    if unlimited && Map.null refusals
+      then Game.pickCounted named asked one_ several amount count candidates
+      else do
+        seat <- if named then asked else pure Nothing
+        now <- State.get
+        let grants = Projection.controlGrants now
+            reachable who oid = unlimited || not (Set.member oid (GameState.battlefield now)) || Projection.objectInRangeGiven grants who oid now
+            offered who oid = reachable who oid && not (Set.member oid (Map.findWithDefault Set.empty who refusals))
+        case seat of
+          Nothing -> pure (Nothing, [])
+          Just who -> Game.pickCounted True (pure (Just who)) one_ several amount count (filter (offered who) candidates)
+  -- CR 732.3: a pick a seat was asked for joins its RepeatIf run's record.
+  Monad.forM_ seat $ \who ->
+    Monad.unless (null picked) $
+      State.modify' (\g -> g {GameState.repeatPicks = fmap (\picks -> picks {RepeatPicks.picked = Map.insertWith Set.union who (Set.fromList picked) (RepeatPicks.picked picks)}) (GameState.repeatPicks g)})
+  pure (seat, picked)
 
 -- Whether a chooser ref names a seat to ask, askedChooser's test without its ask.
 namesChooser :: Map.Map SlotName (Set Recipient) -> ObjectId -> ObjectId -> PlayerId -> GameState -> PlayerRef -> Bool

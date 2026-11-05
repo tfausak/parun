@@ -1339,6 +1339,8 @@ library codec
     Parun.Codec.Repeat
     Parun.Codec.RepeatIf
     Parun.Codec.RepeatIfSpec
+    Parun.Codec.RepeatPicks
+    Parun.Codec.RepeatPicksSpec
     Parun.Codec.RepeatSpec
     Parun.Codec.Replace
     Parun.Codec.ReplacementEffect
@@ -3111,6 +3113,7 @@ library types
     Parun.Types.RemovePlayerCounters
     Parun.Types.Repeat
     Parun.Types.RepeatIf
+    Parun.Types.RepeatPicks
     Parun.Types.Replace
     Parun.Types.ReplacementBucket
     Parun.Types.ReplacementCandidate
