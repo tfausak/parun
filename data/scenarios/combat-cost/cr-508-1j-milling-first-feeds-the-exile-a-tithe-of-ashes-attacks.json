@@ -1,6 +1,6 @@
 {
   "description": "CR 508.1j milling first feeds the exile: a Tithe of Ashes attacks",
-  "note": "Alice's graveyard is empty. CR 508.1j lets her pay the toll's parts in any order, so she mills her Island first and exiles it, and the Tithe attacks.",
+  "note": "Alice's graveyard holds only a Plains. CR 508.1j lets her pay the toll's parts in any order, so she mills her Island first and exiles it rather than the Plains, and the Tithe attacks. The Plains is there so the toll is payable judged before payment (#6328).",
   "board": {
     "active": "alice",
     "step": "DeclareAttackers",
@@ -20,6 +20,12 @@
           },
           {
             "card": "Swamp"
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Plains",
+            "label": "old"
           }
         ]
       },
@@ -57,6 +63,19 @@
       "turn": 1,
       "step": "DeclareAttackers",
       "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseExilesFromGraveyard",
+          "with": [
+            "Island"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
       "check": {
         "Attackers": {
           "attackers": {
@@ -86,8 +105,8 @@
         "Count": {
           "player": "alice",
           "zone": "Graveyard",
-          "card": "Island",
-          "count": 0
+          "card": "Plains",
+          "count": 1
         }
       }
     },

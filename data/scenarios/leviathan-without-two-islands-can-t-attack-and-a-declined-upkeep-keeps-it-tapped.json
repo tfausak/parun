@@ -1,5 +1,5 @@
 {
-  "description": "Leviathan: one Island can't pay its attack cost; declining the upkeep sacrifice leaves it tapped and the Islands in play",
+  "description": "Leviathan: one Island can't pay its attack cost, so alice isn't asked to attack; declining the upkeep sacrifice leaves it tapped and the Islands in play",
   "board": {
     "active": "bob",
     "step": "PrecombatMain",
@@ -91,24 +91,6 @@
     ]
   },
   "timeline": [
-    {
-      "turn": 2,
-      "step": "DeclareAttackers",
-      "player": "alice",
-      "refuse": {
-        "Attack": [
-          "$ready"
-        ]
-      }
-    },
-    {
-      "turn": 2,
-      "step": "DeclareAttackers",
-      "player": "alice",
-      "do": {
-        "Attack": []
-      }
-    },
     {
       "turn": 2,
       "step": "PostcombatMain",

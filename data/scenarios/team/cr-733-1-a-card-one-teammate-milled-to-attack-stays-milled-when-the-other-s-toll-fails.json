@@ -1,6 +1,6 @@
 {
   "description": "CR 733.1 a card one teammate milled to attack stays milled when the other's toll fails",
-  "note": "Shared team turns: alice's Synthetic Tithe of Memory and bob's Exalted Dragon attack together. Alice pays her toll, milling her Island; bob has no land to sacrifice, so the combined declaration is reversed, but not alice's mill.",
+  "note": "Shared team turns: alice's Synthetic Tithe of Memory and bob's two Exalted Dragons attack together. Alice pays her toll, milling her Island; bob's one Forest pays either Dragon's sacrifice but not both, so the combined declaration is reversed, but not alice's mill.",
   "board": {
     "active": "alice",
     "step": "BeginningOfCombat",
@@ -34,6 +34,15 @@
             "card": "Exalted Dragon",
             "label": "dragon",
             "ready": true
+          },
+          {
+            "card": "Exalted Dragon",
+            "label": "dragon2",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "forest"
           }
         ]
       },
@@ -55,7 +64,8 @@
       "do": {
         "Attack": [
           "$tithe",
-          "$dragon"
+          "$dragon",
+          "$dragon2"
         ]
       }
     },
@@ -73,6 +83,15 @@
       "step": "DeclareAttackers",
       "player": "alice",
       "source": "$dragon",
+      "do": {
+        "ChooseAttackTarget": "$carol"
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "source": "$dragon2",
       "do": {
         "ChooseAttackTarget": "$carol"
       }

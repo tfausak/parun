@@ -1,0 +1,70 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Season of the Witch",
+            "ready": true
+          },
+          {
+            "card": "Bonded Construct",
+            "ready": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "ready": true
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Ghostly Prison",
+            "ready": true
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "DeclareAttackers"
+  },
+  "description": "CR 508.1 Season of the Witch spares creatures whose every attack costs more than alice can pay",
+  "note": "bob's Ghostly Prison taxes attacking him and alice has no mana, so every declaration holding the Bears or the Bonded Construct is illegal under CR 508.1's preamble: neither could have attacked, alice isn't asked, and both survive. The Construct puts the question to the search CR 506.5's restriction needs, not only to the shortcut.",
+  "timeline": [
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "EndStep",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Grizzly Bears",
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "EndStep",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Bonded Construct",
+          "count": 1,
+          "player": "alice",
+          "zone": "Battlefield"
+        }
+      },
+      "player": "alice",
+      "step": "EndStep",
+      "turn": 1
+    }
+  ]
+}
