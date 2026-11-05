@@ -667,6 +667,15 @@ costOf value = do
     _ -> Node.untranslated n
   pure Cost.MkCost {Cost.mana = Just mana, Cost.components = components}
 
+-- | A cost a player chooses how to pay, its options in printed order: "pays {1}
+-- or 1 life" (Erosion), or the one option every other cost is.
+costOptions :: Value.Value -> Translated (NonEmpty.NonEmpty (Cost.Cost Keyword.Keyword))
+costOptions value = do
+  n <- Node.node value
+  case Node.tag n of
+    "Or" -> Node.arguments n >>= traverse costOf >>= maybe (Node.untranslated n) Right . NonEmpty.nonEmpty
+    _ -> fmap pure (costOf value)
+
 costPart :: Node.Node -> Translated (Either ManaCost.ManaCost (CostComponent.CostComponent Keyword.Keyword))
 costPart n = case Node.tag n of
   "PayMana" -> fmap Left (Node.argument n >>= manaCost)
@@ -791,7 +800,10 @@ trigger n = case Node.tag n of
             PlayerRelation.AnyPlayer -> Right TurnScope.EachTurn
             PlayerRelation.Opponent -> Right TurnScope.OpponentsTurn
             _ -> Node.untranslated n
-      Right (TriggerCondition.StepBegins (StepBegins.MkStepBegins phase Nothing scope), bound [("Trigger_ThatPlayer", Oracle.Trigger.thatPlayer)])
+      -- Erosion's "that player" is the AST's HostController, where Soul Bleed's
+      -- is Trigger_ThatPlayer.
+      let hostController = [("HostController", Oracle.Trigger.thatPlayer) | singlePlayer whose == Just "HostController"]
+      Right (TriggerCondition.StepBegins (StepBegins.MkStepBegins phase Nothing scope), bound (("Trigger_ThatPlayer", Oracle.Trigger.thatPlayer) : hostController))
 
 -- | A condition of the game's state: an intervening "if" clause's (CR
 -- 603.4) or a static ability's "as long as" (CR 611.3a). A count of cards in
@@ -1043,16 +1055,23 @@ clauses context actions = do
   where
     steps ns = case ns of
       [] -> Right []
-      -- "You may pay [cost]. If you do, [instructions]" (CR 118.12).
+      -- "You may pay [cost]. If you do, [instructions]" (CR 118.12), and
+      -- "[instructions] unless that player pays [cost]" (CR 118.12a).
       may : gate : rest
-        | Node.tag may == "MayCost",
-          Node.tag gate == "If" -> do
-            price <- Node.argument may >>= costOf
+        | elem (Node.tag may) ["MayCost", "PlayerMayCost"],
+          Just branch <- lookup (Node.tag gate) [("If", PayBranch.IfPaid), ("Unless", PayBranch.IfNotPaid)] -> do
+            (payer, price) <- case Node.tag may of
+              "MayCost" -> fmap ((,) (PlayerRef.InSlot Oracle.Target.youSlot)) (Node.argument may)
+              _ -> do
+                (who, price) <- pair may
+                payer <- player context who
+                pure (payer, price)
+            options <- costOptions price
             (condition', body) <- pair gate
             paid <- Node.node condition'
             Monad.unless (Node.tag paid == "CostWasPaid") (Node.untranslated paid)
             es <- Common.asArray body >>= traverse (Node.node Monad.>=> effects context)
-            let gated = (clause Optionality.Mandatory (concat es)) {Clause.payGate = Just (payGate price)}
+            let gated = (clause Optionality.Mandatory (concat es)) {Clause.payGate = Just (payGate payer branch options)}
             fmap (gated :) (steps rest)
       n : rest -> do
         c <- step n
@@ -1067,14 +1086,15 @@ clauses context actions = do
       d : ds | plain c && plain d -> c {Clause.effects = Clause.effects c <> Clause.effects d} : ds
       _ -> c : rest
 
--- | A cost you may pay for what follows to happen (CR 118.12).
-payGate :: Cost.Cost Keyword.Keyword -> PayGate.PayGate
-payGate price =
+-- | A cost a player may pay, whose payment or refusal decides whether what
+-- follows happens (CR 118.12, CR 118.12a).
+payGate :: PlayerRef.PlayerRef -> PayBranch.PayBranch -> NonEmpty.NonEmpty (Cost.Cost Keyword.Keyword) -> PayGate.PayGate
+payGate payer branch options =
   PayGate.MkPayGate
-    { PayGate.payer = PlayerRef.InSlot Oracle.Target.youSlot,
-      PayGate.cost = CostChoice.MkCostChoice (price NonEmpty.:| []),
+    { PayGate.payer = payer,
+      PayGate.cost = CostChoice.MkCostChoice options,
       PayGate.basis = Nothing,
-      PayGate.branch = PayBranch.IfPaid,
+      PayGate.branch = branch,
       PayGate.obligation = PayObligation.Optional,
       PayGate.perEach = Nothing,
       PayGate.x = Nothing,
