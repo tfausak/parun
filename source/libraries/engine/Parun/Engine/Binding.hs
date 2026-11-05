@@ -15,6 +15,7 @@ import qualified Data.Set as Set
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified Parun.Types.AbilityName as AbilityName
+import qualified Parun.Types.Acquisition as Acquisition
 import Parun.Types.Binding (Binding)
 import qualified Parun.Types.Binding as Binding
 import qualified Parun.Types.ExileLink as ExileLink
@@ -591,8 +592,12 @@ nameAsRead :: Maybe AbilityName.AbilityName -> AbilityName.AbilityName -> Abilit
 nameAsRead reader name = maybe name (`qualified` name) (pairOf reader)
 
 -- | CR 607.2a / 607.5: whether `link` files its card against `src` in `pile`,
--- as a reader named `reader` means it. THE one membership test every reader of
--- GameState.exiledWith goes through (Parun.Engine.Game.linkedPile).
+-- as a reader named `reader` that came with `acquisition` means it. THE one
+-- membership test every reader of GameState.exiledWith goes through
+-- (Parun.Engine.Game.linkedPile).
+--
+-- Only a link filed under the reader's own acquisition: a pair a copy effect
+-- brought is linked to no ability the object had before (CR 607.5).
 --
 -- OwnAbilities is every exiling ability paired with the reader: a reader
 -- acquired from a lending card (isLentCardAbility) is linked only to the
@@ -601,9 +606,9 @@ nameAsRead reader name = maybe name (`qualified` name) (pairOf reader)
 -- acquired that way. OfAbility names one exiling ability as the reader means
 -- it (nameAsRead), the other two the reserved ones under entryExileLink and
 -- craftLink.
-isLinkedExile :: Maybe AbilityName.AbilityName -> ExiledPile.ExiledPile -> ObjectId -> ExileLink.ExileLink -> Bool
-isLinkedExile reader pile src link =
-  ExileLink.source link == src && case pile of
+isLinkedExile :: Maybe AbilityName.AbilityName -> Acquisition.Acquisition -> ExiledPile.ExiledPile -> ObjectId -> ExileLink.ExileLink -> Bool
+isLinkedExile reader acquisition pile src link =
+  ExileLink.source link == src && ExileLink.acquisition link == acquisition && case pile of
     ExiledPile.OwnAbilities -> pairOf (ExileLink.ability link) == pairOf reader
     ExiledPile.OfAbility name -> ExileLink.ability link == Just (nameAsRead reader name)
     ExiledPile.AsItEntered -> ExileLink.ability link == Just entryExileLink
@@ -626,6 +631,28 @@ qualified card name = AbilityName.MkAbilityName (AbilityName.unwrap card <> Text
 
 lentCardPrefix :: Text.Text
 lentCardPrefix = Text.pack "thatExiledCard"
+
+-- | CR 607.1a / 707.9a: the name an activated ability a copy effect's
+-- exception let `holder` keep ("and has this ability") carries, drawn from the
+-- holder's id and, for a named one, its own name, so it reads under the
+-- holder's own acquisition (Parun.Engine.Game.acquisitionFor) and a second
+-- instance the copy brought does not. Reserved, as craftLink is.
+-- docs/decisions.md's "A kept ability stays linked to its holder's own exiles"
+-- is the reading.
+keptAbility :: ObjectId -> Maybe AbilityName.AbilityName -> AbilityName.AbilityName
+keptAbility holder = maybe kept (qualified kept)
+  where
+    kept = AbilityName.MkAbilityName (keptPrefix <> Text.pack (show (ObjectId.unwrap holder)))
+
+-- | Whether keptAbility named this ability kept by `holder`.
+isKeptOn :: ObjectId -> AbilityName.AbilityName -> Bool
+isKeptOn holder name =
+  let kept = AbilityName.unwrap (keptAbility holder Nothing)
+      t = AbilityName.unwrap name
+   in t == kept || Text.isPrefixOf (kept <> Text.pack "/") t
+
+keptPrefix :: Text.Text
+keptPrefix = Text.pack "keptByCopy"
 
 -- CR 400.7j: the reserved slot under which the cards a DiscardThis or
 -- DiscardCards COST payment discarded are bound, as the objects they became in

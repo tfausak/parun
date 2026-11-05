@@ -646,6 +646,32 @@ Entries are ordered by the first rule each cites.
   conjures inside an ability that could add mana.
 - **Issue**: none.
 
+## A kept ability stays linked to its holder's own exiles
+
+- **Question**: Mimeoplasm, Revered One becomes a copy of a card "except it's
+  0/0 and has this ability". After the copy, does the kept {2} still refer to
+  the cards Mimeoplasm's printed as-enters ability exiled, or to none, as an
+  ability acquired without its linked twin?
+- **Rules**: CR 607.1a, 607.2b, 607.5, 607.5a, 707.9a; CR of 2026-08-07. No
+  ruling for Mimeoplasm.
+- **Decision**: It stays linked. The exception grants the ability from within
+  the ability itself, so CR 607.1a counts it as printed on the object; the CR
+  607.2b pair is then intact, and CR 607.5's bar covers only a pair acquired
+  together. Only the instance the exception keeps is linked: a second
+  instance the copy itself brought (Mimeoplasm copying a second Mimeoplasm) is
+  CR 607.5's acquired ability and refers to no card.
+- **Rejected**: The kept ability refers to nothing (CR 607.5a by analogy). It
+  loses because CR 607.5a speaks of a choice and not an exile, and it would
+  make "and has this ability" do nothing on the one printing that keeps a
+  linked ability this way. Reading the old pile from every ability of the copy
+  loses on the same board: the copied {2} would find the kept one's cards.
+- **Site**: `Parun.Engine.Binding.keptAbility`, read by
+  `Parun.Engine.Game.acquisitionFor`; proved by
+  `data/scenarios/copy/cr-607-1a-mimeoplasm-copying-a-mimeoplasm-keeps-one-ability-linked-to-its-exiles.json`
+  and
+  `data/scenarios/copy/cr-614-14-mimeoplasm-becomes-a-copy-of-each-card-exiled-with-it-in-turn-and-of-no-other.json`.
+- **Issue**: #4985.
+
 ## When Thieves' Auction's repeated process ends
 
 - **Question**: Thieves' Auction repeats "until all cards exiled this way have

@@ -33,7 +33,9 @@ import qualified Parun.Types.Card as Card
 import qualified Parun.Types.Completion as Completion
 import qualified Parun.Types.ContinuousEffect as ContinuousEffect
 import qualified Parun.Types.Cost as Cost
+import qualified Parun.Types.EntryLink as EntryLink
 import qualified Parun.Types.EventGroup as EventGroup
+import qualified Parun.Types.ExileLink as ExileLink
 import Parun.Types.GameEvent (GameEvent)
 import qualified Parun.Types.GameEvent as GameEvent
 import Parun.Types.GameState (GameState)
@@ -85,7 +87,7 @@ import qualified Parun.Types.Timestamp as Timestamp
 -- 400.7) is never detected.
 digest :: GameState -> StateDigest
 digest gs =
-  let (effects, objects) = canonicalStamps gs
+  let (effects, objects, reacquire) = canonicalStamps gs
    in StateDigest.MkStateDigest
         { StateDigest.unwrap =
             gs
@@ -119,6 +121,8 @@ digest gs =
                 -- and a loop that moves a counter back.
                 GameState.continuousEffects = effects,
                 GameState.objects = objects,
+                GameState.exiledWith = fmap (\link -> link {ExileLink.acquisition = reacquire (ExileLink.acquisition link)}) (GameState.exiledWith gs),
+                GameState.enteredWith = fmap (\link -> link {EntryLink.acquisition = reacquire (EntryLink.acquisition link)}) (GameState.enteredWith gs),
                 -- Canonical rather than dropped: a payment leaves an empty pool
                 -- behind where there was no entry, and no card tells the two apart.
                 GameState.manaPool = Map.filter (not . null . Mana.unwrap) (GameState.manaPool gs)
@@ -139,8 +143,9 @@ digest gs =
 --
 -- Parun.FragmentedSpec's Mist Dragon cases prove both halves for the rows, its
 -- Arcanum Wings case the floor, and its Grim Poppet case both for the
--- counters.
-canonicalStamps :: GameState -> ([ContinuousEffect.ContinuousEffect Card.Card], Map.Map ObjectId.ObjectId Object.Object)
+-- counters. Also answers the restamping of an acquisition, for the links
+-- keyed by one (GameState.exiledWith, GameState.enteredWith).
+canonicalStamps :: GameState -> ([ContinuousEffect.ContinuousEffect Card.Card], Map.Map ObjectId.ObjectId Object.Object, Acquisition.Acquisition -> Acquisition.Acquisition)
 canonicalStamps gs =
   let rows = GameState.continuousEffects gs
       live obj = obj {Object.counterTimestamps = Map.filterWithKey (\kind _ -> Map.findWithDefault 0 kind (Object.counters obj) > 0) (Object.counterTimestamps obj)}
@@ -170,7 +175,8 @@ canonicalStamps gs =
         Just rank -> Timestamp.MkTimestamp (Timestamp.unwrap floor_ + 1 + Int.toNaturalSaturating rank)
         Nothing -> ts
    in ( fmap (\row -> row {ContinuousEffect.timestamp = restamp (ContinuousEffect.timestamp row)}) kept,
-        fmap (\obj -> obj {Object.counterTimestamps = fmap restamp (Object.counterTimestamps obj), Object.acquisition = reacquire (Object.acquisition obj), Object.storedResults = Map.mapKeysWith (Map.unionWith (+)) reacquire (Object.storedResults obj), Object.chosenColors = Map.mapKeys reacquire (Object.chosenColors obj), Object.chosenSubtype = Map.mapKeys reacquire (Object.chosenSubtype obj), Object.chosenNames = Map.mapKeys reacquire (Object.chosenNames obj), Object.chosenPlayers = Map.mapKeys reacquire (Object.chosenPlayers obj), Object.chosenNumber = Map.mapKeys reacquire (Object.chosenNumber obj)}) objects
+        fmap (\obj -> obj {Object.counterTimestamps = fmap restamp (Object.counterTimestamps obj), Object.acquisition = reacquire (Object.acquisition obj), Object.storedResults = Map.mapKeysWith (Map.unionWith (+)) reacquire (Object.storedResults obj), Object.chosenColors = Map.mapKeys reacquire (Object.chosenColors obj), Object.chosenSubtype = Map.mapKeys reacquire (Object.chosenSubtype obj), Object.chosenNames = Map.mapKeys reacquire (Object.chosenNames obj), Object.chosenPlayers = Map.mapKeys reacquire (Object.chosenPlayers obj), Object.chosenNumber = Map.mapKeys reacquire (Object.chosenNumber obj)}) objects,
+        reacquire
       )
 
 -- | Does `later`, applied after `earlier` to the same objects, leave nothing

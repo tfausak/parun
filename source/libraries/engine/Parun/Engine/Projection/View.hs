@@ -976,7 +976,7 @@ settleCopyException :: Maybe Source.Source -> Maybe ProjectedCharacteristics -> 
 settleCopyException this own exception = case exception of
   CopyException.GainThisAbility -> case this of
     Just (Source.OfTrigger triggered) -> [CopyException.GainAbility (GrantedAbility.Triggered (TriggeredAbilitySource.ability triggered))]
-    Just (Source.OfAbility activated) -> [CopyException.GainAbility (GrantedAbility.Activated (ActivatedAbilitySource.ability activated))]
+    Just (Source.OfAbility activated) -> [CopyException.GainAbility (GrantedAbility.Activated (keptActivated activated))]
     _ -> []
   CopyException.DontCopyColors -> case own of
     Just mine -> [CopyException.SetColors (PC.colors mine)]
@@ -992,6 +992,18 @@ settleCopyException this own exception = case exception of
   CopyException.SetColors _ -> [exception]
   CopyException.NoManaCost -> [exception]
   CopyException.GainAbility _ -> [exception]
+
+-- CR 607.1a / 707.9a: the activated ability GainThisAbility lets its holder
+-- keep, named as kept by it (Binding.keptAbility), so it stays linked to what
+-- the holder's own abilities exiled and an instance the copy brought does not.
+-- A name already kept by the holder stays. No triggered carrier is renamed: no
+-- trigger has a name, and none in data/cards/ reads a link.
+keptActivated :: ActivatedAbilitySource.ActivatedAbilitySource -> ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)
+keptActivated activated =
+  let holder = ActivatedAbilitySource.source activated
+      ability = ActivatedAbilitySource.ability activated
+      name = ActivatedAbility.name ability
+   in if maybe False (Binding.isKeptOn holder) name then ability else ability {ActivatedAbility.name = Just (Binding.keptAbility holder name)}
 
 -- One arm per CopyException constructor, no wildcard, for Event.apply's reason: a
 -- new exception shape must break the build here rather than silently copy without
@@ -1050,7 +1062,7 @@ applyCopyException this own snapshot exception = case exception of
     Just (Source.OfTrigger triggered) ->
       snapshot {PC.triggeredAbilities = PC.triggeredAbilities snapshot <> [TriggeredAbilitySource.ability triggered]}
     Just (Source.OfAbility activated) ->
-      snapshot {PC.activatedAbilities = PC.activatedAbilities snapshot <> [ActivatedAbilitySource.ability activated]}
+      snapshot {PC.activatedAbilities = PC.activatedAbilities snapshot <> [keptActivated activated]}
     _ -> snapshot
   -- CR 707.9a over a QUOTED ability (Mercurial Pretender): appended for the arm
   -- above's reason, into the list CR 113.3's classification of the quotation

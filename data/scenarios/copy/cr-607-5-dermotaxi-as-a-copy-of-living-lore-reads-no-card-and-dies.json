@@ -1,0 +1,123 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Swamp",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "ready": true
+          },
+          {
+            "card": "Goblin Piker",
+            "ready": true
+          },
+          {
+            "card": "Goblin Piker",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Dermotaxi",
+            "label": "taxi"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "graveyard": [
+          {
+            "card": "Living Lore"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 607.5 Dermotaxi as a copy of Living Lore reads no exiled card and dies",
+  "note": "Dermotaxi imprints bob's Living Lore, then becomes a copy of it. The copy's size-defining ability came with the copy effect, so it is linked only to an exile that copy effect brought, which never ran on this object (CR 607.5); Dermotaxi's imprint is not that card. Its exception adds types (CR 707.9b), so CR 707.9d keeps the ability, which reads no card: Dermotaxi is a 0/0 and dies (CR 704.5f).",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "Swamp",
+            "Swamp#2"
+          ],
+          "object": "$taxi"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Living Lore",
+          "count": 1,
+          "player": "bob",
+          "zone": "Exile"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Activate": {
+          "ability": 0,
+          "object": "Dermotaxi"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Dermotaxi",
+          "count": 1,
+          "player": "alice",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Living Lore",
+          "count": 1,
+          "player": "bob",
+          "zone": "Exile"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

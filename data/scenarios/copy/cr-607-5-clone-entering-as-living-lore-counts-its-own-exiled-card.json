@@ -1,0 +1,185 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Island",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "ready": true
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Lightning Bolt",
+            "label": "bolt"
+          },
+          {
+            "card": "Day of Judgment",
+            "label": "judgment"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Living Lore",
+            "label": "lore"
+          },
+          {
+            "card": "Clone",
+            "label": "clone"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 607.5 / 707.5 Clone entering as a copy of Living Lore counts the card its own as-enters exile took",
+  "note": "Living Lore exiles Lightning Bolt as it enters, a 1/1. Clone enters as a copy of it with the copied values it entered with as its own (CR 707.5), so the as-enters exile it runs, taking Day of Judgment, is linked to its own size-defining ability: Clone is a 4/4 and Living Lore stays 1/1.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "Island",
+            "Island#2",
+            "Island#3",
+            "Island#4",
+            null
+          ],
+          "object": "$lore"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseCardInGraveyard",
+          "with": "$bolt"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "PowerToughness": {
+          "object": "Living Lore",
+          "power": 1,
+          "toughness": 1
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "Island#5",
+            "Island#6",
+            "Island#7",
+            "Island#8"
+          ],
+          "object": "$clone"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseCopyTarget": "Living Lore"
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Day of Judgment",
+          "count": 1,
+          "player": "alice",
+          "zone": "Exile"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "PowerToughness": {
+          "object": "Clone",
+          "power": 4,
+          "toughness": 4
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "PowerToughness": {
+          "object": "Living Lore",
+          "power": 1,
+          "toughness": 1
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}
