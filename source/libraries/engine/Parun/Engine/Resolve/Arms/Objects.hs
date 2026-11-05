@@ -663,7 +663,7 @@ copyStackObject resolving source controller legal (CopyStackObject.MkCopyStackOb
         plan <- case targets of
           CopyTargets.Copied -> pure [Map.empty]
           CopyTargets.ChosenByController -> pure [Map.empty]
-          CopyTargets.ForEach candidateRefs -> Common.copyForEachTargets controller copier resolving source legal original candidateRefs
+          CopyTargets.ForEach candidates -> Common.copyForEachTargets controller copier resolving source legal original candidates
           CopyTargets.Stated newRef -> Common.copyStatedTargets controller copier resolving source legal original newRef
         Monad.forM_ plan $ \retarget -> do
           -- CR 707.10d / 707.10e with CR 115.7f: a target the effect re-aims
@@ -1940,7 +1940,7 @@ attachTarget resolving source controller legal (AttachTarget.MkAttachTarget slot
         -- resolution's own reads answer here as they do at its other
         -- positions (CR 608.2c) -- Simic Guildmage's destination asks who
         -- controls the permanent its TARGET slot's Aura is attached to
-        -- (Filter.SameControllerAsHostOfBound), which a bare context could
+        -- (Filter.ControllerRelatesToBound under Hop.Host), which a bare context could
         -- not answer.
         destination <- Attach.chooseHost controller subject (Attach.hostsFor (effectContext gs resolving controller source legal (slotBindings resolving gs)) subject filter_ gs)
         -- Proposed as a bare ToObject; Event.attach re-tags it the way the

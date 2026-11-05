@@ -3938,12 +3938,9 @@ filterReads f = case f of
   -- Reads an IDENTITY, which CR 109.3 does not count as a characteristic.
   Filter.Type.IsBound _ -> Set.empty
   Filter.Type.IsTarget -> Set.empty
-  -- Reads the CANDIDATE's controller: the bound object's controller arrives on
-  -- the Context, already projected.
-  Filter.Type.ControllerRelatesToBound _ _ -> Set.singleton Controller
-  -- Reads the CANDIDATE's controller too, the atom above one link along: the
-  -- bound object's HOST's controller arrives on the Context, already projected.
-  Filter.Type.SameControllerAsHostOfBound _ -> Set.singleton Controller
+  -- Reads the CANDIDATE's controller: the bound object's controller, or its
+  -- HOST's under Hop.Host, arrives on the Context, already projected.
+  Filter.Type.ControllerRelatesToBound {} -> Set.singleton Controller
   -- Reads NAMES at both ends too, HasName's answer one indirection along: the
   -- chosen half is not a projection at all, and the other has no Aspect.
   Filter.Type.HasChosenName {} -> Set.empty
@@ -4276,12 +4273,9 @@ filterReadsPeers f = case f of
   Filter.Type.IsBound _ -> False
   Filter.Type.IsTarget -> False
   -- The bound object's controller arrives on the Context, filled by
-  -- Parun.Engine.Target.slotContext -- no peer projection is read here.
-  Filter.Type.ControllerRelatesToBound _ _ -> False
-  -- The bound object's HOST's controller arrives on the Context too, filled by
-  -- Parun.Engine.Resolve.Slots.effectContext -- the host is reached there rather
-  -- than through the candidate's `peers` view.
-  Filter.Type.SameControllerAsHostOfBound _ -> False
+  -- Parun.Engine.Target.slotContext, and under Hop.Host its HOST's, filled by
+  -- Parun.Engine.Resolve.Slots.effectContext -- no peer projection is read here.
+  Filter.Type.ControllerRelatesToBound {} -> False
   Filter.Type.HasChosenName {} -> False
   -- The source's chosen colour arrives on the Context, read off Object.chosenColors
   -- rather than off a projection; the candidate's own colours come from its

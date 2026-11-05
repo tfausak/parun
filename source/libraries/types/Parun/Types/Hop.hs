@@ -1,7 +1,8 @@
 module Parun.Types.Hop where
 
--- | Which object a Parun.Types.PlayerRef.HolderOfBound reads the holder of: the
--- one its slot names, or the permanent that one is attached to.
+-- | Which object a Parun.Types.PlayerRef.HolderOfBound or a
+-- Parun.Types.Filter.ControllerRelatesToBound reads its player from: the one its
+-- slot names, or the permanent that one is attached to.
 data Hop
   = -- | The object the slot names.
     Itself

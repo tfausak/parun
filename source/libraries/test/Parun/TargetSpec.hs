@@ -118,6 +118,7 @@ import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.LifeChange as LifeChange
 import qualified Parun.Types.LifeDirection as LifeDirection
@@ -569,7 +570,7 @@ spec s registry = Spec.describe s "Parun.Engine.Target" $ do
     let (pikerId, gs) = S.addPermanent piker S.bob (Setup.emptyGame S.bothPlayers)
         slot = SlotName.MkSlotName (Text.pack "who")
         context bindings = Target.slotContext Nothing (Just S.alice) False bindings Acquisition.Own S.noSource Nothing gs
-        admits bindings = Filter.matches (context bindings) (Projection.viewOfObject pikerId gs) (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot)
+        admits bindings = Filter.matches (context bindings) (Projection.viewOfObject pikerId gs) (Filter.Type.ControllerRelatesToBound PlayerRelation.You Hop.Itself slot)
     Spec.assertEqWith
       s
       "a slot holding bob refuses bob's Piker, so does a slot answered with none, and an unanswered slot admits it"
@@ -582,7 +583,7 @@ spec s registry = Spec.describe s "Parun.Engine.Target" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (pikerId, gs) = S.addPermanent piker S.bob (Setup.emptyGame S.bothPlayers)
         slot = SlotName.MkSlotName (Text.pack "who")
-        admits slots = Filter.matches (Projection.contextWithSlots gs (Just S.alice) Nothing slots) (Projection.viewOfObject pikerId gs) (Filter.Type.ControllerRelatesToBound PlayerRelation.You slot)
+        admits slots = Filter.matches (Projection.contextWithSlots gs (Just S.alice) Nothing slots) (Projection.viewOfObject pikerId gs) (Filter.Type.ControllerRelatesToBound PlayerRelation.You Hop.Itself slot)
     Spec.assertEqWith
       s
       "a pool whose slot holds bob refuses bob's Piker, and one with no such slot admits it"

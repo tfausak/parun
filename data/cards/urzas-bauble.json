@@ -24,11 +24,14 @@
                         "type": "LookAt",
                         "value": {
                           "ref": {
-                            "type": "RandomCardInHand",
+                            "type": "RandomCard",
                             "value": {
                               "player": {
                                 "type": "InSlot",
                                 "value": "target"
+                              },
+                              "zone": {
+                                "type": "Hand"
                               }
                             }
                           },

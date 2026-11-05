@@ -51,6 +51,7 @@ import qualified Parun.Types.EntryRiders as EntryRiders
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.ForEach as ForEach
 import qualified Parun.Types.ForbidBeingBlocked as ForbidBeingBlocked
+import qualified Parun.Types.HiddenZone as HiddenZone
 import qualified Parun.Types.IfTaken as IfTaken
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
@@ -85,7 +86,7 @@ import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.PreventNextDamage as PreventNextDamage
 import qualified Parun.Types.PutCounters as PutCounters
 import qualified Parun.Types.Quantity as Quantity
-import qualified Parun.Types.RandomCardInHand as RandomCardInHand
+import qualified Parun.Types.RandomCard as RandomCard
 import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.Replace as Replace
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
@@ -1046,11 +1047,12 @@ discarded context d = case d of
     n <- Target.cards (CountedDiscard.quantity c)
     imperative context (CountedDiscard.player c) (Text.pack "discard " <> n) (Text.pack "discards " <> n)
   Discard.These t
-    | ObjectRef.RandomCardInHand r <- TheseDiscard.cards t,
-      RandomCardInHand.filter r == Filter.Type.And [] -> do
-        n <- Target.cards (RandomCardInHand.count r)
+    | ObjectRef.RandomCard r <- TheseDiscard.cards t,
+      RandomCard.zone r == HiddenZone.Hand,
+      RandomCard.filter r == Filter.Type.And [] -> do
+        n <- Target.cards (RandomCard.count r)
         let random = n <> Text.pack " at random"
-        imperative context (RandomCardInHand.player r) (Text.pack "discard " <> random) (Text.pack "discards " <> random)
+        imperative context (RandomCard.player r) (Text.pack "discard " <> random) (Text.pack "discards " <> random)
   _ -> []
 
 -- | The mana an instruction adds: "{G}", "{C}{C}", "one mana of any color",

@@ -409,6 +409,7 @@ import qualified Parun.Codec.GuessSpec
 import qualified Parun.Codec.HalfUnlockedSpec
 import qualified Parun.Codec.HandActionSpec
 import qualified Parun.Codec.HexproofExemptionSpec
+import qualified Parun.Codec.HiddenZoneSpec
 import qualified Parun.Codec.HolderSpec
 import qualified Parun.Codec.HopSpec
 import qualified Parun.Codec.HybridSpec
@@ -459,6 +460,7 @@ import qualified Parun.Codec.LookAtSpec
 import qualified Parun.Codec.LookbackSpec
 import qualified Parun.Codec.LookedSpec
 import qualified Parun.Codec.LoopMembersSpec
+import qualified Parun.Codec.LostPermanentSpec
 import qualified Parun.Codec.LoyaltyClauseSpec
 import qualified Parun.Codec.LoyaltyGrantSpec
 import qualified Parun.Codec.LoyaltyKindSpec
@@ -554,7 +556,6 @@ import qualified Parun.Codec.PermanentActionSpec
 import qualified Parun.Codec.PermanentBecomesDesignatedSpec
 import qualified Parun.Codec.PermanentCandidateSpec
 import qualified Parun.Codec.PermanentIsDealtDamageSpec
-import qualified Parun.Codec.PermanentTappedForManaSpec
 import qualified Parun.Codec.PermanentWasSacrificedSpec
 import qualified Parun.Codec.PermanentsDealCombatDamageToPlayerSpec
 import qualified Parun.Codec.PermissionCostSpec
@@ -728,7 +729,9 @@ import qualified Parun.Codec.TapPermanentsSpec
 import qualified Parun.Codec.TapSpec
 import qualified Parun.Codec.TapStateSpec
 import qualified Parun.Codec.TappedForManaSpec
+import qualified Parun.Codec.TappedForManaTriggerSpec
 import qualified Parun.Codec.TappedIsSpec
+import qualified Parun.Codec.TappedPermanentSpec
 import qualified Parun.Codec.TargetCountSpec
 import qualified Parun.Codec.TargetRestrictionSpec
 import qualified Parun.Codec.TargetSlotSpec
@@ -1079,6 +1082,7 @@ spec s registry corpus = do
   Parun.Codec.EntersTriggerSpec.spec s
   Parun.Codec.LeavesTriggerSpec.spec s
   Parun.Codec.LeavingPermanentSpec.spec s
+  Parun.Codec.LostPermanentSpec.spec s
   Parun.Codec.AttackedSubjectSpec.spec s
   Parun.Codec.AttackedTriggerSpec.spec s
   Parun.Codec.AttackerTargetSpec.spec s
@@ -1394,6 +1398,7 @@ spec s registry corpus = do
   Parun.Codec.QuotientSpec.spec s
   Parun.Codec.HandActionSpec.spec s
   Parun.Codec.HexproofExemptionSpec.spec s
+  Parun.Codec.HiddenZoneSpec.spec s
   Parun.Codec.HolderSpec.spec s
   Parun.Codec.HopSpec.spec s
   Parun.Codec.HybridSpec.spec s
@@ -1541,7 +1546,8 @@ spec s registry corpus = do
   Parun.Codec.PlayerActsOnSpec.spec s
   Parun.Codec.BecomesTargetedTriggerSpec.spec s
   Parun.Codec.PermanentsDealCombatDamageToPlayerSpec.spec s
-  Parun.Codec.PermanentTappedForManaSpec.spec s
+  Parun.Codec.TappedForManaTriggerSpec.spec s
+  Parun.Codec.TappedPermanentSpec.spec s
   Parun.Codec.PermanentWasSacrificedSpec.spec s
   Parun.Codec.PermissionCostSpec.spec s
   Parun.Codec.PermissionLimitSpec.spec s

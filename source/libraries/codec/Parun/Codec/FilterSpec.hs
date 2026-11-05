@@ -27,6 +27,7 @@ import qualified Parun.Types.ExiledPile as ExiledPile
 import qualified Parun.Types.Expansion as Expansion
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
@@ -260,15 +261,15 @@ spec s = Spec.describe s "Parun.Codec.Filter" $ do
     Common.assertCodec
       s
       codec
-      (Filter.ControllerRelatesToBound PlayerRelation.You (SlotName.MkSlotName (Text.pack "from")))
-      " {\"type\":\"ControllerRelatesToBound\",\"value\":{\"relation\":{\"type\":\"You\"},\"slot\":\"from\"}} "
-  Spec.it s "SameControllerAsHostOfBound" $ do
+      (Filter.ControllerRelatesToBound PlayerRelation.You Hop.Itself (SlotName.MkSlotName (Text.pack "from")))
+      " {\"type\":\"ControllerRelatesToBound\",\"value\":{\"relation\":{\"type\":\"You\"},\"hop\":{\"type\":\"Itself\"},\"slot\":\"from\"}} "
+  Spec.it s "ControllerRelatesToBound under Hop.Host" $ do
     Common.assertCodec
       s
       codec
-      (Filter.SameControllerAsHostOfBound (SlotName.MkSlotName (Text.pack "target")))
-      " {\"type\":\"SameControllerAsHostOfBound\",\"value\":\"target\"} "
-    Spec.assertNeWith s "CR 303.4b's host is not the bound object itself" (Codec.encode codec (Filter.SameControllerAsHostOfBound (SlotName.MkSlotName (Text.pack "target")))) (Codec.encode codec (Filter.ControllerRelatesToBound PlayerRelation.You (SlotName.MkSlotName (Text.pack "target"))))
+      (Filter.ControllerRelatesToBound PlayerRelation.You Hop.Host (SlotName.MkSlotName (Text.pack "target")))
+      " {\"type\":\"ControllerRelatesToBound\",\"value\":{\"relation\":{\"type\":\"You\"},\"hop\":{\"type\":\"Host\"},\"slot\":\"target\"}} "
+    Spec.assertNeWith s "CR 303.4b's host is not the bound object itself" (Codec.encode codec (Filter.ControllerRelatesToBound PlayerRelation.You Hop.Host (SlotName.MkSlotName (Text.pack "target")))) (Codec.encode codec (Filter.ControllerRelatesToBound PlayerRelation.You Hop.Itself (SlotName.MkSlotName (Text.pack "target"))))
   Spec.it s "Shares CreatureType Bound" $
     Common.assertCodec
       s

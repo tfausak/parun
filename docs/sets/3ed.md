@@ -14,7 +14,6 @@ Every expressible Revised Edition card has been added to `data/cards/`.
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #6277: Jandor's Ring. No discard cost can name the last card drawn this turn.
 - #6278: Reverse Polarity. Damage dealt to a player this turn can't be summed by
   what dealt it.
 - #5067: Fastbond. Nothing reads how many lands a player has played this turn.

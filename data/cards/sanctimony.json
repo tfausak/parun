@@ -21,16 +21,19 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentTappedForMana",
+            "type": "TappedForMana",
             "value": {
-              "filter": {
-                "type": "HasSubtype",
-                "value": {
-                  "type": "Mountain"
-                }
-              },
               "mana": {
                 "type": "AnyMana"
+              },
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "HasSubtype",
+                  "value": {
+                    "type": "Mountain"
+                  }
+                }
               },
               "player": {
                 "type": "Opponent"

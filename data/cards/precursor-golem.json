@@ -151,17 +151,15 @@
                           },
                           "targets": {
                             "type": "ForEach",
-                            "value": [
-                              {
-                                "type": "EachMatching",
+                            "value": {
+                              "type": "EachMatching",
+                              "value": {
+                                "type": "HasSubtype",
                                 "value": {
-                                  "type": "HasSubtype",
-                                  "value": {
-                                    "type": "Golem"
-                                  }
+                                  "type": "Golem"
                                 }
                               }
-                            ]
+                            }
                           }
                         }
                       }

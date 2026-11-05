@@ -1,5 +1,5 @@
 {
-  "description": "CR 506.7a/g Capricious Sorcerer is not offered from the declare attackers step on, though no attacker is declared",
+  "description": "CR 506.8a/g Capricious Sorcerer is not offered from the declare attackers step on, though no attacker is declared",
   "note": "No attack, so CR 508.8 skips the declare blockers and combat damage steps: the rider names the step's beginning, not an attack. Prodigal Sorcerer is the control.",
   "board": {
     "seats": [

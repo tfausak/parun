@@ -1819,16 +1819,16 @@ restrictionMet pid oid gs restriction = case restriction of
   -- side's clause of the same name asks exactly it: one question about the combat
   -- record, two gates that differ in what ELSE they may read (CR 307.5).
   CastingRestriction.AttackedThisStep -> Turn.attackedThisStep pid gs
-  -- CR 506.7b, read off the combat record rather than off GameState.phase:
-  -- Turn.afterBlockersDeclared says why the record answers CR 506.7c and CR
-  -- 506.7f as well. Curtain of Light is the card; Trap Runner prints the same
-  -- clause on an activation, where CR 506.7g sends
+  -- CR 506.8b, read off the combat record rather than off GameState.phase:
+  -- Turn.afterBlockersDeclared says why the record answers CR 506.8c and CR
+  -- 506.8f as well. Curtain of Light is the card; Trap Runner prints the same
+  -- clause on an activation, where CR 506.8g sends
   -- Parun.Engine.ActivationRestriction to this same reader.
   CastingRestriction.AfterBlockersDeclared -> Turn.afterBlockersDeclared gs
-  -- CR 506.7a, 506.7d and 506.7e; Turn.beforeStep, shared with the activation
-  -- side's arm of this name by CR 506.7g, says why it reads the turn's log.
+  -- CR 506.8a, 506.8d and 506.8e; Turn.beforeStep, shared with the activation
+  -- side's arm of this name by CR 506.8g, says why it reads the turn's log.
   CastingRestriction.BeforeStep target -> Turn.beforeStep target gs
-  -- CR 506.7b, 506.7c and 506.7e; Turn.duringCombatBefore says why it reads the
+  -- CR 506.8b, 506.8c and 506.8e; Turn.duringCombatBefore says why it reads the
   -- phase rather than the combat record. Panic.
   CastingRestriction.DuringCombatBefore target -> Turn.duringCombatBefore target (GameState.phase gs)
   -- CR 102.1 alone: DuringPhase's second conjunct with no window.

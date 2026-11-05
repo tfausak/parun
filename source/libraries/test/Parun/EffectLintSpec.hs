@@ -91,6 +91,7 @@ import qualified Parun.Types.ControllerRelation as ControllerRelation
 import qualified Parun.Types.CopyClause as CopyClause
 import qualified Parun.Types.CopyOriginal as CopyOriginal
 import qualified Parun.Types.CopyStackObject as CopyStackObject
+import qualified Parun.Types.CopyTargets as CopyTargets
 import qualified Parun.Types.Cost as Cost.Type
 import qualified Parun.Types.CostChoice as CostChoice
 import qualified Parun.Types.CountedDiscard as CountedDiscard
@@ -140,6 +141,7 @@ import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Guess as Guess
+import qualified Parun.Types.HiddenZone as HiddenZone
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.HowMany as HowMany
@@ -154,6 +156,7 @@ import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.LifeLoss as LifeLoss
 import qualified Parun.Types.LookAt as LookAt
+import qualified Parun.Types.LostPermanent as LostPermanent
 import qualified Parun.Types.MakeForetold as MakeForetold
 import qualified Parun.Types.ManaAddition as ManaAddition
 import qualified Parun.Types.ManaRestriction as ManaRestriction
@@ -201,9 +204,8 @@ import qualified Parun.Types.PutCounters as PutCounters
 import qualified Parun.Types.PutCountersFrom as PutCountersFrom
 import qualified Parun.Types.PutSticker as PutSticker
 import qualified Parun.Types.Quantity as Quantity.Type
+import qualified Parun.Types.RandomCard as RandomCard
 import qualified Parun.Types.RandomCardInGraveyard as RandomCardInGraveyard
-import qualified Parun.Types.RandomCardInHand as RandomCardInHand
-import qualified Parun.Types.RandomCardInLibrary as RandomCardInLibrary
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.RedirectDamage as RedirectDamage
 import qualified Parun.Types.Regenerability as Regenerability
@@ -1431,9 +1433,10 @@ questionOf ref = case ref of
     _ | Maybe.isJust (ChosenCardFromAmong.pileChooser choice) -> Just PileFromAmong
     HowMany.UpTo Nothing -> Just AnyCardsFromAmong
     _ -> Just CardFromAmong
-  ObjectRef.RandomCardInHand {} -> Just RandomInHand
+  ObjectRef.RandomCard random -> case RandomCard.zone random of
+    HiddenZone.Hand -> Just RandomInHand
+    HiddenZone.Library -> Just RandomInLibrary
   ObjectRef.RandomCardInGraveyard {} -> Just RandomInGraveyard
-  ObjectRef.RandomCardInLibrary {} -> Just RandomInLibrary
   ObjectRef.AtRandom {} -> Just RandomAmong
   ObjectRef.ChosenPermanents choice -> case ChosenPermanents.count choice of
     _ | ChosenPermanents.zone choice /= Zone.Battlefield -> Just OffBattlefield
@@ -1747,7 +1750,7 @@ inertChoosers effect =
   [ref | (allowed, ref) <- effectObjectRefs effect, Just question <- [questionOf ref], question `notElem` allowed]
 
 -- An ObjectRef.AllOf written anywhere but a move's ref, a play grant's, a
--- loop's, a damage instruction's or a destruction's. MoveToZone gathers it
+-- loop's, a damage instruction's, a destruction's or a copy's candidates'. MoveToZone gathers it
 -- member by member (Parun.Engine.Resolve.Arms.Zones's gather), and
 -- GrantPlayFromExile reads its ref
 -- through
@@ -1763,6 +1766,11 @@ inertChoosers effect =
 -- Destroy reads its ref through askingObjects, whose AllOf arm is the union
 -- too -- Loyal Sentry's "that creature and this creature" in one batch, proved
 -- by the scenario loyal-sentry-destroys-both-creatures-at-once.
+-- CopyStackObject's CopyTargets.ForEach reads its candidates through
+-- objectRefRecipients too (Resolve.Common.copyForEachTargets) -- Radiate's
+-- "each other permanent or player", proved by the scenario
+-- cr-707-10d-radiate-copies-the-bolt-for-each-other-permanent-or-player-it-could --
+-- so it alone is exempt, not the opcode: the copy's own ref stays refused.
 -- The other opcodes' one-ref reads (a sticker's candidates, a copy's archived
 -- source, a reveal's shower) would read the union as a single arm.
 strayAllOf :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
@@ -1772,6 +1780,9 @@ strayAllOf effect = case effect of
   Effect.ForEach {} -> False
   Effect.DealDamage {} -> False
   Effect.Destroy {} -> False
+  Effect.CopyStackObject x -> case CopyStackObject.targets x of
+    CopyTargets.ForEach _ -> holdsAllOf (CopyStackObject.ref x)
+    _ -> any (holdsAllOf . snd) (effectObjectRefs effect)
   _ -> any (holdsAllOf . snd) (effectObjectRefs effect)
   where
     holdsAllOf ref = case ref of
@@ -2173,7 +2184,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
           -- and Fall's printed two makes the same seat plural. A COMPUTED count
           -- is plural whatever the board would make it, ChosenCardFromAmong's
           -- reading above and for its reason.
-          ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand player _ count) -> case count of
+          ObjectRef.RandomCard (RandomCard.MkRandomCard _ player _ count) -> case count of
             Quantity.Type.Literal n -> n <= 1 && namesOneSeat player
             _ -> False
           -- One card per GRAVEYARD, the arm above one zone over: randomness picks
@@ -2184,11 +2195,6 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
           -- and for its reason.
           ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard scope _ count) -> case count of
             Quantity.Type.Literal n -> n <= 1 && namesOneGraveyard scope
-            _ -> False
-          -- One card per SEAT, RandomCardInHand's answer one hidden zone over
-          -- and for its reason.
-          ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary player _ count) -> case count of
-            Quantity.Type.Literal n -> n <= 1 && namesOneSeat player
             _ -> False
           -- TRUE for one permanent however many match, and for a printed ceiling
           -- of one, TopOfLibrary's answer; FALSE, EachCardFromAmong's answer
@@ -2617,8 +2623,8 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- environment to a delayed ability, whose condition names a slot and reads
     -- it through Binding.objectSlots. Paired with the same condition over a slot
     -- the destruction never bound.
-    Spec.assertBool s (clashesIn [destruction] [TriggerCondition.LoseControlOfBound destroyedSlot] []) "a delayed condition naming a plurally bound slot is caught"
-    Spec.assertBool s (not (clashesIn [destruction] [TriggerCondition.LoseControlOfBound elsewhereSlot] [])) "a delayed condition naming another slot is left alone"
+    Spec.assertBool s (clashesIn [destruction] [TriggerCondition.LosesControl (LostPermanent.Bound destroyedSlot)] []) "a delayed condition naming a plurally bound slot is caught"
+    Spec.assertBool s (not (clashesIn [destruction] [TriggerCondition.LosesControl (LostPermanent.Bound elsewhereSlot)] [])) "a delayed condition naming another slot is left alone"
     -- The reading side's third carrier: a Filter an effect carries, where CR
     -- 608.2h's Filter.IsControllerOfBound reads the slot through
     -- Parun.Engine.Filter.slotOneObject rather than through Resolve. Three boards
@@ -2755,7 +2761,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- Exhume, Elvish Piper, Commune with the Gods and Merfolk Spy print them.
     Spec.assertBool s asks "the pool has a card asking a player to pick a card"
     Spec.assertEqWith s "a chosen card under an opcode that cannot ask (CR 608.2d)" (fmap (S.nameOf . Printing.card) offenders) []
-  Spec.it s "no AllOf outside a move, a play grant, a loop, a damage instruction or a destruction" $ do
+  Spec.it s "no AllOf outside a move, a play grant, a loop, a damage instruction, a destruction or a copy's candidates" $ do
     ps <- S.allPrintings s corpus
     let offenders = filter (anyFace (any strayAllOf . cardAuthoredEffects) . Printing.card) ps
         moved = any (anyFace (any (any (isAllOf . snd) . effectObjectRefs) . cardAuthoredEffects) . Printing.card) ps
@@ -2784,9 +2790,9 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
         inGraveyard = ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard Chooser.TheController (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)) anyCard HowMany.one)
         inHand = ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (PlayerRef.Relative PlayerRelation.You) anyCard HowMany.one)
         fromAmong = ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong group anyCard HowMany.one (PlayerRef.Relative PlayerRelation.You) Nothing False)
-        atRandom = ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand (PlayerRef.Relative PlayerRelation.You) anyCard (Quantity.Type.Literal 1))
+        atRandom = ObjectRef.RandomCard (RandomCard.MkRandomCard HiddenZone.Hand (PlayerRef.Relative PlayerRelation.You) anyCard (Quantity.Type.Literal 1))
         atRandomInGraveyard = ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)) anyCard (Quantity.Type.Literal 1))
-        sought = ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary (PlayerRef.Relative PlayerRelation.You) anyCard (Quantity.Type.Literal 1))
+        sought = ObjectRef.RandomCard (RandomCard.MkRandomCard HiddenZone.Library (PlayerRef.Relative PlayerRelation.You) anyCard (Quantity.Type.Literal 1))
         anyNumber = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents anyCard (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo Nothing) Zone.Battlefield)
         onePermanent = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents anyCard (PlayerRef.Relative PlayerRelation.You) HowMany.one Zone.Battlefield)
         sourceAndOne = ObjectRef.AllOf (onePermanent NonEmpty.:| [ObjectRef.EachMatching Filter.Type.IsSource])
@@ -2861,6 +2867,16 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
       s
       "AllOf is refused outside a move, a play grant or a loop"
       (fmap strayAllOf [moves sourceAndOne, Effect.Transform sourceAndOne, Effect.Tap (Tap.plain (ObjectRef.AllOf (ObjectRef.EachMatching anyCard NonEmpty.:| [])))])
+      [False, True, True]
+    -- A copy's per-candidate ref may be an AllOf (Radiate); its own ref and a
+    -- stated target may not.
+    let both = ObjectRef.AllOf (ObjectRef.EachMatching anyCard NonEmpty.:| [ObjectRef.EachPlayer])
+        copies ref targets = Effect.CopyStackObject (CopyStackObject.MkCopyStackObject ref targets CopyStackObject.defaultQuantity CopyStackObject.defaultCopier [])
+        spell = ObjectRef.EachMatching anyCard
+    Spec.assertEqWith
+      s
+      "AllOf is allowed as a copy's candidates alone"
+      (fmap strayAllOf [copies spell (CopyTargets.ForEach both), copies both (CopyTargets.ForEach spell), copies spell (CopyTargets.Stated both)])
       [False, True, True]
     -- The at-random arm one zone over, allowed by a move alone -- Ghoulraiser's
     -- "return a Zombie card at random from your graveyard to your hand".

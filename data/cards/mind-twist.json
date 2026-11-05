@@ -29,7 +29,7 @@
                       "type": "These",
                       "value": {
                         "cards": {
-                          "type": "RandomCardInHand",
+                          "type": "RandomCard",
                           "value": {
                             "count": {
                               "type": "InSlot",
@@ -38,6 +38,9 @@
                             "player": {
                               "type": "InSlot",
                               "value": "target"
+                            },
+                            "zone": {
+                              "type": "Hand"
                             }
                           }
                         }

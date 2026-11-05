@@ -2098,7 +2098,7 @@ departedAttackerSpec s registry =
                       -- than declared, so nothing was declared on it.
                       Combat.Type.declaredAttackers = Set.empty,
                       Combat.Type.declaredBlockers = Set.empty,
-                      -- CR 506.7b: the fixture stands after CR 509.1's
+                      -- CR 506.8b: the fixture stands after CR 509.1's
                       -- declaration, which is what put the entry in
                       -- Combat.blockers above.
                       Combat.Type.blockersDeclared = True,
@@ -2148,7 +2148,7 @@ departedDefenderSpec s registry =
                       -- than declared, so nothing was declared on it.
                       Combat.Type.declaredAttackers = Set.empty,
                       Combat.Type.declaredBlockers = Set.empty,
-                      -- CR 506.7b: attackers are declared and blockers are not,
+                      -- CR 506.8b: attackers are declared and blockers are not,
                       -- which is the moment the comment above describes.
                       Combat.Type.blockersDeclared = False,
                       Combat.Type.attackingNothing = Set.empty,

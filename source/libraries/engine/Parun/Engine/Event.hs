@@ -11148,11 +11148,10 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.BecomesTapState _ -> False
   -- Nor does CR 106.12a: an enchanted land can be tapped for mana on anyone's
   -- turn, and Wild Growth's whole point is that the mana is its controller's.
-  TriggerCondition.AttachedPermanentTappedForMana -> False
   -- Nor read by a bystander: the RELATION names a seat and not a turn, the
   -- PermanentSacrificed arm's reason -- Autumn Willow, Harmony's controller taps
   -- a land creature for mana on an opponent's turn too.
-  TriggerCondition.PermanentTappedForMana {} -> False
+  TriggerCondition.TappedForMana _ -> False
   -- CR 605.1b's mana-added event: the same answer, for the same reason.
   TriggerCondition.AbilityAddsMana {} -> False
   -- Nor does CR 605.3b: a creature's mana ability resolves on anyone's turn.
@@ -11241,12 +11240,11 @@ controllerTurnScoped cond = case cond of
   -- combat damage step of whoever is attacking. The watcher may or may not be
   -- that player, which is exactly what makes this not controller-scoped.
   TriggerCondition.PlayerBecomesMonarch _ -> False
-  -- Carries no TurnScope at all: CR 514.2 ends the control effect Ray of Command's
-  -- delayed ability watches on the turn the spell resolved, but that is the
-  -- DURATION's doing rather than a restriction the condition states.
-  TriggerCondition.LoseControlOfBound _ -> False
-  -- Carries no TurnScope: control may change on anyone's turn.
-  TriggerCondition.LoseControlOfSelf -> False
+  -- Carries no TurnScope at all: control may change on anyone's turn. CR 514.2
+  -- ends the control effect Ray of Command's delayed ability watches on the turn
+  -- the spell resolved, but that is the DURATION's doing rather than a
+  -- restriction the condition states.
+  TriggerCondition.LosesControl _ -> False
   -- Carries no TurnScope either, and CR 603.12 restricts a reflexive to no turn:
   -- it fires on whatever turn the ability that created it resolved on, which for
   -- an instant-speed creator is an opponent's as readily as its controller's.

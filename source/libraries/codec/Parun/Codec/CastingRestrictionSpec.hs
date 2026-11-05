@@ -85,21 +85,21 @@ spec s = Spec.describe s "Parun.Codec.CastingRestriction" $ do
       CastingRestriction.AttackedThisStep
       " {\"type\":\"AttackedThisStep\"} "
   -- Curtain of Light's "only during combat after blockers are declared"
-  -- (CR 506.7b).
+  -- (CR 506.8b).
   Spec.it s "AfterBlockersDeclared" $
     Common.assertCodec
       s
       CastingRestriction.codec
       CastingRestriction.AfterBlockersDeclared
       " {\"type\":\"AfterBlockersDeclared\"} "
-  -- Blood Frenzy's "only before the combat damage step" (CR 506.7, 506.7d).
+  -- Blood Frenzy's "only before the combat damage step" (CR 506.8, 506.8d).
   Spec.it s "BeforeStep" $
     Common.assertCodec
       s
       CastingRestriction.codec
       (CastingRestriction.BeforeStep (Phase.Combat CombatStep.CombatDamage))
       " {\"type\":\"BeforeStep\",\"value\":{\"type\":\"Combat\",\"value\":{\"type\":\"CombatDamage\"}}} "
-  -- Panic's "during combat before blockers are declared" (CR 506.7b, 506.7c).
+  -- Panic's "during combat before blockers are declared" (CR 506.8b, 506.8c).
   Spec.it s "DuringCombatBefore" $
     Common.assertCodec
       s

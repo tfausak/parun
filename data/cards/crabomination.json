@@ -115,11 +115,14 @@
                                 }
                               },
                               {
-                                "type": "RandomCardInHand",
+                                "type": "RandomCard",
                                 "value": {
                                   "player": {
                                     "type": "InSlot",
                                     "value": "opponent"
+                                  },
+                                  "zone": {
+                                    "type": "Hand"
                                   }
                                 }
                               }

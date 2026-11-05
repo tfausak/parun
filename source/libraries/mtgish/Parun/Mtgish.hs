@@ -97,6 +97,7 @@ import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.ForEach as ForEach
 import qualified Parun.Types.ForbidBeingBlocked as ForbidBeingBlocked
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.HiddenZone as HiddenZone
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.InZone as InZone
@@ -144,7 +145,7 @@ import qualified Parun.Types.PrintedReplacement as PrintedReplacement
 import qualified Parun.Types.Protection as Protection
 import qualified Parun.Types.PutCounters as PutCounters
 import qualified Parun.Types.Quantity as Quantity
-import qualified Parun.Types.RandomCardInHand as RandomCardInHand
+import qualified Parun.Types.RandomCard as RandomCard
 import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.Replace as Replace
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
@@ -429,7 +430,7 @@ triggeredAbility condition m =
 -- | The clauses of an activated ability's "Activate only ..." rider (CR
 -- 602.5): its timing (CR 307.5, CR 602.5e), how often (CR 602.5b), your
 -- turn or upkeep (CR 102.1, CR 503), or before attackers are declared (CR
--- 506.7a).
+-- 506.8a).
 activationRestrictions :: Node.Node -> Translated [ActivationRestriction.ActivationRestriction]
 activationRestrictions n = case Node.tag n of
   "And" -> fmap concat (Node.arguments n >>= traverse (Node.node Monad.>=> activationRestrictions))
@@ -445,7 +446,7 @@ activationRestrictions n = case Node.tag n of
   where
     onlyIf c = case Node.tag c of
       "And" -> fmap concat (Node.arguments c >>= traverse (Node.node Monad.>=> onlyIf))
-      -- CR 506.7a.
+      -- CR 506.8a.
       "IsBeforeAttackersDeclared" | Maybe.isNothing (Node.args c) -> Right [ActivationRestriction.BeforeStep (Phase.Combat CombatStep.DeclareAttackers)]
       "PlayerPassesFilter" -> do
         (who, test) <- pair c
@@ -1252,7 +1253,7 @@ playerEffects context who n = case Node.tag n of
   "DiscardACard" -> discard (Quantity.Literal 1)
   "DiscardNumberCardsAtRandom" -> do
     q <- Node.argument n >>= quantity context
-    pure [Effect.Discard (Discard.These TheseDiscard.MkTheseDiscard {TheseDiscard.cards = ObjectRef.RandomCardInHand RandomCardInHand.MkRandomCardInHand {RandomCardInHand.player = who, RandomCardInHand.filter = Filter.And [], RandomCardInHand.count = q}, TheseDiscard.discarded = Nothing})]
+    pure [Effect.Discard (Discard.These TheseDiscard.MkTheseDiscard {TheseDiscard.cards = ObjectRef.RandomCard RandomCard.MkRandomCard {RandomCard.zone = HiddenZone.Hand, RandomCard.player = who, RandomCard.filter = Filter.And [], RandomCard.count = q}, TheseDiscard.discarded = Nothing})]
   "GainLifeForEach" -> do
     q <- forEach
     pure [Effect.GainLife (PlayerQuantity.MkPlayerQuantity who q)]

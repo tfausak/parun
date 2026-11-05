@@ -71,7 +71,7 @@ data CastingRestriction
     -- Eightfold Maze's ruling pins the interpretation: a creature needs to have
     -- attacked YOU, not merely a combat to have happened.
     AttackedThisStep
-  | -- | CR 506.7b: "Cast this spell only during combat after blockers are
+  | -- | CR 506.8b: "Cast this spell only during combat after blockers are
     -- declared" (Curtain of Light). Neither a step nor a phase, so DuringPhase
     -- above cannot say it and neither could a Parun.Types.PhaseSelector: the
     -- window opens as the declare blockers step begins and runs to the end of
@@ -80,26 +80,26 @@ data CastingRestriction
     --
     -- The mirror of Parun.Types.ActivationRestriction's arm of this name, sharing
     -- Parun.Engine.Turn.afterBlockersDeclared as its reader -- which is CR
-    -- 506.7g, the rule that says CR 506.7's points govern an activation exactly
+    -- 506.8g, the rule that says CR 506.8's points govern an activation exactly
     -- as they govern a cast.
     --
     -- NULLARY, rather than an after half beside BeforeStep below: the printed
-    -- "during combat" gives it CR 506.7c's every-combat reading, which BeforeStep
+    -- "during combat" gives it CR 506.8c's every-combat reading, which BeforeStep
     -- does not have.
     --
-    -- Two clauses of CR 506.7 ride along rather than needing gates of their own,
+    -- Two clauses of CR 506.8 ride along rather than needing gates of their own,
     -- because the reader asks about the combat record instead of about the phase
-    -- the game is in. CR 506.7f: a combat phase whose declare blockers step is
-    -- skipped admits the spell nowhere in that phase. CR 506.7c: the printed
+    -- the game is in. CR 506.8f: a combat phase whose declare blockers step is
+    -- skipped admits the spell nowhere in that phase. CR 506.8c: the printed
     -- "during combat" gives every combat phase of the turn its own window rather
-    -- than only the first (CR 506.7d).
+    -- than only the first (CR 506.8d).
     AfterBlockersDeclared
-  | -- | CR 506.7 / 506.7d: "Cast this spell only before [the step]" -- Blood
+  | -- | CR 506.8 / 506.8d: "Cast this spell only before [the step]" -- Blood
     -- Frenzy's "before the combat damage step". The mirror of
-    -- Parun.Types.ActivationRestriction's arm of this name (CR 506.7g), sharing
+    -- Parun.Types.ActivationRestriction's arm of this name (CR 506.8g), sharing
     -- Parun.Engine.Turn.beforeStep as its reader.
     BeforeStep Phase.Phase
-  | -- | CR 506.7b / 506.7c: only during a combat phase, short of this step:
+  | -- | CR 506.8b / 506.8c: only during a combat phase, short of this step:
     -- Panic's "during combat before blockers are declared". Reader:
     -- Parun.Engine.Turn.duringCombatBefore. Proved by Parun.CastRestrictionSpec's
     -- "DuringCombatBefore" group.

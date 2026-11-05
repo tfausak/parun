@@ -29,7 +29,18 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "AttachedPermanentTappedForMana"
+            "type": "TappedForMana",
+            "value": {
+              "mana": {
+                "type": "AnyMana"
+              },
+              "permanent": {
+                "type": "Attached"
+              },
+              "player": {
+                "type": "AnyPlayer"
+              }
+            }
           },
           "modal": {
             "modes": [

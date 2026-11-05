@@ -5,6 +5,9 @@ module Parun.Types.LibraryDeparture where
 data LibraryDeparture
   = -- | Drawn (CR 121.1) -- Sylvan Library.
     Drawn
+  | -- | The latest card a player drew this turn (CR 121.1), which only that
+    -- player's next draw unseats -- Jandor's Ring.
+    LastDrawn
   | -- | Milled (CR 701.17a) -- The Master, Transcendent.
     Milled
   deriving (Bounded, Enum, Eq, Ord, Show)

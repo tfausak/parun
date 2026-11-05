@@ -226,7 +226,7 @@ times n = case n of
 -- | One clause of "Activate only ..." (CR 602.5): "as a sorcery" (CR 307.5),
 -- "as an instant" (CR 602.5e), "once each turn" (CR 602.5b), "during your
 -- turn" (CR 102.1), "during your upkeep", "before attackers are declared"
--- (CR 506.7a). Any other is not spelled out here.
+-- (CR 506.8a). Any other is not spelled out here.
 restriction :: ActivationRestriction.ActivationRestriction -> [Text.Text]
 restriction r = case r of
   ActivationRestriction.SorcerySpeed -> [Text.pack "as a sorcery"]

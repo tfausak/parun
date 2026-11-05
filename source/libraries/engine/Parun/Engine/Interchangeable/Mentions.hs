@@ -293,6 +293,7 @@ import qualified Parun.Types.LifeTally as LifeTally
 import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.LimitUnless as LimitUnless
 import qualified Parun.Types.LookAt as LookAt
+import qualified Parun.Types.LostPermanent as LostPermanent
 import qualified Parun.Types.LoyaltyClause as LoyaltyClause
 import qualified Parun.Types.LoyaltyGrant as LoyaltyGrant
 import qualified Parun.Types.MadnessCost as MadnessCost
@@ -340,7 +341,6 @@ import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentCandidate as PermanentCandidate
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
-import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.PhasePattern as PhasePattern
 import qualified Parun.Types.PlacesSticker as PlacesSticker
@@ -376,9 +376,8 @@ import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.PutSticker as PutSticker
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.Quotient as Quotient
+import qualified Parun.Types.RandomCard as RandomCard
 import qualified Parun.Types.RandomCardInGraveyard as RandomCardInGraveyard
-import qualified Parun.Types.RandomCardInHand as RandomCardInHand
-import qualified Parun.Types.RandomCardInLibrary as RandomCardInLibrary
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.RedirectDamage as RedirectDamage
 import qualified Parun.Types.Reinforce as Reinforce
@@ -430,6 +429,8 @@ import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TapForMana as TapForMana
 import qualified Parun.Types.TapForTotalPower as TapForTotalPower
 import qualified Parun.Types.TapPermanents as TapPermanents
+import qualified Parun.Types.TappedForManaTrigger as TappedForManaTrigger
+import qualified Parun.Types.TappedPermanent as TappedPermanent
 import qualified Parun.Types.TargetRestriction as TargetRestriction
 import qualified Parun.Types.TargetSlot as TargetSlot
 import qualified Parun.Types.TheseDiscard as TheseDiscard
@@ -578,8 +579,7 @@ filterNames asking criterion = case criterion of
   Filter.TargetsPlayer _relation -> mempty
   Filter.IsBound slot -> slotNames asking slot
   Filter.IsTarget -> slotNames asking Binding.Engine.announcedTargets
-  Filter.ControllerRelatesToBound _playerRelation slot -> slotNames asking slot
-  Filter.SameControllerAsHostOfBound slot -> slotNames asking slot
+  Filter.ControllerRelatesToBound _playerRelation _hop slot -> slotNames asking slot
   Filter.HasChosenName {} -> mempty
   Filter.HasChosenColor -> mempty
   Filter.HasChosenSubtype -> mempty
@@ -602,7 +602,7 @@ filterNames asking criterion = case criterion of
   Filter.DeclaredBlockerThisCombat -> mempty
   Filter.DeclaredThisTurn role -> keyed asking <> history asking (case role of BlockRole.Attacker -> HistoryRead.Attacks; BlockRole.Blocker -> HistoryRead.Blockers)
   Filter.CouldAttackThisTurn -> keyed asking
-  Filter.LeftLibraryThisTurn how -> keyed asking <> case how of LibraryDeparture.Drawn -> mempty; LibraryDeparture.Milled -> history asking HistoryRead.Mills
+  Filter.LeftLibraryThisTurn how -> keyed asking <> case how of LibraryDeparture.Drawn -> mempty; LibraryDeparture.LastDrawn -> mempty; LibraryDeparture.Milled -> history asking HistoryRead.Mills
   Filter.CantCrewVehicles -> contextNames asking
   Filter.CrewedSourceThisTurn -> keyed asking <> history asking HistoryRead.Crews
   Filter.ConvokedSourceThisTurn -> keyed asking <> history asking HistoryRead.Convokes <> history asking HistoryRead.Moves
@@ -1085,7 +1085,7 @@ copyTargetsNames :: (Monoid r) => Asking r -> CopyTargets.CopyTargets -> r
 copyTargetsNames asking x = case x of
   CopyTargets.Copied -> mempty
   CopyTargets.ChosenByController -> mempty
-  CopyTargets.ForEach objectRef -> foldMap (objectRefNames asking) objectRef
+  CopyTargets.ForEach objectRef -> objectRefNames asking objectRef
   CopyTargets.Stated objectRef -> objectRefNames asking objectRef
 
 costNames :: (Monoid r) => Asking r -> (keyword -> r) -> Cost.Cost keyword -> r
@@ -2330,9 +2330,8 @@ objectRefNames asking x = case x of
   ObjectRef.ChosenCardInHand chosenCardInHand -> chosenCardInHandNames asking chosenCardInHand
   ObjectRef.ChosenCardFromAmong chosenCardFromAmong -> chosenCardFromAmongNames asking chosenCardFromAmong
   ObjectRef.EachCardFromAmong eachCardFromAmong -> eachCardFromAmongNames asking eachCardFromAmong
-  ObjectRef.RandomCardInHand randomCardInHand -> randomCardInHandNames asking randomCardInHand
+  ObjectRef.RandomCard randomCard -> randomCardNames asking randomCard
   ObjectRef.RandomCardInGraveyard randomCardInGraveyard -> randomCardInGraveyardNames asking randomCardInGraveyard
-  ObjectRef.RandomCardInLibrary randomCardInLibrary -> randomCardInLibraryNames asking randomCardInLibrary
   ObjectRef.AtRandom inner -> objectRefNames asking inner
   ObjectRef.ChosenPermanents chosenPermanents -> chosenPermanentsNames asking chosenPermanents
   ObjectRef.AttachedToBound attachedToBound -> attachedToBoundNames asking attachedToBound
@@ -2404,9 +2403,11 @@ playerActsOnNames :: (Monoid r) => Asking r -> PlayerActsOn.PlayerActsOn -> r
 playerActsOnNames asking x = case x of
   PlayerActsOn.MkPlayerActsOn _player filter_ -> filterNames asking filter_
 
-permanentTappedForManaNames :: (Monoid r) => Asking r -> PermanentTappedForMana.PermanentTappedForMana -> r
-permanentTappedForManaNames asking x = case x of
-  PermanentTappedForMana.MkPermanentTappedForMana _player filter_ _mana -> filterNames asking filter_
+tappedForManaTriggerNames :: (Monoid r) => Asking r -> TappedForManaTrigger.TappedForManaTrigger -> r
+tappedForManaTriggerNames asking x = case x of
+  TappedForManaTrigger.MkTappedForManaTrigger permanent _player _mana -> case permanent of
+    TappedPermanent.Attached -> mempty
+    TappedPermanent.Matching filter_ -> filterNames asking filter_
 
 permanentsDealCombatDamageToPlayerNames :: (Monoid r) => Asking r -> PermanentsDealCombatDamageToPlayer.PermanentsDealCombatDamageToPlayer -> r
 permanentsDealCombatDamageToPlayerNames asking x = case x of
@@ -2718,13 +2719,9 @@ randomCardInGraveyardNames :: (Monoid r) => Asking r -> RandomCardInGraveyard.Ra
 randomCardInGraveyardNames asking x = case x of
   RandomCardInGraveyard.MkRandomCardInGraveyard players filter_ count -> zoneScopeNames asking players <> filterNames asking filter_ <> quantityNames asking count
 
-randomCardInHandNames :: (Monoid r) => Asking r -> RandomCardInHand.RandomCardInHand -> r
-randomCardInHandNames asking x = case x of
-  RandomCardInHand.MkRandomCardInHand player filter_ count -> playerRefNames asking player <> filterNames asking filter_ <> quantityNames asking count
-
-randomCardInLibraryNames :: (Monoid r) => Asking r -> RandomCardInLibrary.RandomCardInLibrary -> r
-randomCardInLibraryNames asking x = case x of
-  RandomCardInLibrary.MkRandomCardInLibrary player filter_ count -> playerRefNames asking player <> filterNames asking filter_ <> quantityNames asking count
+randomCardNames :: (Monoid r) => Asking r -> RandomCard.RandomCard -> r
+randomCardNames asking x = case x of
+  RandomCard.MkRandomCard _ player filter_ count -> playerRefNames asking player <> filterNames asking filter_ <> quantityNames asking count
 
 recipientNames :: (Monoid r) => Asking r -> Recipient.Recipient -> r
 recipientNames asking x = case x of
@@ -3108,8 +3105,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.LeavesZone leavesZoneTrigger -> leavesZoneTriggerNames asking leavesZoneTrigger
   TriggerCondition.PutIntoZone putIntoZoneTrigger -> putIntoZoneTriggerNames asking putIntoZoneTrigger
   TriggerCondition.BecomesTapState becomesTapState -> actingPermanentNames asking (BecomesTapState.actor becomesTapState)
-  TriggerCondition.AttachedPermanentTappedForMana -> mempty
-  TriggerCondition.PermanentTappedForMana permanentTappedForMana -> permanentTappedForManaNames asking permanentTappedForMana
+  TriggerCondition.TappedForMana tappedForMana -> tappedForManaTriggerNames asking tappedForMana
   TriggerCondition.AbilityAddsMana abilityAddsMana -> abilityAddsManaNames asking abilityAddsMana
   TriggerCondition.SelfManaAbilityResolves -> mempty
   TriggerCondition.SpellOrAbilityCounters _playerRelation -> mempty
@@ -3139,8 +3135,9 @@ triggerConditionNames asking x = case x of
   TriggerCondition.PermanentSacrificed permanentSacrificed -> playerActsOnNames asking permanentSacrificed
   TriggerCondition.SagaFinalChapterTriggers _playerRelation -> mempty
   TriggerCondition.PlayerBecomesMonarch _playerRelation -> mempty
-  TriggerCondition.LoseControlOfBound slotName -> slotNames asking slotName
-  TriggerCondition.LoseControlOfSelf -> mempty
+  TriggerCondition.LosesControl subject -> case subject of
+    LostPermanent.Self -> mempty
+    LostPermanent.Bound slotName -> slotNames asking slotName
   TriggerCondition.RoomEntered _roomIndex -> mempty
   TriggerCondition.PlayerActs _playerActs -> mempty
   TriggerCondition.PlayerLosesGame _playerRelation -> mempty

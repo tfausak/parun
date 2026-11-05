@@ -89,7 +89,7 @@ spec s = Spec.describe s "Parun.Codec.ActivationRestriction" $ do
       ActivationRestriction.AttackedThisStep
       " {\"type\":\"AttackedThisStep\"} "
   -- Trap Runner's "activate only during combat after blockers are declared"
-  -- (CR 506.7b through CR 506.7g).
+  -- (CR 506.8b through CR 506.8g).
   Spec.it s "AfterBlockersDeclared" $
     Common.assertCodec
       s
@@ -97,14 +97,14 @@ spec s = Spec.describe s "Parun.Codec.ActivationRestriction" $ do
       ActivationRestriction.AfterBlockersDeclared
       " {\"type\":\"AfterBlockersDeclared\"} "
   -- Save Point's "activate only during combat before combat damage has been
-  -- dealt" (CR 506.7 through CR 506.7g).
+  -- dealt" (CR 506.8 through CR 506.8g).
   Spec.it s "DuringCombatBefore" $
     Common.assertCodec
       s
       ActivationRestriction.codec
       (ActivationRestriction.DuringCombatBefore CombatStep.CombatDamage)
       " {\"type\":\"DuringCombatBefore\",\"value\":{\"type\":\"CombatDamage\"}} "
-  -- Capricious Sorcerer's "before attackers are declared" (CR 506.7a).
+  -- Capricious Sorcerer's "before attackers are declared" (CR 506.8a).
   Spec.it s "BeforeStep" $
     Common.assertCodec
       s

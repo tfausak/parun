@@ -111,6 +111,7 @@ import qualified Parun.Types.LifeChange as LifeChange
 import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeTrigger as LifeTrigger
 import qualified Parun.Types.LoggedEvent as LoggedEvent
+import qualified Parun.Types.LostPermanent as LostPermanent
 import qualified Parun.Types.ManaAbilityResolved as ManaAbilityResolved
 import qualified Parun.Types.ManaAdded as ManaAdded
 import qualified Parun.Types.ManaSpecification as ManaSpecification
@@ -124,7 +125,6 @@ import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
-import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.Phase as Phase
@@ -155,6 +155,8 @@ import qualified Parun.Types.StickerPut as StickerPut
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TappedForMana as TappedForMana
+import qualified Parun.Types.TappedForManaTrigger as TappedForManaTrigger
+import qualified Parun.Types.TappedPermanent as TappedPermanent
 import qualified Parun.Types.TransformTrigger as TransformTrigger
 import qualified Parun.Types.Transformed as Transformed
 import Parun.Types.TriggerCondition (TriggerCondition)
@@ -843,7 +845,7 @@ anyTriggerReads event = case event of
 
 -- The same question against a slot environment, for the conditions whose subject
 -- is an object named EARLIER rather than the bearer or a class of objects
--- (TriggerCondition.LoseControlOfBound, and Leaves of LeavingPermanent.Bound).
+-- (a Bound TriggerCondition.LosesControl, and Leaves of LeavingPermanent.Bound).
 -- Projection.controllerOf's `-Given` shape: the plain name above defaults the extra
 -- argument, so a caller with nothing to say says nothing.
 --
@@ -1126,13 +1128,10 @@ armMatches bindings board gs bearer you cond event = case cond of
           -- one here would fire Betrayal twice off one tap.
           GameEvent.TappedForMana _ -> False
           _ -> False
-  TriggerCondition.AttachedPermanentTappedForMana -> case event of
-    GameEvent.TappedForMana tapped ->
-      Game.hostOf bearer gs == Just (TappedForMana.permanent tapped)
-    _ -> False
-  -- CR 106.12a read by a BYSTANDER, where the arm above reads it off an
-  -- attachment link: Autumn Willow, Harmony's "whenever you tap a land creature
-  -- for mana". Every part of the printed sentence is compared, the
+  -- CR 106.12a: a permanent was tapped for mana. An Attached subject reads it off
+  -- the attachment link, the bearer's host by id (Wild Growth); a Matching one is
+  -- a BYSTANDER: Autumn Willow, Harmony's "whenever you tap a land creature for
+  -- mana". Every part of the printed sentence is compared, the
   -- PermanentSacrificed arm's posture -- the tapping player against CR 109.5's
   -- `you`, the permanent against the Filter, and the mana produced against that
   -- rule's "of a specified type" (producedSpecified) -- and a wording that
@@ -1155,23 +1154,25 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- 605.3b leaves the ability no object, and Parun.Engine.Cost.tapForManaWith
   -- records the permanent that stood in for it.
   --
-  -- NO projection read beside it, where the PermanentTappedForMana arm below
+  -- NO projection read beside it, where a Matching TappedForMana arm below
   -- takes one: the condition carries no Filter and no relation, so there is
   -- nothing to ask a view about.
   TriggerCondition.SelfManaAbilityResolves -> case event of
     GameEvent.ManaAbilityResolved resolved -> ManaAbilityResolved.permanent resolved == bearer
     _ -> False
-  TriggerCondition.PermanentTappedForMana (PermanentTappedForMana.MkPermanentTappedForMana relation f specified) -> case event of
+  TriggerCondition.TappedForMana (TappedForManaTrigger.MkTappedForManaTrigger subject relation specified) -> case event of
     GameEvent.TappedForMana tapped
       | PlayerRelation.holds (Game.teams gs) relation you (TappedForMana.player tapped) && producedSpecified gs bearer specified (TappedForMana.mana tapped) ->
-          case Projection.viewWithLastKnown (TappedForMana.permanent tapped) gs (TappedForMana.permanent tapped) of
-            Nothing -> False
-            Just view -> Filter.matches bearerContext view f
+          case subject of
+            TappedPermanent.Attached -> Game.hostOf bearer gs == Just (TappedForMana.permanent tapped)
+            TappedPermanent.Matching f -> case Projection.viewWithLastKnown (TappedForMana.permanent tapped) gs (TappedForMana.permanent tapped) of
+              Nothing -> False
+              Just view -> Filter.matches bearerContext view f
       | otherwise -> False
     _ -> False
   -- CR 605.1b's "mana being added to a player's mana pool", read by a
   -- bystander: Caged Sun's "whenever a land's ability causes you to add one or
-  -- more mana of the chosen color". The PermanentTappedForMana arm's posture --
+  -- more mana of the chosen color". The TappedForMana arm's posture --
   -- the adding player against `you` under the relation, the ability's source
   -- against the Filter, the added mana against the specification -- except
   -- that the player is the event's own recipient rather than a controller read
@@ -1897,8 +1898,8 @@ armMatches bindings board gs bearer you cond event = case cond of
                 in Saga.tracksLore pc && Saga.chapterOf (AbilityTriggered.ability record) == Just (Saga.finalChapterOf pc)
              )
     _ -> False
-  -- CR 603.7: "when you lose control of the creature" -- Ray of Command's third
-  -- sentence. The slot is read out of CR 603.7c's captured environment, so the
+  -- CR 603.7: a Bound subject is "when you lose control of the creature" -- Ray
+  -- of Command's third sentence. The slot is read out of CR 603.7c's captured environment, so the
   -- creature this asks about is the one the spell targeted rather than whatever
   -- creature happens to change hands.
   --
@@ -1918,14 +1919,15 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- whichever of them matched -- CR 603.7b spending the one shot either way. A card
   -- whose controller can lose control of a DIFFERENT permanent while this entry is
   -- armed is what would observe it.
-  TriggerCondition.LoseControlOfBound slot -> case event of
+  --
+  -- A Self subject (CR 603.10d) is the bearer itself changing hands away from
+  -- `you`, the controller the scan offers it under for this event
+  -- (Event.Trigger.lostControlOf).
+  TriggerCondition.LosesControl subject -> case event of
     GameEvent.ControlChanged (ControlChanged.MkControlChanged oid before _) ->
-      Map.lookup slot (Binding.objectSlots bindings) == Just oid && before == you
-    _ -> False
-  -- CR 603.10d: the bearer itself changed hands away from `you`, the controller
-  -- the scan offers it under for this event (Event.Trigger.lostControlOf).
-  TriggerCondition.LoseControlOfSelf -> case event of
-    GameEvent.ControlChanged (ControlChanged.MkControlChanged oid before _) -> oid == bearer && before == you
+      before == you && case subject of
+        LostPermanent.Self -> oid == bearer
+        LostPermanent.Bound slot -> Map.lookup slot (Binding.objectSlots bindings) == Just oid
     _ -> False
   -- CR 309.4c: "when YOU move your venture marker into THIS room", so the
   -- mover must be the ability's controller, the dungeon card the marker is on
@@ -2152,7 +2154,7 @@ armMatches bindings board gs bearer you cond event = case cond of
 
 -- CR 106.12a's second half: did an activation that produced @produced@ produce
 -- the mana this condition specified? The narrowing half of the
--- PermanentTappedForMana arm above, where PlayerRelation.holds and
+-- TappedForMana arm above, where PlayerRelation.holds and
 -- Filter.matches are the other two.
 --
 -- CR 607.2d's link is resolved by reading Object.chosenColors off the BEARER,

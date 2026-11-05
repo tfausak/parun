@@ -260,6 +260,7 @@ import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Guess as Guess
 import qualified Parun.Types.HandAction as HandAction
 import qualified Parun.Types.HexproofExemption as HexproofExemption
+import qualified Parun.Types.HiddenZone as HiddenZone
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.Impending as Impending
@@ -279,6 +280,7 @@ import qualified Parun.Types.LifeLossCause as LifeLossCause
 import qualified Parun.Types.LimitUnless as LimitUnless
 import qualified Parun.Types.LookAt as LookAt
 import qualified Parun.Types.LoopMembers as LoopMembers
+import qualified Parun.Types.LostPermanent as LostPermanent
 import qualified Parun.Types.Loyalty as Loyalty
 import qualified Parun.Types.LoyaltyGrant as LoyaltyGrant
 import qualified Parun.Types.MadnessCost as MadnessCost
@@ -324,7 +326,6 @@ import qualified Parun.Types.PerCreature as PerCreature
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
-import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.PermissionLimit as PermissionLimit
 import qualified Parun.Types.PermissionPool as PermissionPool
@@ -361,9 +362,8 @@ import qualified Parun.Types.PutCountersFrom as PutCountersFrom
 import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.PutSticker as PutSticker
 import qualified Parun.Types.Quantity as Quantity.Type
+import qualified Parun.Types.RandomCard as RandomCard
 import qualified Parun.Types.RandomCardInGraveyard as RandomCardInGraveyard
-import qualified Parun.Types.RandomCardInHand as RandomCardInHand
-import qualified Parun.Types.RandomCardInLibrary as RandomCardInLibrary
 import qualified Parun.Types.RedirectDamage as RedirectDamage
 import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.Reinforce as Reinforce
@@ -417,6 +417,8 @@ import qualified Parun.Types.TapForMana as TapForMana
 import qualified Parun.Types.TapForTotalPower as TapForTotalPower
 import qualified Parun.Types.TapPermanents as TapPermanents
 import qualified Parun.Types.TapState as TapState
+import qualified Parun.Types.TappedForManaTrigger as TappedForManaTrigger
+import qualified Parun.Types.TappedPermanent as TappedPermanent
 import qualified Parun.Types.TargetRestriction as TargetRestriction
 import qualified Parun.Types.TargetSlot as TargetSlot
 import qualified Parun.Types.TheseDiscard as TheseDiscard
@@ -726,7 +728,7 @@ objectRefPositions =
         -- CR 707.10d names a SECOND ref, the candidates', which the sweep must
         -- reach: a copy effect whose candidate description reads a slot no clause
         -- binds is a dangling read like any other.
-        ("copy-spell-for-each", Effect.CopyStackObject (CopyStackObject.MkCopyStackObject (plantedRef "cs-ref") (CopyTargets.ForEach (plantedRef "cs-each" NonEmpty.:| [])) CopyStackObject.defaultQuantity CopyStackObject.defaultCopier []), [plantedRef "cs-ref", plantedRef "cs-each"]),
+        ("copy-spell-for-each", Effect.CopyStackObject (CopyStackObject.MkCopyStackObject (plantedRef "cs-ref") (CopyTargets.ForEach (plantedRef "cs-each")) CopyStackObject.defaultQuantity CopyStackObject.defaultCopier []), [plantedRef "cs-ref", plantedRef "cs-each"]),
         ("later-payment", Effect.LaterPayment (LaterPayment.MkLaterPayment Duration.UntilEndOfTurn (Cost.Type.MkCost Nothing []) (Seq.singleton (Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage Duration.UntilEndOfTurn Nothing (Just (plantedRef "lp")) Nothing Nothing Nothing (Quantity.Type.Literal 1) Seq.empty)))), [plantedRef "lp"]),
         ("prevent-next-damage", Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage Duration.UntilEndOfTurn Nothing (Just (plantedRef "pn")) Nothing Nothing Nothing (Quantity.Type.Literal 1) Seq.empty), [plantedRef "pn"]),
         ("prevent-all-damage", Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage Duration.UntilEndOfTurn Nothing (Just (plantedRef "pa")) Nothing Nothing DamageDirection.DealtTo Nothing (Filter.Type.And []) Seq.empty), [plantedRef "pa"]),
@@ -872,8 +874,8 @@ objectRefPlayerRefPositions =
     ("top-of-library-until", ObjectRef.TopOfLibraryUntil (TopOfLibraryUntil.MkTopOfLibraryUntil (plantedPlayer "tu") (Filter.Type.And []) (Quantity.Type.Literal 1)), [plantedPlayer "tu"]),
     ("top-of-graveyard", ObjectRef.TopOfGraveyard (plantedPlayer "tg"), [plantedPlayer "tg"]),
     ("chosen-card-in-hand", ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (plantedPlayer "ch") (Filter.Type.And []) HowMany.one), [plantedPlayer "ch"]),
-    ("random-card-in-hand", ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand (plantedPlayer "rh") (Filter.Type.And []) (Quantity.Type.Literal 1)), [plantedPlayer "rh"]),
-    ("random-card-in-library", ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary (plantedPlayer "rl") (Filter.Type.And []) (Quantity.Type.Literal 1)), [plantedPlayer "rl"]),
+    ("random-card-in-hand", ObjectRef.RandomCard (RandomCard.MkRandomCard HiddenZone.Hand (plantedPlayer "rh") (Filter.Type.And []) (Quantity.Type.Literal 1)), [plantedPlayer "rh"]),
+    ("random-card-in-library", ObjectRef.RandomCard (RandomCard.MkRandomCard HiddenZone.Library (plantedPlayer "rl") (Filter.Type.And []) (Quantity.Type.Literal 1)), [plantedPlayer "rl"]),
     -- And the two CHOOSERS, which name a seat without counting per seat --
     -- Animal Magnetism's and Wormfang Crab's opponent.
     ("chosen-card-from-among", ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong (SlotName.MkSlotName (Text.pack "group")) (Filter.Type.And []) HowMany.one (plantedPlayer "cfa") Nothing False), [plantedPlayer "cfa"]),
@@ -1144,10 +1146,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- CR 702.134c's is nullary too, so it holds no Quantity.
   TriggerCondition.AttachedCreatureMentors -> []
   TriggerCondition.BecomesTapState _ -> []
-  TriggerCondition.AttachedPermanentTappedForMana -> []
-  -- CR 106.12a's bystander reading carries a PlayerRelation and a Filter,
-  -- neither of which holds a Count.
-  TriggerCondition.PermanentTappedForMana {} -> []
+  TriggerCondition.TappedForMana _ -> []
   TriggerCondition.AbilityAddsMana {} -> []
   TriggerCondition.SelfManaAbilityResolves -> []
   -- Nor does CR 702.110b's, whose Filters hold no Count for a Matching Enters'
@@ -1194,11 +1193,10 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.PlayerDrawsNthCard {} -> []
   -- CR 725.1's crowning condition is a PlayerRelation too.
   TriggerCondition.PlayerBecomesMonarch _ -> []
-  -- CR 603.7's slot-named condition holds a SlotName, which is no Count.
-  TriggerCondition.LoseControlOfBound _ -> []
+  -- CR 603.7's slot-named subject holds a SlotName, which is no Count, and CR
+  -- 603.10d's self subject carries nothing at all.
+  TriggerCondition.LosesControl _ -> []
   TriggerCondition.RoomEntered _ -> []
-  -- CR 603.10d's self condition carries nothing at all.
-  TriggerCondition.LoseControlOfSelf -> []
   -- CR 603.2's PlayerActs carries a PlayerAction and a PlayerRelation, neither
   -- a Count.
   TriggerCondition.PlayerActs _ -> []
@@ -4108,7 +4106,7 @@ copyTargetsRefs :: CopyTargets.CopyTargets -> [ObjectRef.ObjectRef]
 copyTargetsRefs targets = case targets of
   CopyTargets.Copied -> []
   CopyTargets.ChosenByController -> []
-  CopyTargets.ForEach refs -> NonEmpty.toList refs
+  CopyTargets.ForEach ref -> [ref]
   CopyTargets.Stated ref -> [ref]
 
 copyTargetsFilters :: CopyTargets.CopyTargets -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
@@ -4231,20 +4229,17 @@ objectRefFilters ref = case ref of
   -- The arm above's plural: the same Filter position, saying which members are
   -- taken rather than which may be picked, and linted the same way.
   ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong _ f) -> unframed [f]
-  -- Lumbering Lightshield's "a nonland card at random from their hand"; its
-  -- PlayerRef names the seats whose hands are reached, so the Filter is the whole
-  -- of what there is to lint -- the chosen hand card's arm's answer, for its
-  -- reason -- and Fall's count goes through refFilters beside it, TopOfLibrary's
-  -- route above.
-  ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand _ f _) -> unframed [f] <> refFilters ref
+  -- Lumbering Lightshield's "a nonland card at random from their hand" and the
+  -- Gates' "seek a nonland card"; its PlayerRef names the seats whose zones are
+  -- reached, so the Filter is the whole of what there is to lint -- the chosen
+  -- hand card's arm's answer, for its reason -- and Fall's count goes through
+  -- refFilters beside it, TopOfLibrary's route above.
+  ObjectRef.RandomCard (RandomCard.MkRandomCard _ _ f _) -> unframed [f] <> refFilters ref
   -- Ghoulraiser's "a Zombie card at random from your graveyard"; its ZoneScope
   -- names the graveyards reached and holds no characteristic, so the Filter is
   -- the whole of what there is to lint -- the arm above's answer, for its
   -- reason -- and Make a Wish's count goes through refFilters beside it.
   ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard _ f _) -> unframed [f] <> refFilters ref
-  -- The Gates' "seek a nonland card": RandomCardInHand's answer one hidden zone
-  -- over, for its reason.
-  ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary _ f _) -> unframed [f] <> refFilters ref
   -- Tovolar's "any number of Human Werewolves you control" and the Garrison in
   -- Hanweir Battlements' "If you both own and control this land and a creature
   -- named Hanweir Garrison": EachMatching's Filter position exactly -- same
@@ -4590,7 +4585,6 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- Thoughtleech's "an Island an opponent controls" and Deeproot Pilgrimage's
   -- "nontoken Merfolk you control" are card text, swept like Leaves'.
   TriggerCondition.BecomesTapState watched -> actingFilters (BecomesTapState.actor watched)
-  TriggerCondition.AttachedPermanentTappedForMana -> []
   -- Skull Skaab's two, both card text.
   TriggerCondition.Exploits (ExploitTrigger.MkExploitTrigger exploiter exploited) -> actingFilters exploiter <> unframed [exploited]
   -- CR 702.122e's carries none either: it names "this Vehicle" and nothing about
@@ -4601,8 +4595,10 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.SelfCrewsVehicle -> []
   -- CR 106.12a's bystander reading DOES carry a Filter -- Autumn Willow,
   -- Harmony's "a land creature" -- and is swept like the PermanentSacrificed arm
-  -- below.
-  TriggerCondition.PermanentTappedForMana payload -> unframed [PermanentTappedForMana.filter payload]
+  -- below; the attachment link carries none.
+  TriggerCondition.TappedForMana payload -> case TappedForManaTrigger.permanent payload of
+    TappedPermanent.Attached -> []
+    TappedPermanent.Matching f -> unframed [f]
   -- Caged Sun's "a land's" is a Filter over the ability's source, swept alike.
   TriggerCondition.AbilityAddsMana payload -> unframed [AbilityAddsMana.source payload]
   TriggerCondition.SelfManaAbilityResolves -> []
@@ -4677,12 +4673,11 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.PlayerDrawsNthCard {} -> []
   -- CR 725.1's crowning condition is a PlayerRelation, which holds no Filter.
   TriggerCondition.PlayerBecomesMonarch _ -> []
-  -- CR 603.7's slot-named condition holds a SlotName, which is no Filter -- what
-  -- the slot holds was selected by the arming spell's own target slot.
-  TriggerCondition.LoseControlOfBound _ -> []
+  -- CR 603.7's slot-named subject holds a SlotName, which is no Filter -- what
+  -- the slot holds was selected by the arming spell's own target slot -- and CR
+  -- 603.10d's self subject carries nothing at all.
+  TriggerCondition.LosesControl _ -> []
   TriggerCondition.RoomEntered _ -> []
-  -- CR 603.10d's self condition carries nothing at all.
-  TriggerCondition.LoseControlOfSelf -> []
   -- CR 603.2's PlayerActs carries a PlayerAction and a PlayerRelation, neither
   -- a Filter.
   TriggerCondition.PlayerActs _ -> []
@@ -4785,8 +4780,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.LeavesZone _ -> []
   TriggerCondition.PutIntoZone _ -> []
   TriggerCondition.BecomesTapState _ -> []
-  TriggerCondition.AttachedPermanentTappedForMana -> []
-  TriggerCondition.PermanentTappedForMana {} -> []
+  TriggerCondition.TappedForMana _ -> []
   TriggerCondition.AbilityAddsMana {} -> []
   TriggerCondition.SelfManaAbilityResolves -> []
   TriggerCondition.SpellOrAbilityCounters _ -> []
@@ -4820,10 +4814,10 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.PlayerBecomesMonarch _ -> []
   -- CR 603.7's slot-named condition, the first of the three arms with an answer:
   -- Ray of Command's "when you lose control of the creature" watches the
-  -- permanent its own spell targeted.
-  TriggerCondition.LoseControlOfBound slot -> [slot]
-  -- CR 603.10d's self condition names no slot.
-  TriggerCondition.LoseControlOfSelf -> []
+  -- permanent its own spell targeted; CR 603.10d's self subject names no slot.
+  TriggerCondition.LosesControl subject -> case subject of
+    LostPermanent.Bound slot -> [slot]
+    LostPermanent.Self -> []
   TriggerCondition.RoomEntered _ -> []
   TriggerCondition.PlayerActs _ -> []
   TriggerCondition.PlayerLosesGame _ -> []

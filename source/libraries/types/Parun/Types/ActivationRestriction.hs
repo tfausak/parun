@@ -103,24 +103,24 @@ data ActivationRestriction
     -- question about the combat record, and the two gates differ in what ELSE
     -- they may read rather than in what this asks.
     AttackedThisStep
-  | -- | CR 506.7b, through CR 506.7g: "Activate only during combat after
-    -- blockers are declared" (Trap Runner). CR 506.7g is what makes this the
+  | -- | CR 506.8b, through CR 506.8g: "Activate only during combat after
+    -- blockers are declared" (Trap Runner). CR 506.8g is what makes this the
     -- same clause Parun.Types.CastingRestriction prints under this name -- "rules
-    -- 506.7 and 506.7a-f apply to abilities ... just as they apply to spells" --
+    -- 506.8 and 506.8a-f apply to abilities ... just as they apply to spells" --
     -- so the two arms share Parun.Engine.Turn.afterBlockersDeclared verbatim,
     -- as AttackedThisStep above already does.
     --
     -- No TurnScope beside it, unlike DuringPhase: the printed clause names no
-    -- turn, and CR 506.7c gives it every combat phase of one rather than a
+    -- turn, and CR 506.8c gives it every combat phase of one rather than a
     -- chosen player's, so a second axis here would be strictly narrower than the
     -- card.
     AfterBlockersDeclared
-  | -- | CR 506.7c, through CR 506.7g: only during a combat phase, short of this
+  | -- | CR 506.8c, through CR 506.8g: only during a combat phase, short of this
     -- step: Save Point's "before combat damage has been dealt".
     -- Parun.Engine.Turn.duringCombatBefore is the reader, shared with
     -- Parun.Types.CastingRestriction's arm of this name.
     DuringCombatBefore CombatStep.CombatStep
-  | -- | CR 506.7a / 506.7g: only before this step first begins this turn --
+  | -- | CR 506.8a / 506.8g: only before this step first begins this turn --
     -- Capricious Sorcerer's "before attackers are declared", Mana Cache's
     -- "before the end step". Parun.Engine.Turn.beforeStep is the reader.
     BeforeStep Phase.Phase

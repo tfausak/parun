@@ -63,8 +63,11 @@
             "type": "AnyOf",
             "value": [
               {
-                "type": "LoseControlOfBound",
-                "value": "self"
+                "type": "LosesControl",
+                "value": {
+                  "type": "Bound",
+                  "value": "self"
+                }
               },
               {
                 "type": "Leaves",

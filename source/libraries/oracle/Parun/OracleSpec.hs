@@ -81,6 +81,7 @@ import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.ForbidBeingBlocked as ForbidBeingBlocked
 import qualified Parun.Types.GrantedAbility as GrantedAbility
+import qualified Parun.Types.HiddenZone as HiddenZone
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.HowMany as HowMany
@@ -136,7 +137,7 @@ import qualified Parun.Types.PrintedReplacement as PrintedReplacement
 import qualified Parun.Types.Protection as Protection
 import qualified Parun.Types.PutCounters as PutCounters
 import qualified Parun.Types.Quantity as Quantity
-import qualified Parun.Types.RandomCardInHand as RandomCardInHand
+import qualified Parun.Types.RandomCard as RandomCard
 import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.Replace as Replace
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
@@ -614,7 +615,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let player = [(target, TargetSlot.required Pool.Players Nothing)]
     Spec.assertEq s (Just (Text.pack "Target player discards two cards.")) (Oracle.render (spell [clause [discard (PlayerRef.InSlot target) 2]] player))
     Spec.assertEq s (Just (Text.pack "Discard a card.")) (Oracle.render (spell [clause [discard (PlayerRef.Relative PlayerRelation.You) 1]] []))
-    let random = Effect.Discard (Discard.These (TheseDiscard.MkTheseDiscard (ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand (PlayerRef.InSlot target) (Filter.And []) (Quantity.Literal 2))) Nothing))
+    let random = Effect.Discard (Discard.These (TheseDiscard.MkTheseDiscard (ObjectRef.RandomCard (RandomCard.MkRandomCard HiddenZone.Hand (PlayerRef.InSlot target) (Filter.And []) (Quantity.Literal 2))) Nothing))
     Spec.assertEq s (Just (Text.pack "Target player discards two cards at random.")) (Oracle.render (spell [clause [random]] player))
     let loot = spell [clause [draw (PlayerRef.Relative PlayerRelation.You) 1, discard (PlayerRef.Relative PlayerRelation.You) 1]] []
     Spec.assertBool s (elem (Text.pack "Draw a card, then discard a card.") (concat (Oracle.abilities loot))) "no \", then\""
@@ -963,7 +964,7 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     Spec.assertEq s (Just (Text.pack "Target creature can't be blocked this turn except by Walls.")) (Oracle.render (unblocked Duration.UntilEndOfTurn (Filter.Not (Filter.HasSubtype Subtype.Wall))))
     Spec.assertEq s Nothing (Oracle.render (unblocked Duration.UntilEndOfCombat (Filter.And [])))
 
-  -- CR 506.7a: a time before attackers are declared follows the turn it is
+  -- CR 506.8a: a time before attackers are declared follows the turn it is
   -- in after a comma.
   Spec.it s "render prints an ability activated only before attackers are declared" $ do
     let restricted rs = withFace (\f -> f {Face.activatedAbilities = [(activated (mana [green]) (gainLife 1)) {ActivatedAbility.restrictions = rs}]})

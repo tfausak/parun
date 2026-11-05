@@ -11,7 +11,7 @@ import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 
 -- | A bare object keyed by the record's field names, every key required for
--- Parun.Codec.PermanentTappedForMana's reason.
+-- Parun.Codec.TappedForManaTrigger's reason.
 codec :: Codec.Codec AbilityAddsMana.AbilityAddsMana
 codec = Fields.object $ do
   player <- Fields.required "player" PlayerRelation.codec AbilityAddsMana.player

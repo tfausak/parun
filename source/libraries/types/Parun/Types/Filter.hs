@@ -16,6 +16,7 @@ import qualified Parun.Types.EnteredZone as EnteredZone
 import qualified Parun.Types.ExiledPile as ExiledPile
 import qualified Parun.Types.Expansion as Expansion
 import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
 import qualified Parun.Types.LibraryDeparture as LibraryDeparture
@@ -183,30 +184,26 @@ data Filter keyword
     IsTarget
   | -- | CR 110.2 asked of TWO objects: the candidate's controller stands in this
     -- relation (CR 102.2 / 102.3) to the controller of the object this slot
-    -- holds, that controller taking the relation's "you" -- Bioshift's "another
-    -- target creature with the same controller" is You, Necrotic Plague's
-    -- "target creature one of their opponents controls" Opponent.
+    -- holds, or under Hop.Host of the permanent that object is attached to (CR
+    -- 303.4b), that controller taking the relation's "you" -- Bioshift's "another
+    -- target creature with the same controller" is You Itself, Necrotic Plague's
+    -- "target creature one of their opponents controls" Opponent Itself, and
+    -- Simic Guildmage's "another permanent with the same controller" You Host,
+    -- whose 2006-05-01 ruling settles the antecedent as the host.
     --
-    -- VACUOUSLY TRUE where the slot names no object, alone among these atoms: CR
-    -- 601.2c's offer is made before either target is chosen, so
-    -- Parun.Engine.Target.legalSetsGiven widens and selectionLegal's joint check
-    -- narrows, exactly as CR 608.2b will at resolution. Parun.FilterPositionLintSpec's
-    -- "CR 110.2 no card asks ControllerRelatesToBound outside a mode's target slot,
-    -- an attach destination, a stored class or an effect's object" keeps the
-    -- atom to the positions that fill it.
-    ControllerRelatesToBound PlayerRelation.PlayerRelation SlotName.SlotName
-  | -- | CR 110.2 with CR 303.4b: the candidate has the same controller as the
-    -- permanent the object this slot holds is ATTACHED TO -- Simic Guildmage's
-    -- "another permanent with the same controller", whose 2006-05-01 ruling
-    -- settles the antecedent as the host rather than the Aura.
-    --
-    -- VACUOUSLY FALSE where the slot names no object, or names one attached to
-    -- nothing, to a player (CR 303.4b's other destination) or to a host that is
-    -- no longer on the battlefield -- ControllerRelatesToBound's opposite. That
-    -- atom widens only because Parun.Engine.Target.selectionLegal's joint check
-    -- narrows afterwards, and no such check stands behind an attach
-    -- destination.
-    SameControllerAsHostOfBound SlotName.SlotName
+    -- The vacuous direction where the slot names no object is the HOP's. Itself
+    -- is VACUOUSLY TRUE, alone among these atoms: CR 601.2c's offer is made
+    -- before either target is chosen, so Parun.Engine.Target.legalSetsGiven
+    -- widens and selectionLegal's joint check narrows, exactly as CR 608.2b will
+    -- at resolution. Host is VACUOUSLY FALSE, as it is for an object attached to
+    -- nothing, to a player or to a host no longer on the battlefield: the host is
+    -- read as the ability resolves, and no joint check stands behind an attach
+    -- destination to narrow a widened offer. Parun.FilterPositionLintSpec's "CR
+    -- 110.2 no card asks ControllerRelatesToBound outside a mode's target slot,
+    -- an attach destination, a stored class or an effect's object" and "CR 110.2
+    -- no card asks a hopped ControllerRelatesToBound outside a resolution's own
+    -- positions" keep each to the positions that fill it.
+    ControllerRelatesToBound PlayerRelation.PlayerRelation Hop.Hop SlotName.SlotName
   | -- | CR 201.4: the candidate has a name the SOURCE has chosen earlier in the
     -- same resolution (CR 608.2c) -- Ancient Vendetta's "cards with that name" --
     -- by the chooser the NameChooser names. Set intersection, for CR 201.4g's
@@ -329,7 +326,8 @@ data Filter keyword
   | -- | The candidate is a card that left a library this way earlier this turn
     -- (CR 121.1, 701.17a). Matches the incarnation that left (CR 400.7), so a card
     -- that has moved again does not answer. Proved by the scenarios under
-    -- sylvan-library and Parun.CostSpec's "CR 701.17a a card milled to pay a cost".
+    -- sylvan-library and jandors-ring and Parun.CostSpec's "CR 701.17a a card
+    -- milled to pay a cost".
     LeftLibraryThisTurn LibraryDeparture.LibraryDeparture
   | -- | CR 702.122d: an effect in force says this candidate "can't crew
     -- Vehicles". Read off the surrounding evaluation's context rather than off

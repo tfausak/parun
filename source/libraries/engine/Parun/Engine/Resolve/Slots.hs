@@ -160,6 +160,7 @@ import qualified Parun.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Parun.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Guess as Guess
+import qualified Parun.Types.HiddenZone as HiddenZone
 import qualified Parun.Types.HowMany as HowMany
 import qualified Parun.Types.InitiativeTarget as InitiativeTarget
 import qualified Parun.Types.InstructionR as InstructionR
@@ -219,9 +220,8 @@ import qualified Parun.Types.PutCounters as PutCounters
 import qualified Parun.Types.PutCountersFrom as PutCountersFrom
 import qualified Parun.Types.PutSticker as PutSticker
 import qualified Parun.Types.Quantity as Quantity.Type
+import qualified Parun.Types.RandomCard as RandomCard
 import qualified Parun.Types.RandomCardInGraveyard as RandomCardInGraveyard
-import qualified Parun.Types.RandomCardInHand as RandomCardInHand
-import qualified Parun.Types.RandomCardInLibrary as RandomCardInLibrary
 import Parun.Types.Recipient (Recipient)
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.RedirectDamage as RedirectDamage
@@ -569,15 +569,13 @@ objectRefSlots ref = joinTwo (joinSlots (fmap playerRefSlots (objectRefPlayerRef
   -- The arm above's read, for its reasons: the candidates come from a slot, and
   -- the ref reads every member of the group to match them.
   ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong slot _) -> Map.singleton slot SlotArity.Many
-  -- The seats whose hands randomness reads are ChosenCardInHand's, and reported
-  -- where that arm's are; the COUNT is TopOfLibrary's read, for its reason.
-  ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand _ _ count) -> quantitySlots count
+  -- The seats whose hand or library randomness reads are ChosenCardInHand's,
+  -- and reported where that arm's are; the COUNT is TopOfLibrary's read, for its
+  -- reason.
+  ObjectRef.RandomCard (RandomCard.MkRandomCard _ _ _ count) -> quantitySlots count
   -- ChosenCardInGraveyard's read with the chooser struck out: the graveyards
   -- come through the scope, and the COUNT is TopOfLibrary's read.
   ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard scope _ count) -> joinTwo (zoneScopeSlots scope) (quantitySlots count)
-  -- RandomCardInHand's read one hidden zone over: the seat is reported where
-  -- that arm's is, and the COUNT is TopOfLibrary's read.
-  ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary _ _ count) -> quantitySlots count
   -- The pool's own reads.
   ObjectRef.AtRandom inner -> objectRefSlots inner
   -- EachMatching's answer: the candidates come off the battlefield, so only the
@@ -638,16 +636,13 @@ objectRefQuantities ref = case ref of
   -- Literal, which reads no slot, so dropping this leaves the suite green.
   ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong _ _ count _ _ _) -> Foldable.toList (HowMany.quantity count)
   ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong _ _) -> []
-  -- How many cards randomness names out of each hand -- Fall's printed two. A
-  -- REGRESSION FENCE for the arm above's reason: every count in the pool is a
-  -- Literal, which reads no slot.
-  ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand _ _ count) -> [count]
+  -- How many cards randomness names out of each hand or library -- Fall's
+  -- printed two, the Gates' one. A REGRESSION FENCE for the arm above's reason:
+  -- every count in the pool is a Literal, which reads no slot.
+  ObjectRef.RandomCard (RandomCard.MkRandomCard _ _ _ count) -> [count]
   -- How many cards randomness names out of each graveyard -- Make a Wish's
   -- printed two. The arm above's regression fence, for its reason.
   ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard _ _ count) -> [count]
-  -- How many cards a seek names -- the Gates' printed one. The arm above's
-  -- regression fence, for its reason.
-  ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary _ _ count) -> [count]
   ObjectRef.AtRandom inner -> objectRefQuantities inner
   -- At most how many permanents are chosen -- Teferi, Hero of Dominaria's
   -- printed two.
@@ -698,12 +693,11 @@ objectRefPlayerRefs ref = case ref of
   -- objectRefPlayerRefPositions pins it, and this arm's sibling below.
   ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong _ _ _ chooser pileChooser _) -> chooser : Foldable.toList pileChooser
   ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong _ _) -> []
-  ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand player _ _) -> [player]
+  -- The one seat whose hand or library is reached.
+  ObjectRef.RandomCard (RandomCard.MkRandomCard _ player _ _) -> [player]
   -- ChosenCardInGraveyard's answer: the graveyards are named by a ZoneScope,
   -- which is not a PlayerRef, and randomness names no seat at all.
   ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard _ _ _) -> []
-  -- RandomCardInHand's answer: the one seat whose library is reached.
-  ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary player _ _) -> [player]
   ObjectRef.AtRandom inner -> objectRefPlayerRefs inner
   -- The seat that picks off the battlefield -- Wormfang Crab's opponent, and
   -- by default CR 608.2c's resolving controller. Pinned as the arm above is.
@@ -719,7 +713,7 @@ copyTargetsRefs :: CopyTargets.CopyTargets -> [ObjectRef]
 copyTargetsRefs targets = case targets of
   CopyTargets.Copied -> []
   CopyTargets.ChosenByController -> []
-  CopyTargets.ForEach refs -> NonEmpty.toList refs
+  CopyTargets.ForEach ref -> [ref]
   CopyTargets.Stated ref -> [ref]
 
 -- Every ObjectRef this ONE effect holds, its own only: a nested effect's refs
@@ -3363,9 +3357,8 @@ objectRefObjects legal resolving controller source gs ref = case ref of
     matchingFromAmong legal resolving controller source gs filter_ $
       objectRefObjects legal resolving controller source gs (ObjectRef.InSlot slot)
   -- Randomness, answered for real by Resolve.Effect.askingObjects.
-  ObjectRef.RandomCardInHand _ -> []
+  ObjectRef.RandomCard _ -> []
   ObjectRef.RandomCardInGraveyard _ -> []
-  ObjectRef.RandomCardInLibrary _ -> []
   ObjectRef.AtRandom _ -> []
 
 -- The CARDS in one player's library, top first (CR 401.2): a token shuffled in
@@ -3412,6 +3405,13 @@ libraryCardsOf context gs pid filter_ =
             (\oid -> Filter.matches context (viewOf oid) filter_)
             (Game.cardsIn Zone.Library pid gs)
         )
+
+-- The cards in ONE player's hidden zone matching the filter: handCardsOf or
+-- libraryCardsOf, each keeping its own order.
+hiddenCardsOf :: HiddenZone.HiddenZone -> Filter.Context -> GameState -> PlayerId -> Filter.Type.Filter Keyword.Type.Keyword -> [ObjectId]
+hiddenCardsOf zone = case zone of
+  HiddenZone.Hand -> handCardsOf
+  HiddenZone.Library -> libraryCardsOf
 
 -- The objects a Create bound into `slot` as a GROUP, read off the RESOLVING
 -- stack object's live bindings rather than out of `chosen`, which projects CR

@@ -100,9 +100,8 @@ data Prompt r where
   -- player -- and the turn order is then rotated to begin with them. No
   -- Decider: randomness is not a choice.
   RandomFirstPlayer :: NonEmpty.NonEmpty PlayerId.PlayerId -> Prompt PlayerId.PlayerId
-  -- | Which object randomness named (Parun.Types.ObjectRef.RandomCardInHand,
-  -- Parun.Types.ObjectRef.RandomCardInGraveyard,
-  -- Parun.Types.ObjectRef.RandomCardInLibrary, Parun.Types.ObjectRef.AtRandom,
+  -- | Which object randomness named (Parun.Types.ObjectRef.RandomCard,
+  -- Parun.Types.ObjectRef.RandomCardInGraveyard, Parun.Types.ObjectRef.AtRandom,
   -- Parun.Types.DiscardCards' selection).
   -- Neither Decider nor PlayerId: randomness is not a choice, so who it is
   -- asked of is unobservable; the caller filters the answer back.

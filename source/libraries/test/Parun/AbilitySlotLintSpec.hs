@@ -101,6 +101,7 @@ import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.LifeDirection as LifeDirection
 import qualified Parun.Types.LifeTally as LifeTally
+import qualified Parun.Types.LostPermanent as LostPermanent
 import qualified Parun.Types.ManaAddition as ManaAddition
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSpending as ManaSpending
@@ -810,7 +811,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         cardOffends card = any (\ability -> abilityOffends card ability || conditionOffends (cardBound card) ability) (delayedDeclarations card)
         sweeps = anyFaceOrMinted cardOffends
         offenders = filter (sweeps . Printing.card) ps
-        watching slot = modalTrigger (TriggerCondition.LoseControlOfBound slot) [lintMode [] []]
+        watching slot = modalTrigger (TriggerCondition.LosesControl (LostPermanent.Bound slot)) [lintMode [] []]
         armingSlot = SlotName.MkSlotName (Text.pack "target")
         strangerSlot = SlotName.MkSlotName (Text.pack "elsewhere")
         tokenTapping slot =

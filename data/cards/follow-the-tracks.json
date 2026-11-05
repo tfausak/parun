@@ -67,7 +67,7 @@
                                                   "type": "MoveToZone",
                                                   "value": {
                                                     "ref": {
-                                                      "type": "RandomCardInLibrary",
+                                                      "type": "RandomCard",
                                                       "value": {
                                                         "filter": {
                                                           "type": "Not",
@@ -83,6 +83,9 @@
                                                           "value": {
                                                             "type": "You"
                                                           }
+                                                        },
+                                                        "zone": {
+                                                          "type": "Library"
                                                         }
                                                       }
                                                     },
@@ -175,7 +178,7 @@
                                                   "type": "MoveToZone",
                                                   "value": {
                                                     "ref": {
-                                                      "type": "RandomCardInLibrary",
+                                                      "type": "RandomCard",
                                                       "value": {
                                                         "filter": {
                                                           "type": "Not",
@@ -191,6 +194,9 @@
                                                           "value": {
                                                             "type": "You"
                                                           }
+                                                        },
+                                                        "zone": {
+                                                          "type": "Library"
                                                         }
                                                       }
                                                     },
@@ -283,7 +289,7 @@
                                                   "type": "MoveToZone",
                                                   "value": {
                                                     "ref": {
-                                                      "type": "RandomCardInLibrary",
+                                                      "type": "RandomCard",
                                                       "value": {
                                                         "filter": {
                                                           "type": "Not",
@@ -299,6 +305,9 @@
                                                           "value": {
                                                             "type": "You"
                                                           }
+                                                        },
+                                                        "zone": {
+                                                          "type": "Library"
                                                         }
                                                       }
                                                     },
@@ -391,7 +400,7 @@
                                                   "type": "MoveToZone",
                                                   "value": {
                                                     "ref": {
-                                                      "type": "RandomCardInLibrary",
+                                                      "type": "RandomCard",
                                                       "value": {
                                                         "filter": {
                                                           "type": "Not",
@@ -407,6 +416,9 @@
                                                           "value": {
                                                             "type": "You"
                                                           }
+                                                        },
+                                                        "zone": {
+                                                          "type": "Library"
                                                         }
                                                       }
                                                     },
@@ -499,7 +511,7 @@
                                                   "type": "MoveToZone",
                                                   "value": {
                                                     "ref": {
-                                                      "type": "RandomCardInLibrary",
+                                                      "type": "RandomCard",
                                                       "value": {
                                                         "filter": {
                                                           "type": "Not",
@@ -515,6 +527,9 @@
                                                           "value": {
                                                             "type": "You"
                                                           }
+                                                        },
+                                                        "zone": {
+                                                          "type": "Library"
                                                         }
                                                       }
                                                     },

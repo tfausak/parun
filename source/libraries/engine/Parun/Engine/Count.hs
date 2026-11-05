@@ -473,8 +473,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.TargetsPlayer _ -> predicate
         Filter.Type.IsBound _ -> predicate
         Filter.Type.IsTarget -> predicate
-        Filter.Type.ControllerRelatesToBound _ _ -> predicate
-        Filter.Type.SameControllerAsHostOfBound _ -> predicate
+        Filter.Type.ControllerRelatesToBound {} -> predicate
         Filter.Type.HasChosenName {} -> predicate
         Filter.Type.HasChosenColor -> predicate
         Filter.Type.HasChosenSubtype -> predicate
@@ -1189,7 +1188,8 @@ declaredBlockerThisCombat oid gs = Set.member oid (Combat.declaredBlockers (Game
 
 -- CR 121.1, 701.17a, 608.2i: how this object left a library this turn. Only
 -- a mill appends the event, so a surveil's or an explore's bin stays
--- out; only Event.drawCard stamps the tally, so a tutor stays out.
+-- out; only Event.drawCard stamps the tally, so a tutor stays out. The tally
+-- is per player and in draw order, so its last entry is that player's latest.
 leftLibraryThisTurn :: ObjectId -> GameState -> Set.Set LibraryDeparture.LibraryDeparture
 leftLibraryThisTurn oid gs =
   let milledIt event = case event of
@@ -1197,7 +1197,8 @@ leftLibraryThisTurn oid gs =
         _ -> False
       milled = any (milledIt . LoggedEvent.event) (GameState.events gs)
       drawn = any (Foldable.elem oid) (GameState.drawsThisTurn gs)
-   in Set.fromList ([LibraryDeparture.Milled | milled] <> [LibraryDeparture.Drawn | drawn])
+      drawnLast = any (\draws -> Seq.lookup (Seq.length draws - 1) draws == Just oid) (GameState.drawsThisTurn gs)
+   in Set.fromList ([LibraryDeparture.Milled | milled] <> [LibraryDeparture.Drawn | drawn] <> [LibraryDeparture.LastDrawn | drawnLast])
 
 -- CR 120.1 / 608.2i: was this object dealt damage this turn? Never
 -- Object.damage -- CR 120.6 removes the marks on a regeneration, CR 701.69a heals

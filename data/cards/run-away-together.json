@@ -53,6 +53,9 @@
                 "filter": {
                   "type": "ControllerRelatesToBound",
                   "value": {
+                    "hop": {
+                      "type": "Itself"
+                    },
                     "relation": {
                       "type": "AnotherPlayer"
                     },
@@ -67,6 +70,9 @@
                 "filter": {
                   "type": "ControllerRelatesToBound",
                   "value": {
+                    "hop": {
+                      "type": "Itself"
+                    },
                     "relation": {
                       "type": "AnotherPlayer"
                     },

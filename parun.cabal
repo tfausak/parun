@@ -872,6 +872,8 @@ library codec
     Parun.Codec.HandActionSpec
     Parun.Codec.HexproofExemption
     Parun.Codec.HexproofExemptionSpec
+    Parun.Codec.HiddenZone
+    Parun.Codec.HiddenZoneSpec
     Parun.Codec.Holder
     Parun.Codec.HolderSpec
     Parun.Codec.Hop
@@ -976,6 +978,8 @@ library codec
     Parun.Codec.LookedSpec
     Parun.Codec.LoopMembers
     Parun.Codec.LoopMembersSpec
+    Parun.Codec.LostPermanent
+    Parun.Codec.LostPermanentSpec
     Parun.Codec.Loyalty
     Parun.Codec.LoyaltyClause
     Parun.Codec.LoyaltyClauseSpec
@@ -1172,8 +1176,6 @@ library codec
     Parun.Codec.PermanentIsDealtDamageSpec
     Parun.Codec.PermanentsDealCombatDamageToPlayer
     Parun.Codec.PermanentsDealCombatDamageToPlayerSpec
-    Parun.Codec.PermanentTappedForMana
-    Parun.Codec.PermanentTappedForManaSpec
     Parun.Codec.PermanentWasSacrificed
     Parun.Codec.PermanentWasSacrificedSpec
     Parun.Codec.PermissionCost
@@ -1317,9 +1319,8 @@ library codec
     Parun.Codec.QuestionSpec
     Parun.Codec.Quotient
     Parun.Codec.QuotientSpec
+    Parun.Codec.RandomCard
     Parun.Codec.RandomCardInGraveyard
-    Parun.Codec.RandomCardInHand
-    Parun.Codec.RandomCardInLibrary
     Parun.Codec.RangeOfInfluence
     Parun.Codec.RangeOfInfluenceSpec
     Parun.Codec.Readiness
@@ -1529,8 +1530,12 @@ library codec
     Parun.Codec.TapForTotalPowerSpec
     Parun.Codec.TappedForMana
     Parun.Codec.TappedForManaSpec
+    Parun.Codec.TappedForManaTrigger
+    Parun.Codec.TappedForManaTriggerSpec
     Parun.Codec.TappedIs
     Parun.Codec.TappedIsSpec
+    Parun.Codec.TappedPermanent
+    Parun.Codec.TappedPermanentSpec
     Parun.Codec.TapPermanents
     Parun.Codec.TapPermanentsSpec
     Parun.Codec.TapSpec
@@ -2844,6 +2849,7 @@ library types
     Parun.Types.HandActionPerformer
     Parun.Types.HandWindowCap
     Parun.Types.HexproofExemption
+    Parun.Types.HiddenZone
     Parun.Types.HistoryRead
     Parun.Types.Holder
     Parun.Types.Hop
@@ -2906,6 +2912,7 @@ library types
     Parun.Types.Looked
     Parun.Types.LoopMembers
     Parun.Types.LoopTrail
+    Parun.Types.LostPermanent
     Parun.Types.Loyalty
     Parun.Types.LoyaltyClause
     Parun.Types.LoyaltyGrant
@@ -3023,7 +3030,6 @@ library types
     Parun.Types.PermanentCandidate
     Parun.Types.PermanentIsDealtDamage
     Parun.Types.PermanentsDealCombatDamageToPlayer
-    Parun.Types.PermanentTappedForMana
     Parun.Types.PermanentWasSacrificed
     Parun.Types.PermissionCost
     Parun.Types.PermissionLimit
@@ -3103,9 +3109,8 @@ library types
     Parun.Types.Quantity
     Parun.Types.Question
     Parun.Types.Quotient
+    Parun.Types.RandomCard
     Parun.Types.RandomCardInGraveyard
-    Parun.Types.RandomCardInHand
-    Parun.Types.RandomCardInLibrary
     Parun.Types.RangeOfInfluence
     Parun.Types.Readiness
     Parun.Types.Recipient
@@ -3229,7 +3234,9 @@ library types
     Parun.Types.TapForMana
     Parun.Types.TapForTotalPower
     Parun.Types.TappedForMana
+    Parun.Types.TappedForManaTrigger
     Parun.Types.TappedIs
+    Parun.Types.TappedPermanent
     Parun.Types.TapPermanents
     Parun.Types.TapState
     Parun.Types.TargetCount

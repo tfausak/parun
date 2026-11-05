@@ -42,18 +42,21 @@
                       },
                       "targets": {
                         "type": "ForEach",
-                        "value": [
-                          {
-                            "type": "EachMatching",
-                            "value": {
-                              "type": "And",
-                              "value": []
+                        "value": {
+                          "type": "AllOf",
+                          "value": [
+                            {
+                              "type": "EachMatching",
+                              "value": {
+                                "type": "And",
+                                "value": []
+                              }
+                            },
+                            {
+                              "type": "EachPlayer"
                             }
-                          },
-                          {
-                            "type": "EachPlayer"
-                          }
-                        ]
+                          ]
+                        }
                       }
                     }
                   }

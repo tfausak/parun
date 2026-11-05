@@ -42,6 +42,7 @@ import qualified Parun.Types.Facing as Facing
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameState as GameState
+import qualified Parun.Types.HiddenZone as HiddenZone
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
@@ -53,7 +54,7 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Quantity as Quantity.Type
-import qualified Parun.Types.RandomCardInHand as RandomCardInHand
+import qualified Parun.Types.RandomCard as RandomCard
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Reveal as Reveal
 import qualified Parun.Types.StepBegan as StepBegan
@@ -728,7 +729,7 @@ randomRevealSpec s registry =
           maiden <- S.printingOf s registry "Bird Maiden"
           let base = List.foldl' (\g p -> snd (S.addHandCard p S.bob g)) (Setup.emptyGame S.bothPlayers) [piker, wraith, maiden]
               gs = base {GameState.lastChoice = Timestamp.MkTimestamp 0}
-              effect = Effect.Reveal (Reveal.MkReveal (ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand (PlayerRef.Relative PlayerRelation.Opponent) (Filter.Type.And []) (Quantity.Type.Literal 1))) Nothing)
+              effect = Effect.Reveal (Reveal.MkReveal (ObjectRef.RandomCard (RandomCard.MkRandomCard HiddenZone.Hand (PlayerRef.Relative PlayerRelation.Opponent) (Filter.Type.And []) (Quantity.Type.Literal 1))) Nothing)
               after = S.runPure (rolling 1) gs (Resolve.applyEffect S.noSource S.noSource S.alice Map.empty Map.empty effect)
           Spec.assertEqWith s "the roll was honoured here too" (revealed after) [(S.bob, ["Bog Wraith"])]
           Spec.assertEqWith s "and nobody was recorded as having been offered a choice" (GameState.lastChoice after) (Timestamp.MkTimestamp 0)

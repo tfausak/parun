@@ -16,6 +16,7 @@ import qualified Parun.Codec.EnteredZone as EnteredZone
 import qualified Parun.Codec.ExiledPile as ExiledPile
 import qualified Parun.Codec.Expansion as Expansion
 import qualified Parun.Codec.Holder as Holder
+import qualified Parun.Codec.Hop as Hop
 import qualified Parun.Codec.KeywordDesignator as KeywordDesignator
 import qualified Parun.Codec.KeywordFamily as KeywordFamily
 import qualified Parun.Codec.LibraryDeparture as LibraryDeparture
@@ -41,6 +42,7 @@ import qualified Parun.Types.Anchor as Anchor
 import qualified Parun.Types.ControlMargin as ControlMargin
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Holder as Holder
+import qualified Parun.Types.Hop as Hop
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.SlotName as SlotName
@@ -104,8 +106,7 @@ codec keywordCodec =
       Arm.payload "TargetsPlayer" PlayerRelation.codec Filter.TargetsPlayer (\x -> case x of Filter.TargetsPlayer y -> Just y; _ -> Nothing),
       Arm.payload "IsBound" SlotName.codec Filter.IsBound (\x -> case x of Filter.IsBound y -> Just y; _ -> Nothing),
       Arm.nullary "IsTarget" Filter.IsTarget,
-      Arm.payload "ControllerRelatesToBound" relatesToBound (uncurry Filter.ControllerRelatesToBound) (\x -> case x of Filter.ControllerRelatesToBound r y -> Just (r, y); _ -> Nothing),
-      Arm.payload "SameControllerAsHostOfBound" SlotName.codec Filter.SameControllerAsHostOfBound (\x -> case x of Filter.SameControllerAsHostOfBound y -> Just y; _ -> Nothing),
+      Arm.payload "ControllerRelatesToBound" relatesToBound (\(r, h, y) -> Filter.ControllerRelatesToBound r h y) (\x -> case x of Filter.ControllerRelatesToBound r h y -> Just (r, h, y); _ -> Nothing),
       Arm.payload "HasChosenName" NameChooser.codec Filter.HasChosenName (\x -> case x of Filter.HasChosenName y -> Just y; _ -> Nothing),
       Arm.nullary "HasChosenColor" Filter.HasChosenColor,
       Arm.nullary "HasChosenSubtype" Filter.HasChosenSubtype,
@@ -221,8 +222,6 @@ heldByPlayer =
       <$> Fields.required "holder" Holder.codec fst
       <*> Fields.required "player" PlayerId.codec snd
 
--- | CR 110.2's comparison across two objects keyed by name: the relation, and
--- the slot holding the object whose controller it is relative to.
 -- | What is shared, and with which object.
 shares :: (Typeable.Typeable keyword, Eq keyword) => Codec.Codec (Filter.Filter keyword) -> Codec.Codec (Trait.Trait, Anchor.Anchor (Filter.Filter keyword))
 shares filterCodec =
@@ -231,12 +230,15 @@ shares filterCodec =
       <$> Fields.required "trait" Trait.codec fst
       <*> Fields.required "anchor" (Anchor.codec filterCodec) snd
 
-relatesToBound :: Codec.Codec (PlayerRelation.PlayerRelation, SlotName.SlotName)
+-- | CR 110.2's comparison across two objects keyed by name: the relation, the
+-- hop, and the slot holding the object whose controller it is relative to.
+relatesToBound :: Codec.Codec (PlayerRelation.PlayerRelation, Hop.Hop, SlotName.SlotName)
 relatesToBound =
   Fields.object $
-    (,)
-      <$> Fields.required "relation" PlayerRelation.codec fst
-      <*> Fields.required "slot" SlotName.codec snd
+    (,,)
+      <$> Fields.required "relation" PlayerRelation.codec (\(r, _, _) -> r)
+      <*> Fields.required "hop" Hop.codec (\(_, h, _) -> h)
+      <*> Fields.required "slot" SlotName.codec (\(_, _, y) -> y)
 
 tagOf :: Filter.Filter keyword -> String
 tagOf x = case x of
@@ -272,7 +274,6 @@ tagOf x = case x of
   Filter.IsBound {} -> "IsBound"
   Filter.IsTarget {} -> "IsTarget"
   Filter.ControllerRelatesToBound {} -> "ControllerRelatesToBound"
-  Filter.SameControllerAsHostOfBound {} -> "SameControllerAsHostOfBound"
   Filter.HasChosenName {} -> "HasChosenName"
   Filter.HasChosenColor {} -> "HasChosenColor"
   Filter.HasChosenSubtype {} -> "HasChosenSubtype"

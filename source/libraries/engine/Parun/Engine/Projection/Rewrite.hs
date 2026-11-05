@@ -220,7 +220,6 @@ import qualified Parun.Types.PerCreature as PerCreature
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
-import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.PlacesSticker as PlacesSticker
 import qualified Parun.Types.PlaneswalkR as PlaneswalkR
@@ -244,9 +243,8 @@ import qualified Parun.Types.PutCountersFrom as PutCountersFrom
 import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.PutSticker as PutSticker
 import qualified Parun.Types.Quantity as Quantity.Type
+import qualified Parun.Types.RandomCard as RandomCard
 import qualified Parun.Types.RandomCardInGraveyard as RandomCardInGraveyard
-import qualified Parun.Types.RandomCardInHand as RandomCardInHand
-import qualified Parun.Types.RandomCardInLibrary as RandomCardInLibrary
 import qualified Parun.Types.RedirectDamage as RedirectDamage
 import qualified Parun.Types.RemovalCount as RemovalCount
 import qualified Parun.Types.RemoveCounters as RemoveCounters
@@ -284,6 +282,8 @@ import qualified Parun.Types.Subtype as Subtype.Type
 import qualified Parun.Types.TakeExtraTurn as TakeExtraTurn
 import qualified Parun.Types.Tap as Tap
 import qualified Parun.Types.TapForMana as TapForMana
+import qualified Parun.Types.TappedForManaTrigger as TappedForManaTrigger
+import qualified Parun.Types.TappedPermanent as TappedPermanent
 import qualified Parun.Types.TargetRestriction as TargetRestriction
 import qualified Parun.Types.TargetSlot as TargetSlot
 import qualified Parun.Types.TextWord as TextWord
@@ -1263,8 +1263,7 @@ rewriteRestricted pairs restricted = case restricted of
 -- and the player-naming arms hold no subtype word; only the Filters and the
 -- Quantities can carry one -- the Filter that says what ends a walk of a library
 -- included, and ChosenCardInGraveyard's, ChosenCardFromAmong's,
--- RandomCardInHand's, RandomCardInGraveyard's and RandomCardInLibrary's counts
--- beside the two library walks'.
+-- RandomCard's and RandomCardInGraveyard's counts beside the two library walks'.
 rewriteObjectRef :: [(TextWord.TextWord, TextWord.TextWord)] -> ObjectRef.ObjectRef -> ObjectRef.ObjectRef
 rewriteObjectRef pairs ref = case ref of
   ObjectRef.InSlot _ -> ref
@@ -1301,13 +1300,10 @@ rewriteObjectRef pairs ref = case ref of
   -- A REGRESSION FENCE rather than proven behaviour, EachCardInYourLibrary's
   -- reason: no card in the pool narrows a random pick by a land type, and no
   -- printing changes the text of the ones that write this ref.
-  ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand p f c) -> ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand p (Filter.rewrite pairs f) (rewriteQuantity pairs c))
+  ObjectRef.RandomCard (RandomCard.MkRandomCard z p f c) -> ObjectRef.RandomCard (RandomCard.MkRandomCard z p (Filter.rewrite pairs f) (rewriteQuantity pairs c))
   -- The arm above's regression fence, for its reason: Ghoulraiser's Zombie is a
   -- creature type and no printing changes this trigger's text.
   ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard s f c) -> ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard s (Filter.rewrite pairs f) (rewriteQuantity pairs c))
-  -- The arm above's regression fence, for its reason: the Gates' "nonland" is a
-  -- card type and no printing changes their text.
-  ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary p f c) -> ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary p (Filter.rewrite pairs f) (rewriteQuantity pairs c))
   ObjectRef.ChosenPermanents choice -> ObjectRef.ChosenPermanents (rewriteChosenPermanents pairs choice)
   ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound slot f) -> ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound slot (Filter.rewrite pairs f))
   ObjectRef.AttackedBy _ -> ref
@@ -1333,7 +1329,7 @@ rewriteCopyTargets :: [(TextWord.TextWord, TextWord.TextWord)] -> CopyTargets.Co
 rewriteCopyTargets pairs targets = case targets of
   CopyTargets.Copied -> targets
   CopyTargets.ChosenByController -> targets
-  CopyTargets.ForEach refs -> CopyTargets.ForEach (fmap (rewriteObjectRef pairs) refs)
+  CopyTargets.ForEach ref -> CopyTargets.ForEach (rewriteObjectRef pairs ref)
   CopyTargets.Stated ref -> CopyTargets.Stated (rewriteObjectRef pairs ref)
 
 -- CR 612.1/612.2a through the CARD an Effect.Create or an Effect.CreateEmblem
@@ -2187,8 +2183,14 @@ rewriteTriggerCondition pairs condition = case condition of
       acts {PermanentActed.permanent = acting (PermanentActed.permanent acts)}
   TriggerCondition.AttachedCreatureMentors -> condition
   TriggerCondition.BecomesTapState watched -> TriggerCondition.BecomesTapState watched {BecomesTapState.actor = acting (BecomesTapState.actor watched)}
-  TriggerCondition.AttachedPermanentTappedForMana -> condition
-  TriggerCondition.PermanentTappedForMana payload -> TriggerCondition.PermanentTappedForMana payload {PermanentTappedForMana.filter = Filter.rewrite pairs (PermanentTappedForMana.filter payload), PermanentTappedForMana.mana = rewriteManaSpecification pairs (PermanentTappedForMana.mana payload)}
+  TriggerCondition.TappedForMana payload ->
+    TriggerCondition.TappedForMana
+      payload
+        { TappedForManaTrigger.permanent = case TappedForManaTrigger.permanent payload of
+            TappedPermanent.Attached -> TappedPermanent.Attached
+            TappedPermanent.Matching f -> TappedPermanent.Matching (Filter.rewrite pairs f),
+          TappedForManaTrigger.mana = rewriteManaSpecification pairs (TappedForManaTrigger.mana payload)
+        }
   TriggerCondition.AbilityAddsMana payload -> TriggerCondition.AbilityAddsMana payload {AbilityAddsMana.source = Filter.rewrite pairs (AbilityAddsMana.source payload), AbilityAddsMana.mana = rewriteManaSpecification pairs (AbilityAddsMana.mana payload)}
   TriggerCondition.SelfManaAbilityResolves -> condition
   TriggerCondition.Exploits (ExploitTrigger.MkExploitTrigger exploiter exploited) -> TriggerCondition.Exploits (ExploitTrigger.MkExploitTrigger (acting exploiter) (Filter.rewrite pairs exploited))
@@ -2198,8 +2200,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.SagaFinalChapterTriggers _ -> condition
   -- CR 603.7's slot name is card data but not card TEXT, so no CR 612.1 swap
   -- reaches it; what the slot holds is read off the projection instead.
-  TriggerCondition.LoseControlOfBound _ -> condition
-  TriggerCondition.LoseControlOfSelf -> condition
+  TriggerCondition.LosesControl _ -> condition
   TriggerCondition.RoomEntered _ -> condition
   TriggerCondition.PlayerActs _ -> condition
   TriggerCondition.PlayerLosesGame _ -> condition

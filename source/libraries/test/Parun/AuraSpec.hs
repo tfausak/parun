@@ -1563,7 +1563,7 @@ reattachSpec s registry = Spec.describe s "Reattach" $ do
 -- CR 110.2 through CR 303.4b: the 2006-05-01 ruling settles the antecedent --
 -- the destination "must be controlled by the player who controls the permanent
 -- the Aura is attached to", and "it doesn't matter who controls the Aura". So
--- the atom is Filter.SameControllerAsHostOfBound over the target slot, answered
+-- the atom is Filter.ControllerRelatesToBound You Host over the target slot, answered
 -- off Filter.Context.slotHostControllers, which
 -- Parun.Engine.Resolve.Slots.effectContext fills and which reaches the
 -- destination filter only because Parun.Engine.Attach.hostsFor takes its Context

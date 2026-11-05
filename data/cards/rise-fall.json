@@ -121,7 +121,7 @@
                     "type": "Reveal",
                     "value": {
                       "ref": {
-                        "type": "RandomCardInHand",
+                        "type": "RandomCard",
                         "value": {
                           "count": {
                             "type": "Literal",
@@ -130,6 +130,9 @@
                           "player": {
                             "type": "InSlot",
                             "value": "player"
+                          },
+                          "zone": {
+                            "type": "Hand"
                           }
                         }
                       },
