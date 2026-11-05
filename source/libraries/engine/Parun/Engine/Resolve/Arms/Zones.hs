@@ -114,7 +114,6 @@ import qualified Parun.Types.MakeForetold as MakeForetold
 import qualified Parun.Types.Mana as Mana.Type
 import qualified Parun.Types.Mill as Mill
 import qualified Parun.Types.MillTally as MillTally
-import qualified Parun.Types.Milled as Milled
 import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.MoveToZone as MoveToZone
 import qualified Parun.Types.Object as Object
@@ -1226,14 +1225,12 @@ mill settle resolving source controller legal (Mill.MkMill ref quantity mTally m
   -- which the tally below asks its characteristics of, and the ids the moves
   -- ANSWERED, which CR 701.17c's binding holds.
   --
-  -- Then recorded as the mill it was (CR 701.17a): a cancelled move is no card
-  -- milled, so ONE entry per miller holding that player's whole batch, since
-  -- they are milled at once (Contaminated Drink's ruling) -- and recorded even
-  -- for a card a
-  -- replacement diverted elsewhere, since it was milled wherever it ended up.
+  -- The funnel records ONE Milled per miller, holding that player's whole
+  -- batch, since they are milled at once (Contaminated Drink's ruling) -- even
+  -- a card a replacement diverted elsewhere, since it was milled wherever it
+  -- ended up.
   milledBy <- Monad.forM wanted $ \(pid, n) -> do
     (taken, arrived) <- Event.millFromReturningTaken settle pid n
-    Monad.unless (null arrived) (State.modify' (Event.recordEvent (GameEvent.Milled (Milled.MkMilled pid (Seq.fromList arrived)))))
     -- CR 701.17b / 603.12: a library too short for the count named, the Draw
     -- arm's shortfall (Wick's Patrol's 2024-07-26 ruling).
     Monad.when (List.genericLength taken < n) Common.fallShort
