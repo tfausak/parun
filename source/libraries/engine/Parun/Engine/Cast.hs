@@ -4171,11 +4171,10 @@ castProposed perform baseSpending pid oid sid printedFace castFrom preparedFor k
                           -- CR 406.4: a target drawn out of a face-down pile is
                           -- revealed only now the cost is paid
                           -- (docs/synthetic-readings.md, "Whether a target drawn
-                          -- out of a face-down pile is revealed"). Not
-                          -- implemented: ending that reveal after a brief time
-                          -- (CR 701.20a); it lasts while the spell is on the
-                          -- stack (#6175).
-                          Monad.mapM_ (Cost.revealPaying (Just sid) pid) drawn
+                          -- out of a face-down pile is revealed"), for CR
+                          -- 701.20a's brief time: none of its extensions
+                          -- covers a target.
+                          Monad.mapM_ (Event.reveal RevealCause.Ordinary pid) drawn
                           Monad.when (castFrom == Just Zone.Graveyard) (armCastFromGraveyard pid keywordsBefore castFor sid)
                           -- CR 903.8: the cast is now announced, so this is a
                           -- previous cast of it from the command zone

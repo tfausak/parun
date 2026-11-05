@@ -2454,10 +2454,6 @@ beholdObjects paidFor slots pid oid n criterion = do
 -- stack. Nothing where no stack object exists -- a combat toll, a mana ability
 -- (CR 605.3b), a CR 116 special action (`payAction`) or CR 118.12's payment at
 -- resolution -- and then the reveal is the log entry alone.
---
--- Also CR 406.4's reveal of a target drawn out of a face-down pile, made once
--- the spell or ability is paid for (Parun.Engine.Cast.castProposed,
--- Parun.Engine.Activate.activateAbilityWith) and kept as long (gap #6175).
 revealPaying :: Maybe ObjectId -> PlayerId -> ObjectId -> Game ()
 revealPaying paidFor pid card = do
   Event.reveal RevealCause.Ordinary pid card
