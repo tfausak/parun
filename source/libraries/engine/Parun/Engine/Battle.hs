@@ -328,11 +328,12 @@ siegeDefeat =
 --
 -- Off the PROJECTION rather than off the printed type line, so a permanent that
 -- became a Siege has the ability and a Siege that stopped being one does not (CR
--- 613.1d). Both CR 310.4b and CR 310.12b are intrinsic abilities, which layer 6
--- could remove (CR 613.1f), but neither this nor Projection's mint of CR 310.4b
--- reads PC.lostAllAbilities, so LoseAllAbilities leaves both (gap #6242).
+-- 613.1d). CR 310.12b's is an intrinsic ability, so a CR 613.1f wipe takes it:
+-- read off PC.lostAllAbilities, as Projection's mint of CR 310.4b is. The scenario
+-- battle/cr-613-1f-a-stripped-siege-at-defense-0-is-buried-with-no-offer proves
+-- it.
 triggeredAbilitiesOf :: PC.ProjectedCharacteristics -> [TriggeredAbility Card (GrantedAbility.GrantedAbility Card)]
-triggeredAbilitiesOf pc = if Set.member Subtype.Siege (battleTypes pc) then [siegeDefeat] else []
+triggeredAbilitiesOf pc = if Set.member Subtype.Siege (battleTypes pc) && not (PC.lostAllAbilities pc) then [siegeDefeat] else []
 
 -- CR 122.1g / 310.4c: the defense counters on a permanent. Zero for an object the
 -- game does not hold, the answer Saga.loreOn gives for rule 714.3.
