@@ -3114,13 +3114,13 @@ objectRefObjects legal resolving controller source gs ref = case ref of
           AttackTarget.OfBattle oid -> Just oid
      in Maybe.mapMaybe attackedObject (attackedBy legal resolving controller source gs slot)
   -- CR 400.7's link read back: each object the slot holds, followed through
-  -- this turn's logged zone changes to the object it is now -- and, given an
+  -- this turn's logged zone changes to the objects it is now -- and, given an
   -- `among`, kept only where that slot holds the incarnation too (CR 400.7j).
   -- The scenario ante-bronze-tablet-destroyed-in-response-trades-only-the-target
   -- proves the `among` half.
   ObjectRef.FromAnywhere (FromAnywhere.MkFromAnywhere slot among) ->
     let held named = objectRefObjects legal resolving controller source gs (ObjectRef.InSlot named)
-        followed = Maybe.mapMaybe (\oid -> Game.currentIncarnation oid gs) (held slot)
+        followed = concatMap (`Game.currentIncarnations` gs) (held slot)
      in maybe followed (\named -> filter (`elem` held named) followed) among
   -- Each ref's objects in the order written, an object two refs name once.
   ObjectRef.AllOf refs -> ListUtils.nubOrd (concatMap (objectRefObjects legal resolving controller source gs) refs)

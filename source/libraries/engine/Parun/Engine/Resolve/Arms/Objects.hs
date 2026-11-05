@@ -88,6 +88,7 @@ import qualified Parun.Types.Create as Create
 import qualified Parun.Types.CreateCopy as CreateCopy
 import qualified Parun.Types.CreateEmblem as CreateEmblem
 import qualified Parun.Types.DamageDirection as DamageDirection
+import qualified Parun.Types.DamageR as DamageR
 import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.Daytime as Daytime
 import qualified Parun.Types.Designate as Designate
@@ -934,7 +935,7 @@ replace resolving source controller legal (Replace.MkReplace duration uses origi
                     { -- CR 601.2c / 608.2b: "target player" is the player this
                       -- resolution's slot names now, BAKED for `controller`'s
                       -- reason below.
-                      ActiveReplacement.effect = bakeLookCount (Quantity.evaluateFor (effectViewOf resolving source legal gs) context gs resolving source) (Functor.runIdentity (overRelations (pure . Common.bakeRelation (Filter.slotPlayers context)) re)),
+                      ActiveReplacement.effect = bakeAmount (Quantity.evaluateFor (effectViewOf resolving source legal gs) context gs resolving source) (Functor.runIdentity (overRelations (pure . Common.bakeRelation (Filter.slotPlayers context)) re)),
                       ActiveReplacement.source = source,
                       -- CR 109.5: the resolution's controller, BAKED now --
                       -- the source is a spell CR 608.2n is about to put in a
@@ -976,17 +977,26 @@ replace resolving source controller legal (Replace.MkReplace duration uses origi
                     }
              in gs1 {GameState.replacements = active : GameState.replacements gs1}
 
--- CR 107.3a: a look count naming a slot is the number this resolution holds,
--- Aladdin's Lamp's X, so it is written down as the row is installed: the slot
--- dies with the resolution. The scenario
--- aladdins-lamp-keeps-its-x-after-it-has-left proves it.
-bakeLookCount :: (Quantity.Type.Quantity -> Maybe Integer) -> ReplacementEffect.ReplacementEffect card ability effect -> ReplacementEffect.ReplacementEffect card ability effect
-bakeLookCount evaluate re = case re of
+-- A row's number naming a slot is the one this resolution settled, so it is
+-- written down as the row is installed: the slot dies with the resolution, and
+-- a source that already left never held it (CR 113.7a, Common.bindAmountSlot).
+-- CR 608.2h: Power Leak's ceiling, "where X is the amount of mana that player
+-- paid this way". CR 107.3a: Aladdin's Lamp's look count. The scenarios
+-- power-leak-still-prevents-when-the-aura-has-left and
+-- aladdins-lamp-keeps-its-x-after-it-has-left prove them.
+bakeAmount :: (Quantity.Type.Quantity -> Maybe Integer) -> ReplacementEffect.ReplacementEffect card ability effect -> ReplacementEffect.ReplacementEffect card ability effect
+bakeAmount evaluate re = case re of
+  ReplacementEffect.DamageR damage@DamageR.MkDamageR {DamageR.rewrite = DamageRewrite.PreventUpTo quantity}
+    | Just literal <- settled quantity ->
+        ReplacementEffect.DamageR damage {DamageR.rewrite = DamageRewrite.PreventUpTo literal}
   ReplacementEffect.DrawR draw@DrawR.MkDrawR {DrawR.rewrite = DrawRewrite.KeepOneOfTopThenDraw quantity}
-    | not (Set.null (QuantitySlot.slots quantity)),
-      Just n <- evaluate quantity ->
-        ReplacementEffect.DrawR draw {DrawR.rewrite = DrawRewrite.KeepOneOfTopThenDraw (Quantity.Type.Literal n)}
+    | Just literal <- settled quantity ->
+        ReplacementEffect.DrawR draw {DrawR.rewrite = DrawRewrite.KeepOneOfTopThenDraw literal}
   _ -> re
+  where
+    settled quantity
+      | Set.null (QuantitySlot.slots quantity) = Nothing
+      | otherwise = Quantity.Type.Literal <$> evaluate quantity
 
 preventNextDamage :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> PreventNextDamage.PreventNextDamage (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Game ()
 preventNextDamage resolving source controller legal chosen (PreventNextDamage.MkPreventNextDamage duration kind ref whatRecipient whoRecipient sourceFilter quantity riderEffects) = do

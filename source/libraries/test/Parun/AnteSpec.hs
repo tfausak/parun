@@ -12,6 +12,7 @@ import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Foldable as Foldable
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
 import qualified Parun.Engine.Ante as Ante
 import qualified Parun.Engine.Departure as Departure
@@ -336,9 +337,9 @@ spec s registry = Spec.describe s "Ante" $ do
           arrived <- Event.changeZoneReturning (pure ()) start Zone.Graveyard
           Monad.forM_ arrived (\gy -> Event.changeZone (pure ()) gy Zone.Exile)
         after = S.runPure S.identityAnswer g1 twice
-        zoneNow gs = fmap Object.zone (Game.currentIncarnation start gs >>= \oid -> Game.lookupObject oid gs)
-    Spec.assertEqWith s "CR 400.7 it is followed into exile" (zoneNow after) (Just Zone.Exile)
-    Spec.assertEqWith s "CR 800.4a and lost once it has left the game" (Game.currentIncarnation start (S.departs Departure.Type.Conceded S.alice after)) Nothing
+        zoneNow gs = fmap Object.zone (Maybe.mapMaybe (`Game.lookupObject` gs) (Game.currentIncarnations start gs))
+    Spec.assertEqWith s "CR 400.7 it is followed into exile" (zoneNow after) [Zone.Exile]
+    Spec.assertEqWith s "CR 800.4a and lost once it has left the game" (Game.currentIncarnations start (S.departs Departure.Type.Conceded S.alice after)) []
   -- CR 108.3: every card a game begins with is one card through every move,
   -- and the player who began the game with it is its starting owner. Only
   -- cards carry an identity, and no two share one.
