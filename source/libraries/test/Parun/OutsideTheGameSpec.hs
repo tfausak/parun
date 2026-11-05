@@ -51,6 +51,7 @@ import qualified Parun.Engine.Cast as Cast
 import qualified Parun.Engine.Engine as Engine
 import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Game as Game
+import qualified Parun.Engine.Phasing as Phasing
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Setup as Setup
 import qualified Parun.Engine.Stack as Stack
@@ -92,6 +93,7 @@ import qualified Parun.Types.OutsideDestination as OutsideDestination
 import qualified Parun.Types.OutsideObject as OutsideObject
 import qualified Parun.Types.OwnershipChange as OwnershipChange
 import qualified Parun.Types.Phase as Phase
+import qualified Parun.Types.PhasedOut as PhasedOut
 import qualified Parun.Types.Player as Player
 import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.Printing as Printing
@@ -1297,6 +1299,47 @@ spec s registry = Spec.describe s "Parun.Engine.Event (CR 400.11)" $ do
         outsideOf zone = let (oid, placed) = S.addObjectIn zone sign S.alice parent in Map.member oid (GameState.outsideObjects (Setup.subgameStateFrom S.alice placed))
     Spec.assertEqWith s "CR 407.3 the ante card is not outside the subgame" (outsideOf Zone.Ante) False
     Spec.assertEqWith s "CR 729.4 the same card in exile is" (outsideOf Zone.Exile) True
+  -- CR 702.26b/729.4: alice's Breezekeeper phased out in her untap step, and
+  -- in her main phase she casts Shahrazad. Inside the subgame Living Wish ("a
+  -- creature or land card") is not offered the Breezekeeper: a phased-out
+  -- permanent is treated as though it does not exist, CR 729.4 does not name
+  -- one, and the wish's ruling of 2007-09-16 says it can't acquire one. The
+  -- answerer takes the Breezekeeper if offered, so the reading the rule rejects
+  -- reddens every assertion below.
+  --
+  -- The sizing is the Death Wish case's: one {1}{G} wish and eight Forests for
+  -- alice, castable on her turn 3, and bob decks on turn 6.
+  Spec.it s "CR 702.26b/729.4 gameplay: a subgame's Living Wish is not offered a phased-out Breezekeeper" $ do
+    plains <- S.printingOf s registry "Plains"
+    forest <- S.printingOf s registry "Forest"
+    mountain <- S.printingOf s registry "Mountain"
+    shahrazad <- S.printingOf s registry "Shahrazad"
+    livingWish <- S.printingOf s registry "Living Wish"
+    breezekeeper <- S.printingOf s registry "Breezekeeper"
+    let (keeperId, g1) = S.addPermanent breezekeeper S.alice (Setup.emptyGame S.bothPlayers)
+        g2 = Phasing.phaseOut (PhasedOut.Directly S.alice) keeperId g1
+        g3 = S.landsFor plains S.alice 2 g2
+        g4 = stockLibrary mountain 9 S.bob (stockLibrary forest 8 S.alice (stockLibrary livingWish 1 S.alice g3))
+        (_shahrazadId, g5) = S.addHandCard shahrazad S.alice g4
+        before = g5 {GameState.activePlayer = S.alice, GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.alice}
+        isKeeper candidate = case candidate of
+          OutsideCard.InAnotherGame oid -> oid == keeperId
+          OutsideCard.InPool _ -> False
+        -- Records whether the Breezekeeper was ever on offer, and asks for it.
+        recordOffers :: Prompt.Prompt r -> State.State (Bool, Bool) r
+        recordOffers p = case p of
+          Prompt.ChooseOptional {} -> pure OptionalDecision.Exercises
+          Prompt.ChooseFromOutsideTheGame _ _ offered _ _ -> do
+            State.modify' (\(_, seen) -> (True, seen || any isKeeper (NonEmpty.toList offered)))
+            pure [Maybe.fromMaybe (NonEmpty.head offered) (List.find isKeeper (NonEmpty.toList offered))]
+          Prompt.RandomFirstPlayer _ -> pure S.alice
+          _ -> pure (S.castAnswer p)
+        ((_, after), (wished, offeredKeeper)) = State.runState (Engine.runGame recordOffers before Engine.priorityLoop) (False, False)
+    Spec.assertEqWith s "setup: the Breezekeeper is phased out" (Phasing.isPhasedOut keeperId before) True
+    Spec.assertEqWith s "the subgame's Living Wish resolved and asked" wished True
+    Spec.assertEqWith s "CR 702.26b the phased-out Breezekeeper was never offered" offeredKeeper False
+    Spec.assertEqWith s "CR 702.26b and it is still alice's, phased out in the main game" (fmap Object.owner (Game.lookupObject keeperId after), Phasing.phasedOutStatus keeperId after) (Just S.alice, Just (PhasedOut.Directly S.alice))
+    Spec.assertEqWith s "CR 729.1a the subgame did not decide the main game" (GameState.result after) Nothing
   -- CR 400.11b: a destination that is not the hand. The Raven's Warning
   -- ({1}{W}{U} Enchantment -- Saga; name, cost, type line and Oracle text checked
   -- against api.scryfall.com 2026-09-16, paper printing `khm`) is the only
