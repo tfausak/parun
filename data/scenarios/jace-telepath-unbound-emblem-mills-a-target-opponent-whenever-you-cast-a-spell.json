@@ -103,10 +103,7 @@
       "do": {
         "Activate": {
           "object": "$jace",
-          "ability": 2,
-          "mana": [
-            null
-          ]
+          "ability": 2
         }
       }
     },

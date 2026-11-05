@@ -218,9 +218,6 @@
       "do": {
         "Activate": {
           "ability": 1,
-          "mana": [
-            null
-          ],
           "object": "$hof",
           "targets": [
             "$bob"
@@ -266,9 +263,6 @@
       "do": {
         "Activate": {
           "ability": 2,
-          "mana": [
-            null
-          ],
           "object": "$hof"
         }
       },

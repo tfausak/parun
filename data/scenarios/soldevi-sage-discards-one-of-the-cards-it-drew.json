@@ -3,7 +3,7 @@
   "note": "Alice keeps her Mountain; her Shock is refused as the discard, and she discards the drawn Hill Giant.",
   "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "hand": [{"card": "Shock", "label": "shock"}], "battlefield": [{"card": "Soldevi Sage", "label": "sage", "ready": true}, {"card": "Island", "label": "island"}, {"card": "Forest", "label": "forest"}, {"card": "Mountain", "label": "mountain"}], "library": [{"card": "Hill Giant", "label": "giant"}, {"card": "Grizzly Bears"}, {"card": "Swamp"}, {"card": "Plains"}]}, {"name": "bob", "library": [{"card": "Wall of Stone"}, {"card": "Wall of Stone"}, {"card": "Wall of Stone"}]}]},
   "timeline": [
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$sage", "ability": 0, "costOrder": [0, 1], "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$sage", "ability": 0, "costOrder": [0, 1]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseSacrifices", "with": ["$island", "$forest"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "ChooseCardFromAmong", "with": "$shock"}}},

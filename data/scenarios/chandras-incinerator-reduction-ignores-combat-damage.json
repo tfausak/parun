@@ -136,9 +136,6 @@
           "object": "$pyro",
           "targets": [
             "$bob"
-          ],
-          "mana": [
-            null
           ]
         }
       }

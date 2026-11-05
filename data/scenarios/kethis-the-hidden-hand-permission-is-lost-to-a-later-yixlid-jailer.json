@@ -76,9 +76,6 @@
       "do": {
         "Activate": {
           "ability": 0,
-          "mana": [
-            null
-          ],
           "object": "$kethis"
         }
       },

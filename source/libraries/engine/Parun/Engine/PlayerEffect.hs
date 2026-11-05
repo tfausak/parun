@@ -1973,7 +1973,9 @@ loyaltyGrants clause pid srcId gs =
 
 -- CR 116.2c: the life `pid` may pay for mana now, each beside an object the effect
 -- came from, one per distinct price and mana: two Channels offer one action, since
--- taking it through either leaves the same board.
+-- taking it through either leaves the same board. The object is only ever
+-- ManaAdded.source, read by AbilityAddsMana's filter, and every producer is a
+-- sorcery named Channel, so no such filter tells the two apart.
 lifeForMana :: PlayerId -> GameState -> [(ObjectId, Natural, ManaType.ManaType)]
 lifeForMana pid gs =
   ListUtils.nubOrdOn

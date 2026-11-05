@@ -1,6 +1,6 @@
 {
   "description": "CR 116.2c two resolved Channels offer one action, one payment for one mana",
-  "note": "Taking it through either leaves the same board, so a second offer would be no choice. A second prompt in the Ornithopter's window would fail the scenario with no entry to answer it.",
+  "note": "Taking it through either leaves the same board, so a second offer would be no choice. A second prompt in the Bonesplitter's window would fail the scenario with no entry to answer it.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
@@ -52,8 +52,8 @@
             "label": "again"
           },
           {
-            "card": "Ornithopter",
-            "label": "bird"
+            "card": "Bonesplitter",
+            "label": "sword"
           }
         ]
       },
@@ -164,13 +164,59 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "alice",
+      "do": {
+        "Take": {
+          "action": "PayLifeForMana 1 Colorless"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "alice",
+          "life": 19
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "ManaPool",
+          "player": "alice",
+          "is": [
+            {
+              "manaType": {
+                "type": "Colorless"
+              },
+              "tags": [],
+              "retention": {
+                "type": "Ordinary"
+              },
+              "restriction": null,
+              "rider": null,
+              "sourceChoices": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
       "check": {
         "View": {
           "of": "Offered",
           "player": "alice",
           "is": [
             "Pass",
-            "Cast $bird",
+            "Cast $sword",
             "PayLifeForMana 1 Colorless"
           ]
         }
@@ -182,7 +228,7 @@
       "player": "alice",
       "do": {
         "Cast": {
-          "object": "$bird"
+          "object": "$sword"
         }
       }
     },
@@ -207,7 +253,7 @@
         "View": {
           "of": "Stack",
           "is": [
-            "Ornithopter"
+            "Bonesplitter"
           ]
         }
       }
@@ -219,7 +265,19 @@
       "check": {
         "Life": {
           "player": "alice",
-          "life": 20
+          "life": 19
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "ManaPool",
+          "player": "alice",
+          "is": []
         }
       }
     }

@@ -69,10 +69,7 @@
       "player": "bob",
       "do": {
         "Cast": {
-          "object": "$ornithopter",
-          "mana": [
-            null
-          ]
+          "object": "$ornithopter"
         }
       }
     },

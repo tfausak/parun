@@ -134,10 +134,7 @@
         "Activate": {
           "ability": 1,
           "object": "$u",
-          "x": 3,
-          "mana": [
-            null
-          ]
+          "x": 3
         }
       },
       "player": "alice",

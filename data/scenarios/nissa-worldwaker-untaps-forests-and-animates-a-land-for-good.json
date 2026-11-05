@@ -3,7 +3,7 @@
   "note": "On turn 1 Nissa untaps three of alice's five tapped Forests and bob's tapped one. On turn 3 bob's Forest is refused for the other +1, and alice's untapped Forest becomes a 4/4 creature land, still one on turn 5.",
   "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Nissa, Worldwaker", "label": "nissa", "counters": [{"key": {"type": "Loyalty"}, "value": 3}]}, {"card": "Forest", "label": "land"}, {"card": "Forest", "label": "f1", "tapped": true}, {"card": "Forest", "label": "f2", "tapped": true}, {"card": "Forest", "label": "f3", "tapped": true}, {"card": "Forest", "label": "f4", "tapped": true}, {"card": "Forest", "label": "f5", "tapped": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Forest", "label": "theirs", "tapped": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$nissa", "ability": 1, "targets": ["$f1", "$f2", "$f3", "$theirs"], "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$nissa", "ability": 1, "targets": ["$f1", "$f2", "$f3", "$theirs"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$f1", "tapped": false}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$f2", "tapped": false}}},
@@ -12,7 +12,7 @@
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$theirs", "tapped": false}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Counters": {"object": "$nissa", "kind": {"type": "Loyalty"}, "count": 4}}},
     {"turn": 3, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$nissa", "ability": 0, "targets": ["$theirs"], "mana": [null]}}},
-    {"turn": 3, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$nissa", "ability": 0, "targets": ["$land"], "mana": [null]}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$nissa", "ability": 0, "targets": ["$land"]}}},
     {"turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
     {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Types": {"object": "$land", "types": ["Creature", "Land"]}}},
     {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$land", "power": 4, "toughness": 4}}},

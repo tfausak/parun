@@ -120,10 +120,7 @@
         "ChooseToPay": {
           "decision": {
             "type": "Pays"
-          },
-          "mana": [
-            null
-          ]
+          }
         }
       },
       "player": "alice",
@@ -218,9 +215,6 @@
     {
       "do": {
         "Activate": {
-          "mana": [
-            null
-          ],
           "object": "$healer",
           "targets": [
             "$alice"

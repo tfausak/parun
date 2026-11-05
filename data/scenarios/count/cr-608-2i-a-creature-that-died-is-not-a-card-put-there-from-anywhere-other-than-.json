@@ -145,9 +145,6 @@
           "object": "$sorcerer",
           "targets": [
             "$apiker"
-          ],
-          "mana": [
-            null
           ]
         }
       }

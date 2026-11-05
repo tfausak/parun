@@ -159,9 +159,6 @@
       "do": {
         "Activate": {
           "ability": 1,
-          "mana": [
-            null
-          ],
           "object": "Teferi, Timeless Voyager",
           "targets": [
             "$bears"

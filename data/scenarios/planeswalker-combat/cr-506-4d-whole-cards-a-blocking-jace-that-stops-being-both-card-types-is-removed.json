@@ -88,9 +88,6 @@
           "object": "$coating",
           "targets": [
             "$jace"
-          ],
-          "mana": [
-            null
           ]
         }
       }

@@ -76,9 +76,6 @@
           "ability": 0,
           "targets": [
             "$bonesplitter"
-          ],
-          "mana": [
-            null
           ]
         }
       }

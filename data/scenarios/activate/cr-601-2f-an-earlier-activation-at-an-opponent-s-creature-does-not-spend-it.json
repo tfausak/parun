@@ -192,9 +192,6 @@
           "ability": 1,
           "targets": [
             "$war-mammoth"
-          ],
-          "mana": [
-            null
           ]
         }
       }

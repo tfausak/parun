@@ -97,9 +97,6 @@
           "ability": 0,
           "targets": [
             "$elves"
-          ],
-          "mana": [
-            null
           ]
         }
       }
@@ -218,17 +215,6 @@
               }
             }
           ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
-        "Answer": {
-          "prompt": "ChooseExtraManaSource",
-          "with": null
         }
       }
     },

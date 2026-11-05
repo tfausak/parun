@@ -207,9 +207,6 @@
           "object": "Lightning Bolt",
           "targets": [
             "$bob"
-          ],
-          "mana": [
-            null
           ]
         }
       }

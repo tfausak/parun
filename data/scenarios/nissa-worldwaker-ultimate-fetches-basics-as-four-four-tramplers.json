@@ -3,7 +3,7 @@
   "note": "Hill Giant is refused; alice finds a Forest and an Island, each a 4/4 trampling creature land, and Nissa goes to her graveyard with no loyalty left.",
   "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Nissa, Worldwaker", "label": "nissa", "counters": [{"key": {"type": "Loyalty"}, "value": 7}]}, {"card": "Plains", "label": "plains"}], "library": [{"card": "Forest", "label": "lib-forest"}, {"card": "Hill Giant", "label": "lib-giant"}, {"card": "Island", "label": "lib-island"}, {"card": "Grizzly Bears", "label": "lib-bears"}, {"card": "Craw Wurm"}, {"card": "Craw Wurm"}, {"card": "Craw Wurm"}, {"card": "Craw Wurm"}]}, {"name": "bob", "library": [{"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}]}]},
   "timeline": [
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$nissa", "ability": 2, "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$nissa", "ability": 2}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "Search", "with": ["$lib-forest", "$lib-giant"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$lib-forest", "$lib-island"]}}},

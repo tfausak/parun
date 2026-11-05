@@ -1392,3 +1392,24 @@ Entries are ordered by the first rule each cites.
   `CombatDamageAmount`'s order, proved by the scenarios
   "assigning-no-combat-damage-beats-an-older-toughness-marker" and "...-newer-...".
 - **Issue**: #5462.
+
+## Whether a total cost of {0} opens a mana window
+
+- **Question**: Ornithopter's total cost is {0}. Does it "include a mana payment",
+  giving its caster a chance to activate mana abilities (and Channel's life for
+  mana) between choosing targets and paying? Observable: a mana ability that
+  sacrifices a spell's target can be activated mid-cast only if it does.
+- **Rules**: CR 118.5, 601.2f, 601.2g, 602.2b, 605.3a; CR of 2026-08-07. No ruling.
+  CR 601.2f calls a reduced mana component {0}, and CR 118.5 says such a cost
+  "requires no resources" and is still paid by acknowledging it. A cast with no
+  mana cost to pay at all (CR 118.9) has no mana payment, forced.
+- **Decision**: No window. A cost requiring no mana asks for no mana payment.
+  Covers a printed {0}, a reduction to it, and X announced as 0.
+- **Rejected**: A window at {0}, reading "mana component" as a mana payment of
+  nothing. It splits a printed {0} from a free cast, which `Cost.mana` does not
+  (`data/cards/ornithopter.json`'s cost is empty), and `Cost.payActivation` and
+  `Cost.payToll` already skip it.
+- **Site**: `Cost.paySubstitutingReadingThen`, proved by the scenarios
+  channel/channel-asks-nothing-of-a-free-cast,
+  channel/channel-asks-nothing-when-x-is-zero and
+  channel/channel-asks-nothing-of-a-gate-of-zero.

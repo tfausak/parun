@@ -110,9 +110,6 @@
     {
       "do": {
         "Cast": {
-          "mana": [
-            null
-          ],
           "object": "$o1"
         }
       },
@@ -177,9 +174,6 @@
     {
       "do": {
         "Cast": {
-          "mana": [
-            null
-          ],
           "object": "Ornithopter"
         }
       },

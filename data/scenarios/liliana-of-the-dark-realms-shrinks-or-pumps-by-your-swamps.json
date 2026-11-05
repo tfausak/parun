@@ -104,9 +104,6 @@
           "ability": 1,
           "targets": [
             "$giant"
-          ],
-          "mana": [
-            null
           ]
         }
       }
@@ -158,9 +155,6 @@
           "ability": 1,
           "targets": [
             "$bears"
-          ],
-          "mana": [
-            null
           ]
         }
       }

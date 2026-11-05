@@ -27,7 +27,7 @@
     ]
   },
   "timeline": [
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$efreet", "ability": 0, "targets": ["$bob"], "costOrder": [0, 1], "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$efreet", "ability": 0, "targets": ["$bob"], "costOrder": [0, 1] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "ChooseToPay": { "decision": { "type": "Declines" } } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "Lightning Bolt", "targets": ["$bob"], "mana": ["$m1", null] } } },

@@ -161,9 +161,6 @@
           "object": "$ship",
           "targets": [
             "$bob"
-          ],
-          "mana": [
-            null
           ]
         }
       }

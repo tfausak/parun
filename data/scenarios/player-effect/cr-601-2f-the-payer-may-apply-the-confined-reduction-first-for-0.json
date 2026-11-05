@@ -74,10 +74,7 @@
       "player": "alice",
       "do": {
         "Cast": {
-          "object": "$cabal-evangel",
-          "mana": [
-            null
-          ]
+          "object": "$cabal-evangel"
         }
       }
     },

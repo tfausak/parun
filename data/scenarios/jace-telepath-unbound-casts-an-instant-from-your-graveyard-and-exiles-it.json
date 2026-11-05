@@ -81,9 +81,6 @@
           "ability": 1,
           "targets": [
             "$bolt"
-          ],
-          "mana": [
-            null
           ]
         }
       }

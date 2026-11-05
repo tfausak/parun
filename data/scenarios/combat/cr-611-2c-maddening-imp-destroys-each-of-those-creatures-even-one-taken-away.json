@@ -34,7 +34,7 @@
     ]
   },
   "timeline": [
-    { "turn": 1, "step": "Upkeep", "player": "bob", "do": { "Activate": { "object": "$imp", "ability": 0, "mana": [null] } } },
+    { "turn": 1, "step": "Upkeep", "player": "bob", "do": { "Activate": { "object": "$imp", "ability": 0 } } },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Attack": [] } },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$piker"] } },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$piker", "do": { "ChooseAttackTarget": "$bob" } },

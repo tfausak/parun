@@ -43,9 +43,6 @@
           "object": "$fireblast",
           "targets": [
             "$alice"
-          ],
-          "mana": [
-            null
           ]
         }
       }

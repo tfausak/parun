@@ -59,10 +59,7 @@
       "do": {
         "Activate": {
           "object": "$barkhide-mauler",
-          "ability": 0,
-          "mana": [
-            null
-          ]
+          "ability": 0
         }
       }
     },

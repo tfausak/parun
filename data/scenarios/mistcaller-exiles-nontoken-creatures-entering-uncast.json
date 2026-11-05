@@ -130,10 +130,7 @@
       "player": "alice",
       "do": {
         "Activate": {
-          "object": "$mist",
-          "mana": [
-            null
-          ]
+          "object": "$mist"
         }
       }
     },

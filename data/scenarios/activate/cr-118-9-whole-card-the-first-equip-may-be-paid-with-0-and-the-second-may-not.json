@@ -98,9 +98,6 @@
       "do": {
         "Activate": {
           "cost": [],
-          "mana": [
-            null
-          ],
           "object": "$aegis",
           "targets": [
             "$mammoth"

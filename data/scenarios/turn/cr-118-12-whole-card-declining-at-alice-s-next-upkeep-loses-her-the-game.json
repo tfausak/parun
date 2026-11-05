@@ -111,10 +111,7 @@
       "player": "alice",
       "do": {
         "Cast": {
-          "object": "$pact",
-          "mana": [
-            null
-          ]
+          "object": "$pact"
         }
       }
     },

@@ -214,9 +214,6 @@
       "do": {
         "Activate": {
           "ability": 0,
-          "mana": [
-            null
-          ],
           "object": "$nissa"
         }
       },
@@ -268,9 +265,6 @@
       "do": {
         "Activate": {
           "ability": 1,
-          "mana": [
-            null
-          ],
           "object": "$nissa"
         }
       },

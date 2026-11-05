@@ -138,9 +138,6 @@
     {
       "do": {
         "Cast": {
-          "mana": [
-            null
-          ],
           "object": "Grizzly Bears"
         }
       },

@@ -83,10 +83,7 @@
       "player": "alice",
       "do": {
         "Activate": {
-          "object": "$spider",
-          "mana": [
-            null
-          ]
+          "object": "$spider"
         }
       }
     },

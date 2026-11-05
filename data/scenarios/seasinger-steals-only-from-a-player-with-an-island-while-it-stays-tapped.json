@@ -143,9 +143,6 @@
           "object": "$s",
           "targets": [
             "$bears"
-          ],
-          "mana": [
-            null
           ]
         }
       }

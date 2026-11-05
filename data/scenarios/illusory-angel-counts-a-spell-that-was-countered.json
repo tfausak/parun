@@ -81,10 +81,7 @@
       "player": "alice",
       "do": {
         "Cast": {
-          "object": "$thopter",
-          "mana": [
-            null
-          ]
+          "object": "$thopter"
         }
       }
     },

@@ -47,10 +47,7 @@
       "do": {
         "Activate": {
           "object": "$mutavault",
-          "ability": 1,
-          "mana": [
-            null
-          ]
+          "ability": 1
         }
       }
     },
@@ -101,10 +98,7 @@
       "do": {
         "Activate": {
           "object": "$mutavault",
-          "ability": 1,
-          "mana": [
-            null
-          ]
+          "ability": 1
         }
       }
     },

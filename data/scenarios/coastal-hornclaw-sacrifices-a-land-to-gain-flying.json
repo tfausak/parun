@@ -83,10 +83,7 @@
       "player": "alice",
       "do": {
         "Activate": {
-          "object": "$hornclaw",
-          "mana": [
-            null
-          ]
+          "object": "$hornclaw"
         }
       }
     },

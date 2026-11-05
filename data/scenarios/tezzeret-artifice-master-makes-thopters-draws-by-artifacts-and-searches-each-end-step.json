@@ -122,10 +122,7 @@
       "do": {
         "Activate": {
           "object": "$old",
-          "ability": 2,
-          "mana": [
-            null
-          ]
+          "ability": 2
         }
       }
     },
@@ -295,10 +292,7 @@
       "do": {
         "Activate": {
           "object": "Tezzeret, Artifice Master#2",
-          "ability": 0,
-          "mana": [
-            null
-          ]
+          "ability": 0
         }
       }
     },
@@ -420,10 +414,7 @@
       "do": {
         "Activate": {
           "object": "Tezzeret, Artifice Master#2",
-          "ability": 1,
-          "mana": [
-            null
-          ]
+          "ability": 1
         }
       }
     },

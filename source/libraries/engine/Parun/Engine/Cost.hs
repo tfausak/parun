@@ -5007,7 +5007,13 @@ paySubstitutingReadingThen refuses slots perform began earlier moment subject an
       let announceMana mc = do
             (chosen, extra) <- substituting cost {Cost.mana = Just mc}
             pure (Maybe.fromMaybe mc (Cost.mana chosen), extra)
-      settle <- payManaWindowThen perform Set.empty announced subject spending pid announceMana manaCost
+      -- CR 601.2g / 605.3a: no window where the total cost holds no mana payment
+      -- (docs/decisions.md, "Whether a total cost of {0} opens a mana window").
+      entry <- State.get
+      settle <-
+        if all (== ManaSymbol.Generic 0) (ManaCost.unwrap manaCost)
+          then pure (fmap (\(_, extra) -> (True, extra, ManaWindow.MkManaWindow {ManaWindow.payer = pid, ManaWindow.activated = [], ManaWindow.segments = [], ManaWindow.spent = [], ManaWindow.opened = entry, ManaWindow.closed = entry, ManaWindow.unreversible = False})) (announceMana manaCost))
+          else payManaWindowThen perform Set.empty announced subject spending pid announceMana manaCost
       pure $ do
         (paidMana, substitutes, own) <- settle
         paidOwn <-

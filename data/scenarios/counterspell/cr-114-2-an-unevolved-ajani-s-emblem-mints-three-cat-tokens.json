@@ -45,10 +45,7 @@
       "do": {
         "Activate": {
           "object": "$ajani",
-          "ability": 2,
-          "mana": [
-            null
-          ]
+          "ability": 2
         }
       }
     },

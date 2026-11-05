@@ -81,10 +81,7 @@
       "do": {
         "Activate": {
           "object": "$sarkhan",
-          "ability": 0,
-          "mana": [
-            null
-          ]
+          "ability": 0
         }
       }
     },
@@ -164,10 +161,7 @@
       "do": {
         "Activate": {
           "object": "$sarkhan",
-          "ability": 1,
-          "mana": [
-            null
-          ]
+          "ability": 1
         }
       }
     },

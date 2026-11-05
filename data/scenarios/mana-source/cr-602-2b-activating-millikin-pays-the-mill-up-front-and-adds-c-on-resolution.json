@@ -42,10 +42,7 @@
       "do": {
         "Activate": {
           "object": "$millikin",
-          "ability": 0,
-          "mana": [
-            null
-          ]
+          "ability": 0
         }
       }
     },

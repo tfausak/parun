@@ -55,10 +55,7 @@
       "player": "alice",
       "do": {
         "Activate": {
-          "object": "$cub-a",
-          "mana": [
-            null
-          ]
+          "object": "$cub-a"
         }
       }
     },

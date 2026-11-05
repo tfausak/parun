@@ -90,10 +90,7 @@
       "player": "alice",
       "do": {
         "Cast": {
-          "object": "$orni",
-          "mana": [
-            null
-          ]
+          "object": "$orni"
         }
       }
     },

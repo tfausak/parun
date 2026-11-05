@@ -132,9 +132,6 @@
           "ability": 0,
           "targets": [
             "$icy"
-          ],
-          "mana": [
-            null
           ]
         }
       }

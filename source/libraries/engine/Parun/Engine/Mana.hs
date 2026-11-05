@@ -1138,8 +1138,9 @@ productionTagsGiven pcs oid gs =
 unitsOf :: Mana -> [ManaUnit]
 unitsOf (Mana.MkMana units) = units
 
--- CR 116.2c: one mana Channel's special action adds. No source made it, so none
--- of ManaUnit's facts about a source hold of it.
+-- CR 116.2c: one mana Channel's special action adds. CR 106.3 makes Channel its
+-- source (ManaAdded.source); Channel is not snow and has chosen and exiled
+-- nothing, so ManaUnit's facts about a source are all empty.
 lifeForManaUnit :: ManaType -> ManaUnit
 lifeForManaUnit manaType =
   ManaUnit.MkManaUnit
@@ -3017,9 +3018,10 @@ payableResolutionsGiven subject capacity spending sources pcs pid committed comm
       -- behind it: taken k times it adds k mana and pays k times its price, which
       -- CR 119.4's clause below holds against the rest of the board. Never more
       -- often than the board could spend. Its options are mana-FREE, so the object
-      -- beside them names no payment. The life floor is also what ends
-      -- Cost.greatestPayableX's climb: demandBound grows with X, so without it
-      -- that search never stops, and no mutation can lift it to prove so.
+      -- beside them names no payment. This takeWhile only prunes: `affordable`
+      -- below holds every board to the same floor. Together they end
+      -- Cost.greatestPayableX's climb, demandBound growing with X, so lifting
+      -- both loops it; lifting one takeWhile changes nothing.
       lifeForManaOptions =
         [ [ (oid, MkSourceOption {optionSupplies = List.genericReplicate k (rewriteSupply clauses (supplyOf admitting (lifeForManaUnit mana))), optionDemands = [], optionClaims = [], optionLife = k * life, optionEnergy = 0, optionDoublings = []})
           | k <- takeWhile (Event.lifePayable pid gs . (* life)) [0 .. demandBound]

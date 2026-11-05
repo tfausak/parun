@@ -80,10 +80,7 @@
       "player": "alice",
       "do": {
         "Cast": {
-          "object": "$ornithopter",
-          "mana": [
-            null
-          ]
+          "object": "$ornithopter"
         }
       }
     }

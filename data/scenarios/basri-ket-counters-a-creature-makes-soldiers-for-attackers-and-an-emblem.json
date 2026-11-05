@@ -154,9 +154,6 @@
       "do": {
         "Activate": {
           "ability": 0,
-          "mana": [
-            null
-          ],
           "object": "$ket",
           "targets": [
             "$bears"
@@ -249,9 +246,6 @@
       "do": {
         "Activate": {
           "ability": 1,
-          "mana": [
-            null
-          ],
           "object": "$ket"
         }
       },
@@ -421,9 +415,6 @@
       "do": {
         "Activate": {
           "ability": 2,
-          "mana": [
-            null
-          ],
           "object": "$ket"
         }
       },

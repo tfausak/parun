@@ -108,19 +108,6 @@
     {
       "turn": 1,
       "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
-        "Answer": {
-          "prompt": "PayLifeForMana",
-          "with": {
-            "type": "Declines"
-          }
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
       "player": "bob",
       "do": "Pass"
     },

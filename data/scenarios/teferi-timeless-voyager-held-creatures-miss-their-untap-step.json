@@ -170,9 +170,6 @@
       "do": {
         "Activate": {
           "ability": 2,
-          "mana": [
-            null
-          ],
           "object": "$t",
           "targets": [
             "$bob"

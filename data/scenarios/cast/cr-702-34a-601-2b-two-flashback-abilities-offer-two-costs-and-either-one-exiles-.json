@@ -154,10 +154,7 @@
         "ChooseToPay": {
           "decision": {
             "type": "Pays"
-          },
-          "mana": [
-            null
-          ]
+          }
         }
       },
       "source": "The Fugitive Doctor"

@@ -57,10 +57,7 @@
       "do": {
         "Activate": {
           "object": "$gideon",
-          "ability": 2,
-          "mana": [
-            null
-          ]
+          "ability": 2
         }
       }
     },
