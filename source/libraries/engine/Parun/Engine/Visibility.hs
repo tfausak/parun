@@ -2,6 +2,7 @@
 -- each later source of visibility joins as a term of sees.
 module Parun.Engine.Visibility where
 
+import qualified Data.List as List
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Parun.Engine.Conspiracy as Conspiracy
@@ -15,6 +16,7 @@ import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.Facing as Facing
 import qualified Parun.Types.GameEvent as GameEvent
+import qualified Parun.Types.GameSettings as GameSettings
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.Looked as Looked
@@ -26,6 +28,7 @@ import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.RevealWindow as RevealWindow
 import qualified Parun.Types.ShownCards as ShownCards
 import qualified Parun.Types.Shows as Shows
+import qualified Parun.Types.Teams as Teams
 import qualified Parun.Types.Visibility as Visibility
 import qualified Parun.Types.Voted as Voted
 import qualified Parun.Types.Zone as Zone
@@ -165,7 +168,7 @@ base pid oid gs = case Game.lookupObject oid gs of
     Just Zone.Hand ->
       if Game.keptFaceDown oid gs
         then Visibility.Obscured -- CR 121.8, 708.5
-        else visibleIf (Object.owner obj == pid) <> shownTo pid oid gs -- CR 400.2
+        else visibleIf (reviewsHandOf pid (Object.owner obj) gs) <> shownTo pid oid gs -- CR 400.2
     Just Zone.Exile -> visibleIf (Exile.mayLookAt pid oid gs) -- CR 406.3
     Just zone -> case Object.facing obj of
       Facing.FaceUp -> Visibility.Visible
@@ -173,6 +176,17 @@ base pid oid gs = case Game.lookupObject oid gs of
         | zone == Zone.Battlefield || zone == Zone.Stack -> visibleIf (View.controllerOf oid gs == Just pid) -- CR 708.5
         | Conspiracy.isFaceDownConspiracy oid gs -> visibleIf (View.controllerOf oid gs == Just pid) -- CR 315.7
         | otherwise -> Visibility.Obscured -- CR 708.5
+
+-- | CR 402.3: whether this player may look at that player's hand -- their own,
+-- or under CR 808.5, 809.7 and 810.5 a teammate's. CR 811.5 allows the latter
+-- in Alternating Teams only between teammates seated next to each other, read
+-- as CR 811.4's limit reads it (Game.neighbours); see docs/decisions.md,
+-- "Whether Alternating Teams teammates review hands across an emptied seat".
+reviewsHandOf :: PlayerId -> PlayerId -> GameState.GameState -> Bool
+reviewsHandOf pid owner gs =
+  let settings = GameState.settings gs
+      beside = List.elem owner (Game.neighbours pid gs)
+   in pid == owner || Teams.sameTeam (Game.teams gs) pid owner && (not (GameSettings.alternatingTeams settings) || beside)
 
 -- | CR 401.5 / 400.2: a player effect showing the owner's hand or top card.
 shownTo :: PlayerId -> ObjectId -> GameState.GameState -> Visibility.Visibility
