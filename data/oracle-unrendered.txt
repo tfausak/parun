@@ -2083,6 +2083,7 @@ port-of-karfell
 portal-of-sanctuary
 portent
 possessed-skaab
+power-leak
 power-play
 power-sink
 pox

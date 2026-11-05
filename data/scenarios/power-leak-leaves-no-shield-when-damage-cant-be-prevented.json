@@ -1,0 +1,27 @@
+{
+  "description": "CR 615.12 under Leyline of Punishment Power Leak's payment prevents nothing, and what it paid for is not kept for later damage",
+  "note": "alice copies her trigger and pays 2 for the copy under the Leyline, taking 2. She then destroys the Leyline and declines for the original, taking 2 more. A shield standing for the rest of the turn would have stopped them.",
+  "board": {
+    "active": "bob",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "hand": [{"card": "Disenchant", "label": "disenchant"}], "battlefield": [{"card": "Crusade", "label": "crusade"}, {"card": "Power Leak", "label": "leak", "attached": "crusade"}, {"card": "Strionic Resonator", "label": "resonator", "ready": true}, {"card": "Leyline of Punishment", "label": "leyline"}, {"card": "Plains", "label": "p1", "ready": true}, {"card": "Plains", "label": "p2", "ready": true}, {"card": "Island", "label": "i1", "ready": true}, {"card": "Island", "label": "i2", "ready": true}, {"card": "Island", "label": "i3", "ready": true}, {"card": "Island", "label": "i4", "ready": true}, {"card": "Island", "label": "i5", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": {"Activate": {"object": "$resonator", "targets": ["trigger of Power Leak"], "mana": ["$i1", "$i2", null]}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": {"Answer": {"prompt": "ChooseNumber", "with": 2}}, "source": "$leak"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": {"ChooseToPay": {"decision": {"type": "Pays"}, "mana": ["$i3", "$i4", null]}}, "source": "$leak"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Life": {"player": "alice", "life": 18}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": {"Cast": {"object": "$disenchant", "targets": ["$leyline"], "mana": ["$p1", "$p2", null]}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Leyline of Punishment", "count": 1}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": {"Answer": {"prompt": "ChooseNumber", "with": 1}}, "source": "$leak"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": {"ChooseToPay": {"decision": {"type": "Declines"}}}, "source": "$leak"},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 16}}}
+  ]
+}

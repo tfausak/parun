@@ -948,6 +948,24 @@ Entries are ordered by the first rule each cites.
   hallowed-moonlight-exiles-a-card-conjured-onto-the-battlefield.
 - **Issue**: #5764.
 
+## Whether an ability's own "prevent" is a self-replacement
+
+- **Question**: Power Leak deals 2 damage, then says "prevent X of that damage".
+  It is the resolving ability's own effect, as CR 614.15 describes, and it uses
+  "prevent", as CR 615.1a describes. Does it apply first with no choice, or does
+  its victim order it against Furnace of Rath or Reverse Damage?
+- **Rules**: CR 614.15, 608.2c, 615.1, 615.1a, 616.1a, 616.1e; CR of 2026-08-07.
+  CR 614.15 opens "Some replacement effects", CR 615.1 makes a prevention effect
+  continuous, and neither Power Leak nor Errant Minion has a ruling.
+- **Decision**: A self-replacement. It applies first, so Furnace of Rath doubles
+  what is left, and Reverse Damage prevents only that.
+- **Rejected**: A continuous prevention effect under CR 616.1e, which lets the
+  victim take 3 rather than 2 under Furnace of Rath. The sentence qualifies the
+  one before it, as CR 608.2c lets later text do.
+- **Site**: `data/cards/power-leak.json`'s `origin`, proved by the scenario
+  "power-leak-prevents-before-furnace-of-rath-doubles".
+- **Issue**: #6128.
+
 ## Whether a phased-out permanent a subgame takes leaves visibly
 
 - **Question**: A wish brings a phased-out permanent into a Shahrazad

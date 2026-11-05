@@ -1,0 +1,24 @@
+{
+  "description": "Power Leak: what is paid past the damage is not kept, so a copy of the trigger prevents only what was paid for it",
+  "note": "alice copies her own trigger with Strionic Resonator. She pays 3 for the copy and takes nothing, then declines for the original and takes the whole 2 (CR 614.15: the prevention replaces its own instruction's damage, and nothing else).",
+  "board": {
+    "active": "bob",
+    "step": "PrecombatMain",
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Crusade", "label": "crusade"}, {"card": "Power Leak", "label": "leak", "attached": "crusade"}, {"card": "Strionic Resonator", "label": "resonator", "ready": true}, {"card": "Island", "label": "i1", "ready": true}, {"card": "Island", "label": "i2", "ready": true}, {"card": "Island", "label": "i3", "ready": true}, {"card": "Island", "label": "i4", "ready": true}, {"card": "Island", "label": "i5", "ready": true}, {"card": "Island", "label": "i6", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": {"Activate": {"object": "$resonator", "targets": ["trigger of Power Leak"], "mana": ["$i1", "$i2", null]}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": {"Answer": {"prompt": "ChooseNumber", "with": 3}}, "source": "$leak"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": {"ChooseToPay": {"decision": {"type": "Pays"}, "mana": ["$i3", "$i4", "$i5", null]}}, "source": "$leak"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "check": {"Life": {"player": "alice", "life": 20}}},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": {"Answer": {"prompt": "ChooseNumber", "with": 1}}, "source": "$leak"},
+    {"turn": 2, "step": "Upkeep", "player": "alice", "do": {"ChooseToPay": {"decision": {"type": "Declines"}}}, "source": "$leak"},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 18}}}
+  ]
+}
