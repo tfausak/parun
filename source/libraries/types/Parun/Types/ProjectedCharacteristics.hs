@@ -46,9 +46,10 @@ import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 -- Wherever there is a list to empty, that list is the whole record of a strip:
 -- CR 305.7's and CR 613.1f's removals leave the ability fields below EMPTY, and
 -- every reader sees the strip without having to know it happened. The one
--- exception is `lostAllAbilities`, for the one ability with no list -- CR
--- 305.6's intrinsic mana ability, which is minted from `subtypes` rather than
--- stored.
+-- exception is `lostAllAbilities`, for the abilities with no list: the
+-- intrinsic ones the rules mint from the type line rather than store -- CR
+-- 305.6's mana ability, CR 306.5b's loyalty, CR 310.4b's defense, CR 310.12b's
+-- Siege trigger and CR 714.3's lore counter.
 data ProjectedCharacteristics = MkProjectedCharacteristics
   { -- | CR 201.1: the object's names after the layer fold. Copiable (CR 707.2),
     -- which is what earns them a place here rather than a read of the printed
@@ -283,13 +284,15 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
     -- union reaches them.
     ruleAbilities :: RuleAbilities.RuleAbilities,
     -- | CR 613.1f: has a layer-6 "loses all abilities" effect applied to this
-    -- object? Recorded rather than left implicit because CR 305.6's intrinsic
-    -- "{T}: Add [mana symbol]" is minted from `subtypes` instead of being stored
-    -- in a list above, so emptying the lists says nothing about it.
+    -- object? Recorded rather than left implicit because the intrinsic
+    -- abilities -- CR 305.6's "{T}: Add [mana symbol]", CR 306.5b's, CR
+    -- 310.4b's, CR 310.12b's and CR 714.3's -- are minted from `cardTypes` and
+    -- `subtypes` instead of being stored in a list above, so emptying the lists
+    -- says nothing about them.
     --
     -- Layer order and not timestamp order is what makes one flag enough: rule
-    -- 613.1 applies layer 4 before layer 6, so the basic land type that mints
-    -- the ability is always in place before a wipe can reach it. An ability
+    -- 613.1 applies layer 4 before layer 6, so the type that mints the ability
+    -- is always in place before a wipe can reach it. An ability
     -- GRANTED at layer 6 after the wipe still survives, which this field says
     -- nothing about -- Parun.Engine.Projection.applyModification empties the
     -- lists in timestamp order and sets this beside them.
@@ -299,9 +302,10 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
     -- written by the fold rather than by the seed, so
     -- Parun.Engine.Projection.View.copiableCharacteristics never carries it.
     --
-    -- Parun.Engine.Subtype.intrinsicManaAbilityOf is the one reader, and
     -- Parun.ManaSpec's "CR 613.1f Humility strips Dryad Arbor's CR 305.6 mana
-    -- ability" is what proves it reaches the mana routes.
+    -- ability" proves it reaches the mana routes, and the scenario
+    -- gideon-blackblade/cr-613-1f-cast-under-humility-on-his-turn-enters-with-no-loyalty
+    -- the entry rows.
     lostAllAbilities :: Bool,
     -- | CR 612.6 layer 3: did a full-text effect replace this object's text? When
     -- it did, the four lists no layer otherwise writes (staticAbilities,
