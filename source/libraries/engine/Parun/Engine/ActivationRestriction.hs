@@ -8,7 +8,7 @@
 -- module cannot import Parun.Engine.Activate. Every window an arm reads is
 -- Parun.Engine.Turn's for the same reason:
 -- Parun.Engine.Combat imports Parun.Engine.Cost, so the two combat-record readers
--- CR 506.7g and CR 508.3b share with the casting side moved down to
+-- CR 506.8g and CR 508.3b share with the casting side moved down to
 -- Parun.Engine.Turn, beside the other two windows these arms ask about.
 -- Two arms read no window at all: CR 602.5's board condition, which imports
 -- Parun.Engine.Condition and Parun.Engine.Projection, neither of which reaches back
@@ -134,16 +134,16 @@ restrictionMet pid srcId ability gs restriction = case restriction of
   -- casting side's clause of this name uses -- see Turn.attackedThisStep for
   -- why it is the declaration record and not Combat.attacked.
   ActivationRestriction.AttackedThisStep -> Turn.attackedThisStep pid gs
-  -- CR 506.7b through CR 506.7g, which says an "activate only" rider naming one
-  -- of CR 506.7's points is governed exactly as the same words on a cast are --
+  -- CR 506.8b through CR 506.8g, which says an "activate only" rider naming one
+  -- of CR 506.8's points is governed exactly as the same words on a cast are --
   -- so this is Turn.afterBlockersDeclared verbatim, the reader Parun.Engine.Cast's arm
   -- of this name uses. Trap Runner is the card.
   ActivationRestriction.AfterBlockersDeclared -> Turn.afterBlockersDeclared gs
-  -- CR 506.7c through CR 506.7g, the same extension to abilities that governs
+  -- CR 506.8c through CR 506.8g, the same extension to abilities that governs
   -- AfterBlockersDeclared above. Turn.duringCombatBefore says why it reads the
   -- phase rather than the combat record. Save Point.
   ActivationRestriction.DuringCombatBefore target -> Turn.duringCombatBefore target (GameState.phase gs)
-  -- CR 506.7a, 506.7d and 506.7e through CR 506.7g; Turn.beforeStep says why it
+  -- CR 506.8a, 506.8d and 506.8e through CR 506.8g; Turn.beforeStep says why it
   -- reads the turn's log. Capricious Sorcerer and Mana Cache.
   ActivationRestriction.BeforeStep target -> Turn.beforeStep target gs
   -- CR 602.5's prohibition over a fact about the board rather than a window:

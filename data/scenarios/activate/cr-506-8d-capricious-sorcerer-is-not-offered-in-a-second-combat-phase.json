@@ -1,5 +1,5 @@
 {
-  "description": "CR 506.7d Capricious Sorcerer is offered in the first beginning of combat step and not in the second, which Aurelia adds",
+  "description": "CR 506.8d Capricious Sorcerer is offered in the first beginning of combat step and not in the second, which Aurelia adds",
   "note": "Aurelia's additional combat phase follows the first directly (CR 500.8), so no postcombat main phase has begun when the second beginning of combat step does: only the first combat's declare attackers step tells the two apart. The Pass ends the first step's priority, so the second check is taken at the second occurrence of the key.",
   "board": {
     "seats": [

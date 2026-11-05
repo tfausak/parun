@@ -1,6 +1,5 @@
 module Parun.Types.CopyTargets where
 
-import qualified Data.List.NonEmpty as NonEmpty
 import qualified Parun.Types.ObjectRef as ObjectRef
 
 -- | Where a copy put onto the stack by Parun.Types.Effect's CopyStackObject arm
@@ -17,10 +16,10 @@ data CopyTargets
     Copied
   | -- | CR 707.10c: "you may choose new targets for the copy" (Twincast).
     ChosenByController
-  | -- | CR 707.10d: one copy per player or object these refs name that the
+  | -- | CR 707.10d: one copy per player or object this ref names that the
     -- original could target, other than what it already targets (Zada, Hedron
     -- Grinder; Radiate).
-    ForEach (NonEmpty.NonEmpty ObjectRef.ObjectRef)
+    ForEach ObjectRef.ObjectRef
   | -- | CR 707.10e: ONE copy, whose every target is the one player or object
     -- this ref names (Ivy, Gleeful Spellthief).
     Stated ObjectRef.ObjectRef

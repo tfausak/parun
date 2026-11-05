@@ -970,8 +970,8 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.CopyStackObject (CopyStackObject.MkCopyStackObject (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "spell"))) (CopyTargets.ForEach (ObjectRef.EachMatching (Filter.HeldBy Holder.Controller PlayerRelation.You) NonEmpty.:| [])) CopyStackObject.defaultQuantity CopyStackObject.defaultCopier []))
-      " {\"type\":\"CopyStackObject\",\"value\":{\"ref\":{\"type\":\"InSlot\",\"value\":\"spell\"},\"targets\":{\"type\":\"ForEach\",\"value\":[{\"type\":\"EachMatching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}}]}}} "
+      (Effect.CopyStackObject (CopyStackObject.MkCopyStackObject (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "spell"))) (CopyTargets.ForEach (ObjectRef.EachMatching (Filter.HeldBy Holder.Controller PlayerRelation.You))) CopyStackObject.defaultQuantity CopyStackObject.defaultCopier []))
+      " {\"type\":\"CopyStackObject\",\"value\":{\"ref\":{\"type\":\"InSlot\",\"value\":\"spell\"},\"targets\":{\"type\":\"ForEach\",\"value\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"HeldBy\",\"value\":{\"holder\":{\"type\":\"Controller\"},\"relation\":{\"type\":\"You\"}}}}}}} "
     Common.assertJsonCodec
       s
       toJson
