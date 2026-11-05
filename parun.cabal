@@ -411,6 +411,8 @@ library codec
     Parun.Codec.CoinReadingSpec
     Parun.Codec.Color
     Parun.Codec.ColorSpec
+    Parun.Codec.ColorSpread
+    Parun.Codec.ColorSpreadSpec
     Parun.Codec.Combat
     Parun.Codec.CombatDamageAmount
     Parun.Codec.CombatDamageAmountSpec
@@ -712,6 +714,8 @@ library codec
     Parun.Codec.EnteredZoneSpec
     Parun.Codec.EnteringTogether
     Parun.Codec.EnteringTogetherSpec
+    Parun.Codec.EntersTrigger
+    Parun.Codec.EntersTriggerSpec
     Parun.Codec.EntersWith
     Parun.Codec.EntersWithSpec
     Parun.Codec.Entrant
@@ -1606,6 +1610,8 @@ library codec
     Parun.Codec.UntapRewrite
     Parun.Codec.UntapRewriteSpec
     Parun.Codec.UntapRSpec
+    Parun.Codec.UntilPaid
+    Parun.Codec.UntilPaidSpec
     Parun.Codec.Uses
     Parun.Codec.UsesSpec
     Parun.Codec.Vanguard
@@ -2570,6 +2576,7 @@ library types
     Parun.Types.CoinFlipped
     Parun.Types.CoinReading
     Parun.Types.Color
+    Parun.Types.ColorSpread
     Parun.Types.Combat
     Parun.Types.CombatDamageAmount
     Parun.Types.CombatDamageOption
@@ -2736,6 +2743,7 @@ library types
     Parun.Types.EndTurnSignal
     Parun.Types.EnteredZone
     Parun.Types.EnteringTogether
+    Parun.Types.EntersTrigger
     Parun.Types.EntersWith
     Parun.Types.Entrant
     Parun.Types.EntriesTrigger
@@ -3258,6 +3266,7 @@ library types
     Parun.Types.UntapR
     Parun.Types.UntapRestriction
     Parun.Types.UntapRewrite
+    Parun.Types.UntilPaid
     Parun.Types.Uses
     Parun.Types.Vanguard
     Parun.Types.VariableChoice

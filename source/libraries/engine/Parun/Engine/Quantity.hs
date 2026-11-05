@@ -20,6 +20,7 @@ import qualified Parun.Engine.QuantitySlot as QuantitySlot
 import qualified Parun.Engine.Subtype as Subtype.Engine
 import qualified Parun.Engine.Turn as Turn
 import qualified Parun.Types.AbilityAct as AbilityAct
+import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Parun.Types.ActivationsThisTurn as ActivationsThisTurn
 import qualified Parun.Types.AgainstExiledPile as AgainstExiledPile
@@ -382,15 +383,16 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- exiles (Filter.reader): data/scenarios/myr-welder-acquired-soul-foundry-reads-no-card.json
         -- is the proof.
         --
-        -- Not implemented: CR 607.5's narrowing for a reference a copy effect
-        -- brought, which sees only what its own copied pair exiled -- Mimeoplasm,
-        -- Revered One as a copy of Sutured Ghoul (#4985).
+        -- Read under the reader's acquisition (Filter.sourceAcquisition), so a
+        -- reference a copy effect brought sees only what its own copied pair
+        -- exiled (CR 607.5): data/scenarios/copy/cr-607-5-dermotaxi-as-a-copy-of-living-lore-reads-no-card-and-dies.json
+        -- is the proof.
         --
         -- Terminating: the payload is a strictly smaller subterm.
         Quantity.AgainstExiledPile (AgainstExiledPile.MkAgainstExiledPile pile inner) ->
           case Filter.source context of
             Nothing -> Nothing
-            Just src -> fmap sum (traverse (\o -> evaluateAgainst viewOf context gs announcedOn (Just o) (viewOf o) inner) (Game.linkedPile (Filter.reader context) pile src gs))
+            Just src -> fmap sum (traverse (\o -> evaluateAgainst viewOf context gs announcedOn (Just o) (viewOf o) inner) (Game.linkedPile (Filter.reader context) (readerAcquisition context src gs) pile src gs))
         -- The arm above narrowed to ONE card, lastCardExiledWith's, so there is
         -- nothing to sum. Nothing when no linked card matches: "the last creature
         -- card exiled with it" is then no card at all.
@@ -2014,4 +2016,9 @@ lastCardExiledWith :: Count.ViewOf -> Filter.Context -> GameState -> Filter.Type
 lastCardExiledWith viewOf context gs criterion = do
   src <- Filter.source context
   let matching o = maybe False (\view -> Filter.matches context view criterion) (viewOf o)
-  Game.lastExiled (filter matching (Game.linkedPile (Filter.reader context) ExiledPile.OwnAbilities src gs)) gs
+  Game.lastExiled (filter matching (Game.linkedPile (Filter.reader context) (readerAcquisition context src gs) ExiledPile.OwnAbilities src gs)) gs
+
+-- CR 607.5: the acquisition the context's reader came with
+-- (Filter.sourceAcquisition), else the one its source `src` has now.
+readerAcquisition :: Filter.Context -> ObjectId -> GameState -> Acquisition.Acquisition
+readerAcquisition context src gs = Maybe.fromMaybe (Game.acquisitionOf src gs) (Filter.sourceAcquisition context)

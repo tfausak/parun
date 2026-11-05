@@ -23,6 +23,6 @@ spec s = Spec.describe s "Parun.Codec.SpendTrigger" $ do
           SpendTrigger.controller = PlayerId.MkPlayerId 0
         }
       ( " {\"casts\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Instant\"}},"
-          <> "\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}},\"source\":4,\"controller\":0} "
+          <> "\"ability\":{\"condition\":{\"type\":\"Enters\",\"value\":{}},\"modal\":{\"modes\":[{}]}},\"source\":4,\"controller\":0} "
       )
   Spec.it s "has a schema" $ Common.assertHasSchema s SpendTrigger.codec

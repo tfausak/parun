@@ -56,6 +56,7 @@ import qualified Parun.Slug as Slug
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
 import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
+import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.ActivateManaAbilities as ActivateManaAbilities
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
@@ -140,6 +141,7 @@ import qualified Parun.Types.Clause as Clause
 import qualified Parun.Types.ClauseIndex as ClauseIndex
 import qualified Parun.Types.CoinReading as CoinReading
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.ColorSpread as ColorSpread
 import qualified Parun.Types.CombatRestriction as CombatRestriction
 import qualified Parun.Types.Condition as Condition.Type
 import qualified Parun.Types.Conjure as Conjure
@@ -214,6 +216,7 @@ import qualified Parun.Types.EachCardInHand as EachCardInHand
 import qualified Parun.Types.Earthbend as Earthbend
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.Emerge as Emerge
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EntersWith as EntersWith
 import qualified Parun.Types.EntriesTrigger as EntriesTrigger
 import qualified Parun.Types.EntryController as EntryController
@@ -314,6 +317,7 @@ import qualified Parun.Types.Ninjutsu as Ninjutsu
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.OfferCast as OfferCast
+import qualified Parun.Types.Onset as Onset
 import qualified Parun.Types.OrElse as OrElse
 import qualified Parun.Types.PayGate as PayGate
 import qualified Parun.Types.PerCreature as PerCreature
@@ -428,6 +432,7 @@ import qualified Parun.Types.TurnUpR as TurnUpR
 import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Parun.Types.TypeLine as TypeLine
 import qualified Parun.Types.UntapRestriction as UntapRestriction
+import qualified Parun.Types.UntilPaid as UntilPaid
 import qualified Parun.Types.Uses as Uses
 import qualified Parun.Types.Vote as Vote
 import qualified Parun.Types.VoteChoices as VoteChoices
@@ -785,9 +790,9 @@ playerRefPositions =
   let one = Quantity.Type.Literal 1
       playerQuantity stem = PlayerQuantity.MkPlayerQuantity (plantedPlayer stem) one
       affecting effect = Effect.AffectPlayers (AffectPlayers.MkAffectPlayers Duration.UntilEndOfTurn (AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.You)) effect)
-   in [ ("add-mana", Effect.AddMana (ManaAddition.MkManaAddition (plantedPlayer "am") ManaProduction.AnyColor (Quantity.Type.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing), [plantedPlayer "am"]),
+   in [ ("add-mana", Effect.AddMana (ManaAddition.MkManaAddition (plantedPlayer "am") (ManaProduction.AnyColor ColorSpread.OneColor) (Quantity.Type.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing), [plantedPlayer "am"]),
         ("add-mana-pooled", Effect.AddMana (ManaAddition.MkManaAddition (plantedPlayer "amp") (ManaProduction.Pooled (ManaCount.MkManaCount (plantedPlayer "amp-pool") ManaFilter.Any)) (Quantity.Type.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing), [plantedPlayer "amp", plantedPlayer "amp-pool"]),
-        ("firebend", Effect.Firebend (ManaAddition.MkManaAddition (plantedPlayer "fb") ManaProduction.AnyColor (Quantity.Type.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing), [plantedPlayer "fb"]),
+        ("firebend", Effect.Firebend (ManaAddition.MkManaAddition (plantedPlayer "fb") (ManaProduction.AnyColor ColorSpread.OneColor) (Quantity.Type.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing), [plantedPlayer "fb"]),
         ("search", Effect.Search (Search.MkSearch (plantedPlayer "se-searcher") (plantedPlayer "se-owner") Set.empty False Nothing (Filter.Type.And []) Seq.empty False SearchDestination.Battlefield Nothing Nothing Nothing Set.empty False False), [plantedPlayer "se-searcher", plantedPlayer "se-owner"]),
         ("draw", Effect.Draw (Draw.MkDraw (plantedPlayer "dr") one Nothing), [plantedPlayer "dr"]),
         ("mill", Effect.Mill (Mill.MkMill (plantedPlayer "mi") one Nothing Nothing), [plantedPlayer "mi"]),
@@ -842,6 +847,7 @@ playerRefPositions =
         -- join it in are the same ones slotsOf joins durationSlots in --
         -- ModifyTarget, BecomeCopy, Replace, the three prevention opcodes,
         -- RedirectDamage and this one.
+        ("arm-delayed-trigger", Effect.ArmDelayedTrigger (ArmDelayedTrigger.MkArmDelayedTrigger (AbilityName.MkAbilityName (Text.pack "ad")) (Onset.FromNextTurnOf (Just (plantedPlayer "ad-onset"))) (Just (Duration.UntilPaid (UntilPaid.MkUntilPaid (plantedPlayer "ad-payer") (Cost.Type.MkCost Nothing [])))) Nothing), [plantedPlayer "ad-payer", plantedPlayer "ad-onset"]),
         ("grant-play-from-exile-duration", Effect.GrantPlayFromExile (GrantPlayFromExile.MkGrantPlayFromExile (Duration.UntilEndOfNextTurnOf (plantedPlayer "gp-duration")) (plantedPlayer "gp-player") (plantedRef "gp-ref") ManaSpending.AsProduced Nothing Nothing PermissionVerb.Play 0 TapState.Untapped Nothing Zone.Exile), [plantedPlayer "gp-duration", plantedPlayer "gp-player"]),
         -- CR 400.1's reference nested in the PLAYER EFFECT rather than in a field of
         -- the opcode -- the CR 601.3 / 305.1 / 702.170f permissions that name whose
@@ -1110,7 +1116,9 @@ staticAbilityCounts ability =
 -- trigger's own condition) carries one.
 triggerConditionCounts :: TriggerCondition.TriggerCondition -> [Count.Type.Count Quantity.Type.Quantity]
 triggerConditionCounts triggerCondition = case triggerCondition of
-  TriggerCondition.SelfEnters -> []
+  -- CR 603.6a's Filter is a predicate over the entering permanent, and a
+  -- Filter holds no Count (Parun.Types.Filter's atoms are all characteristics).
+  TriggerCondition.Enters _ -> []
   -- CR 709.5h names a half, which is a CardName and not a Quantity.
   TriggerCondition.SelfHalfUnlocked _ -> []
   -- CR 709.5i names a PlayerRelation, which holds no Count.
@@ -1126,10 +1134,10 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- Its bystander sibling carries a Filter, which holds no Count either.
   TriggerCondition.PermanentTransforms _ -> []
   -- Its watcher-scoped sibling carries a Filter, and a Filter holds no Count for
-  -- PermanentEnters' reason.
+  -- Matching Enters' reason.
   TriggerCondition.PermanentTurnedFaceUp _ -> []
   -- PermanentActs carries an action and, for a bystander, a Filter -- which
-  -- holds no Count for PermanentEnters' reason.
+  -- holds no Count for a Matching Enters' reason.
   TriggerCondition.PermanentActs _ -> []
   TriggerCondition.FaceDownPermanentLeavesRevealed -> []
   -- CR 702.112b's condition carries a Filter for the same reason, and no Count.
@@ -1156,10 +1164,6 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.PermanentSacrificed {} -> []
   -- CR 603.3b's carries a PlayerRelation, which holds no Count.
   TriggerCondition.SagaFinalChapterTriggers _ -> []
-  -- CR 603.6a's Filter is a predicate over the entering permanent, and a
-  -- Filter holds no Count (Parun.Types.Filter's atoms are all characteristics).
-  TriggerCondition.PermanentEnters _ -> []
-  TriggerCondition.PermanentsEnter _ -> []
   TriggerCondition.CardPutIntoGraveyard _ -> []
   -- CR 603.10a's third family carries a Filter and a TurnScope, and neither holds
   -- a Count.
@@ -1177,12 +1181,12 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> []
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> []
   TriggerCondition.PlayerTookInitiative -> []
-  -- CR 508.3's Filters hold no Count for PermanentEnters' reason, and CR
+  -- CR 508.3's Filters hold no Count for a Matching Enters' reason, and CR
   -- 508.3c's floor is a bare Natural; only the attacker's state can.
   TriggerCondition.Attacks (AttackTrigger.Attacker t) -> foldMap conditionCounts (AttackerTrigger.while t)
   TriggerCondition.Attacks _ -> []
   -- CR 509.3's Filters are predicates over the creatures of a block, holding no
-  -- Count for PermanentEnters' reason, and CR 509.3e's floor is a bare Natural.
+  -- Count for a Matching Enters' reason, and CR 509.3e's floor is a bare Natural.
   TriggerCondition.Blocks _ -> []
   -- CR 603.6c's holds a Filter, owned zones, a SlotName and a Batching, none
   -- of which holds a Count.
@@ -3616,9 +3620,8 @@ keywordPayloadFilters keyword = case keyword of
   -- like the rest: Parun.Engine.Companion.fulfilled matches it against a printed
   -- face through a bare Context, so no slot is in scope.
   Keyword.Companion predicate -> [predicate]
-  -- CR 702.21a's cost. Rule 702.21b's perEach is a Parun.Types.PlayerCounterTally,
-  -- which names a counter kind and a player and holds no Filter.
-  Keyword.Ward w -> costFilters (Ward.cost w)
+  -- CR 702.21a's cost, and rule 702.21b's perEach as mobilize's N.
+  Keyword.Ward w -> costFilters (Ward.cost w) <> foldMap keywordCountFilters (Ward.perEach w)
   -- CR 702.94a's payload is a Cost too, so its filters are reached the same way.
   Keyword.Miracle cost -> costFilters cost
   -- CR 702.37a: the morph cost, whose components may hold a Filter exactly as
@@ -4445,7 +4448,7 @@ durationFilters duration =
   concatMap conditionFilters (durationConditions duration)
     <> slotlessCost
       ( case duration of
-          Duration.UntilPaid cost -> costFilters cost
+          Duration.UntilPaid untilPaid -> costFilters (UntilPaid.cost untilPaid)
           Duration.UntilEndOfTurn -> []
           Duration.Indefinite -> []
           Duration.Perpetual -> []
@@ -4563,14 +4566,15 @@ staticAbilityFilters ability =
 -- state trigger carries one through its Condition's Counts.
 triggerConditionFilters :: TriggerCondition.TriggerCondition -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
 triggerConditionFilters triggerCondition = case triggerCondition of
-  TriggerCondition.PermanentEnters f -> unframed [f]
-  TriggerCondition.PermanentsEnter f -> unframed [f]
+  TriggerCondition.Enters t -> case EntersTrigger.permanent t of
+    ActingPermanent.Matching f -> unframed [f]
+    ActingPermanent.Self -> []
   -- CR 709.5h names a half by name; nothing about the door is a Filter.
   TriggerCondition.SelfHalfUnlocked _ -> []
   -- CR 709.5i names a PlayerRelation; nothing about it is a Filter.
   TriggerCondition.RoomFullyUnlocked _ -> []
   -- Recursive, for triggerConditionCounts' reason: Balemurk Leech's AnyOf holds a
-  -- PermanentEnters, whose Filter would otherwise never be swept.
+  -- Matching Enters, whose Filter would otherwise never be swept.
   TriggerCondition.AnyOf conditions -> concatMap triggerConditionFilters conditions
   TriggerCondition.CausedBy narrowed -> triggerConditionFilters (CausedBy.condition narrowed)
   -- CR 708.7's condition is nullary, so there is nothing in it to be a Filter.
@@ -4631,7 +4635,6 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.CardsPutIntoZone payload -> unframed [CardsPutIntoZone.filter payload]
   TriggerCondition.SelfLeavesGraveyard -> []
   TriggerCondition.StateIs condition -> frame Unframed (conditionFilters condition)
-  TriggerCondition.SelfEnters -> []
   TriggerCondition.StepBegins {} -> []
   -- A bystander's damage conditions carry one over the watched permanent, swept
   -- for PermanentActs' reason: Noble Purpose's "a creature you control", Death
@@ -4783,9 +4786,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
 -- over a delayed ability's condition.
 triggerConditionSlots :: TriggerCondition.TriggerCondition -> [SlotName.SlotName]
 triggerConditionSlots triggerCondition = case triggerCondition of
-  TriggerCondition.SelfEnters -> []
-  TriggerCondition.PermanentEnters _ -> []
-  TriggerCondition.PermanentsEnter _ -> []
+  TriggerCondition.Enters _ -> []
   TriggerCondition.StepBegins _ -> []
   -- CR 603.8's state trigger holds a Condition, which is a pair of Quantities
   -- and Filters -- no SlotName of its own.
@@ -5892,7 +5893,7 @@ manaRiderFilters rider = [ManaRider.condition rider]
 manaProductionFilters :: ManaProduction.ManaProduction -> [Filter.Type.Filter Keyword.Keyword]
 manaProductionFilters production = case production of
   ManaProduction.OfType _ -> []
-  ManaProduction.AnyColor -> []
+  ManaProduction.AnyColor _ -> []
   ManaProduction.Chosen -> []
   ManaProduction.SnowSymbol -> []
   ManaProduction.Noted -> []
@@ -7537,7 +7538,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
         -- Engine.placeBorne's enteredX).
         entersTriggerReadsX c =
           any
-            (\ability -> TriggeredAbility.condition ability == TriggerCondition.SelfEnters && (modalReadsAnnouncedX (TriggeredAbility.modal ability) || Resolve.readsX (Modal.allEffects (TriggeredAbility.modal ability))))
+            (\ability -> TriggeredAbility.condition ability == TriggerCondition.Enters EntersTrigger.defaultValue && (modalReadsAnnouncedX (TriggeredAbility.modal ability) || Resolve.readsX (Modal.allEffects (TriggeredAbility.modal ability))))
             (Face.triggeredAbilities c)
         -- CR 107.3m's reader that no card writes: a KEYWORD whose minted CR 614.1c
         -- row carries the announcement (ravenous, CR 702.156a, on Jacked Rabbit).
@@ -7722,7 +7723,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- an X its cost does not print is naming nothing.
   Spec.it s "CR 107.3f every triggered ability's resolution-time {X} is chosen, or inherited" $ do
     ps <- S.allPrintings s corpus
-    let inheritsX ability = TriggeredAbility.condition ability `elem` [TriggerCondition.SelfEnters, TriggerCondition.SelfTurnedFaceUp]
+    let inheritsX ability = TriggeredAbility.condition ability `elem` [TriggerCondition.Enters EntersTrigger.defaultValue, TriggerCondition.SelfTurnedFaceUp]
         triggers f = Face.triggeredAbilities f <> delayedDeclarations f <> grantedTriggeredAbilities f
         unchosen ability = not (inheritsX ability) && any declaresVariable (announcedGateCostsOf (TriggeredAbility.modal ability))
         idle gate = Maybe.isJust (PayGate.x gate) && not (any declaresVariable (gateCosts gate))
@@ -7755,7 +7756,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- cost (Aurelia's Vindicator's "up to X other target creatures").
   Spec.it s "CR 603.3d only an enters-the-battlefield or turned-face-up triggered ability's target count reads an announced X" $ do
     ps <- S.allPrintings s corpus
-    let inheritsX ability = TriggeredAbility.condition ability `elem` [TriggerCondition.SelfEnters, TriggerCondition.SelfTurnedFaceUp]
+    let inheritsX ability = TriggeredAbility.condition ability `elem` [TriggerCondition.Enters EntersTrigger.defaultValue, TriggerCondition.SelfTurnedFaceUp]
         triggers f = Face.triggeredAbilities f <> delayedDeclarations f <> grantedTriggeredAbilities f
         countsByX :: [Modal.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)] -> Bool
         countsByX = any (any (countReadsX . TargetSlot.count) . Modal.allTargetSlots)

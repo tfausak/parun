@@ -1,6 +1,6 @@
 {
   "description": "CR 606.3 / 106.6: Sarkhan, Fireblood's first +1 discards to draw; its second adds two mana spendable only on Dragon spells",
-  "note": "Turn 1: alice discards Hill Giant and draws Divination. Turn 3: the two red mana can't pay for Shock with no other source, and do pay for Sarkhan's Whelp beside a Mountain.",
+  "note": "Turn 1: alice discards Hill Giant and draws Divination. Turn 3: the red and green mana, a colour each (CR 106.1a), can't pay for Shock with no other source, and do pay for Sarkhan's Whelp beside a Mountain.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
@@ -203,7 +203,7 @@
           "with": {
             "type": "Colored",
             "value": {
-              "type": "Red"
+              "type": "Green"
             }
           }
         }

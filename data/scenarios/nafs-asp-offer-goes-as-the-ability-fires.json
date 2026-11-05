@@ -1,0 +1,19 @@
+{
+  "description": "CR 116.2c whole card: bob can't stop Nafs Asp's ability once it has triggered, so his draw step offers him no payment",
+  "note": "His Forest is untapped at his draw step, so the offer's absence there is the fired entry and not the mana. The firing itself, and that it happens once, is nafs-asp-makes-the-player-it-hits-lose-1-life-at-their-next-draw-step.json.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Nafs Asp", "label": "asp", "ready": true}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Forest", "label": "forest"}]},
+      {"name": "carol", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$asp"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"ChooseAttackTarget": "$bob"}},
+    {"turn": 1, "step": "EndOfCombat", "player": "bob", "check": {"View": {"of": "Offered", "player": "bob", "is": ["Pass", "EndEffect $asp", "ActivateManaAbility $forest"]}}},
+    {"turn": 2, "step": "DrawStep", "player": "bob", "check": {"View": {"of": "Offered", "player": "bob", "is": ["Pass", "ActivateManaAbility $forest"]}}}
+  ]
+}

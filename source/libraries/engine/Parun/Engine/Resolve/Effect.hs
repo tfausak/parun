@@ -478,8 +478,9 @@ applyEffectWith runSubgame resolving source controller legal chosen effect = Eve
   -- Read BEFORE the effect runs, while the resolving ability is surely still an
   -- object to read.
   ability <- State.gets (resolvingAbilityName resolving)
+  acquisition <- State.gets (\g -> Game.readingAcquisition resolving source g source)
   applyOneEffect runSubgame resolving source controller legal chosen effect
-  State.modify' (Common.recordExiledWith ExileLink.MkExileLink {ExileLink.source = source, ExileLink.ability = ability} before)
+  State.modify' (Common.recordExiledWith ExileLink.MkExileLink {ExileLink.source = source, ExileLink.ability = ability, ExileLink.acquisition = acquisition} before)
   State.modify' (Common.recordExilePile before)
   -- CR 614.1c: the as-enters effects of what this instruction put onto the
   -- battlefield, before the next instruction reads the board. After the window

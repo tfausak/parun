@@ -74,6 +74,7 @@ import qualified Parun.Extra.Int as Int
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
 import qualified Parun.Types.Acquisition as Acquisition
+import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.Action as Action.Type
 import qualified Parun.Types.AnyNumberOf as AnyNumberOf
 import qualified Parun.Types.Asked as Asked
@@ -91,6 +92,7 @@ import qualified Parun.Types.Departure as Departure.Type
 import qualified Parun.Types.DiscardCause as DiscardCause
 import qualified Parun.Types.EndTurnSignal as EndTurnSignal
 import qualified Parun.Types.EndingStep as EndingStep
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EventGroup as EventGroup
 import qualified Parun.Types.ExtraTurn as ExtraTurn
 import Parun.Types.Game (Game)
@@ -936,7 +938,7 @@ placeBorne srcId pending = do
       -- announced (Genesis Hydra), off the spell's own bindings since the
       -- spell is still on the stack as the ability triggers.
       inheritedX = case TriggeredAbility.condition ability of
-        TriggerCondition.SelfEnters -> Game.announcedXOf srcId gs
+        TriggerCondition.Enters (EntersTrigger.MkEntersTrigger ActingPermanent.Self _) -> Game.announcedXOf srcId gs
         TriggerCondition.SelfTurnedFaceUp -> Maybe.fromMaybe 0 (Binding.amountOf Binding.variableX bound)
         TriggerCondition.SelfCast -> Maybe.fromMaybe 0 (Game.lookupObject srcId gs >>= Binding.amountOf Binding.variableX . Object.bindings)
         _ -> 0
@@ -948,7 +950,7 @@ placeBorne srcId pending = do
       -- not overwritten. data/scenarios' Genesis Hydra case proves the cast
       -- trigger's.
       enteredX = case TriggeredAbility.condition ability of
-        TriggerCondition.SelfEnters -> Just inheritedX
+        TriggerCondition.Enters (EntersTrigger.MkEntersTrigger ActingPermanent.Self _) -> Just inheritedX
         TriggerCondition.SelfCast -> Just inheritedX
         _ -> Nothing
       -- CR 700.2b: a mode an earlier choice bars "can't be chosen", like an
@@ -1576,8 +1578,8 @@ priorityLoop = do
                               -- permission came from a resolution rather than
                               -- from printed text. CR 613.1's next projection is
                               -- what makes the ending visible; nothing is undone.
-                              Action.Type.EndEffect oid -> do
-                                EndEffect.endEffect performManaAbility p oid
+                              Action.Type.EndEffect _ resolution -> do
+                                EndEffect.endEffect performManaAbility p resolution
                                 State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
                                 settleForPriority
                                 loop trail'
@@ -1780,6 +1782,8 @@ beginTurn extra pid gs =
             GameState.turnNumber = GameState.turnNumber gs + 1,
             -- CR 500.7: the turn is one of each taker's turns of the game.
             GameState.turnsBegun = Turn.countTurnBegun takers (GameState.turnsBegun gs),
+            -- The outgoing turn's; runStep files this one's.
+            GameState.permanentsAsTurnBegan = Nothing,
             -- CR 500.7: which extra turn this is, for a duration naming it
             -- (Expiry.DuringExtraTurn); Nothing on an ordinary turn.
             GameState.extraTurnUnderWay = extra,
@@ -1894,6 +1898,10 @@ advance = do
 -- state-based actions, then move on. Bails out as soon as the game has a result.
 runStep :: Game ()
 runStep = do
+  -- CR 500.12: nothing happens between turns, so the board this turn's first
+  -- step opens on is the board as the turn began, whatever skips that step (CR
+  -- 500.11) and however many untap steps CR 500.8 adds to the turn.
+  State.modify' fileTurnBegan
   -- CR 727.4: the effect that restarts the game finishes resolving just before the
   -- first turn's untap step, so if the previous step unwound on a restart, this is
   -- that untap step. Lower the signal first.
@@ -1937,6 +1945,14 @@ runStep = do
       if not begins
         then skipStep phase
         else runStepThatBegan phase
+
+-- GameState.permanentsAsTurnBegan, once a turn, after Expiry.dropAtTurnOf
+-- (docs/decisions.md's "at the beginning of this turn"). The record is left
+-- unforced.
+fileTurnBegan :: GameState -> GameState
+fileTurnBegan gs = case GameState.permanentsAsTurnBegan gs of
+  Just _ -> gs
+  Nothing -> gs {GameState.permanentsAsTurnBegan = Just (Map.fromList (Maybe.mapMaybe (\oid -> fmap ((,) oid) (Event.lastKnownRecord gs oid)) (Set.toAscList (GameState.battlefield gs))))}
 
 -- CR 500.11: proceed past a SKIPPED PHASE as though it didn't exist -- so the
 -- rest of its steps leave the schedule and `advance` picks up whatever CR 500.1's

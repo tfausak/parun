@@ -33,17 +33,19 @@
                           "duration": {
                             "type": "UntilPaid",
                             "value": {
-                              "mana": [
-                                {
-                                  "type": "OfType",
-                                  "value": {
-                                    "type": "Colored",
+                              "cost": {
+                                "mana": [
+                                  {
+                                    "type": "OfType",
                                     "value": {
-                                      "type": "Blue"
+                                      "type": "Colored",
+                                      "value": {
+                                        "type": "Blue"
+                                      }
                                     }
                                   }
-                                }
-                              ]
+                                ]
+                              }
                             }
                           },
                           "modification": {
@@ -62,17 +64,19 @@
                           "duration": {
                             "type": "UntilPaid",
                             "value": {
-                              "mana": [
-                                {
-                                  "type": "OfType",
-                                  "value": {
-                                    "type": "Colored",
+                              "cost": {
+                                "mana": [
+                                  {
+                                    "type": "OfType",
                                     "value": {
-                                      "type": "Blue"
+                                      "type": "Colored",
+                                      "value": {
+                                        "type": "Blue"
+                                      }
                                     }
                                   }
-                                }
-                              ]
+                                ]
+                              }
                             }
                           },
                           "modification": {
@@ -98,17 +102,19 @@
                           "duration": {
                             "type": "UntilPaid",
                             "value": {
-                              "mana": [
-                                {
-                                  "type": "OfType",
-                                  "value": {
-                                    "type": "Colored",
+                              "cost": {
+                                "mana": [
+                                  {
+                                    "type": "OfType",
                                     "value": {
-                                      "type": "Blue"
+                                      "type": "Colored",
+                                      "value": {
+                                        "type": "Blue"
+                                      }
                                     }
                                   }
-                                }
-                              ]
+                                ]
+                              }
                             }
                           },
                           "modification": {
@@ -129,17 +135,19 @@
                           "duration": {
                             "type": "UntilPaid",
                             "value": {
-                              "mana": [
-                                {
-                                  "type": "OfType",
-                                  "value": {
-                                    "type": "Colored",
+                              "cost": {
+                                "mana": [
+                                  {
+                                    "type": "OfType",
                                     "value": {
-                                      "type": "Blue"
+                                      "type": "Colored",
+                                      "value": {
+                                        "type": "Blue"
+                                      }
                                     }
                                   }
-                                }
-                              ]
+                                ]
+                              }
                             }
                           },
                           "modification": {

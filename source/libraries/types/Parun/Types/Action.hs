@@ -209,13 +209,12 @@ data Action
     -- it is an Action rather than anything that goes through Parun.Engine.Stack,
     -- exactly as CR 116.2a's land play is.
     --
-    -- Carries the effect's SOURCE, Ignore's shape above, because parun gives a
-    -- stored continuous effect no id of its own. That is exact rather than
-    -- convenient: one printed sentence stores several effects at once and CR
-    -- 116.2c ends "that effect", the sentence -- so the payment must reach all of
-    -- them together, and the source is what they share. Two live pay-to-end
-    -- offers from one object cannot coexist, since a Licid that has activated has
-    -- lost the ability and can no longer activate it.
+    -- Carries the effect's SOURCE, Ignore's shape above, and the RESOLUTION that
+    -- stored it, because parun gives a stored effect no id of its own. One printed
+    -- sentence stores several effects at once and CR 116.2c ends "that effect",
+    -- the sentence -- so the payment must reach all of them together, and the
+    -- resolution is what they share. Two offers from one object do coexist: each
+    -- of Nafs Asp's hits is its own (its third ruling).
     --
     -- What it COSTS is not a choice: the effect named the price when it was
     -- stored (Expiry.WhenPaid), so Parun.Engine.EndEffect reads it off the stored
@@ -223,7 +222,7 @@ data Action
     -- "you" for whatever stored the effect -- the ability's activator, or the
     -- spell's controller -- answered by Parun.Engine.EndEffect.canEnd off the
     -- seat baked into the stored effect.
-    EndEffect ObjectId.ObjectId
+    EndEffect ObjectId.ObjectId ObjectId.ObjectId
   | -- | CR 116.2i / 901.9: roll the planar die, costing {1} for each time this
     -- player has taken this action this turn.
     RollPlanarDie

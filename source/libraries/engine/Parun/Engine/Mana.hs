@@ -55,6 +55,7 @@ import qualified Parun.Types.Claim as Claim.Type
 import qualified Parun.Types.ClaimAxis as ClaimAxis
 import qualified Parun.Types.Clause as Clause
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.ColorSpread as ColorSpread
 import Parun.Types.Cost (Cost)
 import qualified Parun.Types.Cost as Cost
 import qualified Parun.Types.CostAmount as CostAmount
@@ -298,8 +299,9 @@ produced bound oid gs = producedVisiting bound Set.empty oid gs gs
 producedVisiting :: Map.Map SlotName (Set.Set Recipient.Recipient) -> Set.Set ObjectId -> ObjectId -> GameState -> GameState -> ManaProduction -> Produced
 producedVisiting bound visited oid gs poolBoard production = case production of
   ManaProduction.OfType manaType -> Settles [manaType]
-  ManaProduction.AnyColor ->
+  ManaProduction.AnyColor spread ->
     Offers
+      spread
       (fmap ManaType.Colored (Color.White NonEmpty.:| [Color.Blue, Color.Black, Color.Red, Color.Green]))
   ManaProduction.Chosen ->
     among (fmap ManaType.Colored (Set.toList (Maybe.fromMaybe Set.empty (Game.currentChoice Chosen.Colors oid gs))))
@@ -318,7 +320,7 @@ producedVisiting bound visited oid gs poolBoard production = case production of
     among [manaType | Recipient.ToObject tapped <- foldMap Set.toList (Map.lookup Binding.manaSource bound), manaType <- Set.toList (latestTapProduced tapped gs)]
   where
     among types = case types of
-      first : second : more -> Offers (first NonEmpty.:| (second : more))
+      first : second : more -> Offers ColorSpread.OneColor (first NonEmpty.:| (second : more))
       settled -> Settles settled
 
 -- CR 106.12a: the types of mana a permanent's latest tap for mana produced.
@@ -331,11 +333,27 @@ latestTapProduced oid = Foldable.foldl' newest Set.empty . GameState.events
 
 -- CR 106.3: what one AddMana instruction's production comes to on a board --
 -- a settled run of mana, possibly empty (CR 106.5's undefined type adds none),
--- or CR 105.4's choice among two or more types, one of which is added.
+-- or CR 105.4's choice among two or more types, made once for the instruction
+-- or once per unit as the spread says (`choicesOf`).
 data Produced
   = Settles [ManaType]
-  | Offers (NonEmpty.NonEmpty ManaType)
+  | Offers ColorSpread.ColorSpread (NonEmpty.NonEmpty ManaType)
   deriving (Eq, Show)
+
+-- CR 105.4: every way `howMany` units of an offer can be chosen. One
+-- colour repeats a single pick; any combination is each multiset of picks, the
+-- order a pool never keeps (Parun.Types.Mana) left out, so Wizard's Rockets'
+-- X of 3 is 35 choices and not 125.
+choicesOf :: Int -> ColorSpread.ColorSpread -> NonEmpty.NonEmpty ManaType -> [[ManaType]]
+choicesOf howMany spread offered = case spread of
+  ColorSpread.OneColor -> [replicate howMany manaType | manaType <- NonEmpty.toList offered]
+  ColorSpread.AnyCombination -> multisets howMany (NonEmpty.toList offered)
+  where
+    multisets n types
+      | n <= 0 = [[]]
+      | otherwise = case types of
+          [] -> []
+          first : rest -> fmap (first :) (multisets (n - 1) types) <> multisets n rest
 
 -- Every ROUTE by which this object could be activated for mana, as the mana ONE
 -- activation of it adds: its intrinsic subtype mana (CR 305.6), one route per
@@ -636,7 +654,7 @@ manaSuppliesGiven capacity pcs pid borrowed oid gs =
       --
       -- Not implemented: a yield reading any other slot its cost binds --
       -- CR 601.2b's X among them -- which is supplied as the offer prices it
-      -- (#4852).
+      -- (#6146).
       perCandidate option =
         let (activations, share, manaCost) = measured option
             readsSlot slot = any (\(clause, _) -> any (Set.member slot . Quantity.objectSlots . ManaAddition.count) (Maybe.mapMaybe ManaAbility.manaProduced (Foldable.toList (Clause.effects clause)))) (ManaOption.steps option)
@@ -673,7 +691,7 @@ manaSuppliesGiven capacity pcs pid borrowed oid gs =
       -- carry where the floor is all it fixes (CounterSpread.FromAmongAtLeast).
       --
       -- Not implemented: a floor not yet announced (CR 601.2b's X), which is
-      -- supplied as the offer prices it (#4852).
+      -- supplied as the offer prices it (#6146).
       removable option = case [removal | CostComponent.RemoveCounters removal <- Cost.components (ManaOption.cost option)] of
         [CountersFromPermanents.MkCountersFromPermanents (CostAmount.Fixed floor_) which criterion spread]
           | any (any (Set.member Binding.removedCounters . QuantitySlot.slots . ManaAddition.count) . Maybe.mapMaybe ManaAbility.manaProduced . Foldable.toList . Clause.effects . fst) (ManaOption.steps option) ->
@@ -780,7 +798,7 @@ triggerAdds pid gs pending = case PendingTrigger.source pending of
               ManaUnit.rider = ManaAddition.rider addition,
               ManaUnit.spendTrigger = spendTriggerOf controller source gs =<< ManaAddition.whenSpent addition,
               ManaUnit.sourceChoices = sourceChoicesOf source gs,
-              ManaUnit.sourceLastExiled = lastExiledWith Nothing source gs
+              ManaUnit.sourceLastExiled = lastExiledWith Nothing (Game.acquisitionOf source gs) source gs
             }
         adds addition
           | List.notElem pid (Maybe.fromMaybe [] (Players.named resolutionReads gs (ManaAddition.player addition))) = [[]]
@@ -788,7 +806,7 @@ triggerAdds pid gs pending = case PendingTrigger.source pending of
               let howMany = max 0 (Integer.toIntSaturating (Maybe.fromMaybe 0 (Quantity.evaluate (Projection.fullView gs) context gs source (ManaAddition.count addition))))
                in case produced bound source gs (ManaAddition.production addition) of
                     Settles run -> [concat (replicate howMany (fmap (unitOf addition) run))]
-                    Offers offered -> [replicate howMany (unitOf addition manaType) | manaType <- NonEmpty.toList offered]
+                    Offers spread offered -> fmap (fmap (unitOf addition)) (choicesOf howMany spread offered)
      in case Modal.forcedSelection every (Modal.Type.selection modal) of
           Nothing -> [[]]
           Just selection -> fmap concat (traverse adds (Maybe.mapMaybe ManaAbility.manaProduced (Modal.modesEffects selection modal)))
@@ -798,7 +816,7 @@ readsPool (clause, _) = any (poolProduction . ManaAddition.production) (Maybe.ma
   where
     poolProduction production = case production of
       ManaProduction.OfType _ -> False
-      ManaProduction.AnyColor -> False
+      ManaProduction.AnyColor _ -> False
       ManaProduction.Chosen -> False
       ManaProduction.SnowSymbol -> False
       ManaProduction.Noted -> False
@@ -905,7 +923,7 @@ pricedOptionsVisiting visited paid poolBoard pcs oid gs =
               whenSpent <- ManaAddition.whenSpent addition
               spendTriggerOf controller oid gs whenSpent,
             ManaUnit.sourceChoices = choices,
-            ManaUnit.sourceLastExiled = lastExiledWith reader oid gs
+            ManaUnit.sourceLastExiled = lastExiledWith reader (Game.acquisitionFor reader oid gs) oid gs
           }
       -- CR 106.3's count, read off the BOARD rather than off the card: Cabal
       -- Coffers' "Add {B} for each Swamp you control" is ONE instruction whose
@@ -930,12 +948,14 @@ pricedOptionsVisiting visited paid poolBoard pcs oid gs =
       pricedContext = (Projection.framedByBindings gs paid countContext) {Filter.boundAmounts = Map.mapMaybe Binding.Type.amount paid}
       howManyIn context addition = max 0 (Integer.toIntSaturating (Maybe.fromMaybe 0 (Quantity.evaluate (Projection.fullView gs) context gs oid (ManaAddition.count addition))))
       -- CR 105.4's choice is per INSTRUCTION, so the count replicates the unit
-      -- AFTER the type is picked: an addition of two AnyColor offers five options
+      -- AFTER the type is picked: two of any one color offer five options
       -- here, not twenty-five. Loot, the Pathfinder's "{G}, {T}: Add three mana
       -- of any one color" is the printing that proves it -- data/scenarios/mana
       -- reads three units of one colour off one activation -- and Stadium
       -- Vendors says the same sentence as a triggered ability that resolves off
       -- the stack (Resolve's arm).
+      -- "In any combination of colors" is a choice per unit instead
+      -- (`choicesOf`): Thornvault Forager's two offer fifteen.
       --
       -- CR 106.4's RECIPIENT rides the same instruction, and this is where the
       -- option learns it: an addition names whose pool its units go to, so the
@@ -951,8 +971,8 @@ pricedOptionsVisiting visited paid poolBoard pcs oid gs =
       pooled = List.foldl' (\acc (ref, units) -> Map.insertWith (\new old -> Mana.MkMana (unitsOf old <> unitsOf new)) ref (Mana.MkMana units) acc) Map.empty
       expand (cost, restrictions, ability, clauses) =
         let indexed = zip [0 :: Int ..] clauses
-            build howMany half picks =
-              let parts = fmap (\(i, (addition, runs)) -> (i, (ManaAddition.player addition, concat (replicate (howMany addition) (half runs))))) picks
+            build half picks =
+              let parts = fmap (\(i, (addition, runs)) -> (i, (ManaAddition.player addition, half runs))) picks
                in ManaOption.MkManaOption
                     { ManaOption.cost = cost,
                       ManaOption.restrictions = restrictions,
@@ -961,7 +981,7 @@ pricedOptionsVisiting visited paid poolBoard pcs oid gs =
                       ManaOption.steps = fmap (\(i, (clause, _)) -> (clause, pooled [part | (j, part) <- parts, j == i])) indexed
                     }
          in concatMap
-              (\picks -> retyped cost (build (howManyIn countContext) fst picks, build (howManyIn pricedContext) snd picks))
+              (\picks -> retyped cost (build fst picks, build snd picks))
               (traverse (\(i, addition) -> fmap ((,) i . (,) addition) (additionRuns (ActivatedAbility.name =<< ability) addition)) [(i, addition) | (i, (_, additions)) <- indexed, addition <- additions])
       -- CR 106.12b: a route tapping the permanent (CR 106.12) produces the
       -- type each ManaR row applying to it names instead of any other, one
@@ -992,13 +1012,27 @@ pricedOptionsVisiting visited paid poolBoard pcs oid gs =
       -- settled run is repeated whole by the count (CR 607.2e's noted mana).
       --
       -- Each alternative as offered beside the same one priced, the two halves
-      -- differing only in the pools they read (produced's `poolBoard`), so every
-      -- other production gives one list twice and the pairs line up.
+      -- differing only in the pools they read (produced's `poolBoard`) and the
+      -- count, so every other production gives one list twice and the pairs
+      -- line up.
+      --
+      -- A choice per unit (`choicesOf`) is the exception: priced at a count the
+      -- offer could not know (Wizard's Rockets' X, CR 601.2b), no offered
+      -- choice is the same as a priced one, so every priced choice stands
+      -- beside every offered one and Parun.Engine.Cost.tapForManaWith asks
+      -- among them once the cost is paid.
       additionRuns reader addition =
-        let runsOn board = case producedVisiting Map.empty visited oid gs board (ManaAddition.production addition) of
-              Settles run -> [fmap (unitFor reader addition) run]
-              Offers types -> fmap (\manaType -> [unitFor reader addition manaType]) (NonEmpty.toList types)
-         in zip (runsOn gs) (runsOn poolBoard)
+        let offeredCount = howManyIn countContext addition
+            pricedCount = howManyIn pricedContext addition
+            producedOn board = producedVisiting Map.empty visited oid gs board (ManaAddition.production addition)
+            runsOn board howMany = case producedOn board of
+              Settles run -> [concat (replicate howMany (fmap (unitFor reader addition) run))]
+              Offers spread types -> fmap (fmap (unitFor reader addition)) (choicesOf howMany spread types)
+            offered = runsOn gs offeredCount
+            priced = runsOn poolBoard pricedCount
+         in case producedOn gs of
+              Offers ColorSpread.AnyCombination _ | offeredCount /= pricedCount -> [(o, p) | o <- offered, p <- priced]
+              _ -> zip offered priced
    in concatMap expand (manaRoutesOfGiven pcs oid gs)
 
 -- Every unit one option adds, whoever gets it, in printed order within each
@@ -1081,8 +1115,9 @@ sourceChoicesOf oid gs = case Game.lookupObject oid gs of
 -- CR 607.2a's production-time capture, sourceChoicesOf's twin: the last
 -- card exiled with this source that is still in exile, baked onto every unit it
 -- adds (Parun.Types.ManaUnit.sourceLastExiled). Only a card the mana ability
--- named `reader` is linked to counts (Game.linkedPile), so one the source
--- acquired with its exiling twin reads that twin's pile alone (CR 607.5).
+-- named `reader`, come with `acquisition`, is linked to counts
+-- (Game.linkedPile), so one the source acquired with its exiling twin reads
+-- that twin's pile alone (CR 607.5).
 -- data/scenarios/mana-source/cr-607-5-myr-welder-s-acquired-ice-cauldron-mana-casts-what-its-pair-exiled.json
 -- is the proof. "Last" is Game.lastExiled's, so a second card the source
 -- exiles replaces the first, and a card that left exile is no longer one (CR
@@ -1093,8 +1128,8 @@ sourceChoicesOf oid gs = case Game.lookupObject oid gs of
 -- stack before CR 601.2h pays for it, so a spend-time read would never find it in
 -- exile. Mana made while that card is already being cast (CR 601.2g) therefore
 -- names whatever was exiled before it.
-lastExiledWith :: Maybe AbilityName.AbilityName -> ObjectId -> GameState -> Maybe ObjectId
-lastExiledWith reader oid gs = Game.lastExiled (Game.linkedPile reader ExiledPile.OwnAbilities oid gs) gs
+lastExiledWith :: Maybe AbilityName.AbilityName -> Acquisition.Acquisition -> ObjectId -> GameState -> Maybe ObjectId
+lastExiledWith reader acquisition oid gs = Game.lastExiled (Game.linkedPile reader acquisition ExiledPile.OwnAbilities oid gs) gs
 
 -- The production-time tags (Parun.Types.ProductionTag) every mana this object
 -- adds will carry. THE one place they are decided; manaOptionsOfGiven just above

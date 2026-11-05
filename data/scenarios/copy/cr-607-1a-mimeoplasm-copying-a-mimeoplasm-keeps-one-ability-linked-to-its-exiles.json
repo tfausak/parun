@@ -1,0 +1,204 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Swamp",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "ready": true
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Mimeoplasm, Revered One",
+            "label": "other"
+          },
+          {
+            "card": "Goblin Piker",
+            "label": "piker"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Mimeoplasm, Revered One",
+            "label": "ooze"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 607.1a / 607.5 Mimeoplasm copying a second Mimeoplasm keeps one {2} linked to its exiles, and the copied {2} to none",
+  "note": "Mimeoplasm exiles a second Mimeoplasm and Goblin Piker as it enters, then becomes a copy of the second, keeping its {2} (CR 707.9a). The copy's own {2} came with the copy effect and is linked to an as-enters exile that never ran on this object, so it has no legal target (CR 607.5). The kept {2} is linked to the printed exile (CR 607.1a), so it can make Mimeoplasm a Piker.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "Swamp",
+            "Forest",
+            "Island",
+            "Swamp#2",
+            "Swamp#3",
+            null
+          ],
+          "object": "$ooze",
+          "x": 2
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseAnyNumberToExile",
+          "with": [
+            "$other",
+            "$piker"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Activate": {
+          "ability": 0,
+          "mana": [
+            "Swamp#4",
+            "Swamp#5",
+            null
+          ],
+          "object": "Mimeoplasm, Revered One",
+          "targets": [
+            "Mimeoplasm, Revered One#2"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "PowerToughness": {
+          "object": "Mimeoplasm, Revered One",
+          "power": 6,
+          "toughness": 6
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "player": "alice",
+      "refuse": {
+        "Activate": {
+          "ability": 0,
+          "mana": [
+            "Swamp#6",
+            "Swamp#7",
+            null
+          ],
+          "object": "Mimeoplasm, Revered One",
+          "targets": [
+            "Goblin Piker"
+          ]
+        }
+      },
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Activate": {
+          "ability": 1,
+          "mana": [
+            "Swamp#6",
+            "Swamp#7"
+          ],
+          "object": "Mimeoplasm, Revered One",
+          "targets": [
+            "Goblin Piker"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Names": {
+          "names": [
+            "Goblin Piker"
+          ],
+          "object": "Mimeoplasm, Revered One"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

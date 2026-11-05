@@ -787,7 +787,7 @@ grantPlayFromExile resolving source controller legal (GrantPlayFromExile.MkGrant
         -- Object.playPermission holds one, so a reference naming nobody --
         -- or naming several -- grants nothing, PlayerRef.InSlot's own
         -- collapse.
-        [holder] -> case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs of
+        [holder] -> case Expiry.arm resolving legal controller source duration gs of
           -- CR 611.2b: the duration never started, so no permission is stored.
           Nothing -> gs
           Just expiry ->
@@ -1784,7 +1784,7 @@ exchangeValues settle resolving source controller legal (ExchangeValues.MkExchan
         previous <- characteristic oid gs
         pure (previous, Just . setBase oid . setting . Quantity.Type.Literal)
       -- CR 611.2c: the one creature is frozen into the stored effect.
-      setBase oid setting = State.modify' $ \g -> case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration g of
+      setBase oid setting = State.modify' $ \g -> case Expiry.arm resolving legal controller source duration g of
         Nothing -> g
         Just expiry ->
           let (ts, g1) = Game.freshTimestamp g

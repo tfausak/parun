@@ -183,6 +183,7 @@ import qualified Parun.Codec.CoinFaceSpec
 import qualified Parun.Codec.CoinFlippedSpec
 import qualified Parun.Codec.CoinReadingSpec
 import qualified Parun.Codec.ColorSpec
+import qualified Parun.Codec.ColorSpreadSpec
 import qualified Parun.Codec.CombatDamageAmountSpec
 import qualified Parun.Codec.CombatDamageOptionSpec
 import qualified Parun.Codec.CombatDeclarationSpec
@@ -331,6 +332,7 @@ import qualified Parun.Codec.EndTurnSignalSpec
 import qualified Parun.Codec.EndingStepSpec
 import qualified Parun.Codec.EnteredZoneSpec
 import qualified Parun.Codec.EnteringTogetherSpec
+import qualified Parun.Codec.EntersTriggerSpec
 import qualified Parun.Codec.EntersWithSpec
 import qualified Parun.Codec.EntrantSpec
 import qualified Parun.Codec.EntriesTriggerSpec
@@ -763,6 +765,7 @@ import qualified Parun.Codec.UntapHoldSpec
 import qualified Parun.Codec.UntapRSpec
 import qualified Parun.Codec.UntapRestrictionSpec
 import qualified Parun.Codec.UntapRewriteSpec
+import qualified Parun.Codec.UntilPaidSpec
 import qualified Parun.Codec.UsesSpec
 import qualified Parun.Codec.VanguardSpec
 import qualified Parun.Codec.VentureMarkerEnteredSpec
@@ -1067,6 +1070,7 @@ spec s registry corpus = do
   Parun.Codec.AttackCompanySpec.spec s
   Parun.Codec.AttackCountSpec.spec s
   Parun.Codec.AttackTriggerSpec.spec s
+  Parun.Codec.EntersTriggerSpec.spec s
   Parun.Codec.LeavesTriggerSpec.spec s
   Parun.Codec.LeavingPermanentSpec.spec s
   Parun.Codec.AttackedSubjectSpec.spec s
@@ -1161,6 +1165,7 @@ spec s registry corpus = do
   Parun.Codec.CoinReadingSpec.spec s
   Parun.Codec.ChangeModeSpec.spec s
   Parun.Codec.ColorSpec.spec s
+  Parun.Codec.ColorSpreadSpec.spec s
   Parun.Codec.CombatRestrictionSpec.spec s
   Parun.Codec.CombatSpec.spec s
   Parun.Codec.CombatStepSpec.spec s
@@ -1509,6 +1514,7 @@ spec s registry corpus = do
   Parun.Codec.OutsideObjectSpec.spec s
   Parun.Codec.OwnedZoneSpec.spec s
   Parun.Codec.PaidExpirySpec.spec s
+  Parun.Codec.UntilPaidSpec.spec s
   Parun.Codec.PairingSpec.spec s
   Parun.Codec.PartnerTextSpec.spec s
   Parun.Codec.PastActivationSpec.spec s

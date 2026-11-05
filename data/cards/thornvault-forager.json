@@ -59,16 +59,15 @@
                       {
                         "type": "AddMana",
                         "value": {
+                          "count": {
+                            "type": "Literal",
+                            "value": 2
+                          },
                           "production": {
-                            "type": "AnyColor"
-                          }
-                        }
-                      },
-                      {
-                        "type": "AddMana",
-                        "value": {
-                          "production": {
-                            "type": "AnyColor"
+                            "type": "AnyColor",
+                            "value": {
+                              "type": "AnyCombination"
+                            }
                           }
                         }
                       }

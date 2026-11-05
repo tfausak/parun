@@ -33,6 +33,7 @@ import qualified Parun.Types.DealtDamage as DealtDamage
 import qualified Parun.Types.DeclarationTrigger as DeclarationTrigger
 import qualified Parun.Types.Designation as Designation
 import qualified Parun.Types.EndingStep as EndingStep
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.Filter as Filter.Type
 import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Hop as Hop
@@ -91,7 +92,7 @@ event context creature c = case c of
   _ | own@(_ : _) <- selfEvent context creature c -> do
     (openings, happens, slots) <- own
     itself openings (Text.pack happens) slots (ownership c)
-  TriggerCondition.PermanentEnters f -> do
+  TriggerCondition.Enters t@(EntersTrigger.MkEntersTrigger (ActingPermanent.Matching f) _) | t == EntersTrigger.matching f -> do
     (one, that) <- described context f
     -- Free: the entrant is "it" (Aether Flash) or "that creature" (Agent's
     -- Toolkit).
@@ -200,7 +201,7 @@ event context creature c = case c of
 -- (CR 700.4) in the words Oracle text keeps for it (Chromatic Star).
 selfEvent :: Target.Context -> Bool -> TriggerCondition.TriggerCondition -> [([String], String, [(SlotName.SlotName, String)])]
 selfEvent context creature c = case c of
-  TriggerCondition.SelfEnters -> [(["When"], "enters", [])]
+  TriggerCondition.Enters t | t == EntersTrigger.defaultValue -> [(["When"], "enters", [])]
   TriggerCondition.Leaves t
     | t == LeavesTrigger.dies LeavingPermanent.Self, creature -> [(["When"], "dies", [(becameSlot, "it")])]
     | t == LeavesTrigger.dies LeavingPermanent.Self -> [(["When"], "is put into a graveyard from the battlefield", [(becameSlot, "it")])]

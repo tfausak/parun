@@ -127,7 +127,7 @@ isCast action = case action of
   A.PutCompanionIntoHand -> False
   A.RollPlanarDie -> False
   A.Ignore _ _ -> False
-  A.EndEffect _ -> False
+  A.EndEffect {} -> False
   A.ActivateManaAbility _ -> False
 
 isActivate :: A.Action -> Bool
@@ -146,7 +146,7 @@ isActivate action = case action of
   A.PutCompanionIntoHand -> False
   A.RollPlanarDie -> False
   A.Ignore _ _ -> False
-  A.EndEffect _ -> False
+  A.EndEffect {} -> False
   A.ActivateManaAbility _ -> False
 
 isManaAbility :: A.Action -> Bool
@@ -166,7 +166,7 @@ isManaAbility action = case action of
   A.PutCompanionIntoHand -> False
   A.RollPlanarDie -> False
   A.Ignore _ _ -> False
-  A.EndEffect _ -> False
+  A.EndEffect {} -> False
 
 castOf :: ObjectId.ObjectId -> Printing.Printing -> A.Action
 castOf oid printing = A.Cast oid (S.printingName printing) Facing.FaceUp

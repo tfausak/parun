@@ -17,6 +17,7 @@ import qualified Parun.Engine.TextWord as TextWord
 import qualified Parun.Engine.Turn as Turn
 import qualified Parun.Types.AbilityKind as AbilityKind
 import qualified Parun.Types.AbilityName as AbilityName
+import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.Anchor as Anchor
 import qualified Parun.Types.Behold as Behold
 import qualified Parun.Types.BlockRole as BlockRole
@@ -1656,10 +1657,13 @@ data Context = MkContext
     -- the object, so the link outlives the permanent becoming a copy that keeps
     -- the referring ability (CR 607.1a). Empty in contextFor below, so the atom
     -- is vacuously False wherever no source frames the read.
-    --
-    -- Not implemented: CR 607.5's keying by acquisition, which sourceEntrants
-    -- has (#4985).
     sourceExiled :: Map.Map ObjectId.ObjectId ExileLink.ExileLink,
+    -- CR 607.5: the acquisition of the source's abilities the reading ability
+    -- came with, under which it reads sourceExiled and Quantity's exiled piles
+    -- (Binding.isLinkedExile). Set by Parun.Engine.SourceContext.withChoices;
+    -- Nothing in contextFor below, where a reader falls back to the source's
+    -- acquisition now (Parun.Engine.Game.acquisitionOf).
+    sourceAcquisition :: Maybe Acquisition.Acquisition,
     -- | CR 607.5: the name of the ability doing the reading, for what it means by
     -- "exiled with" its source (Binding.isLinkedExile): the resolving ability's
     -- (Parun.Engine.Resolve.Slots.effectContext) or the one being activated
@@ -1747,7 +1751,7 @@ data Context = MkContext
 -- here owes both halves of the same pair: which way its unfilled read answers,
 -- and what holds a card to the positions that fill it.
 contextFor :: Teams.Teams -> Maybe PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> Context
-contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, sourceDealtDamage = Set.empty, sourceDealtDamageEarlier = Set.empty, slotAmount = Nothing, defendingPlayers = [], activePlayers = [], recipient = Nothing, shares = Map.empty, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotCardTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, slotVotes = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, evaluatedCreatureTypes = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceChosenNumber = Nothing, sourceLastExiled = Nothing, sourceExiled = Map.empty, reader = Nothing, candidateMeasures = Nothing, battlefieldViews = Seq.empty}
+contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, sourceDealtDamage = Set.empty, sourceDealtDamageEarlier = Set.empty, slotAmount = Nothing, defendingPlayers = [], activePlayers = [], recipient = Nothing, shares = Map.empty, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotCardTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, slotVotes = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, evaluatedCreatureTypes = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceChosenNumber = Nothing, sourceLastExiled = Nothing, sourceExiled = Map.empty, sourceAcquisition = Nothing, reader = Nothing, candidateMeasures = Nothing, battlefieldViews = Seq.empty}
 
 -- contextFor over a game: its teams (CR 102.4) and its active players (CR 102.1,
 -- 805.4a) filled from the state, the two facts about the table a match may ask.
@@ -2175,7 +2179,7 @@ matches context view predicate = case predicate of
   -- ability in data/cards/ an object can acquire that states this atom
   -- (Mimeoplasm, Revered One's, through Patchwork Crawler) names the
   -- AsItEntered pile, which no reader changes.
-  Filter.IsExiledWithSource pile -> maybe False (\link -> Binding.isLinkedExile (reader context) pile (ExileLink.source link) link) (identity view >>= (`Map.lookup` sourceExiled context))
+  Filter.IsExiledWithSource pile -> maybe False (\link -> Binding.isLinkedExile (reader context) (Maybe.fromMaybe Acquisition.Own (sourceAcquisition context)) pile (ExileLink.source link) link) (identity view >>= (`Map.lookup` sourceExiled context))
   -- CR 607.2a off the Context, which the mana-spending road alone fills: no
   -- card exiled with the source matches nothing.
   Filter.IsLastExiledWithSource -> maybe False (\card -> identity view == Just card) (sourceLastExiled context)
@@ -2894,9 +2898,8 @@ rewriteKeyword pairs keyword = case keyword of
   -- the same way -- a ward cost naming a basic land type is the unprinted case
   -- the arms below are also a fence for.
   --
-  -- CR 702.21b's perEach is left alone: a player-counter tally names no word
-  -- CR 612.2 swaps.
-  Keyword.Type.Ward w -> Keyword.Type.Ward w {Ward.cost = rewriteCost pairs (Ward.cost w)}
+  -- CR 702.21b's perEach is a KeywordCount, descended as mobilize's N is.
+  Keyword.Type.Ward w -> Keyword.Type.Ward (Ward.MkWard (rewriteCost pairs (Ward.cost w)) (fmap (rewriteKeywordCount pairs) (Ward.perEach w)))
   -- CR 702.33a, CR 702.33c, CR 702.34a, CR 702.37a and CR 702.42a: each states a
   -- cost as part of the keyword, so rewriteCost carries CR 612.1 into it.
   Keyword.Type.Kicker cost -> Keyword.Type.Kicker (rewriteCost pairs cost)
@@ -3228,7 +3231,7 @@ rewriteKeyword pairs keyword = case keyword of
   -- craft's reason.
   Keyword.Type.Splice splicing -> Keyword.Type.Splice (Splice.MkSplice (rewrite pairs (Splice.onto splicing)) (rewriteCost pairs (Splice.cost splicing)))
 
--- rewriteKeyword's descent into mobilize's and firebending's N: only a tally
+-- rewriteKeyword's descent into mobilize's, firebending's and ward's N: only a tally
 -- carries a Filter, and its scope holds no word, as rewriteQuantity leaves
 -- Count's.
 rewriteKeywordCount :: [(TextWord.TextWord, TextWord.TextWord)] -> KeywordCount.KeywordCount Keyword.Type.Keyword -> KeywordCount.KeywordCount Keyword.Type.Keyword

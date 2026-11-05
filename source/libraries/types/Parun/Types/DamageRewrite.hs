@@ -120,6 +120,9 @@ data DamageRewrite effect
     -- one recipient in one event, and CR 510.4's two combat damage steps -- the
     -- one way one source hits one creature twice -- are the different TIMES rule
     -- 702.64b's own second sentence lets the ceiling renew at.
+    --
+    -- Power Leak's "prevent X of that damage" is this ceiling on a CR 614.15
+    -- self-replacement with Uses.Once, its X settled as the row is installed.
     PreventUpTo Quantity.Quantity
   | SetAmount Natural.Natural
   | Scale Scaling.Scaling

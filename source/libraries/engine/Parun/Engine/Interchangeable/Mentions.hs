@@ -214,6 +214,7 @@ import qualified Parun.Types.Earthbend as Earthbend
 import qualified Parun.Types.Effect as Effect
 import qualified Parun.Types.Emerge as Emerge
 import qualified Parun.Types.EnteredZone as EnteredZone
+import qualified Parun.Types.EntersTrigger as EntersTrigger
 import qualified Parun.Types.EntersWith as EntersWith
 import qualified Parun.Types.EntriesTrigger as EntriesTrigger
 import qualified Parun.Types.EntryAttack as EntryAttack
@@ -449,6 +450,7 @@ import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Parun.Types.UntapR as UntapR
 import qualified Parun.Types.UntapRestriction as UntapRestriction
 import qualified Parun.Types.UntapRewrite as UntapRewrite
+import qualified Parun.Types.UntilPaid as UntilPaid
 import qualified Parun.Types.Vote as Vote
 import qualified Parun.Types.VoteChoices as VoteChoices
 import qualified Parun.Types.VoteObjects as VoteObjects
@@ -1406,7 +1408,7 @@ durationNames asking x = case x of
   Duration.ForAsLongAs condition -> conditionNames asking condition
   Duration.UntilEndOfCombat -> mempty
   Duration.UntilEndOfCombatOnYourNextTurn -> mempty
-  Duration.UntilPaid cost -> costNames asking (keywordNames asking) cost
+  Duration.UntilPaid (UntilPaid.MkUntilPaid payer cost) -> playerRefNames asking payer <> costNames asking (keywordNames asking) cost
   Duration.UntilUsed slot -> foldMap (slotNames asking) slot
   Duration.UntilEvent durationEvent -> durationEventNames asking durationEvent
 
@@ -2161,7 +2163,7 @@ manaAdditionNames asking x = case x of
 manaProductionNames :: (Monoid r) => Asking r -> ManaProduction.ManaProduction -> r
 manaProductionNames asking x = case x of
   ManaProduction.OfType _manaType -> mempty
-  ManaProduction.AnyColor -> mempty
+  ManaProduction.AnyColor _ -> mempty
   ManaProduction.Chosen -> mempty
   ManaProduction.SnowSymbol -> mempty
   ManaProduction.Noted -> mempty
@@ -2371,7 +2373,7 @@ orElseNames asking x = case x of
 
 paidExpiryNames :: (Monoid r) => Asking r -> PaidExpiry.PaidExpiry -> r
 paidExpiryNames asking x = case x of
-  PaidExpiry.MkPaidExpiry _player cost -> costNames asking (keywordNames asking) cost
+  PaidExpiry.MkPaidExpiry _player cost resolution -> costNames asking (keywordNames asking) cost <> names asking (== resolution)
 
 payGateNames :: (Monoid r) => Asking r -> PayGate.PayGate -> r
 payGateNames asking x = case x of
@@ -2448,7 +2450,14 @@ costChangeNames asking x = case x of
 
 costModifierNames :: (Monoid r) => Asking r -> CostModifier.CostModifier -> r
 costModifierNames asking x = case x of
-  CostModifier.MkCostModifier subject matching whichTargets perTarget perEach onlyFirst change -> foldMap (\scope -> history asking HistoryRead.Activations <> turnScopeNames asking scope) onlyFirst <> costSubjectNames asking subject <> filterNames asking matching <> foldMap (filterNames asking) whichTargets <> foldMap (filterNames asking) perTarget <> foldMap (quantityNames asking) perEach <> costChangeNames asking change
+  CostModifier.MkCostModifier subject matching whichTargets perTarget perEach onlyFirst change -> foldMap (\scope -> history asking (costSubjectHistory subject) <> turnScopeNames asking scope) onlyFirst <> costSubjectNames asking subject <> filterNames asking matching <> foldMap (filterNames asking) whichTargets <> foldMap (filterNames asking) perTarget <> foldMap (quantityNames asking) perEach <> costChangeNames asking change
+
+-- The turn's history a cost modifier's `onlyFirst` reads: CR 601.2i's casts
+-- for a spell, CR 602.2's activations for an ability.
+costSubjectHistory :: CostSubject.CostSubject -> HistoryRead.HistoryRead
+costSubjectHistory x = case x of
+  CostSubject.Spells -> HistoryRead.Casts
+  CostSubject.Activations _ -> HistoryRead.Activations
 
 costSubjectNames :: (Monoid r) => Asking r -> CostSubject.CostSubject -> r
 costSubjectNames asking x = case x of
@@ -2864,6 +2873,7 @@ scopeNames asking x = case x of
   Scope.OverPlayers playerRef -> playerRefNames asking playerRef
   Scope.OverBound _ slotName -> slotNames asking slotName
   Scope.InPosition _position inZone -> inZoneNames asking inZone
+  Scope.AsTurnBegan -> mempty
 
 searchNames :: (Monoid r) => Asking r -> Search.Search -> r
 searchNames asking x = case x of
@@ -3014,6 +3024,11 @@ attackTriggerNames asking x = case x of
   AttackTrigger.Declaration declarationTrigger -> declarationTriggerNames asking declarationTrigger
   AttackTrigger.Unblocked filter_ -> filterNames asking filter_
 
+entersTriggerNames :: (Monoid r) => Asking r -> EntersTrigger.EntersTrigger -> r
+entersTriggerNames asking x = case x of
+  -- A batching, which names nothing.
+  EntersTrigger.MkEntersTrigger permanent _batching -> actingPermanentNames asking permanent
+
 leavesTriggerNames :: (Monoid r) => Asking r -> LeavesTrigger.LeavesTrigger -> r
 leavesTriggerNames asking x = case x of
   -- Zones and a batching, which name nothing.
@@ -3067,9 +3082,7 @@ blockCountNames asking x = case x of
 
 triggerConditionNames :: (Monoid r) => Asking r -> TriggerCondition.TriggerCondition -> r
 triggerConditionNames asking x = case x of
-  TriggerCondition.SelfEnters -> mempty
-  TriggerCondition.PermanentEnters filter_ -> filterNames asking filter_
-  TriggerCondition.PermanentsEnter filter_ -> filterNames asking filter_
+  TriggerCondition.Enters entersTrigger -> entersTriggerNames asking entersTrigger
   TriggerCondition.StepBegins stepBegins -> stepBeginsNames asking stepBegins
   TriggerCondition.StateIs condition -> conditionNames asking condition
   TriggerCondition.DealsDamage damageTrigger -> damageTriggerNames asking damageTrigger
@@ -3247,7 +3260,7 @@ voteObjectsNames asking x = case x of
 
 wardNames :: (Monoid r) => Asking r -> (keyword -> r) -> Ward.Ward keyword -> r
 wardNames asking onKeyword x = case x of
-  Ward.MkWard cost perEach -> costNames asking onKeyword cost <> foldMap (playerCounterTallyNames asking) perEach
+  Ward.MkWard cost perEach -> costNames asking onKeyword cost <> foldMap (keywordCountNames asking) perEach
 
 whenSpentNames :: (Monoid r) => Asking r -> WhenSpent.WhenSpent -> r
 whenSpentNames asking x = case x of

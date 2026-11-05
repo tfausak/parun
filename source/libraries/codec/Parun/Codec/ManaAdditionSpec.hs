@@ -7,6 +7,7 @@ import qualified Parun.Spec as Spec
 import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.ColorSpread as ColorSpread
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.ManaAddition as ManaAddition
 import qualified Parun.Types.ManaProduction as ManaProduction
@@ -122,7 +123,7 @@ spec s = Spec.describe s "Parun.Codec.ManaAddition" $ do
       ( ManaAddition.MkManaAddition
           { ManaAddition.player = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "chosen")),
             ManaAddition.count = Quantity.Literal 2,
-            ManaAddition.production = ManaProduction.AnyColor,
+            ManaAddition.production = ManaProduction.AnyColor ColorSpread.OneColor,
             ManaAddition.retention = ManaRetention.Ordinary,
             ManaAddition.restriction = Nothing,
             ManaAddition.rider = Nothing,
