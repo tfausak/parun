@@ -1852,6 +1852,7 @@ mystic-skyfish
 mystifying-maze
 nacatl-hunt-pride
 nael-avizoa-aeronaut
+nafs-asp
 naked-singularity
 nameless-inversion
 nantuko-cultivator
@@ -2154,6 +2155,7 @@ quarry-colossus
 queen-allenal-of-ruadach
 queen-marchesa
 queens-bay-paladin
+quenchable-fire
 questing-beast
 questing-druid-seek-the-beast
 quicken

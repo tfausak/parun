@@ -178,7 +178,7 @@ isActivateOf oid action = case action of
   A.PutCompanionIntoHand -> False
   A.RollPlanarDie -> False
   A.Ignore _ _ -> False
-  A.EndEffect _ -> False
+  A.EndEffect {} -> False
   A.ActivateManaAbility _ -> False
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()

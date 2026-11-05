@@ -24,6 +24,7 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.SlotName as SlotName
+import qualified Parun.Types.UntilPaid as UntilPaid
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Parun.Codec.Duration" $ do
@@ -137,12 +138,12 @@ spec s = Spec.describe s "Parun.Codec.Duration" $ do
       Duration.UntilEndOfCombatOnYourNextTurn
       " {\"type\":\"UntilEndOfCombatOnYourNextTurn\"} "
   -- CR 611.2a / 116.2c: "You may pay {U} to end this effect" (Gliding Licid).
-  Spec.it s "UntilPaid carries the cost" $
+  Spec.it s "UntilPaid carries the offer" $
     Common.assertCodec
       s
       Duration.codec
-      (Duration.UntilPaid (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.OfType (ManaType.Colored Color.Blue)])) []))
-      " {\"type\":\"UntilPaid\",\"value\":{\"mana\":[{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Blue\"}}}]}} "
+      (Duration.UntilPaid (UntilPaid.MkUntilPaid (PlayerRef.Relative PlayerRelation.You) (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.OfType (ManaType.Colored Color.Blue)])) [])))
+      " {\"type\":\"UntilPaid\",\"value\":{\"cost\":{\"mana\":[{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Blue\"}}}]}}} "
   -- CR 611.2a / Scout's Warning: "the next ... this turn", ended by its own use.
   Spec.it s "UntilUsed" $
     Common.assertCodec

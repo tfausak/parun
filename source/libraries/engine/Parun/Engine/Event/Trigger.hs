@@ -3580,6 +3580,11 @@ delayedPending grouped gs =
           -- player" is the seat that just gained, not one the arming spell named.
           -- Map.union is left-biased, so a name the arming environment happens to
           -- share is read as THIS firing's, which is what the printed word means.
+          -- Except a step's beginning, which names only the seat the turn began
+          -- with (Binding.eventBindingsOver) and happens to no player: under CR
+          -- 805.4 that seat is a teammate of the one Nafs Asp hit or Elkin Lair
+          -- exiled from, so what the arming environment named stands. Proved by
+          -- data/scenarios/nafs-asp-under-shared-turns-costs-the-teammate-it-hit.json.
           -- Nothing for CR 400.7f's bearer arrival: this scan looks for events a
           -- delayed entry watches, not for a bearer's own departure, and the
           -- entry's captured environment (CR 603.7c) is where what it knows about
@@ -3587,7 +3592,10 @@ delayedPending grouped gs =
           -- same reason -- this scan gathers no batch -- which is why CR 400.7e's
           -- new object is claimed by eventBindingSlotsSometimes and not by the
           -- floor wherever eventBindings reads that table.
-          (Map.union (eventSlots entry logged) (DelayedTrigger.bindings entry))
+          ( case LoggedEvent.event logged of
+              GameEvent.StepBegan _ -> Map.union (DelayedTrigger.bindings entry) (eventSlots entry logged)
+              _ -> Map.union (eventSlots entry logged) (DelayedTrigger.bindings entry)
+          )
           -- CR 603.7a: what tells the ability this becomes apart from one its
           -- source simply has, once it is on the stack.
           (Just (DelayedTrigger.createdAt entry))
