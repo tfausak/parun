@@ -12,15 +12,19 @@
 -- here errs towards seeing no loop.
 module Parun.Engine.Fragmented where
 
+import qualified Data.Char as Char
 import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
+import qualified Numeric.Natural as Natural
+import qualified Parun.Engine.Count as Count
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Interchangeable.Mentions as Mentions
 import qualified Parun.Engine.Keyword as Keyword
+import qualified Parun.Engine.MoveDuration as MoveDuration
 import qualified Parun.Engine.Planechase as Planechase
 import qualified Parun.Extra.Int as Int
 import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
@@ -63,73 +67,139 @@ import Parun.Types.StateDigest (StateDigest)
 import qualified Parun.Types.StateDigest as StateDigest
 import qualified Parun.Types.StickerPlacement as StickerPlacement
 import qualified Parun.Types.Timestamp as Timestamp
+import qualified Text.Read as Read
 
 -- | The game state as CR 732.3 compares it: the whole record, by its derived
--- Eq, less the fields below. A RECORD UPDATE rather than a field list, so a
--- field added later is compared by default and can only ever prevent a
--- detection -- Parun.Engine.Interchangeable.objects' posture, whole-Object Eq
--- less the timestamp.
+-- Show, less the fields below, with every object id and timestamp renumbered
+-- by rank. A RECORD UPDATE rather than a field list, so a field added later is
+-- compared by default and can only ever prevent a detection --
+-- Parun.Engine.Interchangeable.objects' posture, whole-Object Eq less the
+-- timestamp.
+--
+-- Renumbered because a zone change makes a new object (CR 400.7) that no card
+-- or player can tell from the old one but by what the history says of it, and
+-- a stamp is read only for its order (CR 613.7). By rank, so every map and set
+-- keyed by either keeps its order, and the renaming is the identity on two
+-- states that hold the same ids. A rank is relative to what the state holds,
+-- so a loop is caught only from the lap whose new objects rank as the last
+-- lap's did -- an under-detection. docs/decisions.md, "When a re-created
+-- object is the same game state".
 --
 -- Dropped as bookkeeping no card reads: the id, timestamp, printing and event
 -- group supplies; CR 104.4b's `lastChoice` and `loopInvolvement`; the
 -- grow-only printing interning; and the scan state keyed off the log
 -- (`scannedThrough`, `damageScannedThrough`, `battlefieldWhenTriggered`,
--- `controlSample`, `stackedIn`). `lastKnown` and `stackArchive` are keyed by ids that have
--- left (CR 400.7), so an entry is reachable only through a kept field holding
--- that id.
+-- `controlSample`, `stackedIn`). `lastKnown` and `stackArchive` are keyed by
+-- ids that have left (CR 400.7), so only the entries of the ids the rest of
+-- the state holds are compared.
 --
 -- Dropped as history a card CAN read: `events` and `activationsThisTurn`.
 -- Compared, no state could recur, since every action appends to both; so they
 -- ride along uncompared, and `lapIsRead` asks whether anything in the game
 -- reads what the loop appended to them.
---
--- Not implemented: a loop that moves a card (CR 400.7) is never detected, since
--- object ids are compared as they stand (#6184).
 digest :: GameState -> StateDigest
 digest gs =
   let (effects, objects, reacquire) = canonicalStamps gs
+      trimmed =
+        gs
+          { GameState.events = Seq.empty,
+            GameState.activationsThisTurn = Seq.empty,
+            -- Only a countdown shield's key is read, and its row, compared here, shrinks as it grows.
+            GameState.damagePreventedBy = Map.empty,
+            GameState.nextObjectId = ObjectId.MkObjectId 0,
+            GameState.nextTimestamp = Timestamp.MkTimestamp 0,
+            GameState.nextPrintingId = PrintingId.MkPrintingId 0,
+            GameState.nextEventGroup = EventGroup.MkEventGroup 0,
+            GameState.eventGroupDepth = 0,
+            GameState.lastChoice = Timestamp.MkTimestamp 0,
+            GameState.loopInvolvement = Map.empty,
+            GameState.printings = Map.empty,
+            GameState.printingIds = Map.empty,
+            GameState.scannedThrough = 0,
+            GameState.damageScannedThrough = 0,
+            GameState.boardAfterEvent = Map.empty,
+            GameState.boardBeforeEvent = Map.empty,
+            GameState.battlefieldWhenTriggered = Map.empty,
+            GameState.controlSample = Map.empty,
+            GameState.boardAtControlSample = Nothing,
+            GameState.heldBoards = [],
+            GameState.lastKnown = Map.empty,
+            GameState.stackArchive = Map.empty,
+            GameState.cardsPlayed = Map.empty,
+            GameState.stackedIn = Map.empty,
+            -- One value for a whole turn, and the digest keeps turnNumber.
+            GameState.permanentsAsTurnBegan = Nothing,
+            -- Canonical rather than dropped, so CR 732.3's own example recurs,
+            -- and a loop that moves a counter back.
+            GameState.continuousEffects = effects,
+            GameState.objects = objects,
+            GameState.exiledWith = fmap (\link -> link {ExileLink.acquisition = reacquire (ExileLink.acquisition link)}) (GameState.exiledWith gs),
+            GameState.enteredWith = fmap (\link -> link {EntryLink.acquisition = reacquire (EntryLink.acquisition link)}) (GameState.enteredWith gs),
+            -- Canonical rather than dropped: a payment leaves an empty pool
+            -- behind where there was no entry, and no card tells the two apart.
+            GameState.manaPool = Map.filter (not . null . Mana.unwrap) (GameState.manaPool gs)
+          }
+      shown = show trimmed
+      held = Set.fromList (fmap ObjectId.MkObjectId (Map.keys (ranked objectIdTag shown)))
+      -- What the log says of each held id, as the readers keyed by one ask it
+      -- (`readers`), so a renamed id is the same object only where the
+      -- history answers for it as for the one it renames.
+      told oid = (Game.arrivalsOf oid gs, Maybe.isJust (Game.entryGroup oid gs), Maybe.isJust (MoveDuration.departedIn oid gs), Count.revealedInPlace gs oid, Count.revealedArriving gs oid)
+      departed = show (Map.restrictKeys (GameState.lastKnown gs) held, Map.restrictKeys (GameState.stackArchive gs) held, Map.restrictKeys (GameState.cardsPlayed gs) held, fmap told (Set.toAscList held))
+      rendered = shown <> departed
+      ids = ranked objectIdTag rendered
    in StateDigest.MkStateDigest
-        { StateDigest.unwrap =
-            gs
-              { GameState.events = Seq.empty,
-                GameState.activationsThisTurn = Seq.empty,
-                -- Only a countdown shield's key is read, and its row, compared here, shrinks as it grows.
-                GameState.damagePreventedBy = Map.empty,
-                GameState.nextObjectId = ObjectId.MkObjectId 0,
-                GameState.nextTimestamp = Timestamp.MkTimestamp 0,
-                GameState.nextPrintingId = PrintingId.MkPrintingId 0,
-                GameState.nextEventGroup = EventGroup.MkEventGroup 0,
-                GameState.eventGroupDepth = 0,
-                GameState.lastChoice = Timestamp.MkTimestamp 0,
-                GameState.loopInvolvement = Map.empty,
-                GameState.printings = Map.empty,
-                GameState.printingIds = Map.empty,
-                GameState.scannedThrough = 0,
-                GameState.damageScannedThrough = 0,
-                GameState.boardAfterEvent = Map.empty,
-                GameState.boardBeforeEvent = Map.empty,
-                GameState.battlefieldWhenTriggered = Map.empty,
-                GameState.controlSample = Map.empty,
-                GameState.boardAtControlSample = Nothing,
-                GameState.heldBoards = [],
-                GameState.lastKnown = Map.empty,
-                GameState.stackArchive = Map.empty,
-                GameState.stackedIn = Map.empty,
-                -- One value for a whole turn, and the digest keeps turnNumber.
-                GameState.permanentsAsTurnBegan = Nothing,
-                -- Canonical rather than dropped, so CR 732.3's own example recurs,
-                -- and a loop that moves a counter back.
-                GameState.continuousEffects = effects,
-                GameState.objects = objects,
-                GameState.exiledWith = fmap (\link -> link {ExileLink.acquisition = reacquire (ExileLink.acquisition link)}) (GameState.exiledWith gs),
-                GameState.enteredWith = fmap (\link -> link {EntryLink.acquisition = reacquire (EntryLink.acquisition link)}) (GameState.enteredWith gs),
-                -- Canonical rather than dropped: a payment leaves an empty pool
-                -- behind where there was no entry, and no card tells the two apart.
-                GameState.manaPool = Map.filter (not . null . Mana.unwrap) (GameState.manaPool gs)
-              },
+        { StateDigest.unwrap = trimmed,
+          StateDigest.canonical = renumber ids (ranked timestampTag rendered) rendered,
+          StateDigest.objectRanks = ids,
           StateDigest.events = GameState.events gs,
           StateDigest.activations = GameState.activationsThisTurn gs
         }
+
+-- How the derived Show renders an object id and a timestamp, up to the
+-- number.
+objectIdTag :: String
+objectIdTag = "MkObjectId {unwrap = "
+
+timestampTag :: String
+timestampTag = "MkTimestamp {unwrap = "
+
+-- Each number `tag` precedes in `rendered`, by its rank among them.
+ranked :: String -> String -> Map.Map Natural.Natural Int
+ranked tag rendered = Map.fromDistinctAscList (zip (Set.toAscList (Set.fromList (tagged tag rendered))) [0 ..])
+
+-- Every number `tag` precedes in `rendered`.
+tagged :: String -> String -> [Natural.Natural]
+tagged tag rendered = case rendered of
+  [] -> []
+  _ : rest -> case List.stripPrefix tag rendered of
+    Just after ->
+      let (digits, more) = span Char.isDigit after
+       in maybe id (:) (Read.readMaybe digits) (tagged tag more)
+    Nothing -> tagged tag rest
+
+-- | `rendered` with each object id and timestamp written as its rank in `ids`
+-- and `stamps`, and one neither ranks marked as raw, so it matches no rank.
+renumber :: Map.Map Natural.Natural Int -> Map.Map Natural.Natural Int -> String -> String
+renumber ids stamps rendered = case rendered of
+  [] -> []
+  c : rest -> case (List.stripPrefix objectIdTag rendered, List.stripPrefix timestampTag rendered) of
+    (Just after, _) -> objectIdTag <> number ids after
+    (_, Just after) -> timestampTag <> number stamps after
+    _ -> c : renumber ids stamps rest
+  where
+    number ranks after =
+      let (digits, more) = span Char.isDigit after
+          written = case Read.readMaybe digits >>= (`Map.lookup` ranks) of
+            Just rank -> show rank
+            Nothing -> '?' : digits
+       in written <> renumber ids stamps more
+
+-- | A game choice made in the state `here` digests, as CR 732.3 compares it:
+-- its object ids renumbered as `here`'s are (`digest`). So the same choice of a
+-- re-created object, made in a recurrence of `here`, is the same choice.
+choiceKey :: (Show choice) => StateDigest -> choice -> String
+choiceKey here = renumber (StateDigest.objectRanks here) Map.empty . show
 
 -- | CR 732.3 over the stamps an action leaves behind -- the stored continuous
 -- effects (CR 611.2a) and the counters' (CR 613.7c) -- as the game can tell
@@ -279,18 +349,22 @@ lapIsRead there gs =
 -- Read sites needing no classification: the readers of the CURRENT action's
 -- own events (Parun.Engine.Resolve.Effect, Parun.Engine.Cost's reversal and mana
 -- triggers, the trigger scan, the CR 704.5h watermark); readers keyed by an
--- id that has moved (Parun.Engine.Game.arrivalsOf, revealedArriving,
--- Parun.Engine.MoveDuration.departedIn, Parun.Engine.Game.entryGroup)
--- or that mints a new one (Parun.Engine.Event.forgetShown), which a lap cannot
--- move again under the same id; Parun.Engine.Engine.beginTurnOf's fold of the
--- casts, damage and attacks, which a priority-only lap without a zone change
--- cannot write; and Parun.Engine.PlayerView's witnessed log, which no rule reads.
+-- id (Parun.Engine.Game.arrivalsOf, entryGroup,
+-- Parun.Engine.Count.revealedInPlace, revealedArriving,
+-- Parun.Engine.MoveDuration.departedIn), whose answers `digest` compares, or
+-- that mints a new one (Parun.Engine.Event.forgetShown); and
+-- Parun.Engine.PlayerView's witnessed log, which no rule reads.
+-- Parun.Engine.Engine.beginTurnOf's fold of the casts, damage and attacks
+-- feeds readers classified here, and CR 731.2a's day and night, the rules'
+-- own reader of the casts.
 readers :: GameState -> Set.Set HistoryRead.HistoryRead
 readers gs =
-  -- The rules' own readers: Parun.Engine.Planechase.rollCost (CR 901.9), and
+  -- The rules' own readers: Parun.Engine.Planechase.rollCost (CR 901.9),
   -- Parun.Engine.Speed's once-each-turn trigger (CR 702.179d), minted for any
-  -- player with a speed and limited off the AbilityTriggered log.
-  Set.fromList ([HistoryRead.PlanarRolls | Planechase.isPlanechase gs] <> [HistoryRead.Triggers | any (Maybe.isJust . Player.speed) (GameState.players gs)])
+  -- player with a speed and limited off the AbilityTriggered log, and
+  -- Parun.Engine.Daytime's untap-step check of the casts (CR 731.2a), once it
+  -- is day or night.
+  Set.fromList ([HistoryRead.PlanarRolls | Planechase.isPlanechase gs] <> [HistoryRead.Triggers | any (Maybe.isJust . Player.speed) (GameState.players gs)] <> [HistoryRead.Casts | Maybe.isJust (GameState.daytime gs)])
     <> foldMap (Mentions.cardNames historyReads . Printing.card) (GameState.printings gs)
 
 -- The history question, asked of every leaf.
@@ -418,7 +492,8 @@ planarDieRolled event = case event of
 
 -- | CR 732.3: the game choices `pid`, asked at `gs` (digested as `here`), may
 -- not make, so a fragmented loop does not continue: the actions refused
--- outright, and the activations refused as completed with. Both empty unless
+-- outright, and the activations and casts refused as completed with, each
+-- as `choiceKey` and `completionKey` write it. Both empty unless
 -- `here` repeats a state this loop has seen, nothing in the game reads the
 -- history the loop appended since (`lapIsRead`), and `pid` is the player the
 -- rule names.
@@ -431,16 +506,17 @@ planarDieRolled event = case event of
 -- loop does not continue" refuses A, B, A, B too. A `choiceless` action is
 -- refused as a whole, by CR 732.3's example ("anything other than activating
 -- that creature's ability again"), and an activation, a mana ability's among
--- them (CR 605.3a), as it was completed -- announced and paid -- so aiming it
--- elsewhere (CR 601.2c) or paying it another way (CR 601.2g/h) is still a
--- choice to make. A choice made later in the lap -- as the object
+-- them (CR 605.3a), or a cast, as it was completed -- announced and paid -- so
+-- aiming it elsewhere (CR 601.2c) or paying it another way (CR 601.2g/h) is
+-- still a choice to make. A choice made later in the lap -- as the object
 -- resolves (CR 608.2d), or for a trigger it causes -- is a game choice of its
 -- own, and leaves this one as it was. Pass never is (CR 732.5). Parun.FragmentedSpec's
 -- control case is the board where the nesting happens, its Grim Poppet case
 -- the announcement, its Freed from the Real cases the payment and the mana
--- ability, and its Fatestitcher case a choice at resolution.
+-- ability, its Fatestitcher case a choice at resolution, and its Blinking
+-- Spirit case a cast of a re-created object (CR 400.7).
 -- docs/decisions.md, "What a fragmented loop forbids, and who is involved".
-forbidden :: StateDigest -> GameState -> PlayerId -> LoopTrail -> (Set.Set Action, Set.Set (Action, Completion.Completion))
+forbidden :: StateDigest -> GameState -> PlayerId -> LoopTrail -> (Set.Set String, Set.Set (String, (Maybe String, StateDigest)))
 forbidden here gs pid loopTrail =
   case Map.findWithDefault [] here (LoopTrail.seen loopTrail) of
     [] -> (Set.empty, Set.empty)
@@ -450,13 +526,19 @@ forbidden here gs pid loopTrail =
           acted (_, _, action, _) = action /= Action.Pass
           involved = Set.fromList [who | (_, who, _, _) <- filter acted (Foldable.toList (Seq.drop firstSeen choices))]
           named = List.find (`Set.member` involved) (Game.turnOrderFrom (GameState.activePlayer gs) gs)
-          made = [(action, completed) | (_, who, action, completed) <- Maybe.mapMaybe (`Seq.lookup` choices) occurrences, who == pid]
-          taken = Set.fromList [action | (action, _) <- made, choiceless action]
-          completedWith = Set.fromList [(action, completion) | (action, Just completion) <- made]
+          made = [(there, action, completed) | (there, who, action, completed) <- Maybe.mapMaybe (`Seq.lookup` choices) occurrences, who == pid]
+          taken = Set.fromList [choiceKey there action | (there, action, _) <- made, choiceless action]
+          completedWith = Set.fromList [(choiceKey there action, completionKey there completion) | (there, action, Just completion) <- made]
           unread = case Seq.lookup firstSeen choices of
             Just (there, _, _, _) -> not (lapIsRead there gs)
             Nothing -> False
        in if named == Just pid && unread then (taken, completedWith) else (Set.empty, Set.empty)
+
+-- | What an activation or a cast made in the state `here` digests was
+-- completed with, as CR 732.3 compares it: the announcement renumbered as
+-- `here`'s ids are (`choiceKey`), and the payment, digested already.
+completionKey :: StateDigest -> Completion.Completion -> (Maybe String, StateDigest)
+completionKey here completion = (fmap (choiceKey here) (Completion.announcement completion), Completion.paid completion)
 
 -- | Is `action` the whole of the game choice (CR 732.1), so refusing it
 -- refuses only the choice that continued the loop? An activation with no

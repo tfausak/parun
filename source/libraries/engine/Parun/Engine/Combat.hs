@@ -100,7 +100,8 @@ emptyCombat =
       Combat.blockingNothing = Set.empty,
       Combat.removedDefending = Map.empty,
       Combat.defenders = [],
-      Combat.barred = []
+      Combat.barred = [],
+      Combat.bands = []
     }
 
 -- CR 511.3: as the end of combat step ends, everything is removed from combat.
@@ -1626,9 +1627,12 @@ blockCeilingGiven board pid gs =
 -- none of them the only legal declaration is the empty one. couldAttack's
 -- twin.
 --
--- Not implemented: CR 509.1's preamble makes a declaration whose CR 509.1f
--- payment can't be made illegal, so a creature only in such declarations is
--- in no legal one; costs are ignored here (#6302).
+-- CR 509.1's preamble makes a declaration whose CR 509.1f payment can't be
+-- made illegal, and CR 509.1d charges a blocker at least its own share for
+-- any one attacker it blocks, so a pair whose share alone its controller
+-- can't pay (tollPayable) is in no legal declaration. Not implemented: a pair
+-- payable alone whose every legal declaration owes more than can be paid
+-- together is still offered (#6308).
 --
 -- A candidate blocking in the ceiling's declaration is in one. Otherwise each
 -- pair it may block is first added to that declaration, which obeys no fewer
@@ -1653,8 +1657,9 @@ declarableBlockers pid gs =
         let boosted = requirements {Requirement.pairs = Map.insertWith (+) (blocker, attacker) heavier (Requirement.pairs requirements)}
             witness = bestBlockDeclaration boosted limit most alone arity pcs able candidates attackers gs
          in requirementsMet boosted witness >= heavier + obeyed
+      affordable blocker attacker = tollPayable (Maybe.fromMaybe pid (Projection.controllerOf blocker gs)) (BlockCost.costsOn blocker (Set.singleton attacker) gs) gs
       declarable blocker =
-        let pairs = filter (able blocker) attackers
+        let pairs = filter (\attacker -> able blocker attacker && affordable blocker attacker) attackers
          in blocking blocker || any (added blocker) pairs || any (reached blocker) pairs
    in filter declarable candidates
 
@@ -1765,6 +1770,12 @@ isBlocked oid gs = Map.member oid (Combat.blockers (GameState.combat gs))
 -- than a creature").
 becomeBlocked :: ObjectId -> GameState -> GameState
 becomeBlocked oid gs =
+  -- CR 702.22i: the whole band becomes blocked.
+  List.foldl' (flip becomeBlockedAlone) gs (oid : Set.toList (bandmatesOf oid (GameState.combat gs)))
+
+-- becomeBlocked for one creature, its band aside.
+becomeBlockedAlone :: ObjectId -> GameState -> GameState
+becomeBlockedAlone oid gs =
   let c = GameState.combat gs
    in if not (Map.member oid (Combat.attackers c)) || isBlocked oid gs
         then gs
@@ -1807,6 +1818,9 @@ becomeBlocked oid gs =
 -- and every creature this moves was blocking one of the pair.
 -- Parun.CombatCostSpec's "CR 509.3a the Pride Guardian moved onto the other
 -- attacker does not block again" is the proof.
+--
+-- Not implemented: CR 702.22h's spread of a moved blocker across the
+-- attacker's band (#6321).
 switchBlockers :: ObjectId -> ObjectId -> GameState -> GameState
 switchBlockers first second gs =
   let c = GameState.combat gs
@@ -2350,11 +2364,18 @@ attemptAttackDeclaration perform pid asked forced rejected = do
         -- UNIONED into the record, not written over it: "the record is mine alone"
         -- is exactly the assumption CR 508.8's second clause breaks, and replacing
         -- the map would silently remove such a creature from combat.
-        let attach kept g =
+        let attach kept banded g =
               g
                 { GameState.combat =
                     (GameState.combat g)
                       { Combat.attackers = Map.union kept (Combat.attackers (GameState.combat g)),
+                        -- CR 702.22c's bands, narrowed to the creatures that
+                        -- joined: one a paid toll took away never attacked.
+                        Combat.bands =
+                          filter
+                            ((>= 2) . Set.size)
+                            (fmap (Set.intersection (Map.keysSet kept)) banded)
+                            <> Combat.bands (GameState.combat g),
                         -- CR 506.4's comparand, taken where the creature joins combat.
                         Combat.joinedUnder = Map.union (Map.fromSet attackerOf (Map.keysSet kept)) (Combat.joinedUnder (GameState.combat g)),
                         -- CR 802.2a's third sentence, taken where the creature
@@ -2418,6 +2439,21 @@ attemptAttackDeclaration perform pid asked forced rejected = do
                   { Combat.declaredAttackers = Set.union (Set.fromList attacking) (Combat.declaredAttackers (GameState.combat g))
                   }
             }
+        -- CR 508.1e: the bands, announced after CR 508.1b's targets and before
+        -- CR 508.1f's tapping, and asked only where a legal band exists.
+        -- Filtered, not trusted: a band the rules do not allow, or one naming a
+        -- creature an earlier band already holds, is dropped.
+        gsBands <- State.get
+        banded <-
+          if not (bandable recorded gsBands)
+            then pure []
+            else do
+              answer <- Game.choose (Prompt.DeclareBands (Decide.deciderFor pid gsBands) pid attacking)
+              let keep kept band =
+                    if legalBand recorded band gsBands && all (Set.disjoint band) kept
+                      then kept <> [band]
+                      else kept
+              pure (List.foldl' keep [] answer)
         -- CR 508.1f, and ONLY 508.1f: 508.1f taps, 508.1h-j determine and pay, and
         -- only 508.1k makes the creatures attacking. The order is observable -- a
         -- Birds of Paradise just declared as an attacker is tapped, so it is no
@@ -2555,7 +2591,7 @@ attemptAttackDeclaration perform pid asked forced rejected = do
               let survivors = filter (\oid -> stillChosen (attackerOf oid) oid gsPaid) attacking
                   gone = Set.difference (Set.fromList attacking) (Set.fromList survivors)
                   kept = Map.restrictKeys recorded (Set.fromList survivors)
-              State.modify' (attach kept)
+              State.modify' (attach kept banded)
               State.modify' $ \g -> g {GameState.combat = (GameState.combat g) {Combat.declaredAttackers = Set.difference (Combat.declaredAttackers (GameState.combat g)) gone}}
               -- CR 508.2b: the declaration is what abilities trigger on, and CR
               -- 508.3a scopes them to a creature DECLARED as an attacker -- one
@@ -2632,6 +2668,45 @@ attemptAttackDeclaration perform pid asked forced rejected = do
               Monad.forM_ side $ \p ->
                 Monad.when (any ((== p) . attackerOf) survivors) (State.modify' (Event.recordEvent (GameEvent.AttackersDeclared p)))
 
+-- CR 702.22c / 702.22d: whether these attackers may be declared one band --
+-- two or more of them, all attacking the same thing, at most one without
+-- banding (so at least one with it).
+--
+-- Not implemented: "bands with other", CR 702.22c's second sentence (#6309).
+legalBand :: Map ObjectId AttackTarget.AttackTarget -> Set ObjectId -> GameState -> Bool
+legalBand recorded band gs =
+  let members = Set.toList band
+      withBanding = filter (\oid -> Projection.hasKeyword Keyword.Banding oid gs) members
+   in Set.size band >= 2
+        && all (`Map.member` recorded) members
+        && length (ListUtils.nubOrd (Maybe.mapMaybe (`Map.lookup` recorded) members)) == 1
+        && length members - length withBanding <= 1
+
+-- CR 508.1e: whether any band can be announced among these attackers -- a
+-- creature with banding and another creature attacking the same thing.
+bandable :: Map ObjectId AttackTarget.AttackTarget -> GameState -> Bool
+bandable recorded gs =
+  any
+    ( \(oid, target) ->
+        Projection.hasKeyword Keyword.Banding oid gs
+          && any (\(other, t) -> other /= oid && t == target) (Map.toList recorded)
+    )
+    (Map.toList recorded)
+
+-- CR 702.22c / 702.22f: the other creatures in this attacker's band that are
+-- still attacking; empty when it is in none.
+bandmatesOf :: ObjectId -> Combat -> Set ObjectId
+bandmatesOf oid c =
+  let attacking = Map.keysSet (Combat.attackers c)
+   in if Set.member oid attacking
+        then Set.delete oid (Set.intersection attacking (Set.unions (filter (Set.member oid) (Combat.bands c))))
+        else Set.empty
+
+-- CR 702.22h: a block declaration with each blocker's attackers widened to
+-- their bands -- blocking one member blocks every member still attacking.
+withBands :: Combat -> Map ObjectId (Set ObjectId) -> Map ObjectId (Set ObjectId)
+withBands c = fmap (\attackers -> Set.union attackers (Set.unions (fmap (`bandmatesOf` c) (Set.toList attackers))))
+
 -- CR 508.1k / 509.1g: whether a creature chosen under `who` still joins combat
 -- once its declaration's costs are paid: on the battlefield and still controlled
 -- by `who`. A cost can sacrifice it (Ashnod's Altar).
@@ -2663,9 +2738,7 @@ payTolls perform handed before held charged = do
   gs <- State.get
   -- CR 118.3: only a payer who CAN pay the whole toll is asked; one who can't
   -- has nothing to decide, and the payment below fails for them.
-  let affords payer charges = case charges of
-        [] -> False
-        (source, first) : rest -> Cost.canPay PaymentSubject.ForNeither payer source (List.foldl' Cost.plus first (fmap snd rest)) gs
+  let affords payer charges = not (null charges) && tollPayable payer charges gs
   agreed <- consents [(payer, charge) | Just chooser <- [handed], (payer, charges) <- charged, payer /= chooser, affords payer charges, charge <- charges]
   if agreed then go [] charged else False <$ Cost.restoreKeepingLibraryActions before
   where
@@ -2680,6 +2753,13 @@ payTolls perform handed before held charged = do
       (payer, charges) : rest
         | null charges -> go earlier rest
         | otherwise -> Cost.payToll perform before (Set.fromList [oid | (p, oid) <- held, p == payer]) earlier payer charges >>= maybe (pure False) (`go` rest)
+
+-- CR 118.3: can this player pay these charges together, as Cost.payToll
+-- pools them? Nothing owed is always paid.
+tollPayable :: PlayerId -> [(ObjectId, Cost Keyword.Keyword)] -> GameState -> Bool
+tollPayable payer charges gs = case charges of
+  [] -> True
+  (source, first) : rest -> Cost.canPay PaymentSubject.ForNeither payer source (List.foldl' Cost.plus first (fmap snd rest)) gs
 
 -- CR 508.1a / 509.1a: who makes `pid`'s declaration -- the controller of the
 -- row handing it over (PlayerEffect.declarationRow), else `pid`.
@@ -2922,7 +3002,9 @@ putOntoBattlefieldBlocking choice oid = do
             SpecifiedAttacker attacker -> pure (if blockable controller attacker then Just attacker else Nothing)
             -- Through Game.chooseAmong, announceAttackTarget's posture.
             AnyAttacker -> Game.chooseAmong (\decider who pool -> Prompt.ChoosePermanent decider who oid pool Seq.empty) controller (filter (blockable controller) (Map.keys (Combat.attackers (GameState.combat start))))
-          Monad.forM_ mAttacker (enterBlocking controller oid)
+          -- CR 702.22h: blocking one member of a band blocks every member.
+          Monad.forM_ mAttacker $ \attacker ->
+            Monad.forM_ (attacker : Set.toList (bandmatesOf attacker (GameState.combat start))) (enterBlocking controller oid)
     _ -> pure ()
 
 -- putOntoBattlefieldBlocking's write, once the attacker is settled.
@@ -3174,7 +3256,9 @@ attemptBlockDeclaration perform pid asked attacking rejected = do
         if not paid && again
           then attemptBlockDeclaration perform pid (Just chooser) attacking (Set.insert chosen rejected)
           else do
-            let declaration = if paid then legal else forcedBlockDeclaration pid gs2
+            -- CR 702.22h: widened to the attackers' bands after the declaration
+            -- is judged, CR 509.1b-c asking only about the block declared.
+            let declaration = withBands (GameState.combat gs2) (if paid then legal else forcedBlockDeclaration pid gs2)
             -- The pairs the declaration states, blocker-major, which is the order
             -- CR 509.1a writes it in and the order the events below are recorded in.
             let pairs = do

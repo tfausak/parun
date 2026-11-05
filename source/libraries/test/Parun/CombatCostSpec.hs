@@ -779,7 +779,7 @@ becomesBlockedSpec s registry = Spec.describe s "BecomesBlocked" $ do
         Spec.assertEqWith s "declaration leg: the same trigger fires" (S.lifeOf S.alice declared) (Just 21)
         Spec.assertBool s (not (S.onBattlefield attacker declared) && not (S.onBattlefield blocker declared)) "declaration leg: and the two creatures trade"
         Spec.assertBool s (any (blockerWasDeclared . LoggedEvent.event) (GameState.events declared)) "declaration leg: and CR 509.3d's event IS recorded there"
-      _ -> Spec.assertFailure s "fixture should have one attacker and one blocker"
+      _ -> Spec.assertFailure s "fixture should have one attacker and two blockers"
 
 -- alice attacks with a Spined Thopter and a Sacred Prey; bob defends with NO
 -- creature at all, holds Flash Foliage and the three Forests that pay its
@@ -1162,7 +1162,7 @@ putOntoBattlefieldBlockingSpec s registry = Spec.describe s "PutOntoBattlefieldB
         -- Clause 0 ran, which is what clause 1's "If you do" hangs on.
         Spec.assertBool s (not (S.onBattlefield plasm atEnd)) "CR 506.4: Aetherplasm left the battlefield, so it was removed from combat"
         Spec.assertEqWith s "CR 400.3: and bob's hand holds Aetherplasm alone, the Evangel having left it" (fmap (fmap S.nameOf . (`Game.cardOf` atEnd)) (Game.zoneMembers Zone.Hand S.bob atEnd)) [Just (S.nameOf (Printing.card plasmP))]
-      _ -> Spec.assertFailure s "fixture should have one attacker and one blocker"
+      _ -> Spec.assertFailure s "fixture should have one attacker and two blockers"
   -- The rider's own control, differing from the whole-card leg in ONE answer:
   -- bob returns Aetherplasm and then declines to put anything out. Everything
   -- else on the card has run, so what is left out is the arrival and nothing
@@ -1186,7 +1186,7 @@ putOntoBattlefieldBlockingSpec s registry = Spec.describe s "PutOntoBattlefieldB
         Spec.assertEqWith s "control: which is why bob is at 20 on this leg as well as the one the Evangel arrives on" (S.lifeOf S.bob atEnd) (Just 20)
         Spec.assertBool s (List.elem evangel (Game.zoneMembers Zone.Hand S.bob atEnd)) "the declined clause left the Evangel in hand"
         Spec.assertBool s (not (S.onBattlefield plasm atEnd)) "and Aetherplasm did return to hand, so the leg differs from the whole-card one in the second may alone"
-      _ -> Spec.assertFailure s "fixture should have one attacker and one blocker"
+      _ -> Spec.assertFailure s "fixture should have one attacker and two blockers"
   -- CR 509.4 over Effect.CreateCopy rather than Effect.Create, and CR 608.2f's
   -- loop over the whole batch, on one board.
   --
@@ -2136,15 +2136,16 @@ tollReversalSpec s registry = Spec.describe s "Reversal at a combat toll" $ do
         Spec.assertEqWith s "alice was asked" (tollReversals keptAsks) 1
       _ -> Spec.assertFailure s "the fixture should have put one attacker on the board"
 
-  -- An Oppressive Rays blocker owes {3}, and bob's two Forests pay {2}.
+  -- Two Oppressive Rays blockers owe {6}, and bob's three Forests pay {3}:
+  -- each block alone is payable, so both are offered (Combat.declarableBlockers).
   Spec.it s "CR 733.1 a blocker's toll: the Forests stay tapped and their mana floats" $ do
     rays <- S.printingOf s registry "Oppressive Rays"
     forest <- S.printingOf s registry "Forest"
     piker <- S.printingOf s registry "Goblin Piker"
-    let (gs, mine, theirs) = attacking [piker] [piker]
+    let (gs, mine, theirs) = attacking [piker] [piker, piker]
     case (mine, theirs) of
-      ([attacker], [blocker]) -> do
-        let (forests, board) = addForestsFor S.bob forest 2 (raying rays blocker gs)
+      ([attacker], [one, two]) -> do
+        let (forests, board) = addForestsFor S.bob forest 3 (raying rays two (raying rays one gs))
             everyForest :: OptionalDecision.OptionalDecision -> Prompt.Prompt r -> State.State TollAsks r
             everyForest decision p = case p of
               Prompt.ChooseManaSource _ _ _ candidates -> pure (List.find (`elem` NonEmpty.toList candidates) forests)
@@ -2152,13 +2153,13 @@ tollReversalSpec s registry = Spec.describe s "Reversal at a combat toll" $ do
             run decision = State.runState (Engine.runGame (everyForest decision) board (Combat.declareBlockers S.manaPerformer)) noTollAsks
             ((_, kept), keptAsks) = run OptionalDecision.Declines
             ((_, reversed), _) = run OptionalDecision.Exercises
-        Spec.assertEqWith s "CR 106.4 bob's {G}{G} is floating" (floating S.bob kept) 2
-        Spec.assertBool s (allTapped forests kept) "and both Forests stay tapped"
+        Spec.assertEqWith s "CR 106.4 bob's {G}{G}{G} is floating" (floating S.bob kept) 3
+        Spec.assertBool s (allTapped forests kept) "and every Forest stays tapped"
         Spec.assertEqWith s "CR 509.1 nothing blocks" (blockersOf attacker kept) Set.empty
         Spec.assertEqWith s "the payer who reverses gets nothing floating" (floating S.bob reversed) 0
-        Spec.assertBool s (allUntapped forests reversed) "and both Forests untapped"
-        Spec.assertEqWith s "bob was asked once per Forest" (tollReversals keptAsks) 2
-      _ -> Spec.assertFailure s "fixture should have one attacker and one blocker"
+        Spec.assertBool s (allUntapped forests reversed) "and every Forest untapped"
+        Spec.assertEqWith s "bob was asked once per Forest" (tollReversals keptAsks) 3
+      _ -> Spec.assertFailure s "fixture should have one attacker and two blockers"
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Parun.Engine.Combat" $ do

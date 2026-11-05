@@ -334,6 +334,13 @@ data Combat = MkCombat
     -- order. Empty outside Alternating Teams. Read through
     -- Parun.Engine.Defender.designatedPlayers, for a reference to "defending
     -- player" with no attacking creature to resolve it (CR 802.2a, Yare).
-    barred :: [PlayerId.PlayerId]
+    barred :: [PlayerId.PlayerId],
+    -- | CR 702.22c: the attacking bands announced at CR 508.1e, each a set of
+    -- two or more attackers, no creature in two. CR 702.22e keeps a band
+    -- whatever later happens to its members' banding; CR 702.22f's removal is
+    -- read rather than written, Parun.Engine.Combat.bandmatesOf narrowing each
+    -- band to the creatures still in `attackers`. Written by
+    -- Parun.Engine.Combat.attemptAttackDeclaration alone.
+    bands :: [Set.Set ObjectId.ObjectId]
   }
   deriving (Eq, Ord, Show)

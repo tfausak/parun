@@ -75,6 +75,17 @@
     },
     {
       "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "DeclareBands",
+          "with": []
+        }
+      }
+    },
+    {
+      "turn": 1,
       "step": "DeclareBlockers",
       "player": "carol",
       "do": {

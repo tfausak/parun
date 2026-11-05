@@ -164,6 +164,7 @@ encode p answer = case p of
   Prompt.ChooseLegend {} -> Response.ChoseLegend answer
   Prompt.DeclareAttackers {} -> Response.DeclaredAttackers answer
   Prompt.ChooseAttackTarget {} -> Response.ChoseAttackTarget answer
+  Prompt.DeclareBands {} -> Response.DeclaredBands answer
   Prompt.ChooseExert {} -> Response.ChoseExert answer
   Prompt.DeclareBlockers {} -> Response.DeclaredBlockers answer
   Prompt.AssignCombatDamage {} -> Response.AssignedCombatDamage answer
@@ -501,6 +502,9 @@ decode p response = case p of
     _ -> Nothing
   Prompt.ChooseAttackTarget {} -> case response of
     Response.ChoseAttackTarget target -> Just target
+    _ -> Nothing
+  Prompt.DeclareBands {} -> case response of
+    Response.DeclaredBands bands -> Just bands
     _ -> Nothing
   Prompt.ChooseExert {} -> case response of
     Response.ChoseExert d -> Just d
@@ -1069,6 +1073,8 @@ defaultAnswer p = case p of
   -- its next untap step. A transcript that ran out of answers must not spend a
   -- resource the player never agreed to spend.
   Prompt.ChooseExert {} -> OptionalDecision.Declines
+  -- CR 508.1e: no bands, which the rule's "if any" always permits.
+  Prompt.DeclareBands {} -> []
   -- Declining to BLOCK is not always legal either -- a CR 509.1c requirement
   -- (Lure) can make the empty declaration illegal -- and stays total the same
   -- way, through Combat.forcedBlockDeclaration.
