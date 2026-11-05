@@ -1,5 +1,6 @@
 -- Covers Parun.Decks and data/decks: every shipped deck list and set list
--- reads, and each set's starter pair plays a whole game that replays.
+-- reads, and the Portal and Starter sets' starter pairs each play a whole game
+-- that replays.
 module Parun.DecksSpec where
 
 import qualified Control.Exception as Exception
@@ -22,19 +23,21 @@ spec s registry = do
   -- Listed, not read: each case reads its own file.
   root <- MonadIO.liftIO Decks.defaultRoot
   decks <- MonadIO.liftIO (Decks.listRoot root)
-  sets <- MonadIO.liftIO (Decks.listRoot (root <> "/sets"))
   Spec.describe s "Decks" $ do
-    Monad.forM_ (decks <> sets) $ \path -> Spec.it s (drop (length root + 1) path <> " reads") $ do
+    Spec.it s "the listing reaches a set's own directory" $
+      Spec.assertEqWith s "sets/m15/all.txt listed" ((root <> "/sets/m15/all.txt") `elem` decks) True
+
+    Monad.forM_ decks $ \path -> Spec.it s (drop (length root + 1) path <> " reads") $ do
       contents <- Decks.loadFile path
       parsed <- either (pure . Left . (: []) . Text.unpack) (fmap (either (Left . (: []) . Exception.displayException) (either (Left . fmap (Text.unpack . DeckList.explain)) Right)) . DeckList.parse registry) contents
       Spec.assertEqWith s (path <> ": problems") (Either.fromLeft [] parsed) []
 
-    Monad.forM_ [("Portal", "portal"), ("Portal Second Age", "portal-second-age"), ("Portal Three Kingdoms", "portal-three-kingdoms"), ("Starter 1999", "starter-1999"), ("Starter 2000", "starter-2000")] $ \(set, prefix) ->
+    Monad.forM_ [("Portal", "por"), ("Portal Second Age", "p02"), ("Portal Three Kingdoms", "ptk"), ("Starter 1999", "s99"), ("Starter 2000", "s00")] $ \(set, code) ->
       Spec.it s ("two bots finish a game with the " <> set <> " starter decks, and it replays clean") $ do
         let read' name = do
-              contents <- Decks.loadFile (root <> "/" <> prefix <> name)
+              contents <- Decks.loadFile (root <> "/sets/" <> code <> name)
               either (const (pure (Left []))) (fmap (Either.fromRight (Left [])) . DeckList.parse registry) contents
-        decksRead <- (,) <$> read' "-starter-1.txt" <*> read' "-starter-2.txt"
+        decksRead <- (,) <$> read' "/starter-1.txt" <*> read' "/starter-2.txt"
         case decksRead of
           (Right one, Right two) -> played (S.alice, one) (S.bob, two)
           _ -> Spec.assertFailure s "the starter decks did not read"
