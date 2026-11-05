@@ -1193,7 +1193,7 @@ matchesPrinted viewOf gs event candidate =
 -- once ControllerRelation.Related You has made that seat the card's own owner.
 stocked :: GameState -> DrawRewrite.DrawRewrite effect -> PlayerId -> Bool
 stocked gs rewrite pid = case rewrite of
-  DrawRewrite.Dredge n -> Natural.length (Game.zoneMembers Zone.Library pid gs) >= n
+  DrawRewrite.Dredge n -> Natural.length (Game.cardsIn Zone.Library pid gs) >= n
   DrawRewrite.GainLife _ -> True
   DrawRewrite.FromOutsideTheGame _ -> True
   DrawRewrite.YouDraw -> True
@@ -1234,11 +1234,11 @@ breaches gs you rewrite pid n = case rewrite of
   -- it, you'll just pay life as normal."
   --
   -- A COUNT of the library rather than a check that the top `n` exist, which is
-  -- the same question asked of a list -- Parun.Engine.Game.zoneMembers is the
-  -- library in top-first order, and Parun.Engine.Event's arm takes its cards off
-  -- the front of that same list.
+  -- the same question asked of a list -- Parun.Engine.Game.cardsIn is the
+  -- library's cards (CR 108.2) in top-first order, and Parun.Engine.Event's
+  -- arm takes its cards off the front of that same list.
   LifeLossRewrite.ExileFromTopOfYourLibrary ->
-    maybe False (\owner -> Natural.length (Game.zoneMembers Zone.Library owner gs) >= n) you
+    maybe False (\owner -> Natural.length (Game.cardsIn Zone.Library owner gs) >= n) you
   -- Strong, the Brutish Thespian's clause states no applicability at all: a loss
   -- turned into a gain of the same size always changes the event, and rule 614.6
   -- removes it whatever the board says. Event.resolveLifeLoss never proposes a

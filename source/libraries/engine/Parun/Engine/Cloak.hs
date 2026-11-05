@@ -78,6 +78,6 @@ riders =
 cloak :: Game () -> PlayerId -> Game ()
 cloak settle pid = do
   gs <- State.get
-  case Game.zoneMembers Zone.Library pid gs of
+  case Game.cardsIn Zone.Library pid gs of
     [] -> pure ()
     top : _ -> Monad.void (Event.changeZoneEntering settle top Zone.Battlefield LibraryPosition.defaultValue riders (Just pid))

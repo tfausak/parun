@@ -3153,7 +3153,8 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- CR 400.1's other hidden per-player zone, and only the RESOLVING
   -- CONTROLLER's, so no scope to fold over and no APNAP order to impose --
   -- EachCardInYourHand's answer above. CR 400.12 is what makes "from your
-  -- library" name every card in it, and CR 109.2a is what a stated Filter reads
+  -- library" name every card in it, CR 108.2 keeps a token out (Game.cardsIn),
+  -- and CR 109.2a is what a stated Filter reads
   -- -- Caldera Breaker's "all Mountain cards". In the library's own
   -- order, top card first, which CR 401.2 keeps players from looking at or
   -- changing; the narrowing does not reorder, and the cards that did not match
@@ -3165,7 +3166,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- does not make it one -- rule 701.23b governs a player who is SEARCHING, and
   -- nothing here asks anyone to.
   ObjectRef.EachCardInYourLibrary mFilter ->
-    let inLibrary = Game.zoneMembers Zone.Library controller gs
+    let inLibrary = Game.cardsIn Zone.Library controller gs
      in case mFilter of
           Nothing -> inLibrary
           Just filter_ ->

@@ -1,0 +1,129 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Hill Giant",
+            "label": "giant",
+            "token": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Anchor to the Aether",
+            "label": "anchor"
+          }
+        ],
+        "library": [
+          {
+            "card": "Craw Wurm",
+            "label": "a1"
+          },
+          {
+            "card": "Island",
+            "label": "a2"
+          },
+          {
+            "card": "Island",
+            "label": "a3"
+          }
+        ],
+        "manaPool": "UUU",
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Island",
+            "label": "b1"
+          },
+          {
+            "card": "Island",
+            "label": "b2"
+          },
+          {
+            "card": "Island",
+            "label": "b3"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 108.2 / 701.22a: Anchor to the Aether puts its caster's own token on top of its owner's library, and the scry 1 that follows looks at the top card, not the token",
+  "note": "The token waits in the library for CR 704.5d, which no resolution checks. A scry that looked at it would leave Craw Wurm on top, and the token would then cease to exist.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "object": "$anchor",
+          "targets": [
+            "$giant"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseScry",
+          "with": [
+            [
+              "Craw Wurm"
+            ],
+            []
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "$b1",
+            "$b2",
+            "$b3"
+          ],
+          "of": "Zone",
+          "player": "bob",
+          "zone": "Library"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "View": {
+          "is": [
+            "$a2",
+            "$a3",
+            "Craw Wurm"
+          ],
+          "of": "Zone",
+          "player": "alice",
+          "zone": "Library"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

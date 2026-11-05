@@ -3199,7 +3199,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.Mill (Mill.MkMill ref quantity _ _) ->
     let millers = playerRefPlayers legal resolving source controller gs ref
         beyondLibrary pid = case evaluateForRecipient viewOf context gs resolving source pid quantity of
-          Just n | n > 0 -> n > List.genericLength (Game.zoneMembers Zone.Library pid gs)
+          Just n | n > 0 -> n > List.genericLength (Game.cardsIn Zone.Library pid gs)
           _ -> False
      in not (null millers) && all beyondLibrary millers
   Effect.Reveal (Reveal.MkReveal ref _) -> choosesFromNothing ref
@@ -4336,6 +4336,15 @@ refill whole moving ordered =
         _ -> (remaining, oid)
    in snd (List.mapAccumL step ordered whole)
 
+-- The top `n` CARDS of `pid`'s library (CR 108.2), and every other object in it
+-- in library order. A token put there waits for CR 704.5d and is no card, so the
+-- look passes it; it stays among the rest, since a rewrite of the library
+-- (reorderLibrary) must keep it, and where among them is unobservable.
+topCards :: Integer -> PlayerId -> GameState -> ([ObjectId], [ObjectId])
+topCards n pid gs =
+  let looked = List.genericTake n (Game.cardsIn Zone.Library pid gs)
+   in (looked, filter (`List.notElem` looked) (Game.zoneMembers Zone.Library pid gs))
+
 -- CR 701.22a: one player's scry DECISION, answered with the cards looked at and
 -- the library order it makes -- Nothing where there was nothing to decide. A short library is looked
 -- at as far as it goes; rule 701.22 states no penalty for scrying more than
@@ -4352,15 +4361,13 @@ refill whole moving ordered =
 decideScry :: Integer -> PlayerId -> Game (PlayerId, Maybe ([ObjectId], [ObjectId]))
 decideScry n pid = do
   gs <- State.get
-  let whole = Game.zoneMembers Zone.Library pid gs
-      looked = List.genericTake n whole
-      beneath = List.genericDrop n whole
+  let (looked, beneath) = topCards n pid gs
       -- The engine never makes the player's choice, but does not ask a question
       -- with one answer either: nothing to look at, or a single looked-at card
       -- that is the whole library. One card with more beneath it IS a decision.
       decided = case looked of
         [] -> False
-        [_] -> not (null beneath)
+        [_] -> any (`Game.isCardObject` gs) beneath
         _ -> True
   Monad.mapM_ (Event.look pid) looked
   if decided
@@ -4395,9 +4402,7 @@ splitLooked looked (away, kept) =
 decideSurveil :: Integer -> PlayerId -> Game (PlayerId, Maybe ([ObjectId], [ObjectId], [ObjectId]))
 decideSurveil n pid = do
   gs <- State.get
-  let whole = Game.zoneMembers Zone.Library pid gs
-      looked = List.genericTake n whole
-      beneath = List.genericDrop n whole
+  let (looked, beneath) = topCards n pid gs
   if null looked
     then pure (pid, Nothing)
     else do
@@ -4439,12 +4444,10 @@ fatesealOne source n pid = do
     -- Re-read rather than reusing the state the opponent choice was made
     -- against: a prompt is the one place this function yields.
     chosen <- State.get
-    let whole = Game.zoneMembers Zone.Library owner chosen
-        looked = List.genericTake n whole
-        beneath = List.genericDrop n whole
+    let (looked, beneath) = topCards n owner chosen
         decided = case looked of
           [] -> False
-          [_] -> not (null beneath)
+          [_] -> any (`Game.isCardObject` chosen) beneath
           _ -> True
     Monad.mapM_ (Event.look pid) looked
     Monad.when decided $ do
@@ -4489,7 +4492,7 @@ clash resolving source controller = do
       -- against: a prompt is the one place this function yields.
       before <- State.get
       let clashers = filter (\pid -> List.elem pid [controller, opponent]) (Game.apnapOrder before)
-          topOf pid = case Game.zoneMembers Zone.Library pid before of
+          topOf pid = case Game.cardsIn Zone.Library pid before of
             top : _ -> Just (pid, top)
             [] -> Nothing
           revealed = Maybe.mapMaybe topOf clashers
@@ -4519,7 +4522,7 @@ clash resolving source controller = do
                 -- question with one answer either: a revealed card that is the
                 -- whole library is already at both ends, decideScry's elision one
                 -- card over.
-                let alone = length (Game.zoneMembers Zone.Library pid asked) <= 1
+                let alone = length (Game.cardsIn Zone.Library pid asked) <= 1
                     earlier = fmap (\(who, _, at) -> (who, at)) made
                 position <-
                   if alone
@@ -4561,7 +4564,7 @@ exploreOne settle resolving oid = do
     -- An id nothing was ever filed under: nobody explores and nothing happens.
     Nothing -> pure ()
     Just pid -> do
-      case Game.zoneMembers Zone.Library pid gs of
+      case Game.cardsIn Zone.Library pid gs of
         [] -> grow pid
         top : _ -> do
           Event.revealResolving resolving pid top
