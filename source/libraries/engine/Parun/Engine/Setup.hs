@@ -16,6 +16,7 @@ import qualified Parun.Engine.Combat as Combat
 import qualified Parun.Engine.Commander as Commander
 import qualified Parun.Engine.Companion as Companion
 import qualified Parun.Engine.Conspiracy as Conspiracy
+import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.Event as Event
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Mulligan as Mulligan
@@ -44,6 +45,7 @@ import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.Object as Object
 import Parun.Types.ObjectId (ObjectId)
 import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.OutsideCard as OutsideCard
 import qualified Parun.Types.OutsideObject as OutsideObject
 import qualified Parun.Types.Player as Player
 import Parun.Types.PlayerId (PlayerId)
@@ -766,12 +768,11 @@ startGameFromCards perform exemptions = do
   -- before decks are shuffled, so CR 702.106a turns each hidden agenda face
   -- down and asks a fresh name. Nothing done in the restarted game carries over:
   -- a conspiracy turned face up there goes back face down.
-  -- Parun.ConspiracySpec's restart case proves it.
-  --
-  -- Not implemented: CR 315.2's choice of further conspiracies from the sideboard
-  -- in a rebuilt game (#6236).
-  Monad.forM_ owners $ \pid ->
+  -- Parun.ConspiracySpec's restart case proves it. Then each player may add
+  -- more from their sideboard (chooseConspiracies).
+  Monad.forM_ owners $ \pid -> do
     Monad.forM_ (filter (\oid -> fmap Object.owner (Map.lookup oid rebuilt) == Just pid) (Set.toAscList conspiracyIds)) (Conspiracy.hideAgenda pid)
+    chooseConspiracies pid
   Monad.forM_ owners Event.shuffleLibrary
   -- CR 103.3a / 729.2a.
   Monad.forM_ owners (\pid -> Monad.forM_ [minBound .. maxBound] (`Game.shuffleSideDeck` pid))
@@ -795,6 +796,25 @@ startGameFromCards perform exemptions = do
   starting <- State.gets GameState.activePlayer
   planechase <- State.gets Planechase.isPlanechase
   Monad.when planechase (Planechase.setStartingPlane starting)
+
+-- CR 315.2 / 905.4: in a game rebuilt from cards (CR 727.1, 729.2), this player
+-- may put any number of conspiracy cards from their sideboard into the command
+-- zone, before decks are shuffled. Each is spent from the pool as Event.bringIn
+-- spends a wished-in card (CR 400.11b), and CR 702.106a's hidden agenda turns it
+-- face down as createDeck's do. Nothing is asked of a sideboard holding no
+-- conspiracy. Parun.SetupSpec's Power Play cases prove it.
+chooseConspiracies :: PlayerId -> Game ()
+chooseConspiracies pid = do
+  gs <- State.get
+  let available = Map.mapKeys OutsideCard.InPool (Conspiracy.inSideboard pid gs)
+      atMost = sum (Map.elems available)
+  Monad.forM_ (NonEmpty.nonEmpty (Map.keys available)) $ \candidates -> do
+    answer <- Game.choose (Prompt.ChooseFromOutsideTheGame (Decide.deciderFor pid gs) pid candidates 0 atMost)
+    Monad.forM_ (Event.settleOutside available 0 atMost answer) $ \card -> case card of
+      OutsideCard.InPool printingId -> do
+        State.modify' (Event.spendFromPool pid printingId)
+        createInCommandZone pid printingId >>= Conspiracy.hideAgenda pid
+      OutsideCard.InAnotherGame _ -> pure ()
 
 -- CR 407.2: when playing for ante, each player in turn order puts one random
 -- card from their library into the ante, through the zone-change funnel. Run
@@ -1580,10 +1600,11 @@ funnelBack finalSub parent =
       --
       -- Only that field. Every other one stays the parent's, which is CR 729.1b:
       -- nothing that happened in the subgame -- life lost, counters, a commander
-      -- tax -- has any meaning in the main game. Nothing but bringIn writes the
-      -- pool once a game is under way (createDeck is the only other writer, and
-      -- neither startGameFromCards nor restartGame calls it), so what the subgame
-      -- hands back differs from the parent's by exactly the cards it spent.
+      -- tax -- has any meaning in the main game. Nothing but bringIn and
+      -- chooseConspiracies writes the pool once a game is under way (createDeck
+      -- is the only other writer, and neither startGameFromCards nor restartGame
+      -- calls it), so what the subgame hands back differs from the parent's by
+      -- exactly the cards it spent, and `conspiraciesBack` refunds the latter's.
       --
       -- A player who DEPARTED inside the subgame keeps the parent's pool instead,
       -- less what survived it (below).
@@ -1648,7 +1669,23 @@ funnelBack finalSub parent =
         Nothing -> player
         Just inSub -> case Player.status inSub of
           Status.Departed _ -> player {Player.outsideTheGame = Map.filter (> 0) (Map.mapWithKey (spendKept pid (Player.outsideTheGame inSub)) (Player.outsideTheGame player))}
-          Status.Playing -> player {Player.outsideTheGame = Player.outsideTheGame inSub}
+          Status.Playing -> player {Player.outsideTheGame = Map.unionWith (+) (Player.outsideTheGame inSub) (conspiraciesBack pid)}
+      -- CR 729.5 / 400.11a: a conspiracy this player put into the subgame's
+      -- command zone from their sideboard (chooseConspiracies) ceases to exist
+      -- as an object with the subgame, and the card is back outside the main
+      -- game, in the sideboard it came from. Only the sideboard can have put one
+      -- there: CR 729.2 moves no main-game conspiracy in, and CR 315.3 lets
+      -- nothing bring one. A departed player's is refunded by `spendKept`,
+      -- since `returned` never holds the command zone.
+      conspiraciesBack pid =
+        Map.fromListWith
+          (+)
+          [ (printingId, 1 :: Natural)
+          | (oid, obj) <- Map.toList (Map.restrictKeys (GameState.objects finalSub) subCmdIds),
+            Object.owner obj == pid,
+            Conspiracy.isConspiracy oid finalSub,
+            Just printingId <- [Game.printingIdOfSource (Object.source obj)]
+          ]
    in parent
         { GameState.objects = Map.unions [allReturned, toCommand, backedBack, planarBack, schemesBack, keptParentObjects],
           GameState.players = carriedPools,

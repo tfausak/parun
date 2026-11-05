@@ -15,6 +15,7 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
+import Numeric.Natural (Natural)
 import qualified Parun.Cards as Cards
 import qualified Parun.Codec.ActiveReplacementSpec as ActiveReplacementSpec
 import qualified Parun.Codec.DelayedTriggerSpec as DelayedTriggerSpec
@@ -78,8 +79,10 @@ import qualified Parun.Types.Modal as Modal
 import qualified Parun.Types.Mode as Mode
 import qualified Parun.Types.Modification as Modification
 import qualified Parun.Types.ModifyPowerToughness as ModifyPowerToughness
+import qualified Parun.Types.MulliganDecision as MulliganDecision
 import qualified Parun.Types.Object as Object
 import qualified Parun.Types.ObjectId as ObjectId
+import qualified Parun.Types.OutsideCard as OutsideCard
 import qualified Parun.Types.OutsideDestination as OutsideDestination
 import qualified Parun.Types.OutsideObject as OutsideObject
 import qualified Parun.Types.PermissionVerb as PermissionVerb
@@ -1364,6 +1367,96 @@ supplementaryDeckSpec s registry = Spec.describe s "supplementary decks" $ do
     Spec.assertEqWith s "and Very Soil is still face up in the main game" (cardNames (Archenemy.faceUp after) after) ["The Very Soil Shall Shake"]
     Spec.assertEqWith s "CR 729.5 no scheme went into a library" (length (Game.zoneMembers Zone.Library S.alice after)) 10
 
+-- CR 315.2 / 905.4 across the two funnels: bob held Power Play (CR 103.1c's
+-- card) back in his sideboard at the start, beside a Mountain, and a game built
+-- again from cards offers it to him once more. Each case's two legs differ only
+-- in whether he takes the offer.
+sideboardConspiracySpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+sideboardConspiracySpec s registry = Spec.describe s "conspiracies from the sideboard" $ do
+  -- CR 727.1 / 727.1a then CR 103.1c: alice restarts with Karn Liberated, so
+  -- she starts the new game unless bob puts Power Play in.
+  Spec.it s "CR 727.1 / 315.2 a restart offers a conspiracy left in the sideboard" $ do
+    karn <- S.printingOf s registry "Karn Liberated"
+    board <- conspiracyBoard s registry
+    let (karnId, withKarn) = S.addPermanent karn S.alice board
+        before = (S.addCounter CounterKind.Loyalty 14 karnId withKarn) {GameState.activePlayer = S.alice, GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.alice}
+        run taking = State.runState (Engine.runGameAsked (conspiring taking karnAnswer) before Engine.priorityLoop) []
+        ((_, taken), offers) = run True
+        ((_, declined), _) = run False
+    Spec.assertEqWith s "setup: bob's command zone starts empty" (Game.zoneMembers Zone.Command S.bob before) []
+    Spec.assertEqWith s "CR 315.2 bob is offered Power Play alone, any number up to one" [o | o@Offered {} <- offers] [Offered 0 S.bob ["Power Play"] 0 1]
+    Spec.assertEqWith s "taken, it is in his command zone" (cardNames (Game.zoneMembers Zone.Command S.bob taken) taken) ["Power Play"]
+    Spec.assertEqWith s "CR 103.1c so bob starts the new game" (GameState.turnOrder taken) [S.bob, S.alice]
+    Spec.assertEqWith s "CR 400.11b and his sideboard holds only the Mountain" (poolNames S.bob taken) [("Mountain", 1)]
+    Spec.assertEqWith s "declined, CR 727.1a alice starts it" (GameState.turnOrder declined) [S.alice, S.bob]
+    Spec.assertEqWith s "and Power Play stays in his sideboard" (poolNames S.bob declined) [("Mountain", 1), ("Power Play", 1)]
+
+  -- CR 729.2 / 315.2: the Shahrazad subgame offers it too, and CR 103.1c makes
+  -- bob the subgame's starting player. CR 729.5: the subgame's command zone
+  -- does not come back, so the card is in his sideboard again afterwards.
+  Spec.it s "CR 729.2 / 315.2 a subgame offers a conspiracy left in the sideboard, which goes back to it" $ do
+    board <- conspiracyBoard s registry
+    before <- withShahrazad s registry board
+    let run taking = State.runState (Engine.runGameAsked (conspiring taking castAnswer) before Engine.priorityLoop) []
+        ((_, after), asked) = run True
+        (_, declinedAsked) = run False
+        firstInSubgame log' = Maybe.listToMaybe [pid | Declared 1 pid <- log']
+    Spec.assertEqWith s "CR 315.2 bob is offered Power Play as the subgame starts" [o | o@Offered {} <- asked] [Offered 1 S.bob ["Power Play"] 0 1]
+    Spec.assertEqWith s "CR 103.1c / 103.5 taken, bob starts the subgame and declares first" (firstInSubgame asked) (Just S.bob)
+    Spec.assertEqWith s "declined, alice does" (firstInSubgame declinedAsked) (Just S.alice)
+    Spec.assertEqWith s "CR 729.5 / 400.11a after the subgame, his sideboard holds it again" (poolNames S.bob after) [("Mountain", 1), ("Power Play", 1)]
+    Spec.assertEqWith s "and the main game's command zone does not" (Game.zoneMembers Zone.Command S.bob after) []
+
+-- Ten Forests in each library, bob's sideboard Power Play and a Mountain.
+conspiracyBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> m GameState.GameState
+conspiracyBoard s registry = do
+  powerPlay <- S.printingOf s registry "Power Play"
+  mountain <- S.printingOf s registry "Mountain"
+  supplementaryBoard s registry id (\d -> d {Deck.sideboard = Map.fromList [(powerPlay, 1), (mountain, 1)]})
+
+-- This player's sideboard pool by name, in name order.
+poolNames :: PlayerId -> GameState.GameState -> [(String, Natural)]
+poolNames pid gs =
+  List.sort
+    [ (Text.unpack (CardName.unwrap (S.nameOf card)), n)
+    | (printingId, n) <- Map.toList (maybe Map.empty Player.outsideTheGame (Map.lookup pid (GameState.players gs))),
+      Just card <- [Game.cardOfPrinting printingId gs]
+    ]
+
+-- What `conspiring` saw, each with how deep it was asked: CR 315.2's offer, to
+-- whom, its cards by name and its bounds; and a CR 103.5 mulligan declaration.
+data Conspired
+  = Offered Int PlayerId [String] Natural Natural
+  | Declared Int PlayerId
+  deriving (Eq, Show)
+
+-- CR 315.2's choice taken whole when `taking`, else declined; every other
+-- question as `answer`, keeping each hand.
+conspiring :: Bool -> (forall a. Prompt.Prompt a -> a) -> Asked.Asked r -> State.State [Conspired] r
+conspiring taking answer asked =
+  let depth = length (Asked.enclosing asked)
+   in case Asked.prompt asked of
+        Prompt.ChooseFromOutsideTheGame _ pid offered least most -> do
+          let named card = case card of
+                OutsideCard.InPool printingId -> maybe "?" (Text.unpack . CardName.unwrap . S.nameOf) (Game.cardOfPrinting printingId (Asked.game asked))
+                OutsideCard.InAnotherGame _ -> "?"
+          State.modify' (<> [Offered depth pid (fmap named (NonEmpty.toList offered)) least most])
+          pure (if taking then NonEmpty.toList offered else [])
+        Prompt.DeclareMulligan _ pid _ -> do
+          State.modify' (<> [Declared depth pid])
+          pure MulliganDecision.Keep
+        p -> pure (answer p)
+
+-- Cast whatever is castable, else pass.
+castAnswer :: Prompt.Prompt r -> r
+castAnswer p = case p of
+  Prompt.ChooseAction _ _ actions ->
+    let isCast a = case a of
+          A.Cast {} -> True
+          _ -> False
+     in Maybe.fromMaybe A.Pass (List.find isCast actions)
+  _ -> S.identityAnswer p
+
 -- Ten Forests in each library and alice's and bob's decks adjusted, built
 -- without opening hands so a subgame's libraries are the whole ten.
 supplementaryBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> (Deck.Deck -> Deck.Deck) -> (Deck.Deck -> Deck.Deck) -> m GameState.GameState
@@ -1436,3 +1529,4 @@ spec s registry = Spec.describe s "Parun.Engine.Setup" $ do
   restartSpec s registry
   subgameSpec s registry
   supplementaryDeckSpec s registry
+  sideboardConspiracySpec s registry
