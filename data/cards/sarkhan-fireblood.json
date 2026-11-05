@@ -90,24 +90,15 @@
                       {
                         "type": "AddMana",
                         "value": {
-                          "production": {
-                            "type": "AnyColor"
+                          "count": {
+                            "type": "Literal",
+                            "value": 2
                           },
-                          "restriction": {
-                            "casts": {
-                              "type": "HasSubtype",
-                              "value": {
-                                "type": "Dragon"
-                              }
-                            }
-                          }
-                        }
-                      },
-                      {
-                        "type": "AddMana",
-                        "value": {
                           "production": {
-                            "type": "AnyColor"
+                            "type": "AnyColor",
+                            "value": {
+                              "type": "AnyCombination"
+                            }
                           },
                           "restriction": {
                             "casts": {

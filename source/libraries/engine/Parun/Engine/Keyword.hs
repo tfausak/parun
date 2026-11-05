@@ -64,6 +64,7 @@ import qualified Parun.Types.ClassLevel as ClassLevel
 import qualified Parun.Types.Clause as Clause
 import qualified Parun.Types.ClauseIndex as ClauseIndex
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.ColorSpread as ColorSpread
 import qualified Parun.Types.CombatRestriction as CombatRestriction
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Compares as Compares
@@ -7867,7 +7868,7 @@ treasureToken =
     Effect.AddMana
       ManaAddition.MkManaAddition
         { ManaAddition.player = PlayerRef.Relative PlayerRelation.You,
-          ManaAddition.production = ManaProduction.AnyColor,
+          ManaAddition.production = ManaProduction.AnyColor ColorSpread.OneColor,
           ManaAddition.count = Quantity.Literal 1,
           ManaAddition.retention = ManaRetention.Ordinary,
           ManaAddition.restriction = Nothing,

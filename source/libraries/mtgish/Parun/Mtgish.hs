@@ -53,6 +53,7 @@ import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CharacteristicPT as CharacteristicPT
 import qualified Parun.Types.Clause as Clause
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.ColorSpread as ColorSpread
 import qualified Parun.Types.CombatRestriction as CombatRestriction
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Compares as Compares
@@ -1347,7 +1348,7 @@ productions context n = case Node.tag n of
     case manaChoice context of
       Just i | (option : _) <- drop i options -> Node.node option >>= productions context
       _ -> Node.untranslated n
-  "AnyManaColor" -> Right [ManaProduction.AnyColor]
+  "AnyManaColor" -> Right [ManaProduction.AnyColor ColorSpread.OneColor]
   'M' : 'a' : 'n' : 'a' : 'P' : 'r' : 'o' : 'd' : 'u' : 'c' : 'e' : [c] | Just t <- Ingest.manaType c -> Right [ManaProduction.OfType t]
   _ -> Node.untranslated n
 

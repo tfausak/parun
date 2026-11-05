@@ -60,6 +60,7 @@ import qualified Parun.Types.ChoosePlayerAtRandom as ChoosePlayerAtRandom
 import qualified Parun.Types.ChosenPermanents as ChosenPermanents
 import qualified Parun.Types.CoinFace as CoinFace
 import qualified Parun.Types.CoinReading as CoinReading
+import qualified Parun.Types.ColorSpread as ColorSpread
 import qualified Parun.Types.ContinuousEffect as ContinuousEffect
 import qualified Parun.Types.ControlDuration as ControlDuration
 import qualified Parun.Types.ControlPlayer as ControlPlayer
@@ -491,17 +492,21 @@ addMana resolving source controller legal (ManaAddition.MkManaAddition ref produ
     -- CR 105.4's choice is made ONCE for the whole instruction, which is what
     -- "two mana of any one color they choose" says (Stadium Vendors): the
     -- count replicates the unit the answer settled rather than asking again.
-    Mana.Offers offered ->
+    -- "In any combination of colors" asks once per unit instead: Sarkhan,
+    -- Fireblood's +1 (data/scenarios/sarkhan-fireblood-rummages-and-makes-mana-only-for-dragons.json).
+    Mana.Offers spread offered ->
       let named = playerRefPlayers legal resolving source controller gs0 ref
           ordered = filter (\pid -> List.elem pid named) (Game.apnapOrder gs0)
           recipients = ordered <> filter (\pid -> List.notElem pid ordered) named
        in Monad.forM_ recipients $ \pid -> do
             -- Through Game.chooseAmong, the instruction being mandatory.
             -- Mana.produced answers Offers only for two or more types.
-            picked <- Game.chooseAmong (\decider who -> Prompt.ChooseManaType decider who resolving) pid (NonEmpty.toList offered)
-            let manaType = Maybe.fromMaybe (NonEmpty.head offered) picked
-            State.modify' (Mana.addMana pid (replicate howMany (unitOf manaType)))
-            recordAdded pid (Set.singleton manaType)
+            let pick = fmap (Maybe.fromMaybe (NonEmpty.head offered)) (Game.chooseAmong (\decider who -> Prompt.ChooseManaType decider who resolving) pid (NonEmpty.toList offered))
+            manaTypes <- case spread of
+              ColorSpread.OneColor -> fmap (replicate howMany) pick
+              ColorSpread.AnyCombination -> Monad.replicateM howMany pick
+            State.modify' (Mana.addMana pid (fmap unitOf manaTypes))
+            recordAdded pid (Set.fromList manaTypes)
 
 -- CR 608.2c's instruction, carried out by somebody other than this spell's
 -- controller: Drain Power's first sentence has the TARGETED player activate a

@@ -26,6 +26,7 @@ import qualified Parun.Types.Card as Card
 import qualified Parun.Types.ChooseBetween as ChooseBetween
 import qualified Parun.Types.Clause as Clause
 import qualified Parun.Types.ClauseIndex as ClauseIndex
+import qualified Parun.Types.ColorSpread as ColorSpread
 import qualified Parun.Types.Compares as Compares
 import qualified Parun.Types.Comparison as Comparison
 import qualified Parun.Types.Condition as Condition
@@ -1054,15 +1055,17 @@ discarded context d = case d of
         imperative context (RandomCardInHand.player r) (Text.pack "discard " <> random) (Text.pack "discards " <> random)
   _ -> []
 
--- | The mana an instruction adds: "{G}", "{C}{C}", "one mana of any color"
--- (CR 106.1).
+-- | The mana an instruction adds: "{G}", "{C}{C}", "one mana of any color",
+-- "two mana in any combination of colors" (CR 106.1).
 added :: ManaProduction.ManaProduction -> Quantity.Quantity -> [(Mana, Text.Text)]
 added production count = case (production, count) of
   (ManaProduction.OfType t, Quantity.Literal n)
     | n >= 1 ->
         let symbols = Text.concat (List.genericReplicate n (Text.pack "{" <> Cost.manaType t <> Text.pack "}"))
          in [(Symbols symbols, symbols)]
-  (ManaProduction.AnyColor, Quantity.Literal 1) -> [(Described, Text.pack "one mana of any color")]
+  (ManaProduction.AnyColor _, Quantity.Literal 1) -> [(Described, Text.pack "one mana of any color")]
+  (ManaProduction.AnyColor ColorSpread.AnyCombination, Quantity.Literal n)
+    | n >= 2 -> [(Described, Prose.cardinal n <> Text.pack " mana in any combination of colors")]
   _ -> []
 
 -- | "[Source] deals [amount] damage to [recipient]", one part after another

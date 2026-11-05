@@ -2162,7 +2162,7 @@ manaAdditionNames asking x = case x of
 manaProductionNames :: (Monoid r) => Asking r -> ManaProduction.ManaProduction -> r
 manaProductionNames asking x = case x of
   ManaProduction.OfType _manaType -> mempty
-  ManaProduction.AnyColor -> mempty
+  ManaProduction.AnyColor _ -> mempty
   ManaProduction.Chosen -> mempty
   ManaProduction.SnowSymbol -> mempty
   ManaProduction.Noted -> mempty

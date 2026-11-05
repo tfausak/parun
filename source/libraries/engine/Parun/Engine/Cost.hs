@@ -6108,7 +6108,16 @@ tapForManaWith perform window inFlight refused activator oid = do
           --
           -- `gs` is still current: chooseManaYield only prompts.
           let gathered = manaActivationAdjustments (ActivatedAbility.keyword =<< ManaOption.ability chosen) (ActivatedAbility.name =<< ManaOption.ability chosen) controller oid gs
-              withComponents = plusComponents gathered (ManaOption.cost chosen)
+              printedX = hasVariable (ManaOption.cost chosen)
+              payableAt x = Activations.times (capacity Mana.ForOffer Map.empty controller oid (substituteX x (ManaOption.cost chosen)) (ManaOption.restrictions chosen) (ManaOption.ability chosen) gs) > 0
+          -- CR 601.2b through CR 602.2b: the activation cost's {X} is announced
+          -- first, bounded by what the gate above measures (Prompt.ChooseX), and
+          -- bound under Binding.variableX for the yield's price below. Wizard's
+          -- Rockets' "{X}, {T}, Sacrifice this artifact: Add X mana" (Parun.ManaSpec's
+          -- Wizard's Rockets group). An X the board cannot pay loses the
+          -- activation at the payment, Activate.activateAbility's posture.
+          x <- if printedX then Game.choose (Prompt.ChooseX (Decide.deciderFor controller gs) controller oid Binding.variableX 0 (greatestPayableX Nothing payableAt (ManaOption.cost chosen))) else pure 0
+          let withComponents = plusComponents gathered (substituteX x (ManaOption.cost chosen))
           -- CR 118.13a: a mana ability is an activated ability (CR 605.1a) and
           -- CR 602.2b sends its activation cost through CR 601.2b, so a symbol
           -- payable in several ways is announced as the ability is activated
@@ -6128,7 +6137,7 @@ tapForManaWith perform window inFlight refused activator oid = do
           (outcome, nested, nestedSpent) <- payActivation perform (Set.insert (oid, ManaOption.ability chosen) inFlight) controller oid (totalWith announced announcedCost)
           case outcome of
             Payment.Unpaid -> pure (False, nested, [], Set.singleton (oid, ManaOption.ability chosen))
-            Payment.Paid paid -> do
+            Payment.Paid paidSlots -> do
               -- CR 601.2h / 608.2h: the yield is priced again with the slots
               -- the payment bound, since an offer cannot know which artifact
               -- Priest of Yawgmoth's cost will sacrifice (Parun.ManaSpec's Priest
@@ -6143,7 +6152,8 @@ tapForManaWith perform window inFlight refused activator oid = do
               -- Not implemented: the slots reaching CR 405.6c's other effects,
               -- which run with none of them -- see `perform` below (#4850).
               gsPaid <- State.get
-              let pricedAlike = [priced | (offered, priced) <- Mana.manaRepricingsGiven paid gsPaid Map.empty oid gs, List.elem offered alike]
+              let paid = if printedX then Map.insert Binding.variableX (Binding.toAmount x) paidSlots else paidSlots
+                  pricedAlike = [priced | (offered, priced) <- Mana.manaRepricingsGiven paid gsPaid Map.empty oid gs, List.elem offered alike]
               pricedChosen <- case ListUtils.nubOrdOn ownPart pricedAlike of
                 route : routes -> chooseManaYield controller oid (route NonEmpty.:| routes) gsPaid
                 [] -> pure chosen

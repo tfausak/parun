@@ -632,7 +632,7 @@ rewriteManaAddition pairs addition =
 rewriteManaProduction :: [(TextWord.TextWord, TextWord.TextWord)] -> ManaProduction.ManaProduction -> ManaProduction.ManaProduction
 rewriteManaProduction pairs production = case production of
   ManaProduction.OfType _ -> production
-  ManaProduction.AnyColor -> production
+  ManaProduction.AnyColor _ -> production
   ManaProduction.Chosen -> production
   ManaProduction.SnowSymbol -> production
   ManaProduction.Noted -> production

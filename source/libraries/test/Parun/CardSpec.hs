@@ -140,6 +140,7 @@ import qualified Parun.Types.Clause as Clause
 import qualified Parun.Types.ClauseIndex as ClauseIndex
 import qualified Parun.Types.CoinReading as CoinReading
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.ColorSpread as ColorSpread
 import qualified Parun.Types.CombatRestriction as CombatRestriction
 import qualified Parun.Types.Condition as Condition.Type
 import qualified Parun.Types.Conjure as Conjure
@@ -786,9 +787,9 @@ playerRefPositions =
   let one = Quantity.Type.Literal 1
       playerQuantity stem = PlayerQuantity.MkPlayerQuantity (plantedPlayer stem) one
       affecting effect = Effect.AffectPlayers (AffectPlayers.MkAffectPlayers Duration.UntilEndOfTurn (AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.You)) effect)
-   in [ ("add-mana", Effect.AddMana (ManaAddition.MkManaAddition (plantedPlayer "am") ManaProduction.AnyColor (Quantity.Type.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing), [plantedPlayer "am"]),
+   in [ ("add-mana", Effect.AddMana (ManaAddition.MkManaAddition (plantedPlayer "am") (ManaProduction.AnyColor ColorSpread.OneColor) (Quantity.Type.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing), [plantedPlayer "am"]),
         ("add-mana-pooled", Effect.AddMana (ManaAddition.MkManaAddition (plantedPlayer "amp") (ManaProduction.Pooled (ManaCount.MkManaCount (plantedPlayer "amp-pool") ManaFilter.Any)) (Quantity.Type.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing), [plantedPlayer "amp", plantedPlayer "amp-pool"]),
-        ("firebend", Effect.Firebend (ManaAddition.MkManaAddition (plantedPlayer "fb") ManaProduction.AnyColor (Quantity.Type.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing), [plantedPlayer "fb"]),
+        ("firebend", Effect.Firebend (ManaAddition.MkManaAddition (plantedPlayer "fb") (ManaProduction.AnyColor ColorSpread.OneColor) (Quantity.Type.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing), [plantedPlayer "fb"]),
         ("search", Effect.Search (Search.MkSearch (plantedPlayer "se-searcher") (plantedPlayer "se-owner") Set.empty False Nothing (Filter.Type.And []) Seq.empty False SearchDestination.Battlefield Nothing Nothing Nothing Set.empty False False), [plantedPlayer "se-searcher", plantedPlayer "se-owner"]),
         ("draw", Effect.Draw (Draw.MkDraw (plantedPlayer "dr") one Nothing), [plantedPlayer "dr"]),
         ("mill", Effect.Mill (Mill.MkMill (plantedPlayer "mi") one Nothing Nothing), [plantedPlayer "mi"]),
@@ -5888,7 +5889,7 @@ manaRiderFilters rider = [ManaRider.condition rider]
 manaProductionFilters :: ManaProduction.ManaProduction -> [Filter.Type.Filter Keyword.Keyword]
 manaProductionFilters production = case production of
   ManaProduction.OfType _ -> []
-  ManaProduction.AnyColor -> []
+  ManaProduction.AnyColor _ -> []
   ManaProduction.Chosen -> []
   ManaProduction.SnowSymbol -> []
   ManaProduction.Noted -> []
