@@ -527,12 +527,15 @@ library codec
     Parun.Codec.CounterDestinationSpec
     Parun.Codec.CounteredEnd
     Parun.Codec.CounteredEndSpec
+    Parun.Codec.CounteredKind
     Parun.Codec.CounterGrouping
     Parun.Codec.CounterGroupingSpec
     Parun.Codec.CounterHolder
     Parun.Codec.CounterHolderSpec
     Parun.Codec.Countering
     Parun.Codec.CounteringSpec
+    Parun.Codec.CounteringTrigger
+    Parun.Codec.CounteringTriggerSpec
     Parun.Codec.CounterKind
     Parun.Codec.CounterKindSpec
     Parun.Codec.CounterMotion
@@ -2668,9 +2671,11 @@ library types
     Parun.Types.CounterChange
     Parun.Types.CounterDestination
     Parun.Types.CounteredEnd
+    Parun.Types.CounteredKind
     Parun.Types.CounterGrouping
     Parun.Types.CounterHolder
     Parun.Types.Countering
+    Parun.Types.CounteringTrigger
     Parun.Types.CounterKind
     Parun.Types.CounterKindFamily
     Parun.Types.CounterKindFor
@@ -3292,6 +3297,7 @@ library types
     Parun.Types.TurnFaceDown
     Parun.Types.TurnRole
     Parun.Types.TurnScope
+    Parun.Types.TurnTally
     Parun.Types.TurnUpEvent
     Parun.Types.TurnUpProcedure
     Parun.Types.TurnUpR

@@ -73,7 +73,9 @@ import qualified Parun.Types.CounterChange as CounterChange
 import qualified Parun.Types.CounterHolder as CounterHolder
 import qualified Parun.Types.CounterMotion as CounterMotion
 import qualified Parun.Types.CounterTrigger as CounterTrigger
+import qualified Parun.Types.CounteredKind as CounteredKind
 import qualified Parun.Types.Countering as Countering
+import qualified Parun.Types.CounteringTrigger as CounteringTrigger
 import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.CrewRole as CrewRole
 import qualified Parun.Types.Crewing as Crewing
@@ -1189,10 +1191,15 @@ armMatches bindings board gs bearer you cond event = case cond of
             Just view -> Filter.matches bearerContext view f
       | otherwise -> False
     _ -> False
-  -- CR 701.6a: a spell was countered, by a spell or ability whose controller the
-  -- relation admits. The countering source's controller comes from the event,
-  -- captured as the counter happened, and CR 109.5/603.3a fix "you" as the
-  -- ability's controller.
+  -- CR 701.6a: a spell or ability of the payload's kind was countered, by a
+  -- spell or ability whose controller the relation admits. The countering
+  -- source's controller comes from the event, captured as the counter happened,
+  -- and CR 109.5/603.3a fix "you" as the ability's controller.
+  --
+  -- The kind is read off which event arm was written: rule 701.6a cancels a
+  -- spell and an ability by different means, so Baral, Chief of Compliance's
+  -- "counters a spell" is silent for a countered ability and Synthetic Echo
+  -- Silencer's "an ability is countered" for a countered spell.
   --
   -- The bearer is NOT part of the match -- the Discarder discard's posture rather than
   -- any Self- condition's -- since the bearer is a permanent and the countering is
@@ -1202,32 +1209,16 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- spell, CR 613.11's on a permanent's static ability: a spell that can't be
   -- countered is not countered at all (CR 101.2), so `counter` records nothing
   -- and there is no event for this arm to see.
-  TriggerCondition.SpellOrAbilityCounters relation -> case event of
-    GameEvent.SpellCountered c -> PlayerRelation.holds (Game.teams gs) relation you (Countering.controller c)
-    -- CR 701.6a's other subject, and the fence Baral needs: his sentence says
-    -- "counters A SPELL", so a countered ABILITY is not his event.
-    GameEvent.AbilityCountered _ -> False
-    _ -> False
-  -- CR 701.6a from the VICTIM's side: an ability was countered, whoever did it.
-  -- The event alone settles it -- the arm above's relation has no counterpart
-  -- here, the printed sentence this serves naming no player at all -- so the
-  -- constructor IS the match.
-  --
-  -- A countered SPELL is silence rather than a miss, which is the whole point of
-  -- the two arms: CR 701.6a cancels a spell and an ability by different means,
-  -- and Baral, Chief of Compliance reads the other one.
-  --
-  -- The bearer is not part of the match, SpellOrAbilityCounters' posture: the
-  -- bearer is a permanent and the countering happens somewhere else. Neither
-  -- "can't be countered" gate needs a clause, for that arm's reason: through CR
-  -- 101.2 nothing was countered, so `counter` records no event to see.
-  TriggerCondition.AbilityIsCountered -> case event of
-    GameEvent.AbilityCountered _ -> True
-    _ -> False
+  TriggerCondition.Countered (CounteringTrigger.MkCounteringTrigger kind relation) ->
+    let counteredBy c = PlayerRelation.holds (Game.teams gs) relation you (Countering.controller c)
+     in case (kind, event) of
+          (CounteredKind.Spell, GameEvent.SpellCountered c) -> counteredBy c
+          (CounteredKind.Ability, GameEvent.AbilityCountered c) -> counteredBy c
+          _ -> False
   -- CR 615.13: a prevention effect was applied and prevented some damage, and the
   -- damage it prevented was addressed to a player the relation admits. CR 109.5 /
   -- 603.3a fix "you" as the ability's controller, exactly as a Discarder discard and
-  -- SpellOrAbilityCounters do.
+  -- Countered do.
   --
   -- The bearer is NOT part of the match: Selfless Squire is a creature watching
   -- damage addressed to its controller, and CR 615.13 says nothing about which
@@ -1961,11 +1952,12 @@ armMatches bindings board gs bearer you cond event = case cond of
     _ -> False
   -- CR 305.1: "whenever you play a land from exile" (Urianger Augurelt). The
   -- player is the one who played it, which CR 305.1 makes the special
-  -- action's taker; the zone is the one it was played from.
+  -- action's taker; the zone is the one it was played from, any for Nothing
+  -- (Fastbond's "whenever you play a land").
   TriggerCondition.PlayerPlaysLand p -> case event of
     GameEvent.LandPlayed played ->
       PlayerRelation.holds (Game.teams gs) (PlaysLand.player p) you (LandPlayed.player played)
-        && LandPlayed.from played == PlaysLand.from p
+        && all (== LandPlayed.from played) (PlaysLand.from p)
         -- The land as it arrived (CR 400.7i), read the way a Matching Enters
         -- reads an entrant, so Fires of Mount Doom's Filter.IsBound names the
         -- permanent Cast.playLand's follow moved the binding onto.

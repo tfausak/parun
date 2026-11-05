@@ -72,9 +72,11 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SpellOrAbilityCounters",
+            "type": "Countered",
             "value": {
-              "type": "You"
+              "counterer": {
+                "type": "You"
+              }
             }
           },
           "modal": {

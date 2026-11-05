@@ -91,7 +91,9 @@ import qualified Parun.Types.CounterHolder as CounterHolder
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.CounterMotion as CounterMotion
 import qualified Parun.Types.CounterTrigger as CounterTrigger
+import qualified Parun.Types.CounteredKind as CounteredKind
 import qualified Parun.Types.Countering as Countering
+import qualified Parun.Types.CounteringTrigger as CounteringTrigger
 import qualified Parun.Types.CountersPlaced as CountersPlaced
 import qualified Parun.Types.CrewRole as CrewRole
 import qualified Parun.Types.Crewing as Crewing
@@ -2013,13 +2015,13 @@ representativeEvents cond =
            in case LeavesZoneTrigger.to t of
                 Just to -> one (moved from to)
                 Nothing -> noTable (moved from Zone.Battlefield) NonEmpty.:| [noTable (moved from Zone.Hand), noTable (leftTheGameFrom from)]
-        TriggerCondition.SpellOrAbilityCounters _ ->
-          one (GameEvent.SpellCountered (Countering.MkCountering departed arrived S.alice))
-        -- CR 701.6a's other subject and this condition's only event: the payload is
-        -- the same record, so the floor is the same as the arm above's -- empty,
-        -- the condition binding nothing.
-        TriggerCondition.AbilityIsCountered ->
-          one (GameEvent.AbilityCountered (Countering.MkCountering departed arrived S.alice))
+        -- CR 701.6a's event for the kind: both arms carry the same record, so
+        -- the floor is the same for each -- empty, the condition binding nothing.
+        TriggerCondition.Countered t ->
+          let countering = Countering.MkCountering departed arrived S.alice
+           in one $ case CounteringTrigger.countered t of
+                CounteredKind.Spell -> GameEvent.SpellCountered countering
+                CounteredKind.Ability -> GameEvent.AbilityCountered countering
         -- CR 615.13: the recipient has to be a PLAYER, this condition being
         -- scoped to damage that would be dealt to one -- an event naming a
         -- creature matches nothing and would pin the floor at empty.
@@ -2219,7 +2221,7 @@ representativeEvents cond =
         TriggerCondition.PlayerLosesGame _ -> one (GameEvent.LostTheGame S.bob)
         TriggerCondition.PlacesSticker _ -> one (GameEvent.StickerPut StickerPut.MkStickerPut {StickerPut.placer = S.bob, StickerPut.object = departed, StickerPut.kind = StickerKind.Art})
         -- CR 305.1's own event: a land play binds nothing.
-        TriggerCondition.PlayerPlaysLand p -> one (GameEvent.LandPlayed (LandPlayed.MkLandPlayed S.bob departed (PlaysLand.from p)))
+        TriggerCondition.PlayerPlaysLand p -> one (GameEvent.LandPlayed (LandPlayed.MkLandPlayed S.bob departed (Maybe.fromMaybe Zone.Hand (PlaysLand.from p))))
         -- TWO: CR 701.62b's manifest dread that binned nothing, and one that
         -- binned a card, which is what parts the floor from the ceiling.
         TriggerCondition.PlayerManifestsDread _ ->
@@ -2391,8 +2393,8 @@ everyTriggerCondition =
     TriggerCondition.Leaves LeavesTrigger.defaultValue {LeavesTrigger.permanent = LeavingPermanent.Bound (SlotName.MkSlotName (Text.pack "target"))},
     TriggerCondition.Leaves LeavesTrigger.defaultValue {LeavesTrigger.permanent = LeavingPermanent.Matching Filter.Type.IsSource, LeavesTrigger.batching = Batching.OneOrMore},
     TriggerCondition.Leaves LeavesTrigger.defaultValue {LeavesTrigger.permanent = LeavingPermanent.Haunted},
-    TriggerCondition.SpellOrAbilityCounters PlayerRelation.You,
-    TriggerCondition.AbilityIsCountered,
+    TriggerCondition.Countered (CounteringTrigger.MkCounteringTrigger CounteredKind.Spell PlayerRelation.You),
+    TriggerCondition.Countered (CounteringTrigger.MkCounteringTrigger CounteredKind.Ability PlayerRelation.AnyPlayer),
     TriggerCondition.DamageToPlayerPrevented PlayerRelation.You,
     TriggerCondition.SelfPreventsDamage (Filter.Type.And []),
     TriggerCondition.LifeChanges (LifeTrigger.MkLifeTrigger LifeDirection.Gained PlayerRelation.You (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)) Batching.EachOccurrence TriggerFrequency.EveryTime),
@@ -2529,7 +2531,9 @@ everyTriggerCondition =
     -- PlayerBecomesMonarch pair's reasoning.
     TriggerCondition.PlayerLosesGame PlayerRelation.AnyPlayer,
     TriggerCondition.PlayerLosesGame PlayerRelation.Opponent,
-    TriggerCondition.PlayerPlaysLand (PlaysLand.MkPlaysLand PlayerRelation.You Zone.Exile (Filter.Type.And [])),
+    TriggerCondition.PlayerPlaysLand (PlaysLand.MkPlaysLand PlayerRelation.You (Just Zone.Exile) (Filter.Type.And [])),
+    -- Fastbond's play from any zone.
+    TriggerCondition.PlayerPlaysLand (PlaysLand.MkPlaysLand PlayerRelation.You Nothing (Filter.Type.And [])),
     TriggerCondition.PlayerManifestsDread PlayerRelation.You,
     TriggerCondition.PlayerManifestsDread PlayerRelation.Opponent,
     TriggerCondition.PlayerRollsResult DieResult.MkDieResult {DieResult.roller = PlayerRelation.You, DieResult.result = 6},

@@ -1,0 +1,81 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Season of the Witch",
+            "ready": true
+          },
+          {
+            "card": "Bonded Construct",
+            "ready": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "ready": true
+          },
+          {
+            "card": "Llanowar Elves",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "f1"
+          },
+          {
+            "card": "Forest",
+            "label": "f2"
+          },
+          {
+            "card": "Forest",
+            "label": "f3"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Ghostly Prison",
+            "ready": true
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "DeclareAttackers"
+  },
+  "description": "CR 508.1c Season of the Witch destroys a creature that can't attack alone when only its cheaper company makes the toll payable",
+  "note": "Bob's Ghostly Prison charges {2} an attacker and the Bonded Construct can't attack alone (CR 506.5). Beside the Elves, CR 508.1f taps them and three Forests can't pay {4}; beside the Bears, the Elves and the Forests can, so the Construct could have attacked and dies.",
+  "timeline": [
+    {
+      "do": {
+        "Attack": []
+      },
+      "player": "alice",
+      "step": "DeclareAttackers",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "EndStep",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Bonded Construct",
+          "count": 1,
+          "player": "alice",
+          "zone": "Graveyard"
+        }
+      },
+      "player": "alice",
+      "step": "EndStep",
+      "turn": 1
+    }
+  ]
+}

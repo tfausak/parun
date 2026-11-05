@@ -2159,8 +2159,7 @@ rewriteTriggerCondition pairs condition = case condition of
           destinations
           batching
       )
-  TriggerCondition.SpellOrAbilityCounters _ -> condition
-  TriggerCondition.AbilityIsCountered -> condition
+  TriggerCondition.Countered _ -> condition
   TriggerCondition.DamageToPlayerPrevented _ -> condition
   TriggerCondition.SelfPreventsDamage f -> TriggerCondition.SelfPreventsDamage (Filter.rewrite pairs f)
   TriggerCondition.LifeChanges _ -> condition
@@ -2460,9 +2459,7 @@ rewriteQuantity pairs quantity = case quantity of
   Quantity.Type.AttackersDeclaredThisCombat -> quantity
   Quantity.Type.AttackedInLastTurnOf _ -> quantity
   Quantity.Type.AttackersInTheirLastTurn _ -> quantity
-  Quantity.Type.CardsDiscardedThisTurn _ -> quantity
-  Quantity.Type.CardsDrawnThisTurn _ -> quantity
-  Quantity.Type.BendingsThisTurn _ -> quantity
+  Quantity.Type.TalliedThisTurn _ _ -> quantity
   Quantity.Type.LifeChanged _ -> quantity
   Quantity.Type.PlayersDealtDamageThisTurn _ -> quantity
   Quantity.Type.DamageDealtToPlayersThisTurn _ -> quantity

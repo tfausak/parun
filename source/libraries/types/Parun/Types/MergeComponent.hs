@@ -28,8 +28,8 @@ import qualified Parun.Types.PrintingId as PrintingId
 data MergeComponent
   = -- | CR 108.2: a card component, with the identity it keeps (CR 108.3).
     OfCard ComponentCard.ComponentCard
-  | -- | CR 111.3: a token component, named by the printing its effect-defined
-    -- characteristics were interned as.
+  | -- | CR 111.3 / 111.13: a token component, a merged copy of a mutating spell
+    -- included, named by the printing its characteristics were interned as.
     OfToken PrintingId.PrintingId
   | -- | CR 701.42a: a melded component -- one component that two cards represent,
     -- which Parun.Types.MeldSource carries and documents.
@@ -49,16 +49,4 @@ data MergeComponent
     -- Parun.Engine.Game.componentsOf expands this arm into rule 712.21's two
     -- cards, so every reader of that classifier keeps quantifying over cards.
     OfMeld MeldSource.MeldSource
-  | -- | CR 730.2's "or copy": a copy of a spell as a component, which CR 702.140c
-    -- puts here when a copy of a mutating creature spell resolves.
-    --
-    -- NEITHER of the two arms above, and CR 608.3f is why: a copy of a permanent
-    -- spell "will become a token permanent as it is put onto the battlefield",
-    -- and rule 702.140c's merge is the one resolution that puts it nowhere -- so
-    -- the copy is still a copy here, and it is no card either (CR 707.10, "even
-    -- though it has no spell card associated with it"). Parun.Engine.Game's
-    -- componentIsToken answers False for it under CR 730.2d and componentIsCard
-    -- answers False under CR 108.2, which is what keeps CR 903.9c from finding a
-    -- commander in it.
-    OfSpellCopy PrintingId.PrintingId
   deriving (Eq, Ord, Show)

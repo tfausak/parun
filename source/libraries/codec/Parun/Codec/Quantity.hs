@@ -38,6 +38,7 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Types.Arithmetic as Arithmetic
 import qualified Parun.Types.ControlWindow as ControlWindow
 import qualified Parun.Types.Quantity as Quantity
+import qualified Parun.Types.TurnTally as TurnTally
 
 -- | Quantity.Count's arm is tagged HERE, like every other arm. Parun.Codec.Count
 -- writes a bare object, so the tag that picks this arm has to come from the
@@ -164,15 +165,16 @@ codec =
       Arm.nullary "AttackersDeclaredThisCombat" Quantity.AttackersDeclaredThisCombat,
       Arm.payload "AttackedInLastTurnOf" PlayerRef.codec Quantity.AttackedInLastTurnOf (\x -> case x of Quantity.AttackedInLastTurnOf y -> Just y; _ -> Nothing),
       Arm.payload "AttackersInTheirLastTurn" PlayerRef.codec Quantity.AttackersInTheirLastTurn (\x -> case x of Quantity.AttackersInTheirLastTurn y -> Just y; _ -> Nothing),
-      -- CR 701.9a's tally, with only a PlayerRef on the wire for
-      -- OpponentsAttacked's reason: what is counted comes from the event log
-      -- rather than from anything the card names, and the turn is the log's
-      -- extent rather than a window a card could state.
-      Arm.payload "CardsDiscardedThisTurn" PlayerRef.codec Quantity.CardsDiscardedThisTurn (\x -> case x of Quantity.CardsDiscardedThisTurn y -> Just y; _ -> Nothing),
-      Arm.payload "CardsDrawnThisTurn" PlayerRef.codec Quantity.CardsDrawnThisTurn (\x -> case x of Quantity.CardsDrawnThisTurn y -> Just y; _ -> Nothing),
-      -- CR 603.1b's four bending verbs, with only a PlayerRef on the wire for
-      -- CardsDiscardedThisTurn's reason above.
-      Arm.payload "BendingsThisTurn" PlayerRef.codec Quantity.BendingsThisTurn (\x -> case x of Quantity.BendingsThisTurn y -> Just y; _ -> Nothing),
+      -- The tally is the tag, as ControlGained's window is: CR 701.9a's discards,
+      -- CR 121.1's draws, CR 603.1b's bending verbs and CR 305.2a's land plays,
+      -- with only a PlayerRef on the wire for OpponentsAttacked's reason: what is
+      -- counted comes from the turn's record rather than from anything the card
+      -- names, and the turn is the record's extent rather than a window a card
+      -- could state.
+      Arm.payload "CardsDiscardedThisTurn" PlayerRef.codec (Quantity.TalliedThisTurn TurnTally.CardsDiscarded) (\x -> case x of Quantity.TalliedThisTurn TurnTally.CardsDiscarded y -> Just y; _ -> Nothing),
+      Arm.payload "CardsDrawnThisTurn" PlayerRef.codec (Quantity.TalliedThisTurn TurnTally.CardsDrawn) (\x -> case x of Quantity.TalliedThisTurn TurnTally.CardsDrawn y -> Just y; _ -> Nothing),
+      Arm.payload "BendingsThisTurn" PlayerRef.codec (Quantity.TalliedThisTurn TurnTally.Bendings) (\x -> case x of Quantity.TalliedThisTurn TurnTally.Bendings y -> Just y; _ -> Nothing),
+      Arm.payload "LandsPlayedThisTurn" PlayerRef.codec (Quantity.TalliedThisTurn TurnTally.LandsPlayed) (\x -> case x of Quantity.TalliedThisTurn TurnTally.LandsPlayed y -> Just y; _ -> Nothing),
       -- CR 119.3's life gained, with only a PlayerRef on the wire for
       -- CardsDiscardedThisTurn's reason above. What is SUMMED is the amounts and
       -- not the events, which is the arm's own reading rather than anything on
@@ -307,9 +309,10 @@ tagOf x = case x of
   Quantity.AttackersDeclaredThisCombat {} -> "AttackersDeclaredThisCombat"
   Quantity.AttackedInLastTurnOf {} -> "AttackedInLastTurnOf"
   Quantity.AttackersInTheirLastTurn {} -> "AttackersInTheirLastTurn"
-  Quantity.CardsDiscardedThisTurn {} -> "CardsDiscardedThisTurn"
-  Quantity.CardsDrawnThisTurn {} -> "CardsDrawnThisTurn"
-  Quantity.BendingsThisTurn {} -> "BendingsThisTurn"
+  Quantity.TalliedThisTurn TurnTally.CardsDiscarded _ -> "CardsDiscardedThisTurn"
+  Quantity.TalliedThisTurn TurnTally.CardsDrawn _ -> "CardsDrawnThisTurn"
+  Quantity.TalliedThisTurn TurnTally.Bendings _ -> "BendingsThisTurn"
+  Quantity.TalliedThisTurn TurnTally.LandsPlayed _ -> "LandsPlayedThisTurn"
   Quantity.LifeChanged {} -> "LifeChanged"
   Quantity.PlayersDealtDamageThisTurn {} -> "PlayersDealtDamageThisTurn"
   Quantity.DamageDealtToPlayersThisTurn {} -> "DamageDealtToPlayersThisTurn"

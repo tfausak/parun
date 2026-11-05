@@ -680,8 +680,7 @@ looksBack condition = case condition of
     _ -> True
   -- CR 603.10e names this one, and False is unobservable: CR 701.6a moves no
   -- permanent, so no bearer leaves in the counter's own group.
-  TriggerCondition.SpellOrAbilityCounters _ -> False
-  TriggerCondition.AbilityIsCountered -> False
+  TriggerCondition.Countered _ -> False
   TriggerCondition.DamageToPlayerPrevented _ -> False
   TriggerCondition.SelfPreventsDamage _ -> False
   -- CR 603.10a's list names no life change.
@@ -886,8 +885,7 @@ batchScoped condition = case condition of
   -- EachOccurrence is CR 603.2c's second sentence: Justice, Vance Astrovik fires
   -- once per permanent returned.
   TriggerCondition.Leaves t -> LeavesTrigger.batching t == Batching.OneOrMore
-  TriggerCondition.SpellOrAbilityCounters _ -> False
-  TriggerCondition.AbilityIsCountered -> False
+  TriggerCondition.Countered _ -> False
   TriggerCondition.DamageToPlayerPrevented _ -> False
   -- Per PREVENTION, which is what the record already is: groupPreventions
   -- collapsed the batch to one entry per applying instance -- over recipients as
@@ -2933,8 +2931,7 @@ zonesTriggeredFrom cond =
           ActingPermanent.Self -> Set.singleton (LeavesZoneTrigger.from t)
           ActingPermanent.Matching _ -> battlefield
         -- CR 113.6's default again: the bearer watches from the battlefield.
-        TriggerCondition.SpellOrAbilityCounters _ -> battlefield
-        TriggerCondition.AbilityIsCountered -> battlefield
+        TriggerCondition.Countered _ -> battlefield
         -- The same default: Selfless Squire watches damage addressed to its controller from
         -- the battlefield, and a card in a graveyard sees nothing prevented.
         TriggerCondition.DamageToPlayerPrevented _ -> battlefield
@@ -3131,8 +3128,7 @@ stateTriggersOn gs
             TriggerCondition.PlayerDrawsNthCard {} -> False
             TriggerCondition.LeavesZone _ -> False
             TriggerCondition.PutIntoZone _ -> False
-            TriggerCondition.SpellOrAbilityCounters _ -> False
-            TriggerCondition.AbilityIsCountered -> False
+            TriggerCondition.Countered _ -> False
             TriggerCondition.DamageToPlayerPrevented _ -> False
             TriggerCondition.SelfPreventsDamage _ -> False
             TriggerCondition.LifeChanges _ -> False

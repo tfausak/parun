@@ -70,9 +70,11 @@ uncounterable oid gs = case Game.lookupObject oid gs of
 --
 -- The effect names the paid-for object as CR 611.2c's fixed set of one and
 -- rides CR 400.7a onto the permanent that spell becomes
--- (Parun.Engine.Event.carryOver). That crossing is the whole of what makes the
--- grant observable: haste on a spell is nothing, and Parun.ManaSourceSpec's
--- Generator Servant case reads the attack rather than the stored row.
+-- (Parun.Engine.Event.carryOver), or CR 702.140f onto the permanent a mutating
+-- spell merges with (Parun.Engine.Event.referTo). That crossing is the whole of
+-- what makes the grant observable: haste on a spell is nothing, and
+-- Parun.ManaSourceSpec's and Parun.MutateSpec's Generator Servant cases read the
+-- attack rather than the stored row.
 --
 -- `source` is the object being paid for and not the mana's own source, which
 -- Parun.Types.ManaUnit deliberately does not carry -- mana outlives its source

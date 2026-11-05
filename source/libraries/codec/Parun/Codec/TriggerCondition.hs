@@ -14,6 +14,7 @@ import qualified Parun.Codec.CoinFlipTrigger as CoinFlipTrigger
 import qualified Parun.Codec.Condition as Condition
 import qualified Parun.Codec.ControllerBecomesTarget as ControllerBecomesTarget
 import qualified Parun.Codec.CounterTrigger as CounterTrigger
+import qualified Parun.Codec.CounteringTrigger as CounteringTrigger
 import qualified Parun.Codec.CrewRole as CrewRole
 import qualified Parun.Codec.DamageTrigger as DamageTrigger
 import qualified Parun.Codec.DieResult as DieResult
@@ -85,8 +86,7 @@ codec =
           Arm.payload "TappedForMana" TappedForManaTrigger.codec TriggerCondition.TappedForMana (\x -> case x of TriggerCondition.TappedForMana y -> Just y; _ -> Nothing),
           Arm.payload "AbilityAddsMana" AbilityAddsMana.codec TriggerCondition.AbilityAddsMana (\x -> case x of TriggerCondition.AbilityAddsMana y -> Just y; _ -> Nothing),
           Arm.nullary "SelfManaAbilityResolves" TriggerCondition.SelfManaAbilityResolves,
-          Arm.payload "SpellOrAbilityCounters" PlayerRelation.codec TriggerCondition.SpellOrAbilityCounters (\x -> case x of TriggerCondition.SpellOrAbilityCounters y -> Just y; _ -> Nothing),
-          Arm.nullary "AbilityIsCountered" TriggerCondition.AbilityIsCountered,
+          Arm.payload "Countered" CounteringTrigger.codec TriggerCondition.Countered (\x -> case x of TriggerCondition.Countered y -> Just y; _ -> Nothing),
           Arm.payload "DamageToPlayerPrevented" PlayerRelation.codec TriggerCondition.DamageToPlayerPrevented (\x -> case x of TriggerCondition.DamageToPlayerPrevented y -> Just y; _ -> Nothing),
           Arm.payload "SelfPreventsDamage" filterCodec TriggerCondition.SelfPreventsDamage (\x -> case x of TriggerCondition.SelfPreventsDamage y -> Just y; _ -> Nothing),
           Arm.payload "LifeChanges" LifeTrigger.codec TriggerCondition.LifeChanges (\x -> case x of TriggerCondition.LifeChanges y -> Just y; _ -> Nothing),
@@ -157,8 +157,7 @@ tagOf x = case x of
   TriggerCondition.TappedForMana {} -> "TappedForMana"
   TriggerCondition.AbilityAddsMana {} -> "AbilityAddsMana"
   TriggerCondition.SelfManaAbilityResolves {} -> "SelfManaAbilityResolves"
-  TriggerCondition.SpellOrAbilityCounters {} -> "SpellOrAbilityCounters"
-  TriggerCondition.AbilityIsCountered {} -> "AbilityIsCountered"
+  TriggerCondition.Countered {} -> "Countered"
   TriggerCondition.DamageToPlayerPrevented {} -> "DamageToPlayerPrevented"
   TriggerCondition.SelfPreventsDamage {} -> "SelfPreventsDamage"
   TriggerCondition.LifeChanges {} -> "LifeChanges"

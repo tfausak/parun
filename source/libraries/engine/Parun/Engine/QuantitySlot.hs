@@ -182,9 +182,7 @@ overSlots f quantity =
         -- nothing else on it.
         Quantity.OpponentsAttacked _ -> pure quantity
         -- And a tenth, CR 701.9a's tally having nothing beside its PlayerRef either.
-        Quantity.CardsDiscardedThisTurn _ -> pure quantity
-        Quantity.CardsDrawnThisTurn _ -> pure quantity
-        Quantity.BendingsThisTurn _ -> pure quantity
+        Quantity.TalliedThisTurn _ _ -> pure quantity
         -- And another, CR 508.1a's declaration tally likewise.
         Quantity.AttackersDeclaredThisTurn _ -> pure quantity
         Quantity.AttackersDeclaredThisCombat -> pure quantity
@@ -373,9 +371,7 @@ nestedRefs quantity = case quantity of
   Quantity.AttackersDeclaredThisCombat -> Set.empty
   Quantity.AttackedInLastTurnOf ref -> Set.singleton (Left ref)
   Quantity.AttackersInTheirLastTurn ref -> Set.singleton (Left ref)
-  Quantity.CardsDiscardedThisTurn ref -> Set.singleton (Left ref)
-  Quantity.CardsDrawnThisTurn ref -> Set.singleton (Left ref)
-  Quantity.BendingsThisTurn ref -> Set.singleton (Left ref)
+  Quantity.TalliedThisTurn _ ref -> Set.singleton (Left ref)
   Quantity.LifeChanged tally -> Set.singleton (Left (LifeTally.player tally))
   Quantity.PlayersDealtDamageThisTurn tally -> Set.singleton (Left (DealtDamage.recipient tally))
   Quantity.DamageDealtToPlayersThisTurn tally -> Set.singleton (Left (DealtDamage.recipient tally))
@@ -498,9 +494,7 @@ nestedCounts quantity = case quantity of
   Quantity.AttackersDeclaredThisCombat -> []
   Quantity.AttackedInLastTurnOf _ -> []
   Quantity.AttackersInTheirLastTurn _ -> []
-  Quantity.CardsDiscardedThisTurn _ -> []
-  Quantity.CardsDrawnThisTurn _ -> []
-  Quantity.BendingsThisTurn _ -> []
+  Quantity.TalliedThisTurn _ _ -> []
   Quantity.LifeChanged _ -> []
   Quantity.PlayersDealtDamageThisTurn _ -> []
   Quantity.DamageDealtToPlayersThisTurn _ -> []
@@ -650,9 +644,7 @@ mapPlayerRefs f intoCount quantity =
         Quantity.AttackersDeclaredThisCombat -> quantity
         Quantity.AttackedInLastTurnOf ref -> Quantity.AttackedInLastTurnOf (f ref)
         Quantity.AttackersInTheirLastTurn ref -> Quantity.AttackersInTheirLastTurn (f ref)
-        Quantity.CardsDiscardedThisTurn ref -> Quantity.CardsDiscardedThisTurn (f ref)
-        Quantity.CardsDrawnThisTurn ref -> Quantity.CardsDrawnThisTurn (f ref)
-        Quantity.BendingsThisTurn ref -> Quantity.BendingsThisTurn (f ref)
+        Quantity.TalliedThisTurn tally ref -> Quantity.TalliedThisTurn tally (f ref)
         Quantity.LifeChanged tally -> Quantity.LifeChanged tally {LifeTally.player = f (LifeTally.player tally)}
         Quantity.PlayersDealtDamageThisTurn tally -> Quantity.PlayersDealtDamageThisTurn tally {DealtDamage.recipient = f (DealtDamage.recipient tally)}
         Quantity.DamageDealtToPlayersThisTurn tally -> Quantity.DamageDealtToPlayersThisTurn tally {DealtDamage.recipient = f (DealtDamage.recipient tally)}

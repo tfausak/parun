@@ -1,6 +1,6 @@
 {
-  "description": "CR 614.12 / 607.2d: Door of Destinies charges whenever its controller casts a spell of the type chosen as it entered, and pumps that type per charge counter",
-  "note": "alice names Goblin: Goblin Piker charges the Door and ends 3/2; Grizzly Bears neither charge it nor grow.",
+  "description": "CR 205.3e / 614.12 / 607.2d: Door of Destinies charges whenever its controller casts a spell of the type chosen as it entered, and pumps that type per charge counter",
+  "note": "alice answers Island, which is no creature type, so she is asked again; she names Goblin: Goblin Piker charges the Door and ends 3/2; Grizzly Bears neither charge it nor grow.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
@@ -12,6 +12,7 @@
   "timeline": [
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$door", "mana": ["$m1", "$m2", "$m3", "$m4", null]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "ChooseCreatureType", "with": {"type": "Island"}}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCreatureType", "with": {"type": "Goblin"}}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$piker", "mana": ["$m5", "$m6", null]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},

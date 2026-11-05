@@ -884,7 +884,7 @@ revealsInsteadOfTurningUp oid gs =
       manifested =
         (reason == Just (Just FaceDownReason.Manifested) || reason == Just (Just FaceDownReason.Cloaked) || reason == Just (Just FaceDownReason.EnteredFaceDown))
           && maybe False (isInstantOrSorcery . snd) (representingCardOf oid gs)
-      components = foldMap (Seq.filter Game.componentIsCard . Game.componentsOf . Object.source) object
+      components = foldMap (Seq.filter (not . Game.componentIsToken) . Game.componentsOf . Object.source) object
       merged =
         maybe False (Facing.isFaceDown . Object.facing) object
           && any (maybe False (isInstantOrSorcery . TypeLine.types . Face.typeLine . Card.combined) . (`Game.cardOfPrinting` gs) . Game.printingOfComponent) components
@@ -2439,7 +2439,7 @@ cardPrintings gs event = case event of
     [ Game.printingOfComponent component
     | obj <- Maybe.maybeToList (Game.lookupObject (ZoneChange.object zc) gs),
       component <- Foldable.toList (Game.componentsOf (Object.source obj)),
-      Game.componentIsCard component
+      not (Game.componentIsToken component)
     ]
   _ -> []
 
@@ -7234,7 +7234,7 @@ stayPut oid obj requestedDest position shuffling = case Object.zone obj of
     let owner = Object.owner obj
     State.modify' (Game.insertIntoZone Zone.Library position owner oid . Game.removeFromZones oid)
     placed <- State.state (forgetShown oid)
-    Monad.when shuffling (shuffleLibrary owner)
+    Monad.when shuffling (shuffleAroundArrivals owner)
     Monad.when (requestedDest /= Zone.Library && not shuffling) $
       State.modify' (noteArrival owner (ArrivalEnd.IntoLibrary position) (Seq.singleton placed))
     pure (Seq.singleton placed)
@@ -8120,8 +8120,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
               -- merged permanent can have a TOKEN component, which arrives as a
               -- token (Game.sourceOfComponent) and is then removed by CR 111.7's
               -- state-based action, rather than as a card that would sit in the
-              -- graveyard for ever. CR 730.2's copy component arrives as the copy
-              -- it is and CR 704.5e removes it there, one rule over.
+              -- graveyard for ever.
               --
               -- CR 712.21d needs nothing here: the CR 616.1 replacement loop
               -- ran ONCE above, against the melded permanent, so a replacement
@@ -8149,13 +8148,12 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                   --
                   -- Only a CARD component goes to the command zone, whatever
                   -- printing the others were interned under: CR 903.9c splits off
-                  -- "the card that represents it and is a commander", and neither
-                  -- a token (CR 111.6) nor CR 730.2's copy (CR 707.10, "no spell
-                  -- card associated with it") is one. Game.componentIsCard is
-                  -- that read, and Commander.commanderCardOf takes it on the
-                  -- way in, so the two agree about which component the
-                  -- designation can sit on.
-                  (splitComponents, destComponents) = Seq.partition (\component -> Game.componentIsCard component && Map.member (Game.printingOfComponent component) splitOff) components
+                  -- "the card that represents it and is a commander", and a token
+                  -- (CR 111.6) is none. Game.componentIsToken is that read, and
+                  -- Commander.commanderCardOf takes it on the way in, so the two
+                  -- agree about which component the designation can sit on. CR
+                  -- 730.3e's split moves cards only, by the same read.
+                  (splitComponents, destComponents) = Seq.partition (\component -> not (Game.componentIsToken component) && Map.member (Game.printingOfComponent component) splitOff) components
                   splitGroups = Map.fromListWith (flip (<>)) [(target, Seq.singleton component) | component <- Foldable.toList splitComponents, Just target <- [Map.lookup (Game.printingOfComponent component) splitOff]]
                   -- CR 123.5c: only the component `keeps` names takes the
                   -- departing permanent's stickers.
@@ -8229,7 +8227,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
               Monad.when (dest == Zone.Exile) $ do
                 placed <- State.get
                 let exiler = Maybe.fromMaybe lastController ((exiledBy >>= \replacer -> Projection.controllerOf replacer placed) <|> under)
-                    cards = [arrival | (arrival, Just component) <- zip (newId : Foldable.toList trailingIds0) (leading : fmap Just (Foldable.toList trailing)), Game.componentIsCard component]
+                    cards = [arrival | (arrival, Just component) <- zip (newId : Foldable.toList trailingIds0) (leading : fmap Just (Foldable.toList trailing)), not (Game.componentIsToken component)]
                 Restamp.orderFor exiler start cards
               -- CR 400.1's command zone is one shared area rather than one per
               -- player, so placeObject's `pid` decides nothing about where the
@@ -8304,7 +8302,10 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
               --
               -- The OWNER's library, CR 400.3: every zone this funnel places into
               -- is keyed by owner, and `pid` is the id placeObject was handed.
-              Monad.when shuffling (shuffleLibrary pid)
+              --
+              -- CR 701.24g: around the cards this scope already put at an end of
+              -- that library (shuffleAroundArrivals).
+              Monad.when shuffling (shuffleAroundArrivals pid)
               -- CR 401.4: a redirect INTO a library at a stated end, for the
               -- scope's owner to arrange (arrangeArrivals). A move headed for
               -- a library already had its order settled by its instruction
@@ -8665,11 +8666,20 @@ carryOver carrying oldId newId = case carrying of
   CarryOver.NotCarried -> pure ()
   CarryOver.Carried ->
     State.modify' $ \gs ->
-      gs
-        { GameState.continuousEffects = fmap (reanchor oldId (Set.singleton newId)) (GameState.continuousEffects gs),
-          GameState.replacements = fmap (rewatch oldId newId . reenter oldId newId) (GameState.replacements gs),
-          GameState.exiledWith = fmap (relink oldId newId) (GameState.exiledWith gs)
-        }
+      let referred = referTo oldId newId gs
+       in referred {GameState.replacements = fmap (reenter oldId newId) (GameState.replacements referred)}
+
+-- CR 702.140f: an effect referring to or modifying a mutating creature spell
+-- refers to or modifies the permanent it merged with. carryOver's re-keying
+-- without `reenter`, which `merge` runs: CR 730.2b's merge is no entry, so no
+-- EntryR row watches it.
+referTo :: ObjectId -> ObjectId -> GameState -> GameState
+referTo oldId newId gs =
+  gs
+    { GameState.continuousEffects = fmap (reanchor oldId (Set.singleton newId)) (GameState.continuousEffects gs),
+      GameState.replacements = fmap (rewatch oldId newId) (GameState.replacements gs),
+      GameState.exiledWith = fmap (relink oldId newId) (GameState.exiledWith gs)
+    }
 
 -- carryOver's CR 607.2q half: a card exiled to pay the cost of a permanent spell
 -- is linked to the permanent that spell becomes, so a link naming the spell
@@ -10165,6 +10175,9 @@ meldable victims gs = do
 --
 -- CR 123.5b / 613.7k / 730.2b: the spell's stickers take new timestamps at the
 -- merge, in their order, after the host's, which keep theirs (CR 730.2c).
+--
+-- CR 702.140f: what named the spell names the permanent (referTo).
+-- Parun.MutateSpec's Generator Servant case proves it.
 merge :: ObjectId -> ObjectId -> MutateSide.MutateSide -> Game Bool
 merge sid target side = do
   gs <- State.get
@@ -10265,6 +10278,7 @@ merge sid target side = do
               let (snapshot, turned) = readings (unrowed {GameState.copyEffects = alone row : GameState.copyEffects unrowed})
                in (alone row) {ActiveCopy.snapshot = snapshot, ActiveCopy.turned = if turned == snapshot then Nothing else Just turned}
             rows = fmap rewoven (filter (Game.copyCovers gs target) (GameState.copyEffects gs))
+        State.modify' (referTo sid target)
         State.modify' (`forgetObject` sid)
         joining <- State.state (Game.restampPlacements (Seq.sortOn StickerPlacement.timestamp (Object.stickers spell)))
         State.modify'
@@ -10327,23 +10341,22 @@ mergeComponents permanent = case Object.source permanent of
     alone component = Just [ShownComponent.MkShownComponent component (Object.face permanent) (Object.facing permanent)]
 
 -- CR 730.2's OTHER side: "the card or copy that represented that object", which
--- is what the merging spell contributes to the component list. Two of rule
--- 730.2's three nouns, since only these two can be a spell on the stack -- a
--- token is never one (CR 111.1) and a melded permanent is put onto the
--- battlefield (CR 701.42a).
+-- is what the merging spell contributes to the component list. Only a card or a
+-- copy of one can be a spell on the stack -- a token is never one (CR 111.1) and
+-- a melded permanent is put onto the battlefield (CR 701.42a).
 --
--- The COPY arm is CR 707.10's own sentence: "a copy of a spell is itself a
--- spell", so a copy of a mutating creature spell is a mutating creature spell
--- and CR 702.140c merges it like the original. It stays a copy through the
--- merge because CR 608.3f turns one into a token only "as it is put onto the
--- battlefield", which rule 702.140c is the resolution that never does.
+-- The COPY arm is a token: a copy of a permanent spell becomes one as it
+-- resolves (CR 111.13, 707.10f), merging included, so CR 730.2d makes the
+-- merged permanent a token while the copy is topmost. Parun.MutateSpec's "CR
+-- 730.2d/111.13 a merged permanent whose topmost component is a spell copy is a
+-- token" proves it.
 --
 -- Nothing where the object is no spell at all, which `merge` and `mergeable`
 -- both report as a refusal.
 mergingComponent :: Object.Object -> Maybe MergeComponent.MergeComponent
 mergingComponent spell = case Object.source spell of
   Source.OfCard pid -> Just (MergeComponent.OfCard (Game.componentCardOf spell pid))
-  Source.OfSpellCopy pid -> Just (MergeComponent.OfSpellCopy pid)
+  Source.OfSpellCopy pid -> Just (MergeComponent.OfToken pid)
   -- A copy of a card is a spell once cast, and no such spell parun mints is a
   -- mutating creature spell: CR 722.3c's "has only the characteristics of that
   -- permanent's prepare spell" leaves rule 702.140a's mutate out, and CR 707.12's
@@ -10977,6 +10990,25 @@ madnessChoice pid oid payloads = do
 shuffleLibrary :: PlayerId -> Game ()
 shuffleLibrary = shuffleLibraryExcept Set.empty
 
+-- CR 701.24g: a redirect's shuffle of `pid`'s library, leaving out the cards
+-- the open arrivingTogether scope already put at an end of it (noteArrival),
+-- which then go back to that end in the order they held. A card put there LATER
+-- in the scope lands on the shuffled library and needs nothing. Still one
+-- Prompt.Shuffle and one Shuffle event (CR 701.24f). Parun.ZoneReplacementSpec's
+-- CR 701.24g case is the proof, in both orders of the moves.
+shuffleAroundArrivals :: PlayerId -> Game ()
+shuffleAroundArrivals pid = do
+  pending <- State.gets (foldMap Foldable.toList . GameState.arrivals)
+  let placedAt position = Set.fromList [oid | arrival <- pending, Arrival.owner arrival == pid, Arrival.end arrival == ArrivalEnd.IntoLibrary position, oid <- Foldable.toList (Arrival.cards arrival)]
+      tops = placedAt LibraryPosition.Top
+      bottoms = placedAt LibraryPosition.Bottom
+      regroup pile =
+        let (top, rest) = Seq.partition (`Set.member` tops) pile
+            (bottom, middle) = Seq.partition (`Set.member` bottoms) rest
+         in top <> middle <> bottom
+  shuffleLibraryExcept (tops <> bottoms) pid
+  State.modify' (\g -> g {GameState.library = Map.adjust regroup pid (GameState.library g)})
+
 -- shuffleLibrary leaving `leftOut` out: CR 701.24b's found cards, which "aren't
 -- included in the shuffle, even though they remain in the library". They keep
 -- their places, and are not reordered, so none of them becomes a new object.
@@ -11264,8 +11296,7 @@ controllerTurnScoped cond = case cond of
   -- and Spirit Mascot and Dutiful Knowledge Seeker print no turn.
   TriggerCondition.LeavesZone t -> Turn.isControllersTurn (LeavesZoneTrigger.scope t)
   TriggerCondition.PutIntoZone t -> Turn.isControllersTurn (PutIntoZoneTrigger.scope t)
-  TriggerCondition.SpellOrAbilityCounters _ -> False
-  TriggerCondition.AbilityIsCountered -> False
+  TriggerCondition.Countered _ -> False
   -- Damage can be prevented on anybody's turn.
   TriggerCondition.DamageToPlayerPrevented _ -> False
   -- Damage can be prevented on anybody's turn, the arm above's reason.

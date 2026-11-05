@@ -811,7 +811,7 @@ confinedToSource pat = case pat of
 reachesCardComponents :: (ObjectId -> Filter.View) -> GameState -> ReplacementCandidate -> Filter.Type.Filter Keyword.Type.Keyword -> ObjectId -> Bool
 reachesCardComponents viewOf gs candidate filter_ oid =
   Filter.token (viewOf oid)
-    && maybe False (any Game.componentIsCard . Game.componentsOf . Object.source) (Game.lookupObject oid gs)
+    && maybe False (not . all Game.componentIsToken . Game.componentsOf . Object.source) (Game.lookupObject oid gs)
     && Filter.matches (candidateContext gs candidate) ((viewOf oid) {Filter.token = False}) filter_
 
 -- CR 730.3e: is this zone-change row applicable to the moving object only

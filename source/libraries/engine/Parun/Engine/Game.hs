@@ -1247,7 +1247,7 @@ printingIdOfSource source = case source of
 -- FLATTENED past a melded component (CR 730.2's mutate onto a melded permanent):
 -- CR 730.3 puts "each of the individual components" into the appropriate zone
 -- and CR 712.21 says a melded permanent is two cards there, so the answer stays
--- a list of cards, tokens and copies and no reader of it has to compose the two
+-- a list of cards and tokens and no reader of it has to compose the two
 -- rules itself. The unflattened list, which CR 730.2a's topmost read wants, is
 -- `mergeComponentsOf` below.
 componentsOf :: Source.Source -> Seq.Seq MergeComponent.MergeComponent
@@ -1274,7 +1274,6 @@ cardComponentsOf component = case component of
   MergeComponent.OfMeld meld -> meldCardComponents meld
   MergeComponent.OfCard _ -> Seq.singleton component
   MergeComponent.OfToken _ -> Seq.singleton component
-  MergeComponent.OfSpellCopy _ -> Seq.singleton component
 
 -- CR 701.42a's two cards as components of their own. Shared by the two arms that
 -- need them so that a melded permanent and a melded COMPONENT cannot come to
@@ -1299,11 +1298,6 @@ printingOfComponent component = case component of
   -- Object.duplicate, which `representComponent` writes back.
   MergeComponent.OfCard card -> ComponentCard.printing card
   MergeComponent.OfToken pid -> pid
-  -- CR 707.2: the copiable values a copy of a spell reports are the copied
-  -- spell's, so the printing it names is the one its characteristics come off --
-  -- Parun.Types.Source's OfSpellCopy arm carries the same payload for the same
-  -- reason.
-  MergeComponent.OfSpellCopy pid -> pid
   MergeComponent.OfMeld meld -> MeldSource.result meld
 
 -- `cardOf` for a member of a HAND. An emblem answers Nothing where `cardOf`
@@ -1822,7 +1816,6 @@ referenceFaces gs =
         MergeComponent.OfCard card -> Seq.singleton (ComponentCard.printing card)
         MergeComponent.OfMeld meld -> Seq.fromList (fmap ComponentCard.printing (NonEmpty.toList (MeldSource.components meld)))
         MergeComponent.OfToken _ -> Seq.empty
-        MergeComponent.OfSpellCopy _ -> Seq.empty
       pids =
         Set.unions
           [ Set.fromList (foldMap (Foldable.toList . ofSource . Object.source) (Map.elems (GameState.objects gs))),
@@ -2792,7 +2785,8 @@ sourceIsToken source = case source of
 -- CR 730.2d / 111.1: is this component of a merged permanent a token rather than
 -- a card? The same classification as `sourceIsToken` one type over, and the read
 -- CR 730.3's departure takes to put each component into the zone its own kind
--- calls for.
+-- calls for. Every component is one or the other, so its negation is CR 108.2's
+-- card, which CR 903.9c's split reads.
 componentIsToken :: MergeComponent.MergeComponent -> Bool
 componentIsToken component = case component of
   MergeComponent.OfToken _ -> True
@@ -2800,40 +2794,15 @@ componentIsToken component = case component of
   -- CR 108.2b / 701.42b: both cards of a meld pair are Magic cards, and a token
   -- cannot be one of them. `sourceIsToken`'s OfMeld arm answers the same.
   MergeComponent.OfMeld _ -> False
-  -- Not implemented: a merged copy of a permanent spell is a token, being one as
-  -- it resolves (CR 111.13, 707.10f), which makes the permanent one with it on
-  -- top (CR 730.2d) (#6172). Parun.MutateSpec's "CR 730.2d/608.3f a merged
-  -- permanent whose topmost component is a spell copy is no token" pins this arm.
-  MergeComponent.OfSpellCopy _ -> False
-
--- CR 108.2 / 903.9c: is this component of a merged permanent a CARD? Not
--- `componentIsToken` negated, which is the reading CR 730.2d asks for and not
--- this one: rule 730.2's "the card or copy" admits a component that is neither a
--- card nor a token (Parun.Types.MergeComponent's OfSpellCopy arm), and only a
--- card answers True here.
---
--- Two of its readers are the two rules that name a component's CARD --
--- Parun.Engine.Commander's rule 903.9c search for "the card that represents it
--- and is a commander", and Parun.Engine.Event's CR 903.9c split of a departing
--- merged permanent -- so neither can find a commander in a copy interned to the
--- commander's own printing.
-componentIsCard :: MergeComponent.MergeComponent -> Bool
-componentIsCard component = case component of
-  MergeComponent.OfCard _ -> True
-  -- CR 701.42b again: both components of a meld pair are Magic cards.
-  MergeComponent.OfMeld _ -> True
-  MergeComponent.OfToken _ -> False
-  MergeComponent.OfSpellCopy _ -> False
 
 -- CR 108.2: the card one component of `componentsOf` is, which carries what that
--- card keeps (Parun.Types.ComponentCard). Nothing for a token or a copy, and for
+-- card keeps (Parun.Types.ComponentCard). Nothing for a token, and for
 -- a melded component, which `componentsOf` has already expanded into its cards.
 cardOfComponent :: MergeComponent.MergeComponent -> Maybe ComponentCard.ComponentCard
 cardOfComponent component = case component of
   MergeComponent.OfCard card -> Just card
   MergeComponent.OfMeld _ -> Nothing
   MergeComponent.OfToken _ -> Nothing
-  MergeComponent.OfSpellCopy _ -> Nothing
 
 -- CR 730.2/730.3: what a component of a merged permanent represents once it is
 -- an object of its own again -- the card representing itself (CR 108.2), or the
@@ -2843,10 +2812,6 @@ sourceOfComponent :: MergeComponent.MergeComponent -> Source.Source
 sourceOfComponent component = case component of
   MergeComponent.OfCard card -> Source.OfCard (ComponentCard.printing card)
   MergeComponent.OfToken pid -> Source.OfToken pid
-  -- The copy it still is, so CR 704.5e removes it in whatever zone CR 730.3 put
-  -- it -- the same road the token arm above takes to CR 111.7, one rule over.
-  -- Parun.Engine.Sba's OfSpellCopy arm is what performs it.
-  MergeComponent.OfSpellCopy pid -> Source.OfSpellCopy pid
   -- The melded permanent it still is (CR 730.2c). Neither reader can be handed
   -- one: both take `componentsOf`, which has already expanded a melded component
   -- into CR 712.21's two cards, so this arm is the type's answer rather than a
@@ -2868,7 +2833,6 @@ representComponent component object =
    in case component of
         MergeComponent.OfCard card -> represented {Object.identity = ComponentCard.identity card, Object.duplicate = ComponentCard.duplicate card}
         MergeComponent.OfToken _ -> represented {Object.duplicate = Nothing}
-        MergeComponent.OfSpellCopy _ -> represented {Object.duplicate = Nothing}
         MergeComponent.OfMeld _ -> represented {Object.duplicate = Nothing}
 
 -- CR 730.2 / 701.42a: the card a CARD object is as it becomes one of a merged
