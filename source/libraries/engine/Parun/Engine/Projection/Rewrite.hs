@@ -1764,6 +1764,7 @@ rewriteDamageRewrite pairs rewrite = case rewrite of
   DamageRewrite.RedirectNext _ _ -> rewrite
   DamageRewrite.PreventAll -> rewrite
   DamageRewrite.PreventRemovingShieldCounter -> rewrite
+  DamageRewrite.PreventRemovingCounters _ -> rewrite
   DamageRewrite.PreventNext _ -> rewrite
   DamageRewrite.PreventAllBut _ -> rewrite
   DamageRewrite.PreventUpTo quantity -> DamageRewrite.PreventUpTo (rewriteQuantity pairs quantity)

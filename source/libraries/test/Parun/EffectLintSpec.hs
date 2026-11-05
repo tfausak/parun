@@ -841,6 +841,8 @@ engineMintedDamage :: DamageRewrite.DamageRewrite (Effect.Effect Card.Type.Card 
 engineMintedDamage rewrite = case rewrite of
   DamageRewrite.PreventNext _ -> True
   DamageRewrite.PreventRemovingShieldCounter -> True
+  -- Rock Hydra prints its own.
+  DamageRewrite.PreventRemovingCounters _ -> False
   DamageRewrite.PreventAll -> False
   -- CR 615.10's counterpart to that first rule: a shield with an amount that a
   -- STATIC ability prints (Temple Altisaur), which names nothing an engine has to
@@ -981,6 +983,7 @@ preventsDamage rewrite = case rewrite of
   DamageRewrite.PreventAllBut _ -> True
   DamageRewrite.PreventUpTo _ -> True
   DamageRewrite.PreventRemovingShieldCounter -> True
+  DamageRewrite.PreventRemovingCounters _ -> True
   DamageRewrite.SetAmount _ -> False
   DamageRewrite.Scale _ -> False
   DamageRewrite.Redirect _ -> False

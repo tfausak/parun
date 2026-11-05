@@ -2096,6 +2096,7 @@ damageRewriteEffects rewrite = case rewrite of
   DamageRewrite.RunEffects effects -> Foldable.toList effects
   DamageRewrite.PreventAll -> []
   DamageRewrite.PreventRemovingShieldCounter -> []
+  DamageRewrite.PreventRemovingCounters _ -> []
   DamageRewrite.PreventNext _ -> []
   DamageRewrite.PreventAllBut _ -> []
   DamageRewrite.PreventUpTo _ -> []
@@ -2119,6 +2120,7 @@ damageRewriteReads rewrite = case rewrite of
   DamageRewrite.RedirectNext _ _ -> ([], [])
   DamageRewrite.PreventAll -> ([], [])
   DamageRewrite.PreventRemovingShieldCounter -> ([], [])
+  DamageRewrite.PreventRemovingCounters _ -> ([], [])
   DamageRewrite.PreventNext _ -> ([], [])
   DamageRewrite.PreventAllBut _ -> ([], [])
   DamageRewrite.PreventUpTo quantity -> ([], [quantity])

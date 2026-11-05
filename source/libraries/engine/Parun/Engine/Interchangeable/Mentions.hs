@@ -1273,6 +1273,7 @@ damageRewriteNames :: (Monoid r) => Asking r -> (effect -> r) -> DamageRewrite.D
 damageRewriteNames asking onEffect x = case x of
   DamageRewrite.PreventAll -> mempty
   DamageRewrite.PreventRemovingShieldCounter -> mempty
+  DamageRewrite.PreventRemovingCounters _kind -> mempty
   DamageRewrite.PreventNext _natural -> mempty
   DamageRewrite.PreventAllBut _natural -> mempty
   DamageRewrite.PreventUpTo quantity -> quantityNames asking quantity

@@ -8,6 +8,7 @@ import qualified Parun.Codec.Effect as Effect
 import qualified Parun.Codec.GrantedAbility as GrantedAbility
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
+import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.DamageRewrite as DamageRewrite
 import qualified Parun.Types.Destroy as Destroy
 import qualified Parun.Types.Effect as Effect.Type
@@ -37,6 +38,13 @@ spec s = Spec.describe s "Parun.Codec.DamageRewrite" $ do
       (DamageRewrite.codec (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
       DamageRewrite.PreventRemovingShieldCounter
       " {\"type\":\"PreventRemovingShieldCounter\"} "
+  -- Rock Hydra's prevention, naming the kind of counter it spends.
+  Spec.it s "PreventRemovingCounters" $
+    Common.assertCodec
+      s
+      (DamageRewrite.codec (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      (DamageRewrite.PreventRemovingCounters CounterKind.PlusOnePlusOne)
+      " {\"type\":\"PreventRemovingCounters\",\"value\":{\"type\":\"PlusOnePlusOne\"}} "
   -- CR 615.7's shield, whose Natural is what REMAINS of it. Baked by Resolve's
   -- PreventNextDamage arm and never authored on a card, so this codec is the
   -- only place the wire form is pinned.

@@ -2602,6 +2602,11 @@ applyInertly candidate rewrite event = do
     -- removes one counter per application whatever it prevented, here nothing --
     -- so it is the half of the clause that survives unpreventable damage.
     DamageRewrite.PreventRemovingShieldCounter -> removeCounters (ReplacementCandidate.source candidate) CounterKind.Shield 1
+    -- Rock Hydra's ruling: "you still remove a +1/+1 counter from it for each 1
+    -- damage dealt". `removeCounters` stops at the counters there are.
+    DamageRewrite.PreventRemovingCounters kind -> case event of
+      ProposedEvent.WouldDealDamage de -> removeCounters (ReplacementCandidate.source candidate) kind (DamageEvent.amount de)
+      _ -> pure ()
     -- CR 615.7's countdown shield has no additional effect of its own; its
     -- remaining amount is exactly the "existing damage prevention shield" the
     -- rule's last sentence protects.
@@ -3993,6 +3998,19 @@ apply settle batch applied batchPrevented candidate event =
       DamageRewrite.PreventRemovingShieldCounter -> do
         removeCounters (ReplacementCandidate.source candidate) CounterKind.Shield 1
         pure Nothing
+      -- Rock Hydra: one counter and 1 damage at a time, as far as the counters go.
+      -- Taken here rather than by a CR 615.5 rider, whose removal waits for the
+      -- batch's end and whose "that much" is 0 for unpreventable damage
+      -- (`applyInertly`). `Replacement.ceilingLeft` refuses a row with no counter.
+      DamageRewrite.PreventRemovingCounters kind -> do
+        gs <- State.get
+        let source = ReplacementCandidate.source candidate
+            amount = DamageEvent.amount de
+            prevented = min (Projection.counterCount kind source gs) amount
+        removeCounters source kind prevented
+        if prevented >= amount
+          then pure Nothing
+          else pure (Just (ProposedEvent.WouldDealDamage de {DamageEvent.amount = amount - prevented}))
       -- CR 615.7's shield covers as much of THIS event as it has left, and
       -- whatever it could not cover survives as a smaller event of the same
       -- source, recipient and riders. Nothing when it covered all of it, which

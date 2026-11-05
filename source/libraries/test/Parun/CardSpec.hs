@@ -5269,6 +5269,7 @@ damageRewriteFilters rewrite = case rewrite of
   DamageRewrite.RedirectNext _ _ -> []
   DamageRewrite.PreventAll -> []
   DamageRewrite.PreventRemovingShieldCounter -> []
+  DamageRewrite.PreventRemovingCounters _ -> []
   DamageRewrite.PreventNext _ -> []
   DamageRewrite.PreventAllBut _ -> []
   DamageRewrite.PreventUpTo quantity -> quantityFilters quantity

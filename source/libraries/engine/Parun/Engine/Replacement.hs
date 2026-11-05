@@ -683,6 +683,8 @@ unspent rewrite = case rewrite of
   -- shield spent to nothing is gone from the gathered list rather than present and
   -- refused here.
   DamageRewrite.PreventRemovingShieldCounter -> True
+  -- Spent by its counters too, and `ceilingLeft` refuses the row without one.
+  DamageRewrite.PreventRemovingCounters _ -> True
   DamageRewrite.SetAmount _ -> True
   DamageRewrite.Scale _ -> True
   -- CR 614.9's uncounted redirection has nothing to spend: it moves the
@@ -716,6 +718,8 @@ unspent rewrite = case rewrite of
 admitsRecipient :: ObjectId -> Rewrite -> DamageEvent.DamageEvent -> Bool
 admitsRecipient src rewrite de = case rewrite of
   DamageRewrite.PreventRemovingShieldCounter -> Recipient.objectOf (DamageEvent.target de) == Just src
+  -- The counters come off the row's own permanent, so it shields only that.
+  DamageRewrite.PreventRemovingCounters _ -> Recipient.objectOf (DamageEvent.target de) == Just src
   DamageRewrite.PreventAll -> True
   DamageRewrite.PreventNext _ -> True
   DamageRewrite.PreventAllBut _ -> True
@@ -2511,6 +2515,7 @@ countedCeiling rewrite = case rewrite of
   DamageRewrite.PreventUpTo _ -> True
   DamageRewrite.PreventAll -> False
   DamageRewrite.PreventRemovingShieldCounter -> False
+  DamageRewrite.PreventRemovingCounters _ -> False
   DamageRewrite.PreventNext _ -> False
   DamageRewrite.PreventAllBut _ -> False
   DamageRewrite.SetAmount _ -> False
@@ -3160,6 +3165,8 @@ remainingOf rewrite = case rewrite of
   -- renews it rather than counting it down.
   DamageRewrite.PreventUpTo _ -> Nothing
   DamageRewrite.PreventRemovingShieldCounter -> Nothing
+  -- Its count is on the permanent, so `allocationSupply` reads the board for it.
+  DamageRewrite.PreventRemovingCounters _ -> Nothing
   DamageRewrite.SetAmount _ -> Nothing
   DamageRewrite.Scale _ -> Nothing
   DamageRewrite.Redirect _ -> Nothing
@@ -3203,11 +3210,9 @@ partialCoverage gs allowances candidate event = case (ReplacementCandidate.effec
     -- event rather than splitting it -- so nothing to split UNLESS the batch's
     -- allocation gave it less than the whole event, which is the one share it
     -- must not exceed here.
-    DamageRewrite.PreventNext _
-      | Just allowed <- Map.lookup (ReplacementCandidate.identity candidate) allowances,
-        allowed < DamageEvent.amount de ->
-          Just allowed
-      | otherwise -> Nothing
+    DamageRewrite.PreventNext _ -> shareBelowEvent allowances candidate de
+    -- Counted in the same unit, so the same one share.
+    DamageRewrite.PreventRemovingCounters _ -> shareBelowEvent allowances candidate de
     DamageRewrite.PreventAll -> Nothing
     DamageRewrite.PreventAllBut _ -> Nothing
     DamageRewrite.PreventUpTo _ -> Nothing
@@ -3224,6 +3229,11 @@ partialCoverage gs allowances candidate event = case (ReplacementCandidate.effec
     DamageRewrite.TurnFaceUp -> Nothing
     DamageRewrite.AlsoToSourceController -> Nothing
   _ -> Nothing
+
+-- CR 615.7: the share of a countdown the batch's allocation gave this event,
+-- where that is less than the whole event.
+shareBelowEvent :: Map.Map CandidateId Natural -> ReplacementCandidate -> DamageEvent.DamageEvent -> Maybe Natural
+shareBelowEvent allowances candidate de = Monad.mfilter (< DamageEvent.amount de) (Map.lookup (ReplacementCandidate.identity candidate) allowances)
 
 -- The two halves of a damage event `partialCoverage` split: the covered part,
 -- which the candidate is applied to, and the residue, which continues through
@@ -3326,6 +3336,8 @@ prevents rewrite = case rewrite of
   DamageRewrite.PreventUpTo _ -> True
   -- CR 122.1c says "prevent that damage", so CR 615.1a makes this one too.
   DamageRewrite.PreventRemovingShieldCounter -> True
+  -- Rock Hydra says "prevent that 1 damage".
+  DamageRewrite.PreventRemovingCounters _ -> True
   DamageRewrite.SetAmount _ -> False
   DamageRewrite.Scale _ -> False
   -- CR 614.9's redirection is a rule-614 replacement. Turn the Tables never says
@@ -3363,6 +3375,8 @@ prevents rewrite = case rewrite of
 spentInertly :: Rewrite -> Bool
 spentInertly rewrite = case rewrite of
   DamageRewrite.PreventRemovingShieldCounter -> True
+  -- Rock Hydra's ruling: the counters go for damage that can't be prevented.
+  DamageRewrite.PreventRemovingCounters _ -> True
   DamageRewrite.PreventNext _ -> False
   -- CR 615.10's static shield has no stored amount at all, and no additional
   -- effect of its own, so there is nothing for CR 615.12's middle clause to run
@@ -3580,6 +3594,7 @@ redirects rewrite = case rewrite of
   DamageRewrite.PreventAllBut _ -> False
   DamageRewrite.PreventUpTo _ -> False
   DamageRewrite.PreventRemovingShieldCounter -> False
+  DamageRewrite.PreventRemovingCounters _ -> False
   -- CR 614.1a's two amount rewrites leave the recipient where it was, so neither
   -- deals the damage "instead to another permanent or player".
   DamageRewrite.SetAmount _ -> False
@@ -3931,9 +3946,8 @@ spendDown countdown =
 -- entry per (row, chooser) as (the row's identity, what it has left, whose
 -- choice it is, the batch positions it is contested over).
 --
--- The two counted rewrites and no others, read off `remainingOf` -- the same
--- total classification the write-back uses, so a third counted rewrite is
--- allocated rather than silently ordered.
+-- The counted rewrites and no others, read off `allocationSupply`, so another
+-- counted rewrite is allocated rather than silently ordered.
 --
 -- The CONTEST is judged over the whole row before the split by chooser, which is
 -- the rule's own unit: the pool is exhausted by everything it admits, not by one
@@ -3947,16 +3961,26 @@ allocations gs threads =
       grants = Projection.controlGrants gs
       allocationsBy candidate = Maybe.fromMaybe [] $ do
         rewrite <- damageRewriteOf candidate
-        left <- remainingOf rewrite
+        left <- allocationSupply gs candidate rewrite
         let hits = hitsOf viewOf grants gs indexed candidate
         Monad.guard (length hits >= 2)
         Monad.guard (left < sum (fmap (DamageEvent.amount . snd) hits))
+        -- Damage that can't be prevented is all dealt, whichever event spends the
+        -- counters (CR 615.12), so a batch of nothing else divides nothing.
+        Monad.guard (not (prevents rewrite) || any (preventable viewOf gs . snd) hits)
         pure
           ( fmap
               (\(pid, ps) -> (ReplacementCandidate.identity candidate, left, pid, Set.toAscList (Set.fromList ps)))
               (Map.toList (Map.fromListWith (<>) (Maybe.mapMaybe (\(position, event) -> fmap (\pid -> (pid, [position])) (chooserOf gs (ProposedEvent.WouldDealDamage event))) hits)))
           )
    in concatMap allocationsBy (collect gs (GameState.replacements gs))
+
+-- What a counted rewrite has left to divide: the number on its row
+-- (`remainingOf`), or the counters on its permanent for one spending those.
+allocationSupply :: GameState -> ReplacementCandidate -> Rewrite -> Maybe Natural
+allocationSupply gs candidate rewrite = case rewrite of
+  DamageRewrite.PreventRemovingCounters kind -> Just (Projection.counterCount kind (ReplacementCandidate.source candidate) gs)
+  _ -> remainingOf rewrite
 
 -- The damage rewrite a candidate carries, and Nothing for a candidate that
 -- rewrites some other class of event.
@@ -4002,8 +4026,10 @@ type Passage = (CandidateId, DamageEvent.DamageEvent)
 
 -- CR 702.64b / 615.10: what is left of a PreventUpTo row's ceiling for this
 -- event's source and recipient, given what the row has prevented of it earlier
--- in the batch (`Tally`). Nothing for every other rewrite; Event.loop's filter
--- refuses a row at Just 0, so CR 616.1 never offers it.
+-- in the batch (`Tally`). A PreventRemovingCounters row's is the counters its
+-- permanent still has ("if it has a +1/+1 counter on it"), each spent as it is
+-- applied so the batch needs no tally. Nothing for every other rewrite;
+-- Event.loop's filter refuses a row at Just 0, so CR 616.1 never offers it.
 ceilingLeft :: GameState -> Tally -> ReplacementCandidate -> ProposedEvent -> Maybe Natural
 ceilingLeft gs (earlier, _) candidate event = case (ReplacementCandidate.effect candidate, event) of
   (ReplacementEffect.DamageR (DamageR.MkDamageR _ rewrite _), ProposedEvent.WouldDealDamage de) -> case rewrite of
@@ -4017,6 +4043,7 @@ ceilingLeft gs (earlier, _) candidate event = case (ReplacementCandidate.effect 
                 Just n <- [Map.lookup (DamageEvent.target de) =<< Map.lookup (DamageEvent.source de) (Prevention.amounts prevention)]
               ]
        in Just (ceiling_ - min ceiling_ spent)
+    DamageRewrite.PreventRemovingCounters kind -> Just (Projection.counterCount kind (ReplacementCandidate.source candidate) gs)
     DamageRewrite.PreventAll -> Nothing
     DamageRewrite.PreventRemovingShieldCounter -> Nothing
     DamageRewrite.PreventNext _ -> Nothing
@@ -4050,6 +4077,7 @@ floorLeft (_, passed) candidate event = case (ReplacementCandidate.effect candid
        in Just (surviving - min surviving through)
     DamageRewrite.PreventAll -> Nothing
     DamageRewrite.PreventRemovingShieldCounter -> Nothing
+    DamageRewrite.PreventRemovingCounters _ -> Nothing
     DamageRewrite.PreventNext _ -> Nothing
     DamageRewrite.PreventUpTo _ -> Nothing
     DamageRewrite.SetAmount _ -> Nothing
@@ -4222,10 +4250,12 @@ contestedResource gs candidate = case ReplacementCandidate.effect candidate of
     -- `remainingOf`.
     DamageRewrite.PreventNext _ -> Nothing
     DamageRewrite.RedirectNext _ _ -> Nothing
+    -- Rock Hydra's counters go one per 1 damage, so `allocations` divides them.
+    DamageRewrite.PreventRemovingCounters _ -> Nothing
     -- CR 122.1c: one counter per application, so a batch of n events demands n
     -- of them, and the permanent's counters are the supply.
     DamageRewrite.PreventRemovingShieldCounter ->
-      Just (Projection.shieldCounters (ReplacementCandidate.source candidate) gs, Int.toNaturalSaturating . length)
+      Just (Projection.counterCount CounterKind.Shield (ReplacementCandidate.source candidate) gs, Int.toNaturalSaturating . length)
     -- Fog is unlimited for its duration, so there is nothing to allocate: it
     -- prevents every event it admits and the order cannot matter.
     DamageRewrite.PreventAll -> Nothing
