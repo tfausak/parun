@@ -820,6 +820,7 @@ anyTriggerReads event = case event of
   GameEvent.BecameAttached {} -> True
   GameEvent.BecameUnattached {} -> True
   GameEvent.LeftTheGame {} -> True
+  GameEvent.ArrivedUnseen {} -> False
   GameEvent.LostTheGame {} -> True
   GameEvent.LandPlayed {} -> True
   GameEvent.ManifestedDread {} -> True

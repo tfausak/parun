@@ -126,6 +126,7 @@ codec =
       Arm.payload "BecameAttached" BecameAttached.codec GameEvent.BecameAttached (\x -> case x of GameEvent.BecameAttached y -> Just y; _ -> Nothing),
       Arm.payload "BecameUnattached" BecameUnattached.codec GameEvent.BecameUnattached (\x -> case x of GameEvent.BecameUnattached y -> Just y; _ -> Nothing),
       Arm.payload "LeftTheGame" LeftTheGame.codec GameEvent.LeftTheGame (\x -> case x of GameEvent.LeftTheGame y -> Just y; _ -> Nothing),
+      Arm.payload "ArrivedUnseen" ObjectId.codec GameEvent.ArrivedUnseen (\x -> case x of GameEvent.ArrivedUnseen y -> Just y; _ -> Nothing),
       Arm.payload "LostTheGame" PlayerId.codec GameEvent.LostTheGame (\x -> case x of GameEvent.LostTheGame y -> Just y; _ -> Nothing),
       Arm.payload "PlayerActed" (PlayerActed.codec PlayerId.codec) GameEvent.PlayerActed (\x -> case x of GameEvent.PlayerActed y -> Just y; _ -> Nothing),
       Arm.payload "LandPlayed" LandPlayed.codec GameEvent.LandPlayed (\x -> case x of GameEvent.LandPlayed y -> Just y; _ -> Nothing),
@@ -202,6 +203,7 @@ tagOf x = case x of
   GameEvent.BecameAttached {} -> "BecameAttached"
   GameEvent.BecameUnattached {} -> "BecameUnattached"
   GameEvent.LeftTheGame {} -> "LeftTheGame"
+  GameEvent.ArrivedUnseen {} -> "ArrivedUnseen"
   GameEvent.LostTheGame {} -> "LostTheGame"
   GameEvent.LandPlayed {} -> "LandPlayed"
   GameEvent.PlayerActed {} -> "PlayerActed"

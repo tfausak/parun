@@ -110,6 +110,7 @@ witnessed pid logged = case LoggedEvent.event logged of
   GameEvent.BecameAttached {} -> Visibility.Visible
   GameEvent.BecameUnattached {} -> Visibility.Visible
   GameEvent.LeftTheGame {} -> Visibility.Visible
+  GameEvent.ArrivedUnseen {} -> Visibility.Visible
   GameEvent.LostTheGame {} -> Visibility.Visible
   GameEvent.LandPlayed {} -> Visibility.Visible
   GameEvent.ManifestedDread {} -> Visibility.Visible

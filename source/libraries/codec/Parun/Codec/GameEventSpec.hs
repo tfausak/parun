@@ -534,6 +534,13 @@ spec s = Spec.describe s "Parun.Codec.GameEvent" $ do
       GameEvent.codec
       (GameEvent.LeftTheGame (LeftTheGame.MkLeftTheGame (ObjectId.MkObjectId 7) Zone.Battlefield))
       " {\"type\":\"LeftTheGame\",\"value\":{\"object\":7,\"from\":{\"type\":\"Battlefield\"}}} "
+  -- CR 702.26n. The new object in exile.
+  Spec.it s "ArrivedUnseen" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.ArrivedUnseen (ObjectId.MkObjectId 7))
+      " {\"type\":\"ArrivedUnseen\",\"value\":7} "
   -- CR 603.9. One player id: the player who lost.
   Spec.it s "LostTheGame" $
     Common.assertCodec

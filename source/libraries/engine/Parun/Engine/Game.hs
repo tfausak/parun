@@ -3221,6 +3221,7 @@ castOf event = case event of
   GameEvent.BecameAttached {} -> Nothing
   GameEvent.BecameUnattached {} -> Nothing
   GameEvent.LeftTheGame _ -> Nothing
+  GameEvent.ArrivedUnseen _ -> Nothing
   GameEvent.Milled {} -> Nothing
   GameEvent.PlayerActed _ -> Nothing
   GameEvent.LandPlayed {} -> Nothing
@@ -3348,6 +3349,7 @@ abilityResolved event = case event of
   GameEvent.BecameAttached {} -> Nothing
   GameEvent.BecameUnattached {} -> Nothing
   GameEvent.LeftTheGame _ -> Nothing
+  GameEvent.ArrivedUnseen _ -> Nothing
   GameEvent.Milled {} -> Nothing
   GameEvent.PlayerActed _ -> Nothing
   GameEvent.LandPlayed {} -> Nothing
@@ -3435,6 +3437,7 @@ discardOf event = case event of
   GameEvent.BecameAttached {} -> Nothing
   GameEvent.BecameUnattached {} -> Nothing
   GameEvent.LeftTheGame _ -> Nothing
+  GameEvent.ArrivedUnseen _ -> Nothing
   GameEvent.Milled {} -> Nothing
   GameEvent.PlayerActed _ -> Nothing
   GameEvent.LandPlayed {} -> Nothing
@@ -3598,6 +3601,7 @@ movedChange event = case event of
   GameEvent.BecameAttached {} -> Nothing
   GameEvent.BecameUnattached {} -> Nothing
   GameEvent.LeftTheGame _ -> Nothing
+  GameEvent.ArrivedUnseen _ -> Nothing
   GameEvent.Milled {} -> Nothing
   GameEvent.PlayerActed _ -> Nothing
   GameEvent.LandPlayed {} -> Nothing
@@ -3704,6 +3708,7 @@ damageDealt event = case event of
   GameEvent.BecameAttached {} -> Nothing
   GameEvent.BecameUnattached {} -> Nothing
   GameEvent.LeftTheGame _ -> Nothing
+  GameEvent.ArrivedUnseen _ -> Nothing
   GameEvent.Milled {} -> Nothing
   GameEvent.PlayerActed _ -> Nothing
   GameEvent.LandPlayed {} -> Nothing
@@ -3989,6 +3994,7 @@ lifeChangeOf direction event = case event of
   GameEvent.BecameAttached {} -> Nothing
   GameEvent.BecameUnattached {} -> Nothing
   GameEvent.LeftTheGame _ -> Nothing
+  GameEvent.ArrivedUnseen _ -> Nothing
   GameEvent.Milled {} -> Nothing
   GameEvent.PlayerActed _ -> Nothing
   GameEvent.LandPlayed {} -> Nothing

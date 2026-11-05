@@ -1230,6 +1230,7 @@ damageOf event = case event of
   GameEvent.BecameAttached {} -> Nothing
   GameEvent.BecameUnattached {} -> Nothing
   GameEvent.LeftTheGame _ -> Nothing
+  GameEvent.ArrivedUnseen _ -> Nothing
   GameEvent.Milled {} -> Nothing
   GameEvent.PlayerActed _ -> Nothing
   GameEvent.LandPlayed {} -> Nothing
@@ -1303,6 +1304,7 @@ revealOf event = case event of
   GameEvent.BecameAttached {} -> Nothing
   GameEvent.BecameUnattached {} -> Nothing
   GameEvent.LeftTheGame _ -> Nothing
+  GameEvent.ArrivedUnseen _ -> Nothing
   GameEvent.Milled {} -> Nothing
   GameEvent.PlayerActed _ -> Nothing
   GameEvent.LandPlayed {} -> Nothing
@@ -11509,6 +11511,7 @@ abilityTriggeredOf event = case event of
   GameEvent.BecameAttached {} -> Nothing
   GameEvent.BecameUnattached {} -> Nothing
   GameEvent.LeftTheGame _ -> Nothing
+  GameEvent.ArrivedUnseen _ -> Nothing
   GameEvent.Milled {} -> Nothing
   GameEvent.PlayerActed _ -> Nothing
   GameEvent.LandPlayed {} -> Nothing
