@@ -845,8 +845,8 @@ departureSpec s registry = Spec.describe s "Departure" $ do
   --
   -- The MINIMAL PAIR is the same departure without the Ripple: bob's Super
   -- Shredder sees the phased-in Piker exiled, and not the phased-out one
-  -- (docs/decisions.md, "Whether a phased-out permanent a subgame takes leaves
-  -- visibly"). Both legs also see alice's five Swamps leave the game with her
+  -- (docs/decisions.md, "Whether a phased-out permanent exiled with its departed
+  -- controller leaves visibly"). Both legs also see alice's five Swamps leave the game with her
   -- (CR 603.6c).
   Spec.it s "CR 702.26n a phased-out permanent its departed controller doesn't own is exiled at once" $ do
     fixture <- risenFixture s registry

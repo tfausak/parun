@@ -1018,22 +1018,18 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
 
   -- CR 702.26b: "except for rules and effects that specifically mention
   -- phased-out permanents, a phased-out permanent is treated as though it does
-  -- not exist. It can't affect or be affected by anything else in the game." CR
-  -- 729.4a mentions none, so a main-game ability watching for permanents leaving
-  -- the battlefield cannot see this one go -- the same answer CR 702.26k gives
-  -- in so many words for the departure road. What CR 702.26d does settle is that
-  -- the permanent never changed zones, which is why the crossing has to be gated
-  -- on battlefield MEMBERSHIP for the two legs to differ at all.
+  -- not exist", with no limit to one game. CR 729.4 mentions none, so a
+  -- phased-out main-game permanent is not outside the subgame at all.
   --
   -- The paired negative for the case above: the same board, the same seats, the
-  -- same crossing, and the one difference is that the Thragtusk is phased out
-  -- when the subgame's wish reaches it. Carol's control is asserted on the
-  -- phased-out board too, so rule 702.26b's "does not exist" cannot quietly hand
-  -- the creature back to alice and answer for a different reason.
+  -- same wish, and the one difference is that the Thragtusk is phased out.
+  -- Carol's control is asserted on the phased-out board too, so rule 702.26b's
+  -- "does not exist" cannot quietly hand the creature back to alice and answer
+  -- for a different reason.
   --
   -- Built with Parun.Engine.Phasing.phaseOut for Parun.DepartureSpec's reason: no
   -- printing in the pool has both phasing and a leaves-the-battlefield ability.
-  Spec.it s "CR 702.26b a phased-out permanent a subgame takes leaves the main game and triggers nothing" $ do
+  Spec.it s "CR 702.26b a subgame is not offered a phased-out main-game permanent" $ do
     thragtusk <- S.printingOf s registry "Thragtusk"
     let (tusk, g1) = S.addPermanent thragtusk S.alice S.threePlayerGame
         parent = Phasing.phaseOut (PhasedOut.Directly S.carol) tusk (S.giveControl tusk S.carol g1)
@@ -1042,15 +1038,10 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
         after = resolveTriggers (Setup.applyCrossings crossedSub parent)
     Spec.assertEqWith s "it is phased out" (Phasing.isPhasedOut tusk parent) True
     Spec.assertEqWith s "and carol still controls it, so CR 702.26b is not answering by handing it back" (Projection.controllerOf tusk parent) (Just S.carol)
-    -- The fixture's own precondition, and the reading recorded at
-    -- Setup.applyCrossings: CR 729.4 puts every main-game object outside the
-    -- subgame, so the wish reaches this one and the crossing happens at all.
-    Spec.assertEqWith s "the subgame's wish did reach it (CR 729.4)" (Maybe.isJust broughtInId) True
-    -- The rule under test, ahead of every proxy below it.
-    Spec.assertEqWith s "CR 702.26b: no zone-change ability triggered" (fmap (\pid -> S.countOnBattlefieldByName beastToken pid after) [S.alice, S.bob, S.carol]) [0, 0, 0]
-    Spec.assertEqWith s "CR 729.4a: it left the main game just the same" (Game.lookupObject tusk after) Nothing
-    Spec.assertEqWith s "and is no longer recorded as phased out either" (Map.member tusk (GameState.phasedOut after)) False
-    Spec.assertEqWith s "CR 608.2h: its last known information is still filed" (Map.member tusk (GameState.lastKnown after)) True
+    Spec.assertEqWith s "CR 702.26b: it is not outside the subgame" (Map.member tusk (GameState.outsideObjects sub0)) False
+    Spec.assertEqWith s "so the subgame's wish cannot reach it" (Maybe.isJust broughtInId) False
+    Spec.assertEqWith s "it stays in the main game, still phased out" (Phasing.isPhasedOut tusk after) True
+    Spec.assertEqWith s "and no zone-change ability triggered" (fmap (\pid -> S.countOnBattlefieldByName beastToken pid after) [S.alice, S.bob, S.carol]) [0, 0, 0]
   -- CR 729.4a's wider half: "abilities in the main game that trigger on objects
   -- leaving a main-game ZONE will trigger". A card the subgame takes out of a
   -- main-game graveyard has left that graveyard, and it has NOT left the
@@ -1093,35 +1084,6 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
     Spec.assertEqWith s "and her hand started empty" (S.handSize S.alice parent) 0
     Spec.assertEqWith s "the subgame's wish reached it (CR 729.4)" (Maybe.isJust broughtInId) True
     Spec.assertEqWith s "CR 729.4a: it left the main game" (Game.lookupObject tusk after) Nothing
-
-  -- CR 702.26b again, this time against CR 604.2's handover rather than the
-  -- event: a phased-out permanent "is treated as though it does not exist", so
-  -- its static ability was generating no effect there is anything to continue.
-  -- One gate serves both, GameState.battlefield membership, which is the reading
-  -- Departure.objectsLeaveWith records for the other road out of the game.
-  --
-  -- A PAIR differing in the phase-out alone -- same Song, same Statue, same
-  -- crossing -- since a phased-out Song animates nothing while it is out there
-  -- either, and a negative assembled on its own board could not tell the two
-  -- readings apart. Parun.OutsideTheGameSpec's Death Wish case proves the
-  -- phased-in leg at gameplay level; this one is here for the gate.
-  Spec.it s "CR 702.26b a phased-out Titania's Song a subgame takes hands nothing over" $ do
-    titaniasSong <- S.printingOf s registry "Titania's Song"
-    jadeStatue <- S.printingOf s registry "Jade Statue"
-    let (songId, g1) = S.addPermanent titaniasSong S.alice (Setup.emptyGame S.bothPlayers)
-        (statueId, phasedIn) = S.addPermanent jadeStatue S.alice g1
-        phasedOut = Phasing.phaseOut (PhasedOut.Directly S.alice) songId phasedIn
-        crossFrom parent = Setup.applyCrossings (snd (Event.bringInFrom OutsideDestination.Hand S.alice songId (Setup.subgameStateFrom S.alice parent))) parent
-        afterIn = crossFrom phasedIn
-        afterOut = crossFrom phasedOut
-    -- The pair's one difference, on the boards going in.
-    Spec.assertEqWith s "CR 613.4b the phased-in Song animates the Statue as a 4/4" (S.powerToughnessOf statueId phasedIn) (Just (4, 4))
-    Spec.assertEqWith s "CR 702.26b the phased-out one animates nothing" (S.powerToughnessOf statueId phasedOut) Nothing
-    -- The gate, ahead of the proxies.
-    Spec.assertEqWith s "CR 702.26b: the phased-out Song hands nothing over as it leaves the game" (S.powerToughnessOf statueId afterOut) Nothing
-    Spec.assertEqWith s "CR 604.2: where the phased-in one's effect goes on applying" (S.powerToughnessOf statueId afterIn) (Just (4, 4))
-    Spec.assertEqWith s "and it is a stored effect on each leg, none and CR 613.6's four parts" (length (GameState.continuousEffects afterOut), length (GameState.continuousEffects afterIn)) (0, 4)
-    Spec.assertEqWith s "CR 729.4a: both legs took the Song out of the main game" (Map.member songId (GameState.objects afterOut), Map.member songId (GameState.objects afterIn)) (False, False)
 
   -- Why applyCrossings does NOT wrap its batch in Event.simultaneouslyPure, the
   -- one place it parts company with Departure.objectsLeaveWith: CR 800.4a's
