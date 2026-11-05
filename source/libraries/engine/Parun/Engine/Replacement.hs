@@ -3282,13 +3282,21 @@ splitDamage covered event = case event of
 -- Parun.ReplacementSpec's Ajani Steadfast emblem case proves
 -- the first: CR 615.10's floor applies once per event, so 4 and 2 at one
 -- recipient deal 1 as one event and would deal 2 as two. No test proves the
--- second: the case it was proved by, an unmoved split, now rejoins in
--- Event.chooseAndApply, and two redirects onto one recipient are #6267's.
+-- second: an unmoved split rejoins in Event.chooseAndApply, and halves two
+-- redirects land together join earlier, in Event.settleThreads.
 oneEventPerRecipient :: [DamageEvent.DamageEvent] -> [DamageEvent.DamageEvent]
-oneEventPerRecipient events =
+oneEventPerRecipient = fmap fst . oneThreadPerRecipient . fmap (\event -> (event, Set.empty))
+
+-- `oneEventPerRecipient` over threads still to settle: the joined thread carries
+-- every effect that applied to any part, since each modified the one event (CR
+-- 614.5). Event.settleThreads joins what redirects landed together before their
+-- next CR 616.1 loop, so a flat bonus there applies once.
+oneThreadPerRecipient :: [DamageThread] -> [DamageThread]
+oneThreadPerRecipient threads =
   let key event = event {DamageEvent.amount = 0}
-      total event = sum (fmap DamageEvent.amount (filter (\other -> key other == key event) events))
-   in fmap (\event -> event {DamageEvent.amount = total event}) (ListUtils.nubOrdOn key events)
+      sharing event = filter (\(other, _) -> key other == key event) threads
+      join (event, _) = (event {DamageEvent.amount = sum (fmap (DamageEvent.amount . fst) (sharing event))}, Set.unions (fmap snd (sharing event)))
+   in fmap join (ListUtils.nubOrdOn (key . fst) threads)
 
 -- CR 615.1a: is this damage rewrite a PREVENTION effect, rather than one of CR
 -- 614.1a's replacements? "Effects that use the word 'prevent' are prevention

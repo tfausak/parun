@@ -116,7 +116,9 @@ Entries are ordered by the first rule each cites.
   over an instruction's aims and over a whole batch's survivors, since a
   redirect can land two proposals of one source together. A counted redirect
   aimed back at its recipient splits nothing, so a flat bonus such as
-  Pyromancer's Gauntlet's applies to the one event once (CR 614.5).
+  Pyromancer's Gauntlet's applies to the one event once (CR 614.5). Parts
+  redirects land on one recipient join before its replacements apply, carrying
+  every effect that applied to any part, so the bonus applies once there too.
 - **Rejected**: Two events, which applies CR 615.10 twice; Savage Alliance's two
   events come from two instructions, which agrees with this. A key without the
   source: combat and fights have several dealers.
@@ -130,8 +132,10 @@ Entries are ordered by the first rule each cites.
   `temple-altisaur-lets-1-of-earthquake-through-once-though-pariah-adds-to-it`;
   the redirect aimed back at its recipient at
   `Parun.Engine.Event.chooseAndApply`, proved by the scenarios
-  `harms-way-back-onto-its-recipient-takes-pyromancers-gauntlet-once-*`.
-- **Issue**: #2586, #6251.
+  `harms-way-back-onto-its-recipient-takes-pyromancers-gauntlet-once-*`; the
+  join before replacements at `Parun.Engine.Event.settleThreads`, proved by
+  `harms-way-twice-onto-one-recipient-takes-pyromancers-gauntlet-once`.
+- **Issue**: #2586, #6251, #6267.
 
 ## Whether damage a replacement adds joins a division already owed
 
