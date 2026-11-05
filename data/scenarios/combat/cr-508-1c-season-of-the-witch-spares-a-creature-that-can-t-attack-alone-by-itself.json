@@ -1,6 +1,6 @@
 {
   "description": "CR 508.1c Season of the Witch spares a creature that can't attack alone and had no company",
-  "note": "Bonded Construct is alice's only possible attacker, and CR 506.5 makes a declaration of it alone illegal, so it couldn't have attacked. The scenario beside this one adds Grizzly Bears, which lets the two attack together, and both die.",
+  "note": "Bonded Construct is alice's only possible attacker, and CR 506.5 makes a declaration of it alone illegal, so it couldn't have attacked and alice isn't asked. The scenario beside this one adds Grizzly Bears, which lets the two attack together, and both die.",
   "board": {
     "seats": [
       {
@@ -16,7 +16,6 @@
     "step": "DeclareAttackers"
   },
   "timeline": [
-    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } },
     { "turn": 1, "step": "EndStep", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Bonded Construct", "count": 1 } } }
   ]

@@ -2135,8 +2135,8 @@ announceAttackTarget pid oid options =
 -- run here are CR 508.1a-d and 508.1f-k, in the rule's own order, plus the event
 -- CR 508.1m's triggers watch.
 --
--- No legal attackers means no prompt: declining is then the only legal answer, CR
--- 508.1d's instances being minted from the candidate list.
+-- No creature in a legal declaration means no prompt: declining is then the
+-- only legal answer (couldAttack).
 --
 -- CR 508.1's preamble costs this function its shape: a declaration the active
 -- player cannot comply with is illegal and the game returns to the moment before
@@ -2236,8 +2236,8 @@ couldAttack pid gs =
 -- declaration. An interpreter that keeps proposing FRESH failing declarations
 -- terminates on the finite set of declarations over `candidates`.
 --
--- No legal attackers means no prompt: declining is then the only legal answer, CR
--- 508.1d's instances being minted from the candidate list.
+-- No creature in a legal declaration means no prompt: declining is then the
+-- only legal answer (couldAttack).
 --
 -- `asked` is who chooses, settled by declarationChooser at the first attempt and
 -- carried through the retries so a rewind does not ask it again. `forced` is the
@@ -2254,13 +2254,19 @@ attemptAttackDeclaration perform pid asked forced rejected = do
       -- the one controlling it, which legalAttackers made one of `side`.
       attackerOf oid = Maybe.fromMaybe pid (Projection.controllerOf oid gs)
       (candidates, barred) = attackCandidates pid gs
+      -- Only creatures some legal declaration contains are offered: with none,
+      -- declining is the only legal answer and there is nothing to ask.
+      -- `candidates` stays the scope the ceiling and the check judge over, the
+      -- same answer, since a legal declaration holds only declarable creatures.
+      declarable = couldAttack pid gs
+      offerable = filter (`Set.member` declarable) candidates
       -- CR 508.1b's announcements this creature may actually make.
       announceableFor oid = filter (attackTargetAllowed barred oid) (declarableTargets gs)
   -- CR 508.1b / CR 802.3's candidates -- every defending player's own seat,
   -- planeswalkers and battles -- taken ONCE and from the state the declaration
   -- is judged against. Empty is a combat with no defending player, which
   -- declareAttackers has already excluded on the engine's path.
-  Monad.unless (null candidates) . Monad.forM_ (NonEmpty.nonEmpty (declarableTargets gs)) $ \targets -> do
+  Monad.unless (null offerable) . Monad.forM_ (NonEmpty.nonEmpty (declarableTargets gs)) $ \targets -> do
     -- CR 508.1c's set-shaped restrictions and CR 508.1d's maximization,
     -- taken ONCE for all three questions below, so the ceiling and the check
     -- beside it cannot judge different boards.
@@ -2277,10 +2283,10 @@ attemptAttackDeclaration perform pid asked forced rejected = do
         then pure (forcedAttackDeclaration bound candidates)
         else do
           now <- State.get
-          chosen <- Game.choose (Prompt.DeclareAttackers (Decide.deciderFor chooser now) pid candidates)
+          chosen <- Game.choose (Prompt.DeclareAttackers (Decide.deciderFor chooser now) pid offerable)
           -- Filtered, not trusted: an interpreter cannot attack with a creature
           -- that is not legally an attacker.
-          let isCandidate oid = List.elem oid candidates
+          let isCandidate oid = List.elem oid offerable
               -- Deduplicated too: CR 508.1a's declaration is a SET, and the
               -- event fold below would otherwise record a creature's
               -- declaration twice and make CR 506.5's count disagree with it.
@@ -2297,7 +2303,7 @@ attemptAttackDeclaration perform pid asked forced rejected = do
           -- The options are this creature's own, not the whole list: CR 508.1c's
           -- aimed-at restriction is asked BEFORE the announcement, so a forbidden
           -- player is never offered. `targets` is the fallback the list cannot need --
-          -- `offered` is filtered to `candidates`, each of which has at least one
+          -- `offered` is filtered to `offerable`, each of which has at least one
           -- announcement -- and is what keeps this total.
           Monad.mapM (\oid -> fmap ((,) oid) (announceAttackTarget pid oid (Maybe.fromMaybe targets (NonEmpty.nonEmpty (announceableFor oid))))) offered
     let -- CR 508.1a-d's declaration, announcements included, as a map -- the
