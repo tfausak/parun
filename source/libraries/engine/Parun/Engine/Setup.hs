@@ -657,11 +657,11 @@ startGameFromCards perform exemptions = do
       -- through the same Object.newIncarnation, so that a field added later
       -- cannot be forgotten on one path and reset on the other.
       toLibraryCard obj = (Object.newIncarnation obj) {Object.zone = Zone.Library}
-      -- CR 123.5: the command zone is public, so a commander moving into a
-      -- subgame's keeps its stickers (CR 729.2c), proved by Parun.StickerSpec's
-      -- "CR 123.5/729.2c" (docs/decisions.md, "Whether a commander keeps its stickers
-      -- into a subgame"). A restart has already taken them off (restartGame).
-      toCommandCard obj = (Object.newIncarnation obj) {Object.zone = Zone.Command, Object.stickers = Object.stickers obj}
+      -- Tug of War's ruling (2022-10-07), the specific word over CR 123.5 on CR
+      -- 729.2c's move: a commander's owner "removes all stickers from it", as
+      -- newIncarnation does; proved by Parun.StickerSpec's "CR 729.2c". A
+      -- restart has already taken them off (restartGame).
+      toCommandCard obj = (Object.newIncarnation obj) {Object.zone = Zone.Command}
       rebuilt = Map.filter isCard (Map.withoutKeys (GameState.objects gs) exempt)
       -- CR 903.6: "each player puts their commander from their deck face up into
       -- the command zone". Both callers start a new game following rule 103 (CR
@@ -849,8 +849,7 @@ anteFromLibraries seated = do
 -- not drawn, CR 123.6-123.8 having no access condition and CR 123.2c's access
 -- being read only by CR 123.3's choice, which does not offer it again off a drawn
 -- one. Whether it stays is docs/decisions.md's "Whether a card a restart leaves in
--- exile keeps its stickers" and "Whether a commander keeps its stickers into a
--- subgame".
+-- exile keeps its stickers".
 drawStickerSheets :: [PlayerId] -> Game ()
 drawStickerSheets seated = Monad.forM_ seated $ \pid -> do
   gs <- State.get
@@ -1500,10 +1499,10 @@ funnelBack finalSub parent =
       -- hand-written zone move outside Event.changeZone, performing that
       -- funnel's per-incarnation reset through the one shared function.
       toLibraryCard obj = (Object.newIncarnation obj) {Object.zone = Zone.Library}
-      -- CR 123.5, as startGameFromCards' own toCommandCard: a commander keeps
-      -- its stickers coming back to the main game's command zone (CR 729.5c;
-      -- docs/decisions.md, "Whether a commander keeps its stickers into a subgame").
-      toCommandCard obj = (Object.newIncarnation obj) {Object.zone = Zone.Command, Object.stickers = Object.stickers obj}
+      -- Tug of War's ruling (2022-10-07), as startGameFromCards' own
+      -- toCommandCard: "No counters, stickers, or other effects from the
+      -- subgame move back into the main game" on CR 729.5c's move.
+      toCommandCard obj = (Object.newIncarnation obj) {Object.zone = Zone.Command}
       -- CR 729.5's own exclusion: "all traditional cards they own that are in the
       -- subgame OTHER THAN those in the subgame command zone". So the library
       -- funnel skips the subgame's command zone wholesale, and CR 729.5b and CR

@@ -47,25 +47,6 @@ Entries are ordered by the first rule each cites.
   offered again".
 - **Issue**: none.
 
-## Whether a commander keeps its stickers into a subgame
-
-- **Question**: CR 729.2c and 729.5c move a commander between command zones, and
-  CR 123.5 retains stickers on a move to a public zone. Tug of War's rulings have
-  its owner remove them going in, and bring none back. Do those rulings reach
-  every subgame?
-- **Rules**: CR 123.5, 729.2c, 729.5c; Tug of War's rulings of 2022-10-07,
-  "removes all stickers from it" and "No counters, stickers, or other effects
-  from the subgame move back into the main game"; CR of 2026-08-07.
-- **Decision**: It keeps them both ways: CR 123.5 has no exception for these
-  moves, and the rulings are on one card.
-- **Rejected**: Clearing them on both moves, as the rulings do, on the ground that
-  they are the specific word on this move. #6176 argues for it, and this entry
-  goes if that issue lands.
-- **Site**: `Parun.Engine.Setup`'s two `toCommandCard`s, proved by
-  `Parun.StickerSpec`'s "CR 123.5/729.2c a commander keeps its stickers into a
-  subgame and back, but not through a restart".
-- **Issue**: #4887, #6176.
-
 ## A rider ability regained from one granter stays spent
 
 - **Question**: A permanent loses a "triggers only once each turn" or "activate
