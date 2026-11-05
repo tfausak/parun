@@ -94,7 +94,7 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "CreatureExploits",
+            "type": "Exploits",
             "value": {
               "exploited": {
                 "type": "And",
@@ -117,26 +117,29 @@
                 ]
               },
               "exploiter": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
-                  },
-                  {
-                    "type": "HeldBy",
-                    "value": {
-                      "holder": {
-                        "type": "Controller"
-                      },
-                      "relation": {
-                        "type": "You"
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    },
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
                       }
                     }
-                  }
-                ]
+                  ]
+                }
               }
             }
           },

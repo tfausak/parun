@@ -11145,8 +11145,7 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.AbilityAddsMana {} -> False
   -- Nor does CR 605.3b: a creature's mana ability resolves on anyone's turn.
   TriggerCondition.SelfManaAbilityResolves -> False
-  TriggerCondition.SelfExploits -> False
-  TriggerCondition.CreatureExploits {} -> False
+  TriggerCondition.Exploits {} -> False
   -- Rule 702.122e names no turn either: a Vehicle may be crewed at instant speed
   -- on any player's turn, CR 702.122a's cost carrying no timing clause.
   TriggerCondition.SelfBecomesCrewed {} -> False

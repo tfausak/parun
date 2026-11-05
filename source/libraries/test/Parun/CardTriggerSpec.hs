@@ -2733,7 +2733,7 @@ profanerSpec s registry =
           Spec.assertBool s (S.onBattlefield giantId after) "and the Hill Giant alice did not choose stayed"
           Spec.assertBool s (not (S.onBattlefield pikerId after)) "CR 702.110a the Goblin Piker she did choose was sacrificed"
 
--- CR 702.110b read by a bystander: TriggerCondition.CreatureExploits puts the
+-- CR 702.110b read by a bystander: a Matching TriggerCondition.Exploits puts the
 -- exploiter and the exploited creature to a Filter each, both read off last
 -- known information since either may be the creature sacrificed.
 --
@@ -2813,7 +2813,7 @@ creatureExploitsSpec s registry =
             (_, staged) = S.spellOnStack evangel S.alice stocked
         pure (giantId, pikerId, humanId, staged)
       treasures = S.countOnBattlefieldByName (named "Treasure Token") S.alice
-   in Spec.describe s "CreatureExploits" $ do
+   in Spec.describe s "Exploits by a bystander" $ do
         Spec.it s "CR 702.110b Skull Skaab exploiting a nontoken creature makes a Zombie" $ do
           (giantId, tokenId, staged) <- skaabBoard
           let after = played (exploiting (== giantId)) staged
@@ -2851,6 +2851,25 @@ creatureExploitsSpec s registry =
           Spec.assertEqWith s "CR 109.5 alice got no Zombie off bob's exploit" (zombies after) 0
           Spec.assertBool s (S.onBattlefield skaabId after) "and the Skaab was there to see it"
           Spec.assertBool s (not (S.onBattlefield giantId after)) "CR 702.110a bob's Hill Giant really was exploited"
+        -- A Self exploiter watches only its own exploit: the Profaner on alice's
+        -- battlefield sees her Sadist exploit and stays silent, so bob's
+        -- toughness-1 creature, under the Giant's 3, stays. The Profaner's own
+        -- exploit firing is the Profaner of the Dead group above.
+        Spec.it s "CR 702.110b another creature exploiting does not trigger Profaner of the Dead" $ do
+          profaner <- S.printingOf s registry "Profaner of the Dead"
+          sadist <- S.printingOf s registry "Qarsi Sadist"
+          giant <- S.printingOf s registry "Hill Giant"
+          gnat <- S.printingOf s registry "Gnat Miser"
+          let base = Setup.emptyGame S.threePlayers
+              (profanerId, withProfaner) = S.addPermanent profaner S.alice base
+              (giantId, withGiant) = S.addPermanent giant S.alice withProfaner
+              (gnatId, withGnat) = S.addPermanent gnat S.bob withGiant
+              (_, staged) = S.spellOnStack sadist S.alice withGnat
+              after = played (exploiting (== giantId)) staged
+          Spec.assertBool s (S.onBattlefield gnatId after) "CR 702.110b the Profaner did not fire, so bob's toughness-1 creature stayed"
+          Spec.assertEqWith s "CR 702.110b the Sadist's own trigger did fire: alice gained 2" (S.lifeOf S.alice after) (fmap (+ 2) (S.lifeOf S.alice staged))
+          Spec.assertBool s (S.onBattlefield profanerId after) "and the Profaner was there to see it"
+          Spec.assertBool s (not (S.onBattlefield giantId after)) "CR 702.110a the Hill Giant was the creature sacrificed"
         -- Henry Wu grants the exploit, and the exploited creature's power is read
         -- off last known information by the Treasure clause.
         Spec.it s "CR 702.110b Henry Wu draws and makes a Treasure off a power-3 non-Human" $ do
