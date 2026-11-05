@@ -281,15 +281,17 @@ so in the PR.
 ### Git and the PR
 
 - When cut from another unit's branch, say so in the PR body.
-- **Merge `origin/main` once**, immediately before self-review, never
-  mid-work; never force-push, and resolve conflicts taking both sides. Then
-  run the suite first --- a card in a superseded wire spelling fails
-  `Parun.CardsSpec` and makes every lookup answer `InvalidCorpus`, so grep the
-  new cards for any JSON key a merged PR renamed --- and re-run the
-  load-bearing mutations, since a bad resolution can neuter a test.
+- **Start from the latest `origin/main`, and merge it in only to resolve a
+  conflict or fix a CI failure**: the merge queue tests each PR against
+  `main`. When you do merge, never force-push, and resolve conflicts taking
+  both sides. Then run the suite first --- a card in a superseded wire
+  spelling fails `Parun.CardsSpec` and makes every lookup answer
+  `InvalidCorpus`, so grep the new cards for any JSON key a merged PR renamed
+  --- and re-run the load-bearing mutations, since a bad resolution can neuter
+  a test.
 - Measure the suite count, never infer it; re-measure after a merge.
-- Grep a closed issue's bare number again after the last merge. An issue
-  only narrowed gets "related to #N" and a retitle naming what is left.
+- Grep a closed issue's bare number again after any merge. An issue only
+  narrowed gets "related to #N" and a retitle naming what is left.
 - `script/format-json.sh` takes `MODE FILE...` and passes vacuously when run
   bare.
 - After a CR update, grep the renumbered rules in the tree (fix in the PR) and
