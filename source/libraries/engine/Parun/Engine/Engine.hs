@@ -1363,6 +1363,14 @@ settlePasses passes boards = do
   more <- if not ended && (swept || returned || orphaned || dayNight || designated || sampledControl || unpaired || unsectored || acted || placed) then settlePasses passed (if acted then boards <> [board] else []) else pure False
   pure (acted || placed || more)
 
+-- CR 117.5: settle, then grant `holder` priority with a fresh pass count (CR
+-- 117.4); nobody holds it during the settle (CR 117.3a, 117.3c).
+grantAfterSettle :: PlayerId -> Game ()
+grantAfterSettle holder = do
+  State.modify' (\gs -> gs {GameState.priority = Nothing, GameState.passed = Set.empty})
+  settleForPriority
+  State.modify' (\gs -> gs {GameState.priority = Just holder})
+
 -- Ask the priority holder for an action until every still-playing player has
 -- passed in succession (CR 117.4). A full round of passes resolves the top of the
 -- stack and hands priority back to the active player; only an EMPTY stack ends
@@ -1371,7 +1379,6 @@ priorityLoop :: Game ()
 priorityLoop = do
   -- CR 800.4j: the active player, unless they have left the game.
   holder <- State.gets priorityHolder
-  State.modify' $ \gs -> gs {GameState.priority = Just holder, GameState.passed = Set.empty}
   -- settleForPriority (CR 117.5) runs where the board can CHANGE -- once at entry,
   -- and after each resolution or board-changing action -- never after a bare
   -- priority pass, which leaves the game state untouched. Observably identical to
@@ -1417,12 +1424,10 @@ priorityLoop = do
                             -- but not resetting risks resolving a spell a player
                             -- would have responded to. See docs/decisions.md,
                             -- "Whether a concession restarts the pass count".
-                            State.modify' $ \g ->
-                              let reset = g {GameState.passed = Set.empty}
-                               in reset {GameState.priority = Just (passPriorityFrom reset p)}
                             -- CR 117.5: the departure changed the board, so the
                             -- next player's priority waits on a settle.
-                            settleForPriority
+                            next <- State.gets (\g -> passPriorityFrom g {GameState.passed = Set.empty} p)
+                            grantAfterSettle next
                             loop trail
                           Concession.Continues -> do
                             let decider = Decide.deciderFor p gs
@@ -1512,8 +1517,7 @@ priorityLoop = do
                                 -- CR 116.2a: the special action, made under a
                                 -- CR 601.3 permission (Cast.playLand).
                                 Cast.playLand (Resolve.runReplacementEffects playSubgame) False p oid mName
-                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
-                                settleForPriority
+                                grantAfterSettle p
                                 loop trail'
                               Action.Type.Cast oid name facing -> do
                                 -- CR 611.2a's spend is Cast.castSpellWith's own,
@@ -1536,8 +1540,7 @@ priorityLoop = do
                                 let completion = Completion.MkCompletion {Completion.announcement = Nothing, Completion.paid = Fragmented.paid Nothing post}
                                     completed = if Cost.touchedLibrary pre post then Nothing else Just completion
                                 Monad.when (any refusing completed) (Cost.restoreKeepingLibraryActions pre)
-                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
-                                settleForPriority
+                                grantAfterSettle p
                                 loop (Fragmented.complete completed trail')
                               -- CR 116.2b / 702.37e / 701.40b: a special action, so
                               -- nothing goes on the stack and no player gets a
@@ -1546,8 +1549,7 @@ priorityLoop = do
                               -- succession" meaning without actions in between.
                               Action.Type.TurnFaceUp oid procedure -> do
                                 FaceDown.turnFaceUp performManaAbility p procedure oid
-                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
-                                settleForPriority
+                                grantAfterSettle p
                                 loop trail'
                               -- CR 116.2m / 709.5e: a special action too, the
                               -- TurnFaceUp arm's shape. What CR 709.5h's trigger
@@ -1555,8 +1557,7 @@ priorityLoop = do
                               -- gathers like any other.
                               Action.Type.Unlock oid half -> do
                                 Room.unlock performManaAbility p oid half
-                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
-                                settleForPriority
+                                grantAfterSettle p
                                 loop trail'
                               -- CR 116.2e: a special action too, the TurnFaceUp
                               -- arm's shape. The discard goes through the CR
@@ -1566,29 +1567,25 @@ priorityLoop = do
                               -- cause being a cycling ability's cost.
                               Action.Type.DiscardFromHand oid -> do
                                 Event.discard (Resolve.runReplacementEffects playSubgame) DiscardCause.Ordinary p oid
-                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
-                                settleForPriority
+                                grantAfterSettle p
                                 loop trail'
                               -- CR 116.2k / 702.170b: a special action too, the
                               -- TurnFaceUp arm's shape.
                               Action.Type.Plot oid cost -> do
                                 Plot.plot performManaAbility p oid cost
-                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
-                                settleForPriority
+                                grantAfterSettle p
                                 loop trail'
                               -- CR 116.2h / 702.143b: a special action too.
                               Action.Type.Foretell oid -> do
                                 Foretell.foretell performManaAbility p oid
-                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
-                                settleForPriority
+                                grantAfterSettle p
                                 loop trail'
                               -- CR 116.2f / 702.62a: a special action too, and
                               -- the one whose window is the card's own
                               -- castability rather than a phase.
                               Action.Type.Suspend oid -> do
                                 Suspend.suspend performManaAbility p oid
-                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
-                                settleForPriority
+                                grantAfterSettle p
                                 loop trail'
                               -- CR 116.2g / 702.139a: a special action too, and
                               -- the one that takes no object -- Player.companion
@@ -1596,22 +1593,19 @@ priorityLoop = do
                               -- object to name it with (CR 400.11).
                               Action.Type.PutCompanionIntoHand -> do
                                 Companion.take performManaAbility p
-                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
-                                settleForPriority
+                                grantAfterSettle p
                                 loop trail'
                               -- CR 116.2i / 901.9: a special action too, and one
                               -- that takes no object; CR 901.9a-c give the roller
                               -- priority afterwards whatever the die shows.
                               Action.Type.RollPlanarDie -> do
                                 Planechase.roll performManaAbility p
-                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
-                                settleForPriority
+                                grantAfterSettle p
                                 loop trail'
                               -- CR 116.2j / 702.106c: a special action too.
                               Action.Type.TurnConspiracyFaceUp oid -> do
                                 Conspiracy.turnFaceUp p oid
-                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
-                                settleForPriority
+                                grantAfterSettle p
                                 loop trail'
                               -- CR 116.2c: a special action too, and the one whose
                               -- permission came from a resolution rather than
@@ -1619,28 +1613,24 @@ priorityLoop = do
                               -- what makes the ending visible; nothing is undone.
                               Action.Type.EndEffect _ resolution -> do
                                 EndEffect.endEffect performManaAbility p resolution
-                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
-                                settleForPriority
+                                grantAfterSettle p
                                 loop trail'
                               -- CR 116.2c: a special action too, whose payment
                               -- leaves the offer in place.
                               Action.Type.MakeLaterPayment _ createdAt -> do
                                 paid <- LaterPayment.pay performManaAbility p createdAt
                                 Foldable.for_ paid (Resolve.runLaterPayment playSubgame)
-                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
-                                settleForPriority
+                                grantAfterSettle p
                                 loop trail'
                               -- CR 116.2c / 116.3: Channel's life for mana.
                               Action.Type.PayLifeForMana life mana -> do
                                 _ <- Cost.payLifeForMana performManaAbility p life mana
-                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
-                                settleForPriority
+                                grantAfterSettle p
                                 loop trail'
                               -- CR 116.2d: a special action too.
                               Action.Type.Ignore oid name -> do
                                 Ignore.ignore performManaAbility p oid name
-                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
-                                settleForPriority
+                                grantAfterSettle p
                                 loop trail'
                               -- CR 605.3a's first window, and CR 605.3b's
                               -- immediacy: the ability does not go on the stack,
@@ -1677,24 +1667,22 @@ priorityLoop = do
                                 let completion = Completion.MkCompletion {Completion.announcement = Nothing, Completion.paid = Fragmented.paid Nothing post}
                                     completed = if null nested && not (Cost.touchedLibrary pre post) then Just completion else Nothing
                                 Monad.when (any refusing completed) (Cost.restoreKeepingLibraryActions pre)
-                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
-                                settleForPriority
+                                grantAfterSettle p
                                 loop (Fragmented.complete completed trail')
                               Action.Type.Activate oid ability -> do
                                 completed <- Activate.activateAbilityWith refusing playSubgame p oid ability
-                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
-                                settleForPriority
+                                grantAfterSettle p
                                 loop (Fragmented.complete completed trail')
                       else do
-                        -- CR 800.4a (last sentence): `p` was written as the holder
-                        -- and then departed -- e.g. paying a life cost inside
+                        -- CR 800.4a (last sentence): `p` departed in the settle
+                        -- before its grant -- e.g. paying a life cost inside
                         -- settleForPriority (CR 119.4) -- before being asked
                         -- anything. Departure.depart does not touch
-                        -- GameState.priority, so the stale `Just p` would
+                        -- GameState.priority, so the granted `Just p` would
                         -- otherwise survive to the Concede prompt.
                         State.modify' (\g -> g {GameState.priority = Just (passPriorityFrom g p)})
                         loop trail
-  settleForPriority
+  grantAfterSettle holder
   loop LoopTrail.empty
 
 -- CR 500.7 / 800.4k / 800.4m: this turn is over, so begin the next one -- a
