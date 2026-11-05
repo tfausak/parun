@@ -27,7 +27,7 @@ import qualified Parun.Engine.Engine as Engine
 import qualified Parun.Engine.Game as Game.Engine
 import qualified Parun.Engine.Mana as Mana
 import qualified Parun.Engine.PlayerView as PlayerView
-import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Resolve.Effect as Resolve
 import qualified Parun.Engine.Setup as Setup
 import qualified Parun.Exceptions.InvalidCorpus as InvalidCorpus
@@ -289,7 +289,8 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "life for mana" (answering gs "1" (Prompt.PayLifeForMana alice S.alice 1 ManaType.Colorless)) (Right OptionalDecision.Exercises)
     Spec.assertEqWith s "x" (answering gs "3" (Prompt.ChooseX alice S.alice o7 Binding.variableX 1 5)) (Right 3)
     Spec.assertEqWith s "number" (answering gs "2" (Prompt.ChooseNumber alice S.alice o7 1 (Just 2))) (Right 2)
-    Spec.assertEqWith s "a number past its bound is refused" (answering gs "3" (Prompt.ChooseNumber alice S.alice o7 1 (Just 2))) (Left (Text.pack "end of input"))
+    let (_, pastBound) = asking Hotseat.fresh {Hotseat.facing = Just S.alice} ["3"] gs (Prompt.ChooseNumber alice S.alice o7 1 (Just 2))
+    Spec.assertEqWith s "a number past its bound is refused by its range" (filter (Text.isPrefixOf (Text.pack "Type a number")) pastBound) [Text.pack "Type a number from 1 to 2."]
     Spec.assertEqWith s "an unbounded number" (answering gs "99" (Prompt.ChooseNumber alice S.alice o7 3 Nothing)) (Right 99)
     Spec.assertEqWith s "combat damage" (answering gs "1 2" (Prompt.AssignCombatDamage alice S.alice o7 (Map.fromList [(Recipient.ToCreature o5, 0), (Recipient.ToCreature o9, 0)]) 3)) (Right (Map.fromList [(Recipient.ToCreature o5, 1), (Recipient.ToCreature o9, 2)]))
     Spec.assertEqWith s "division" (answering gs "3 1" (Prompt.ChooseDivision alice S.alice o7 (Dividing.Total 4) (Recipient.ToCreature o9 NonEmpty.:| [Recipient.ToPlayer S.bob]))) (Right (Map.fromList [(Recipient.ToCreature o9, 3), (Recipient.ToPlayer S.bob, 1)]))
@@ -769,7 +770,7 @@ bids :: Screen -> Maybe Text.Text
 bids sc
   | any (Text.isPrefixOf (Text.pack "Pass to ")) shown = Just Text.empty
   | any (Text.isPrefixOf (Text.pack "Paying ")) shown = Just (Text.pack "auto")
-  | any (Text.isPrefixOf (Text.pack "Choose 1 target for Illicit Auction")) shown = numberOf (Text.isPrefixOf (Text.pack ". Hill Giant"))
+  | any (Text.isPrefixOf (Text.pack "Choose 1 target for Illicit Auction")) shown = numberOf (Text.isInfixOf (Text.pack "Hill Giant"))
   | Text.pack "Type a number of at least 3." `elem` shown = Just (Text.pack "4")
   | Text.pack "Choose a number for Illicit Auction, at least 0:" `elem` shown = Just (Text.pack "3")
   | Text.pack "Choose a number for Illicit Auction, at least 3:" `elem` shown = Just (Text.pack "2")
