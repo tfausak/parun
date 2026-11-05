@@ -7,22 +7,7 @@ missing list by writing the set list as a deck (`1 Name` per line) and running
 
 ## Expressible today
 
-These need no new capability, but `parun translate` does not translate them yet.
-Each names the mtgish node the translator stops at.
-
-- Basalt Monolith: `_PermanentRule:DoesntUntapDuringControllersUntap`
-- Copy Artifact: `_ReplacementActionWouldEnter:MayActions`
-- Demonic Hordes: `_Action:SacrificeAPermanentOfAPlayersChoice`
-- Earthbind: `_Permanent:HostPermanent`
-- Farmstead: `_Rule:TriggerA`
-- Fork: `_Action:CopySpellAndMayChooseNewTargetsWithEffects`
-- Kudzu: `_Trigger:WhenAPermanentBecomesTapped`
-- Mijae Djinn: `_Action:FlipACoin_OnLose`
-- Resurrection: `_Action:PutGraveyardCardOntoBattlefield`
-- Rocket Launcher: `_Action:CreateFutureTrigger`
-- Sacrifice: `_Rule:CastEffect`
-- Veteran Bodyguard: `_Rule:ReplaceWouldDealDamage`
-- Wheel of Fortune: `_Action:DiscardHand`
+Every expressible Revised Edition card has been added to `data/cards/`.
 
 ## Needs a capability
 

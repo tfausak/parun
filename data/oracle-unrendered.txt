@@ -3408,3 +3408,15 @@ shapeshifter
 captive-audience
 prismatic-geoscope
 wizards-rockets
+basalt-monolith
+copy-artifact
+demonic-hordes
+earthbind
+farmstead
+fork
+kudzu
+mijae-djinn
+rocket-launcher
+sacrifice
+veteran-bodyguard
+wheel-of-fortune

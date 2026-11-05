@@ -1,0 +1,168 @@
+{
+  "faces": [
+    {
+      "enchant": [
+        {
+          "filter": {
+            "type": "HasCardType",
+            "value": {
+              "type": "Land"
+            }
+          },
+          "pool": {
+            "type": "Permanents"
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Farmstead",
+      "oracleText": "Enchant land\nEnchanted land has \"At the beginning of your upkeep, you may pay {W}{W}. If you do, you gain 1 life.\"",
+      "staticAbilities": [
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Land"
+                  }
+                },
+                {
+                  "type": "HasAttached",
+                  "value": {
+                    "type": "IsSource"
+                  }
+                }
+              ]
+            }
+          },
+          "modifications": [
+            {
+              "type": "GainAbility",
+              "value": {
+                "type": "Triggered",
+                "value": {
+                  "condition": {
+                    "type": "StepBegins",
+                    "value": {
+                      "phase": {
+                        "type": "Beginning",
+                        "value": {
+                          "type": "Upkeep"
+                        }
+                      },
+                      "scope": {
+                        "type": "ControllersTurn"
+                      }
+                    }
+                  },
+                  "modal": {
+                    "modes": [
+                      {
+                        "clauses": [
+                          {
+                            "effects": [
+                              {
+                                "type": "GainLife",
+                                "value": {
+                                  "player": {
+                                    "type": "Relative",
+                                    "value": {
+                                      "type": "You"
+                                    }
+                                  },
+                                  "quantity": {
+                                    "type": "Literal",
+                                    "value": 1
+                                  }
+                                }
+                              }
+                            ],
+                            "payGate": {
+                              "branch": {
+                                "type": "IfPaid"
+                              },
+                              "cost": {
+                                "mana": [
+                                  {
+                                    "type": "OfType",
+                                    "value": {
+                                      "type": "Colored",
+                                      "value": {
+                                        "type": "White"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "OfType",
+                                    "value": {
+                                      "type": "Colored",
+                                      "value": {
+                                        "type": "White"
+                                      }
+                                    }
+                                  }
+                                ]
+                              },
+                              "payer": {
+                                "type": "InSlot",
+                                "value": "you"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Aura"
+          }
+        ],
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -64,8 +64,8 @@ import qualified Parun.Types.Scaling as Scaling
 -- are not one arm for DamagePattern's `whichRecipient` / `whatRecipient`
 -- reason: Redirect names an id the engine baked, where this one DESCRIBES the
 -- destination by characteristic -- Pariah's "is dealt to enchanted creature
--- instead" is `Filter.IsHostOfSource`, and a permanent redirecting to itself
--- (Palisade Giant) would write `Filter.IsSource`.
+-- instead" is `Filter.IsHostOfSource`, and Veteran Bodyguard's "is dealt to this
+-- creature instead" is `Filter.IsSource`.
 data DamageRewrite effect
   = PreventAll
   | -- | CR 122.1c: "if damage would be dealt to this permanent, prevent that
@@ -151,8 +151,8 @@ data DamageRewrite effect
     -- UNIQUE match, and a filter admitting none or several redirects nowhere:
     -- CR 614.9's "the effect does nothing", which
     -- Parun.Engine.Replacement.printedDestination answers. Nothing in this type
-    -- stops a card describing several; the pool's one destination is
-    -- Filter.IsHostOfSource, which cannot.
+    -- stops a card describing several; the pool's destinations are
+    -- Filter.IsHostOfSource and Filter.IsSource, which cannot.
     --
     -- A PLAYER destination has no spelling here: a Filter describes objects and
     -- CR 120.3's other kind of recipient is not one, which is why DamagePattern
