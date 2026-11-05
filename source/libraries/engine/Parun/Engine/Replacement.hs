@@ -3976,15 +3976,22 @@ hitsOf viewOf grants gs indexed candidate =
 allocatedOut :: Map.Map CandidateId Natural -> ReplacementCandidate -> Bool
 allocatedOut allowances candidate = Map.lookup (ReplacementCandidate.identity candidate) allowances == Just 0
 
+-- A damage batch's record so far: the preventions CR 615.13 reports, and what
+-- each CR 615.10 floor let through (a Passage: the row, and the event as it
+-- left that row). A redirect can land a second event of one source on one
+-- recipient at one time, which docs/decisions.md's "Whether one instruction
+-- naming a recipient twice deals one damage event" makes one event, so a row's
+-- amount spans both (`ceilingLeft`, `floorLeft`).
+type Tally = ([Prevention], [Passage])
+
+type Passage = (CandidateId, DamageEvent.DamageEvent)
+
 -- CR 702.64b / 615.10: what is left of a PreventUpTo row's ceiling for this
--- event's source and recipient, `earlier` being what the batch has prevented so
--- far. A redirect can land a second event of one source on one recipient at one
--- time, which docs/decisions.md's "Whether one instruction naming a recipient
--- twice deals one damage event" makes one event, so the row's earlier share of
--- it counts against the ceiling. Nothing for every other rewrite; Event.loop's
--- filter refuses a row at Just 0, so CR 616.1 never offers it.
-ceilingLeft :: GameState -> [Prevention] -> ReplacementCandidate -> ProposedEvent -> Maybe Natural
-ceilingLeft gs earlier candidate event = case (ReplacementCandidate.effect candidate, event) of
+-- event's source and recipient, given what the row has prevented of it earlier
+-- in the batch (`Tally`). Nothing for every other rewrite; Event.loop's filter
+-- refuses a row at Just 0, so CR 616.1 never offers it.
+ceilingLeft :: GameState -> Tally -> ReplacementCandidate -> ProposedEvent -> Maybe Natural
+ceilingLeft gs (earlier, _) candidate event = case (ReplacementCandidate.effect candidate, event) of
   (ReplacementEffect.DamageR (DamageR.MkDamageR _ rewrite _), ProposedEvent.WouldDealDamage de) -> case rewrite of
     DamageRewrite.PreventUpTo quantity ->
       let ceiling_ = maybe 0 Integer.toNaturalSaturating (Quantity.evaluate (Projection.fullView gs) (candidateContext gs candidate) gs (ReplacementCandidate.source candidate) quantity)
@@ -4008,6 +4015,47 @@ ceilingLeft gs earlier candidate event = case (ReplacementCandidate.effect candi
     DamageRewrite.RedirectMatching _ -> Nothing
     DamageRewrite.TurnFaceUp -> Nothing
     DamageRewrite.AlsoToSourceController -> Nothing
+  _ -> Nothing
+
+-- CR 615.10: what is left of a PreventAllBut row's floor for this event's source
+-- and recipient, given what the row has let through of it earlier in the batch
+-- (`Tally`). Nothing for every other rewrite. Unlike the ceiling, a floor at
+-- Just 0 is still offered: it prevents the whole event.
+floorLeft :: Tally -> ReplacementCandidate -> ProposedEvent -> Maybe Natural
+floorLeft (_, passed) candidate event = case (ReplacementCandidate.effect candidate, event) of
+  (ReplacementEffect.DamageR (DamageR.MkDamageR _ rewrite _), ProposedEvent.WouldDealDamage de) -> case rewrite of
+    DamageRewrite.PreventAllBut surviving ->
+      let through =
+            sum
+              [ DamageEvent.amount earlier
+              | (by, earlier) <- passed,
+                by == ReplacementCandidate.identity candidate,
+                DamageEvent.source earlier == DamageEvent.source de,
+                DamageEvent.target earlier == DamageEvent.target de
+              ]
+       in Just (surviving - min surviving through)
+    DamageRewrite.PreventAll -> Nothing
+    DamageRewrite.PreventRemovingShieldCounter -> Nothing
+    DamageRewrite.PreventNext _ -> Nothing
+    DamageRewrite.PreventUpTo _ -> Nothing
+    DamageRewrite.SetAmount _ -> Nothing
+    DamageRewrite.Scale _ -> Nothing
+    DamageRewrite.Redirect _ -> Nothing
+    DamageRewrite.RunEffects _ -> Nothing
+    DamageRewrite.RedirectNext _ _ -> Nothing
+    DamageRewrite.RedirectMatching _ -> Nothing
+    DamageRewrite.TurnFaceUp -> Nothing
+    DamageRewrite.AlsoToSourceController -> Nothing
+  _ -> Nothing
+
+-- CR 615.10: what a floor row just let through of `before`, read off the event
+-- before and after as `preventionBy` reads a prevention; Nothing for a row with
+-- no floor (`floorLeft`).
+passageBy :: ReplacementCandidate -> ProposedEvent -> Maybe ProposedEvent -> Maybe Passage
+passageBy candidate before after = case before of
+  ProposedEvent.WouldDealDamage de
+    | Maybe.isJust (floorLeft mempty candidate before) ->
+        Just (ReplacementCandidate.identity candidate, de {DamageEvent.amount = maybe 0 DamageEvent.amount (after >>= asDamageEvent)})
   _ -> Nothing
 
 -- CR 616.1 / 101.4: group a batch by whose CR 616.1 choice each event is, active

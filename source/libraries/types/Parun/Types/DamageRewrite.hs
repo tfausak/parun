@@ -95,7 +95,9 @@ data DamageRewrite effect
     -- PreventUpTo's ceiling on what is stopped: the rule's shield "will apply
     -- separately to
     -- damage from other applicable events", so nothing is written back and
-    -- Parun.Engine.Replacement.contestedResource gives it no supply.
+    -- Parun.Engine.Replacement.contestedResource gives it no supply. A redirect
+    -- (Pariah) landing a second event of one source on one recipient is the
+    -- same event, so it shares the floor (Parun.Engine.Replacement.floorLeft).
     --
     -- Not SetAmount with the same number, which is what makes this its own arm:
     -- that one never says "prevent", so CR 615.1a would classify it out of
