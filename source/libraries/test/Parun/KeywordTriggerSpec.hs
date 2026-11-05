@@ -2450,6 +2450,12 @@ graftSpec s registry =
 -- / Hexproof", checked against api.scryfall.com 2026-09-26) prints a keyword on
 -- EACH side of its backup line, so rule 702.165a's "printed below this one" is
 -- what decides which one the Piker gains.
+--
+-- Dack's Duplicate ("... except it has haste and dethrone") and Phantasmal
+-- Image ("... except it's an Illusion ... and it has 'When this creature becomes
+-- the target of a spell or ability, sacrifice it.'") copy the Archpriest, and
+-- Clone copies the Duplicate: CR 702.165c's copy exceptions, none of which
+-- backup grants. Giant Growth is what targets the Image's grant.
 backupSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 backupSpec s registry =
   let pikerName = CardName.MkCardName (Text.pack "Goblin Piker")
@@ -2475,6 +2481,16 @@ backupSpec s registry =
       entersTargeting :: ObjectId.ObjectId -> ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
       entersTargeting victim card gs =
         S.runPure (targeting victim) gs (Event.changeZone (pure ()) card Zone.Battlefield >> Engine.settleForPriority >> Stack.resolveTop)
+      -- The same entry for a copy (CR 707.5), its copy choice pinned to `model`.
+      entersCopying :: ObjectId.ObjectId -> ObjectId.ObjectId -> ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
+      entersCopying model victim card gs =
+        let answer :: Prompt.Prompt r -> r
+            answer p = case p of
+              Prompt.ChooseCopyTarget {} -> Just model
+              _ -> targeting victim p
+         in S.runPure answer gs (Event.changeZone (pure ()) card Zone.Battlefield >> Engine.settleForPriority >> Stack.resolveTop)
+      -- The permanent alice gained between two states, CR 400.7's new object.
+      newcomer before after = List.find (`notElem` Game.zoneMembers Zone.Battlefield S.alice before) (Game.zoneMembers Zone.Battlefield S.alice after)
       -- alice attacks with everything, then CR 509.1b's question: may bob's
       -- `blocker` alone block `attacker`?
       attacked gs = snd (Engine.runGamePure S.aggressiveAnswer gs (Combat.declareAttackers S.manaPerformer S.alice))
@@ -2533,6 +2549,79 @@ backupSpec s registry =
               Spec.assertBool s (Projection.hasKeyword (Keyword.Type.Hexproof Nothing) pikerId backed) "and did gain the hexproof printed below it"
               Spec.assertEqWith s "with rule 702.165a's one +1/+1 counter on it" (plusOnes pikerId backed) 1
             _ -> Spec.assertFailure s "fixture should give alice a Piker"
+        -- CR 702.165c over a CR 707.9a exception: Dack's Duplicate enters as a
+        -- copy of the Archpriest "except it has haste and dethrone". Its backup
+        -- grants the Archpriest's deathtouch, not the copy effect's dethrone, so
+        -- the Piker attacking bob at most life gains no dethrone counter while
+        -- the Duplicate's own dethrone does.
+        Spec.it s "CR 702.165c a Dack's Duplicate copying the Archpriest grants deathtouch and not the haste and dethrone its copy effect added" $ do
+          piker <- S.printingOf s registry "Goblin Piker"
+          archpriest <- S.printingOf s registry "Archpriest of Shadows"
+          duplicate <- S.printingOf s registry "Dack's Duplicate"
+          case S.combatBoardOf [piker, archpriest] [] of
+            (gs0, [pikerId, archId], _) -> do
+              let (card, staged) = S.addHandCard duplicate S.alice gs0
+                  backed = entersCopying archId pikerId card staged
+                  after = S.runCombat S.aggressiveAnswer backed
+              case newcomer staged backed of
+                Nothing -> Spec.assertFailure s "the Duplicate did not reach the battlefield"
+                Just dupId -> do
+                  Spec.assertEqWith s "CR 702.165c the Piker attacked bob at most life holding only backup's counter, no dethrone's" (plusOnes pikerId after) 1
+                  Spec.assertEqWith s "while the Duplicate's own dethrone put one on it" (plusOnes dupId after) 1
+                  Spec.assertBool s (not (Projection.hasKeyword Keyword.Type.Haste pikerId backed)) "CR 702.165c the Piker did not gain the excepted haste"
+                  Spec.assertBool s (Projection.hasKeyword Keyword.Type.Deathtouch pikerId backed) "and did gain the copied deathtouch"
+                  Spec.assertBool s (Projection.hasKeyword Keyword.Type.Haste dupId backed) "the Duplicate itself has haste"
+            _ -> Spec.assertFailure s "fixture should give alice a Piker and an Archpriest"
+        -- The same over CR 707.9b's copy of the copy: a Clone of the Duplicate
+        -- has its haste and dethrone as copiable values, and its backup grants
+        -- them no more than the Duplicate's did.
+        Spec.it s "CR 702.165c a Clone of the Duplicate grants none of the Duplicate's excepted abilities" $ do
+          piker <- S.printingOf s registry "Goblin Piker"
+          archpriest <- S.printingOf s registry "Archpriest of Shadows"
+          duplicate <- S.printingOf s registry "Dack's Duplicate"
+          clone <- S.printingOf s registry "Clone"
+          case S.combatBoardOf [piker, archpriest] [] of
+            (gs0, [pikerId, archId], _) -> do
+              let (dupCard, staged) = S.addHandCard duplicate S.alice gs0
+                  (cloneCard, armed) = S.addHandCard clone S.alice staged
+                  duplicated = entersCopying archId archId dupCard armed
+              case newcomer armed duplicated of
+                Nothing -> Spec.assertFailure s "the Duplicate did not reach the battlefield"
+                Just dupId -> do
+                  let backed = entersCopying dupId pikerId cloneCard duplicated
+                      after = S.runCombat S.aggressiveAnswer backed
+                  case newcomer duplicated backed of
+                    Nothing -> Spec.assertFailure s "the Clone did not reach the battlefield"
+                    Just cloneId -> do
+                      Spec.assertEqWith s "CR 702.165c the Piker attacked bob at most life holding only backup's counter, no dethrone's" (plusOnes pikerId after) 1
+                      Spec.assertEqWith s "while the Clone's copied dethrone put one on it" (plusOnes cloneId after) 1
+                      Spec.assertBool s (not (Projection.hasKeyword Keyword.Type.Haste pikerId backed)) "CR 702.165c the Piker did not gain the copied excepted haste"
+                      Spec.assertBool s (Projection.hasKeyword Keyword.Type.Deathtouch pikerId backed) "and did gain the deathtouch"
+            _ -> Spec.assertFailure s "fixture should give alice a Piker and an Archpriest"
+        -- CR 702.165c over a QUOTED exception: Phantasmal Image's "When this
+        -- creature becomes the target of a spell or ability, sacrifice it."
+        -- The pair differs only in Giant Growth's target: the Image holds the
+        -- trigger and is sacrificed, the Piker its backup aimed at does not.
+        Spec.it s "CR 702.165c a Phantasmal Image copying the Archpriest grants no sacrifice trigger" $ do
+          piker <- S.printingOf s registry "Goblin Piker"
+          archpriest <- S.printingOf s registry "Archpriest of Shadows"
+          image <- S.printingOf s registry "Phantasmal Image"
+          growth <- S.printingOf s registry "Giant Growth"
+          forest <- S.printingOf s registry "Forest"
+          case S.combatBoardOf [piker, archpriest] [] of
+            (gs0, [pikerId, archId], _) -> do
+              let (card, staged) = S.addHandCard image S.alice (S.landsFor forest S.alice 1 gs0)
+                  (growthId, armed) = S.addHandCard growth S.alice staged
+                  backed = entersCopying archId pikerId card armed
+                  grown victim = S.runPure (targeting victim) backed (S.cast S.alice growthId >> Engine.settleForPriority >> Stack.resolveTop)
+              case newcomer armed backed of
+                Nothing -> Spec.assertFailure s "the Image did not reach the battlefield"
+                Just imageId -> do
+                  Spec.assertBool s (S.onBattlefield pikerId (grown pikerId)) "CR 702.165c the Piker survived becoming Giant Growth's target"
+                  Spec.assertEqWith s "and the Growth resolved on it" (Projection.powerOf pikerId (grown pikerId)) (Just 6)
+                  Spec.assertBool s (not (S.onBattlefield imageId (grown imageId))) "the Image, targeted instead, was sacrificed"
+                  Spec.assertBool s (Projection.hasKeyword Keyword.Type.Deathtouch pikerId backed) "the Piker did gain the copied deathtouch"
+            _ -> Spec.assertFailure s "fixture should give alice a Piker and an Archpriest"
         -- THE ABILITY HALF, at gameplay level, and CR 113.7 with it: the granted
         -- trigger is the PIKER's, so "this creature" is the Piker and "your
         -- graveyard" is the Piker's controller's. The Archpriest never attacks,
