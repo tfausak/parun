@@ -246,6 +246,42 @@ objects view =
 named :: PlayerView.PlayerView -> ObjectId.ObjectId -> Text.Text
 named view oid = Maybe.fromMaybe (Text.pack ("object " <> show (ObjectId.unwrap oid))) (knownName view oid)
 
+-- | An object as a prompt lists it, told apart from others of its name: on
+-- the battlefield or the stack, by its controller and its status (CR 108.4);
+-- in a graveyard or exile, by its owner and that zone; elsewhere by name.
+choosable :: PlayerView.PlayerView -> ObjectId.ObjectId -> Text.Text
+choosable view oid = case located view oid of
+  Just (Zone.Battlefield, o) -> whose (ObjectView.controller o) <> describe view o
+  Just (Zone.Stack, o) -> whose (ObjectView.controller o) <> describe view o <> Text.pack ", on the stack"
+  Just (Zone.Graveyard, o) -> whose (Just (ObjectView.owner o)) <> describe view o <> Text.pack ", in a graveyard"
+  Just (Zone.Exile, o) -> whose (Just (ObjectView.owner o)) <> describe view o <> Text.pack ", in exile"
+  _ -> named view oid
+  where
+    whose = maybe Text.empty (\pid -> if pid == PlayerView.viewer view then Text.pack "Your " else player pid <> Text.pack "'s ")
+
+-- | The seat an object is listed under: its controller on the battlefield or
+-- the stack, else its owner.
+seatOf :: PlayerView.PlayerView -> ObjectId.ObjectId -> Maybe PlayerId.PlayerId
+seatOf view oid = case located view oid of
+  Just (z, o) | z `elem` [Zone.Battlefield, Zone.Stack] -> ObjectView.controller o
+  Just (_, o) -> Just (ObjectView.owner o)
+  Nothing -> Nothing
+
+-- | The zone the view shows an object in, and the object.
+located :: PlayerView.PlayerView -> ObjectId.ObjectId -> Maybe (Zone.Zone, ObjectView.ObjectView)
+located view oid =
+  List.find ((== oid) . ObjectView.object . snd) $
+    fmap ((,) Zone.Battlefield) (PlayerView.battlefield view)
+      <> fmap ((,) Zone.Stack) (PlayerView.stack view)
+      <> concatMap
+        ( \s ->
+            fmap ((,) Zone.Hand) (SeatView.hand s)
+              <> fmap ((,) Zone.Library) (SeatView.library s)
+              <> fmap ((,) Zone.Graveyard) (SeatView.graveyard s)
+              <> fmap ((,) Zone.Exile) (SeatView.exile s)
+        )
+        (PlayerView.seats view)
+
 -- | An object's name, if the view shows it or a witnessed move of it.
 knownName :: PlayerView.PlayerView -> ObjectId.ObjectId -> Maybe Text.Text
 knownName view oid = case Map.lookup oid (objects view) of

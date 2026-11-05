@@ -480,6 +480,30 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertBool s (any (Text.isInfixOf (Text.pack "Ainok Tracker")) (seenBy S.bob) && all (`elem` seenBy S.bob) (Text.lines text)) ("bob looks at it: " <> show (seenBy S.bob))
     Spec.assertEqWith s "alice cannot name it" (cardLines (readout lookUp gs ["card Ainok Tracker", "1"] (targeting S.alice))) [Text.pack "No card you can see is named Ainok Tracker."]
 
+  Spec.it s "a target prompt tells same-named permanents apart by controller and status, the deciding seat's first" $ do
+    island <- S.printingOf s registry "Island"
+    demolish <- S.printingOf s registry "Demolish"
+    let (bobTapped, g1) = S.addPermanent island S.bob (Setup.emptyGame S.bothPlayers)
+        (alices, g2) = S.addPermanent island S.alice g1
+        (bobs, g3) = S.addPermanent island S.bob g2
+        (buried, g4) = S.addObjectIn Zone.Graveyard island S.bob g3
+        (spell, g5) = S.addHandCard demolish S.alice g4
+        gs = g5 {GameState.objects = Map.adjust (\o -> o {Object.tapped = TapState.Tapped}) bobTapped (GameState.objects g5)}
+        slot = SlotName.MkSlotName (Text.pack "target")
+        legal = Set.fromList (fmap Recipient.ToObject [bobTapped, alices, bobs, buried])
+        prompt = Prompt.ChooseTargets (Decider.MkDecider S.alice) S.alice spell (Map.singleton slot (1, legal))
+        (picked, shown) = asking Hotseat.fresh {Hotseat.facing = Just S.alice} ["2"] gs prompt
+    Spec.assertEqWith
+      s
+      "listed"
+      (takeWhile (Text.isPrefixOf (Text.pack "  ")) (drop 1 (dropWhile (not . Text.isPrefixOf (Text.pack "Choose 1 target for Demolish")) shown)))
+      [ Text.pack "  1. Your Island",
+        Text.pack "  2. Player 2's Island (tapped)",
+        Text.pack "  3. Player 2's Island",
+        Text.pack "  4. Player 2's Island, in a graveyard"
+      ]
+    Spec.assertEqWith s "the number picks the one shown" picked (Right (Map.singleton slot (Set.singleton (Recipient.ToObject bobTapped))))
+
   -- `parun play`'s answer to card data it cannot read: play stops, saying why,
   -- rather than showing the card as one with no text.
   Spec.it s "card stops play, saying why, when the card data cannot be read" $ do

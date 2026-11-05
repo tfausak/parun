@@ -134,8 +134,9 @@ answer terminal lookUp seat view question = case (Question.kind question, slotsO
                       Nothing -> say terminal (Text.pack "Auto can't pay the rest of this cost. Choose a source.") >> loop
               _ -> either (\problem -> say terminal problem >> loop) pure (reader typed)
       loop
-    target source (slot, wanted, legal) = do
-      let n = min wanted (Natural.length legal)
+    target source (slot, wanted, offered) = do
+      let legal = bySeat view offered
+          n = min wanted (Natural.length legal)
           shown =
             Text.concat [Text.pack "Choose ", Render.count n "target", Text.pack " for ", objectName view source, Text.pack " (", slotName slot, Text.pack "):"]
               : numbered (fmap (recipientName view) legal)
@@ -168,7 +169,7 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
   "DeclareAttackers" -> do
     attackers <- arrayOf offer
     pure
-      ( Text.pack "Choose attackers by number or range such as 1-3, separated by spaces, all, or press Enter for none:" : numbered (fmap (objectName view) attackers),
+      ( Text.pack "Choose attackers by number or range such as 1-3, separated by spaces, all, or press Enter for none:" : numbered (fmap (listedName view) attackers),
         fmap R.Array . some attackers
       )
   "DeclareBlockers" -> do
@@ -176,9 +177,9 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
     attackers <- field "attackers" offer >>= arrayOf
     pure
       ( [Text.pack "Attacking:"]
-          <> numbered (fmap (objectName view) attackers)
+          <> numbered (fmap (listedName view) attackers)
           <> [Text.pack "Your creatures that can block:"]
-          <> numbered (fmap (objectName view) blockers)
+          <> numbered (fmap (listedName view) blockers)
           <> [Text.pack "Type blocker:attacker pairs, such as 1:2, separated by spaces, or press Enter for no blocks:"],
         blocks blockers attackers
       )
@@ -268,7 +269,7 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
       let sources = fmap fst offered
           makes yields = if null yields then Text.empty else Text.pack " (makes " <> Text.intercalate (Text.pack " or ") (fmap (foldMap Render.manaType) yields) <> Text.pack ")"
       pure
-        ( heading : numbered (fmap (\(source, yields) -> objectName view source <> makes yields) offered),
+        ( heading : numbered (fmap (\(source, yields) -> listedName view source <> makes yields) offered),
           \typed ->
             if Text.toCaseFold typed == none
               then Right R.Null
@@ -279,7 +280,7 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
       wanted <- field "count" offer >>= naturalOf
       let n = min wanted (Natural.length from)
       pure
-        ( Text.pack "Choose " <> Render.count n "card" <> Text.pack (" " <> purpose <> ", by number or range such as 1-3, separated by spaces:") : numbered (fmap (objectName view) from),
+        ( Text.pack "Choose " <> Render.count n "card" <> Text.pack (" " <> purpose <> ", by number or range such as 1-3, separated by spaces:") : numbered (fmap (listedName view) from),
           fmap R.Array . exactly n from
         )
     generic =
@@ -332,6 +333,21 @@ distinct view = reverse . snd . List.foldl' keep ([], []) . zip [0 ..]
       o <- field "object" option >>= objectOf >>= (`Map.lookup` held)
       R.Object pairs <- Just option
       pure (filter ((/= Text.pack "object") . fst) pairs, o {ObjectView.object = ObjectId.MkObjectId 0})
+
+-- | Recipients grouped by seat, the deciding seat's first, each seat's
+-- player ahead of its objects, and otherwise in the offer's order.
+bySeat :: PlayerView.PlayerView -> [R.Reply] -> [R.Reply]
+bySeat view = List.sortOn key
+  where
+    key reply =
+      let pid = maybe (recipientPlayer reply) (Render.seatOf view) (recipientObject reply)
+       in (Maybe.isNothing pid, fmap (\p -> (p /= PlayerView.viewer view, p)) pid, Maybe.isJust (recipientObject reply))
+
+-- | The player a recipient names, if it is one.
+recipientPlayer :: R.Reply -> Maybe PlayerId.PlayerId
+recipientPlayer reply = case reply of
+  R.Array [R.Text tag, R.Text x] | tag == Text.pack "Player" -> fmap PlayerId.MkPlayerId (Read.readMaybe (Text.unpack x))
+  _ -> Nothing
 
 -- | The object a recipient names, if it is not a player.
 recipientObject :: R.Reply -> Maybe ObjectId.ObjectId
@@ -518,11 +534,15 @@ actionName view action =
 objectName :: PlayerView.PlayerView -> R.Reply -> Text.Text
 objectName view reply = maybe (Text.pack "something") (Render.named view) (objectOf reply)
 
+-- | An object an offer lists, told apart from others of its name.
+listedName :: PlayerView.PlayerView -> R.Reply -> Text.Text
+listedName view reply = maybe (Text.pack "something") (Render.choosable view) (objectOf reply)
+
 recipientName :: PlayerView.PlayerView -> R.Reply -> Text.Text
 recipientName view reply = case reply of
   R.Array [R.Text tag, R.Text x]
     | tag == Text.pack "Player" -> maybe x (Render.player . PlayerId.MkPlayerId) (Read.readMaybe (Text.unpack x))
-    | otherwise -> objectName view (R.Text x)
+    | otherwise -> listedName view (R.Text x)
   _ -> Text.pack "something"
 
 objectOf :: R.Reply -> Maybe ObjectId.ObjectId
