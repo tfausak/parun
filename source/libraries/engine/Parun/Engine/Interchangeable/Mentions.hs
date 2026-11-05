@@ -1086,7 +1086,7 @@ copyTargetsNames :: (Monoid r) => Asking r -> CopyTargets.CopyTargets -> r
 copyTargetsNames asking x = case x of
   CopyTargets.Copied -> mempty
   CopyTargets.ChosenByController -> mempty
-  CopyTargets.ForEach objectRef -> foldMap (objectRefNames asking) objectRef
+  CopyTargets.ForEach objectRef -> objectRefNames asking objectRef
   CopyTargets.Stated objectRef -> objectRefNames asking objectRef
 
 costNames :: (Monoid r) => Asking r -> (keyword -> r) -> Cost.Cost keyword -> r
