@@ -72,6 +72,7 @@ import qualified Parun.Types.AttachRestriction as AttachRestriction
 import qualified Parun.Types.AttachRewrite as AttachRewrite
 import qualified Parun.Types.AttachTarget as AttachTarget
 import qualified Parun.Types.AttachedToBound as AttachedToBound
+import qualified Parun.Types.AttachmentTrigger as AttachmentTrigger
 import qualified Parun.Types.AttackCompany as AttackCompany
 import qualified Parun.Types.AttackCost as AttackCost
 import qualified Parun.Types.AttackCount as AttackCount
@@ -3159,9 +3160,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.Visit -> mempty
   TriggerCondition.FlipsCoin _ -> mempty
   TriggerCondition.SelfBecomesPlotted -> mempty
-  TriggerCondition.SelfBecomesAttachedBy filter_ -> filterNames asking filter_
-  TriggerCondition.SelfBecomesAttachedTo filter_ -> filterNames asking filter_
-  TriggerCondition.SelfBecomesUnattachedFrom filter_ -> filterNames asking filter_
+  TriggerCondition.AttachmentChanges t -> filterNames asking (AttachmentTrigger.other t)
   TriggerCondition.Reflexive -> mempty
   TriggerCondition.PlacesSticker placesSticker -> filterNames asking (PlacesSticker.object placesSticker)
 

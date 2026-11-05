@@ -88,6 +88,7 @@ import qualified Parun.Types.AttachRestriction as AttachRestriction
 import qualified Parun.Types.AttachRewrite as AttachRewrite
 import qualified Parun.Types.AttachTarget as AttachTarget
 import qualified Parun.Types.AttachedToBound as AttachedToBound
+import qualified Parun.Types.AttachmentTrigger as AttachmentTrigger
 import qualified Parun.Types.AttackCompany as AttackCompany
 import qualified Parun.Types.AttackCost as AttackCost
 import qualified Parun.Types.AttackCount as AttackCount
@@ -1218,10 +1219,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.PlacesSticker _ -> []
   -- CR 701.3a's carries a Filter, and a Filter holds no Count for a Matching
   -- TurnedFaceUp's reason.
-  TriggerCondition.SelfBecomesAttachedBy _ -> []
-  -- And so do the attachment-scoped pair, whose Filters are over the host.
-  TriggerCondition.SelfBecomesAttachedTo _ -> []
-  TriggerCondition.SelfBecomesUnattachedFrom _ -> []
+  TriggerCondition.AttachmentChanges _ -> []
   -- CR 603.12's carries nothing at all, so no Count.
   TriggerCondition.Reflexive -> []
   -- CR 701.6a's countering condition is a PlayerRelation, which holds no Count,
@@ -4698,13 +4696,10 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.FlipsCoin _ -> []
   TriggerCondition.SelfBecomesPlotted -> []
   TriggerCondition.PlacesSticker placesSticker -> unframed [PlacesSticker.object placesSticker]
-  -- CR 701.3a's carries one over the ATTACHMENT -- Bramble Elemental's "an
-  -- Aura" -- which this sweep must see for a Matching TurnedFaceUp's reason.
-  TriggerCondition.SelfBecomesAttachedBy f -> unframed [f]
-  -- CR 701.3a and CR 701.3d read from the attachment carry one over the HOST --
-  -- Enormous Energy Blade's "a creature" -- and it needs the same sweep.
-  TriggerCondition.SelfBecomesAttachedTo f -> unframed [f]
-  TriggerCondition.SelfBecomesUnattachedFrom f -> unframed [f]
+  -- CR 701.3a's carries one over the other end -- Bramble Elemental's "an
+  -- Aura", Enormous Energy Blade's "a creature" -- which this sweep must see for
+  -- a Matching TurnedFaceUp's reason.
+  TriggerCondition.AttachmentChanges t -> unframed [AttachmentTrigger.other t]
   -- CR 603.12's carries nothing, so no Filter either.
   TriggerCondition.Reflexive -> []
   TriggerCondition.SpellOrAbilityCounters _ -> []
@@ -4837,11 +4832,9 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.SelfPlaneswalkedAwayFrom -> []
   TriggerCondition.FlipsCoin _ -> []
   TriggerCondition.SelfBecomesPlotted -> []
-  TriggerCondition.SelfBecomesAttachedBy _ -> []
-  -- Neither attachment-scoped condition names a slot OUTRIGHT either: each binds
-  -- one (Parun.Engine.Event.Binding.eventBindingSlots) rather than reading one.
-  TriggerCondition.SelfBecomesAttachedTo _ -> []
-  TriggerCondition.SelfBecomesUnattachedFrom _ -> []
+  -- No attachment condition names a slot OUTRIGHT: an Attachment end binds one
+  -- (Parun.Engine.Event.Binding.eventBindingSlots) rather than reading one.
+  TriggerCondition.AttachmentChanges _ -> []
   -- CR 603.7c's captured environment is what a reflexive trigger knows, but the
   -- condition itself admits no event and names nothing.
   TriggerCondition.Reflexive -> []

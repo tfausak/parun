@@ -2176,7 +2176,7 @@ spymastersVaultSpec s registry =
           Spec.assertEqWith s "one counter for the nonland discard and one off its own trigger" (S.powerToughnessOf mongerId after) (Just (4, 4))
 
 -- CR 701.3a's attachment event, read from the HOST's side by
--- TriggerCondition.SelfBecomesAttachedBy.
+-- a Host TriggerCondition.AttachmentChanges.
 --
 -- Bramble Elemental, {3}{G}{G} Creature -- Elemental 4/4, "Whenever an Aura
 -- becomes attached to this creature, create two 1/1 green Saproling creature
@@ -2283,7 +2283,7 @@ equipAbilityOf oid gs = case Projection.abilitiesOf oid gs of
   [] -> Nothing
 
 -- CR 701.3a's attachment event read from the ATTACHMENT's side, by
--- TriggerCondition.SelfBecomesAttachedTo -- the mirror of Bramble Elemental's
+-- an Attachment TriggerCondition.AttachmentChanges -- the mirror of Bramble Elemental's
 -- group above.
 --
 -- Enormous Energy Blade, {2}{B} Artifact -- Equipment: "Equipped creature gets
@@ -2324,7 +2324,7 @@ enormousEnergyBladeSpec s registry =
           Spec.assertEqWith s "which CR 301.5f's +4/+0 confirms" (S.powerToughnessOf pikerId after) (Just (6, 1))
 
 -- CR 701.3d's unattachment event, read by the attachment through
--- TriggerCondition.SelfBecomesUnattachedFrom.
+-- an Unattaches TriggerCondition.AttachmentChanges.
 --
 -- Grafted Wargear, {3} Artifact -- Equipment: "Equipped creature gets +3/+2. /
 -- Whenever this Equipment becomes unattached from a permanent, sacrifice that

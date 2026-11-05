@@ -2,6 +2,7 @@ module Parun.Types.TriggerCondition where
 
 import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
 import qualified Parun.Types.ActingPermanent as ActingPermanent
+import qualified Parun.Types.AttachmentTrigger as AttachmentTrigger
 import qualified Parun.Types.AttackTrigger as AttackTrigger
 import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.BecomesTargetedTrigger as BecomesTargetedTrigger
@@ -299,17 +300,9 @@ data TriggerCondition
   | -- | CR 702.170a / 702.170c: "when this card becomes plotted" (Aloe
     -- Alchemist). Self-scoped, and watched for from exile.
     SelfBecomesPlotted
-  | -- | CR 701.3a read by the host: "whenever an Aura becomes attached to this
-    -- creature" (Bramble Elemental), with the Filter over the attachment.
-    SelfBecomesAttachedBy (Filter.Filter Keyword.Keyword)
-  | -- | CR 701.3a read by the attachment: "whenever this Equipment becomes
-    -- attached to a creature" (Enormous Energy Blade), with the Filter over the
-    -- host and the host bound as "that creature".
-    SelfBecomesAttachedTo (Filter.Filter Keyword.Keyword)
-  | -- | CR 701.3d read by the attachment: "whenever this Equipment becomes
-    -- unattached from a permanent" (Grafted Wargear), with the Filter over the
-    -- former host and that host bound as "that permanent".
-    SelfBecomesUnattachedFrom (Filter.Filter Keyword.Keyword)
+  | -- | CR 701.3a / 701.3d: an attachment link with the bearer at one end was
+    -- made or broken (Bramble Elemental, Enormous Energy Blade, Grafted Wargear).
+    AttachmentChanges AttachmentTrigger.AttachmentTrigger
   | -- | CR 603.12's reflexive triggered ability: "when you do" (The Fugitive
     -- Doctor). Nullary, and it matches no GameEvent -- the arm runs only when
     -- the action it hangs off actually happened, CR 701.28e's ignored convert

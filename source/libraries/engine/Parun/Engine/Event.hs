@@ -11095,12 +11095,10 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.SelfPlaneswalkedAwayFrom -> False
   TriggerCondition.FlipsCoin _ -> False
   -- CR 701.3a names no turn: an Aura can be cast, and an Equipment equipped, on
-  -- any turn its controller has priority for.
-  TriggerCondition.SelfBecomesAttachedBy _ -> False
-  TriggerCondition.SelfBecomesAttachedTo _ -> False
-  -- CR 701.3d names no turn either: an Equipment comes off on whatever turn the
-  -- move, the zone change or the state-based action happens.
-  TriggerCondition.SelfBecomesUnattachedFrom _ -> False
+  -- any turn its controller has priority for. CR 701.3d names no turn either: an
+  -- Equipment comes off on whatever turn the move, the zone change or the
+  -- state-based action happens.
+  TriggerCondition.AttachmentChanges _ -> False
   -- One of the two arms carrying a TurnScope, and the one the lint below this
   -- was written for (CR 603.3a, CR 109.5).
   TriggerCondition.StepBegins (StepBegins.MkStepBegins _ _ TurnScope.ControllersTurn) -> True

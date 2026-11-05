@@ -84,11 +84,14 @@ import qualified Parun.Codec.AsCopySpec
 import qualified Parun.Codec.AtMostSpec
 import qualified Parun.Codec.AttachAllSpec
 import qualified Parun.Codec.AttachBoundSpec
+import qualified Parun.Codec.AttachDirectionSpec
 import qualified Parun.Codec.AttachRSpec
 import qualified Parun.Codec.AttachRestrictionSpec
 import qualified Parun.Codec.AttachRewriteSpec
 import qualified Parun.Codec.AttachTargetSpec
 import qualified Parun.Codec.AttachedToBoundSpec
+import qualified Parun.Codec.AttachmentEndSpec
+import qualified Parun.Codec.AttachmentTriggerSpec
 import qualified Parun.Codec.AttackCompanySpec
 import qualified Parun.Codec.AttackCostSpec
 import qualified Parun.Codec.AttackCountSpec
@@ -1250,6 +1253,9 @@ spec s registry corpus = do
   Parun.Codec.CreateEmblemSpec.spec s
   Parun.Codec.CreateSpec.spec s
   Parun.Codec.ExploitTriggerSpec.spec s
+  Parun.Codec.AttachDirectionSpec.spec s
+  Parun.Codec.AttachmentEndSpec.spec s
+  Parun.Codec.AttachmentTriggerSpec.spec s
   Parun.Codec.CoinFlipTriggerSpec.spec s
   Parun.Codec.FlipOutcomeSpec.spec s
   Parun.Codec.TransformTriggerSpec.spec s

@@ -1472,9 +1472,9 @@ grifterBladeSpec s registry = Spec.describe s "Grifter's Blade (CR 614.1c)" $ do
     -- record is written at the entry (Parun.Engine.Event, where the reasoning
     -- sits). Read off the LOG rather than through a
     -- trigger because nothing in data/cards/ prints one that would fire: a grep
-    -- for TriggerCondition.SelfBecomesAttachedBy (2026-09-19) finds only Bramble
-    -- Elemental, whose filter is HasSubtype Aura, and the attachment-side
-    -- SelfBecomesAttachedTo only Enormous Energy Blade, which is not this card.
+    -- for a Host TriggerCondition.AttachmentChanges (2026-09-19) finds only
+    -- Bramble Elemental, whose filter is HasSubtype Aura, and the Attachment end
+    -- only Enormous Energy Blade, which is not this card.
     -- So the line this guards is a regression fence rather than a gameplay-level
     -- proof.
     Spec.assertBool

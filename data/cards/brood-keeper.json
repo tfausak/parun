@@ -29,11 +29,19 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfBecomesAttachedBy",
+            "type": "AttachmentChanges",
             "value": {
-              "type": "HasSubtype",
-              "value": {
-                "type": "Aura"
+              "direction": {
+                "type": "Attaches"
+              },
+              "end": {
+                "type": "Host"
+              },
+              "other": {
+                "type": "HasSubtype",
+                "value": {
+                  "type": "Aura"
+                }
               }
             }
           },

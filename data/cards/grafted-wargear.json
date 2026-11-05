@@ -62,10 +62,18 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfBecomesUnattachedFrom",
+            "type": "AttachmentChanges",
             "value": {
-              "type": "And",
-              "value": []
+              "direction": {
+                "type": "Unattaches"
+              },
+              "end": {
+                "type": "Attachment"
+              },
+              "other": {
+                "type": "And",
+                "value": []
+              }
             }
           },
           "modal": {
