@@ -9,6 +9,8 @@ import qualified Data.Bifunctor as Bifunctor
 import qualified Data.Char as Char
 import qualified Data.Foldable as Foldable
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified Parun.Codec.CombatDamageOption as Codec.CombatDamageOption
@@ -22,6 +24,7 @@ import qualified Parun.Codec.Reference as Codec.Reference
 import qualified Parun.Codec.Reply as Codec.Reply
 import qualified Parun.Codec.Request as Codec.Request
 import qualified Parun.Codec.SlotName as Codec.SlotName
+import qualified Parun.Engine.Combat as Combat
 import qualified Parun.Engine.Driver as Driver
 import qualified Parun.Engine.Mana as Mana
 import qualified Parun.Engine.PlayerView as PlayerView
@@ -29,6 +32,7 @@ import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.JsonCodec.Codec as Codec
 import qualified Parun.JsonCodec.Common as Common
+import qualified Parun.Play.Render as Render
 import qualified Parun.Scenario as Scenario
 import qualified Parun.Scenario.Prompt as Scenario.Prompt
 import qualified Parun.Scenario.Reply as Reply
@@ -61,7 +65,8 @@ over send fallback = Answerer.MkAnswerer $ \asked -> case requestFor asked of
     let go pending = do
           line <- send (render pending)
           either (\problem -> go pending {Request.problem = Just problem}) pure $
-            Common.parse line >>= Codec.Reply.fromValue >>= decodeAnswer (Asked.prompt asked) >>= onOffer (Asked.prompt asked)
+            Common.parse line >>= Codec.Reply.fromValue >>= decodeAnswer (Asked.prompt asked) >>= onOffer (Asked.prompt asked) >>= lawful named (Asked.game asked) (Asked.prompt asked)
+        named = maybe (const (Text.pack "a creature")) Render.named (Request.view request)
      in go request
 
 -- | An answer the prompt offers. The engine reads one it does not with a
@@ -70,6 +75,26 @@ onOffer :: Prompt.Prompt r -> r -> Either Text.Text r
 onOffer prompt answer
   | Scenario.withinOffer prompt answer = Right answer
   | otherwise = Left (Text.pack "not an answer the prompt offers")
+
+-- | An answer the rules let stand: an illegal declaration of attackers (CR
+-- 508.1c, 508.1d) or blockers (CR 509.1b, 509.1c) is refused with why, where
+-- the engine's rewind would ask again with no reason and degrade a repeat to a
+-- declaration the player did not make. ProtocolSpec's Wind Drake and Bonded
+-- Construct cases are the proof.
+--
+-- Not implemented: refusing an illegal declaration of attackers where more than
+-- one attack target is declarable, whose CR 508.1b announcements follow this
+-- answer (#6291).
+lawful :: (ObjectId.ObjectId -> Text.Text) -> GameState.GameState -> Prompt.Prompt r -> r -> Either Text.Text r
+lawful named gs prompt answer = case prompt of
+  Prompt.DeclareAttackers _ pid _
+    | [target] <- Combat.declarableTargets gs,
+      not (Combat.attackProposalAllowed pid (Map.fromList (fmap (\oid -> (oid, target)) answer)) gs) ->
+        Left (Text.pack "the declaration of attackers is illegal")
+  Prompt.DeclareBlockers _ pid _ _
+    | not (Combat.legalBlockDeclaration pid answer gs) ->
+        Left (Text.pack "the declaration of blockers is illegal" <> foldMap (\(blocker, attacker) -> Text.pack ": " <> named blocker <> Text.pack " can't block " <> named attacker) (Maybe.listToMaybe (Combat.forbiddenBlocks pid answer gs)))
+  _ -> Right answer
 
 -- | One line: no newline inside it, and none after.
 render :: Request.Request -> Text.Text
