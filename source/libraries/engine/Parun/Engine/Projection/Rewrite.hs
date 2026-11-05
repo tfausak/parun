@@ -988,11 +988,9 @@ rewriteEffect pairs effect = case effect of
   Effect.Transform ref -> Effect.Transform (rewriteObjectRef pairs ref)
   Effect.Convert ref -> Effect.Convert (rewriteObjectRef pairs ref)
   Effect.Flip ref -> Effect.Flip (rewriteObjectRef pairs ref)
-  -- Through the combined back face as well as the ref, because the face is card
-  -- data the ability carries. That goes further than the rules: CR 612.2a covers
-  -- tokens, and CR 612.1 words printed on the object, which this face's are not
-  -- (gap #6250).
-  Effect.Meld (Meld.MkMeld ref card) -> Effect.Meld (Meld.MkMeld (rewriteObjectRef pairs ref) (rewriteCard pairs card))
+  -- The ref only: the combined back face's words are not printed on the object
+  -- (CR 612.1), and a meld result is no token (CR 612.2a).
+  Effect.Meld (Meld.MkMeld ref card) -> Effect.Meld (Meld.MkMeld (rewriteObjectRef pairs ref) card)
   Effect.PhaseOut ref -> Effect.PhaseOut (rewriteObjectRef pairs ref)
   Effect.AddPhases _ -> effect
   Effect.EndTurn -> effect
