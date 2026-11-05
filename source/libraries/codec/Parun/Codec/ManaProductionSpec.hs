@@ -5,6 +5,7 @@ import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.ColorSpread as ColorSpread
 import qualified Parun.Types.CouldProduce as CouldProduce
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.ManaCount as ManaCount
@@ -26,8 +27,14 @@ spec s = Spec.describe s "Parun.Codec.ManaProduction" $ do
     Common.assertCodec
       s
       ManaProduction.codec
-      ManaProduction.AnyColor
+      (ManaProduction.AnyColor ColorSpread.OneColor)
       " {\"type\":\"AnyColor\"} "
+  Spec.it s "AnyColor in any combination" $
+    Common.assertCodec
+      s
+      ManaProduction.codec
+      (ManaProduction.AnyColor ColorSpread.AnyCombination)
+      " {\"type\":\"AnyColor\",\"value\":{\"type\":\"AnyCombination\"}} "
   Spec.it s "Chosen" $
     Common.assertCodec
       s

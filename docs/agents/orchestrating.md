@@ -72,7 +72,7 @@ Per set, in this order, one unit at a time ("Mechanics").
    The PR stays a draft until the fixes land.
 5. **Finish.** When every capability card is in the pool, set "Needs a
    capability" to "Nothing", commit the set list as
-   `data/decks/sets/<set>.txt` (`1 Name` a line, one per card name;
+   `data/decks/sets/<set>/all.txt` (`1 Name` a line, one per card name;
    `DecksSpec` proves each resolves), and tick the set on #5468. The set's
    last unit does this; until then, check the list with `parun deck` from a
    scratch file. The orchestrator then writes `## How it went` as the

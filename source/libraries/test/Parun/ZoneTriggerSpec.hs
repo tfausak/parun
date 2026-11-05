@@ -64,12 +64,9 @@ import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.BlocksDeclared as BlocksDeclared
 import qualified Parun.Types.CandidateId as CandidateId
 import qualified Parun.Types.Card as Card
-import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
-import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
 import qualified Parun.Types.CardSelection as CardSelection
 import qualified Parun.Types.CardType as CardType
-import qualified Parun.Types.CardsPutIntoZone as CardsPutIntoZone
 import qualified Parun.Types.CausedBy as CausedBy
 import qualified Parun.Types.ClassLevel as ClassLevel
 import qualified Parun.Types.ClassLevelChange as ClassLevelChange
@@ -125,6 +122,7 @@ import qualified Parun.Types.Holder as Holder
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LandPlayed as LandPlayed
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
 import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
@@ -171,6 +169,7 @@ import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Prompt as Prompt
+import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.Quantity as Quantity.Type
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Regenerability as Regenerability
@@ -308,6 +307,16 @@ graveyardTriggerSpec s registry =
               died = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) creature Zone.Graveyard)
           Spec.assertEqWith s "nothing triggered" (fmap PendingTrigger.source (gathered died)) []
           Spec.assertBool s (Set.member narcomoebaName (namesIn Zone.Graveyard S.alice died)) "it is in the graveyard"
+        -- "This card": a Narcomoeba already in the graveyard does not see another
+        -- card milled into it, which matches its zones exactly.
+        Spec.it s "CR 113.6k Narcomoeba in the graveyard does not see ANOTHER card milled" $ do
+          narcomoeba <- S.printingOf s registry "Narcomoeba"
+          island <- S.printingOf s registry "Island"
+          let (_, gs0) = S.addGraveyardCard narcomoeba S.alice (Setup.emptyGame S.bothPlayers)
+              (islandCard, gs) = S.addLibraryCard island S.alice gs0
+              milled = S.runPure S.identityAnswer gs (Event.changeZone (pure ()) islandCard Zone.Graveyard)
+          Spec.assertEqWith s "nothing triggered" (fmap PendingTrigger.source (gathered milled)) []
+          Spec.assertEqWith s "both cards are in the graveyard" (Set.size (namesIn Zone.Graveyard S.alice milled)) 2
         -- The zone half, isolated from the mill: a graveyard card whose only
         -- trigger functions on the battlefield (CR 113.6's default) is not
         -- scanned into firing by an event it would have seen from play.
@@ -724,7 +733,7 @@ serraAvatarSpec s registry =
           Spec.assertBool s (Set.member avatarName (namesIn Zone.Library S.alice after)) "it is in its owner's library"
           Spec.assertBool s (not (Set.member avatarName (namesIn Zone.Graveyard S.alice after))) "and no longer in the graveyard"
         -- Half two, and the falsifier for the other direction -- collapsing this
-        -- condition into Narcomoeba's SelfPutIntoGraveyardFromLibrary. A mill
+        -- condition into Narcomoeba's library origin. A mill
         -- fires BOTH conditions; the hand case above is what only this one sees.
         Spec.it s "CR 603.6 a Serra Avatar milled from the LIBRARY triggers" $ do
           (libraryCard, gs) <- cardIn S.addLibraryCard
@@ -746,7 +755,7 @@ serraAvatarSpec s registry =
         Spec.it s "CR 603.6 only a GRAVEYARD destination matches: exile does not" $ do
           (creature, gs) <- cardIn S.addPermanent
           let moveTo to = GameEvent.Moved (Moved.moved (ZoneChange.MkZoneChange creature creature Zone.Battlefield to) S.emptyCharacteristics)
-              matches = Event.matchesTrigger gs creature S.alice TriggerCondition.SelfPutIntoGraveyardFromAnywhere
+              matches = Event.matchesTrigger gs creature S.alice (TriggerCondition.PutIntoZone (PutIntoZoneTrigger.self Zone.Graveyard))
           Spec.assertBool s (matches (moveTo Zone.Graveyard)) "a graveyard-bound move matches"
           Spec.assertBool s (not (matches (moveTo Zone.Exile))) "an exile-bound move does not"
         -- The gameplay-level companion to the pair above: an Avatar exiled off
@@ -1959,20 +1968,18 @@ representativeEvents cond =
           (BlockRole.Attacker, BlockCount.AtLeast {}) ->
             noTable (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked departed S.carol (Set.singleton (ObjectId.MkObjectId 41))))
               NonEmpty.:| [noTable (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 42, BecameBlocking.attacker = departed, BecameBlocking.producer = BlockProducer.PutOntoBattlefield, BecameBlocking.attackerWasBlocked = True, BecameBlocking.blockersBefore = Set.singleton (ObjectId.MkObjectId 43)}))]
-        TriggerCondition.SelfPutIntoGraveyardFromLibrary -> one (moved Zone.Library Zone.Graveyard)
-        -- Every origin zone is admitted, but the floor is the same for all of
-        -- them: the destination is always a graveyard, which CR 400.2 makes
-        -- public, so CR 400.7e never withholds anything and one event says as
-        -- much as any list would.
-        TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> one (moved Zone.Hand Zone.Graveyard)
-        -- CR 702.55a's spell sentence binds nothing either, for the arm above's
-        -- reason: the bearer already is the arriving card.
-        TriggerCondition.SelfPutIntoGraveyardDuringResolution -> one resolvedIntoGraveyard
-        -- BOTH events this condition admits, which is the whole reason it
-        -- exists: CR 712.21's second card is announced by a CardArrived event
-        -- rather than a Moved one, and the floor has to hold for each.
-        TriggerCondition.CardPutIntoGraveyard _ ->
-          noTable (moved Zone.Hand Zone.Graveyard) NonEmpty.:| [noTable (GameEvent.CardArrived (ZoneChange.MkZoneChange departed arrived Zone.Battlefield Zone.Graveyard))]
+        -- CR 603.6: one move into the zone the trigger names, from the first
+        -- origin it admits, and CR 712.21's second card, which a CardArrived
+        -- event announces rather than a Moved one: the floor has to hold for
+        -- each. CR 608.2n's narrowing admits the spell's own resolution move
+        -- alone. Every destination here is public, so CR 400.7e withholds
+        -- nothing, and a batch or a Self subject binds nothing at all.
+        TriggerCondition.PutIntoZone t
+          | PutIntoZoneTrigger.duringResolution t -> one resolvedIntoGraveyard
+          | otherwise ->
+              let origin = maybe Zone.Hand fst (Set.minView (PutIntoZoneTrigger.from t))
+                  to = PutIntoZoneTrigger.to t
+               in noTable (moved origin to) NonEmpty.:| [noTable (GameEvent.CardArrived (ZoneChange.MkZoneChange departed arrived Zone.Battlefield to))]
         -- CR 603.6c: one departure for each destination the trigger names, the
         -- floor having to hold for every one. With none named, a public and a
         -- hidden destination and CR 800.4a's departure from the game, the three
@@ -1986,25 +1993,16 @@ representativeEvents cond =
           Just events -> events
           Nothing -> noTable (moved Zone.Battlefield Zone.Graveyard) NonEmpty.:| [noTable (moved Zone.Battlefield Zone.Hand), noTable (leftTheGameFrom Zone.Battlefield)]
         -- The zone read on the DEPARTURE side instead: every destination the
-        -- condition admits has the same floor, so one event out of the zone it
-        -- names says as much as a list would -- SelfPutIntoGraveyardFromAnywhere's
-        -- reasoning pointed the other way. Empty, except Binding.handArrival for a
-        -- move reaching a hand, which a destination-free condition also admits --
-        -- as it admits CR 729.4a's crossing out of the zone, which reaches none.
-        TriggerCondition.CardLeavesZone p -> case CardLeavesZone.to p of
-          Just to -> one (moved (CardLeavesZone.from p) to)
-          Nothing -> noTable (moved (CardLeavesZone.from p) Zone.Battlefield) NonEmpty.:| [noTable (moved (CardLeavesZone.from p) Zone.Hand), noTable (leftTheGameFrom (CardLeavesZone.from p))]
-        -- The same events, a OneOrMore Leaves' reason: the batch arm
-        -- delegates to the singular's, so the two match alike. Each binds the
-        -- event's share of CR 603.2c's "that many".
-        TriggerCondition.CardsLeaveZone p -> case CardLeavesZone.to p of
-          Just to -> one (moved (CardLeavesZone.from p) to)
-          Nothing -> noTable (moved (CardLeavesZone.from p) Zone.Battlefield) NonEmpty.:| [noTable (leftTheGameFrom (CardLeavesZone.from p))]
-        -- The arrival side, pinned on the destination the condition names. Empty:
-        -- it binds nothing.
-        TriggerCondition.CardsPutIntoZone p -> one (moved Zone.Graveyard (CardsPutIntoZone.to p))
-        -- The self form out of the same zone. Empty: it binds nothing.
-        TriggerCondition.SelfLeavesGraveyard -> one (moved Zone.Graveyard Zone.Battlefield)
+        -- trigger admits has the same floor, so one event out of the zone it
+        -- names says as much as a list would. With none named, a move reaching
+        -- a hand, which binds Binding.handArrival for a single card, and CR
+        -- 729.4a's crossing out of the zone, which reaches none. A batch binds
+        -- each event's share of CR 603.2c's "that many" off every one.
+        TriggerCondition.LeavesZone t ->
+          let from = LeavesZoneTrigger.from t
+           in case LeavesZoneTrigger.to t of
+                Just to -> one (moved from to)
+                Nothing -> noTable (moved from Zone.Battlefield) NonEmpty.:| [noTable (moved from Zone.Hand), noTable (leftTheGameFrom from)]
         TriggerCondition.SpellOrAbilityCounters _ ->
           one (GameEvent.SpellCountered (Countering.MkCountering departed arrived S.alice))
         -- CR 701.6a's other subject and this condition's only event: the payload is
@@ -2279,7 +2277,6 @@ everyTriggerCondition =
     TriggerCondition.Enters EntersTrigger.defaultValue {EntersTrigger.batching = Batching.OneOrMore},
     TriggerCondition.Enters (EntersTrigger.matching Filter.Type.IsSource),
     TriggerCondition.Enters (EntersTrigger.matching Filter.Type.IsSource) {EntersTrigger.batching = Batching.OneOrMore},
-    TriggerCondition.CardPutIntoGraveyard (CardPutIntoGraveyard.MkCardPutIntoGraveyard Filter.Type.IsSource Set.empty),
     TriggerCondition.Leaves (LeavesTrigger.dies (LeavingPermanent.Matching Filter.Type.IsSource)),
     TriggerCondition.Leaves (LeavesTrigger.dies (LeavingPermanent.Matching Filter.Type.IsSource)) {LeavesTrigger.batching = Batching.OneOrMore},
     TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing TurnScope.EachTurn),
@@ -2359,9 +2356,15 @@ everyTriggerCondition =
     TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker (Filter.Type.And []) (BlockCount.EachCreature (Filter.Type.And []))),
     TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker Filter.Type.IsSource (BlockCount.AtLeast 1 (Filter.Type.And []))),
     TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker (Filter.Type.IsAttackingPlayer PlayerRelation.Opponent) (BlockCount.AtLeast 2 (Filter.Type.And []))),
-    TriggerCondition.SelfPutIntoGraveyardFromLibrary,
-    TriggerCondition.SelfPutIntoGraveyardFromAnywhere,
-    TriggerCondition.SelfPutIntoGraveyardDuringResolution,
+    -- CR 603.6's arrival: each subject, origins named and not, CR 608.2n's
+    -- narrowing, a batch into a hidden zone, and a batch from the battlefield.
+    TriggerCondition.PutIntoZone (PutIntoZoneTrigger.self Zone.Graveyard),
+    TriggerCondition.PutIntoZone (PutIntoZoneTrigger.self Zone.Graveyard) {PutIntoZoneTrigger.from = Set.singleton Zone.Library},
+    TriggerCondition.PutIntoZone (PutIntoZoneTrigger.self Zone.Graveyard) {PutIntoZoneTrigger.duringResolution = True},
+    TriggerCondition.PutIntoZone (PutIntoZoneTrigger.self Zone.Graveyard) {PutIntoZoneTrigger.card = ActingPermanent.Matching Filter.Type.IsSource},
+    TriggerCondition.PutIntoZone (PutIntoZoneTrigger.self Zone.Graveyard) {PutIntoZoneTrigger.card = ActingPermanent.Matching Filter.Type.IsSource, PutIntoZoneTrigger.from = Set.fromList [Zone.Library, Zone.Hand]},
+    TriggerCondition.PutIntoZone (PutIntoZoneTrigger.self Zone.Library) {PutIntoZoneTrigger.card = ActingPermanent.Matching Filter.Type.IsSource, PutIntoZoneTrigger.batching = Batching.OneOrMore},
+    TriggerCondition.PutIntoZone (PutIntoZoneTrigger.self Zone.Exile) {PutIntoZoneTrigger.card = ActingPermanent.Matching Filter.Type.IsSource, PutIntoZoneTrigger.from = Set.fromList [Zone.Graveyard, Zone.Battlefield], PutIntoZoneTrigger.batching = Batching.OneOrMore},
     TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self),
     TriggerCondition.Leaves LeavesTrigger.defaultValue,
     TriggerCondition.Leaves LeavesTrigger.defaultValue {LeavesTrigger.destinations = Set.singleton (OwnedZone.MkOwnedZone Zone.Graveyard PlayerRelation.You)},
@@ -2369,13 +2372,14 @@ everyTriggerCondition =
     TriggerCondition.Leaves LeavesTrigger.defaultValue {LeavesTrigger.permanent = LeavingPermanent.Matching Filter.Type.IsSource},
     TriggerCondition.Leaves LeavesTrigger.defaultValue {LeavesTrigger.permanent = LeavingPermanent.Matching Filter.Type.IsSource, LeavesTrigger.destinations = Set.singleton (OwnedZone.MkOwnedZone Zone.Hand PlayerRelation.AnyPlayer)},
     TriggerCondition.Leaves LeavesTrigger.defaultValue {LeavesTrigger.permanent = LeavingPermanent.Matching Filter.Type.IsSource, LeavesTrigger.destinations = Set.singleton (OwnedZone.MkOwnedZone Zone.Hand PlayerRelation.AnyPlayer), LeavesTrigger.batching = Batching.OneOrMore},
-    TriggerCondition.CardLeavesZone (CardLeavesZone.MkCardLeavesZone Filter.Type.IsSource TurnScope.EachTurn Zone.Graveyard Nothing Nothing),
-    TriggerCondition.CardLeavesZone (CardLeavesZone.MkCardLeavesZone Filter.Type.IsSource TurnScope.EachTurn Zone.Graveyard Nothing (Just PlayerRelation.You)),
-    TriggerCondition.CardLeavesZone (CardLeavesZone.MkCardLeavesZone Filter.Type.IsSource TurnScope.EachTurn Zone.Library (Just Zone.Hand) Nothing),
-    TriggerCondition.CardsLeaveZone (CardLeavesZone.MkCardLeavesZone Filter.Type.IsSource TurnScope.EachTurn Zone.Graveyard Nothing Nothing),
-    TriggerCondition.CardsLeaveZone (CardLeavesZone.MkCardLeavesZone Filter.Type.IsSource TurnScope.EachTurn Zone.Exile Nothing Nothing),
-    TriggerCondition.CardsPutIntoZone (CardsPutIntoZone.MkCardsPutIntoZone Filter.Type.IsSource TurnScope.EachTurn Set.empty Zone.Library),
-    TriggerCondition.SelfLeavesGraveyard,
+    -- CR 400.7's departure: each subject, a pile, a hand destination, and a
+    -- batch out of a graveyard and out of exile.
+    TriggerCondition.LeavesZone (LeavesZoneTrigger.self Zone.Graveyard),
+    TriggerCondition.LeavesZone (LeavesZoneTrigger.self Zone.Graveyard) {LeavesZoneTrigger.card = ActingPermanent.Matching Filter.Type.IsSource},
+    TriggerCondition.LeavesZone (LeavesZoneTrigger.self Zone.Graveyard) {LeavesZoneTrigger.card = ActingPermanent.Matching Filter.Type.IsSource, LeavesZoneTrigger.whose = Just PlayerRelation.You, LeavesZoneTrigger.scope = TurnScope.ControllersTurn},
+    TriggerCondition.LeavesZone (LeavesZoneTrigger.self Zone.Library) {LeavesZoneTrigger.card = ActingPermanent.Matching Filter.Type.IsSource, LeavesZoneTrigger.to = Just Zone.Hand},
+    TriggerCondition.LeavesZone (LeavesZoneTrigger.self Zone.Graveyard) {LeavesZoneTrigger.card = ActingPermanent.Matching Filter.Type.IsSource, LeavesZoneTrigger.batching = Batching.OneOrMore},
+    TriggerCondition.LeavesZone (LeavesZoneTrigger.self Zone.Exile) {LeavesZoneTrigger.card = ActingPermanent.Matching Filter.Type.IsSource, LeavesZoneTrigger.batching = Batching.OneOrMore},
     TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Haunted),
     -- CR 603.6c's fields off the shapes card data prints: a hidden destination
     -- alone, public and hidden together, a bystander or bound subject naming no

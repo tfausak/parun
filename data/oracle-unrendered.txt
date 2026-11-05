@@ -61,6 +61,7 @@ akki-lavarunner-tok-tok-volcano-born
 akoum
 alabaster-dragon
 aladdin
+aladdins-lamp
 alchemists-gambit
 alchemists-retrieval
 alchemists-vial
@@ -114,6 +115,7 @@ animate-wall
 animists-awakening
 ankh-of-mishra
 annex
+anointed-procession
 aphotic-wisps
 apocalypse-chime
 approach-of-the-second-sun
@@ -1383,7 +1385,6 @@ indentured-djinn
 index
 indigo-faerie
 indomitable-might
-indulgent-tormentor
 infantry-shield
 infectious-bloodlust
 infernal-contract
@@ -1684,6 +1685,7 @@ magister-sphinx
 magistrates-scepter
 magmakin-artillerist
 magmatic-insight
+magnetic-mountain
 magnetic-theft
 magnivore
 magnus-the-red
@@ -1852,6 +1854,7 @@ mystic-skyfish
 mystifying-maze
 nacatl-hunt-pride
 nael-avizoa-aeronaut
+nafs-asp
 naked-singularity
 nameless-inversion
 nantuko-cultivator
@@ -2040,6 +2043,7 @@ phantom-beast
 phantom-tiger
 phylactery-lich
 phyrexian-colossus
+phyrexian-fleshgorger
 phyrexian-ingester
 phyrexian-metamorph
 phyrexian-rebirth
@@ -2080,6 +2084,7 @@ port-of-karfell
 portal-of-sanctuary
 portent
 possessed-skaab
+power-leak
 power-play
 power-sink
 pox
@@ -2153,6 +2158,7 @@ quarry-colossus
 queen-allenal-of-ruadach
 queen-marchesa
 queens-bay-paladin
+quenchable-fire
 questing-beast
 questing-druid-seek-the-beast
 quicken
@@ -2465,6 +2471,7 @@ serras-hymn
 serum-powder
 setons-desire
 shacklegeist
+shadow-in-the-warp
 shadow-prophecy
 shadow-the-hedgehog
 shadow-urchin
@@ -2909,7 +2916,6 @@ tome-of-the-infinite
 too-greedily-too-deep
 toralfs-disciple
 torgaar-famine-incarnate
-torment-of-venom
 tormented-thoughts
 tormenting-voice
 tormods-crypt
@@ -2919,6 +2925,7 @@ total-war
 touch-of-death
 touch-of-moonglove
 touch-of-the-eternal
+touch-of-vitae
 tovolar-dire-overlord-tovolar-the-midnight-scourge
 tower-geist
 toxic-deluge
@@ -2957,6 +2964,7 @@ tsabos-web
 turn-the-tables
 turn-to-frog
 turn-to-slag
+turntimber-ranger
 turret-ogre
 tusk-and-whiskers
 twinblade-assassins
@@ -3272,7 +3280,6 @@ cavalier-of-night
 chrome-replicator
 conclave-mentor
 containment-priest
-crypt-lurker
 destructive-tampering
 discontinuity
 double-vision
@@ -3399,3 +3406,5 @@ go-ninja-go
 nether-shadow
 shapeshifter
 captive-audience
+prismatic-geoscope
+wizards-rockets

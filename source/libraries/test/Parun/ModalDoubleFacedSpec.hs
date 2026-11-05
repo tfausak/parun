@@ -142,7 +142,7 @@ landPlays actions =
         A.PutCompanionIntoHand -> Nothing
         A.RollPlanarDie -> Nothing
         A.Ignore _ _ -> Nothing
-        A.EndEffect _ -> Nothing
+        A.EndEffect {} -> Nothing
         A.PayLifeForMana _ _ -> Nothing
         A.ActivateManaAbility _ -> Nothing
    in Maybe.mapMaybe playOf actions

@@ -22,7 +22,7 @@ import qualified Parun.Engine.Condition as Condition
 import qualified Parun.Engine.Decide as Decide
 import qualified Parun.Engine.EffectZone as EffectZone
 import Parun.Engine.Event.Binding (batchBindings, batchPartition, countersMovedOn, eventBindingsOver)
-import Parun.Engine.Event.Match (additionalEntryTriggers, additionalTriggers, matchesTriggerGiven, stepPlayers)
+import Parun.Engine.Event.Match (additionalEntryTriggers, additionalTriggers, leavesZoneLooksBack, matchesTriggerGiven, putIntoZoneLooksBack, stepPlayers)
 import qualified Parun.Engine.Expiry as Expiry
 import qualified Parun.Engine.Filter as Filter
 import qualified Parun.Engine.Game as Game
@@ -40,6 +40,7 @@ import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.AbilityTriggered as AbilityTriggered
 import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
+import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackTrigger as AttackTrigger
@@ -59,8 +60,6 @@ import qualified Parun.Types.BecameTarget as BecameTarget
 import qualified Parun.Types.BecameUnattached as BecameUnattached
 import qualified Parun.Types.BlocksDeclared as BlocksDeclared
 import Parun.Types.Card (Card)
-import qualified Parun.Types.CardLeavesZone as CardLeavesZone
-import qualified Parun.Types.CardsPutIntoZone as CardsPutIntoZone
 import qualified Parun.Types.CausedBy as CausedBy
 import qualified Parun.Types.ClassLevelChange as ClassLevelChange
 import qualified Parun.Types.CoinFlipped as CoinFlipped
@@ -100,6 +99,7 @@ import qualified Parun.Types.HalfUnlocked as HalfUnlocked
 import qualified Parun.Types.LandPlayed as LandPlayed
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
 import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
@@ -128,6 +128,7 @@ import qualified Parun.Types.PlayerActed as PlayerActed
 import Parun.Types.PlayerId (PlayerId)
 import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Prompt as Prompt
+import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.RangeOfInfluence as RangeOfInfluence
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.RevealCause as RevealCause
@@ -569,29 +570,28 @@ looksBack condition = case condition of
   -- case).
   TriggerCondition.FaceDownPermanentLeavesRevealed -> True
   -- CR 603.10a's third family, named in that rule's own list: "abilities that
-  -- trigger when a card leaves a graveyard". And its fourth, CardsPutIntoZone's
-  -- below, where the condition names a hand or library as the destination
-  -- (Kithkin Brinefarer's "put into your hand from your library");
-  -- matchesTriggerGiven's arm asks each move whether all players could see it.
-  -- A card leaving any other zone for anywhere else is in neither.
-  TriggerCondition.CardLeavesZone p -> leavesLookingBack p
-  -- The batch reading is in the same family: CR 603.10a names the family
-  -- without counting its members.
-  TriggerCondition.CardsLeaveZone p -> leavesLookingBack p
+  -- trigger when a card leaves a graveyard", and its fourth, where the trigger
+  -- names a hand or library as the destination (Kithkin Brinefarer's "put into
+  -- your hand from your library"); Match.leavesZone asks each move whether all
+  -- players could see it. A card leaving any other zone for anywhere else is in
+  -- neither. The batch reading is in the same family: CR 603.10a names the
+  -- family without counting its members. A Self subject is load-bearing here:
+  -- by CR 113.6k the bearer IS the departing card, so only the look-back finds
+  -- it at all.
+  TriggerCondition.LeavesZone t -> leavesZoneLooksBack t
   -- CR 603.10a's fourth family, "put into a hand or library", which are CR
-  -- 400.2's two hidden zones. The rule narrows it to an object all players could
-  -- see; matchesTriggerGiven's arm asks that of each move, since it is a fact
-  -- about the event rather than the condition.
+  -- 400.2's two hidden zones, and its first where the trigger names the
+  -- battlefield as an origin (CR 603.6c). The rule narrows the fourth to an
+  -- object all players could see; Match.putIntoZone asks that of each move,
+  -- since it is a fact about the event rather than the trigger. Any other
+  -- arrival is outside the family: CR 603.6c's last sentence puts "from
+  -- anywhere" outside it, and CR 603.10's normal reading applies.
   --
   -- The answer decides a bearer that left for another zone while a visible card
   -- entered a library in the same group, `leftBattlefield` already offering a
   -- bearer its own move. Parun.LeavesTriggerSpec's "CR 603.10a an exiled Seeker
   -- looks back at" cases are the proof.
-  TriggerCondition.CardsPutIntoZone p -> Game.isHiddenZone (CardsPutIntoZone.to p)
-  -- The same third family read off the card itself, and the one it is
-  -- load-bearing for: by CR 113.6k the bearer IS the departing card, so only the
-  -- look-back finds it at all.
-  TriggerCondition.SelfLeavesGraveyard -> True
+  TriggerCondition.PutIntoZone t -> putIntoZoneLooksBack t
   -- Not on CR 603.10a's list at all: that rule names leaves-the-battlefield
   -- abilities, sacrifices, cards leaving a graveyard and objects put into a hand
   -- or library, and a permanent becoming tapped is none of them. It stays on the
@@ -619,18 +619,6 @@ looksBack condition = case condition of
   -- still has to admit the candidate.
   TriggerCondition.AnyOf conditions -> any looksBack conditions
   TriggerCondition.CausedBy narrowed -> looksBack (CausedBy.condition narrowed)
-  -- CR 603.6c's own last sentence puts this OUTSIDE the family: a card put into
-  -- a graveyard from anywhere is not a leaves-the-battlefield ability, and CR
-  -- 603.10's normal reading applies. The constructor's own Haddock argues it.
-  TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> False
-  TriggerCondition.SelfPutIntoGraveyardDuringResolution -> False
-  -- The bystander reading of the arm above, and outside the family for the same
-  -- sentence of CR 603.6c.
-  TriggerCondition.CardPutIntoGraveyard _ -> False
-  -- Library to graveyard, which is on none of CR 603.10a's four families: a card
-  -- leaving a LIBRARY is not a card leaving a graveyard, and the bearer this
-  -- reads is the CR 400.7 incarnation that arrived.
-  TriggerCondition.SelfPutIntoGraveyardFromLibrary -> False
   -- CR 708.8 leaves the permanent on the battlefield, so there is no departure
   -- for a look-back to recover and the live read is what CR 603.10's first
   -- sentence asks for. Both written forms.
@@ -736,13 +724,6 @@ looksBack condition = case condition of
   -- a reflexive is fired by none. Its bearer is a CR 603.7 delayed entry too.
   TriggerCondition.Reflexive -> False
 
--- CR 603.10a's third and fourth families for a card leaving a zone: a card
--- leaving a graveyard, or one put into a hand or library (CR 400.2's hidden
--- zones). Parun.LeavesTriggerSpec's "CR 603.10a an exiled Kithkin Brinefarer
--- looks back" cases are the proof of the second.
-leavesLookingBack :: CardLeavesZone.CardLeavesZone -> Bool
-leavesLookingBack p = CardLeavesZone.from p == Zone.Graveyard || maybe False Game.isHiddenZone (CardLeavesZone.to p)
-
 -- CR 603.2c: does this condition's trigger event CONTAIN the occurrences, or IS
 -- each occurrence its trigger event? "Whenever one or more
 -- other creatures you control die" names the whole CR 704.3 / CR 608.2f batch, so
@@ -799,22 +780,18 @@ batchScoped condition = case condition of
   -- Per-occurrence too: CR 701.3d's routes each unattach one permanent from one
   -- host, and no printing reads a batch of them.
   TriggerCondition.SelfBecomesUnattachedFrom _ -> False
-  -- Per-card, an EachOccurrence Leaves' answer: Kishla Skimmer's "whenever a card
-  -- leaves your graveyard" is CR 603.2c's second sentence, so a resolution that
-  -- moved two cards out of one graveyard fires it twice.
-  TriggerCondition.CardLeavesZone {} -> False
-  -- A True beside the arm above, a OneOrMore Leaves' reason one zone over:
-  -- CR 608.2f's sweep moves the cards as one action, Parun.Engine.Resolve brackets
-  -- it as one Parun.Types.EventGroup, and "one or more cards leave your graveyard"
-  -- (Spirit Mascot) names that whole group as its trigger event. Proved by
+  -- CR 603.2c, off the field, a Leaves' answer one zone over: Kishla Skimmer's
+  -- "whenever a card leaves your graveyard" is the rule's second sentence, so a
+  -- resolution that moved two cards out of one graveyard fires it twice, while
+  -- "one or more cards leave your graveyard" (Spirit Mascot) names the whole
+  -- CR 608.2f group Parun.Engine.Resolve brackets. Proved by
   -- Parun.LeavesTriggerSpec's "CR 603.2c two cards leaving alice's graveyard at
   -- once put ONE counter on the Mascot".
-  TriggerCondition.CardsLeaveZone {} -> True
-  -- The arrival side of the same reading: Dutiful Knowledge Seeker's "one or
-  -- more cards are put into a library" names the whole group once.
-  TriggerCondition.CardsPutIntoZone {} -> True
-  -- One card, one departure.
-  TriggerCondition.SelfLeavesGraveyard -> False
+  TriggerCondition.LeavesZone t -> LeavesZoneTrigger.batching t == Batching.OneOrMore
+  -- The arrival side of the same reading: Planar Void's printing is singular,
+  -- while Dutiful Knowledge Seeker's "one or more cards are put into a library"
+  -- names the whole group once.
+  TriggerCondition.PutIntoZone t -> PutIntoZoneTrigger.batching t == Batching.OneOrMore
   -- Thoughtleech's "whenever an Island ... becomes tapped" has no "one or
   -- more", so each permanent a tapping event taps is its own occurrence. The
   -- untap direction the same way, CR 502.3's simultaneous batch included:
@@ -839,12 +816,6 @@ batchScoped condition = case condition of
   TriggerCondition.PermanentSacrificed {} -> False
   TriggerCondition.AnyOf conditions -> any batchScoped conditions
   TriggerCondition.CausedBy narrowed -> batchScoped (CausedBy.condition narrowed)
-  -- CR 603.2c's second sentence: Planar Void's printing is singular, so each
-  -- card put into a graveyard is its own trigger event.
-  TriggerCondition.CardPutIntoGraveyard _ -> False
-  TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> False
-  TriggerCondition.SelfPutIntoGraveyardDuringResolution -> False
-  TriggerCondition.SelfPutIntoGraveyardFromLibrary -> False
   TriggerCondition.SelfTurnedFaceUp -> False
   TriggerCondition.PermanentTurnedFaceUp _ -> False
   TriggerCondition.FaceDownPermanentLeavesRevealed -> False
@@ -1770,7 +1741,7 @@ eventTriggers events gs =
       -- Keyed by `ZoneChange.departed`, the graveyard incarnation: the id
       -- `ZoneChange.object` named when it ARRIVED, which is the id `arrivedLater`
       -- subtracts, the id `inGraveyards` would have offered, and the one
-      -- `matchesTriggerGiven` compares against for SelfPutIntoGraveyardFromLibrary.
+      -- `matchesTriggerGiven` compares against for a Self PutIntoZone.
       -- The two ids coincide by construction, and that is the hinge of this source.
       --
       -- Abilities from the last known projection rather than a printed face: a
@@ -2662,12 +2633,8 @@ conditionPutsSelfInto condition zone = case condition of
   -- ability is scanned in exile without asking `functionsIn` (`exileCandidate`).
   TriggerCondition.Discards (DiscardTrigger.MkDiscardTrigger DiscardSubject.Self way _)
     | way /= DiscardWay.ExiledForMadness -> zone == Zone.Graveyard
-  -- CR 603.6's graveyard-arrival forms, either origin.
-  TriggerCondition.SelfPutIntoGraveyardFromLibrary -> zone == Zone.Graveyard
-  TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> zone == Zone.Graveyard
-  -- CR 608.2n narrows the arm above to one cause and leaves its destination
-  -- alone, so the answer is the same graveyard.
-  TriggerCondition.SelfPutIntoGraveyardDuringResolution -> zone == Zone.Graveyard
+  -- CR 603.6's arrival forms, whatever the origin or CR 608.2n's cause.
+  TriggerCondition.PutIntoZone (PutIntoZoneTrigger.MkPutIntoZoneTrigger ActingPermanent.Self _ to _ _ _) -> zone == to
   TriggerCondition.AnyOf conditions -> any (`conditionPutsSelfInto` zone) conditions
   TriggerCondition.CausedBy narrowed -> conditionPutsSelfInto (CausedBy.condition narrowed) zone
   _ -> False
@@ -2963,38 +2930,29 @@ zonesTriggeredFrom cond =
         -- the battlefield. CR 702.94a's miracle answers a hand below, and it is a
         -- different condition -- it watches the REVEAL, not the draw.
         TriggerCondition.PlayerDrawsNthCard {} -> battlefield
-        -- The condition this predicate exists for: a card cannot be put into a graveyard
-        -- from a library while on the battlefield, so this can never trigger from there
-        -- and the graveyard it lands in is the one zone it can.
-        TriggerCondition.SelfPutIntoGraveyardFromLibrary -> Set.singleton Zone.Graveyard
-        -- The graveyard for a NEARER reason than the library condition's, and the one
-        -- that matters: this condition CAN follow a battlefield-to-graveyard move, but CR
-        -- 603.6c's last sentence denies it the leaves-the-battlefield look-back, so
-        -- the bearer is never the permanent on the battlefield -- it is always the card
-        -- that arrived in the graveyard. Nothing it can trigger from is the
-        -- battlefield, so CR 113.6k puts it in every zone it can, and the graveyard is
-        -- where the scan meets it whatever zone the card came from.
-        TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> Set.singleton Zone.Graveyard
-        -- The graveyard for that same reason: CR 608.2n has already put the card
-        -- there by the time the ability is gathered.
-        TriggerCondition.SelfPutIntoGraveyardDuringResolution -> Set.singleton Zone.Graveyard
-        -- The bystander reading takes CR 113.6's default instead: the watcher is a
-        -- permanent on the battlefield (Planar Void), and nothing about the condition
-        -- says otherwise.
-        TriggerCondition.CardPutIntoGraveyard _ -> battlefield
-        -- CR 113.6's default once more: Kishla Skimmer is a creature watching its
-        -- controller's graveyard from the battlefield, and CR 113.6k's exception is for
-        -- a condition that cannot trigger from there at all.
-        TriggerCondition.CardLeavesZone {} -> battlefield
-        -- The batch reading watches the same graveyard from the same zone.
-        TriggerCondition.CardsLeaveZone {} -> battlefield
-        -- CR 113.6's default: Dutiful Knowledge Seeker watches libraries from the
-        -- battlefield, and its own move there is found by CR 603.10a's look-back.
-        TriggerCondition.CardsPutIntoZone {} -> battlefield
+        -- The condition this predicate exists for: a card cannot be put into a
+        -- graveyard from a library while on the battlefield, and a Self arrival
+        -- from anywhere is denied the leaves-the-battlefield look-back by CR
+        -- 603.6c's last sentence, so the bearer is never the permanent on the
+        -- battlefield -- it is always the card that arrived. CR 113.6k puts the
+        -- ability in the one zone it can trigger from, where the scan meets it.
+        -- CR 608.2n's cause has put the card there too by the time the ability
+        -- is gathered.
+        --
+        -- A Matching card takes CR 113.6's default instead: the watcher is a
+        -- permanent on the battlefield (Planar Void; Dutiful Knowledge Seeker,
+        -- whose own move into a library CR 603.10a's look-back finds).
+        TriggerCondition.PutIntoZone t -> case PutIntoZoneTrigger.card t of
+          ActingPermanent.Self -> Set.singleton (PutIntoZoneTrigger.to t)
+          ActingPermanent.Matching _ -> battlefield
         -- CR 113.6k: a card leaving a graveyard is in one until it leaves, so the
-        -- graveyard is the one zone this can trigger from. eventTriggers'
-        -- `leftGraveyardSame` is what serves it, the departure being its own event.
-        TriggerCondition.SelfLeavesGraveyard -> Set.singleton Zone.Graveyard
+        -- zone it leaves is the one a Self subject can trigger from.
+        -- eventTriggers' `leftGraveyardSame` is what serves it, the departure
+        -- being its own event. A Matching card takes CR 113.6's default: Kishla
+        -- Skimmer watches its controller's graveyard from the battlefield.
+        TriggerCondition.LeavesZone t -> case LeavesZoneTrigger.card t of
+          ActingPermanent.Self -> Set.singleton (LeavesZoneTrigger.from t)
+          ActingPermanent.Matching _ -> battlefield
         -- CR 113.6's default again: the bearer watches from the battlefield.
         TriggerCondition.SpellOrAbilityCounters _ -> battlefield
         TriggerCondition.AbilityIsCountered -> battlefield
@@ -3194,14 +3152,8 @@ stateTriggersOn gs
             TriggerCondition.RevealedThisWay _ -> False
             TriggerCondition.Discards _ -> False
             TriggerCondition.PlayerDrawsNthCard {} -> False
-            TriggerCondition.SelfPutIntoGraveyardFromLibrary -> False
-            TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> False
-            TriggerCondition.SelfPutIntoGraveyardDuringResolution -> False
-            TriggerCondition.CardPutIntoGraveyard _ -> False
-            TriggerCondition.CardLeavesZone {} -> False
-            TriggerCondition.CardsLeaveZone {} -> False
-            TriggerCondition.CardsPutIntoZone {} -> False
-            TriggerCondition.SelfLeavesGraveyard -> False
+            TriggerCondition.LeavesZone _ -> False
+            TriggerCondition.PutIntoZone _ -> False
             TriggerCondition.SpellOrAbilityCounters _ -> False
             TriggerCondition.AbilityIsCountered -> False
             TriggerCondition.DamageToPlayerPrevented _ -> False
@@ -3580,6 +3532,11 @@ delayedPending grouped gs =
           -- player" is the seat that just gained, not one the arming spell named.
           -- Map.union is left-biased, so a name the arming environment happens to
           -- share is read as THIS firing's, which is what the printed word means.
+          -- Except a step's beginning, which names only the seat the turn began
+          -- with (Binding.eventBindingsOver) and happens to no player: under CR
+          -- 805.4 that seat is a teammate of the one Nafs Asp hit or Elkin Lair
+          -- exiled from, so what the arming environment named stands. Proved by
+          -- data/scenarios/nafs-asp-under-shared-turns-costs-the-teammate-it-hit.json.
           -- Nothing for CR 400.7f's bearer arrival: this scan looks for events a
           -- delayed entry watches, not for a bearer's own departure, and the
           -- entry's captured environment (CR 603.7c) is where what it knows about
@@ -3587,7 +3544,10 @@ delayedPending grouped gs =
           -- same reason -- this scan gathers no batch -- which is why CR 400.7e's
           -- new object is claimed by eventBindingSlotsSometimes and not by the
           -- floor wherever eventBindings reads that table.
-          (Map.union (eventSlots entry logged) (DelayedTrigger.bindings entry))
+          ( case LoggedEvent.event logged of
+              GameEvent.StepBegan _ -> Map.union (DelayedTrigger.bindings entry) (eventSlots entry logged)
+              _ -> Map.union (eventSlots entry logged) (DelayedTrigger.bindings entry)
+          )
           -- CR 603.7a: what tells the ability this becomes apart from one its
           -- source simply has, once it is on the stack.
           (Just (DelayedTrigger.createdAt entry))

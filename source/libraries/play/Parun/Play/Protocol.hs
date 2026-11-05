@@ -178,7 +178,7 @@ actionOffer gs action = fields (("action", R.Text (Text.pack kind)) : rest)
       Action.Foretell oid -> ("Foretell", on oid)
       Action.Suspend oid -> ("Suspend", on oid)
       Action.PutCompanionIntoHand -> ("PutCompanionIntoHand", [])
-      Action.EndEffect oid -> ("EndEffect", on oid)
+      Action.EndEffect oid _ -> ("EndEffect", on oid)
       Action.PayLifeForMana life mana -> ("PayLifeForMana", [("life", natural life), ("mana", Reply.encode (Reply.viaCodec Codec.ManaType.codec) namer mana)])
       Action.RollPlanarDie -> ("RollPlanarDie", [])
     on oid = [("object", object oid)]

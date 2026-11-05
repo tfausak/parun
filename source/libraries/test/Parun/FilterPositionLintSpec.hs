@@ -186,6 +186,7 @@ import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TurnRole as TurnRole
 import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
+import qualified Parun.Types.UntilPaid as UntilPaid
 import qualified Parun.Types.WhichCounters as WhichCounters
 import qualified Parun.Types.WhichTurn as WhichTurn
 import qualified Parun.Types.WithCounters as WithCounters
@@ -1955,8 +1956,8 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- abilities, whose X CR 602.2b announces.
     --
     -- Exactly, against the mana value: Chthonian Nightmare, Tamiyo, Compleated
-    -- Sage, Synthetic Counted, Announced and Wide Verdict, Spell Blast and
-    -- Detonate in a slot, and Fear of Change and Ornate Imitations in a reference
+    -- Sage, Synthetic Counted, Announced, Wide, Paired, Total and Divided
+    -- Verdict, Spell Blast and Detonate in a slot, and Fear of Change and Ornate Imitations in a reference
     -- pick, at the top level and
     -- inside a ForEachNumber body; Isareth the Awakener in a reflexive delayed
     -- ability's slot, whose amount the arming resolution's chosen X binds.
@@ -1989,6 +1990,9 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Synthetic Counted Verdict", 1),
         ("Synthetic Announced Verdict", 1),
         ("Synthetic Wide Verdict", 1),
+        ("Synthetic Paired Verdict", 1),
+        ("Synthetic Total Verdict", 1),
+        ("Synthetic Divided Verdict", 1),
         ("Spell Blast", 1),
         ("Detonate", 1),
         ("Fear of Change", 1),
@@ -2121,6 +2125,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         ("Ring of Xathrid", 1), -- Regeneration's wording, through an Equipment
         ("Claustrophobia", 1), -- Bewitching Leechcraft's entering tap
         ("Paralyze", 2), -- the entering tap and the paid untap
+        ("Erosion", 1), -- the destroy a refused payment leaves
         ("Waterknot", 1), -- Claustrophobia's wording
         ("Sleep Paralysis", 1), -- Claustrophobia's wording
         ("Capture Sphere", 1), -- Claustrophobia's wording
@@ -2373,7 +2378,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         -- announcement could answer in any engine.
         ignoring = base {Face.specialActions = [SpecialAction.IgnoreThisUntilEndOfTurn (AbilityName.MkAbilityName (Text.pack "the prohibition")) sacrificeCost]}
         -- CR 116.2c: the same special action, as the price of ending an effect.
-        ending = base {Face.spell = spellOf [Effect.AffectPlayers (AffectPlayers.MkAffectPlayers (Duration.UntilPaid sacrificeCost) (AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.You)) PlayerEffect.CantCastSpells)]}
+        ending = base {Face.spell = spellOf [Effect.AffectPlayers (AffectPlayers.MkAffectPlayers (Duration.UntilPaid (UntilPaid.MkUntilPaid (PlayerRef.Relative PlayerRelation.You) sacrificeCost)) (AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.You)) PlayerEffect.CantCastSpells)]}
         -- CR 508.1h and CR 509.1d: a declaration announces no target.
         attacking = base {Face.attackCosts = [AttackCost.MkAttackCost (Affected.Matching (Filter.Type.HasCardType CardType.Creature)) (PerCreature.Fixed sacrificeCost) AttackCostScope.Controller Nothing]}
         blocking = base {Face.blockCosts = [BlockCost.MkBlockCost (Affected.Matching (Filter.Type.HasCardType CardType.Creature)) (PerCreature.Fixed sacrificeCost) Nothing Nothing]}

@@ -87,6 +87,7 @@ subdirectory named for that spec; `docs/scenario-burndown.md` lists the ones sti
   `Take` takes any other action offered at priority (CR 116.2, 605.3a), named
   as the `Offered` view renders it, with a cast's choices such as `mana`:
   `{ "action": "TurnFaceUp $piker Manifest", "mana": ["$mountain"] }`.
+  A second CR 116.2c offer from one source to one seat renders as `EndEffect $asp #2`.
   `OrderTriggers` lists one player's simultaneous triggers by source, `null`
   for a sourceless one such as the monarch's draw, in the order they go on the
   stack, so the last named resolves first (CR 603.3b).

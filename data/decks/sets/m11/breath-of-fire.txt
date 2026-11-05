@@ -1,0 +1,26 @@
+9 Island
+16 Mountain
+1 Ancient Hellkite
+1 Augury Owl
+2 Berserkers of Blood Ridge
+1 Call to Mind
+1 Canyon Minotaur
+3 Chandra's Outrage
+2 Chandra's Spitfire
+1 Cyclops Gladiator
+1 Earth Servant
+2 Ember Hauler
+2 Fiery Hellhound
+1 Fire Servant
+1 Fireball
+1 Foresee
+1 Goblin Piker
+2 Goblin Tunneler
+2 Lava Axe
+3 Lightning Bolt
+1 Negate
+1 Preordain
+2 Prodigal Pyromancer
+1 Shiv's Embrace
+1 Stone Golem
+1 Unsummon

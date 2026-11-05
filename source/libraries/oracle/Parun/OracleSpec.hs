@@ -733,6 +733,13 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let graveyardCards = countOf (Filter.And []) (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You))
         disdain = spell [(clause [counter]) {Clause.payGate = Just ((gate PayBranch.IfNotPaid (PlayerRef.HolderOfBound Holder.Controller Hop.Itself target) (mana [ManaSymbol.Generic 1])) {PayGate.perEach = Just graveyardCards})}] spellSlot
     Spec.assertEq s (Just (Text.pack "Counter target spell unless its controller pays {1} for each card in your graveyard.")) (Oracle.render disdain)
+    let choosing options = spell [(clause [counter]) {Clause.payGate = Just ((gate PayBranch.IfNotPaid (PlayerRef.HolderOfBound Holder.Controller Hop.Itself target) (mana [ManaSymbol.Generic 1])) {PayGate.cost = CostChoice.MkCostChoice options})}] spellSlot
+        life = Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost []), Cost.components = [CostComponent.PayLife (CostAmount.Fixed 1)]}
+        discards = Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost []), Cost.components = [CostComponent.DiscardCards (DiscardCards.MkDiscardCards (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.And []) CardSelection.ByChoice)]}
+    Spec.assertEq s (Just (Text.pack "Counter target spell unless its controller pays {1} or 1 life.")) (Oracle.render (choosing (mana [ManaSymbol.Generic 1] NonEmpty.:| [life])))
+    Spec.assertEq s (Just (Text.pack "Counter target spell unless its controller discards a card or pays 1 life.")) (Oracle.render (choosing (discards NonEmpty.:| [life])))
+    -- A third option has no rendering yet, so the card stays unrendered.
+    Spec.assertEq s Nothing (Oracle.render (choosing (mana [ManaSymbol.Generic 1] NonEmpty.:| [life, discards])))
     let seer = triggered (TriggerCondition.Leaves (LeavesTrigger.dies LeavingPermanent.Self)) [(clause [draw (PlayerRef.Relative PlayerRelation.You) 1]) {Clause.payGate = Just (gate PayBranch.IfPaid (PlayerRef.InSlot you) (mana [ManaSymbol.Generic 1, ManaSymbol.OfType (ManaType.Colored Color.Blue)]))}] []
     Spec.assertEq s [[Text.pack "When Spark dies, you may pay {1}{U}. If you do, draw a card."]] (Oracle.abilities (withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [seer]})))
     let mountain = Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.Sacrifice (Sacrifice.MkSacrifice (ObjectCount.Exactly (CostAmount.Fixed 1)) (Filter.HasSubtype Subtype.Mountain))]

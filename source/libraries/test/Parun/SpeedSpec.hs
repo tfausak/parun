@@ -178,7 +178,7 @@ isActivateOf oid action = case action of
   A.PutCompanionIntoHand -> False
   A.RollPlanarDie -> False
   A.Ignore _ _ -> False
-  A.EndEffect _ -> False
+  A.EndEffect {} -> False
   A.PayLifeForMana _ _ -> False
   A.ActivateManaAbility _ -> False
 

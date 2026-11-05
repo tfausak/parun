@@ -895,9 +895,10 @@ matchesPrinted viewOf gs event candidate =
         -- And WHAT is being created (Queen Allenal of Ruadach's "creature
         -- tokens"): "one or more" is ANY lot matching, each judged off what the
         -- creating effect gives its token (CR 111.3) since none is minted yet.
+        -- An effects-only row skips a cost's lot (reachesLot).
         (ReplacementEffect.TokenR (TokenR.MkTokenR pat _ _), ProposedEvent.WouldCreateTokens pid lots) ->
           matchesPlayer gs candidate (TokenPattern.whose pat) pid
-            && any (matchesTokenLot gs (candidateContext gs candidate) (TokenPattern.whatToken pat) pid) lots
+            && any (\lot -> reachesLot pat lot && matchesTokenLot gs (candidateContext gs candidate) (TokenPattern.whatToken pat) pid lot) lots
         -- CR 614.1b / 500.11: a skip intercepts a step or phase BEGINNING, and
         -- names exactly which one -- and, for a player-scoped skip, whose.
         --
@@ -1161,6 +1162,8 @@ stocked gs rewrite pid = case rewrite of
   DrawRewrite.RevealUntilChosenKind -> True
   DrawRewrite.DrawInstead _ -> True
   DrawRewrite.DiscardThenDrawOrMill -> True
+  -- CR 614.11: an empty library still looks at nothing and then draws.
+  DrawRewrite.KeepOneOfTopThenDraw _ -> True
   DrawRewrite.MaySkipFor _ -> True
 
 breaches :: GameState -> Maybe PlayerId -> LifeLossRewrite.LifeLossRewrite -> PlayerId -> Natural -> Bool
@@ -1887,6 +1890,13 @@ candidateContext gs candidate =
           { Filter.carrierChosenPlayer = Game.currentChoice Chosen.Players source gs >>= Map.lookup PlayerChoice.AsEnters
           }
 
+-- CR 614.16: whether a token row's "an effect would create" reaches `lot`: a
+-- lot made as CR 118.12's cost is no effect's (docs/decisions.md, "What a spell
+-- or ability causes"), while one another replacement appended is. The
+-- turntimber-ranger-* scenarios prove both.
+reachesLot :: TokenPattern.TokenPattern -> TokenLot.TokenLot -> Bool
+reachesLot pat lot = not (TokenPattern.effectsOnly pat) || TokenLot.byEffect lot
+
 -- A lot's token is judged off the characteristics the creating effect gives it
 -- (CR 111.3) -- its given text, or for CR 707.1's copy token the copiable values
 -- it takes (CR 707.2). The controller is the event's player (CR 111.2), which is
@@ -2401,6 +2411,10 @@ readsApplier re = case re of
   -- CR 609.1: the discard is the row's controller's effect (Event.causedBy), so
   -- two rows under different controllers make different players its cause.
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.DiscardThenDrawOrMill) -> True
+  -- The looker is the drawer the EVENT named. A baked count reads nothing of the
+  -- row; any other is read against its Context, countedCeiling's answer.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.KeepOneOfTopThenDraw (Quantity.Type.Literal _))) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.KeepOneOfTopThenDraw _)) -> True
   -- CR 109.5: the effects run under the row's controller, GameLossR's answer.
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.MaySkipFor _)) -> True
   -- CR 121.2a: "you and that player each draw a card" -- the "you" is the row's
@@ -2531,6 +2545,10 @@ readsSource effect = case effect of
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.RevealUntilChosenKind) -> False
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.DrawInstead _)) -> False
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.DiscardThenDrawOrMill) -> False
+  -- The source only names the prompt once the count is baked; any other count
+  -- is read against it.
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.KeepOneOfTopThenDraw (Quantity.Type.Literal _))) -> False
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.KeepOneOfTopThenDraw _)) -> True
   -- The effects run from the row's source, GameLossR's answer.
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.MaySkipFor _)) -> True
   -- CR 616.1: Event.eligible scans the pool under Projection.sourceContext
@@ -2992,7 +3010,9 @@ legalCopyTargets context batch filter_ among self gs =
         CopyDomain.InZone Zone.Battlefield -> Set.toAscList (GameState.battlefield gs)
         CopyDomain.InZone Zone.Graveyard -> concatMap (\pid -> Game.cardsIn Zone.Graveyard pid gs) (GameState.turnOrder gs)
         CopyDomain.InZone _ -> []
-        CopyDomain.InPile pile -> Game.linkedPile Nothing pile (Maybe.fromMaybe self (Filter.source context)) gs
+        CopyDomain.InPile pile ->
+          let src = Maybe.fromMaybe self (Filter.source context)
+           in Game.linkedPile Nothing (Quantity.readerAcquisition context src gs) pile src gs
    in filter eligible domain
 
 -- CR 707.9g / 603.11: the triggered ability linked to a CR 707.5 entry

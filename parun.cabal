@@ -14,8 +14,7 @@ license-file: LICENSE.txt
 data-dir: data
 data-files:
   cards/*.json
-  decks/*.txt
-  decks/sets/*.txt
+  decks/**/*.txt
   oracle-unrendered.txt
   scenarios/**/*.json
   sticker-sheets/*.json
@@ -328,17 +327,11 @@ library codec
     Parun.Codec.CardArrivedInSpec
     Parun.Codec.CardIdentity
     Parun.Codec.CardIdentitySpec
-    Parun.Codec.CardLeavesZone
-    Parun.Codec.CardLeavesZoneSpec
     Parun.Codec.CardName
     Parun.Codec.CardNameSpec
-    Parun.Codec.CardPutIntoGraveyard
-    Parun.Codec.CardPutIntoGraveyardSpec
     Parun.Codec.CardSelection
     Parun.Codec.CardSelectionSpec
     Parun.Codec.CardSpec
-    Parun.Codec.CardsPutIntoZone
-    Parun.Codec.CardsPutIntoZoneSpec
     Parun.Codec.CardType
     Parun.Codec.CardTypeSpec
     Parun.Codec.CastFrom
@@ -411,6 +404,8 @@ library codec
     Parun.Codec.CoinReadingSpec
     Parun.Codec.Color
     Parun.Codec.ColorSpec
+    Parun.Codec.ColorSpread
+    Parun.Codec.ColorSpreadSpec
     Parun.Codec.Combat
     Parun.Codec.CombatDamageAmount
     Parun.Codec.CombatDamageAmountSpec
@@ -920,6 +915,8 @@ library codec
     Parun.Codec.LayoutSpec
     Parun.Codec.LeavesTrigger
     Parun.Codec.LeavesTriggerSpec
+    Parun.Codec.LeavesZoneTrigger
+    Parun.Codec.LeavesZoneTriggerSpec
     Parun.Codec.LeavingPermanent
     Parun.Codec.LeavingPermanentSpec
     Parun.Codec.LeftTheGame
@@ -1303,6 +1300,8 @@ library codec
     Parun.Codec.PutCountersFrom
     Parun.Codec.PutCountersFromSpec
     Parun.Codec.PutCountersSpec
+    Parun.Codec.PutIntoZoneTrigger
+    Parun.Codec.PutIntoZoneTriggerSpec
     Parun.Codec.PutSticker
     Parun.Codec.Quantity
     Parun.Codec.QuantitySpec
@@ -1608,6 +1607,8 @@ library codec
     Parun.Codec.UntapRewrite
     Parun.Codec.UntapRewriteSpec
     Parun.Codec.UntapRSpec
+    Parun.Codec.UntilPaid
+    Parun.Codec.UntilPaidSpec
     Parun.Codec.Uses
     Parun.Codec.UsesSpec
     Parun.Codec.Vanguard
@@ -2525,11 +2526,8 @@ library types
     Parun.Types.CardAbilities
     Parun.Types.CardArrivedIn
     Parun.Types.CardIdentity
-    Parun.Types.CardLeavesZone
     Parun.Types.CardName
-    Parun.Types.CardPutIntoGraveyard
     Parun.Types.CardSelection
-    Parun.Types.CardsPutIntoZone
     Parun.Types.CardType
     Parun.Types.CarryOver
     Parun.Types.CastFrom
@@ -2572,6 +2570,7 @@ library types
     Parun.Types.CoinFlipped
     Parun.Types.CoinReading
     Parun.Types.Color
+    Parun.Types.ColorSpread
     Parun.Types.Combat
     Parun.Types.CombatDamageAmount
     Parun.Types.CombatDamageOption
@@ -2862,6 +2861,7 @@ library types
     Parun.Types.Layout
     Parun.Types.LearnMode
     Parun.Types.LeavesTrigger
+    Parun.Types.LeavesZoneTrigger
     Parun.Types.LeavingPermanent
     Parun.Types.LeftTheGame
     Parun.Types.LentCards
@@ -3081,6 +3081,7 @@ library types
     Parun.Types.Prototype
     Parun.Types.PutCounters
     Parun.Types.PutCountersFrom
+    Parun.Types.PutIntoZoneTrigger
     Parun.Types.PutSticker
     Parun.Types.Quantity
     Parun.Types.Question
@@ -3261,6 +3262,7 @@ library types
     Parun.Types.UntapR
     Parun.Types.UntapRestriction
     Parun.Types.UntapRewrite
+    Parun.Types.UntilPaid
     Parun.Types.Uses
     Parun.Types.Vanguard
     Parun.Types.VariableChoice

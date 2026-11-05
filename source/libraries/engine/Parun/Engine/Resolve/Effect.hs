@@ -478,8 +478,9 @@ applyEffectWith runSubgame resolving source controller legal chosen effect = Eve
   -- Read BEFORE the effect runs, while the resolving ability is surely still an
   -- object to read.
   ability <- State.gets (resolvingAbilityName resolving)
+  acquisition <- State.gets (\g -> Game.readingAcquisition resolving source g source)
   applyOneEffect runSubgame resolving source controller legal chosen effect
-  State.modify' (Common.recordExiledWith ExileLink.MkExileLink {ExileLink.source = source, ExileLink.ability = ability} before)
+  State.modify' (Common.recordExiledWith ExileLink.MkExileLink {ExileLink.source = source, ExileLink.ability = ability, ExileLink.acquisition = acquisition} before)
   State.modify' (Common.recordExilePile before)
   -- CR 614.1c: the as-enters effects of what this instruction put onto the
   -- battlefield, before the next instruction reads the board. After the window
@@ -820,11 +821,13 @@ runReplacementEffects runSubgame = do
 -- `resolving` and `source` are both the row's own source (CR 113.7),
 -- runPreventionRider's posture. Every slot the row carries is treated as a LEGAL
 -- target, CR 608.2b having been applied when the installing ability resolved.
+-- An effect (CR 609.1) even when drained inside CR 118.12's cost, so the
+-- paying flag is cleared (docs/decisions.md, "What a spell or ability causes").
 runDamageRewriteEffect :: Game Result -> PendingReplacementEffect.PendingReplacementEffect -> Game ()
 runDamageRewriteEffect runSubgame pending =
   let targets = PendingReplacementEffect.targets pending
       src = PendingReplacementEffect.source pending
-   in Monad.void (runCarrying runSubgame src (PendingReplacementEffect.controller pending) Map.empty targets (PendingReplacementEffect.effects pending))
+   in Monad.void (Event.payingOnResolution False (runCarrying runSubgame src (PendingReplacementEffect.controller pending) Map.empty targets (PendingReplacementEffect.effects pending)))
 
 -- CR 103.5b / CR 103.6: perform the effects of an action a card grants from a
 -- player's hand. Parun.Engine.Mulligan's window loops reach this through the

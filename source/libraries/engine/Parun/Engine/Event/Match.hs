@@ -55,10 +55,7 @@ import qualified Parun.Types.BlockProducer as BlockProducer
 import qualified Parun.Types.BlockRole as BlockRole
 import qualified Parun.Types.BlockTrigger as BlockTrigger
 import qualified Parun.Types.BlocksDeclared as BlocksDeclared
-import qualified Parun.Types.CardLeavesZone as CardLeavesZone
-import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
 import qualified Parun.Types.CardType as CardType
-import qualified Parun.Types.CardsPutIntoZone as CardsPutIntoZone
 import qualified Parun.Types.CastWindow as CastWindow
 import qualified Parun.Types.CausedBy as CausedBy
 import qualified Parun.Types.Chosen as Chosen
@@ -104,6 +101,7 @@ import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LandPlayed as LandPlayed
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
 import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LeftTheGame as LeftTheGame
 import qualified Parun.Types.LifeChange as LifeChange
@@ -140,6 +138,7 @@ import qualified Parun.Types.PlayerIsDealtDamage as PlayerIsDealtDamage
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.PlaysLand as PlaysLand
 import qualified Parun.Types.ProjectedCharacteristics as PC
+import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.RevealCause as RevealCause
 import qualified Parun.Types.Revealed as Revealed
@@ -569,6 +568,133 @@ leaves bindings context gs bearer you t event = case event of
       LeavingPermanent.Haunted -> Map.lookup bearer (GameState.haunting gs) == Just departed
       LeavingPermanent.Bound slot -> Map.lookup slot (Binding.objectSlots bindings) == Just departed
 
+-- CR 400.7: a card left the zone the trigger names, for the destination it
+-- names or any, from the pile it names or any, on a turn the scope admits.
+-- Whose pile is read off the pile CR 608.2h recorded
+-- (Event.Binding.admitsDeparture). A card exiled from exile left nothing (CR
+-- 400.8, Game.leftOrigin).
+--
+-- ANY of Moved.departures admits, not only ZoneChange.departed: a meld's entry
+-- is one event naming every card that left exile (CR 701.42a, CR 712.14c).
+--
+-- The subject, by ActingPermanent:
+--
+-- - Self compares ids: by CR 113.6k the bearer IS the departing card (Oglor,
+--   Devoted Assistant's grant), which only eventTriggers' look-back offers.
+-- - Matching reads its Filter off CR 608.2h's last known information: the card
+--   is no longer in the zone it left by the time CR 603.10 checks. A bearer
+--   absent from the board sees the move only where all players could see it
+--   (Moved.revealed), CR 603.10a's look-back reaching such a move only then.
+--   Parun.LeavesTriggerSpec's "CR 603.10a an exiled Kithkin Brinefarer" cases
+--   are the proof.
+--
+-- The turn comes from the GAME STATE: no characteristic of the departing card
+-- says whose turn it is, and CR 109.5 with CR 603.3a fixes "you" as the
+-- ability's controller.
+--
+-- GameEvent.LeftTheGame is CR 729.4a's crossing out of the zone the trigger
+-- names, admitted only where it names no destination: leaving the game reaches
+-- no zone. Parun.OutsideTheGameSpec's Spirit Mascot case proves it.
+--
+-- Batching is not read here, `leaves`' reason.
+leavesZone :: Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> GameState -> ObjectId -> PlayerId -> (LeavesZoneTrigger.LeavesZoneTrigger -> Bool) -> LeavesZoneTrigger.LeavesZoneTrigger -> GameEvent -> Bool
+leavesZone board gs bearer you admitsTurn t event = case event of
+  GameEvent.Moved m
+    | ZoneChange.from (Moved.change m) == LeavesZoneTrigger.from t,
+      Game.leftOrigin (Moved.change m),
+      maybe True (== ZoneChange.to (Moved.change m)) (LeavesZoneTrigger.to t) ->
+        admitsTurn t
+          && seen (Moved.revealed m)
+          && not (Seq.null (admittedDepartures gs bearer you t m))
+          && entryTriggers gs you (Moved.change m)
+  GameEvent.LeftTheGame l
+    | LeftTheGame.from l == LeavesZoneTrigger.from t,
+      Maybe.isNothing (LeavesZoneTrigger.to t) ->
+        admitsTurn t && admitsDeparture gs bearer you t (LeftTheGame.object l)
+  -- CR 730.3's departure split, whose origin is the battlefield.
+  _ -> False
+  where
+    seen revealed = case LeavesZoneTrigger.card t of
+      ActingPermanent.Self -> True
+      ActingPermanent.Matching _ -> Map.member bearer board || revealed
+
+-- CR 603.6: a card was put into the zone the trigger names, from a zone it
+-- admits, on a turn the scope admits, and -- for CR 702.55a's haunt -- as the
+-- last step of its own resolution (CR 608.2n), which a countered spell (CR
+-- 701.6a) and a fizzled one (CR 608.2b) escape.
+--
+-- Every logged move into the zone is an arrival: reordering a library puts no
+-- card into one (Wan Shi Tong, All-Knowing's ruling) and logs nothing
+-- (Event.alreadyIn), while a card exiled from exile is a new object (CR 400.8).
+--
+-- Matched on ZoneChange.object, the ARRIVING card. TWO EVENTS, which is CR
+-- 712.21's own Example: the Moved event names the first card a melded
+-- permanent's departure puts into the zone and a CardArrived event names each
+-- card after it, so such a death fires a per-card trigger twice. A CardArrived
+-- is never CR 608.2n's move, nor a move from anywhere but the battlefield.
+-- Parun.MutateSpec's "from either arrangement" case proves it over both orders.
+--
+-- The subject, by ActingPermanent:
+--
+-- - Self compares ids: the bearer is CR 400.7's new incarnation in the zone it
+--   arrived in (Narcomoeba, Serra Avatar), which CR 113.6k makes the zone its
+--   ability functions from.
+-- - Matching reads its Filter off the arrival, CR 603.10's after-the-event
+--   reading: viewWithLastKnown aimed at the arriving card twice over, for the
+--   card that has left again by the CR 117.5 boundary. Not the departed object:
+--   a merged permanent is one departure and one arrival per component (CR
+--   730.3), and CR 730.2d makes it a token whenever its topmost component is
+--   one. Parun.LeavesTriggerSpec's "CR 730.3 a merged token put into a library"
+--   case is the proof. The bearer frames the match: it is the Filter.Context's
+--   source, and its controller is CR 109.5's "you".
+--
+-- Whether a Matching trigger sees a move its bearer did not stand through is
+-- CR 603.10a's question, `putIntoZoneLooksBack`. One that looks back sees a
+-- move all players could see (Moved.revealed), its bearer's own departure
+-- included. One that does not never sees its bearer's own departure from the
+-- battlefield: by CR 603.10's first sentence the bearer is not among the
+-- objects that exist immediately after the event, though eventTriggers offers
+-- it its own move, and `Not IsSource` (Planar Void's "another") cannot exclude
+-- it, CR 400.7 having minted the arrival a fresh id.
+--
+-- Batching is not read here, `leaves`' reason.
+putIntoZone :: Filter.Context -> Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> GameState -> ObjectId -> PlayerId -> (PutIntoZoneTrigger.PutIntoZoneTrigger -> Bool) -> PutIntoZoneTrigger.PutIntoZoneTrigger -> GameEvent -> Bool
+putIntoZone context board gs bearer you admitsTurn t event = case event of
+  GameEvent.Moved m -> admits (Moved.revealed m) (Moved.duringResolution m) (Moved.change m)
+  GameEvent.CardArrived zc -> admits True False zc
+  _ -> False
+  where
+    origins = PutIntoZoneTrigger.from t
+    admits revealed duringResolution zc =
+      ZoneChange.to zc == PutIntoZoneTrigger.to t
+        && (Set.null origins || Set.member (ZoneChange.from zc) origins)
+        && (duringResolution || not (PutIntoZoneTrigger.duringResolution t))
+        && admitsTurn t
+        && entryTriggers gs you zc
+        && watched revealed zc
+    watched revealed zc = case PutIntoZoneTrigger.card t of
+      ActingPermanent.Self -> ZoneChange.object zc == bearer
+      ActingPermanent.Matching f ->
+        (Map.member bearer board || revealed)
+          && (putIntoZoneLooksBack t || ZoneChange.departed zc /= bearer)
+          && let arrived = ZoneChange.object zc
+              in maybe False (\view -> Filter.matches context view f) (Projection.viewWithLastKnown arrived gs arrived)
+
+-- CR 603.10a's third and fourth families for a card leaving a zone: a card
+-- leaving a graveyard, or one put into a hand or library (CR 400.2's hidden
+-- zones). Parun.LeavesTriggerSpec's "CR 603.10a an exiled Kithkin Brinefarer
+-- looks back" cases are the proof of the second.
+leavesZoneLooksBack :: LeavesZoneTrigger.LeavesZoneTrigger -> Bool
+leavesZoneLooksBack t = LeavesZoneTrigger.from t == Zone.Graveyard || maybe False Game.isHiddenZone (LeavesZoneTrigger.to t)
+
+-- CR 603.10a's fourth family, "put into a hand or library" (CR 400.2's hidden
+-- zones), and its first: CR 603.6c makes "put into [a zone] from the
+-- battlefield" a leaves-the-battlefield ability (Ketramose, the New Dawn's
+-- "from graveyards and/or the battlefield"). Parun.LeavesTriggerSpec's "CR
+-- 603.10a an exiled Seeker looks back at" cases are the proof of the first.
+putIntoZoneLooksBack :: PutIntoZoneTrigger.PutIntoZoneTrigger -> Bool
+putIntoZoneLooksBack t = Game.isHiddenZone (PutIntoZoneTrigger.to t) || Set.member Zone.Battlefield (PutIntoZoneTrigger.from t)
+
 -- CR 120.3: was this damage dealt to a player `related` admits, or, with
 -- `orTheirPlaneswalkers`, to a planeswalker such a player controls (CR 120.3c)?
 -- The planeswalker is judged through `board` as damageBy's Filter is: the
@@ -587,14 +713,13 @@ dealtToRelated board gs related orTheirPlaneswalkers target
 -- CR 603.6a / 613.11: may this zone change trigger `you`'s abilities, or is
 -- it a move onto the battlefield that an effect applying to them (Hushwing
 -- Gryff) silences? Every arm a move onto the battlefield can satisfy asks: the
--- two CR 603.6a arms, the departure-side SelfLeavesGraveyard and
--- CardLeavesZone, since the entry and the departure are one event
--- (docs/decisions.md, "A silenced entry silences its departure"), and
--- CardsPutIntoZone. Any other move answers True, and an event riding the
--- entry (a lore counter, an attachment) is not asked (docs/decisions.md, "An
--- entry's own triggers are the zone change's"). CardsPutIntoZone's gate is a
--- regression fence: no card in data/cards names the battlefield as its
--- destination (grep, 2026-10-28).
+-- CR 603.6a arm, the departure-side LeavesZone, since the entry and the
+-- departure are one event (docs/decisions.md, "A silenced entry silences its
+-- departure"), and PutIntoZone. Any other move answers True, and an event
+-- riding the entry (a lore counter, an attachment) is not asked
+-- (docs/decisions.md, "An entry's own triggers are the zone change's").
+-- PutIntoZone's gate is a regression fence: no card in data/cards names the
+-- battlefield as its destination (grep, 2026-10-28).
 --
 -- Asked of the game filed immediately after the entry
 -- (GameState.boardAfterEvent), so a silencer that entered beside the entrant,
@@ -943,139 +1068,8 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- CR 509.3, as a function of Parun.Types.BlockTrigger's fields: blocks.
   TriggerCondition.Blocks t -> blocks bearerContext board gs t event
   TriggerCondition.Leaves t -> leaves bindings bearerContext gs bearer you t event
-  -- CR 603.10a's third family read off the departing card itself: the bearer
-  -- is the graveyard incarnation (`ZoneChange.departed`), which only
-  -- eventTriggers' look-back offers. ANY of Moved.departures, CardLeavesZone's
-  -- reason. CR 400.3 puts a card only in its owner's graveyard, so "your" is
-  -- no further test. Not so between an ownership change and the move that
-  -- follows it (CR 407.3), where the card in that graveyard is the ante card
-  -- itself (Tempest Efreet, Timmerian Fiends), and neither prints this trigger.
-  TriggerCondition.SelfLeavesGraveyard -> case event of
-    GameEvent.Moved m ->
-      ZoneChange.from (Moved.change m) == Zone.Graveyard
-        && Game.leftOrigin (Moved.change m)
-        && elem bearer (Moved.departures m)
-        && entryTriggers gs you (Moved.change m)
-    -- CR 730.3's departure split, whose origin is the battlefield.
-    GameEvent.CardArrived _ -> False
-    _ -> False
-  -- CR 603.6: a zone-change trigger matched on BOTH ends of the move, library to
-  -- graveyard. The bearer is the incarnation the card became on arrival per CR
-  -- 400.7e, a graveyard being public (CR 400.2). The pair is also what makes CR
-  -- 113.6k put this ability in the graveyard rather than on the battlefield.
-  --
-  -- `from` is the half that does the work: the same card discarded out of a hand
-  -- or dying off the battlefield reaches the same graveyard and must not trigger.
-  TriggerCondition.SelfPutIntoGraveyardFromLibrary -> case event of
-    GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _) ->
-      ZoneChange.object zc == bearer
-        && ZoneChange.from zc == Zone.Library
-        && ZoneChange.to zc == Zone.Graveyard
-    -- Unreachable rather than elided: Parun.Engine.Event records this event only
-    -- in CR 730.3's departure split, whose origin is the battlefield, so `from`
-    -- is never the library here.
-    GameEvent.CardArrived _ -> False
-    _ -> False
-  -- CR 603.6 with NO origin zone: the destination is the whole condition, so a
-  -- discard, a mill, a countered spell and a death all match. `from` is
-  -- deliberately unread, which is the one line separating this from the two
-  -- conditions on either side of it.
-  --
-  -- Matched on `object`, the arriving incarnation, and NOT on `departed`: CR
-  -- 603.6c's last sentence takes this out of the leaves-the-battlefield family,
-  -- so CR 603.10a's look-back does not reach it and CR 603.10's normal reading --
-  -- the objects that exist immediately after the event -- applies. That is also
-  -- what makes the graveyard the one zone the scan has to find the bearer in,
-  -- however far away the card started.
-  TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> case event of
-    GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _) ->
-      ZoneChange.object zc == bearer
-        && ZoneChange.to zc == Zone.Graveyard
-    -- CR 712.21 / CR 730.3: every component card after the leading one is put
-    -- into the graveyard too and announces itself here, so a component printing
-    -- this condition fires for its own card wherever CR 730.3a's arrangement put
-    -- it. Matched exactly as the Moved arm above, the two events differing only
-    -- in which arrival they name. Parun.MutateSpec's "from either arrangement"
-    -- case proves it over both orders.
-    GameEvent.CardArrived zc ->
-      ZoneChange.object zc == bearer
-        && ZoneChange.to zc == Zone.Graveyard
-    _ -> False
-  -- CR 702.55a's second sentence, which CR 608.2n dates: "when this spell is put
-  -- into a graveyard during its resolution". The arm above's destination test
-  -- plus the CAUSE, which is the whole of the difference -- a COUNTERED spell
-  -- (CR 701.6a) and a FIZZLED one (CR 608.2b) reach the same graveyard from the
-  -- same zone, and each extra fire would be an extra haunt in the controller's
-  -- favour.
-  --
-  -- `from` is unread for the arm above's reason and for a second one: the cause
-  -- already implies the stack, CR 608.2n's move having no other origin.
-  --
-  -- Matched on `object`, the arriving incarnation, for the arm above's reason --
-  -- CR 603.6c's last sentence keeps this out of the leaves-the-battlefield
-  -- family.
-  TriggerCondition.SelfPutIntoGraveyardDuringResolution -> case event of
-    GameEvent.Moved (Moved.MkMoved zc _ _ _ duringResolution _ _ _) ->
-      ZoneChange.object zc == bearer
-        && ZoneChange.to zc == Zone.Graveyard
-        && duringResolution
-    -- CR 712.21 / CR 730.3: every component card after the leading one is put
-    -- into the graveyard too and announces itself here, so a component printing
-    -- this condition fires for its own card wherever CR 730.3a's arrangement put
-    -- it. Matched exactly as the Moved arm above, the two events differing only
-    -- in which arrival they name. Parun.MutateSpec's "from either arrangement"
-    -- case proves it over both orders.
-    -- Never CR 608.2n's move: rule 712.21's trailing arrivals are a melded
-    -- PERMANENT's components leaving the battlefield, and a spell on the stack
-    -- has none.
-    GameEvent.CardArrived _ -> False
-    _ -> False
-  -- CR 603.6 read by a BYSTANDER: "whenever another card is put into a graveyard
-  -- from anywhere" (Planar Void). The destination is the whole of the zone test,
-  -- as it is for SelfPutIntoGraveyardFromAnywhere above; what differs is who is
-  -- watching, so the bearer frames the match rather than being it -- it is the
-  -- Filter.Context's source (so `Not IsSource` is "another") and its controller
-  -- is CR 109.5's "you".
-  --
-  -- TWO EVENTS, which is CR 712.21's own Example: the Moved event names the
-  -- first card put into the graveyard and a CardArrived event names each card
-  -- after it, so a melded permanent's death fires this condition twice while
-  -- a Leaves death, which reads the Moved event alone, fires once.
-  --
-  -- Matched on `object`, the ARRIVING card, and filtered over it: CR 603.6c's
-  -- last sentence keeps this out of the leaves-the-battlefield family, so CR
-  -- 603.10a's look-back does not reach it and CR 603.10's normal first sentence
-  -- governs -- the objects that exist immediately after the event. That is why
-  -- the filter reads the card in the graveyard rather than CR 608.2h last known
-  -- information, Leaves' opposite choice.
-  --
-  -- viewWithLastKnown aimed at the arriving card twice over, Leaves'
-  -- posture: the live graveyard card for the ordinary case, and CR 608.2h for
-  -- the card that has left the graveyard again by the CR 117.5 boundary.
-  --
-  -- The bearer's OWN departure is excluded, and by the same sentence of CR
-  -- 603.10: a permanent put into a graveyard does not exist on the battlefield
-  -- immediately after the event that put it there, so it is not among the
-  -- objects checked. eventTriggers offers it all the same -- `leftBattlefield`
-  -- is CR 603.10a's look-back, unrestricted by this condition's own exclusion --
-  -- and `Not IsSource` cannot do the excluding, CR 400.7 having minted the
-  -- graveyard card a fresh id that the bearer's own id never equals.
-  --
-  -- The origin is read off the event, CR 400.7's zone left, and an empty set
-  -- admits any.
-  TriggerCondition.CardPutIntoGraveyard (CardPutIntoGraveyard.MkCardPutIntoGraveyard f origins) ->
-    let admits zc =
-          ZoneChange.to zc == Zone.Graveyard
-            && (Set.null origins || Set.member (ZoneChange.from zc) origins)
-            && ZoneChange.departed zc /= bearer
-            && let arrived = ZoneChange.object zc
-                in case Projection.viewWithLastKnown arrived gs arrived of
-                     Nothing -> False
-                     Just view -> Filter.matches bearerContext view f
-     in case event of
-          GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _) -> admits zc
-          GameEvent.CardArrived zc -> admits zc
-          _ -> False
+  TriggerCondition.LeavesZone t -> leavesZone board gs bearer you (admitsTurn . LeavesZoneTrigger.scope) t event
+  TriggerCondition.PutIntoZone t -> putIntoZone bearerContext board gs bearer you (admitsTurn . PutIntoZoneTrigger.scope) t event
   -- CR 603.2c's batch reading of DealsDamage's combat damage to a player (Pia Nalaar,
   -- Chief Mechanic's "whenever ONE OR MORE artifact creatures you control deal
   -- combat damage to a player"), delegated because which
@@ -1192,96 +1186,6 @@ armMatches bindings board gs bearer you cond event = case cond of
             Just view -> Filter.matches bearerContext view f
       | otherwise -> False
     _ -> False
-  -- Leaves' match with the zone pinned on the DEPARTURE side
-  -- instead -- the origin is the zone the condition names, and the destination is
-  -- the one it names or, where it names none, wherever the card went. Whose zone
-  -- it left is CardLeavesZone.whose, read off the pile CR 608.2h recorded
-  -- (Event.Binding.admitsDeparture). A card exiled from exile left nothing (CR
-  -- 400.8, Game.leftOrigin).
-  --
-  -- ANY of Moved.departures admits, not only ZoneChange.departed: a meld's entry
-  -- is one event naming every card that left exile (CR 701.42a, CR 712.14c).
-  --
-  -- The same viewWithLastKnown read on each departed id, and CR 608.2h is what
-  -- makes it the only possible read: the card is no longer in the zone it left by
-  -- the time CR 603.10 checks, so a live lookup of the id that left answers
-  -- nothing at all.
-  --
-  -- The TurnScope comes from the GAME STATE, the SpellCast arm's reason: no
-  -- characteristic of the departing card says whose turn it is, and CR 109.5 with
-  -- CR 603.3a fixes "you" as the ability's controller.
-  --
-  -- GameEvent.LeftTheGame is CR 729.4a's crossing out of the zone the condition
-  -- names, admitted only where the condition names no destination: leaving the
-  -- game reaches no zone, so it cannot be the hand or exile a printing names.
-  -- Parun.OutsideTheGameSpec's Spirit Mascot case proves it.
-  --
-  -- A bearer absent from the board sees a move only where all players could see
-  -- it (Moved.revealed), CardsPutIntoZone's gate below and for its reason:
-  -- CR 603.10a's look-back reaches such a move only then. Parun.LeavesTriggerSpec's
-  -- "CR 603.10a an exiled Kithkin Brinefarer" cases are the proof.
-  TriggerCondition.CardLeavesZone p ->
-    let admitted = admittedDepartures gs bearer you p
-     in case event of
-          GameEvent.Moved m
-            | ZoneChange.from (Moved.change m) == CardLeavesZone.from p,
-              Game.leftOrigin (Moved.change m),
-              maybe True (== ZoneChange.to (Moved.change m)) (CardLeavesZone.to p) ->
-                Turn.turnScopeAdmits scopeNamed gs (CardLeavesZone.scope p) (GameState.activePlayer gs) you
-                  && (Map.member bearer board || Moved.revealed m)
-                  && not (Seq.null (admitted m))
-                  && entryTriggers gs you (Moved.change m)
-          GameEvent.LeftTheGame l
-            | LeftTheGame.from l == CardLeavesZone.from p,
-              Maybe.isNothing (CardLeavesZone.to p) ->
-                Turn.turnScopeAdmits scopeNamed gs (CardLeavesZone.scope p) (GameState.activePlayer gs) you
-                  && admitsDeparture gs bearer you p (LeftTheGame.object l)
-          _ -> False
-  -- CR 603.2c's batch reading of the arm above (Spirit Mascot's "whenever ONE OR
-  -- MORE cards leave your graveyard"), delegated because which moves this
-  -- condition admits is the arm above's answer, and firing once for the batch is
-  -- `batchScoped` plus eventTriggers' dedup, never this arm.
-  TriggerCondition.CardsLeaveZone p -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.CardLeavesZone p) event
-  -- CR 603.2c's batch reading of a card put INTO a zone (Dutiful Knowledge
-  -- Seeker's "one or more cards are put into a library from anywhere"), once for
-  -- the batch by `batchScoped`. Every logged move into the destination is an
-  -- arrival: reordering a library puts no card into one (Wan Shi Tong,
-  -- All-Knowing's ruling) and logs nothing (Event.alreadyIn), while a card
-  -- exiled from exile is "a new object that has just been exiled" (CR 400.8).
-  --
-  -- CR 603.10a's look-back reaches the move only when the object was one all
-  -- players could see (Moved.revealed): not a card leaving a hidden zone (CR
-  -- 400.2) unrevealed, nor one face down in exile, which that rule lets a public
-  -- zone hold. So a bearer absent from the board --
-  -- offered for its own departure in this event group by `leftBattlefield` or
-  -- `sameGroup` -- sees those moves alone, while a bearer standing on the
-  -- battlefield sees every move, a hand's included, by CR 603.10's first
-  -- sentence.
-  --
-  -- The Filter reads each ARRIVAL, CardPutIntoGraveyard's posture, and not the
-  -- object that departed: a merged permanent is one departure and one arrival
-  -- per component (CR 730.3), and CR 730.2d makes it a token whenever its
-  -- topmost component is one, so "cards" read off the departure would reject a
-  -- card component that really did arrive. Parun.LeavesTriggerSpec's "CR 730.3 a
-  -- merged token put into a library" case is the proof.
-  TriggerCondition.CardsPutIntoZone (CardsPutIntoZone.MkCardsPutIntoZone f scope origins destination) ->
-    let admits revealed zc =
-          ZoneChange.to zc == destination
-            && Turn.turnScopeAdmits scopeNamed gs scope (GameState.activePlayer gs) you
-            && (Set.null origins || Set.member (ZoneChange.from zc) origins)
-            && (Map.member bearer board || revealed)
-            && entryTriggers gs you zc
-            && let arrived = ZoneChange.object zc
-                in case Projection.viewWithLastKnown arrived gs arrived of
-                     Nothing -> False
-                     Just view -> Filter.matches bearerContext view f
-     in case event of
-          GameEvent.Moved m -> admits (Moved.revealed m) (Moved.change m)
-          -- A merged or melded permanent's further card, which left the
-          -- battlefield, where all players see it (CR 400.2) or CR 708.9 reveals
-          -- it.
-          GameEvent.CardArrived zc -> admits True zc
-          _ -> False
   -- CR 701.6a: a spell was countered, by a spell or ability whose controller the
   -- relation admits. The countering source's controller comes from the event,
   -- captured as the counter happened, and CR 109.5/603.3a fix "you" as the
@@ -2244,6 +2148,7 @@ armMatches bindings board gs bearer you cond event = case cond of
     bearerContext = Projection.framedByBindings gs bindings (Projection.sourceContext gs (Just you) bearer)
     -- CR 102.1: the seats a TurnScope.PlayersTurn names, read from the bearer.
     scopeNamed = Count.scopePlayers (Projection.viewWithLastKnownAnywhere gs) bearerContext gs
+    admitsTurn scope = Turn.turnScopeAdmits scopeNamed gs scope (GameState.activePlayer gs) you
     -- A damage condition's watched permanent, the damage's source or recipient:
     -- the bearer by id, or a permanent the Filter admits. The Filter reads it
     -- through `board`, CR 603.10's battlefield immediately after the damage:

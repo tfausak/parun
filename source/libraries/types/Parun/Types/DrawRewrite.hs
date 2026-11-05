@@ -3,6 +3,7 @@ module Parun.Types.DrawRewrite where
 import qualified Data.Sequence as Seq
 import qualified Numeric.Natural as Natural
 import qualified Parun.Types.FromOutsideTheGame as FromOutsideTheGame
+import qualified Parun.Types.Quantity as Quantity
 
 -- | CR 614.1a / 614.11: how a replacement rewrites a would-draw-a-card event.
 -- Once an arm replaces the draw it does not happen (CR 614.6), so CR 121.4's
@@ -73,6 +74,10 @@ data DrawRewrite effect
     -- instead. If the player discards a card this way, they draw a card. If the
     -- player doesn't discard a card this way, they mill a card."
     DiscardThenDrawOrMill
+  | -- | CR 614.1a / 701.20e / 614.5: Aladdin's Lamp's "instead look at the top X
+    -- cards of your library, put all but one of them on the bottom of your
+    -- library in a random order, then draw a card".
+    KeepOneOfTopThenDraw Quantity.Quantity
   | -- | CR 614.10 / 614.1a: Island Sanctuary's "instead you may skip that draw.
     -- If you do, [these effects]", queued for the reason
     -- Parun.Types.PendingReplacementEffect gives.

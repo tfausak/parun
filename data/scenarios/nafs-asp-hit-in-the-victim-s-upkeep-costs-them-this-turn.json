@@ -1,0 +1,19 @@
+{
+  "description": "CR 603.7b whole card: a hit in bob's upkeep comes due at the draw step of that same turn",
+  "note": "Soul's Fire has the Asp deal its damage during bob's upkeep, so that turn's draw step is still his next one and he is at 18 by his main phase.",
+  "board": {
+    "active": "bob",
+    "step": "Upkeep",
+    "seats": [
+      {"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Nafs Asp", "label": "asp", "ready": true}, {"card": "Mountain", "label": "m1"}, {"card": "Mountain", "label": "m2"}, {"card": "Mountain", "label": "m3"}], "hand": [{"card": "Soul's Fire", "label": "fire"}]},
+      {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]},
+      {"name": "carol", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}
+    ]
+  },
+  "timeline": [
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"Cast": {"object": "$fire", "targetsBySlot": {"dealer": ["$asp"], "victim": ["$bob"]}, "mana": ["$m1", "$m2", "$m3"]}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "check": {"Life": {"player": "bob", "life": 19}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "bob", "life": 18}}}
+  ]
+}

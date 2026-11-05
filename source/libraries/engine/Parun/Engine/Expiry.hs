@@ -80,6 +80,7 @@ import Parun.Types.Recipient (Recipient)
 import Parun.Types.SlotName (SlotName)
 import qualified Parun.Types.StepBegan as StepBegan
 import qualified Parun.Types.StepOfControllerOf as StepOfControllerOf
+import qualified Parun.Types.UntilPaid as UntilPaid
 import qualified Parun.Types.While as While
 
 -- CR 611.2: the moment a duration BEGINS. `controller` is the effect's
@@ -96,17 +97,18 @@ import qualified Parun.Types.While as While
 -- holding an OBJECT. Empty for a caller with no resolution behind it, whose
 -- durations name no slot.
 --
--- `acquisition` says which acquisition's choices a slot's object is read under
--- (CR 607.5): Game.readingAcquisition for a resolution, so an ability whose
--- source has since become a copy of something else still reads the choice its
--- own pair made (CR 607.2d); Game.acquisitionOf otherwise. Proved by
+-- `resolving` is the object whose resolution stores this, the source itself for
+-- a caller with no resolution behind it. It names a CR 116.2c offer
+-- (PaidExpiry.resolution), and says which acquisition's choices a slot's object
+-- is read under (CR 607.5), so an ability whose source has since become a copy of
+-- something else still reads the choice its own pair made (CR 607.2d). Proved by
 -- data/scenarios/copy/cr-607-5-a-grudgekeeper-ability-still-times-its-window-by-the-chosen-player-after-mirrorweave.json.
 --
 -- CR 611.2b's second sentence is vacuous here: this runs once, at the point the
 -- effect would be stored, and no opcode both ends and restarts a condition
 -- mid-resolution.
-arm :: (GameState -> ObjectId -> Acquisition.Acquisition) -> Map.Map SlotName (Set.Set Recipient) -> PlayerId -> ObjectId -> Duration -> GameState -> Maybe Expiry
-arm acquisition targets controller source duration gs = case duration of
+arm :: ObjectId -> Map.Map SlotName (Set.Set Recipient) -> PlayerId -> ObjectId -> Duration -> GameState -> Maybe Expiry
+arm resolving targets controller source duration gs = case duration of
   Duration.UntilEndOfTurn -> Just Expiry.AtCleanup
   Duration.Indefinite -> Just Expiry.Never
   -- Alchemy's "perpetually": Never's lifetime under an arm a zone change can
@@ -127,7 +129,7 @@ arm acquisition targets controller source duration gs = case duration of
       | Just oid <- Map.lookup slot (Binding.objectsIn targets),
         Maybe.isJust (Game.lookupObject oid gs) ->
           Just (Expiry.AtStepOfControllerOf (StepOfControllerOf.MkStepOfControllerOf (NextStepOf.step next) oid))
-    ref -> Expiry.AtStepOf . StepBegan.MkStepBegan (NextStepOf.step next) <$> seatOf (acquisition gs) targets controller gs ref
+    ref -> Expiry.AtStepOf . StepBegan.MkStepBegan (NextStepOf.step next) <$> seatOf reading targets controller gs ref
   -- CR 611.2a: "until the end of your next turn". Two samples, both taken here
   -- and neither ever rewritten: the controller (CR 109.5's "you", as above) and
   -- the turn this duration began on. dropAtCleanup ends it at the first turn of
@@ -148,7 +150,7 @@ arm acquisition targets controller source duration gs = case duration of
   Duration.UntilEndOfNextTurnOf ref ->
     fmap
       (\pid -> Expiry.AtEndOfTurnOf (AfterTurn.MkAfterTurn pid (GameState.turnNumber gs)))
-      (seatOf (acquisition gs) targets controller gs ref)
+      (seatOf reading targets controller gs ref)
   -- CR 611.2a: the same seat and the same turn number as the arm above, under an
   -- arm that also states a BEGINNING. Sampled through seatOf for that arm's
   -- reasons, and Nothing where the reference names nobody for that arm's reason
@@ -166,12 +168,12 @@ arm acquisition targets controller source duration gs = case duration of
     _ ->
       fmap
         (\pid -> Expiry.DuringTurnOf (AfterTurn.MkAfterTurn pid (GameState.turnNumber gs)))
-        (seatOf (acquisition gs) targets controller gs ref)
+        (seatOf reading targets controller gs ref)
   -- CR 611.2a / 502.3: the arm above's seat, sampled the same way, with the
   -- untap step for the window. No turn is sampled: no player receives priority
   -- during an untap step (CR 502.4), so nothing arms this inside the window it
   -- names, and the first of that player's untap steps to begin is the next one.
-  Duration.DuringNextUntapStepOf ref -> fmap Expiry.DuringUntapStepOf (seatOf (acquisition gs) targets controller gs ref)
+  Duration.DuringNextUntapStepOf ref -> fmap Expiry.DuringUntapStepOf (seatOf reading targets controller gs ref)
   -- CR 611.2a: the arm above's window with the seat taken from CR 109.5's "you",
   -- as UntilYourNextTurn takes it. Never Nothing -- a controller is always a
   -- seat, so this window always begins.
@@ -209,12 +211,13 @@ arm acquisition targets controller source duration gs = case duration of
   -- CR 116.2c: nothing about the game's clock is baked in, because no window of
   -- the turn ends this -- the PRICE is carried through unchanged so the offer
   -- below can quote it and the payment charge it. The SEAT is baked, as
-  -- UntilYourNextTurn's is: `controller` here is the resolving object's
-  -- controller, stamped at the ability's creation (CR 602.2a, Resolve's
+  -- UntilYourNextTurn's is: for a Licid's "you" `controller` here is the resolving
+  -- object's controller, stamped at the ability's creation (CR 602.2a, Resolve's
   -- effectController), which is exactly CR 109.5's "the player who activated the
   -- ability" -- and unlike that rule's static-ability sentence it must not follow
-  -- the source's control afterwards.
-  Duration.UntilPaid cost -> Just (Expiry.WhenPaid (PaidExpiry.MkPaidExpiry controller cost))
+  -- the source's control afterwards. A payer naming nobody offers nothing.
+  Duration.UntilPaid (UntilPaid.MkUntilPaid payer cost) ->
+    fmap (\pid -> Expiry.WhenPaid (PaidExpiry.MkPaidExpiry pid cost resolving)) (seatOf reading targets controller gs payer)
   -- CR 611.2a: nothing about the game's clock or a payment is baked in --
   -- Parun.Engine.PlayerEffect.spentByCast/spentByLandPlay are what end this
   -- early, matching the stored effect's own Filter against whatever was just
@@ -240,6 +243,8 @@ arm acquisition targets controller source duration gs = case duration of
               DurationEvent.SpellCast criterion -> DurationEvent.SpellCast (Filter.bakeBound (Binding.playersIn targets) Map.empty Map.empty criterion)
           )
       )
+  where
+    reading = Game.readingAcquisition resolving source gs
 
 -- The ONE seat a Duration.UntilEndOfNextTurnOf, DuringNextTurnOf or UntilNextStepOf reference
 -- names, sampled as the window begins. One stored row names one turn, so a
@@ -378,7 +383,7 @@ data Moment
     EndOf PhaseSelector
   | -- | CR 611.2b / 704.3: a settle re-reads every "for as long as" condition.
     Settle
-  | -- | CR 116.2c: the pay-to-end price this object's effects state was paid.
+  | -- | CR 116.2c: the pay-to-end price this resolution's effects state was paid.
     -- Ends ALL of them: the printed sentence is the rule's grain, and Gliding
     -- Licid's one sentence stores four.
     PaidFor ObjectId
@@ -460,7 +465,7 @@ endsAt gs moment source expiry = case expiry of
     namedTurnEnds (EndOf PhaseSelector.CombatPhase) afterTurn || namedTurnEnds Cleanup afterTurn
   -- CR 116.2c: only a payment ends this, and CR 800.4m does not reach it -- the
   -- offer goes with the departed player's objects.
-  Expiry.WhenPaid _ -> moment == PaidFor source
+  Expiry.WhenPaid paid -> moment == PaidFor (PaidExpiry.resolution paid)
   -- CR 611.2a: ended by its use (Parun.Engine.PlayerEffect.spentGrants, or a
   -- delayed trigger's firing, `firesOnce`), and at cleanup, since every printed
   -- producer also says "this turn".
@@ -505,9 +510,14 @@ endsAt gs moment source expiry = case expiry of
 -- trigger only once? With none it does, and firing is the use a Used expiry
 -- waits for, so Chandra, the Firebrand's "when you next cast ... this turn"
 -- fires once (its 2011-09-22 ruling: "the next instant or sorcery spell you
--- cast that turn") and lapses at cleanup unfired.
+-- cast that turn") and lapses at cleanup unfired. A price states no duration, so
+-- CR 116.2c's offer leaves the one shot alone and goes as it fires: "unless they
+-- pay {1} before that draw step" (Nafs Asp).
 firesOnce :: GameState -> ObjectId -> Maybe Expiry -> Bool
-firesOnce gs source = maybe True (endsAt gs Used source)
+firesOnce gs source expiry = case expiry of
+  Nothing -> True
+  Just (Expiry.WhenPaid _) -> True
+  Just stated -> endsAt gs Used source stated
 
 -- CR 611.2a: end every stored row whose expiry ends at this moment.
 -- Delete-and-recompute (design.md 2.5): dropping the stored entry makes the next
@@ -686,34 +696,20 @@ traverseExpiries edit gs =
           fmap
             (\kept -> o {Object.playPermission = fmap (\e -> p {ExilePlayPermission.expiry = e}) kept})
             (edit (ExilePlayPermission.source p) (ExilePlayPermission.expiry p))
-      set ce co re pe br ar op ap ev ia dt ob =
-        gs
-          { GameState.continuousEffects = ce,
-            GameState.copyEffects = co,
-            GameState.replacements = re,
-            GameState.playerEffects = pe,
-            GameState.blockRequirements = br,
-            GameState.attackRequirements = ar,
-            GameState.objectProhibitions = op,
-            GameState.attackProhibitions = ap,
-            GameState.evasions = ev,
-            GameState.ignoredAbilities = ia,
-            GameState.delayedTriggers = dt,
-            GameState.objects = ob
-          }
-   in set
-        <$> rows edit ContinuousEffect.source ContinuousEffect.expiry (\x e -> x {ContinuousEffect.expiry = e}) (GameState.continuousEffects gs)
-        <*> rows edit ActiveCopy.source ActiveCopy.expiry (\x e -> x {ActiveCopy.expiry = e}) (GameState.copyEffects gs)
-        <*> rows edit ActiveReplacement.source ActiveReplacement.expiry (\x e -> x {ActiveReplacement.expiry = e}) (GameState.replacements gs)
-        <*> rows edit ActivePlayerEffect.source ActivePlayerEffect.expiry (\x e -> x {ActivePlayerEffect.expiry = e}) (GameState.playerEffects gs)
-        <*> rows edit ActiveBlockRequirement.source ActiveBlockRequirement.expiry (\x e -> x {ActiveBlockRequirement.expiry = e}) (GameState.blockRequirements gs)
-        <*> rows edit ActiveAttackRequirement.source ActiveAttackRequirement.expiry (\x e -> x {ActiveAttackRequirement.expiry = e}) (GameState.attackRequirements gs)
-        <*> rows edit ActiveObjectProhibition.source ActiveObjectProhibition.expiry (\x e -> x {ActiveObjectProhibition.expiry = e}) (GameState.objectProhibitions gs)
-        <*> rows edit ActiveAttackProhibition.source ActiveAttackProhibition.expiry (\x e -> x {ActiveAttackProhibition.expiry = e}) (GameState.attackProhibitions gs)
-        <*> rows edit ActiveEvasion.source ActiveEvasion.expiry (\x e -> x {ActiveEvasion.expiry = e}) (GameState.evasions gs)
-        <*> rows edit IgnoredAbility.source IgnoredAbility.expiry (\x e -> x {IgnoredAbility.expiry = e}) (GameState.ignoredAbilities gs)
-        <*> fmap (Seq.fromList . Maybe.catMaybes) (traverse delayed (Foldable.toList (GameState.delayedTriggers gs)))
-        <*> traverse object (GameState.objects gs)
+   in fmap (foldr ($) gs) . sequenceA $
+        [ (\xs g -> g {GameState.continuousEffects = xs}) <$> rows edit ContinuousEffect.source ContinuousEffect.expiry (\x e -> x {ContinuousEffect.expiry = e}) (GameState.continuousEffects gs),
+          (\xs g -> g {GameState.copyEffects = xs}) <$> rows edit ActiveCopy.source ActiveCopy.expiry (\x e -> x {ActiveCopy.expiry = e}) (GameState.copyEffects gs),
+          (\xs g -> g {GameState.replacements = xs}) <$> rows edit ActiveReplacement.source ActiveReplacement.expiry (\x e -> x {ActiveReplacement.expiry = e}) (GameState.replacements gs),
+          (\xs g -> g {GameState.playerEffects = xs}) <$> rows edit ActivePlayerEffect.source ActivePlayerEffect.expiry (\x e -> x {ActivePlayerEffect.expiry = e}) (GameState.playerEffects gs),
+          (\xs g -> g {GameState.blockRequirements = xs}) <$> rows edit ActiveBlockRequirement.source ActiveBlockRequirement.expiry (\x e -> x {ActiveBlockRequirement.expiry = e}) (GameState.blockRequirements gs),
+          (\xs g -> g {GameState.attackRequirements = xs}) <$> rows edit ActiveAttackRequirement.source ActiveAttackRequirement.expiry (\x e -> x {ActiveAttackRequirement.expiry = e}) (GameState.attackRequirements gs),
+          (\xs g -> g {GameState.objectProhibitions = xs}) <$> rows edit ActiveObjectProhibition.source ActiveObjectProhibition.expiry (\x e -> x {ActiveObjectProhibition.expiry = e}) (GameState.objectProhibitions gs),
+          (\xs g -> g {GameState.attackProhibitions = xs}) <$> rows edit ActiveAttackProhibition.source ActiveAttackProhibition.expiry (\x e -> x {ActiveAttackProhibition.expiry = e}) (GameState.attackProhibitions gs),
+          (\xs g -> g {GameState.evasions = xs}) <$> rows edit ActiveEvasion.source ActiveEvasion.expiry (\x e -> x {ActiveEvasion.expiry = e}) (GameState.evasions gs),
+          (\xs g -> g {GameState.ignoredAbilities = xs}) <$> rows edit IgnoredAbility.source IgnoredAbility.expiry (\x e -> x {IgnoredAbility.expiry = e}) (GameState.ignoredAbilities gs),
+          (\xs g -> g {GameState.delayedTriggers = xs}) . Seq.fromList . Maybe.catMaybes <$> traverse delayed (Foldable.toList (GameState.delayedTriggers gs)),
+          (\xs g -> g {GameState.objects = xs}) <$> traverse object (GameState.objects gs)
+        ]
 
 -- One carrier's list under traverseExpiries' edit, survivors in order.
 rows :: (Applicative f) => (ObjectId -> Expiry -> f (Maybe Expiry)) -> (r -> ObjectId) -> (r -> Expiry) -> (r -> Expiry -> r) -> [r] -> f [r]
@@ -759,9 +755,9 @@ dropAtEndOf ending =
 -- Every carrier, through sourcedExpiries: Parun.Types.Duration is one
 -- vocabulary and any opcode taking a duration could print this one, so a carrier
 -- left out would hold an effect that is offered to nobody and ends never. The
--- pair is the source and the offer -- the price and CR 109.5's seat, which
--- is all CR 116.2c needs. WHICH of the source's effects is not asked, since one
--- printed sentence stores several and the rule ends the sentence.
+-- pair is the source and the offer -- the price, the seat and the resolution,
+-- which is all CR 116.2c needs. WHICH of the resolution's effects is not asked,
+-- since one printed sentence stores several and the rule ends the sentence.
 paidExpiries :: GameState -> [(ObjectId, PaidExpiry.PaidExpiry)]
 paidExpiries gs = [(source, paid) | (source, Expiry.WhenPaid paid) <- sourcedExpiries gs]
 

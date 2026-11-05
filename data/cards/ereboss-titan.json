@@ -121,19 +121,19 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "CardLeavesZone",
+            "type": "LeavesZone",
             "value": {
-              "filter": {
-                "type": "HasCardType",
+              "card": {
+                "type": "Matching",
                 "value": {
-                  "type": "Creature"
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
                 }
               },
               "from": {
                 "type": "Graveyard"
-              },
-              "scope": {
-                "type": "EachTurn"
               },
               "whose": {
                 "type": "Opponent"

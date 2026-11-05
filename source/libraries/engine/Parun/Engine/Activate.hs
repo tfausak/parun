@@ -143,7 +143,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
                   ActivatedAbilitySource.ability = ability,
                   ActivatedAbilitySource.delayed = Projection.delayedSnapshotOf srcId gs,
                   -- CR 607.5: the pair the ability belongs to, as it is announced.
-                  ActivatedAbilitySource.acquisition = Game.acquisitionOf srcId gs
+                  ActivatedAbilitySource.acquisition = Game.acquisitionFor (ActivatedAbility.name ability) srcId gs
                 }
           )
           Zone.Stack

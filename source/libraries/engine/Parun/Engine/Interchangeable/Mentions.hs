@@ -103,9 +103,6 @@ import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.CantBlockCreatures as CantBlockCreatures
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardAbilities as CardAbilities
-import qualified Parun.Types.CardLeavesZone as CardLeavesZone
-import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
-import qualified Parun.Types.CardsPutIntoZone as CardsPutIntoZone
 import qualified Parun.Types.CastFrom as CastFrom
 import qualified Parun.Types.CastFromZone as CastFromZone
 import qualified Parun.Types.CastOffer as CastOffer
@@ -280,6 +277,7 @@ import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.KeywordTally as KeywordTally
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
 import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LibraryDeparture as LibraryDeparture
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
@@ -372,6 +370,7 @@ import qualified Parun.Types.ProjectedCharacteristics as ProjectedCharacteristic
 import qualified Parun.Types.Protection as Protection
 import qualified Parun.Types.PutCounters as PutCounters
 import qualified Parun.Types.PutCountersFrom as PutCountersFrom
+import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.PutSticker as PutSticker
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.Quotient as Quotient
@@ -450,6 +449,7 @@ import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Parun.Types.UntapR as UntapR
 import qualified Parun.Types.UntapRestriction as UntapRestriction
 import qualified Parun.Types.UntapRewrite as UntapRewrite
+import qualified Parun.Types.UntilPaid as UntilPaid
 import qualified Parun.Types.Vote as Vote
 import qualified Parun.Types.VoteChoices as VoteChoices
 import qualified Parun.Types.VoteObjects as VoteObjects
@@ -884,18 +884,6 @@ cantBlockCreaturesNames asking x = case x of
 cardNames :: (Monoid r) => Asking r -> Card.Card -> r
 cardNames asking x = case x of
   Card.MkCard _layout faces -> foldMap (faceNames asking (cardNames asking)) faces
-
-cardLeavesZoneNames :: (Monoid r) => Asking r -> CardLeavesZone.CardLeavesZone -> r
-cardLeavesZoneNames asking x = case x of
-  CardLeavesZone.MkCardLeavesZone filter_ scope _from _to _whose -> filterNames asking filter_ <> turnScopeNames asking scope
-
-cardPutIntoGraveyardNames :: (Monoid r) => Asking r -> CardPutIntoGraveyard.CardPutIntoGraveyard -> r
-cardPutIntoGraveyardNames asking x = case x of
-  CardPutIntoGraveyard.MkCardPutIntoGraveyard filter_ _from -> filterNames asking filter_
-
-cardsPutIntoZoneNames :: (Monoid r) => Asking r -> CardsPutIntoZone.CardsPutIntoZone -> r
-cardsPutIntoZoneNames asking x = case x of
-  CardsPutIntoZone.MkCardsPutIntoZone filter_ scope _from _to -> filterNames asking filter_ <> turnScopeNames asking scope
 
 castFromNames :: (Monoid r) => Asking r -> CastFrom.CastFrom -> r
 castFromNames asking x = case x of
@@ -1385,6 +1373,7 @@ drawRewriteNames asking onEffect x = case x of
   DrawRewrite.RevealUntilChosenKind -> mempty
   DrawRewrite.DrawInstead _natural -> mempty
   DrawRewrite.DiscardThenDrawOrMill -> mempty
+  DrawRewrite.KeepOneOfTopThenDraw quantity -> quantityNames asking quantity
   DrawRewrite.MaySkipFor effects -> foldMap onEffect effects
 
 dungeonRoomNames :: (Monoid r) => Asking r -> (card -> r) -> DungeonRoom.DungeonRoom card -> r
@@ -1407,7 +1396,7 @@ durationNames asking x = case x of
   Duration.ForAsLongAs condition -> conditionNames asking condition
   Duration.UntilEndOfCombat -> mempty
   Duration.UntilEndOfCombatOnYourNextTurn -> mempty
-  Duration.UntilPaid cost -> costNames asking (keywordNames asking) cost
+  Duration.UntilPaid (UntilPaid.MkUntilPaid payer cost) -> playerRefNames asking payer <> costNames asking (keywordNames asking) cost
   Duration.UntilUsed slot -> foldMap (slotNames asking) slot
   Duration.UntilEvent durationEvent -> durationEventNames asking durationEvent
 
@@ -2162,7 +2151,7 @@ manaAdditionNames asking x = case x of
 manaProductionNames :: (Monoid r) => Asking r -> ManaProduction.ManaProduction -> r
 manaProductionNames asking x = case x of
   ManaProduction.OfType _manaType -> mempty
-  ManaProduction.AnyColor -> mempty
+  ManaProduction.AnyColor _ -> mempty
   ManaProduction.Chosen -> mempty
   ManaProduction.SnowSymbol -> mempty
   ManaProduction.Noted -> mempty
@@ -2372,7 +2361,7 @@ orElseNames asking x = case x of
 
 paidExpiryNames :: (Monoid r) => Asking r -> PaidExpiry.PaidExpiry -> r
 paidExpiryNames asking x = case x of
-  PaidExpiry.MkPaidExpiry _player cost -> costNames asking (keywordNames asking) cost
+  PaidExpiry.MkPaidExpiry _player cost resolution -> costNames asking (keywordNames asking) cost <> names asking (== resolution)
 
 payGateNames :: (Monoid r) => Asking r -> PayGate.PayGate -> r
 payGateNames asking x = case x of
@@ -2449,7 +2438,14 @@ costChangeNames asking x = case x of
 
 costModifierNames :: (Monoid r) => Asking r -> CostModifier.CostModifier -> r
 costModifierNames asking x = case x of
-  CostModifier.MkCostModifier subject matching whichTargets perTarget perEach onlyFirst change -> foldMap (\scope -> history asking HistoryRead.Activations <> turnScopeNames asking scope) onlyFirst <> costSubjectNames asking subject <> filterNames asking matching <> foldMap (filterNames asking) whichTargets <> foldMap (filterNames asking) perTarget <> foldMap (quantityNames asking) perEach <> costChangeNames asking change
+  CostModifier.MkCostModifier subject matching whichTargets perTarget perEach onlyFirst change -> foldMap (\scope -> history asking (costSubjectHistory subject) <> turnScopeNames asking scope) onlyFirst <> costSubjectNames asking subject <> filterNames asking matching <> foldMap (filterNames asking) whichTargets <> foldMap (filterNames asking) perTarget <> foldMap (quantityNames asking) perEach <> costChangeNames asking change
+
+-- The turn's history a cost modifier's `onlyFirst` reads: CR 601.2i's casts
+-- for a spell, CR 602.2's activations for an ability.
+costSubjectHistory :: CostSubject.CostSubject -> HistoryRead.HistoryRead
+costSubjectHistory x = case x of
+  CostSubject.Spells -> HistoryRead.Casts
+  CostSubject.Activations _ -> HistoryRead.Activations
 
 costSubjectNames :: (Monoid r) => Asking r -> CostSubject.CostSubject -> r
 costSubjectNames asking x = case x of
@@ -2986,7 +2982,7 @@ timesNames _asking onQuantity x = case x of
 
 tokenPatternNames :: (Monoid r) => Asking r -> TokenPattern.TokenPattern -> r
 tokenPatternNames asking x = case x of
-  TokenPattern.MkTokenPattern whose whatToken -> controllerRelationNames asking whose <> filterNames asking whatToken
+  TokenPattern.MkTokenPattern whose whatToken _ -> controllerRelationNames asking whose <> filterNames asking whatToken
 
 tokenPlusNames :: Asking r -> (card -> r) -> TokenPlus.TokenPlus card -> r
 tokenPlusNames _asking onCard x = case x of
@@ -3021,6 +3017,16 @@ entersTriggerNames :: (Monoid r) => Asking r -> EntersTrigger.EntersTrigger -> r
 entersTriggerNames asking x = case x of
   -- A batching, which names nothing.
   EntersTrigger.MkEntersTrigger permanent _batching -> actingPermanentNames asking permanent
+
+leavesZoneTriggerNames :: (Monoid r) => Asking r -> LeavesZoneTrigger.LeavesZoneTrigger -> r
+leavesZoneTriggerNames asking x = case x of
+  -- Zones, a pile's relation and a batching, which name nothing.
+  LeavesZoneTrigger.MkLeavesZoneTrigger card _from _to _whose scope _batching -> actingPermanentNames asking card <> turnScopeNames asking scope
+
+putIntoZoneTriggerNames :: (Monoid r) => Asking r -> PutIntoZoneTrigger.PutIntoZoneTrigger -> r
+putIntoZoneTriggerNames asking x = case x of
+  -- Zones, a flag and a batching, which name nothing.
+  PutIntoZoneTrigger.MkPutIntoZoneTrigger card _from _to scope _duringResolution _batching -> actingPermanentNames asking card <> turnScopeNames asking scope
 
 leavesTriggerNames :: (Monoid r) => Asking r -> LeavesTrigger.LeavesTrigger -> r
 leavesTriggerNames asking x = case x of
@@ -3092,14 +3098,8 @@ triggerConditionNames asking x = case x of
   TriggerCondition.Attacks attackTrigger -> attackTriggerNames asking attackTrigger
   TriggerCondition.Blocks blockTrigger -> blockTriggerNames asking blockTrigger
   TriggerCondition.Leaves leavesTrigger -> leavesTriggerNames asking leavesTrigger
-  TriggerCondition.SelfPutIntoGraveyardFromLibrary -> mempty
-  TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> mempty
-  TriggerCondition.SelfPutIntoGraveyardDuringResolution -> mempty
-  TriggerCondition.CardPutIntoGraveyard cardPutIntoGraveyard -> cardPutIntoGraveyardNames asking cardPutIntoGraveyard
-  TriggerCondition.CardLeavesZone cardLeavesZone -> cardLeavesZoneNames asking cardLeavesZone
-  TriggerCondition.CardsLeaveZone cardLeavesZone -> cardLeavesZoneNames asking cardLeavesZone
-  TriggerCondition.CardsPutIntoZone cardsPutIntoZone -> cardsPutIntoZoneNames asking cardsPutIntoZone
-  TriggerCondition.SelfLeavesGraveyard -> mempty
+  TriggerCondition.LeavesZone leavesZoneTrigger -> leavesZoneTriggerNames asking leavesZoneTrigger
+  TriggerCondition.PutIntoZone putIntoZoneTrigger -> putIntoZoneTriggerNames asking putIntoZoneTrigger
   TriggerCondition.BecomesTapState becomesTapState -> actingPermanentNames asking (BecomesTapState.actor becomesTapState)
   TriggerCondition.PermanentsBecomeTapped filter_ -> filterNames asking filter_
   TriggerCondition.AttachedPermanentTappedForMana -> mempty
@@ -3253,7 +3253,7 @@ voteObjectsNames asking x = case x of
 
 wardNames :: (Monoid r) => Asking r -> (keyword -> r) -> Ward.Ward keyword -> r
 wardNames asking onKeyword x = case x of
-  Ward.MkWard cost perEach -> costNames asking onKeyword cost <> foldMap (playerCounterTallyNames asking) perEach
+  Ward.MkWard cost perEach -> costNames asking onKeyword cost <> foldMap (keywordCountNames asking) perEach
 
 whenSpentNames :: (Monoid r) => Asking r -> WhenSpent.WhenSpent -> r
 whenSpentNames asking x = case x of

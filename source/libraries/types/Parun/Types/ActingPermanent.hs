@@ -4,8 +4,9 @@ import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
 
 -- | Which object a Parun.Types.TriggerCondition watches: PermanentActs'
--- actor, or the object a damage condition's damage was dealt by or to -- a
--- permanent, or a spell as the source (CR 120.2).
+-- actor, the object a damage condition's damage was dealt by or to -- a
+-- permanent, or a spell as the source (CR 120.2) -- or a card a zone-change
+-- condition watches move.
 data ActingPermanent
   = -- | CR 603.2: the bearer itself ("when this creature evolves"), compared by
     -- id, so a bearer that has since left is still answered about the event.

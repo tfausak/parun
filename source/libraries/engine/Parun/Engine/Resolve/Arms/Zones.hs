@@ -630,21 +630,23 @@ setOwner resolving source controller legal (SetOwner.MkSetOwner player ref) = do
     [owner] -> State.put (List.foldl' (\g oid -> Game.setOwner oid owner g) gs named)
     _ -> pure ()
 
--- CR 701.12a / 108.3: the one object each ref names trade owners. All or
--- nothing: a ref naming no object or several, or both naming the same one,
--- exchanges nothing. Two Game.setOwner writes on the objects as they stand,
--- no zone change; one owner on both sides changes nothing.
+-- CR 701.12a / 108.3: the objects each ref names trade owners, each taking the
+-- other side's former owner. A side names several where "from anywhere" found
+-- a merged permanent's every component (CR 730.3c), and the writes are one
+-- simultaneous action (CR 608.2f), so each owner is read from the objects as
+-- they stand before any write. All or nothing: an empty side, an object on
+-- both sides, or a side with more than one owner exchanges nothing. No zone
+-- change; one owner on both sides changes nothing.
 exchangeOwnership :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> ExchangeOwnership.ExchangeOwnership -> Game ()
 exchangeOwnership resolving source controller legal (ExchangeOwnership.MkExchangeOwnership one other) = do
   gs <- State.get
   let named ref = ListUtils.nubOrd (objectRefObjects legal resolving controller source gs ref)
-      ownerOf oid = fmap Object.owner (Game.lookupObject oid gs)
-  case (named one, named other) of
-    ([a], [b])
-      | a /= b,
-        Just ownerA <- ownerOf a,
-        Just ownerB <- ownerOf b ->
-          State.put (Game.setOwner b ownerA (Game.setOwner a ownerB gs))
+      ownersOf = ListUtils.nubOrd . Maybe.mapMaybe (fmap Object.owner . (`Game.lookupObject` gs))
+      side ref = let oids = named ref in (oids, ownersOf oids)
+  case (side one, side other) of
+    ((as@(_ : _), [ownerA]), (bs@(_ : _), [ownerB]))
+      | all (`notElem` bs) as ->
+          State.put (List.foldl' (\g oid -> Game.setOwner oid ownerA g) (List.foldl' (\g oid -> Game.setOwner oid ownerB g) gs as) bs)
     _ -> pure ()
 
 -- CR 407.4: "the owner of an object is the only player who can ante that
@@ -787,7 +789,7 @@ grantPlayFromExile resolving source controller legal (GrantPlayFromExile.MkGrant
         -- Object.playPermission holds one, so a reference naming nobody --
         -- or naming several -- grants nothing, PlayerRef.InSlot's own
         -- collapse.
-        [holder] -> case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs of
+        [holder] -> case Expiry.arm resolving legal controller source duration gs of
           -- CR 611.2b: the duration never started, so no permission is stored.
           Nothing -> gs
           Just expiry ->
@@ -1784,7 +1786,7 @@ exchangeValues settle resolving source controller legal (ExchangeValues.MkExchan
         previous <- characteristic oid gs
         pure (previous, Just . setBase oid . setting . Quantity.Type.Literal)
       -- CR 611.2c: the one creature is frozen into the stored effect.
-      setBase oid setting = State.modify' $ \g -> case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration g of
+      setBase oid setting = State.modify' $ \g -> case Expiry.arm resolving legal controller source duration g of
         Nothing -> g
         Just expiry ->
           let (ts, g1) = Game.freshTimestamp g

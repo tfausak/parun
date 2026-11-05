@@ -28,6 +28,7 @@ module Parun.Engine.PlayerEffect where
 
 import qualified Data.Bifunctor as Bifunctor
 import qualified Data.Containers.ListUtils as ListUtils
+import qualified Data.Foldable as Foldable
 import qualified Data.Functor.Const as Functor
 import qualified Data.Functor.Identity as Functor
 import qualified Data.List as List
@@ -65,6 +66,7 @@ import qualified Parun.Types.AlternativeActivationCost as AlternativeActivationC
 import qualified Parun.Types.AppliedReduction as AppliedReduction
 import qualified Parun.Types.CantSearchLibraries as CantSearchLibraries
 import qualified Parun.Types.CastFromZone as CastFromZone
+import qualified Parun.Types.CastWindow as CastWindow
 import qualified Parun.Types.CastingPermission as CastingPermission
 import qualified Parun.Types.Chosen as Chosen
 import qualified Parun.Types.CombatDeclaration as CombatDeclaration
@@ -81,10 +83,12 @@ import qualified Parun.Types.DrawReveal as DrawReveal
 import qualified Parun.Types.EnteredZone as EnteredZone
 import qualified Parun.Types.EntriesTrigger as EntriesTrigger
 import qualified Parun.Types.EntryTriggering as EntryTriggering
+import qualified Parun.Types.EventShape as EventShape
 import qualified Parun.Types.ExtraVotes as ExtraVotes
 import qualified Parun.Types.Face as Face
 import Parun.Types.Filter (Filter)
 import qualified Parun.Types.Filter as Filter.Type
+import qualified Parun.Types.GameEvent as GameEvent
 import qualified Parun.Types.GameOutcome as GameOutcome
 import qualified Parun.Types.GameSettings as GameSettings
 import Parun.Types.GameState (GameState)
@@ -130,6 +134,7 @@ import qualified Parun.Types.RowSource as RowSource
 import qualified Parun.Types.Shows as Shows
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SourceChoices as SourceChoices
+import qualified Parun.Types.SpellWasCast as SpellWasCast
 import qualified Parun.Types.SpendManaAsThough as SpendManaAsThough
 import qualified Parun.Types.StackObjectKind as StackObjectKind
 import qualified Parun.Types.StatedFlip as StatedFlip
@@ -1639,9 +1644,10 @@ admitsAtManaValue pid permission oid manaValue gs = case permission of
 spellCostAdjustments :: Set.Set Recipient.Recipient -> PlayerId -> ObjectId -> GameState -> CostAdjustments
 spellCostAdjustments targets pid oid gs =
   let reaches source modifier = case CostModifier.subject modifier of
-        -- Not implemented: a spell's `onlyFirst` (#4924), which
-        -- Parun.Codec.CostModifier refuses.
-        CostSubject.Spells -> Maybe.isNothing (CostModifier.onlyFirst modifier) && matchesObjectFrom source (CostModifier.matching modifier) oid gs
+        -- Then Shadow in the Warp's "first", asked with the same criterion.
+        CostSubject.Spells ->
+          matchesObjectFrom source (CostModifier.matching modifier) oid gs
+            && maybe True (firstCast pid source (CostModifier.matching modifier) oid gs) (CostModifier.onlyFirst modifier)
         -- Oppressive Rays, turned away by the SUBJECT and not by its Filter
         -- -- the mirror of what keeps Thalia off an activation cost in
         -- activationCostAdjustmentsGiven below (#90).
@@ -1796,6 +1802,23 @@ firstActivation pid source criterion criteria aimedAt gs scope =
           && maybe True (\f -> any (matchesSnapshot (Just (targetPerspective pid source gs)) f) (PastActivation.targets past)) aimedAt
    in Turn.turnScopeAdmits (Count.scopePlayers (Projection.viewWithLastKnownAnywhere gs) (contextFor (Just pid) source gs) gs) gs scope (GameState.activePlayer gs) pid
         && not (any admits (GameState.activationsThisTurn gs))
+
+-- Shadow in the Warp's "the FIRST creature spell you cast each turn",
+-- firstActivation's twin over CR 601.2i's casts: in a turn the scope admits, did
+-- `pid` cast no spell matching `criterion` earlier this turn? Reduced or not, and
+-- whether or not the effect asking existed yet (Shadow in the Warp's ruling).
+-- Asked of the casts the log holds before `oid`'s own (Game.castsBefore), or of
+-- all of them while `oid` is still being cast, since CR 601.2f runs before CR
+-- 601.2i files it. Each past cast is matched as cast (Count.snapshotView), with
+-- its caster as CR 109.5's "you".
+firstCast :: PlayerId -> RowSource -> Filter Keyword -> ObjectId -> GameState -> TurnScope.TurnScope -> Bool
+firstCast pid source criterion oid gs scope =
+  let earlier = Maybe.fromMaybe (Foldable.toList (Game.castsInLog gs)) (Game.castsBefore oid gs)
+      admits cast =
+        SpellWasCast.player cast == pid
+          && maybe False (\view -> Filter.matches (contextFor (Just pid) source gs) view criterion) (Count.snapshotView (Projection.viewWithLastKnownAnywhere gs) gs (EventShape.SpellCast CastWindow.ThisTurn) (GameEvent.SpellCast cast))
+   in Turn.turnScopeAdmits (Count.scopePlayers (Projection.viewWithLastKnownAnywhere gs) (contextFor (Just pid) source gs) gs) gs scope (GameState.activePlayer gs) pid
+        && not (any admits earlier)
 
 -- CR 118.9 through CR 602.2b: the costs `pid` may pay RATHER THAN the
 -- activation cost of an ability stamped `stamp` -- Kíli the Resourceful's {0}
@@ -2352,7 +2375,7 @@ castPermissionsFrom pid zone oid gs =
       inPool source pool = case pool of
         PermissionPool.EveryCard -> True
         PermissionPool.InExiledPile pile -> case (RowSource.object source, Map.lookup oid (GameState.exiledWith gs)) of
-          (Just sid, Just link) -> Binding.isLinkedExile (RowSource.ability source) pile sid link
+          (Just sid, Just link) -> Binding.isLinkedExile (RowSource.ability source) (maybe (Game.acquisitionFor (RowSource.ability source) sid gs) SourceChoices.acquisition (RowSource.choices source)) pile sid link
           _ -> False
    in Maybe.mapMaybe grantOf (filter allows (applying pid gs))
 

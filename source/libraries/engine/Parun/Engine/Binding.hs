@@ -15,6 +15,7 @@ import qualified Data.Set as Set
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified Parun.Types.AbilityName as AbilityName
+import qualified Parun.Types.Acquisition as Acquisition
 import Parun.Types.Binding (Binding)
 import qualified Parun.Types.Binding as Binding
 import qualified Parun.Types.ExileLink as ExileLink
@@ -345,7 +346,7 @@ became = SlotName.MkSlotName (Text.pack "became")
 -- that reach it anyway -- Kithkin Brinefarer's "conjure a duplicate of that
 -- card", Volatile Rift's "it perpetually gets +X/+0" -- so the paper rule on
 -- `became` stands unchanged. Stamped by Parun.Engine.Event.Binding.eventBindings
--- for TriggerCondition.CardLeavesZone; reserved and not a target, `became`'s
+-- for TriggerCondition.LeavesZone; reserved and not a target, `became`'s
 -- posture.
 handArrival :: SlotName
 handArrival = SlotName.MkSlotName (Text.pack "handArrival")
@@ -558,30 +559,39 @@ craftLink = AbilityName.MkAbilityName (Text.pack "thoseCraftMaterials")
 entryExileLink :: AbilityName.AbilityName
 entryExileLink = AbilityName.MkAbilityName (Text.pack "exiledAsThisEntered")
 
--- CR 602.5c / 607.5: the name each activated ability an object acquires from
--- one card lends it carries (Modification.GainCardAbilities), drawn from
--- that card's id and, for a named one, its own name, so two identically worded
--- abilities acquired from two cards are two abilities to a restriction on their
--- use, and none is the holder's own ability of that name. Reserved, as
--- craftLink is.
-lentCardAbility :: ObjectId -> Maybe AbilityName.AbilityName -> AbilityName.AbilityName
-lentCardAbility oid = maybe card (qualified card)
+-- CR 602.5c / 607.5 / 113.2c: the name an ability an object acquires from
+-- `oid` carries, drawn from that object's id and, for a named one, its own
+-- name: an exiled card lending its abilities (Modification.GainCardAbilities),
+-- or a permanent or resolution granting one printing a once-only rider
+-- (Projection's GainAbility arm). Two identically worded abilities from two
+-- sources are then two abilities to a restriction on their use, and none is the
+-- holder's own ability of that name. Reserved, as craftLink is.
+acquiredFrom :: ObjectId -> Maybe AbilityName.AbilityName -> AbilityName.AbilityName
+acquiredFrom oid = maybe card (qualified card)
   where
-    card = AbilityName.MkAbilityName (lentCardPrefix <> Text.pack (show (ObjectId.unwrap oid)))
+    card = AbilityName.MkAbilityName (acquiredPrefix <> Text.pack (show (ObjectId.unwrap oid)))
 
--- CR 607.2a / 607.5: whether lentCardAbility gave this name, so what an
--- ability acquired that way exiled is linked to none of its holder's own
--- abilities.
-isLentCardAbility :: AbilityName.AbilityName -> Bool
-isLentCardAbility = Text.isPrefixOf lentCardPrefix . AbilityName.unwrap
+-- CR 607.2a / 607.5: whether acquiredFrom gave this name, so what an ability
+-- acquired that way exiled is linked to none of its holder's own abilities.
+isAcquired :: AbilityName.AbilityName -> Bool
+isAcquired = Text.isPrefixOf acquiredPrefix . AbilityName.unwrap
 
--- Whether lentCardAbility drew this name from `oid`.
+-- Whether acquiredFrom drew this name from `oid`.
 isAcquiredFrom :: ObjectId -> AbilityName.AbilityName -> Bool
-isAcquiredFrom oid name = pairOf (Just name) == Just (lentCardAbility oid Nothing)
+isAcquiredFrom oid name = pairOf (Just name) == Just (acquiredFrom oid Nothing)
+
+-- CR 603.3b: the name an ability carries as written, acquiredFrom's naming
+-- undone: its own name, or Nothing for an unnamed one.
+asWritten :: Maybe AbilityName.AbilityName -> Maybe AbilityName.AbilityName
+asWritten name = case name of
+  Just n | isAcquired n -> case Text.breakOn (Text.pack "/") (AbilityName.unwrap n) of
+    (_, rest) | Text.null rest -> Nothing
+    (_, rest) -> Just (AbilityName.MkAbilityName (Text.drop 1 rest))
+  _ -> name
 
 -- | CR 607.5: the ability a name stated inside the ability `reader` means. A
 -- reader acquired from a lending card means that card's ability of the name,
--- as acquired beside it (lentCardAbility); any other reader the name as
+-- as acquired beside it (acquiredFrom); any other reader the name as
 -- written. Synthetic Split Reliquary's "the cards exiled with warden" and
 -- Gliding Licid's "loses this ability" are the readers, the second only for
 -- its own object (Parun.Engine.Resolve.Arms.Damage's ModifyTarget).
@@ -591,41 +601,67 @@ nameAsRead :: Maybe AbilityName.AbilityName -> AbilityName.AbilityName -> Abilit
 nameAsRead reader name = maybe name (`qualified` name) (pairOf reader)
 
 -- | CR 607.2a / 607.5: whether `link` files its card against `src` in `pile`,
--- as a reader named `reader` means it. THE one membership test every reader of
--- GameState.exiledWith goes through (Parun.Engine.Game.linkedPile).
+-- as a reader named `reader` that came with `acquisition` means it. THE one
+-- membership test every reader of GameState.exiledWith goes through
+-- (Parun.Engine.Game.linkedPile).
+--
+-- Only a link filed under the reader's own acquisition: a pair a copy effect
+-- brought is linked to no ability the object had before (CR 607.5).
 --
 -- OwnAbilities is every exiling ability paired with the reader: a reader
--- acquired from a lending card (isLentCardAbility) is linked only to the
+-- acquired from a lending card (isAcquired) is linked only to the
 -- abilities acquired from that card; every other reader -- printed, or
 -- "printed" by CR 607.1a's grant -- only to exiling abilities that were not
 -- acquired that way. OfAbility names one exiling ability as the reader means
 -- it (nameAsRead), the other two the reserved ones under entryExileLink and
 -- craftLink.
-isLinkedExile :: Maybe AbilityName.AbilityName -> ExiledPile.ExiledPile -> ObjectId -> ExileLink.ExileLink -> Bool
-isLinkedExile reader pile src link =
-  ExileLink.source link == src && case pile of
+isLinkedExile :: Maybe AbilityName.AbilityName -> Acquisition.Acquisition -> ExiledPile.ExiledPile -> ObjectId -> ExileLink.ExileLink -> Bool
+isLinkedExile reader acquisition pile src link =
+  ExileLink.source link == src && ExileLink.acquisition link == acquisition && case pile of
     ExiledPile.OwnAbilities -> pairOf (ExileLink.ability link) == pairOf reader
     ExiledPile.OfAbility name -> ExileLink.ability link == Just (nameAsRead reader name)
     ExiledPile.AsItEntered -> ExileLink.ability link == Just entryExileLink
     ExiledPile.CraftMaterials -> ExileLink.ability link == Just craftLink
 
 -- The lending card a link's or a reader's ability name was acquired from, as
--- lentCardAbility names an unnamed ability of it; Nothing for the holder's
+-- acquiredFrom names an unnamed ability of it; Nothing for the holder's
 -- own. Dropping a named one's own name is a REGRESSION FENCE: no card in
 -- data/cards/ pairs an acquired "exiled with" reader with a NAMED exiling
 -- ability beside it, so keeping the whole name leaves the suite green.
 pairOf :: Maybe AbilityName.AbilityName -> Maybe AbilityName.AbilityName
-pairOf = fmap (AbilityName.MkAbilityName . card . AbilityName.unwrap) . Monad.mfilter isLentCardAbility
+pairOf = fmap (AbilityName.MkAbilityName . card . AbilityName.unwrap) . Monad.mfilter isAcquired
   where
-    card t = lentCardPrefix <> Text.takeWhile Char.isDigit (Text.drop (Text.length lentCardPrefix) t)
+    card t = acquiredPrefix <> Text.takeWhile Char.isDigit (Text.drop (Text.length acquiredPrefix) t)
 
--- The name lentCardAbility gives the ability named `name` acquired from the
+-- The name acquiredFrom gives the ability named `name` acquired from the
 -- card whose unnamed abilities it names `card`.
 qualified :: AbilityName.AbilityName -> AbilityName.AbilityName -> AbilityName.AbilityName
 qualified card name = AbilityName.MkAbilityName (AbilityName.unwrap card <> Text.pack "/" <> AbilityName.unwrap name)
 
-lentCardPrefix :: Text.Text
-lentCardPrefix = Text.pack "thatExiledCard"
+acquiredPrefix :: Text.Text
+acquiredPrefix = Text.pack "acquiredFrom"
+
+-- | CR 607.1a / 707.9a: the name an activated ability a copy effect's
+-- exception let `holder` keep ("and has this ability") carries, drawn from the
+-- holder's id and, for a named one, its own name, so it reads under the
+-- holder's own acquisition (Parun.Engine.Game.acquisitionFor) and a second
+-- instance the copy brought does not. Reserved, as craftLink is.
+-- docs/decisions.md's "A kept ability stays linked to its holder's own exiles"
+-- is the reading.
+keptAbility :: ObjectId -> Maybe AbilityName.AbilityName -> AbilityName.AbilityName
+keptAbility holder = maybe kept (qualified kept)
+  where
+    kept = AbilityName.MkAbilityName (keptPrefix <> Text.pack (show (ObjectId.unwrap holder)))
+
+-- | Whether keptAbility named this ability kept by `holder`.
+isKeptOn :: ObjectId -> AbilityName.AbilityName -> Bool
+isKeptOn holder name =
+  let kept = AbilityName.unwrap (keptAbility holder Nothing)
+      t = AbilityName.unwrap name
+   in t == kept || Text.isPrefixOf (kept <> Text.pack "/") t
+
+keptPrefix :: Text.Text
+keptPrefix = Text.pack "keptByCopy"
 
 -- CR 400.7j: the reserved slot under which the cards a DiscardThis or
 -- DiscardCards COST payment discarded are bound, as the objects they became in
@@ -908,7 +944,7 @@ manaSource = SlotName.MkSlotName (Text.pack "thatManaSource")
 -- CR 701.21a's PermanentSacrificed, where Prowling Geistcatcher's "if that
 -- creature was a token" reads it. Under a self TriggerCondition.Leaves the
 -- departed id already IS CR 113.7a's `triggerSource`, so a second name for one
--- object would be the redundancy SelfPutIntoGraveyardFromAnywhere's empty floor
+-- object would be the redundancy a Self PutIntoZone's empty floor
 -- declines.
 --
 -- Every read of it is CR 608.2h's last known information --

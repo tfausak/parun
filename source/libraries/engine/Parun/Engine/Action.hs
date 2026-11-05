@@ -243,11 +243,11 @@ legalActions pid gs =
       -- priority, unless that effect specifies another timing restriction", which
       -- is CR 116.2b's window plus the escape clause `lifeForMana` below uses.
       --
-      -- ONE ACTION PER SOURCE, not per stored effect: CR 116.2c ends "that
-      -- effect", the printed sentence, and Gliding Licid's one sentence stores
-      -- four continuous effects that must end together. Nothing is left for the
-      -- player to choose once the permanent is chosen.
-      endings = fmap Action.EndEffect (EndEffect.endable pid gs)
+      -- ONE ACTION PER RESOLUTION, not per stored effect or per source: CR 116.2c
+      -- ends "that effect", the printed sentence, so Gliding Licid's one sentence
+      -- is one action over its four stored effects, and each of Nafs Asp's hits on
+      -- one player is an action of its own.
+      endings = fmap (uncurry Action.EndEffect) (EndEffect.endable pid gs)
       -- CR 116.2c again, with the timing restriction that rule leaves room for:
       -- Channel's "any time you could activate a mana ability" is CR 605.3a's
       -- windows, this one and Cost.payManaWindowThen's. A TIMING restriction, so

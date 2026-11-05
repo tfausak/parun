@@ -67,6 +67,27 @@ Entries are ordered by the first rule each cites.
   component is a spell copy is no token".
 - **Issue**: none.
 
+## A rider ability regained from one granter stays spent
+
+- **Question**: A permanent loses a "triggers only once each turn" or "activate
+  only once" ability a granter gave it, then gets it back from the SAME granter
+  (Well Rested moved off and back by Aura Graft). Is it a new ability, unspent?
+  The rulings on Tyvar the Bellicose, Dionus and Cursed Wombat settle only a
+  new granter's grant, and only for a triggered ability.
+- **Rules**: CR 113.2c, 400.7, 602.5b, 613.7e; CR of 2026-08-07.
+- **Decision**: The same ability, still spent: a grant is named for its
+  granter object (`Binding.acquiredFrom`), not for its timestamp. A new
+  granter, including one that left and returned (CR 400.7), gives a new
+  ability. The activated side reads the same, CR 113.2c being all that speaks
+  to it.
+- **Rejected**: A new ability on each re-grant, keyed by the grant's
+  timestamp: CR 613.7e re-stamps a moved Aura without changing which object
+  grants, and the rulings speak of the granting object.
+- **Site**: `Parun.Engine.Projection`'s `GainAbility` arm;
+  `data/scenarios/well-rested-moved-back-by-aura-graft-stays-spent.json`
+  proves it.
+- **Issue**: #4627.
+
 ## Who says which new target takes a replaced target's part of a division
 
 - **Question**: CR 115.7f keeps a divided spell's division through a change of
@@ -646,6 +667,32 @@ Entries are ordered by the first rule each cites.
   conjures inside an ability that could add mana.
 - **Issue**: none.
 
+## A kept ability stays linked to its holder's own exiles
+
+- **Question**: Mimeoplasm, Revered One becomes a copy of a card "except it's
+  0/0 and has this ability". After the copy, does the kept {2} still refer to
+  the cards Mimeoplasm's printed as-enters ability exiled, or to none, as an
+  ability acquired without its linked twin?
+- **Rules**: CR 607.1a, 607.2b, 607.5, 607.5a, 707.9a; CR of 2026-08-07. No
+  ruling for Mimeoplasm.
+- **Decision**: It stays linked. The exception grants the ability from within
+  the ability itself, so CR 607.1a counts it as printed on the object; the CR
+  607.2b pair is then intact, and CR 607.5's bar covers only a pair acquired
+  together. Only the instance the exception keeps is linked: a second
+  instance the copy itself brought (Mimeoplasm copying a second Mimeoplasm) is
+  CR 607.5's acquired ability and refers to no card.
+- **Rejected**: The kept ability refers to nothing (CR 607.5a by analogy). It
+  loses because CR 607.5a speaks of a choice and not an exile, and it would
+  make "and has this ability" do nothing on the one printing that keeps a
+  linked ability this way. Reading the old pile from every ability of the copy
+  loses on the same board: the copied {2} would find the kept one's cards.
+- **Site**: `Parun.Engine.Binding.keptAbility`, read by
+  `Parun.Engine.Game.acquisitionFor`; proved by
+  `data/scenarios/copy/cr-607-1a-mimeoplasm-copying-a-mimeoplasm-keeps-one-ability-linked-to-its-exiles.json`
+  and
+  `data/scenarios/copy/cr-614-14-mimeoplasm-becomes-a-copy-of-each-card-exiled-with-it-in-turn-and-of-no-other.json`.
+- **Issue**: #4985.
+
 ## When Thieves' Auction's repeated process ends
 
 - **Question**: Thieves' Auction repeats "until all cards exiled this way have
@@ -708,8 +755,10 @@ Entries are ordered by the first rule each cites.
   "a spell or ability an opponent controls causes" a move or a discard. Does a
   cost paid for it count, a CR 118.12 cost paid as it resolves (Professor
   Onyx's "each opponent may discard a card. If they don't, ..."), or the
-  state-based action that follows its damage?
-- **Rules**: CR 609.1, 118.12, 601.2h, 602.2b, 704.3; CR of 2026-08-07.
+  state-based action that follows its damage? Does Doubling Season's "if an
+  effect would create" reach a token made as such a cost?
+- **Rules**: CR 609.1, 118.12, 601.2h, 602.2b, 614.16, 704.3; CR of
+  2026-08-07.
 - **Decision**: Only an effect (CR 609.1) of a spell or ability counts, with
   that spell or ability's controller as the effect is performed. A cost,
   CR 118.12's included, a state-based action, a turn-based action and the
@@ -729,8 +778,11 @@ Entries are ordered by the first rule each cites.
   `Parun.Engine.Resolve.Effect.applyEffectWith` and
   `Parun.Engine.Cost.payComponent`, proved by the `sacred-ground-*` and
   `spiritual-focus-*` scenarios. The `obstinate-baloth-*` scenarios prove
-  only whose spell or ability caused the discard.
-- **Issue**: #5530.
+  only whose spell or ability caused the discard. A token lot made as that
+  cost is no effect's either, while one another replacement appends is (CR
+  614.16): `Parun.Engine.Replacement.reachesLot` reads `TokenLot.byEffect`,
+  proved by the `turntimber-ranger-*` scenarios.
+- **Issue**: #5530, #6114.
 
 ## Whether "if you can't" holds after doing part of an instruction
 
@@ -921,6 +973,24 @@ Entries are ordered by the first rule each cites.
 - **Site**: `Parun.Engine.Event.placeDiverted`. Proved by the scenario
   hallowed-moonlight-exiles-a-card-conjured-onto-the-battlefield.
 - **Issue**: #5764.
+
+## Whether an ability's own "prevent" is a self-replacement
+
+- **Question**: Power Leak deals 2 damage, then says "prevent X of that damage".
+  It is the resolving ability's own effect, as CR 614.15 describes, and it uses
+  "prevent", as CR 615.1a describes. Does it apply first with no choice, or does
+  its victim order it against Furnace of Rath or Reverse Damage?
+- **Rules**: CR 614.15, 608.2c, 615.1, 615.1a, 616.1a, 616.1e; CR of 2026-08-07.
+  CR 614.15 opens "Some replacement effects", CR 615.1 makes a prevention effect
+  continuous, and neither Power Leak nor Errant Minion has a ruling.
+- **Decision**: A self-replacement. It applies first, so Furnace of Rath doubles
+  what is left, and Reverse Damage prevents only that.
+- **Rejected**: A continuous prevention effect under CR 616.1e, which lets the
+  victim take 3 rather than 2 under Furnace of Rath. The sentence qualifies the
+  one before it, as CR 608.2c lets later text do.
+- **Site**: `data/cards/power-leak.json`'s `origin`, proved by the scenario
+  "power-leak-prevents-before-furnace-of-rath-doubles".
+- **Issue**: #6128.
 
 ## Whether a phased-out permanent a subgame takes leaves visibly
 
@@ -1418,3 +1488,18 @@ Entries are ordered by the first rule each cites.
   channel/channel-asks-nothing-of-a-gate-of-zero,
   channel/channel-asks-nothing-of-phyrexian-mana-paid-in-life and, for the toll,
   channel/channel-asks-nothing-of-a-toll-of-zero.
+
+## Who pays Quenchable Fire's price once the planeswalker changes hands
+
+- **Question**: Quenchable Fire's target is a planeswalker, which changes
+  controllers before the caster's next upkeep. "That planeswalker's controller
+  pays {U}": the player who controlled it as the spell resolved, or whoever
+  controls it when they pay? The card's rulings speak only of a targeted player.
+- **Rules**: CR 116.2c, 608.2c (CR of 2026-08-07).
+- **Decision**: The controller as the spell resolves. The offer's seat is sampled
+  once, as for every CR 116.2c offer.
+- **Rejected**: Whoever controls it at payment, under which the offer moves with
+  the planeswalker. The sentence names no later moment to ask again.
+- **Site**: `Parun.Types.UntilPaid`'s `payer`, sampled by `Parun.Engine.Expiry.arm`.
+  No test changes the planeswalker's controller.
+- **Issue**: #6084.

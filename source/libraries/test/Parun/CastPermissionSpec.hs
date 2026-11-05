@@ -34,6 +34,7 @@ import qualified Parun.Engine.Stack as Stack
 import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
+import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.Action as Action.Type
 import qualified Parun.Types.ActivePlayerEffect as ActivePlayerEffect
 import qualified Parun.Types.AffectedPlayers as AffectedPlayers
@@ -560,7 +561,7 @@ playing wanted action = case action of
   Action.Type.PutCompanionIntoHand -> False
   Action.Type.RollPlanarDie -> False
   Action.Type.Ignore _ _ -> False
-  Action.Type.EndEffect _ -> False
+  Action.Type.EndEffect {} -> False
   Action.Type.PayLifeForMana _ _ -> False
   Action.Type.ActivateManaAbility _ -> False
 
@@ -1753,7 +1754,7 @@ dawnhandBoard s registry giantPlusOne active = do
       (unlinked, g5) = S.addExiledCard cheetah S.alice g4
       (bobs, g6) = S.addExiledCard cheetah S.bob g5
       (inHand, g7) = S.addHandCard cheetah S.alice g6
-      link = ExileLink.MkExileLink {ExileLink.source = dissidentId, ExileLink.ability = Nothing}
+      link = ExileLink.MkExileLink {ExileLink.source = dissidentId, ExileLink.ability = Nothing, ExileLink.acquisition = Acquisition.Own}
       counted =
         S.addCounter CounterKind.PlusOnePlusOne giantPlusOne giantId
           . S.addCounter CounterKind.PlusOnePlusOne 1 pikerId
@@ -1918,7 +1919,7 @@ uriangerBoard s registry caster = do
       (_, g2) = S.addLibraryCard ornithopter S.alice g1
       (shown, g3) = S.addExiledCard memnite S.alice g2
       (treasonId, g4) = S.addHandCard treason caster g3
-      link = ExileLink.MkExileLink {ExileLink.source = uriangerId, ExileLink.ability = Nothing}
+      link = ExileLink.MkExileLink {ExileLink.source = uriangerId, ExileLink.ability = Nothing, ExileLink.acquisition = Acquisition.Own}
       ready =
         g4
           { GameState.exiledWith = Map.singleton shown link,

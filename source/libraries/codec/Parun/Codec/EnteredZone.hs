@@ -10,7 +10,7 @@ import qualified Parun.JsonCodec.Fields as Fields
 import qualified Parun.Types.EnteredZone as EnteredZone
 
 -- | A bare object keyed by the record's field names, as
--- Parun.Codec.CardsPutIntoZone is. The origin zones are defaulted, "from
+-- Parun.Codec.PutIntoZoneTrigger is. The origin zones are defaulted, "from
 -- anywhere" naming none.
 codec :: Codec.Codec EnteredZone.EnteredZone
 codec = Fields.object $ do

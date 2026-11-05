@@ -95,7 +95,6 @@ import qualified Parun.Types.CandidateCost as CandidateCost
 import Parun.Types.CandidateId (CandidateId)
 import Parun.Types.Card (Card)
 import qualified Parun.Types.Card as Card.Type
-import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.CarryOver as CarryOver
@@ -195,6 +194,7 @@ import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.LandOrNonland as LandOrNonland
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.Layout as Layout
+import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LifeChange as LifeChange
 import qualified Parun.Types.LifeDirection as LifeDirection
@@ -253,6 +253,7 @@ import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Prompt as Prompt
 import Parun.Types.ProposedEvent (ProposedEvent)
 import qualified Parun.Types.ProposedEvent as ProposedEvent
+import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.Quantity as Quantity.Type
 import qualified Parun.Types.RangeOfInfluence as RangeOfInfluence
 import qualified Parun.Types.Recipient as Recipient
@@ -261,6 +262,7 @@ import qualified Parun.Types.ReplacementBucket as ReplacementBucket
 import Parun.Types.ReplacementCandidate (ReplacementCandidate)
 import qualified Parun.Types.ReplacementCandidate as ReplacementCandidate
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
+import qualified Parun.Types.ReplacementOrigin as ReplacementOrigin
 import qualified Parun.Types.RevealCause as RevealCause
 import qualified Parun.Types.RevealObligation as RevealObligation
 import qualified Parun.Types.RevealTiming as RevealTiming
@@ -2405,10 +2407,8 @@ applyChosen settle asOf batch diverting allowances applied prevented exiledBy sh
   -- rule's middle clause, "any additional effects they have will take
   -- place", which is `applyInertly`'s whole job.
   --
-  -- CR 615.3's use count is skipped too, which no card notices: every
-  -- prevention row parun installs is Uses.Unlimited (Resolve.installDamageRow
-  -- says why, and Fog's authored row says Unlimited as well), so the
-  -- `consume` this bypasses would have been a no-op anyway.
+  -- A shield's use count is skipped too, so CR 615.8's "next time" waits for
+  -- damage it can prevent. A self-replacement's is spent, in `applyInertly`.
   --
   -- A SEPARATE fold rather than a flag inside `apply`, because CR 615.12 is
   -- a fact about the (effect, event) PAIR and not about any one rewrite:
@@ -2535,8 +2535,10 @@ shufflesAfter candidate = case ReplacementCandidate.effect candidate of
 --
 -- No `consume` and no `setShield` in any arm, which is CR 615.12's last sentence:
 -- "existing damage prevention shields won't be reduced by damage that can't be
--- prevented". CR 615.3's use count is skipped with it, which no card notices --
--- `loop` above says why.
+-- prevented". A use count is skipped with it, but for a CR 614.15
+-- self-replacement: its one event is this one, and it stands as no shield for the
+-- next. The scenario power-leak-leaves-no-shield-when-damage-cant-be-prevented
+-- proves it.
 --
 -- One arm per DamageRewrite constructor, `apply`'s discipline for `apply`'s
 -- reason: a new prevention rewrite carrying an additional effect must break the
@@ -2545,6 +2547,7 @@ shufflesAfter candidate = case ReplacementCandidate.effect candidate of
 -- for a rewrite that prevents.
 applyInertly :: ReplacementCandidate -> DamageRewrite.DamageRewrite (Effect.Type.Effect Card (GrantedAbility.Type.GrantedAbility Card)) -> ProposedEvent -> Game (Maybe ProposedEvent)
 applyInertly candidate rewrite event = do
+  Monad.when (ReplacementCandidate.origin candidate == ReplacementOrigin.SelfReplacement) (Replacement.consume (ReplacementCandidate.identity candidate))
   case rewrite of
     -- CR 122.1c's "prevent that damage and remove a shield counter from it". The
     -- removal is the additional effect, and it is AMOUNT-INDEPENDENT -- the rule
@@ -2962,7 +2965,7 @@ apply settle batch applied candidate event =
               -- unreachable and is written out only because arm is total over
               -- Duration. No bindings -- CR 614.1c's rewrite is a replacement's,
               -- not a resolution's, so its duration can name no slot.
-              case Expiry.arm (flip Game.acquisitionOf) Map.empty controller oid Duration.Indefinite gs2 of
+              case Expiry.arm oid Map.empty controller oid Duration.Indefinite gs2 of
                 Nothing -> gs2
                 Just expiry ->
                   let (ts, gs3) = Game.freshTimestamp gs2
@@ -3369,7 +3372,7 @@ apply settle batch applied candidate event =
                 -- data/scenarios/entry-replacement proves it: Spirit Mascot fires once.
                 arrivals <- changeZonesTogether settle (fmap (\card -> (card, Zone.Exile)) chosen)
                 State.modify' $ \gs2 ->
-                  gs2 {GameState.exiledWith = foldr (\arrival -> Map.insert arrival ExileLink.MkExileLink {ExileLink.source = oid, ExileLink.ability = Just Binding.entryExileLink}) (GameState.exiledWith gs2) (foldMap Foldable.toList arrivals)}
+                  gs2 {GameState.exiledWith = foldr (\arrival -> Map.insert arrival ExileLink.MkExileLink {ExileLink.source = oid, ExileLink.ability = Just Binding.entryExileLink, ExileLink.acquisition = Game.acquisitionOf oid gs2}) (GameState.exiledWith gs2) (foldMap Foldable.toList arrivals)}
                 -- "For each creature card exiled this way": the cards that reached
                 -- exile, one choice of kind each.
                 exiled <- State.gets (\gs2 -> filter (`Set.member` GameState.exile gs2) (foldMap Foldable.toList arrivals))
@@ -3546,7 +3549,7 @@ apply settle batch applied candidate event =
                   -- and is written out only because arm is total over Duration.
                   -- No bindings: rule 702.136a's riot is a replacement's choice,
                   -- not a resolution, so its duration can name no slot.
-                  case Expiry.arm (flip Game.acquisitionOf) Map.empty controller oid Duration.Indefinite gs2 of
+                  case Expiry.arm oid Map.empty controller oid Duration.Indefinite gs2 of
                     Nothing -> gs2
                     Just expiry ->
                       let (ts, gs3) = Game.freshTimestamp gs2
@@ -4476,7 +4479,7 @@ apply settle batch applied candidate event =
         Replacement.consume (ReplacementCandidate.identity candidate)
         gs <- State.get
         let source = ReplacementCandidate.source candidate
-            revealed = Maybe.listToMaybe (Game.zoneMembers Zone.Library pid gs)
+            revealed = Maybe.listToMaybe (Game.cardsIn Zone.Library pid gs)
             cost = Cost.MkCost Nothing [CostComponent.PayLife (CostAmount.Fixed n)]
             ask earlier payer = do
               now <- State.get
@@ -4561,7 +4564,7 @@ apply settle batch applied candidate event =
                 wanted oid = case kind of
                   LandOrNonland.Land -> isLand oid
                   LandOrNonland.Nonland -> not (isLand oid)
-                (passed, rest) = List.break wanted (Game.zoneMembers Zone.Library pid gs)
+                (passed, rest) = List.break wanted (Game.cardsIn Zone.Library pid gs)
                 found = Maybe.listToMaybe rest
             Monad.mapM_ (reveal RevealCause.Ordinary pid) (passed <> Maybe.maybeToList found)
             Monad.forM_ found (\oid -> changeZone settle oid Zone.Hand)
@@ -4609,6 +4612,31 @@ apply settle batch applied candidate event =
             milled <- millFrom settle pid 1
             Monad.unless (null milled) (State.modify' (recordEvent (GameEvent.Milled (Milled.MkMilled pid (Seq.fromList milled)))))
           else Monad.void (drawSeries settle (spentWith candidate applied) pid 1)
+        pure Nothing
+      -- CR 614.1a / 701.20e: Aladdin's Lamp. Run here rather than queued, so the
+      -- inner draw is offered only to the rows CR 614.5 leaves it (a second Lamp,
+      -- the card's ruling; never an Archive that made this draw), and done before
+      -- this call returns (CR 614.11a). The looker and the drawer are the seat the
+      -- EVENT named, GainLife's reason. The kept card stays where it is, on top
+      -- once the rest have gone, and CR 614.11 draws off an empty library too.
+      -- The look reads cards (CR 108.2), past a token waiting on CR 704.5d. The
+      -- inner draw is a new one: see docs/decisions.md, "Which draw is the first
+      -- one drawn in a draw step".
+      DrawRewrite.KeepOneOfTopThenDraw quantity -> do
+        Replacement.consume (ReplacementCandidate.identity candidate)
+        gs <- State.get
+        let source = ReplacementCandidate.source candidate
+            count = maybe 0 Integer.toNaturalSaturating (Quantity.evaluate (Projection.fullView gs) (Replacement.candidateContext gs candidate) gs source quantity)
+            looked = List.genericTake count (Game.cardsIn Zone.Library pid gs)
+        Monad.mapM_ (look pid) looked
+        kept <- Game.chooseAmong (\decider who -> Prompt.ChooseCardFromAmong decider who source) pid looked
+        let rest = filter ((/= kept) . Just) looked
+        ordered <- case rest of
+          _ : _ : _ -> Game.honourShuffle rest <$> Game.ask (Prompt.Shuffle rest)
+          _ -> pure rest
+        Monad.forM_ (reverse ordered) $ \oid ->
+          changeZoneAttaching settle Nothing Set.empty oid Zone.Library LibraryPosition.Bottom Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
+        Monad.void (drawSeries settle (spentWith candidate applied) pid 1)
         pure Nothing
       -- CR 614.10: Island Sanctuary's "instead you may skip that draw. If you do,
       -- [these effects]". The decider is the drawer, Dredge's posture; declining
@@ -4890,11 +4918,16 @@ apply settle batch applied candidate event =
     -- too, and the creating effect's riders reach it (Queen Allenal's ruling).
     -- Parun.ShieldCounterSpec's Queen Allenal and Chatterfang groups are the
     -- proof, both orders.
-    (ReplacementEffect.TokenR (TokenR.MkTokenR _ scaling plus), ProposedEvent.WouldCreateTokens pid lots) -> do
+    --
+    -- CR 614.16: an effects-only row scales only the lots an effect makes
+    -- (Replacement.reachesLot), and a lot this row appends is one.
+    (ReplacementEffect.TokenR (TokenR.MkTokenR pat scaling plus), ProposedEvent.WouldCreateTokens pid lots) -> do
       Replacement.consume (ReplacementCandidate.identity candidate)
-      let scaleLot factor lot = lot {TokenLot.count = Replacement.scale factor (TokenLot.count lot)}
+      let scaleLot factor lot
+            | Replacement.reachesLot pat lot = lot {TokenLot.count = Replacement.scale factor (TokenLot.count lot)}
+            | otherwise = lot
           scaled = maybe lots (\factor -> fmap (scaleLot factor) lots) scaling
-          lotOf card n = TokenLot.MkTokenLot {TokenLot.card = card, TokenLot.copy = Nothing, TokenLot.count = n}
+          lotOf card n = TokenLot.MkTokenLot {TokenLot.card = card, TokenLot.copy = Nothing, TokenLot.count = n, TokenLot.byEffect = True}
           appended = case plus of
             Nothing -> scaled
             Just (TokenPlus.One card) -> scaled Seq.|> lotOf card 1
@@ -5257,7 +5290,7 @@ becomeCopyAs batch candidate asCopy oid = do
             -- this creature is turned face down") stores the copy as a row
             -- that can end, Effect.BecomeCopy's road. The object is the
             -- row's source, which is "this creature".
-            Just stated -> case Expiry.arm (flip Game.acquisitionOf) Map.empty controller oid stated g of
+            Just stated -> case Expiry.arm oid Map.empty controller oid stated g of
               -- CR 611.2b: the duration never started.
               Nothing -> g
               Just expiry ->
@@ -6919,7 +6952,7 @@ millFromReturningTaken settle pid n
           -- caller's own gate (Cost.canPayComponent,
           -- Parun.Engine.Replacement.stocked) had already measured against the
           -- printed one.
-          let cards = List.genericTake settled (Game.zoneMembers Zone.Library miller gs)
+          let cards = List.genericTake settled (Game.cardsIn Zone.Library miller gs)
           -- ONE event (CR 608.2f), whose cards the owner may arrange (CR 404.3).
           arrived <- fmap (concatMap Foldable.toList) (changeZonesTogether settle (fmap (\card -> (card, Zone.Graveyard)) cards))
           pure (cards, arrived)
@@ -8318,7 +8351,7 @@ changeZoneWithCause settle discarded asOf batch oid requestedDest requestedPosit
                   -- CR 607.2b's link is exactly such a finding.
                   Monad.forM_ (if dest == Zone.Exile then exiledBy else Nothing) $ \linked ->
                     Monad.forM_ arrivals $ \arrival ->
-                      State.modify' (\g -> g {GameState.exiledWith = Map.insert arrival ExileLink.MkExileLink {ExileLink.source = linked, ExileLink.ability = Nothing} (GameState.exiledWith g)})
+                      State.modify' (\g -> g {GameState.exiledWith = Map.insert arrival ExileLink.MkExileLink {ExileLink.source = linked, ExileLink.ability = Nothing, ExileLink.acquisition = Game.acquisitionOf linked g} (GameState.exiledWith g)})
                   -- ONE Moved event for the whole move, which is CR 712.21's first
                   -- clause: one permanent leaves the battlefield. `newId` is the
                   -- first arrival, so a trigger reading the destination end of this
@@ -8701,7 +8734,7 @@ lingeringHandover oid lastController gs =
           duration <- fmap snd (filter ((== n) . fst) lingering)
           -- No bindings to bake a CR 611.2b condition against: this duration is
           -- a PRINTED static ability's, and no resolution chose anything for it.
-          expiry <- Maybe.maybeToList (Expiry.arm (flip Game.acquisitionOf) Map.empty lastController oid duration gs)
+          expiry <- Maybe.maybeToList (Expiry.arm oid Map.empty lastController oid duration gs)
           pure
             ContinuousEffect.MkContinuousEffect
               { ContinuousEffect.source = oid,
@@ -8743,7 +8776,7 @@ permissionRiders src gs played =
           (n, ts, modification, _) <- Projection.frozenStaticParts src gs
           duration <- fmap snd (filter ((== n) . fst) riders)
           you <- Maybe.maybeToList controller
-          expiry <- Maybe.maybeToList (Expiry.arm (flip Game.acquisitionOf) Map.empty you src duration gs)
+          expiry <- Maybe.maybeToList (Expiry.arm src Map.empty you src duration gs)
           pure
             ContinuousEffect.MkContinuousEffect
               { ContinuousEffect.source = src,
@@ -9461,7 +9494,7 @@ createTokens settle controller card copy n tapped entering attached marks = do
   if List.notElem controller (Game.stillPlaying gs)
     then pure []
     else do
-      resolved <- resolveTokens controller (Seq.singleton TokenLot.MkTokenLot {TokenLot.card = card, TokenLot.copy = copy, TokenLot.count = n})
+      resolved <- resolveTokens controller (Seq.singleton TokenLot.MkTokenLot {TokenLot.card = card, TokenLot.copy = copy, TokenLot.count = n, TokenLot.byEffect = not (GameState.payingOnResolution gs)})
       case resolved of
         Nothing -> pure []
         Just (owner, lots) -> do
@@ -11071,32 +11104,11 @@ controllerTurnScoped cond = case cond of
   -- Whippoorwill's "this turn" is its delayed entry's CR 603.7b duration, not
   -- anything the condition states.
   TriggerCondition.Leaves _ -> False
-  TriggerCondition.SelfPutIntoGraveyardFromLibrary -> False
-  TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> False
-  TriggerCondition.SelfPutIntoGraveyardDuringResolution -> False
-  -- CR 603.2b names no turn, so the bystander reading is unscoped like the
-  -- self-scoped one above.
-  TriggerCondition.CardPutIntoGraveyard _ -> False
-  -- The third arm carrying a TurnScope, and the classification follows the FIELD
-  -- rather than the constructor: Kishla Skimmer prints "during your turn" and a
-  -- printing of the same family without it would not.
-  TriggerCondition.CardLeavesZone (CardLeavesZone.MkCardLeavesZone _ TurnScope.ControllersTurn _ _ _) -> True
-  TriggerCondition.CardLeavesZone (CardLeavesZone.MkCardLeavesZone _ TurnScope.EachTurn _ _ _) -> False
-  -- No printing of this family says "during an opponent's turn", so this arm is
-  -- unreachable from card data; answering True would make the classification wrong
-  -- for the sake of that unreachable case.
-  TriggerCondition.CardLeavesZone (CardLeavesZone.MkCardLeavesZone _ TurnScope.OpponentsTurn _ _ _) -> False
-  -- StepBegins' PlayersTurn answer, and for its reason.
-  TriggerCondition.CardLeavesZone (CardLeavesZone.MkCardLeavesZone _ (TurnScope.PlayersTurn _) _ _ _) -> False
-  -- The batch reading of the same family, classified off the same field for the
-  -- same reason: Spirit Mascot prints no turn clause where Kishla Skimmer does.
-  TriggerCondition.CardsLeaveZone (CardLeavesZone.MkCardLeavesZone _ TurnScope.ControllersTurn _ _ _) -> True
-  TriggerCondition.CardsLeaveZone (CardLeavesZone.MkCardLeavesZone _ TurnScope.EachTurn _ _ _) -> False
-  TriggerCondition.CardsLeaveZone (CardLeavesZone.MkCardLeavesZone _ TurnScope.OpponentsTurn _ _ _) -> False
-  TriggerCondition.CardsLeaveZone (CardLeavesZone.MkCardLeavesZone _ (TurnScope.PlayersTurn _) _ _ _) -> False
-  -- Dutiful Knowledge Seeker's arrival names no turn.
-  TriggerCondition.CardsPutIntoZone {} -> False
-  TriggerCondition.SelfLeavesGraveyard -> False
+  -- The classification follows the FIELD rather than the constructor, LifeChanges'
+  -- reading: Kishla Skimmer and Stonebinder's Familiar print "during your turn",
+  -- and Spirit Mascot and Dutiful Knowledge Seeker print no turn.
+  TriggerCondition.LeavesZone t -> LeavesZoneTrigger.scope t == TurnScope.ControllersTurn
+  TriggerCondition.PutIntoZone t -> PutIntoZoneTrigger.scope t == TurnScope.ControllersTurn
   TriggerCondition.SpellOrAbilityCounters _ -> False
   TriggerCondition.AbilityIsCountered -> False
   -- Damage can be prevented on anybody's turn.
@@ -11342,8 +11354,11 @@ triggeredSources boards gs =
 --
 -- COUNTED against PendingTrigger.copies, as stateTriggers counts CR 603.8's
 -- suppression: CR 113.2c makes two value-identical instances on one source two
--- abilities, each with its own allowance. Parun.EventTriggerSpec's "CR 113.2c two
--- Well Rested on one creature each trigger once that turn" proves it.
+-- abilities, each with its own allowance. Two granters' grants are unequal
+-- (Binding.acquiredFrom), so the count is reached only by instances one printing
+-- or one granter repeats; Parun.EventTriggerSpec's per-game rider case drives
+-- it directly, and its "CR 113.2c two Well Rested on one creature each trigger
+-- once that turn" proves the two granters' grants.
 withinTriggerLimit :: GameState -> [PendingTrigger.PendingTrigger] -> [PendingTrigger.PendingTrigger]
 withinTriggerLimit gs =
   let spentKey record = limitKey (AbilityTriggered.source record) (AbilityTriggered.controller record) (AbilityTriggered.ability record)
@@ -11375,10 +11390,9 @@ withinTriggerLimit gs =
 -- active teammate's speed rises once": under the shared team turns option two
 -- active players each spend their own instance of rule 702.179d's ability.
 --
--- Not implemented: value-identical instances on one source share a key and are
--- COUNTED rather than told apart, so when the instance that triggered goes and
--- an identical one that has not stays, the one that stays reads as spent
--- (#4627).
+-- A grant is told apart by its name, drawn from its granter
+-- (Binding.acquiredFrom), so a new granter's grant is unspent; the Well Rested
+-- and Tyvar the Bellicose files in data/scenarios prove it.
 type LimitKey = (TriggerSource.TriggerSource, Maybe PlayerId, TriggeredAbility.TriggeredAbility Card (GrantedAbility.Type.GrantedAbility Card))
 
 limitKey :: TriggerSource.TriggerSource -> PlayerId -> TriggeredAbility.TriggeredAbility Card (GrantedAbility.Type.GrantedAbility Card) -> LimitKey

@@ -267,6 +267,7 @@ import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TurnFaceDown as TurnFaceDown
 import qualified Parun.Types.TurnUpR as TurnUpR
 import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
+import qualified Parun.Types.UntilPaid as UntilPaid
 import qualified Parun.Types.Vote as Vote
 import qualified Parun.Types.VoteChoices as VoteChoices
 import qualified Parun.Types.VoteObjects as VoteObjects
@@ -1090,10 +1091,11 @@ effectPlayerRefs effect = case effect of
   Effect.EndCombatPhase -> []
   Effect.GainControl (GainControl.MkGainControl _ _ to) -> [to]
   Effect.ExchangeControl {} -> []
-  Effect.ArmDelayedTrigger arm -> case ArmDelayedTrigger.onset arm of
-    Onset.FromNextTurnOf ref -> Maybe.maybeToList ref
-    Onset.Immediately -> []
-    Onset.FromThatExtraTurn -> []
+  Effect.ArmDelayedTrigger arm ->
+    foldMap durationPlayerRefs (ArmDelayedTrigger.duration arm) <> case ArmDelayedTrigger.onset arm of
+      Onset.FromNextTurnOf ref -> Maybe.maybeToList ref
+      Onset.Immediately -> []
+      Onset.FromThatExtraTurn -> []
   -- CR 400.1's zone reference, which lives inside the permission payloads rather
   -- than in a field of the opcode -- so the walk is
   -- Parun.Engine.PlayerEffect.playerRefsIn's and this arm joins it in, which is
@@ -1198,7 +1200,7 @@ effectPlayerRefs effect = case effect of
 productionPlayerRefs :: ManaProduction.ManaProduction -> [PlayerRef]
 productionPlayerRefs production = case production of
   ManaProduction.OfType _ -> []
-  ManaProduction.AnyColor -> []
+  ManaProduction.AnyColor _ -> []
   ManaProduction.Chosen -> []
   ManaProduction.SnowSymbol -> []
   ManaProduction.Noted -> []
@@ -1210,7 +1212,7 @@ productionPlayerRefs production = case production of
 productionSlots :: ManaProduction.ManaProduction -> Map.Map SlotName SlotArity
 productionSlots production = case production of
   ManaProduction.OfType _ -> Map.empty
-  ManaProduction.AnyColor -> Map.empty
+  ManaProduction.AnyColor _ -> Map.empty
   ManaProduction.Chosen -> Map.empty
   ManaProduction.SnowSymbol -> Map.empty
   ManaProduction.Noted -> Map.empty
@@ -1673,7 +1675,7 @@ durationPlayerRefs duration = case duration of
   -- A Condition's own references are Quantity.bakePlayerRef's half, reached
   -- through conditionSlots rather than through a list of references.
   Duration.ForAsLongAs _ -> []
-  Duration.UntilPaid _ -> []
+  Duration.UntilPaid untilPaid -> [UntilPaid.payer untilPaid]
   Duration.UntilEndOfCombat -> []
   Duration.UntilEndOfCombatOnYourNextTurn -> []
   Duration.UntilUsed _ -> []
@@ -1699,7 +1701,8 @@ durationSlots duration = case duration of
   Duration.ForAsLongAs condition -> conditionSlots condition
   -- A Cost reads no slot: the activation cost of an ability is not walked by
   -- modeSlots either, and CR 116.2c's price is paid outside any resolution, so
-  -- there is no binding environment for it to name.
+  -- there is no binding environment for it to name. The payer is a reference,
+  -- durationPlayerRefs' half.
   Duration.UntilPaid _ -> Map.empty
   Duration.UntilEndOfCombat -> Map.empty
   Duration.UntilEndOfCombatOnYourNextTurn -> Map.empty
@@ -1928,13 +1931,14 @@ drawRewriteReads rewrite = case rewrite of
   DrawRewrite.RevealUntilChosenKind -> ([], [])
   DrawRewrite.DrawInstead _ -> ([], [])
   DrawRewrite.DiscardThenDrawOrMill -> ([], [])
+  DrawRewrite.KeepOneOfTopThenDraw quantity -> ([], [quantity])
   DrawRewrite.MaySkipFor _ -> ([], [])
 
 -- replacementRowReads as a slot map. Arity One for every FILTER read, a
 -- Filter.IsBound being a membership test rather than a target slot; the QUANTITY
 -- half is quantitySlots' answer, so a Quantity.InSlot reports SlotArity.Amount --
--- CR 614.1c's WithCounters and CR 702.37b's are the two rewrites that can carry
--- one. The two capture sites take Map.keysSet, so the arity reaches only slotsOf's
+-- CR 614.1c's WithCounters, CR 702.37b's and DrawRewrite.KeepOneOfTopThenDraw's
+-- count can carry one. The two capture sites take Map.keysSet, so the arity reaches only slotsOf's
 -- Replace arm.
 replacementRowSlots :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Map.Map SlotName SlotArity
 replacementRowSlots re =
@@ -2416,7 +2420,8 @@ durationSlotsAreExhaustive duration = case duration of
   Duration.DuringYourNextTurn -> True
   Duration.DuringThatExtraTurn -> True
   Duration.ForAsLongAs condition -> conditionSlotsAreExhaustive condition
-  -- durationSlots' answer: a Cost reads no slot, so its enumeration is complete.
+  -- durationSlots' answer: a Cost reads no slot, and its payer names at most one,
+  -- so the enumeration is complete.
   Duration.UntilPaid _ -> True
   Duration.UntilEndOfCombat -> True
   Duration.UntilEndOfCombatOnYourNextTurn -> True
@@ -2462,8 +2467,9 @@ readsX =
         -- Untamed Might's "+X/+X" sits inside the Modification, not on the effect.
         Effect.ModifyTarget (ModifyTarget.MkModifyTarget _ modification _ _) -> any Quantity.readsX (Projection.quantitiesOf modification)
         Effect.ChangeText {} -> False
-        Effect.AddMana _ -> False
-        Effect.Firebend _ -> False
+        -- Wizard's Rockets' "Add X mana".
+        Effect.AddMana addition -> Quantity.readsX (ManaAddition.count addition)
+        Effect.Firebend addition -> Quantity.readsX (ManaAddition.count addition)
         Effect.ActivateManaAbilities _ -> False
         Effect.MoveMana _ -> False
         -- The filter too: Citanul Flute's "mana value X or less" compares against
@@ -2556,7 +2562,8 @@ readsX =
         Effect.BecomeCopy {} -> False
         -- CR 601.2b's X reaches the effects a rewrite or a CR 615.5 rider nests,
         -- the three prevention opcodes' posture with their own riders.
-        Effect.Replace (Replace.MkReplace _ _ _ _ re) -> readsX (replacementRowEffects re)
+        -- Aladdin's Lamp's count sits on the row, not on an effect it holds.
+        Effect.Replace (Replace.MkReplace _ _ _ _ re) -> readsX (replacementRowEffects re) || any Quantity.readsX (snd (replacementRowReads re))
         Effect.SkipPhase {} -> False
         -- CR 601.2b's X reaches the rider too.
         Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ quantity rider) -> Quantity.readsX quantity || readsX (Foldable.toList rider)
@@ -3107,13 +3114,13 @@ objectRefObjects legal resolving controller source gs ref = case ref of
           AttackTarget.OfBattle oid -> Just oid
      in Maybe.mapMaybe attackedObject (attackedBy legal resolving controller source gs slot)
   -- CR 400.7's link read back: each object the slot holds, followed through
-  -- this turn's logged zone changes to the object it is now -- and, given an
+  -- this turn's logged zone changes to the objects it is now -- and, given an
   -- `among`, kept only where that slot holds the incarnation too (CR 400.7j).
   -- The scenario ante-bronze-tablet-destroyed-in-response-trades-only-the-target
   -- proves the `among` half.
   ObjectRef.FromAnywhere (FromAnywhere.MkFromAnywhere slot among) ->
     let held named = objectRefObjects legal resolving controller source gs (ObjectRef.InSlot named)
-        followed = Maybe.mapMaybe (\oid -> Game.currentIncarnation oid gs) (held slot)
+        followed = concatMap (`Game.currentIncarnations` gs) (held slot)
      in maybe followed (\named -> filter (`elem` held named) followed) among
   -- Each ref's objects in the order written, an object two refs name once.
   ObjectRef.AllOf refs -> ListUtils.nubOrd (concatMap (objectRefObjects legal resolving controller source gs) refs)
@@ -3210,7 +3217,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
         stated oid = case mFilter of
           Nothing -> True
           Just filter_ -> Filter.matches context (viewOf oid) filter_
-     in filter stated (Game.linkedPile (resolvingAbilityName resolving gs) pile source gs)
+     in filter stated (Game.linkedPile (resolvingAbilityName resolving gs) (Game.readingAcquisition resolving source gs source) pile source gs)
   -- CR 702.99b's relation, the arm above's shape over GameState.encoded. Keyed
   -- on the source's id alone, so a trigger whose creature has since left still
   -- finds the card it last had encoded (CR 608.2h).

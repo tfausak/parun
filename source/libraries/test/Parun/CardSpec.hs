@@ -56,6 +56,7 @@ import qualified Parun.Slug as Slug
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
 import qualified Parun.Types.AbilityAddsMana as AbilityAddsMana
+import qualified Parun.Types.AbilityName as AbilityName
 import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.ActivateManaAbilities as ActivateManaAbilities
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
@@ -114,11 +115,8 @@ import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.CantBlockCreatures as CantBlockCreatures
 import qualified Parun.Types.Card as Card.Type
 import qualified Parun.Types.CardAbilities as CardAbilities
-import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
-import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
 import qualified Parun.Types.CardType as CardType
-import qualified Parun.Types.CardsPutIntoZone as CardsPutIntoZone
 import qualified Parun.Types.CastFromZone as CastFromZone
 import qualified Parun.Types.CastObligation as CastObligation
 import qualified Parun.Types.CastOffer as CastOffer
@@ -140,6 +138,7 @@ import qualified Parun.Types.Clause as Clause
 import qualified Parun.Types.ClauseIndex as ClauseIndex
 import qualified Parun.Types.CoinReading as CoinReading
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.ColorSpread as ColorSpread
 import qualified Parun.Types.CombatRestriction as CombatRestriction
 import qualified Parun.Types.Condition as Condition.Type
 import qualified Parun.Types.Conjure as Conjure
@@ -269,6 +268,7 @@ import qualified Parun.Types.KeywordCount as KeywordCount
 import qualified Parun.Types.KeywordTally as KeywordTally
 import qualified Parun.Types.Layout as Layout
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
 import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
 import qualified Parun.Types.LibraryPosition as LibraryPosition
@@ -315,6 +315,7 @@ import qualified Parun.Types.Ninjutsu as Ninjutsu
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.ObjectRef as ObjectRef
 import qualified Parun.Types.OfferCast as OfferCast
+import qualified Parun.Types.Onset as Onset
 import qualified Parun.Types.OrElse as OrElse
 import qualified Parun.Types.PayGate as PayGate
 import qualified Parun.Types.PerCreature as PerCreature
@@ -356,6 +357,7 @@ import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Protection as Protection
 import qualified Parun.Types.PutCounters as PutCounters
 import qualified Parun.Types.PutCountersFrom as PutCountersFrom
+import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.PutSticker as PutSticker
 import qualified Parun.Types.Quantity as Quantity.Type
 import qualified Parun.Types.RandomCardInGraveyard as RandomCardInGraveyard
@@ -429,6 +431,7 @@ import qualified Parun.Types.TurnUpR as TurnUpR
 import qualified Parun.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Parun.Types.TypeLine as TypeLine
 import qualified Parun.Types.UntapRestriction as UntapRestriction
+import qualified Parun.Types.UntilPaid as UntilPaid
 import qualified Parun.Types.Uses as Uses
 import qualified Parun.Types.Vote as Vote
 import qualified Parun.Types.VoteChoices as VoteChoices
@@ -786,9 +789,9 @@ playerRefPositions =
   let one = Quantity.Type.Literal 1
       playerQuantity stem = PlayerQuantity.MkPlayerQuantity (plantedPlayer stem) one
       affecting effect = Effect.AffectPlayers (AffectPlayers.MkAffectPlayers Duration.UntilEndOfTurn (AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.You)) effect)
-   in [ ("add-mana", Effect.AddMana (ManaAddition.MkManaAddition (plantedPlayer "am") ManaProduction.AnyColor (Quantity.Type.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing), [plantedPlayer "am"]),
+   in [ ("add-mana", Effect.AddMana (ManaAddition.MkManaAddition (plantedPlayer "am") (ManaProduction.AnyColor ColorSpread.OneColor) (Quantity.Type.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing), [plantedPlayer "am"]),
         ("add-mana-pooled", Effect.AddMana (ManaAddition.MkManaAddition (plantedPlayer "amp") (ManaProduction.Pooled (ManaCount.MkManaCount (plantedPlayer "amp-pool") ManaFilter.Any)) (Quantity.Type.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing), [plantedPlayer "amp", plantedPlayer "amp-pool"]),
-        ("firebend", Effect.Firebend (ManaAddition.MkManaAddition (plantedPlayer "fb") ManaProduction.AnyColor (Quantity.Type.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing), [plantedPlayer "fb"]),
+        ("firebend", Effect.Firebend (ManaAddition.MkManaAddition (plantedPlayer "fb") (ManaProduction.AnyColor ColorSpread.OneColor) (Quantity.Type.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing), [plantedPlayer "fb"]),
         ("search", Effect.Search (Search.MkSearch (plantedPlayer "se-searcher") (plantedPlayer "se-owner") Set.empty False Nothing (Filter.Type.And []) Seq.empty False SearchDestination.Battlefield Nothing Nothing Nothing Set.empty False False), [plantedPlayer "se-searcher", plantedPlayer "se-owner"]),
         ("draw", Effect.Draw (Draw.MkDraw (plantedPlayer "dr") one Nothing), [plantedPlayer "dr"]),
         ("mill", Effect.Mill (Mill.MkMill (plantedPlayer "mi") one Nothing Nothing), [plantedPlayer "mi"]),
@@ -843,6 +846,7 @@ playerRefPositions =
         -- join it in are the same ones slotsOf joins durationSlots in --
         -- ModifyTarget, BecomeCopy, Replace, the three prevention opcodes,
         -- RedirectDamage and this one.
+        ("arm-delayed-trigger", Effect.ArmDelayedTrigger (ArmDelayedTrigger.MkArmDelayedTrigger (AbilityName.MkAbilityName (Text.pack "ad")) (Onset.FromNextTurnOf (Just (plantedPlayer "ad-onset"))) (Just (Duration.UntilPaid (UntilPaid.MkUntilPaid (plantedPlayer "ad-payer") (Cost.Type.MkCost Nothing [])))) Nothing), [plantedPlayer "ad-payer", plantedPlayer "ad-onset"]),
         ("grant-play-from-exile-duration", Effect.GrantPlayFromExile (GrantPlayFromExile.MkGrantPlayFromExile (Duration.UntilEndOfNextTurnOf (plantedPlayer "gp-duration")) (plantedPlayer "gp-player") (plantedRef "gp-ref") ManaSpending.AsProduced Nothing Nothing PermissionVerb.Play 0 TapState.Untapped Nothing Zone.Exile), [plantedPlayer "gp-duration", plantedPlayer "gp-player"]),
         -- CR 400.1's reference nested in the PLAYER EFFECT rather than in a field of
         -- the opcode -- the CR 601.3 / 305.1 / 702.170f permissions that name whose
@@ -1159,13 +1163,10 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.PermanentSacrificed {} -> []
   -- CR 603.3b's carries a PlayerRelation, which holds no Count.
   TriggerCondition.SagaFinalChapterTriggers _ -> []
-  TriggerCondition.CardPutIntoGraveyard _ -> []
-  -- CR 603.10a's third family carries a Filter and a TurnScope, and neither holds
-  -- a Count.
-  TriggerCondition.CardLeavesZone {} -> []
-  TriggerCondition.CardsLeaveZone {} -> []
-  TriggerCondition.CardsPutIntoZone {} -> []
-  TriggerCondition.SelfLeavesGraveyard -> []
+  -- A card-zone trigger carries a Filter, zones and a TurnScope, and none holds a
+  -- Count.
+  TriggerCondition.LeavesZone _ -> []
+  TriggerCondition.PutIntoZone _ -> []
   TriggerCondition.StepBegins {} -> []
   TriggerCondition.StateIs condition -> conditionCounts condition
   TriggerCondition.DealsDamage _ -> []
@@ -1225,9 +1226,6 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.SelfBecomesUnattachedFrom _ -> []
   -- CR 603.12's carries nothing at all, so no Count.
   TriggerCondition.Reflexive -> []
-  TriggerCondition.SelfPutIntoGraveyardFromLibrary -> []
-  TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> []
-  TriggerCondition.SelfPutIntoGraveyardDuringResolution -> []
   -- CR 701.6a's countering condition is a PlayerRelation, which holds no Count,
   -- exactly as the discard condition above.
   TriggerCondition.SpellOrAbilityCounters _ -> []
@@ -3615,9 +3613,8 @@ keywordPayloadFilters keyword = case keyword of
   -- like the rest: Parun.Engine.Companion.fulfilled matches it against a printed
   -- face through a bare Context, so no slot is in scope.
   Keyword.Companion predicate -> [predicate]
-  -- CR 702.21a's cost. Rule 702.21b's perEach is a Parun.Types.PlayerCounterTally,
-  -- which names a counter kind and a player and holds no Filter.
-  Keyword.Ward w -> costFilters (Ward.cost w)
+  -- CR 702.21a's cost, and rule 702.21b's perEach as mobilize's N.
+  Keyword.Ward w -> costFilters (Ward.cost w) <> foldMap keywordCountFilters (Ward.perEach w)
   -- CR 702.94a's payload is a Cost too, so its filters are reached the same way.
   Keyword.Miracle cost -> costFilters cost
   -- CR 702.37a: the morph cost, whose components may hold a Filter exactly as
@@ -4444,7 +4441,7 @@ durationFilters duration =
   concatMap conditionFilters (durationConditions duration)
     <> slotlessCost
       ( case duration of
-          Duration.UntilPaid cost -> costFilters cost
+          Duration.UntilPaid untilPaid -> costFilters (UntilPaid.cost untilPaid)
           Duration.UntilEndOfTurn -> []
           Duration.Indefinite -> []
           Duration.Perpetual -> []
@@ -4620,16 +4617,10 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- CR 603.3b's names a PlayerRelation; the Saga is found through CR 714.2d's
   -- final chapter number rather than through a Filter.
   TriggerCondition.SagaFinalChapterTriggers _ -> []
-  TriggerCondition.CardPutIntoGraveyard p -> unframed [CardPutIntoGraveyard.filter p]
-  -- CR 603.10a's third family carries its Filter inside a record, and it is card
-  -- text like any other -- Kishla Skimmer's "your graveyard" is that Filter.
-  TriggerCondition.CardLeavesZone payload -> unframed [CardLeavesZone.filter payload]
-  -- The batch reading carries the same record, swept the same way.
-  TriggerCondition.CardsLeaveZone payload -> unframed [CardLeavesZone.filter payload]
-  -- The arrival side carries its Filter the same way: Dutiful Knowledge Seeker's
-  -- "cards" is that Filter.
-  TriggerCondition.CardsPutIntoZone payload -> unframed [CardsPutIntoZone.filter payload]
-  TriggerCondition.SelfLeavesGraveyard -> []
+  -- A card-zone trigger's Matching card is card text like any other: Planar
+  -- Void's "another card", Dutiful Knowledge Seeker's "cards".
+  TriggerCondition.LeavesZone t -> actingFilters (LeavesZoneTrigger.card t)
+  TriggerCondition.PutIntoZone t -> actingFilters (PutIntoZoneTrigger.card t)
   TriggerCondition.StateIs condition -> frame Unframed (conditionFilters condition)
   TriggerCondition.StepBegins {} -> []
   -- A bystander's damage conditions carry one over the watched permanent, swept
@@ -4723,9 +4714,6 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.SelfBecomesUnattachedFrom f -> unframed [f]
   -- CR 603.12's carries nothing, so no Filter either.
   TriggerCondition.Reflexive -> []
-  TriggerCondition.SelfPutIntoGraveyardFromLibrary -> []
-  TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> []
-  TriggerCondition.SelfPutIntoGraveyardDuringResolution -> []
   TriggerCondition.SpellOrAbilityCounters _ -> []
   TriggerCondition.AbilityIsCountered -> []
   TriggerCondition.DamageToPlayerPrevented _ -> []
@@ -4804,14 +4792,8 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.Leaves t -> case LeavesTrigger.permanent t of
     LeavingPermanent.Bound slot -> [slot]
     _ -> []
-  TriggerCondition.SelfPutIntoGraveyardFromLibrary -> []
-  TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> []
-  TriggerCondition.SelfPutIntoGraveyardDuringResolution -> []
-  TriggerCondition.CardPutIntoGraveyard _ -> []
-  TriggerCondition.CardLeavesZone {} -> []
-  TriggerCondition.CardsLeaveZone {} -> []
-  TriggerCondition.CardsPutIntoZone {} -> []
-  TriggerCondition.SelfLeavesGraveyard -> []
+  TriggerCondition.LeavesZone _ -> []
+  TriggerCondition.PutIntoZone _ -> []
   TriggerCondition.BecomesTapState _ -> []
   TriggerCondition.PermanentsBecomeTapped _ -> []
   TriggerCondition.AttachedPermanentTappedForMana -> []
@@ -5265,9 +5247,9 @@ replacementEffectFilters replacementEffect = case replacementEffect of
   ReplacementEffect.LifeLossR {} -> []
   ReplacementEffect.LifeGainR {} -> []
   -- The pattern is one ControllerRelation; the wish filter a FromOutsideTheGame
-  -- rewrite carries is the one Filter a draw row can hold (Ring of Maʼrûf), and
-  -- it is CR 400.11c's, so it takes the same framing Effect.FromOutsideTheGame's
-  -- does.
+  -- rewrite carries is the one Filter a draw row can hold (Ring of Maʼrûf) beside
+  -- one a KeepOneOfTopThenDraw count reads, and it is CR 400.11c's, so it takes
+  -- the same framing Effect.FromOutsideTheGame's does.
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.FromOutsideTheGame payload)) -> outsideTheGameFramed [FromOutsideTheGame.filter payload]
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.GainLife _)) -> []
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.Dredge _)) -> []
@@ -5277,6 +5259,7 @@ replacementEffectFilters replacementEffect = case replacementEffect of
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.RevealUntilChosenKind) -> []
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.DrawInstead _)) -> []
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ DrawRewrite.DiscardThenDrawOrMill) -> []
+  ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.KeepOneOfTopThenDraw quantity)) -> quantityFilters quantity
   ReplacementEffect.DrawR (DrawR.MkDrawR _ _ (DrawRewrite.MaySkipFor _)) -> []
   ReplacementEffect.DrawCountR {} -> []
   ReplacementEffect.InstructionR {} -> []
@@ -5890,7 +5873,7 @@ manaRiderFilters rider = [ManaRider.condition rider]
 manaProductionFilters :: ManaProduction.ManaProduction -> [Filter.Type.Filter Keyword.Keyword]
 manaProductionFilters production = case production of
   ManaProduction.OfType _ -> []
-  ManaProduction.AnyColor -> []
+  ManaProduction.AnyColor _ -> []
   ManaProduction.Chosen -> []
   ManaProduction.SnowSymbol -> []
   ManaProduction.Noted -> []
@@ -7356,7 +7339,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
                       else Nothing
     Spec.assertEqWith s "every ante is an ante card's Effect.Ante" (Maybe.mapMaybe offends corpus) []
   -- CR 400.1: "your graveyard" in a card-leaves trigger is the pile the card
-  -- left (CardLeavesZone.whose), never a HeldBy Owner on the card -- an owner and
+  -- left (LeavesZoneTrigger.whose), never a HeldBy Owner on the card -- an owner and
   -- the pile disagree between an ownership change and its move (CR 407.3).
   -- A HeldBy Owner beside `whose` is an arrival read ("into your hand").
   Spec.it s "CR 400.1 a card-leaves trigger names whose pile through whose, never HeldBy Owner alone" $ do
@@ -7366,10 +7349,11 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
           Filter.Type.HeldBy Holder.Owner _ -> True
           Filter.Type.And fs -> any ownedByConjunct fs
           _ -> False
-        oldStyle p = List.elem (CardLeavesZone.from p) piles && Maybe.isNothing (CardLeavesZone.whose p) && ownedByConjunct (CardLeavesZone.filter p)
+        oldStyle t = case LeavesZoneTrigger.card t of
+          ActingPermanent.Matching f -> List.elem (LeavesZoneTrigger.from t) piles && Maybe.isNothing (LeavesZoneTrigger.whose t) && ownedByConjunct f
+          ActingPermanent.Self -> False
         offendingCondition condition = case condition of
-          TriggerCondition.CardLeavesZone p -> oldStyle p
-          TriggerCondition.CardsLeaveZone p -> oldStyle p
+          TriggerCondition.LeavesZone t -> oldStyle t
           _ -> False
         offends (path, result) = case result of
           Left reason -> Just (path <> ": " <> Text.unpack reason)

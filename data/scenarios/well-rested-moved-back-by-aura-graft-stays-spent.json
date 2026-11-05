@@ -1,0 +1,66 @@
+{
+  "description": "CR 113.2c / 613.7e: a creature that gets Well Rested's ability back from the same Aura that turn has the same ability, already spent, though the Aura was moved and stamped anew",
+  "note": "docs/decisions.md, 'A rider ability regained from one granter stays spent'. Twiddle untaps the first Elves and Well Rested's ability fires. Aura Graft moves the Aura to the second Elves, whose untap fires it there. A second Aura Graft moves it back, and the first Elves' third untap fires nothing. A grant keyed by its timestamp would fire again.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Llanowar Elves", "label": "e1", "ready": true, "tapped": true },
+          { "card": "Llanowar Elves", "label": "e2", "ready": true },
+          { "card": "Well Rested", "label": "rested", "attached": "e1" },
+          { "card": "Island", "label": "i1", "ready": true },
+          { "card": "Island", "label": "i2", "ready": true },
+          { "card": "Island", "label": "i3", "ready": true },
+          { "card": "Island", "label": "i4", "ready": true },
+          { "card": "Island", "label": "i5", "ready": true }
+        ],
+        "hand": [
+          { "card": "Twiddle", "label": "twiddle1" },
+          { "card": "Twiddle", "label": "twiddle2" },
+          { "card": "Twiddle", "label": "twiddle3" },
+          { "card": "Aura Graft", "label": "graft1" },
+          { "card": "Aura Graft", "label": "graft2" }
+        ],
+        "library": [
+          { "card": "Island" },
+          { "card": "Island" },
+          { "card": "Island" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          { "card": "Island" },
+          { "card": "Island" }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$twiddle1", "targets": ["$e1"], "mana": ["$i1", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "$e1", "kind": { "type": "PlusOnePlusOne" }, "count": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$graft1", "targets": ["$rested"], "mana": ["$e2", "$i2", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "AttachedTo", "object": "$rested", "is": "$e2" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$twiddle2", "targets": ["$e2"], "mana": ["$i3", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "$e2", "kind": { "type": "PlusOnePlusOne" }, "count": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$graft2", "targets": ["$rested"], "mana": ["$e1", "$i4", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "AttachedTo", "object": "$rested", "is": "$e1" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$twiddle3", "targets": ["$e1"], "mana": ["$i5", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$e1", "tapped": false } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "$e1", "kind": { "type": "PlusOnePlusOne" }, "count": 2 } } }
+  ]
+}

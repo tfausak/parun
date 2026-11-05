@@ -167,14 +167,15 @@ lookupObject :: ObjectId -> GameState -> Maybe Object
 lookupObject oid gs = Map.lookup oid (GameState.objects gs)
 
 -- | CR 607.2a: the cards in exile in `src`'s `pile`, as a reader named `reader`
--- means it (Binding.isLinkedExile), in ascending id and thus arrival order.
+-- that came with `acquisition` means it (Binding.isLinkedExile), in ascending id
+-- and thus arrival order.
 -- THE one sweep of GameState.exiledWith's piles. The relation and not a zone
 -- sweep, so a card a second copy of the same printing exiled is not in it; and
 -- in exile NOW (CR 400.7), since a card that left is a new object the stale
 -- link no longer names.
-linkedPile :: Maybe AbilityName.AbilityName -> ExiledPile.ExiledPile -> ObjectId -> GameState -> [ObjectId]
-linkedPile reader pile src gs =
-  filter (\o -> maybe False (Binding.isLinkedExile reader pile src) (Map.lookup o (GameState.exiledWith gs))) (Set.toAscList (GameState.exile gs))
+linkedPile :: Maybe AbilityName.AbilityName -> Acquisition.Acquisition -> ExiledPile.ExiledPile -> ObjectId -> GameState -> [ObjectId]
+linkedPile reader acquisition pile src gs =
+  filter (\o -> maybe False (Binding.isLinkedExile reader acquisition pile src) (Map.lookup o (GameState.exiledWith gs))) (Set.toAscList (GameState.exile gs))
 
 -- | CR 607.2a / 613.7d: the LAST of these cards to have been exiled, the one
 -- with the latest timestamp -- Duplicant's "the last creature card exiled with
@@ -2289,6 +2290,14 @@ acquisitionOf oid gs =
     Just row -> Acquisition.Copied (copyRowTimestamp gs row)
     Nothing -> Maybe.fromMaybe Acquisition.Own (liveOrLastKnown Object.acquisition LastKnown.acquisition oid gs)
 
+-- | CR 607.5: the acquisition the ability named `reader` of `oid` comes with:
+-- Own for one a copy effect's exception let it keep (Binding.isKeptOn), which
+-- CR 607.1a treats as printed on it, else acquisitionOf.
+acquisitionFor :: Maybe AbilityName.AbilityName -> ObjectId -> GameState -> Acquisition.Acquisition
+acquisitionFor reader oid gs
+  | maybe False (Binding.isKeptOn oid) reader = Acquisition.Own
+  | otherwise = acquisitionOf oid gs
+
 -- | CR 607.5: the acquisition whose choices, stored results and entrants the
 -- object resolving as `resolving`, a spell or an ability of `source`, reads off
 -- `oid`. For an ability reading its own source, the one it froze as it went
@@ -3514,26 +3523,17 @@ diedChange event = do
   if ZoneChange.from change == Zone.Battlefield && ZoneChange.to change == Zone.Graveyard then Just change else Nothing
 
 -- CR 400.7's link read back for a card that says "from anywhere" (Tempest
--- Efreet, Timmerian Fiends): the object this id is now, following each logged
--- zone change from the id that left to the id that arrived. Nothing once the
--- trail reaches an id that is gone with no successor: the card left the game.
--- The log is this turn's (GameState.events), which is enough, since the stack
--- empties before any turn ends.
---
--- Not implemented: following a card out of a move with several arrivals, a
--- merged permanent leaving the battlefield (#4837).
-currentIncarnation :: ObjectId -> GameState -> Maybe ObjectId
-currentIncarnation oid gs
-  | Map.member oid (GameState.objects gs) = Just oid
-  | otherwise = case successorOf oid gs of
-      Just next -> currentIncarnation next gs
-      Nothing -> Nothing
-
--- The one id a logged single-arrival move turned this id into.
-successorOf :: ObjectId -> GameState -> Maybe ObjectId
-successorOf oid gs = case arrivalsOf oid gs of
-  [arrival] -> Just arrival
-  _ -> Nothing
+-- Efreet, Timmerian Fiends): the objects this id is now, following each logged
+-- zone change from the id that left to every id that arrived -- several where a
+-- merged or melded permanent came apart, all of which the effect finds (CR
+-- 730.3c, 712.21c). None once every trail reaches an id that is gone with no
+-- successor: the card left the game. The log is this turn's
+-- (GameState.events), which is enough, since the stack empties before any turn
+-- ends.
+currentIncarnations :: ObjectId -> GameState -> [ObjectId]
+currentIncarnations oid gs
+  | Map.member oid (GameState.objects gs) = [oid]
+  | otherwise = concatMap (`currentIncarnations` gs) (arrivalsOf oid gs)
 
 -- CR 400.7: the ids a logged Moved entry naming this one as its DEPARTURE
 -- arrived as -- none for CR 111.7's token, several for a melded or merged

@@ -316,7 +316,7 @@ data Effect card ability
     ExchangeCardZones ExchangeCardZones.ExchangeCardZones
   | -- | CR 108.3 / 407.3: a player becomes the owner of the named objects.
     SetOwner SetOwner.SetOwner
-  | -- | CR 701.12a / 108.3: two named objects trade owners.
+  | -- | CR 701.12a / 108.3: the objects two refs name trade owners.
     ExchangeOwnership ExchangeOwnership.ExchangeOwnership
   | -- | CR 119.5: the players the PlayerRef names each gain or lose the
     -- necessary amount to end up with this life total (Magister Sphinx).

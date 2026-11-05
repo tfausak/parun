@@ -64,6 +64,7 @@ import qualified Parun.Types.ClassLevel as ClassLevel
 import qualified Parun.Types.Clause as Clause
 import qualified Parun.Types.ClauseIndex as ClauseIndex
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.ColorSpread as ColorSpread
 import qualified Parun.Types.CombatRestriction as CombatRestriction
 import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.Compares as Compares
@@ -216,6 +217,7 @@ import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Protection as Protection
 import qualified Parun.Types.Prototype as Prototype
 import qualified Parun.Types.PutCounters as PutCounters
+import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.Reinforce as Reinforce
 import qualified Parun.Types.RemoveCounters as RemoveCounters
@@ -5569,6 +5571,28 @@ reducesByManaCostOnEntry keyword = case keyword of
 restrictionsOf :: ActivatedAbility Card (GrantedAbility.GrantedAbility Card) -> [ActivationRestriction.ActivationRestriction]
 restrictionsOf ability = ActivatedAbility.restrictions ability <> foldMap printedRiders (ActivatedAbility.keyword ability)
 
+-- CR 602.5b: is the ability bound by a rider counting its activations, "only
+-- once" or "only N times each turn"? Parun.Engine.ActivationRestriction's
+-- recordActivation keeps the count; Parun.Engine.Projection names a grant of
+-- such an ability for its granter (Binding.acquiredFrom).
+countsActivations :: ActivatedAbility Card (GrantedAbility.GrantedAbility Card) -> Bool
+countsActivations = any counted . restrictionsOf
+  where
+    counted restriction = case restriction of
+      ActivationRestriction.OnlyOnce -> True
+      ActivationRestriction.TimesEachTurn _ -> True
+      ActivationRestriction.SorcerySpeed -> False
+      ActivationRestriction.DuringPhase _ -> False
+      ActivationRestriction.DuringTurn _ -> False
+      ActivationRestriction.AttackedThisStep -> False
+      ActivationRestriction.AfterBlockersDeclared -> False
+      ActivationRestriction.DuringCombatBefore _ -> False
+      ActivationRestriction.BeforeStep _ -> False
+      ActivationRestriction.OnlyIf _ -> False
+      ActivationRestriction.DuringDieRoll -> False
+      ActivationRestriction.SpendOnly _ -> False
+      ActivationRestriction.InstantSpeed -> False
+
 -- CR 113.6b: the zones rule 702 says the ability a keyword stamps functions
 -- from, empty where it names none. CR 702.57a puts a printed forecast ability in
 -- a hand; CR 702.49a puts minted ninjutsu there, and CR 702.49d commander
@@ -6311,7 +6335,7 @@ mobilize n =
             }
    in Mint.trigger (TriggerCondition.Attacks (AttackTrigger.Attacker AttackerTrigger.defaultValue)) (Seq.fromList [spawn, arm])
 
--- The quantity mobilize's and firebending's N reads as the ability resolves
+-- The quantity mobilize's, firebending's and ward's N reads as the ability resolves
 -- (CR 608.2h). Power reads the triggered ability's source, the object carrying
 -- the keyword (CR 113.7); a tally's or a counter count's "you" is the ability's
 -- controller (CR 109.5).
@@ -6985,9 +7009,8 @@ training =
 --
 -- CR 702.21b's X rides PayGate.perEach, which Parun.Engine.Resolve.Effect.payGatePaidBy
 -- evaluates against the RESOLUTION -- "not locked in as the ability triggers".
--- The narrow tally the keyword stores is widened into a Quantity here, the one
--- place the two namespaces meet; Parun.Types.Ward.perEach says why it is stored
--- narrow.
+-- The KeywordCount the keyword stores is widened into a Quantity here
+-- (keywordCount); Parun.Types.Ward.perEach says why it is stored narrow.
 ward :: Ward.Ward Keyword -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 ward w =
   let clause = Mint.mandatoryPaying gate (Seq.singleton effect)
@@ -7000,7 +7023,7 @@ ward w =
             PayGate.basis = Nothing,
             PayGate.branch = PayBranch.IfNotPaid,
             PayGate.obligation = PayObligation.Optional,
-            PayGate.perEach = fmap Quantity.PlayerCounters (Ward.perEach w),
+            PayGate.perEach = fmap keywordCount (Ward.perEach w),
             PayGate.x = Nothing,
             PayGate.offeredAt = Nothing
           }
@@ -7868,7 +7891,7 @@ treasureToken =
     Effect.AddMana
       ManaAddition.MkManaAddition
         { ManaAddition.player = PlayerRef.Relative PlayerRelation.You,
-          ManaAddition.production = ManaProduction.AnyColor,
+          ManaAddition.production = ManaProduction.AnyColor ColorSpread.OneColor,
           ManaAddition.count = Quantity.Literal 1,
           ManaAddition.retention = ManaRetention.Ordinary,
           ManaAddition.restriction = Nothing,
@@ -8190,7 +8213,7 @@ hauntSpell =
   let slot = TargetSlot.required Pool.Creatures Nothing
       exile = Effect.ExileHaunting (ExileHaunting.MkExileHaunting Binding.triggerSource hauntTarget)
    in Mint.triggerOf
-        TriggerCondition.SelfPutIntoGraveyardDuringResolution
+        (TriggerCondition.PutIntoZone (PutIntoZoneTrigger.self Zone.Graveyard) {PutIntoZoneTrigger.duringResolution = True})
         Nothing
         (Mint.oneModeTargeting (Map.singleton hauntTarget slot) (Seq.singleton exile))
 

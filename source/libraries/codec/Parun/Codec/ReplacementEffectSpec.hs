@@ -325,7 +325,7 @@ spec s =
           Common.assertCodec
             s
             codec
-            (ReplacementEffect.TokenR (TokenR.MkTokenR TokenPattern.MkTokenPattern {TokenPattern.whose = ControllerRelation.Related PlayerRelation.You, TokenPattern.whatToken = Filter.And []} (Just (Scaling.Multiply 2)) Nothing))
+            (ReplacementEffect.TokenR (TokenR.MkTokenR TokenPattern.MkTokenPattern {TokenPattern.whose = ControllerRelation.Related PlayerRelation.You, TokenPattern.whatToken = Filter.And [], TokenPattern.effectsOnly = False} (Just (Scaling.Multiply 2)) Nothing))
             " {\"type\":\"TokenR\",\"value\":{\"matching\":{\"whose\":{\"type\":\"You\"}},\"scaling\":{\"type\":\"Multiply\",\"value\":2}}} "
         -- CR 614.1b: a skip carries a pattern and no rewrite, so the payload is the
         -- pattern itself rather than the usual two-element array.

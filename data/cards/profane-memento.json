@@ -12,35 +12,41 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "CardPutIntoGraveyard",
+            "type": "PutIntoZone",
             "value": {
-              "filter": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
-                  },
-                  {
-                    "type": "Not",
-                    "value": {
-                      "type": "IsToken"
-                    }
-                  },
-                  {
-                    "type": "HeldBy",
-                    "value": {
-                      "holder": {
-                        "type": "Owner"
-                      },
-                      "relation": {
-                        "type": "Opponent"
+              "card": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    },
+                    {
+                      "type": "Not",
+                      "value": {
+                        "type": "IsToken"
+                      }
+                    },
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Owner"
+                        },
+                        "relation": {
+                          "type": "Opponent"
+                        }
                       }
                     }
-                  }
-                ]
+                  ]
+                }
+              },
+              "to": {
+                "type": "Graveyard"
               }
             }
           },

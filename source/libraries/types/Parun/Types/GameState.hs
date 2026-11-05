@@ -452,7 +452,7 @@ data GameState = MkGameState
     -- Object.activatedOnce is.
     activatedThisTurn :: Map.Map ObjectId.ObjectId (Map.Map (ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)) Natural.Natural),
     -- | CR 602.2: every activated ability begun this turn, oldest first, as
-    -- Parun.Types.CostModifier.onlyFirst, Quantity.TimesThisTurn and
+    -- an activation's Parun.Types.CostModifier.onlyFirst, Quantity.TimesThisTurn and
     -- Quantity.ActivationsThisTurn ask after it; cleared at turn handoff. Written by
     -- Parun.Engine.ActivationRestriction.logActivation. A
     -- new reader owes its construct's arm in Parun.Engine.Interchangeable.Mentions

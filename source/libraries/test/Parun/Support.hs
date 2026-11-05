@@ -83,7 +83,6 @@ import qualified Parun.Types.Deck as Deck
 import qualified Parun.Types.Departure as Departure.Type
 import qualified Parun.Types.DestructionR as DestructionR
 import qualified Parun.Types.DestructionRewrite as DestructionRewrite
-import qualified Parun.Types.EndTurnSignal as EndTurnSignal
 import qualified Parun.Types.Entry as Entry
 import qualified Parun.Types.EventGroup as EventGroup
 import qualified Parun.Types.Expiry as Expiry
@@ -129,7 +128,6 @@ import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Reference as Reference
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
 import qualified Parun.Types.ReplacementOrigin as ReplacementOrigin
-import qualified Parun.Types.RestartSignal as RestartSignal
 import qualified Parun.Types.ScenarioFailure as ScenarioFailure
 import qualified Parun.Types.Scope as Scope
 import qualified Parun.Types.Seat as Seat
@@ -719,7 +717,7 @@ playLandAnswer p = case p of
           A.PutCompanionIntoHand -> False
           A.RollPlanarDie -> False
           A.Ignore _ _ -> False
-          A.EndEffect _ -> False
+          A.EndEffect {} -> False
           A.PayLifeForMana _ _ -> False
           A.ActivateManaAbility _ -> False
      in case filter isPlay actions of
@@ -1642,133 +1640,16 @@ oneMountainState mountain ph =
       printingId = oneMountainPrintingId
       obj =
         Game.cardObject oid alice printingId Zone.Hand (Timestamp.MkTimestamp 0)
-   in GameState.MkGameState
-        { GameState.settings = GameSettings.plain,
-          GameState.objects = Map.singleton oid obj,
-          GameState.library = Map.empty,
+   in (Setup.blankGame GameSettings.plain [alice] alice)
+        { GameState.objects = Map.singleton oid obj,
           GameState.hand = Map.singleton alice (Seq.singleton oid),
-          GameState.graveyard = Map.empty,
-          GameState.battlefield = mempty,
-          GameState.phasedOut = mempty,
-          GameState.exile = mempty,
-          GameState.command = mempty,
-          GameState.ante = mempty,
-          GameState.sideDecks = Map.empty,
-          GameState.stack = [],
-          GameState.stackedIn = Map.empty,
-          GameState.players = Map.empty,
-          GameState.stackArchive = Map.empty,
-          GameState.outsideObjects = Map.empty,
-          GameState.broughtIn = Seq.empty,
-          GameState.manaPool = Map.empty,
-          GameState.combat = Combat.emptyCombat,
-          GameState.events = Seq.empty,
-          GameState.nextEventGroup = EventGroup.first,
-          GameState.eventGroupDepth = 0,
-          GameState.enteringTogether = Nothing,
-          GameState.arrivals = Nothing,
-          GameState.payingOnResolution = False,
-          GameState.causing = Nothing,
-          GameState.lastKnown = Map.empty,
-          GameState.scannedThrough = 0,
-          GameState.boardAfterEvent = Map.empty,
-          GameState.boardBeforeEvent = Map.empty,
-          GameState.battlefieldWhenTriggered = Map.empty,
-          GameState.controlSample = Map.empty,
-          GameState.boardAtControlSample = Nothing,
-          GameState.heldBoards = [],
-          GameState.damageScannedThrough = 0,
-          GameState.delayedTriggers = Seq.empty,
-          GameState.continuousEffects = [],
-          GameState.copyEffects = [],
-          GameState.replacements = [],
-          GameState.pendingPreventionRiders = Seq.empty,
-          GameState.pendingReplacementEffects = Seq.empty,
-          GameState.contested = Map.empty,
-          GameState.ambientAmounts = Map.empty,
-          GameState.detachedBindings = Map.empty,
-          GameState.pendingEntryEffects = Seq.empty,
-          GameState.enteringBeside = Set.empty,
-          GameState.enteringSubjects = Map.empty,
-          GameState.enteredFrom = Map.empty,
-          GameState.enteringPending = Map.empty,
-          GameState.refusedEntries = Nothing,
-          GameState.enteringCounters = Map.empty,
-          GameState.copyExceptionCounters = Map.empty,
-          GameState.playerEffects = [],
-          GameState.blockRequirements = [],
-          GameState.objectProhibitions = [],
-          GameState.attackProhibitions = [],
-          GameState.evasions = [],
-          GameState.attackRequirements = [],
-          GameState.ignoredAbilities = [],
-          GameState.turnOrder = [alice],
-          GameState.activePlayer = alice,
           GameState.phase = ph,
-          GameState.remaining = Turn.laterPhases,
           GameState.priority = Just alice,
-          GameState.passed = Set.empty,
-          GameState.turnNumber = 1,
-          GameState.turnsBegun = Map.singleton alice 1,
-          GameState.permanentsAsTurnBegan = Nothing,
-          GameState.result = Nothing,
-          GameState.restartSignal = RestartSignal.Playing,
-          GameState.endTurnSignal = EndTurnSignal.Running,
           GameState.nextObjectId = ObjectId.MkObjectId 1,
           GameState.printings = Map.singleton printingId mountain,
           GameState.printingIds = Map.singleton mountain printingId,
-          GameState.lookedUp = Set.empty,
-          GameState.referenceNames = Map.empty,
-          GameState.outsideCopies = Set.empty,
-          GameState.namedCopyChoices = Map.empty,
-          GameState.notedCards = Map.empty,
-          GameState.notedMana = Map.empty,
           GameState.nextPrintingId = PrintingId.MkPrintingId 1,
-          GameState.nextTimestamp = Timestamp.MkTimestamp 1,
-          GameState.lastChoice = Timestamp.MkTimestamp 0,
-          GameState.loopInvolvement = Map.empty,
-          GameState.drewFromEmpty = mempty,
-          GameState.fellShort = 0,
-          GameState.landsPlayed = mempty,
-          GameState.cardsPlayed = mempty,
-          GameState.drawsThisTurn = mempty,
-          GameState.keptFaceDown = Nothing,
-          GameState.announcedTops = Nothing,
-          GameState.loopPicks = Nothing,
-          GameState.revealedTops = mempty,
-          GameState.departedThisTurn = mempty,
-          GameState.couldAttackThisTurn = mempty,
-          GameState.activatedThisTurn = mempty,
-          GameState.activationsThisTurn = mempty,
-          GameState.castPermissionsUsedThisTurn = mempty,
-          GameState.rollModifiersUsedThisTurn = mempty,
-          GameState.triggeredThisGame = mempty,
-          GameState.pendingControl = Map.empty,
-          GameState.control = Map.empty,
-          GameState.monarch = Nothing,
-          GameState.initiative = Nothing,
-          GameState.daytime = Nothing,
-          GameState.spellsCastLastTurn = 0,
-          GameState.eventsLastTurn = mempty,
-          GameState.castsBeforeThisTurn = mempty,
-          GameState.damageBeforeThisTurn = mempty,
-          GameState.damagePreventedBy = mempty,
-          GameState.attacksInOwnLastTurn = mempty,
-          GameState.resolvedNames = Map.empty,
-          GameState.movedUntil = Map.empty,
-          GameState.haunting = Map.empty,
-          GameState.encoded = Map.empty,
-          GameState.exiledWith = Map.empty,
-          GameState.enteredWith = Map.empty,
-          GameState.exilePiles = Map.empty,
-          GameState.extraTurns = [],
-          GameState.subgamesThisMatch = 0,
-          GameState.gamesThisMatch = 1,
-          GameState.gameNumber = 1,
-          GameState.turnAnchor = Nothing,
-          GameState.extraTurnUnderWay = Nothing,
-          GameState.rollingDie = Nothing,
-          GameState.rerollRequested = False
+          GameState.nextTimestamp = Timestamp.MkTimestamp 1
         }
 
 drawStep :: Game.Type.Game ()
@@ -1830,7 +1711,7 @@ isCastOf oid action = case action of
   A.PutCompanionIntoHand -> False
   A.RollPlanarDie -> False
   A.Ignore _ _ -> False
-  A.EndEffect _ -> False
+  A.EndEffect {} -> False
   A.PayLifeForMana _ _ -> False
   A.ActivateManaAbility _ -> False
 

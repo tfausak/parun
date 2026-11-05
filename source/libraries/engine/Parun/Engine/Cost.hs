@@ -73,6 +73,7 @@ import qualified Parun.Extra.Integer as Integer
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.AbilityKind as AbilityKind
 import qualified Parun.Types.AbilityName as AbilityName
+import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.Activations as Activations
 import qualified Parun.Types.AlternativeCost as AlternativeCost
@@ -1696,11 +1697,16 @@ plus base extra =
 -- -- Killing Wave's ruling, "each player pays life and sacrifices creatures at
 -- the same time".
 together :: NonEmpty.NonEmpty (Cost Keyword.Type.Keyword) -> Cost Keyword.Type.Keyword
-together costs =
-  let summed = foldr1 plus costs
-      life = sum [n | CostComponent.PayLife (CostAmount.Fixed n) <- Cost.components summed]
-      others = filter (\component -> case component of CostComponent.PayLife (CostAmount.Fixed _) -> False; _ -> True) (Cost.components summed)
-   in summed {Cost.components = others <> [CostComponent.PayLife (CostAmount.Fixed life) | life > 0]}
+together = lifeSummed . foldr1 plus
+
+-- CR 119.4: every fixed life payment of one cost summed into ONE PayLife, so
+-- the life is paid as one event and the total, not each part, is what CR 119.4
+-- measures. `together`'s and `repeated`'s.
+lifeSummed :: Cost Keyword.Type.Keyword -> Cost Keyword.Type.Keyword
+lifeSummed cost =
+  let life = sum [n | CostComponent.PayLife (CostAmount.Fixed n) <- Cost.components cost]
+      others = filter (\component -> case component of CostComponent.PayLife (CostAmount.Fixed _) -> False; _ -> True) (Cost.components cost)
+   in cost {Cost.components = others <> [CostComponent.PayLife (CostAmount.Fixed life) | life > 0]}
 
 -- CR 702.24a's "[cost] for each age counter on it": N whole copies of this cost,
 -- as ONE cost. `plus` folded over itself, so the mana parts concatenate and the
@@ -1725,8 +1731,11 @@ together costs =
 -- real and payable and is what "for each" of nothing means. Rule 702.24a reaches
 -- neither zero case -- the age counter is put on before the offer -- but
 -- Parun.Types.PayGate.perEach is stated over every count.
+--
+-- Fixed life is `lifeSummed`: Phyrexian Fleshgorger's ward, PayLife 1 per point
+-- of power, pays its life once.
 repeated :: Natural -> Cost Keyword.Type.Keyword -> Cost Keyword.Type.Keyword
-repeated n cost = foldr plus (Cost.MkCost (fmap (const (ManaCost.MkManaCost [])) (Cost.mana cost)) []) (List.genericReplicate n cost)
+repeated n cost = lifeSummed $ foldr plus (Cost.MkCost (fmap (const (ManaCost.MkManaCost [])) (Cost.mana cost)) []) (List.genericReplicate n cost)
 
 -- CR 601.2b: substitute the chosen value of X everywhere in this cost -- the mana
 -- part's ManaSymbol.Variable, and every component's X (`substituteAnnounced`).
@@ -4301,10 +4310,12 @@ aimingSignature pid oid gs cost
           capacity = Mana.supplyCapacity (midPayment (manaActivationsGiven (PlayerEffect.applying pid gs)))
           borrowed = PlayerEffect.tapForManaGrants pid gs
           pcs = Projection.projectAll gs
+          -- A route announcing an X is read at X = 0 alone: what it claims is
+          -- the same at every X.
           supplies =
             if Set.null axes
               then []
-              else [(source, supply) | source <- Mana.manaSourcesGiven Set.empty capacity (Projection.controlGrants gs) pcs pid gs, supply <- Mana.manaSuppliesGiven capacity pcs pid (borrowed source) source gs]
+              else [(source, supply) | source <- Mana.manaSourcesGiven Set.empty capacity (Projection.controlGrants gs) pcs pid gs, supply <- Mana.manaSuppliesGiven 0 capacity pcs pid (borrowed source) source gs]
           -- The yield's OWN claims, narrowed per sacrifice candidate where the
           -- supply prices one (Mana.manaSuppliesGiven's fourth element).
           relevant (_, _, _, own) = filter ((`Set.member` axes) . Claim.Type.axis) (Activations.claims own)
@@ -6163,7 +6174,17 @@ tapForManaWith perform window inFlight refused activator oid = do
           --
           -- `gs` is still current: chooseManaYield only prompts.
           let gathered = manaActivationAdjustments (ActivatedAbility.keyword =<< ManaOption.ability chosen) (ActivatedAbility.name =<< ManaOption.ability chosen) controller oid gs
-              withComponents = plusComponents gathered (ManaOption.cost chosen)
+              printedX = hasVariable (ManaOption.cost chosen)
+              payableAt x = Activations.times (capacity Mana.ForOffer Map.empty controller oid (substituteX x (ManaOption.cost chosen)) (ManaOption.restrictions chosen) (ManaOption.ability chosen) gs) > 0
+          -- CR 601.2b through CR 602.2b: the activation cost's {X} is announced
+          -- first, bounded by what the gate above measures (Prompt.ChooseX), and
+          -- bound under Binding.variableX for the yield's price below: Wizard's
+          -- Rockets' "{X}, {T}, Sacrifice this artifact: Add X mana"
+          -- (data/scenarios/mana/cr-106-1a-601-2b-wizard-s-rockets-adds-x-mana-in-any-combination-of-colors.json).
+          -- An X the board cannot pay loses the activation at the payment,
+          -- Activate.activateAbility's posture.
+          x <- if printedX then Game.choose (Prompt.ChooseX (Decide.deciderFor controller gs) controller oid Binding.variableX 0 (greatestPayableX Nothing payableAt (ManaOption.cost chosen))) else pure 0
+          let withComponents = plusComponents gathered (substituteX x (ManaOption.cost chosen))
           -- CR 118.13a: a mana ability is an activated ability (CR 605.1a) and
           -- CR 602.2b sends its activation cost through CR 601.2b, so a symbol
           -- payable in several ways is announced as the ability is activated
@@ -6183,7 +6204,7 @@ tapForManaWith perform window inFlight refused activator oid = do
           (outcome, nested, nestedSpent) <- payActivation perform (Set.insert (oid, ManaOption.ability chosen) inFlight) controller oid (totalWith announced announcedCost)
           case outcome of
             Payment.Unpaid -> pure (False, nested, [], Set.singleton (oid, ManaOption.ability chosen))
-            Payment.Paid paid -> do
+            Payment.Paid paidSlots -> do
               -- CR 601.2h / 608.2h: the yield is priced again with the slots
               -- the payment bound, since an offer cannot know which artifact
               -- Priest of Yawgmoth's cost will sacrifice (Parun.ManaSpec's Priest
@@ -6198,7 +6219,8 @@ tapForManaWith perform window inFlight refused activator oid = do
               -- Not implemented: the slots reaching CR 405.6c's other effects,
               -- which run with none of them -- see `perform` below (#4850).
               gsPaid <- State.get
-              let pricedAlike = [priced | (offered, priced) <- Mana.manaRepricingsGiven paid gsPaid Map.empty oid gs, List.elem offered alike]
+              let paid = if printedX then Map.insert Binding.variableX (Binding.toAmount x) paidSlots else paidSlots
+                  pricedAlike = [priced | (offered, priced) <- Mana.manaRepricingsGiven paid gsPaid Map.empty oid gs, List.elem offered alike]
               pricedChosen <- case ListUtils.nubOrdOn ownPart pricedAlike of
                 route : routes -> chooseManaYield controller oid (route NonEmpty.:| routes) gsPaid
                 [] -> pure chosen
@@ -6938,7 +6960,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
     case beheld of
       Just [chosen] -> do
         arrived <- Event.changeZoneReturning (ManaAbilityPerformer.settle perform) chosen Zone.Exile
-        let link = ExileLink.MkExileLink {ExileLink.source = oid, ExileLink.ability = Nothing}
+        let link = ExileLink.MkExileLink {ExileLink.source = oid, ExileLink.ability = Nothing, ExileLink.acquisition = Acquisition.Own}
         State.modify' (\g -> g {GameState.exiledWith = foldr (`Map.insert` link) (GameState.exiledWith g) arrived})
         pure bindsNothing
       _ -> pure Payment.Unpaid

@@ -24,12 +24,12 @@ import qualified Parun.Types.PayObligation as PayObligation
 -- the branch, where a default would let a card written a word short play as the
 -- opposite card.
 --
--- The other six are elided when unmarked, which is what every card but
--- Standstill and Don't Make a Sound writes: CR 118.12a's rewriting makes an
--- "unless" cost optional, a clause that names no other clause makes its own
--- offer, and a cost is offered once rather than once per counted thing.
--- Rakshasa's Disdain is the card in `data/cards/` that writes `perEach`; CR
--- 702.24a's mint writes one too, but a minted ability never goes on the wire.
+-- The other six are elided when unmarked, which is what most cards write: CR
+-- 118.12a's rewriting makes an "unless" cost optional, a clause that names no
+-- other clause makes its own offer, and a cost is offered once rather than once
+-- per counted thing. Rakshasa's Disdain's `perEach` counts a graveyard and
+-- Magnetic Mountain's the permanents an earlier clause chose; CR 702.24a's mint
+-- writes one too, but a minted ability never goes on the wire.
 -- `basis` is Flash's alone: CR 118.6 lets a cost be described in terms of
 -- another object's mana cost rather than printed, and every other gate prints
 -- one. `x` is Flameblast Dragon's: an {X} chosen as the ability resolves (CR
