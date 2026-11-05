@@ -92,7 +92,7 @@
         "Count": {
           "player": "alice",
           "zone": "Graveyard",
-          "card": "Island"
+          "card": "Island",
           "count": 1
         }
       }
