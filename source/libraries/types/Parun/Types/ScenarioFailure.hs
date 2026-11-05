@@ -1,5 +1,6 @@
 module Parun.Types.ScenarioFailure where
 
+import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Sequence as Seq
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
@@ -7,6 +8,7 @@ import qualified Parun.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.Check as Check
 import qualified Parun.Types.Choices as Choices
+import qualified Parun.Types.Discrepancy as Discrepancy
 import qualified Parun.Types.Entry as Entry
 import qualified Parun.Types.Label as Label
 import qualified Parun.Types.Move as Move
@@ -71,6 +73,9 @@ data ScenarioFailure
   | -- | A move the timeline took at priority that the engine never made: the
     -- next priority prompt found it unmade (CR 733.1).
     MkUnmadeMove When.When Move.Move
+  | -- | Between two priority prompts, the event log failed to account for the
+    -- board (Parun.Engine.Ledger), at the turn and step of the later prompt.
+    MkUnloggedChanges Natural Phase.Phase (NonEmpty.NonEmpty Discrepancy.Discrepancy)
   | -- | Entries whose moment never came, at least one of them a move, and the
     -- turn and step the run stopped at.
     MkUnreachedEntries Natural Phase.Phase (Seq.Seq Timed.Timed)

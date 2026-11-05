@@ -1781,6 +1781,7 @@ library engine
     Parun.Engine.Keyword
     Parun.Engine.LaterPayment
     Parun.Engine.Learn
+    Parun.Engine.Ledger
     Parun.Engine.Loyalty
     Parun.Engine.Mana
     Parun.Engine.ManaAbility
@@ -2331,6 +2332,7 @@ library test
     Parun.KeywordTriggerSpec
     Parun.LearnSpec
     Parun.LeavesTriggerSpec
+    Parun.LedgerSpec
     Parun.LibraryOrderSpec
     Parun.LifeReplacementSpec
     Parun.LifeTriggerSpec
@@ -2740,6 +2742,7 @@ library types
     Parun.Types.DiscardSubject
     Parun.Types.DiscardTrigger
     Parun.Types.DiscardWay
+    Parun.Types.Discrepancy
     Parun.Types.DistinctOf
     Parun.Types.Divide
     Parun.Types.Dividing
