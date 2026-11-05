@@ -233,26 +233,6 @@
     },
     {
       "turn": 3,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "refuse": {
-        "Block": {
-          "$wurm": [
-            "Cephalid Inkmage"
-          ]
-        }
-      }
-    },
-    {
-      "turn": 3,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "do": {
-        "Block": {}
-      }
-    },
-    {
-      "turn": 3,
       "step": "PostcombatMain",
       "player": "alice",
       "check": {

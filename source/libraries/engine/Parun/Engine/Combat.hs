@@ -1621,6 +1621,43 @@ blockCeilingGiven board pid gs =
           else bestBlockDeclaration requirements limit most alone arity (Snapshot.projected board) freely candidates attackers gs
       )
 
+-- CR 509.1a-c: the candidates some legal declaration contains, in
+-- blockScopeGiven's order -- the creatures CR 509.1's prompt offers, and with
+-- none of them the only legal declaration is the empty one. couldAttack's
+-- twin.
+--
+-- Not implemented: CR 509.1's preamble makes a declaration whose CR 509.1f
+-- payment can't be made illegal, so a creature only in such declarations is
+-- in no legal one; costs are ignored here (#6302).
+--
+-- A candidate blocking in the ceiling's declaration is in one. Otherwise each
+-- pair it may block is first added to that declaration, which obeys no fewer
+-- requirements, so is legal when it breaks no restriction; failing that, the
+-- pair is put to bestBlockDeclaration as a requirement heavier than every
+-- other together, which reaches that weight plus CR 509.1c's maximum exactly
+-- when a declaration containing the pair attains the maximum too (menace,
+-- Mogg Flunkies).
+declarableBlockers :: PlayerId -> GameState -> [ObjectId]
+declarableBlockers pid gs =
+  let board = Snapshot.whole gs
+      pcs = Snapshot.projected board
+      (candidates, attackers, barred, (limit, most, alone)) = blockScopeGiven board pid gs
+      able blocker attacker = pairAllowedGiven board barred candidates attackers blocker attacker gs
+      arity = blockArityGiven candidates gs
+      (requirements, best) = blockCeilingGiven board pid gs
+      obeyed = requirementsMet requirements best
+      heavier = 1 + sum (Requirement.pairs requirements) + sum (Requirement.groups requirements)
+      blocking blocker = maybe False (not . Set.null) (Map.lookup blocker best)
+      added blocker attacker = blockDeclarationAllowed limit most alone arity pcs able (Map.insert blocker (Set.singleton attacker) best) gs
+      reached blocker attacker =
+        let boosted = requirements {Requirement.pairs = Map.insertWith (+) (blocker, attacker) heavier (Requirement.pairs requirements)}
+            witness = bestBlockDeclaration boosted limit most alone arity pcs able candidates attackers gs
+         in requirementsMet boosted witness >= heavier + obeyed
+      declarable blocker =
+        let pairs = filter (able blocker) attackers
+         in blocking blocker || any (added blocker) pairs || any (reached blocker) pairs
+   in filter declarable candidates
+
 -- CR 509.1: is this declaration one the defending player may make? Both checks
 -- the rule asks for, in the order it asks them: CR 509.1b's restrictions, then CR
 -- 509.1c's requirements -- a MAXIMIZATION rather than a check, which is what makes
@@ -3047,7 +3084,9 @@ recordDeclaredBlockers oids g =
 attemptBlockDeclaration :: ManaAbilityPerformer.ManaAbilityPerformer -> PlayerId -> Maybe PlayerId -> [ObjectId] -> Set (Map ObjectId (Set ObjectId)) -> Game ()
 attemptBlockDeclaration perform pid asked attacking rejected = do
   gs <- State.get
-  let (candidates, _, _, _) = blockScopeGiven (Snapshot.whole gs) pid gs
+  -- Only creatures some legal declaration contains: with none, declining is
+  -- the only legal answer and there is nothing to ask.
+  let candidates = declarableBlockers pid gs
       -- CR 805.10d: the defending player a blocker is declared by is the one
       -- controlling it, which blockScopeGiven made one of `pid`'s side.
       blockerOf oid = Maybe.fromMaybe pid (Projection.controllerOf oid gs)

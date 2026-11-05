@@ -172,26 +172,6 @@
       "turn": 1
     },
     {
-      "player": "alice",
-      "refuse": {
-        "Block": {
-          "$abears": [
-            "$ogre"
-          ]
-        }
-      },
-      "step": "DeclareBlockers",
-      "turn": 1
-    },
-    {
-      "do": {
-        "Block": {}
-      },
-      "player": "alice",
-      "step": "DeclareBlockers",
-      "turn": 1
-    },
-    {
       "check": {
         "Blockers": {
           "attacker": "$ogre",

@@ -1,6 +1,6 @@
 {
   "description": "CR 702.14c whole card: Fishliver Oil's creature has islandwalk, so bob, who controls an Island, cannot block it",
-  "note": "Bob's Hill Giant is refused as a blocker for alice's enchanted bears, which deal him 2.",
+  "note": "Bob is not asked to block alice's enchanted bears with his Hill Giant (an unscheduled block prompt would fail the run), which deal him 2.",
   "board": {
     "active": "alice",
     "step": "BeginningOfCombat",
@@ -67,26 +67,6 @@
         "Attack": [
           "$bears"
         ]
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "refuse": {
-        "Block": {
-          "$giant": [
-            "$bears"
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "do": {
-        "Block": {}
       }
     },
     {

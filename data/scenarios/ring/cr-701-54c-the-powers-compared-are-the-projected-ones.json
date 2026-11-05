@@ -1,6 +1,6 @@
 {
   "description": "CR 701.54c the powers compared are the PROJECTED ones",
-  "note": "bob's Goblin Piker carries a +1/+1 counter, so its projected power 3 exceeds the Ring-bearer's 2 and the block is refused; the control file is the same board without the counter, where the block stands.",
+  "note": "bob's Goblin Piker carries a +1/+1 counter, so its projected power 3 exceeds the Ring-bearer's 2 and bob is not asked to block (an unscheduled block prompt would fail the run); the control file is the same board without the counter, where the block stands.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
@@ -102,26 +102,6 @@
         "Attack": [
           "$bearer"
         ]
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "refuse": {
-        "Block": {
-          "$blocker": [
-            "$bearer"
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "do": {
-        "Block": {}
       }
     },
     {

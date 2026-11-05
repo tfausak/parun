@@ -135,26 +135,6 @@
       "turn": 1
     },
     {
-      "player": "bob",
-      "refuse": {
-        "Block": {
-          "$wall": [
-            "$bear"
-          ]
-        }
-      },
-      "step": "DeclareBlockers",
-      "turn": 1
-    },
-    {
-      "do": {
-        "Block": {}
-      },
-      "player": "bob",
-      "step": "DeclareBlockers",
-      "turn": 1
-    },
-    {
       "check": {
         "Life": {
           "life": 18,

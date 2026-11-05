@@ -1,6 +1,6 @@
 {
   "description": "CR 509.1b whole card: Tidal Kraken can't be blocked",
-  "note": "Bob's untapped Hill Giant is refused as its blocker, and the Kraken's 6 reach him.",
+  "note": "Bob is not asked to block it with his untapped Hill Giant (an unscheduled block prompt would fail the run), and the Kraken's 6 reach him.",
   "board": {
     "active": "alice",
     "step": "BeginningOfCombat",
@@ -63,26 +63,6 @@
         "Attack": [
           "$kraken"
         ]
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "refuse": {
-        "Block": {
-          "$giant": [
-            "$kraken"
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "do": {
-        "Block": {}
       }
     },
     {

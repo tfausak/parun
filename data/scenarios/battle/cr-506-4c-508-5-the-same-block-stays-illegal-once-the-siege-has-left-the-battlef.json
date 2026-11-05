@@ -1,6 +1,6 @@
 {
   "description": "CR 506.4c / 508.5 the same block stays illegal once the Siege has left the battlefield",
-  "note": "carol protects the placed Siege and holds the Swamp. Two Bolts in the declare attackers step take its five defense counters and CR 310.12b exiles it (the offered cast declined); the Wraith still attacks the departed Siege, and carol's block stays refused. Proven by giving carol an Island instead. The Haskell read of the attackers map naming the Siege AFTER it left cannot be written (an Attackers check cannot name a departed label), so Attackers is checked at declaration and the control file shows the Wraith still attacking afterwards.",
+  "note": "carol protects the placed Siege and holds the Swamp. Two Bolts in the declare attackers step take its five defense counters and CR 310.12b exiles it (the offered cast declined); the Wraith still attacks the departed Siege, and carol's block stays illegal, so she is not asked to block (an unscheduled block prompt would fail the run). Proven by giving carol an Island instead. The Haskell read of the attackers map naming the Siege AFTER it left cannot be written (an Attackers check cannot name a departed label), so Attackers is checked at declaration and the control file shows the Wraith still attacking afterwards.",
   "board": {
     "seats": [
       {
@@ -202,26 +202,6 @@
           "card": "Invasion of Dominaria",
           "count": 0
         }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "carol",
-      "refuse": {
-        "Block": {
-          "$blocker": [
-            "$wraith"
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "carol",
-      "do": {
-        "Block": {}
       }
     },
     {

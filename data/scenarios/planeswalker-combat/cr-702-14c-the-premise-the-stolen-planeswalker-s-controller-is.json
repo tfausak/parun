@@ -115,26 +115,6 @@
     {
       "turn": 1,
       "step": "DeclareBlockers",
-      "player": "bob",
-      "refuse": {
-        "Block": {
-          "$blocker": [
-            "$wraith"
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "do": {
-        "Block": {}
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
       "player": "alice",
       "check": {
         "Blockers": {

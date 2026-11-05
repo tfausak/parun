@@ -1,6 +1,6 @@
 {
   "description": "CR 702.9b a declaration in which a ground creature blocks a flier is illegal",
-  "note": "Bird Maiden flies; bob's Goblin Piker has neither flying nor reach, so its block is refused (CR 509.1b) and bob declares no blocks instead.",
+  "note": "Bird Maiden flies; bob's Goblin Piker has neither flying nor reach, so no declaration has it blocking (CR 509.1b) and bob is not asked to block (an unscheduled block prompt would fail the run).",
   "board": {
     "active": "alice",
     "step": "BeginningOfCombat",
@@ -29,8 +29,6 @@
   },
   "timeline": [
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$attacker"]}},
-    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": {"Block": {"$blocker": ["$attacker"]}}},
-    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {}}},
     {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Blockers": {"attacker": "$attacker", "blockers": null}}}
   ]
 }

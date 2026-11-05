@@ -4,8 +4,6 @@
   "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "", "battlefield": [{"card": "Hill Giant", "label": "giant", "ready": true}, {"card": "Hot Soup", "label": "soup", "attached": "giant"}, {"card": "Mountain", "label": "mtn"}], "hand": [{"card": "Shock", "label": "shock"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Gray Ogre", "label": "ogre"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
   "timeline": [
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$giant"]}},
-    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": {"Block": {"$ogre": ["$giant"]}}},
-    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {}}},
     {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 17}}},
     {"turn": 1, "step": "PostcombatMain", "player": "alice", "do": {"Cast": {"object": "$shock", "targets": ["$giant"], "mana": ["$mtn"]}}},
     {"turn": 1, "step": "PostcombatMain", "player": "alice", "do": "Pass"},

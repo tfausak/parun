@@ -123,26 +123,6 @@
     },
     {
       "turn": 3,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "refuse": {
-        "Block": {
-          "$giant": [
-            "$serpent"
-          ]
-        }
-      }
-    },
-    {
-      "turn": 3,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "do": {
-        "Block": {}
-      }
-    },
-    {
-      "turn": 3,
       "step": "EndOfCombat",
       "player": "alice",
       "check": {

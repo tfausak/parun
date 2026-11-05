@@ -187,26 +187,6 @@
       "turn": 1
     },
     {
-      "player": "bob",
-      "refuse": {
-        "Block": {
-          "$bears": [
-            "$ogre"
-          ]
-        }
-      },
-      "step": "DeclareBlockers",
-      "turn": 1
-    },
-    {
-      "do": {
-        "Block": {}
-      },
-      "player": "bob",
-      "step": "DeclareBlockers",
-      "turn": 1
-    },
-    {
       "check": {
         "Blockers": {
           "attacker": "$ogre",

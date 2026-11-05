@@ -107,26 +107,6 @@
     },
     {
       "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "refuse": {
-        "Block": {
-          "$drake": [
-            "$leviathan"
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "do": {
-        "Block": {}
-      }
-    },
-    {
-      "turn": 1,
       "step": "EndOfCombat",
       "player": "alice",
       "check": {
@@ -155,14 +135,6 @@
         "Attack": [
           "$drake"
         ]
-      }
-    },
-    {
-      "turn": 2,
-      "step": "DeclareBlockers",
-      "player": "alice",
-      "do": {
-        "Block": {}
       }
     },
     {

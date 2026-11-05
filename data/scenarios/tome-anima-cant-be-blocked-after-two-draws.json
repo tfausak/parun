@@ -166,26 +166,6 @@
       "turn": 1
     },
     {
-      "refuse": {
-        "Block": {
-          "$w": [
-            "$a"
-          ]
-        }
-      },
-      "player": "bob",
-      "step": "DeclareBlockers",
-      "turn": 1
-    },
-    {
-      "do": {
-        "Block": {}
-      },
-      "player": "bob",
-      "step": "DeclareBlockers",
-      "turn": 1
-    },
-    {
       "check": {
         "Life": {
           "life": 17,

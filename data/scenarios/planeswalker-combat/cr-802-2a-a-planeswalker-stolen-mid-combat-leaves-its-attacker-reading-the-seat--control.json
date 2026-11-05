@@ -166,26 +166,6 @@
     {
       "turn": 1,
       "step": "DeclareBlockers",
-      "player": "carol",
-      "refuse": {
-        "Block": {
-          "$carols": [
-            "$wraith"
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "carol",
-      "do": {
-        "Block": {}
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
       "player": "alice",
       "check": {
         "Blockers": {

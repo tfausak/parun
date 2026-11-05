@@ -7,7 +7,6 @@
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"View": {"of": "Stack", "is": []}}},
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
     {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": "Pass"},
-    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {}}},
     {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Damage": {"object": "$bears", "damage": 0}}},
     {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Damage": {"object": "$wood", "damage": 0}}}
   ]

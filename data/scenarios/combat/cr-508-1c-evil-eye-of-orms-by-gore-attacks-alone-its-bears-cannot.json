@@ -23,7 +23,6 @@
   "timeline": [
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Attack": ["$eye", "$bears"] } },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$eye"] } },
-    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": {} } },
     { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 17 } } },
     { "turn": 2, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": ["$bobs-bears"] } },
     { "turn": 2, "step": "DeclareBlockers", "player": "alice", "do": { "Block": {} } },
