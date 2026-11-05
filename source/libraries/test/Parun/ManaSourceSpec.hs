@@ -776,7 +776,7 @@ shizukoSpec s registry = Spec.describe s "Shizuko, Caller of Autumn" $ do
     Spec.assertEqWith s "the stack is empty again" (length (GameState.stack after)) 0
 
   -- The other half of the pair, differing in ONE thing: whose upkeep it is. Under
-  -- CR 603.2b's EachTurn scope the same ability fires on the controller's own
+  -- CR 603.2b's @Relative AnyPlayer@ scope the same ability fires on the controller's own
   -- turn, and then "that player" IS the controller -- a redundancy, not a wrong
   -- answer, and the reading that stops "always the upkeep player" from being
   -- indistinguishable from "always somebody else".

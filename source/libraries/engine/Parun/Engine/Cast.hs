@@ -1804,7 +1804,7 @@ restrictionMet pid oid gs restriction = case restriction of
   -- outside its window.
   --
   -- CR 109.5 supplies the second conjunct, a genuinely separate fact: Rally the
-  -- Troops names no turn (EachTurn -- the DEFENDING player casts it, on the
+  -- Troops names no turn (@Relative AnyPlayer@ -- the DEFENDING player casts it, on the
   -- attacker's turn), while Necrologia's "your end step" is alice's and not
   -- bob's. For a spell "you" is the would-be caster, which is `pid`.
   --

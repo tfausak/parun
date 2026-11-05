@@ -7,6 +7,7 @@ import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.Batching as Batching
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
+import qualified Parun.Types.PlayerRef as PlayerRef
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.TurnScope as TurnScope
 import qualified Parun.Types.Zone as Zone
@@ -28,9 +29,9 @@ spec s = Spec.describe s "Parun.Codec.LeavesZoneTrigger" $ do
       (LeavesZoneTrigger.self Zone.Graveyard)
         { LeavesZoneTrigger.card = ActingPermanent.Matching (Filter.Not Filter.IsToken),
           LeavesZoneTrigger.whose = Just PlayerRelation.You,
-          LeavesZoneTrigger.scope = TurnScope.ControllersTurn
+          LeavesZoneTrigger.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)
         }
-      " {\"card\":{\"type\":\"Matching\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}},\"from\":{\"type\":\"Graveyard\"},\"whose\":{\"type\":\"You\"},\"scope\":{\"type\":\"ControllersTurn\"}} "
+      " {\"card\":{\"type\":\"Matching\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}},\"from\":{\"type\":\"Graveyard\"},\"whose\":{\"type\":\"You\"},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}} "
   -- Rakshasa Vizier: a destination, once per batch.
   Spec.it s "round-trips a destination and a batch" $
     Common.assertCodec

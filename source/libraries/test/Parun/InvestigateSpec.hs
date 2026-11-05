@@ -825,8 +825,8 @@ wildEvocationSpec s registry =
       board evocation cards =
         let (_, withEvocation) = S.addPermanent evocation S.alice (Setup.emptyGame S.bothPlayers)
          in List.foldl' (\g p -> snd (S.addHandCard p S.bob g)) withEvocation (reverse cards)
-      -- BOB's upkeep, stamped and recorded: the half TurnScope.EachTurn buys,
-      -- since under ControllersTurn the trigger would not fire here at all.
+      -- BOB's upkeep, stamped and recorded: the half @Relative AnyPlayer@ buys,
+      -- since under @Relative You@ the trigger would not fire here at all.
       atBobsUpkeep gs =
         let upkeep = Phase.Beginning BeginningStep.Upkeep
          in Event.recordEvent

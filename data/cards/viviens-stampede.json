@@ -13,7 +13,13 @@
                     "type": "PrecombatMain"
                   },
                   "scope": {
-                    "type": "EachTurn"
+                    "type": "PlayersTurn",
+                    "value": {
+                      "type": "Relative",
+                      "value": {
+                        "type": "AnyPlayer"
+                      }
+                    }
                   }
                 }
               },
@@ -24,7 +30,13 @@
                     "type": "PostcombatMain"
                   },
                   "scope": {
-                    "type": "EachTurn"
+                    "type": "PlayersTurn",
+                    "value": {
+                      "type": "Relative",
+                      "value": {
+                        "type": "AnyPlayer"
+                      }
+                    }
                   }
                 }
               }

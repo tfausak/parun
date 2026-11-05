@@ -18,7 +18,7 @@ import qualified Parun.Types.PlayerRef as PlayerRef
 --
 -- FromNextTurnOf is Meandering Towershell's "on your next turn". The gate is
 -- NOT vacuous and not expressible by the trigger condition alone:
--- TriggerCondition.StepBegins carries a TurnScope, and ControllersTurn admits
+-- TriggerCondition.StepBegins carries a TurnScope, and @Relative You@ admits
 -- the very turn the ability was armed on -- so an extra combat phase in that
 -- same turn (Relentless Assault) would fire it early. "Next" is a fact about
 -- WHEN THE ABILITY WAS CREATED, which nothing the ability watches for says.
@@ -45,9 +45,9 @@ data Onset
     -- boundary turns out to be.
     --
     -- For "your" the delayed ability's own TriggerCondition.StepBegins carries
-    -- TurnScope.ControllersTurn as well, which the settled window makes
+    -- @Relative You@ as well, which the settled window makes
     -- redundant for FIRING. The pairing is still lint-enforced, because a card
-    -- that armed this onset over an EachTurn condition would have its printed
+    -- that armed this onset over an @Relative AnyPlayer@ condition would have its printed
     -- "each" silently narrowed to the controller's turn. Card data must say what
     -- the card says instead of leaning on the engine to mean it.
     FromNextTurnOf (Maybe PlayerRef.PlayerRef)

@@ -2937,9 +2937,6 @@ stepBeginsNames asking x = case x of
 -- CR 102.1: a named player's turn reads whatever its reference reads.
 turnScopeNames :: (Monoid r) => Asking r -> TurnScope.TurnScope -> r
 turnScopeNames asking x = case x of
-  TurnScope.EachTurn -> mempty
-  TurnScope.ControllersTurn -> mempty
-  TurnScope.OpponentsTurn -> mempty
   TurnScope.PlayersTurn playerRef -> playerRefNames asking playerRef
 
 duringPhaseNames :: (Monoid r) => Asking r -> DuringPhase.DuringPhase -> r

@@ -63,7 +63,13 @@
               "type": "DuringPhase",
               "value": {
                 "scope": {
-                  "type": "ControllersTurn"
+                  "type": "PlayersTurn",
+                  "value": {
+                    "type": "Relative",
+                    "value": {
+                      "type": "You"
+                    }
+                  }
                 },
                 "window": {
                   "type": "Step",
@@ -137,7 +143,13 @@
                 }
               },
               "scope": {
-                "type": "EachTurn"
+                "type": "PlayersTurn",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                }
               }
             }
           },

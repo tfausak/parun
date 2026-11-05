@@ -28,8 +28,8 @@ import qualified Parun.Types.TurnScope as TurnScope
 data CastingRestriction
   = -- | CR 500.1: castable only while the game is in the window the rider names,
     -- on a turn its scope admits. Rally the Troops' "only during the declare
-    -- attackers step" (any player's, so TurnScope.EachTurn) and Necrologia's
-    -- "only during your end step" (TurnScope.ControllersTurn).
+    -- attackers step" (any player's, so @Relative AnyPlayer@) and Necrologia's
+    -- "only during your end step" (@Relative You@).
     --
     -- The same Parun.Types.DuringPhase bundle Parun.Types.ActivationRestriction's
     -- arm of this name carries, and for the same reasons: a

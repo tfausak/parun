@@ -360,7 +360,7 @@ theRingSacrificesTheBlocker =
 -- controller off the permanent, so a blocker that changed hands between the block
 -- and the end of combat is sacrificed by whoever holds it then.
 --
--- TurnScope.EachTurn rather than ControllersTurn, on Parun.Types.TurnScope's own
+-- @Relative AnyPlayer@ rather than @Relative You@, on Parun.Types.TurnScope's own
 -- reading of a delayed ability keyed to the NEXT occurrence of its event: rule
 -- 701.54c says "at end of combat" and names no player's turn, and CR 603.7b's
 -- once-ness comes from the delayed store rather than from the scope.
@@ -374,7 +374,7 @@ theRingBlockerSacrifice =
         StepBegins.MkStepBegins
           { StepBegins.ordinal = Nothing,
             StepBegins.phase = Phase.Combat CombatStep.EndOfCombat,
-            StepBegins.scope = TurnScope.EachTurn
+            StepBegins.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)
           }
     )
     (Seq.singleton (Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot Binding.blockingCreature, SacrificeEffect.sacrificer = Sacrificer.PermanentController, SacrificeEffect.sacrificed = Nothing}))

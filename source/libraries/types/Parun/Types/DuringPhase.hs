@@ -9,7 +9,7 @@ import qualified Parun.Types.TurnScope as TurnScope
 
 -- There is deliberately no scope-less form: the axis is not a default a card may
 -- omit, so a payload naming only a window is a decode failure rather than a
--- silent EachTurn.
+-- silent @Relative AnyPlayer@.
 data DuringPhase = MkDuringPhase
   { window :: PhaseSelector.PhaseSelector,
     scope :: TurnScope.TurnScope

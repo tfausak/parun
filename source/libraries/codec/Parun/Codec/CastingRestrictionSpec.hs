@@ -34,10 +34,10 @@ spec s = Spec.describe s "Parun.Codec.CastingRestriction" $ do
       ( CastingRestriction.DuringPhase
           DuringPhase.MkDuringPhase
             { DuringPhase.window = PhaseSelector.Step (Phase.Combat CombatStep.DeclareAttackers),
-              DuringPhase.scope = TurnScope.EachTurn
+              DuringPhase.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)
             }
       )
-      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Combat\",\"value\":{\"type\":\"DeclareAttackers\"}}},\"scope\":{\"type\":\"EachTurn\"}}} "
+      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Combat\",\"value\":{\"type\":\"DeclareAttackers\"}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}}} "
   -- Necrologia's "only during your end step" (CR 512.1, CR 109.5): a different
   -- window AND a different scope, so neither key is defaulted past.
   Spec.it s "DuringPhase, Necrologia's own end step" $
@@ -47,10 +47,10 @@ spec s = Spec.describe s "Parun.Codec.CastingRestriction" $ do
       ( CastingRestriction.DuringPhase
           DuringPhase.MkDuringPhase
             { DuringPhase.window = PhaseSelector.Step (Phase.Ending EndingStep.EndStep),
-              DuringPhase.scope = TurnScope.ControllersTurn
+              DuringPhase.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You)
             }
       )
-      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Ending\",\"value\":{\"type\":\"EndStep\"}}},\"scope\":{\"type\":\"ControllersTurn\"}}} "
+      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Ending\",\"value\":{\"type\":\"EndStep\"}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}}} "
   -- The third scope, and a whole-phase window: no card prints it on a CAST yet,
   -- so this is the codec's own coverage of the axis the arm gained.
   Spec.it s "DuringPhase, a whole-phase window on an opponent's turn" $
@@ -60,17 +60,17 @@ spec s = Spec.describe s "Parun.Codec.CastingRestriction" $ do
       ( CastingRestriction.DuringPhase
           DuringPhase.MkDuringPhase
             { DuringPhase.window = PhaseSelector.CombatPhase,
-              DuringPhase.scope = TurnScope.OpponentsTurn
+              DuringPhase.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.Opponent)
             }
       )
-      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"CombatPhase\"},\"scope\":{\"type\":\"OpponentsTurn\"}}} "
+      " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"CombatPhase\"},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}}}} "
   -- Siren's Call's "during an opponent's turn" (CR 102.1).
   Spec.it s "DuringTurn" $
     Common.assertCodec
       s
       CastingRestriction.codec
-      (CastingRestriction.DuringTurn TurnScope.OpponentsTurn)
-      " {\"type\":\"DuringTurn\",\"value\":{\"type\":\"OpponentsTurn\"}} "
+      (CastingRestriction.DuringTurn (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.Opponent)))
+      " {\"type\":\"DuringTurn\",\"value\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}}}} "
   -- Serra Avenger's "your first, second, or third turns of the game" (CR 601.3).
   Spec.it s "NotDuringFirstTurns" $
     Common.assertCodec

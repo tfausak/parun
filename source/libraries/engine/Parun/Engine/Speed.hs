@@ -153,7 +153,7 @@ opponentsLoseLifeDuringYourTurn =
     LifeTrigger.MkLifeTrigger
       { LifeTrigger.direction = LifeDirection.Lost,
         LifeTrigger.player = PlayerRelation.Opponent,
-        LifeTrigger.scope = TurnScope.ControllersTurn,
+        LifeTrigger.scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You),
         LifeTrigger.batching = Batching.OneOrMore,
         LifeTrigger.frequency = TriggerFrequency.EveryTime
       }

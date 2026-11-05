@@ -46,7 +46,13 @@
             "type": "SpellCast",
             "value": {
               "scope": {
-                "type": "ControllersTurn"
+                "type": "PlayersTurn",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                }
               },
               "spell": {
                 "type": "Matching",

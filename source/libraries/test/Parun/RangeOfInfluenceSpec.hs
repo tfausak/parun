@@ -4,7 +4,8 @@
 -- the Parun.Types.GameSettings field that carries it, Parun.Engine.Game.inRangeOf,
 -- and its readers: Parun.Engine.Combat's attackableOpponents (CR 801.3),
 -- Parun.Engine.Target's legalRecipientsGiven (CR 801.4),
--- Parun.Engine.Activate's activatableGiven (CR 801.6), Parun.Engine.Sba's
+-- Parun.Engine.Activate's activatableGiven (CR 801.6), Parun.Engine.Turn's
+-- turnScopeAdmits (which CR 801 does not cut), Parun.Engine.Sba's
 -- fallsOff and becomesUnattached (CR 801.8 / CR 801.9),
 -- Parun.Engine.Projection's affectsWith and Parun.Engine.PlayerEffect's printedRows
 -- (CR 801.10 for static abilities), Parun.Engine.Projection.View's
@@ -153,6 +154,19 @@ spec s registry = Spec.describe s "Range of influence" $ do
     Spec.assertBool s (not (offeredTo S.alice (S.withRange 1 board))) "CR 801.6 at range 1 alice is not offered the Lion carol controls"
     Spec.assertBool s (offeredTo S.alice board) "at an unlimited range she is"
     Spec.assertBool s (offeredTo S.bob (S.withRange 1 board)) "and bob, one seat from carol, is at range 1"
+
+  -- CR 102.1 / 806.1 under CR 801: a turn scope says whose turn it is and
+  -- affects nobody, so range does not cut it. Alice's Siren's Call ("Cast this spell
+  -- only during an opponent's turn, before attackers are declared.") on the turn
+  -- of carol, two seats away. Paired with the same board at an unlimited range.
+  Spec.it s "CR 806.1/801 an opponent's turn outside the reader's range is still an opponent's turn" $ do
+    island <- S.printingOf s registry "Island"
+    sirensCall <- S.printingOf s registry "Siren's Call"
+    let (call, g0) = S.addHandCard sirensCall S.alice (S.landsFor island S.alice 1 S.fourPlayerGame)
+        board = g0 {GameState.activePlayer = S.carol, GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.alice}
+    Spec.assertBool s (not (Game.wasInRangeOf S.alice S.carol (S.withRange 1 board))) "at range 1 carol is outside alice's range"
+    Spec.assertBool s (S.castable S.alice call (S.withRange 1 board)) "CR 806.1 alice may cast Siren's Call on carol's turn at range 1"
+    Spec.assertBool s (S.castable S.alice call board) "as at an unlimited range"
 
   -- CR 801.8 / CR 801.9: alice's Goblin Piker (2/1) wears her Unholy Strength
   -- (+2/+1) and her Bonesplitter (+2/+0), and carol's Control Magic has taken

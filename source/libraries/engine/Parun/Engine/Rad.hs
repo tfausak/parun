@@ -125,10 +125,10 @@ ability :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 ability =
   Mint.triggerIf
     -- CR 500.1 / 505.1a: a turn has exactly one precombat main phase and it is
-    -- the active player's, so ControllersTurn plus the active player as this
+    -- the active player's, so @Relative You@ plus the active player as this
     -- ability's controller IS rule 728.1's "each player's precombat main
     -- phase" -- the rule quantifies over turns, not over the players of one.
-    (TriggerCondition.StepBegins (StepBegins.MkStepBegins Phase.PrecombatMain Nothing TurnScope.ControllersTurn))
+    (TriggerCondition.StepBegins (StepBegins.MkStepBegins Phase.PrecombatMain Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You))))
     hasRadCounters
     ( Seq.fromList
         [ -- "that player mills a number of cards equal to the
@@ -170,7 +170,7 @@ ability =
 -- player". Under the shared team turns option each member of the active team
 -- has a precombat main phase, so each has the ability (CR 805.4d).
 --
--- "That player" is the controller: ControllersTurn admits only the controller's
+-- "That player" is the controller: @Relative You@ admits only the controller's
 -- own phase (CR 505.1a gives a turn exactly one), and CR 603.4's "if that player
 -- has one or more rad counters" is Event.interveningHolds' check. A player with
 -- no rad counters does not trigger at all, which is observable: a trigger going

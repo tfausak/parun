@@ -60,8 +60,8 @@ spec s = Spec.describe s "Parun.Codec.Condition" $ do
     Common.assertCodec
       s
       Condition.codec
-      (Condition.During (DuringPhase.MkDuringPhase (PhaseSelector.Step (Phase.Ending EndingStep.EndStep)) TurnScope.ControllersTurn))
-      " {\"type\":\"During\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Ending\",\"value\":{\"type\":\"EndStep\"}}},\"scope\":{\"type\":\"ControllersTurn\"}}} "
+      (Condition.During (DuringPhase.MkDuringPhase (PhaseSelector.Step (Phase.Ending EndingStep.EndStep)) (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.You))))
+      " {\"type\":\"During\",\"value\":{\"window\":{\"type\":\"Step\",\"value\":{\"type\":\"Ending\",\"value\":{\"type\":\"EndStep\"}}},\"scope\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}}} "
   -- The old untagged shapes are not conditions any more. A comparison's keys
   -- alone decoding would mean a card file written before #1304 kept working
   -- while writing something the schema does not describe.

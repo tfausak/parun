@@ -148,7 +148,13 @@
                         }
                       },
                       "scope": {
-                        "type": "ControllersTurn"
+                        "type": "PlayersTurn",
+                        "value": {
+                          "type": "Relative",
+                          "value": {
+                            "type": "You"
+                          }
+                        }
                       }
                     }
                   },

@@ -3019,7 +3019,7 @@ comeBackWrongSpec s registry =
    in Spec.describe s "ComeBackWrong" $ do
         -- The card's last sentence, and the reason the MoveToZone binds a slot of
         -- its own: "it" is the BATTLEFIELD incarnation, a third object again (CR
-        -- 400.7). "Your next end step" is TurnScope.ControllersTurn, so alice's.
+        -- 400.7). "Your next end step" is @Relative You@, so alice's.
         Spec.it s "CR 603.7 the delayed ability sacrifices what came back at the caster's next end step" $ do
           comeBackWrong <- S.printingOf s registry "Come Back Wrong"
           swamp <- S.printingOf s registry "Swamp"

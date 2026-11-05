@@ -155,7 +155,6 @@ import qualified Parun.Types.StickerPut as StickerPut
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TappedForMana as TappedForMana
-import qualified Parun.Types.Teams as Teams
 import qualified Parun.Types.TransformTrigger as TransformTrigger
 import qualified Parun.Types.Transformed as Transformed
 import Parun.Types.TriggerCondition (TriggerCondition)
@@ -426,19 +425,15 @@ castOrdinal context predicate fromZone caster spell gs =
    in fmap ((1 +) . Natural.length . filter counted) (Game.castsBefore spell gs)
 
 -- CR 805.4d: the players whose step this is, among those the scope names, read
--- against `own` as turnScopeAdmits reads it. Every active player for "each
--- player's", each active opponent for "each opponent's", `own` alone for
--- "your", and the active players a PlayersTurn reference names off `bearer` --
--- one seat outside the shared team turns option, where Turn.activePlayers is
--- the active player alone.
+-- against `own` as turnScopeAdmits reads it (Turn.scopeNames). Every active
+-- player for "each player's", each active opponent for "each opponent's", `own`
+-- alone for "your", and the active players any other reference names off
+-- `bearer` -- one seat outside the shared team turns option, where
+-- Turn.activePlayers is the active player alone.
 stepPlayers :: GameState -> ObjectId -> TurnScope.TurnScope -> PlayerId -> [PlayerId]
 stepPlayers gs bearer scope own =
-  let admits player = case scope of
-        TurnScope.EachTurn -> True
-        TurnScope.ControllersTurn -> player == own
-        TurnScope.OpponentsTurn -> Teams.areOpponents (Game.teams gs) own player
-        TurnScope.PlayersTurn ref -> maybe False (elem player) (Count.scopePlayers (Projection.viewWithLastKnownAnywhere gs) (Projection.sourceContext gs (Just own) bearer) gs ref)
-   in filter admits (Turn.activePlayers gs)
+  let named = Count.scopePlayers (Projection.viewWithLastKnownAnywhere gs) (Projection.sourceContext gs (Just own) bearer) gs
+   in filter (Turn.scopeNames named gs scope own) (Turn.activePlayers gs)
 
 -- CR 505.1b: how many main phases have begun this turn, counting the one whose
 -- beginning is being matched. GameState.events is cleared at the turn handoff
@@ -1405,7 +1400,7 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- reachable. The bearer is the STACK object, which is the same id
   -- GameEvent.SpellCast carries: CR 601.2a puts the card on the stack as it is
   -- cast and leaves it there, so eventTriggers' `spellCast` source offers
-  -- exactly that incarnation. Its scope is EachTurn (CR 601.2i says nothing
+  -- exactly that incarnation. Its scope is @Relative AnyPlayer@ (CR 601.2i says nothing
   -- about whose turn it is, and no printing narrows its own cast by one), and a
   -- spell's own cast is the first of its kind, so its ordinal is one.
   TriggerCondition.SpellCast (SpellCast.MkSpellCast subject scope fromZone ordinal window copies) ->

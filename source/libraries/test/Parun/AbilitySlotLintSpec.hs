@@ -480,11 +480,11 @@ discardsAsCost =
 -- own: Event.armOnset stores TurnWindow.NextTurnOf and
 -- Event.settleOnsets pins the entry to the one turn that turns out to be, whose
 -- active player is the entry's controller. So the ability's own
--- TriggerCondition.StepBegins carrying TurnScope.ControllersTurn is redundant
+-- TriggerCondition.StepBegins carrying @Relative You@ is redundant
 -- for FIRING.
 --
 -- It is not redundant in the DATA, which is what this lint is about: a card that
--- arms with the onset but scopes with EachTurn has printed an "each" the window
+-- arms with the onset but scopes with @Relative AnyPlayer@ has printed an "each" the window
 -- would silently narrow to the controller's turn, so its text would mean
 -- something the card does not say. That is what this rejects.
 --
@@ -876,7 +876,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
   -- committed offends it, so the REJECTING direction is proven here instead,
   -- against that same card misauthored on purpose. Never a card file: a card
   -- that offends a lint must not be loadable.
-  Spec.it s "the lint itself catches an onset over an EachTurn condition" $ do
+  Spec.it s "the lint itself catches an onset over an each-turn condition" $ do
     towershell <- S.printingOf s registry "Meandering Towershell"
     let face = S.combinedFace towershell
         -- The Towershell's own condition with CR 603.2b's OTHER turn scope: "at
@@ -886,7 +886,7 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         eachTurn ability =
           ability
             { TriggeredAbility.condition =
-                TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Combat CombatStep.DeclareAttackers) Nothing TurnScope.EachTurn)
+                TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Combat CombatStep.DeclareAttackers) Nothing (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)))
             }
         widened = face {Face.delayedAbilities = fmap eachTurn (Face.delayedAbilities face)}
         -- The other way a card can reach this: an onset naming an ability the
@@ -899,8 +899,8 @@ abilitySlotLintSpec s registry corpus = Spec.describe s "Lint" $ do
         attacksWith relation ability = ability {TriggeredAbility.condition = TriggerCondition.Attacks (AttackTrigger.Declaration (DeclarationTrigger.MkDeclarationTrigger relation Nothing))}
         youAttack = face {Face.delayedAbilities = fmap (attacksWith PlayerRelation.You) (Face.delayedAbilities face)}
         anyoneAttacks = face {Face.delayedAbilities = fmap (attacksWith PlayerRelation.AnyPlayer) (Face.delayedAbilities face)}
-    Spec.assertBool s (not (onsetOffends face)) "the real card, ControllersTurn, is accepted"
-    Spec.assertBool s (onsetOffends widened) "EachTurn under an onset is rejected"
+    Spec.assertBool s (not (onsetOffends face)) "the real card, your turn, is accepted"
+    Spec.assertBool s (onsetOffends widened) "each turn under an onset is rejected"
     Spec.assertBool s (onsetOffends dangling) "and so is an onset naming no declared ability"
     Spec.assertBool s (not (onsetOffends youAttack)) "CR 508.3d \"whenever you attack\" is controller-scoped"
     Spec.assertBool s (onsetOffends anyoneAttacks) "and \"whenever a player attacks\" is not"

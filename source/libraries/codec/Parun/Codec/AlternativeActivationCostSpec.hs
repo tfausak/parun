@@ -8,6 +8,8 @@ import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordFamily as KeywordFamily
 import qualified Parun.Types.ManaCost as ManaCost
 import qualified Parun.Types.ManaSymbol as ManaSymbol
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.TurnScope as TurnScope
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -19,10 +21,10 @@ spec s = Spec.describe s "Parun.Codec.AlternativeActivationCost" $ do
       AlternativeActivationCost.codec
       AlternativeActivationCost.MkAlternativeActivationCost
         { AlternativeActivationCost.grantedBy = KeywordDesignator.OfFamily KeywordFamily.Equip,
-          AlternativeActivationCost.onlyFirst = Just TurnScope.EachTurn,
+          AlternativeActivationCost.onlyFirst = Just (TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer)),
           AlternativeActivationCost.cost = ManaCost.MkManaCost []
         }
-      " {\"grantedBy\":{\"type\":\"OfFamily\",\"value\":{\"type\":\"Equip\"}},\"onlyFirst\":{\"type\":\"EachTurn\"},\"cost\":[]} "
+      " {\"grantedBy\":{\"type\":\"OfFamily\",\"value\":{\"type\":\"Equip\"}},\"onlyFirst\":{\"type\":\"PlayersTurn\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}},\"cost\":[]} "
   -- onlyFirst is DEFAULTED, so its absence is its own case.
   Spec.it s "every matching ability" $
     Common.assertCodec

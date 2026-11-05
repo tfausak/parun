@@ -140,7 +140,13 @@
             {
               "type": "DuringTurn",
               "value": {
-                "type": "ControllersTurn"
+                "type": "PlayersTurn",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                }
               }
             }
           ]
@@ -158,7 +164,13 @@
                 }
               },
               "scope": {
-                "type": "EachTurn"
+                "type": "PlayersTurn",
+                "value": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                }
               }
             }
           },

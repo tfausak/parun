@@ -3,6 +3,8 @@ module Parun.Types.PutIntoZoneTrigger where
 import qualified Data.Set as Set
 import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.Batching as Batching
+import qualified Parun.Types.PlayerRef as PlayerRef
+import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.TurnScope as TurnScope
 import qualified Parun.Types.Zone as Zone
 
@@ -36,7 +38,7 @@ self zone =
     { card = ActingPermanent.Self,
       from = Set.empty,
       to = zone,
-      scope = TurnScope.EachTurn,
+      scope = TurnScope.PlayersTurn (PlayerRef.Relative PlayerRelation.AnyPlayer),
       duringResolution = False,
       batching = Batching.EachOccurrence
     }
