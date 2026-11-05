@@ -5457,6 +5457,10 @@ blockPermissionFilters permission =
 --     Parun.Engine.Resolve.gateHolds through Resolve.Slots.effectContext, so
 --     CR 205.3m's Filter.Shares CreatureType Bound answers there (Mudbutton
 --     Clanger).
+--   * RepeatGateFramed -- a RepeatIf's condition, read by
+--     Parun.Engine.Resolve.Arms.Zones.repeatIf through Resolve.Slots.effectContext
+--     and a view filling Filter.View.hasEntryHost, which no other position does
+--     (Thieves' Auction).
 --   * LifeLossAmountFramed -- CR 119.3's amount, which the Effect.LoseLife arm
 --     reads per recipient through Resolve.Slots.effectContext, so
 --     Filter.Context.slotNames is filled and CR 709.4a's
@@ -5647,6 +5651,9 @@ data Framing
   | -- | CR 608.2c's clause "if", evaluated in the resolution's own context. See
     -- the overview above.
     ClauseGateFramed
+  | -- | A RepeatIf's condition, evaluated in the resolution's own context. See
+    -- the overview above.
+    RepeatGateFramed
   | -- | CR 119.3's per-recipient amount, evaluated in the resolution's own
     -- context. See the overview above.
     LifeLossAmountFramed
@@ -5736,6 +5743,8 @@ sweptForSingularSlots framing = case framing of
   HandSweepFramed -> True
   -- SWEPT for MillTallyFramed's reason: gateHolds' context carries the slots.
   ClauseGateFramed -> True
+  -- SWEPT for MillTallyFramed's reason: repeatIf's context carries the slots.
+  RepeatGateFramed -> True
   -- SWEPT for MillTallyFramed's reason: the LoseLife arm reads effectContext.
   LifeLossAmountFramed -> True
   -- SWEPT, as all three were while they were Unframed: the split is about CR
@@ -6257,7 +6266,7 @@ effectFilters effect = case effect of
   Effect.ForEach (ForEach.MkForEach ref _ _ body _ gate _) -> frame SourceHostFramed (objectRefFilters ref) <> concatMap effectFilters body <> concatMap payGateFilters (Maybe.maybeToList gate)
   Effect.ForEachNumber (ForEachNumber.MkForEachNumber _ _ body) -> concatMap effectFilters body
   Effect.Repeat (Repeat.MkRepeat _ body gate _ ifAgain) -> foldMap (frame Unframed . conditionFilters) gate <> concatMap effectFilters (body <> ifAgain)
-  Effect.RepeatIf (RepeatIf.MkRepeatIf process condition ifHolds) -> frame Unframed (conditionFilters condition) <> concatMap effectFilters (process <> ifHolds)
+  Effect.RepeatIf (RepeatIf.MkRepeatIf process condition ifHolds) -> frame RepeatGateFramed (conditionFilters condition) <> concatMap effectFilters (process <> ifHolds)
   Effect.Heal ref -> frame SourceHostFramed (objectRefFilters ref)
   Effect.ChooseNewTargets ref -> frame SourceHostFramed (objectRefFilters ref)
   Effect.ChangeTargets x -> frame SourceHostFramed (objectRefFilters (ChangeTargets.objects x) <> foldMap objectRefFilters (ChangeTargets.onto x))

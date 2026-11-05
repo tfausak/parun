@@ -533,6 +533,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.AttachedNoLaterThanSource -> predicate
         Filter.Type.CanHostSubject -> predicate
         Filter.Type.CanAttachToSubject -> predicate
+        Filter.Type.HasEntryHost -> predicate
         Filter.Type.HostOfSubjectHasCardType _ -> predicate
         Filter.Type.IsCommander -> predicate
         Filter.Type.IsToken -> predicate
@@ -1476,6 +1477,7 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       -- nor a search's candidate, so nothing framed it as either.
       Filter.canHostSubject = False,
       Filter.canAttachToSubject = False,
+      Filter.hasEntryHost = False,
       -- CR 111.6: "A token isn't a card", which is a fact about the OBJECT and
       -- not a characteristic, so the arm supplies it above.
       Filter.token = isToken,

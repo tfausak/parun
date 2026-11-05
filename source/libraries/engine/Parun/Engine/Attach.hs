@@ -310,6 +310,14 @@ entryHostsFor chooser subject before =
       players = filter (\pid -> Maybe.isJust (attachmentFor subject (Recipient.ToPlayer pid) gs)) (Players.table (Just chooser) gs)
    in fmap Recipient.ToObject objects <> fmap Recipient.ToPlayer players
 
+-- CR 303.4f / 303.4g: whether `subject` is an Aura that entryHostsFor would
+-- offer something to under some player still in the game; False for anything
+-- else. The Aura test is Event's CR 303.4f gate's, the projection's subtypes.
+hasEntryHost :: ObjectId -> GameState -> Bool
+hasEntryHost subject gs =
+  Set.member Subtype.Aura (Projection.subtypesOf subject gs)
+    && any (\pid -> not (null (entryHostsFor pid subject gs))) (Game.stillPlaying gs)
+
 -- attachmentFor for a card about to enter under `player`, on enteringUnder's
 -- board: the tag entryHostsFor's offer was made with.
 entryAttachmentFor :: PlayerId -> ObjectId -> Recipient -> GameState -> Maybe Recipient

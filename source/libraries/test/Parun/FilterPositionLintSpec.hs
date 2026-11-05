@@ -14,7 +14,7 @@ import qualified Data.Monoid as Monoid
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
-import Parun.CardSpec (Framing (ActivationCostFramed, AffectedSetFramed, AttachDestination, ChosenSourceFramed, ClauseGateFramed, EntryAttachDestination, HandSweepFramed, InTargetSlot, KeywordFramed, LifeLossAmountFramed, ManaRestrictionFramed, MillTallyFramed, MintedTargetSlot, OutsideTheGameFramed, PlayerEffectFramed, ReplacementRowFramed, SearchFramed, SlotlessCostFramed, SourceHostFramed, StandingHostFramed, StoredClassFramed, StoredPlayerEffectFramed, TriggerConditionFramed, Unframed), anyFace, cardCounts, cardFilters, cardResolutionEffects, conditionFilters, counterKindFilters, durationFilters, effectFilters, entryRewriteFilters, filterSlotsReadSingly, framedSlotsReadSingly, keywordFilters, modalFilters, objectRefFilters, oneEffectTrigger, oneFaced, payGateFilters, quantityFilters, replacementEffectFilters, riderFilters, triggerConditionFilters, turnUpRewriteFilters)
+import Parun.CardSpec (Framing (ActivationCostFramed, AffectedSetFramed, AttachDestination, ChosenSourceFramed, ClauseGateFramed, EntryAttachDestination, HandSweepFramed, InTargetSlot, KeywordFramed, LifeLossAmountFramed, ManaRestrictionFramed, MillTallyFramed, MintedTargetSlot, OutsideTheGameFramed, PlayerEffectFramed, RepeatGateFramed, ReplacementRowFramed, SearchFramed, SlotlessCostFramed, SourceHostFramed, StandingHostFramed, StoredClassFramed, StoredPlayerEffectFramed, TriggerConditionFramed, Unframed), anyFace, cardCounts, cardFilters, cardResolutionEffects, conditionFilters, counterKindFilters, durationFilters, effectFilters, entryRewriteFilters, filterSlotsReadSingly, framedSlotsReadSingly, keywordFilters, modalFilters, objectRefFilters, oneEffectTrigger, oneFaced, payGateFilters, quantityFilters, replacementEffectFilters, riderFilters, triggerConditionFilters, turnUpRewriteFilters)
 import qualified Parun.Codec.Card as Card
 import qualified Parun.Codec.Face as Face.Codec
 import qualified Parun.Codec.Filter as Filter.Codec
@@ -359,6 +359,9 @@ filterAtomsOf leaf predicate = case predicate of
   -- A leaf: the MIRROR atom is not this one, and its own lint counts it through the
   -- codec (canAttachToSubjectCounts) rather than through this recursion.
   Filter.Type.CanAttachToSubject -> leaf predicate
+  -- A leaf for CanAttachToSubject's reason: its lint counts it through the codec
+  -- (hasEntryHostCounts).
+  Filter.Type.HasEntryHost -> leaf predicate
   -- A leaf for the atom above's reason: CR 205.2a's read of the subject's host is
   -- a different atom with a lint of its own (hostOfSubjectCardTypeCounts), even
   -- though it is admitted in exactly the positions this one counts.
@@ -406,6 +409,7 @@ sourceFramed framing = case framing of
   MillTallyFramed -> True
   HandSweepFramed -> True
   ClauseGateFramed -> True
+  RepeatGateFramed -> True
   LifeLossAmountFramed -> True
   AffectedSetFramed -> True
   ActivationCostFramed -> True
@@ -780,6 +784,25 @@ canAttachToSubjectOffends :: Face.Face Card.Type.Card -> Bool
 canAttachToSubjectOffends card =
   let (framed, unframedCount) = canAttachToSubjectCounts card
    in unframedCount /= 0 || framed + unframedCount /= jsonAtoms canAttachToSubjectTag (Codec.encode (Face.Codec.codec Card.codec) card)
+
+-- The CR 303.4f entry-host tag, spelled once.
+hasEntryHostTag :: Text.Text
+hasEntryHostTag = Text.pack "HasEntryHost"
+
+-- How many CR 303.4f entry-host atoms this card carries in a RepeatIf's
+-- condition, and how many anywhere else. The second number is the offence.
+hasEntryHostCounts :: Face.Face Card.Type.Card -> (Int, Int)
+hasEntryHostCounts card =
+  let total wanted = sum (fmap (\(_, f) -> filterAtoms hasEntryHostTag f) (filter (\(framing, _) -> (framing == RepeatGateFramed) == wanted) (cardFilters card)))
+   in (total True, total False)
+
+-- Filter.HasEntryHost is answerable only where the view fills it, which is
+-- Parun.Engine.Resolve.Arms.Zones.repeatIf's condition; anywhere else it is a
+-- silent False. canAttachToSubjectOffends' two offences.
+hasEntryHostOffends :: Face.Face Card.Type.Card -> Bool
+hasEntryHostOffends card =
+  let (framed, unframedCount) = hasEntryHostCounts card
+   in unframedCount /= 0 || framed + unframedCount /= jsonAtoms hasEntryHostTag (Codec.encode (Face.Codec.codec Card.codec) card)
 
 -- The CR 205.2a subject's-host tag, spelled once.
 hostOfSubjectCardTypeTag :: Text.Text
@@ -1584,6 +1607,19 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- nothing.
     let positions = concatMap (cardFilters . S.combinedFace) ps
     Spec.assertBool s (length (filter ((== SearchFramed) . fst) positions) > 5) "the pool gives the accepted side search filters to be about"
+  -- CR 303.4f's entry host: answerable only in a RepeatIf's condition, whose
+  -- view repeatIf fills. See hasEntryHostOffends for the two offences.
+  Spec.it s "CR 303.4f no card asks HasEntryHost outside a RepeatIf's condition" $ do
+    ps <- S.allPrintings s corpus
+    let offenders = filter (anyFace hasEntryHostOffends . Printing.card) ps
+    Spec.assertEqWith s "the atom sits only in a RepeatIf's condition" (fmap (S.nameOf . Printing.card) offenders) []
+    assertAuthors s registry ps "each author's atom is framed by its RepeatIf" hasEntryHostCounts [("Thieves' Auction", 1)]
+    -- The lint's own proof: the same atom in a static restriction's affected set.
+    auction <- S.printingOf s registry "Thieves' Auction"
+    let face = S.combinedFace auction
+        restricted = face {Face.counterRestrictions = [CounterRestriction.MkCounterRestriction (Affected.Matching Filter.Type.HasEntryHost) Nothing]}
+    Spec.assertBool s (hasEntryHostOffends restricted) "the atom in an affected set offends"
+    Spec.assertEqWith s "counted outside the admitted position" (hasEntryHostCounts restricted) (1, 1)
   -- CR 201.4's chosen name is CR 701.3a's atom in nearly the same frame:
   -- answerable only where the resolution's own context is built
   -- (Parun.Engine.Resolve.Slots.effectContext), and a silent False everywhere
@@ -2728,6 +2764,7 @@ filterPositionLintSpec s registry corpus = Spec.describe s "Lint" $ do
         (MillTallyFramed, [bound]),
         (HandSweepFramed, [bound]),
         (ClauseGateFramed, [bound]),
+        (RepeatGateFramed, [bound]),
         (LifeLossAmountFramed, [bound]),
         (AffectedSetFramed, [bound]),
         (ActivationCostFramed, [bound]),

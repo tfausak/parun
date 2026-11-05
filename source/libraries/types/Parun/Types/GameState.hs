@@ -61,6 +61,7 @@ import qualified Parun.Types.Prevention as Prevention
 import qualified Parun.Types.Printing as Printing
 import qualified Parun.Types.PrintingId as PrintingId
 import qualified Parun.Types.ProjectedCharacteristics as ProjectedCharacteristics
+import qualified Parun.Types.RepeatPicks as RepeatPicks
 import qualified Parun.Types.RestartSignal as RestartSignal
 import qualified Parun.Types.Result as Result
 import qualified Parun.Types.ReturnWatch as ReturnWatch
@@ -437,6 +438,9 @@ data GameState = MkGameState
     -- picked them, which a later pick's prompt carries
     -- (Parun.Engine.Resolve.Arms.Zones.forEach).
     loopPicks :: Maybe (Seq.Seq (PlayerId.PlayerId, Set.Set ObjectId.ObjectId)),
+    -- | CR 732.3: Nothing outside a Parun.Types.RepeatIf; inside one, its run's
+    -- picks and refusals (Parun.Engine.Resolve.Arms.Zones.repeatIf).
+    repeatPicks :: Maybe RepeatPicks.RepeatPicks,
     -- | CR 401.6: each library's top card as the last settle found it revealed
     -- to every player by a player effect (Event.settleRevealedTops).
     revealedTops :: Map.Map PlayerId.PlayerId ObjectId.ObjectId,

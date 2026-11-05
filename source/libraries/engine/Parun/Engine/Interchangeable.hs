@@ -69,6 +69,7 @@ import qualified Parun.Types.PastActivation as PastActivation
 import qualified Parun.Types.PhasedOut as PhasedOut
 import qualified Parun.Types.ProjectedCharacteristics as PC
 import qualified Parun.Types.Recipient as Recipient
+import qualified Parun.Types.RepeatPicks as RepeatPicks
 import qualified Parun.Types.RestrictedCreatures as RestrictedCreatures
 import qualified Parun.Types.ReturnEnding as ReturnEnding
 import qualified Parun.Types.ReturnWatch as ReturnWatch
@@ -528,11 +529,11 @@ affectedNames oid source gs affected = case affected of
 --     602.5b), castPermissionsUsedThisTurn (CR 601.3), rollModifiersUsedThisTurn
 --     (CR 706.2), namedCopyChoices (CR 707.13), notedCards (CR 707.14),
 --     notedMana (CR 607.2e), keptFaceDown (CR 121.8), announcedTops (CR 401.5),
---     loopPicks (CR 101.4b), revealedTops (CR 401.6) and outsideCopies (CR
---     400.11), each keyed by the object it is about; and the logs
---     triggeredThisGame (a "triggers only once" rider's spent triggerings),
---     activationsThisTurn (CR 602.2) and attacksInOwnLastTurn (CR 508.1a), by
---     the object each entry names.
+--     loopPicks (CR 101.4b), repeatPicks (CR 732.3), revealedTops (CR 401.6)
+--     and outsideCopies (CR 400.11), each keyed by the object it is about; and
+--     the logs triggeredThisGame (a "triggers only once" rider's spent
+--     triggerings), activationsThisTurn (CR 602.2) and attacksInOwnLastTurn (CR
+--     508.1a), by the object each entry names.
 --
 -- phasedOut and a crowning watch can never name a CANDIDATE through the one
 -- caller (Parun.Engine.Cost's mana-source window): both key on an object not on
@@ -586,6 +587,7 @@ namedByRelation oid gs =
         || maybe False keyed (GameState.keptFaceDown gs)
         || maybe False (elem oid) (GameState.announcedTops gs)
         || maybe False (any (Set.member oid . snd)) (GameState.loopPicks gs)
+        || maybe False (\picks -> any (Set.member oid) (RepeatPicks.picked picks) || any (Set.member oid) (RepeatPicks.refused picks)) (GameState.repeatPicks gs)
         || elem oid (GameState.revealedTops gs)
         || Set.member oid (GameState.outsideCopies gs)
         || any (triggeredNames oid) (GameState.triggeredThisGame gs)

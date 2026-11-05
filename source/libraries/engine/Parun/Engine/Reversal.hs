@@ -154,6 +154,7 @@ withoutAnnouncement before entry closed = do
   keptFaceDown <- one GameState.keptFaceDown
   announcedTops <- one GameState.announcedTops
   loopPicks <- one GameState.loopPicks
+  repeatPicks <- one GameState.repeatPicks
   revealedTops <- mapOf GameState.revealedTops
   departedThisTurn <- setOf GameState.departedThisTurn
   couldAttackThisTurn <- setOf GameState.couldAttackThisTurn
@@ -291,6 +292,7 @@ withoutAnnouncement before entry closed = do
         GameState.keptFaceDown = keptFaceDown,
         GameState.announcedTops = announcedTops,
         GameState.loopPicks = loopPicks,
+        GameState.repeatPicks = repeatPicks,
         GameState.revealedTops = revealedTops,
         GameState.departedThisTurn = departedThisTurn,
         GameState.couldAttackThisTurn = couldAttackThisTurn,

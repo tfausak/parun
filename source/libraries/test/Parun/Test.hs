@@ -635,6 +635,7 @@ import qualified Parun.Codec.ReinforceSpec
 import qualified Parun.Codec.RemoveCountersSpec
 import qualified Parun.Codec.RemovePlayerCountersSpec
 import qualified Parun.Codec.RepeatIfSpec
+import qualified Parun.Codec.RepeatPicksSpec
 import qualified Parun.Codec.RepeatSpec
 import qualified Parun.Codec.ReplaceSpec
 import qualified Parun.Codec.ReplacementEffectSpec
@@ -1621,6 +1622,7 @@ spec s registry corpus = do
   Parun.Codec.RemoveCountersSpec.spec s
   Parun.Codec.RemovePlayerCountersSpec.spec s
   Parun.Codec.RepeatIfSpec.spec s
+  Parun.Codec.RepeatPicksSpec.spec s
   Parun.Codec.RepeatSpec.spec s
   Parun.Codec.ReplacementEffectSpec.spec s
   Parun.Codec.ReplacementOriginSpec.spec s
