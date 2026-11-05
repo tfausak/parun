@@ -192,7 +192,7 @@ data Effect card ability
     -- it now.
     Sacrifice SacrificeEffect.SacrificeEffect
   | -- | CR 701.3 / 702.6a: attach this permanent (the effect's source) to the
-    -- slot's target.
+    -- slot's object, a target or a permanent an earlier instruction chose (Kudzu).
     Attach SlotName.SlotName
   | -- | CR 702.6e: Attach, with the slot's planeswalker treated as though it were
     -- a creature for CR 301.5's legality test.
