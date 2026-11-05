@@ -1,0 +1,103 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Worms of the Earth",
+            "label": "worms",
+            "ready": true
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Clone",
+            "label": "clone"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Exhume",
+            "label": "exhume"
+          }
+        ],
+        "manaPool": "BB",
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Dryad Arbor",
+            "label": "arbor",
+            "ready": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears",
+            "ready": true
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 400.4a under Worms an exhumed Clone copying Dryad Arbor stays in the graveyard",
+  "final": [
+    {
+      "View": {
+        "is": [
+          "$clone",
+          "Exhume"
+        ],
+        "of": "Zone",
+        "player": "alice",
+        "zone": "Graveyard"
+      }
+    },
+    {
+      "View": {
+        "is": [
+          "$worms"
+        ],
+        "of": "Zone",
+        "player": "alice",
+        "zone": "Battlefield"
+      }
+    },
+    {
+      "View": {
+        "is": [],
+        "of": "Stack"
+      }
+    }
+  ],
+  "note": "Exhume puts alice's Clone onto the battlefield from her graveyard; it would enter as a copy of bob's Dryad Arbor, a land, so Worms of the Earth refuses it and it remains in its previous zone.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "object": "$exhume"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseCopyTarget": "$arbor"
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

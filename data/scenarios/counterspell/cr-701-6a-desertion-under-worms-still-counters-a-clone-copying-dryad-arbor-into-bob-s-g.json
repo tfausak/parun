@@ -1,0 +1,174 @@
+{
+  "board": {
+    "active": "bob",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "alice-island-1"
+          },
+          {
+            "card": "Island",
+            "label": "alice-island-2"
+          },
+          {
+            "card": "Island",
+            "label": "alice-island-3"
+          },
+          {
+            "card": "Island",
+            "label": "alice-island-4"
+          },
+          {
+            "card": "Island",
+            "label": "alice-island-5"
+          },
+          {
+            "card": "Worms of the Earth",
+            "label": "worms"
+          },
+          {
+            "card": "Dryad Arbor",
+            "label": "arbor"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Desertion",
+            "label": "desertion"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "bob-island-1"
+          },
+          {
+            "card": "Island",
+            "label": "bob-island-2"
+          },
+          {
+            "card": "Island",
+            "label": "bob-island-3"
+          },
+          {
+            "card": "Island",
+            "label": "bob-island-4"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Clone",
+            "label": "clone"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 701.6a Desertion under Worms still counters a Clone copying Dryad Arbor into bob's graveyard",
+  "final": [
+    {
+      "View": {
+        "is": [],
+        "of": "Stack"
+      }
+    },
+    {
+      "Count": {
+        "card": "Clone",
+        "count": 1,
+        "player": "bob",
+        "zone": "Graveyard"
+      }
+    },
+    {
+      "Count": {
+        "card": "Desertion",
+        "count": 1,
+        "player": "alice",
+        "zone": "Graveyard"
+      }
+    },
+    {
+      "View": {
+        "is": [
+          "$alice-island-1",
+          "$alice-island-2",
+          "$alice-island-3",
+          "$alice-island-4",
+          "$alice-island-5",
+          "$worms",
+          "$arbor"
+        ],
+        "of": "Zone",
+        "player": "alice",
+        "zone": "Battlefield"
+      }
+    }
+  ],
+  "note": "alice's Desertion counters bob's Clone and would put it onto the battlefield under her control, but it would enter as a copy of her Dryad Arbor, a land, which Worms of the Earth forbids (CR 101.2, 614.17d). So Desertion's instead cannot happen: the Clone is still countered and goes to its owner's graveyard, and it does not stay on the stack to resolve.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$bob-island-1",
+            "$bob-island-2",
+            "$bob-island-3",
+            "$bob-island-4"
+          ],
+          "object": "$clone"
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "$alice-island-1",
+            "$alice-island-2",
+            "$alice-island-3",
+            "$alice-island-4",
+            "$alice-island-5"
+          ],
+          "object": "$desertion",
+          "targets": [
+            "Clone"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseCopyTarget": "$arbor"
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

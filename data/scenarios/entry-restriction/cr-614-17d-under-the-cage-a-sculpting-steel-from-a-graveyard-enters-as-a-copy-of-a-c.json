@@ -1,0 +1,117 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Grafdigger's Cage",
+            "label": "cage",
+            "ready": true
+          },
+          {
+            "card": "Ornithopter",
+            "label": "ornithopter",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Grasping Tentacles",
+            "label": "tentacles"
+          }
+        ],
+        "manaPool": "UBB",
+        "name": "alice"
+      },
+      {
+        "graveyard": [
+          {
+            "card": "Sculpting Steel",
+            "label": "returned"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 614.17d under the Cage a Sculpting Steel from a graveyard enters as a copy of a creature",
+  "final": [
+    {
+      "Count": {
+        "card": "Sculpting Steel",
+        "count": 0,
+        "player": "bob",
+        "zone": "Graveyard"
+      }
+    },
+    {
+      "Names": {
+        "names": [
+          "Ornithopter"
+        ],
+        "object": "Sculpting Steel"
+      }
+    },
+    {
+      "View": {
+        "is": [
+          "Sculpting Steel"
+        ],
+        "of": "Zone",
+        "player": "bob",
+        "zone": "Battlefield"
+      }
+    },
+    {
+      "View": {
+        "is": "alice",
+        "object": "Sculpting Steel",
+        "of": "Controller"
+      }
+    }
+  ],
+  "note": "Grafdigger's Cage names creature CARDS in graveyards, read as the card exists there (its ruling, 2019-07-12): Sculpting Steel is a noncreature artifact card in bob's graveyard, so Grasping Tentacles puts it onto the battlefield, as a copy of alice's Ornithopter, though as it would exist it is an artifact creature.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "object": "$tentacles",
+          "targets": [
+            "$bob"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseOptional": {
+          "type": "Exercises"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseCopyTarget": "$ornithopter"
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}
