@@ -1,5 +1,5 @@
 {
-  "description": "CR 616.1a Power Leak's prevention is a self-replacement (CR 614.15), so it applies before Furnace of Rath: 2 - 1, then doubled",
+  "description": "Power Leak's prevention applies before Furnace of Rath, per decisions.md's self-replacement entry: 2 - 1, then doubled",
   "note": "bob pays 1. He is asked nothing about the order: 2 becomes 1 becomes 2, never 4 - 1.",
   "board": {
     "active": "alice",
