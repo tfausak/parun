@@ -5789,9 +5789,8 @@ resolveDamage allowances spent earlier de = do
 -- lands both halves on that one permanent, and docs/decisions.md's "Whether one
 -- instruction naming a recipient twice deals one damage event" makes it one
 -- event. Run over the whole batch because a half can come back as a DamageThread;
--- settleThreads joins those halves already, before their loop, so a flat bonus
--- applies once (Replacement.oneThreadPerRecipient);
 -- the key's source component keeps a CR 510.2 batch's separate dealers apart.
+-- Halves that come back together are joined earlier, in settleThreads.
 --
 -- Each event still runs its OWN CR 616.1 loop and the loop's unit is still one
 -- event, which is what CR 614.5 and CR 615.10 both describe. Three things this
