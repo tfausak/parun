@@ -4432,7 +4432,7 @@ apply settle batch applied batchPrevented candidate event =
       -- Replacement.readsApplier answers True for this rewrite alone.
       --
       -- The ids are snapshotted from the pre-move board and then moved one at a
-      -- time, `performDraw`'s shape: Game.zoneMembers is top-first, so
+      -- time, `performDraw`'s shape: Game.cardsIn is top-first, so
       -- `take` off the front is the top `n`, and each move is CR 400.7's funnel
       -- with every replacement of its own. Replacement.breaches has already
       -- refused a library too short, so the take is never partial when it starts
@@ -4446,7 +4446,7 @@ apply settle batch applied batchPrevented candidate event =
           -- nobody, there being no library its clause could measure.
           Nothing -> pure (Just event)
           Just you -> do
-            Monad.mapM_ (\oid -> changeZone settle oid Zone.Exile) (take (Natural.toIntSaturating n) (Game.zoneMembers Zone.Library you gs))
+            Monad.mapM_ (\oid -> changeZone settle oid Zone.Exile) (take (Natural.toIntSaturating n) (Game.cardsIn Zone.Library you gs))
             pure Nothing
       -- CR 614.6 with CR 728.1a: Strong, the Brutish Thespian's "you gain life
       -- rather than lose life from radiation". THE SECOND ARM THAT CANCELS, the

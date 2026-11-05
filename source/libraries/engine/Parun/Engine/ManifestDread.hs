@@ -72,7 +72,7 @@ riders =
 manifestDread :: Game () -> ObjectId -> PlayerId -> Game ()
 manifestDread settle source pid = do
   gs <- State.get
-  let looked = take 2 (Game.zoneMembers Zone.Library pid gs)
+  let looked = take 2 (Game.cardsIn Zone.Library pid gs)
   Monad.mapM_ (Event.look pid) looked
   chosen <- Game.chooseAmong (\decider asked -> Prompt.ChooseCardFromAmong decider asked source) pid looked
   Monad.forM_ chosen $ \card ->
