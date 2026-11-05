@@ -307,6 +307,7 @@ movedOf event = case event of
   GameEvent.BecameAttached {} -> Nothing
   GameEvent.BecameUnattached {} -> Nothing
   GameEvent.LeftTheGame _ -> Nothing
+  GameEvent.ArrivedUnseen _ -> Nothing
   GameEvent.Milled {} -> Nothing
   GameEvent.PlayerActed _ -> Nothing
   GameEvent.LandPlayed {} -> Nothing
@@ -464,6 +465,7 @@ participants event =
         GameEvent.BecameAttached a -> ([BecameAttached.attachment a], []) <> recipient (BecameAttached.host a)
         GameEvent.BecameUnattached a -> ([BecameUnattached.attachment a], []) <> recipient (BecameUnattached.host a)
         GameEvent.LeftTheGame l -> one (LeftTheGame.object l)
+        GameEvent.ArrivedUnseen oid -> one oid
         GameEvent.PlayerActed acted -> player (PlayerActed.player acted)
         GameEvent.LandPlayed l -> ([LandPlayed.land l], [LandPlayed.player l])
         GameEvent.LostTheGame pid -> player pid
@@ -1265,6 +1267,7 @@ eventTriggers events gs =
               Just lk -> Map.singleton oid (LastKnown.controller lk, battlefieldAbilitiesOf oid (LastKnown.characteristics lk))
           | otherwise -> Map.empty
         GameEvent.Milled {} -> Map.empty
+        GameEvent.ArrivedUnseen _ -> Map.empty
         GameEvent.PlayerActed _ -> Map.empty
         GameEvent.LandPlayed {} -> Map.empty
         GameEvent.LostTheGame _ -> Map.empty
@@ -1642,6 +1645,7 @@ eventTriggers events gs =
         GameEvent.BecameAttached {} -> Map.empty
         GameEvent.BecameUnattached {} -> Map.empty
         GameEvent.LeftTheGame _ -> Map.empty
+        GameEvent.ArrivedUnseen _ -> Map.empty
         GameEvent.Milled {} -> Map.empty
         GameEvent.PlayerActed _ -> Map.empty
         GameEvent.LandPlayed {} -> Map.empty
@@ -2036,6 +2040,7 @@ eventTriggers events gs =
         GameEvent.BecameAttached {} -> Map.empty
         GameEvent.BecameUnattached {} -> Map.empty
         GameEvent.LeftTheGame _ -> Map.empty
+        GameEvent.ArrivedUnseen _ -> Map.empty
         GameEvent.Milled {} -> Map.empty
         GameEvent.PlayerActed _ -> Map.empty
         GameEvent.LandPlayed {} -> Map.empty
@@ -2199,6 +2204,7 @@ eventTriggers events gs =
         GameEvent.BecameAttached {} -> Map.empty
         GameEvent.BecameUnattached {} -> Map.empty
         GameEvent.LeftTheGame _ -> Map.empty
+        GameEvent.ArrivedUnseen _ -> Map.empty
         GameEvent.Milled {} -> Map.empty
         GameEvent.PlayerActed _ -> Map.empty
         GameEvent.LandPlayed {} -> Map.empty
@@ -3913,6 +3919,7 @@ resnapshot gs without event =
         GameEvent.BecameAttached {} -> Just event
         GameEvent.BecameUnattached {} -> Just event
         GameEvent.LeftTheGame {} -> Just event
+        GameEvent.ArrivedUnseen {} -> Just event
         GameEvent.PlayerActed {} -> Just event
         GameEvent.LandPlayed {} -> Just event
         GameEvent.LostTheGame {} -> Just event

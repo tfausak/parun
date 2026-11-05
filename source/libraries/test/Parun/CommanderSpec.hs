@@ -96,6 +96,7 @@ import qualified Parun.Engine.FaceDown as FaceDown
 import qualified Parun.Engine.Game as Game
 import qualified Parun.Engine.Interchangeable as Interchangeable
 import qualified Parun.Engine.Projection as Projection
+import qualified Parun.Engine.Projection.View as Projection
 import qualified Parun.Engine.Setup as Setup
 import qualified Parun.Engine.Stack as Stack
 import qualified Parun.Registry as Registry
@@ -189,6 +190,7 @@ spec s registry = Spec.describe s "Parun.Engine.Commander" $ do
   subgameSpec s registry
   restartSpec s registry
   ninjutsuSpec s registry
+  departureSpec s registry
 
 designationSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 designationSpec s registry = Spec.describe s "Designation" $ do
@@ -1507,3 +1509,52 @@ restartSpec s registry = Spec.describe s "Restart" $ do
 commanderPrintingsOf :: GameState.GameState -> Player.Player -> [Printing.Printing]
 commanderPrintingsOf gs pl =
   Maybe.mapMaybe (`Game.printingOf` gs) (Set.toAscList (Set.fromList [printingId | obj <- Map.elems (GameState.objects gs), Just identity <- [Object.identity obj], Set.member identity (Player.commander pl), Source.OfCard printingId <- [Object.source obj]]))
+
+-- CR 903.9a with CR 702.26n: four seats, bob's commander Jedit Ojanen in his
+-- graveyard. alice reanimates it with Rise from the Grave, carol phases it out
+-- with Reality Ripple, and alice concedes: CR 800.4a exiles it while phased out,
+-- which records no Moved (CR 702.26b). The next state-based action check still
+-- offers bob the return, and declining leaves it in exile.
+departureSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+departureSpec s registry = Spec.describe s "Departure" $ do
+  Spec.it s "CR 903.9a/702.26n a phased-out commander exiled by a departure is offered the command zone" $ do
+    swamp <- S.printingOf s registry "Swamp"
+    island <- S.printingOf s registry "Island"
+    jedit <- S.printingOf s registry "Jedit Ojanen"
+    rise <- S.printingOf s registry "Rise from the Grave"
+    ripple <- S.printingOf s registry "Reality Ripple"
+    let designated = designating [(S.bob, jedit)] S.fourPlayerGame
+        jedits gs = filter (\oid -> fmap S.nameOf (Game.cardOf oid gs) == Just (S.printingName jedit)) (Map.keys (GameState.objects gs))
+        zoneOfJedit gs = case jedits gs of
+          [oid] -> fmap Object.zone (Game.lookupObject oid gs)
+          _ -> Nothing
+        buried = List.foldl' (\g oid -> S.runPure S.identityAnswer g (Event.changeZone (pure ()) oid Zone.Graveyard)) designated (jedits designated)
+        lands = S.landsFor island S.carol 2 (S.landsFor swamp S.alice 5 buried)
+        (riseId, g1) = S.addHandCard rise S.alice lands
+        (rippleId, g2) = S.addHandCard ripple S.carol g1
+        board = g2 {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
+        castAt pid spell gs = case jedits gs of
+          [oid] -> S.runPure (aimingAt oid) gs {GameState.priority = Just pid} (S.cast pid spell >> Stack.resolveTop >> pure ())
+          _ -> gs
+        risen = castAt S.alice riseId board
+        rippled = castAt S.carol rippleId risen
+        left = S.runPure S.identityAnswer rippled (Departure.leaveGame Departure.Type.Conceded S.alice)
+        accepted = S.runPure bobReturns left Engine.settleForPriority
+        declined = S.runPure S.identityAnswer left Engine.settleForPriority
+    Spec.assertEqWith s "setup: alice controls the risen Jedit" (fmap (`Projection.controllerOf` risen) (Maybe.listToMaybe (jedits risen))) (Just (Just S.alice))
+    Spec.assertEqWith s "setup: carol's Ripple phased it out" (fmap (\oid -> Map.member oid (GameState.phasedOut rippled)) (Maybe.listToMaybe (jedits rippled))) (Just True)
+    Spec.assertEqWith s "setup: alice leaving exiles it" (zoneOfJedit left) (Just Zone.Exile)
+    Spec.assertEqWith s "bob is offered the command zone and takes it" (zoneOfJedit accepted) (Just Zone.Command)
+    Spec.assertEqWith s "declining leaves it in exile" (zoneOfJedit declined) (Just Zone.Exile)
+
+-- CR 601.2c: every target slot takes `oid` where it may.
+aimingAt :: ObjectId.ObjectId -> Prompt.Prompt r -> r
+aimingAt oid p = case p of
+  Prompt.ChooseTargets _ _ _ sets -> S.preferring ((== Just oid) . Recipient.objectOf) sets
+  _ -> S.identityAnswer p
+
+-- Accepts CR 903.9a's offer when it is put to bob, and only then.
+bobReturns :: Prompt.Prompt r -> r
+bobReturns p = case p of
+  Prompt.ReturnCommander _ pid _ | pid == S.bob -> CommandZoneDecision.Returns
+  _ -> S.identityAnswer p
