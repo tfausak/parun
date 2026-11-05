@@ -1809,6 +1809,7 @@ damageRewriteRecipients rewrite = case rewrite of
   DamageRewrite.RedirectNext _ recipient -> [recipient]
   DamageRewrite.PreventAll -> []
   DamageRewrite.PreventRemovingShieldCounter -> []
+  DamageRewrite.PreventRemovingCounters _ -> []
   DamageRewrite.PreventNext _ -> []
   DamageRewrite.PreventAllBut _ -> []
   DamageRewrite.PreventUpTo _ -> []

@@ -4,6 +4,7 @@ module Parun.Codec.DamageRewrite where
 
 import qualified Data.Typeable as Typeable
 import qualified Numeric.Natural as Natural
+import qualified Parun.Codec.CounterKind as CounterKind
 import qualified Parun.Codec.Filter as Filter
 import qualified Parun.Codec.Keyword as Keyword
 import qualified Parun.Codec.Quantity as Quantity
@@ -30,6 +31,7 @@ codec effectCodec =
     tagOf
     [ Arm.nullary "PreventAll" DamageRewrite.PreventAll,
       Arm.nullary "PreventRemovingShieldCounter" DamageRewrite.PreventRemovingShieldCounter,
+      Arm.payload "PreventRemovingCounters" (CounterKind.codec Keyword.codec) DamageRewrite.PreventRemovingCounters (\x -> case x of DamageRewrite.PreventRemovingCounters y -> Just y; _ -> Nothing),
       Arm.payload "PreventNext" Common.natural DamageRewrite.PreventNext (\x -> case x of DamageRewrite.PreventNext y -> Just y; _ -> Nothing),
       Arm.payload "PreventAllBut" Common.natural DamageRewrite.PreventAllBut (\x -> case x of DamageRewrite.PreventAllBut y -> Just y; _ -> Nothing),
       Arm.payload "PreventUpTo" Quantity.codec DamageRewrite.PreventUpTo (\x -> case x of DamageRewrite.PreventUpTo y -> Just y; _ -> Nothing),
@@ -56,6 +58,7 @@ tagOf :: DamageRewrite.DamageRewrite effect -> String
 tagOf x = case x of
   DamageRewrite.PreventAll {} -> "PreventAll"
   DamageRewrite.PreventRemovingShieldCounter {} -> "PreventRemovingShieldCounter"
+  DamageRewrite.PreventRemovingCounters {} -> "PreventRemovingCounters"
   DamageRewrite.PreventNext {} -> "PreventNext"
   DamageRewrite.PreventAllBut {} -> "PreventAllBut"
   DamageRewrite.PreventUpTo {} -> "PreventUpTo"

@@ -14,8 +14,6 @@ Every expressible Revised Edition card has been added to `data/cards/`.
 Each card is tracked by its issue and is added when that issue lands. Hardest
 first.
 
-- #6276: Rock Hydra. A counter removed for each 1 damage, even damage that can't
-  be prevented, is more than a prevention's rider reads.
 - #6277: Jandor's Ring. No discard cost can name the last card drawn this turn.
 - #6278: Reverse Polarity. Damage dealt to a player this turn can't be summed by
   what dealt it.

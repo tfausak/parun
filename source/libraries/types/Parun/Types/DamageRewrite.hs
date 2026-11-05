@@ -2,6 +2,7 @@ module Parun.Types.DamageRewrite where
 
 import qualified Data.Sequence as Seq
 import qualified Numeric.Natural as Natural
+import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.Filter as Filter
 import qualified Parun.Types.Keyword as Keyword
 import qualified Parun.Types.Quantity as Quantity
@@ -86,6 +87,15 @@ data DamageRewrite effect
     -- 615.7's PreventNext below, rule 122.1c counts events rather than damage, so
     -- one shield counter covers one damage event of any size.
     PreventRemovingShieldCounter
+  | -- | CR 615.1a / Rock Hydra: the row's own permanent pays one counter of this
+    -- kind for each 1 damage prevented, and pays it for damage that can't be
+    -- prevented too (its ruling; CR 615.12).
+    --
+    -- Not PreventRemovingShieldCounter: rule 122.1c counts events, which an order
+    -- divides, and this counts damage, which only a division can
+    -- (Parun.Engine.Replacement.allocations; docs/decisions.md's "Whether a
+    -- permanent's counters are divided among simultaneous damage").
+    PreventRemovingCounters (CounterKind.CounterKind Keyword.Keyword)
   | PreventNext Natural.Natural
   | -- | CR 615.10: a static prevention that leaves this much of each applicable
     -- damage event standing and prevents the rest -- Temple Altisaur's "prevent

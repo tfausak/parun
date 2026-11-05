@@ -1058,3 +1058,22 @@ Entries are ordered by the first rule each cites.
 - **Site**: `Parun.Types.UntilPaid`'s `payer`, sampled by `Parun.Engine.Expiry.arm`.
   No test changes the planeswalker's controller.
 - **Issue**: #6084.
+
+## Whether a permanent's counters are divided among simultaneous damage
+
+- **Question**: Rock Hydra has 3 +1/+1 counters and two creatures deal it 2 each
+  at once, one with lifelink. "For each 1 damage ... if it has a +1/+1 counter
+  on it" names no order. Does each event see all 3, and if not, who says which
+  damage the counters stop? The lifelink observes it.
+- **Rules**: CR 615.7, 615.10, 616.1 (CR of 2026-08-07). CR 615.7's division is
+  of a shield a resolution made, CR 615.10's static effect holds no count, and
+  the card's rulings don't speak to it.
+- **Decision**: One supply, 1 counter for 1 damage, divided by the Hydra's
+  controller as CR 615.7 divides a shield.
+- **Rejected**: Each event reading all the counters, as CR 615.10's static
+  shield applies separately: it would stop 4 damage for 3 counters. An order
+  fixed by the engine: that makes a player's choice.
+- **Site**: `Parun.Engine.Replacement`'s `allocationSupply`. The scenarios
+  rock-hydra-divides-its-counters-away-from-the-lifelink and
+  rock-hydra-divides-its-counters-onto-the-other-blocker.
+- **Issue**: #6276.

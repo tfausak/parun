@@ -5711,7 +5711,7 @@ colorsSpentOf oid gs = case Game.lookupObject oid gs of
 -- event's Recipient TAG (CR 510.1b) and not to which permanent was hit.
 shieldOf :: ObjectId -> GameState -> [ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card))]
 shieldOf oid gs =
-  if shieldCounters oid gs == 0
+  if counterCount CounterKind.Shield oid gs == 0
     then []
     else
       [ ReplacementEffect.DestructionR (DestructionR.MkDestructionR Nothing DestructionRewrite.RemoveShieldCounter),
@@ -5738,12 +5738,10 @@ shieldOf oid gs =
           )
       ]
 
--- CR 122.1c: how many shield counters this object has, which is how many more
--- events its pair may replace.
-shieldCounters :: ObjectId -> GameState -> Natural
-shieldCounters oid gs = case Game.lookupObject oid gs of
-  Nothing -> 0
-  Just obj -> Map.findWithDefault 0 CounterKind.Shield (Object.counters obj)
+-- How many counters of this kind this object has: CR 122.1c's shield counters
+-- are how many more events its pair may replace.
+counterCount :: CounterKind.CounterKind Keyword.Type.Keyword -> ObjectId -> GameState -> Natural
+counterCount kind oid gs = Map.findWithDefault 0 kind (countersOf oid gs)
 
 -- CR 122.1h: the replacement effect one or more finality counters create --
 -- "If this permanent would be put into a graveyard from the battlefield, exile
@@ -5797,7 +5795,7 @@ finalityOf oid gs =
 
 -- CR 122.1h: how many finality counters this object has. Only whether it is zero
 -- is ever asked -- the rule's effect is one row at any positive count -- but the
--- count is what the board stores, so shieldCounters' shape is kept.
+-- count is what the board stores, so counterCount's shape is kept.
 finalityCounters :: ObjectId -> GameState -> Natural
 finalityCounters oid gs = case Game.lookupObject oid gs of
   Nothing -> 0
@@ -5870,7 +5868,7 @@ turnUpOf oid gs = case fmap Object.facing (Game.lookupObject oid gs) of
       TurnUpEvent.AssignsCombatDamage -> []
       TurnUpEvent.BecomesTapped -> []
 
--- CR 122.1d: how many stun counters this object has. shieldCounters' shape, and
+-- CR 122.1d: how many stun counters this object has. counterCount's shape, and
 -- for its reason -- the count is what the board stores, and only whether it is
 -- positive decides that the row exists.
 stunCounters :: ObjectId -> GameState -> Natural
@@ -6007,7 +6005,7 @@ replacementsAffecting gs =
       -- CR 122.1c's pair, CR 122.1h's row and CR 122.1d's row are minted from
       -- COUNTERS, so none of them is on any base face -- which is why all three
       -- are asked before any copiable value is.
-      baseHas oid | shieldCounters oid gs > 0 || finalityCounters oid gs > 0 || stunCounters oid gs > 0 = True
+      baseHas oid | counterCount CounterKind.Shield oid gs > 0 || finalityCounters oid gs > 0 || stunCounters oid gs > 0 = True
       -- Illusionary Mask's rows are minted from the face-down STATUS
       -- (turnUpOf), which no base face lists either.
       baseHas oid | not (null (turnUpOf oid gs)) = True
