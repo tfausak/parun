@@ -1712,7 +1712,7 @@ effectObjectRefs effect =
         Effect.RollDie {} -> []
         Effect.FlipCoin {} -> []
         Effect.TakeExtraTurn {} -> []
-        Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary _ refs _) -> read_ (NonEmpty.toList refs)
+        Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary _ ref _) -> read_ [ref]
         Effect.Ante (Ante.MkAnte _ ref _) -> read_ [ref]
         -- Proficient Pyrodancer's "a nonland permanent you own" and Scampire's "a
         -- creature card in your graveyard".
@@ -1747,7 +1747,7 @@ inertChoosers effect =
   [ref | (allowed, ref) <- effectObjectRefs effect, Just question <- [questionOf ref], question `notElem` allowed]
 
 -- An ObjectRef.AllOf written anywhere but a move's ref, a play grant's, a
--- loop's, a damage instruction's or a destruction's. MoveToZone gathers it
+-- loop's, a damage instruction's, a destruction's or a shuffle-in's. MoveToZone gathers it
 -- member by member (Parun.Engine.Resolve.Arms.Zones's gather), and
 -- GrantPlayFromExile reads its ref
 -- through
@@ -1763,6 +1763,9 @@ inertChoosers effect =
 -- Destroy reads its ref through askingObjects, whose AllOf arm is the union
 -- too -- Loyal Sentry's "that creature and this creature" in one batch, proved
 -- by the scenario loyal-sentry-destroys-both-creatures-at-once.
+-- ShuffleIntoLibrary reads its ref through objectRefObjects too -- Timetwister's
+-- "their hand and graveyard" as one move and one shuffle, proved by
+-- Parun.MassEffectSpec's Timetwister group.
 -- The other opcodes' one-ref reads (a sticker's candidates, a copy's archived
 -- source, a reveal's shower) would read the union as a single arm.
 strayAllOf :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
@@ -1772,6 +1775,7 @@ strayAllOf effect = case effect of
   Effect.ForEach {} -> False
   Effect.DealDamage {} -> False
   Effect.Destroy {} -> False
+  Effect.ShuffleIntoLibrary {} -> False
   _ -> any (holdsAllOf . snd) (effectObjectRefs effect)
   where
     holdsAllOf ref = case ref of
@@ -2755,7 +2759,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
     -- Exhume, Elvish Piper, Commune with the Gods and Merfolk Spy print them.
     Spec.assertBool s asks "the pool has a card asking a player to pick a card"
     Spec.assertEqWith s "a chosen card under an opcode that cannot ask (CR 608.2d)" (fmap (S.nameOf . Printing.card) offenders) []
-  Spec.it s "no AllOf outside a move, a play grant, a loop, a damage instruction or a destruction" $ do
+  Spec.it s "no AllOf outside a move, a play grant, a loop, a damage instruction, a destruction or a shuffle-in" $ do
     ps <- S.allPrintings s corpus
     let offenders = filter (anyFace (any strayAllOf . cardAuthoredEffects) . Printing.card) ps
         moved = any (anyFace (any (any (isAllOf . snd) . effectObjectRefs) . cardAuthoredEffects) . Printing.card) ps
@@ -2851,7 +2855,7 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
       [False, True, True, True]
     -- Hanweir Battlements' "exile them": the source beside one chosen
     -- permanent, fenced by its member's question, and refused outside a move, a
-    -- play grant or a loop by strayAllOf.
+    -- play grant, a loop or a shuffle-in by strayAllOf.
     Spec.assertEqWith
       s
       "the source with one chosen permanent is allowed where one chosen permanent is"
@@ -2859,9 +2863,9 @@ effectLintSpec s registry corpus = Spec.describe s "Lint" $ do
       [False, False, True, True]
     Spec.assertEqWith
       s
-      "AllOf is refused outside a move, a play grant or a loop"
-      (fmap strayAllOf [moves sourceAndOne, Effect.Transform sourceAndOne, Effect.Tap (Tap.plain (ObjectRef.AllOf (ObjectRef.EachMatching anyCard NonEmpty.:| [])))])
-      [False, True, True]
+      "AllOf is refused outside a move, a play grant, a loop or a shuffle-in"
+      (fmap strayAllOf [moves sourceAndOne, Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary Nothing sourceAndOne Nothing), Effect.Transform sourceAndOne, Effect.Tap (Tap.plain (ObjectRef.AllOf (ObjectRef.EachMatching anyCard NonEmpty.:| [])))])
+      [False, False, True, True]
     -- The at-random arm one zone over, allowed by a move alone -- Ghoulraiser's
     -- "return a Zombie card at random from your graveyard to your hand".
     -- Rejected under the two sites allowing the hand's at-random arm: CR 400.2's

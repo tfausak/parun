@@ -29,19 +29,17 @@
                           "type": "AnyPlayer"
                         }
                       },
-                      "refs": [
-                        {
-                          "type": "EachCardInHand",
-                          "value": {
-                            "hands": {
-                              "type": "Scoped",
-                              "value": {
-                                "type": "AnyPlayer"
-                              }
+                      "ref": {
+                        "type": "EachCardInHand",
+                        "value": {
+                          "hands": {
+                            "type": "Scoped",
+                            "value": {
+                              "type": "AnyPlayer"
                             }
                           }
                         }
-                      ],
+                      },
                       "slot": "shuffled"
                     }
                   },

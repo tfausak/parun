@@ -40,27 +40,30 @@
                       {
                         "type": "ShuffleIntoLibrary",
                         "value": {
-                          "refs": [
-                            {
-                              "type": "InSlot",
-                              "value": "self"
-                            },
-                            {
-                              "type": "EachCardInGraveyard",
-                              "value": {
-                                "filter": {
-                                  "type": "And",
-                                  "value": []
-                                },
-                                "graveyards": {
-                                  "type": "Scoped",
-                                  "value": {
-                                    "type": "You"
+                          "ref": {
+                            "type": "AllOf",
+                            "value": [
+                              {
+                                "type": "InSlot",
+                                "value": "self"
+                              },
+                              {
+                                "type": "EachCardInGraveyard",
+                                "value": {
+                                  "filter": {
+                                    "type": "And",
+                                    "value": []
+                                  },
+                                  "graveyards": {
+                                    "type": "Scoped",
+                                    "value": {
+                                      "type": "You"
+                                    }
                                   }
                                 }
                               }
-                            }
-                          ]
+                            ]
+                          }
                         }
                       }
                     ]

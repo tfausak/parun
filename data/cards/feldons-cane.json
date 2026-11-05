@@ -29,23 +29,21 @@
                               "type": "You"
                             }
                           },
-                          "refs": [
-                            {
-                              "type": "EachCardInGraveyard",
-                              "value": {
-                                "filter": {
-                                  "type": "And",
-                                  "value": []
-                                },
-                                "graveyards": {
-                                  "type": "Scoped",
-                                  "value": {
-                                    "type": "You"
-                                  }
+                          "ref": {
+                            "type": "EachCardInGraveyard",
+                            "value": {
+                              "filter": {
+                                "type": "And",
+                                "value": []
+                              },
+                              "graveyards": {
+                                "type": "Scoped",
+                                "value": {
+                                  "type": "You"
                                 }
                               }
                             }
-                          ]
+                          }
                         }
                       }
                     ]

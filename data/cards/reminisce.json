@@ -31,21 +31,19 @@
                         "type": "InSlot",
                         "value": "target"
                       },
-                      "refs": [
-                        {
-                          "type": "EachCardInGraveyard",
-                          "value": {
-                            "filter": {
-                              "type": "And",
-                              "value": []
-                            },
-                            "graveyards": {
-                              "type": "InSlot",
-                              "value": "target"
-                            }
+                      "ref": {
+                        "type": "EachCardInGraveyard",
+                        "value": {
+                          "filter": {
+                            "type": "And",
+                            "value": []
+                          },
+                          "graveyards": {
+                            "type": "InSlot",
+                            "value": "target"
                           }
                         }
-                      ]
+                      }
                     }
                   }
                 ]

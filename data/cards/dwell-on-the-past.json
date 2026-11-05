@@ -27,12 +27,10 @@
                         "type": "InSlot",
                         "value": "player"
                       },
-                      "refs": [
-                        {
-                          "type": "InSlot",
-                          "value": "cards"
-                        }
-                      ]
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "cards"
+                      }
                     }
                   }
                 ]
