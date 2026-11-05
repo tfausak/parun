@@ -187,6 +187,26 @@ spec s registry = Spec.describe s "PlayerView" $ do
           prompt -> pure (S.identityAnswer prompt)
         asked = State.execState (Engine.runGameAsked answer board (S.cast S.alice spell >> Engine.priorityLoop)) []
     Spec.assertEqWith s "alice is asked, with nobody holding priority" asked [(S.alice, Nothing, [Text.pack "Turn 1, Player 1's precombat main phase."])]
+  -- Goblin Battle Jester's trigger asks alice its target in the settle, which
+  -- follows the step's first grant (cast before the loop) or her cast (inside).
+  Spec.it s "CR 117.5 / 117.3c no seat holds priority while Goblin Battle Jester's trigger asks its target" $ do
+    jester <- S.printingOf s registry "Goblin Battle Jester"
+    mountain <- S.printingOf s registry "Mountain"
+    goblin <- S.printingOf s registry "Raging Goblin"
+    let (_, g1) = S.addPermanent jester S.alice (Setup.emptyGame S.bothPlayers)
+        (_, g2) = S.addPermanent mountain S.alice g1
+        (_, g3) = S.addPermanent goblin S.bob g2
+        (spell, g4) = S.addHandCard goblin S.alice g3
+        board = g4 {GameState.activePlayer = S.alice, GameState.phase = Phase.PrecombatMain}
+        answer :: Asked.Asked r -> State.State [(PlayerId.PlayerId, Maybe PlayerId.PlayerId)] r
+        answer question = case Asked.prompt question of
+          prompt@(Prompt.ChooseTargets _ pid _ _) -> do
+            State.modify' (<> [(pid, GameState.priority (Asked.game question))])
+            pure (S.identityAnswer prompt)
+          prompt -> pure (S.castAnswer prompt)
+        asked script = State.execState (Engine.runGameAsked answer board script) []
+    Spec.assertEqWith s "at the first grant" (asked (S.cast S.alice spell >> Engine.priorityLoop)) [(S.alice, Nothing)]
+    Spec.assertEqWith s "after her cast" (asked Engine.priorityLoop) [(S.alice, Nothing)]
   Spec.it s "CR 723.4 a seat making another player's decisions sees that player's hand" $ do
     started0 <- started s registry
     let row =
