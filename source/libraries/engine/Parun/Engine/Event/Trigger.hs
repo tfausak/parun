@@ -629,11 +629,8 @@ looksBack condition = case condition of
   TriggerCondition.TurnedFaceUp _ -> False
   -- CR 712.18 is the same claim about transforming, and states it outright: the
   -- permanent "doesn't become a new object", so there is no departure for CR
-  -- 603.10a to look back at.
-  TriggerCondition.SelfTransformedInto _ -> False
-  -- The bystander form of that same claim: CR 712.18's permanent is still
-  -- there, whoever is watching it.
-  TriggerCondition.PermanentTransforms _ -> False
+  -- 603.10a to look back at, whoever is watching it.
+  TriggerCondition.Transforms _ -> False
   -- CR 702.112b's designation is given to a permanent that stays where it is, so
   -- there is no departure here either.
   TriggerCondition.PermanentBecomesDesignated {} -> False
@@ -820,8 +817,7 @@ batchScoped condition = case condition of
   TriggerCondition.CausedBy narrowed -> batchScoped (CausedBy.condition narrowed)
   TriggerCondition.TurnedFaceUp _ -> False
   TriggerCondition.FaceDownPermanentLeavesRevealed -> False
-  TriggerCondition.SelfTransformedInto _ -> False
-  TriggerCondition.PermanentTransforms _ -> False
+  TriggerCondition.Transforms _ -> False
   TriggerCondition.PermanentBecomesDesignated {} -> False
   TriggerCondition.AttachedCreatureMentors -> False
   TriggerCondition.Exploits {} -> False
@@ -2814,12 +2810,10 @@ zonesTriggeredFrom cond =
         -- from the battlefield at all, does not apply: CR 113.6's default.
         TriggerCondition.TurnedFaceUp _ -> battlefield
         -- CR 701.27a transforms a PERMANENT, which CR 110.1 puts on the battlefield
-        -- alone, so CR 113.6k never reaches this either.
-        TriggerCondition.SelfTransformedInto _ -> battlefield
-        -- CR 113.6's default for the watcher's side, a Matching TurnedFaceUp's
-        -- reason above: Cult of the Waxing Moon is a creature watching from the
-        -- battlefield.
-        TriggerCondition.PermanentTransforms _ -> battlefield
+        -- alone, so CR 113.6k never reaches a Self subject either; and CR 113.6's
+        -- default for the watcher's side, a Matching TurnedFaceUp's reason above:
+        -- Cult of the Waxing Moon is a creature watching from the battlefield.
+        TriggerCondition.Transforms _ -> battlefield
         TriggerCondition.FaceDownPermanentLeavesRevealed -> battlefield
         -- The same default: CR 702.112b's "only permanents can be or become renowned"
         -- keeps the subject on the battlefield, and Valeron Wardens watches from it.
@@ -3196,12 +3190,10 @@ stateTriggersOn gs
             TriggerCondition.TurnedFaceUp _ -> False
             -- CR 701.27a is an EVENT trigger for that reason exactly: CR
             -- 712.18 leaves the permanent on its new face thereafter, so a
-            -- state read would fire it again on every settle.
-            TriggerCondition.SelfTransformedInto _ -> False
-            -- And the bystander's form of it is an EVENT trigger for the
-            -- same reason: a board showing a permanent on its back face
-            -- says nothing about when it turned over.
-            TriggerCondition.PermanentTransforms _ -> False
+            -- state read would fire it again on every settle. The bystander's
+            -- form likewise: a board showing a permanent on its back face says
+            -- nothing about when it turned over.
+            TriggerCondition.Transforms _ -> False
             TriggerCondition.FaceDownPermanentLeavesRevealed -> False
             -- CR 702.112b's designation is exactly that shape once more: the
             -- permanent keeps it, so a state read would fire every settle.

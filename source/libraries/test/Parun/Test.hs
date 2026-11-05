@@ -743,6 +743,7 @@ import qualified Parun.Codec.TopOfLibrarySpec
 import qualified Parun.Codec.TopOfLibraryUntilSpec
 import qualified Parun.Codec.ToughnessSpec
 import qualified Parun.Codec.TraitSpec
+import qualified Parun.Codec.TransformTriggerSpec
 import qualified Parun.Codec.TransformedSpec
 import qualified Parun.Codec.TriggerConditionSpec
 import qualified Parun.Codec.TriggerFrequencySpec
@@ -1244,6 +1245,7 @@ spec s registry corpus = do
   Parun.Codec.CreateEmblemSpec.spec s
   Parun.Codec.CreateSpec.spec s
   Parun.Codec.ExploitTriggerSpec.spec s
+  Parun.Codec.TransformTriggerSpec.spec s
   Parun.Codec.CrewingSpec.spec s
   Parun.Codec.CrewRestrictionSpec.spec s
   Parun.Codec.CyclingSpec.spec s

@@ -1596,14 +1596,14 @@ grantHeld lapsed = maybe True (`Set.notMember` lapsed) . ActivatedAbility.condit
 -- for an event whose object is still there to be asked about but whose
 -- characteristics the rule pins to the moment of the event -- CR 701.27e's "has
 -- the specified characteristic immediately after it does so", read by
--- Parun.Engine.Event's TriggerCondition.PermanentTransforms arm.
+-- Parun.Engine.Event.Match's TriggerCondition.Transforms arm, Matching subject.
 --
 -- Not viewOfSnapshot alone, and that is the whole point: CR 109.3 names an
 -- object's controller and what an Aura enchants among the things that are NOT
 -- characteristics, and a zone is no more one (CR 400.1), so a snapshot has
 -- nothing to say about them and a Filter naming one would go silently False.
 -- Those come from the view this is handed, which CR 603.10 also pins to
--- immediately after the event: the PermanentTransforms arm writes the sampled
+-- immediately after the event: the Transforms arm writes the sampled
 -- controller onto the live view BEFORE calling this, and the sampled attachments
 -- over the result afterwards.
 --

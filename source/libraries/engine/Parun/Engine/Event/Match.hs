@@ -154,6 +154,7 @@ import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TappedForMana as TappedForMana
 import qualified Parun.Types.Teams as Teams
+import qualified Parun.Types.TransformTrigger as TransformTrigger
 import qualified Parun.Types.Transformed as Transformed
 import Parun.Types.TriggerCondition (TriggerCondition)
 import qualified Parun.Types.TriggerCondition as TriggerCondition
@@ -1601,11 +1602,12 @@ armMatches bindings board gs bearer you cond event = case cond of
         Nothing -> False
         Just view -> Filter.matches bearerContext view f
     _ -> False
-  -- CR 701.27e through CR 603.2: the bearer is the permanent that transformed,
-  -- and the names the event carries are what it turned INTO. TurnedFaceUp's
-  -- Self subject above is the neighbouring shape, plus the name -- and CR
-  -- 701.27b is why they are two conditions rather than one, turning over and
-  -- turning face up being different game actions.
+  -- CR 701.27e through CR 603.2: a Self subject is the permanent that
+  -- transformed, and the names the event carries are what it turned INTO, which
+  -- `into` asks for when it names a face. TurnedFaceUp's Self subject above is
+  -- the neighbouring shape, plus the name -- and CR 701.27b is why they are two
+  -- conditions rather than one, turning over and turning face up being
+  -- different game actions.
   --
   -- Both halves are read off the EVENT, neither off the board. The board at the
   -- CR 117.5 scan is not the board CR 701.27e asks about: a permanent that
@@ -1614,13 +1616,12 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- sample for that reason.
   --
   -- Set.member rather than equality because CR 709.4a admits several names and
-  -- CR 708.2a admits none; a permanent with no name matches nothing, which is
-  -- the rule's own answer rather than a guard.
-  TriggerCondition.SelfTransformedInto name -> case event of
-    GameEvent.Transformed transformed -> Transformed.object transformed == bearer && Set.member name (PC.names (Transformed.characteristics transformed))
-    _ -> False
-  -- CR 701.27e's OTHER written form, read by a bystander: "whenever a permanent
-  -- you control transforms into a non-Human creature" (Cult of the Waxing Moon).
+  -- CR 708.2a admits none; a permanent with no name matches no named face,
+  -- which is the rule's own answer rather than a guard.
+  --
+  -- A Matching subject is CR 701.27e's OTHER written form, read by a bystander:
+  -- "whenever a permanent you control transforms into a non-Human creature" (Cult
+  -- of the Waxing Moon).
   -- TurnedFaceUp's Matching shape against its Self one, one rule along --
   -- the bearer frames the match rather than being it, contributing CR 109.5's
   -- perspective and the Filter.Context's source and nothing else.
@@ -1655,22 +1656,25 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- viewWithLastKnown rather than viewOfObject, a Matching TurnedFaceUp's reason:
   -- a permanent that turned over and left before the CR 117.5 boundary is still
   -- read as it was on the battlefield (CR 608.2h).
-  TriggerCondition.PermanentTransforms f -> case event of
+  TriggerCondition.Transforms (TransformTrigger.MkTransformTrigger subject into) -> case event of
     GameEvent.Transformed transformed ->
-      let oid = Transformed.object transformed
-       in case Projection.viewWithLastKnown oid gs oid of
-            Nothing -> False
-            Just live ->
-              let sampled =
-                    Count.overlaySnapshot
-                      (Count.deployIn gs Zone.Battlefield)
-                      (Transformed.lapsedGrants transformed)
-                      (Transformed.characteristics transformed)
-                      live {Filter.controller = Transformed.controller transformed}
-               in Filter.matches
-                    bearerContext
-                    sampled {Filter.attachedViews = Maybe.mapMaybe (Projection.viewWithLastKnownAnywhere gs) (Set.toAscList (Transformed.attachments transformed))}
-                    f
+      maybe True (\name -> Set.member name (PC.names (Transformed.characteristics transformed))) into && case subject of
+        ActingPermanent.Self -> Transformed.object transformed == bearer
+        ActingPermanent.Matching f ->
+          let oid = Transformed.object transformed
+           in case Projection.viewWithLastKnown oid gs oid of
+                Nothing -> False
+                Just live ->
+                  let sampled =
+                        Count.overlaySnapshot
+                          (Count.deployIn gs Zone.Battlefield)
+                          (Transformed.lapsedGrants transformed)
+                          (Transformed.characteristics transformed)
+                          live {Filter.controller = Transformed.controller transformed}
+                   in Filter.matches
+                        bearerContext
+                        sampled {Filter.attachedViews = Maybe.mapMaybe (Projection.viewWithLastKnownAnywhere gs) (Set.toAscList (Transformed.attachments transformed))}
+                        f
     _ -> False
   -- CR 603.2: a permanent performed the watched action. The EVENT and nothing
   -- else -- each action's own rule places the moment it is recorded

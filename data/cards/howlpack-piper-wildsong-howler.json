@@ -224,8 +224,10 @@
                 "value": {}
               },
               {
-                "type": "SelfTransformedInto",
-                "value": "Wildsong Howler"
+                "type": "Transforms",
+                "value": {
+                  "into": "Wildsong Howler"
+                }
               }
             ]
           },
