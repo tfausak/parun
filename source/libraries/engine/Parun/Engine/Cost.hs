@@ -6112,10 +6112,11 @@ tapForManaWith perform window inFlight refused activator oid = do
               payableAt x = Activations.times (capacity Mana.ForOffer Map.empty controller oid (substituteX x (ManaOption.cost chosen)) (ManaOption.restrictions chosen) (ManaOption.ability chosen) gs) > 0
           -- CR 601.2b through CR 602.2b: the activation cost's {X} is announced
           -- first, bounded by what the gate above measures (Prompt.ChooseX), and
-          -- bound under Binding.variableX for the yield's price below. Wizard's
-          -- Rockets' "{X}, {T}, Sacrifice this artifact: Add X mana" (Parun.ManaSpec's
-          -- Wizard's Rockets group). An X the board cannot pay loses the
-          -- activation at the payment, Activate.activateAbility's posture.
+          -- bound under Binding.variableX for the yield's price below: Wizard's
+          -- Rockets' "{X}, {T}, Sacrifice this artifact: Add X mana"
+          -- (data/scenarios/mana/cr-106-1a-601-2b-wizard-s-rockets-adds-x-mana-in-any-combination-of-colors.json).
+          -- An X the board cannot pay loses the activation at the payment,
+          -- Activate.activateAbility's posture.
           x <- if printedX then Game.choose (Prompt.ChooseX (Decide.deciderFor controller gs) controller oid Binding.variableX 0 (greatestPayableX Nothing payableAt (ManaOption.cost chosen))) else pure 0
           let withComponents = plusComponents gathered (substituteX x (ManaOption.cost chosen))
           -- CR 118.13a: a mana ability is an activated ability (CR 605.1a) and
