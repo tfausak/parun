@@ -1447,7 +1447,7 @@ priorityLoop = do
                                 here = Fragmented.digest gs
                                 settled = if offersAChoice then Fragmented.settle here trail else trail
                                 (refused, refusedCompletions) = if offersAChoice then Fragmented.forbidden here gs p settled else (Set.empty, Set.empty)
-                                menu = if Set.null refused then actions else filter (`Set.notMember` refused) actions
+                                menu = if Set.null refused then actions else filter (\action -> Set.notMember (Fragmented.choiceKey here action) refused) actions
                                 narrowedChoice = case menu of
                                   _ : _ : _ -> True
                                   _ -> False
@@ -1463,6 +1463,7 @@ priorityLoop = do
                             -- making all of it advisory. Rejecting to Pass keeps
                             -- the loop total and cannot wedge the game.
                             let chosen = if List.elem answered menu then answered else Action.Type.Pass
+                                refusing completion = not (Set.null refusedCompletions) && Set.member (Fragmented.choiceKey here chosen, Fragmented.completionKey here completion) refusedCompletions
                                 trail' = if offersAChoice then Fragmented.record here p chosen settled else trail
                             case chosen of
                               -- CR 117.4 / 805.5b: every team has passed in
@@ -1519,10 +1520,25 @@ priorityLoop = do
                                 -- so the two other doors into a cast -- a search's
                                 -- CR 601.3 offer and Parun.Engine.Resolve's -- spend
                                 -- the same grant this one does.
+                                --
+                                -- CR 732.3: completed as the state it leaves, the
+                                -- spell's announcement and payment on it
+                                -- (Fragmented.paid), and reversed as an illegal
+                                -- action (CR 733.1) where a fragmented loop has
+                                -- already completed it so here -- the
+                                -- ActivateManaAbility arm's shape, and its
+                                -- exclusion of a cast that touched a library.
+                                -- Parun.FragmentedSpec's Blinking Spirit case
+                                -- proves the refusal.
+                                pre <- State.get
                                 Cast.castSpell performManaAbility p oid name facing
+                                post <- State.get
+                                let completion = Completion.MkCompletion {Completion.announcement = Nothing, Completion.paid = Fragmented.paid Nothing post}
+                                    completed = if Cost.touchedLibrary pre post then Nothing else Just completion
+                                Monad.when (any refusing completed) (Cost.restoreKeepingLibraryActions pre)
                                 State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
                                 settleForPriority
-                                loop trail'
+                                loop (Fragmented.complete completed trail')
                               -- CR 116.2b / 702.37e / 701.40b: a special action, so
                               -- nothing goes on the stack and no player gets a
                               -- window to respond. Priority is retained and the
@@ -1660,12 +1676,12 @@ priorityLoop = do
                                 post <- State.get
                                 let completion = Completion.MkCompletion {Completion.announcement = Nothing, Completion.paid = Fragmented.paid Nothing post}
                                     completed = if null nested && not (Cost.touchedLibrary pre post) then Just completion else Nothing
-                                Monad.when (not (Set.null refusedCompletions) && any (\c -> Set.member (chosen, c) refusedCompletions) completed) (Cost.restoreKeepingLibraryActions pre)
+                                Monad.when (any refusing completed) (Cost.restoreKeepingLibraryActions pre)
                                 State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
                                 settleForPriority
                                 loop (Fragmented.complete completed trail')
                               Action.Type.Activate oid ability -> do
-                                completed <- Activate.activateAbilityWith (\completion -> Set.member (chosen, completion) refusedCompletions) playSubgame p oid ability
+                                completed <- Activate.activateAbilityWith refusing playSubgame p oid ability
                                 State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
                                 settleForPriority
                                 loop (Fragmented.complete completed trail')

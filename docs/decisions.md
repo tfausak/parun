@@ -871,6 +871,21 @@ Entries are ordered by the first rule each cites.
   not make a repeated activation a new one".
 - **Issue**: #951.
 
+## When a re-created object is the same game state
+
+- **Question**: CR 732.3 turns on "the same game state" being reached again,
+  which the CR doesn't define. A lap that moves a card makes a new object
+  (CR 400.7). Is the state it returns to the same one?
+- **Rules**: CR 732.3, 400.7, 613.7; CR of 2026-08-07. No ruling.
+- **Decision**: The same, where it differs only in which objects and stamps
+  stand for which, in an order-preserving renaming, and what the log says of
+  each held object answers alike. No card or player can tell the two apart.
+- **Rejected**: Different, by identity, which lets Blinking Spirit under
+  Omniscience loop forever with no player made to choose otherwise.
+- **Site**: `Parun.Engine.Fragmented.digest`, proved by `Parun.FragmentedSpec`'s
+  "a loop that moves a card recurs under the card's new identity".
+- **Issue**: #6184.
+
 ## Whether attack left closes up over a seat that emptied
 
 - **Question**: CR 803.1a and 803.1b let a player attack only the opponent seated

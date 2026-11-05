@@ -2,18 +2,27 @@ module Parun.Types.StateDigest where
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
+import qualified Numeric.Natural as Natural
 import qualified Parun.Types.GameState as GameState
 import qualified Parun.Types.LoggedEvent as LoggedEvent
 import qualified Parun.Types.PastActivation as PastActivation
 
 -- | CR 732.3: a game state as Parun.Engine.Fragmented.digest leaves it for
--- comparison. Ordered by a few cheap fields before the whole record, so two
--- states that differ in who holds priority, what is on the stack, what is on
--- the battlefield or in a mana pool -- most pairs a loop compares -- never
--- walk every object.
+-- comparison, its object ids and timestamps renumbered by rank (CR 400.7).
+-- Ordered by a few cheap, id-free fields before the canonical text, so two
+-- states that differ in who holds priority, how much is on the stack or the
+-- battlefield, or what is in a mana pool -- most pairs a loop compares --
+-- never render every object.
 data StateDigest = MkStateDigest
-  { -- | The state, less what the digest drops. The only field compared.
+  { -- | The state, less what the digest drops, as it stands.
     unwrap :: GameState.GameState,
+    -- | `unwrap` rendered with every object id and timestamp replaced by its
+    -- rank among those it holds. The only field compared bar the cheap ones,
+    -- and lazy, so a comparison the cheap fields settle never renders it.
+    canonical :: String,
+    -- | The rank `canonical` gives each object id `unwrap` holds, so a
+    -- choice made in this state can be compared under the same renaming.
+    objectRanks :: Map.Map Natural.Natural Int,
     -- | The dropped GameState.events, carried uncompared so a recurrence can
     -- ask which of them the loop wrote.
     events :: Seq.Seq LoggedEvent.LoggedEvent,
@@ -27,18 +36,16 @@ instance Eq StateDigest where
 
 instance Ord StateDigest where
   compare x y =
-    compare (cheap a) (cheap b) <> compare a b
+    compare (cheap (unwrap x)) (cheap (unwrap y)) <> compare (canonical x) (canonical y)
     where
-      a = unwrap x
-      b = unwrap y
       cheap gs =
         ( ( GameState.priority gs,
             GameState.passed gs,
-            GameState.stack gs,
+            length (GameState.stack gs),
             GameState.phase gs
           ),
           ( Map.size (GameState.objects gs),
-            GameState.battlefield gs,
+            length (GameState.battlefield gs),
             GameState.manaPool gs,
             fmap length (GameState.hand gs)
           )
