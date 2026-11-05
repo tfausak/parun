@@ -1668,7 +1668,7 @@ turnFaceUpSpec s registry = Spec.describe s "Turning face up" $ do
   -- fails here rather than passing as the right answer on the wrong object.
   --
   -- AINOK TRACKER AND NOT SKIRK MARAUDER, and not by taste: the Marauder bears a
-  -- SelfTurnedFaceUp trigger, so on a board with both, a bug that fired the
+  -- Self TurnedFaceUp trigger, so on a board with both, a bug that fired the
   -- Farseer's ability under the self-scoped condition would be invisible. The
   -- Tracker bears no triggered ability at all, so the only condition that can
   -- fire on this board is the Farseer's. Misthoof Kirin was rejected for the
@@ -1707,8 +1707,8 @@ turnFaceUpSpec s registry = Spec.describe s "Turning face up" $ do
         -- CR 708.7 through CR 603.2: the counter is on the WATCHER.
         Spec.assertEqWith s "CR 708.7 the Farseer took the +1/+1 counter" (S.counterOf CounterKind.PlusOnePlusOne watcher after) 1
         Spec.assertEqWith s "CR 613.4c so the 1/1 is a 2/2" (S.powerToughnessOf watcher after) (Just (2, 2))
-        -- And NOT on the permanent that turned over, which is what separates this
-        -- condition from SelfTurnedFaceUp.
+        -- And NOT on the permanent that turned over, which is what separates a
+        -- Matching subject from a Self one.
         Spec.assertEqWith s "CR 708.7 the Tracker took none" (S.counterOf CounterKind.PlusOnePlusOne morphling after) 0
         Spec.assertEqWith s "CR 708.8 so it is the printed 3/3 and not a 4/4" (S.powerToughnessOf morphling after) (Just (3, 3))
         Spec.assertEqWith s "CR 110.5 face up" (fmap Object.facing (Game.lookupObject morphling after)) (Just Facing.FaceUp)

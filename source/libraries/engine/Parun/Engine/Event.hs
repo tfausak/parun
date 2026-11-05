@@ -11071,8 +11071,9 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.AnyOf conditions -> all controllerTurnScoped conditions
   TriggerCondition.CausedBy narrowed -> controllerTurnScoped (CausedBy.condition narrowed)
   -- CR 702.37e offers the special action "any time you have priority", which is
-  -- every turn and not only the controller's own.
-  TriggerCondition.SelfTurnedFaceUp -> False
+  -- every turn and not only the controller's own; and a Matching subject's
+  -- watcher is not even the player taking it.
+  TriggerCondition.TurnedFaceUp _ -> False
   -- CR 701.27a names no turn at all: an activated ability can transform a
   -- permanent whenever it can be activated, and CR 702.145c's sweep fires on
   -- whosever turn it becomes night.
@@ -11080,10 +11081,6 @@ controllerTurnScoped cond = case cond of
   -- The watcher's side of that answer, and False for the same reason, the
   -- watcher not being the permanent that turned over.
   TriggerCondition.PermanentTransforms _ -> False
-  -- The same rule from the watcher's side, and doubly so: CR 702.37e lets any
-  -- player take the action on any turn, and the watcher is not even the player
-  -- taking it.
-  TriggerCondition.PermanentTurnedFaceUp _ -> False
   TriggerCondition.FaceDownPermanentLeavesRevealed -> False
   -- CR 702.112a's ability fires on combat damage to a player, which any player's
   -- turn can carry, and the watcher's turn is not asked about at all.

@@ -152,28 +152,31 @@
                 }
               },
               {
-                "type": "PermanentTurnedFaceUp",
+                "type": "TurnedFaceUp",
                 "value": {
-                  "type": "And",
-                  "value": [
-                    {
-                      "type": "HeldBy",
-                      "value": {
-                        "holder": {
-                          "type": "Controller"
-                        },
-                        "relation": {
-                          "type": "You"
+                  "type": "Matching",
+                  "value": {
+                    "type": "And",
+                    "value": [
+                      {
+                        "type": "HeldBy",
+                        "value": {
+                          "holder": {
+                            "type": "Controller"
+                          },
+                          "relation": {
+                            "type": "You"
+                          }
+                        }
+                      },
+                      {
+                        "type": "HasSubtype",
+                        "value": {
+                          "type": "Detective"
                         }
                       }
-                    },
-                    {
-                      "type": "HasSubtype",
-                      "value": {
-                        "type": "Detective"
-                      }
-                    }
-                  ]
+                    ]
+                  }
                 }
               }
             ]
