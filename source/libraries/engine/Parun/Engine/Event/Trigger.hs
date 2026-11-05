@@ -696,7 +696,6 @@ looksBack condition = case condition of
   -- so there is nothing gone for CR 603.10a to look back at, whatever the
   -- subject or batching.
   TriggerCondition.BecomesTargeted {} -> False
-  TriggerCondition.ControllerBecomesTarget {} -> False
   TriggerCondition.SelfHalfUnlocked _ -> False
   TriggerCondition.RoomFullyUnlocked _ -> False
   -- CR 603.3b's second class names no zone change at all -- its event is another
@@ -906,7 +905,6 @@ batchScoped condition = case condition of
   TriggerCondition.SelfBecomesClassLevel _ -> False
   TriggerCondition.SpellCast {} -> False
   TriggerCondition.AbilityActivated _ -> False
-  TriggerCondition.ControllerBecomesTarget {} -> False
   -- A True beside a OneOrMore Leaves and a OneOrMore LifeChanges, and the whole of
   -- what separates this constructor from the two singular arms above: CR 603.2c's
   -- FIRST sentence, "one or more creatures you control become the target of an
@@ -2968,12 +2966,10 @@ zonesTriggeredFrom cond =
         -- spell on the stack can become a target too, and no card in the pool is one.
         --
         -- And for a Matching subject: Professor Hojo is a creature, watching the
-        -- creatures beside it from the battlefield.
+        -- creatures beside it from the battlefield. And for a You subject: Dormant
+        -- Gomazoa is a creature and Amulet of Safekeeping an artifact, both
+        -- watching their controller from the battlefield.
         TriggerCondition.BecomesTargeted {} -> battlefield
-        -- CR 113.6's default again: Dormant Gomazoa is a creature and Amulet of
-        -- Safekeeping an artifact, both watching their controller from the
-        -- battlefield. Nothing on the stack reads its controller becoming a target.
-        TriggerCondition.ControllerBecomesTarget {} -> battlefield
         -- CR 113.6's default a last time: Historian's Boon is an enchantment watching
         -- the battlefield's Sagas, and a card in a graveyard sees no chapter fire.
         TriggerCondition.SagaFinalChapterTriggers _ -> battlefield
@@ -3217,7 +3213,6 @@ stateTriggersOn gs
             TriggerCondition.SpellCast {} -> False
             TriggerCondition.AbilityActivated _ -> False
             TriggerCondition.BecomesTargeted {} -> False
-            TriggerCondition.ControllerBecomesTarget {} -> False
             -- CR 709.5i is an EVENT trigger, for CR 709.5h's reason one arm up:
             -- it fires on the LAST designation arriving, and CR 709.5c leaves
             -- the permanent holding both thereafter, so a state read would fire

@@ -11259,11 +11259,9 @@ controllerTurnScoped cond = case cond of
   -- Nor an activation, which CR 117.1b allows on anybody's turn.
   TriggerCondition.AbilityActivated _ -> False
   -- The condition carries no TurnScope, and an opponent can target the bearer,
-  -- or an activated ability name a creature, on anybody's turn.
+  -- an activated ability name a creature, or a spell name its controller, on
+  -- anybody's turn.
   TriggerCondition.BecomesTargeted {} -> False
-  -- Its player-side sibling likewise: a spell can name its controller on anybody's
-  -- turn.
-  TriggerCondition.ControllerBecomesTarget {} -> False
   -- CR 714.3c's turn-based action falls on the Saga controller's own turn, but
   -- nothing restricts this CONDITION to it: CR 714.3a's entry replacement can put
   -- a Saga's last lore counter on during anybody's turn, and the watcher is not

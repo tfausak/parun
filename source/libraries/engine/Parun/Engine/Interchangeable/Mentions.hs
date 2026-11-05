@@ -435,6 +435,7 @@ import qualified Parun.Types.TappedForManaTrigger as TappedForManaTrigger
 import qualified Parun.Types.TappedPermanent as TappedPermanent
 import qualified Parun.Types.TargetRestriction as TargetRestriction
 import qualified Parun.Types.TargetSlot as TargetSlot
+import qualified Parun.Types.TargetedSubject as TargetedSubject
 import qualified Parun.Types.TheseDiscard as TheseDiscard
 import qualified Parun.Types.Times as Times
 import qualified Parun.Types.TokenPattern as TokenPattern
@@ -3016,7 +3017,13 @@ attackTriggerNames asking x = case x of
 
 becomesTargetedTriggerNames :: (Monoid r) => Asking r -> BecomesTargetedTrigger.BecomesTargetedTrigger -> r
 becomesTargetedTriggerNames asking x = case x of
-  BecomesTargetedTrigger.MkBecomesTargetedTrigger permanent _relation _kind _includesYou _batching -> actingPermanentNames asking permanent
+  BecomesTargetedTrigger.MkBecomesTargetedTrigger subject _relation _kind _batching -> targetedSubjectNames asking subject
+
+targetedSubjectNames :: (Monoid r) => Asking r -> TargetedSubject.TargetedSubject -> r
+targetedSubjectNames asking x = case x of
+  TargetedSubject.Permanent permanent -> actingPermanentNames asking permanent
+  TargetedSubject.You -> mempty
+  TargetedSubject.YouOrPermanent permanent -> actingPermanentNames asking permanent
 
 exploitTriggerNames :: (Monoid r) => Asking r -> ExploitTrigger.ExploitTrigger -> r
 exploitTriggerNames asking x = case x of
@@ -3122,7 +3129,6 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SpellCast spellCast -> spellCastNames asking spellCast
   TriggerCondition.AbilityActivated filter_ -> filterNames asking filter_
   TriggerCondition.BecomesTargeted becomesTargetedTrigger -> becomesTargetedTriggerNames asking becomesTargetedTrigger
-  TriggerCondition.ControllerBecomesTarget _controllerBecomesTarget -> mempty
   TriggerCondition.SelfHalfUnlocked _cardName -> mempty
   TriggerCondition.RoomFullyUnlocked _playerRelation -> mempty
   TriggerCondition.AnyOf items -> foldMap (triggerConditionNames asking) items

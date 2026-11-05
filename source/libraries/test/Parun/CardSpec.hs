@@ -422,6 +422,7 @@ import qualified Parun.Types.TappedForManaTrigger as TappedForManaTrigger
 import qualified Parun.Types.TappedPermanent as TappedPermanent
 import qualified Parun.Types.TargetRestriction as TargetRestriction
 import qualified Parun.Types.TargetSlot as TargetSlot
+import qualified Parun.Types.TargetedSubject as TargetedSubject
 import qualified Parun.Types.TheseDiscard as TheseDiscard
 import qualified Parun.Types.TokenPattern as TokenPattern
 import qualified Parun.Types.TokenR as TokenR
@@ -1240,9 +1241,6 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- CR 601.2c's carries a subject, a PlayerRelation, a StackObjectKind and a
   -- Batching, and no Count.
   TriggerCondition.BecomesTargeted {} -> []
-  -- Its player-side sibling carries a PlayerRelation and a StackObjectKind, and
-  -- no Count either.
-  TriggerCondition.ControllerBecomesTarget {} -> []
 
 -- Every Count reachable from one effect: the Quantities nested in its
 -- ObjectRefs, its own Quantity/Duration fields, and -- for Create/CreateEmblem
@@ -4709,14 +4707,10 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- needs no Filter to say so.
   TriggerCondition.SpellCast c -> actingFilters (SpellCast.spell c)
   TriggerCondition.AbilityActivated f -> unframed [f]
-  -- Rule 702.21a's Self subject names the bearer and carries no Filter; a
-  -- Matching one's is card text like any other: Professor Hojo's "creatures you
-  -- control".
-  TriggerCondition.BecomesTargeted c -> actingFilters (BecomesTargetedTrigger.permanent c)
-  -- CR 601.2c from the player's side names CR 109.5's "you", a relation over the
-  -- targeting object's controller and a kind read off the event, so there is no
-  -- Filter here either.
-  TriggerCondition.ControllerBecomesTarget {} -> []
+  -- Rule 702.21a's Self subject names the bearer and a You subject CR 109.5's
+  -- "you", and neither carries a Filter; a Matching one's is card text like any
+  -- other: Professor Hojo's "creatures you control".
+  TriggerCondition.BecomesTargeted c -> foldMap actingFilters (TargetedSubject.permanentOf (BecomesTargetedTrigger.subject c))
   where
     actingFilters watched = case watched of
       ActingPermanent.Self -> []
@@ -4775,7 +4769,6 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.SpellCast _ -> []
   TriggerCondition.AbilityActivated _ -> []
   TriggerCondition.BecomesTargeted _ -> []
-  TriggerCondition.ControllerBecomesTarget _ -> []
   TriggerCondition.SelfHalfUnlocked _ -> []
   TriggerCondition.RoomFullyUnlocked _ -> []
   -- Recursive, for triggerConditionCounts' reason: a branch of an AnyOf may be

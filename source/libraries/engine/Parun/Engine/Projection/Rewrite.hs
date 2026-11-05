@@ -287,6 +287,7 @@ import qualified Parun.Types.TappedForManaTrigger as TappedForManaTrigger
 import qualified Parun.Types.TappedPermanent as TappedPermanent
 import qualified Parun.Types.TargetRestriction as TargetRestriction
 import qualified Parun.Types.TargetSlot as TargetSlot
+import qualified Parun.Types.TargetedSubject as TargetedSubject
 import qualified Parun.Types.TextWord as TextWord
 import qualified Parun.Types.TheseDiscard as TheseDiscard
 import qualified Parun.Types.TokenPattern as TokenPattern
@@ -2137,8 +2138,14 @@ rewriteTriggerCondition pairs condition = case condition of
     DiscardSubject.Self -> condition
     DiscardSubject.Discarder payload -> TriggerCondition.Discards (DiscardTrigger.MkDiscardTrigger (DiscardSubject.Discarder payload {PlayerActsOn.filter = Filter.rewrite pairs (PlayerActsOn.filter payload)}) way batching)
   TriggerCondition.AbilityActivated f -> TriggerCondition.AbilityActivated (Filter.rewrite pairs f)
-  TriggerCondition.BecomesTargeted c -> TriggerCondition.BecomesTargeted c {BecomesTargetedTrigger.permanent = acting (BecomesTargetedTrigger.permanent c)}
-  TriggerCondition.ControllerBecomesTarget {} -> condition
+  TriggerCondition.BecomesTargeted c ->
+    TriggerCondition.BecomesTargeted
+      c
+        { BecomesTargetedTrigger.subject = case BecomesTargetedTrigger.subject c of
+            TargetedSubject.Permanent p -> TargetedSubject.Permanent (acting p)
+            TargetedSubject.You -> TargetedSubject.You
+            TargetedSubject.YouOrPermanent p -> TargetedSubject.YouOrPermanent (acting p)
+        }
   TriggerCondition.PlayerDrawsNthCard {} -> condition
   TriggerCondition.PlayerBecomesMonarch _ -> condition
   TriggerCondition.Attacks t -> TriggerCondition.Attacks (rewriteAttackTrigger pairs t)

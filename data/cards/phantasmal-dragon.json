@@ -45,10 +45,13 @@
           "condition": {
             "type": "BecomesTargeted",
             "value": {
-              "permanent": {
-                "type": "Matching",
+              "subject": {
+                "type": "Permanent",
                 "value": {
-                  "type": "IsSource"
+                  "type": "Matching",
+                  "value": {
+                    "type": "IsSource"
+                  }
                 }
               }
             }

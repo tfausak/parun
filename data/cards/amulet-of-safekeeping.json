@@ -48,10 +48,13 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "ControllerBecomesTarget",
+            "type": "BecomesTargeted",
             "value": {
               "relation": {
                 "type": "Opponent"
+              },
+              "subject": {
+                "type": "You"
               }
             }
           },

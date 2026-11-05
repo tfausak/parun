@@ -32,12 +32,15 @@
           "condition": {
             "type": "BecomesTargeted",
             "value": {
-              "permanent": {
-                "type": "Matching",
+              "subject": {
+                "type": "Permanent",
                 "value": {
-                  "type": "HasCardType",
+                  "type": "Matching",
                   "value": {
-                    "type": "Creature"
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Creature"
+                    }
                   }
                 }
               }

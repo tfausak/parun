@@ -69,12 +69,15 @@
           "condition": {
             "type": "BecomesTargeted",
             "value": {
-              "permanent": {
-                "type": "Matching",
+              "subject": {
+                "type": "Permanent",
                 "value": {
-                  "type": "HasAttached",
+                  "type": "Matching",
                   "value": {
-                    "type": "IsSource"
+                    "type": "HasAttached",
+                    "value": {
+                      "type": "IsSource"
+                    }
                   }
                 }
               }

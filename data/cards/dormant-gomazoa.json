@@ -58,13 +58,13 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "ControllerBecomesTarget",
+            "type": "BecomesTargeted",
             "value": {
               "kind": {
                 "type": "Spell"
               },
-              "relation": {
-                "type": "AnyPlayer"
+              "subject": {
+                "type": "You"
               }
             }
           },
