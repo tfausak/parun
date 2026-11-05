@@ -3523,26 +3523,17 @@ diedChange event = do
   if ZoneChange.from change == Zone.Battlefield && ZoneChange.to change == Zone.Graveyard then Just change else Nothing
 
 -- CR 400.7's link read back for a card that says "from anywhere" (Tempest
--- Efreet, Timmerian Fiends): the object this id is now, following each logged
--- zone change from the id that left to the id that arrived. Nothing once the
--- trail reaches an id that is gone with no successor: the card left the game.
--- The log is this turn's (GameState.events), which is enough, since the stack
--- empties before any turn ends.
---
--- Not implemented: following a card out of a move with several arrivals, a
--- merged permanent leaving the battlefield (#4837).
-currentIncarnation :: ObjectId -> GameState -> Maybe ObjectId
-currentIncarnation oid gs
-  | Map.member oid (GameState.objects gs) = Just oid
-  | otherwise = case successorOf oid gs of
-      Just next -> currentIncarnation next gs
-      Nothing -> Nothing
-
--- The one id a logged single-arrival move turned this id into.
-successorOf :: ObjectId -> GameState -> Maybe ObjectId
-successorOf oid gs = case arrivalsOf oid gs of
-  [arrival] -> Just arrival
-  _ -> Nothing
+-- Efreet, Timmerian Fiends): the objects this id is now, following each logged
+-- zone change from the id that left to every id that arrived -- several where a
+-- merged or melded permanent came apart, all of which the effect finds (CR
+-- 730.3c, 712.21c). None once every trail reaches an id that is gone with no
+-- successor: the card left the game. The log is this turn's
+-- (GameState.events), which is enough, since the stack empties before any turn
+-- ends.
+currentIncarnations :: ObjectId -> GameState -> [ObjectId]
+currentIncarnations oid gs
+  | Map.member oid (GameState.objects gs) = [oid]
+  | otherwise = concatMap (`currentIncarnations` gs) (arrivalsOf oid gs)
 
 -- CR 400.7: the ids a logged Moved entry naming this one as its DEPARTURE
 -- arrived as -- none for CR 111.7's token, several for a melded or merged
