@@ -260,7 +260,7 @@ choosable view oid = case located view oid of
     whose = maybe Text.empty (\pid -> if pid == PlayerView.viewer view then Text.pack "Your " else player pid <> Text.pack "'s ")
 
 -- | The seat an object is listed under: its controller on the battlefield or
--- the stack, else its owner.
+-- the stack, else its owner (CR 108.4a).
 seatOf :: PlayerView.PlayerView -> ObjectId.ObjectId -> Maybe PlayerId.PlayerId
 seatOf view oid = case located view oid of
   Just (z, o) | z `elem` [Zone.Battlefield, Zone.Stack] -> ObjectView.controller o
