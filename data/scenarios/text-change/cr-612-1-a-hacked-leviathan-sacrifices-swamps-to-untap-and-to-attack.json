@@ -1,0 +1,19 @@
+{
+  "description": "CR 612.1 whole card: a Leviathan hacked from Island to Swamp sacrifices two Swamps at upkeep to untap and two more to attack",
+  "note": "Magical Hack rewrites both of Leviathan's sacrifices. The Island that paid for the Hack is never one the costs can take, so the attack is legal only because its cost to attack now names Swamps.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Leviathan", "tapped": true, "label": "lev"}, {"card": "Island", "label": "u"}, {"card": "Swamp", "label": "s1"}, {"card": "Swamp", "label": "s2"}, {"card": "Swamp", "label": "s3"}, {"card": "Swamp", "label": "s4"}], "hand": [{"card": "Magical Hack", "label": "hack"}], "library": [{"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}]}, {"name": "bob", "library": [{"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$hack", "targets": ["$lev"], "mana": ["$u", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Magical Hack", "do": {"ChooseWordSwap": {"from": {"type": "Island"}, "to": {"type": "Swamp"}}}},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "do": {"ChooseToPay": {"decision": {"type": "Pays"}}}},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "do": {"Answer": {"prompt": "ChooseSacrifices", "with": ["$s1", "$s2"]}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$lev", "tapped": false}}},
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Swamp", "count": 2}}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$lev"]}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Swamp", "count": 0}}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Island", "count": 1}}},
+    {"turn": 3, "step": "PostcombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 10}}}
+  ]
+}
