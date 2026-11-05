@@ -1,0 +1,23 @@
+5 Island
+12 Mountain
+1 Terramorphic Expanse
+1 Berserkers of Blood Ridge
+1 Canyon Minotaur
+1 Divination
+1 Dragon Whelp
+1 Earthquake
+1 Fiery Hellhound
+1 Fireball
+1 Goblin Artillery
+1 Goblin Piker
+1 Lava Axe
+2 Lightning Bolt
+2 Lightning Elemental
+1 Negate
+1 Prodigal Pyromancer
+1 Pyroclasm
+1 Raging Goblin
+2 Seismic Strike
+1 Shivan Dragon
+1 Sleep
+1 Wall of Fire

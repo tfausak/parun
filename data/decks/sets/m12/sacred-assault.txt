@@ -1,0 +1,23 @@
+10 Forest
+14 Plains
+1 Aegis Angel
+2 Alabaster Mage
+3 Assault Griffin
+2 Auramancer
+2 Cudgel Troll
+2 Divine Favor
+2 Elite Vanguard
+1 Gladecover Scout
+2 Griffin Rider
+2 Griffin Sentinel
+1 Jade Mage
+1 Lifelink
+1 Lure
+1 Mesa Enchantress
+1 Naturalize
+3 Pacifism
+2 Peregrine Griffin
+2 Sacred Wolf
+2 Spirit Mantle
+2 Thran Golem
+1 Trollhide

@@ -114,6 +114,7 @@ animate-wall
 animists-awakening
 ankh-of-mishra
 annex
+anointed-procession
 aphotic-wisps
 apocalypse-chime
 approach-of-the-second-sun
@@ -2923,6 +2924,7 @@ total-war
 touch-of-death
 touch-of-moonglove
 touch-of-the-eternal
+touch-of-vitae
 tovolar-dire-overlord-tovolar-the-midnight-scourge
 tower-geist
 toxic-deluge
@@ -2961,6 +2963,7 @@ tsabos-web
 turn-the-tables
 turn-to-frog
 turn-to-slag
+turntimber-ranger
 turret-ogre
 tusk-and-whiskers
 twinblade-assassins

@@ -1,0 +1,58 @@
+{
+  "description": "CR 113.2c: once Well Rested's granted untap trigger has fired, a second Well Rested put on the same creature that turn grants a new ability, which triggers",
+  "note": "Twiddle untaps the Elves and the first Well Rested's ability fires. Disenchant destroys it, and a second Well Rested, paid for by tapping the Elves, is put on them. A second Twiddle untaps them again: the new Aura's ability has not triggered this turn, so it does. A record keyed by the ability's text alone would read it as spent.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Llanowar Elves", "label": "elves", "ready": true, "tapped": true },
+          { "card": "Well Rested", "label": "old", "attached": "elves" },
+          { "card": "Island", "label": "i1", "ready": true },
+          { "card": "Island", "label": "i2", "ready": true },
+          { "card": "Island", "label": "i3", "ready": true },
+          { "card": "Plains", "label": "p1", "ready": true },
+          { "card": "Forest", "label": "f1", "ready": true }
+        ],
+        "hand": [
+          { "card": "Twiddle", "label": "twiddle1" },
+          { "card": "Twiddle", "label": "twiddle2" },
+          { "card": "Disenchant", "label": "disenchant" },
+          { "card": "Well Rested", "label": "new" }
+        ],
+        "library": [
+          { "card": "Island" },
+          { "card": "Island" },
+          { "card": "Island" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          { "card": "Island" },
+          { "card": "Island" }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$twiddle1", "targets": ["$elves"], "mana": ["$i1", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "$elves", "kind": { "type": "PlusOnePlusOne" }, "count": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$disenchant", "targets": ["$old"], "mana": ["$p1", "$i2", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$new", "targets": ["$elves"], "mana": ["$elves", "$f1", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$elves", "tapped": true } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$twiddle2", "targets": ["$elves"], "mana": ["$i3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of $elves"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "$elves", "kind": { "type": "PlusOnePlusOne" }, "count": 4 } } }
+  ]
+}

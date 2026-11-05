@@ -67,6 +67,27 @@ Entries are ordered by the first rule each cites.
   component is a spell copy is no token".
 - **Issue**: none.
 
+## A rider ability regained from one granter stays spent
+
+- **Question**: A permanent loses a "triggers only once each turn" or "activate
+  only once" ability a granter gave it, then gets it back from the SAME granter
+  (Well Rested moved off and back by Aura Graft). Is it a new ability, unspent?
+  The rulings on Tyvar the Bellicose, Dionus and Cursed Wombat settle only a
+  new granter's grant, and only for a triggered ability.
+- **Rules**: CR 113.2c, 400.7, 602.5b, 613.7e; CR of 2026-08-07.
+- **Decision**: The same ability, still spent: a grant is named for its
+  granter object (`Binding.acquiredFrom`), not for its timestamp. A new
+  granter, including one that left and returned (CR 400.7), gives a new
+  ability. The activated side reads the same, CR 113.2c being all that speaks
+  to it.
+- **Rejected**: A new ability on each re-grant, keyed by the grant's
+  timestamp: CR 613.7e re-stamps a moved Aura without changing which object
+  grants, and the rulings speak of the granting object.
+- **Site**: `Parun.Engine.Projection`'s `GainAbility` arm;
+  `data/scenarios/well-rested-moved-back-by-aura-graft-stays-spent.json`
+  proves it.
+- **Issue**: #4627.
+
 ## Who says which new target takes a replaced target's part of a division
 
 - **Question**: CR 115.7f keeps a divided spell's division through a change of
@@ -734,8 +755,10 @@ Entries are ordered by the first rule each cites.
   "a spell or ability an opponent controls causes" a move or a discard. Does a
   cost paid for it count, a CR 118.12 cost paid as it resolves (Professor
   Onyx's "each opponent may discard a card. If they don't, ..."), or the
-  state-based action that follows its damage?
-- **Rules**: CR 609.1, 118.12, 601.2h, 602.2b, 704.3; CR of 2026-08-07.
+  state-based action that follows its damage? Does Doubling Season's "if an
+  effect would create" reach a token made as such a cost?
+- **Rules**: CR 609.1, 118.12, 601.2h, 602.2b, 614.16, 704.3; CR of
+  2026-08-07.
 - **Decision**: Only an effect (CR 609.1) of a spell or ability counts, with
   that spell or ability's controller as the effect is performed. A cost,
   CR 118.12's included, a state-based action, a turn-based action and the
@@ -755,8 +778,11 @@ Entries are ordered by the first rule each cites.
   `Parun.Engine.Resolve.Effect.applyEffectWith` and
   `Parun.Engine.Cost.payComponent`, proved by the `sacred-ground-*` and
   `spiritual-focus-*` scenarios. The `obstinate-baloth-*` scenarios prove
-  only whose spell or ability caused the discard.
-- **Issue**: #5530.
+  only whose spell or ability caused the discard. A token lot made as that
+  cost is no effect's either, while one another replacement appends is (CR
+  614.16): `Parun.Engine.Replacement.reachesLot` reads `TokenLot.byEffect`,
+  proved by the `turntimber-ranger-*` scenarios.
+- **Issue**: #5530, #6114.
 
 ## Whether "if you can't" holds after doing part of an instruction
 

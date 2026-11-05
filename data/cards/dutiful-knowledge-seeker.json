@@ -78,16 +78,19 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "CardsPutIntoZone",
+            "type": "PutIntoZone",
             "value": {
-              "filter": {
-                "type": "Not",
-                "value": {
-                  "type": "IsToken"
-                }
+              "batching": {
+                "type": "OneOrMore"
               },
-              "scope": {
-                "type": "EachTurn"
+              "card": {
+                "type": "Matching",
+                "value": {
+                  "type": "Not",
+                  "value": {
+                    "type": "IsToken"
+                  }
+                }
               },
               "to": {
                 "type": "Library"

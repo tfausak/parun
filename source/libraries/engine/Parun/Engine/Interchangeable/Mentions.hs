@@ -103,9 +103,6 @@ import qualified Parun.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Parun.Types.CantBlockCreatures as CantBlockCreatures
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardAbilities as CardAbilities
-import qualified Parun.Types.CardLeavesZone as CardLeavesZone
-import qualified Parun.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
-import qualified Parun.Types.CardsPutIntoZone as CardsPutIntoZone
 import qualified Parun.Types.CastFrom as CastFrom
 import qualified Parun.Types.CastFromZone as CastFromZone
 import qualified Parun.Types.CastOffer as CastOffer
@@ -280,6 +277,7 @@ import qualified Parun.Types.KeywordDesignator as KeywordDesignator
 import qualified Parun.Types.KeywordInstance as KeywordInstance
 import qualified Parun.Types.KeywordTally as KeywordTally
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
 import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LibraryDeparture as LibraryDeparture
 import qualified Parun.Types.LibraryPlacement as LibraryPlacement
@@ -372,6 +370,7 @@ import qualified Parun.Types.ProjectedCharacteristics as ProjectedCharacteristic
 import qualified Parun.Types.Protection as Protection
 import qualified Parun.Types.PutCounters as PutCounters
 import qualified Parun.Types.PutCountersFrom as PutCountersFrom
+import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.PutSticker as PutSticker
 import qualified Parun.Types.Quantity as Quantity
 import qualified Parun.Types.Quotient as Quotient
@@ -885,18 +884,6 @@ cantBlockCreaturesNames asking x = case x of
 cardNames :: (Monoid r) => Asking r -> Card.Card -> r
 cardNames asking x = case x of
   Card.MkCard _layout faces -> foldMap (faceNames asking (cardNames asking)) faces
-
-cardLeavesZoneNames :: (Monoid r) => Asking r -> CardLeavesZone.CardLeavesZone -> r
-cardLeavesZoneNames asking x = case x of
-  CardLeavesZone.MkCardLeavesZone filter_ scope _from _to _whose -> filterNames asking filter_ <> turnScopeNames asking scope
-
-cardPutIntoGraveyardNames :: (Monoid r) => Asking r -> CardPutIntoGraveyard.CardPutIntoGraveyard -> r
-cardPutIntoGraveyardNames asking x = case x of
-  CardPutIntoGraveyard.MkCardPutIntoGraveyard filter_ _from -> filterNames asking filter_
-
-cardsPutIntoZoneNames :: (Monoid r) => Asking r -> CardsPutIntoZone.CardsPutIntoZone -> r
-cardsPutIntoZoneNames asking x = case x of
-  CardsPutIntoZone.MkCardsPutIntoZone filter_ scope _from _to -> filterNames asking filter_ <> turnScopeNames asking scope
 
 castFromNames :: (Monoid r) => Asking r -> CastFrom.CastFrom -> r
 castFromNames asking x = case x of
@@ -2993,7 +2980,7 @@ timesNames _asking onQuantity x = case x of
 
 tokenPatternNames :: (Monoid r) => Asking r -> TokenPattern.TokenPattern -> r
 tokenPatternNames asking x = case x of
-  TokenPattern.MkTokenPattern whose whatToken -> controllerRelationNames asking whose <> filterNames asking whatToken
+  TokenPattern.MkTokenPattern whose whatToken _ -> controllerRelationNames asking whose <> filterNames asking whatToken
 
 tokenPlusNames :: Asking r -> (card -> r) -> TokenPlus.TokenPlus card -> r
 tokenPlusNames _asking onCard x = case x of
@@ -3028,6 +3015,16 @@ entersTriggerNames :: (Monoid r) => Asking r -> EntersTrigger.EntersTrigger -> r
 entersTriggerNames asking x = case x of
   -- A batching, which names nothing.
   EntersTrigger.MkEntersTrigger permanent _batching -> actingPermanentNames asking permanent
+
+leavesZoneTriggerNames :: (Monoid r) => Asking r -> LeavesZoneTrigger.LeavesZoneTrigger -> r
+leavesZoneTriggerNames asking x = case x of
+  -- Zones, a pile's relation and a batching, which name nothing.
+  LeavesZoneTrigger.MkLeavesZoneTrigger card _from _to _whose scope _batching -> actingPermanentNames asking card <> turnScopeNames asking scope
+
+putIntoZoneTriggerNames :: (Monoid r) => Asking r -> PutIntoZoneTrigger.PutIntoZoneTrigger -> r
+putIntoZoneTriggerNames asking x = case x of
+  -- Zones, a flag and a batching, which name nothing.
+  PutIntoZoneTrigger.MkPutIntoZoneTrigger card _from _to scope _duringResolution _batching -> actingPermanentNames asking card <> turnScopeNames asking scope
 
 leavesTriggerNames :: (Monoid r) => Asking r -> LeavesTrigger.LeavesTrigger -> r
 leavesTriggerNames asking x = case x of
@@ -3099,14 +3096,8 @@ triggerConditionNames asking x = case x of
   TriggerCondition.Attacks attackTrigger -> attackTriggerNames asking attackTrigger
   TriggerCondition.Blocks blockTrigger -> blockTriggerNames asking blockTrigger
   TriggerCondition.Leaves leavesTrigger -> leavesTriggerNames asking leavesTrigger
-  TriggerCondition.SelfPutIntoGraveyardFromLibrary -> mempty
-  TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> mempty
-  TriggerCondition.SelfPutIntoGraveyardDuringResolution -> mempty
-  TriggerCondition.CardPutIntoGraveyard cardPutIntoGraveyard -> cardPutIntoGraveyardNames asking cardPutIntoGraveyard
-  TriggerCondition.CardLeavesZone cardLeavesZone -> cardLeavesZoneNames asking cardLeavesZone
-  TriggerCondition.CardsLeaveZone cardLeavesZone -> cardLeavesZoneNames asking cardLeavesZone
-  TriggerCondition.CardsPutIntoZone cardsPutIntoZone -> cardsPutIntoZoneNames asking cardsPutIntoZone
-  TriggerCondition.SelfLeavesGraveyard -> mempty
+  TriggerCondition.LeavesZone leavesZoneTrigger -> leavesZoneTriggerNames asking leavesZoneTrigger
+  TriggerCondition.PutIntoZone putIntoZoneTrigger -> putIntoZoneTriggerNames asking putIntoZoneTrigger
   TriggerCondition.BecomesTapState becomesTapState -> actingPermanentNames asking (BecomesTapState.actor becomesTapState)
   TriggerCondition.PermanentsBecomeTapped filter_ -> filterNames asking filter_
   TriggerCondition.AttachedPermanentTappedForMana -> mempty

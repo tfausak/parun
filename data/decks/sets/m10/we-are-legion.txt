@@ -1,0 +1,23 @@
+5 Mountain
+12 Plains
+1 Terramorphic Expanse
+1 Armored Ascension
+1 Divine Verdict
+1 Elite Vanguard
+1 Glorious Charge
+1 Griffin Sentinel
+1 Harm's Way
+1 Honor of the Pure
+1 Lava Axe
+1 Lightning Bolt
+1 Lightwielder Paladin
+2 Pacifism
+1 Palace Guard
+1 Prodigal Pyromancer
+2 Razorfoot Griffin
+1 Righteousness
+1 Serra Angel
+2 Silvercoat Lion
+1 Soul Warden
+1 Stormfront Pegasus
+1 Undead Slayer

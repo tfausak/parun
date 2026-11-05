@@ -41,11 +41,11 @@ import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
 import qualified Parun.Types.Acquisition as Acquisition
+import qualified Parun.Types.ActingPermanent as ActingPermanent
 import qualified Parun.Types.ActiveReplacement as ActiveReplacement
 import qualified Parun.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.CandidateCost as CandidateCost
-import qualified Parun.Types.CardLeavesZone as CardLeavesZone
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.Clause as Clause
@@ -69,6 +69,7 @@ import qualified Parun.Types.GrantedAbility as GrantedAbility
 import qualified Parun.Types.Keyword as Keyword.Type
 import qualified Parun.Types.LastKnown as LastKnown
 import qualified Parun.Types.LeavesTrigger as LeavesTrigger
+import qualified Parun.Types.LeavesZoneTrigger as LeavesZoneTrigger
 import qualified Parun.Types.LeavingPermanent as LeavingPermanent
 import qualified Parun.Types.LibraryPosition as LibraryPosition
 import qualified Parun.Types.LoggedEvent as LoggedEvent
@@ -93,6 +94,7 @@ import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PlayerRelation as PlayerRelation
 import qualified Parun.Types.Pool as Pool
 import qualified Parun.Types.Prompt as Prompt
+import qualified Parun.Types.PutIntoZoneTrigger as PutIntoZoneTrigger
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.ReplacementEffect as ReplacementEffect
@@ -108,7 +110,6 @@ import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggerSource as TriggerSource
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TriggeredAbilitySource as TriggeredAbilitySource
-import qualified Parun.Types.TurnScope as TurnScope
 import qualified Parun.Types.TypeLine as TypeLine
 import qualified Parun.Types.Visibility as Visibility.Type
 import qualified Parun.Types.Ward as Ward
@@ -566,6 +567,37 @@ rakshasaVizierSpec s registry =
           Spec.assertEqWith s "nothing reached the stack" (length (GameState.stack (S.runPure S.identityAnswer gone Engine.settleForPriority))) 0
           Spec.assertEqWith s "off the same departures: alice's graveyard is empty" (length (Game.zoneMembers Zone.Graveyard S.alice after)) 0
 
+-- CR 603.10 against CR 603.6c, for a bearer exiled with the cards it watches
+-- exiled. Stonebinder's Familiar {W} Creature -- Spirit Dog 1/1, "Whenever one
+-- or more cards are put into exile during your turn, put a +1/+1 counter on
+-- this creature. This ability triggers only once each turn."
+-- (data/cards/stonebinders-familiar.json) is not on CR 603.10a's list, so it
+-- does not exist immediately after its own exile and sees nothing. Ketramose,
+-- the New Dawn {1}{W}{B} Legendary Creature -- God 4/4, "Whenever one or more
+-- cards are put into exile from graveyards and/or the battlefield during your
+-- turn, you draw a card and lose 1 life." (data/cards/ketramose-the-new-dawn.json)
+-- is: CR 603.6c makes "put into [a zone] from the battlefield" a
+-- leaves-the-battlefield ability, so it looks back at its own exile. Oracle
+-- text checked against Scryfall 2026-11-05.
+exiledWatcherSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+exiledWatcherSpec s registry =
+  let exiledOnAlicesTurn name = do
+        watcher <- S.printingOf s registry name
+        plains <- S.printingOf s registry "Plains"
+        let (watcherId, gs) = S.addPermanent watcher S.alice (S.landsFor plains S.alice 3 (Setup.emptyGame S.bothPlayers))
+            board = gs {GameState.activePlayer = S.alice}
+            moved = S.runPure S.identityAnswer board (Event.changeZone (pure ()) watcherId Zone.Exile)
+        pure (S.runPure S.identityAnswer moved Engine.settleForPriority)
+   in Spec.describe s "PutIntoZone" $ do
+        Spec.it s "CR 603.10 a Stonebinder's Familiar exiled during alice's turn does not see its own exile" $ do
+          settled <- exiledOnAlicesTurn "Stonebinder's Familiar"
+          Spec.assertEqWith s "setup: the Familiar is in exile" (length (Game.zoneMembers Zone.Exile S.alice settled)) 1
+          Spec.assertEqWith s "CR 603.10 nothing reached the stack" (length (GameState.stack settled)) 0
+        Spec.it s "CR 603.6c a Ketramose exiled from the battlefield during alice's turn looks back at its own exile" $ do
+          settled <- exiledOnAlicesTurn "Ketramose, the New Dawn"
+          Spec.assertEqWith s "setup: Ketramose is in exile" (length (Game.zoneMembers Zone.Exile S.alice settled)) 1
+          Spec.assertEqWith s "CR 603.10a its trigger reached the stack" (length (GameState.stack settled)) 1
+
 -- CR 603.10a's fourth family: Dutiful Knowledge Seeker {2}{U} Creature -- Fox
 -- Spirit 2/2, "Whenever one or more cards are put into a library from anywhere,
 -- put a +1/+1 counter on this creature. / {3}: Put target card from a graveyard
@@ -897,7 +929,7 @@ handArrivalSpec s registry =
         Spec.it s "CR 400.7e a library-to-hand move binds handArrival and not became" $ do
           (_, (settled, _)) <- brinefarerDraws "Burrenton Forge-Tender"
           let arrived = Game.zoneMembers Zone.Hand S.alice settled
-              condition = TriggerCondition.CardLeavesZone (CardLeavesZone.MkCardLeavesZone (Filter.Type.And []) TurnScope.EachTurn Zone.Library (Just Zone.Hand) Nothing)
+              condition = TriggerCondition.LeavesZone (LeavesZoneTrigger.self Zone.Library) {LeavesZoneTrigger.card = ActingPermanent.Matching (Filter.Type.And []), LeavesZoneTrigger.to = Just Zone.Hand}
               bindingsOf = Event.eventBindings settled Nothing Map.empty (ObjectId.MkObjectId 0) S.alice condition
               drew = [bindingsOf event | event@(GameEvent.Moved m) <- fmap LoggedEvent.event (Foldable.toList (GameState.events settled)), ZoneChange.to (Moved.change m) == Zone.Hand]
           Spec.assertEqWith s "the arrival is the card in alice's hand" drew (fmap (Map.singleton Binding.handArrival . Binding.toObject) arrived)
@@ -1111,7 +1143,7 @@ warpedDevotionSpec s registry =
 --
 -- The structural twin is Narcomoeba's `MoveToZone "self" Battlefield` in
 -- graveyardTriggerSpec: same opcode, same slot shape. There "self" IS the
--- arriving card, because SelfPutIntoGraveyardFromLibrary matches on the
+-- arriving card, because a Self PutIntoZone matches on the
 -- ARRIVING incarnation; here it is not, because CR 603.10a makes this condition
 -- match on the DEPARTING one. That contrast is why there are two slots.
 becameSlotSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -1170,7 +1202,7 @@ becameSlotSpec s registry =
         Spec.it s "CR 113.6k a library-to-graveyard trigger binds nothing" $ do
           let oid = ObjectId.MkObjectId 1
               milled = GameEvent.Moved (Moved.moved (ZoneChange.MkZoneChange oid oid Zone.Library Zone.Graveyard) S.emptyCharacteristics)
-          Spec.assertEqWith s "no became slot" (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice TriggerCondition.SelfPutIntoGraveyardFromLibrary milled) Map.empty
+          Spec.assertEqWith s "no became slot" (Event.eventBindings (Setup.emptyGame S.bothPlayers) Nothing Map.empty (ObjectId.MkObjectId 0) S.alice (TriggerCondition.PutIntoZone (PutIntoZoneTrigger.self Zone.Graveyard) {PutIntoZoneTrigger.from = Set.singleton Zone.Library}) milled) Map.empty
         -- CR 400.7f's arm, the one place the slot comes from something other than
         -- the event: the BEARER's own arrival, which eventTriggers computes off
         -- the batch. Pinned in isolation so the rule is stated once here and once
@@ -2750,7 +2782,8 @@ bystanderSpec s registry =
       Spec.assertBool s (Event.looksBack (TriggerCondition.Leaves (LeavesTrigger.dies (LeavingPermanent.Matching (Filter.Type.And []))))) "a dies trigger is a leaves-the-battlefield ability"
       Spec.assertBool s (Event.looksBack (TriggerCondition.Leaves LeavesTrigger.defaultValue)) "and so is the wider written form"
       Spec.assertBool s (Event.looksBack (TriggerCondition.PermanentSacrificed (PlayerActsOn.MkPlayerActsOn PlayerRelation.AnyPlayer (Filter.Type.And [])))) "a sacrifice trigger is named outright"
-      Spec.assertBool s (not (Event.looksBack TriggerCondition.SelfPutIntoGraveyardFromAnywhere)) "CR 603.6c says put-into-a-graveyard-from-anywhere is not one"
+      Spec.assertBool s (not (Event.looksBack (TriggerCondition.PutIntoZone (PutIntoZoneTrigger.self Zone.Graveyard)))) "CR 603.6c says put-into-a-graveyard-from-anywhere is not one"
+      Spec.assertBool s (Event.looksBack (TriggerCondition.PutIntoZone (PutIntoZoneTrigger.self Zone.Exile) {PutIntoZoneTrigger.from = Set.singleton Zone.Battlefield})) "but CR 603.6c makes put-into-a-zone-from-the-battlefield one"
       Spec.assertBool s (not (Event.looksBack (TriggerCondition.PermanentTurnedFaceUp (Filter.Type.And [])))) "and CR 708.8 leaves a turned-up permanent on the battlefield"
       -- CR 603.1b: one ability, several conditions -- it looks back if any of
       -- them does, and the pair below differ only in whether one does.
@@ -3871,6 +3904,7 @@ spec s registry = Spec.describe s "Parun.Engine.Trigger" $ do
   spiritMascotSpec s registry
   rakshasaVizierSpec s registry
   dutifulKnowledgeSeekerSpec s registry
+  exiledWatcherSpec s registry
   handArrivalSpec s registry
   warpedDevotionSpec s registry
   becameSlotSpec s registry

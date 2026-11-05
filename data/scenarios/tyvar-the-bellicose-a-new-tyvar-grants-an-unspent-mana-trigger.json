@@ -1,0 +1,61 @@
+{
+  "description": "CR 113.2c / 400.7: once Tyvar the Bellicose's granted mana trigger has fired on Llanowar Elves, a new Tyvar that turn grants a different ability, which triggers",
+  "note": "The ruling on Tyvar: if another Tyvar arrives, or Tyvar leaves and returns, the ability the new one grants is a different ability and may trigger that turn. The Elves tap for Giant Growth and get a counter. Boomerang returns Tyvar, alice casts the Tyvar in her hand, Twiddle untaps the Elves, and they tap for a second Giant Growth: a second counter.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Tyvar the Bellicose", "label": "tyvar" },
+          { "card": "Llanowar Elves", "label": "elves", "ready": true },
+          { "card": "Island", "label": "i1", "ready": true },
+          { "card": "Island", "label": "i2", "ready": true },
+          { "card": "Island", "label": "i3", "ready": true },
+          { "card": "Island", "label": "i4", "ready": true },
+          { "card": "Island", "label": "i5", "ready": true },
+          { "card": "Swamp", "label": "s1", "ready": true },
+          { "card": "Forest", "label": "f1", "ready": true }
+        ],
+        "hand": [
+          { "card": "Giant Growth", "label": "growth1" },
+          { "card": "Giant Growth", "label": "growth2" },
+          { "card": "Boomerang", "label": "boomerang" },
+          { "card": "Twiddle", "label": "twiddle" },
+          { "card": "Tyvar the Bellicose", "label": "new" }
+        ],
+        "library": [
+          { "card": "Island" },
+          { "card": "Island" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          { "card": "Island" },
+          { "card": "Island" }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$growth1", "targets": ["$elves"], "mana": ["$elves", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "$elves", "kind": { "type": "PlusOnePlusOne" }, "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$boomerang", "targets": ["$tyvar"], "mana": ["$i1", "$i2", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$new", "mana": ["$s1", "$f1", "$i3", "$i4", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$twiddle", "targets": ["$elves"], "mana": ["$i5"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$elves", "tapped": false } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$growth2", "targets": ["$elves"], "mana": ["$elves"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of $elves", "Giant Growth#2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "$elves", "kind": { "type": "PlusOnePlusOne" }, "count": 2 } } }
+  ]
+}

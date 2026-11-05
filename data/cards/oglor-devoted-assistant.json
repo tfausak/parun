@@ -100,29 +100,32 @@
         },
         {
           "condition": {
-            "type": "CardPutIntoGraveyard",
+            "type": "PutIntoZone",
             "value": {
-              "filter": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
-                  },
-                  {
-                    "type": "HeldBy",
-                    "value": {
-                      "holder": {
-                        "type": "Owner"
-                      },
-                      "relation": {
-                        "type": "You"
+              "card": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    },
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Owner"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
                       }
                     }
-                  }
-                ]
+                  ]
+                }
               },
               "from": [
                 {
@@ -131,7 +134,10 @@
                 {
                   "type": "Hand"
                 }
-              ]
+              ],
+              "to": {
+                "type": "Graveyard"
+              }
             }
           },
           "modal": {
@@ -152,7 +158,12 @@
                               "type": "Triggered",
                               "value": {
                                 "condition": {
-                                  "type": "SelfLeavesGraveyard"
+                                  "type": "LeavesZone",
+                                  "value": {
+                                    "from": {
+                                      "type": "Graveyard"
+                                    }
+                                  }
                                 },
                                 "modal": {
                                   "modes": [
