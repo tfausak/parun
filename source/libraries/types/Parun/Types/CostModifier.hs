@@ -41,13 +41,12 @@ data CostModifier = MkCostModifier
     -- the change, Mutated Cultist's "for each counter removed this way" (#5153).
     perEach :: Maybe Quantity.Quantity,
     -- | Professor Hojo's "the FIRST activated ability you activate during your
+    -- turn" and Shadow in the Warp's "the first creature spell you cast each
     -- turn": Just a scope applies the change only in a turn the scope admits,
-    -- and only to the first matching activation the player begins that turn --
-    -- whether or not that one was changed, and whether or not this effect
-    -- existed yet (Tezzeret, Betrayer of Flesh's ruling).
-    --
-    -- Not implemented for spells: Shadow in the Warp's "the first creature
-    -- spell you cast each turn" (#4924); Parun.Codec.CostModifier refuses it.
+    -- and only to the first matching activation or cast the player begins that
+    -- turn -- whether or not that one was changed, and whether or not this
+    -- effect existed yet (Tezzeret, Betrayer of Flesh's and Shadow in the
+    -- Warp's rulings).
     onlyFirst :: Maybe TurnScope.TurnScope,
     -- | What it does to the total cost.
     change :: CostChange.CostChange

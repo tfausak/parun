@@ -2450,7 +2450,14 @@ costChangeNames asking x = case x of
 
 costModifierNames :: (Monoid r) => Asking r -> CostModifier.CostModifier -> r
 costModifierNames asking x = case x of
-  CostModifier.MkCostModifier subject matching whichTargets perTarget perEach onlyFirst change -> foldMap (\scope -> history asking HistoryRead.Activations <> turnScopeNames asking scope) onlyFirst <> costSubjectNames asking subject <> filterNames asking matching <> foldMap (filterNames asking) whichTargets <> foldMap (filterNames asking) perTarget <> foldMap (quantityNames asking) perEach <> costChangeNames asking change
+  CostModifier.MkCostModifier subject matching whichTargets perTarget perEach onlyFirst change -> foldMap (\scope -> history asking (costSubjectHistory subject) <> turnScopeNames asking scope) onlyFirst <> costSubjectNames asking subject <> filterNames asking matching <> foldMap (filterNames asking) whichTargets <> foldMap (filterNames asking) perTarget <> foldMap (quantityNames asking) perEach <> costChangeNames asking change
+
+-- The turn's history a cost modifier's `onlyFirst` reads: CR 601.2i's casts
+-- for a spell, CR 602.2's activations for an ability.
+costSubjectHistory :: CostSubject.CostSubject -> HistoryRead.HistoryRead
+costSubjectHistory x = case x of
+  CostSubject.Spells -> HistoryRead.Casts
+  CostSubject.Activations _ -> HistoryRead.Activations
 
 costSubjectNames :: (Monoid r) => Asking r -> CostSubject.CostSubject -> r
 costSubjectNames asking x = case x of
