@@ -421,6 +421,9 @@ data Prompt r where
   -- first; also CR 508.4's entering-attacking question (CR 506.3b). Elided at
   -- one candidate.
   ChooseAttackTarget :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty AttackTarget.AttackTarget -> Prompt AttackTarget.AttackTarget
+  -- | CR 508.1e / 702.22c: which of the chosen attackers are banded with which,
+  -- each set one band. Raised only where a legal band exists.
+  DeclareBands :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Prompt [Set.Set ObjectId.ObjectId]
   -- | CR 508.1g / 701.43d: whether one chosen attacker with exert is exerted;
   -- never elided, CR 701.43b making an exerted creature exertable again.
   ChooseExert :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Prompt OptionalDecision.OptionalDecision

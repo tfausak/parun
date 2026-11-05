@@ -435,6 +435,8 @@ data Response
   | -- | CR 508.1b / CR 508.4: what one attacking creature was announced as
     -- attacking. Unlike ChoseDefender, this may name a permanent.
     ChoseAttackTarget AttackTarget.AttackTarget
+  | -- | CR 508.1e: the attacking bands announced.
+    DeclaredBands [Set.Set ObjectId.ObjectId]
   | -- | CR 508.1g / 701.43d: whether one chosen attacker with exert was exerted.
     -- Distinct from ChoseRiot and the other as-enters "may" answers for their
     -- reason: a transcript that answered one optional decision must not silently

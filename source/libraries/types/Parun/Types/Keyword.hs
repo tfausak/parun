@@ -124,9 +124,9 @@ data Keyword
     -- or ability unless its controller pays. CR 702.21b's X rides the payload's
     -- second field; see Parun.Types.Ward.
     Ward (Ward.Ward Keyword)
-  | -- | 702.22: banding, of which only the two combat-damage-division halves are
-    -- modeled (CR 702.22j and CR 702.22k). CR 702.22c's band of attackers is a
-    -- shape the declare-attackers step does not have.
+  | -- | 702.22: banding.
+    --
+    -- Not implemented: "bands with other" (#6309).
     Banding -- 702.22
   | -- | 702.23a: rampage N -- whenever this creature becomes blocked, it gets
     -- +N/+N until end of turn for each creature blocking it beyond the first;

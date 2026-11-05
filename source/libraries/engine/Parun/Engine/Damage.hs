@@ -486,9 +486,7 @@ attackerAssignment gs contested (attacker, target) = case Projection.combatDamag
 -- damage. Stated as an exception to CR 510.1d alone, so it moves WHO is asked and
 -- nothing else. CR 702.22j is the mirror, on the attacking side.
 --
--- The "bands with other [quality]" half of the rule is not read, and is part of
--- the unmodeled half Parun.Types.Keyword's Banding note describes: no card in the
--- pool prints it.
+-- Not implemented: the "bands with other [quality]" half of the rule (#6309).
 --
 -- CR 805.9: under the shared team turns option "the active player" is one
 -- active player, chosen by the banding ability's controller -- the controller

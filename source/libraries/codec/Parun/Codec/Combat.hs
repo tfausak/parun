@@ -46,6 +46,7 @@ codec = Fields.object $ do
   removedDefending <- Fields.defaulted "removedDefending" Map.empty (Common.naturalMap ObjectId.codec PlayerId.codec) Combat.removedDefending
   defenders <- Fields.defaulted "defenders" [] (Common.list PlayerId.codec) Combat.defenders
   barred <- Fields.defaulted "barred" [] (Common.list PlayerId.codec) Combat.barred
+  bands <- Fields.defaulted "bands" [] (Common.list (Common.set ObjectId.codec)) Combat.bands
   pure
     Combat.MkCombat
       { Combat.attackers = attackers,
@@ -65,5 +66,6 @@ codec = Fields.object $ do
         Combat.blockingNothing = blockingNothing,
         Combat.removedDefending = removedDefending,
         Combat.defenders = defenders,
-        Combat.barred = barred
+        Combat.barred = barred,
+        Combat.bands = bands
       }

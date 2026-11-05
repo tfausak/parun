@@ -19,6 +19,7 @@
   },
   "timeline": [
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$hero", "$piker"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Answer": { "prompt": "DeclareBands", "with": [] } } },
     { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$brigade": ["$hero", "$piker"] } } },
     { "turn": 1, "step": "CombatDamage", "player": "alice", "source": "$brigade", "do": { "AssignDamage": { "$piker": 2 } } }
   ]
