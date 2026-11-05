@@ -2235,9 +2235,13 @@ applyReplacementsIn settle asOf batch spent event = do
 -- where it was, so one proposed damage event can come out of the loop as two.
 -- Every other class comes out as at most one, which applyReplacementsIn reads
 -- off the first component alone.
-applyReplacementsReporting :: Maybe GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> ProposedEvent -> Game ([ProposedEvent], [Replacement.DamageThread], [Prevention])
-applyReplacementsReporting asOf batch allowances spent event = do
-  (outcome, residue, prevented, _, _, _) <- applyReplacementsFully (pure ()) asOf batch allowances spent event
+--
+-- `earlier` is what the batch has already prevented, and the answer extends it:
+-- CR 702.64b's ceiling spans one source's damage to one recipient across the
+-- batch (Replacement.ceilingLeft).
+applyReplacementsReporting :: Maybe GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> ProposedEvent -> Game ([ProposedEvent], [Replacement.DamageThread], [Prevention])
+applyReplacementsReporting asOf batch allowances spent earlier event = do
+  (outcome, residue, prevented, _, _, _) <- loop (pure ()) asOf batch Nothing allowances spent earlier Nothing False Nothing event
   let (added, dealt) = Either.partitionEithers residue
   pure (Maybe.maybeToList outcome <> dealt, added, prevented)
 
@@ -2291,7 +2295,7 @@ loop settle asOf batch diverting allowances applied prevented exiledBy shuffling
       -- once, in this loop. Parun.ReplacementSpec's "a Corpsejack Menace reanimated
       -- beside a modular creature doubles nothing" is the proof.
       notSibling candidate = not (Set.member (ReplacementCandidate.source candidate) batch)
-      fresh = filter (\candidate -> unused candidate && notSibling candidate && not (Replacement.allocatedOut allowances candidate)) (Replacement.applicable asOf gs event)
+      fresh = filter (\candidate -> unused candidate && notSibling candidate && not (Replacement.allocatedOut allowances candidate) && Replacement.ceilingLeft gs prevented candidate event /= Just 0) (Replacement.applicable asOf gs event)
   case Replacement.highestBucket fresh of
     -- CR 616.1c / 614.12: an entering object (`diverting`, the zone it leaves)
     -- is offered to the battlefield-bound zone-change redirects once CR
@@ -2460,7 +2464,7 @@ stepChosen settle batch applied prevented exiledBy shuffling split candidate eve
   let inert = Replacement.inertPrevention gs candidate event
   outcome <- case inert of
     Just rewrite -> applyInertly candidate rewrite event
-    Nothing -> apply settle batch applied candidate event
+    Nothing -> apply settle batch applied prevented candidate event
   -- CR 615.13: read OUTSIDE `apply`, from the event before and after, so
   -- no arm of that fold has to report anything and none can forget to.
   -- What makes it exact rather than a guess is Replacement.prevents: only a
@@ -2650,9 +2654,10 @@ dealing de = if DamageEvent.amount de == 0 then Nothing else Just (ProposedEvent
 --
 -- `applied` is CR 614.5's set of rows already applied to this event, which a
 -- rewrite performing NEW events of the same class in its place hands on to
--- them, together with the candidate itself.
-apply :: Game () -> Set ObjectId -> Set CandidateId -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent)
-apply settle batch applied candidate event =
+-- them, together with the candidate itself. `batchPrevented` is the damage
+-- batch's preventions so far, which CR 702.64b's ceiling reads.
+apply :: Game () -> Set ObjectId -> Set CandidateId -> [Prevention] -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent)
+apply settle batch applied batchPrevented candidate event =
   case (ReplacementCandidate.effect candidate, event) of
     (ReplacementEffect.ZoneChangeR (ZoneChangeR.MkZoneChangeR _ toDest revealing _ toPosition optional), ProposedEvent.WouldChangeZone zc discarded position resolving) -> do
       -- CR 614.1a's "you may ... instead" (Library of Leng): the row's
@@ -4022,22 +4027,23 @@ apply settle batch applied candidate event =
       --
       -- No `setShield` and no arithmetic written back, for CR 615.10's reason one
       -- rule over: CR 702.64b renews the ceiling per source and per time, so a
-      -- countdown's remainder would be the wrong state to keep.
+      -- countdown's remainder would be the wrong state to keep. What the row
+      -- already stopped of this source's damage to this recipient in the batch
+      -- comes off the ceiling instead (Replacement.ceilingLeft), proved by the
+      -- scenario lymph-sliver-absorbs-1-of-earthquake-once-though-pariah-adds-to-it.
       --
       -- The ceiling is read HERE, as this event would happen (CR 615.1), against
       -- the row's own context: Shield of the Avatar's "creatures you control" is
       -- the candidate controller's, counted afresh for each event.
-      DamageRewrite.PreventUpTo quantity -> do
+      DamageRewrite.PreventUpTo _ -> do
         gs <- State.get
         Replacement.consume (ReplacementCandidate.identity candidate)
         let amount = DamageEvent.amount de
-            source = ReplacementCandidate.source candidate
-            ceiling_ = maybe 0 Integer.toNaturalSaturating (Quantity.evaluate (Projection.fullView gs) (Replacement.candidateContext gs candidate) gs source quantity)
-            -- Total on Natural: `prevented` is a min of the two operands.
-            prevented = min ceiling_ amount
-        if prevented >= amount
+            -- Total on Natural: `stopped` is a min of the two operands.
+            stopped = min (Maybe.fromMaybe 0 (Replacement.ceilingLeft gs batchPrevented candidate event)) amount
+        if stopped >= amount
           then pure Nothing
-          else pure (Just (ProposedEvent.WouldDealDamage de {DamageEvent.amount = amount - prevented}))
+          else pure (Just (ProposedEvent.WouldDealDamage de {DamageEvent.amount = amount - stopped}))
       -- CR 614.1a's "instead" with a flat amount (Galvanic Blast). Only the
       -- AMOUNT is rewritten, and that is the rule rather than economy: a
       -- replaced damage event keeps its source, its recipient and every
@@ -5798,11 +5804,12 @@ fullyUnlockedAfter halves card = case card of
 -- CR 615: settle one proposed damage event. Empty means it does not happen; two
 -- or more is CR 614.9's counted redirection having moved part of it (Harm's
 -- Way). The second answer is what comes back unsettled (`DamageThread`), and the
--- third CR 615.13's, one entry per prevention effect that applied to THIS event
--- and prevented some of it.
-resolveDamage :: Map CandidateId Natural -> Set CandidateId -> DamageEvent.DamageEvent -> Game ([DamageEvent.DamageEvent], [Replacement.DamageThread], [Prevention])
-resolveDamage allowances spent de = do
-  (outcome, added, prevented) <- applyReplacementsReporting Nothing Set.empty allowances spent (ProposedEvent.WouldDealDamage de)
+-- third CR 615.13's: `earlier`, the batch's preventions so far, extended by one
+-- entry per prevention effect that applied to THIS event and prevented some of
+-- it.
+resolveDamage :: Map CandidateId Natural -> Set CandidateId -> [Prevention] -> DamageEvent.DamageEvent -> Game ([DamageEvent.DamageEvent], [Replacement.DamageThread], [Prevention])
+resolveDamage allowances spent earlier de = do
+  (outcome, added, prevented) <- applyReplacementsReporting Nothing Set.empty allowances spent earlier (ProposedEvent.WouldDealDamage de)
   pure (Maybe.mapMaybe Replacement.asDamageEvent outcome, added, prevented)
 
 -- CR 608.2f / 510.2: settle a whole batch of SIMULTANEOUS damage events, and
@@ -5836,28 +5843,32 @@ resolveDamage allowances spent de = do
 --     the total rather than three.
 resolveDamageBatch :: [DamageEvent.DamageEvent] -> Game ([DamageEvent.DamageEvent], [Prevention])
 resolveDamageBatch events = do
-  (dealt, prevented) <- settleThreads (fmap (\de -> (de, Set.empty)) events)
+  (dealt, prevented) <- settleThreads [] (fmap (\de -> (de, Set.empty)) events)
   pure (Replacement.oneEventPerRecipient dealt, Replacement.groupPreventions prevented)
 
 -- CR 615.7: a row owes its division over damage an Eye for an Eye adds as much
 -- as over what was proposed, so a batch holding a thread such a row reaches
 -- settles what `settlesFirst` admits, asking only what touches it, and the rest
 -- wait for what that adds.
-settleThreads :: [Replacement.DamageThread] -> Game ([DamageEvent.DamageEvent], [Prevention])
-settleThreads threads = do
+--
+-- `earlier` is every prevention the batch has made so far, threaded through
+-- each thread in turn and answered extended (applyReplacementsReporting).
+settleThreads :: [Prevention] -> [Replacement.DamageThread] -> Game ([DamageEvent.DamageEvent], [Prevention])
+settleThreads earlier threads = do
   gs <- State.get
   let first = settlesFirst gs threads
   ordered <- Replacement.orderBatch first threads
   let (now, later) = List.partition (first . fst) ordered
-  settled <- mapM (\((de, spent), allowance) -> resolveDamage allowance spent de) now
-  let dealt = concatMap (\(survivors, _, _) -> survivors) settled
-      prevented = concatMap (\(_, _, ps) -> ps) settled
-      waiting = concatMap (\(_, added, _) -> added) settled <> fmap fst later
+      step (dealt0, added0, prevented0) ((de, spent), allowance) = do
+        (survivors, added, prevented1) <- resolveDamage allowance spent prevented0 de
+        pure (dealt0 <> survivors, added0 <> added, prevented1)
+  (dealt, added, prevented) <- Monad.foldM step ([], [], earlier) now
+  let waiting = added <> fmap fst later
   if null waiting
     then pure (dealt, prevented)
     else do
-      (dealt2, prevented2) <- settleThreads waiting
-      pure (dealt <> dealt2, prevented <> prevented2)
+      (dealt2, prevented2) <- settleThreads prevented waiting
+      pure (dealt <> dealt2, prevented2)
 
 -- Which threads settle this round. A row that adds damage or moves it (CR 614.9)
 -- and is its event's only effect asks no one anything (CR 616.1's "two or
@@ -6651,9 +6662,10 @@ changeZone settle oid requestedDest = Monad.void (changeZoneReturning settle oid
 -- the engine never learns which card is entering. The rule's SECOND sentence is
 -- the same refusal CR 712.14b gets below -- "if a player is instructed to put a
 -- card that isn't a double-faced card onto the battlefield transformed or
--- converted, that card stays in its current zone" -- read here as a card whose
--- layout gives Card.backFace nothing to answer with, which takes in a meld card
--- though CR 712.1 makes it double-faced (gap #6257).
+-- converted, that card stays in its current zone" -- read here as a card that
+-- isn't double-faced (Card.isDoubleFaced). A meld card is double-faced (CR
+-- 712.1) with no back face to turn to, so CR 712.4c ignores the instruction and
+-- it enters front face up (CR 712.14).
 --
 -- CR 712.14a and NOT CR 702.145b's entering-transformed ability, which is a
 -- different mechanism: an ability causing a permanent to enter transformed is a
@@ -6697,9 +6709,10 @@ changeZoneEnteringIn settle asOf batch seed source oid requestedDest position ri
   let mCard = Game.cardOf oid gs
       onto = requestedDest == Zone.Battlefield
       -- CR 712.14a's back face, asked only of a move the effect says is
-      -- transformed. Nothing means one of two different things, which is why the
-      -- rider is read alongside it below: no back face to turn to, or no
-      -- instruction to turn at all.
+      -- transformed. Nothing means one of three things, which is why the rider
+      -- and the layout are read alongside it below: a card that isn't
+      -- double-faced, a meld card (CR 712.4c ignores the instruction, so it
+      -- enters front face up), or no instruction to turn at all.
       mBack = if EntryRiders.transformed riders then mCard >>= Card.backFace else Nothing
       -- CR 708.3 turns a face-down entry over BEFORE it enters, so neither the
       -- front face (CR 712.14b, 712.15) nor the card type (CR 400.4a) is asked
@@ -6715,7 +6728,7 @@ changeZoneEnteringIn settle asOf batch seed source oid requestedDest position ri
         onto
           && ( (faceUpEntry && maybe False Card.staysWhenPutOntoBattlefield mCard) -- CR 712.14b
                  || (faceUpEntry && maybe False (instantOrSorcery . Card.combined) mCard && Maybe.isNothing mBack) -- CR 400.4a
-                 || (EntryRiders.transformed riders && Maybe.isNothing mBack) -- CR 712.14a
+                 || (EntryRiders.transformed riders && Maybe.isNothing mBack && not (maybe False Card.isDoubleFaced mCard)) -- CR 712.14a, 712.4c
              )
       -- CR 712.14: "A double-faced card put onto the battlefield from a zone
       -- other than the stack enters the battlefield with its front face up by
