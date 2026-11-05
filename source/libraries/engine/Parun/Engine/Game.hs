@@ -836,18 +836,6 @@ attackTargetWithLastKnown oid gs = Monad.join (liveOrLastKnown (const (attackTar
 choiceWithLastKnown :: Chosen.Chosen a -> Acquisition.Acquisition -> ObjectId -> GameState -> Maybe a
 choiceWithLastKnown field acquisition oid gs = Map.lookup acquisition =<< liveOrLastKnown (objectChoices field) (lastKnownChoices field) oid gs
 
--- | CR 609.1: the cause a move or a discard made now records -- the controller
--- of the spell or ability whose effect is being performed, and Nothing for CR
--- 118.12's "[do something]".
---
--- Not implemented: that cost counts as caused by the spell or ability resolving
--- it (CR 118.12a; Tamiyo, Collector of Tales' rulings of 2019-05-03), though
--- "an effect" still excludes it (Library of Leng's ruling) (#6180).
-causeNow :: GameState -> Maybe PlayerId
-causeNow gs
-  | GameState.payingOnResolution gs = Nothing
-  | otherwise = GameState.causing gs
-
 -- | CR 607.5: the choice `field` holds for the abilities the LIVE object has
 -- now (acquisitionOf), for a static ability or a restriction read off its
 -- source. Nothing for an id naming no object, and for a choice those abilities

@@ -14,8 +14,9 @@ module Parun.Types.PaymentMoment where
 -- X" and Boggart Mischief's "unless you blight 1" are the same
 -- Parun.Types.CostComponent, and only the caller knows which door it came in by.
 --
--- Read by Parun.Engine.Cost.counterCause, and by nothing else -- CR 614.16 is the
--- only rule in the vocabulary that asks.
+-- Read by Parun.Engine.Cost.counterCause, for CR 614.16, and by
+-- Parun.Engine.Cost.payComponent, for whether the payment's events record a
+-- cause.
 data PaymentMoment
   = -- | CR 601.2h's payment, and CR 508.1j \/ 509.1f's combat toll: no spell or
     -- ability is resolving, so CR 609.1 gives the payment's events no effect to

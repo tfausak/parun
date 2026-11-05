@@ -48,9 +48,6 @@
                 },
                 "whenDestination": {
                   "type": "Graveyard"
-                },
-                "whenDiscarded": {
-                  "type": "ByEffect"
                 }
               }
             }

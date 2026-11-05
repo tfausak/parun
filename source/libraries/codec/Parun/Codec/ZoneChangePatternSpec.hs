@@ -84,9 +84,23 @@ spec s = Spec.describe s "Parun.Codec.ZoneChangePattern" $ do
         { ZoneChangePattern.whenDestination = Just Zone.Graveyard,
           ZoneChangePattern.whatObject = Filter.IsSource,
           ZoneChangePattern.whoseObject = ControllerRelation.Related PlayerRelation.AnyPlayer,
-          ZoneChangePattern.whenDiscarded = Just DiscardCause.ByEffect,
+          ZoneChangePattern.whenDiscarded = Nothing,
           ZoneChangePattern.causedBy = Just PlayerRelation.Opponent,
           ZoneChangePattern.duringResolution = False
         }
-      " {\"causedBy\":{\"type\":\"Opponent\"},\"whatObject\":{\"type\":\"IsSource\"},\"whenDestination\":{\"type\":\"Graveyard\"},\"whenDiscarded\":{\"type\":\"ByEffect\"}} "
+      " {\"causedBy\":{\"type\":\"Opponent\"},\"whatObject\":{\"type\":\"IsSource\"},\"whenDestination\":{\"type\":\"Graveyard\"}} "
+  -- CR 701.9a: Library of Leng's "if an effect causes you to discard a card".
+  Spec.it s "MkZoneChangePattern (Library of Leng, discarded by an effect)" $
+    Common.assertCodec
+      s
+      ZoneChangePattern.codec
+      ZoneChangePattern.MkZoneChangePattern
+        { ZoneChangePattern.whenDestination = Just Zone.Graveyard,
+          ZoneChangePattern.whatObject = Filter.And [],
+          ZoneChangePattern.whoseObject = ControllerRelation.Related PlayerRelation.You,
+          ZoneChangePattern.whenDiscarded = Just DiscardCause.ByEffect,
+          ZoneChangePattern.causedBy = Nothing,
+          ZoneChangePattern.duringResolution = False
+        }
+      " {\"whenDestination\":{\"type\":\"Graveyard\"},\"whenDiscarded\":{\"type\":\"ByEffect\"},\"whoseObject\":{\"type\":\"You\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ZoneChangePattern.codec
