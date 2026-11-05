@@ -81,7 +81,7 @@ Argentum resolves copy (Layer 1) at object-entry time as a replacement effect: t
 ## 4. Milestone-keyed lessons
 
 **M0 (complete game, zero cards).**
-- Steal Argentum's **"atom" pattern**: funnel every observable mutation through one helper that performs the change *and* emits its event *and* owns the no-op→no-event guard (603.2f). Motivated by real lost-tap-event bugs. Co-locate state-change + event emission structurally from the start.
+- Steal Argentum's **"atom" pattern**: funnel every observable mutation through one helper that performs the change *and* emits its event *and* owns the no-op→no-event guard (603.2e, 603.2g). Motivated by real lost-tap-event bugs. Co-locate state-change + event emission structurally from the start.
 - Trigger detection is **three passes**, not one: battlefield / phase-step / leaves-battlefield — because LTB/dies triggers reference objects no longer on the battlefield. Design the trigger scan for this now.
 - Profile the goldfish loop for thunk leaks (your risk register) — Argentum confirms memoized-per-state projection is the intended contract; make the projected field lazy + shared, everything else strict.
 
