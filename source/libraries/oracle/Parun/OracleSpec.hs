@@ -366,10 +366,10 @@ spec s = Spec.describe s "Parun.Oracle" $ do
     let creature = Filter.HasCardType CardType.Creature
         both = ObjectRef.AllOf (ObjectRef.InSlot thatAttacker NonEmpty.:| [ObjectRef.InSlot thatBlocker])
     Spec.assertEq s (Just (Text.pack "Whenever Spark blocks or becomes blocked by a creature, it deals 3 damage to that creature.")) (Oracle.render (on (TriggerCondition.AnyOf [TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Blocker Filter.IsSource (BlockCount.EachCreature creature)), TriggerCondition.Blocks (BlockTrigger.MkBlockTrigger BlockRole.Attacker Filter.IsSource (BlockCount.EachCreature creature))]) [damageBy [(both, Quantity.Literal 3)]]))
-    let raptor = on (TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing) Batching.OneOrMore)) [gainLifeBy (Quantity.InSlot (SlotName.MkSlotName (Text.pack "thatMuch")))]
+    let raptor = on (TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing Nothing) Batching.OneOrMore)) [gainLifeBy (Quantity.InSlot (SlotName.MkSlotName (Text.pack "thatMuch")))]
     Spec.assertEq s (Just (Text.pack "Whenever Spark is dealt damage, you gain that much life.")) (Oracle.render raptor)
     Spec.assertBool s (Oracle.says raptor spark (Text.pack "Enrage \8212 Whenever this creature is dealt damage, you gain that much life.")) "enrage unsaid"
-    let essence = on (TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self (Just DamageKind.Combat)) Batching.OneOrMore)) [gainLifeBy (Quantity.InSlot (SlotName.MkSlotName (Text.pack "thatMuch")))]
+    let essence = on (TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self (Just DamageKind.Combat) Nothing) Batching.OneOrMore)) [gainLifeBy (Quantity.InSlot (SlotName.MkSlotName (Text.pack "thatMuch")))]
     Spec.assertBool s (Oracle.says essence spark (Text.pack "Whenever this creature is dealt combat damage, you gain that much life.")) "Wall of Essence's wording unsaid"
     Spec.assertBool s (not (Oracle.says essence spark (Text.pack "Enrage \8212 Whenever this creature is dealt combat damage, you gain that much life."))) "enrage said of combat damage alone"
 

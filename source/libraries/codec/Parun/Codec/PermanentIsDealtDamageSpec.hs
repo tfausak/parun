@@ -15,12 +15,12 @@ spec s = Spec.describe s "Parun.Codec.PermanentIsDealtDamage" $ do
     Common.assertCodec
       s
       PermanentIsDealtDamage.codec
-      (PermanentIsDealtDamage.MkPermanentIsDealtDamage {PermanentIsDealtDamage.dealt = DealtDamage.MkDealtDamage ActingPermanent.Self Nothing, PermanentIsDealtDamage.batching = Batching.OneOrMore})
+      (PermanentIsDealtDamage.MkPermanentIsDealtDamage {PermanentIsDealtDamage.dealt = DealtDamage.MkDealtDamage ActingPermanent.Self Nothing Nothing, PermanentIsDealtDamage.batching = Batching.OneOrMore})
       " {\"dealt\":{\"recipient\":{\"type\":\"Self\"}}} "
   Spec.it s "the per-source reading" $
     Common.assertCodec
       s
       PermanentIsDealtDamage.codec
-      (PermanentIsDealtDamage.MkPermanentIsDealtDamage {PermanentIsDealtDamage.dealt = DealtDamage.MkDealtDamage ActingPermanent.Self (Just DamageKind.Combat), PermanentIsDealtDamage.batching = Batching.EachOccurrence})
+      (PermanentIsDealtDamage.MkPermanentIsDealtDamage {PermanentIsDealtDamage.dealt = DealtDamage.MkDealtDamage ActingPermanent.Self (Just DamageKind.Combat) Nothing, PermanentIsDealtDamage.batching = Batching.EachOccurrence})
       " {\"dealt\":{\"recipient\":{\"type\":\"Self\"},\"kind\":{\"type\":\"Combat\"}},\"batching\":{\"type\":\"EachOccurrence\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PermanentIsDealtDamage.codec

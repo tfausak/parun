@@ -317,7 +317,7 @@ inkshieldSpec s registry = Spec.describe s "Inkshield (CR 615.5)" $ do
 stormwildCapridorSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 stormwildCapridorSpec s registry = Spec.describe s "Stormwild Capridor (CR 615.5)" $ do
   let hit kind src recipient n =
-        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False kind
+        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False mempty kind
   -- The rider fires from the funnel a RESOLVING spell drains
   -- (Resolve.runPreventionRider), the same seam Test of Faith's shield uses --
   -- so what is new here is only where the rider came from: the permanent's
@@ -391,7 +391,7 @@ stormwildCapridorSpec s registry = Spec.describe s "Stormwild Capridor (CR 615.5
 templeAltisaurSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 templeAltisaurSpec s registry = Spec.describe s "Temple Altisaur (CR 615.10)" $ do
   let hit src recipient n =
-        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
       withBoard act = do
         plains <- S.printingOf s registry "Plains"
         altisaurPrinting <- S.printingOf s registry "Temple Altisaur"
@@ -489,7 +489,7 @@ templeAltisaurSpec s registry = Spec.describe s "Temple Altisaur (CR 615.10)" $ 
 absorbSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 absorbSpec s registry = Spec.describe s "Absorb (CR 702.64)" $ do
   let hit src recipient n =
-        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
       withBoard act = do
         plains <- S.printingOf s registry "Plains"
         lymphPrinting <- S.printingOf s registry "Lymph Sliver"
@@ -588,7 +588,7 @@ absorbSpec s registry = Spec.describe s "Absorb (CR 702.64)" $ do
 ajaniSteadfastSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 ajaniSteadfastSpec s registry = Spec.describe s "Ajani Steadfast (CR 114.4, CR 615.10)" $ do
   let hit src recipient n =
-        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
       -- alice's precombat main phase with an empty stack, the window CR 606.3
       -- gives a loyalty ability. Loyalty counters are handed over directly
       -- rather than by casting, so each planeswalker's count is exactly the
@@ -826,7 +826,7 @@ glitteringLionSpec s registry = Spec.describe s "Glittering Lion (CR 613.1f)" $ 
         pure (lion, attacker, g2 {GameState.priority = Just S.alice})
       -- The Piker's 2, as noncombat damage: the printed pattern names no kind, so
       -- either kind would do, and this is the funnel the Capridor cases above use.
-      hits attacker lion = [DamageEvent.MkDamageEvent attacker (Recipient.ToCreature lion) 2 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat]
+      hits attacker lion = [DamageEvent.MkDamageEvent attacker (Recipient.ToCreature lion) 2 False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat]
       -- Damage, then CR 704.3's check -- the zone is what these cases assert, so
       -- the SBAs have to run or a dead Lion still reads as being on the
       -- battlefield.
@@ -913,7 +913,7 @@ glitteringLionSpec s registry = Spec.describe s "Glittering Lion (CR 613.1f)" $ 
 spiderPunkSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spiderPunkSpec s registry = Spec.describe s "Spider-Punk (CR 615.12)" $ do
   let hit src recipient n =
-        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
       amounts gs = fmap DamageEvent.amount (S.damageEventsOf gs)
       -- alice's Piker is shielded by a Mending Hands she really casts on it;
       -- bob's TWO Pikers are the sources of the hand-built events. Two of them
@@ -1029,7 +1029,7 @@ spiderPunkSpec s registry = Spec.describe s "Spider-Punk (CR 615.12)" $ do
 phantomTigerSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 phantomTigerSpec s registry = Spec.describe s "Phantom Tiger (CR 615.12)" $ do
   let hit src recipient n =
-        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
       named = CardName.MkCardName . Text.pack
   -- THE CASE. One Lightning Bolt at one Phantom Tiger, on two boards differing
   -- in Spider-Punk alone. With him the 3 cannot be prevented and lands whole,
@@ -1187,7 +1187,7 @@ allocateShield furnace src p = case p of
 apnapSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 apnapSpec s registry = Spec.describe s "APNAP (CR 616.1)" $ do
   let hit src recipient n =
-        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
   -- Both batch orders, because only the PAIR discriminates: settling the batch
   -- in gather order already answers [alice, bob] when alice's event happens to
   -- come first, and would answer [bob, alice] when it does not.
@@ -1316,7 +1316,7 @@ apnapSpec s registry = Spec.describe s "APNAP (CR 616.1)" $ do
 excruciatorSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 excruciatorSpec s registry = Spec.describe s "Excruciator (CR 615.12)" $ do
   let hit src recipient n =
-        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
       amounts gs = fmap DamageEvent.amount (S.damageEventsOf gs)
       withBoard act = do
         plains <- S.printingOf s registry "Plains"
@@ -1395,7 +1395,7 @@ excruciatorSpec s registry = Spec.describe s "Excruciator (CR 615.12)" $ do
 questingBeastSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 questingBeastSpec s registry = Spec.describe s "Questing Beast (CR 615.12)" $ do
   let hit kind src recipient n =
-        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False kind
+        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False mempty kind
       amounts gs = fmap DamageEvent.amount (S.damageEventsOf gs)
       withBoard act = do
         plains <- S.printingOf s registry "Plains"
@@ -1479,7 +1479,7 @@ questingBeastSpec s registry = Spec.describe s "Questing Beast (CR 615.12)" $ do
 -- reason.
 luminesceSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 luminesceSpec s registry = Spec.describe s "Luminesce (CR 615.1, CR 609.7b)" $ do
-  let hit src n = DamageEvent.MkDamageEvent src (Recipient.ToPlayer S.alice) n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+  let hit src n = DamageEvent.MkDamageEvent src (Recipient.ToPlayer S.alice) n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
       amounts gs = fmap DamageEvent.amount (S.damageEventsOf gs)
       withBoard act = do
         plains <- S.printingOf s registry "Plains"
@@ -1583,7 +1583,7 @@ luminesceSpec s registry = Spec.describe s "Luminesce (CR 615.1, CR 609.7b)" $ d
 -- Forest as a Combat source, and the card file should say what the card says.
 moonmistSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 moonmistSpec s registry = Spec.describe s "Moonmist (CR 615.1, CR 609.7b)" $ do
-  let hit kind src n = DamageEvent.MkDamageEvent src (Recipient.ToPlayer S.alice) n False False False 0 Nothing Nothing mempty False kind
+  let hit kind src n = DamageEvent.MkDamageEvent src (Recipient.ToPlayer S.alice) n False False False 0 Nothing Nothing mempty False mempty kind
       sources gs = fmap DamageEvent.source (S.damageEventsOf gs)
       withBoard act = do
         forest <- S.printingOf s registry "Forest"
@@ -1638,7 +1638,7 @@ moonmistSpec s registry = Spec.describe s "Moonmist (CR 615.1, CR 609.7b)" $ do
 selflessSquireSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 selflessSquireSpec s registry = Spec.describe s "Selfless Squire (CR 615.13)" $ do
   let hit src recipient n =
-        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
       amounts gs = fmap DamageEvent.amount (S.damageEventsOf gs)
       -- Cast the Squire, let its CR 603.6a enters trigger go on the stack, and
       -- resolve it -- which is what installs the CR 615.1 shield.
@@ -1849,7 +1849,7 @@ strikeAndSettleWith answer gs batch =
 phyrexianVindicatorSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 phyrexianVindicatorSpec s registry = Spec.describe s "Phyrexian Vindicator (CR 615.13)" $ do
   let hit src recipient n =
-        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
       onlyBob = [Recipient.ToPlayer S.bob]
   -- THE WHOLE CARD: the Vindicator's own prevention stops 4 (CR 615.6), its
   -- paired trigger reads how much that was, and the 4 lands on bob instead.
@@ -1960,7 +1960,7 @@ samiteMinistrationSpec s registry = Spec.describe s "Samite Ministration (CR 615
         (piker, g1) = S.addPermanent pikerPrinting S.bob base
         (g2, spellId) = S.handOne ministration g1
         shielded = castAndResolve (nameDamageSource piker) g2 spellId
-        (dealt, after) = strikeAndSettleWith (nameDamageSource piker) shielded [DamageEvent.MkDamageEvent piker (Recipient.ToPlayer S.alice) 3 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat]
+        (dealt, after) = strikeAndSettleWith (nameDamageSource piker) shielded [DamageEvent.MkDamageEvent piker (Recipient.ToPlayer S.alice) 3 False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat]
     Spec.assertEqWith s "setup: the shield names the Piker" (shieldedSource shielded) (Just piker)
     Spec.assertEqWith s "the 3 was prevented and came back as life" (S.lifeOf S.alice after) (Just 23)
     Spec.assertEqWith s "one trigger was gathered" (length (GameState.stack dealt)) 1
@@ -2004,7 +2004,7 @@ deflectingPalmSpec s registry = Spec.describe s "Deflecting Palm (CR 615.8 / 615
         (evangel, g1) = S.addPermanent evangelPrinting S.bob base
         (spider, g2) = S.addPermanent spiderPrinting S.carol g1
         (g3, spellId) = S.handOne palm g2
-        hit src n = DamageEvent.MkDamageEvent src (Recipient.ToPlayer S.alice) n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+        hit src n = DamageEvent.MkDamageEvent src (Recipient.ToPlayer S.alice) n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
         shielded = castAndResolve (nameDamageSource spider) g3 spellId
         firstBatch = fst (strikeAndSettleWith (nameDamageSource spider) shielded [hit evangel 2, hit spider 7])
         after = fst (strikeAndSettleWith (nameDamageSource spider) firstBatch [hit spider 4])
@@ -2038,7 +2038,7 @@ reverseDamageSpec s registry = Spec.describe s "Reverse Damage (CR 615.8 / 615.5
         (evangel, g1) = S.addPermanent evangelPrinting S.bob base
         (spider, g2) = S.addPermanent spiderPrinting S.carol g1
         (g3, spellId) = S.handOne reverseDamage g2
-        hit src n = DamageEvent.MkDamageEvent src (Recipient.ToPlayer S.alice) n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+        hit src n = DamageEvent.MkDamageEvent src (Recipient.ToPlayer S.alice) n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
         shielded = castAndResolve (nameDamageSource spider) g3 spellId
         firstBatch = fst (strikeAndSettleWith (nameDamageSource spider) shielded [hit evangel 2, hit spider 7])
         after = fst (strikeAndSettleWith (nameDamageSource spider) firstBatch [hit spider 4])
@@ -2067,7 +2067,7 @@ newWayForwardSpec s registry = Spec.describe s "New Way Forward (CR 615.8 / 615.
         (evangel, g1) = S.addPermanent evangelPrinting S.bob stocked
         (spider, g2) = S.addPermanent spiderPrinting S.carol g1
         (g3, spellId) = S.handOne forward g2
-        hit src n = DamageEvent.MkDamageEvent src (Recipient.ToPlayer S.alice) n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+        hit src n = DamageEvent.MkDamageEvent src (Recipient.ToPlayer S.alice) n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
         shielded = castAndResolve (nameDamageSource spider) g3 spellId
         (firstBatch, after) = strikeAndSettleWith (nameDamageSource spider) shielded [hit evangel 2, hit spider 7]
     Spec.assertEqWith s "setup: the shield names carol's Spider" (shieldedSource shielded) (Just spider)
@@ -2088,7 +2088,7 @@ interventionPactSpec s registry = Spec.describe s "Intervention Pact (CR 615.8 /
     pact <- S.printingOf s registry "Intervention Pact"
     let (spider, g1) = S.addPermanent spiderPrinting S.bob S.threePlayerGame
         (g2, spellId) = S.handOne pact g1
-        hit n = DamageEvent.MkDamageEvent spider (Recipient.ToPlayer S.alice) n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+        hit n = DamageEvent.MkDamageEvent spider (Recipient.ToPlayer S.alice) n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
         shielded = castAndResolve (nameDamageSource spider) g2 spellId
         struck = fst (strikeAndSettleWith (nameDamageSource spider) shielded [hit 6])
     Spec.assertEqWith s "CR 615.5 the prevented 6 came back as life" (S.lifeOf S.alice struck) (Just 26)
@@ -2151,7 +2151,7 @@ redirectRows gs = do
 turnTheTablesSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 turnTheTablesSpec s registry = Spec.describe s "Turn the Tables (CR 614.9)" $ do
   let atCombatDamage = S.runToStep (Phase.Combat CombatStep.CombatDamage)
-      hit src recipient n = DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+      hit src recipient n = DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
       amounts gs = fmap DamageEvent.amount (S.damageEventsOf gs)
       targets gs = fmap DamageEvent.target (S.damageEventsOf gs)
   -- THE KIND NARROWING. "All COMBAT damage", so a noncombat event aimed at bob
@@ -2261,7 +2261,7 @@ orderedBy wanted p = case p of
 -- card's second sentence.
 caromSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 caromSpec s registry = Spec.describe s "Carom (CR 614.9, CR 615.7)" $ do
-  let hit src recipient n = DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+  let hit src recipient n = DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
       amounts gs = List.sort (fmap DamageEvent.amount (S.damageEventsOf gs))
       targets gs = fmap DamageEvent.target (S.damageEventsOf gs)
       strike src recipient n g = S.runPure S.identityAnswer g (Damage.applyDamage (pure ()) [hit src recipient n])
@@ -2336,7 +2336,7 @@ caromSpec s registry = Spec.describe s "Carom (CR 614.9, CR 615.7)" $ do
 -- it at X=2, from herself to bob.
 captainsManeuverSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 captainsManeuverSpec s registry = Spec.describe s "Captain's Maneuver (CR 614.9, CR 615.7)" $ do
-  let hit src recipient n = DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+  let hit src recipient n = DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
       strike src recipient n g = S.runPure S.identityAnswer g (Damage.applyDamage (pure ()) [hit src recipient n])
       board = do
         mountain <- S.printingOf s registry "Mountain"
@@ -2394,7 +2394,7 @@ aimAliceToBobAtTwo p = case p of
 -- an engine that took the head would watch the wrong source.
 harmsWaySpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 harmsWaySpec s registry = Spec.describe s "Harm's Way (CR 614.9, CR 615.7, CR 609.7a)" $ do
-  let hit src recipient n = DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+  let hit src recipient n = DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
       amounts gs = fmap DamageEvent.amount (S.damageEventsOf gs)
       targets gs = fmap DamageEvent.target (S.damageEventsOf gs)
       strike src recipient n g = S.runPure S.identityAnswer g (Damage.applyDamage (pure ()) [hit src recipient n])
@@ -2558,7 +2558,7 @@ harmsWaySpec s registry = Spec.describe s "Harm's Way (CR 614.9, CR 615.7, CR 60
 pariahSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 pariahSpec s registry = Spec.describe s "Pariah (CR 614.9)" $ do
   let hit src recipient n =
-        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
       board plains jedit pikerPrinting pariah =
         let base = S.landsInPlay plains 1
             (host, g1) = S.addPermanent jedit S.alice base
@@ -2646,7 +2646,7 @@ aimObjectWithX n oid p = case p of
 lavaBurstSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 lavaBurstSpec s registry = Spec.describe s "Lava Burst (CR 615.12, CR 614.9)" $ do
   let hit src recipient n =
-        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+        DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
   -- CR 614.9, the redirection limb, and #1681's own case. Oracle's Attendants
   -- ({3}{W} Creature -- Human Soldier, 1/5: "{T}: All damage that would be dealt
   -- to target creature this turn by a source of your choice is dealt to this
@@ -2949,7 +2949,7 @@ comeuppanceSpec s registry = Spec.describe s "Comeuppance (CR 615.5 / 615.13)" $
         (mine, g4) = S.addPermanent jedit S.alice g3
         (g5, spellId) = S.handOne comeuppance g4
         shielded = castAndResolve S.identityAnswer g5 spellId
-        hit src target n = DamageEvent.MkDamageEvent src target n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+        hit src target n = DamageEvent.MkDamageEvent src target n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
         batch = [hit croc (Recipient.ToPlayer S.alice) 3, hit croc (Recipient.ToPlaneswalker walker) 2, hit carolWalker (Recipient.ToPlayer S.alice) 4, hit mine (Recipient.ToPlayer S.alice) 1]
         (after, _) = strikeAndSettleWith S.identityAnswer shielded batch
         hitsOn oid = fmap DamageEvent.amount (filter (\de -> DamageEvent.target de == Recipient.ToCreature oid) (S.damageEventsOf after))
@@ -2973,7 +2973,7 @@ comeuppanceSpec s registry = Spec.describe s "Comeuppance (CR 615.5 / 615.13)" $
         (g2, spellId) = S.handOne comeuppance g1
         shielded = castAndResolve S.identityAnswer g2 spellId
         gone = S.runPure S.identityAnswer shielded (Event.sacrifice (pure ()) S.bob croc)
-        (after, _) = strikeAndSettleWith S.identityAnswer gone [DamageEvent.MkDamageEvent croc (Recipient.ToPlayer S.alice) 3 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat]
+        (after, _) = strikeAndSettleWith S.identityAnswer gone [DamageEvent.MkDamageEvent croc (Recipient.ToPlayer S.alice) 3 False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat]
     Spec.assertBool s (not (S.onBattlefield croc gone)) "setup: the Crocodile has left the battlefield"
     Spec.assertEqWith s "bob is not dealt the 3 as if it came from a noncreature source" (S.lifeOf S.bob after) (Just 20)
     Spec.assertEqWith s "and alice's 3 was still prevented" (S.lifeOf S.alice after) (Just 20)
@@ -2999,7 +2999,7 @@ swansOfBrynArgollSpec s registry = Spec.describe s "Swans of Bryn Argoll (CR 615
         (swans, g1) = S.addPermanent swansPrinting S.alice base
         (croc, g2) = S.addPermanent crocPrinting S.bob g1
         (big, g3) = S.addPermanent jedit S.carol g2
-        hit src n = DamageEvent.MkDamageEvent src (Recipient.ToCreature swans) n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+        hit src n = DamageEvent.MkDamageEvent src (Recipient.ToCreature swans) n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
         (after, _) = strikeAndSettleWith S.identityAnswer g3 [hit croc 2, hit big 5]
     Spec.assertEqWith s "bob draws the 2 prevented from his Crocodile" (S.handSize S.bob after) 2
     Spec.assertEqWith s "carol draws the 5 prevented from her Jedit" (S.handSize S.carol after) 5

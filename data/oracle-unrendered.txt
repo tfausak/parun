@@ -2275,6 +2275,7 @@ revenge-of-the-rats
 reverberate
 revered-unicorn
 reverse-damage
+reverse-polarity
 reverse-the-sands
 revoke-privileges
 rhovanion-rampager

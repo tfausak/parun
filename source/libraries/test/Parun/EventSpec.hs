@@ -528,29 +528,29 @@ spec s registry = Spec.describe s "Parun.Engine.Event" $ do
 
   Spec.it s "CR 603.2 DealsDamage matches the bearer's combat damage to a player" $ do
     let bearer = ObjectId.MkObjectId 1
-        ev = GameEvent.DamageDealt (DamageEvent.MkDamageEvent bearer (Recipient.ToPlayer S.bob) 2 False False False 0 Nothing Nothing mempty False DamageKind.Combat)
+        ev = GameEvent.DamageDealt (DamageEvent.MkDamageEvent bearer (Recipient.ToPlayer S.bob) 2 False False False 0 Nothing Nothing mempty False mempty DamageKind.Combat)
     Spec.assertBool s (Event.matchesTrigger (Setup.emptyGame S.bothPlayers) bearer S.alice Mint.dealsCombatDamageToAPlayer ev) "matches"
 
   Spec.it s "it does not match combat damage to a creature" $ do
     let bearer = ObjectId.MkObjectId 1
-        ev = GameEvent.DamageDealt (DamageEvent.MkDamageEvent bearer (Recipient.ToCreature (ObjectId.MkObjectId 2)) 2 False False False 0 Nothing Nothing mempty False DamageKind.Combat)
+        ev = GameEvent.DamageDealt (DamageEvent.MkDamageEvent bearer (Recipient.ToCreature (ObjectId.MkObjectId 2)) 2 False False False 0 Nothing Nothing mempty False mempty DamageKind.Combat)
     Spec.assertBool s (not (Event.matchesTrigger (Setup.emptyGame S.bothPlayers) bearer S.alice Mint.dealsCombatDamageToAPlayer ev)) "no match"
 
   Spec.it s "it does not match noncombat damage to a player" $ do
     let bearer = ObjectId.MkObjectId 1
-        ev = GameEvent.DamageDealt (DamageEvent.MkDamageEvent bearer (Recipient.ToPlayer S.bob) 2 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat)
+        ev = GameEvent.DamageDealt (DamageEvent.MkDamageEvent bearer (Recipient.ToPlayer S.bob) 2 False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat)
     Spec.assertBool s (not (Event.matchesTrigger (Setup.emptyGame S.bothPlayers) bearer S.alice Mint.dealsCombatDamageToAPlayer ev)) "no match"
 
   -- CR 603.2 / 120.1: the arm without the combat narrowing, asked the same two
   -- questions. The kind is what separates it from the three cases above.
   Spec.it s "CR 603.2 DealsDamage without a kind matches the bearer's NONCOMBAT damage to a player" $ do
     let bearer = ObjectId.MkObjectId 1
-        ev = GameEvent.DamageDealt (DamageEvent.MkDamageEvent bearer (Recipient.ToPlayer S.bob) 2 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat)
+        ev = GameEvent.DamageDealt (DamageEvent.MkDamageEvent bearer (Recipient.ToPlayer S.bob) 2 False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat)
     Spec.assertBool s (Event.matchesTrigger (Setup.emptyGame S.bothPlayers) bearer S.alice (TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger ActingPermanent.Self Nothing (Set.singleton (DamageRecipient.Player PlayerRelation.AnyPlayer)))) ev) "matches"
 
   Spec.it s "it does not match noncombat damage to a creature" $ do
     let bearer = ObjectId.MkObjectId 1
-        ev = GameEvent.DamageDealt (DamageEvent.MkDamageEvent bearer (Recipient.ToCreature (ObjectId.MkObjectId 2)) 2 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat)
+        ev = GameEvent.DamageDealt (DamageEvent.MkDamageEvent bearer (Recipient.ToCreature (ObjectId.MkObjectId 2)) 2 False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat)
     Spec.assertBool s (not (Event.matchesTrigger (Setup.emptyGame S.bothPlayers) bearer S.alice (TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger ActingPermanent.Self Nothing (Set.singleton (DamageRecipient.Player PlayerRelation.AnyPlayer)))) ev)) "no match"
 
   Spec.it s "CR 400.7: a zone change forgets attachment" $ do

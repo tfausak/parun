@@ -1746,7 +1746,7 @@ dovinSpec s registry = Spec.describe s "DovinHandOfControl" $ do
         warMammoth <- S.printingOf s registry "War Mammoth"
         dovin <- S.printingOf s registry "Dovin, Hand of Control"
         act (dovinBoard plains piker warMammoth dovin)
-      hit src recipient n = DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+      hit src recipient n = DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
       amounts gs = fmap DamageEvent.amount (S.damageEventsOf gs)
       settleDamage gs batch = S.runPure S.identityAnswer gs (Damage.applyDamage (pure ()) batch)
   -- TWO rows for the one printed clause: parun installs a shield per relation, so
@@ -1899,7 +1899,7 @@ oldFatSpiderSpec s registry = Spec.describe s "OldFatSpiderCantSeeMe" $ do
         warMammoth <- S.printingOf s registry "War Mammoth"
         spider <- S.printingOf s registry "Old Fat Spider Can't See Me"
         act (spiderBoard island piker warMammoth spider)
-      hit src recipient n = DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
+      hit src recipient n = DamageEvent.MkDamageEvent src recipient n False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat
       amounts gs = fmap DamageEvent.amount (S.damageEventsOf gs)
       settleDamage gs events = S.runPure S.identityAnswer gs (Damage.applyDamage (pure ()) events)
       -- The two dealers hit the SAME player for DIFFERENT amounts, so a board

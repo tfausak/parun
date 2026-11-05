@@ -2,6 +2,7 @@ module Parun.Types.DamageEvent where
 
 import qualified Data.Set as Set
 import qualified Numeric.Natural as Natural
+import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.PlayerId as PlayerId
@@ -78,6 +79,11 @@ data DamageEvent = MkDamageEvent
     -- reader Parun.Engine.Commander.isCommander answers False for an id that
     -- names nothing, which would silently drop a commander that died in combat.
     dealtByCommander :: Bool,
+    -- | CR 120.1: the source's CARD TYPES when this damage was dealt, read by
+    -- Parun.Types.DealtDamage's `by`; docs/decisions.md, "Whether a source's card
+    -- type is read as it dealt the damage". CR 608.2h's last known information for
+    -- a source already gone.
+    dealtByCardTypes :: Set.Set CardType.CardType,
     -- | CR 510 vs CR 608: combat damage or not. Set at deal time -- Damage tags
     -- Combat, Resolve's DealDamage tags Noncombat. Read by Replacement.applies's
     -- DamageR arm (CR 615.1's damage pattern).

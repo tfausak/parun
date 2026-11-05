@@ -1827,10 +1827,10 @@ representativeEvents cond =
       resolvedIntoGraveyard = GameEvent.Moved (Moved.moved (ZoneChange.MkZoneChange departed arrived Zone.Stack Zone.Graveyard) S.emptyCharacteristics) {Moved.duringResolution = True}
       combatDamage =
         GameEvent.DamageDealt
-          (DamageEvent.MkDamageEvent departed (Recipient.ToPlayer S.bob) 2 False False False 0 Nothing Nothing mempty False DamageKind.Combat)
+          (DamageEvent.MkDamageEvent departed (Recipient.ToPlayer S.bob) 2 False False False 0 Nothing Nothing mempty False mempty DamageKind.Combat)
       combatDamageToAlice =
         GameEvent.DamageDealt
-          (DamageEvent.MkDamageEvent departed (Recipient.ToPlayer S.alice) 2 False False False 0 Nothing Nothing mempty False DamageKind.Combat)
+          (DamageEvent.MkDamageEvent departed (Recipient.ToPlayer S.alice) 2 False False False 0 Nothing Nothing mempty False mempty DamageKind.Combat)
       -- A row whose arm reads no arrival table, which is every arm but one.
       noTable e = (Map.empty, e)
       one e = noTable e NonEmpty.:| []
@@ -1871,7 +1871,7 @@ representativeEvents cond =
                 DamageRecipient.Permanent CardType.Planeswalker -> Recipient.ToPlaneswalker arrived
                 DamageRecipient.Permanent CardType.Battle -> Recipient.ToBattle arrived
                 DamageRecipient.Permanent _ -> Recipient.ToCreature arrived
-              events = [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed recipient 3 False False False 0 Nothing Nothing mempty False kind)) | kind <- kinds, recipient <- recipients]
+              events = [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed recipient 3 False False False 0 Nothing Nothing mempty False mempty kind)) | kind <- kinds, recipient <- recipients]
            in case events of
                 event : rest -> event NonEmpty.:| rest
                 [] -> one combatDamage
@@ -1880,18 +1880,18 @@ representativeEvents cond =
         -- condition admits both, as the arm above does: a floor claimed for one
         -- kind and not the other would come apart here.
         TriggerCondition.IsDealtDamage _ ->
-          noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToCreature departed) 2 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat))
-            NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToCreature departed) 3 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
+          noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToCreature departed) 2 False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat))
+            NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToCreature departed) 3 False False False 0 Nothing Nothing mempty False mempty DamageKind.Combat))]
         -- CR 120.3's event pointed at a player, alice being the "you", in both
         -- kinds for the arm above's reason. A reading that admits the player's
         -- planeswalkers admits damage to one too, so its second event names one.
         TriggerCondition.PlayerIsDealtDamage watched
           | PlayerIsDealtDamage.orTheirPlaneswalkers watched ->
-              noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToPlayer S.alice) 2 False False False 0 Nothing Nothing mempty False DamageKind.Combat))
-                NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToPlaneswalker departed) 3 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
+              noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToPlayer S.alice) 2 False False False 0 Nothing Nothing mempty False mempty DamageKind.Combat))
+                NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToPlaneswalker departed) 3 False False False 0 Nothing Nothing mempty False mempty DamageKind.Combat))]
         TriggerCondition.PlayerIsDealtDamage _ ->
-          noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToPlayer S.alice) 2 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat))
-            NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToPlayer S.alice) 3 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
+          noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToPlayer S.alice) 2 False False False 0 Nothing Nothing mempty False mempty DamageKind.Noncombat))
+            NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToPlayer S.alice) 3 False False False 0 Nothing Nothing mempty False mempty DamageKind.Combat))]
         -- The same one event, and NOT because the batch reading matches nothing:
         -- Event.matchesTrigger answers alike for both (its batch arm delegates to
         -- DealsDamage's), CR 603.2c's once-per-step scoping living in
@@ -2287,13 +2287,13 @@ everyTriggerCondition =
     TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger (ActingPermanent.Matching (Filter.Type.HasAttached Filter.Type.IsSource)) Nothing Set.empty),
     TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger (ActingPermanent.Matching (Filter.Type.And [])) (Just DamageKind.Combat) (Set.singleton (DamageRecipient.Player PlayerRelation.AnyPlayer))),
     TriggerCondition.DealsDamage (DamageTrigger.MkDamageTrigger (ActingPermanent.Matching (Filter.Type.And [])) (Just DamageKind.Combat) (Set.fromList [DamageRecipient.Player PlayerRelation.AnyPlayer, DamageRecipient.Permanent CardType.Planeswalker])),
-    TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing) Batching.OneOrMore),
-    TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing) Batching.EachOccurrence),
-    TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage (ActingPermanent.Matching (Filter.Type.And [])) Nothing) Batching.OneOrMore),
-    TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self (Just DamageKind.Combat)) Batching.OneOrMore),
-    TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You Nothing) False),
-    TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You (Just DamageKind.Noncombat)) False),
-    TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You (Just DamageKind.Combat)) True),
+    TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing Nothing) Batching.OneOrMore),
+    TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self Nothing Nothing) Batching.EachOccurrence),
+    TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage (ActingPermanent.Matching (Filter.Type.And [])) Nothing Nothing) Batching.OneOrMore),
+    TriggerCondition.IsDealtDamage (PermanentIsDealtDamage.MkPermanentIsDealtDamage (DealtDamage.MkDealtDamage ActingPermanent.Self (Just DamageKind.Combat) Nothing) Batching.OneOrMore),
+    TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You Nothing Nothing) False),
+    TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You (Just DamageKind.Noncombat) Nothing) False),
+    TriggerCondition.PlayerIsDealtDamage (PlayerIsDealtDamage.MkPlayerIsDealtDamage (DealtDamage.MkDealtDamage PlayerRelation.You (Just DamageKind.Combat) Nothing) True),
     TriggerCondition.PermanentsDealCombatDamageToPlayer (PermanentsDealCombatDamageToPlayer.MkPermanentsDealCombatDamageToPlayer (Filter.Type.And []) PlayerRelation.AnyPlayer False),
     TriggerCondition.CreatureDealtCombatDamageToMonarch,
     TriggerCondition.CreaturesDealtCombatDamageToInitiative,

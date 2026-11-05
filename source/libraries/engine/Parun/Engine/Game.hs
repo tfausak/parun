@@ -3861,17 +3861,24 @@ freerunningDamageThisTurn pid gs =
 -- PlayersDealtDamageThisTurn arm, which counts the seats it answers True for.
 -- The turn scope is GameState.events itself: Parun.Engine.Engine.beginTurnOf
 -- clears the log at the handoff, so "this turn" is what the log holds. A kind
--- narrows the question to that damage alone (CR 510.2's combat damage).
-wasDealtDamageThisTurn :: Maybe DamageKind.DamageKind -> GameState -> PlayerId -> Bool
-wasDealtDamageThisTurn kind gs pid =
-  let counts event = damagedPlayer event == Just pid && damageOfKind kind event
+-- narrows the question to that damage alone (CR 510.2's combat damage), and a
+-- card type to a source's that had it.
+wasDealtDamageThisTurn :: Maybe DamageKind.DamageKind -> Maybe CardType.CardType -> GameState -> PlayerId -> Bool
+wasDealtDamageThisTurn kind by gs pid =
+  let counts event = damagedPlayer event == Just pid && eventCounts kind by event
    in any (counts . LoggedEvent.event) (GameState.events gs)
 
--- Is this event damage of that kind? Nothing admits every event.
-damageOfKind :: Maybe DamageKind.DamageKind -> GameEvent -> Bool
-damageOfKind kind event = case event of
-  GameEvent.DamageDealt ev -> all (== DamageEvent.kind ev) kind
-  _ -> Maybe.isNothing kind
+-- Parun.Types.DealtDamage's "which damage counts", the one reading of its `kind`
+-- and `by`. Nothing admits every event.
+damageCounts :: Maybe DamageKind.DamageKind -> Maybe CardType.CardType -> DamageEvent.DamageEvent -> Bool
+damageCounts kind by ev =
+  all (== DamageEvent.kind ev) kind && all (`Set.member` DamageEvent.dealtByCardTypes ev) by
+
+-- damageCounts over the log, where only a damage event has a kind or a source.
+eventCounts :: Maybe DamageKind.DamageKind -> Maybe CardType.CardType -> GameEvent -> Bool
+eventCounts kind by event = case event of
+  GameEvent.DamageDealt ev -> damageCounts kind by ev
+  _ -> Maybe.isNothing kind && Maybe.isNothing by
 
 -- CR 120.1 / 608.2i: how much damage was dealt to this PLAYER this turn --
 -- wasDealtDamageThisTurn's twin summing amounts where that one answers yes or
@@ -3881,14 +3888,14 @@ damageOfKind kind event = case event of
 --
 -- damageDealt and not damagedPlayer, because the AMOUNT is what a total wants;
 -- damageRecipient is the same answer with it dropped. CR 120.8's `amount > 0`
--- fence lives in damageDealt, so a 0 contributes nothing here either. A kind
--- narrows the total as it narrows the yes or no.
-damageDealtToPlayerThisTurn :: Maybe DamageKind.DamageKind -> GameState -> PlayerId -> Natural
-damageDealtToPlayerThisTurn kind gs pid =
+-- fence lives in damageDealt, so a 0 contributes nothing here either. A kind and
+-- a card type narrow the total as they narrow the yes or no.
+damageDealtToPlayerThisTurn :: Maybe DamageKind.DamageKind -> Maybe CardType.CardType -> GameState -> PlayerId -> Natural
+damageDealtToPlayerThisTurn kind by gs pid =
   sum
     ( Maybe.mapMaybe
         ( \logged -> case damageDealt (LoggedEvent.event logged) of
-            Just (recipient, amount) | Recipient.playerOf recipient == Just pid && damageOfKind kind (LoggedEvent.event logged) -> Just amount
+            Just (recipient, amount) | Recipient.playerOf recipient == Just pid && eventCounts kind by (LoggedEvent.event logged) -> Just amount
             _ -> Nothing
         )
         (Foldable.toList (GameState.events gs))

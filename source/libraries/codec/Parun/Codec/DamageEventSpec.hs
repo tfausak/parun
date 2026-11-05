@@ -4,6 +4,7 @@ import qualified Data.Set as Set
 import qualified Parun.Codec.DamageEvent as DamageEvent
 import qualified Parun.JsonCodec.Common as Common
 import qualified Parun.Spec as Spec
+import qualified Parun.Types.CardType as CardType
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
 import qualified Parun.Types.ObjectId as ObjectId
@@ -34,9 +35,10 @@ spec s = Spec.describe s "Parun.Codec.DamageEvent" $ do
           DamageEvent.dealtByController = Just (PlayerId.MkPlayerId 4),
           DamageEvent.dealtByCreatureTypes = Set.singleton Subtype.Rogue,
           DamageEvent.dealtByCommander = True,
+          DamageEvent.dealtByCardTypes = Set.singleton CardType.Artifact,
           DamageEvent.kind = DamageKind.Combat
         }
-      " {\"source\":1,\"target\":{\"type\":\"ToPlayer\",\"value\":2},\"amount\":3,\"dealtByDeathtouch\":true,\"dealtByWither\":true,\"dealtByToxic\":2,\"dealtByController\":4,\"dealtByCreatureTypes\":[{\"type\":\"Rogue\"}],\"dealtByCommander\":true,\"kind\":{\"type\":\"Combat\"}} "
+      " {\"source\":1,\"target\":{\"type\":\"ToPlayer\",\"value\":2},\"amount\":3,\"dealtByDeathtouch\":true,\"dealtByWither\":true,\"dealtByToxic\":2,\"dealtByController\":4,\"dealtByCreatureTypes\":[{\"type\":\"Rogue\"}],\"dealtByCommander\":true,\"dealtByCardTypes\":[{\"type\":\"Artifact\"}],\"kind\":{\"type\":\"Combat\"}} "
   -- CR 120.3c's recipient tag and CR 608's noncombat damage are each the other
   -- arm of their type. CR 702.15b's lifelink payee is a concrete PlayerId.
   Spec.it s "MkDamageEvent, dealt to a planeswalker, with lifelink" $
@@ -55,6 +57,7 @@ spec s = Spec.describe s "Parun.Codec.DamageEvent" $ do
           DamageEvent.dealtByController = Nothing,
           DamageEvent.dealtByCreatureTypes = Set.empty,
           DamageEvent.dealtByCommander = False,
+          DamageEvent.dealtByCardTypes = Set.empty,
           DamageEvent.kind = DamageKind.Noncombat
         }
       " {\"source\":1,\"target\":{\"type\":\"ToPlaneswalker\",\"value\":5},\"amount\":4,\"dealtByInfect\":true,\"dealtByLifelink\":2,\"kind\":{\"type\":\"Noncombat\"}} "
@@ -76,6 +79,7 @@ spec s = Spec.describe s "Parun.Codec.DamageEvent" $ do
           DamageEvent.dealtByController = Nothing,
           DamageEvent.dealtByCreatureTypes = Set.empty,
           DamageEvent.dealtByCommander = False,
+          DamageEvent.dealtByCardTypes = Set.empty,
           DamageEvent.kind = DamageKind.Combat
         }
       " {\"source\":1,\"target\":{\"type\":\"ToPlayer\",\"value\":2},\"amount\":3,\"kind\":{\"type\":\"Combat\"}} "

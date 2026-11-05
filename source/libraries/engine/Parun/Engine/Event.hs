@@ -1081,6 +1081,7 @@ damageEvent gs kind source target amount =
           DamageEvent.dealtByController = controller,
           DamageEvent.dealtByCreatureTypes = Set.filter Subtype.Engine.isCreatureType (PC.subtypes characteristics),
           DamageEvent.dealtByCommander = Commander.isCommander source gs,
+          DamageEvent.dealtByCardTypes = PC.cardTypes characteristics,
           DamageEvent.kind = kind
         }
 
@@ -3723,7 +3724,7 @@ apply settle batch applied batchPrevented candidate event =
               Just printed -> printed
               Nothing ->
                 let context = Projection.sourceContext gs (Projection.controllerOf oid gs) oid
-                    quantity = Quantity.Type.DamageDealtToPlayersThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Nothing}
+                    quantity = Quantity.Type.DamageDealtToPlayersThisTurn DealtDamage.MkDealtDamage {DealtDamage.recipient = PlayerRef.Relative PlayerRelation.Opponent, DealtDamage.kind = Nothing, DealtDamage.by = Nothing}
                  in maybe 0 Integer.toNaturalSaturating (Quantity.evaluate (Projection.fullView gs) context gs oid quantity)
         Replacement.consume (ReplacementCandidate.identity candidate)
         addEnteringCounters Nothing oid CounterKind.PlusOnePlusOne count
