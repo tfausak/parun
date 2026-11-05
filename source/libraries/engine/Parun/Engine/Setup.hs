@@ -579,9 +579,8 @@ newGame perform matchup = do
 -- (its identity, a conjured duplicate's values) differ between the two cards
 -- (Game.representComponent), since each represents itself
 -- again and not the permanent they were. A merged permanent's TOKEN component
--- (CR 730.2d) is minted as the token it is, and its copy component (CR 730.2,
--- CR 707.10) as the copy it is, which the funnel below then drops for CR
--- 727.2's own reason: neither is a card. CR 712.21a's arrangement is not asked:
+-- (CR 730.2d) is minted as the token it is, which the funnel below then drops
+-- for CR 727.2's own reason: it is no card. CR 712.21a's arrangement is not asked:
 -- both callers shuffle what they build (CR 103.3, CR 729.5), so the order the
 -- two cards are placed in is not observable.
 splitComponents :: ObjectId -> Map.Map ObjectId Object.Object -> (Map.Map ObjectId Object.Object, ObjectId)

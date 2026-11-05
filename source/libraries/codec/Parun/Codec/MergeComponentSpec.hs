@@ -45,13 +45,5 @@ spec s = Spec.describe s "Parun.Codec.MergeComponent" $ do
       MergeComponent.codec
       (MergeComponent.OfMeld MeldSource.MkMeldSource {MeldSource.result = PrintingId.MkPrintingId 13, MeldSource.components = ComponentCard.MkComponentCard (PrintingId.MkPrintingId 14) Nothing Nothing NonEmpty.:| [ComponentCard.MkComponentCard (PrintingId.MkPrintingId 15) Nothing Nothing]})
       " {\"type\":\"OfMeld\",\"value\":{\"components\":[{\"printing\":14},{\"printing\":15}],\"result\":13}} "
-  -- CR 730.2's "or copy": the third tag over the printing payload, which is what
-  -- separates it from the two above.
-  Spec.it s "OfSpellCopy" $
-    Common.assertCodec
-      s
-      MergeComponent.codec
-      (MergeComponent.OfSpellCopy (PrintingId.MkPrintingId 16))
-      " {\"type\":\"OfSpellCopy\",\"value\":16} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s MergeComponent.codec
