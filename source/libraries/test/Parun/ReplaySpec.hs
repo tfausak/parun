@@ -879,7 +879,7 @@ combatReplaySpec s =
         Spec.it s "ChooseCost records and replays a Cost" $ do
           let printed = CandidateCost.plain Nothing (Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 4])) [])
               alternative = CandidateCost.plain Nothing (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.SacrificeThis])
-              p = Prompt.ChooseCost decider S.alice oid [printed, alternative]
+              p = Prompt.ChooseCost decider S.alice oid [printed, alternative] Seq.empty
           Spec.assertEqWith s "round trip" (Replay.decode p (Replay.encode p alternative)) (Just alternative)
         Spec.it s "defaultAnswer takes the first offered cost (the printed one)" $ do
           let printed = CandidateCost.plain Nothing (Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 4])) [])
@@ -887,7 +887,7 @@ combatReplaySpec s =
           Spec.assertEqWith
             s
             "the printed one"
-            (Replay.defaultAnswer (Prompt.ChooseCost decider S.alice oid [printed, alternative]))
+            (Replay.defaultAnswer (Prompt.ChooseCost decider S.alice oid [printed, alternative] Seq.empty))
             printed
         -- #136 / CR 729.2: "Randomly determine which player goes first." The
         -- determination is randomness, not a choice, so the prompt carries NO

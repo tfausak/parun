@@ -2754,7 +2754,7 @@ outlastSpec s registry = Spec.describe s "Outlast" $ do
 -- Answers CR 601.2b's ChooseCost with `pick` and aims every target at `victim`.
 payingAt :: ([Cost.Type.Cost Keyword.Keyword] -> Cost.Type.Cost Keyword.Keyword) -> ObjectId.ObjectId -> Prompt.Prompt r -> r
 payingAt pick victim p = case p of
-  Prompt.ChooseCost _ _ _ costs -> Cost.untagged (pick (fmap CandidateCost.cost costs))
+  Prompt.ChooseCost _ _ _ costs _ -> Cost.untagged (pick (fmap CandidateCost.cost costs))
   _ -> aimAtOffered victim p
 
 -- Kíli the Resourceful, checked against Scryfall on 2026-09-28: "As long as you

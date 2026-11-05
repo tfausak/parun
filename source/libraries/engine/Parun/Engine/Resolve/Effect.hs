@@ -94,8 +94,8 @@ import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.PayGate as PayGate
 import qualified Parun.Types.PayObligation as PayObligation
 import qualified Parun.Types.PayOffer as PayOffer
+import qualified Parun.Types.PayerAnswer as PayerAnswer
 import qualified Parun.Types.Payment as Payment
-import qualified Parun.Types.PaymentDecision as PaymentDecision
 import qualified Parun.Types.PaymentMoment as PaymentMoment
 import qualified Parun.Types.PaymentSubject as PaymentSubject
 import qualified Parun.Types.PendingEntryEffect as PendingEntryEffect
@@ -1417,16 +1417,21 @@ applyLoopBody runSubgame resolving source controller legal chosen bodyDefined bo
 -- its damage instead.
 --
 -- CR 101.4's APNAP order over the players the reference names, which is what
--- `apnapDecidersOf` imposes, each told whether the payers before them took the
--- offer (CR 101.4b). Nothing a payer chose has happened when the next is asked,
--- since each rehearsal is undone (CR 101.4a's hidden card stays hidden). Only
--- then does every payment happen, made again from its answers, and two or more
--- are ONE event: the "then the actions happen simultaneously" of CR 101.4 and
--- Perforating Artist's ruling, which CR 603.10a's look-back reads. The scenarios
+-- `apnapDecidersOf` imposes, each told which option and objects the payers
+-- before them paid with (CR 101.4b, Common.payerAnswerOf). Nothing a payer
+-- chose has happened when the next is asked, since each rehearsal is undone
+-- (CR 101.4a's hidden card stays hidden). Parun.ResolveSpec's "CR 101.4b a
+-- later opponent is told" case proves it. Only then does every payment
+-- happen, made again from its answers, and two or more are ONE event: the
+-- "then the actions happen simultaneously" of CR 101.4 and Perforating
+-- Artist's ruling, which CR 603.10a's look-back reads. The scenarios
 -- named perforating-artist prove both. A payment the others have since made fail
 -- asks its payer again (payAgain), a fence: no pool cost depends on another
 -- payer's permanent or mana ability, as is a lone payment's staying outside the
 -- bracket.
+--
+-- Not implemented: telling a later payer the same in the prompts their own
+-- payment raises, ChooseSacrifices and ChooseDiscard (#6376).
 --
 -- The mana windows are not in the event: CR 605.3a's activations come before
 -- the payment they are for (CR 601.2g's order), so every payer's window
@@ -1435,9 +1440,6 @@ applyLoopBody runSubgame resolving source controller legal chosen bodyDefined bo
 -- payer's. The scenario
 -- cr-605-3a-each-altar-sacrifice-paying-for-rhystic-tutor-is-its-own-event
 -- proves it.
---
--- Not implemented: telling a later payer WHICH option or object an earlier one
--- chose (#5933).
 --
 -- A player the reference names who has LEFT the game stays in this list and is
 -- answered unpaid by payGatePaidBy, CR 800.4f.
@@ -1453,7 +1455,7 @@ payGatePaid runSubgame resolving source controller idx cIdx legal announced comm
   -- when they announced the branch, so their offer is CR 118.12's mandatory
   -- limb: paid when CR 118.3 allows, and not asked.
   let offerTo payer = if Set.member payer committed then gate {PayGate.obligation = PayObligation.Mandatory} else gate
-      rehearse earlier payer = payGatePaidBy runSubgame resolving source controller (PayOffer.AtClause idx cIdx) (fmap (fmap (Common.paymentDecisionOf . snd)) earlier) legal payer (offerTo payer)
+      rehearse earlier payer = payGatePaidBy runSubgame resolving source controller (PayOffer.AtClause idx cIdx) (fmap (fmap (Common.payerAnswerOf gs)) earlier) legal payer (offerTo payer)
   rehearsed <-
     Monad.foldM
       ( \earlier payer -> do
@@ -1513,7 +1515,7 @@ loopOffers runSubgame resolving source controller slot legal members gate = do
       agreedBy payer answers = [taken | (p, _, Just taken) <- Foldable.toList answers, p == payer]
       agreeOne acc payer member = do
         (slots, options) <- State.gets (Common.gateCostOf resolving source controller (legalFor member) gate)
-        let earlier = Seq.fromList [(p, maybe PaymentDecision.Declines (const PaymentDecision.Pays) taken) | (p, m, taken) <- Foldable.toList acc, m == member]
+        let earlier = Seq.fromList [(p, maybe PayerAnswer.Declined (\(_, cost) -> PayerAnswer.Paid cost Set.empty) taken) | (p, m, taken) <- Foldable.toList acc, m == member]
             owed = fmap (Cost.together . fmap snd) (NonEmpty.nonEmpty (agreedBy payer acc))
         agreed <- Common.payGateAgreed resolving source (PayOffer.ForMember member) earlier payer gate slots owed options
         pure (payer, member, fmap ((,) slots) agreed)
@@ -1589,7 +1591,7 @@ loopOffers runSubgame resolving source controller slot legal members gate = do
 -- against and how it was answered (payGateCost's record), for payGatePaid to make
 -- again, and what the last one bound, if it was paid. A failed attempt counts: a
 -- mana ability the payer kept stands (CR 733.1).
-payGatePaidBy :: Game Result -> ObjectId -> ObjectId -> PlayerId -> PayOffer.PayOffer -> Seq.Seq (PlayerId, PaymentDecision.PaymentDecision) -> Map.Map SlotName (Set Recipient) -> PlayerId -> PayGate.PayGate -> Game (Seq.Seq (Map.Map SlotName (Set Recipient), Cost.Type.Cost Keyword.Type.Keyword, [Response.Response]), Maybe (Map.Map SlotName Binding.Type.Binding))
+payGatePaidBy :: Game Result -> ObjectId -> ObjectId -> PlayerId -> PayOffer.PayOffer -> Seq.Seq (PlayerId, PayerAnswer.PayerAnswer) -> Map.Map SlotName (Set Recipient) -> PlayerId -> PayGate.PayGate -> Game (Seq.Seq (Map.Map SlotName (Set Recipient), Cost.Type.Cost Keyword.Type.Keyword, [Response.Response]), Maybe (Map.Map SlotName Binding.Type.Binding))
 payGatePaidBy runSubgame resolving source controller offer earlier legal payer gate = attempt Seq.empty Set.empty
   where
     -- CR 733.1 / 118.12a: a payment that fails is reversed, which returns the

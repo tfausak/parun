@@ -170,7 +170,7 @@ twoBeholdsSpec s registry =
         -- is the only component either option carries.
         beholding :: Prompt.Prompt r -> r
         beholding p = case p of
-          Prompt.ChooseCost _ _ _ candidates
+          Prompt.ChooseCost _ _ _ candidates _
             | Just cost <- List.find (not . null . Cost.Type.components . CandidateCost.cost) candidates -> cost
           Prompt.ChooseTargets _ _ _ asked -> fmap (\(_, legal) -> Set.filter ((== Just victimId) . Recipient.objectOf) legal) asked
           _ -> S.identityAnswer p

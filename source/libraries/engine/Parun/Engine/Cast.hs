@@ -3612,7 +3612,7 @@ castProposed perform baseSpending pid oid sid printedFace castFrom preparedFor k
           -- group proves it.
           chosenCandidate <- case payableCandidates of
             [only] -> pure only
-            _ -> Game.choose (Prompt.ChooseCost decider pid sid payableCandidates)
+            _ -> Game.choose (Prompt.ChooseCost decider pid sid payableCandidates Seq.empty)
           if notElem chosenCandidate payableCandidates
             then reject
             else do

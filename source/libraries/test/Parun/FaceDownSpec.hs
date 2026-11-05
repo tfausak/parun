@@ -1639,7 +1639,7 @@ turnFaceUpSpec s registry = Spec.describe s "Turning face up" $ do
     let green n = Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic n, ManaSymbol.OfType (ManaType.Colored Color.Green)])) []
         paying :: Cost.Cost Keyword.Keyword -> Prompt.Prompt r -> r
         paying want p = case p of
-          Prompt.ChooseCost _ _ _ offered -> Maybe.fromMaybe (S.identityAnswer p) (List.find ((== want) . CandidateCost.cost) offered)
+          Prompt.ChooseCost _ _ _ offered _ -> Maybe.fromMaybe (S.identityAnswer p) (List.find ((== want) . CandidateCost.cost) offered)
           _ -> S.identityAnswer p
         turnedFor want before permanent = S.runPure (paying want) before (FaceDown.turnFaceUp S.manaPerformer S.alice TurnUpProcedure.Morph permanent)
     case faceDownWith forest adept 8 of

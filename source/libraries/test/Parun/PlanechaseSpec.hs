@@ -647,7 +647,7 @@ caldaiaBoard s registry creature others = do
 -- CR 601.2b answered with `wanted`'s mana, and every attack with everything.
 paying :: [ManaSymbol.ManaSymbol] -> Prompt.Prompt r -> r
 paying wanted p = case p of
-  Prompt.ChooseCost _ _ _ candidates -> Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just (ManaCost.MkManaCost wanted)) . Cost.Type.mana . CandidateCost.cost) candidates)
+  Prompt.ChooseCost _ _ _ candidates _ -> Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just (ManaCost.MkManaCost wanted)) . Cost.Type.mana . CandidateCost.cost) candidates)
   Prompt.DeclareAttackers {} -> S.aggressiveAnswer p
   _ -> S.identityAnswer p
 

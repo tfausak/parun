@@ -4810,7 +4810,7 @@ announceSubstitutionsReading slots substituting pid oid cost = case Cost.mana co
       [] -> pure (cost, [])
       [only] -> pure only
       first : rest -> do
-        chosen <- Game.choose (Prompt.ChooseCost (Decide.deciderFor pid gs) pid oid (fmap (untagged . whole) (first : rest)))
+        chosen <- Game.choose (Prompt.ChooseCost (Decide.deciderFor pid gs) pid oid (fmap (untagged . whole) (first : rest)) Seq.empty)
         pure (Maybe.fromMaybe first (List.find ((== chosen) . untagged . whole) offered))
 
 -- CR 601.2g then 601.2h: the mana window first, then the payment, whose order is

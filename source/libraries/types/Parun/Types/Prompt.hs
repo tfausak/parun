@@ -63,6 +63,7 @@ import qualified Parun.Types.ObjectId as ObjectId
 import qualified Parun.Types.OptionalDecision as OptionalDecision
 import qualified Parun.Types.OutsideCard as OutsideCard
 import qualified Parun.Types.PayOffer as PayOffer
+import qualified Parun.Types.PayerAnswer as PayerAnswer
 import qualified Parun.Types.PaymentDecision as PaymentDecision
 import qualified Parun.Types.PhyrexianPayment as PhyrexianPayment
 import qualified Parun.Types.PlayerChoice as PlayerChoice
@@ -873,7 +874,8 @@ data Prompt r where
   -- payability at the first four, and an answer outside them is rejected.
   -- Each carries the keyword ability that offered it, so two equal costs
   -- offered by different abilities are two answers (CR 601.2b, 702.152a).
-  ChooseCost :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [CandidateCost.CandidateCost] -> Prompt CandidateCost.CandidateCost
+  -- The Seq is ChooseToPay's, empty at every moment but the first.
+  ChooseCost :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [CandidateCost.CandidateCost] -> Seq.Seq (PlayerId.PlayerId, PayerAnswer.PayerAnswer) -> Prompt CandidateCost.CandidateCost
   -- | CR 601.3 / 305.1: which of the permissions admitting a play of the
   -- ObjectId it is made under (Nothing = none of them); asked only where two
   -- would differ in the budget spent or the rider given (CR 400.7h, 400.7i).
@@ -990,8 +992,8 @@ data Prompt r where
   -- only declining, nor for CR 118.12's mandatory limb
   -- (Parun.Types.PayObligation). Parun.ResolveSpec's PayGate group fails if this
   -- prompt is raised there. The Seq is what the payers before this one answered
-  -- to the same offer (CR 101.4b).
-  ChooseToPay :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> PayOffer.PayOffer -> Cost.Cost Keyword.Keyword -> Seq.Seq (PlayerId.PlayerId, PaymentDecision.PaymentDecision) -> Prompt PaymentDecision.PaymentDecision
+  -- to the same offer, with the option and objects each paid with (CR 101.4b).
+  ChooseToPay :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> PayOffer.PayOffer -> Cost.Cost Keyword.Keyword -> Seq.Seq (PlayerId.PlayerId, PayerAnswer.PayerAnswer) -> Prompt PaymentDecision.PaymentDecision
   -- | CR 601.2b: whether 2 life or mana pays each Phyrexian symbol, one prompt
   -- per symbol in printed order at CR 118.13's moments and for a combat toll
   -- (Parun.Engine.Cost.announceToll); a hybrid Phyrexian symbol (CR 107.4f)

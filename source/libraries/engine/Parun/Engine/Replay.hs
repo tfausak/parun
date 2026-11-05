@@ -1314,7 +1314,7 @@ defaultAnswer p = case p of
   -- (CR 702.34a states no limit), and the head is the default.
   -- Cost.firstOffered keeps this total for the empty list the engine never
   -- produces.
-  Prompt.ChooseCost _ _ _ candidates -> Cost.firstOffered candidates
+  Prompt.ChooseCost _ _ _ candidates _ -> Cost.firstOffered candidates
   -- The head is the permission that spends no budget where one admits the play
   -- (Parun.Engine.PlayerEffect.permissionOptions orders them so).
   Prompt.ChoosePlayPermission _ _ _ options -> NonEmpty.head options

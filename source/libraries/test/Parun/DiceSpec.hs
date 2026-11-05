@@ -924,7 +924,7 @@ nightShiftAnswer index p = case p of
       [] -> State.put (rolls, rerolls, [], NonEmpty.toList results : shown) >> pure Nothing
   Prompt.ChooseDieResult {} -> pure index
   -- CR 701.67a's offer, ascending: the last entry taps the most.
-  Prompt.ChooseCost _ _ _ offered@(_ : _) -> pure (last offered)
+  Prompt.ChooseCost _ _ _ offered@(_ : _) _ -> pure (last offered)
   _ -> pure (S.identityAnswer p)
 
 -- Cast the Endeavor, resolve it, then place and drain whatever triggered (CR

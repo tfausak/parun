@@ -224,6 +224,7 @@ import qualified Parun.Types.OutsideCard as OutsideCard
 import qualified Parun.Types.OutsideDestination as OutsideDestination
 import qualified Parun.Types.OutsideObject as OutsideObject
 import qualified Parun.Types.PayOffer as PayOffer
+import qualified Parun.Types.PayerAnswer as PayerAnswer
 import qualified Parun.Types.PaymentDecision as PaymentDecision
 import qualified Parun.Types.PendingEntryEffect as PendingEntryEffect
 import qualified Parun.Types.PendingReplacementEffect as PendingReplacementEffect
@@ -4619,10 +4620,10 @@ apply settle batch applied batchPrevented candidate event =
                 if canPayLife payer n now
                   then Game.choose (Prompt.ChooseToPay (Decide.deciderFor payer now) payer source PayOffer.InsteadOfDraw cost earlier)
                   else pure PaymentDecision.Declines
-              pure (earlier Seq.|> (payer, decision))
+              pure (earlier Seq.|> (payer, if decision == PaymentDecision.Pays then PayerAnswer.Paid cost Set.empty else PayerAnswer.Declined))
         Monad.mapM_ (reveal RevealCause.Ordinary pid) revealed
         answers <- Monad.foldM ask Seq.empty (filter (/= pid) (Game.apnapOrder gs))
-        let payers = [payer | (payer, PaymentDecision.Pays) <- Foldable.toList answers]
+        let payers = [payer | (payer, PayerAnswer.Paid {}) <- Foldable.toList answers]
         Monad.mapM_ (\payer -> payLife settle payer n) payers
         if null payers
           then pure (Just event)
@@ -11043,7 +11044,7 @@ madnessChoice pid oid payloads = do
     [] -> pure Nothing
     [(_, only)] -> pure (Just only)
     offered@((_, first) : _) -> do
-      answer <- Game.choose (Prompt.ChooseCost (Decide.deciderFor pid gs) pid oid (fmap (CandidateCost.plain Nothing . fst) offered))
+      answer <- Game.choose (Prompt.ChooseCost (Decide.deciderFor pid gs) pid oid (fmap (CandidateCost.plain Nothing . fst) offered) Seq.empty)
       -- Reject-not-repair: an answer outside the offer keeps the first.
       pure (Just (Maybe.fromMaybe first (Map.lookup (CandidateCost.cost answer) bySettled)))
 

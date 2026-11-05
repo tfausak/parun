@@ -1330,7 +1330,7 @@ mergingOnto :: ObjectId.ObjectId -> GameState.GameState -> ObjectId.ObjectId -> 
 mergingOnto host board spellId =
   let answer :: Prompt.Prompt r -> r
       answer p = case p of
-        Prompt.ChooseCost _ _ _ candidates ->
+        Prompt.ChooseCost _ _ _ candidates _ ->
           Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just cubwardenMutateCost) . Cost.Type.mana . CandidateCost.cost) candidates)
         Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter ((== Just host) . Recipient.objectOf) . snd) sets
         Prompt.ChooseMutateSide {} -> MutateSide.Over

@@ -156,6 +156,7 @@ import qualified Parun.Types.PayBranch as PayBranch
 import qualified Parun.Types.PayGate as PayGate
 import qualified Parun.Types.PayObligation as PayObligation
 import qualified Parun.Types.PayOffer as PayOffer
+import qualified Parun.Types.PayerAnswer as PayerAnswer
 import qualified Parun.Types.PaymentDecision as PaymentDecision
 import qualified Parun.Types.PaymentSubject as PaymentSubject
 import qualified Parun.Types.PendingReplacementEffect as PendingReplacementEffect
@@ -4710,12 +4711,22 @@ branchSelects branch asked = case branch of
   PayBranch.IfNotPaid -> Map.keysSet (Map.filter not asked)
   PayBranch.IfNonePaid -> if or asked then Set.empty else Map.keysSet asked
 
--- CR 101.4b: an answer as a later payer is told it -- Pays exactly when the
--- payment went through, so a payer who could not pay (CR 118.3), had left (CR
--- 800.4f) or repeated a payment that failed (payAgain) reads as having
--- declined.
-paymentDecisionOf :: Maybe a -> PaymentDecision.PaymentDecision
-paymentDecisionOf paid = if Maybe.isJust paid then PaymentDecision.Pays else PaymentDecision.Declines
+-- CR 101.4b: an answer as a later payer is told it, off payGatePaidBy's record
+-- -- Paid exactly when the payment went through, so a payer who could not pay
+-- (CR 118.3), had left (CR 800.4f) or repeated a payment that failed
+-- (payAgain) reads as having declined. Paid names the option the last attempt
+-- paid with, and of the objects the payment bound (foldPaid's slots) those in
+-- a public zone of `gs`, the board before the payment was made: a card chosen
+-- from a hand or library stays unnamed (CR 101.4a), as does the new object a
+-- payment put into a graveyard (CR 400.7), absent from `gs`.
+payerAnswerOf :: GameState -> (Seq.Seq (a, Cost.Type.Cost Keyword.Type.Keyword, b), Maybe (Map.Map SlotName Binding.Type.Binding)) -> PayerAnswer.PayerAnswer
+payerAnswerOf gs (attempts, paid) = case (Seq.viewr attempts, paid) of
+  (_ Seq.:> (_, cost, _), Just bound) ->
+    let bindings = Map.elems bound
+        named = concatMap (foldMap (Maybe.mapMaybe Recipient.objectOf . Set.toList) . Binding.Type.targets) bindings <> concatMap (foldMap Foldable.toList . Binding.Type.objects) bindings
+        public oid = maybe False (not . Game.isHiddenZone) (Game.zoneOf oid gs)
+     in PayerAnswer.Paid cost (Set.fromList (filter public named))
+  _ -> PayerAnswer.Declined
 
 -- CR 733.1 / 118.12a: what follows a payment `agreed` to and answered as it
 -- was (payGateCost's record). A paid one stands, as `stands` reports it. A failed
@@ -4770,8 +4781,9 @@ gateAffordable resolving source controller legal payer gate gs =
 -- with Prompt.ChooseCost, asked only where two or more are payable; an answer
 -- outside them pays nothing. Then Prompt.ChooseToPay over the option picked, so
 -- an optional cost can still be declined. Proved by Parun.ResolveSpec's "CR
--- 118.12 a choice of costs" group.
-payGateAgreed :: ObjectId -> ObjectId -> PayOffer.PayOffer -> Seq.Seq (PlayerId, PaymentDecision.PaymentDecision) -> PlayerId -> PayGate.PayGate -> Map.Map SlotName (Set Recipient) -> Maybe (Cost.Type.Cost Keyword.Type.Keyword) -> NonEmpty.NonEmpty (Cost.Type.Cost Keyword.Type.Keyword) -> Game (Maybe (Cost.Type.Cost Keyword.Type.Keyword))
+-- 118.12 a choice of costs" group. Both prompts carry `earlier`, what the
+-- payers before this one answered (CR 101.4b).
+payGateAgreed :: ObjectId -> ObjectId -> PayOffer.PayOffer -> Seq.Seq (PlayerId, PayerAnswer.PayerAnswer) -> PlayerId -> PayGate.PayGate -> Map.Map SlotName (Set Recipient) -> Maybe (Cost.Type.Cost Keyword.Type.Keyword) -> NonEmpty.NonEmpty (Cost.Type.Cost Keyword.Type.Keyword) -> Game (Maybe (Cost.Type.Cost Keyword.Type.Keyword))
 payGateAgreed resolving source offer earlier payer gate slots owed options = do
   gs <- State.get
   let total cost = maybe cost (`Cost.plus` cost) owed
@@ -4783,7 +4795,7 @@ payGateAgreed resolving source offer earlier payer gate slots owed options = do
         [] -> pure Nothing
         [only] -> pure (Just only)
         _ -> do
-          answer <- Game.choose (Prompt.ChooseCost (Decide.deciderFor payer gs) payer resolving (fmap Cost.untagged payable))
+          answer <- Game.choose (Prompt.ChooseCost (Decide.deciderFor payer gs) payer resolving (fmap Cost.untagged payable) earlier)
           pure (List.find ((== answer) . Cost.untagged) payable)
       case picked of
         Nothing -> pure Nothing
