@@ -1,6 +1,6 @@
 {
-  "description": "CR 616.1e: Beacon of Unrest returns Wood Elemental under Hallowed Moonlight, and its controller applies Hallowed Moonlight's redirect first, so it is exiled before it sacrifices, which it never does",
-  "note": "Both effects sit in CR 616.1e, so the entering object's controller picks the order; offer 0 is the sacrifice, 1 the redirect.",
+  "description": "CR 616.1e: Tamiyo, Compleated Sage's token copy of Wood Elemental under Hallowed Moonlight takes its sacrifice before the redirect, so two Forests are sacrificed and the token is exiled",
+  "note": "Both effects sit in CR 616.1e, so the entering token's controller orders them; offer 0 is the sacrifice, 1 the redirect. The Wood Elemental in exile is the card Tamiyo exiled; the exiled token ceases to exist (CR 111.7).",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
@@ -9,6 +9,18 @@
         "name": "alice",
         "battlefield": [
           {
+            "card": "Tamiyo, Compleated Sage",
+            "label": "tamiyo",
+            "counters": [
+              {
+                "key": {
+                  "type": "Loyalty"
+                },
+                "value": 5
+              }
+            ]
+          },
+          {
             "card": "Plains",
             "label": "p1",
             "ready": true
@@ -16,31 +28,6 @@
           {
             "card": "Plains",
             "label": "p2",
-            "ready": true
-          },
-          {
-            "card": "Swamp",
-            "label": "s1",
-            "ready": true
-          },
-          {
-            "card": "Swamp",
-            "label": "s2",
-            "ready": true
-          },
-          {
-            "card": "Swamp",
-            "label": "s3",
-            "ready": true
-          },
-          {
-            "card": "Swamp",
-            "label": "s4",
-            "ready": true
-          },
-          {
-            "card": "Swamp",
-            "label": "s5",
             "ready": true
           },
           {
@@ -64,24 +51,17 @@
           {
             "card": "Hallowed Moonlight",
             "label": "moonlight"
-          },
-          {
-            "card": "Beacon of Unrest",
-            "label": "beacon"
           }
         ],
         "library": [
           {
-            "card": "Island",
-            "label": "i1"
+            "card": "Island"
           },
           {
-            "card": "Island",
-            "label": "i2"
+            "card": "Island"
           },
           {
-            "card": "Island",
-            "label": "i3"
+            "card": "Island"
           }
         ]
       },
@@ -111,7 +91,8 @@
           "object": "$moonlight",
           "mana": [
             "$p1",
-            "$p2"
+            "$p2",
+            null
           ]
         }
       }
@@ -127,15 +108,10 @@
       "step": "PrecombatMain",
       "player": "alice",
       "do": {
-        "Cast": {
-          "object": "$beacon",
-          "mana": [
-            "$s1",
-            "$s2",
-            "$s3",
-            "$s4",
-            "$s5"
-          ],
+        "Activate": {
+          "object": "$tamiyo",
+          "ability": 1,
+          "x": 4,
           "targets": [
             "$wood"
           ]
@@ -155,7 +131,7 @@
       "do": {
         "Answer": {
           "prompt": "ChooseReplacement",
-          "with": 1
+          "with": 0
         }
       }
     },
@@ -165,11 +141,10 @@
       "player": "alice",
       "do": {
         "Answer": {
-          "prompt": "Shuffle",
+          "prompt": "ChooseAnyNumberToSacrifice",
           "with": [
-            "$i2",
-            "Beacon of Unrest",
-            "$i3"
+            "$f1",
+            "$f2"
           ]
         }
       }
@@ -209,7 +184,7 @@
           "player": "alice",
           "zone": "Battlefield",
           "card": "Forest",
-          "count": 2
+          "count": 0
         }
       }
     },
@@ -222,7 +197,7 @@
           "player": "alice",
           "zone": "Graveyard",
           "card": "Forest",
-          "count": 0
+          "count": 2
         }
       }
     }

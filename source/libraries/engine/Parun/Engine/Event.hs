@@ -2330,11 +2330,16 @@ loop settle asOf batch diverting allowances applied prevented exiledBy shuffling
     -- hallowed-moonlight-exiles-a-token-that-enters-as-a-copy-of-a-creature and
     -- hallowed-moonlight-exiles-a-card-that-enters-as-a-copy-of-a-creature.
     --
-    -- CR 616.1e: a redirect and the CR 616.1e entry rewrites still applicable are
-    -- one choice for the object's controller, and CR 616.1f re-collects after
-    -- each. Proved by the scenarios
-    -- hallowed-moonlight-exiles-a-wood-elemental-before-it-sacrifices and
-    -- hallowed-moonlight-exiles-a-wood-elemental-after-it-sacrifices.
+    -- CR 616.1e: for a minted object (`from` the battlefield, runEntry's
+    -- convention), a redirect and the CR 616.1e entry rewrites still applicable
+    -- are one choice for its controller, and CR 616.1f re-collects after each.
+    -- Proved by the scenarios
+    -- hallowed-moonlight-exiles-a-wood-elemental-token-before-it-sacrifices and
+    -- hallowed-moonlight-exiles-a-wood-elemental-token-after-it-sacrifices.
+    --
+    -- Not implemented: that choice for a card moved onto the battlefield, whose
+    -- diverted entry is rolled back with the rewrites already applied; the
+    -- redirect goes first there (#6383).
     bucket
       | Just from <- diverting,
         ProposedEvent.WouldEnter oid <- event,
@@ -2345,7 +2350,7 @@ loop settle asOf batch diverting allowances applied prevented exiledBy shuffling
                 Just (ProposedEvent.WouldChangeZone zc _ _ _)
                   | ZoneChange.to zc == Zone.Battlefield -> loop settle asOf batch Nothing allowances applied prevented exiledBy shuffling split event
                 _ -> pure (redirected, [], prevented, exiledBy, shuffling, split)
-          if null bucket || null redirects || not (all ((== ReplacementBucket.Other) . Replacement.bucketOf) redirects)
+          if from /= Zone.Battlefield || null bucket || null redirects || not (all ((== ReplacementBucket.Other) . Replacement.bucketOf) redirects)
             then continue =<< divertEntry batch from oid
             else do
               picked <- Replacement.choose gs event (bucket <> redirects)

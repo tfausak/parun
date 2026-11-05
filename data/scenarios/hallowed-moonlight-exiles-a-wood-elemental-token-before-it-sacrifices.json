@@ -1,6 +1,6 @@
 {
-  "description": "CR 616.1e: Tamiyo, Compleated Sage's token copy of Wood Elemental under Hallowed Moonlight is offered the redirect beside its sacrifice, and taking the redirect first sacrifices no Forest",
-  "note": "The minted road to the same choice; offer 0 is the sacrifice, 1 the redirect. Only the card Tamiyo exiled is a Wood Elemental card in exile, since the exiled token ceases to exist.",
+  "description": "CR 616.1e: Tamiyo, Compleated Sage's token copy of Wood Elemental under Hallowed Moonlight takes the redirect before its sacrifice, so the token is exiled and no Forest is sacrificed",
+  "note": "Both effects sit in CR 616.1e, so the entering token's controller orders them; offer 0 is the sacrifice, 1 the redirect. The Wood Elemental in exile is the card Tamiyo exiled; the exiled token ceases to exist (CR 111.7).",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
@@ -55,16 +55,13 @@
         ],
         "library": [
           {
-            "card": "Island",
-            "label": "i1"
+            "card": "Island"
           },
           {
-            "card": "Island",
-            "label": "i2"
+            "card": "Island"
           },
           {
-            "card": "Island",
-            "label": "i3"
+            "card": "Island"
           }
         ]
       },
@@ -94,7 +91,8 @@
           "object": "$moonlight",
           "mana": [
             "$p1",
-            "$p2"
+            "$p2",
+            null
           ]
         }
       }
