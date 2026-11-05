@@ -1,6 +1,6 @@
 {
   "description": "CR 601.2f Illusionary Mask under Suppression Field offers only what the mana spent on X could pay",
-  "note": "Suppression Field makes the Mask's {X} cost {2} more, so X = 2 is paid with four mana: two Forests and two Mountains. Only two of those units paid {X}, so a {3}{R} Hill Giant, which the whole four could pay, is not offered, and the {G} Llanowar Elves is offered alone -- an unscheduled ChooseOfferedCastSpell would fail the run.",
+  "note": "Suppression Field makes the Mask's {X} cost {2} more, so X = 2 is paid with four mana: two Forests and two Mountains. Only two of those units paid {X}, and alice says they were the Forests' green, so a {3}{R} Hill Giant, which the whole four could pay, is not offered, and the {G} Llanowar Elves is offered alone -- an unscheduled ChooseOfferedCastSpell would fail the run.",
   "board": {
     "seats": [
       {
@@ -80,6 +80,17 @@
             "$m1",
             "$m2"
           ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseManaSpentOnX",
+          "with": 2
         }
       }
     },

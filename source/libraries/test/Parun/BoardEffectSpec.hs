@@ -87,6 +87,7 @@ import qualified Parun.Types.Sickness as Sickness
 import qualified Parun.Types.SlotArity as SlotArity
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.StackObjectKind as StackObjectKind
+import qualified Parun.Types.StaticRead as StaticRead
 import qualified Parun.Types.Status as Status
 import qualified Parun.Types.StepBegan as StepBegan
 import qualified Parun.Types.TapState as TapState
@@ -1284,7 +1285,7 @@ communeWithLavaSpec s registry =
         -- The STATIC-ANALYSIS half, planted rather than read off a card, because no
         -- printing puts a TARGET slot in a library's depth and the gameplay cases
         -- above pass whatever these two answer. Both are the seam a nested Quantity
-        -- slips through: objectRefSlots and readsX reach it only via
+        -- slips through: objectRefSlots and hasRead reach it only via
         -- objectRefQuantities, and Effect.Reveal is the cheapest of the
         -- ObjectRef-taking opcodes to plant it under. A damage clause's ref is the
         -- same seam and answers the same way, which the last assertion pins:
@@ -1312,7 +1313,7 @@ communeWithLavaSpec s registry =
           Spec.assertEqWith
             s
             "CR 107.3: a depth reading X makes the effect an X reader"
-            (Resolve.readsX [depthOf (Quantity.InSlot Binding.variableX)], Resolve.readsX [depthOf (Quantity.Literal 3)])
+            (Resolve.hasRead StaticRead.ReadsX [depthOf (Quantity.InSlot Binding.variableX)], Resolve.hasRead StaticRead.ReadsX [depthOf (Quantity.Literal 3)])
             (True, False)
           -- The third reader of the same seam, and the one CR 603.3b's elision
           -- rests on: a PlayerRef nested in the depth is a TARGET slot that
@@ -1343,7 +1344,7 @@ communeWithLavaSpec s registry =
             s
             "a damage clause's own ref reports its depth's slot, X read and exhaustiveness alike"
             ( Resolve.slotsOf (damageDepthOf (Quantity.InSlot slot)),
-              Resolve.readsX [damageDepthOf (Quantity.InSlot Binding.variableX)],
+              Resolve.hasRead StaticRead.ReadsX [damageDepthOf (Quantity.InSlot Binding.variableX)],
               Resolve.slotsAreExhaustive (damageDepthOf (Quantity.LifeTotal (PlayerRef.InSlot slot)))
             )
             (Map.singleton slot SlotArity.Amount, True, False)
@@ -1367,14 +1368,14 @@ communeWithLavaSpec s registry =
             s
             "a counter move's giver reports its depth's slot, X read and exhaustiveness alike"
             ( Resolve.slotsOf (giverDepthOf (Quantity.InSlot slot)),
-              Resolve.readsX [giverDepthOf (Quantity.InSlot Binding.variableX)],
+              Resolve.hasRead StaticRead.ReadsX [giverDepthOf (Quantity.InSlot Binding.variableX)],
               Resolve.slotsAreExhaustive (giverDepthOf (Quantity.LifeTotal (PlayerRef.InSlot slot)))
             )
             (Map.fromList [(slot, SlotArity.Amount), (SlotName.MkSlotName (Text.pack "recipient"), SlotArity.Many)], True, False)
           Spec.assertEqWith
             s
             "and a literal depth reads no X and states its slots whole, so the answers are the depth's"
-            ( Resolve.readsX [giverDepthOf (Quantity.Literal 3)],
+            ( Resolve.hasRead StaticRead.ReadsX [giverDepthOf (Quantity.Literal 3)],
               Resolve.slotsAreExhaustive (giverDepthOf (Quantity.Literal 3))
             )
             (False, True)
@@ -2655,7 +2656,7 @@ phyrexianRebirthSpec s registry = Spec.describe s "PhyrexianRebirth" $ do
       (foldMap Resolve.boundSlots (Card.allEffects face))
       (Set.singleton destroyed)
     -- The other two walkers over the same position -- slotsAreExhaustive and
-    -- readsX -- take the widening as REGRESSION FENCES rather than proven
+    -- hasRead -- take the widening as REGRESSION FENCES rather than proven
     -- behaviour, so nothing here asserts them: a token box naming a slot is
     -- exhaustive either way, and no card in data/cards/ writes one that reads CR
     -- 601.2b's X, so mutating the box out of both leaves the suite green

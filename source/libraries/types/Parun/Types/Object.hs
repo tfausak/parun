@@ -755,15 +755,13 @@ data Object = MkObject
     -- placeBorne reads it on CR 107.3m's own condition rather than for every
     -- ability the permanent triggers.
     announcedX :: Maybe Natural.Natural,
-    -- | CR 107.3 / 601.2h: the pools of `manaSpent` that could have paid the
-    -- spell's or ability's {X}, each what is left once the rest of the total
-    -- cost is paid (Mana.xShares); Nothing for every object nothing paid for.
-    -- Several where the payment does not say which unit went where. Illusionary
-    -- Mask's "the mana you spent on {X}" and Soul Burn's "the amount of {B}
-    -- spent on X" are the readers. Written by Parun.Engine.Activate and
-    -- Parun.Engine.Cast once the payment settles, under the spend-as-though
-    -- clauses the payment was made under (CR 609.4b).
-    manaSpentOnX :: Maybe [Mana.Mana],
+    -- | CR 107.3 / 601.2h: the pool of `manaSpent` that paid the spell's or
+    -- ability's {X}, what is left once the rest of the total cost is paid
+    -- (Mana.xShares), the payer's answer where the payment leaves several
+    -- (Parun.Engine.Cost.recordXShares); Nothing for every object nothing paid
+    -- for. Illusionary Mask's "the mana you spent on {X}" and Soul Burn's "the
+    -- amount of {B} spent on X" are the readers.
+    manaSpentOnX :: Maybe Mana.Mana,
     -- | CR 601.2a: the zone this spell was moved to the stack FROM, which is what
     -- Aven Interrupter's "spells your opponents cast from graveyards or from
     -- exile" names. Read by Parun.Engine.Filter's WasCastFrom atom.

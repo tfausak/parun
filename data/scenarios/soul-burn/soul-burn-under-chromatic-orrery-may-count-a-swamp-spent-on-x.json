@@ -53,7 +53,7 @@
     "step": "PrecombatMain"
   },
   "description": "CR 609.4b Under Chromatic Orrery a Forest may pay Soul Burn's {B}, leaving the Swamp's black for X",
-  "note": "A Swamp, four Forests and an untapped Orrery cast X 2. Green may pay the {B} as though black, so the Swamp's mana is a share of X and its {B} counts (the most any share holds, #5973): bob takes 2 and alice gains 1.",
+  "note": "A Swamp, four Forests and an untapped Orrery cast X 2. Green may pay the {B} as though black, so the Swamp's mana is a share of X, and alice says X held it: bob takes 2 and alice gains 1.",
   "timeline": [
     {
       "do": {
@@ -71,6 +71,17 @@
             "$bob"
           ],
           "x": 2
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseManaSpentOnX",
+          "with": 0
         }
       },
       "player": "alice",

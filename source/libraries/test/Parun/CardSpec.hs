@@ -408,6 +408,7 @@ import qualified Parun.Types.SpellCast as SpellCast
 import qualified Parun.Types.SpendManaAsThough as SpendManaAsThough
 import qualified Parun.Types.Splice as Splice
 import qualified Parun.Types.StaticAbility as StaticAbility
+import qualified Parun.Types.StaticRead as StaticRead
 import qualified Parun.Types.StickerKind as StickerKind
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.Supertype as Supertype
@@ -692,7 +693,7 @@ cardSpec s = Spec.describe s "Card" $ do
 
 -- Every Count reachable from an ObjectRef, through the Quantities it carries.
 -- Delegated to Resolve.objectRefQuantities so this traversal and the engine's two
--- static-analysis passes (Resolve.slotsAreExhaustive, Resolve.readsX) cannot
+-- static-analysis passes (Resolve.slotsAreExhaustive, Resolve.hasRead) cannot
 -- disagree about which ARMS of an ObjectRef hold a number -- today that is
 -- ObjectRef.TopOfLibrary's depth alone -- as Resolve.effectObjectRefs keeps the
 -- three from disagreeing about which OPCODES hold a ref.
@@ -2233,7 +2234,7 @@ handActionSlotsOffend card =
 -- "up to X target artifacts and/or enchantments" (Pest Infestation) -- or
 -- through a slot's CR 202.3 computed BOUND, "mana value X or less" (Stir the
 -- Grave) -- or through CR 601.2d's divided TOTAL (Rolling Thunder)? Three
--- readers Resolve.readsX cannot see, that one walking effects and these sitting
+-- readers Resolve.hasRead cannot see, that one walking effects and these sitting
 -- on the slot, so the two reads-equal-declares lints below ask all four.
 modalReadsAnnouncedX :: Modal.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
 modalReadsAnnouncedX =
@@ -7386,7 +7387,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
     Spec.assertEqWith
       s
       "CR 107.3 a depth reading X makes the effect an X reader"
-      (Resolve.readsX [destroying (Quantity.Type.InSlot Binding.variableX)])
+      (Resolve.hasRead StaticRead.ReadsX [destroying (Quantity.Type.InSlot Binding.variableX)])
       True
     Spec.assertEqWith
       s
@@ -7398,7 +7399,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
     Spec.assertEqWith
       s
       "and a literal depth fires none of the three"
-      (Resolve.slotsAreExhaustive (destroying (Quantity.Type.Literal 3)), Resolve.readsX [destroying (Quantity.Type.Literal 3)], effectCounts (destroying (Quantity.Type.Literal 3)))
+      (Resolve.slotsAreExhaustive (destroying (Quantity.Type.Literal 3)), Resolve.hasRead StaticRead.ReadsX [destroying (Quantity.Type.Literal 3)], effectCounts (destroying (Quantity.Type.Literal 3)))
       (True, False, [])
   Spec.it s "the lint itself catches a dangling reference" $
     let bad = Map.keysSet (Resolve.slotsOf (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "ghost"))) (Quantity.Type.Literal 3))) Nothing Nothing Nothing Nothing Nothing)))
@@ -7462,7 +7463,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
         entryEffectsReadX rows =
           or $ do
             ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.RunEffects effects)) <- rows
-            pure (Resolve.readsX (Foldable.toList effects))
+            pure (Resolve.hasRead StaticRead.ReadsX (Foldable.toList effects))
         -- The same rule's reader in a CR 614.1c as-enters exile: Frankenstein's
         -- Monster's "exile X creature cards", through the count or the counters
         -- each card buys.
@@ -7480,7 +7481,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
         -- Engine.placeBorne's enteredX).
         entersTriggerReadsX c =
           any
-            (\ability -> TriggeredAbility.condition ability == TriggerCondition.Enters EntersTrigger.defaultValue && (modalReadsAnnouncedX (TriggeredAbility.modal ability) || Resolve.readsX (Modal.allEffects (TriggeredAbility.modal ability))))
+            (\ability -> TriggeredAbility.condition ability == TriggerCondition.Enters EntersTrigger.defaultValue && (modalReadsAnnouncedX (TriggeredAbility.modal ability) || Resolve.hasRead StaticRead.ReadsX (Modal.allEffects (TriggeredAbility.modal ability))))
             (Face.triggeredAbilities c)
         -- CR 107.3m's reader that no card writes: a KEYWORD whose minted CR 614.1c
         -- row carries the announcement (ravenous, CR 702.156a, on Jacked Rabbit).
@@ -7488,7 +7489,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
         -- this lint no arm.
         mintedCountersReadX c = any (entryCountersReadX . flip KeywordEngine.mintedReplacementsFor 1) (Map.keys (Face.keywords c))
         readsX c =
-          Resolve.readsX (Card.allEffects c)
+          Resolve.hasRead StaticRead.ReadsX (Card.allEffects c)
             || Face.loyalty c == Just Loyalty.Variable
             || entryCountersReadX (fmap PrintedReplacement.effect (Face.replacementEffects c))
             || entryEffectsReadX (fmap PrintedReplacement.effect (Face.replacementEffects c))
@@ -7508,14 +7509,14 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
         -- CR 601.2f's reader: the spell's own reduction counting the X its
         -- additional cost announced (Torgaar, Famine Incarnate's "for each
         -- creature sacrificed this way").
-        selfReductionReadsX c = any (Quantity.readsX . CostReduction.perEach) (Face.costReductions c)
+        selfReductionReadsX c = any (Quantity.hasRead StaticRead.ReadsX . CostReduction.perEach) (Face.costReductions c)
         -- CR 702.37f / 702.168e's reader: a turned-face-up ability reading the X
         -- chosen for the morph or disguise cost, through its effects (Warbreak
         -- Trumpeter's X Goblins) or its target count (Aurelia's Vindicator). Its
         -- declarer is that cost rather than a spell cost, so the pair is also
         -- checked on its own below: a turn-up X declared and never read, or read
         -- and never declared, is an offender whatever the spell costs say.
-        turnedUpReadsX c = any (\t -> Resolve.readsX (Modal.allEffects (TriggeredAbility.modal t)) || modalReadsAnnouncedX (TriggeredAbility.modal t)) (turnedUpTriggers c)
+        turnedUpReadsX c = any (\t -> Resolve.hasRead StaticRead.ReadsX (Modal.allEffects (TriggeredAbility.modal t)) || modalReadsAnnouncedX (TriggeredAbility.modal t)) (turnedUpTriggers c)
         turnUpDeclaresX c = any declaresVariable (turnUpCostsOf c)
         offends f =
           let spellDeclaresX = any declaresVariable (spellCostsOf f)
@@ -7647,7 +7648,7 @@ lintSpec s registry corpus = Spec.describe s "Lint" $ do
         -- rule lets happen while the ability is on the stack, so none may.
         defined ab = Maybe.isJust (ActivatedAbility.definedX ab)
         offends (_, ab) =
-          let effectsReadIt = Resolve.readsX (Modal.allEffects (ActivatedAbility.modal ab)) || modalReadsAnnouncedX (ActivatedAbility.modal ab) || any declaresVariable (announcedGateCostsOf (ActivatedAbility.modal ab))
+          let effectsReadIt = Resolve.hasRead StaticRead.ReadsX (Modal.allEffects (ActivatedAbility.modal ab)) || modalReadsAnnouncedX (ActivatedAbility.modal ab) || any declaresVariable (announcedGateCostsOf (ActivatedAbility.modal ab))
               readsIt = effectsReadIt || defined ab
               declared = declaresVariable (ActivatedAbility.cost ab)
            in (readsIt /= declared && not (declared && notesSpent ab)) || (defined ab && effectsReadIt)

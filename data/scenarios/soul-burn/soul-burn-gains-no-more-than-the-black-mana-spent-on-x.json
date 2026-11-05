@@ -50,7 +50,7 @@
     "step": "PrecombatMain"
   },
   "description": "CR 107.3 / 601.2h Soul Burn gains no more than the {B} spent on X",
-  "note": "X 2 off two Swamps and three Mountains: one Swamp pays the {B}, so X holds at most one black mana. Bob takes 2 and alice gains 1.",
+  "note": "X 2 off two Swamps and three Mountains: one Swamp pays the {B}, so X holds at most one black mana, and alice says it held one. Bob takes 2 and alice gains 1.",
   "timeline": [
     {
       "do": {
@@ -67,6 +67,17 @@
             "$bob"
           ],
           "x": 2
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseManaSpentOnX",
+          "with": 0
         }
       },
       "player": "alice",

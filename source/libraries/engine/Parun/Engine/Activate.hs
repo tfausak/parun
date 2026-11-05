@@ -20,6 +20,7 @@ import qualified Parun.Engine.Modal as Modal
 import qualified Parun.Engine.Projection as Projection
 import qualified Parun.Engine.Resolve.Common as Resolve
 import qualified Parun.Engine.Resolve.Effect as Resolve
+import qualified Parun.Engine.Resolve.Slots as Slots
 import qualified Parun.Engine.Target as Target
 import qualified Parun.Types.AbilityKind as AbilityKind
 import qualified Parun.Types.AbilityWasActivated as AbilityWasActivated
@@ -53,6 +54,7 @@ import qualified Parun.Types.RevealWindow as RevealWindow
 import qualified Parun.Types.Saddling as Saddling
 import qualified Parun.Types.Source as Source
 import qualified Parun.Types.StackObjectKind as StackObjectKind
+import qualified Parun.Types.StaticRead as StaticRead
 import qualified Parun.Types.Zone as Zone
 
 -- CR 602.2a: an ability activated from a hidden zone reveals the card that has
@@ -471,11 +473,11 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
                   -- onto the ABILITY for the reason CR 113.7a gives above: the
                   -- source may itself be what was sacrificed.
                   State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.bindings = Binding.setPaid bound (Object.bindings o)}) abilId (GameState.objects g)})
-                  -- CR 602.2b: which of the spent mana could have paid the
-                  -- ability's {X} (Object.manaSpentOnX), split off CR 601.2f's
-                  -- total the mana was spent against, an increase's included.
+                  -- CR 602.2b: which of the spent mana paid the ability's {X}
+                  -- (Object.manaSpentOnX), split off CR 601.2f's total the mana
+                  -- was spent against, an increase's included.
                   xNow <- State.gets (Game.lookupObject abilId Monad.>=> (Binding.amountOf Binding.variableX . Object.bindings))
-                  State.modify' (Cost.recordXShares (PaymentSubject.Activating srcId stamp spendable) pid abilId ((\x paid -> Cost.splitX Nothing x Cost.noAdjustments paid paid) <$> xNow <*> Cost.Type.mana paidCost))
+                  Cost.recordXShares (PaymentSubject.Activating srcId stamp spendable) pid abilId (Slots.hasRead StaticRead.ReadsManaSpentOnX (Modal.allEffects (ActivatedAbility.modal ability))) ((\x paid -> Cost.splitX Nothing x Cost.noAdjustments paid paid) <$> xNow <*> Cost.Type.mana paidCost)
                   -- CR 602.5b: record that THIS ability of this permanent has now
                   -- been activated, which is the whole of both counted riders'
                   -- storage -- see ActivationRestriction.recordActivation, the

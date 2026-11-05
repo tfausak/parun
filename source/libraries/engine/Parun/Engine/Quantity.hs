@@ -82,6 +82,7 @@ import Parun.Types.SlotName (SlotName)
 import qualified Parun.Types.Source as Source
 import qualified Parun.Types.SpellTally as SpellTally
 import qualified Parun.Types.SpellWasCast as SpellWasCast
+import qualified Parun.Types.StaticRead as StaticRead
 import qualified Parun.Types.StickerContent as StickerContent
 import qualified Parun.Types.StoredResult as StoredResult
 import qualified Parun.Types.Subtype as Subtype
@@ -678,15 +679,10 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         Quantity.ManaSpent part -> case part of
           ManaSpent.Total -> fmap (toInteger . Filter.manaSpentAmount) mView
           -- CR 107.3 / 601.2h: Soul Burn's "the amount of {B} spent on X", off
-          -- the shares the payment could have spent on X (Object.manaSpentOnX),
-          -- 0 where none was. A unit counts by the type it IS, not one a
-          -- spend-as-though clause let it pay as (CR 609.4b).
-          --
-          -- Asking the payer which share they spent is not implemented: the
-          -- most of that type any share holds is counted (#5973).
-          ManaSpent.OfTypeOnX manaType ->
-            let ofType = toInteger . length . filter ((== manaType) . ManaUnit.manaType) . Mana.unwrap
-             in fmap (\view -> maximum (0 : fmap ofType (Filter.manaSpentOnX view))) mView
+          -- the mana the payer spent on X (Object.manaSpentOnX), 0 where none
+          -- was. A unit counts by the type it IS, not one a spend-as-though
+          -- clause let it pay as (CR 609.4b).
+          ManaSpent.OfTypeOnX manaType -> fmap (toInteger . length . filter ((== manaType) . ManaUnit.manaType) . Mana.unwrap . Filter.manaSpentOnX) mView
         -- CR 111.6's status as a 0/1, WasForetold's arm in every respect. Filter.token
         -- rather than Game.isToken: reading the object directly answers False for an
         -- id naming nothing, which is the whole case this arm exists for; see #1102.
@@ -1616,24 +1612,27 @@ bakePlayerRef players objects ref = case ref of
   PlayerRef.Superlative _ -> ref
   PlayerRef.InRole _ -> ref
 
--- Does this quantity read CR 601.2b's announced X? Since #14 retired X's
--- dedicated constructor, that read is a Quantity.InSlot naming
--- Binding.variableX, and it can sit anywhere inside a quantity rather than only
--- at its root -- so answering needs the same recursion QuantitySlot.slots has,
--- and an equality test against a bare X does not answer it at all.
+-- Does this quantity make the read `wanted` names, anywhere inside it? CR
+-- 601.2b's announced X is a Quantity.InSlot naming Binding.variableX (#14
+-- retired its dedicated constructor), and either read can sit anywhere inside a
+-- quantity rather than only at its root -- so answering needs the same
+-- recursion QuantitySlot.slots has, and an equality test against a bare X does
+-- not answer it at all.
 --
--- Resolve.readsX is the one caller: it asks "does this card read X?" for the lint
--- that pairs a read against the cost's {X} (CR 107.3, CR 107.3a, CR 118.4).
--- Vitalizing Cascade's "X plus 3" is the card that distinguishes the two
--- answers.
+-- Resolve.hasRead asks it "does this card read X?" for the lint that pairs a
+-- read against the cost's {X} (CR 107.3, CR 107.3a, CR 118.4), and "does it
+-- read the mana spent on X?" for whether the payer is asked which mana that was
+-- (Parun.Engine.Cost.recordXShares). Vitalizing Cascade's "X plus 3" is the
+-- card that needs the recursion for X, Soul Burn's limit inside an AtMost the
+-- one for the mana.
 --
 -- Written out arm by arm rather than as a filter over QuantitySlot.slots, for
 -- that function's own reason: a new Quantity constructor must make its author
 -- answer "does this read X?" explicitly, rather than inherit whatever the other
 -- function decided.
-readsX :: Quantity -> Bool
-readsX quantity = case quantity of
-  Quantity.InSlot slot -> slot == Binding.variableX
+hasRead :: StaticRead.StaticRead -> Quantity -> Bool
+hasRead wanted quantity = case quantity of
+  Quantity.InSlot slot -> wanted == StaticRead.ReadsX && slot == Binding.variableX
   -- Never X: CR 601.2d's part names a target slot, whose total is the slot's
   -- own `divided` quantity -- read there, not here.
   Quantity.Share _ -> False
@@ -1646,11 +1645,11 @@ readsX quantity = case quantity of
   -- The whole point of the recursion: Vitalizing Cascade's "X plus 3" is
   -- Plus X (Literal 3), and Toxic Deluge's "-X" is Negate X, each reading X
   -- without being equal to it.
-  Quantity.Arithmetic arithmetic -> any readsX arithmetic
-  Quantity.AtMost atMost -> any readsX atMost
+  Quantity.Arithmetic arithmetic -> any (hasRead wanted) arithmetic
+  Quantity.AtMost atMost -> any (hasRead wanted) atMost
   -- Terminating for the reason QuantitySlot.overSlots' Count arm is: a Greatest's
   -- payload is a strictly smaller subterm.
-  Quantity.Count c -> QuantitySlot.anyCount readsX c
+  Quantity.Count c -> QuantitySlot.anyCount (hasRead wanted) c
   -- Every remaining arm is a LEAF holding no Quantity, so none can hide an X.
   -- The ten references below (ManaCount's, LifeTotal's, StartingLifeTotal's,
   -- Speed's, IsMonarch's, HasPlayerDesignation's, IsStartingPlayer's,
@@ -1691,7 +1690,9 @@ readsX quantity = case quantity of
   Quantity.TagWasSpentOfOwnColor {} -> False
   Quantity.ChosenColorsItIs -> False
   Quantity.ChosenNumber -> False
-  Quantity.ManaSpent _ -> False
+  Quantity.ManaSpent part -> case part of
+    ManaSpent.Total -> False
+    ManaSpent.OfTypeOnX _ -> wanted == StaticRead.ReadsManaSpentOnX
   Quantity.WasToken -> False
   Quantity.WasAttacking -> False
   Quantity.WasBlocking -> False
@@ -1727,11 +1728,11 @@ readsX quantity = case quantity of
   -- Not a leaf: its payload is a whole Quantity and may read X, the same recursion
   -- Plus above needs. Its own SlotName names a target rather than an amount, and X
   -- is only ever an amount.
-  Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot _ inner) -> readsX inner
+  Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot _ inner) -> hasRead wanted inner
   -- AgainstSlot's answer: not a leaf, and its payload may read X. It names no
   -- slot at all, so the target/amount distinction above does not arise.
-  Quantity.AgainstExiledPile a -> readsX (AgainstExiledPile.quantity a)
-  Quantity.AgainstLastCardExiledWith l -> readsX (AgainstLastCardExiledWith.quantity l)
+  Quantity.AgainstExiledPile a -> hasRead wanted (AgainstExiledPile.quantity a)
+  Quantity.AgainstLastCardExiledWith l -> hasRead wanted (AgainstLastCardExiledWith.quantity l)
 
 -- CR 800.4i: does this per-player quantity tally actions players took, so that a
 -- fold over players (Count.evaluate's Scope.OverPlayers arm) still finds a player
@@ -1742,7 +1743,7 @@ readsX quantity = case quantity of
 --
 -- A compound answers False, a REGRESSION FENCE: no card folds one over players'
 -- history, and whether a departed player answers its other parts is per part.
--- Written out arm by arm, readsX's posture.
+-- Written out arm by arm, hasRead's posture.
 talliesWhatHappened :: Quantity -> Bool
 talliesWhatHappened quantity = case quantity of
   Quantity.InSlot _ -> False

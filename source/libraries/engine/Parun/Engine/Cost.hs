@@ -1463,17 +1463,28 @@ splitX confinement x adjustments untotalled totalled =
       )
 
 -- CR 107.3 / 601.2h: Object.manaSpentOnX for `oid`, once its payment has
--- settled -- the shares of what it records as spent that could have paid the
--- `onX` half of a total split by `splitX`. Under the clauses that payment was
--- made under (CR 609.4b), read off the board it settled on. Nothing to write
--- for a cost with no X.
-recordXShares :: PaymentSubject.PaymentSubject -> PlayerId -> ObjectId -> Maybe (ManaCost.ManaCost, ManaCost.ManaCost) -> GameState -> GameState
-recordXShares subject pid oid split gs = case split of
-  Nothing -> gs
-  Just (rest, onX) ->
-    let clauses = PlayerEffect.spendManaAsThoughFor pid subject gs
-        record o = o {Object.manaSpentOnX = Just (Mana.xShares clauses rest onX (Object.manaSpent o))}
-     in gs {GameState.objects = Map.adjust record oid (GameState.objects gs)}
+-- settled -- the share of what it records as spent that paid the `onX` half of
+-- a total split by `splitX`. Under the clauses that payment was made under (CR
+-- 609.4b), read off the board it settled on. Nothing to write for a cost with
+-- no X.
+--
+-- No rule assigns mana to symbols, so where the payment leaves several shares
+-- the split is the payer's, asked here and stored once (Illusionary Mask's
+-- ruling: "you must keep track of the amount and types of mana you spent on
+-- {X}"). Asked only when `readsIt`, the object's text reading that mana
+-- (Resolve.Slots.hasRead): otherwise no share is distinguishable from another,
+-- and the first is stored. data/scenarios/soul-burn's "Soul Burn under an
+-- opponent's Tainted Remedy" proves the answer is the payer's.
+recordXShares :: PaymentSubject.PaymentSubject -> PlayerId -> ObjectId -> Bool -> Maybe (ManaCost.ManaCost, ManaCost.ManaCost) -> Game ()
+recordXShares subject pid oid readsIt split = Monad.forM_ split $ \(rest, onX) -> do
+  gs <- State.get
+  let clauses = PlayerEffect.spendManaAsThoughFor pid subject gs
+      shares = foldMap (Mana.xShares clauses rest onX . Object.manaSpent) (Game.lookupObject oid gs)
+  chosen <-
+    if readsIt
+      then Game.chooseAmong (\decider who -> Prompt.ChooseManaSpentOnX decider who oid) pid shares
+      else pure (Maybe.listToMaybe shares)
+  State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.manaSpentOnX = chosen}) oid (GameState.objects g)})
 
 -- CR 702.51b / 702.66b / 702.126b: the ways a keyword on this object lets part of
 -- an already TOTALLED mana cost be paid by spending something else -- tapping a
