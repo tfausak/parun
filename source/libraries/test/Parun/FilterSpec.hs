@@ -329,7 +329,8 @@ targetingSpell :: Filter.View
 targetingSpell =
   blackCreature
     { Filter.zone = Just Zone.Stack,
-      Filter.targets = Set.fromList [Recipient.ToCreature (ObjectId.MkObjectId 9), Recipient.ToPlayer (PlayerId.MkPlayerId 1)]
+      Filter.targets = Set.fromList [Recipient.ToCreature (ObjectId.MkObjectId 9), Recipient.ToPlayer (PlayerId.MkPlayerId 1)],
+      Filter.targetViews = Map.singleton (Recipient.ToPlayer (PlayerId.MkPlayerId 1)) (Filter.playerView (PlayerId.MkPlayerId 1))
     }
 
 -- `targetingSpell` narrowed to ONE target, with that target's own view filled
@@ -932,6 +933,10 @@ spec s = Spec.describe s "Parun.Engine.Filter" $ do
     -- controller the fixture does not even record; only a ToPlayer answers.
     Spec.it s "an object target is not a player target" $ do
       Spec.assertBool s (not (Filter.matches other (targetingSpell {Filter.targets = Set.singleton (Recipient.ToCreature (ObjectId.MkObjectId 9))}) (Filter.Type.TargetsPlayer PlayerRelation.You))) "a creature is not you"
+
+    -- CR 115.9b: a player target with no view has left the game.
+    Spec.it s "CR 115.9b a player target with no view is ignored" $
+      Spec.assertBool s (not (Filter.matches other (targetingSpell {Filter.targetViews = Map.empty}) (Filter.Type.TargetsPlayer PlayerRelation.You))) "a departed player is not you"
 
     Spec.it s "no perspective, a player, and an object targeting nothing are vacuously false" $ do
       Spec.assertBool s (not (Filter.matches noPerspective targetingSpell (Filter.Type.TargetsPlayer PlayerRelation.AnyPlayer))) "no perspective"

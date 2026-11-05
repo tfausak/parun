@@ -2336,9 +2336,9 @@ targetSlotsOfStackObject gs oid = maybe Map.empty targetsOf (Game.lookupObject o
 -- viewOfCharacteristics stands in. A player target answers Count.playerView,
 -- which no projection reaches at all.
 --
--- A recipient whose object is gone is DROPPED rather than mapped to a blank
--- view: CR 608.2b leaves nothing to describe, and Parun.Engine.Filter answers the
--- atom False for a missing key.
+-- A recipient whose object is gone, or whose player has left the game, is
+-- DROPPED rather than mapped to a blank view: CR 115.9b ignores it, and
+-- Parun.Engine.Filter answers the atom False for a missing key.
 targetViewsOfStackObject :: Count.ViewOf -> GameState -> ObjectId -> Map Recipient.Recipient Filter.View
 targetViewsOfStackObject peers gs oid =
   Map.fromList
@@ -2347,10 +2347,13 @@ targetViewsOfStackObject peers gs oid =
 -- The view one recipient answers, splitting CR 115.1's two kinds of target: a
 -- player is Count.playerView's candidate, and an object one the bounded reader
 -- above answers for. Nothing for CR 406.4's pile, which is neither and which CR
--- 601.2c never leaves on a stack object anyway.
+-- 601.2c never leaves on a stack object anyway. Nothing too for a player no
+-- longer in the game (CR 115.9b, 800.4a), as for an object no longer there.
 viewOfRecipient :: Count.ViewOf -> GameState -> Recipient.Recipient -> Maybe Filter.View
 viewOfRecipient peers gs r = case Recipient.playerOf r of
-  Just pid -> Just (Count.playerView gs pid)
+  Just pid
+    | List.elem pid (Game.stillPlaying gs) -> Just (Count.playerView gs pid)
+    | otherwise -> Nothing
   Nothing -> Recipient.objectOf r >>= peers
 
 -- One control-granting static ability, flattened: the source, the timestamp
