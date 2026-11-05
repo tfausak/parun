@@ -561,8 +561,6 @@ library codec
     Parun.Codec.CreateEmblem
     Parun.Codec.CreateEmblemSpec
     Parun.Codec.CreateSpec
-    Parun.Codec.CreatureExploits
-    Parun.Codec.CreatureExploitsSpec
     Parun.Codec.Crewing
     Parun.Codec.CrewingSpec
     Parun.Codec.CrewRestriction
@@ -794,6 +792,8 @@ library codec
     Parun.Codec.ExpirySpec
     Parun.Codec.Exploited
     Parun.Codec.ExploitedSpec
+    Parun.Codec.ExploitTrigger
+    Parun.Codec.ExploitTriggerSpec
     Parun.Codec.ExtraPhase
     Parun.Codec.ExtraPhaseSpec
     Parun.Codec.ExtraTurn
@@ -2658,7 +2658,6 @@ library types
     Parun.Types.Create
     Parun.Types.CreateCopy
     Parun.Types.CreateEmblem
-    Parun.Types.CreatureExploits
     Parun.Types.Crewing
     Parun.Types.CrewRestriction
     Parun.Types.Cycling
@@ -2784,6 +2783,7 @@ library types
     Parun.Types.Expansion
     Parun.Types.Expiry
     Parun.Types.Exploited
+    Parun.Types.ExploitTrigger
     Parun.Types.ExtraPhase
     Parun.Types.ExtraTurn
     Parun.Types.ExtraVotes

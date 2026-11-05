@@ -88,7 +88,6 @@ import qualified Parun.Types.CounterMotion as CounterMotion
 import qualified Parun.Types.CounterTrigger as CounterTrigger
 import qualified Parun.Types.Countering as Countering
 import qualified Parun.Types.CountersPlaced as CountersPlaced
-import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.Crewing as Crewing
 import qualified Parun.Types.DamageEvent as DamageEvent
 import qualified Parun.Types.DamageKind as DamageKind
@@ -110,6 +109,7 @@ import qualified Parun.Types.DrawnUnder as DrawnUnder
 import qualified Parun.Types.Drew as Drew
 import qualified Parun.Types.EndingStep as EndingStep
 import qualified Parun.Types.EntersTrigger as EntersTrigger
+import qualified Parun.Types.ExploitTrigger as ExploitTrigger
 import qualified Parun.Types.Exploited as Exploited
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.Filter as Filter.Type
@@ -2145,11 +2145,9 @@ representativeEvents cond =
         TriggerCondition.SelfManaAbilityResolves -> one (GameEvent.ManaAbilityResolved (ManaAbilityResolved.MkManaAbilityResolved {ManaAbilityResolved.permanent = departed, ManaAbilityResolved.amount = 1}))
         -- CR 702.110b's own event, and the only one this condition admits, on
         -- `departed`, which is not the bearer. BOTH ids are `departed`, so the
-        -- exploiter side matches whichever way the arm reads the pair.
-        TriggerCondition.SelfExploits -> one (GameEvent.Exploited (Exploited.MkExploited departed departed))
-        -- The bystander reading of the same event, `departed` on both sides for
-        -- the arm above's reason; the slot it binds is SelfExploits' too.
-        TriggerCondition.CreatureExploits {} -> one (GameEvent.Exploited (Exploited.MkExploited departed departed))
+        -- exploiter side matches whichever way the arm reads the pair; a Self
+        -- exploiter declines it, a Matching one under the trivial Filter admits it.
+        TriggerCondition.Exploits {} -> one (GameEvent.Exploited (Exploited.MkExploited departed departed))
         -- CR 702.122e's own event, and the only one this condition admits, on
         -- `departed`, which is not the bearer.
         TriggerCondition.SelfBecomesCrewed _ -> one (GameEvent.BecameCrewed (Crewing.MkCrewing departed (Set.singleton departed)))
@@ -2498,8 +2496,8 @@ everyTriggerCondition =
     TriggerCondition.AbilityAddsMana (AbilityAddsMana.MkAbilityAddsMana PlayerRelation.Opponent (Filter.Type.And []) ManaSpecification.AnyMana),
     TriggerCondition.AbilityAddsMana (AbilityAddsMana.MkAbilityAddsMana PlayerRelation.AnyPlayer (Filter.Type.And []) ManaSpecification.AnyMana),
     TriggerCondition.SelfManaAbilityResolves,
-    TriggerCondition.SelfExploits,
-    TriggerCondition.CreatureExploits (CreatureExploits.MkCreatureExploits (Filter.Type.And []) (Filter.Type.And [])),
+    TriggerCondition.Exploits ExploitTrigger.defaultValue,
+    TriggerCondition.Exploits (ExploitTrigger.MkExploitTrigger (ActingPermanent.Matching (Filter.Type.And [])) (Filter.Type.And [])),
     TriggerCondition.SelfBecomesCrewed TriggerFrequency.EveryTime,
     TriggerCondition.SelfCrewsVehicle,
     -- ALL THREE relations, on the Declaration rows' reasoning above: an

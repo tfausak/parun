@@ -525,6 +525,12 @@ taxCandidates pid oid gs cost =
 -- 903.9b -- hand and library, which IS a replacement -- is `commandZoneOffer`
 -- below, asked from the zone-change funnel instead.
 --
+-- GameEvent.ArrivedUnseen too: CR 702.26n's exile of a phased-out commander
+-- records no Moved (CR 702.26b), but the card arriving in exile is a new,
+-- phased-in object (CR 400.7) that CR 903.9a asks about all the same.
+-- Parun.CommanderSpec's "CR 903.9a/702.26n a phased-out commander exiled by a
+-- departure is offered the command zone" is the proof.
+--
 -- Takes the unscanned events rather than reading them off the state, which is
 -- what keeps this module free of Parun.Engine.Event: rule 903.9b's half is called
 -- FROM that module, so the dependency runs the other way now. Parun.Engine.Sba
@@ -535,6 +541,7 @@ returnable events gs =
       arrivalsOf event = case event of
         GameEvent.Moved m
           | elem (ZoneChange.to (Moved.change m)) [Zone.Graveyard, Zone.Exile] -> Foldable.toList (Moved.arrivals m)
+        GameEvent.ArrivedUnseen oid -> [oid]
         _ -> []
       stillThere oid = case Game.lookupObject oid gs of
         Nothing -> False

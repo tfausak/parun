@@ -12,18 +12,18 @@
 --
 -- TWO places ask, for the reason Parun.Engine.SacrificeRestriction's header gives
 -- about its own two: CR 101.2 makes the "can't" beat the "can", so a refused
--- placement must neither be WRITTEN (Parun.Engine.Event.settleCounters, the door
--- both of CR 122.6's roads share -- counters put on a permanent already on the
--- battlefield, and counters an object is given as it enters) nor be reached
--- around by CR 122.5's move, whose third impossibility is "the second object
+-- placement must neither be WRITTEN (CR 122.6's two roads: counters put on a
+-- permanent already on the battlefield, Parun.Engine.Event.putCountersWithin,
+-- and counters an object is given as it enters,
+-- Parun.Engine.Replacement.matchingEnteringCounters, with Event.settleCounters
+-- fencing both) nor be reached around by CR 122.5's move, whose third impossibility is "the second object
 -- can't have counters put onto it" (Parun.Engine.Resolve's Effect.MoveCounters
 -- arm). Gating only the first would still take the counter OFF the source, which
 -- rule 122.5 forbids outright. A third, CR 118.3's: a cost putting counters on
 -- the object can't be paid (Parun.Engine.Cost.canPayComponent).
 --
--- Asked AFTER CR 616.1's replacement loop has settled the placement, not before.
--- No row moves a placement to another object: ReplacementEffect.CounterR carries
--- only a Scaling, so the settled object is the one the effect named.
+-- Asked AHEAD of CR 616.1's replacement loop: a placement that can't happen
+-- admits only a self-replacement (CR 614.17c), and no CounterR is one.
 module Parun.Engine.CounterRestriction where
 
 import qualified Data.Set as Set

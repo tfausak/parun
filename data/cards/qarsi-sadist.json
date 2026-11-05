@@ -34,7 +34,8 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SelfExploits"
+            "type": "Exploits",
+            "value": {}
           },
           "modal": {
             "modes": [

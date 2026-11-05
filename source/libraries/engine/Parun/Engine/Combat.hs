@@ -1678,6 +1678,15 @@ legalBlockDeclaration pid declaration gs =
    in blockDeclarationAllowed limit most alone arity (Snapshot.projected board) able declaration gs
         && requirementsMet requirements declaration >= requirementsMet requirements best
 
+-- The pairs of this declaration CR 509.1b's pairwise restrictions forbid, or
+-- CR 509.1a's own conditions do: blockDeclarationAllowed's first conjunct, kept
+-- apart so a refusal can name the attacker.
+forbiddenBlocks :: PlayerId -> Map ObjectId (Set ObjectId) -> GameState -> [(ObjectId, ObjectId)]
+forbiddenBlocks pid declaration gs =
+  let board = Snapshot.whole gs
+      (candidates, attackers, barred, _) = blockScopeGiven board pid gs
+   in filter (\(blocker, attacker) -> not (pairAllowedGiven board barred candidates attackers blocker attacker gs)) (Set.toList (declaredPairs declaration))
+
 -- CR 509.1 / 805.10d: what a block declaration by `pid`'s side is judged over --
 -- its candidate blockers, the attackers they may block, CR 509.1b's barred pairs
 -- and its bounds, on the whole declaration and per attacker. One defending
@@ -2168,6 +2177,19 @@ attackCandidates pid gs =
       barred = barredAnnouncements legal gs
    in (filter (\oid -> any (attackTargetAllowed barred oid) (declarableTargets gs)) legal, barred)
 
+-- CR 508.1c / 508.1d: whether attemptAttackDeclaration lets this declaration,
+-- announcements included, stand, for a caller asking before it does.
+attackProposalAllowed :: PlayerId -> Map ObjectId AttackTarget.AttackTarget -> GameState -> Bool
+attackProposalAllowed pid proposal gs =
+  let (candidates, barred) = attackCandidates pid gs
+      alone = aloneAnnouncements candidates gs
+      limits = CombatRestriction.attackLimit gs
+   in attackProposalAllowedGiven limits alone (attackCeilingGiven limits alone barred candidates gs) proposal gs
+
+attackProposalAllowedGiven :: CombatRestriction.AttackLimits -> Map (ObjectId, AttackTarget.AttackTarget) [CombatRestriction.Company] -> (Requirement.Instances (ObjectId, AttackTarget.AttackTarget), Map ObjectId AttackTarget.AttackTarget) -> Map ObjectId AttackTarget.AttackTarget -> GameState -> Bool
+attackProposalAllowedGiven limits alone bound proposal gs =
+  attackDeclarationAllowed limits alone proposal gs && obeysAttackRequirements bound proposal
+
 -- CR 508.1a-d: the candidates some legal declaration contains -- Season of the
 -- Witch's ruling's "could have been declared as an attacker during that turn's
 -- Declare Attackers Step", so over every such step of the turn.
@@ -2285,7 +2307,7 @@ attemptAttackDeclaration perform pid asked forced rejected = do
         -- Declining to attack is NOT always legal: under a CR 508.1d
         -- requirement (Curse of the Nightly Hunt) "no attacks" can itself be
         -- the illegal answer.
-        allowed = attackDeclarationAllowed limits alone proposal gs && obeysAttackRequirements bound proposal
+        allowed = attackProposalAllowedGiven limits alone bound proposal gs
         -- Whether the preamble's rewind still has a fresh declaration to ask
         -- for. False once this exact declaration has already been rewound,
         -- which is what makes the recursion terminate.

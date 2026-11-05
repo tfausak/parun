@@ -1230,6 +1230,7 @@ damageOf event = case event of
   GameEvent.BecameAttached {} -> Nothing
   GameEvent.BecameUnattached {} -> Nothing
   GameEvent.LeftTheGame _ -> Nothing
+  GameEvent.ArrivedUnseen _ -> Nothing
   GameEvent.Milled {} -> Nothing
   GameEvent.PlayerActed _ -> Nothing
   GameEvent.LandPlayed {} -> Nothing
@@ -1303,6 +1304,7 @@ revealOf event = case event of
   GameEvent.BecameAttached {} -> Nothing
   GameEvent.BecameUnattached {} -> Nothing
   GameEvent.LeftTheGame _ -> Nothing
+  GameEvent.ArrivedUnseen _ -> Nothing
   GameEvent.Milled {} -> Nothing
   GameEvent.PlayerActed _ -> Nothing
   GameEvent.LandPlayed {} -> Nothing
@@ -1866,12 +1868,18 @@ bringIn :: OutsideDestination.OutsideDestination -> PlayerId -> PrintingId.Print
 bringIn destination pid printingId gs =
   let (zone, position) = arrivalOf destination
       (oid, gs1) = mintCard pid Nothing printingId zone position TapState.Untapped gs
-      -- One copy, not the entry: CR 100.2a's four-card limit is applied to the
-      -- combined deck and sideboard (CR 100.4a), so copies of a card are COUNTED
-      -- and a player who set aside two can be brought the second one later.
-      spend n = if n <= 1 then Nothing else Just (n - 1)
+   in (oid, spendFromPool pid printingId gs1)
+
+-- CR 400.11b: take one copy of this printing out of the player's sideboard
+-- pool. One copy, not the entry: CR 100.2a's four-card limit is applied to the
+-- combined deck and sideboard (CR 100.4a), so copies of a card are COUNTED and a
+-- player who set aside two can be brought the second one later. `bringIn` and
+-- Parun.Engine.Setup's CR 315.2 conspiracy choice both spend through it.
+spendFromPool :: PlayerId -> PrintingId.PrintingId -> GameState.GameState -> GameState.GameState
+spendFromPool pid printingId gs =
+  let spend n = if n <= 1 then Nothing else Just (n - 1)
       spent p = p {Player.outsideTheGame = Map.update spend printingId (Player.outsideTheGame p)}
-   in (oid, gs1 {GameState.players = Map.adjust spent pid (GameState.players gs1)})
+   in gs {GameState.players = Map.adjust spent pid (GameState.players gs)}
 
 -- CR 712.21a / 730.3a: the owner arranges the cards of a melded or merged
 -- permanent a library destination receives, written back onto the entry
@@ -2237,10 +2245,10 @@ applyReplacementsIn settle asOf batch spent event = do
 -- Every other class comes out as at most one, which applyReplacementsIn reads
 -- off the first component alone.
 --
--- `earlier` is what the batch has already prevented, and the answer extends it:
--- CR 702.64b's ceiling spans one source's damage to one recipient across the
--- batch (Replacement.ceilingLeft).
-applyReplacementsReporting :: Maybe GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> ProposedEvent -> Game ([ProposedEvent], [Replacement.DamageThread], [Prevention])
+-- `earlier` is what the batch has already prevented and let through, and the
+-- answer extends it: CR 702.64b's ceiling and CR 615.10's floor span one
+-- source's damage to one recipient across the batch (Replacement.Tally).
+applyReplacementsReporting :: Maybe GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> ProposedEvent -> Game ([ProposedEvent], [Replacement.DamageThread], Replacement.Tally)
 applyReplacementsReporting asOf batch allowances spent earlier event = do
   (outcome, residue, prevented, _, _, _) <- loop (pure ()) asOf batch Nothing allowances spent earlier Nothing False Nothing event
   let (added, dealt) = Either.partitionEithers residue
@@ -2263,13 +2271,13 @@ applyReplacementsReporting asOf batch allowances spent earlier event = do
 -- carried in per event: it caps what a countdown covers here, and a share of 0
 -- keeps its row out of CR 616.1's offer entirely. Empty for every caller but
 -- the batch, which is every caller but resolveDamage.
-applyReplacementsFully :: Game () -> Maybe GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
-applyReplacementsFully settle asOf batch allowances spent = loop settle asOf batch Nothing allowances spent [] Nothing False Nothing
+applyReplacementsFully :: Game () -> Maybe GameState -> Set ObjectId -> Map CandidateId Natural -> Set CandidateId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
+applyReplacementsFully settle asOf batch allowances spent = loop settle asOf batch Nothing allowances spent mempty Nothing False Nothing
 
 -- The last accumulator is CR 903.9c's split, taken when the owner accepted CR
 -- 903.9b's offer for a melded or merged commander inside the loop -- see
 -- `offerCommandZoneFirst`.
-loop :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
+loop :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
 loop settle asOf batch diverting allowances applied prevented exiledBy shuffling split event = do
   gs <- State.get
   -- From scratch each iteration: collect against the CURRENT state (or, for a
@@ -2328,7 +2336,7 @@ loop settle asOf batch diverting allowances applied prevented exiledBy shuffling
 -- The CR 616.1 choice among the card-borne candidates of one bucket, and its
 -- application. Split out of `loop` so `offerCommandZoneFirst` can stand in front
 -- of it.
-chooseAndApply :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> GameState -> ProposedEvent -> [ReplacementCandidate] -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
+chooseAndApply :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> GameState -> ProposedEvent -> [ReplacementCandidate] -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
 chooseAndApply settle asOf batch diverting allowances applied prevented exiledBy shuffling split gs event bucket = do
   picked <- Replacement.choose gs event bucket
   case picked of
@@ -2421,7 +2429,7 @@ rejoinUnmoved covered rest = case (covered, rest) of
 -- One iteration of `loop`: apply the chosen candidate to the event and continue
 -- with what comes back. Split out so the partial-cover branch above and the
 -- ordinary one apply a candidate the same way.
-applyChosen :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
+applyChosen :: Game () -> Maybe GameState -> Set ObjectId -> Maybe Zone -> Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, Maybe PrintingId.PrintingId)
 applyChosen settle asOf batch diverting allowances applied prevented exiledBy shuffling split candidate event = do
   stepped <- stepChosen settle batch applied prevented exiledBy shuffling split candidate event
   case stepped of
@@ -2431,7 +2439,7 @@ applyChosen settle asOf batch diverting allowances applied prevented exiledBy sh
 -- The application itself, short of continuing the loop: Left for an outcome that
 -- ends this thread, Right for the rewritten event and the accumulators the loop
 -- continues it with.
-stepChosen :: Game () -> Set ObjectId -> Set CandidateId -> [Prevention] -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ReplacementCandidate -> ProposedEvent -> Game (Either (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], [Prevention], Maybe ObjectId, Bool, Maybe PrintingId.PrintingId) (Set CandidateId, [Prevention], Maybe ObjectId, Bool, ProposedEvent))
+stepChosen :: Game () -> Set ObjectId -> Set CandidateId -> Replacement.Tally -> Maybe ObjectId -> Bool -> Maybe PrintingId.PrintingId -> ReplacementCandidate -> ProposedEvent -> Game (Either (Maybe ProposedEvent, [Either Replacement.DamageThread ProposedEvent], Replacement.Tally, Maybe ObjectId, Bool, Maybe PrintingId.PrintingId) (Set CandidateId, Replacement.Tally, Maybe ObjectId, Bool, ProposedEvent))
 stepChosen settle batch applied prevented exiledBy shuffling split candidate event = do
   gs <- State.get
   -- CR 615.12: the chosen effect is a prevention effect and this damage
@@ -2471,7 +2479,10 @@ stepChosen settle batch applied prevented exiledBy shuffling split candidate eve
   -- What makes it exact rather than a guess is Replacement.prevents: only a
   -- PREVENTION rewrite's shrinkage is prevention, where CR 614.1a's
   -- SetAmount and Scale shrink an event without preventing a point of it.
-  let prevented1 = prevented <> Maybe.maybeToList (Replacement.preventionBy inert candidate event outcome)
+  --
+  -- CR 615.10's floor is read off the same pair: what the row let through
+  -- counts against it for the rest of the batch (Replacement.floorLeft).
+  let prevented1 = prevented <> (Maybe.maybeToList (Replacement.preventionBy inert candidate event outcome), Maybe.maybeToList (Replacement.passageBy candidate event outcome))
   let applied1 = Set.insert (ReplacementCandidate.identity candidate) applied
   pure $ case outcome of
     Nothing -> Left (Nothing, [], prevented1, exiledBy, shuffling, split)
@@ -2656,8 +2667,8 @@ dealing de = if DamageEvent.amount de == 0 then Nothing else Just (ProposedEvent
 -- `applied` is CR 614.5's set of rows already applied to this event, which a
 -- rewrite performing NEW events of the same class in its place hands on to
 -- them, together with the candidate itself. `batchPrevented` is the damage
--- batch's preventions so far, which CR 702.64b's ceiling reads.
-apply :: Game () -> Set ObjectId -> Set CandidateId -> [Prevention] -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent)
+-- batch's tally so far, which CR 702.64b's ceiling and CR 615.10's floor read.
+apply :: Game () -> Set ObjectId -> Set CandidateId -> Replacement.Tally -> ReplacementCandidate -> ProposedEvent -> Game (Maybe ProposedEvent)
 apply settle batch applied batchPrevented candidate event =
   case (ReplacementCandidate.effect candidate, event) of
     (ReplacementEffect.ZoneChangeR (ZoneChangeR.MkZoneChangeR _ toDest revealing _ toPosition optional), ProposedEvent.WouldChangeZone zc discarded position resolving) -> do
@@ -4014,10 +4025,14 @@ apply settle batch applied batchPrevented candidate event =
       -- prevention of it, which is CR 615.13's own condition.
       --
       -- No `setShield` and no arithmetic written back: CR 615.10's shields are
-      -- deliberately not reduced, applying separately to each event.
+      -- deliberately not reduced, applying separately to each event. What the
+      -- row already let through of this source's damage to this recipient in
+      -- the batch comes off the floor instead (Replacement.floorLeft), proved by
+      -- the scenario
+      -- temple-altisaur-lets-1-of-earthquake-through-once-though-pariah-adds-to-it.
       DamageRewrite.PreventAllBut surviving -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        let left = min surviving (DamageEvent.amount de)
+        let left = min (Maybe.fromMaybe surviving (Replacement.floorLeft batchPrevented candidate event)) (DamageEvent.amount de)
         if left == 0
           then pure Nothing
           else pure (Just (ProposedEvent.WouldDealDamage de {DamageEvent.amount = left}))
@@ -5522,7 +5537,7 @@ runEntry settle diverting origin given oid = do
   -- below for the reason `before` is.
   beforeSubjects <- State.gets GameState.enteringSubjects
   State.modify' (\gs -> gs {GameState.enteringBeside = batch, GameState.enteringSubjects = Map.insert oid origin beforeSubjects})
-  (outcome, _, _, _, _, _) <- loop settle Nothing batch diverting Map.empty Set.empty [] Nothing False Nothing (ProposedEvent.WouldEnter oid)
+  (outcome, _, _, _, _, _) <- loop settle Nothing batch diverting Map.empty Set.empty mempty Nothing False Nothing (ProposedEvent.WouldEnter oid)
   case outcome of
     Just (ProposedEvent.WouldChangeZone zc _ position _) -> do
       Monad.void (takeEnteringCounters oid)
@@ -5805,10 +5820,9 @@ fullyUnlockedAfter halves card = case card of
 -- CR 615: settle one proposed damage event. Empty means it does not happen; two
 -- or more is CR 614.9's counted redirection having moved part of it (Harm's
 -- Way). The second answer is what comes back unsettled (`DamageThread`), and the
--- third CR 615.13's: `earlier`, the batch's preventions so far, extended by one
--- entry per prevention effect that applied to THIS event and prevented some of
--- it.
-resolveDamage :: Map CandidateId Natural -> Set CandidateId -> [Prevention] -> DamageEvent.DamageEvent -> Game ([DamageEvent.DamageEvent], [Replacement.DamageThread], [Prevention])
+-- third `earlier`, the batch's tally so far (Replacement.Tally), extended by
+-- what each prevention effect applying to THIS event prevented or let through.
+resolveDamage :: Map CandidateId Natural -> Set CandidateId -> Replacement.Tally -> DamageEvent.DamageEvent -> Game ([DamageEvent.DamageEvent], [Replacement.DamageThread], Replacement.Tally)
 resolveDamage allowances spent earlier de = do
   (outcome, added, prevented) <- applyReplacementsReporting Nothing Set.empty allowances spent earlier (ProposedEvent.WouldDealDamage de)
   pure (Maybe.mapMaybe Replacement.asDamageEvent outcome, added, prevented)
@@ -5844,7 +5858,7 @@ resolveDamage allowances spent earlier de = do
 --     the total rather than three.
 resolveDamageBatch :: [DamageEvent.DamageEvent] -> Game ([DamageEvent.DamageEvent], [Prevention])
 resolveDamageBatch events = do
-  (dealt, prevented) <- settleThreads [] (fmap (\de -> (de, Set.empty)) events)
+  (dealt, (prevented, _)) <- settleThreads mempty (fmap (\de -> (de, Set.empty)) events)
   pure (Replacement.oneEventPerRecipient dealt, Replacement.groupPreventions prevented)
 
 -- CR 615.7: a row owes its division over damage an Eye for an Eye adds as much
@@ -5852,9 +5866,9 @@ resolveDamageBatch events = do
 -- settles what `settlesFirst` admits, asking only what touches it, and the rest
 -- wait for what that adds.
 --
--- `earlier` is every prevention the batch has made so far, threaded through
--- each thread in turn and answered extended (applyReplacementsReporting).
-settleThreads :: [Prevention] -> [Replacement.DamageThread] -> Game ([DamageEvent.DamageEvent], [Prevention])
+-- `earlier` is the batch's tally so far, threaded through each thread in turn
+-- and answered extended (applyReplacementsReporting).
+settleThreads :: Replacement.Tally -> [Replacement.DamageThread] -> Game ([DamageEvent.DamageEvent], Replacement.Tally)
 settleThreads earlier threads = do
   gs <- State.get
   let first = settlesFirst gs threads
@@ -5959,12 +5973,19 @@ putCounters :: CounterCause.CounterCause -> ObjectId -> CounterKind.CounterKind 
 putCounters = putCountersWithin Nothing
 
 -- The funnel itself, with a limit on the total of the settled kind the settled
--- object may reach: PutCounters.totalAtMost's reading, asked after CR 616.1's loop,
--- which settles the count it limits (CR 101.2), and landing what fits (CR 609.3).
+-- object may reach: PutCounters.totalAtMost's reading, asked after CR 616.1's loop
+-- because the loop settles the count it limits, and landing what fits (CR 609.3).
 -- A permanent already past the limit takes none and loses none.
+--
+-- CR 101.2 with CR 122.6: a permanent an effect in force says can't have counters
+-- of the kind put on it takes none (Solemnity, Melira, Sylvok Outcast), asked
+-- AHEAD of the loop: a placement that can't happen admits only a
+-- self-replacement (CR 614.17c), and no CounterR is one, so the loop is skipped
+-- whole and Hardened Scales and Doubling Season are never ordered.
 putCountersWithin :: Maybe Natural -> CounterCause.CounterCause -> ObjectId -> CounterKind.CounterKind Keyword.Type.Keyword -> Natural -> Game Natural
 putCountersWithin totalAtMost cause oid kind n = do
-  resolved <- resolveCounters cause oid kind n
+  prohibited <- State.gets (CounterRestriction.prohibited oid kind)
+  resolved <- if prohibited then pure Nothing else resolveCounters cause oid kind n
   case resolved of
     Nothing -> pure 0
     Just (target, settledKind, settledCount) -> do
@@ -5991,17 +6012,11 @@ settleCounters putter target settledKind settledCount
       -- the object exists, and how many counters of the kind it already had.
       case Game.lookupObject target gs of
         Nothing -> pure 0
-        -- CR 101.2 with CR 122.6: a permanent an effect in force says can't have
-        -- counters put on it takes none, whatever allowed or directed the
-        -- placement (Solemnity, Melira Sylvok Outcast). Asked HERE, on the settled
-        -- object and the settled kind, after resolveCounters rather than ahead of
-        -- it (gap #6235). No row of CR 616.1's loop moves a placement to another
-        -- object or kind: `apply`'s CounterR arm rewrites only the count.
-        --
-        -- Both of CR 122.6's roads reach this door -- a placement onto a permanent
-        -- already on the battlefield, and the counters an object is given as it
-        -- enters, which flushEnteringCounters places through here -- so one gate
-        -- answers the whole rule.
+        -- CR 101.2 with CR 122.6: a FENCE behind the two gates ahead of CR
+        -- 616.1's loops -- putCountersWithin's, and Replacement's
+        -- matchingEnteringCounters for the counters an object enters with, where
+        -- a later entry row (a copy rewrite) may still change what the permanent
+        -- is after a counter row was matched.
         --
         -- NOT a CR 614.16 replacement: that rule scales a placement that was
         -- possible, and these cards say "can't". See
@@ -6218,32 +6233,27 @@ resolveCounters cause oid kind n = do
 -- the event together; this is where it is recorded.
 putPlayerCounters :: CounterCause.CounterCause -> PlayerId -> PlayerCounterKind.PlayerCounterKind -> Natural -> Game Natural
 putPlayerCounters cause pid kind n = do
-  resolved <- resolvePlayerCounters cause pid kind n
+  -- CR 101.2 with CR 122.1: a player an effect in force says can't get counters
+  -- gets none (Solemnity, Melira, Sylvok Outcast). putCountersWithin's gate on
+  -- the player axis, ahead of CR 616.1's loop for CR 614.17c's reason.
+  prohibited <- State.gets (PlayerEffect.prohibitsCounters pid kind)
+  resolved <- if prohibited then pure Nothing else resolvePlayerCounters cause pid kind n
   case resolved of
     Nothing -> pure 0
     Just (target, settledKind, settledCount)
       | settledCount == 0 -> pure 0
       | otherwise -> do
-          live <- State.get
-          -- CR 101.2 with CR 122.1: a player an effect in force says can't get
-          -- counters gets none, whatever allowed or directed the placement
-          -- (Solemnity, Melira Sylvok Outcast). settleCounters' gate on the player
-          -- axis, read the same way and at the same point -- after CR 616.1's
-          -- loop, about the SETTLED player and the settled kind.
-          if PlayerEffect.prohibitsCounters target settledKind live
-            then pure 0
-            else do
-              -- Zero is the guard putCounters puts on its own write, and the two
-              -- shrinking scalings are what make it reachable here: half of one
-              -- counter, rounded down, and one counter minus one, are replacements
-              -- that remove the event.
-              --
-              -- CR 810.10: the counters happen to the player and land on their
-              -- team's shared count, which every sharer holds (Game.counterSharers).
-              State.modify' $ \gs ->
-                let bump p = p {Player.counters = Map.insertWith (+) settledKind settledCount (Player.counters p)}
-                 in gs {GameState.players = List.foldl' (flip (Map.adjust bump)) (GameState.players gs) (Game.counterSharers settledKind target gs)}
-              pure settledCount
+          -- Zero is the guard putCounters puts on its own write, and the two
+          -- shrinking scalings are what make it reachable here: half of one
+          -- counter, rounded down, and one counter minus one, are replacements
+          -- that remove the event.
+          --
+          -- CR 810.10: the counters happen to the player and land on their
+          -- team's shared count, which every sharer holds (Game.counterSharers).
+          State.modify' $ \gs ->
+            let bump p = p {Player.counters = Map.insertWith (+) settledKind settledCount (Player.counters p)}
+             in gs {GameState.players = List.foldl' (flip (Map.adjust bump)) (GameState.players gs) (Game.counterSharers settledKind target gs)}
+          pure settledCount
 
 -- CR 122.1: resolveCounters for a player recipient, and read the same way -- the
 -- cause rides the event and the rows decide which causes they reach.
@@ -9541,21 +9551,11 @@ createTokens settle controller card copy n tapped entering attached marks = do
   if List.notElem controller (Game.stillPlaying gs)
     then pure []
     else do
-      resolved <- resolveTokens controller (Seq.singleton TokenLot.MkTokenLot {TokenLot.card = card, TokenLot.copy = copy, TokenLot.count = n, TokenLot.byEffect = not (GameState.payingOnResolution gs)})
-      case resolved of
-        Nothing -> pure []
-        Just (owner, lots) -> do
-          -- CR 111.5's rollback point below, captured AFTER resolveTokens rather
-          -- than before it, so a rule 614.3 use a replacement spent on the creation
-          -- event stays spent when the batch is refused (gap #6238).
-          unminted <- State.get
-          -- ONE lot came in; several come out when a CR 614.1a append (Queen
-          -- Allenal of Ruadach) put another shape into the event. Every lot is
-          -- minted here, in the one batch, before any token runs its entry loop.
-          ids <- fmap concat . Monad.forM (Foldable.toList lots) $ \lot -> do
-            -- Interned ONCE per lot, not once per token: a lot's tokens are
-            -- copies of one set of effect-defined characteristics (CR 111.3), so
-            -- they name one entry.
+      let original = TokenLot.MkTokenLot {TokenLot.card = card, TokenLot.copy = copy, TokenLot.count = n, TokenLot.byEffect = not (GameState.payingOnResolution gs)}
+          -- Every token of one lot, placed onto the battlefield. Interned ONCE
+          -- per lot, not once per token: a lot's tokens are copies of one set of
+          -- effect-defined characteristics (CR 111.3), so they name one entry.
+          mintLot owner lot = do
             tokenId <- State.state (Game.intern (Printing.ofCard (TokenLot.card lot)))
             let mkObj ts =
                   (Game.tokenOfLot owner tokenId lot ts)
@@ -9572,32 +9572,60 @@ createTokens settle controller card copy n tapped entering attached marks = do
                       Object.designations = marks
                     }
             Monad.replicateM (Natural.toIntSaturating (TokenLot.count lot)) (placeObject owner mkObj Zone.Battlefield LibraryPosition.defaultValue)
+          barredIn g = filter (\tok -> EntryRestriction.prohibited tok Zone.Battlefield g)
+      -- CR 111.5: "if a spell or ability would create a token, but a rule or
+      -- effect states that a permanent with one or more of that token's
+      -- characteristics can't enter the battlefield, the token is not created."
+      -- The same prohibition changeZoneAttaching asks of a move, asked here
+      -- because a token takes no move -- it is minted straight onto the
+      -- battlefield -- so the funnel's gate cannot see it.
+      --
+      -- The ORIGINAL lot is judged BEFORE resolveTokens: a creation that can't
+      -- happen can be replaced only by a self-replacement effect (CR 614.17c),
+      -- so no row is offered, nothing is appended and no CR 614.3 use is spent.
+      -- Its refusal takes the whole event, Queen Allenal's Soldier included.
+      -- Parun.EntryRestrictionSpec's Dryad Arbor case is the proof.
+      --
+      -- MINTED AND ROLLED BACK rather than asked of a hypothetical, because the
+      -- question is about characteristics the projection answers and
+      -- Parun.Engine.Projection reads an object that exists. Nothing observes the
+      -- interval: placeObject writes only GameState.objects and the zone index,
+      -- and the rollback restores the state as it was.
+      --
+      -- Zone.Battlefield is the ORIGIN passed, which is the field's own reading
+      -- (Parun.Types.EntryRestriction.origins: the zone the object is in when the
+      -- move is judged) and not a sentinel. It also decides which printings reach
+      -- a token, correctly: a prohibition that NAMES zones names off-battlefield
+      -- ones -- Grafdigger's Cage's graveyard and library -- so it cannot reach a
+      -- token, while one that names no zone carries the full set and does. Worms
+      -- of the Earth's "lands can't enter the battlefield" is the pool's second
+      -- kind.
+      unjudged <- State.get
+      judged <- mintLot controller original
+      refused <- State.gets (\g -> not (null (barredIn g judged)))
+      State.put unjudged
+      resolved <- if refused then pure Nothing else resolveTokens controller (Seq.singleton original)
+      case resolved of
+        Nothing -> pure []
+        Just (owner, lots) -> do
+          -- CR 303.4i's rollback point below, captured AFTER resolveTokens, so a
+          -- rule 614.3 use a replacement spent on the creation event stays spent
+          -- when an Aura token is refused.
+          unminted <- State.get
+          -- ONE lot came in; several come out when a CR 614.1a append (Queen
+          -- Allenal of Ruadach) put another shape into the event. Every lot is
+          -- minted here, in the one batch, before any token runs its entry loop.
+          ids <- fmap concat (Monad.forM (Foldable.toList lots) (mintLot owner))
+          -- CR 111.5 again, PER TOKEN: an appended token is its own token, so one
+          -- that can't enter is not created while the rest of the event is
+          -- (CR 614.17d reads the permanent as it would exist). The original lot
+          -- passed above, and a replacement only scales it, so what this unmakes
+          -- is an appended one -- Parun.EntryRestrictionSpec's Chatterfang case,
+          -- whose Squirrel is a Forest land beside a Treasure that is not.
+          barred <- State.gets (`barredIn` ids)
+          Monad.mapM_ unmake barred
+          let kept = filter (`notElem` barred) ids
           minted <- State.get
-          -- CR 111.5: "if a spell or ability would create a token, but a rule or
-          -- effect states that a permanent with one or more of that token's
-          -- characteristics can't enter the battlefield, the token is not
-          -- created." The same prohibition changeZoneAttaching asks of a move,
-          -- asked here because a token takes no move -- it is minted straight onto
-          -- the battlefield -- so the funnel's gate cannot see it.
-          --
-          -- MINTED AND ROLLED BACK rather than asked of a hypothetical, because
-          -- the question is about characteristics the projection answers and
-          -- Parun.Engine.Projection reads an object that exists. Nothing observes
-          -- the interval: placeObject writes only GameState.objects and the zone
-          -- index, and every road out of this function that could be seen -- the
-          -- CR 122.6a counters, each token's CR 616.1 entry loop, the CR 111.2
-          -- minted-entry event -- is below this gate. So a refused batch leaves
-          -- the board exactly as `unminted` had it, which is rule 111.5's "the
-          -- token is not created" and not "a token that dies at once".
-          --
-          -- Zone.Battlefield is the ORIGIN passed, which is the field's own
-          -- reading (Parun.Types.EntryRestriction.origins: the zone the object is
-          -- in when the move is judged) and not a sentinel. It also decides which
-          -- printings reach a token, correctly: a prohibition that NAMES zones
-          -- names off-battlefield ones -- Grafdigger's Cage's graveyard and
-          -- library -- so it cannot reach a token, while one that names no zone
-          -- carries the full set and does. Worms of the Earth's "lands can't enter
-          -- the battlefield" is the pool's second kind.
 
           -- CR 303.4i, and CR 303.4g's last sentence with it: what the effect named
           -- as this token's host, judged as rule 701.3a judges every attachment
@@ -9609,8 +9637,9 @@ createTokens settle controller card copy n tapped entering attached marks = do
           -- exists: the legality reading is about the token's subtypes and its enchant
           -- ability, and Parun.Engine.Projection answers for an object that is on the
           -- board. So the token is minted, judged, and unmade again -- CR 111.5's
-          -- rollback above, to the same `unminted` and for the same reason, rule 303.4i
-          -- ending in the same words rule 111.5 does.
+          -- shape above, here back to `unminted`, rule 303.4i ending in the same
+          -- words rule 111.5 does. Only the original lot's token can be an Aura, and
+          -- then the event can't happen, so an unhostable one refuses all of it.
           --
           -- THE AURA TEST is the rule's own scope and not a card-identity read: CR
           -- 303.4i refuses the token, while CR 301.5e says an Equipment in the same
@@ -9625,7 +9654,7 @@ createTokens settle controller card copy n tapped entering attached marks = do
           -- legality reading comes first and the creator picks among what is left,
           -- through Attach.chooseHost (elided at one, filtered rather than trusted).
           -- Asked here for the reason above: legality needs the token to exist.
-          hosts <- Monad.forM ids $ \tok -> case attached of
+          hosts <- Monad.forM kept $ \tok -> case attached of
             Nothing -> pure (tok, Nothing)
             Just named -> do
               let legalHosts = Maybe.mapMaybe (\destination -> Attach.attachmentFor tok destination minted) named
@@ -9638,7 +9667,7 @@ createTokens settle controller card copy n tapped entering attached marks = do
                 )
           let hostFor tok = Monad.join (List.lookup tok hosts)
               unhostable tok = Maybe.isNothing (hostFor tok) && Set.member Subtype.Aura (Projection.subtypesOf tok minted)
-          if any (\tok -> EntryRestriction.prohibited tok Zone.Battlefield minted) ids || (Maybe.isJust attached && any unhostable ids)
+          if Maybe.isJust attached && any unhostable kept
             then do
               State.put unminted
               pure []
@@ -9649,7 +9678,7 @@ createTokens settle controller card copy n tapped entering attached marks = do
               -- host. settleMinted records that it became attached. The move funnel's
               -- own door (changeZoneEntering's entrySeed) writes the same field the same
               -- way, one incarnation earlier.
-              Monad.forM_ ids $ \tok ->
+              Monad.forM_ kept $ \tok ->
                 Monad.forM_ (hostFor tok) $ \host ->
                   State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.attachedTo = Just host}) tok (GameState.objects g)})
               -- CR 122.6a: the counters the EFFECT says these tokens enter with, gathered
@@ -9667,9 +9696,9 @@ createTokens settle controller card copy n tapped entering attached marks = do
               -- counters whenever they were written. What CR 614.12 does rest on is
               -- `placeObject` above having materialized every token first, which is what
               -- `siblingsOf` then hands each entry loop.
-              let siblingsOf oid = Set.delete oid (Set.fromList ids)
-              Monad.mapM_ (\oid -> Monad.mapM_ (uncurry (addEnteringCounters Nothing oid)) (Map.toAscList entering)) ids
-              refusals <- traverse (\oid -> (,) oid <$> runEntry settle (Just Zone.Battlefield) Nothing (siblingsOf oid) oid) ids
+              let siblingsOf oid = Set.delete oid (Set.fromList kept)
+              Monad.mapM_ (\oid -> Monad.mapM_ (uncurry (addEnteringCounters Nothing oid)) (Map.toAscList entering)) kept
+              refusals <- traverse (\oid -> (,) oid <$> runEntry settle (Just Zone.Battlefield) Nothing (siblingsOf oid) oid) kept
               let entered = [oid | (oid, Nothing) <- refusals]
               Monad.mapM_ unmake [oid | (oid, Just refusal) <- refusals, not (isDiverted refusal)]
               settleMinted (GameState.nextTimestamp unminted) entered
@@ -11112,8 +11141,7 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.AbilityAddsMana {} -> False
   -- Nor does CR 605.3b: a creature's mana ability resolves on anyone's turn.
   TriggerCondition.SelfManaAbilityResolves -> False
-  TriggerCondition.SelfExploits -> False
-  TriggerCondition.CreatureExploits {} -> False
+  TriggerCondition.Exploits {} -> False
   -- Rule 702.122e names no turn either: a Vehicle may be crewed at instant speed
   -- on any player's turn, CR 702.122a's cost carrying no timing clause.
   TriggerCondition.SelfBecomesCrewed {} -> False
@@ -11509,6 +11537,7 @@ abilityTriggeredOf event = case event of
   GameEvent.BecameAttached {} -> Nothing
   GameEvent.BecameUnattached {} -> Nothing
   GameEvent.LeftTheGame _ -> Nothing
+  GameEvent.ArrivedUnseen _ -> Nothing
   GameEvent.Milled {} -> Nothing
   GameEvent.PlayerActed _ -> Nothing
   GameEvent.LandPlayed {} -> Nothing

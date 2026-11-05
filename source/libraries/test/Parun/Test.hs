@@ -257,7 +257,6 @@ import qualified Parun.Codec.CraftSpec
 import qualified Parun.Codec.CreateCopySpec
 import qualified Parun.Codec.CreateEmblemSpec
 import qualified Parun.Codec.CreateSpec
-import qualified Parun.Codec.CreatureExploitsSpec
 import qualified Parun.Codec.CrewRestrictionSpec
 import qualified Parun.Codec.CrewingSpec
 import qualified Parun.Codec.CyclingSpec
@@ -370,6 +369,7 @@ import qualified Parun.Codec.ExilePlayPermissionSpec
 import qualified Parun.Codec.ExiledPileSpec
 import qualified Parun.Codec.ExpansionSpec
 import qualified Parun.Codec.ExpirySpec
+import qualified Parun.Codec.ExploitTriggerSpec
 import qualified Parun.Codec.ExploitedSpec
 import qualified Parun.Codec.ExtraPhaseSpec
 import qualified Parun.Codec.ExtraTurnSpec
@@ -1240,7 +1240,7 @@ spec s registry corpus = do
   Parun.Codec.CreateCopySpec.spec s
   Parun.Codec.CreateEmblemSpec.spec s
   Parun.Codec.CreateSpec.spec s
-  Parun.Codec.CreatureExploitsSpec.spec s
+  Parun.Codec.ExploitTriggerSpec.spec s
   Parun.Codec.CrewingSpec.spec s
   Parun.Codec.CrewRestrictionSpec.spec s
   Parun.Codec.CyclingSpec.spec s

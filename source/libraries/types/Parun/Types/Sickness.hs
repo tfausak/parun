@@ -14,8 +14,7 @@ import qualified Parun.Types.PlayerId as PlayerId
 -- whose turn and control are at issue.
 --
 -- Two writers, for CR 302.6's continuity: Engine.settleAll writes
--- `Settled pid` at pid's untap step for everything pid controls, so not when
--- that step is skipped (gap #6241); and
+-- `Settled pid` as pid's turn begins for everything pid controls; and
 -- Engine.checkControlContinuity DROPS a `Settled p` whose object p no longer
 -- controls. Control is DERIVED, so nothing announces a change and the check
 -- samples wherever the board can change -- the same diff Event.sampleControl

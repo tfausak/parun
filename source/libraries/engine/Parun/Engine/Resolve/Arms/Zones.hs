@@ -1294,13 +1294,19 @@ reveal resolving source controller legal chosen (Reveal.MkReveal ref mSlot) = do
   -- back with an EachCardFromAmong. Parun.MassEffectSpec's UncoveredClues group
   -- proves the binding.
   named <- Common.askingObjects resolving source controller legal chosen ref
-  let -- A card in a hand is shown by the seat whose hand it is -- Duress's
-      -- "target opponent reveals their hand", Fall's random cards. A card
-      -- picked "from among them" is shown by the resolving controller, who
-      -- carries the instruction out.
+  let -- A card in a hand or a library is shown by the seat whose zone it is
+      -- (CR 400.3) -- Duress's "target opponent reveals their hand", Fall's
+      -- random cards, Aven Windreader's "target player reveals the top card of
+      -- their library". A card picked "from among them" is shown by the
+      -- resolving controller, who carries the instruction out.
+      --
+      -- Not implemented: a controller revealing the top of ANOTHER player's
+      -- library, Prophecy's wording, credits that library's owner (#6292).
+      -- Parun.InvestigateSpec's "CR 701.20a a target player reveals the top of
+      -- their own library" proves the owner reading.
       shower oid = case (ref, Game.lookupObject oid gs) of
         (ObjectRef.ChosenCardFromAmong {}, _) -> controller
-        (_, Just obj) | Object.zone obj == Zone.Hand -> Object.owner obj
+        (_, Just obj) | Object.zone obj `elem` [Zone.Hand, Zone.Library] -> Object.owner obj
         _ -> controller
   Monad.mapM_ (\oid -> Event.revealResolving resolving (shower oid) oid) named
   bindShown named
