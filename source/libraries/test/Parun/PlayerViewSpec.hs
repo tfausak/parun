@@ -1,8 +1,12 @@
+-- Pattern matching on Parun.Types.Prompt, a GADT, in an answerer below.
+{-# LANGUAGE GADTs #-}
+
 -- Covers Parun.Engine.PlayerView: what one seat's view of a game shows, and
 -- that nothing it may not see reaches the encoded view.
 module Parun.PlayerViewSpec where
 
 import qualified Control.Monad as Monad
+import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
@@ -29,6 +33,7 @@ import qualified Parun.Types.AbilityView as AbilityView
 import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Parun.Types.Answer as Answer
+import qualified Parun.Types.Asked as Asked
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.AttackerDeclared as AttackerDeclared
 import qualified Parun.Types.BeginningStep as BeginningStep
@@ -64,6 +69,7 @@ import qualified Parun.Types.PlayerId as PlayerId
 import qualified Parun.Types.PlayerView as PlayerView.Type
 import qualified Parun.Types.Printing as Printing
 import qualified Parun.Types.ProjectedCharacteristics as ProjectedCharacteristics
+import qualified Parun.Types.Prompt as Prompt
 import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Reply as Reply
 import qualified Parun.Types.Seat as Seat
@@ -163,6 +169,24 @@ spec s registry = Spec.describe s "PlayerView" $ do
     let (_, gs) = S.addObjectIn Zone.Exile piker S.alice (Setup.emptyGame S.bothPlayers)
         exiled pid = foldMap SeatView.exile (seatOf S.alice (PlayerView.viewFor pid gs))
     Spec.assertBool s (all (Maybe.isJust . ObjectView.characteristics) (exiled S.bob) && not (null (exiled S.bob))) "bob sees it"
+  -- bob passes last, so a stale holder would read bob while alice answers.
+  Spec.it s "CR 117.3b no seat holds priority while Dragon's Claw's trigger asks alice its may" $ do
+    claw <- S.printingOf s registry "Dragon's Claw"
+    mountain <- S.printingOf s registry "Mountain"
+    goblin <- S.printingOf s registry "Raging Goblin"
+    let (_, g1) = S.addPermanent claw S.alice (Setup.emptyGame S.bothPlayers)
+        (_, g2) = S.addPermanent mountain S.alice g1
+        (spell, g3) = S.addHandCard goblin S.alice g2
+        board = g3 {GameState.activePlayer = S.alice, GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.alice}
+        answer :: Asked.Asked r -> State.State [(PlayerId.PlayerId, Maybe PlayerId.PlayerId, [Text.Text])] r
+        answer question = case Asked.prompt question of
+          prompt@(Prompt.ChooseOptional _ pid _ _ _ _) -> do
+            let gs = Asked.game question
+            State.modify' (<> [(pid, GameState.priority gs, take 1 (Render.board (PlayerView.viewFor pid gs)))])
+            pure (S.identityAnswer prompt)
+          prompt -> pure (S.identityAnswer prompt)
+        asked = State.execState (Engine.runGameAsked answer board (S.cast S.alice spell >> Engine.priorityLoop)) []
+    Spec.assertEqWith s "alice is asked, with nobody holding priority" asked [(S.alice, Nothing, [Text.pack "Turn 1, Player 1's precombat main phase."])]
   Spec.it s "CR 723.4 a seat making another player's decisions sees that player's hand" $ do
     started0 <- started s registry
     let row =

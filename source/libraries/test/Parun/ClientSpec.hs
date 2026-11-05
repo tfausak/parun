@@ -41,11 +41,14 @@ import qualified Parun.Support as S
 import qualified Parun.Types.Action as Action
 import qualified Parun.Types.Answerer as Answerer
 import qualified Parun.Types.Asked as Asked
+import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.BeginningStep as BeginningStep
 import qualified Parun.Types.Card as Card
 import qualified Parun.Types.CardName as CardName
 import qualified Parun.Types.ClauseIndex as ClauseIndex
 import qualified Parun.Types.Color as Color
+import qualified Parun.Types.Combat as Combat.Type
+import qualified Parun.Types.CombatStep as CombatStep
 import qualified Parun.Types.CounterKind as CounterKind
 import qualified Parun.Types.Decider as Decider
 import qualified Parun.Types.Deck as Deck
@@ -222,6 +225,7 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertBool s (any (Text.isPrefixOf (Text.pack "Choose 1 target for Mindslaver's ability ")) shown) "the target prompt names it"
     Spec.assertEqWith s "the stack names it, then once it is sacrificed" (Set.toList (Set.fromList (stacks shown)), take 1 (stacks (dropWhile (/= Text.pack "  Graveyard: Mindslaver") shown))) ([stackLine], [stackLine])
     Spec.assertEqWith s "no face-down card" (filter (Text.isInfixOf (Text.pack "face-down")) shown) []
+    Spec.assertEqWith s "CR 602.2 the activation names its player and source" (filter (Text.isInfixOf (Text.pack "activate")) shown) [Text.pack "Player 1 activates Mindslaver's ability."]
 
   Spec.it s "CR 723.6 a seat controlled for its turn is still shown the rest of the turn before, and that turn, at its next question" $ do
     gs <- started s registry
@@ -252,7 +256,13 @@ spec s registry = Spec.describe s "Client" $ do
         alice = Decider.MkDecider S.alice
         bob = Decider.MkDecider S.bob
     Spec.assertEqWith s "attackers" (answering gs "2" (Prompt.DeclareAttackers alice S.alice [o7, o9])) (Right [o9])
-    Spec.assertEqWith s "blockers" (answering gs "2:1" (Prompt.DeclareBlockers bob S.bob [o5, o9] [o7])) (Right (Map.singleton o9 (Set.singleton o7)))
+    -- On a real combat: the line refuses a block the rules forbid.
+    giant <- S.printingOf s registry "Hill Giant"
+    case S.combatBoardOf [giant] [giant, giant] of
+      (board, [attacker], [first, second]) -> do
+        let blocking = board {GameState.phase = Phase.Combat CombatStep.DeclareBlockers, GameState.combat = (GameState.combat board) {Combat.Type.attackers = Map.singleton attacker (AttackTarget.OfPlayer S.bob)}}
+        Spec.assertEqWith s "blockers" (answering blocking "2:1" (Prompt.DeclareBlockers bob S.bob [first, second] [attacker])) (Right (Map.singleton second (Set.singleton attacker)))
+      _ -> Spec.assertFailure s "fixture should have one attacker and two blockers"
     Spec.assertEqWith s "targets" (answering gs "1" (Prompt.ChooseTargets alice S.alice o7 (Map.singleton slot (1, Set.fromList [Recipient.ToPlayer S.bob, Recipient.ToCreature o9])))) (Right (Map.singleton slot (Set.singleton (Recipient.ToCreature o9))))
     Spec.assertEqWith s "optional" (answering gs "2" (Prompt.ChooseOptional alice S.alice o7 (ModeIndex.MkModeIndex 0) (ClauseIndex.MkClauseIndex 0) mempty)) (Right OptionalDecision.Declines)
     Spec.assertEqWith s "life for mana" (answering gs "1" (Prompt.PayLifeForMana alice S.alice 1 ManaType.Colorless)) (Right OptionalDecision.Exercises)

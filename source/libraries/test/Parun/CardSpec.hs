@@ -176,7 +176,6 @@ import qualified Parun.Types.Craft as Craft
 import qualified Parun.Types.Create as Create
 import qualified Parun.Types.CreateCopy as CreateCopy
 import qualified Parun.Types.CreateEmblem as CreateEmblem
-import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.CrewRestriction as CrewRestriction
 import qualified Parun.Types.Cycling as Cycling
 import qualified Parun.Types.DamageDirection as DamageDirection
@@ -236,6 +235,7 @@ import qualified Parun.Types.ExileCardsFromHand as ExileCardsFromHand
 import qualified Parun.Types.ExileFromGraveyard as ExileFromGraveyard
 import qualified Parun.Types.ExileMaterials as ExileMaterials
 import qualified Parun.Types.ExilePermanents as ExilePermanents
+import qualified Parun.Types.ExploitTrigger as ExploitTrigger
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.FaceDownCharacteristics as FaceDownCharacteristics
 import qualified Parun.Types.FaceDownState as FaceDownState
@@ -1149,9 +1149,9 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.PermanentTappedForMana {} -> []
   TriggerCondition.AbilityAddsMana {} -> []
   TriggerCondition.SelfManaAbilityResolves -> []
-  -- Nor does CR 702.110b's, for the same reason.
-  TriggerCondition.SelfExploits -> []
-  TriggerCondition.CreatureExploits {} -> []
+  -- Nor does CR 702.110b's, whose Filters hold no Count for a Matching Enters'
+  -- reason.
+  TriggerCondition.Exploits {} -> []
   -- Nor does CR 702.122e's: its payload is a TriggerFrequency.
   TriggerCondition.SelfBecomesCrewed {} -> []
   -- Nor does CR 702.122b's crewer side, nullary too.
@@ -4594,9 +4594,8 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.BecomesTapState watched -> actingFilters (BecomesTapState.actor watched)
   TriggerCondition.PermanentsBecomeTapped f -> unframed [f]
   TriggerCondition.AttachedPermanentTappedForMana -> []
-  TriggerCondition.SelfExploits -> []
   -- Skull Skaab's two, both card text.
-  TriggerCondition.CreatureExploits (CreatureExploits.MkCreatureExploits exploiter exploited) -> unframed [exploiter, exploited]
+  TriggerCondition.Exploits (ExploitTrigger.MkExploitTrigger exploiter exploited) -> actingFilters exploiter <> unframed [exploited]
   -- CR 702.122e's carries none either: it names "this Vehicle" and nothing about
   -- it to narrow by.
   TriggerCondition.SelfBecomesCrewed {} -> []
@@ -4826,8 +4825,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.FaceDownPermanentLeavesRevealed -> []
   TriggerCondition.PermanentBecomesDesignated _ -> []
   TriggerCondition.AttachedCreatureMentors -> []
-  TriggerCondition.SelfExploits -> []
-  TriggerCondition.CreatureExploits {} -> []
+  TriggerCondition.Exploits {} -> []
   TriggerCondition.SelfBecomesCrewed {} -> []
   TriggerCondition.SelfCrewsVehicle -> []
   TriggerCondition.PermanentSacrificed {} -> []

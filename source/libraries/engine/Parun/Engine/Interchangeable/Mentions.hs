@@ -170,7 +170,6 @@ import qualified Parun.Types.Craft as Craft
 import qualified Parun.Types.Create as Create
 import qualified Parun.Types.CreateCopy as CreateCopy
 import qualified Parun.Types.CreateEmblem as CreateEmblem
-import qualified Parun.Types.CreatureExploits as CreatureExploits
 import qualified Parun.Types.CrewRestriction as CrewRestriction
 import qualified Parun.Types.Cycling as Cycling
 import qualified Parun.Types.DamagePart as DamagePart
@@ -242,6 +241,7 @@ import qualified Parun.Types.ExileHaunting as ExileHaunting
 import qualified Parun.Types.ExileMaterials as ExileMaterials
 import qualified Parun.Types.ExilePermanents as ExilePermanents
 import qualified Parun.Types.Expiry as Expiry
+import qualified Parun.Types.ExploitTrigger as ExploitTrigger
 import qualified Parun.Types.Face as Face
 import qualified Parun.Types.FaceDownCharacteristics as FaceDownCharacteristics
 import qualified Parun.Types.FaceDownState as FaceDownState
@@ -1237,10 +1237,6 @@ createEmblemNames asking onCard x = case x of
 createCopyNames :: (Monoid r) => Asking r -> (ability -> r) -> CreateCopy.CreateCopy ability -> r
 createCopyNames asking onAbility x = case x of
   CreateCopy.MkCreateCopy quantity ref riders slot exceptions _ -> quantityNames asking quantity <> objectRefNames asking ref <> entryRidersNames asking (quantityNames asking) onAbility riders <> foldMap (slotNames asking) slot <> foldMap (copyExceptionNames asking onAbility) exceptions
-
-creatureExploitsNames :: (Monoid r) => Asking r -> CreatureExploits.CreatureExploits -> r
-creatureExploitsNames asking x = case x of
-  CreatureExploits.MkCreatureExploits exploiter exploited -> filterNames asking exploiter <> filterNames asking exploited
 
 counterProhibitionNames :: (Monoid r) => Asking r -> CounterProhibition.CounterProhibition -> r
 counterProhibitionNames asking x = case x of
@@ -3013,6 +3009,10 @@ attackTriggerNames asking x = case x of
   AttackTrigger.Declaration declarationTrigger -> declarationTriggerNames asking declarationTrigger
   AttackTrigger.Unblocked filter_ -> filterNames asking filter_
 
+exploitTriggerNames :: (Monoid r) => Asking r -> ExploitTrigger.ExploitTrigger -> r
+exploitTriggerNames asking x = case x of
+  ExploitTrigger.MkExploitTrigger exploiter exploited -> actingPermanentNames asking exploiter <> filterNames asking exploited
+
 entersTriggerNames :: (Monoid r) => Asking r -> EntersTrigger.EntersTrigger -> r
 entersTriggerNames asking x = case x of
   -- A batching, which names nothing.
@@ -3131,8 +3131,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.PermanentBecomesDesignated permanentBecomesDesignated -> permanentBecomesDesignatedNames asking permanentBecomesDesignated
   TriggerCondition.PermanentActs permanentActs -> permanentActedNames asking (actingPermanentNames asking) permanentActs
   TriggerCondition.AttachedCreatureMentors -> mempty
-  TriggerCondition.SelfExploits -> mempty
-  TriggerCondition.CreatureExploits creatureExploits -> creatureExploitsNames asking creatureExploits
+  TriggerCondition.Exploits exploitTrigger -> exploitTriggerNames asking exploitTrigger
   TriggerCondition.SelfBecomesCrewed triggerFrequency -> triggerFrequencyNames asking HistoryRead.Crews triggerFrequency
   TriggerCondition.SelfCrewsVehicle -> mempty
   TriggerCondition.PermanentSacrificed permanentSacrificed -> playerActsOnNames asking permanentSacrificed
