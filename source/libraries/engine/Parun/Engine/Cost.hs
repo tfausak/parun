@@ -73,6 +73,7 @@ import qualified Parun.Extra.Integer as Integer
 import qualified Parun.Extra.Natural as Natural
 import qualified Parun.Types.AbilityKind as AbilityKind
 import qualified Parun.Types.AbilityName as AbilityName
+import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.ActivatedAbility as ActivatedAbility
 import qualified Parun.Types.Activations as Activations
 import qualified Parun.Types.AlternativeCost as AlternativeCost
@@ -6883,7 +6884,7 @@ payPayable perform moment paidFor slots pid oid component = case component of
     case beheld of
       Just [chosen] -> do
         arrived <- Event.changeZoneReturning (ManaAbilityPerformer.settle perform) chosen Zone.Exile
-        let link = ExileLink.MkExileLink {ExileLink.source = oid, ExileLink.ability = Nothing}
+        let link = ExileLink.MkExileLink {ExileLink.source = oid, ExileLink.ability = Nothing, ExileLink.acquisition = Acquisition.Own}
         State.modify' (\g -> g {GameState.exiledWith = foldr (`Map.insert` link) (GameState.exiledWith g) arrived})
         pure bindsNothing
       _ -> pure Payment.Unpaid

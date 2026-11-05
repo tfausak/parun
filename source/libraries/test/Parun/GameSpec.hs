@@ -742,7 +742,7 @@ ruleSpec s registry = Spec.describe s "Rules" $ do
         gStart =
           g4
             { -- CR 607.2a's linkage, which Karn's own -3 files in the case above.
-              GameState.exiledWith = Map.fromList [(pikerId, ExileLink.MkExileLink {ExileLink.source = karnId, ExileLink.ability = Nothing}), (pacifismId, ExileLink.MkExileLink {ExileLink.source = karnId, ExileLink.ability = Nothing})],
+              GameState.exiledWith = Map.fromList [(pikerId, ExileLink.MkExileLink {ExileLink.source = karnId, ExileLink.ability = Nothing, ExileLink.acquisition = Acquisition.Own}), (pacifismId, ExileLink.MkExileLink {ExileLink.source = karnId, ExileLink.ability = Nothing, ExileLink.acquisition = Acquisition.Own})],
               GameState.activePlayer = S.bob,
               GameState.phase = Phase.PrecombatMain,
               GameState.priority = Just S.bob

@@ -38,6 +38,7 @@ import qualified Parun.Engine.Turn as Turn
 import qualified Parun.Registry as Registry
 import qualified Parun.Spec as Spec
 import qualified Parun.Support as S
+import qualified Parun.Types.Acquisition as Acquisition
 import qualified Parun.Types.Action as A
 import qualified Parun.Types.AttackTarget as AttackTarget
 import qualified Parun.Types.BeginningStep as BeginningStep
@@ -2662,7 +2663,7 @@ shellPileBoard island shell piker bolt blade =
       (boltId, g3) = S.addExiledCard bolt S.bob g2
       (bladeId, g4) = S.addExiledCard blade S.bob g3
       (_, g5) = S.addExiledCard bolt S.bob g4
-   in (shellId, g5 {GameState.exiledWith = Map.fromList [(boltId, ExileLink.MkExileLink {ExileLink.source = shellId, ExileLink.ability = Nothing}), (bladeId, ExileLink.MkExileLink {ExileLink.source = shellId, ExileLink.ability = Nothing})]})
+   in (shellId, g5 {GameState.exiledWith = Map.fromList [(boltId, ExileLink.MkExileLink {ExileLink.source = shellId, ExileLink.ability = Nothing, ExileLink.acquisition = Acquisition.Own}), (bladeId, ExileLink.MkExileLink {ExileLink.source = shellId, ExileLink.ability = Nothing, ExileLink.acquisition = Acquisition.Own})]})
 
 -- Activates the Shell's SECOND ability and answers CR 601.3's choice with the
 -- option at `wanted`, then resolves the stack down.

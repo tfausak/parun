@@ -3214,7 +3214,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
         stated oid = case mFilter of
           Nothing -> True
           Just filter_ -> Filter.matches context (viewOf oid) filter_
-     in filter stated (Game.linkedPile (resolvingAbilityName resolving gs) pile source gs)
+     in filter stated (Game.linkedPile (resolvingAbilityName resolving gs) (Game.readingAcquisition resolving source gs source) pile source gs)
   -- CR 702.99b's relation, the arm above's shape over GameState.encoded. Keyed
   -- on the source's id alone, so a trigger whose creature has since left still
   -- finds the card it last had encoded (CR 608.2h).
