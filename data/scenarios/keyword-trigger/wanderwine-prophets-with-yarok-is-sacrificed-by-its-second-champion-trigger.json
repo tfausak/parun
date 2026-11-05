@@ -1,0 +1,113 @@
+{
+  "description": "CR 702.72a / 118.12a: with Yarok, the Desecrated, Wanderwine Prophets' champion trigger resolves twice; the first exiles alice's only other Merfolk, the second has nothing to exile, so the Prophets are sacrificed and the Merfolk returns",
+  "note": "Each instance answers its own \"unless\" (CR 118.12): the second instance is not satisfied by the first one's exile. The Tidal Warrior coming back proves the first instance did exile it.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "UUUUUU",
+        "battlefield": [
+          {
+            "card": "Yarok, the Desecrated"
+          },
+          {
+            "card": "Tidal Warrior",
+            "label": "merfolk"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Wanderwine Prophets",
+            "label": "prophets"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$prophets"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "ChooseOptional": {
+          "type": "Exercises"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChoosePermanent",
+          "with": "$merfolk"
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Graveyard",
+        "card": "Wanderwine Prophets",
+        "count": 1
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Battlefield",
+        "card": "Tidal Warrior",
+        "count": 1
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Exile",
+        "card": "Tidal Warrior",
+        "count": 0
+      }
+    }
+  ]
+}
