@@ -2,8 +2,8 @@ module Parun.Types.FromAnywhere where
 
 import qualified Parun.Types.SlotName as SlotName
 
--- | CR 400.7: the object a slot holds, followed to wherever it is now --
--- Timmerian Fiends' "Timmerian Fiends from anywhere".
+-- | CR 400.7 / 730.3c: the objects a slot holds, followed to wherever they are
+-- now -- Timmerian Fiends' "Timmerian Fiends from anywhere".
 --
 -- The fields are named rather than positional, the shape every other
 -- Parun.Types.ObjectRef payload record takes.
