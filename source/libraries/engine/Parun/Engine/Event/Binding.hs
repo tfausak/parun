@@ -102,6 +102,8 @@ import qualified Parun.Types.StepBegan as StepBegan
 import qualified Parun.Types.StickerPut as StickerPut
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TappedForMana as TappedForMana
+import qualified Parun.Types.TappedForManaTrigger as TappedForManaTrigger
+import qualified Parun.Types.TappedPermanent as TappedPermanent
 import Parun.Types.TriggerCondition (TriggerCondition)
 import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggerSource as TriggerSource
@@ -612,7 +614,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- Unconditional given a match, an Attached Leaves' claim and for its
   -- reason: matchesTrigger accepts only a GameEvent.TappedForMana whose
   -- permanent IS the bearer's host, so the id is always there.
-  (TriggerCondition.AttachedPermanentTappedForMana, GameEvent.TappedForMana tapped) ->
+  (TriggerCondition.TappedForMana (TappedForManaTrigger.MkTappedForManaTrigger TappedPermanent.Attached _ _), GameEvent.TappedForMana tapped) ->
     Binding.setManaSource (TappedForMana.permanent tapped) Map.empty
   -- The same slot for the bystander reading: Vernal Bloom's "its controller"
   -- reads it through PlayerRef.HolderOfBound. "That player" is the tapping
@@ -622,7 +624,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- Unconditional given a match, the arm above's reason: matchesTrigger accepts
   -- only a GameEvent.TappedForMana, which carries the permanent and the player
   -- outright.
-  (TriggerCondition.PermanentTappedForMana {}, GameEvent.TappedForMana tapped) ->
+  (TriggerCondition.TappedForMana (TappedForManaTrigger.MkTappedForManaTrigger (TappedPermanent.Matching _) _ _), GameEvent.TappedForMana tapped) ->
     Binding.setTriggerPlayer (TappedForMana.player tapped) (Binding.setManaSource (TappedForMana.permanent tapped) Map.empty)
   -- CR 605.1b's resolution read off the bearer's own mana ability: the permanent
   -- needs no slot -- it IS the bearer, whom Binding.triggerSource already names
@@ -630,7 +632,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- which Tyvar the Bellicose's "equal to the amount of mana this creature
   -- produced" takes through Quantity.InSlot.
   --
-  -- Unconditional given a match, AttachedPermanentTappedForMana's claim and for
+  -- Unconditional given a match, an Attached TappedForMana's claim and for
   -- its reason: matchesTrigger accepts only a GameEvent.ManaAbilityResolved
   -- whose permanent IS the bearer, and the amount is on the event outright.
   (TriggerCondition.SelfManaAbilityResolves, GameEvent.ManaAbilityResolved resolved) ->
@@ -1581,11 +1583,11 @@ eventBindingSlots cond = case cond of
     Batching.EachOccurrence -> Set.singleton (Binding.tapStatePermanent (BecomesTapState.status watched))
     Batching.OneOrMore -> Set.empty
   -- The permanent tapped for mana, which the arm above stamps for every
-  -- match: Wild Growth reads it through PlayerRef.HolderOfBound.
-  TriggerCondition.AttachedPermanentTappedForMana -> Set.singleton Binding.manaSource
-  -- The same slot for the bystander reading and the tapping player beside it,
-  -- stamped by the arm above for every match.
-  TriggerCondition.PermanentTappedForMana {} -> Set.fromList [Binding.manaSource, Binding.triggerPlayer]
+  -- match: Wild Growth reads it through PlayerRef.HolderOfBound. The same slot
+  -- for the bystander reading and the tapping player beside it.
+  TriggerCondition.TappedForMana t -> case TappedForManaTrigger.permanent t of
+    TappedPermanent.Attached -> Set.singleton Binding.manaSource
+    TappedPermanent.Matching _ -> Set.fromList [Binding.manaSource, Binding.triggerPlayer]
   -- A deliberate empty: Caged Sun's "that color" is the bearer's chosen color,
   -- and it names no source. A card that did would take manaSource.
   TriggerCondition.AbilityAddsMana {} -> Set.empty

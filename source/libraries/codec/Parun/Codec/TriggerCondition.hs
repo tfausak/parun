@@ -27,7 +27,6 @@ import qualified Parun.Codec.LostPermanent as LostPermanent
 import qualified Parun.Codec.PermanentActed as PermanentActed
 import qualified Parun.Codec.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Codec.PermanentIsDealtDamage as PermanentIsDealtDamage
-import qualified Parun.Codec.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Codec.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Codec.PlacesSticker as PlacesSticker
 import qualified Parun.Codec.PlayerActed as PlayerActed
@@ -41,6 +40,7 @@ import qualified Parun.Codec.RevealedThisWay as RevealedThisWay
 import qualified Parun.Codec.RoomIndex as RoomIndex
 import qualified Parun.Codec.SpellCast as SpellCast
 import qualified Parun.Codec.StepBegins as StepBegins
+import qualified Parun.Codec.TappedForManaTrigger as TappedForManaTrigger
 import qualified Parun.Codec.TransformTrigger as TransformTrigger
 import qualified Parun.Codec.TriggerFrequency as TriggerFrequency
 import qualified Parun.JsonCodec.Arm as Arm
@@ -81,8 +81,7 @@ codec =
           Arm.payload "LeavesZone" LeavesZoneTrigger.codec TriggerCondition.LeavesZone (\x -> case x of TriggerCondition.LeavesZone y -> Just y; _ -> Nothing),
           Arm.payload "PutIntoZone" PutIntoZoneTrigger.codec TriggerCondition.PutIntoZone (\x -> case x of TriggerCondition.PutIntoZone y -> Just y; _ -> Nothing),
           Arm.payload "BecomesTapState" BecomesTapState.codec TriggerCondition.BecomesTapState (\x -> case x of TriggerCondition.BecomesTapState y -> Just y; _ -> Nothing),
-          Arm.nullary "AttachedPermanentTappedForMana" TriggerCondition.AttachedPermanentTappedForMana,
-          Arm.payload "PermanentTappedForMana" PermanentTappedForMana.codec TriggerCondition.PermanentTappedForMana (\x -> case x of TriggerCondition.PermanentTappedForMana y -> Just y; _ -> Nothing),
+          Arm.payload "TappedForMana" TappedForManaTrigger.codec TriggerCondition.TappedForMana (\x -> case x of TriggerCondition.TappedForMana y -> Just y; _ -> Nothing),
           Arm.payload "AbilityAddsMana" AbilityAddsMana.codec TriggerCondition.AbilityAddsMana (\x -> case x of TriggerCondition.AbilityAddsMana y -> Just y; _ -> Nothing),
           Arm.nullary "SelfManaAbilityResolves" TriggerCondition.SelfManaAbilityResolves,
           Arm.payload "SpellOrAbilityCounters" PlayerRelation.codec TriggerCondition.SpellOrAbilityCounters (\x -> case x of TriggerCondition.SpellOrAbilityCounters y -> Just y; _ -> Nothing),
@@ -157,8 +156,7 @@ tagOf x = case x of
   TriggerCondition.LeavesZone {} -> "LeavesZone"
   TriggerCondition.PutIntoZone {} -> "PutIntoZone"
   TriggerCondition.BecomesTapState {} -> "BecomesTapState"
-  TriggerCondition.AttachedPermanentTappedForMana {} -> "AttachedPermanentTappedForMana"
-  TriggerCondition.PermanentTappedForMana {} -> "PermanentTappedForMana"
+  TriggerCondition.TappedForMana {} -> "TappedForMana"
   TriggerCondition.AbilityAddsMana {} -> "AbilityAddsMana"
   TriggerCondition.SelfManaAbilityResolves {} -> "SelfManaAbilityResolves"
   TriggerCondition.SpellOrAbilityCounters {} -> "SpellOrAbilityCounters"

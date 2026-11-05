@@ -11155,11 +11155,10 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.BecomesTapState _ -> False
   -- Nor does CR 106.12a: an enchanted land can be tapped for mana on anyone's
   -- turn, and Wild Growth's whole point is that the mana is its controller's.
-  TriggerCondition.AttachedPermanentTappedForMana -> False
   -- Nor read by a bystander: the RELATION names a seat and not a turn, the
   -- PermanentSacrificed arm's reason -- Autumn Willow, Harmony's controller taps
   -- a land creature for mana on an opponent's turn too.
-  TriggerCondition.PermanentTappedForMana {} -> False
+  TriggerCondition.TappedForMana _ -> False
   -- CR 605.1b's mana-added event: the same answer, for the same reason.
   TriggerCondition.AbilityAddsMana {} -> False
   -- Nor does CR 605.3b: a creature's mana ability resolves on anyone's turn.

@@ -606,9 +606,7 @@ looksBack condition = case condition of
   -- Not on CR 603.10a's list either, the arm above's reason: the permanent
   -- tapped for mana is standing on the battlefield when the ability is
   -- gathered.
-  TriggerCondition.AttachedPermanentTappedForMana -> False
-  -- The same event and the same reason, whoever watches it.
-  TriggerCondition.PermanentTappedForMana {} -> False
+  TriggerCondition.TappedForMana _ -> False
   -- CR 605.1b's mana-added event: the same answer, for the same reason.
   TriggerCondition.AbilityAddsMana {} -> False
   -- CR 605.3b's resolution is not on that list either: the bearer whose mana
@@ -801,9 +799,7 @@ batchScoped condition = case condition of
   TriggerCondition.BecomesTapState watched -> BecomesTapState.batching watched == Batching.OneOrMore
   -- CR 106.12a names one resolution of one mana ability, so one occurrence;
   -- no printing of it says "one or more".
-  TriggerCondition.AttachedPermanentTappedForMana -> False
-  -- One occurrence for the arm above's reason, bystander or not.
-  TriggerCondition.PermanentTappedForMana {} -> False
+  TriggerCondition.TappedForMana _ -> False
   -- Caged Sun's "one or more" counts MANA within one addition, not events:
   -- Parun.Types.ManaAdded is already one per player per activation.
   TriggerCondition.AbilityAddsMana {} -> False
@@ -2574,7 +2570,7 @@ enchantedObjectLeaves condition = case condition of
   TriggerCondition.BecomesTapState _ -> False
   -- False for the arm above's reason: the enchanted permanent stays exactly
   -- where it was, so CR 113.6m's Aura clause has nothing to exempt.
-  TriggerCondition.AttachedPermanentTappedForMana -> False
+  TriggerCondition.TappedForMana _ -> False
   TriggerCondition.AnyOf conditions -> any enchantedObjectLeaves conditions
   TriggerCondition.CausedBy narrowed -> enchantedObjectLeaves (CausedBy.condition narrowed)
   _ -> False
@@ -2823,12 +2819,10 @@ zonesTriggeredFrom cond =
         -- permanent is itself a permanent on the battlefield, and CR 113.6k's exception
         -- is for a condition that cannot trigger from there at all.
         TriggerCondition.BecomesTapState _ -> battlefield
-        -- The same default and the same reason, one event over.
-        TriggerCondition.AttachedPermanentTappedForMana -> battlefield
-        -- CR 113.6's default once more: Autumn Willow, Harmony is a creature watching
-        -- from the board it stands on, and CR 113.6k's exception -- for a condition
-        -- that cannot trigger from the battlefield at all -- does not apply.
-        TriggerCondition.PermanentTappedForMana {} -> battlefield
+        -- The same default and the same reason, one event over; and for a Matching
+        -- subject, Autumn Willow, Harmony is a creature watching from the board it
+        -- stands on, so CR 113.6k's exception does not apply.
+        TriggerCondition.TappedForMana _ -> battlefield
         -- CR 605.1b's mana-added event: the same answer, for the same reason.
         TriggerCondition.AbilityAddsMana {} -> battlefield
         -- CR 113.6's default once more: the bearer's own mana ability resolved,
@@ -3204,9 +3198,7 @@ stateTriggersOn gs
             -- CR 106.12a is an EVENT too, and more plainly than the arm
             -- above: a mana ability having resolved is nothing a later
             -- board read can recover.
-            TriggerCondition.AttachedPermanentTappedForMana -> False
-            -- The same resolution read by a bystander, so the same answer.
-            TriggerCondition.PermanentTappedForMana {} -> False
+            TriggerCondition.TappedForMana _ -> False
             -- CR 605.1b's mana-added event: the same answer, for the same reason.
             TriggerCondition.AbilityAddsMana {} -> False
             -- CR 605.3b's resolution likewise: the counters it puts are

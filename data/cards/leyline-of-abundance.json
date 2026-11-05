@@ -127,16 +127,19 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentTappedForMana",
+            "type": "TappedForMana",
             "value": {
-              "filter": {
-                "type": "HasCardType",
-                "value": {
-                  "type": "Creature"
-                }
-              },
               "mana": {
                 "type": "AnyMana"
+              },
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                }
               },
               "player": {
                 "type": "You"

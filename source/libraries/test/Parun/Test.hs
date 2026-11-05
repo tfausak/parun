@@ -555,7 +555,6 @@ import qualified Parun.Codec.PermanentActionSpec
 import qualified Parun.Codec.PermanentBecomesDesignatedSpec
 import qualified Parun.Codec.PermanentCandidateSpec
 import qualified Parun.Codec.PermanentIsDealtDamageSpec
-import qualified Parun.Codec.PermanentTappedForManaSpec
 import qualified Parun.Codec.PermanentWasSacrificedSpec
 import qualified Parun.Codec.PermanentsDealCombatDamageToPlayerSpec
 import qualified Parun.Codec.PermissionCostSpec
@@ -729,7 +728,9 @@ import qualified Parun.Codec.TapPermanentsSpec
 import qualified Parun.Codec.TapSpec
 import qualified Parun.Codec.TapStateSpec
 import qualified Parun.Codec.TappedForManaSpec
+import qualified Parun.Codec.TappedForManaTriggerSpec
 import qualified Parun.Codec.TappedIsSpec
+import qualified Parun.Codec.TappedPermanentSpec
 import qualified Parun.Codec.TargetCountSpec
 import qualified Parun.Codec.TargetRestrictionSpec
 import qualified Parun.Codec.TargetSlotSpec
@@ -1543,7 +1544,8 @@ spec s registry corpus = do
   Parun.Codec.PlayerActsOnSpec.spec s
   Parun.Codec.BecomesTargetedTriggerSpec.spec s
   Parun.Codec.PermanentsDealCombatDamageToPlayerSpec.spec s
-  Parun.Codec.PermanentTappedForManaSpec.spec s
+  Parun.Codec.TappedForManaTriggerSpec.spec s
+  Parun.Codec.TappedPermanentSpec.spec s
   Parun.Codec.PermanentWasSacrificedSpec.spec s
   Parun.Codec.PermissionCostSpec.spec s
   Parun.Codec.PermissionLimitSpec.spec s

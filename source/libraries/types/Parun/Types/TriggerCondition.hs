@@ -27,7 +27,6 @@ import qualified Parun.Types.LostPermanent as LostPermanent
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
-import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.PlacesSticker as PlacesSticker
 import qualified Parun.Types.PlayerActed as PlayerActed
@@ -41,6 +40,7 @@ import qualified Parun.Types.RevealedThisWay as RevealedThisWay
 import qualified Parun.Types.RoomIndex as RoomIndex
 import qualified Parun.Types.SpellCast as SpellCast
 import qualified Parun.Types.StepBegins as StepBegins
+import qualified Parun.Types.TappedForManaTrigger as TappedForManaTrigger
 import qualified Parun.Types.TransformTrigger as TransformTrigger
 import qualified Parun.Types.TriggerFrequency as TriggerFrequency
 
@@ -121,14 +121,9 @@ data TriggerCondition
   | -- | CR 701.26a / 701.26b / 603.2c: a permanent became tapped or untapped, per
     -- permanent or per tapping (City of Brass, Mesmeric Orb, Deeproot Pilgrimage).
     BecomesTapState BecomesTapState.BecomesTapState
-  | -- | CR 106.12a's "is tapped for mana" read off the permanent the bearer is
-    -- attached to (Wild Growth), live rather than through last known
-    -- information.
-    AttachedPermanentTappedForMana
-  | -- | CR 106.12a read by a bystander: "whenever you tap a land creature for
-    -- mana" (Autumn Willow, Harmony), the arm above's event under a relation and
-    -- a filter instead of an attachment link.
-    PermanentTappedForMana PermanentTappedForMana.PermanentTappedForMana
+  | -- | CR 106.12a: a permanent was tapped for mana, the one the bearer is
+    -- attached to (Wild Growth) or one a Filter admits (Autumn Willow, Harmony).
+    TappedForMana TappedForManaTrigger.TappedForManaTrigger
   | -- | CR 605.1b's "mana being added to a player's mana pool": "whenever a
     -- land's ability causes you to add one or more mana of the chosen color"
     -- (Caged Sun).

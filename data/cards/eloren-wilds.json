@@ -6,14 +6,17 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentTappedForMana",
+            "type": "TappedForMana",
             "value": {
-              "filter": {
-                "type": "And",
-                "value": []
-              },
               "mana": {
                 "type": "AnyMana"
+              },
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": []
+                }
               },
               "player": {
                 "type": "AnyPlayer"

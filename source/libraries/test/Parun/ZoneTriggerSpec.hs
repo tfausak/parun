@@ -153,7 +153,6 @@ import qualified Parun.Types.PendingTrigger as PendingTrigger
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
-import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.Phase as Phase
@@ -193,6 +192,8 @@ import qualified Parun.Types.StickerKind as StickerKind
 import qualified Parun.Types.StickerPut as StickerPut
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TappedForMana as TappedForMana
+import qualified Parun.Types.TappedForManaTrigger as TappedForManaTrigger
+import qualified Parun.Types.TappedPermanent as TappedPermanent
 import qualified Parun.Types.Timestamp as Timestamp
 import qualified Parun.Types.TransformTrigger as TransformTrigger
 import qualified Parun.Types.Transformed as Transformed
@@ -2133,11 +2134,10 @@ representativeEvents cond =
         TriggerCondition.BecomesTapState watched -> case BecomesTapState.status watched of
           TapState.Tapped -> one (GameEvent.BecameTapped departed)
           TapState.Untapped -> one (GameEvent.BecameUntapped departed)
-        TriggerCondition.AttachedPermanentTappedForMana -> one (GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = departed, TappedForMana.mana = Set.singleton (ManaType.Colored Color.Green), TappedForMana.player = S.alice}))
-        -- The same event for the bystander reading, on `departed` for the arm
-        -- above's reason: the arm stamps the tapped permanent under every
-        -- relation it admits, so the floor is the same whether the pair matches.
-        TriggerCondition.PermanentTappedForMana {} -> one (GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = departed, TappedForMana.mana = Set.singleton (ManaType.Colored Color.Green), TappedForMana.player = S.alice}))
+        -- CR 106.12a's own event, on `departed` under either subject: the arm
+        -- stamps the tapped permanent under every relation it admits, so the floor
+        -- is the same whether the pair matches.
+        TriggerCondition.TappedForMana _ -> one (GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = departed, TappedForMana.mana = Set.singleton (ManaType.Colored Color.Green), TappedForMana.player = S.alice}))
         -- CR 605.1b's mana-added event, on `departed` for the arm above's
         -- reason; the arm binds nothing either way.
         TriggerCondition.AbilityAddsMana {} -> one (GameEvent.ManaAdded (ManaAdded.MkManaAdded {ManaAdded.player = S.alice, ManaAdded.source = departed, ManaAdded.mana = Set.singleton (ManaType.Colored Color.Green), ManaAdded.cause = ManaAddedCause.ManaAbility}))
@@ -2472,21 +2472,21 @@ everyTriggerCondition =
     TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Untapped ActingPermanent.Self Batching.EachOccurrence),
     TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Untapped (ActingPermanent.Matching (Filter.Type.And [])) Batching.EachOccurrence),
     TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Tapped (ActingPermanent.Matching (Filter.Type.And [])) Batching.OneOrMore),
-    TriggerCondition.AttachedPermanentTappedForMana,
+    TriggerCondition.TappedForMana (TappedForManaTrigger.MkTappedForManaTrigger TappedPermanent.Attached PlayerRelation.AnyPlayer ManaSpecification.AnyMana),
     -- ALL THREE relations, on the PermanentSacrificed rows' reasoning below:
     -- an eventBindings arm that had cased on the relation and stamped nothing
     -- under one of them would go unseen if only one were listed. Autumn Willow,
     -- Harmony prints the You form.
-    TriggerCondition.PermanentTappedForMana (PermanentTappedForMana.MkPermanentTappedForMana PlayerRelation.You (Filter.Type.And []) ManaSpecification.AnyMana),
-    TriggerCondition.PermanentTappedForMana (PermanentTappedForMana.MkPermanentTappedForMana PlayerRelation.Opponent (Filter.Type.And []) ManaSpecification.AnyMana),
-    TriggerCondition.PermanentTappedForMana (PermanentTappedForMana.MkPermanentTappedForMana PlayerRelation.AnyPlayer (Filter.Type.And []) ManaSpecification.AnyMana),
+    TriggerCondition.TappedForMana (TappedForManaTrigger.MkTappedForManaTrigger (TappedPermanent.Matching (Filter.Type.And [])) PlayerRelation.You ManaSpecification.AnyMana),
+    TriggerCondition.TappedForMana (TappedForManaTrigger.MkTappedForManaTrigger (TappedPermanent.Matching (Filter.Type.And [])) PlayerRelation.Opponent ManaSpecification.AnyMana),
+    TriggerCondition.TappedForMana (TappedForManaTrigger.MkTappedForManaTrigger (TappedPermanent.Matching (Filter.Type.And [])) PlayerRelation.AnyPlayer ManaSpecification.AnyMana),
     -- CR 106.12a's narrowed form beside the three above, listed for their
     -- reason applied to the other field: an eventBindings arm that had cased on
     -- the specification and stamped nothing under this one would go unseen.
     -- Gauntlet of Power prints it.
-    TriggerCondition.PermanentTappedForMana (PermanentTappedForMana.MkPermanentTappedForMana PlayerRelation.AnyPlayer (Filter.Type.And []) ManaSpecification.ChosenColor),
+    TriggerCondition.TappedForMana (TappedForManaTrigger.MkTappedForManaTrigger (TappedPermanent.Matching (Filter.Type.And [])) PlayerRelation.AnyPlayer ManaSpecification.ChosenColor),
     -- CR 605.1b's mana-added condition under each relation and both
-    -- specifications, for the PermanentTappedForMana rows' reason. Caged Sun
+    -- specifications, for the TappedForMana rows' reason. Caged Sun
     -- prints the You, ChosenColor form.
     TriggerCondition.AbilityAddsMana (AbilityAddsMana.MkAbilityAddsMana PlayerRelation.You (Filter.Type.And []) ManaSpecification.ChosenColor),
     TriggerCondition.AbilityAddsMana (AbilityAddsMana.MkAbilityAddsMana PlayerRelation.Opponent (Filter.Type.And []) ManaSpecification.AnyMana),

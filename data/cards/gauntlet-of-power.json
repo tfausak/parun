@@ -70,27 +70,30 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentTappedForMana",
+            "type": "TappedForMana",
             "value": {
-              "filter": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "HasSupertype",
-                    "value": {
-                      "type": "Basic"
-                    }
-                  },
-                  {
-                    "type": "HasCardType",
-                    "value": {
-                      "type": "Land"
-                    }
-                  }
-                ]
-              },
               "mana": {
                 "type": "ChosenColor"
+              },
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasSupertype",
+                      "value": {
+                        "type": "Basic"
+                      }
+                    },
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Land"
+                      }
+                    }
+                  ]
+                }
               },
               "player": {
                 "type": "AnyPlayer"

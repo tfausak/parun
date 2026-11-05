@@ -57,7 +57,6 @@ import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentAction as PermanentAction
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
-import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.Phase as Phase
 import qualified Parun.Types.PlacesSticker as PlacesSticker
@@ -79,6 +78,8 @@ import qualified Parun.Types.StepBegins as StepBegins
 import qualified Parun.Types.StickerKind as StickerKind
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TapState as TapState
+import qualified Parun.Types.TappedForManaTrigger as TappedForManaTrigger
+import qualified Parun.Types.TappedPermanent as TappedPermanent
 import qualified Parun.Types.TransformTrigger as TransformTrigger
 import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggerFrequency as TriggerFrequency
@@ -267,14 +268,14 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Tapped (ActingPermanent.Matching (Filter.Not Filter.IsToken)) Batching.OneOrMore))
       " {\"type\":\"BecomesTapState\",\"value\":{\"actor\":{\"type\":\"Matching\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}},\"status\":{\"type\":\"Tapped\"},\"batching\":{\"type\":\"OneOrMore\"}}} "
-  -- CR 106.12a's tap for mana read off the attachment link. Nullary: that link is
-  -- board state, so nothing about it rides the condition.
-  Spec.it s "AttachedPermanentTappedForMana" $
+  -- CR 106.12a's tap for mana read off the attachment link, Wild Growth's: that
+  -- link is board state, so the subject alone names it.
+  Spec.it s "TappedForMana round-trips an Attached subject" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      TriggerCondition.AttachedPermanentTappedForMana
-      " {\"type\":\"AttachedPermanentTappedForMana\"} "
+      (TriggerCondition.TappedForMana (TappedForManaTrigger.MkTappedForManaTrigger TappedPermanent.Attached PlayerRelation.AnyPlayer ManaSpecification.AnyMana))
+      " {\"type\":\"TappedForMana\",\"value\":{\"permanent\":{\"type\":\"Attached\"},\"player\":{\"type\":\"AnyPlayer\"},\"mana\":{\"type\":\"AnyMana\"}}} "
   -- CR 605.1b's other alternative, self-scoped and so carrying nothing:
   -- Tyvar the Bellicose's granted "whenever a mana ability of this creature
   -- resolves".
@@ -287,12 +288,12 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
   -- The same event read by a bystander, so every part of the printed sentence
   -- rides the condition -- Autumn Willow, Harmony's "whenever YOU tap a LAND
   -- CREATURE for mana", which narrows the mana not at all.
-  Spec.it s "PermanentTappedForMana round-trips every half" $
+  Spec.it s "TappedForMana round-trips a Matching subject" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentTappedForMana (PermanentTappedForMana.MkPermanentTappedForMana PlayerRelation.You (Filter.HasCardType CardType.Land) ManaSpecification.AnyMana))
-      " {\"type\":\"PermanentTappedForMana\",\"value\":{\"player\":{\"type\":\"You\"},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"mana\":{\"type\":\"AnyMana\"}}} "
+      (TriggerCondition.TappedForMana (TappedForManaTrigger.MkTappedForManaTrigger (TappedPermanent.Matching (Filter.HasCardType CardType.Land)) PlayerRelation.You ManaSpecification.AnyMana))
+      " {\"type\":\"TappedForMana\",\"value\":{\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}},\"player\":{\"type\":\"You\"},\"mana\":{\"type\":\"AnyMana\"}}} "
   -- CR 605.1b's mana-added watch, Caged Sun's: you, a land's ability, the
   -- chosen color.
   Spec.it s "AbilityAddsMana round-trips every half" $

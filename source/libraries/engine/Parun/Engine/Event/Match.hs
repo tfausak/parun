@@ -125,7 +125,6 @@ import qualified Parun.Types.OwnedZone as OwnedZone
 import qualified Parun.Types.PermanentActed as PermanentActed
 import qualified Parun.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
 import qualified Parun.Types.PermanentIsDealtDamage as PermanentIsDealtDamage
-import qualified Parun.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Parun.Types.PermanentWasSacrificed as PermanentWasSacrificed
 import qualified Parun.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Parun.Types.Phase as Phase
@@ -156,6 +155,8 @@ import qualified Parun.Types.StickerPut as StickerPut
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TappedForMana as TappedForMana
+import qualified Parun.Types.TappedForManaTrigger as TappedForManaTrigger
+import qualified Parun.Types.TappedPermanent as TappedPermanent
 import qualified Parun.Types.Teams as Teams
 import qualified Parun.Types.TransformTrigger as TransformTrigger
 import qualified Parun.Types.Transformed as Transformed
@@ -1132,13 +1133,10 @@ armMatches bindings board gs bearer you cond event = case cond of
           -- one here would fire Betrayal twice off one tap.
           GameEvent.TappedForMana _ -> False
           _ -> False
-  TriggerCondition.AttachedPermanentTappedForMana -> case event of
-    GameEvent.TappedForMana tapped ->
-      Game.hostOf bearer gs == Just (TappedForMana.permanent tapped)
-    _ -> False
-  -- CR 106.12a read by a BYSTANDER, where the arm above reads it off an
-  -- attachment link: Autumn Willow, Harmony's "whenever you tap a land creature
-  -- for mana". Every part of the printed sentence is compared, the
+  -- CR 106.12a: a permanent was tapped for mana. An Attached subject reads it off
+  -- the attachment link, the bearer's host by id (Wild Growth); a Matching one is
+  -- a BYSTANDER: Autumn Willow, Harmony's "whenever you tap a land creature for
+  -- mana". Every part of the printed sentence is compared, the
   -- PermanentSacrificed arm's posture -- the tapping player against CR 109.5's
   -- `you`, the permanent against the Filter, and the mana produced against that
   -- rule's "of a specified type" (producedSpecified) -- and a wording that
@@ -1161,23 +1159,25 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- 605.3b leaves the ability no object, and Parun.Engine.Cost.tapForManaWith
   -- records the permanent that stood in for it.
   --
-  -- NO projection read beside it, where the PermanentTappedForMana arm below
+  -- NO projection read beside it, where a Matching TappedForMana arm below
   -- takes one: the condition carries no Filter and no relation, so there is
   -- nothing to ask a view about.
   TriggerCondition.SelfManaAbilityResolves -> case event of
     GameEvent.ManaAbilityResolved resolved -> ManaAbilityResolved.permanent resolved == bearer
     _ -> False
-  TriggerCondition.PermanentTappedForMana (PermanentTappedForMana.MkPermanentTappedForMana relation f specified) -> case event of
+  TriggerCondition.TappedForMana (TappedForManaTrigger.MkTappedForManaTrigger subject relation specified) -> case event of
     GameEvent.TappedForMana tapped
       | PlayerRelation.holds (Game.teams gs) relation you (TappedForMana.player tapped) && producedSpecified gs bearer specified (TappedForMana.mana tapped) ->
-          case Projection.viewWithLastKnown (TappedForMana.permanent tapped) gs (TappedForMana.permanent tapped) of
-            Nothing -> False
-            Just view -> Filter.matches bearerContext view f
+          case subject of
+            TappedPermanent.Attached -> Game.hostOf bearer gs == Just (TappedForMana.permanent tapped)
+            TappedPermanent.Matching f -> case Projection.viewWithLastKnown (TappedForMana.permanent tapped) gs (TappedForMana.permanent tapped) of
+              Nothing -> False
+              Just view -> Filter.matches bearerContext view f
       | otherwise -> False
     _ -> False
   -- CR 605.1b's "mana being added to a player's mana pool", read by a
   -- bystander: Caged Sun's "whenever a land's ability causes you to add one or
-  -- more mana of the chosen color". The PermanentTappedForMana arm's posture --
+  -- more mana of the chosen color". The TappedForMana arm's posture --
   -- the adding player against `you` under the relation, the ability's source
   -- against the Filter, the added mana against the specification -- except
   -- that the player is the event's own recipient rather than a controller read
@@ -2159,7 +2159,7 @@ armMatches bindings board gs bearer you cond event = case cond of
 
 -- CR 106.12a's second half: did an activation that produced @produced@ produce
 -- the mana this condition specified? The narrowing half of the
--- PermanentTappedForMana arm above, where PlayerRelation.holds and
+-- TappedForMana arm above, where PlayerRelation.holds and
 -- Filter.matches are the other two.
 --
 -- CR 607.2d's link is resolved by reading Object.chosenColors off the BEARER,
