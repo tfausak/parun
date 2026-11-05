@@ -11116,11 +11116,9 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.TurnedFaceUp _ -> False
   -- CR 701.27a names no turn at all: an activated ability can transform a
   -- permanent whenever it can be activated, and CR 702.145c's sweep fires on
-  -- whosever turn it becomes night.
-  TriggerCondition.SelfTransformedInto _ -> False
-  -- The watcher's side of that answer, and False for the same reason, the
-  -- watcher not being the permanent that turned over.
-  TriggerCondition.PermanentTransforms _ -> False
+  -- whosever turn it becomes night; and a watcher is not even the permanent
+  -- that turned over.
+  TriggerCondition.Transforms _ -> False
   TriggerCondition.FaceDownPermanentLeavesRevealed -> False
   -- CR 702.112a's ability fires on combat damage to a player, which any player's
   -- turn can carry, and the watcher's turn is not asked about at all.

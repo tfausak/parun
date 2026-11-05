@@ -41,8 +41,10 @@
                 "value": {}
               },
               {
-                "type": "SelfTransformedInto",
-                "value": "Grub, Storied Matriarch"
+                "type": "Transforms",
+                "value": {
+                  "into": "Grub, Storied Matriarch"
+                }
               }
             ]
           },

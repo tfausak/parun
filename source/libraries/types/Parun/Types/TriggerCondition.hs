@@ -40,6 +40,7 @@ import qualified Parun.Types.RoomIndex as RoomIndex
 import qualified Parun.Types.SlotName as SlotName
 import qualified Parun.Types.SpellCast as SpellCast
 import qualified Parun.Types.StepBegins as StepBegins
+import qualified Parun.Types.TransformTrigger as TransformTrigger
 import qualified Parun.Types.TriggerFrequency as TriggerFrequency
 
 -- | CR 603.2: the pattern that fires a triggered ability. Only
@@ -208,17 +209,9 @@ data TriggerCondition
   | -- | CR 708.7 through CR 603.2: a face-down permanent is turned face up, the
     -- bearer itself (Skirk Marauder) or one the Filter admits (Aven Farseer).
     TurnedFaceUp ActingPermanent.ActingPermanent
-  | -- | CR 701.27e: "when this creature transforms into [face]", matched against
-    -- the names the event carries. Self-scoped plus the name, which is what
-    -- tells the turn to a face from the turn away from it.
-    --
-    -- PermanentTransforms below is the same event read by a bystander, as
-    -- TurnedFaceUp's Matching subject is.
-    SelfTransformedInto CardName.CardName
-  | -- | CR 701.27e read by a bystander: a permanent the Filter admits turned over
-    -- (Cult of the Waxing Moon), matched against what the event SAMPLED rather
-    -- than against the board the CR 117.5 scan reads.
-    PermanentTransforms (Filter.Filter Keyword.Keyword)
+  | -- | CR 701.27e: a permanent transformed, the bearer (Howlpack Piper) or one
+    -- the Filter admits (Cult of the Waxing Moon), into a face of a name or any.
+    Transforms TransformTrigger.TransformTrigger
   | -- | CR 708.9: "whenever a face-down permanent is revealed as it leaves the
     -- battlefield" (Synthetic Unmasking Witness).
     FaceDownPermanentLeavesRevealed

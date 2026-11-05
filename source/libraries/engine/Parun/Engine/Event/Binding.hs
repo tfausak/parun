@@ -1552,17 +1552,16 @@ eventBindingSlots cond = case cond of
     slots : rest -> List.foldl' Set.intersection slots rest
   TriggerCondition.CausedBy narrowed -> eventBindingSlots (CausedBy.condition narrowed)
   TriggerCondition.TurnedFaceUp subject -> fst (turnedFaceUpSlots subject)
-  -- A deliberate empty, and for a Self TurnedFaceUp's reason one step further
-  -- on: CR 701.27e's event names the permanent that transformed, which CR
-  -- 113.7a's source slot already names, and the face it turned into is a NAME
-  -- rather than an object for a slot to hold.
-  TriggerCondition.SelfTransformedInto _ -> Set.empty
-  -- A deliberate empty too, and a Matching TurnedFaceUp (turnedFaceUpSlots) is
+  -- A deliberate empty under either subject. A Self one for a Self
+  -- TurnedFaceUp's reason one step further on: CR 701.27e's event names the
+  -- permanent that transformed, which CR 113.7a's source slot already names,
+  -- and the face it turned into is a NAME rather than an object for a slot to
+  -- hold. A Matching one because a Matching TurnedFaceUp (turnedFaceUpSlots) is
   -- where the difference would show if a card asked for one: Cult of the Waxing
   -- Moon's payload names the permanent that turned over nowhere, so there is no
   -- subject to claim a slot for. Norn's Inquisitor's "put a +1/+1 counter on
   -- it" is what would take CR 400.7e's slot, exactly as Pine Walker does there.
-  TriggerCondition.PermanentTransforms _ -> Set.empty
+  TriggerCondition.Transforms _ -> Set.empty
   TriggerCondition.FaceDownPermanentLeavesRevealed -> Set.empty
   -- A deliberate empty: Valeron Wardens draws a card and names no "it", so there
   -- is no subject to claim a slot for. A Matching TurnedFaceUp

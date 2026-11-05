@@ -67,11 +67,16 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentTransforms",
+            "type": "Transforms",
             "value": {
-              "type": "HasAttached",
-              "value": {
-                "type": "IsSource"
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "HasAttached",
+                  "value": {
+                    "type": "IsSource"
+                  }
+                }
               }
             }
           },

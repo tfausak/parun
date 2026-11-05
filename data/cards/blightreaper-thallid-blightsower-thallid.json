@@ -106,8 +106,10 @@
             "type": "AnyOf",
             "value": [
               {
-                "type": "SelfTransformedInto",
-                "value": "Blightsower Thallid"
+                "type": "Transforms",
+                "value": {
+                  "into": "Blightsower Thallid"
+                }
               },
               {
                 "type": "Leaves",

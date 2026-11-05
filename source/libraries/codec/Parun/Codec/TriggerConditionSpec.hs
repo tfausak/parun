@@ -76,6 +76,7 @@ import qualified Parun.Types.StepBegins as StepBegins
 import qualified Parun.Types.StickerKind as StickerKind
 import qualified Parun.Types.Subtype as Subtype
 import qualified Parun.Types.TapState as TapState
+import qualified Parun.Types.TransformTrigger as TransformTrigger
 import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggerFrequency as TriggerFrequency
 import qualified Parun.Types.TurnScope as TurnScope
@@ -461,22 +462,21 @@ spec s = Spec.describe s "Parun.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.SelfHalfUnlocked (CardName.MkCardName (Text.pack "Steaming Sauna")))
       " {\"type\":\"SelfHalfUnlocked\",\"value\":\"Steaming Sauna\"} "
-  -- CR 701.27e, SelfHalfUnlocked's shape: a self-scoped condition whose payload
-  -- is the face named.
-  Spec.it s "SelfTransformedInto round-trips the face it names" $
+  -- CR 701.27e: Blightreaper Thallid's Self subject and the face it names.
+  -- Parun.Codec.TransformTriggerSpec has the fields.
+  Spec.it s "Transforms round-trips the face a Self subject names" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfTransformedInto (CardName.MkCardName (Text.pack "Blightsower Thallid")))
-      " {\"type\":\"SelfTransformedInto\",\"value\":\"Blightsower Thallid\"} "
-  -- The same rule read by a bystander, whose payload is a Filter instead: the TAG
-  -- is the whole difference between the two, so both are pinned.
-  Spec.it s "PermanentTransforms round-trips its Filter" $
+      (TriggerCondition.Transforms TransformTrigger.defaultValue {TransformTrigger.into = Just (CardName.MkCardName (Text.pack "Blightsower Thallid"))})
+      " {\"type\":\"Transforms\",\"value\":{\"into\":\"Blightsower Thallid\"}} "
+  -- The same rule read by a bystander, Cult of the Waxing Moon's Filter.
+  Spec.it s "Transforms round-trips a Matching subject" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.PermanentTransforms (Filter.Not (Filter.HasSubtype Subtype.Human)))
-      " {\"type\":\"PermanentTransforms\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Human\"}}}} "
+      (TriggerCondition.Transforms TransformTrigger.defaultValue {TransformTrigger.permanent = ActingPermanent.Matching (Filter.Not (Filter.HasSubtype Subtype.Human))})
+      " {\"type\":\"Transforms\",\"value\":{\"permanent\":{\"type\":\"Matching\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Human\"}}}}}} "
   -- CR 709.5i. The payload is a PlayerRelation, read against the player who
   -- unlocked the permanent. BOTH relations, since the two are what
   -- separate "you fully unlock" from an opponent doing it.

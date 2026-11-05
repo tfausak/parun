@@ -12,7 +12,7 @@
 -- Parun.Engine.Event.changeZoneEntering applies it. See enterTransformedSpec.
 --
 -- Also CR 701.27e's "transforms into", the trigger condition a CARD names:
--- Parun.Types.TriggerCondition's SelfTransformedInto against the
+-- Parun.Types.TriggerCondition's Transforms, Self subject, against the
 -- GameEvent.Transformed that Parun.Engine.Event.recordTransformed writes. See
 -- transformTriggerSpec, whose fixture is Blightreaper Thallid // Blightsower
 -- Thallid, the Gargoyle printing no text on its back face to trigger with.
@@ -132,6 +132,7 @@ import qualified Parun.Types.Recipient as Recipient
 import qualified Parun.Types.Regenerability as Regenerability
 import qualified Parun.Types.StepBegan as StepBegan
 import qualified Parun.Types.Subtype as Subtype
+import qualified Parun.Types.TransformTrigger as TransformTrigger
 import qualified Parun.Types.Transformed as Transformed
 import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggerSource as TriggerSource
@@ -994,7 +995,7 @@ transformTriggerSpec s registry = Spec.describe s "TransformsInto" $ do
     let board = emptyBoard
         bearer = S.noSource
         event into = GameEvent.Transformed Transformed.MkTransformed {Transformed.object = bearer, Transformed.characteristics = S.emptyCharacteristics {PC.names = Set.singleton into}, Transformed.controller = Nothing, Transformed.attachments = Set.empty, Transformed.lapsedGrants = Set.empty}
-        matches into = Event.matchesTrigger board bearer S.alice (TriggerCondition.SelfTransformedInto thallidBack) (event into)
+        matches into = Event.matchesTrigger board bearer S.alice (TriggerCondition.Transforms TransformTrigger.defaultValue {TransformTrigger.into = Just thallidBack}) (event into)
     Spec.assertBool s (matches thallidBack) "the face it names matches"
     Spec.assertBool s (not (matches thallidFront)) "and the other face of the same card does not"
   -- The printed condition's OTHER limb, so the AnyOf is not proved by one side

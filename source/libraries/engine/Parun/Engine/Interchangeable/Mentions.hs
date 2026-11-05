@@ -438,6 +438,7 @@ import qualified Parun.Types.TokenR as TokenR
 import qualified Parun.Types.TopOfLibrary as TopOfLibrary
 import qualified Parun.Types.TopOfLibraryUntil as TopOfLibraryUntil
 import qualified Parun.Types.Toughness as Toughness
+import qualified Parun.Types.TransformTrigger as TransformTrigger
 import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggerFrequency as TriggerFrequency
 import qualified Parun.Types.TriggerLimit as TriggerLimit
@@ -3122,8 +3123,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.AnyOf items -> foldMap (triggerConditionNames asking) items
   TriggerCondition.CausedBy narrowed -> triggerConditionNames asking (CausedBy.condition narrowed)
   TriggerCondition.TurnedFaceUp actingPermanent -> actingPermanentNames asking actingPermanent
-  TriggerCondition.SelfTransformedInto _cardName -> mempty
-  TriggerCondition.PermanentTransforms filter_ -> filterNames asking filter_
+  TriggerCondition.Transforms (TransformTrigger.MkTransformTrigger permanent _into) -> actingPermanentNames asking permanent
   TriggerCondition.FaceDownPermanentLeavesRevealed -> mempty
   TriggerCondition.PermanentBecomesDesignated permanentBecomesDesignated -> permanentBecomesDesignatedNames asking permanentBecomesDesignated
   TriggerCondition.PermanentActs permanentActs -> permanentActedNames asking (actingPermanentNames asking) permanentActs

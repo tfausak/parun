@@ -191,6 +191,7 @@ import qualified Parun.Types.StickerPut as StickerPut
 import qualified Parun.Types.TapState as TapState
 import qualified Parun.Types.TappedForMana as TappedForMana
 import qualified Parun.Types.Timestamp as Timestamp
+import qualified Parun.Types.TransformTrigger as TransformTrigger
 import qualified Parun.Types.Transformed as Transformed
 import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggerFrequency as TriggerFrequency
@@ -2099,15 +2100,12 @@ representativeEvents cond =
             noTable (GameEvent.TurnedFaceUp TurnedFaceUp.MkTurnedFaceUp {TurnedFaceUp.object = departed, TurnedFaceUp.announcedX = Just 3})
               NonEmpty.:| [noTable (GameEvent.TurnedFaceUp TurnedFaceUp.MkTurnedFaceUp {TurnedFaceUp.object = departed, TurnedFaceUp.announcedX = Nothing})]
           ActingPermanent.Matching _ -> one (GameEvent.TurnedFaceUp TurnedFaceUp.MkTurnedFaceUp {TurnedFaceUp.object = departed, TurnedFaceUp.announcedX = Just 3})
-        -- CR 701.27a's own event, and the only one this condition admits, on the
-        -- BEARER and naming the same face the condition does -- so the pair
-        -- really matches; the face below is the one everyTriggerCondition names.
-        TriggerCondition.SelfTransformedInto name -> one (GameEvent.Transformed Transformed.MkTransformed {Transformed.object = departed, Transformed.characteristics = S.emptyCharacteristics {PC.names = Set.singleton name}, Transformed.controller = Nothing, Transformed.attachments = Set.empty, Transformed.lapsedGrants = Set.empty})
-        -- CR 701.27e's event for the bystander form, on `departed` for the reason
-        -- the TurnedFaceUp arm above gives: the Filter this condition is
-        -- instantiated with is the trivial one, which the sampled characteristics
-        -- satisfy however empty they are.
-        TriggerCondition.PermanentTransforms _ -> one (GameEvent.Transformed Transformed.MkTransformed {Transformed.object = departed, Transformed.characteristics = S.emptyCharacteristics, Transformed.controller = Nothing, Transformed.attachments = Set.empty, Transformed.lapsedGrants = Set.empty})
+        -- CR 701.27a's own event, and the only one this condition admits, on
+        -- `departed`, the BEARER, naming the face the condition names if it names
+        -- one -- so the pair really matches under either subject, the Matching
+        -- one's Filter below being the trivial one, which the sampled
+        -- characteristics satisfy however empty they are.
+        TriggerCondition.Transforms t -> one (GameEvent.Transformed Transformed.MkTransformed {Transformed.object = departed, Transformed.characteristics = S.emptyCharacteristics {PC.names = maybe Set.empty Set.singleton (TransformTrigger.into t)}, Transformed.controller = Nothing, Transformed.attachments = Set.empty, Transformed.lapsedGrants = Set.empty})
         -- CR 603.2's own event, carrying the watched action, on `departed`: under
         -- the trivial Filter the pair really matches, and under Self it does not,
         -- which pins the floor for a matching pair too, this arm binding nothing
@@ -2462,8 +2460,8 @@ everyTriggerCondition =
     -- Sacred Ground's narrowing, over the condition whose bindings it keeps.
     TriggerCondition.CausedBy CausedBy.MkCausedBy {CausedBy.controller = PlayerRelation.Opponent, CausedBy.condition = TriggerCondition.Leaves (LeavesTrigger.dies (LeavingPermanent.Matching (Filter.Type.And [])))},
     TriggerCondition.TurnedFaceUp ActingPermanent.Self,
-    TriggerCondition.SelfTransformedInto (CardName.MkCardName (Text.pack "Blightsower Thallid")),
-    TriggerCondition.PermanentTransforms (Filter.Type.And []),
+    TriggerCondition.Transforms TransformTrigger.defaultValue {TransformTrigger.into = Just (CardName.MkCardName (Text.pack "Blightsower Thallid"))},
+    TriggerCondition.Transforms TransformTrigger.defaultValue {TransformTrigger.permanent = ActingPermanent.Matching (Filter.Type.And [])},
     TriggerCondition.TurnedFaceUp (ActingPermanent.Matching (Filter.Type.And [])),
     TriggerCondition.FaceDownPermanentLeavesRevealed,
     TriggerCondition.PermanentBecomesDesignated (PermanentBecomesDesignated.MkPermanentBecomesDesignated Designation.Renowned (Filter.Type.And [])),

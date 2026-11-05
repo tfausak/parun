@@ -20,31 +20,36 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PermanentTransforms",
+            "type": "Transforms",
             "value": {
-              "type": "And",
-              "value": [
-                {
-                  "type": "HeldBy",
-                  "value": {
-                    "holder": {
-                      "type": "Controller"
+              "permanent": {
+                "type": "Matching",
+                "value": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HeldBy",
+                      "value": {
+                        "holder": {
+                          "type": "Controller"
+                        },
+                        "relation": {
+                          "type": "You"
+                        }
+                      }
                     },
-                    "relation": {
-                      "type": "You"
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    },
+                    {
+                      "type": "HasActivatedAbility"
                     }
-                  }
-                },
-                {
-                  "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
-                },
-                {
-                  "type": "HasActivatedAbility"
+                  ]
                 }
-              ]
+              }
             }
           },
           "modal": {

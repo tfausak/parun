@@ -1563,6 +1563,8 @@ library codec
     Parun.Codec.TraitSpec
     Parun.Codec.Transformed
     Parun.Codec.TransformedSpec
+    Parun.Codec.TransformTrigger
+    Parun.Codec.TransformTriggerSpec
     Parun.Codec.TriggerCondition
     Parun.Codec.TriggerConditionSpec
     Parun.Codec.TriggeredAbility
@@ -3239,6 +3241,7 @@ library types
     Parun.Types.Toughness
     Parun.Types.Trait
     Parun.Types.Transformed
+    Parun.Types.TransformTrigger
     Parun.Types.TriggerCondition
     Parun.Types.TriggeredAbility
     Parun.Types.TriggeredAbilitySource

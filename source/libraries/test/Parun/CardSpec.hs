@@ -424,6 +424,7 @@ import qualified Parun.Types.TokenR as TokenR
 import qualified Parun.Types.TopOfLibrary as TopOfLibrary
 import qualified Parun.Types.TopOfLibraryUntil as TopOfLibraryUntil
 import qualified Parun.Types.Toughness as Toughness
+import qualified Parun.Types.TransformTrigger as TransformTrigger
 import qualified Parun.Types.TriggerCondition as TriggerCondition
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
 import qualified Parun.Types.TurnFaceDown as TurnFaceDown
@@ -1129,10 +1130,9 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- CR 708.7's carries at most a Filter, which holds no Count for Matching
   -- Enters' reason.
   TriggerCondition.TurnedFaceUp _ -> []
-  -- CR 701.27e's names a face, which is a CardName and not a Quantity.
-  TriggerCondition.SelfTransformedInto _ -> []
-  -- Its bystander sibling carries a Filter, which holds no Count either.
-  TriggerCondition.PermanentTransforms _ -> []
+  -- CR 701.27e's names a face, a CardName and not a Quantity, beside a subject
+  -- whose Filter holds no Count either.
+  TriggerCondition.Transforms _ -> []
   -- PermanentActs carries an action and, for a bystander, a Filter -- which
   -- holds no Count for a Matching Enters' reason.
   TriggerCondition.PermanentActs _ -> []
@@ -4569,11 +4569,10 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.TurnedFaceUp subject -> case subject of
     ActingPermanent.Matching f -> unframed [f]
     ActingPermanent.Self -> []
-  -- CR 701.27e's names a face by name; nothing about it is a Filter.
-  TriggerCondition.SelfTransformedInto _ -> []
-  -- Its bystander sibling carries one -- Cult of the Waxing Moon's "a permanent
-  -- you control ... into a non-Human creature".
-  TriggerCondition.PermanentTransforms f -> unframed [f]
+  -- CR 701.27e's face is a name and no Filter; a bystander subject carries one
+  -- -- Cult of the Waxing Moon's "a permanent you control ... into a non-Human
+  -- creature".
+  TriggerCondition.Transforms t -> actingFilters (TransformTrigger.permanent t)
   TriggerCondition.FaceDownPermanentLeavesRevealed -> []
   -- CR 702.112b's carries one too -- Valeron Wardens' "a creature you control".
   TriggerCondition.PermanentBecomesDesignated (PermanentBecomesDesignated.MkPermanentBecomesDesignated _ f) -> unframed [f]
@@ -4807,8 +4806,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.AnyOf conditions -> concatMap triggerConditionSlots conditions
   TriggerCondition.CausedBy narrowed -> triggerConditionSlots (CausedBy.condition narrowed)
   TriggerCondition.TurnedFaceUp _ -> []
-  TriggerCondition.SelfTransformedInto _ -> []
-  TriggerCondition.PermanentTransforms _ -> []
+  TriggerCondition.Transforms _ -> []
   TriggerCondition.PermanentActs _ -> []
   TriggerCondition.FaceDownPermanentLeavesRevealed -> []
   TriggerCondition.PermanentBecomesDesignated _ -> []

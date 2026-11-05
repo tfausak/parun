@@ -291,6 +291,7 @@ import qualified Parun.Types.TokenPattern as TokenPattern
 import qualified Parun.Types.TokenR as TokenR
 import qualified Parun.Types.TopOfLibrary as TopOfLibrary
 import qualified Parun.Types.TopOfLibraryUntil as TopOfLibraryUntil
+import qualified Parun.Types.TransformTrigger as TransformTrigger
 import qualified Parun.Types.TriggerCondition as TriggerCondition
 import Parun.Types.TriggeredAbility (TriggeredAbility)
 import qualified Parun.Types.TriggeredAbility as TriggeredAbility
@@ -2171,11 +2172,10 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.AnyOf conditions -> TriggerCondition.AnyOf (fmap (rewriteTriggerCondition pairs) conditions)
   TriggerCondition.CausedBy narrowed -> TriggerCondition.CausedBy narrowed {CausedBy.condition = rewriteTriggerCondition pairs (CausedBy.condition narrowed)}
   TriggerCondition.TurnedFaceUp permanent -> TriggerCondition.TurnedFaceUp (acting permanent)
-  -- CR 701.27e's payload is a face's NAME, which CR 612.2's second sentence keeps a
-  -- swap off, so nothing in this condition is rewritten. SelfHalfUnlocked's answer
-  -- for its own door.
-  TriggerCondition.SelfTransformedInto _ -> condition
-  TriggerCondition.PermanentTransforms f -> TriggerCondition.PermanentTransforms (Filter.rewrite pairs f)
+  -- CR 701.27e's face is a NAME, which CR 612.2's second sentence keeps a swap
+  -- off, so only the subject is rewritten. SelfHalfUnlocked's answer for its own
+  -- door.
+  TriggerCondition.Transforms (TransformTrigger.MkTransformTrigger permanent into) -> TriggerCondition.Transforms (TransformTrigger.MkTransformTrigger (acting permanent) into)
   TriggerCondition.FaceDownPermanentLeavesRevealed -> condition
   TriggerCondition.PermanentBecomesDesignated (PermanentBecomesDesignated.MkPermanentBecomesDesignated d f) -> TriggerCondition.PermanentBecomesDesignated (PermanentBecomesDesignated.MkPermanentBecomesDesignated d (Filter.rewrite pairs f))
   TriggerCondition.PermanentActs acts ->
