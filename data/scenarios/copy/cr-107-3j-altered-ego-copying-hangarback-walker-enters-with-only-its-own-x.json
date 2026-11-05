@@ -1,0 +1,124 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Forest",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Altered Ego",
+            "label": "ego"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Hangarback Walker",
+            "counters": [
+              {
+                "key": {
+                  "type": "PlusOnePlusOne"
+                },
+                "value": 1
+              }
+            ],
+            "label": "walker"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 107.3j Altered Ego cast for X = 2 copying Hangarback Walker enters with only its own two +1/+1 counters",
+  "note": "Hangarback Walker's \"enters with X +1/+1 counters\" is a replacement effect Altered Ego gains through its copy effect, which defines no X, so it places none (CR 107.3j over CR 107.3m; Altered Ego's 2025-01-24 ruling). Altered Ego's own \"X additional +1/+1 counters\" places the announced 2: two counters, not four.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "Forest",
+            "Forest#2",
+            "Forest#3",
+            "Island",
+            "Island#2",
+            "Island#3"
+          ],
+          "object": "$ego",
+          "x": 2
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseCopyTarget": "$walker"
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Names": {
+          "names": [
+            "Hangarback Walker"
+          ],
+          "object": "Altered Ego"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Counters": {
+          "count": 2,
+          "kind": {
+            "type": "PlusOnePlusOne"
+          },
+          "object": "Altered Ego"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

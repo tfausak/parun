@@ -1,0 +1,144 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Forest",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Altered Ego",
+            "label": "ego"
+          }
+        ],
+        "library": [
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Gadwick, the Wizened",
+            "label": "gadwick"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 107.3j Altered Ego cast for X = 2 copying Gadwick, the Wizened draws no cards",
+  "note": "Gadwick's \"draw X cards\" is an ability Altered Ego gains through its copy effect, which defines no X, so X is 0 (CR 107.3j over CR 107.3m; Altered Ego's 2025-01-24 ruling). Altered Ego's own \"X additional +1/+1 counters\" still reads the announced 2, so the copy is a 5/5. Bob controls the copied Gadwick, so no legend rule applies, and alice's blue spell does not trigger it.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "mana": [
+            "Forest",
+            "Forest#2",
+            "Forest#3",
+            "Island",
+            "Island#2",
+            "Island#3"
+          ],
+          "object": "$ego",
+          "x": 2
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseCopyTarget": "$gadwick"
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "PowerToughness": {
+          "object": "Altered Ego",
+          "power": 5,
+          "toughness": 5
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Plains",
+          "count": 0,
+          "player": "alice",
+          "zone": "Hand"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Count": {
+          "card": "Plains",
+          "count": 3,
+          "player": "alice",
+          "zone": "Library"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}
