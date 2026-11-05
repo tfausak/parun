@@ -1,6 +1,6 @@
 {
   "description": "CR 508.5 the same block stays illegal once the planeswalker has left combat",
-  "note": "alice's Bolt buries the stolen Jace after the declaration, so the Wraith attacks nothing (CR 506.4c) and swampwalk reads the player it was attacking through: bob, who holds the Swamp, so the block stays illegal. Reading the gone planeswalker finds no defending player, and reading its owner finds carol's Island; both would call the block legal. The refused block names the Wraith among the offered attackers, which is what says it is still an attacking creature: the gone Jace leaves no label for an Attackers check to name.",
+  "note": "alice's Bolt buries the stolen Jace after the declaration, so the Wraith attacks nothing (CR 506.4c) and swampwalk reads the player it was attacking through: bob, who holds the Swamp, so the block stays illegal and bob is not asked to block (an unscheduled block prompt would fail the run). Reading the gone planeswalker finds no defending player, and reading its owner finds carol's Island; both would call the block legal.",
   "board": {
     "active": "alice",
     "step": "BeginningOfCombat",
@@ -151,26 +151,6 @@
           "card": "Jace Beleren",
           "count": 1
         }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "refuse": {
-        "Block": {
-          "$blocker": [
-            "$wraith"
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "do": {
-        "Block": {}
       }
     },
     {

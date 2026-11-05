@@ -1,6 +1,6 @@
 {
   "description": "CR 611.2c Veiling Oddity's creatures can't be blocked reaches a creature cast after it",
-  "note": "The last time counter comes off the suspended Oddity in alice's upkeep; she declines the cast. The Goblin Chariot is cast afterwards, so a grant to the creatures on the battlefield as the trigger resolved would miss it. The Hill Giant was there all along. The control board leaves a second time counter on the Oddity, and there the Spider's block on the Chariot stands.",
+  "note": "The last time counter comes off the suspended Oddity in alice's upkeep; she declines the cast. The Goblin Chariot is cast afterwards, so a grant to the creatures on the battlefield as the trigger resolved would miss it. The Hill Giant was there all along; bob is not asked to block (an unscheduled block prompt would fail the run). The control board leaves a second time counter on the Oddity, and there the Spider's block on the Chariot stands.",
   "board": {
     "seats": [
       {
@@ -149,38 +149,6 @@
           "Goblin Chariot",
           "$early"
         ]
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "refuse": {
-        "Block": {
-          "$blocker": [
-            "Goblin Chariot"
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "refuse": {
-        "Block": {
-          "$blocker": [
-            "$early"
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "do": {
-        "Block": {}
       }
     },
     {

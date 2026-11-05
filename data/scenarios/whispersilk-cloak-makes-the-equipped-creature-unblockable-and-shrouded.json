@@ -1,6 +1,6 @@
 {
   "description": "CR 702.18a / 509.1b whole card: the creature equipped with Whispersilk Cloak can't be blocked and has shroud",
-  "note": "Bob's Shock can't target the equipped Grizzly Bears; the Bears then attack and his Hill Giant's block is refused.",
+  "note": "Bob's Shock can't target the equipped Grizzly Bears; the Bears then attack and he is not asked to block with his Hill Giant (an unscheduled block prompt would fail the run).",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
@@ -88,26 +88,6 @@
         "Attack": [
           "$bears"
         ]
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "refuse": {
-        "Block": {
-          "$giant": [
-            "$bears"
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "do": {
-        "Block": {}
       }
     },
     {

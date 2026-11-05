@@ -1,6 +1,6 @@
 {
   "description": "CR 310.9d / 508.5 the defending player of a creature attacking a battle is the battle's protector",
-  "note": "carol protects the placed Siege, is the chosen defender, and holds the Swamp, so the Wraith's swampwalk forbids her Piker's block. Proven by moving carol's Swamp to an Island (the refused block then stands).",
+  "note": "carol protects the placed Siege, is the chosen defender, and holds the Swamp, so the Wraith's swampwalk forbids her Piker's block, so she is not asked to block (an unscheduled block prompt would fail the run). Proven by moving carol's Swamp to an Island (the block then stands).",
   "board": {
     "seats": [
       {
@@ -86,26 +86,6 @@
             "$wraith": "$invasion"
           }
         }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "carol",
-      "refuse": {
-        "Block": {
-          "$blocker": [
-            "$wraith"
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "carol",
-      "do": {
-        "Block": {}
       }
     },
     {

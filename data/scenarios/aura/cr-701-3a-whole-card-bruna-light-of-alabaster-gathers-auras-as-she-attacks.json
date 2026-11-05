@@ -54,7 +54,6 @@
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Answer": { "prompt": "Search", "with": ["$consecrate"] } } },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Answer": { "prompt": "Search", "with": ["$library-pacifism"] } } },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Answer": { "prompt": "Search", "with": ["$lure", "$ego"] } } },
-    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": {} } },
     { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "View": { "of": "AttachedTo", "object": "$unholy", "is": "$bruna" } } },
     { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "View": { "of": "Controller", "object": "$unholy", "is": "bob" } } },
     { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "View": { "of": "AttachedTo", "object": "$wild-growth", "is": "$forest" } } },

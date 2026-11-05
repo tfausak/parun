@@ -10,8 +10,6 @@
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$sovereign", "ability": 0, "targets": ["$coral"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$coral"]}},
-    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": {"Block": {"$trident": ["$coral"]}}},
-    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {}}},
     {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 17}}}
   ]
 }

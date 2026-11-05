@@ -1,6 +1,6 @@
 {
   "description": "CR 702.14c an unhacked Goblin Scouts mints MOUNTAINwalkers",
-  "note": "Goblin Scouts makes three 1/1 Goblin Scout tokens with mountainwalk, the keyword printed on a token by the spell that mints it. On bob's Mountain the Piker's block is refused. The tokens' CR 613.7m timestamp order is alice's to name and immaterial; they attack on alice's next turn once settled. The -swamp file is the same board with a Swamp, where the block stands.",
+  "note": "Goblin Scouts makes three 1/1 Goblin Scout tokens with mountainwalk, the keyword printed on a token by the spell that mints it. On bob's Mountain bob is not asked to block with the Piker (an unscheduled block prompt would fail the run). The tokens' CR 613.7m timestamp order is alice's to name and immaterial; they attack on alice's next turn once settled. The -swamp file is the same board with a Swamp, where the block stands.",
   "board": {
     "seats": [
       {
@@ -79,8 +79,6 @@
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Goblin Scout Token", "count": 3}}},
     {"turn": 2, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": []}},
     {"turn": 3, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["Goblin Scout Token", "Goblin Scout Token#2", "Goblin Scout Token#3"]}},
-    {"turn": 3, "step": "DeclareBlockers", "player": "bob", "refuse": {"Block": {"$piker": ["Goblin Scout Token"]}}},
-    {"turn": 3, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {}}},
     {"turn": 3, "step": "DeclareBlockers", "player": "alice", "check": {"Blockers": {"attacker": "Goblin Scout Token", "blockers": null}}}
   ]
 }

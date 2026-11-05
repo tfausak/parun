@@ -143,14 +143,6 @@
     },
     {
       "do": {
-        "Block": {}
-      },
-      "player": "bob",
-      "step": "DeclareBlockers",
-      "turn": 1
-    },
-    {
-      "do": {
         "Cast": {
           "mana": [
             "$i1",

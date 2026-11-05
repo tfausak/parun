@@ -165,14 +165,6 @@
     },
     {
       "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "carol",
-      "do": {
-        "Block": {}
-      }
-    },
-    {
-      "turn": 1,
       "step": "EndOfCombat",
       "player": "alice",
       "check": {

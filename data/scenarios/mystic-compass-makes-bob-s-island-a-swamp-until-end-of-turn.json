@@ -11,8 +11,6 @@
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Subtypes": {"object": "$isl", "subtypes": ["Swamp"]}}},
     {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$wraith"]}},
-    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": {"Block": {"$bears": ["$wraith"]}}},
-    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {}}},
     {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 17}}},
     {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Mystic Compass", "count": 1}}},
     {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Subtypes": {"object": "$isl", "subtypes": ["Island"]}}}

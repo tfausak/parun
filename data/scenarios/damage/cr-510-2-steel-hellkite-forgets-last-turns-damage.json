@@ -96,14 +96,6 @@
       "turn": 1
     },
     {
-      "do": {
-        "Block": {}
-      },
-      "player": "bob",
-      "step": "DeclareBlockers",
-      "turn": 1
-    },
-    {
       "do": "Pass",
       "player": "bob",
       "step": "PrecombatMain",

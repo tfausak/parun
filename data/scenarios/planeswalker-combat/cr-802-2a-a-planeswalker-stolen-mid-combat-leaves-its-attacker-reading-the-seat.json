@@ -1,6 +1,6 @@
 {
   "description": "CR 802.2a a planeswalker stolen mid-combat leaves its attacker reading the seat it was taken from",
-  "note": "alice's Bog Wraith attacks carol's Jace Beleren with bob and carol both defending; bob's Aura Graft then moves carol's Confiscate onto Jace, so bob controls him mid-combat. bob, whom the Wraith is not attacking, is never asked to block (an unscheduled block prompt would fail the run), and carol's block is refused because her own Swamp is what swampwalk still reads.",
+  "note": "alice's Bog Wraith attacks carol's Jace Beleren with bob and carol both defending; bob's Aura Graft then moves carol's Confiscate onto Jace, so bob controls him mid-combat. bob, whom the Wraith is not attacking, is never asked to block (an unscheduled block prompt would fail the run), and carol is not asked either, because her own Swamp is what swampwalk still reads.",
   "board": {
     "active": "alice",
     "step": "BeginningOfCombat",
@@ -203,26 +203,6 @@
             "carol"
           ]
         }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "carol",
-      "refuse": {
-        "Block": {
-          "$carols": [
-            "$wraith"
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "carol",
-      "do": {
-        "Block": {}
       }
     },
     {

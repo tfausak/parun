@@ -67,7 +67,7 @@
     "step": "PrecombatMain"
   },
   "description": "CR 509.1b whole card: Subterranean Scout's enters trigger makes target creature with power 2 or less unblockable this turn",
-  "note": "Hill Giant (power 3) is refused as the target; the targeted Grizzly Bears may not be blocked by bob's Wind Drake and deals 2.",
+  "note": "Hill Giant (power 3) is refused as the target; the targeted Grizzly Bears may not be blocked by bob's Wind Drake, so bob is not asked to block (an unscheduled block prompt would fail the run), and deals 2.",
   "timeline": [
     {
       "do": {
@@ -127,26 +127,6 @@
       },
       "player": "alice",
       "step": "DeclareAttackers",
-      "turn": 1
-    },
-    {
-      "player": "bob",
-      "refuse": {
-        "Block": {
-          "$drake": [
-            "$bears"
-          ]
-        }
-      },
-      "step": "DeclareBlockers",
-      "turn": 1
-    },
-    {
-      "do": {
-        "Block": {}
-      },
-      "player": "bob",
-      "step": "DeclareBlockers",
       "turn": 1
     },
     {

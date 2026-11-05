@@ -91,26 +91,6 @@
       "turn": 1
     },
     {
-      "player": "bob",
-      "refuse": {
-        "Block": {
-          "$bears": [
-            "$sneak"
-          ]
-        }
-      },
-      "step": "DeclareBlockers",
-      "turn": 1
-    },
-    {
-      "do": {
-        "Block": {}
-      },
-      "player": "bob",
-      "step": "DeclareBlockers",
-      "turn": 1
-    },
-    {
       "check": {
         "Count": {
           "card": "Island",

@@ -168,26 +168,6 @@
     },
     {
       "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "refuse": {
-        "Block": {
-          "$giant": [
-            "$bears"
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "do": {
-        "Block": {}
-      }
-    },
-    {
-      "turn": 1,
       "step": "PostcombatMain",
       "player": "alice",
       "check": {

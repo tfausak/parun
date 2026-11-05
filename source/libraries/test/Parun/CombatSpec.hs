@@ -971,6 +971,59 @@ menaceSpec s registry = Spec.describe s "Menace" $ do
         Spec.assertEqWith s "and is still blocked by the one creature" (Combat.blockersOf a after) (Set.singleton b)
       _ -> Spec.assertFailure s "fixture should have an attacker and a blocker"
 
+-- Every Prompt.DeclareBlockers a declare blockers step raises on this board,
+-- as the candidates it offered, each answered by blocking every attacker with
+-- every candidate (an illegal answer is asked again once, then degrades).
+blockOffers :: GameState.GameState -> [[ObjectId.ObjectId]]
+blockOffers gs =
+  let asking :: Prompt.Prompt r -> State.State [[ObjectId.ObjectId]] r
+      asking p = case p of
+        Prompt.DeclareBlockers _ _ candidates attackers -> do
+          State.modify' (<> [candidates])
+          pure (Map.fromList (fmap (\b -> (b, Set.fromList attackers)) candidates))
+        _ -> pure (S.identityAnswer p)
+   in State.execState (Engine.runGame asking gs (Combat.declareBlockers S.manaPerformer)) []
+
+-- CR 509.1a-c: the declare blockers prompt offers only creatures some legal
+-- declaration contains, and is not raised when none is (Combat.declarableBlockers).
+blockOfferSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+blockOfferSpec s registry = Spec.describe s "BlockOffer" $ do
+  Spec.it s "CR 702.9b bob is not asked to block a Wind Drake with Balduvian Barbarians" $ do
+    drake <- S.printingOf s registry "Wind Drake"
+    barbarians <- S.printingOf s registry "Balduvian Barbarians"
+    crow <- S.printingOf s registry "Storm Crow"
+    let (alone, _, _) = attacking [drake] [barbarians]
+    Spec.assertEqWith s "no creature can block the flier: no prompt" (blockOffers alone) []
+    case attacking [drake] [barbarians, crow] of
+      (gs, _, [_, crowId]) -> Spec.assertEqWith s "a Storm Crow beside them is offered alone" (blockOffers gs) [[crowId]]
+      _ -> Spec.assertFailure s "fixture should give bob two creatures"
+  Spec.it s "CR 702.111b one creature is not asked to block a menace attacker, two are" $ do
+    brute <- S.printingOf s registry "Boggart Brute"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (one, _, _) = attacking [brute] [piker]
+    Spec.assertEqWith s "a lone Piker: no prompt" (blockOffers one) []
+    let (two, _, pikers) = attacking [brute] [piker, piker]
+    Spec.assertEqWith s "two Pikers block it together: both offered" (blockOffers two) [pikers]
+  Spec.it s "CR 506.5 Mogg Flunkies is not asked to block alone" $ do
+    piker <- S.printingOf s registry "Goblin Piker"
+    flunkies <- S.printingOf s registry "Mogg Flunkies"
+    let (lone, _, _) = attacking [piker] [flunkies]
+    Spec.assertEqWith s "Flunkies alone: no prompt" (blockOffers lone) []
+    let (paired, _, theirs) = attacking [piker] [flunkies, piker]
+    Spec.assertEqWith s "beside a Piker: both offered" (blockOffers paired) [theirs]
+  -- The Crow must block the Lured Drake (CR 509.1c), so it is never the
+  -- Barbarians' company against the menace Brute: the Barbarians' one block
+  -- is in no declaration obeying the maximum.
+  Spec.it s "CR 509.1c a creature whose only block costs a Lure requirement is not offered" $ do
+    lure <- S.printingOf s registry "Lure"
+    drake <- S.printingOf s registry "Wind Drake"
+    brute <- S.printingOf s registry "Boggart Brute"
+    crow <- S.printingOf s registry "Storm Crow"
+    barbarians <- S.printingOf s registry "Balduvian Barbarians"
+    case luring lure [drake, brute] [crow, barbarians] of
+      (gs, _, [crowId, _]) -> Spec.assertEqWith s "only the Crow is offered" (take 1 (blockOffers gs)) [[crowId]]
+      _ -> Spec.assertFailure s "fixture should give bob two creatures"
+
 -- Declare attackers with everything, then put a Lure on the first attacker.
 -- Attaching directly is S.attach's state-fixture posture -- Parun.Engine.Cast can cast
 -- the Aura, but a combat fixture cannot reach a sorcery-speed cast mid-step --
@@ -2960,6 +3013,7 @@ spec s registry = Spec.describe s "Parun.Engine.Combat" $ do
   evasionSpec s registry
   textChangedLandwalkSpec s registry
   menaceSpec s registry
+  blockOfferSpec s registry
   blockPermissionSpec s registry
   blockRequirementSpec s registry
   attackRequirementSpec s registry

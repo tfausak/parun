@@ -70,26 +70,6 @@
     },
     {
       "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "refuse": {
-        "Block": {
-          "$bears": [
-            "$giant"
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "do": {
-        "Block": {}
-      }
-    },
-    {
-      "turn": 1,
       "step": "EndOfCombat",
       "player": "alice",
       "check": {

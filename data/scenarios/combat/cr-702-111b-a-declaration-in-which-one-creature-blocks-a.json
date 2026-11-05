@@ -1,6 +1,6 @@
 {
   "description": "CR 702.111b a declaration in which ONE creature blocks a menace attacker is illegal",
-  "note": "Boggart Brute has menace, so a single Piker's block is refused; declining stands.",
+  "note": "Boggart Brute has menace, so a single Piker has no legal block and bob is not asked to block (an unscheduled block prompt would fail the run).",
   "board": {
     "active": "alice",
     "step": "BeginningOfCombat",
@@ -21,8 +21,6 @@
   },
   "timeline": [
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$brute"] } },
-    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": { "Block": { "$blocker": ["$brute"] } } },
-    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": {} } },
     { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "Blockers": { "attacker": "$brute", "blockers": null } } }
   ]
 }

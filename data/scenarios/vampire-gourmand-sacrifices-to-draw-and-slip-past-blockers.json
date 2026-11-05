@@ -1,5 +1,5 @@
 {
-  "description": "Paying draws and makes it unblockable this turn, the blocker refused.",
+  "description": "Paying draws and makes it unblockable this turn, the blocker not asked.",
   "board": {
     "seats": [
       {
@@ -146,26 +146,6 @@
           "card": "Grizzly Bears",
           "count": 1
         }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "refuse": {
-        "Block": {
-          "$g": [
-            "$v"
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "bob",
-      "do": {
-        "Block": {}
       }
     },
     {

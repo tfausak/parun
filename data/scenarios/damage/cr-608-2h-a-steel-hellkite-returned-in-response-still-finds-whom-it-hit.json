@@ -107,14 +107,6 @@
     },
     {
       "do": {
-        "Block": {}
-      },
-      "player": "bob",
-      "step": "DeclareBlockers",
-      "turn": 1
-    },
-    {
-      "do": {
         "Activate": {
           "ability": 1,
           "mana": [

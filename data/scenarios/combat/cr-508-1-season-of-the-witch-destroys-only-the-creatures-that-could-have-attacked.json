@@ -28,7 +28,6 @@
   },
   "timeline": [
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$angel"] } },
-    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": {} } },
     { "turn": 1, "step": "PostcombatMain", "player": "alice", "do": { "Cast": { "object": "$late", "mana": ["$mountain"] } } },
     { "turn": 1, "step": "EndStep", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Raging Goblin", "count": 1 } } },

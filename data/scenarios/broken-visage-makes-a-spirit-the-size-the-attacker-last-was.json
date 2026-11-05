@@ -238,14 +238,6 @@
     },
     {
       "turn": 1,
-      "step": "DeclareBlockers",
-      "player": "alice",
-      "do": {
-        "Block": {}
-      }
-    },
-    {
-      "turn": 1,
       "step": "PostcombatMain",
       "player": "bob",
       "check": {
