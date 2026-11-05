@@ -47,7 +47,7 @@ Commit as often as is convenient.
 
 Merge through the merge queue ("merge when ready"). It tests each PR against
 the latest `main`, so there is no need to update a branch that has fallen
-behind.
+behind. Merge `main` in only to resolve a conflict or fix a CI failure.
 
 Typically each PR will close one issue. However sometimes a single PR will
 close multiple issues. Other times one issue may require multiple PRs, in
