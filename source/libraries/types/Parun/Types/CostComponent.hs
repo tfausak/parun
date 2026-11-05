@@ -120,8 +120,8 @@ data CostComponent keyword
     -- lacks it.
     --
     -- The OUTCOME is not part of the payment. Rule 705.2's win or loss is a
-    -- property of the flip that other abilities watch (TriggerCondition's
-    -- PlayerWinsCoinFlip and PlayerLosesCoinFlip), not a condition on whether the
+    -- property of the flip that other abilities watch
+    -- (TriggerCondition.FlipsCoin), not a condition on whether the
     -- cost was paid; a lost flip pays the cost exactly as a won one does.
     --
     -- Nullary, rule 705.1 fixing everything but the flipper's call.

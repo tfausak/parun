@@ -61,6 +61,7 @@ import qualified Parun.Types.CastWindow as CastWindow
 import qualified Parun.Types.CausedBy as CausedBy
 import qualified Parun.Types.Chosen as Chosen
 import qualified Parun.Types.ClassLevelChange as ClassLevelChange
+import qualified Parun.Types.CoinFlipTrigger as CoinFlipTrigger
 import qualified Parun.Types.CoinFlipped as CoinFlipped
 import qualified Parun.Types.Combat as Combat
 import qualified Parun.Types.ControlChanged as ControlChanged
@@ -93,6 +94,7 @@ import qualified Parun.Types.EventShape as EventShape
 import qualified Parun.Types.ExploitTrigger as ExploitTrigger
 import qualified Parun.Types.Exploited as Exploited
 import qualified Parun.Types.Filter as Filter.Type
+import qualified Parun.Types.FlipOutcome as FlipOutcome
 import Parun.Types.GameEvent (GameEvent)
 import qualified Parun.Types.GameEvent as GameEvent
 import Parun.Types.GameState (GameState)
@@ -2019,30 +2021,23 @@ armMatches bindings board gs bearer you cond event = case cond of
   TriggerCondition.SelfPlaneswalkedAwayFrom -> case event of
     GameEvent.TurnedUpOffDeck e -> Set.member bearer (TurnedUpOffDeck.awayFrom e)
     _ -> False
-  -- CR 705.2: this player WON a coin flip, the relation reading the flipper
-  -- against CR 109.5's "you" as PlayerActs does. Tavern Scoundrel is
-  -- the You form.
+  -- CR 705.2: this player won or lost a coin flip, the relation reading the
+  -- flipper against CR 109.5's "you" as PlayerActs does. Tavern Scoundrel is
+  -- the You form of a win and Karplusan Minotaur of a loss.
   --
   -- The OUTCOME is a bar here, where PlayerAction.RollDice deliberately has none: CR
-  -- 705.2 names the win itself, so a lost flip is a recorded event this must not
+  -- 705.2 names the win itself, so a lost flip is a recorded event a win must not
   -- match. CR 705.2's last sentence is why one seat answers -- "no other players
   -- are involved" -- so the losing side of a won flip is nobody.
-  TriggerCondition.PlayerWinsCoinFlip relation -> case event of
-    -- A flip with NO outcome (CR 705.2's first sentence) is not a won one, so
-    -- Nothing answers False exactly as Just False does.
-    GameEvent.CoinFlipped flipped -> CoinFlipped.won flipped == Just True && PlayerRelation.holds (Game.teams gs) relation you (CoinFlipped.flipper flipped)
-    _ -> False
-  -- CR 705.2: this player LOST a coin flip -- they called, and the face did not
-  -- match. Karplusan Minotaur is the You form.
   --
-  -- PlayerWinsCoinFlip's mirror, and the arm that makes CoinFlipped.won's Maybe
-  -- observable: a winnerless flip answers False to both conditions, where a
-  -- called-and-missed flip answers only this one.
-  TriggerCondition.PlayerLosesCoinFlip relation -> case event of
-    -- A flip with NO outcome (CR 705.2's first sentence) is not a lost one
-    -- either: Nothing is the flip nobody called, where Just False is the call that
-    -- missed.
-    GameEvent.CoinFlipped flipped -> CoinFlipped.won flipped == Just False && PlayerRelation.holds (Game.teams gs) relation you (CoinFlipped.flipper flipped)
+  -- A flip with NO outcome (CR 705.2's first sentence) is neither won nor lost:
+  -- Nothing is the flip nobody called, where Just False is the call that missed,
+  -- and it answers False under either outcome. That is what makes
+  -- CoinFlipped.won's Maybe observable.
+  TriggerCondition.FlipsCoin (CoinFlipTrigger.MkCoinFlipTrigger relation outcome) -> case event of
+    GameEvent.CoinFlipped flipped ->
+      CoinFlipped.won flipped == Just (outcome == FlipOutcome.Won)
+        && PlayerRelation.holds (Game.teams gs) relation you (CoinFlipped.flipper flipped)
     _ -> False
   -- CR 702.170a / 702.170c: the bearer's own card became plotted. Self-scoped, so the
   -- match is the id and nothing else -- and the id the event carries is the

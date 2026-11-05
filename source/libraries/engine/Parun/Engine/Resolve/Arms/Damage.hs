@@ -1430,8 +1430,8 @@ rerollStoredResults throwDice runSubgame resolving source controller legal slot 
 -- opponent -- and CR 705.2's last sentence keeps everyone else out of each
 -- flip, so each flipper calls their own coin. The tallies sum over them.
 --
--- CR 705.1's flip is also the event TriggerCondition's PlayerWinsCoinFlip and
--- PlayerLosesCoinFlip watch (Tavern Scoundrel, Karplusan Minotaur), recorded
+-- CR 705.1's flip is also the event TriggerCondition.FlipsCoin watches (Tavern
+-- Scoundrel, Karplusan Minotaur), recorded
 -- under the flipper: the instruction is aimed at that player, and CR 705.2's
 -- last sentence keeps every other seat out of it. EVERY coin is recorded, won or lost -- Parun.Types.CoinFlipped
 -- says why the outcome is a field rather than the presence of an entry -- and

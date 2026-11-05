@@ -51,9 +51,14 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "PlayerWinsCoinFlip",
+            "type": "FlipsCoin",
             "value": {
-              "type": "You"
+              "outcome": {
+                "type": "Won"
+              },
+              "player": {
+                "type": "You"
+              }
             }
           },
           "modal": {
@@ -95,9 +100,14 @@
         },
         {
           "condition": {
-            "type": "PlayerLosesCoinFlip",
+            "type": "FlipsCoin",
             "value": {
-              "type": "You"
+              "outcome": {
+                "type": "Lost"
+              },
+              "player": {
+                "type": "You"
+              }
             }
           },
           "modal": {

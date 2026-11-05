@@ -1718,7 +1718,7 @@ feywildTricksterSpec s registry =
 -- upkeep--Flip a coin. / Whenever you win a coin flip, this creature deals 1
 -- damage to any target. / Whenever you lose a coin flip, this creature deals 1
 -- damage to any target of an opponent's choice." -- the pool's only producer for
--- TriggerCondition.PlayerLosesCoinFlip (CR 705.2) and for CostComponent.FlipCoin
+-- a Lost TriggerCondition.FlipsCoin (CR 705.2) and for CostComponent.FlipCoin
 -- (CR 705.1 as a cost).
 --
 -- ONE CARD carries both halves again, Tavern Scoundrel's shape: its cumulative
@@ -1742,7 +1742,7 @@ feywildTricksterSpec s registry =
 -- CR 705.2's FIRST SENTENCE is the third leg, and the discriminating board this
 -- whole condition exists for: Molten Sentry's as-enters flip has no winner, so
 -- CoinFlipped.won is Nothing rather than Just False, and NEITHER trigger fires.
--- Before PlayerLosesCoinFlip there was no board that told those two apart.
+-- Before a Lost outcome there was no board that told those two apart.
 --
 -- CR 603.3 IS THE SEQUENCING throughout: the flip happens while the cumulative
 -- upkeep ability or the entry replacement is being carried out, so the damage
@@ -1761,7 +1761,7 @@ karplusanMinotaurSpec s registry =
         let settled = snd (Engine.runGamePure (minotaurAnswer face) (steppedTo S.alice gs) Engine.settleForPriority)
          in snd (Engine.runGamePure (minotaurAnswer face) settled Engine.priorityLoop)
       flips gs = [flipped | GameEvent.CoinFlipped flipped <- S.eventsOf gs]
-   in Spec.describe s "PlayerLosesCoinFlip" $ do
+   in Spec.describe s "FlipsCoin" $ do
         -- CR 705.2: the call did not match the face, so alice lost the flip her
         -- own cumulative upkeep paid, and only the losing trigger fires.
         Spec.it s "CR 705.2 a lost flip damages the target an opponent names" $ do
@@ -1785,6 +1785,19 @@ karplusanMinotaurSpec s registry =
           Spec.assertEqWith s "CR 705.2 carol, whom alice named off her won flip, took the damage" (S.lifeOf S.carol after) (Just 19)
           Spec.assertEqWith s "CR 705.2 and alice, whom the losing trigger would have hit, took none" (S.lifeOf S.alice after) (Just 20)
           Spec.assertEqWith s "CR 705.1 one flip, and CR 705.2 won it" (flips after) [CoinFlipped.MkCoinFlipped {CoinFlipped.flipper = S.alice, CoinFlipped.won = Just True}]
+        -- CR 109.5 over the flipper: the same won flip beside Tavern Scoundrel
+        -- ("whenever YOU win a coin flip", api.scryfall.com, 2026-11-05), whose
+        -- seat is the one thing the two cases differ in. alice's makes its two
+        -- Treasures; bob's, whose controller flipped nothing, makes none.
+        Spec.it s "CR 109.5 only the flipper's Tavern Scoundrel makes Treasure off her won flip" $ do
+          (_, gs) <- board
+          scoundrel <- S.printingOf s registry "Tavern Scoundrel"
+          let treasures = S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Treasure Token"))
+              hers = runUpkeep CoinFace.Heads (snd (S.addPermanent scoundrel S.alice gs))
+              his = runUpkeep CoinFace.Heads (snd (S.addPermanent scoundrel S.bob gs))
+          Spec.assertEqWith s "CR 705.2 alice's Scoundrel saw her win" (treasures S.alice hers) 2
+          Spec.assertEqWith s "CR 109.5 bob's Scoundrel did not, alice being no \"you\" of his" (treasures S.bob his) 0
+          Spec.assertEqWith s "CR 705.1 the flip was alice's and she won it" (flips his) [CoinFlipped.MkCoinFlipped {CoinFlipped.flipper = S.alice, CoinFlipped.won = Just True}]
 
 -- alice pays rule 702.24a's cumulative upkeep and calls heads; the coin shows
 -- `face`. Both questions are pinned by CONSTANT so the engine cannot repair

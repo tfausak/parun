@@ -2212,8 +2212,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.PlayerRollsPlaneswalker _ -> condition
   TriggerCondition.SelfTurnedUpOffDeck -> condition
   TriggerCondition.SelfPlaneswalkedAwayFrom -> condition
-  TriggerCondition.PlayerWinsCoinFlip _ -> condition
-  TriggerCondition.PlayerLosesCoinFlip _ -> condition
+  TriggerCondition.FlipsCoin _ -> condition
   TriggerCondition.SelfBecomesPlotted -> condition
   TriggerCondition.SelfBecomesAttachedBy f -> TriggerCondition.SelfBecomesAttachedBy (Filter.rewrite pairs f)
   TriggerCondition.SelfBecomesAttachedTo f -> TriggerCondition.SelfBecomesAttachedTo (Filter.rewrite pairs f)

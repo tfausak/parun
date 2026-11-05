@@ -3154,8 +3154,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SelfPlaneswalkedAwayFrom -> mempty
   TriggerCondition.PlayerRollsResult dieResult -> dieResultNames asking (const mempty) dieResult
   TriggerCondition.Visit -> mempty
-  TriggerCondition.PlayerWinsCoinFlip _playerRelation -> mempty
-  TriggerCondition.PlayerLosesCoinFlip _playerRelation -> mempty
+  TriggerCondition.FlipsCoin _ -> mempty
   TriggerCondition.SelfBecomesPlotted -> mempty
   TriggerCondition.SelfBecomesAttachedBy filter_ -> filterNames asking filter_
   TriggerCondition.SelfBecomesAttachedTo filter_ -> filterNames asking filter_

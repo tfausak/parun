@@ -24,8 +24,8 @@ import qualified Parun.Types.PlayerId as PlayerId
 -- that couldn't otherwise be won" -- proved by Parun.CoinSpec's "CR 705.3 reaches
 -- the flip CR 705.2 leaves winnerless".
 --
--- Nothing IS TOLD FROM Just False by TriggerCondition.PlayerLosesCoinFlip, which
--- matches the second and not the first where PlayerWinsCoinFlip matches neither
+-- Nothing IS TOLD FROM Just False by a Lost TriggerCondition.FlipsCoin, which
+-- matches the second and not the first where a Won one matches neither
 -- -- proved by Parun.CardTriggerSpec's "CR 705.2 a winnerless flip fires neither
 -- trigger", a Molten Sentry entering beside a Karplusan Minotaur.
 --
@@ -36,8 +36,8 @@ import qualified Parun.Types.PlayerId as PlayerId
 -- No FACE. CR 705.2 draws the line itself: an effect either cares about the
 -- win\/loss or cares about heads\/tails, and Parun.Types.FlipCoin's haddock argues
 -- the two readings apart at length. Nothing in rule 603's vocabulary watches a
--- face -- TriggerCondition's PlayerWinsCoinFlip and PlayerLosesCoinFlip are the
--- only conditions over this event, and both read the outcome -- and an effect
+-- face -- TriggerCondition.FlipsCoin is the only condition over this event, and
+-- it reads the outcome -- and an effect
 -- that reads the face reads it off the tally
 -- Parun.Types.FlipCoin binds, never off the log.
 --
