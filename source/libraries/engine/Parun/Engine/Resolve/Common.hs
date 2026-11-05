@@ -3697,9 +3697,9 @@ bindEarthbentLand resolving land gs =
 --
 -- Read off the COPIABLE characteristics (CR 707.2), never the printed face: CR
 -- 702.165b grants what a permanent that entered as a copy of a card with backup
--- copied, and CR 702.165c keeps out every ability an effect gave it, though a CR
--- 707.9 exception's abilities are in these copiable values and so are granted
--- (gap #6253).
+-- copied, and CR 702.165c keeps out every ability an effect gave it -- a CR
+-- 707.9a exception's too, though it is a copiable value, so those are subtracted
+-- (Projection.withoutExceptedAbilities).
 --
 -- And read as they were when the ability was put on the stack, which is CR
 -- 702.165d: Parun.Engine.Engine.placeBorne stamped them on the resolving object
@@ -3731,7 +3731,7 @@ bindEarthbentLand resolving land gs =
 expandGrant :: ObjectId -> ObjectId -> GameState -> Modification.Modification (GrantedAbility.GrantedAbility Card.Type.Card) -> [Modification.Modification (GrantedAbility.GrantedAbility Card.Type.Card)]
 expandGrant resolving source gs modification = case modification of
   Modification.GainAbilitiesOfSource above ->
-    let pc = Maybe.fromMaybe (Projection.copiableCharacteristics source gs) (Binding.placedSourceCopyOf (slotBindings resolving gs))
+    let pc = Projection.withoutExceptedAbilities (Maybe.fromMaybe (Projection.copiableCharacteristics source gs) (Binding.placedSourceCopyOf (slotBindings resolving gs)))
         printedAbove keyword = Set.member keyword above
         granted keyword count
           | Keyword.familyOf keyword == Just KeywordFamily.Backup = []

@@ -390,14 +390,16 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
     -- | CR 707.9a / 707.9b: the copy exceptions folded into these copiable
     -- values, in the order they applied, settled against the copy effect that
     -- made them (Parun.Engine.Replacement.applyCopyExceptions). Empty for values
-    -- no exception touched. Read only where `halves` above is rebuilt against
-    -- an object's own designations, which re-applies them
-    -- (Parun.Engine.Projection.View.copiableCharacteristics).
+    -- no exception touched. Read where `halves` above is rebuilt against an
+    -- object's own designations, which re-applies them
+    -- (Parun.Engine.Projection.View.copiableCharacteristics), and by CR
+    -- 702.165c's backup grant, which subtracts the abilities they added
+    -- (Parun.Engine.Projection.View.withoutExceptedAbilities).
     exceptions :: [CopyException.CopyException (GrantedAbility.GrantedAbility Card.Card)],
     -- | CR 702.140e: the records a merge took abilities from to graft onto these
     -- copiable values, in the order it grafted them
     -- (Parun.Engine.Projection.View.withMergedAbilities). Read only where `halves`
-    -- is rebuilt, which re-grafts them, `exceptions` above's reason.
+    -- is rebuilt, which re-grafts them.
     mergedDonors :: [ProjectedCharacteristics],
     -- | CR 722.2b: the PREPARE SPELL this object has -- "the existence and values
     -- of these alternative characteristics are part of the object's copiable
