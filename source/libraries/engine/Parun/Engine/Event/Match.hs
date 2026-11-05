@@ -1115,7 +1115,8 @@ armMatches bindings board gs bearer you cond event = case cond of
   -- rather than here: a
   -- permanent that entered tapped or untapped never transitioned, and rules
   -- 701.26a and 701.26b make a repeat tap or untap no event at all. So this arm
-  -- asks only whose transition it was.
+  -- asks only whose transition it was. The batching is not asked here: firing
+  -- once for a OneOrMore batch is `batchScoped` plus eventTriggers' dedup.
   TriggerCondition.BecomesTapState watched ->
     let watches oid = case BecomesTapState.actor watched of
           ActingPermanent.Self -> oid == bearer
@@ -1130,9 +1131,6 @@ armMatches bindings board gs bearer you cond event = case cond of
           -- one here would fire Betrayal twice off one tap.
           GameEvent.TappedForMana _ -> False
           _ -> False
-  -- CR 701.26a's batch reading by a bystander, the arm above's match; firing
-  -- once for a batch is `batchScoped` plus eventTriggers' dedup, never this arm.
-  TriggerCondition.PermanentsBecomeTapped f -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.BecomesTapState (BecomesTapState.MkBecomesTapState TapState.Tapped (ActingPermanent.Matching f))) event
   TriggerCondition.AttachedPermanentTappedForMana -> case event of
     GameEvent.TappedForMana tapped ->
       Game.hostOf bearer gs == Just (TappedForMana.permanent tapped)

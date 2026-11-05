@@ -1144,7 +1144,6 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   -- CR 702.134c's is nullary too, so it holds no Quantity.
   TriggerCondition.AttachedCreatureMentors -> []
   TriggerCondition.BecomesTapState _ -> []
-  TriggerCondition.PermanentsBecomeTapped _ -> []
   TriggerCondition.AttachedPermanentTappedForMana -> []
   -- CR 106.12a's bystander reading carries a PlayerRelation and a Filter,
   -- neither of which holds a Count.
@@ -4591,7 +4590,6 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- Thoughtleech's "an Island an opponent controls" and Deeproot Pilgrimage's
   -- "nontoken Merfolk you control" are card text, swept like Leaves'.
   TriggerCondition.BecomesTapState watched -> actingFilters (BecomesTapState.actor watched)
-  TriggerCondition.PermanentsBecomeTapped f -> unframed [f]
   TriggerCondition.AttachedPermanentTappedForMana -> []
   -- Skull Skaab's two, both card text.
   TriggerCondition.Exploits (ExploitTrigger.MkExploitTrigger exploiter exploited) -> actingFilters exploiter <> unframed [exploited]
@@ -4787,7 +4785,6 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.LeavesZone _ -> []
   TriggerCondition.PutIntoZone _ -> []
   TriggerCondition.BecomesTapState _ -> []
-  TriggerCondition.PermanentsBecomeTapped _ -> []
   TriggerCondition.AttachedPermanentTappedForMana -> []
   TriggerCondition.PermanentTappedForMana {} -> []
   TriggerCondition.AbilityAddsMana {} -> []

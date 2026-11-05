@@ -119,7 +119,10 @@ to agents as written. What it doesn't say:
 
 - STAGE, then `hooky fix` (staged files only; it runs every `.hooky.kdl` check
   and rewrites in place), then `git add` again. `--all` sweeps the tree; use
-  it only when you suspect something landed unstaged.
+  it only when you suspect something landed unstaged. It exits 1 both when
+  it rewrote a file and when a check it cannot fix (HLint) fails, and the
+  commit hook re-runs it: repeat stage-and-fix until it exits 0, reading the
+  summary rather than discarding it.
   Run `script/format-json.sh fix` on the files you wrote, never a whole
   directory: over all of `data/scenarios/` it rewrites hand-formatted
   scenarios and breaks some. It sorts keys, and a `View ManaPool` check

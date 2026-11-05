@@ -58,6 +58,7 @@ import qualified Parun.Types.BecameBlocking as BecameBlocking
 import qualified Parun.Types.BecameDesignated as BecameDesignated
 import qualified Parun.Types.BecameTarget as BecameTarget
 import qualified Parun.Types.BecameUnattached as BecameUnattached
+import qualified Parun.Types.BecomesTapState as BecomesTapState
 import qualified Parun.Types.BecomesTargetedTrigger as BecomesTargetedTrigger
 import qualified Parun.Types.BlocksDeclared as BlocksDeclared
 import Parun.Types.Card (Card)
@@ -601,7 +602,6 @@ looksBack condition = case condition of
   -- battlefield, so the ordinary CR 603.10 reading -- the board as it is now --
   -- is the right one. Becoming untapped (CR 701.26b) leaves it standing too.
   TriggerCondition.BecomesTapState _ -> False
-  TriggerCondition.PermanentsBecomeTapped _ -> False
   -- Not on CR 603.10a's list either, the arm above's reason: the permanent
   -- tapped for mana is standing on the battlefield when the ability is
   -- gathered.
@@ -793,12 +793,12 @@ batchScoped condition = case condition of
   -- more", so each permanent a tapping event taps is its own occurrence. The
   -- untap direction the same way, CR 502.3's simultaneous batch included:
   -- Mesmeric Orb triggers once per permanent the step untaps.
-  TriggerCondition.BecomesTapState _ -> False
-  -- A True beside a OneOrMore Leaves: "one or more nontoken Merfolk
-  -- you control become tapped" (Deeproot Pilgrimage) is one trigger event per
+  --
+  -- OneOrMore beside a OneOrMore Leaves: "one or more nontoken Merfolk you
+  -- control become tapped" (Deeproot Pilgrimage) is one trigger event per
   -- tapping, however many it tapped -- a cost's taps, CR 508.1f's attackers, or
   -- one Effect.Tap -- so long as each of those sites brackets its loop.
-  TriggerCondition.PermanentsBecomeTapped _ -> True
+  TriggerCondition.BecomesTapState watched -> BecomesTapState.batching watched == Batching.OneOrMore
   -- CR 106.12a names one resolution of one mana ability, so one occurrence;
   -- no printing of it says "one or more".
   TriggerCondition.AttachedPermanentTappedForMana -> False
@@ -2824,7 +2824,6 @@ zonesTriggeredFrom cond =
         -- permanent is itself a permanent on the battlefield, and CR 113.6k's exception
         -- is for a condition that cannot trigger from there at all.
         TriggerCondition.BecomesTapState _ -> battlefield
-        TriggerCondition.PermanentsBecomeTapped _ -> battlefield
         -- The same default and the same reason, one event over.
         TriggerCondition.AttachedPermanentTappedForMana -> battlefield
         -- CR 113.6's default once more: Autumn Willow, Harmony is a creature watching
@@ -3205,7 +3204,6 @@ stateTriggersOn gs
             -- while the state persists, and a state trigger would do nothing but.
             -- CR 701.26b's untap is an EVENT for the identical reason.
             TriggerCondition.BecomesTapState _ -> False
-            TriggerCondition.PermanentsBecomeTapped _ -> False
             -- CR 106.12a is an EVENT too, and more plainly than the arm
             -- above: a mana ability having resolved is nothing a later
             -- board read can recover.

@@ -81,7 +81,6 @@ codec =
           Arm.payload "LeavesZone" LeavesZoneTrigger.codec TriggerCondition.LeavesZone (\x -> case x of TriggerCondition.LeavesZone y -> Just y; _ -> Nothing),
           Arm.payload "PutIntoZone" PutIntoZoneTrigger.codec TriggerCondition.PutIntoZone (\x -> case x of TriggerCondition.PutIntoZone y -> Just y; _ -> Nothing),
           Arm.payload "BecomesTapState" BecomesTapState.codec TriggerCondition.BecomesTapState (\x -> case x of TriggerCondition.BecomesTapState y -> Just y; _ -> Nothing),
-          Arm.payload "PermanentsBecomeTapped" filterCodec TriggerCondition.PermanentsBecomeTapped (\x -> case x of TriggerCondition.PermanentsBecomeTapped y -> Just y; _ -> Nothing),
           Arm.nullary "AttachedPermanentTappedForMana" TriggerCondition.AttachedPermanentTappedForMana,
           Arm.payload "PermanentTappedForMana" PermanentTappedForMana.codec TriggerCondition.PermanentTappedForMana (\x -> case x of TriggerCondition.PermanentTappedForMana y -> Just y; _ -> Nothing),
           Arm.payload "AbilityAddsMana" AbilityAddsMana.codec TriggerCondition.AbilityAddsMana (\x -> case x of TriggerCondition.AbilityAddsMana y -> Just y; _ -> Nothing),
@@ -159,7 +158,6 @@ tagOf x = case x of
   TriggerCondition.LeavesZone {} -> "LeavesZone"
   TriggerCondition.PutIntoZone {} -> "PutIntoZone"
   TriggerCondition.BecomesTapState {} -> "BecomesTapState"
-  TriggerCondition.PermanentsBecomeTapped {} -> "PermanentsBecomeTapped"
   TriggerCondition.AttachedPermanentTappedForMana {} -> "AttachedPermanentTappedForMana"
   TriggerCondition.PermanentTappedForMana {} -> "PermanentTappedForMana"
   TriggerCondition.AbilityAddsMana {} -> "AbilityAddsMana"

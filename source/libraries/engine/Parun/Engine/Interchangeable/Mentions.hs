@@ -3110,7 +3110,6 @@ triggerConditionNames asking x = case x of
   TriggerCondition.LeavesZone leavesZoneTrigger -> leavesZoneTriggerNames asking leavesZoneTrigger
   TriggerCondition.PutIntoZone putIntoZoneTrigger -> putIntoZoneTriggerNames asking putIntoZoneTrigger
   TriggerCondition.BecomesTapState becomesTapState -> actingPermanentNames asking (BecomesTapState.actor becomesTapState)
-  TriggerCondition.PermanentsBecomeTapped filter_ -> filterNames asking filter_
   TriggerCondition.AttachedPermanentTappedForMana -> mempty
   TriggerCondition.PermanentTappedForMana permanentTappedForMana -> permanentTappedForManaNames asking permanentTappedForMana
   TriggerCondition.AbilityAddsMana abilityAddsMana -> abilityAddsManaNames asking abilityAddsMana
