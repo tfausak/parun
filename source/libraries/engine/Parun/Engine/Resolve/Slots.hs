@@ -938,7 +938,7 @@ effectObjectRefs effect = case effect of
   Effect.Vote {} -> []
   Effect.Bid {} -> []
   Effect.TakeExtraTurn {} -> []
-  Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary _ refs _) -> NonEmpty.toList refs
+  Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary _ ref _) -> [ref]
   Effect.Ante (Ante.MkAnte _ ref _) -> [ref]
   Effect.PutSticker (PutSticker.MkPutSticker _ ref _ _ _ _) -> [ref]
   Effect.SetOwner (SetOwner.MkSetOwner _ ref) -> [ref]

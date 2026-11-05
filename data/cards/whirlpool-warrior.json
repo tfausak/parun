@@ -36,19 +36,17 @@
                               "type": "AnyPlayer"
                             }
                           },
-                          "refs": [
-                            {
-                              "type": "EachCardInHand",
-                              "value": {
-                                "hands": {
-                                  "type": "Scoped",
-                                  "value": {
-                                    "type": "AnyPlayer"
-                                  }
+                          "ref": {
+                            "type": "EachCardInHand",
+                            "value": {
+                              "hands": {
+                                "type": "Scoped",
+                                "value": {
+                                  "type": "AnyPlayer"
                                 }
                               }
                             }
-                          ],
+                          },
                           "slot": "shuffled"
                         }
                       },
@@ -154,19 +152,17 @@
                               "type": "You"
                             }
                           },
-                          "refs": [
-                            {
-                              "type": "EachCardInHand",
-                              "value": {
-                                "hands": {
-                                  "type": "Scoped",
-                                  "value": {
-                                    "type": "You"
-                                  }
+                          "ref": {
+                            "type": "EachCardInHand",
+                            "value": {
+                              "hands": {
+                                "type": "Scoped",
+                                "value": {
+                                  "type": "You"
                                 }
                               }
                             }
-                          ],
+                          },
                           "slot": "shuffled"
                         }
                       },

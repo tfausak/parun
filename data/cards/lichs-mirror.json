@@ -24,40 +24,43 @@
                         "type": "You"
                       }
                     },
-                    "refs": [
-                      {
-                        "type": "EachCardInYourHand"
-                      },
-                      {
-                        "type": "EachCardInGraveyard",
-                        "value": {
-                          "filter": {
-                            "type": "And",
-                            "value": []
-                          },
-                          "graveyards": {
-                            "type": "Scoped",
-                            "value": {
-                              "type": "You"
-                            }
-                          }
-                        }
-                      },
-                      {
-                        "type": "EachMatching",
-                        "value": {
-                          "type": "HeldBy",
+                    "ref": {
+                      "type": "AllOf",
+                      "value": [
+                        {
+                          "type": "EachCardInYourHand"
+                        },
+                        {
+                          "type": "EachCardInGraveyard",
                           "value": {
-                            "holder": {
-                              "type": "Owner"
+                            "filter": {
+                              "type": "And",
+                              "value": []
                             },
-                            "relation": {
-                              "type": "You"
+                            "graveyards": {
+                              "type": "Scoped",
+                              "value": {
+                                "type": "You"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "type": "EachMatching",
+                          "value": {
+                            "type": "HeldBy",
+                            "value": {
+                              "holder": {
+                                "type": "Owner"
+                              },
+                              "relation": {
+                                "type": "You"
+                              }
                             }
                           }
                         }
-                      }
-                    ]
+                      ]
+                    }
                   }
                 },
                 {

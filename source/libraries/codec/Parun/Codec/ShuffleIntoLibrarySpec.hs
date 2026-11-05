@@ -20,11 +20,11 @@ spec s = Spec.describe s "Parun.Codec.ShuffleIntoLibrary" $ do
       ShuffleIntoLibrary.codec
       ( ShuffleIntoLibrary.MkShuffleIntoLibrary
           { ShuffleIntoLibrary.library = Nothing,
-            ShuffleIntoLibrary.refs = NonEmpty.singleton (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))),
+            ShuffleIntoLibrary.ref = ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")),
             ShuffleIntoLibrary.slot = Nothing
           }
       )
-      " {\"refs\":[{\"type\":\"InSlot\",\"value\":\"target\"}]} "
+      " {\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"}} "
   -- CR 701.24c's named library -- Dwell on the Past's "their library", which
   -- is shuffled whether or not any of the named cards arrive.
   Spec.it s "MkShuffleIntoLibrary, library named" $
@@ -33,23 +33,23 @@ spec s = Spec.describe s "Parun.Codec.ShuffleIntoLibrary" $ do
       ShuffleIntoLibrary.codec
       ( ShuffleIntoLibrary.MkShuffleIntoLibrary
           { ShuffleIntoLibrary.library = Just (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "player"))),
-            ShuffleIntoLibrary.refs = NonEmpty.singleton (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "cards"))),
+            ShuffleIntoLibrary.ref = ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "cards")),
             ShuffleIntoLibrary.slot = Nothing
           }
       )
-      " {\"library\":{\"type\":\"InSlot\",\"value\":\"player\"},\"refs\":[{\"type\":\"InSlot\",\"value\":\"cards\"}]} "
+      " {\"library\":{\"type\":\"InSlot\",\"value\":\"player\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"cards\"}} "
   -- Timetwister's "their hand and graveyard": two sets in one instruction.
-  Spec.it s "MkShuffleIntoLibrary, two refs" $
+  Spec.it s "MkShuffleIntoLibrary, an AllOf ref" $
     Common.assertCodec
       s
       ShuffleIntoLibrary.codec
       ( ShuffleIntoLibrary.MkShuffleIntoLibrary
           { ShuffleIntoLibrary.library = Nothing,
-            ShuffleIntoLibrary.refs = ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "hand")) NonEmpty.:| [ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "graveyard"))],
+            ShuffleIntoLibrary.ref = ObjectRef.AllOf (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "hand")) NonEmpty.:| [ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "graveyard"))]),
             ShuffleIntoLibrary.slot = Nothing
           }
       )
-      " {\"refs\":[{\"type\":\"InSlot\",\"value\":\"hand\"},{\"type\":\"InSlot\",\"value\":\"graveyard\"}]} "
+      " {\"ref\":{\"type\":\"AllOf\",\"value\":[{\"type\":\"InSlot\",\"value\":\"hand\"},{\"type\":\"InSlot\",\"value\":\"graveyard\"}]}} "
   -- Winds of Change's "then draws that many": the shuffled-in cards bound.
   Spec.it s "MkShuffleIntoLibrary, slot named" $
     Common.assertCodec
@@ -57,9 +57,9 @@ spec s = Spec.describe s "Parun.Codec.ShuffleIntoLibrary" $ do
       ShuffleIntoLibrary.codec
       ( ShuffleIntoLibrary.MkShuffleIntoLibrary
           { ShuffleIntoLibrary.library = Nothing,
-            ShuffleIntoLibrary.refs = NonEmpty.singleton (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "hand"))),
+            ShuffleIntoLibrary.ref = ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "hand")),
             ShuffleIntoLibrary.slot = Just (SlotName.MkSlotName (Text.pack "shuffled"))
           }
       )
-      " {\"refs\":[{\"type\":\"InSlot\",\"value\":\"hand\"}],\"slot\":\"shuffled\"} "
+      " {\"ref\":{\"type\":\"InSlot\",\"value\":\"hand\"},\"slot\":\"shuffled\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ShuffleIntoLibrary.codec

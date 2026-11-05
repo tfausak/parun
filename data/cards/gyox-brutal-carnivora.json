@@ -227,12 +227,10 @@
                       {
                         "type": "ShuffleIntoLibrary",
                         "value": {
-                          "refs": [
-                            {
-                              "type": "InSlot",
-                              "value": "duplicates"
-                            }
-                          ]
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "duplicates"
+                          }
                         }
                       }
                     ]

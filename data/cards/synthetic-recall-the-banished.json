@@ -26,21 +26,24 @@
                   {
                     "type": "ShuffleIntoLibrary",
                     "value": {
-                      "refs": [
-                        {
-                          "type": "InSlot",
-                          "value": "target"
-                        },
-                        {
-                          "type": "EachCardYouOwn",
-                          "value": {
-                            "type": "IsInZone",
+                      "ref": {
+                        "type": "AllOf",
+                        "value": [
+                          {
+                            "type": "InSlot",
+                            "value": "target"
+                          },
+                          {
+                            "type": "EachCardYouOwn",
                             "value": {
-                              "type": "Exile"
+                              "type": "IsInZone",
+                              "value": {
+                                "type": "Exile"
+                              }
                             }
                           }
-                        }
-                      ]
+                        ]
+                      }
                     }
                   }
                 ]

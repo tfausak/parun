@@ -1244,11 +1244,11 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       ( Effect.ShuffleIntoLibrary
           ShuffleIntoLibrary.MkShuffleIntoLibrary
             { ShuffleIntoLibrary.library = Nothing,
-              ShuffleIntoLibrary.refs = NonEmpty.singleton (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))),
+              ShuffleIntoLibrary.ref = ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")),
               ShuffleIntoLibrary.slot = Nothing
             }
       )
-      " {\"type\":\"ShuffleIntoLibrary\",\"value\":{\"refs\":[{\"type\":\"InSlot\",\"value\":\"target\"}]}} "
+      " {\"type\":\"ShuffleIntoLibrary\",\"value\":{\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"}}} "
   -- CR 701.24c's named library (Dwell on the Past's "their library"): the pair
   -- form: both keys written, where the case above elides the absent one.
   Spec.it s "ShuffleIntoLibrary naming the library" $
@@ -1259,11 +1259,11 @@ spec s = Spec.describe s "Parun.Codec.Effect" $ do
       ( Effect.ShuffleIntoLibrary
           ShuffleIntoLibrary.MkShuffleIntoLibrary
             { ShuffleIntoLibrary.library = Just (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "player"))),
-              ShuffleIntoLibrary.refs = NonEmpty.singleton (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "cards"))),
+              ShuffleIntoLibrary.ref = ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "cards")),
               ShuffleIntoLibrary.slot = Nothing
             }
       )
-      " {\"type\":\"ShuffleIntoLibrary\",\"value\":{\"library\":{\"type\":\"InSlot\",\"value\":\"player\"},\"refs\":[{\"type\":\"InSlot\",\"value\":\"cards\"}]}} "
+      " {\"type\":\"ShuffleIntoLibrary\",\"value\":{\"library\":{\"type\":\"InSlot\",\"value\":\"player\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"cards\"}}} "
   -- CR 123.3: who places, onto what, and which kinds.
   Spec.it s "PutSticker" $
     Common.assertJsonCodec

@@ -20,11 +20,11 @@ import qualified Parun.Types.ShuffleIntoLibrary as ShuffleIntoLibrary
 codec :: Codec.Codec ShuffleIntoLibrary.ShuffleIntoLibrary
 codec = Fields.object $ do
   library <- Fields.defaulted "library" Nothing (Common.maybe PlayerRef.codec) ShuffleIntoLibrary.library
-  refs <- Fields.required "refs" (Common.nonEmpty ObjectRef.codec) ShuffleIntoLibrary.refs
+  ref <- Fields.required "ref" ObjectRef.codec ShuffleIntoLibrary.ref
   slot <- Fields.defaulted "slot" Nothing (Common.maybe SlotName.codec) ShuffleIntoLibrary.slot
   pure
     ShuffleIntoLibrary.MkShuffleIntoLibrary
       { ShuffleIntoLibrary.library = library,
-        ShuffleIntoLibrary.refs = refs,
+        ShuffleIntoLibrary.ref = ref,
         ShuffleIntoLibrary.slot = slot
       }

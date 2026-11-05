@@ -23,12 +23,10 @@
                   {
                     "type": "ShuffleIntoLibrary",
                     "value": {
-                      "refs": [
-                        {
-                          "type": "InSlot",
-                          "value": "cards"
-                        }
-                      ]
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "cards"
+                      }
                     }
                   }
                 ]

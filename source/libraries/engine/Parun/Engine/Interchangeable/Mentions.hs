@@ -2892,7 +2892,7 @@ putStickerNames asking x = case x of
 
 shuffleIntoLibraryNames :: (Monoid r) => Asking r -> ShuffleIntoLibrary.ShuffleIntoLibrary -> r
 shuffleIntoLibraryNames asking x = case x of
-  ShuffleIntoLibrary.MkShuffleIntoLibrary library refs slot -> foldMap (playerRefNames asking) library <> foldMap (objectRefNames asking) refs <> foldMap (slotNames asking) slot
+  ShuffleIntoLibrary.MkShuffleIntoLibrary library ref slot -> foldMap (playerRefNames asking) library <> objectRefNames asking ref <> foldMap (slotNames asking) slot
 
 skipPhaseNames :: (Monoid r) => Asking r -> SkipPhase.SkipPhase -> r
 skipPhaseNames asking x = case x of
