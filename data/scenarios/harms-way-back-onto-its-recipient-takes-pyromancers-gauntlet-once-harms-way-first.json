@@ -1,0 +1,160 @@
+{
+  "board": {
+    "active": "alice",
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Pyromancer's Gauntlet"
+          },
+          {
+            "card": "Darksteel Colossus",
+            "label": "colossus"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Lightning Bolt",
+            "label": "bolt"
+          },
+          {
+            "card": "Harm's Way",
+            "label": "way"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "manaPool": "RW",
+        "name": "alice"
+      },
+      {
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "Harm's Way aimed back at the Colossus alice's Lightning Bolt is hitting moves nothing, so the hit stays one event and Pyromancer's Gauntlet adds 2 once: 5, not 7 (CR 614.5, 614.9)",
+  "note": "alice orders Harm's Way first (ChooseReplacement 1). Two events would take the Gauntlet's 2 each, 4 and 3; the indestructible 11/11 keeps every point marked.",
+  "timeline": [
+    {
+      "do": {
+        "Cast": {
+          "object": "$bolt",
+          "targets": [
+            "$colossus"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Cast": {
+          "object": "$way",
+          "targets": [
+            "$colossus"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseDamageSource",
+          "with": "Lightning Bolt"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ChooseReplacement",
+          "with": 1
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Damage": {
+          "damage": 5,
+          "object": "$colossus"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "check": {
+        "Life": {
+          "life": 20,
+          "player": "bob"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

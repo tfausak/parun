@@ -3267,17 +3267,16 @@ splitDamage covered event = case event of
 --     sources, so CR 615.10's floor applies to each -- and neither must a fight,
 --     whose two blows have different dealers (CR 701.14a).
 --   * Event.resolveDamageBatch, over what the batch's CR 616.1 loops came out with:
---     `splitDamage`'s inverse, rejoining the halves a counted redirect split off
---     when both ended up on the same recipient. Without it that recipient is
---     recorded as taking two events, and its "whenever this creature is dealt
---     damage" trigger (Ripjaw Raptor), its CR 119.2 life loss and its CR 120.3c
---     loyalty removal each read twice.
+--     joining what a redirect landed on a recipient beside another of the same
+--     source's damage (a split that moved nothing is rejoined earlier, by
+--     Event.chooseAndApply). Without it that recipient is recorded as taking
+--     two events.
 --
--- Observable at both. Parun.ReplacementSpec's Ajani Steadfast emblem case proves
+-- Parun.ReplacementSpec's Ajani Steadfast emblem case proves
 -- the first: CR 615.10's floor applies once per event, so 4 and 2 at one
--- recipient deal 1 as one event and would deal 2 as two. Parun.DamageReplacementSpec's
--- "a redirect onto the recipient it was already aimed at deals one event, not
--- two" proves the second, off the one card Ripjaw Raptor's enrage draws.
+-- recipient deal 1 as one event and would deal 2 as two. No test proves the
+-- second: the case it was proved by, an unmoved split, now rejoins in
+-- Event.chooseAndApply, and two redirects onto one recipient are #6267's.
 oneEventPerRecipient :: [DamageEvent.DamageEvent] -> [DamageEvent.DamageEvent]
 oneEventPerRecipient events =
   let key event = event {DamageEvent.amount = 0}
